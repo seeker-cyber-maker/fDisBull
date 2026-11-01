@@ -37,7 +37,10 @@ def test_lost_run_response_retains_attempt_without_claiming_no_execution():
     def lost(**kwargs):raise TimeoutError('response lost after dispatch')
     run.d=SimpleNamespace(run=lost)
     with pytest.raises(TimeoutError):run.advance(100)
-    assert run.journal==[{'kind':'run','attempted':True,'result':None}]
+    assert run.journal==[{'kind':'run','attempted':True,'result':None,
+                         'error':'response lost after dispatch'}]
+    assert run._native_controller.blocked_reason is not None
+    with pytest.raises(RuntimeError,match='Controller stopped'):run.advance(100)
 
 
 def test_print_observer_cannot_restart_exhausted_route_budget(monkeypatch):
@@ -92,3 +95,23 @@ def test_neutral_dialogue_retries_are_bounded():
     run.press=press
     with pytest.raises(RuntimeError,match='bounded dialogues'):run.neutral()
     assert keys==['up']*4
+
+
+def test_print_progress_is_retained_before_a_failed_frame_export(tmp_path,monkeypatch):
+    import examples.agi.verify_goat as module
+    run=object.__new__(GoatRun);run.guest_elapsed=0;run.deadline=time.monotonic()+5
+    run.journal=[];run.messages=[];run.bp='print';run.resources={};run.cs=0x1000;run.ds=0x20000
+    run.root=tmp_path
+    run.d=SimpleNamespace(call=lambda *a,**k:{},run=lambda **k:{'outcome':'breakpoint','guest_elapsed_ms':0,
+        'session':{'stop_reason':{'breakpoint_id':'print'}}})
+    def fail(*a):raise OSError('frame export failed')
+    run.p=SimpleNamespace(debug_export=fail)
+    msg={'status':'completed','stops':[{'guest_elapsed_ms':25}],'frame':{'artifact':'known-frame'}}
+    class Observer:
+        def __init__(self,*a,**k):pass
+        def finish(self,**k):return msg
+        def readback(self):return msg
+    monkeypatch.setattr(module,'AGIDOSPrintObserver',Observer)
+    with pytest.raises(OSError,match='frame export'):run.advance(100)
+    assert run.guest_elapsed==run._native_controller.guest_elapsed==25
+    assert run.messages==[msg] and run._native_controller.blocked_reason

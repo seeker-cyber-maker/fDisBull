@@ -11,6 +11,7 @@ from pathlib import Path
 import time
 
 from examples.agi.spatial_trial import native_game, read, require, manifest
+from fdisbull.native_controller import BoundedNativeController
 from fdisbull.agi import load_logic
 from fdisbull.agi_print import AGIDOSPrintObserver
 from fdisbull.agi_dos import AGIDOSMonitor, FETCH
@@ -34,7 +35,8 @@ class GoatRun:
         self.journal=[];self.messages=[];self.inputs=[];self.observations={};self.actions=[]
         checkout=Path(__file__).resolve().parents[2]
         report['implementation_sha256']={name:sha256((checkout/name).read_bytes()).hexdigest() for name in
-            ('examples/agi/verify_goat.py','src/fdisbull/agi_print.py','src/fdisbull/agi_host.py','src/fdisbull/agi_dos.py','src/fdisbull/agi_resources.py')}
+            ('examples/agi/verify_goat.py','src/fdisbull/native_controller.py','src/fdisbull/scene_receipts.py',
+             'src/fdisbull/agi_print.py','src/fdisbull/agi_host.py','src/fdisbull/agi_dos.py','src/fdisbull/agi_resources.py')}
         self.deadline=time.monotonic()+self.wall_budget_ms/1000;self.guest_elapsed=0;self.bp=None
         self._arm()
 
@@ -53,39 +55,56 @@ class GoatRun:
                 'ego':obj(0),'goat':obj(13),'gate_actor':obj(1),'inside_pen':flag(74),'control_direction':v[6],
                 'distance':v[70],'initializing':flag(5),'window':int.from_bytes(read(self.d,self.ds+0xd15,2),'little')}
 
+    def _transport(self):
+        controller=getattr(self,'_native_controller',None)
+        if controller is None:
+            controller=BoundedNativeController(self.d,read_state=lambda:self.state(),
+                total_guest_ms=self.guest_budget_ms,total_timeout_ms=self.wall_budget_ms,
+                journal=self.journal,inputs=getattr(self,'inputs',[]),
+                stop_handler=self._native_stop,fast_forward=self.fast_forward,
+                admission_check=self._admit_transport,input_advance=self.advance)
+            self._native_controller=controller
+        # Specialized source observers retain their own protocol and measured
+        # execution; their cumulative progress joins the next transport call.
+        controller.guest_elapsed=self.guest_elapsed;controller.deadline=self.deadline
+        controller.fast_forward=self.fast_forward
+        return controller
+
+    def _admit_transport(self):
+        """Adapters can refuse input and execution before either is dispatched."""
+
     def advance(self,ms=100):
-        end=self.guest_elapsed+ms
-        while self.guest_elapsed<end:
-            guest,wall=self.remaining_limits(min(100,end-self.guest_elapsed),10000)
-            attempt={'kind':'run','attempted':True,'result':None};self.journal.append(attempt)
-            out=self.d.run(guest_ms=guest,timeout_ms=wall,fast_forward=self.fast_forward,stop_on_hook=True)
-            attempt['result']=out;elapsed=out.get('guest_elapsed_ms')
-            require(type(elapsed) in (int,float) and elapsed>=0,'Missing guest progress')
-            self.guest_elapsed+=elapsed
-            require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after native slice')
-            if out['outcome']=='breakpoint':
-                stop=(out.get('session') or {}).get('stop_reason',{})
-                if stop.get('breakpoint_id')!=self.bp or stop.get('data_access'):
-                    self.handle_stop(out)
-                    continue
-                require(stop.get('breakpoint_id')==self.bp and not stop.get('data_access'),'Foreign stop preserved')
-                self.d.call('breakpoints.delete',{'breakpoint_id':self.bp});self.bp=None
-                observer=AGIDOSPrintObserver(self.d,self.resources,cs=self.cs,ds=self.ds//16)
-                guest,wall=self.remaining_limits(10000,60000)
-                msg=observer.finish(frame_name=f'goat-message-{len(self.messages)}',guest_ms=min(1000,guest),
-                    timeout_ms=min(10000,wall),total_guest_ms=guest,total_timeout_ms=wall)
-                self.messages.append(msg);self.journal.append({'kind':'message','observation':msg})
-                require(observer.readback()==msg and observer.finish()==msg,'Message readback replayed')
-                if msg.get('frame'):
-                    item=msg['frame'];name=f'message-{len(self.messages)-1}.png';self.p.debug_export(item['artifact'],self.root/name)
-                    msg['frame']={'path':name,'sha256':item['sha256'],'metadata':item['metadata']}
-                self.guest_elapsed+=sum(s.get('guest_elapsed_ms',0) for s in msg['stops'])
-                require(msg['status']=='completed','Original message did not complete: '+str(msg.get('error')))
-                require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after message')
-                self._arm()
-                self.message_observed(msg)
-            else:require(out['outcome']=='guest_time','Unexpected native stop preserved')
-        return self.state()
+        controller=self._transport()
+        try:return controller.advance(ms)
+        finally:self.guest_elapsed=controller.guest_elapsed
+
+    def _native_stop(self,out):
+        controller=self._native_controller;self.guest_elapsed=controller.guest_elapsed
+        try:
+            stop=(out.get('session') or {}).get('stop_reason',{})
+            require(out.get('outcome')=='breakpoint' and not out.get('hook_hits'),
+                    'Unexpected native stop preserved')
+            if stop.get('breakpoint_id')!=self.bp or stop.get('data_access'):
+                self.handle_stop(out)
+                return True
+            self.d.call('breakpoints.delete',{'breakpoint_id':self.bp});self.bp=None
+            observer=AGIDOSPrintObserver(self.d,self.resources,cs=self.cs,ds=self.ds//16)
+            guest,wall=self.remaining_limits(10000,60000)
+            msg=observer.finish(frame_name=f'goat-message-{len(self.messages)}',guest_ms=min(1000,guest),
+                timeout_ms=min(10000,wall),total_guest_ms=guest,total_timeout_ms=wall)
+            self.messages.append(msg);self.journal.append({'kind':'message','observation':msg})
+            try:controller.account_guest(sum(s['guest_elapsed_ms'] for s in msg['stops']))
+            finally:self.guest_elapsed=controller.guest_elapsed
+            require(observer.readback()==msg and observer.finish()==msg,'Message readback replayed')
+            if msg.get('frame'):
+                item=msg['frame'];name=f'message-{len(self.messages)-1}.png';self.p.debug_export(item['artifact'],self.root/name)
+                msg['frame']={'path':name,'sha256':item['sha256'],'metadata':item['metadata']}
+            require(msg['status']=='completed','Original message did not complete: '+str(msg.get('error')))
+            require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after message')
+            self._arm()
+            self.message_observed(msg)
+            return True
+        finally:controller.guest_elapsed=self.guest_elapsed
 
     def handle_stop(self,out):
         """Extensions must qualify their own stop before any further execution."""
@@ -99,26 +118,17 @@ class GoatRun:
         return all(type(k.get(n)) is int and k[n]==0 for n in ('pending_events','owned_keys','queued_guest_ms'))
 
     def remaining_limits(self,guest=100,wall=10000):
-        guest=min(int(guest),int(self.guest_budget_ms-self.guest_elapsed))
-        wall=min(int(wall),int((self.deadline-time.monotonic())*1000))
-        require(guest>0 and wall>0,'Route budget exhausted')
-        return guest,wall
+        return self._transport().remaining_limits(guest,wall)
 
     def press(self,key,ms=150,*,hold_ms=60,gap_ms=50):
-        require(self._idle(),'Existing keyboard input is not settled')
-        item={'kind':'keyboard','key':'press:'+key,'delivered':None,'complete':False}
-        self.inputs.append(item);self.journal.append({'kind':'input','record':item})
-        receipt=self.d.keyboard_press(key,hold_ms=hold_ms,gap_ms=gap_ms);item['delivery']=receipt
-        item['delivered']=receipt.get('accepted') if type(receipt.get('accepted')) is bool else None
-        self.advance(max(ms,hold_ms+gap_ms));item['complete']=self._idle();require(item['delivered'] and item['complete'],'Key outcome unknown')
+        controller=self._transport()
+        try:return controller.press(key,ms,hold_ms=hold_ms,gap_ms=gap_ms)
+        finally:self.guest_elapsed=controller.guest_elapsed
 
     def command(self,text):
-        require(self._idle(),'Existing keyboard input is not settled')
-        item={'kind':'keyboard','key':'type:'+text,'delivered':None,'complete':False}
-        self.inputs.append(item);self.journal.append({'kind':'input','record':item})
-        receipt=self.d.keyboard_type(text,hold_ms=30,gap_ms=30);item['delivery']=receipt
-        item['delivered']=receipt.get('accepted') if type(receipt.get('accepted')) is bool else None
-        self.advance(len(text)*60+150);item['complete']=self._idle();require(item['delivered'] and item['complete'],'Text outcome unknown')
+        controller=self._transport()
+        try:controller.type_text(text,hold_ms=30,gap_ms=30)
+        finally:self.guest_elapsed=controller.guest_elapsed
         self.press('enter',300,hold_ms=30,gap_ms=30)
 
     def neutral(self):
@@ -272,7 +282,8 @@ class GoatRun:
         return {'format':'fdisbull-agi-natural-encounter-1',
             'source':{'agi_sha256':sha256((self.source/'AGI').read_bytes()).hexdigest(),'resources':{str(n):r.resource_sha256 for n,r in self.resources.items()}},
             'runtime':{'policy':'physical','fresh_game':True,'interventions':[],'session_id':self.d.session_id,'guest_elapsed_ms':self.guest_elapsed},
-            'observations':self.observations,'actions':self.actions}
+            'observations':self.observations,'actions':self.actions,
+            'controller':self._transport().status() if getattr(self,'_native_controller',None) else None}
 
 
 def main():

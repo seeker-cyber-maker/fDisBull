@@ -17,6 +17,7 @@ from fdisbull.agi_resources import logic_messages
 from fdisbull.il_scenes import ILSceneBackend
 from fdisbull.processor import Location
 from fdisbull.scene_domains import audit_coordinate_domains
+from fdisbull.scene_receipts import ReceiptAssembler
 from examples.agi.scan_collision_candidates import edge_water_seams
 
 
@@ -53,13 +54,7 @@ def json_artifact(reference, loader, name):
 
 
 def frame_evidence(frame, loader):
-    artifact(frame, loader, 'frame')
-    metadata = frame.get('metadata')
-    require(isinstance(metadata, dict) and metadata.get('source') == 'last_completed_guest_frame' and
-            all(type(metadata.get(key)) is int and metadata[key] >= 0 for key in ('frame_id', 'mode_id')) and
-            all(type(metadata.get(key)) is int and metadata[key] > 0 for key in ('width', 'height')),
-            'incomplete native frame metadata')
-    return {'sha256': frame['sha256'], 'metadata': deepcopy(metadata)}
+    return ReceiptAssembler({'scope':'frame reference'}, {'scope':'supplied frame'}, loader).frame(frame)
 
 
 def project_state(value):
@@ -123,6 +118,7 @@ def build(source, capture, artifact_loader):
             runtime.get('interventions') == [], 'unqualified physical runtime')
     identity = capture.get('source')
     require(isinstance(identity, dict) and digest((source / 'AGI').read_bytes()) == identity.get('agi_sha256'), 'AGI identity mismatch')
+    assembly = ReceiptAssembler(identity, runtime, artifact_loader)
     expected = identity.get('resources')
     require(isinstance(expected, dict) and all(key in expected for key in ('39', '40')) and len(expected) <= 256,
             'missing clip source logic identities')
@@ -160,7 +156,7 @@ def build(source, capture, artifact_loader):
             value = observations[ident]
             require(isinstance(value, dict), 'invalid clip observation')
             state = project_state(value.get('state'))
-            checked_observations[ident] = {'state': state, 'frame': frame_evidence(value.get('frame'), artifact_loader)}
+            checked_observations[ident] = {'state': state, 'frame': assembly.frame(value.get('frame'))}
         return checked_observations[ident]['state']
 
     states = [observation(actions[0].get('before'))]
@@ -198,7 +194,7 @@ def build(source, capture, artifact_loader):
             binding = {'logic': 40, 'source_offset': 175, 'message_id': 1,
                        'resource_sha256': target.resource_sha256, 'text_sha256': digest(encoded), 'length': len(encoded),
                        'native_execution': True, 'handler_return_observed': True, 'input_accepted_and_settled': True,
-                       'frame': frame_evidence(message.get('frame'), artifact_loader)}
+                       'frame': assembly.frame(message.get('frame'))}
         message_bindings.append(binding)
         inputs = action.get('inputs')
         require(isinstance(inputs, list) and bool(inputs) and all(isinstance(item, dict) and item.get('kind') == 'keyboard' and

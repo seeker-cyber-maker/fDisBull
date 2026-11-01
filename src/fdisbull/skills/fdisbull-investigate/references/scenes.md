@@ -53,6 +53,16 @@ scene.click("office.bank")        # All prerequisites + bounded postcondition.
 
 ## Build a bounded scene efficiently
 
+Source checkouts containing `fdisbull.native_controller` and
+`fdisbull.scene_receipts` provide shared controller/receipt helpers. Check their
+availability before relying on newer guidance in an installed package. Keep
+game-specific source predicates and pending transitions in an adapter. Use the
+controller's admission hook for existing execution blocks, including before
+keyboard delivery; a foreign debugger stop never becomes an ordinary pending
+scene state. Receipt completion requires explicit forward observation endpoints.
+Give a private full log and a portable summary distinct artifact roles/hashes.
+The helpers cache one bounded artifact snapshot and do not authenticate a run.
+
 Start with one intended interaction or short contiguous route, its policy and
 the observation that would distinguish success from the nearest failure. Check
 for existing qualified captures and source bindings first. For interpreted games,

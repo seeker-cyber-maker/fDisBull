@@ -224,7 +224,8 @@ def test_lost_route_slice_retains_unknown_attempt_without_resuming(tmp_path, mon
     with pytest.raises(TimeoutError) as observed:
         run.advance(20)
     assert observed.value is primary and len(run.d.runs) == 1
-    assert run.journal == [{'kind': 'run', 'attempted': True, 'result': None}]
+    assert run.journal == [{'kind': 'run', 'attempted': True, 'result': None,
+                            'error': 'authored lost execution response'}]
     assert run.state()['mushroom_carried'] is True
     assert run.predicate_proof['complete'] is False
 

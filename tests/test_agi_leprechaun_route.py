@@ -162,7 +162,16 @@ def test_lost_execution_response_is_never_replayed(tmp_path, monkeypatch):
     run.d.run = lost
     with pytest.raises(TimeoutError) as raised: run.advance(20)
     assert raised.value is error and len(run.d.runs) == 1
-    assert run.journal == [{'kind': 'run', 'attempted': True, 'result': None}]
+    assert run.journal == [{'kind': 'run', 'attempted': True, 'result': None,
+                            'error': 'lost execution response'}]
+
+
+@pytest.mark.parametrize('kind',['press','type_text','command'])
+def test_existing_execution_block_also_refuses_input_before_delivery(tmp_path,monkeypatch,kind):
+    run=shield_run(tmp_path,monkeypatch);run.execution_blocked=True
+    with pytest.raises(RuntimeError,match='Earlier execution'):
+        getattr(run,kind)('left' if kind=='press' else 'look')
+    assert run.d.runs==[] and run.inputs==[]
     assert not run.predicate_proof['complete']
 
 

@@ -81,9 +81,12 @@ class CaveRun(MushroomRun):
         require(s['step_size']==1, 'Walking step size changed')
         return s
 
-    def advance(self, ms=100):
+    def _admit_transport(self):
         require(not getattr(self,'execution_blocked',False),
                 'Earlier execution/observation failed; preserve the stop and start a fresh session')
+
+    def advance(self, ms=100):
+        self._admit_transport()
         try:
             return super().advance(ms)
         except BaseException as exc:
@@ -94,20 +97,14 @@ class CaveRun(MushroomRun):
             raise
 
     def type_text(self, text):
-        """Type once without Enter; input delivery alone is not an outcome."""
-        previous = self.fast_forward
-        self.fast_forward = False
+        """Type once without Enter through the shared delivery/stop contract."""
+        previous=self.fast_forward;self.fast_forward=False;controller=None
         try:
-            require(self._idle(), 'Keyboard not idle')
-            item = {'kind':'keyboard', 'key':'type:'+text, 'delivered':None, 'complete':False}
-            self.inputs.append(item); self.journal.append({'kind':'input', 'record':item})
-            item['delivery'] = self.d.keyboard_type(text, hold_ms=1, gap_ms=1)
-            item['delivered'] = item['delivery'].get('accepted')
-            self.advance(len(text)*2+20)
-            item['complete'] = self._idle()
-            require(item['delivered'] is True and item['complete'], 'Typed input outcome unknown')
+            controller=self._transport()
+            return controller.type_text(text,hold_ms=1,gap_ms=1,guest_ms=len(text)*2+20)
         finally:
-            self.fast_forward = previous
+            if controller is not None:self.guest_elapsed=controller.guest_elapsed
+            self.fast_forward=previous
 
     def command(self, text):
         previous=self.fast_forward; self.fast_forward=False

@@ -302,6 +302,9 @@ never grant movement or teleport authority.
 The [bottom-row bridge follow-up](AGI_BRIDGE_BOTTOM.md) shows a complete bounded
 source-candidate → ordinary-input witness → standalone scene workflow, including
 expected border/room-initialization stages and the one-row-higher control.
+Use the [shared controller and receipt helpers](BOUNDED_NATIVE_SCENES.md) when
+authoring another native investigation. Keep the source-specific state/stop
+policy in the adapter; routine saved scripts continue to use their existing API.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.

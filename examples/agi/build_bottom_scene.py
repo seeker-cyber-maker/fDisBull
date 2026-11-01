@@ -9,7 +9,8 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from examples.agi.build_clip_scene import FIELDS, BOOLEAN_FIELDS, frame_evidence, require
+from examples.agi.build_clip_scene import FIELDS, BOOLEAN_FIELDS, require
+from fdisbull.scene_receipts import ReceiptAssembler
 from examples.agi.scan_collision_candidates import edge_water_seams
 from fdisbull.agi import load_logic
 from fdisbull.agi_picture import decode_picture, extract_v2_resource
@@ -70,28 +71,21 @@ def build(source, capture, report, artifact_loader):
     inputs, messages = capture.get('inputs'), capture.get('messages')
     require(isinstance(inputs, list) and 0 < len(inputs) <= 2000 and isinstance(messages, list) and len(messages) <= 32,
             'Input/message records missing or excessive')
-    require(all(isinstance(i, dict) and i.get('kind') == 'keyboard' and i.get('delivered') is True and
-                i.get('complete') is True and i.get('delivery', {}).get('accepted') is True for i in inputs),
-            'Incomplete or uncertain input delivery')
-    checked = []
+    assembly = ReceiptAssembler(identity, runtime, artifact_loader)
+    inputs = assembly.inputs(inputs)
+    require(all(i['kind']=='keyboard' for i in inputs), 'Expected ordinary keyboard inputs')
+    prepared = []
     for index, observation in enumerate(observations):
-        projected = state(observation.get('state'), moving=index == 3)
-        for key, maximum in (('input_count', len(inputs)), ('message_count', len(messages))):
-            require(type(observation.get(key)) is int and 0 <= observation[key] <= maximum,
-                    'Invalid observation record count')
-        frame = frame_evidence(observation.get('frame'), artifact_loader)
-        require((frame['metadata']['width'], frame['metadata']['height'], frame['metadata']['mode_id']) == (320, 200, 5),
+        require(isinstance(observation, dict), 'Invalid observation')
+        prepared.append({**observation, 'state': state(observation.get('state'), moving=index==3)})
+    assembled = assembly.observations(prepared, expected_ids=STAGES,
+        input_count=len(inputs), message_count=len(messages), require_progress=True)
+    require(assembled['complete'], 'Incomplete or inconsistent scene observations: '+str(assembled['issues']))
+    checked = assembled['observations']
+    for observation in checked:
+        frame=observation['frame']
+        require((frame['metadata']['width'],frame['metadata']['height'],frame['metadata']['mode_id'])==(320,200,5),
                 'Unexpected video dimensions/mode')
-        require(type(observation.get('guest_ms')) is int and observation['guest_ms'] >= 0, 'Missing guest progress')
-        if checked:
-            previous = observations[index-1]
-            require(observation['guest_ms'] > previous['guest_ms'] and
-                    all(observation[k] >= previous[k] for k in ('input_count', 'message_count')) and
-                    frame['metadata']['frame_id'] >= checked[-1]['frame']['metadata']['frame_id'],
-                    'Observations out of order')
-        checked.append({'id': observation['id'], 'state': projected, 'frame': frame,
-                        'guest_ms': observation['guest_ms'], 'input_count': observation['input_count'],
-                        'message_count': observation['message_count']})
     a, b, middle, end = [checked[n]['state'] for n in (1, 2, 3, 4)]
     require([(s['room'], s['x'], s['y']) for s in (a, b)] == [(39, 110, 166), (39, 110, 167)] and
             middle['room'] == 39 and middle['y'] == 167 and 5 <= middle['x'] <= 80 and
@@ -108,7 +102,7 @@ def build(source, capture, report, artifact_loader):
                 msg.get('input_settled') is True and msg.get('window_closed') is True and
                 msg.get('identity', {}).get('resource_sha256') == resources[40].resource_sha256 and
                 not msg.get('cleanup_errors'), 'Unfinished or unbound original dialogue')
-        frame_evidence(msg.get('frame'), artifact_loader)
+        assembly.frame(msg.get('frame'))
     variables = {'$phase': {'type': 'u8', 'initial': 0}, **{
         '$'+k: {'type': 'bool' if k in BOOL else 'u8', 'initial': a[k]} for k in TRACKED}}
     programs, edges = {}, []
@@ -128,7 +122,7 @@ def build(source, capture, report, artifact_loader):
                              'The recorded walk reaches the bottom row.' if index == 0 else
                              'The recorded bottom-row walk reaches the neighboring room, dry and without resolving the troll.'}},
                          'body': body}
-        edges.append({'program': name, 'before': STAGES[i], 'after': STAGES[j], 'inputs': deepcopy(section),
+        edges.append({'complete': True, 'program': name, 'before': STAGES[i], 'after': STAGES[j], 'inputs': deepcopy(section),
                       'messages': deepcopy(messages[observations[i]['message_count']:observations[j]['message_count']])})
     scene = {'format': 'fdisbull-il-scene-1', 'programs': programs, 'partial': True,
              'contexts': [{'id': 'phase-'+str(n), 'title': title,
@@ -145,6 +139,7 @@ def build(source, capture, report, artifact_loader):
                 'picture': deepcopy(capture['picture']), 'observations': checked, 'edges': edges,
                 'capture_sha256': sha256(json.dumps(capture, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
                 'report_sha256': sha256(json.dumps(report, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
+                'receipt': assembly.receipt(assembled, edges=edges),
                 'scope': 'Supplied observations and source identities; hashes do not authenticate execution. One observed ordinary route, not all82 candidates, collision-handler proof, deterministic replay or durable saves. Frames are last-completed, not atomic with state.'}
     return scene, evidence
 

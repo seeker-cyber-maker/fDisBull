@@ -14,6 +14,7 @@ from fdisbull.agi import load_logic
 from fdisbull.agi_dos import _ENGINE_LENGTH,_ENGINE_SHA256
 from fdisbull.agi_layout import logic_layout
 from fdisbull.agi_picture import extract_v2_resource,decode_picture
+from fdisbull.scene_receipts import retain_evidence
 
 
 class ClipRun(GoatRun):
@@ -254,26 +255,21 @@ class ClipRun(GoatRun):
 
 def retain_private_evidence(driver,source,root,report):
     """Try every independent receipt/hash operation without replacing a primary."""
-    errors=[]
-    def attempt(operation,fn):
-        try:fn()
-        except Exception as exc:
-            errors.append(exc)
-            report.setdefault('persistence_errors',[]).append({'operation':operation,'error':str(exc)})
+    operations=[]
     def write(name,value):
         (root/name).write_text(json.dumps(value,indent=2)+'\n')
     if driver is not None:
-        attempt('journal',lambda:write('journal.private.json',driver.journal))
-        attempt('partial capture',lambda:write('partial-capture.private.json',driver.capture()))
+        operations.append(('journal',lambda:write('journal.private.json',driver.journal)))
+        operations.append(('partial capture',lambda:write('partial-capture.private.json',driver.capture())))
         if driver.predicate_proof:
-            attempt('partial predicate',lambda:write('partial-predicate.private.json',driver.predicate_proof))
+            operations.append(('partial predicate',lambda:write('partial-predicate.private.json',driver.predicate_proof)))
     def integrity(path,field):
         report[field]=manifest(path)==report['source_manifest']
         require(report[field],'Post-teardown files changed: '+field)
-    attempt('source integrity',lambda:integrity(source,'post_teardown_source_unchanged'))
-    attempt('copy integrity',lambda:integrity(root/'game','post_teardown_copy_unchanged'))
-    attempt('final receipt',lambda:write('result.json',report))
-    return errors
+    operations.extend([('source integrity',lambda:integrity(source,'post_teardown_source_unchanged')),
+                       ('copy integrity',lambda:integrity(root/'game','post_teardown_copy_unchanged')),
+                       ('final receipt',lambda:write('result.json',report))])
+    return retain_evidence(operations,report)
 
 
 def main():

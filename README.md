@@ -253,6 +253,9 @@ designer notes for expected scrolling margins.
 The [bottom-row bridge route](docs/AGI_BRIDGE_BOTTOM.md) now has a fresh-game
 witness, an adjacent water control and a two-action scene for the separate
 player, with the original game files unchanged.
+Agents can now reuse [bounded native control and scene receipts](docs/BOUNDED_NATIVE_SCENES.md)
+for their own routes, carrying partial results and evidence forward without
+rewriting the same transport and capture bookkeeping.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 
