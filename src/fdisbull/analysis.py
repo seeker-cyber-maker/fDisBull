@@ -39,7 +39,9 @@ class AnalysisMixin:
             document['header']['managed']=image.metadata['managed']
         if image.format == 'raw':
             region = image.regions[0]
-            document['sections'] = [dict(name='raw',virtual_address=region.start,virtual_size=len(region.data),file_offset=0,file_size=len(region.data),permissions='rx')]
+            document['sections'] = [dict(name=r.name,virtual_address=r.start,virtual_size=len(r.data),file_offset=r.start-region.start,file_size=len(r.data),permissions='rx' if r.executable else 'r') for r in image.regions]
+            if image.metadata.get('cortex_m'):
+                document['cortex_m'] = image.metadata['cortex_m']
             document['imports'], document['exports'] = [], []
             for item in document['strings']:
                 item['address'] = region.start + item['file_offset']
@@ -48,6 +50,8 @@ class AnalysisMixin:
         self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
         self._index_symbols(version, document)
         self._fresh_facts(version)
+        if image.arch == 'thumb':
+            self._thumb_reset(version)
         if image.format in ('MZ', 'COM'):
             self._dos_init(image,version)
 
@@ -107,7 +111,7 @@ class AnalysisMixin:
                 if self.meta['format'] == 'NE':
                     for name in ('sections', 'imports', 'exports', 'libraries'):
                         counts[name] = len(self.meta['loader_metadata']['ne'][name])
-                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','cortex_m') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
             if topic == 'linkage':
                 return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
             if topic == 'header':
@@ -239,7 +243,7 @@ class AnalysisMixin:
                 # Promote only corroborated indirect control-flow, never an arbitrary pointer.
                 sources=self.db.execute("SELECT DISTINCT i.address,i.flow FROM xrefs x JOIN instructions i ON i.version=x.version AND i.context=x.context AND i.address=x.source JOIN operand_refs o ON o.version=x.version AND o.context=x.context AND o.source=x.source AND o.target=x.target WHERE x.version=? AND x.context=? AND x.target=? AND x.kind='data' AND i.flow IN ('indirect_call','indirect_jump') AND o.role='memory' AND o.width=?",(version,self.context,k(address),self.bits//8)).fetchall()
                 advanced=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{version}',)).fetchone()
-                if sources and target_region.executable and not advanced:
+                if sources and target_region.executable and not advanced and self.arch != 'thumb':
                     for ins in sources:
                         kind='resolved_call' if ins['flow']=='indirect_call' else 'resolved_branch'
                         self._add_xref(version,int(ins['address'],16),target,kind,'indirect operand + stored pointer value')
@@ -274,6 +278,8 @@ class AnalysisMixin:
             self.db.execute('INSERT OR IGNORE INTO analysis_state(version) VALUES (?)',(v,))
             regions=self.regions(v)
             doc=self._document(v)
+            if self.arch=='thumb' and doc.get('cortex_m',{}).get('error'):
+                raise ValueError('Invalid Cortex-M vectors in selected version: '+doc['cortex_m']['error'])
             definitions=[(int(r[0],16),r[1],r[2]) for r in self.db.execute('SELECT address,representation,size FROM definitions WHERE version=? AND context=?',(v,self.context))]
             def mapped(a):
                 return next((r for r in regions if r.start<=a<r.start+len(r.data)),None)
@@ -281,11 +287,15 @@ class AnalysisMixin:
                 r=mapped(a)
                 return r is not None and (r.executable or any(x<=a<x+s and t=='code' for x,t,s in definitions))
             def blocked(a,size):
-                return any(t!='code' and a<x+s and a+size>x for x,t,s in definitions)
+                explicit_code = any(t=='code' and x<=a<x+s for x,t,s in definitions)
+                return (any(t!='code' and a<x+s and a+size>x for x,t,s in definitions)
+                        or self.arch=='thumb' and not explicit_code and self._thumb_blocked(v,a,size))
             def fact_count():
                 return sum(self.db.execute(f'SELECT count(*) FROM {table} WHERE version=?',(v,)).fetchone()[0] for table in ('instructions','xrefs','functions','data_items','operand_refs'))
             if start is not None:
                 a=self._address(start)
+                if self.arch=='thumb' and a & 1:
+                    raise ValueError('Thumb start must be a canonical halfword-aligned code address')
                 if not executable(a):
                     raise ValueError('analysis start is not in executable mapped bytes')
                 self._queue_code(v,a,'user seed')
@@ -308,12 +318,19 @@ class AnalysisMixin:
                     ins=result.facts if result else None
                     if ins is None or blocked(a,ins['size']):
                         state='blocked' if ins is not None else 'invalid'
-                        detail = 'user data definition' if state == 'blocked' else getattr(processor, 'last_failure', None) or 'invalid or outside executable mapping'
+                        detail = ('data definition or evidenced Thumb literal' if self.arch == 'thumb' else 'user data definition') if state == 'blocked' else getattr(processor, 'last_failure', None) or 'invalid or outside executable mapping'
                         self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,detail,v,self.context,k(a)))
                         continue
+                    if self.arch=='thumb':
+                        ins=self._thumb_prepare(v,a,ins,regions)
                     flow,target=ins['flow'],ins['target']
                     inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
-                    self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",('unresolved indirect control flow' if flow.startswith('indirect') else None,v,self.context,k(a)))
+                    detail = 'unresolved indirect control flow' if flow.startswith('indirect') else None
+                    if self.arch=='thumb' and (flow=='return' or flow=='conditional' and target is None):
+                        detail = 'Thumb conditional/return target and exception state remain unresolved'
+                    if ins.get('issue'):
+                        detail = ins['issue'] + ('; '+detail if detail else '')
+                    self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",(detail,v,self.context,k(a)))
                     decoded+=inserted.rowcount
                     self._clear_memory_facts(v,self.context,a)
                     self._memory_facts(v,self.context,a,bytes.fromhex(ins['bytes']))
@@ -389,12 +406,15 @@ class AnalysisMixin:
         self.db.execute("DELETE FROM functions WHERE version=? AND source IN ('direct call','resolved indirect call')",(version,))
         self.db.execute('INSERT INTO analysis_state VALUES (?,0,0) ON CONFLICT(version) DO UPDATE SET entry_complete=0,seeds_admitted=0',(version,))
         self._fresh_facts(version)
+        if self.arch=='thumb' and not self.meta['loader_metadata'].get('cortex_m'):
+            self._thumb_reset(version)
         roots=self.meta.get('analysis_roots')
         if roots is not None:
             for a in roots:
                 self._queue_code(version,a,'requested module root')
         elif self.meta['loader_metadata'].get('entrypoint_present',True):
-            self._queue_code(version,self.meta['entry'],'entry')
+            if self.arch!='thumb' or not self._thumb_reset(version):
+                self._queue_code(version,self.meta['entry'],'entry')
         for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation='code'",(version,)).fetchall():
             self._queue_code(version,int(row[0],16),'user code definition')
         for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation NOT IN ('code','unexplored')",(version,)).fetchall():

@@ -144,6 +144,11 @@ for selected native blocks. Optional Ghidra and one-stop LLDB probes are
 described in [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md). Native facts,
 diagnostic C and runtime observations do not constitute a UIL translation.
 
+The [Cortex-M static profile](docs/CORTEX_M.md) imports a declared flash image
+with an Armv7-M vector table, decodes Thumb/Thumb-2 code and exports stored analysis images.
+It preserves unknown transfers and peripheral state. The first static milestone
+has been tested on the 121GW 2.05 firmware on macOS; it does not emulate the meter.
+
 ## Debug the original program
 
 The DOS debugger uses a separately built, compatible patched DOSBox backend.
