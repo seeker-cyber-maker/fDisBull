@@ -135,3 +135,52 @@ def test_preserved_runtime_ram_outside_original_com_mapping_and_full_recovery(fr
     debug.load_anchor_stone(stone['artifact'])
     assert projection(debug) == initial
     assert 'timeline_experiment' not in debug.metadata
+
+
+def test_mouse_owned_snapshots_refuse_capture_and_legacy_load(frame_native, tmp_path):
+    _, debug, _ = frame_native
+    neutral = debug.save_anchor_stone('released-mouse.sav')
+    debug.call('input.mouse.button', {'button': 'left', 'pressed': True})
+    mouse = debug.call('input.mouse.state')['mouse']
+    assert mouse['buttons'] == mouse['owned_buttons'] == 1 and not mouse['release_pending']
+    with pytest.raises(ValueError, match='mouse'):
+        debug.timeline_start(max_frames=4)
+    with pytest.raises(ValueError, match='mouse'):
+        debug.save_anchor_stone('held-mouse.sav')
+    assert not debug.closed
+    # Model a historical/native-client state lacking an ownership sidecar.
+    # Native load restores hardware buttons but clears the agent's ownership.
+    path = tmp_path / 'legacy-native.sav'
+    debug.call('state.save', {'path': str(path)})
+    legacy = debug._artifact('legacy-held-mouse.sav', 'state', path.read_bytes(), neutral['metadata'])
+    debug.call('input.mouse.button', {'button': 'left', 'pressed': False})
+    with pytest.raises(ValueError, match='mouse'):
+        debug.load_anchor_stone(legacy['artifact'])
+    assert debug.closed and debug.rpc.process.poll() is not None
+
+
+@pytest.mark.parametrize('operation', ['frame-inputs', 'timeline-advance', 'timeline-rewind', 'load-anchor-stone'])
+def test_failed_frame_script_reaps_owned_guest_with_held_keys(frame_native, operation):
+    _, debug, _ = frame_native
+    if operation == 'frame-inputs':
+        step = {'op': operation, 'edges': [{'key': 'right', 'pressed': True}]}
+    elif operation == 'timeline-advance':
+        debug.timeline_start(max_frames=4)
+        step = {'op': operation, 'frames': 1, 'inputs': [
+            {'frame': 0, 'edges': [{'key': 'right', 'pressed': True}]}]}
+    elif operation == 'timeline-rewind':
+        debug.timeline_start(max_frames=4)
+        debug.timeline_advance(2, inputs=[
+            {'frame': 0, 'edges': [{'key': 'right', 'pressed': True}]},
+            {'frame': 1, 'edges': [{'key': 'right', 'pressed': False}]}])
+        step = {'op': operation, 'frames': 1}
+    else:
+        debug.frame_inputs([{'key': 'right', 'pressed': True}])
+        stone = debug.save_anchor_stone('held-script-input.sav')
+        debug.frame_inputs([{'key': 'right', 'pressed': False}])
+        step = {'op': operation, 'artifact': stone['artifact']}
+    result = debug.script({'format': 'fdisbull-script-1', 'steps': [
+        step, {'op': 'assert', 'value': False, 'equals': True}]})
+    assert not result['ok'] and result['completed_steps'] == 1
+    assert result['input_cleanup']['closed']
+    assert debug.closed and debug.rpc.process.poll() is not None

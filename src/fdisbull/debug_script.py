@@ -164,8 +164,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
     frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
                         'timeline-rewind','timeline-pin','timeline-image'}
+    capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
     if any(step['op'] in frame_operations for step in steps):
-        capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
@@ -176,6 +176,33 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             for key in ('start','stop'):
                 call=step[key]
                 session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
+    restore_operations = {'load-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
+    def frame_owned_keys():
+        from .keyboard_input import KEYS
+        result = session.call('input.keyboard.state')
+        keyboard = result.get('keyboard') if isinstance(result,dict) else None
+        keys = keyboard.get('frame_keys') if isinstance(keyboard,dict) else None
+        if not isinstance(keys,list) or any(not isinstance(key,str) or key not in KEYS for key in keys):
+            raise ValueError('Native frame input ownership is unavailable')
+        normalized = {'escape' if key=='esc' else key for key in keys}
+        if len(normalized) != len(keys):
+            raise ValueError('Native frame input ownership contains duplicate keys')
+        return normalized
+    frame_owned_before = None
+    track_restored_input = (isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+                           and any(step['op'] in restore_operations for step in steps))
+    if track_restored_input:
+        # A full-state restore can introduce held input without dispatching
+        # an edge. Existing entry ownership remains the caller's responsibility.
+        try:
+            frame_owned_before = frame_owned_keys()
+        except ValueError as error:
+            frozen = (getattr(session,'_cpu_delta_history',None) or {}).get('frozen')
+            if not frozen or 'CPU delta partial state is frozen' not in str(error):
+                raise
+            # The delta guard deliberately refuses this query. Keep ownership
+            # unknown while allowing the script's full recovery operation.
+    frame_restore_attempted = False
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
     started = time.monotonic(); deadline = started+timeout_ms/1000
@@ -211,7 +238,14 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")
                 result = {'matched':True}
             else:
-                if step['op'].startswith('keyboard.') and step['op']!='keyboard.state':keyboard_touched=True
+                # Record intended input before dispatch so an uncertain failure
+                # follows the same terminal cleanup as legacy keyboard input.
+                if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
+                        or (step['op']=='frame-inputs' and params['edges'])
+                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):
+                    keyboard_touched=True
+                if track_restored_input and step['op'] in restore_operations:
+                    frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
             record['result'] = result
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
@@ -236,9 +270,24 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         if failure:
             break
     cleanup=None
-    if failure and (keyboard_touched or set(getattr(session,'_keyboard_leases',{}))-owned_before):
+    restored_input_held = restore_ownership_unknown = False
+    if failure and frame_restore_attempted and not keyboard_touched:
+        try:
+            current = frame_owned_keys()
+            if frame_owned_before is None:
+                restore_ownership_unknown = bool(current)
+            else:
+                restored_input_held = bool(current - frame_owned_before)
+        except Exception:
+            # An attempted restore with no verifiable ownership readback must
+            # not leave a failed route free to resume an unknown held key.
+            restore_ownership_unknown = True
+    if failure and (keyboard_touched or restored_input_held or restore_ownership_unknown
+                    or set(getattr(session,'_keyboard_leases',{}))-owned_before):
         # A failed route must not leave input depressed or execute through a stop.
-        session.close();cleanup={'closed':True,'reason':'Failed script owned unreleased input'}
+        reason = ('Failed script frame input ownership is unknown after restore' if restore_ownership_unknown
+                  else 'Failed script owned unreleased input')
+        session.close();cleanup={'closed':True,'reason':reason}
     report = {'format':'fdisbull-script-result-1','script_artifact':source['artifact'],
               'script_sha256':hashlib.sha256(encoded).hexdigest(),'run':session.run_id,
               'ok':failure is None,'error':failure,'completed_steps':sum(r['ok'] for r in records),

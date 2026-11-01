@@ -26,6 +26,14 @@ def _sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def _require_released_mouse(mouse):
+    # Native saves retain hardware button bits, but have no agent ownership
+    # sidecar for releasing them after a load. Admit only released input.
+    if not isinstance(mouse, dict) or any(mouse.get(key) for key in
+            ('buttons', 'owned_buttons', 'pending_release_buttons', 'release_pending')):
+        raise ValueError('Native checkpoints require released mouse buttons and no pending mouse input')
+
+
 def _receipt(result):
     """Keep durable operation evidence compact; the full point list stays live."""
     result = dict(result)
@@ -249,8 +257,7 @@ class FrameTimelineSessionMixin:
         keyboard = self.call('input.keyboard.state').get('keyboard', {})
         if keyboard.get('pending_events') or keyboard.get('owned_keys'):
             raise ValueError('Frame timeline cannot mix legacy queued or leased keyboard input')
-        if self.call('input.mouse.state').get('mouse', {}).get('release_pending'):
-            raise ValueError('Frame timeline cannot mix pending mouse input')
+        _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
 
     def _timeline_bytes(self, history):
         return sum(p['bytes'] for p in history['points']) + sum(len(_encoded(i)) for i in history['inputs'])

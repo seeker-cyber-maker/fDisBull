@@ -17,7 +17,7 @@ from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .debug_rewind import RewindSessionMixin
-from .debug_timeline import FrameTimelineSessionMixin, timeline_locked
+from .debug_timeline import FrameTimelineSessionMixin, timeline_locked, _require_released_mouse
 from .debug_cpu_deltas import CpuDeltaSessionMixin
 from .anchor_stones import AnchorStoneSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
@@ -657,8 +657,7 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
-        if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
-            raise ValueError('Run until queued mouse releases complete before saving a state')
+        _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
         if self.rpc.capabilities.get('input',{}).get('keyboard'):
             keyboard=self.keyboard_state()['keyboard']
             if keyboard['pending_events'] or keyboard['owned_keys']:
@@ -736,6 +735,7 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 result = self.call('state.load',params)
                 if self.rpc.capabilities.get('frame_timeline') and result.get('frame_keys') != frame_keys:
                     raise DebuggerError('Restored frame input ownership differs from saved state')
+                _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
                 registers = self.registers()
                 for field in ('general','segments','instruction_pointer','flags'):
                     if registers.get(field) != metadata['registers'].get(field):

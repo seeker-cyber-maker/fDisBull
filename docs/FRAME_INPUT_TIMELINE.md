@@ -76,9 +76,12 @@ image remains historical and is labeled accordingly.
 Native saved states preserve keyboard FIFO, controller, repeat and modifier
 state. Dedicated frame-held key names are retained as checkpoint metadata and
 restored as ownership bookkeeping after loading the native hardware state;
-loading must not synthesize new make events. Legacy timed events/leases and
-pending mouse releases remain incompatible with timeline capture. Keyboard reset
-in progress is also refused.
+loading must not synthesize new make events. Legacy timed events/leases,
+held mouse buttons and pending mouse releases remain incompatible with timeline
+capture. Native state files do not retain agent ownership of mouse buttons, so
+manual capture also requires released buttons; loading an older held-button state
+closes the session rather than exposing a button that cannot be released.
+Keyboard reset in progress is also refused.
 
 ## Restoring or preserving RNG
 
@@ -135,6 +138,10 @@ without advancing the guest or operating a GUI.
 The same methods are available as `debug-timeline-*`, `debug-frame-advance` and
 `debug-frame-inputs` JSON methods and their unprefixed declarative script names.
 Malformed literal plans are rejected before earlier script steps execute.
+If a route fails after delivering frame inputs or restoring newly held keys,
+the owned session closes so those inputs cannot continue unexpectedly. Keys
+already held on route entry retain their existing ownership. An uncertain
+ownership readback after an attempted restoration also closes the session.
 
 ## Local comparison
 

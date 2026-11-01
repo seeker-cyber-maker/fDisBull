@@ -121,6 +121,192 @@ def test_legacy_scripts_and_local_timeline_status_cleanup_need_no_frame_capabili
     assert session.timeline_status()['retained_points'] == 0
 
 
+@pytest.mark.parametrize('recording,step', [
+    (False, {'op': 'frame-inputs', 'edges': [{'key': 'right', 'pressed': True}]}),
+    (True, {'op': 'frame-inputs', 'edges': [{'key': 'right', 'pressed': True}]}),
+    (True, {'op': 'timeline-advance', 'inputs': [
+        {'frame': 0, 'edges': [{'key': 'right', 'pressed': True}]}]}),
+])
+def test_failed_frame_route_closes_after_physical_input(recording, step):
+    from test_debug_timeline import Session, start
+    session = Session()
+    try:
+        if recording:
+            start(session)
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [
+            step, {'op': 'assert', 'value': False, 'equals': True}]})
+        assert not result['ok'] and result['completed_steps'] == 1
+        assert session.keys == {'right'}  # Accepted once; cleanup never replays input.
+        assert session.calls.count('input.keyboard.frame_edges') == 1
+        assert session.closed
+        assert result['input_cleanup']['closed']
+    finally:
+        session.db.close()
+
+
+@pytest.mark.parametrize('step', [
+    {'op': 'frame-inputs', 'edges': []},
+    {'op': 'timeline-advance'},
+    {'op': 'timeline-advance', 'inputs': [{'frame': 0, 'edges': []}]},
+])
+def test_failed_frame_route_without_input_preserves_session(step):
+    from test_debug_timeline import Session, start
+    session = Session()
+    try:
+        start(session)
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [
+            step, {'op': 'assert', 'value': False, 'equals': True}]})
+        assert not result['ok'] and result['completed_steps'] == 1
+        assert not session.keys and not session.closed
+        assert result['input_cleanup'] is None
+        assert session.timeline_status()['valid']
+    finally:
+        session.db.close()
+
+
+def frame_restore_session(operation, initial_keys, restored_keys):
+    from fdisbull.anchor_stones import AnchorStoneSessionMixin
+    from test_debug_timeline import Session, start
+    session = Session()
+    session.keys = set(restored_keys)
+    start(session)
+    checkpoint = session._frame_timeline['points'][0]['checkpoint']
+    session.timeline_advance()
+    edges = [dict(key=key, pressed=False) for key in set(restored_keys) - set(initial_keys)]
+    edges += [dict(key=key, pressed=True) for key in set(initial_keys) - set(restored_keys)]
+    if edges:
+        session.frame_inputs(edges)
+    if operation == 'timeline-rewind':
+        step = {'op': operation, 'frames': 1}
+    else:
+        session.load_state = lambda artifact: session._restore_native_checkpoint(checkpoint)
+        session.load_anchor_stone = lambda artifact: AnchorStoneSessionMixin.load_anchor_stone(session, artifact)
+        step = {'op': operation, 'artifact': 'owned-test-checkpoint'}
+    return session, step
+
+
+@pytest.mark.parametrize('operation', ['timeline-rewind', 'load-state', 'load-anchor-stone'])
+@pytest.mark.parametrize('initial_keys,restored_keys,should_close', [
+    ([], ['right'], True),
+    (['right'], ['right'], False),
+    (['right', 'left'], ['right'], False),
+    ([], [], False),
+])
+def test_failed_restore_route_cleans_only_newly_held_frame_keys(operation, initial_keys, restored_keys, should_close):
+    session, step = frame_restore_session(operation, initial_keys, restored_keys)
+    try:
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [
+            step, {'op': 'assert', 'value': False, 'equals': True}]})
+        assert not result['ok'] and result['completed_steps'] == 1
+        assert session.restores == 1 and session.keys == set(restored_keys)
+        assert session.closed is should_close
+        assert bool(result['input_cleanup']) is should_close
+    finally:
+        session.db.close()
+
+
+@pytest.mark.parametrize('unavailable', ['exception', 'missing-ownership'])
+def test_failed_restore_route_with_unknown_frame_ownership_closes(unavailable):
+    session, step = frame_restore_session('load-state', [], [])
+    original = session.call
+    def lose_ownership_after_restore(method, params=None):
+        if method == 'input.keyboard.state' and session.restores:
+            if unavailable == 'exception':
+                raise TimeoutError('restored ownership reply unavailable')
+            return {'keyboard': {}}
+        return original(method, params)
+    session.call = lose_ownership_after_restore
+    try:
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [
+            step, {'op': 'assert', 'value': False, 'equals': True}]})
+        assert not result['ok'] and result['completed_steps'] == 1
+        assert session.restores == 1 and session.closed
+        assert result['input_cleanup']['closed']
+    finally:
+        session.db.close()
+
+
+def test_restore_error_after_mutation_still_cleans_new_frame_ownership():
+    session, step = frame_restore_session('load-state', [], ['right'])
+    original = session.load_state
+    def restore_then_lose_receipt(artifact):
+        original(artifact)
+        raise ValueError('restore receipt unavailable')
+    session.load_state = restore_then_lose_receipt
+    try:
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [step]})
+        assert not result['ok'] and result['completed_steps'] == 0
+        assert result['error']['message'] == 'restore receipt unavailable'
+        assert session.restores == 1 and session.keys == {'right'} and session.closed
+        assert result['input_cleanup']['closed']
+    finally:
+        session.db.close()
+
+
+def test_restore_refusal_with_preexisting_frame_keys_keeps_session_open():
+    session, _ = frame_restore_session('timeline-rewind', ['right'], ['right'])
+    try:
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'timeline-rewind', 'frames': 4096}]})
+        assert not result['ok'] and result['completed_steps'] == 0
+        assert session.restores == 0 and session.keys == {'right'}
+        assert not session.closed and result['input_cleanup'] is None
+    finally:
+        session.db.close()
+
+
+@pytest.mark.parametrize('operation', ['load-anchor-stone', 'delta-recover'])
+@pytest.mark.parametrize('later_failure,restored_keys,should_close', [
+    (False, ['right'], False),
+    (True, [], False),
+    (True, ['right'], True),
+])
+def test_frozen_delta_recovery_script_preserves_unknown_entry_ownership(
+        operation, later_failure, restored_keys, should_close):
+    session, step = frame_restore_session('load-anchor-stone', [], restored_keys)
+    session._cpu_delta_history = {'frozen': True}
+    original_call, original_load = session.call, session.load_state
+    refused_queries = []
+    def guarded_call(method, params=None):
+        if method == 'input.keyboard.state' and session._cpu_delta_history['frozen']:
+            refused_queries.append(method)
+            raise ValueError('CPU delta partial state is frozen; load a full native checkpoint before execution or capture')
+        return original_call(method, params)
+    def recover(artifact=None):
+        result = original_load(artifact)
+        session._cpu_delta_history['frozen'] = False
+        return result
+    session.call, session.load_state = guarded_call, recover
+    session.cpu_delta_recover = recover
+    if operation == 'delta-recover':
+        step = {'op': operation}
+    steps = [step]
+    if later_failure:
+        steps.append({'op': 'assert', 'value': False, 'equals': True})
+    try:
+        result = execute_script(session, {'format': 'fdisbull-script-1', 'steps': steps})
+        assert result['ok'] is not later_failure
+        assert refused_queries == ['input.keyboard.state']
+        assert session.restores == 1 and not session._cpu_delta_history['frozen']
+        assert session.keys == set(restored_keys) and session.closed is should_close
+        assert bool(result['input_cleanup']) is should_close
+    finally:
+        session.db.close()
+
+
+def test_unavailable_entry_frame_ownership_refuses_before_restore():
+    session, step = frame_restore_session('load-state', [], [])
+    original = session.call
+    session.call = lambda method, params=None: ({'keyboard': {}} if method == 'input.keyboard.state'
+                                               else original(method, params))
+    try:
+        with pytest.raises(ValueError, match='ownership is unavailable'):
+            execute_script(session, {'format': 'fdisbull-script-1', 'steps': [step]})
+        assert session.restores == 0 and not session.closed and not session.artifacts
+    finally:
+        session.db.close()
+
+
 @pytest.mark.parametrize('process_status', [None, 0, 'unknown'])
 @pytest.mark.parametrize('receipt_fails', [False, True])
 def test_failed_transport_cleanup_releases_cache_and_terminal_ownership(process_status, receipt_fails):
