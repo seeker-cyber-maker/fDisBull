@@ -169,6 +169,9 @@ alongside earlier views, but a capture does not by itself prove those bytes ran.
 See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERIMENTS.md),
 [debugger scripts](docs/DEBUGGER_SCRIPTS.md) and [runtime code](docs/RUNTIME_CODE.md).
 
+For short debugging histories, [checkpoint-backed rewind](docs/DEBUGGER_REWIND.md)
+records recent steps and lets an agent return to an earlier recorded boundary.
+
 ## Scenes, maps and interaction policies
 
 Scenes connect named controls, masks, predicates and supporting screenshots to

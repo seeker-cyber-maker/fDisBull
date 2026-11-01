@@ -16,6 +16,7 @@ from .dos_launch import LaunchAlias, guest_name
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
+from .debug_rewind import RewindSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
@@ -254,7 +255,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -386,6 +387,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
+        self._rewind_before_call(method)
         deadline=getattr(self,'_rpc_deadline',None)
         options={}
         if deadline is not None:
@@ -629,7 +631,9 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
             entries.append({'path':str(path.relative_to(self.game_dir)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
         return entries
 
-    def save_state(self, name='checkpoint.sav'):
+    def save_state(self, name='checkpoint.sav', *, max_bytes=None):
+        if max_bytes is not None:
+            bounded(max_bytes,'max_bytes',1,256*1024*1024)
         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
         _file_name(name)
@@ -652,6 +656,8 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
             path = Path(directory)/'state.sav'
             self.call('state.save',{'path':str(path)})
             data = path.read_bytes()
+        if max_bytes is not None and len(data)>max_bytes:
+            raise ValueError('Native state exceeds remaining rewind byte budget')
         if before != self._disk_manifest():
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
@@ -928,6 +934,8 @@ class DebugWorkspace:
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
         methods.update({'debug-controls':'controls','debug-save-experiment':'save_experiment',
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
+        methods.update({'debug-rewind-start':'rewind_start','debug-rewind-status':'rewind_status',
+                        'debug-rewind-record':'rewind_record','debug-rewind':'rewind'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
