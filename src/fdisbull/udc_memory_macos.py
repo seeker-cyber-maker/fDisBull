@@ -55,7 +55,7 @@ def _ranges(name, values):
     return 'static const FdbRange '+name+'[] = {'+','.join('{'+str(start)+'u,'+str(count)+'u}' for start,count in values)+'};'
 
 
-def _runtime(prepared, controls, config_sha):
+def _runtime(prepared, controls, config_sha, *, target=TARGET, owner_prelude=None):
     program=prepared['program'];execution=prepared['execution_program'];plan=prepared['plan']
     functions=sorted(execution['functions']);indices={name:i for i,name in enumerate(functions)}
     slots=prepared['regions']['slots'] if prepared['regions'] else {}
@@ -65,7 +65,7 @@ def _runtime(prepared, controls, config_sha):
         symbol='fdb_native_'+str(len(sources))
         text=emit_memory_function(model,function,symbol,capture_local=capture)
         sources.append(text);realizations[label]={'symbol':symbol,'module_uil_sha256':digest(model),
-            'source_sha256':hashlib.sha256(text.encode()).hexdigest(),'target':TARGET,'function':function}
+            'source_sha256':hashlib.sha256(text.encode()).hexdigest(),'target':target,'function':function}
         return symbol
     for function in functions:
         if function in slots:
@@ -78,7 +78,10 @@ def _runtime(prepared, controls, config_sha):
             for phase,spec in lowered[function]['phases'].items():
                 phase_symbols[function][phase]=emit(spec['program'],function,'phase/'+function+'/'+phase,lowered[function]['token_local'])
         else:symbols[function]=emit(program,function,'function/'+function)
-    lines=[NATIVE_MEMORY_HEADER,'#include "memory-runtime.h"','#include <pthread.h>',
+    if owner_prelude is None:
+        owner_prelude=['#include <pthread.h>',
+            'static int fdb_owner_thread(void) { return pthread_main_np(); }']
+    lines=[NATIVE_MEMORY_HEADER,'#include "memory-runtime.h"',*owner_prelude,
         'typedef struct { uint32_t start,count; } FdbRange;',
         f'enum {{ FDB_WORDS={words}, FDB_FUNCTIONS={len(functions)}, FDB_REGIONS={len(controls)} }};',
         'static uint32_t g_words[FDB_WORDS] = {'+','.join(str(v)+'u' for v in prepared['initial'])+'};',
@@ -87,7 +90,7 @@ def _runtime(prepared, controls, config_sha):
         'static _Thread_local const char *g_error="";',
         'static const char *g_names[] = {'+','.join(json.dumps(fn) for fn in functions)+'};',
         'static int fail(const char *message) { g_error=message; return 1; }',
-        'static int admit(void) { if(!pthread_main_np()) return fail("Main-thread owner required"); if(g_closed) return fail("Shell closed"); if(g_busy) return fail("Reentrant shell operation"); return 0; }',
+        'static int admit(void) { if(!fdb_owner_thread()) return fail("Main-thread owner required"); if(g_closed) return fail("Shell closed"); if(g_busy) return fail("Reentrant shell operation"); return 0; }',
         'static int inside(uint32_t i,const FdbRange *r,size_t n) { for(size_t j=0;j<n;j++) if(i>=r[j].start && i-r[j].start<r[j].count) return 1; return 0; }',
         'static int compare_words(const void *a,const void *b) { uint32_t x=*(const uint32_t*)a,y=*(const uint32_t*)b; return (x>y)-(x<y); }',
         _ranges('commit_ranges',plan['commit_ranges']),_ranges('replace_ranges',plan['replace_ranges']),
@@ -150,18 +153,18 @@ def _runtime(prepared, controls, config_sha):
         count=len(plan['outputs'][function]);lines += [f'if(!r.status) for(uint32_t i=0;i<FDB_WORDS;i++) if(!inside(i,outputs_{index},{count}u) && w[i]!=before[i]) {{ r.status=1u; fail("Kernel wrote outside declared output"); break; }}','break;']
     lines += ['default:break; } free(before); return r; }',
         'size_t fdb_word_count(void) { return FDB_WORDS; }',
-        'const uint32_t *fdb_words(void) { return pthread_main_np()&&!g_closed?g_words:NULL; }',
+        'const uint32_t *fdb_words(void) { return fdb_owner_thread()&&!g_closed?g_words:NULL; }',
         'const char *fdb_last_error(void) { return g_error; }',
         'const char *fdb_config_sha256(void) { return "'+config_sha+'"; }',
-        'int fdb_closed(void) { return !pthread_main_np() || g_closed; }',
-        'uint64_t fdb_revision(void) { return pthread_main_np()?g_revision:0; }',
-        'uint32_t fdb_last_steps(void) { return pthread_main_np()?g_last_steps:0; }',
-        'uint64_t fdb_invocation_count(size_t fn) { return pthread_main_np()&&fn<FDB_FUNCTIONS?g_calls[fn]:0; }',
+        'int fdb_closed(void) { return !fdb_owner_thread() || g_closed; }',
+        'uint64_t fdb_revision(void) { return fdb_owner_thread()?g_revision:0; }',
+        'uint32_t fdb_last_steps(void) { return fdb_owner_thread()?g_last_steps:0; }',
+        'uint64_t fdb_invocation_count(size_t fn) { return fdb_owner_thread()&&fn<FDB_FUNCTIONS?g_calls[fn]:0; }',
         'int fdb_function_index(const char *name) { if(!name) return -1; for(int i=0;i<FDB_FUNCTIONS;i++) if(!strcmp(name,g_names[i])) return i; return -1; }',
         'int fdb_copy_words(uint32_t *out,size_t n) { if(admit()) return 1; if(!out || n!=FDB_WORDS) return fail("Snapshot length differs"); memmove(out,g_words,sizeof(g_words)); return 0; }',
-        'int fdb_selected_region(size_t slot) { if(!pthread_main_np() || g_closed) return -1; switch(slot) {']
+        'int fdb_selected_region(size_t slot) { if(!fdb_owner_thread() || g_closed) return -1; switch(slot) {']
     for slot in range(len(controls)):lines.append(f'case {slot}:return (int)g_choice_{slot};')
-    lines += ['default:return -1; } }','uint64_t fdb_region_invocation_count(size_t slot,size_t variant) { if(!pthread_main_np()) return 0; switch(slot) {']
+    lines += ['default:return -1; } }','uint64_t fdb_region_invocation_count(size_t slot,size_t variant) { if(!fdb_owner_thread()) return 0; switch(slot) {']
     for slot,control in enumerate(controls):lines.append(f'case {slot}:return variant<{len(control["variants"])}u?g_region_calls_{slot}[variant]:0;')
     lines += ['default:return 0; } }','int fdb_select_region(size_t slot,size_t variant) { if(admit()) return 1; if(g_epoch==UINT64_MAX) return fail("Epoch exhausted"); switch(slot) {']
     for slot,control in enumerate(controls):lines.append(f'case {slot}:if(variant>={len(control["variants"])}u) return fail("Unknown region variant"); g_choice_{slot}=(uint32_t)variant;break;')
@@ -183,7 +186,7 @@ def _runtime(prepared, controls, config_sha):
         'free(w);g_busy=0;if(failed && !*g_error) fail("Native block refused");return failed?1:0; }',
         f'int fdb_dispatch(const uint32_t *i,const uint32_t *v,size_t n,int render) {{ return fdb_call({indices[plan["events"]["function"]]}u,i,v,n,render); }}',
         f'int fdb_initialize(uint32_t clock) {{ uint32_t index={plan["events"]["clock"]}u;return fdb_call({indices[plan["initialize"]]}u,&index,&clock,1u,1); }}',
-        'void fdb_close(void) { if(!pthread_main_np() || g_busy || g_closed) return;g_closed=1;memset(g_words,0,sizeof(g_words)); }']
+        'void fdb_close(void) { if(!fdb_owner_thread() || g_busy || g_closed) return;g_closed=1;memset(g_words,0,sizeof(g_words)); }']
     return '\n'.join(lines)+'\n',realizations,functions
 
 

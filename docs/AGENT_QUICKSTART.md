@@ -21,6 +21,11 @@ For a native macOS ARM64 window over the same memory UIL, see
 AppKit adapters have separate execution and input/view qualification gates;
 source selection target metadata remains provenance.
 
+For Win64/Win32 and Linux x86-64/X11 shells over that same memory UIL, see
+[native desktop reconstruction](UDC_MEMORY_DESKTOP.md). Source emission,
+compilation, immutable artifact admission and native input/view qualification
+are separate gates; Wine execution does not qualify Microsoft Windows itself.
+
 ## Discover commands and bundled skills
 
 ```text

@@ -2,7 +2,7 @@ include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyprojec
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
 recursive-include src/fdisbull/web_runtime *.mjs *.html
-recursive-include src/fdisbull/native_runtime *.m
+recursive-include src/fdisbull/native_runtime *.m *.c *.h
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
@@ -87,7 +87,10 @@ include examples/recovery/run_snake_rng_switch.mjs
 include examples/recovery/snake_macos.py
 include examples/recovery/verify_snake_macos.py
 include examples/recovery/verify_snake_appkit.py
+include examples/recovery/snake_desktop.py
+include examples/recovery/verify_snake_desktop.py
 include docs/evidence/snake-browser/verification.json
 include docs/evidence/snake-nested-step/verification.json
 include docs/evidence/snake-rng/verification.json
 include docs/evidence/snake-macos-arm64/verification.json
+include docs/evidence/snake-desktop-x64/verification.json

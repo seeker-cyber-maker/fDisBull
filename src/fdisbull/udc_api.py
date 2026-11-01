@@ -1,5 +1,9 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-memory-desktop-shell':'Compile native Win64/Win32 or Linux x86-64/X11 blocks and shell; selections,plan,initial,destination,target,[cuts,regions,c_compiler]; build only',
+ 'emit-memory-desktop-shell':'Emit a source-only native desktop recipe; selections,plan,initial,destination,target,[cuts,regions]; compilation and execution separate',
+ 'compile-memory-desktop-shell':'Compile an admitted private desktop source recipe; destination,[c_compiler]; does not execute outputs',
+ 'seal-memory-desktop-shell':'Record format/architecture/hashes of privately compiled desktop outputs; destination,[compiler_evidence]; does not establish compiler lineage or execution',
  'build-memory-macos-shell':'Emit native ARM64 memory blocks and AppKit adapters from exact source selections; selections,plan,initial,destination,[cuts,regions,c_compiler,with_app]; build only',
  'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts,regions]; build only',
  'store-memory-region-contract':'Register a source-bound pure word-update region; document,[author]',
@@ -38,6 +42,9 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method in ('build-memory-desktop-shell','emit-memory-desktop-shell','compile-memory-desktop-shell','seal-memory-desktop-shell'):
+  from . import udc_memory_desktop
+  return getattr(udc_memory_desktop,method.replace('-','_'))(project,**params) if method.startswith(('build-','emit-')) else getattr(udc_memory_desktop,method.replace('-','_'))(**params)
  if method=='build-memory-macos-shell':
   from .udc_memory_macos import build_memory_macos_shell
   return build_memory_macos_shell(project,**params)

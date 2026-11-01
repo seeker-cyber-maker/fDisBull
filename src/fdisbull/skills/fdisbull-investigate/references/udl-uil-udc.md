@@ -320,3 +320,22 @@ source preservation, compiler output and native execution remain separate.
 Capture descriptor3 observations only in the explicit analysis profile, validate
 complete frames and bind the executable/process identity before making claims.
 Source-checkout docs/UDC_LINUX_AND_C.md records the actual pilot and limits.
+
+## Win64 and Linux bounded-memory desktop realization
+
+The same memory UIL, cuts and selectable region contracts can emit native
+Win32/GDI and Linux x86-64/X11 shells with `emit-memory-desktop-shell` or
+`build-memory-desktop-shell`. Source-only emission, native compilation, immutable
+format/architecture/hash admission and runtime qualification are separate gates.
+Stored Wasm/WebGPU selections remain source provenance; generated native
+realizations record their actual targets and source identities.
+
+The shell owns palette presentation, physical keys, pointer capture/coordinates,
+selectors and monotonic clock. Native integer pixels use the same deterministic
+center sampling for drawing and picking. Refused-call observation reads the
+actual live core; final closed observations use a labelled owned snapshot.
+Qualify full state, frame bytes and native surfaces on the same original inputs,
+including wrong-adapter/refusal counterexamples. Programmatic window messages or
+X server queue events do not establish physical hardware/global hit-testing.
+Win64 execution under Wine does not qualify Microsoft Windows OS execution.
+Source-checkout docs/UDC_MEMORY_DESKTOP.md documents APIs, recipes and limits.

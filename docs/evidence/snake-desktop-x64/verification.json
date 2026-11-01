@@ -1,0 +1,742 @@
+{
+  "format": "fdisbull-snake-desktop-x64-milestone-1",
+  "status": "passed-finite-qualification",
+  "original": {
+    "format": "fdisbull-snake-macos-original-oracle-1",
+    "status": "fresh_finite_original_match",
+    "original_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "map_sha256": "1a72757fc86cf64043d987fde0d01c60bdeaa33c1e8a2c7bdab12e7e7572ec28",
+    "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cases": 342,
+    "original_cpu_calls": 368,
+    "outcome_steps": 26,
+    "mismatches": 0,
+    "unchanged_original": true,
+    "palette": {
+      "0": [
+        0,
+        0,
+        0
+      ],
+      "1": [
+        0,
+        0,
+        170
+      ],
+      "2": [
+        0,
+        170,
+        0
+      ],
+      "8": [
+        85,
+        85,
+        85
+      ],
+      "10": [
+        85,
+        255,
+        85
+      ],
+      "12": [
+        255,
+        85,
+        85
+      ],
+      "15": [
+        255,
+        255,
+        255
+      ]
+    },
+    "scope": "Isolated original DOS x86-16 step code with declared normalized memory/register adapter; original keyboard/mouse and graphics evidence remain separate frozen native observations",
+    "case_file_sha256": "2671875c9929a02cfa5c56b86dd267394973fb8eda4be12f0f1eaeb0226e612e",
+    "outcome_file_sha256": "10581b4bc37bc9a5446eb8296ce77eee3ccc17a652d18ceb54e8d14004425a4e"
+  },
+  "original_execution_refresh_sha256": "2f9fd21ac8a210affcff1bf2db17c2cf004f5cbbcab4aac5c5bbd29da55234d0",
+  "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "canonical_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+  "shared_model": {
+    "same_udl_uil_plan_cuts_regions_source_endpoints": true,
+    "same_generated_game_function_c_sources": true,
+    "source_layer_targets_preserved": true,
+    "native_machine_code_byte_identity_between_os_abis": "not asserted"
+  },
+  "platforms": {
+    "linux": {
+      "status": "passed-finite-qualification",
+      "format": "ELF64/X11",
+      "execution_environment": "Linux 6.1 x86-64 kernel under local offline QEMU",
+      "profile": "linux-x64-memory-x11-1",
+      "native_manifest_sha256": "090ae1719b4f86035dd7b5a5be51b3058a1555a355a577d6bdf85eeb09e84195",
+      "application_sha256": "fc5e7689a5b39f68c74614b039810389b2c452106e9bfc67fa5bc62019928d47",
+      "probe_sha256": "cae535df2515bd2d9f18e1769fc348c4f67d256b419eee945cc077fd57be251f",
+      "full_qualification_sha256": "85138a357fae45879319d99e96ad257c87a98cce0df49990df819f02ca6bc8e2",
+      "admission_manifest_snapshot_sha256": "090ae1719b4f86035dd7b5a5be51b3058a1555a355a577d6bdf85eeb09e84195",
+      "cases": {
+        "original": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 0,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "lfsr16": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 84,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "8be09708c7ccfb1a3e26e5ea448eda8890e3ec101df7b36cb63d2f4587895ffa"
+        }
+      },
+      "core_carried": {
+        "original": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [],
+          "observations": 69
+        },
+        "lfsr16": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [],
+          "observations": 69
+        }
+      },
+      "native_adapters": {
+        "original": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [
+            {
+              "name": "two-times",
+              "size": [
+                640,
+                400
+              ],
+              "integer_fit_rectangle": [
+                0,
+                0,
+                640,
+                400
+              ],
+              "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+              "exact_bytes": true
+            },
+            {
+              "name": "wide",
+              "size": [
+                800,
+                600
+              ],
+              "integer_fit_rectangle": [
+                0,
+                50,
+                800,
+                500
+              ],
+              "rgba_sha256": "a01dde1475f78d0da959adab069990198bdf88412c6cbe2c89584c3ef195e220",
+              "exact_bytes": true
+            },
+            {
+              "name": "tall",
+              "size": [
+                600,
+                800
+              ],
+              "integer_fit_rectangle": [
+                0,
+                212,
+                600,
+                375
+              ],
+              "rgba_sha256": "9f921ccf34c0fced3a6a98ef8df17f199fe791f3f54b951490153395c858c690",
+              "exact_bytes": true
+            }
+          ],
+          "event_coverage": {
+            "key_commands": 53,
+            "declared_keys": [
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+              "ArrowUp",
+              "Escape",
+              "KeyA",
+              "KeyD",
+              "KeyN",
+              "KeyP",
+              "KeyR",
+              "KeyS",
+              "KeyW",
+              "KeyX",
+              "Space"
+            ],
+            "pointer_commands": 22,
+            "clock_commands": [
+              36501,
+              36502,
+              36506,
+              36510
+            ]
+          },
+          "observations": 69
+        },
+        "lfsr16": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [
+            {
+              "name": "two-times",
+              "size": [
+                640,
+                400
+              ],
+              "integer_fit_rectangle": [
+                0,
+                0,
+                640,
+                400
+              ],
+              "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+              "exact_bytes": true
+            },
+            {
+              "name": "wide",
+              "size": [
+                800,
+                600
+              ],
+              "integer_fit_rectangle": [
+                0,
+                50,
+                800,
+                500
+              ],
+              "rgba_sha256": "a01dde1475f78d0da959adab069990198bdf88412c6cbe2c89584c3ef195e220",
+              "exact_bytes": true
+            },
+            {
+              "name": "tall",
+              "size": [
+                600,
+                800
+              ],
+              "integer_fit_rectangle": [
+                0,
+                212,
+                600,
+                375
+              ],
+              "rgba_sha256": "9f921ccf34c0fced3a6a98ef8df17f199fe791f3f54b951490153395c858c690",
+              "exact_bytes": true
+            }
+          ],
+          "event_coverage": {
+            "key_commands": 53,
+            "declared_keys": [
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+              "ArrowUp",
+              "Escape",
+              "KeyA",
+              "KeyD",
+              "KeyN",
+              "KeyP",
+              "KeyR",
+              "KeyS",
+              "KeyW",
+              "KeyX",
+              "Space"
+            ],
+            "pointer_commands": 22,
+            "clock_commands": [
+              36501,
+              36502,
+              36506,
+              36510
+            ]
+          },
+          "observations": 69
+        }
+      },
+      "outcomes": {
+        "original": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 0,
+            "original": 2
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "indexed_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "frame_rgba_sha256": "e2830a9b07f6970372a58448c3d20946ccfa297732627ede857a910db0b988c4",
+            "native_view_rgba_sha256": "e2830a9b07f6970372a58448c3d20946ccfa297732627ede857a910db0b988c4",
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 35834,
+            "food_cell": 434,
+            "game_status": 1,
+            "head": 358
+          }
+        },
+        "lfsr16": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 0
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "indexed_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "frame_rgba_sha256": "903a15b9cd0de596f7034b91f73e8b6ae6a35bf659d04320d02d89389f3613af",
+            "native_view_rgba_sha256": "903a15b9cd0de596f7034b91f73e8b6ae6a35bf659d04320d02d89389f3613af",
+            "snake_length": 4,
+            "score": 1,
+            "rng_seed": 2330,
+            "food_cell": 530,
+            "game_status": 0,
+            "head": 359
+          }
+        },
+        "hot_swap": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 1
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "8f82fcfc496b8b2e5f4137ab6c6318c13b948d3eefe6b8a3616609589e43793f",
+            "indexed_sha256": "2f8d3e87e2909d0a80590ecfd3486fce288278bef0c4e8e999b91939475b69ef",
+            "frame_rgba_sha256": "da44f7cb05a9a75646b1da1220755442ae9090cc76ee095840a67c60d26161e0",
+            "native_view_rgba_sha256": "da44f7cb05a9a75646b1da1220755442ae9090cc76ee095840a67c60d26161e0",
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 41134,
+            "food_cell": 334,
+            "game_status": 1,
+            "head": 358
+          },
+          "selector_preserved_all_words": true
+        }
+      },
+      "seed_probes": 10,
+      "guard_refusals": [
+        "immutable-input-patch",
+        "invalid-active-body",
+        "unchanged-state-and-revision",
+        "closed-owner-mutation"
+      ],
+      "native_process_studies": 21,
+      "artifacts_unchanged_during_study": true,
+      "linkage": {
+        "platform": "linux",
+        "application_sha256": "fc5e7689a5b39f68c74614b039810389b2c452106e9bfc67fa5bc62019928d47",
+        "imports": [
+          "libX11.so.6",
+          "libc.so.6",
+          "ld-linux-x86-64.so.2"
+        ],
+        "interpreter": "/lib64/ld-linux-x86-64.so.2",
+        "symbol_versions": [
+          {
+            "library": "ld-linux-x86-64.so.2",
+            "versions": [
+              "GLIBC_2.3"
+            ]
+          },
+          {
+            "library": "libc.so.6",
+            "versions": [
+              "GLIBC_2.14",
+              "GLIBC_2.15",
+              "GLIBC_2.4",
+              "GLIBC_2.17",
+              "GLIBC_2.34",
+              "GLIBC_2.2.5",
+              "GLIBC_2.3.4"
+            ]
+          }
+        ]
+      },
+      "scope": "Generated x86-64 processes versus original-RNG DOS witnesses and explicitly different LFSR references; declared logical events, native responder paths and owned native surfaces; physical hardware and Microsoft Windows OS require separate evidence"
+    },
+    "windows": {
+      "status": "passed-finite-qualification",
+      "format": "PE64/Win32-GDI",
+      "execution_environment": "Win64 APIs under Wine 9 in local offline x86-64 QEMU Linux; Microsoft Windows OS unqualified",
+      "profile": "windows-x64-memory-win32-1",
+      "native_manifest_sha256": "39749fb8de2d31bf3a0cdd8ab503521228567b7836fa4ac016c3247ef623bb13",
+      "application_sha256": "034c813ded583ee86d9abf6cb17c455e495a86a779b0eeb8abd576e97f1ea80d",
+      "probe_sha256": "5eb93a8914595e47945ec9c89f70a01e4af56c8746819850c849701a08efaba7",
+      "full_qualification_sha256": "552fe093b0cd10d529fdfde94d0c85769e533e072d6c6ddcdc8ef20b60cc9364",
+      "admission_manifest_snapshot_sha256": "39749fb8de2d31bf3a0cdd8ab503521228567b7836fa4ac016c3247ef623bb13",
+      "cases": {
+        "original": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 0,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "lfsr16": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 84,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "8be09708c7ccfb1a3e26e5ea448eda8890e3ec101df7b36cb63d2f4587895ffa"
+        }
+      },
+      "core_carried": {
+        "original": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [],
+          "observations": 69
+        },
+        "lfsr16": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [],
+          "observations": 69
+        }
+      },
+      "native_adapters": {
+        "original": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [
+            {
+              "name": "two-times",
+              "size": [
+                640,
+                400
+              ],
+              "integer_fit_rectangle": [
+                0,
+                0,
+                640,
+                400
+              ],
+              "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+              "exact_bytes": true
+            },
+            {
+              "name": "wide",
+              "size": [
+                800,
+                600
+              ],
+              "integer_fit_rectangle": [
+                0,
+                50,
+                800,
+                500
+              ],
+              "rgba_sha256": "a01dde1475f78d0da959adab069990198bdf88412c6cbe2c89584c3ef195e220",
+              "exact_bytes": true
+            },
+            {
+              "name": "tall",
+              "size": [
+                600,
+                800
+              ],
+              "integer_fit_rectangle": [
+                0,
+                212,
+                600,
+                375
+              ],
+              "rgba_sha256": "9f921ccf34c0fced3a6a98ef8df17f199fe791f3f54b951490153395c858c690",
+              "exact_bytes": true
+            }
+          ],
+          "event_coverage": {
+            "key_commands": 53,
+            "declared_keys": [
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+              "ArrowUp",
+              "Escape",
+              "KeyA",
+              "KeyD",
+              "KeyN",
+              "KeyP",
+              "KeyR",
+              "KeyS",
+              "KeyW",
+              "KeyX",
+              "Space"
+            ],
+            "pointer_commands": 22,
+            "clock_commands": [
+              36501,
+              36502,
+              36506,
+              36510
+            ]
+          },
+          "observations": 69
+        },
+        "lfsr16": {
+          "normalized_events": 79,
+          "declared_ram_interventions": 1,
+          "ordinary_answer_resets": 0,
+          "complete_state_words": 621,
+          "complete_indexed_pixels": 64000,
+          "closed": true,
+          "view_checks": [
+            {
+              "name": "two-times",
+              "size": [
+                640,
+                400
+              ],
+              "integer_fit_rectangle": [
+                0,
+                0,
+                640,
+                400
+              ],
+              "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+              "exact_bytes": true
+            },
+            {
+              "name": "wide",
+              "size": [
+                800,
+                600
+              ],
+              "integer_fit_rectangle": [
+                0,
+                50,
+                800,
+                500
+              ],
+              "rgba_sha256": "a01dde1475f78d0da959adab069990198bdf88412c6cbe2c89584c3ef195e220",
+              "exact_bytes": true
+            },
+            {
+              "name": "tall",
+              "size": [
+                600,
+                800
+              ],
+              "integer_fit_rectangle": [
+                0,
+                212,
+                600,
+                375
+              ],
+              "rgba_sha256": "9f921ccf34c0fced3a6a98ef8df17f199fe791f3f54b951490153395c858c690",
+              "exact_bytes": true
+            }
+          ],
+          "event_coverage": {
+            "key_commands": 53,
+            "declared_keys": [
+              "ArrowDown",
+              "ArrowLeft",
+              "ArrowRight",
+              "ArrowUp",
+              "Escape",
+              "KeyA",
+              "KeyD",
+              "KeyN",
+              "KeyP",
+              "KeyR",
+              "KeyS",
+              "KeyW",
+              "KeyX",
+              "Space"
+            ],
+            "pointer_commands": 22,
+            "clock_commands": [
+              36501,
+              36502,
+              36506,
+              36510
+            ]
+          },
+          "observations": 69
+        }
+      },
+      "outcomes": {
+        "original": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 0,
+            "original": 2
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "indexed_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "frame_rgba_sha256": "e2830a9b07f6970372a58448c3d20946ccfa297732627ede857a910db0b988c4",
+            "native_view_rgba_sha256": "e2830a9b07f6970372a58448c3d20946ccfa297732627ede857a910db0b988c4",
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 35834,
+            "food_cell": 434,
+            "game_status": 1,
+            "head": 358
+          }
+        },
+        "lfsr16": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 0
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "indexed_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "frame_rgba_sha256": "903a15b9cd0de596f7034b91f73e8b6ae6a35bf659d04320d02d89389f3613af",
+            "native_view_rgba_sha256": "903a15b9cd0de596f7034b91f73e8b6ae6a35bf659d04320d02d89389f3613af",
+            "snake_length": 4,
+            "score": 1,
+            "rng_seed": 2330,
+            "food_cell": 530,
+            "game_status": 0,
+            "head": 359
+          }
+        },
+        "hot_swap": {
+          "steps": 26,
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 1
+          },
+          "board_or_seed_interventions": 0,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "8f82fcfc496b8b2e5f4137ab6c6318c13b948d3eefe6b8a3616609589e43793f",
+            "indexed_sha256": "2f8d3e87e2909d0a80590ecfd3486fce288278bef0c4e8e999b91939475b69ef",
+            "frame_rgba_sha256": "da44f7cb05a9a75646b1da1220755442ae9090cc76ee095840a67c60d26161e0",
+            "native_view_rgba_sha256": "da44f7cb05a9a75646b1da1220755442ae9090cc76ee095840a67c60d26161e0",
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 41134,
+            "food_cell": 334,
+            "game_status": 1,
+            "head": 358
+          },
+          "selector_preserved_all_words": true
+        }
+      },
+      "seed_probes": 10,
+      "guard_refusals": [
+        "immutable-input-patch",
+        "invalid-active-body",
+        "unchanged-state-and-revision",
+        "closed-owner-mutation"
+      ],
+      "native_process_studies": 21,
+      "artifacts_unchanged_during_study": true,
+      "linkage": {
+        "platform": "windows",
+        "application_sha256": "034c813ded583ee86d9abf6cb17c455e495a86a779b0eeb8abd576e97f1ea80d",
+        "imports": [
+          "GDI32.dll",
+          "KERNEL32.dll",
+          "msvcrt.dll",
+          "USER32.dll"
+        ],
+        "subsystem": 2,
+        "timestamp": 0
+      },
+      "scope": "Generated x86-64 processes versus original-RNG DOS witnesses and explicitly different LFSR references; declared logical events, native responder paths and owned native surfaces; physical hardware and Microsoft Windows OS require separate evidence"
+    }
+  },
+  "generic_native_regressions": {
+    "linux_x11": {
+      "checks": 6,
+      "receipt_sha256": "5ff304c5736b55ec3d8fb12f66f450c325c321d583f9050b79ab136ef709b068"
+    },
+    "win64_gdi": {
+      "checks": 7,
+      "receipt_sha256": "3941a12336f5a06fad7fb380a62308dd6681bedda30daf3cb88eb497df12bfdb"
+    },
+    "refusal_observer_counterexample_sha256": "324140c4d60fa0519eee79faab1d26113b038c5ed75152269300cfaae0b8ef0d"
+  },
+  "test_suite": {
+    "passed": 2469,
+    "skipped": 145,
+    "deselected": 2,
+    "seconds": 77.78,
+    "exit_code": 0,
+    "production_source_files": 164,
+    "source_map_unchanged_sha256": "36a69bb9c230f51c51f4b8cf37a8ee7923b4c030705d895ff31f159a2575fa6a",
+    "log_sha256": "2d98e215baf479b5d26962b1758b717132360e60adc248ce933125eb200bd951",
+    "scope": "compatible macOS source suite; GNU/Linux ELF fixture builders excluded; native Win32/X11 checks recorded separately"
+  },
+  "resolved_frictions": [
+    "multi-button Win32 capture ownership",
+    "Windows minimize/restore and viewport size budgets",
+    "consistent fractional viewport drawing and pointer picking",
+    "refusal observations refresh actual live core instead of cached state",
+    "u32 snapshot carrier conversion for palette indices",
+    "immutable admission manifests retained and rechecked during qualification",
+    "exact compiler recipes, file-kind admission and refusal of redirected artifact writes"
+  ],
+  "privacy": {
+    "original_executable_unchanged": true,
+    "generated_game_project_font_raw_evidence_outside_git": true,
+    "network_disabled_in_test_guest": true,
+    "github_or_publication": false,
+    "system_installation_changed": false
+  },
+  "limits": [
+    "Finite original-kernel and recorded native observations, not all-input or whole-binary equivalence.",
+    "Original RNG matches DOS; LFSR is deliberately different and checked against its explicit variant reference.",
+    "Input studies use Win32 window messages or the X server queue; physical hardware and global hit-testing remain unqualified.",
+    "Wine/QEMU Win64 execution does not qualify Microsoft Windows OS execution.",
+    "One declared full-board RAM-prefix intervention per carried arm; ordinary events do not reset to answers.",
+    "X11 surface qualification uses 24-bit TrueColor; other display visuals and compositor behavior remain unqualified."
+  ]
+}
