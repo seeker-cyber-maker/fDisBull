@@ -56,7 +56,7 @@ test-and-package:
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
   before_script:
     - apt-get update
-    - apt-get install -y --no-install-recommends git gcc nodejs
+    - apt-get install -y --no-install-recommends git build-essential nodejs
   script:
     - python -m pip install --upgrade pip
     - python -m pip install ".[test,source]" build
