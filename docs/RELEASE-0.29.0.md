@@ -167,3 +167,10 @@ full native CI matrix and hosted runs remain separate gates.
 ## Post-publication agent download helpers (November 1, 2026)
 
 See [the v0.29.0 agent download support directory](../release-assets/v0.29.0/README.md) for the verified package downloader, the machine-readable source inventory, authentication guidance and direct downloads. These support files are committed on `main` after publication; the tagged release and its original ten package binaries remain unchanged. The GitLab Release Assets panel still lists the original package groups; these are separately linked repository downloads.
+
+## Post-publication source note (November 2, 2026)
+
+Unreleased source after this tag declares `z3-solver==5.3.2.0` as a core
+dependency and removes the redundant `proof` extra. The published `v0.29.0`
+wheel, tag and release assets are unchanged; the published 0.29.0 offline
+dependency bundle already contained Z3.
