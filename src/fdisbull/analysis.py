@@ -312,7 +312,7 @@ class AnalysisMixin:
                         self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,detail,v,self.context,k(a)))
                         continue
                     flow,target=ins['flow'],ins['target']
-                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
+                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
                     self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",('unresolved indirect control flow' if flow.startswith('indirect') else None,v,self.context,k(a)))
                     decoded+=inserted.rowcount
                     self._clear_memory_facts(v,self.context,a)
@@ -424,8 +424,9 @@ class AnalysisMixin:
                 raise ValueError('definition must fit in one mapped region')
             if representation in ('ascii','utf-16le'):
                 r.data[a-r.start:a-r.start+size].decode('ascii' if representation=='ascii' else 'utf-16le')
-            overlap=self.db.execute('SELECT address,size FROM definitions WHERE version=? AND context=? AND address!=?',(v,self.context,k(a))).fetchall()
-            if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16) for row in overlap):
+            overlap=self.db.execute('SELECT address,size,representation FROM definitions WHERE version=? AND context=? AND address!=?',(v,self.context,k(a))).fetchall()
+            if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16)
+                   and (representation!='code' or row[2]!='code') for row in overlap):
                 raise ValueError('definition overlaps another explicit definition')
             self.db.execute('INSERT INTO definitions VALUES (?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,author=excluded.author',(v,self.context,k(a),representation,size,author))
             invalidation=self._incremental_representation(v,a,size)

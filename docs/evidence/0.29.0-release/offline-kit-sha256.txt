@@ -1,0 +1,2 @@
+b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f  fdisbull-0.29.0-linux-x86_64-offline.tar.gz
+f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118  fdisbull-0.29.0-linux-x86_64-source-companion.tar

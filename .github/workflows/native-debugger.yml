@@ -2,20 +2,11 @@ name: Native debugger acceptance
 
 on:
   push:
-    paths:
-      - .github/workflows/native-debugger.yml
-      - experimental/dosbox-x/**
-      - experimental/wine/ci/**
-      - src/fdisbull/**
-      - tests/**
-      - pyproject.toml
-      - player/**
-      - scripts/build_offline_kit.py
-      - scripts/build_dosbox_source_companion.py
-      - scripts/verify_offline_kit.py
+    branches: [main]
+    tags: ['v*']
   pull_request:
     paths:
-      - .github/workflows/native-debugger.yml
+      - .github/workflows/**
       - experimental/dosbox-x/**
       - experimental/wine/ci/**
       - src/fdisbull/**
@@ -26,6 +17,11 @@ on:
       - scripts/build_dosbox_source_companion.py
       - scripts/verify_offline_kit.py
   workflow_dispatch:
+
+# Cancel only superseded PR work; never replace a main/tag/manual SHA's run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -42,16 +38,17 @@ jobs:
           - profile: stable-backend
             patch_directory: experimental/dosbox-x
             python_version: "3.12"
-            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py tests/test_spatial_native.py tests/test_spatial_map.py tests/test_spatial_modes.py tests/test_spatial_integration.py tests/test_agi_layout.py tests/test_agi_picture.py tests/test_fair_play.py tests/test_zmachine.py tests/test_interaction_il.py tests/test_il_recovery.py tests/test_language_cli.py tests/test_udc.py tests/test_udc_cli.py tests/test_udl_blocks.py tests/test_udc_native.py tests/test_pr17_examples.py
+            tests: tests/test_debugger.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py tests/test_spatial_native.py tests/test_spatial_map.py tests/test_spatial_modes.py tests/test_spatial_integration.py tests/test_agi_layout.py tests/test_agi_picture.py tests/test_fair_play.py tests/test_zmachine.py tests/test_interaction_il.py tests/test_il_recovery.py tests/test_language_cli.py tests/test_udc.py tests/test_udc_cli.py tests/test_udl_blocks.py tests/test_udc_native.py tests/test_instruction_overlap.py tests/test_code_backings.py tests/test_code_layout.py tests/test_code_overlap_proof.py tests/test_code_overlap_native.py tests/test_code_blocks.py tests/test_native_udc.py tests/test_native_udc_cli.py tests/test_pr17_examples.py
           - profile: layers-backend
             patch_directory: experimental/dosbox-x/layers
             python_version: "3.13.5"
-            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py tests/test_screenshot_grid.py tests/test_screenshot_hooks.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_scene_layers.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py tests/test_library_catalog.py tests/test_rich_types.py tests/test_dos_services.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py tests/test_player_checkpoints.py tests/test_spatial_native.py tests/test_spatial_map.py tests/test_spatial_modes.py tests/test_spatial_integration.py tests/test_agi_layout.py tests/test_agi_picture.py tests/test_fair_play.py tests/test_zmachine.py tests/test_interaction_il.py tests/test_il_recovery.py tests/test_language_cli.py tests/test_udc.py tests/test_udc_cli.py tests/test_udl_blocks.py tests/test_udc_native.py tests/test_pr17_examples.py
+            tests: tests/test_debugger.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py tests/test_screenshot_grid.py tests/test_screenshot_hooks.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_scene_layers.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py tests/test_library_catalog.py tests/test_rich_types.py tests/test_dos_services.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py tests/test_player_checkpoints.py tests/test_spatial_native.py tests/test_spatial_map.py tests/test_spatial_modes.py tests/test_spatial_integration.py tests/test_agi_layout.py tests/test_agi_picture.py tests/test_fair_play.py tests/test_zmachine.py tests/test_interaction_il.py tests/test_il_recovery.py tests/test_language_cli.py tests/test_udc.py tests/test_udc_cli.py tests/test_udl_blocks.py tests/test_udc_native.py tests/test_instruction_overlap.py tests/test_code_backings.py tests/test_code_layout.py tests/test_code_overlap_proof.py tests/test_code_overlap_native.py tests/test_code_blocks.py tests/test_native_udc.py tests/test_native_udc_cli.py tests/test_pr17_examples.py
     env:
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/dosbox-x/src/dosbox-x
       FDISBULL_DOSBOX_SOURCE: ${{ github.workspace }}/.native/dosbox-x
       FDISBULL_PATCH_DIRECTORY: ${{ matrix.patch_directory }}
       FDISBULL_NATIVE_TESTS: ${{ matrix.tests }}
+      FDISBULL_FRAME_EVIDENCE: ${{ github.workspace }}/native-evidence/frame-capture
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,7 +67,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential autoconf automake pkg-config nasm llvm \
+          sudo apt-get install -y build-essential autoconf automake pkg-config nasm llvm ffmpeg \
             libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
           python -m pip install ".[test]" build
       - name: Verify pinned baseline and apply the complete patch
@@ -120,16 +117,22 @@ jobs:
         run: |
           set -euo pipefail
           python -m pytest -q --require-native $FDISBULL_NATIVE_TESTS \
+            tests/test_frame_cache_contract.py tests/test_frame_capture_native.py tests/test_capture_audit.py \
             tests/test_output_artifacts.py tests/test_output_limits.py tests/test_output_cli.py \
             tests/test_agent_skill_gate.py tests/test_agent_discovery.py \
             tests/test_il_scenes.py tests/test_z_process_backend.py tests/test_dinopark_z_bridge.py \
             tests/test_dinopark_continuation.py tests/test_z_batch.py tests/test_action_continuations.py \
+            tests/test_z_reconciliation.py tests/test_z_checkpoint_reconciliation.py \
             tests/test_dinopark_recovery_mode.py tests/test_dinopark_recovery_lifecycle.py \
             tests/test_zork_intent_runtime.py tests/test_zork_uil.py tests/test_zork_uil_cli.py \
             tests/test_zork_intents_mapper.py tests/test_zork_intents_cli.py tests/test_game_intents.py \
             tests/test_uil_word16_runtime.py tests/test_gog_unpack.py tests/test_le_loader.py tests/test_le_workflow.py \
             tests/test_zmachine_processor.py tests/test_zmachine_analysis.py tests/test_zmachine_processor_acceptance.py \
             tests/test_watchpoint_completion.py \
+            tests/test_target_storage.py tests/test_external_native_udc.py \
+            tests/test_ne_loader.py tests/test_ne_workflow.py tests/test_type_catalog.py tests/test_type_catalog_cli.py \
+            tests/test_media_modules.py tests/test_source_reconstruction_skill.py \
+            tests/test_dinopark_terminal.py tests/test_dinopark_z_replies.py \
             --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
       - name: Build and verify the offline kit with genuine Z3
         if: matrix.profile == 'layers-backend'

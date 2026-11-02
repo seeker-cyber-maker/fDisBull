@@ -1,0 +1,14 @@
+{
+  "diff": {
+    "added": [],
+    "changed": false,
+    "extras_changed": false,
+    "removed": [],
+    "target_changed": false,
+    "version_changed": []
+  },
+  "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+  "previous": "/workspace/dist/fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz",
+  "previous_fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+  "status": "reuse"
+}

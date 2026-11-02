@@ -1,9 +1,12 @@
 # fDisBull
 
-This checkout contains the **0.26.0 release source**. Its recovery,
-Z-machine inspection and observation work is described in the
-[0.26 notes](docs/RELEASE-0.26.0.md). The published and shared installation
-remains [0.25.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0).
+The **0.29.0** release candidate carries the unpublished 0.28.0 candidate scope
+and adds read-only Civilization I world snapshots plus the Z world language and
+a full Zork I room/exit map. See the
+[release notes](docs/RELEASE-0.29.0.md) for scope, qualification and gates. The
+latest published release is
+[0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0);
+0.29.0 is not published yet.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -20,12 +23,24 @@ play an authored text projection without opening the debugger yourself.
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 
+**Do not upload game binaries or game files.** Keep originals, modified binaries,
+assets, story images, saves and byte-containing databases/archives private.
+New FDBs reference private external payloads by size and SHA-256. A divergent
+source requires explicit approval for its exact identity and base before it
+can become a separate analysis layer. Semantic UIL/game representations remain
+allowed pending sanitation; embedded original files are excluded. See
+[external targets and publication policy](docs/EXTERNAL_TARGETS.md) for scope,
+legacy migration and remaining export limits.
+
 ## Choose a starting point
 
 | I want to… | Start here |
 | --- | --- |
+| Check this copy's decoder, debugger, decompiler and UIL scope without running a target | [`capabilities`](docs/CAPABILITIES.md) |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Investigate a macOS ARM64 executable with source-bound Ghidra and LLDB probes | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -44,6 +59,12 @@ and their boundaries; they do not turn an inferred result into observed fact.
 The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
 the language, interface, scene and proof proposals together and shows which
 parts are working, partial or still proposed.
+
+This source also adds an unreleased, read-only `fdisbull capabilities` report.
+It distinguishes implemented code, detected dependencies and runtime validation;
+it does not infer release contents from the package version. The
+[macOS app replication case study](docs/MACOS_APP_REPLICATION.md) records the
+remaining investigation features and the authored UIL model's limits.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
@@ -84,6 +105,12 @@ evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
 See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
 [platform support](docs/PLATFORMS.md) for more options.
 
+Miles AIL music drivers can be recognized and inspected directly, including
+their exported functions and device descriptions. DOS disassembly also names
+documented DIGPAK/MIDPAK audio calls. See [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md)
+for commands and the limits of static recognition; execution and hardware
+support require separate original-runtime evidence.
+
 ## Disassemble and analyze
 
 Import x86 16/32/64 or ARM64 programs in supported DOS MZ, COM, PE, ELF,
@@ -103,6 +130,11 @@ supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
 logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
 shows how related DOS and Windows code can guide an investigation.
+
+For Mach-O ARM64, `code-backings` retains exact source-file offsets and bytes
+for selected native blocks. Optional Ghidra and one-stop LLDB probes are
+described in [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md). Native facts,
+diagnostic C and runtime observations do not constitute a UIL translation.
 
 ## Debug the original program
 
@@ -173,11 +205,17 @@ in the published 0.24.0 packages.
 
 The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
 buy supplies, prepare a pen, hire a guide, open the park and save its progress
-through a bounded text interface. The original-backed compiler reconstructs
+through a bounded text interface. [Named menu and quit actions](docs/DINOPARK_Z_TERMINAL_ACTIONS.md)
+let an agent review the original prompts, cancel a quit request, leave a park
+and return to DOS. The original-backed compiler reconstructs
 your own qualified game files before play, and the original engine performs
 the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
+
+A separate [static-analysis study](docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md)
+records whole-binary discovery limits and proposed tool improvements. Its code
+and resource candidates remain unconfirmed; it does not extend playable coverage.
 
 [Recoverable Z batches](docs/Z_BATCH_RECOVERY.md) retain per-step effects,
 resume explicitly declared notice continuations and rewind only after a
@@ -187,6 +225,12 @@ guest and unchanged mounted files; native park saves provide durable resumption.
 An acknowledgement can advance a partial action, but current providers do not
 certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
+If a result read fails, read-only reconciliation can verify a saved reply in the
+same guest before the batch continues.
+The DinoPark bridge also [retains oversized replies](docs/Z_REPLY_RECOVERY.md)
+before transmission, with read-only retrieval and a delivery hold that prevents
+further actions until the caller acknowledges the retained result against the
+same native session.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available

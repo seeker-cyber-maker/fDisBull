@@ -22,13 +22,15 @@ NAVIGATION = {'office': 'office', 'bank': 'bank', 'street': 'street', 'dinomart'
 TITLES = {'office': 'Park office', 'bank': 'Bank', 'street': 'Park street', 'dinomart': 'DinoMart',
           'general_store': 'General Store', 'employment': 'Employment office',
           'dino_diner': 'Dino Diner', 'park': 'Park'}
+PURCHASE_COMMITS = ('food_purchase_committed', 'vegasaurus_purchase_confirmed',
+                    'coelophysis_purchase_confirmed')
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
                    'pending_park_entry', 'pending_food_notice',
                    'pending_food_return',
                    'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action',
-                   'last_continuation')
+                   'last_continuation', 'dinosaur_order')
 
 
 def sha(path):
@@ -103,6 +105,7 @@ class ZService:
     def __init__(self, work, reader, writer, *, slot='zpark', oracle=False):
         self.work, self.reader, self.writer, self.slot = work, reader, writer, slot
         self.text = None
+        self.terminal = None
         self.epoch = secrets.token_hex(32)
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
@@ -110,6 +113,8 @@ class ZService:
         self.failures = []
         self.revision = 0
         self.pending = None
+        self._action_budget_scope = None
+        self.held_action = None
         self.snapshots = {}
         self.latest_native_save = None
         self.processes = []
@@ -117,19 +122,27 @@ class ZService:
         self.restarted = False
         self.oracle_enabled, self.oracle_count = oracle, 0
         self.stop_reason = None
+        from .z_replies import ZReplyJournal
+        self.replies = ZReplyJournal(work)
 
     def receipt(self, status, *, complete=False):
         from fdisbull.dinopark_scenes import atomic_json
         processes=[{'pid':p.pid,'returncode':p.poll()} for p in self.processes]
+        delivery_pending = self.reply_pending
         atomic_json(self.work/'z-session.json',{
-            'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
+            'status':status, 'complete':complete and not delivery_pending, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
             'latest_native_save':self.latest_native_save,
             'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
             'recovery_required':self.recovery_required, 'action_failures':self.failures,
+            'held_command':self.held_action['pending']['command'] if self.held_action else None,
+            'recovery_id':self.held_action['id'] if self.held_action else None,
+            'reconciliation_available':self._reconcilable_navigation() or self._reconcilable_purchase(),
+            'purchase_phase':(getattr(self.text,'dinosaur_order',None) or {}).get('phase'),
+            'reply_delivery_pending':delivery_pending,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
-                ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
-                else 'unknown' if self.pending else 'none-pending'),
+                PURCHASE_COMMITS for e in self.pending['events'])
+                else 'unknown' if self.pending else self.held_action['effects'] if self.held_action else 'none-pending'),
             'processes':processes, 'cleanup_complete':all(p['returncode'] is not None for p in processes),
             'scope':'original-backed UDC with existing native scene actions'})
 
@@ -139,17 +152,24 @@ class ZService:
             self.latest_native_save = item['command'].removeprefix('save park ')
         if self.pending is not None:
             self.pending['events'].append(deepcopy(item))
-        if item.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed'):
+        if item.get('phase') == 'coelophysis_purchase_confirmed' and self._reconcilable_purchase():
+            self.held_action['effects'] = 'applied-confirmed'
+            self.failures[self.held_action['failure_index']]['effects'] = 'applied-confirmed'
+        if item.get('phase') in (*PURCHASE_COMMITS, 'coelophysis_input_sent'):
             self.receipt('acting')
-            # The handler has already captured its native commit proof. Do
-            # not insert optional native RPCs while it is paused at an
+            # Retain delivery or commit evidence without optional native RPCs at an
             # instruction boundary; witness readback runs at command end.
 
     def ready(self, text):
         self.text = text
+        text.bounded_purchases = True
+        if not hasattr(text, 'dinosaur_order'):
+            text.dinosaur_order = None
+        self.terminal = None
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
         self.recovery_required = False
+        self.held_action = None
         if (self.pending and self.pending['command'].startswith('load park ') and any(
                 e.get('phase') == 'result' and e.get('command') == 'load park'
                 for e in self.pending['events'])):
@@ -169,13 +189,67 @@ class ZService:
         if self.pending is not None and not message.startswith('Travel:'):
             self.pending['messages'].append(message)
 
+    @property
+    def reply_pending(self):
+        return self.replies.blocked
+
+    def reply_witness(self):
+        # session.status observes the existing stopped native session. No scene
+        # readback, run, input, checkpoint restore or new guest is permitted here.
+        try:
+            debug = self.text.debug
+            native = debug.call('session.status')
+            stop = native.get('last_stop', native.get('stop_reason'))
+            if (not isinstance(stop, dict) or not isinstance(stop.get('kind'), str)
+                    or not stop['kind'] or len(stop['kind']) > 64
+                    or not isinstance(native.get('session_id'), str)
+                    or native.get('state') not in ('stopped', 'exited')
+                    or type(native.get('state_revision')) is not int or native['state_revision'] < 0):
+                return None
+            witness = {'epoch': self.epoch, 'session_token': self.session_token,
+                       'run': debug.run_id,
+                       'native': {**{k: native.get(k) for k in
+                                      ('session_id', 'state', 'state_revision')},
+                                  'stop_reason': stop}}
+            from .z_replies import encoded
+            return witness if len(encoded(witness)) <= 8192 else None
+        except Exception:
+            return None
+
+    def reply_command(self, request):
+        op = request.get('op')
+        if op == 'reply_status' and set(request) == {'op'}:
+            return self.replies.status()
+        if op == 'read_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'offset', 'length'}:
+            return self.replies.read(request['reply_id'], request.get('offset', 0), request.get('length', 8192))
+        if op == 'select_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'pointer'}:
+            return self.replies.select(request['reply_id'], request.get('pointer', ''))
+        if op == 'accept_reply' and set(request) == {'op', 'reply_id', 'sha256'}:
+            return self.replies.accept(request['reply_id'], request['sha256'], self.reply_witness())
+        raise ValueError('Invalid reply request')
+
     def send(self, result):
-        data = json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n'
-        if len(data.encode()) > LIMIT:
-            data = '{"complete":false,"status":"incomplete","message":"Response exceeds the Z budget; inspect private evidence."}\n'
-        with (self.work/'z-protocol.jsonl').open('a',encoding='utf-8') as journal:
-            journal.write(data)
-        self.writer.write(data); self.writer.flush()
+        from .z_replies import encoded
+        data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            try:
+                status = result.get('status')
+                execution = {'returned': True,
+                             'complete': result.get('complete') if type(result.get('complete')) is bool else None,
+                             'status': status if isinstance(status, str) and len(status) <= 48 else None}
+                result = self.replies.retain(data[:-1], self.reply_witness(), execution)
+            except Exception:
+                self.replies.unavailable()
+                result = {
+                    'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True,
+                    'retry_safe': False, 'message': 'Reply retention failed; do not replay the action.'}
+            data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            raise ValueError('Z reply exceeds delivery budget')
+        text = data.decode('utf-8')
+        with (self.work/'z-protocol.jsonl').open('a', encoding='utf-8') as journal:
+            journal.write(text)
+        self.writer.write(text); self.writer.flush()
 
     def public_message(self, text):
         # Legacy saved-park responses include local evidence paths. Keep them private.
@@ -218,6 +292,14 @@ class ZService:
         return None
 
     def objects(self):
+        if self.terminal is not None and self.terminal.phase != 'live':
+            return self.terminal.objects()
+        if self._reconcilable_purchase():
+            if self.text.dinosaur_order.get('proof') and self.text.dinosaur_order['phase'] == 'committed':
+                return [], {}
+            return ([{'id':'dinosaur-order','label':'dinosaur order','aliases':['order','coelophysis order'],
+                      'description':'Continue the remaining phases of the existing order; delivered inputs are not repeated.',
+                      'verbs':['continue']}], {('continue','dinosaur-order'):'continue dinosaur order'})
         view = self.text.current
         objects = []
         bindings = {}
@@ -255,6 +337,8 @@ class ZService:
         if view in ('street','park'):
             add('time','time',[], 'Advance one bounded original-game interval.', {'advance':'advance time'})
             add('notice','notice',[], 'Acknowledge a currently recognized notice.', {'acknowledge':'acknowledge notice'})
+        if view == 'office':
+            add('terminal-menu', 'game menu', ['menu'], 'Open the original menu to resume or leave this park.', {'open':'terminal:open'})
         add('saves','saves',[], 'List named native saves in this private session library.', {'list':'list saves'})
         for name in self.native_save_names():
             add('save-'+name, 'saved park '+name, [name],
@@ -287,7 +371,34 @@ class ZService:
     def observe(self, *, recovering=False):
         try:
             if (self.checkpoint_failed or self.recovery_required) and not recovering:
+                if self._reconcilable_purchase():
+                    from .dinopark_purchase import PurchaseBudget, recovery_view
+                    with PurchaseBudget().bind(self.text.debug):
+                        state = recovery_view(self.text)
+                        registers = self.text.debug.registers()
+                    order = self.text.dinosaur_order
+                    context = 'dinomart.order-' + order['phase']
+                    token = hashlib.sha256(json.dumps([self.epoch,self.session_token,self.revision,
+                        order['id'],context,state,registers.get('state_revision')],sort_keys=True).encode()).hexdigest()
+                    objects, _ = self.objects()
+                    return {'complete':True,'session_token':self.session_token,
+                            'context':{'id':context,'token':token,'title':'DinoMart order',
+                                       'description':('The purchase effect is verified. Use reconcile to finish the order.'
+                                                      if order.get('proof') else
+                                                      'Your Coelophysis order is in progress. Continue dinosaur order to proceed.')},
+                            'objects':objects,'inventory':[],'coverage':{'partial':True},
+                            'recovery_required':True,'recovery_id':self.held_action['id'],
+                            'reconciliation_available':True}
                 raise ValueError('Checkpoint recovery is unqualified')
+            if self.terminal is not None and self.terminal.phase != 'live':
+                (title, description), revision = self.terminal.view()
+                context = 'terminal.' + self.terminal.phase
+                token = hashlib.sha256(json.dumps([self.epoch, self.session_token, self.revision,
+                    context, revision, getattr(self.text.debug, '_runtime_epoch', None)]).encode()).hexdigest()
+                objects, _ = self.objects()
+                return {'complete':True,'session_token':self.session_token,
+                        'context':{'id':context,'token':token,'title':title,'description':description},
+                        'objects':objects,'inventory':[],'coverage':{'partial':True}}
             modal = False
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
             if parking:
@@ -335,12 +446,138 @@ class ZService:
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
             return {'complete':False, 'session_token':self.session_token,
-                    'recovery_required':self.recovery_required or self.checkpoint_failed}
+                    'recovery_required':self.recovery_required or self.checkpoint_failed,
+                    'recovery_id':self.held_action['id'] if self.held_action else None,
+                    'reconciliation_available':self._reconcilable_navigation() or self._reconcilable_purchase()}
+
+    def _reconcilable_purchase(self):
+        held = self.held_action
+        if not held or self.checkpoint_failed or not self.recovery_required:
+            return False
+        pending = held['pending']
+        action = pending.get('action', {})
+        order = held.get('dinosaur_order')
+        current = getattr(self.text, 'dinosaur_order', None)
+        if not isinstance(order, dict) or not isinstance(current, dict):
+            return False
+        ticket = order.get('last_input') or {}
+        current_ticket = current.get('last_input') or {}
+        return (held['session_token'] == pending.get('session_token') == self.session_token and
+                pending.get('command') == 'buy coelophysis' and
+                {k:action.get(k) for k in ('verb','target','item')} ==
+                    {'verb':'buy','target':'coelophysis','item':None} and
+                held['source'] == self.text.current == 'dinomart' and
+                order.get('id') == current.get('id') and
+                order.get('run') == current.get('run') == self.text.debug.run_id and
+                order.get('source_revision') == current.get('source_revision') and
+                ticket.get('accepted') is True and ticket.get('delivery') == 'queued' and
+                current_ticket.get('accepted') is True and current_ticket.get('delivery') == 'queued')
+
+    def _reconcilable_navigation(self):
+        held = self.held_action
+        if not held or self.checkpoint_failed or not self.recovery_required:
+            return False
+        pending, failure = held['pending'], held['scene_failure']
+        action = pending.get('action', {})
+        ticket = failure.get('input', {})
+        return (held['session_token'] == self.session_token and
+                pending.get('session_token') == self.session_token and
+                pending.get('command') == 'go dinomart' and
+                {k:action.get(k) for k in ('verb','target','item')} ==
+                    {'verb':'go','target':'route-dinomart','item':None} and
+                held['source'] == self.text.current == 'street' and
+                failure.get('scene_revision') == getattr(self.text,'street',None) and
+                failure.get('action_name') == 'street.mart' and
+                failure.get('before_observation') is not None and
+                ticket.get('accepted') is True and ticket.get('delivery') == 'queued' and
+                (not getattr(self.text.debug,'run_id',None) or
+                 failure.get('run') == self.text.debug.run_id))
+
+    def reconcile(self, recovery_id=None):
+        """Qualify the held original destination without execution or new input."""
+        result = {'complete':False, 'status':'incomplete',
+                  'effects':self.held_action['effects'] if self.held_action else 'unknown',
+                  'read_only':True, 'recovery_required':self.recovery_required or self.checkpoint_failed,
+                  'recovery_id':self.held_action['id'] if self.held_action else None,
+                  'message':'Original outcome remains unresolved; no input sent.'}
+        if not self.recovery_required and not self.checkpoint_failed:
+            return {**result,'complete':True,'status':'not-needed','effects':'none-confirmed',
+                    'message':'No held original action requires reconciliation.'}
+        purchase = self._reconcilable_purchase()
+        if not purchase and not self._reconcilable_navigation():
+            return result
+        held = self.held_action
+        if recovery_id is not None and recovery_id != held['id']:
+            return result
+        previous = self.text.current, self.text.mart, self.revision
+        previous_order = deepcopy(getattr(self.text,'dinosaur_order',None))
+        previous_bought = getattr(self.text,'dinosaur_bought',False)
+        try:
+            from .dinopark_purchase import PurchaseBudget, qualify_purchase
+            with PurchaseBudget().bind(self.text.debug):
+                if self.text.debug.call('session.status').get('state') != 'stopped':
+                    return result
+                if purchase:
+                    qualified = qualify_purchase(self.text)
+                else:
+                    qualified = load_scenes().qualify_dinomart(self.text)
+                self.revision += 1
+                observed = self.observe(recovering=True)
+                witness = self.witness(observed)
+                if witness is None or observed['context']['id'] != 'dinomart':
+                    raise ValueError('Original destination is not qualified')
+        except Exception:
+            self.text.current, self.text.mart, self.revision = previous
+            if purchase:
+                proof = getattr(self.text,'dinosaur_order',{}).get('proof')
+                self.text.dinosaur_order = previous_order
+                if proof:
+                    self.text.dinosaur_order['proof'] = proof
+                self.text.dinosaur_bought = previous_bought
+            return {**result, 'effects':held['effects']}
+        self.recovery_required = False
+        self.held_action = None
+        action = {k:held['pending']['action'][k] for k in ('verb','target','item')}
+        self.failures[held['failure_index']]['reconciliation'] = {
+            'read_only':True,'witness':witness,'original_diagnostic_preserved':True}
+        self.event({'phase':'purchase_reconciled' if purchase else 'navigation_reconciled',
+                    'command':held['pending']['command'],
+                    'read_only':True,'guest_execution':'not_requested','input':'not_sent',
+                    'frame':qualified['frame'],'witness':witness})
+        self.receipt('reconciled')
+        return {**result,'complete':True,'status':'success','effects':'applied-confirmed',
+                'recovery_required':False,'action':action,'witness':witness,
+                'message':('Original Coelophysis purchase verified: one dinosaur placed, $1,250 charged. '
+                           'Cash: $3,250. No input was replayed.' if purchase else
+                           'Original DinoMart destination verified; navigation was not replayed.')}
+
+    def witness(self, observation):
+        context = observation.get('context', {})
+        if (observation.get('complete') is True and isinstance(context, dict)
+                and all(isinstance(context.get(k), str) and 1 <= len(context[k]) <= 128
+                        for k in ('id', 'token'))):
+            return {'session_token': self.session_token,
+                    'context_id': context['id'], 'context_token': context['token']}
+        return None
 
     def finish(self):
         self.oracle('command-complete')
         pending, self.pending = self.pending, None
         self.revision += 1
+        if pending['command'] == 'continue dinosaur order' and self.held_action is not None:
+            self.held_action['dinosaur_order'] = deepcopy(self.text.dinosaur_order)
+            processed = (self.text.dinosaur_order['phase'] == 'committed' and
+                         self.text.dinosaur_order.get('proof') and any(
+                             e.get('phase') == 'coelophysis_continuation' and
+                             e.get('order_id') == self.text.dinosaur_order['id'] for e in pending['events']))
+            self.receipt('recovery-required')
+            self.send({'status':'accepted' if processed else 'incomplete','complete':bool(processed),
+                       'effects':self.held_action['effects'],
+                       'recovery_required':True,'recovery_id':self.held_action['id'],
+                       'message':('The remaining order phases have been processed. Use reconcile to verify the original purchase.'
+                                  if processed else 'The continuation was not verified; the original order remains held.')})
+            self._end_action_budget()
+            return
         events = pending['events']
         messages = '\n'.join(pending['messages']).strip()
         refusal = any(e.get('phase') == 'refused' for e in events)
@@ -351,7 +588,7 @@ class ZService:
                    for e in events)
         verified = any(e.get('phase') in ('result','park_status','notice') and
                        e.get('command') == pending['command'] for e in events)
-        verified = verified or any(e.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in events)
+        verified = verified or any(e.get('phase') in PURCHASE_COMMITS for e in events)
         verified = verified or pending['command'] == 'list saves'
         if pending['command'].startswith('go '):
             verified = self.text.current == NAVIGATION.get(pending['command'][3:])
@@ -402,9 +639,32 @@ class ZService:
         previous_session = pending.get('session_token', self.session_token)
         if previous_session != self.session_token and status == 'success' and pending['command'].startswith('load park '):
             extra['session_transition'] = {'from': previous_session, 'to': self.session_token, 'reason': 'native-load'}
+        if status != 'incomplete':
+            observed = self.observe()
+            witness = self.witness(observed)
+            if witness is not None:
+                extra['witness'] = witness
+            elif pending['command'] == 'buy coelophysis' and not (refusal or text_refusal):
+                self.pending = pending
+                if self.action_error(RuntimeError('Coelophysis following observation incomplete')):
+                    return
+                raise RuntimeError('Original purchase follow-up is unavailable')
         self.send({'status':status, 'complete':status != 'incomplete',
                    'message':self.public_message(messages or 'No verified completion was recorded.'),
                    'effects':effects, **extra})
+        self._end_action_budget()
+
+    def _start_action_budget(self):
+        from .dinopark_purchase import PurchaseBudget
+        self._end_action_budget()
+        scope = PurchaseBudget().bind(self.text.debug)
+        scope.__enter__()
+        self._action_budget_scope = scope
+
+    def _end_action_budget(self):
+        scope, self._action_budget_scope = self._action_budget_scope, None
+        if scope is not None:
+            scope.__exit__(None, None, None)
 
     def checkpoint(self, request):
         op = request['op']; name = request.get('slot' if op == 'save' else 'checkpoint', 'live')
@@ -412,6 +672,8 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
+                if self.terminal is not None and self.terminal.phase != 'live':
+                    raise ValueError('Live checkpoints require a qualified park scene')
                 if self.checkpoint_failed or self.recovery_required:
                     raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
@@ -437,6 +699,8 @@ class ZService:
                 self.checkpoint_failed = True
                 self.revision += 1
                 self.text.debug.load_state(snapshot['artifact'])
+                if self.terminal is not None:
+                    self.terminal.reset_after_restore()
                 for key,value in snapshot['text'].items(): setattr(self.text,key,deepcopy(value))
                 self.latest_native_save = snapshot['latest_native_save']
                 restored_fields = load_scenes().live_saved_fields(self.text.debug)
@@ -456,6 +720,7 @@ class ZService:
                     raise ValueError('Restored scene did not requalify')
                 self.checkpoint_failed = False
                 self.recovery_required = False
+                self.held_action = None
                 for failure in self.failures:
                     if failure.get('restored_by') is None:
                         failure['restored_by'] = name
@@ -465,15 +730,20 @@ class ZService:
                             'context':observation['context']['id'], 'following_input':'not_sent'})
                 result = 'restored'
             self.receipt('checkpoint-' + result)
-            return {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
-                    'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+            reply = {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
+                     'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+            if result in ('saved', 'restored'):
+                witness = self.witness(self.observe() if result == 'saved' else observation)
+                if witness is not None:
+                    reply['witness'] = witness
+            return reply
         except Exception as error:
             self.event({'phase':'checkpoint_incomplete', 'operation':op, 'error_type':type(error).__name__, 'error':str(error)})
             self.receipt('checkpoint-incomplete')
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):
-        if self.pending is not None:
+        if self.pending is not None and not self.reply_pending:
             self.finish()
         while True:
             line = self.reader.readline(65537)
@@ -484,43 +754,116 @@ class ZService:
                 request = json.loads(line)
                 if not isinstance(request,dict): raise ValueError('Expected request')
                 op = request.get('op')
+                if op in ('reply_status', 'read_reply', 'select_reply', 'accept_reply'):
+                    try:
+                        self.send(self.reply_command(request))
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'unresolved', 'delivery_pending': self.reply_pending,
+                                   'retry_safe': False, 'message': 'Reply unavailable or invalid; no input sent.'})
+                    continue
+                if self.reply_pending:
+                    try: self.send(self.replies.status())
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True, 'retry_safe': False})
+                    continue
                 if op == 'observe' and set(request) == {'op'}:
                     self.send(self.observe()); continue
+                if op == 'reconcile' and set(request) <= {'op','recovery_id'}:
+                    ident = request.get('recovery_id')
+                    if ident is not None and (not isinstance(ident,str) or not 1 <= len(ident) <= 128):
+                        raise ValueError('Invalid recovery identity')
+                    self.send(self.reconcile(ident)); continue
                 if op in ('save','load') and set(request) <= {'op','slot' if op == 'save' else 'checkpoint'}:
                     self.send(self.checkpoint(request)); continue
                 if op != 'act' or set(request) != {'op','action'}:
                     raise ValueError('Unsupported request')
-                if self.recovery_required or self.checkpoint_failed:
+                candidate = request.get('action')
+                continuing = (isinstance(candidate,dict) and candidate.get('verb') == 'continue' and
+                              candidate.get('target') == 'dinosaur-order' and self._reconcilable_purchase())
+                if (self.recovery_required or self.checkpoint_failed) and not continuing:
                     self.send({'complete':True,'status':'rejected','effects':'none-confirmed',
                                'recovery_required':True,
-                               'message':'Checkpoint recovery is required; no action input was sent.'});continue
+                               'message':'Reconciliation or checkpoint recovery is required; no action input was sent.'});continue
                 action = request['action']
                 if (not isinstance(action,dict) or set(action) != {'verb','target','item','context_token'}
                         or not all(isinstance(action[k],str) for k in ('verb','target','context_token')) or action['item'] is not None):
                     raise ValueError('Invalid action')
+                bounded_purchase = action['verb'] == 'buy' and action['target'] == 'coelophysis' or continuing
+                if bounded_purchase:
+                    self._start_action_budget()
                 observation = self.observe()
                 if not observation['complete']:
-                    self.send({'complete':False,'status':'incomplete','message':'Original scene observation incomplete.'});continue
+                    self._end_action_budget()
+                    self.send({'complete':bounded_purchase,
+                               'status':'rejected' if bounded_purchase else 'incomplete',
+                               'effects':'none-confirmed' if bounded_purchase else 'unknown',
+                               'message':'Original scene observation incomplete; no input sent.'});continue
                 if action['context_token'] != observation['context']['token']:
+                    self._end_action_budget()
                     self.send({'complete':True,'status':'rejected','message':'Context changed; no input sent.'});continue
                 visible = {o['id'] for o in observation['objects'] + observation['inventory']}
                 _,bindings = self.objects()
                 command = bindings.get((action['verb'],action['target'])) if action['target'] in visible else None
                 if command is None:
+                    self._end_action_budget()
                     self.send({'complete':True,'status':'rejected','message':'Action unavailable; no input sent.'});continue
-                self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
+                self.pending = {'command':command,'messages':[],'events':[],
+                                'session_token':self.session_token,'action':deepcopy(action)}
                 self.restarted = False
                 self.receipt('acting')
+                if command.startswith('terminal:'):
+                    self.terminal_command(command.removeprefix('terminal:'))
+                    continue
                 return command
             except (ValueError,TypeError,KeyError):
+                self._end_action_budget()
                 self.send({'complete':False,'status':'incomplete','message':'Invalid Z request; no input sent.'})
+
+    def terminal_command(self, action):
+        from .dinopark_terminal import TerminalScenes
+        try:
+            if self.terminal is None:
+                self.terminal = TerminalScenes(self.text)
+            result = self.terminal.perform(action)
+            self.revision += 1
+            if result.get('complete'):
+                observed = self.observe()
+                witness = self.witness(observed)
+                if witness is None:
+                    raise RuntimeError('Terminal result observation incomplete; outcome unknown')
+                result['witness'] = witness
+            if self.terminal.phase in ('live','menu','confirm','save'):
+                self.oracle('terminal-complete')
+            self.pending = None
+            self.receipt('terminal-' + self.terminal.phase)
+            self.send(result)
+        except Exception as error:
+            # Delivery failures after pending was cleared must never rerun the
+            # input or be turned into a second producer result.
+            if self.pending is None:
+                raise
+            if not self.action_error(error):
+                command = self.pending['command']
+                self.pending = None
+                self.recovery_required = True
+                self.failures.append({'command':command,'effects':'unknown',
+                                      'diagnostic':'terminal action failure','restored_by':None})
+                self.receipt('recovery-required')
+                self.send({'complete':False,'status':'incomplete','effects':'unknown',
+                           'recovery_required':True,'message':'Terminal outcome unknown; no input will be replayed.'})
 
     def action_error(self, error):
         """Keep only a reachable, paused native guest for explicit recovery."""
+        self._end_action_budget()
         if self.pending is None:
             return False
         try:
-            if self.text.debug.call('session.status').get('state') != 'stopped':
+            if self.pending['command'] in ('buy coelophysis', 'continue dinosaur order'):
+                from .dinopark_purchase import recovery_budget
+                with recovery_budget(self.text):
+                    if self.text.debug.call('session.status').get('state') != 'stopped':
+                        return False
+            elif self.text.debug.call('session.status').get('state') != 'stopped':
                 return False
         except Exception:
             return False
@@ -533,25 +876,41 @@ class ZService:
         if self.pending is None:
             self.send({'complete':False,'status':'stopped','message':'Original-backed service stopped; inspect private evidence.'})
             return
-        confirmed = [e for e in self.pending['events'] if e.get('phase') in
-                     ('food_purchase_committed','vegasaurus_purchase_confirmed')]
-        message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if confirmed else
+        root = (self.held_action if self.pending['command'] == 'continue dinosaur order' else None)
+        confirmed = [e for e in self.pending['events'] if e.get('phase') in PURCHASE_COMMITS]
+        effects = 'applied-confirmed' if confirmed else root['effects'] if root else 'unknown'
+        message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if effects == 'applied-confirmed' else
                    'The original action did not reach a verified outcome. Do not retry blindly.')
         if recoverable:
-            message += ' Restore an existing live checkpoint to recover; further action input is blocked.'
-        effects = 'applied-confirmed' if confirmed else 'unknown'
+            message += ' The provider is retained for reconciliation or checkpoint recovery; further action input is blocked.'
+            if self.pending['command'] in ('buy coelophysis','continue dinosaur order'):
+                message += ' Use look for the guarded order continuation, or reconcile to check completion; do not repeat the purchase.'
         path = self.work/('z-failure.json' if not self.failures else f'z-failure-{len(self.failures)+1:03d}.json')
         load_scenes().atomic_json(path, {'error_type':type(error).__name__, 'error':str(error),
             'pending':self.pending,'confirmed_effects':confirmed,'recovery_required':recoverable})
+        index = len(self.failures)
         self.failures.append({'command':self.pending['command'],'effects':effects,
                               'diagnostic':path.name,'restored_by':None})
         if recoverable:
+            scene_failure = getattr(error,'result',{})
+            if root is not None:
+                root.update(effects=effects, dinosaur_order=deepcopy(self.text.dinosaur_order),
+                            last_failure_index=index)
+                self.held_action = root
+            else:
+                self.held_action = {'id':secrets.token_hex(16),'pending':deepcopy(self.pending),'effects':effects,
+                    'session_token':self.session_token,'source':getattr(self.text,'current',None),
+                    'scene_failure':deepcopy(scene_failure) if isinstance(scene_failure,dict) else {},
+                    'dinosaur_order':deepcopy(getattr(self.text,'dinosaur_order',None)),
+                    'failure_index':index}
             self.pending = None  # Exactly one reply; the next read must not finish it again.
             self.receipt('recovery-required')
         self.send({'complete':False,'status':'incomplete','message':message,
-                   'effects':effects,'followup':'failed','recovery_required':recoverable})
+                   'effects':effects,'followup':'failed','recovery_required':recoverable,
+                   'recovery_id':self.held_action['id'] if recoverable else None})
 
     def stop(self, signum, _frame=None):
+        self._end_action_budget()
         self.stop_reason=signal.Signals(signum).name
         # Prevent a second termination signal from interrupting receipt finalization.
         signal.signal(signal.SIGTERM,signal.SIG_IGN)
@@ -609,7 +968,7 @@ def main(argv=None):
                         on_ready=service.ready,on_event=service.event,on_spawn=service.spawned,
                         on_action_error=service.action_error,
                         recovery_required=lambda:service.recovery_required or service.checkpoint_failed)
-        status='recovery-required' if service.recovery_required or service.checkpoint_failed else 'completed'
+        status='recovery-required' if service.recovery_required or service.checkpoint_failed or service.reply_pending else 'completed'
         return 0 if status == 'completed' else 1
     except scenes.SceneInterrupted:
         status='interrupted'

@@ -7,10 +7,14 @@ import zipfile
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scripts/check_agent_skill.py',
+REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+                       'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+                       'src/fdisbull/capabilities.py','tests/test_capabilities.py',
+                       'scripts/check_agent_skill.py',
                        'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py','player/fdisbull_player/word16.py',
                        'player/fdisbull_player/game_intents.py','player/fdisbull_player/intent_runtime.py','player/fdisbull_player/batch.py',
+                       'src/fdisbull/media.py','src/fdisbull/skills/fdisbull-investigate/references/media-modules.md','tests/test_media_modules.py',
                        'src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py','tests/fixtures_z_scenes.py',
                        'tests/wine_gui_fixture.c','tests/dosbox_zip_empty_write.cpp','src/fdisbull/wine_guest/agent.c',
                        'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py','src/fdisbull/wine_guest/selftest.c',
@@ -21,6 +25,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
                        'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
+                       'src/fdisbull/ghidra_arm64.py','src/fdisbull/macos_lldb.py',
+                       'src/fdisbull/_macos_lldb_driver.py','src/fdisbull/data/FdisbullGhidraArm64.txt',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
@@ -35,10 +41,13 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
 GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
     'SKILL.md', 'references/evidence-and-provenance.md', 'references/guide-structure.md',
     'references/technical-mechanics.md', 'references/source-examples.md',
+    'references/routes-and-discoveries.md', 'references/formats-and-engine-reuse.md',
+    'references/engine-source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
-REQUIRED_SOURCE_FILES += ('examples/civ/civ_exepack.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_original_compare.py', 'examples/civ/civ_city_scene.json', 'examples/udc/civ_production.py')
+REQUIRED_SOURCE_FILES += ('examples/civ/civ_exepack.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_original_compare.py', 'examples/civ/civ_city_scene.json', 'examples/udc/civ_production.py', 'examples/civ/civ_media.py', 'examples/civ/civ_world_uil.py')
 REQUIRED_SOURCE_FILES += ("docs/evidence/civ-original-corrections/verification.json",)
+REQUIRED_SOURCE_FILES += ('src/fdisbull/data/dinopark-e55-terminal.json',)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -65,6 +74,10 @@ REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
+REQUIRED_SOURCE_FILES += ('tests/fixtures/frame_capture.S',
+                          'docs/verification/kq1-tas-2026-10-31.json')
+REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_audit.py')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -106,11 +119,17 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
 
 
 @pytest.mark.parametrize('required',[
-    'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
+    'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+    'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+    'src/fdisbull/capabilities.py','tests/test_capabilities.py',
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
     'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
     'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/media-modules.md',
+    'src/fdisbull/media.py',
+    'tests/test_media_modules.py',
+    'src/fdisbull/data/FdisbullGhidraArm64.txt',
 ])
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
@@ -155,4 +174,28 @@ def test_reviewed_recipe_allowlist_rejects_other_examples(tmp_path):
     with zipfile.ZipFile(archive, 'a') as output:
         output.writestr('fdisbull-test/examples/unreviewed.py', 'unreviewed input')
     with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)
+
+
+@pytest.mark.parametrize('kind', ['source', 'wheel'])
+def test_distribution_check_requires_dinopark_terminal_resource(tmp_path, kind):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    resource = 'data/dinopark-e55-terminal.json'
+    if kind == 'source':
+        members = {'fdisbull-test/' + path for path in REQUIRED_SOURCE_FILES}
+        required = 'fdisbull-test/src/fdisbull/' + resource
+    else:
+        members = {path.removeprefix('src/') for path in REQUIRED_SOURCE_FILES
+                   if path.startswith('src/fdisbull/')}
+        members.add('fdisbull-0.dist-info/METADATA')
+        required = 'fdisbull/' + resource
+    archive = tmp_path / ('fdisbull-resource.whl' if kind == 'wheel' else 'fdisbull-resource.zip')
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members):
+            output.writestr(member, '')
+    assert check(archive) == len(members)
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members - {required}):
+            output.writestr(member, '')
+    with pytest.raises(ValueError, match=re.escape(resource)):
         check(archive)

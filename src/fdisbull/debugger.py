@@ -26,6 +26,7 @@ from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSe
 from .assisted_travel import AssistedTravelSessionMixin
 from .text_projection import TextProjectionProjectMixin, TextProjectionSessionMixin
 from .spatial import SpatialProjectMixin, SpatialSessionMixin, validate_mode
+from .operation_budget import RpcAdmissionTimeout, run_cleanup_scope
 
 
 DEBUG_DDL = '''
@@ -119,7 +120,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debug_artifacts(self, version=None, run=None):
         v = self.version(version)['id']
-        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,length(a.data) AS size,a.metadata
+        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,fdb_length(a.data) AS size,a.metadata
             FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run
             WHERE r.version=? AND (? IS NULL OR r.id=?) ORDER BY a.rowid''',(v,run,run))
         return {'version':v,'artifacts':[{**dict(r),'metadata':json.loads(r['metadata'])} for r in rows]}
@@ -223,13 +224,13 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         result = dict(artifact=identifier,run=run,version=row['version'],name=name,kind=kind,
                       sha256=digest,size=len(data),metadata=metadata)
         with self.transaction(True):
-            used = self.db.execute('SELECT coalesce(sum(length(data)),0) FROM debug_artifacts').fetchone()[0]
+            used = self.db.execute('SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0]
             if used+len(data) > 256*1024*1024:
                 raise ValueError('Project runtime artifact budget exceeds 256 MiB')
             self.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
                 (identifier,run,name,kind,digest,data,json.dumps(metadata)))
             self.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                            (run,stamp(),'artifact',json.dumps(result)))
+                            (run,stamp(),'artifact',self._external_text(json.dumps(result))))
         return result
 
     def debug_grid(self, artifact, *, name='coordinate-grid.png', step=32, target=None):
@@ -389,14 +390,15 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         options={}
         if deadline is not None:
             remaining=int((deadline-time.monotonic())*1000)
-            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
-            options['timeout_ms']=min(15000,remaining)
+            if remaining<=0 or remaining < (getattr(self,'_rpc_admission_ms',None) or 0):
+                raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
+            options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                                    (self.run_id,stamp(),operation,json.dumps(evidence)))
+                                    (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
             state = evidence.get('state') or evidence.get('session',{}).get('state')
             if state:
                 self.project.db.execute('UPDATE debug_runs SET state=? WHERE id=?',(state,self.run_id))
@@ -468,23 +470,24 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         finally:
             if not self.closed:
                 try:
-                    if running:
-                        try:
-                            pause = self.call('execution.pause')
-                            terminal_operation=pause['operation_id']
-                        except DebuggerError as error:
-                            if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
-                            # A real stop can win the race with our budget pause.
-                            # Observe the existing operation; never continue/replay.
-                            terminal_operation=operation['operation_id']
-                        result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
-                        if result.get('running'):
-                            raise DebuggerError('Target failed to pause after bounded run')
-                        kind=result.get('stop_reason',{}).get('kind')
-                        if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
-                        if kind!='pause':outcome=kind
-                    if result is None or result.get('state') != 'exited':
-                        timing = self._timing(before['fast_forward'])
+                    with run_cleanup_scope(self):
+                        if running:
+                            try:
+                                pause = self.call('execution.pause')
+                                terminal_operation=pause['operation_id']
+                            except DebuggerError as error:
+                                if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
+                                # A real stop can win the race with our budget pause.
+                                # Observe the existing operation; never continue/replay.
+                                terminal_operation=operation['operation_id']
+                            result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
+                            if result.get('running'):
+                                raise DebuggerError('Target failed to pause after bounded run')
+                            kind=result.get('stop_reason',{}).get('kind')
+                            if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
+                            if kind!='pause':outcome=kind
+                        if result is None or result.get('state') != 'exited':
+                            timing = self._timing(before['fast_forward'])
                 except BaseException:
                     self.close()
                     raise

@@ -14,6 +14,7 @@ general compiler manual.
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
+- [Overlapping instruction backings](#overlapping-instruction-backings)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
@@ -172,6 +173,59 @@ after unknown or partial effects as though no action occurred.
 
 Source-checkout `docs/UDL_BLOCK_LAYERS.md` supplies concrete API examples,
 formats, policy distinctions, first-profile limits and verification boundaries.
+## Overlapping instruction backings
+
+For the baseline direct UDL-to-UDC route, prefer `udc-native-capture`,
+`udc-native-info` and default `udc-native-compile`. This immutable definition
+keeps native backings and a logical multi-instruction block plan without
+requiring UIL. Original-layout pass-through reproduces the entire retained
+version-1 file byte-for-byte, preserving shared bytes and original offsets.
+Incomplete analysis does not prevent exact byte retention; graph confidence
+is reported separately and becomes unknown when stored facts cannot be verified.
+
+`code-blocks` groups unique contiguous fallthroughs, splitting at admitted
+entries, branch targets, joins, outside incoming edges and explicit captured
+instruction IDs. The plan is unplaced and source layout is unchanged. One
+intent can span several such blocks; grouping does not automatically recover
+intent. Keep behavior identity, native backing, source offsets and final
+placement separate.
+
+Choose `udc-native-compile --mode relayout` only for an explicitly admitted
+placement experiment. `--block-order FILE` places logical groups; `--order FILE`
+is the separate instruction-order seam. They cannot be combined. Output entry
+maps, source occurrences and fixups replace source-offset arithmetic. Arbitrary
+implementation replacement and complete DOS executable generation remain
+future compiler work. Source-checkout `docs/NATIVE_UDL_UDC.md` documents the
+pass-through, splitting and layer-by-layer testing contract.
+
+Use `code-backings PROJECT --entry ADDRESS` (repeat entries as needed), or
+`Project.code_backings(entries)`, to capture exact stored x86 16/32-bit
+instruction interpretations. A byte may be an immediate on one entry path
+and an opcode on another. Each backing owns its complete local encoding;
+physical-byte coverage counts the shared source once. Stored incoming paths,
+byte roles, explicit continuations and source/backing revisions remain visible.
+Explicit code/code ranges may overlap; data/code conflicts remain refused.
+
+`code-layout` / `Project.code_layout` captures fresh and emits a bounded raw
+layout with remapped direct near branches and explicit fallthrough jumps.
+Require the complete captured graph and all five explicit caller assertions:
+`no_code_reads`, `no_code_writes`, `no_computed_entries`,
+`address_identity_unobserved` and `timing_unobserved`. These are domain claims,
+not facts established by setting them to true. Indirect/far transfers, calls,
+mixed contexts and unsupported relocation/alias requirements remain refused.
+The output is `structural_only`, with source occurrences, glue and fixups;
+it is not a regenerated MZ/LE file, semantic UIL or general equivalence proof.
+
+The Python helpers `materialize_code_backing` and `validate_source` live in
+`fdisbull.code_backings`; standalone `compile_code_backings` lives in
+`fdisbull.code_layout`. Validation against a newer patch version rejects a stale
+capsule; explicitly selecting its retained parent still works. The source
+validator re-queries the requested stored graph; a public digest alone does
+not authenticate caller-supplied evidence. Preserve incomplete captures as
+incomplete and qualify native behavior separately. Source-checkout
+`docs/CODE_BACKINGS.md` gives the schema, CLI examples and bounds. Keep private
+byte-retaining capsules and emitted code outside Git. No physical-overlap
+operation was added to UIL; unsupported effects remain native residuals.
 
 ## Zork IR and recovered intents
 

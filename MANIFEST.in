@@ -6,9 +6,12 @@ recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
+include tests/fixtures/frame_capture.S
 include tests/ida_rpc_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/CLOUD-0.27.0-MANIFEST.json
+include docs/verification/kq1-tas-2026-10-31.json
 prune docs/uil-rfcs/0001
 include docs/uil-rfcs/0001/README.md
 include docs/uil-rfcs/0001/check_examples.py
@@ -22,6 +25,7 @@ include docs/uil-rfcs/0001/vectors.json
 include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
+include docs/evidence/integration-0261/verification.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
@@ -47,6 +51,7 @@ prune experimental
 prune build
 prune dist
 prune .github
+exclude .gitlab-ci.yml
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
 
 include docs/evidence/civ-original-corrections/verification.json

@@ -16,6 +16,9 @@ PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live
 REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
+REQUIRED_TEST_HELPERS.add("tests/test_media_modules.py")
+REQUIRED_TEST_HELPERS.add("tests/fixtures/frame_capture.S")
+REQUIRED_TEST_HELPERS.add("tests/test_capture_audit.py")
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
@@ -26,12 +29,17 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civ-original-corrections/verification.json")
-REVIEWED_SOURCE_RECIPES = {'examples/civ/civ_exepack.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_scene.json', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_original_compare.py', 'examples/udc/civ_production.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py'}
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/verification/kq1-tas-2026-10-31.json")
+REVIEWED_SOURCE_RECIPES = {'examples/civ/civ_exepack.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_scene.json', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_original_compare.py', 'examples/udc/civ_production.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py', 'examples/civ/civ_media.py', 'examples/civ/civ_world_uil.py'}
 REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
-REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
+REQUIRED_KNOWLEDGE_RESOURCES = {"data/dinopark-e55-terminal.json", "media.py", "capabilities.py", "capture_audit.py", "skills/fdisbull-investigate/references/media-modules.md"}
+REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
+REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
+                            "data/FdisbullGhidraArm64.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/reconstruction.md",
@@ -47,6 +55,9 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
     "skills/write-gamefaqs-guide/references/guide-structure.md",
     "skills/write-gamefaqs-guide/references/technical-mechanics.md",
+    "skills/write-gamefaqs-guide/references/routes-and-discoveries.md",
+    "skills/write-gamefaqs-guide/references/formats-and-engine-reuse.md",
+    "skills/write-gamefaqs-guide/references/engine-source-examples.md",
     "skills/write-gamefaqs-guide/references/source-examples.md",
 }
 
@@ -105,6 +116,8 @@ def check_archive(path: Path) -> int:
                 raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
             missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
             if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
+            missing={"fdisbull/"+name for name in REQUIRED_MACOS_RESOURCES}-set(names)
+            if missing:raise ValueError(f"Wheel is missing macOS analysis resources: {sorted(missing)}")
         else:
             raise ValueError(f"Wheel contains unexpected package or metadata roots: {sorted(roots)}")
     else:
@@ -115,7 +128,9 @@ def check_archive(path: Path) -> int:
         required = REQUIRED_TEST_HELPERS | REQUIRED_PLAYER_SOURCE | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
         required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
-        required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
+        required |= {"src/fdisbull/" + name for name in REQUIRED_MACOS_RESOURCES}
+        required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md", "docs/MACOS_ARM64_ANALYSIS.md",
+                     "docs/CAPABILITIES.md", "docs/MACOS_APP_REPLICATION.md", "tests/test_capabilities.py"}
         required |= {"scripts/check_agent_skill.py"}
         required |= REQUIRED_SOURCE_EVIDENCE
         missing = required - relative

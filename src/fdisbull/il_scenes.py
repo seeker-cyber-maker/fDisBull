@@ -237,7 +237,10 @@ class ILSceneBackend:
         with self.lock:
 
             def result(status, complete, message):
-                return {"status": status, "complete": complete, "message": message}
+                reply = {"status": status, "complete": complete, "message": message}
+                if complete:
+                    reply["witness"] = self._witness()
+                return reply
 
             if (
                 not isinstance(request, dict)
@@ -289,6 +292,16 @@ class ILSceneBackend:
             # A confirmed pure-IL commit stays confirmed if the next scene is outside coverage.
             return result("success", True, text or "Action completed.")
 
+    def _witness(self):
+        observation = self.observe()
+        if observation.get("complete") is True:
+            return {
+                "session_token": self.epoch,
+                "context_id": observation["context"]["id"],
+                "context_token": observation["context"]["token"],
+            }
+        return None
+
     def save(self, slot="live"):
         with self.lock:
             if not isinstance(slot, str) or not 1 <= len(slot) <= 64:
@@ -301,6 +314,7 @@ class ILSceneBackend:
                 "status": "saved",
                 "checkpoint": slot,
                 "replay_safe": True,
+                "witness": self._witness(),
             }
 
     def load(self, checkpoint="live"):
@@ -316,6 +330,7 @@ class ILSceneBackend:
                 "status": "restored",
                 "checkpoint": checkpoint,
                 "replay_safe": True,
+                "witness": self._witness(),
             }
 
 

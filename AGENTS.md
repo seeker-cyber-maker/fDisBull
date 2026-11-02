@@ -56,13 +56,44 @@ Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
 
+After each release candidate is packaged, install and activate a fresh shared
+prefix locally, then run
+`python scripts/check_local_install.py --version <version> --commit <commit>`
+from the source tree. A release is not locally complete until the active
+payload, version, commit and selector all verify.
+
+## Repository mirrors and CI coordination (GitLab 30-day trial + local Git parity)
+
+- **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete.** Never push to, fetch from, or poll GitHub (`origin` push URL is locked to `RETIRED_GITHUB_DO_NOT_PUSH`).
+- **Local Git and GitLab (`gitlab` -> `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`) are equal representations.** Because GitLab is under a 30-day evaluation trial, agents must update **both** the local Git repository (`local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git` and local branches/tags in `/Volumes/CODEX/Codex_Projects/fDisBull`) and GitLab (`gitlab`), using `python scripts/sync_mirrors.py` or pushing to the `dual` remote (`git push -o ci.skip dual <branch>`).
+- Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before starting or observing hosted checks.
+- **Anti-abuse CI rules**: `.gitlab-ci.yml` never runs automatic pipelines on feature/topic/archive branch pushes or `Draft:` Merge Requests, and heavy C++ DOSBox-X compilation jobs (`native-debugger-*`) are manual-only (`when: manual` or `FDISBULL_RUN_NATIVE_CI=1`). Always pass `-o ci.skip` when mirroring non-main branches to GitLab.
+- Name one CI owner for the repository; other agents consume that owner's dated receipt. Use `scripts/ci_status.py` in cache-only mode by default:
+  ```sh
+  python scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull --sha "$(git rev-parse HEAD)"
+  ```
+  Only the named owner uses `--refresh --owner`; the helper permits one repository-wide refresh per five minutes, shared across local worktrees. Do not run parallel job-status loops, `glab ci trace`, `gh run watch`, automatic retry loops, or empty commits to restart CI.
+
+## Game files and target identity
+
+Do not upload original or modified game binaries, assets, story images, saves,
+emulator states or byte-containing databases/archives to GitLab, local hubs or packages.
+Semantic UIL/game representations are allowed pending sanitation; embedded
+original files are not. Read [external targets](docs/EXTERNAL_TARGETS.md).
+New FDBs store size/SHA-256 references and loader provenance; keep their private
+external object store outside Git. For divergence, obtain explicit user approval
+of the exact project/base/candidate receipt before `bind-source`; an agent must
+not manufacture consent by echoing `source-candidate.approval`. Without approval,
+leave it unattached and create another analysis only on explicit caller choice.
+Hash equality means recorded byte identity, not publisher authenticity or rights.
+
 ## Engineering contract
 
 Build a usable local agent-first disassembler. Native decoders provide instruction facts; our analyzer owns traversal and the persistent database. Screenshots must come from stored state without operating a GUI.
 
 - Start with recursive entry-point traversal, then investigate referenced memory and later symbol/export seeds. Deduplicate work and facts; a budget stop must never be called stable.
 - Resolve entry names and representations from shared address identity in every query/export. Keep raw operands and evidence intact.
-- Preserve original bytes and every earlier code version. Do not key an instruction by address alone.
+- Preserve original byte identity and every earlier code version; new FDB payloads remain in the private external store. Do not key an instruction by address alone.
 - Label inferred functions as candidates; preserve xref evidence and annotation authorship. Keep unknown indirect/segmented behavior unknown.
 - Do not substitute a mock disassembly, web landing page, decompiler framework, or runtime harness for the working tool.
 - Keep `README.md` limitations and verification aligned with the final packaged source. macOS is unverified until actually run there.

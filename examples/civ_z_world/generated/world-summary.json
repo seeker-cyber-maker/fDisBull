@@ -1,0 +1,87 @@
+{
+  "format": "civ-world-0",
+  "source": {
+    "edition": "ru-47501",
+    "sve": "CIVIL0.SVE",
+    "map": "CIVIL0.MAP",
+    "sve_sha256": "a6164c93bcb5ee75ba09b407b2dff527a2433993b963c48b3e573c6e06ffc63b",
+    "map_sha256": "e4616630dcab0e8198b776c2fc324c42d87eb7db1774d5c67bd5ec01b0666226",
+    "map_file_sha256": "ea82bbca9ee1e6c87cc7ed17fa153ab7251c5e94968f35d8eb3bc1f0fff0b922",
+    "sve_size": 37856,
+    "map_page_size": 64000,
+    "format": "civ-world-0"
+  },
+  "turn": 308,
+  "year": 1540,
+  "human_civ": 1,
+  "stats": {
+    "terrain_counts": {
+      "Desert": 34,
+      "Plains": 165,
+      "Grassland": 195,
+      "Forest": 103,
+      "Hills": 77,
+      "Mountains": 52,
+      "Tundra": 76,
+      "Arctic": 152,
+      "Swamp": 36,
+      "Jungle": 76,
+      "Ocean": 2969,
+      "River": 65,
+      "Unknown": 0
+    },
+    "resources": 230,
+    "cities": 41,
+    "units": 172,
+    "cities_by_civ": [
+      0,
+      5,
+      1,
+      0,
+      7,
+      11,
+      12,
+      5
+    ],
+    "units_by_civ": [
+      0,
+      9,
+      8,
+      0,
+      20,
+      57,
+      54,
+      24
+    ],
+    "unit_types": {
+      "Militia": 5,
+      "Riflemen": 73,
+      "Catapult": 7,
+      "Legion": 3,
+      "Phalanx": 23,
+      "Settlers": 19,
+      "Battleship": 3,
+      "Transport": 4,
+      "Cannon": 3,
+      "Armor": 4,
+      "Musketeers": 7,
+      "Cruiser": 2,
+      "Knights": 7,
+      "Frigate": 6,
+      "Sail": 5,
+      "Cavalry": 1
+    },
+    "explored_tiles": 181,
+    "declared_cities": 41,
+    "city_tile_mismatches": 0,
+    "unit_tile_mismatches": 1
+  },
+  "diagnostics": [
+    {
+      "severity": "info",
+      "code": "unit-stacked-or-stale-owner",
+      "subject": "unit-5-20",
+      "message": "tile owner 6 != unit civ 5"
+    }
+  ]
+}

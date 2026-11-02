@@ -20,7 +20,10 @@ DOC_EXAMPLE_FILES = (
     'examples/civ/civ_city_original_compare.py',
     'examples/civ/civ_city_scene.json',
     'examples/udc/civ_production.py',
-
+    'examples/civ/civ_media.py',
+    'examples/civ/civ_world_uil.py',
+    "docs/CLOUD-0.27.0-MANIFEST.json",
+    "docs/verification/kq1-tas-2026-10-31.json",
     "docs/uil-rfcs/0001/README.md",
     "docs/uil-rfcs/0001/check_examples.py",
     "docs/uil-rfcs/0001/commit.js",
@@ -49,6 +52,7 @@ SOURCE_PATTERNS = (
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
+    ("tests/fixtures", "frame_capture.S"),
     ("tests", "ida_rpc_vectors.json"),
     ("docs", "*.md"),
     ("docs/evidence/spatial-2026-10-29", "verification.json"),
@@ -70,6 +74,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "tests.json"),
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
+    ("docs/evidence/integration-0261", "verification.json"),
     ("scripts", "*.py"),
 )
 

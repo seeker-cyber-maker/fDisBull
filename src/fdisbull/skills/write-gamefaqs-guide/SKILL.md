@@ -1,6 +1,6 @@
 ---
 name: write-gamefaqs-guide
-description: Write or revise a human-readable GameFAQs-style knowledge review, walkthrough, mechanics FAQ or reference guide from a game's existing investigation evidence. Use for explaining what reverse engineering has established, auditing earlier generated solutions, or turning supported findings into player-facing prose with release scope, provenance, uncertainty and useful navigation. Support Markdown by default and a requested legacy text rendition; do not imply a completed playthrough or GameFAQs submission.
+description: Write or revise a human-readable GameFAQs-style guide from a game's reverse-engineering evidence. Cover mechanics and event probabilities, bugs and exploits, cheats and easter eggs, recovered unused code, alternate routes, speedrun and completionist goals, file and media specifications, embedded interpreters and transferable engine knowledge. Use for reviews of established knowledge, partial walkthroughs, technical FAQs or audits of earlier solutions, preserving release scope, provenance, uncertainty and navigation. Default to Markdown with optional legacy text; do not imply completed playthroughs, rule compliance or site submission.
 ---
 
 # Write a GameFAQs-style game guide
@@ -12,15 +12,50 @@ what is known at a stated investigation cutoff. A useful review can describe
 recovered mechanics and unresolved progression without claiming a complete
 solution.
 
+Treat the guide as a review of the recovered game, including material beyond
+its intended winning route. Explain useful discoveries for ordinary players,
+speedrunners, completionists and readers investigating the implementation.
+Unused code, unconfirmed exploits and partial format specifications remain
+valuable when their evidence and limits are explicit.
+
+
+## Keep game files out of publication
+
+Do not upload original or modified game binaries, game assets, story images,
+saves, emulator states, or raw game-containing FDBs/archives to GitHub or tool
+packages. Semantic UIL/game representations are allowed pending sanitation;
+complete originals embedded in memory arrays, hex caches or nested archives
+are excluded. Review contents, not names. New FDBs retain exact size/SHA-256
+identities and loader provenance with payloads in a private external store;
+that store must never be uploaded. Hash equality verifies recorded byte identity,
+not publisher authenticity, safety, ownership or permission to distribute.
+
+Use `source-candidate` for a changed binary. Obtain the user's explicit approval
+for that exact project/base/candidate receipt before calling `bind-source` with
+it; receiving or echoing the receipt is not consent. An approved binary is a
+distinct provenance-bound layer, with bytes still external and the base
+preserved. Without approval leave it unattached, and create a separate analysis
+only if explicitly chosen. Declining must not execute the candidate. Legacy
+FDBs require read-only `storage-info` and an explicitly requested new derivative
+via `migrate-external`; never silently rewrite an original. Other exports can
+still embed target data and need separate review. See repository
+`docs/EXTERNAL_TARGETS.md` for the full storage and compatibility contract.
+
 ## Choose the next reference
 
 Read the entrypoint, then only the reference needed for the current decision.
+Check the experiment's information policy before opening either source-examples
+reference; both contain external game facts. General writing references can be
+used with supplied evidence alone during a files-only recovery pass.
 
 | Need | Reference |
 | --- | --- |
 | Qualify claims, earlier AI output, source ports or a files-only experiment | [Evidence and provenance](references/evidence-and-provenance.md) |
 | Organize a readable review, route, tables or optional plain-text rendition | [Guide structure](references/guide-structure.md) |
 | Explain formulas, timing, random behavior, pseudocode and worked examples | [Technical mechanics](references/technical-mechanics.md) |
+| Cover unused content, bugs, cheats, secrets, alternate routes, speedrun rules and completion goals | [Routes and discoveries](references/routes-and-discoveries.md) |
+| Specify recovered files/media, identify engines or interpreters, and qualify transfer to related games | [Formats and engine reuse](references/formats-and-engine-reuse.md) |
+| Compare concrete external engine/layout/edition examples, only when the experiment permits external game facts | [Engine source examples](references/engine-source-examples.md) |
 | Inspect the official guidance and concrete guides motivating these requirements | [Source examples and design lessons](references/source-examples.md) |
 
 For a new investigation question, use the separate `fdisbull-investigate` skill.
@@ -40,6 +75,12 @@ partial walkthrough, supported route, or a combination. Default to a readable
 Markdown review with a contents list, compact source appendix and explicit
 coverage statement. Include a spoiler notice appropriate to the material.
 Produce extra text/HTML formats only when requested or useful to the task.
+
+For a speedrun or minimal route, name the objective, allowed actions and
+applicable ruleset; fewest actions, fastest time and least required progress are
+different goals. For completion, define what counts and whether mutually
+exclusive outcomes require multiple runs. An unexplored category is a coverage
+gap, not evidence that the game has no such content.
 
 If the user is testing recovery from game files alone, preserve that experiment
 boundary before reading external game facts. Formatting examples are permitted
@@ -70,6 +111,14 @@ examined but unresolved ones. If calling a list or route complete, state its
 denominator and scope. A budget stop, polished old guide or arbitrary chapter
 count cannot supply missing coverage.
 
+Include material findings across these areas where the investigation has them:
+progression and alternative solutions; random events and timing; programming
+bugs and potential exploits; cheats, easter eggs and debug features; unused or
+conditionally reachable code/assets; optional and missable content; recovered
+file/media layouts; engine/interpreter structure and transferable knowledge.
+Record present, understood, reachable and observed separately. Do not silently
+discard a recovered branch because it cannot yet support player instructions.
+
 ## 3. Write from gameplay meaning
 
 Explain the useful result before the technical derivation. Organize around
@@ -85,6 +134,13 @@ optional scoring, alternate solutions and debugger-assisted observations. A
 static candidate route remains a candidate until its relevant reachability and
 execution obligations are supported.
 
+Publish speedrun shortcuts with their entry/exit state, dependencies, costs,
+failure risks, provenance and category eligibility. Keep intended solutions,
+glitches, built-in cheats and external state edits distinguishable; a bug can be
+legal in one category and disallowed in another. Preserve candidate techniques
+as candidates. Completion checklists should identify mutually exclusive choices,
+missables and recovery, separating obtainable content from archival discoveries.
+
 For mechanics, give the practical implication, exact applicable conditions,
 calculation order and exceptions, then a worked example when supported. Label
 unknown terms instead of filling them from familiarity with another game or
@@ -92,6 +148,12 @@ release. Classify implementation and algorithm listings as actual disassembly,
 decompiler output, source excerpt, reconstructed pseudocode or an illustrative
 model. Label player commands, captured output and data listings by their actual
 purpose and source.
+
+For implementation findings, include a readable technical appendix with the
+recovered byte layout, known invariants, unknown fields and original consumer
+behavior. Distinguish container, codec and playback contracts. Identify which
+engine, VM or native-code layer implements a behavior and which evidence makes
+part of the analysis reusable in a related release or game.
 
 Use short local qualifiers and source IDs where they change how the reader
 should use a claim. Keep the fuller provenance in the appendix. Write original
@@ -106,6 +168,14 @@ against its source. Check prose against tables, formulas and pseudocode. Preserv
 differences between versions and competing sources. If public receipts are
 missing, report what the available record establishes without asserting that
 private analysis never occurred.
+
+Check that unused-code labels state their reachability scope, bugs include their
+trigger and actual effects, probabilities name their conditioned event and draw
+model, and completion totals exclude or label unobtainable/exclusive entries.
+Do not call a route category-legal without the relevant rules, or a media file
+safe to shorten merely because a standalone decoder accepts it. Reuse across
+games requires correspondence at the claimed layer, not just a shared title,
+series, extension or source-port engine name.
 
 Check that compressed routes retain required dependencies or explicitly point
 to the detailed route. Do not promote a checklist to an optimal, no-damage or

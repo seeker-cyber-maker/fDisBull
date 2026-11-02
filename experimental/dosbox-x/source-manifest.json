@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "3c282d4cf09c72e38e95f43ca1449d7fa9bdd102127442e65f59d65e32ffe07d",
+  "patch_sha256": "28c46ac5aeaac4c7c20f33b57bdfc29ece05a923d3954741ac9960f7fc5cb251",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -28,14 +28,24 @@
       "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349"
     },
     {
+      "path": "include/agent/agent_bridge.h",
+      "size": 1505,
+      "sha256": "bf07375fd187bcf89c9f95c2da4dbd1220e767c765a2c11916a5e5b6979ecc68"
+    },
+    {
       "path": "include/agent/agent_protocol.h",
       "size": 2508,
       "sha256": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008"
     },
     {
+      "path": "include/agent/agent_server.h",
+      "size": 2172,
+      "sha256": "c7819e93fca18ba30abb09f1acd4b1269e96cb4a5c24f9166fd592b6e0b7a1d6"
+    },
+    {
       "path": "include/agent/debugger_adapter.h",
-      "size": 3753,
-      "sha256": "19c5a735cb3d77942d683b1c79ae1addf3bc5f2c0ff60414791aa40017268e8d"
+      "size": 3794,
+      "sha256": "febd9733743f4f6943fe1b153a45cf33b32c766ddb273bf26bf40f4d5917d05a"
     },
     {
       "path": "include/agent/input_adapter.h",
@@ -63,9 +73,14 @@
       "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6"
     },
     {
+      "path": "src/agent/bridge/agent_bridge.cpp",
+      "size": 8181,
+      "sha256": "abe903d347878b9eb38e518f26d82df68c5fee2b8d93d9f49ec56629e256c93a"
+    },
+    {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "size": 24311,
-      "sha256": "c0a5ef4df2f75e8a48105d25ec64613a65da2dadb44caff7b4eaff1c53f430a8"
+      "size": 24445,
+      "sha256": "f01528e3fafc2c9672c201edbbbb39ed7832eb6e40cc7c2b0b3131a27a32b3d0"
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -74,8 +89,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 196630,
-      "sha256": "2de1d2aa7ba993c6c37632749679334b2f8583b65ee8be0d81b7ec491873dd83"
+      "size": 202381,
+      "sha256": "e6bc147cf9b858eb47c61c8429c63e7e9e879cc752d8ab0824c466f388cd5144"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -103,9 +118,14 @@
       "sha256": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19"
     },
     {
+      "path": "src/dos/dos_execute.cpp",
+      "size": 38388,
+      "sha256": "626fdb065ba5837cce4168d89ad1ad28a9506cc8f1f7ba1b6338c3323707fbda"
+    },
+    {
       "path": "src/gui/render.cpp",
-      "size": 69117,
-      "sha256": "ebd35b92b3d30484605cd1cc954d8eab9413970dc07ba75df3b6bda628b50de6"
+      "size": 69550,
+      "sha256": "4e1c7a47e3f78b67442bf7287d370c3a60eac5fb9d3e5ce411d4267413055a85"
     },
     {
       "path": "src/gui/sdlmain.cpp",
@@ -147,7 +167,7 @@
   "nasm_source_sha256": "1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148",
   "keyboard_capability": "ibm_pc_controller_us_ascii_v1",
   "pixel_probe_capability": "video.probe: 0..4096 native RGB points from one completed frame; no PNG encoding or transfer",
-  "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
+  "feature": "Selected DOS guest exit after process cleanup; prior headless/state/input/continuation features preserved",
   "controlled_window_source": {
     "scope": "SDL2 spectator event filtering, stopped-agent safeguards, and pre-target selected-driver/window validation; controlled_window capability",
     "source_paths": [
@@ -160,5 +180,14 @@
     "verification": "Full patch applied to all pinned-baseline files with matching Git blob identities; resulting source hashes checked. Build, GUI and input/paused-runtime acceptance remain unverified."
   },
   "verification_scope_note": "Source replay hashes are retained here. Runtime qualification and limitations are recorded separately in repository verification documents.",
-  "keyboard_held_leases": "source merged; see verification record for tested scope"
+  "keyboard_held_leases": "source merged; see verification record for tested scope",
+  "source_replay_files_verified": 32,
+  "dos_guest_exit": {
+    "capability": "lifecycle.dos_guest_exit",
+    "normal_stop": "guest_exit",
+    "resident_stop": "guest_tsr",
+    "scope": "Selected target PSP after built-in DOS_Terminate cleanup; explicit session.stop excluded",
+    "state_identity": "Exact in-session state-save hash preserves selected PSP; unrecognized restores disable guest-exit tracking",
+    "verification": "Candidate regression and cloud receipts are separate from publication or installed-system activation"
+  }
 }

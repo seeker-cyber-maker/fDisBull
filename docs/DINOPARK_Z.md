@@ -11,6 +11,12 @@ uses the committed 0.23 compiler source. See also the
 The [batch recovery interface](Z_BATCH_RECOVERY.md) adds per-step journals,
 declared action continuations and live checkpoint scene requalification.
 It keeps uncertain effects blocked until an explicit verified recovery.
+[Oversized reply recovery](Z_REPLY_RECOVERY.md) retains a returned native result
+before sending its bounded reference. Read-only paging and witness-bound delivery
+acknowledgement avoid repeating the original input after a lost or truncated reply.
+The [named terminal scenes](DINOPARK_Z_TERMINAL_ACTIONS.md) expose the original
+menu, cancellation, quit/save prompts, title menu and DOS exit through the same
+public Z action protocol, including bounded input-free continuations.
 The [funded26k return/recovery follow-up](DINOPARK_FUNDED_RECOVERY.md) handles
 quarter notices after confirmed food commits and retains a reachable paused
 provider for explicit checkpoint recovery after an action error.
@@ -132,6 +138,37 @@ restores the first catalogue page and checks the original species and price
 before BUY; the last inspected page cannot silently change the intended order.
 
 ## Saving and stopping
+
+An incomplete original action holds further action input while its reachable
+provider remains available. For a held `go dinomart`, `reconcile` can confirm
+the destination from the paused original frame and current selector without
+sending input, running the guest or restoring a checkpoint. This requires the
+retained original input receipt, source scene revision and same live session.
+An unqualified destination leaves the hold intact. Other unknown action effects
+remain unresolved; this command does not authorize replay or reconnect an exited
+guest. Observation and session receipts expose `reconciliation_available` and
+the held attempt's `recovery_id`.
+
+A held Coelophysis order retains its delivered input receipts. Use `look` to
+obtain its current guarded actions. When offered, `continue dinosaur order`
+waits for the retained phase and sends only later inputs; it does not repeat
+the buy command. Each request has a host deadline and phase guest allowances
+remain cumulative. After the remaining phases finish, use `reconcile` to
+certify the original buy from cash, pen, expense, display and released-pointer
+observations. This final step is read-only. A confirmed effect survives a
+failed display readback, while an unproved effect stays unknown. See the
+[purchase recovery verification](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+for the tested scope and retained failures.
+
+The JSON-line backend accepts `{"op":"reconcile"}` and an optional
+`recovery_id` selecting the already-held attempt. A successful result carries
+`read_only: true`, the original canonical action and a fresh destination witness.
+Batch journal reconciliation checks the attempt ID, action and session before
+accepting that certificate, then refreshes its observation without replaying the
+step. The original failure diagnostic is retained. An already confirmed purchase
+keeps its known commit if an unsupported follow-up hold cannot be reconciled.
+See the [DinoMart recovery verification](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+for the actual tested boundary and remaining analysis obligations.
 
 `save park` uses the original native writer and creates a new backup each time:
 `zpark`, `zpark-002`, and so on. `--slot` chooses the base name. Earlier backups

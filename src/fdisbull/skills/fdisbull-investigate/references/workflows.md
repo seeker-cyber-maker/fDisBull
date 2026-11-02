@@ -78,6 +78,13 @@ can yield with the same PC and a nonzero remaining count; inspect raw registers
 and memory before claiming completion of the copy or the enclosing transaction.
 Do not use older unconditional completion labels as that evidence.
 
+For a rebuilt DOS backend advertising `lifecycle.dos_guest_exit`, a
+`guest_exit` run result retains the selected PSP's completed DOS cleanup in
+`session.stop_reason.guest_exit`; `guest_tsr` separately reports remaining
+resident. Record target registers before exit because DOS has restored the
+parent context at this boundary. A legacy `program_exit` on debugger closure,
+a pause outside the image, or an exit interrupt alone is not this evidence.
+
 ## Scenes, maps and movement
 
 Use scenes for versioned screen context, recognition masks, readiness and
@@ -199,3 +206,13 @@ a storage or serialization failure, with no artifact; it does not undo execution
 output references differ from project debug artifact IDs. The default private
 store is user-data `fdisbull/output-artifacts`; `FDISBULL_OUTPUT_ARTIFACT_DIR`
 may select a location outside Git. Artifacts have no automatic deletion.
+
+## Compare related programs
+
+Use explicit `export-types` / `import-types` to share unbound structural
+interpretations after checking each target's own layout evidence. Keep byte
+identity signatures separate from semantic correspondences: equivalent arithmetic
+can have different code, pointer widths and calling conventions. Catalog origin
+is a declared source claim, not native evidence. Apply a received type only at a
+locally qualified memory/file location; fixed pointer segments cannot be
+transferred. Record accepted, rejected and still-candidate correspondences.

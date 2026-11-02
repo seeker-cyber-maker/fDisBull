@@ -18,7 +18,9 @@ AGENT_SKILL_GUIDES = {
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
+    'references/binary-claim-verification.md': 'Prove or falsify stored-value, writer and behavior claims against the decoded original binary',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
@@ -28,18 +30,26 @@ AGENT_SKILLS = {
         'guides': AGENT_SKILL_GUIDES,
     },
     'write-gamefaqs-guide': {
-        'purpose': 'Write a human-readable game knowledge review with qualified walkthrough and mechanics claims',
+        'purpose': 'Write a reversing-first game review covering mechanics, discoveries, routes, formats and engine reuse',
         'guides': {
             'SKILL.md': 'Start here: scope, evidence and workflow for a readable game guide',
             'references/evidence-and-provenance.md': 'Distinguish recovered facts, observations, external sources and unknowns',
             'references/guide-structure.md': 'Organize routes, reference sections, navigation, spoilers and text exports',
             'references/technical-mechanics.md': 'Explain algorithms, numeric semantics and worked examples with evidence',
-            'references/source-examples.md': 'Inspect the guide examples and source limitations motivating these requirements',
+            'references/routes-and-discoveries.md': 'Cover unused code, bugs, cheats, alternate routes, speedrun rules and completion goals',
+            'references/formats-and-engine-reuse.md': 'Specify recovered files and media; qualify interpreters and cross-game reuse',
+            'references/engine-source-examples.md': 'External engine/layout examples: read only when the information policy permits game facts',
+            'references/source-examples.md': 'External guide examples and rationale: check the information policy before reading',
         },
     },
 }
 
 METHODS = {
+    'capture-audit':'Decode/hash finalized AVI segments and optionally sample frames; inputs,output,[every,html,timeout,max_frames,max_frame_bytes,max_input_bytes,max_metadata_bytes,max_output_bytes,ffmpeg,ffprobe]; no guest or project required',
+    'capabilities':'Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution',
+    'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
+    'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
+    'media-extract':'Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]',
     'gog-list':'List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required',
     'gog-unpack':'Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required',
     'output-info':'Inspect an immutable private output artifact; artifact',
@@ -99,7 +109,7 @@ METHODS = {
     'import-signatures': 'Atomically import an explicit signature catalog; catalog,[version]',
     'export-signatures': 'Export registered project identities as a reusable JSON catalog; [version]',
     'omf-catalog': 'Extract fixup-free DOS16 public routines from an OMF library; path,[abi]',
-    'dos-services': 'List the authored DOS/BIOS interrupt contract catalog',
+    'dos-services': 'List DOS/BIOS/audio contracts or describe a vector with pre-call registers',
     'debug-wait': 'Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]',
     'debug-trace-view': 'Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version',
     'doctor': 'Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]',
@@ -178,6 +188,8 @@ METHODS = {
     'set-function-type': 'Apply a declared function prototype and ABI; address,type_name,[version,cs,author]',
     'apply-type': 'Bind a type to shared data identity; address,type_name,[name,version,author]',
     'types': 'Registered layouts and data bindings; [version]',
+    'export-types': 'Export unbound structural interpretations with declared provenance; [version,names,output]',
+    'import-types': 'Atomically import structural definitions without bindings; catalog,[version,author]',
     'typed-data': 'Interpret a bound data object; address,[version,max_items]',
     'set-summary': 'Register a qualified function contract; address,name,[prototype,summary,abi,version,cs,author]',
     'summaries': 'Registered and signature-qualified function contracts; [version]',
@@ -191,6 +203,14 @@ METHODS = {
     "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions,slice_arch,image]",
     "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
     "cfg": "Reachable stored CFG from exact entry; address,[version,cs,max_instructions,highlights]",
+    "code-backings": "Exact entry-qualified native encodings and source occurrences (x86 and Mach-O ARM64); entries,[version,cs,max_instructions]",
+    "ghidra-arm64": "Cross-check selected source-bound Mach-O ARM64 instructions with optional Ghidra; project,path,addresses,analyze_headless,[decompile_entry,version]",
+    "macos-observe": "Launch one exact source-bound Mach-O ARM64 executable to a named LLDB breakpoint; project,executable,symbol,[version,argv]",
+    "code-blocks": "Logical entry-qualified code blocks without source layout changes; entries,[version,cs,max_instructions,split_at]",
+    "code-layout": "Bounded raw x86 layout with explicit jumps and caller assumptions; entries,assumptions,[version,cs,max_instructions,order,base,entry_references]",
+    "udc-native-capture": "Persist native UDL blocks for direct UDC pass-through; name,entries,[version,cs,max_instructions,split_at,parent,author]",
+    "udc-native-info": "Read an immutable native UDC definition; definition,[include_blocks]",
+    "udc-native-compile": "Exact original-layout pass-through or explicit raw relayout; definition,[mode,assumptions,base,order,block_order,entry_references]",
     "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
     "memory-accesses": "Read/write/overlap and unresolved memory evidence; address,[size,version,access,limit,offset,include_unresolved]",
     "refresh-facts": "Backfill persisted fallthrough and memory-access facts from stored instructions; [version]",
@@ -228,6 +248,12 @@ METHODS = {
     "patch": "Create a new snapshot, preserve parent; address,data,[version,label,origin]",
     "issues": "Pending/rejected/unresolved work; [version,limit]",
     "render": "Export stored rows as SVG/PNG; output,[version,address,lines,format,cs]",
+    'storage-info': 'Read-only storage inventory; project',
+    'migrate-external': 'Explicitly create an external-storage derivative; project,destination',
+    'source-info': 'Recorded target size/SHA-256, loader provenance and current availability; [version]',
+    'source-candidate': 'Inspect candidate identity without attaching; path,[version]',
+    'bind-source': 'Bind exact source or explicitly approved divergent layer; path,[version,approval]',
+    'new-source-analysis': 'Explicitly create a separate analysis without changing this one; path,destination,[version]',
     "help": "List methods; all project operations require project path",
 }
 
@@ -293,6 +319,16 @@ def invoke(method, params, debugger=None):
         root=files('fdisbull').joinpath('skills',skill)
         resources=(reference,) if reference is not None else tuple(guides)
         return {'name':skill,'files':{n:root.joinpath(n).read_text(encoding='utf-8') for n in resources}}
+    if method=='media-modules':
+        from .media import media_modules
+        if p:raise ValueError('media-modules takes no parameters')
+        return media_modules()
+    if method=='capture-audit':
+        from .capture_audit import audit_capture
+        return audit_capture(**p)
+    if method in ('media-inspect','media-extract'):
+        from .media import inspect_media, extract_media
+        return (inspect_media if method=='media-inspect' else extract_media)(**p)
     if method in ('gog-list','gog-unpack'):
         from .gog_unpack import list_gog, unpack_gog
         return (list_gog if method=='gog-list' else unpack_gog)(**p)
@@ -302,12 +338,25 @@ def invoke(method, params, debugger=None):
         if not path.is_file() or path.stat().st_size>16*1024*1024:raise ValueError('OMF library must be at most 16 MiB')
         return omf_signatures(path.read_bytes(),source=str(path),**p)
     if method=='dos-services':
-        from .dos_services import service_catalog
-        if p:raise ValueError('dos-services takes no parameters')
-        return service_catalog()
+        from .dos_services import service_catalog, describe_interrupt
+        vector=p.pop('vector',None);registers=p.pop('registers',{});ax=p.pop('ax',None)
+        if p or not isinstance(registers,dict):raise ValueError('dos-services expects vector, registers and optional ax')
+        if vector is None:
+            if registers or ax is not None:raise ValueError('registers/ax require a vector')
+            return service_catalog()
+        from .project import integer
+        vector=integer(vector,'vector',0,255)
+        if ax is not None:
+            ax=integer(ax,'ax',0,65535)
+            if 'ax' in registers and registers['ax']!=ax:raise ValueError('conflicting AX selectors')
+            registers={**registers,'ax':ax}
+        return describe_interrupt(vector,registers)
     if method=='doctor':
         from .doctor import doctor
         return doctor(**p)
+    if method=='capabilities':
+        from .capabilities import capabilities
+        return capabilities(**p)
     if method in ('zmachine-disasm','zmachine-analyze'):
         from .zmachine_analysis import analyze_story,disassemble_story
         operation=disassemble_story if method=='zmachine-disasm' else analyze_story
@@ -327,6 +376,47 @@ def invoke(method, params, debugger=None):
         if not isinstance(data,str):
             raise ValueError('data must be hexadecimal bytes')
         return compare_decoders(bytes.fromhex(data),**p)
+    if method in ('ghidra-arm64', 'macos-observe'):
+        import hashlib
+        project = p.pop('project', None)
+        version = p.pop('version', 1)
+        if not project:
+            raise ValueError('project path is required')
+        if type(version) is not int or version != 1:
+            raise ValueError('macOS native probes currently require the original byte version 1')
+        path = Path(p.pop('path' if method == 'ghidra-arm64' else 'executable'))
+        if not path.is_file() or not 0 < path.stat().st_size <= 64*1024*1024:
+            raise ValueError('expected a nonempty Mach-O source file at most 64 MiB')
+        with path.open('rb') as stream:
+            checked_bytes = stream.read(64*1024*1024 + 1)
+        if not 0 < len(checked_bytes) <= 64*1024*1024:
+            raise ValueError('Mach-O source grew beyond the 64 MiB probe limit')
+        with Project(project) as db:
+            state = db.status(version=version)
+            source = db.source_info(version=version)
+        if state['format'] != 'Mach-O' or state['arch'] != 'arm64' or state['bits'] != 64:
+            raise ValueError('project must contain a Mach-O ARM64 image')
+        identity = source['identity']
+        if not source['verified'] or path.stat().st_size != identity['size']:
+            raise ValueError('original source identity is unavailable or does not match this file')
+        if hashlib.sha256(checked_bytes).hexdigest() != identity['sha256']:
+            raise ValueError('probe file does not match the recorded original source hash')
+        if method == 'ghidra-arm64':
+            from .ghidra_arm64 import probe_macho_arm64
+            try:
+                result = probe_macho_arm64(path, p.pop('addresses'), **p)
+            except RuntimeError as error:
+                raise ValueError(str(error)) from error
+        else:
+            from .macos_lldb import observe_macos_arm64_launch
+            result = observe_macos_arm64_launch(path, **p)
+        observed_hash = (result.get('source_sha256') if method == 'ghidra-arm64'
+                         else (result.get('source') or {}).get('sha256'))
+        if observed_hash != identity['sha256']:
+            raise ValueError('native probe source changed or could not be verified against the project')
+        result['fdisbull_project'] = {'version': version, 'mapped_sha256': state['version']['sha256'],
+                                       'source_sha256': identity['sha256']}
+        return result
     if method=='managed' and 'path' in p:
         from .managed import inspect_managed,disassemble_managed
         path=Path(p.pop('path'))
@@ -356,6 +446,11 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
+    if method == 'storage-info':
+        from .target_storage import storage_report
+        return storage_report(project)
+    if method == 'migrate-external':
+        return Project.migrate_external(project, p['destination'])
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes',
                    'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info',
@@ -379,6 +474,21 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('code-backings', 'code-blocks', 'code-layout',
+                      'udc-native-capture', 'udc-native-info', 'udc-native-compile'):
+            for field in ('assumptions', 'order', 'block_order', 'entry_references'):
+                filename = p.pop(field + '_file', None)
+                if filename is not None:
+                    path = Path(filename)
+                    if field in p or not path.is_file() or path.stat().st_size > 4*1024*1024:
+                        raise ValueError('expected one JSON argument file at most 4 MiB')
+                    p[field] = json.loads(path.read_text())
+            return getattr(db, method.replace('-', '_'))(**p)
+        if method in ('source-info','source-candidate','bind-source'):
+            return getattr(db, method.replace('-', '_'))(**p)
+        if method == 'new-source-analysis':
+            p['project'] = p.pop('destination')
+            return db.new_source_analysis(**p)
         if method in ('proof-check','proofs','proof-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
@@ -387,14 +497,36 @@ def invoke(method, params, debugger=None):
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
         file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
         if method in file_methods:return getattr(db,file_methods[method])(**p)
-        if method in ('define-type','add-signature','set-summary','import-signatures'):
+        if method == 'export-types':
+            output = p.pop('output', None)
+            catalog = db.export_types(**p)
+            if output is None:
+                return catalog
+            from .type_catalog import _json as catalog_json
+            raw = catalog_json(catalog).encode('utf-8')
+            if len(raw) > 4 * 1024 * 1024:
+                raise ValueError('Type catalog exceeds 4 MiB')
+            destination = Path(output).expanduser()
+            with destination.open('xb') as stream:
+                stream.write(raw)
+            import hashlib
+            return dict(output=str(destination), bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(),
+                        exported=len(catalog['types']), version=catalog['source']['version'])
+        if method in ('define-type','add-signature','set-summary','import-signatures','import-types'):
             for field in ('definition','signature','prototype','summary','catalog'):
                 filename=p.pop(field+'_file',None)
                 if filename is not None:
                     path=Path(filename)
                     if not path.is_file() or path.stat().st_size>4*1024*1024:raise ValueError('expected a JSON file at most 4 MiB')
-                    p[field]=json.loads(path.read_text())
-        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+                    if method == 'import-types':
+                        with path.open('rb') as stream:
+                            raw = stream.read(4 * 1024 * 1024 + 1)
+                        if len(raw) > 4 * 1024 * 1024:
+                            raise ValueError('expected a JSON file at most 4 MiB')
+                        p[field] = json.loads(raw)
+                    else:
+                        p[field]=json.loads(path.read_text())
+        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'export-types', 'import-types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
             return getattr(db,method.replace('-','_'))(**p)
         if method=="memory-accesses":
             return db.memory_accesses(**p)
@@ -464,11 +596,14 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('capture-audit','capabilities','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
-        if request["method"] not in BLOCK_METHODS:result=public_addresses(result)
+        # Catalog definitions can contain enum members named "address" or
+        # "target". Preserve their numeric values for exact round trips.
+        if request["method"] not in BLOCK_METHODS and request["method"]!='export-types':
+            result=public_addresses(result)
         value={"id":request_id,"ok":True,"result":result}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
@@ -602,9 +737,13 @@ def parser():
         elif name=='debug-export-scenes':
             c.add_argument('output');c.add_argument('scenes',nargs='+')
         elif name=='debug-import-scenes':c.add_argument('bundle')
-    sub.add_parser('dos-services',help=METHODS['dos-services'])
+    c=sub.add_parser('dos-services',help=METHODS['dos-services'])
+    c.add_argument('--vector',type=lambda s:int(s,0))
+    c.add_argument('--ax',type=lambda s:int(s,0))
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')
+    c=sub.add_parser('capabilities',help=METHODS['capabilities'])
+    c.add_argument('--analyze-headless');c.add_argument('--lldb');c.add_argument('--java')
     c=sub.add_parser('doctor',help=METHODS['doctor'])
     c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu'],required=True)
     c.add_argument('--executable',required=True)
@@ -646,6 +785,32 @@ def parser():
             if name=='debug-artifacts':c.add_argument('--run')
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
+    sub.add_parser('media-modules',help=METHODS['media-modules'])
+    c=sub.add_parser('capture-audit',help=METHODS['capture-audit'])
+    c.add_argument('inputs',nargs='+',help='Finalized AVI files; each keeps its own clock')
+    c.add_argument('--output',required=True,help='New directory beneath an existing private parent outside Git')
+    c.add_argument('--every',type=int,default=0,help='Export frames 0,N,2N,...; 0 hashes all without PNG export')
+    c.add_argument('--html',action='store_true',help='Self-contained sampled-frame viewer; requires --every')
+    c.add_argument('--timeout',type=float,default=120,help='Host seconds per reader process')
+    c.add_argument('--max-frames',type=int,default=10000)
+    c.add_argument('--max-frame-bytes',type=int,default=16*1024*1024)
+    c.add_argument('--max-input-bytes',type=int,default=512*1024*1024)
+    c.add_argument('--max-metadata-bytes',type=int,default=32*1024*1024)
+    c.add_argument('--audit-output-bytes',dest='capture_max_output_bytes',type=int,default=512*1024*1024,
+                   help='Audit file budget, separate from the global JSON reply budget')
+    c.add_argument('--ffmpeg',default='ffmpeg')
+    c.add_argument('--ffprobe',default='ffprobe')
+    for name in ('media-inspect','media-extract'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path')
+        c.add_argument('--adapter',required=True,choices=('mz-envelope','agi-v2'))
+        c.add_argument('--volume-root')
+        c.add_argument('--number',type=int)
+        if name=='media-extract':
+            c.add_argument('output')
+            c.add_argument('--member',required=True)
+            c.add_argument('--max-payload-bytes',dest='media_max_output_bytes',type=int,default=64*1024*1024,
+                           help='Extracted member byte limit (1..67108864); separate from global JSON reply budget')
     for name in ('gog-list','gog-unpack'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path',help='local GOG Inno Setup offline installer')
@@ -657,7 +822,35 @@ def parser():
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'])
+            c.add_argument('--image',choices=['auto','pe','le','ne','mz','com','ail'])
+    c=sub.add_parser('ghidra-arm64',help=METHODS['ghidra-arm64'])
+    c.add_argument('project'); c.add_argument('path')
+    c.add_argument('--address',dest='addresses',action='append',type=lambda s:int(s,0),required=True)
+    c.add_argument('--analyze-headless',required=True,help='Ghidra support/analyzeHeadless executable')
+    c.add_argument('--java-home',help='JDK home used by Ghidra')
+    c.add_argument('--max-instructions',type=int,default=64)
+    c.add_argument('--timeout-s',type=float,default=120)
+    c.add_argument('--decompile-entry',type=lambda s:int(s,0))
+    c.add_argument('--decompile-timeout-s',type=int,default=10)
+    c.add_argument('--version',type=int,default=1)
+    c=sub.add_parser('macos-observe',help=METHODS['macos-observe'])
+    c.add_argument('project'); c.add_argument('executable'); c.add_argument('--symbol',required=True)
+    c.add_argument('--arg',dest='argv',action='append',default=[])
+    c.add_argument('--timeout-seconds',type=float,default=20)
+    c.add_argument('--memory-bytes',type=int,default=32)
+    c.add_argument('--instruction-count',type=int,default=8)
+    c.add_argument('--lldb-path')
+    c.add_argument('--version',type=int,default=1)
+    for name in ('storage-info','migrate-external','source-info','source-candidate','bind-source','new-source-analysis'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name in ('source-candidate','bind-source','new-source-analysis'):
+            c.add_argument('path')
+        if name in ('migrate-external','new-source-analysis'):
+            c.add_argument('destination')
+        if name not in ('storage-info','migrate-external'):
+            c.add_argument('--version', type=int)
+        if name == 'bind-source':
+            c.add_argument('--approval', type=json.loads, help='Exact source-candidate receipt, only after user approval of this base and candidate')
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -666,12 +859,12 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'],help='select PE, DOS/4GW LE, Win16 NE, MZ or explicitly declared DOS COM')
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz','com','ail'],help='select PE, DOS/4GW LE, Win16 NE, MZ, declared DOS COM or AIL driver')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
-    c.add_argument('--image',choices=['auto','pe','le','ne','mz'])
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz','ail'])
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
@@ -691,6 +884,37 @@ def parser():
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)
     c.add_argument('--scan-offsets',action='store_true');c.add_argument('--max-candidates',type=int,default=16)
+    for name in ('code-backings', 'code-blocks', 'code-layout'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        c.add_argument('--entry', dest='entries', action='append', required=True)
+        c.add_argument('--version', type=int); c.add_argument('--cs', type=lambda s:int(s,0))
+        c.add_argument('--max-instructions', type=int, default=10000)
+        if name == 'code-blocks':
+            c.add_argument('--split-at', dest='split_at', action='append')
+        if name == 'code-layout':
+            c.add_argument('--assumptions', dest='assumptions_file', required=True)
+            c.add_argument('--order', dest='order_file')
+            c.add_argument('--entry-references', dest='entry_references_file')
+            c.add_argument('--base', type=lambda s:int(s,0), default=0)
+    for name in ('udc-native-capture', 'udc-native-info', 'udc-native-compile'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name == 'udc-native-capture':
+            c.add_argument('name'); c.add_argument('--entry', dest='entries', action='append', required=True)
+            c.add_argument('--version', type=int); c.add_argument('--cs', type=lambda s:int(s,0))
+            c.add_argument('--max-instructions', type=int, default=10000)
+            c.add_argument('--split-at', dest='split_at', action='append')
+            c.add_argument('--parent'); c.add_argument('--author', default='agent')
+        else:
+            c.add_argument('definition')
+            if name == 'udc-native-info':
+                c.add_argument('--full', dest='include_blocks', action='store_true')
+            else:
+                c.add_argument('--mode', choices=('original-layout', 'relayout'), default='original-layout')
+                c.add_argument('--assumptions', dest='assumptions_file')
+                c.add_argument('--base', type=lambda s:int(s,0), default=0)
+                c.add_argument('--order', dest='order_file')
+                c.add_argument('--block-order', dest='block_order_file')
+                c.add_argument('--entry-references', dest='entry_references_file')
     for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts","libraries","relocations","linkage","refresh-metadata","refresh-dos-state"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
@@ -749,7 +973,7 @@ def parser():
         if name == "render":
             c.add_argument("output")
             c.add_argument("--format",choices=["svg","png"])
-    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'export-types', 'import-types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
         if name in ('function-analysis','apply-type','typed-data','set-summary','set-function-type','capture-signature'):c.add_argument('address')
         if name in ('function-analysis','set-summary','auto-analyze','set-function-type','capture-signature'):c.add_argument('--cs',type=lambda s:int(s,0))
@@ -767,9 +991,12 @@ def parser():
             c.add_argument('name');c.add_argument('--abi');c.add_argument('--prototype-file');c.add_argument('--summary-file')
         if name=='capture-signature':
             c.add_argument('name');c.add_argument('--max-instructions',type=int,default=4096)
-        if name=='import-signatures':c.add_argument('catalog_file')
+        if name in ('import-signatures','import-types'):c.add_argument('catalog_file')
+        if name=='export-types':
+            c.add_argument('--output',help='write the raw catalog to a new file')
+            c.add_argument('--name',dest='names',action='append',help='select a type and its dependencies; repeat to select more')
         if name=='add-signature':c.add_argument('signature_file')
-        if name in ('define-type','apply-type','set-summary','set-function-type','capture-signature'):c.add_argument('--author',default='agent')
+        if name in ('define-type','apply-type','set-summary','set-function-type','capture-signature','import-types'):c.add_argument('--author',default='agent')
         if name=='call-effects':
             c.add_argument('--address');c.add_argument('--size',type=int,default=1)
             c.add_argument('--access',choices=['all','read','write'],default='all')
@@ -963,7 +1190,12 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
-    if command.startswith(('udc-','udl-')):return _udc_command(command,args)
+    if command == 'media-extract':
+        args['max_output_bytes'] = args.pop('media_max_output_bytes')
+    if command == 'capture-audit':
+        args['max_output_bytes'] = args.pop('capture_max_output_bytes')
+    if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
+        return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
@@ -996,7 +1228,7 @@ def _dispatch(args):
         request = {"method":"help" if command=="methods" else command,"params":{k:v for k,v in args.items() if v is not None}}
     result = respond(request)
     emit(result)
-    if command=='doctor' and result['ok']:
+    if command in ('doctor','capture-audit') and result['ok']:
         body=result['result']
         status=body['execution']['status'] if body.get('format')=='fdisbull-output-ref-1' else body['status']
         if status!='passed':return 1

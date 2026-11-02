@@ -27,7 +27,11 @@ def test_city_scene_exposes_source_mapped_tabs_and_transitions():
     changed = backend.act(
         {"verb": "select", "target": "tab-map", "item": None, "context_token": token}
     )
-    assert changed == {"status": "success", "complete": True, "message": "Map"}
+    assert changed["status"] == "success"
+    assert changed["complete"] is True
+    assert changed["message"] == "Map"
+    assert changed["witness"]["context_id"] == "city"
+    assert changed["witness"]["context_token"]
     mapped = backend.observe()
     mapped_ids = {item["id"] for item in mapped["objects"]}
     assert "map-panel" in mapped_ids
@@ -95,7 +99,9 @@ def test_city_udc_rejects_non_pinned_source_before_output(tmp_path):
 
 
 NATIVE = sys.platform == "darwin" and platform.machine() == "arm64"
-PINNED_ROOT = Path(os.environ.get("FDISBULL_CIV_UNPACKED", "build/civ-analysis/CIV_UNP.EXE"))
+PINNED_ROOT = Path(
+    os.environ.get("FDISBULL_CIV_UNPACKED", "build/civ-analysis/CIV_UNP.EXE")
+)
 
 
 @pytest.mark.skipif(
@@ -149,7 +155,10 @@ def test_city_udc_matches_interpreter_across_boundaries(tmp_path):
     by_case = {row["case"]: row for row in receipt["cases"]}
     assert by_case["wrap-high"]["observed"]["frame"]["state"]["$shield_box"] == -32768
     assert by_case["wrap-low"]["observed"]["frame"]["state"]["$shield_box"] == 32767
-    assert by_case["disorder-preserves-stock"]["observed"]["frame"]["state"]["$shield_box"] == 7
+    assert (
+        by_case["disorder-preserves-stock"]["observed"]["frame"]["state"]["$shield_box"]
+        == 7
+    )
     refused = by_case["unsanitized-refusal"]["observed"]
     assert refused["returncode"] != 0 and refused["frame"] is None
 
@@ -171,7 +180,10 @@ def test_city_production_chooser_commits_recovered_codes():
     assert _act(backend, "activate", "production-change")["status"] == "success"
     chooser = backend.observe()
     assert chooser["context"]["id"] == "production-chooser"
-    assert {item["id"] for item in chooser["objects"]} == {"build-settlers", "build-militia"}
+    assert {item["id"] for item in chooser["objects"]} == {
+        "build-settlers",
+        "build-militia",
+    }
     assert _act(backend, "build", "build-militia")["status"] == "success"
     assert backend.observe()["context"]["id"] == "city"
     assert backend.state["$production"] == 1

@@ -1,0 +1,15 @@
+container: fdisbull-linux
+image: docker.io/library/python:3.13-slim
+platform: linux/amd64 (Rosetta)
+fdisbull-linux       docker.io/library/python:3.13-slim                                                                     linux  amd64  running  192.168.64.2/24  4     4096 MB  2026-11-01T10:09:34Z
+Linux fdisbull-linux 6.18.35 #1 SMP Mon Jun 15 12:55:27 UTC 2026 x86_64 GNU/Linux
+
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+
+Python 3.13.18
+v20.19.2
+gcc (Debian 14.2.0-19) 14.2.0
+git version 2.47.3

@@ -4,10 +4,26 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+Do not upload original or modified game binaries/assets, story files, saves,
+emulator states or raw game-containing databases/archives. New FDBs store
+external payload references with exact size/SHA-256 and loader provenance;
+the private object store is never a publication artifact. See
+[external targets](EXTERNAL_TARGETS.md) for explicit divergent-source approval,
+separate analysis, legacy migration and remaining export limits. Semantic
+UIL/game representations are permitted pending sanitation, without embedded
+original files. Hash equality is byte identity, not publisher authenticity.
+
 ## Discover commands and bundled skills
+
+For repository CI and dual-mirror updates (Local Git + GitLab), first read
+[CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
+keep local Git and GitLab (`brewster-jennings-group/fdisbull`) synchronized,
+and use `scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull`
+in cache-only mode by default.
 
 ```text
 fdisbull --version
+fdisbull capabilities
 fdisbull methods
 fdisbull agent-skill --list
 fdisbull agent-skill --index
@@ -16,7 +32,13 @@ fdisbull agent-skill --skill write-gamefaqs-guide --index
 fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
-`methods` prints the JSON method names and their parameter summaries.
+`capabilities` reports the imported copy's bounded analysis, debugger, C and
+UIL support, provider hashes and dependency detection without launching tools
+or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+before treating dependency presence as working support. `doctor` is a separate
+explicit runtime acceptance test. `methods` prints the JSON method names and
+their parameter summaries; some language operations are CLI-only and appear
+in the capability report with `cli:` interface names.
 `agent-skill --list` returns the small skill catalogue. Use `--skill` to select
 one, then `--index` to list its references and their purposes without fetching
 their text. Choose a reference and retrieve it with `--reference`.
@@ -37,6 +59,8 @@ fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/routes-and-discoveries.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/formats-and-engine-reuse.md
 ```
 
 With a source checkout, the bundled files are under
@@ -58,9 +82,12 @@ The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
-human-readable review, route or mechanics reference. It preserves release
-boundaries, attributes external sources, and separates supported knowledge from
-unknowns. Its templates and research guidance do not implement a game-guide
+human-readable review, route or mechanics reference. Cover recovered unused code,
+bugs, cheats, easter eggs, event probabilities, alternate paths, speedrun rules
+and completion goals. Include recovered file/media specifications and qualified
+engine/interpreter reuse across related games. It preserves release boundaries,
+attributes external sources, and separates supported knowledge from unknowns.
+Its templates and research guidance do not implement a game-guide
 generator, play through a game, or submit anything to GameFAQs. Return to the
 investigation skill for unresolved behavior that materially affects the review.
 
@@ -70,6 +97,26 @@ the investigation skill:
 ```text
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
+
+## Reuse media readers
+
+Run `fdisbull media-modules` to discover shipped parser APIs, dependencies and
+limits. `media-inspect` inventories classic MZ header/module/opaque-tail ranges
+or a selected AGI v2 resource; `media-extract` copies one member to a new private
+directory outside Git. Both return source/member hashes without inline target
+bytes and never execute inputs. Existing `gog-list/gog-unpack` and AGI picture
+APIs remain available through the catalog. Read the packaged specification with
+`fdisbull agent-skill --reference references/media-modules.md` before recovering
+missing tooling or extending an adapter. This does not unpack compressed DOS
+executables or establish the purpose of their trailing bytes.
+
+For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
+/private/run/audit --every 4 --html` hashes every decoded frame and exports a
+sample with original timestamps for slower review. Its output parent must be
+private and outside Git. Check the audit receipt before analyzing pixels; video
+timestamps do not supply guest ticks or input alignment. The
+[capture-audit guide](TAS_CAPTURE_AUDIT.md) covers the Python/JSON interfaces,
+budgets and failed-run diagnostics.
 
 ## Choose a route
 
@@ -89,6 +136,22 @@ For DOS COM files, select `--image com` explicitly when importing. A suffix
 alone does not establish the file format. Analysis limits may leave work
 pending; inspect status and do not call a budget stop complete. `render` exports
 from saved project state without operating a GUI.
+
+For a macOS ARM64 executable, select the `arm64` Mach-O slice explicitly and
+keep the FDB and original file private. The 0.29.0 candidate includes exact ARM64
+`code-backings`, source-bound `ghidra-arm64` instruction/C diagnostics and a
+one-stop `macos-observe` LLDB launch. Read
+[macOS ARM64 analysis](MACOS_ARM64_ANALYSIS.md) for commands, source hashes,
+static/runtime address separation and the still-unimplemented app-level UIL
+export.
+
+Miles AIL 2 driver libraries (often `.ADV`) are recognized by validated bytes
+and expose named exports and a bounded descriptor candidate. They import
+automatically or with `--image ail`; addresses remain module-relative and no
+runtime driver is installed. Use `dos-services --vector 0x66 --ax 0x688` to
+describe a DIGPAK call, or `--ax 0x702` for MIDPAK. Stored DOS disassembly uses
+the same names when AX is known, retaining unverified-handler and unknown-outcome
+qualifications. See [DOS audio drivers](DOS_AUDIO_DRIVERS.md).
 
 ### Observe a real DOS target
 
