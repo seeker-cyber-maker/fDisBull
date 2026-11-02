@@ -13,7 +13,7 @@ screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
 for address identity?
 
 The answer is a bounded **yes**: the committed scene is a valid
-`fdisbull-il-scene-1` document with 23 contexts, 95 objects and 47 programs.
+`fdisbull-il-scene-1` document with 23 contexts, 123 objects and 90 programs.
 It can be driven through the shared IL backend or Z text player. It is not a
 claim that the game's simulation, assets, input decoding or save format has
 been recovered.
@@ -84,9 +84,9 @@ provenance file.
 
 | Context | `$screen` | Civ64 section | civd source | Objects | Resolved anchors |
 | --- | ---: | --- | --- | ---: | --- |
-| `title` | 0 | SCENES.md 4.4-6 | GAME.C | 4 | R:01A8:0486 `_game_menu` (entry) |
-| `load` | 1 | SCENES.md 7.2 | SAVE.C | 2 | O11:0000 `_load_game` (entry) |
-| `customize` | 2 | SCENES.md 7.4 | GAME.C | 6 | R:01A8:0591 `_game_menu` (inside) |
+| `title` | 0 | SCENES.md 4.4-6 | GAME.C | 5 | R:01A8:0486 `_game_menu` (entry) |
+| `load` | 1 | SCENES.md 7.2 | SAVE.C | 11 | O11:0000 `_load_game` (entry) |
+| `customize` | 2 | SCENES.md 7.4 | GAME.C | 14 | R:01A8:0591 `_game_menu` (inside) |
 | `birth` | 3 | SCENES.md 8 | WORLDGEN.C | 2 | O7:0012 `_make_world` (entry) |
 | `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 5 | O5:0031 `_new_game` (inside) |
 | `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 5 | O5:012E `_new_game` (inside) |
@@ -94,12 +94,12 @@ provenance file.
 | `leader-name` | 7 | SCENES.md 9.4-9.5, 10.4 | NAMES.C | 2 | O23:00D6 `_rename_leader` (entry), O23:0414 `_edit_line` (entry) |
 | `intro` | 8 | SCENES.md 9.6 | NEWGAME.C | 2 | O5:0657 `_new_game` (inside) |
 | `world` | 9 | SCENES-PLAY.md 1-6 | MAP.C, TURN.C, CONTROL.C, UNITS.C | 14 | R:1AEA:0008 `_reveal` (entry), R:1AEA:03BA `_seen_map` (entry), R:0238:0FEA `_draw_banner` (entry), R:0238:107E `_status_draw` (entry), R:0403:4060 `_uinit` (entry), R:0403:0676 `_ai_turn` (inside), R:0866:0AD6 `_blink_unit` (entry), R:0866:1D55 `_anim_unit` (entry), R:0866:1F69 `_pick_unit` (entry) |
-| `city` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C | 14 | R:0D12:0045 `_city_process` (entry), R:0D12:7045 `_draw_icon` (entry), R:0D12:710D `_tile_panel` (entry), R:0ADE:03EA `_kill` (entry), R:0ADE:0093 `_civ_economy` (inside), R:1459:0597 `_capunit` (inside) |
+| `city` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C | 16 | R:0D12:0045 `_city_process` (entry), R:0D12:7045 `_draw_icon` (entry), R:0D12:710D `_tile_panel` (entry), R:0ADE:03EA `_kill` (entry), R:0ADE:0093 `_civ_economy` (inside), R:1459:0597 `_capunit` (inside) |
 | `production` | 10 | SCENES-PLAY.md 7.12 | ECONOMY.C | 3 | R:0ADE:0421 `_find_slot` (entry) |
 | `units` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C, CONTROL.C, UNITS.C | 5 | R:0403:4060 `_uinit` (entry), R:0866:1F69 `_pick_unit` (entry) |
 | `city-view` | 11 | SCENES-PLAY.md 7.2-7.3 | CITYVIEW.C | 2 | O19:0000 `_city_scene` (entry), O19:167B `_invasion_scene` (entry), O19:18C1 `_riot_anim` (entry), O19:1AE1 `_love_anim` (entry) |
-| `reports` | 12 | SCENES-PLAY.md 7.14 | ADVISORS.C, REPORTS.C, TURN.C | 7 | O14:0000 `_advisor_open` (entry), O14:186F `_city_rpt` (entry), O14:03AD `_mil_rpt` (entry), O14:014B `_sci_rpt` (entry), O14:07F1 `_trade_rpt` (entry), O12:0000 `_world_map` (entry) |
-| `pedia` | 13 | SCENES-PLAY.md 7.13 | PEDIA.C | 3 | O8:0000 `_civilopedia` (entry), O8:062A `_pedia_show` (entry) |
+| `reports` | 12 | SCENES-PLAY.md 7.14 | ADVISORS.C, REPORTS.C, TURN.C | 13 | O14:0000 `_advisor_open` (entry), O14:186F `_city_rpt` (entry), O14:03AD `_mil_rpt` (entry), O14:014B `_sci_rpt` (entry), O14:07F1 `_trade_rpt` (entry), O12:0000 `_world_map` (entry) |
+| `pedia` | 13 | SCENES-PLAY.md 7.13 | PEDIA.C | 5 | O8:0000 `_civilopedia` (entry), O8:062A `_pedia_show` (entry) |
 | `diplomacy` | 14 | SCENES-PLAY.md 7.9-7.10 | AUDIENCE.C, DIPLOMAC.C | 3 | O6:1D2B `_load_leader` (entry), R:1517:04A1 `_set_government` (entry) |
 | `spaceship` | 15 | SCENES-PLAY.md 7.16 | SPACESHP.C | 3 | O18:0000 `_spaceship_open` (entry), O18:0F83 `_spaceship_build` (entry) |
 | `hall` | 16 | SCENES.md 7.5, SCENES-PLAY.md 7.17 | FAME.C | 2 | O3:002B `_fame_load` (entry), O3:00D7 `_show_fame` (entry) |
@@ -127,6 +127,14 @@ carries every field and its evidence; the important groups are:
 | `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound 6..2; five menu rows write the field |
 | `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
+| `$earth_world` | `bool` | DGROUP:D76A; civd GAME.C:case 2; Civ64 SCENES.md 7.3 | EARTH branch flag; title `EARTH` sets it |
+| `$custom_land`, `$custom_temperature`, `$custom_climate`, `$custom_age` | `u8` | DGROUP:7EF6/7EF8/7EFA/7EFC; civd GAME.C:702/716/730/742; WORLDGEN.C:75/110/147/200 | 0..2 menu values, default 1; twelve option objects bind them |
+| `$load_slot` | `u8` | ten CIVIL0..9.SVE slots; Civ64 SCENES.md 7.2 | 0..9 selector; save parsing is outside the scene |
+| `$view_mode` | `u8` | civd CITYMGT.C key loop `i/h/m`; Civ64 SCENES-PLAY 7.1 | city INFO/HAPPY/MAP selection |
+| `$pedia_category`, `$pedia_entry`, `$pedia_entries` | `u8` | Civ64 SCENES-PLAY 7.13, R:271E tables | category 0..2 and exclusive entry bounds 72/28/12 |
+| `$government`, `$government_count` | `u8` | civd DIPLOMAC.C `_set_government`; Civ64 SCENES-PLAY 7.10 | authored six-government selector |
+| `$spaceship_parts` | `u8` | O18:0F83 build path; Civ64 SCENES-PLAY 7.16 | authored 0..16 scalar; part array is not modeled |
+| `$hall_entry` | `u8` | six FAME.DTA entries; Civ64 SCENES.md 7.5 | 0..5 cursor |
 | `$tribe`, `$human_civ` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 | dynamic row mapping for both groups |
 | `$tribe_row`, `$tribe_split`, `$tribe_rows` | `u8` | zero-based row; `civ_total+1`; `2*(civ_total+1)`; civd NEWGAME.C:103-117 | navigation state; split/rows written by each competition row |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
@@ -263,16 +271,19 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **17 passed**
+- `tests/test_civ_game_uil.py`: **24 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **48 passed**
+  **44 passed**
 - full repository suite: **2,252 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
 
 The scene is validated against the shared interpreter, but the evidence claims
-remain static. No DOS screen was run for this slice.
+remain static. No DOS screen was run for this slice. The scalar selector surface
+(EARTH, ten load slots, twelve customize choices, city tabs, eleven reports,
+Civilopedia, government, spaceship and Hall cursors) is executable; the
+remaining gaps are the IL model itself.
 
 ## Limits and non-claims
 
@@ -280,13 +291,15 @@ remain static. No DOS screen was run for this slice.
 - The founding city record was read from one 474.03 run; no save load, turn,
   buy or other edition was exercised. VGA rendering, palette/font/asset loading
   and input decoding are outside the scene.
+- Scalar selectors are now bound: EARTH, ten load slots, twelve customize
+  choices, city INFO/HAPPY/MAP tabs, eleven report pages, Civilopedia
+  category/entry, government, spaceship-parts and Hall-entry cursors.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
   `players`; tribe rows map dynamically for both groups; city auto-build
   toggles status bit `0x10`; unit-list navigation clamps over a seeded 3-unit
   fixture because the runtime-founded city has no unit; buy computes unit and
-  improvement rush prices and commits
-  shields. Rename remains declared, and no action has a live-screen
-  observation.
+  improvement rush prices and commits shields. Rename remains declared, and no
+  action has a live-screen observation.
 - Unit-list navigation is cursor-only; select does not write army-record
   moves/status/goto. Buy uses original Settlers/Militia/MarketPlace costs; the
   Chieftain start uses the source 50 (other tiers 0) and the founded city has no
@@ -302,16 +315,58 @@ remain static. No DOS screen was run for this slice.
   [`CIV_DOS_CIV64_CROSSWALK.md`](CIV_DOS_CIV64_CROSSWALK.md).
 - The edition conflict between civd's 474.05 and Civ64's 475.05 remains open.
 
+## Indexed record and media extraction
+
+The scene envelope still cannot carry strings or arrays. A separate additive
+record now does:
+
+- `src/fdisbull/uil_record.py` defines `fdisbull-uil-record-1` with
+  zero-based slot references, `string` slots, fixed `array` slots and a
+  declarative `print_text(slot,x,y)` operation;
+- `examples/civ/civ_world_uil.py` turns a decoded `CIVILn.MAP` page-2 image
+  into slots 0..49 (the 50 map row strings) plus terrain, terrain-colour,
+  unit-owner, unit-present, improvements and known-improvement arrays;
+- `examples/civ/civ_media.py` decodes the external `PIC`, `PAL`, `FONTS.CV`
+  and `.MAP` media named by `CIV.EXE`.
+
+The format and manual are in [UIL_RECORD.md](UIL_RECORD.md); the decoder,
+methodology, file layouts and extraction receipt are in
+[CIV_MEDIA_FORMATS.md](CIV_MEDIA_FORMATS.md). These are representational
+results. They do not make the `fdisbull-il-scene-1` inventory string- or
+array-capable, and they do not claim VGA rendering or live state.
+
+## Representation blockers
+
+The remaining unbound objects are not a shortage of source evidence; they are
+limits of the current `fdisbull-il-1` envelope:
+
+1. **The scene envelope has no string state.** The leader-name and city-name
+   edit fields (`O23:0414`) are 13- and 11-character text buffers. The indexed
+   record now carries bounded string slots and `print_text`; the remaining gap
+   is a text-input event plus a bridge from the record to the scene/player, not
+   another scalar selector.
+2. **The scene envelope has no array or indexed state.** The indexed record
+   carries the 80x50 terrain/unit/improvement layers and 50 row strings. The
+   remaining gap is a bridge/compiler and the other collections (128 `townbuf`
+   records, 24-bit building mask, unit records, report/Civilopedia tables);
+   `menu-bar`, city buildings/production and the full-screen asset scenes stay
+   projections until they have the same representation.
+3. **No asset/input binding.** The external `PIC/PAL/FONTS.CV/.MAP` media are
+   now decoded with a documented, tested decoder, but the scene does not render
+   them and the original mouse/key dispatch is still outside it. The decoder is
+   evidence and an extraction route, not a renderer.
+4. **No matching runtime backend.** The live city-screen entry and a
+   matching-edition 474.05 observation remain unbound. The scene stays
+   `partial: true` until a controlled runtime observation can bind the same
+   record.
+
 ## Next probes
 
-1. Read `shield_box`, money and status from a live city-screen state before
-   and after one buy; add more original unit/improvement rows where the chooser
-   exposes them.
-2. Add a matched live-screen or DOSBox observation for one setup row so the
-   source-bound scene claim can become bounded-observed.
-3. Use the atlas's caller graph to add one bounded transition not yet modeled,
-   such as the production chooser returning through `_city_process` after a
-   commit.
-4. Keep the scene at `partial: true` until a matching-edition backend supplies
-   a baseline, one controlled action and a committed state change bound to the
-   same record.
+1. Compile/serve the indexed record through the Z player and bind its
+   `print_text` events to extracted font/asset resources; keep that renderer
+   separate from scene visibility.
+2. Add a bounded text-input event for the two edit-line fields; do not pretend
+   a string slot is a key reader.
+3. Bridge the record arrays to the scene as a read-only projection, then add
+   one runtime observation for a matching edition.
+4. Do not claim a complete game UIL while the blockers above remain.

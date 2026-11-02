@@ -105,6 +105,19 @@ VARIABLES = {
     "$view_x": {"type": "u8", "initial": 0},
     "$view_y": {"type": "u8", "initial": 0},
     "$earth_world": {"type": "bool", "initial": False},
+    "$custom_land": {"type": "u8", "initial": 1},
+    "$custom_temperature": {"type": "u8", "initial": 1},
+    "$custom_climate": {"type": "u8", "initial": 1},
+    "$custom_age": {"type": "u8", "initial": 1},
+    "$load_slot": {"type": "u8", "initial": 0},
+    "$view_mode": {"type": "u8", "initial": 0},
+    "$pedia_category": {"type": "u8", "initial": 0},
+    "$pedia_entry": {"type": "u8", "initial": 0},
+    "$pedia_entries": {"type": "u8", "initial": 72},
+    "$government": {"type": "u8", "initial": 0},
+    "$government_count": {"type": "u8", "initial": 6},
+    "$spaceship_parts": {"type": "u8", "initial": 0},
+    "$hall_entry": {"type": "u8", "initial": 0},
     "$game_over": {"type": "bool", "initial": False},
 }
 
@@ -144,7 +157,20 @@ STATE_EVIDENCE = {
     "$report": "UIL report selector; F1..F10 table at R:0403 3B7D..3BFF; Civ64 SCENES-PLAY 7.14.",
     "$view_x": "DGROUP:D4CC viewport x; Civ64 SCENES-PLAY 3.",
     "$view_y": "DGROUP:D75E viewport y; Civ64 SCENES-PLAY 3.",
-    "$earth_world": "DGROUP:D76A EARTH branch; Civ64 SCENES 7.3.",
+    "$earth_world": "DGROUP:D76A EARTH branch; civd GAME.C:case 2 sets it before Birth; Civ64 SCENES.md 7.3.",
+    "$custom_land": "DGROUP:7EF6 custom land mass 0..2; civd GAME.C:702 writes the menu result, default 1; WORLDGEN.C:75 uses it.",
+    "$custom_temperature": "DGROUP:7EF8 custom temperature 0..2; civd GAME.C:716 writes the menu result, default 1; WORLDGEN.C:110 uses it.",
+    "$custom_climate": "DGROUP:7EFA custom climate 0..2; civd GAME.C:730 writes the menu result, default 1; WORLDGEN.C:147 uses it.",
+    "$custom_age": "DGROUP:7EFC custom age 0..2; civd GAME.C:742 writes the menu result, default 1; WORLDGEN.C:200 uses it.",
+    "$load_slot": "UIL selector for the ten CIVIL0..9.SVE slots; Civ64 SCENES.md 7.2. No save parser is modelled.",
+    "$view_mode": "City tab selection: 0 INFO, 1 HAPPY, 2 MAP; civd CITYMGT.C key loop i/h/m and Civ64 SCENES-PLAY 7.1.",
+    "$pedia_category": "Civilopedia category selector 0 advances, 1 units, 2 terrain; Civ64 SCENES-PLAY 7.13 tables at R:271E.",
+    "$pedia_entry": "Zero-based Civilopedia entry index; Civ64 SCENES-PLAY 7.13.",
+    "$pedia_entries": "Exclusive category entry bound: 72 advances, 28 units, 12 terrain from the Civ64 R:271E byte tables; Civ64 SCENES-PLAY 7.13.",
+    "$government": "Government selector; civd DIPLOMAC.C `_set_government` and Civ64 SCENES-PLAY 7.10.",
+    "$government_count": "Authored government list bound (six Civ1 governments); Civ64 SCENES-PLAY 7.10.",
+    "$spaceship_parts": "Authored count of placed spaceship parts; source O18:0F83 build path, Civ64 SCENES-PLAY 7.16. The part array is not modeled.",
+    "$hall_entry": "Zero-based Hall of Fame entry cursor over six FAME.DTA entries; Civ64 SCENES.md 7.5.",
     "$game_over": "UIL end-state flag; Civ64 SCENES-PLAY 7.17.",
 }
 
@@ -263,6 +289,14 @@ SCREEN_SPECS = [
                 "enter-load",
             ),
             _object(
+                "title-earth",
+                "Play on EARTH",
+                ["earth", "play earth", "world map"],
+                "Sets DGROUP:D76A = 1 and enters Birth with the Earth map; civd GAME.C:case 2.",
+                "activate",
+                "title-earth",
+            ),
+            _object(
                 "title-customize",
                 "Customize World",
                 ["customize", "custom world"],
@@ -289,14 +323,17 @@ SCREEN_SPECS = [
         ["SAVE.C"],
         [("O11:0000", "load screen")],
         [
-            _object(
-                "load-slot",
-                "Load first slot",
-                ["slot", "first slot", "load game"],
-                "Declared slot 0; the save-file parser is outside this scene.",
-                "open",
-                "load-world",
-            ),
+            *[
+                _object(
+                    f"load-slot-{slot}",
+                    f"Load CIVIL{slot}.SVE",
+                    [f"slot {slot}", f"civil{slot}", f"load {slot}"],
+                    f"Loads fixed slot {slot}; the save-file parser is outside this scene. Civ64 SCENES.md 7.2.",
+                    "load",
+                    f"load-slot-{slot}",
+                )
+                for slot in range(10)
+            ],
             _object(
                 "load-cancel",
                 "Cancel load",
@@ -316,30 +353,63 @@ SCREEN_SPECS = [
         ["GAME.C"],
         [("R:01A8:0591", "customize world")],
         [
-            _object(
-                "custom-land",
-                "Land mass",
-                ["land", "land mass"],
-                "World parameter DGROUP:7EF6; the selected item is not modelled.",
-            ),
-            _object(
-                "custom-temperature",
-                "Temperature",
-                ["temperature", "temp"],
-                "World parameter DGROUP:7EF8; the selected item is not modelled.",
-            ),
-            _object(
-                "custom-climate",
-                "Climate",
-                ["climate"],
-                "World parameter DGROUP:7EFA; the selected item is not modelled.",
-            ),
-            _object(
-                "custom-age",
-                "Age",
-                ["age"],
-                "World parameter DGROUP:7EFC; the selected item is not modelled.",
-            ),
+            *[
+                _object(
+                    f"custom-{param}-{slug}",
+                    label,
+                    [label.lower(), slug, f"{param} {slug}"],
+                    f"{heading} {label}; civd {source} writes {address}, default 1.",
+                    "choose",
+                    f"custom-{param}-{slug}",
+                )
+                for param, heading, address, source, options in (
+                    (
+                        "land",
+                        "Land mass",
+                        "DGROUP:7EF6",
+                        "GAME.C:702",
+                        (
+                            ("small", "Small", 0),
+                            ("normal", "Normal", 1),
+                            ("large", "Large", 2),
+                        ),
+                    ),
+                    (
+                        "temperature",
+                        "Temperature",
+                        "DGROUP:7EF8",
+                        "GAME.C:716",
+                        (
+                            ("cool", "Cool", 0),
+                            ("temperate", "Temperate", 1),
+                            ("warm", "Warm", 2),
+                        ),
+                    ),
+                    (
+                        "climate",
+                        "Climate",
+                        "DGROUP:7EFA",
+                        "GAME.C:730",
+                        (
+                            ("arid", "Arid", 0),
+                            ("normal", "Normal", 1),
+                            ("wet", "Wet", 2),
+                        ),
+                    ),
+                    (
+                        "age",
+                        "Age",
+                        "DGROUP:7EFC",
+                        "GAME.C:742",
+                        (
+                            ("3-billion", "3 billion years", 0),
+                            ("4-billion", "4 billion years", 1),
+                            ("5-billion", "5 billion years", 2),
+                        ),
+                    ),
+                )
+                for slug, label, _value in options
+            ],
             _object(
                 "custom-begin",
                 "Begin world",
@@ -738,10 +808,28 @@ SCREEN_SPECS = [
                 "Selected unit/improvement and stored shields.",
             ),
             _object(
-                "city-tabs",
-                "City tabs",
-                ["tabs", "info", "happy", "map", "view"],
-                "INFO/HAPPY/MAP/VIEW tabs; detailed tab text is in the city fixture.",
+                "city-tab-info",
+                "INFO tab",
+                ["info", "info tab"],
+                "Selects the INFO view (view_mode 0); civd CITYMGT.C key i.",
+                "activate",
+                "city-tab-info",
+            ),
+            _object(
+                "city-tab-happy",
+                "HAPPY tab",
+                ["happy", "happy tab"],
+                "Selects the HAPPY view (view_mode 1); civd CITYMGT.C key h.",
+                "activate",
+                "city-tab-happy",
+            ),
+            _object(
+                "city-tab-map",
+                "MAP tab",
+                ["map", "map tab"],
+                "Selects the MAP view (view_mode 2); civd CITYMGT.C key m.",
+                "activate",
+                "city-tab-map",
             ),
             _object(
                 "city-units",
@@ -956,30 +1044,97 @@ SCREEN_SPECS = [
                 "report-frame",
                 "Report frame",
                 ["frame", "header"],
-                "Title, realm, leader and year header.",
+                "Title, realm, leader and year header; O14:0000/001C.",
             ),
-            _object(
-                "report-city",
-                "City status",
-                ["city status", "cities"],
-                "O14:186F; rows and paging are not rendered.",
-            ),
-            _object(
-                "report-military",
-                "Military status",
-                ["military", "losses"],
-                "O14:03AD/061F.",
-            ),
-            _object(
-                "report-science", "Science report", ["science", "research"], "O14:014B."
-            ),
-            _object("report-trade", "Trade report", ["trade", "economy"], "O14:07F1."),
-            _object(
-                "report-world",
-                "World map report",
-                ["world map", "map report"],
-                "O12:0000; 4x4 terrain tiles.",
-            ),
+            *[
+                _object(
+                    f"report-{slug}",
+                    label,
+                    aliases,
+                    description,
+                    "open",
+                    f"report-{slug}",
+                )
+                for slug, label, aliases, description, _value in (
+                    (
+                        "city",
+                        "City status",
+                        ["city status", "cities", "f1"],
+                        "O14:186F (F1); rows and paging are not rendered.",
+                        0,
+                    ),
+                    (
+                        "military",
+                        "Military status",
+                        ["military", "losses", "f2"],
+                        "O14:03AD/061F (F2).",
+                        1,
+                    ),
+                    (
+                        "intelligence",
+                        "Intelligence",
+                        ["intelligence", "spies", "f3"],
+                        "O14:0D43 (F3); dossier and INFO buttons are not rendered.",
+                        2,
+                    ),
+                    (
+                        "attitude",
+                        "Attitude survey",
+                        ["attitude", "survey", "f4"],
+                        "O14:15F4 (F4).",
+                        3,
+                    ),
+                    (
+                        "trade",
+                        "Trade report",
+                        ["trade", "economy", "f5"],
+                        "O14:07F1 (F5).",
+                        4,
+                    ),
+                    (
+                        "science",
+                        "Science report",
+                        ["science", "research", "f6"],
+                        "O14:014B (F6).",
+                        5,
+                    ),
+                    (
+                        "wonders",
+                        "Wonders of the World",
+                        ["wonders", "f7"],
+                        "O12:080D (F7); wonder icons are not rendered.",
+                        6,
+                    ),
+                    (
+                        "top5",
+                        "Top 5 Cities",
+                        ["top 5", "top five", "f8"],
+                        "O3:09AC (F8).",
+                        7,
+                    ),
+                    (
+                        "score",
+                        "Civilization score",
+                        ["score", "scoring", "f9"],
+                        "O20:0CA9 (F9).",
+                        8,
+                    ),
+                    (
+                        "world",
+                        "World map report",
+                        ["world map", "map report", "f10"],
+                        "O12:0000 (F10); 4x4 terrain tiles.",
+                        9,
+                    ),
+                    (
+                        "demographics",
+                        "Demographics",
+                        ["demographics", "stats"],
+                        "O12:0D6D; 13 rows.",
+                        10,
+                    ),
+                )
+            ],
             _object(
                 "report-back",
                 "Close reports",
@@ -1002,14 +1157,34 @@ SCREEN_SPECS = [
             _object(
                 "pedia-index",
                 "Civilopedia index",
-                ["index"],
-                "Advances, units and terrain tables.",
+                ["index", "next category"],
+                "Advances the category and resets the entry; Civ64 SCENES-PLAY 7.13.",
+                "next",
+                "pedia-category-next",
+            ),
+            _object(
+                "pedia-index-previous",
+                "Civilopedia previous category",
+                ["previous category", "back category"],
+                "Moves to the previous category and resets the entry; Civ64 SCENES-PLAY 7.13.",
+                "previous",
+                "pedia-category-previous",
             ),
             _object(
                 "pedia-entry",
                 "Civilopedia entry",
-                ["entry", "article"],
-                "BLURB text and picture cells are outside this scene.",
+                ["entry", "article", "next entry"],
+                "Advances the entry within the category; BLURB text and picture cells remain outside the scene.",
+                "next",
+                "pedia-entry-next",
+            ),
+            _object(
+                "pedia-entry-previous",
+                "Civilopedia previous entry",
+                ["previous entry", "back entry"],
+                "Moves to the previous entry within the category; Civ64 SCENES-PLAY 7.13.",
+                "previous",
+                "pedia-entry-previous",
             ),
             _object(
                 "pedia-back",
@@ -1039,8 +1214,10 @@ SCREEN_SPECS = [
             _object(
                 "government-change",
                 "Government change",
-                ["government", "cabinet"],
-                "New Cabinet display; government rules are not modelled.",
+                ["government", "cabinet", "next government"],
+                "Advances the government selector; civd DIPLOMAC.C _set_government and Civ64 SCENES-PLAY 7.10. Government rules are not modelled.",
+                "next",
+                "government-next",
             ),
             _object(
                 "diplomacy-back",
@@ -1070,8 +1247,10 @@ SCREEN_SPECS = [
             _object(
                 "spaceship-build",
                 "Build spaceship",
-                ["build", "launch"],
-                "Build/launch rules are outside this scene.",
+                ["build", "place part"],
+                "Adds one declared part up to the authored 16-part bound; source O18:0F83. Part arrays and launch rules are outside this scene.",
+                "build",
+                "spaceship-build-step",
             ),
             _object(
                 "spaceship-back",
@@ -1095,8 +1274,10 @@ SCREEN_SPECS = [
             _object(
                 "hall-entries",
                 "Hall entries",
-                ["entries", "fame"],
-                "Six entries from FAME.DTA; file parsing is outside this scene.",
+                ["entries", "fame", "next entry"],
+                "Advances the cursor over six FAME.DTA entries; file parsing is outside this scene.",
+                "next",
+                "hall-entry-next",
             ),
             _object(
                 "hall-back",
@@ -1322,14 +1503,6 @@ def build_programs() -> dict:
         "enter-load",
         _transition(
             "enter-load", LOAD, "Load game: drive prompt and ten fixed save slots."
-        ),
-    )
-    add(
-        "load-world",
-        _transition(
-            "load-world",
-            WORLD,
-            "Loaded game enters the world map; save parsing is not modelled.",
         ),
     )
     add("load-cancel", _transition("load-cancel", TITLE, "Returned to the title menu."))
@@ -2185,7 +2358,412 @@ def build_programs() -> dict:
         ),
     )
 
-    if not 1 <= len(programs) <= 48:
+    add(
+        "title-earth",
+        _transition(
+            "title-earth",
+            BIRTH,
+            "EARTH selected: DGROUP:D76A = 1; Birth skips generation stages.",
+            ("$earth_world", True),
+        ),
+    )
+    for slot in range(10):
+        add(
+            f"load-slot-{slot}",
+            _transition(
+                f"load-slot-{slot}",
+                WORLD,
+                f"Loaded slot CIVIL{slot}.SVE; save parsing is outside this scene.",
+                ("$load_slot", slot),
+            ),
+        )
+    for param, values in (
+        ("land", (("small", 0), ("normal", 1), ("large", 2))),
+        ("temperature", (("cool", 0), ("temperate", 1), ("warm", 2))),
+        ("climate", (("arid", 0), ("normal", 1), ("wet", 2))),
+        ("age", (("3-billion", 0), ("4-billion", 1), ("5-billion", 2))),
+    ):
+        for slug, value in values:
+            add(
+                f"custom-{param}-{slug}",
+                _transition(
+                    f"custom-{param}-{slug}",
+                    CUSTOMIZE,
+                    f"{param} = {value}; custom world parameter remains selected.",
+                    (f"$custom_{param}", value),
+                ),
+            )
+    for name, value in (("info", 0), ("happy", 1), ("map", 2)):
+        add(
+            f"city-tab-{name}",
+            _transition(
+                f"city-tab-{name}",
+                CITY,
+                f"City view mode = {value}.",
+                ("$view_mode", value),
+            ),
+        )
+    for slug, value in (
+        ("city", 0),
+        ("military", 1),
+        ("intelligence", 2),
+        ("attitude", 3),
+        ("trade", 4),
+        ("science", 5),
+        ("wonders", 6),
+        ("top5", 7),
+        ("score", 8),
+        ("world", 9),
+        ("demographics", 10),
+    ):
+        add(
+            f"report-{slug}",
+            _transition(
+                f"report-{slug}",
+                REPORTS,
+                f"Report selector = {value}.",
+                ("$report", value),
+            ),
+        )
+    add(
+        "pedia-category-next",
+        _program(
+            "pedia-category-next",
+            [
+                {
+                    "id": "pedia-category-add",
+                    "op": "add",
+                    "var": "$pedia_category",
+                    "value": 1,
+                },
+                {
+                    "id": "pedia-category-wrap",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$pedia_category"},
+                        "right": 3,
+                    },
+                    "then": [
+                        {
+                            "id": "pedia-category-reset",
+                            "op": "set",
+                            "var": "$pedia_category",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "pedia-entries-select",
+                    "op": "if",
+                    "condition": _eq("$pedia_category", 0),
+                    "then": [
+                        {
+                            "id": "pedia-entries-advances",
+                            "op": "set",
+                            "var": "$pedia_entries",
+                            "value": 72,
+                        }
+                    ],
+                    "else": [
+                        {
+                            "id": "pedia-entries-units-or-terrain",
+                            "op": "if",
+                            "condition": _eq("$pedia_category", 1),
+                            "then": [
+                                {
+                                    "id": "pedia-entries-units",
+                                    "op": "set",
+                                    "var": "$pedia_entries",
+                                    "value": 28,
+                                }
+                            ],
+                            "else": [
+                                {
+                                    "id": "pedia-entries-terrain",
+                                    "op": "set",
+                                    "var": "$pedia_entries",
+                                    "value": 12,
+                                }
+                            ],
+                        }
+                    ],
+                },
+                _set_block("pedia-category-next", "$pedia_entry", 0),
+                _text_block("pedia-category-next", "pedia-category-next-text"),
+            ],
+            {
+                "pedia-category-next-text": {
+                    "kind": "text",
+                    "text": "Civilopedia category advanced; entry reset.",
+                }
+            },
+        ),
+    )
+    add(
+        "pedia-category-previous",
+        _program(
+            "pedia-category-previous",
+            [
+                {
+                    "id": "pedia-category-previous-branch",
+                    "op": "if",
+                    "condition": _eq("$pedia_category", 0),
+                    "then": [
+                        {
+                            "id": "pedia-category-previous-wrap",
+                            "op": "set",
+                            "var": "$pedia_category",
+                            "value": 2,
+                        }
+                    ],
+                    "else": [
+                        {
+                            "id": "pedia-category-previous-step",
+                            "op": "subtract",
+                            "var": "$pedia_category",
+                            "value": 1,
+                        }
+                    ],
+                },
+                {
+                    "id": "pedia-previous-entries-select",
+                    "op": "if",
+                    "condition": _eq("$pedia_category", 0),
+                    "then": [
+                        {
+                            "id": "pedia-previous-entries-advances",
+                            "op": "set",
+                            "var": "$pedia_entries",
+                            "value": 72,
+                        }
+                    ],
+                    "else": [
+                        {
+                            "id": "pedia-previous-entries-units-or-terrain",
+                            "op": "if",
+                            "condition": _eq("$pedia_category", 1),
+                            "then": [
+                                {
+                                    "id": "pedia-previous-entries-units",
+                                    "op": "set",
+                                    "var": "$pedia_entries",
+                                    "value": 28,
+                                }
+                            ],
+                            "else": [
+                                {
+                                    "id": "pedia-previous-entries-terrain",
+                                    "op": "set",
+                                    "var": "$pedia_entries",
+                                    "value": 12,
+                                }
+                            ],
+                        }
+                    ],
+                },
+                _set_block("pedia-category-previous", "$pedia_entry", 0),
+                _text_block("pedia-category-previous", "pedia-category-previous-text"),
+            ],
+            {
+                "pedia-category-previous-text": {
+                    "kind": "text",
+                    "text": "Civilopedia category moved back; entry reset.",
+                }
+            },
+        ),
+    )
+    add(
+        "pedia-entry-next",
+        _program(
+            "pedia-entry-next",
+            [
+                {
+                    "id": "pedia-entry-add",
+                    "op": "add",
+                    "var": "$pedia_entry",
+                    "value": 1,
+                },
+                {
+                    "id": "pedia-entry-wrap",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$pedia_entry"},
+                        "right": {"var": "$pedia_entries"},
+                    },
+                    "then": [
+                        {
+                            "id": "pedia-entry-reset",
+                            "op": "set",
+                            "var": "$pedia_entry",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                _text_block("pedia-entry-next", "pedia-entry-next-text"),
+            ],
+            {
+                "pedia-entry-next-text": {
+                    "kind": "text",
+                    "text": "Civilopedia entry advanced and wrapped.",
+                }
+            },
+        ),
+    )
+    add(
+        "pedia-entry-previous",
+        _program(
+            "pedia-entry-previous",
+            [
+                {
+                    "id": "pedia-entry-previous-branch",
+                    "op": "if",
+                    "condition": _eq("$pedia_entry", 0),
+                    "then": [
+                        {
+                            "id": "pedia-entry-previous-set",
+                            "op": "set",
+                            "var": "$pedia_entry",
+                            "value": {"var": "$pedia_entries"},
+                        },
+                        {
+                            "id": "pedia-entry-previous-step",
+                            "op": "subtract",
+                            "var": "$pedia_entry",
+                            "value": 1,
+                        },
+                    ],
+                    "else": [
+                        {
+                            "id": "pedia-entry-previous-decrement",
+                            "op": "subtract",
+                            "var": "$pedia_entry",
+                            "value": 1,
+                        }
+                    ],
+                },
+                _text_block("pedia-entry-previous", "pedia-entry-previous-text"),
+            ],
+            {
+                "pedia-entry-previous-text": {
+                    "kind": "text",
+                    "text": "Civilopedia entry moved back and wrapped.",
+                }
+            },
+        ),
+    )
+    add(
+        "government-next",
+        _program(
+            "government-next",
+            [
+                {
+                    "id": "government-add",
+                    "op": "add",
+                    "var": "$government",
+                    "value": 1,
+                },
+                {
+                    "id": "government-wrap",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$government"},
+                        "right": {"var": "$government_count"},
+                    },
+                    "then": [
+                        {
+                            "id": "government-reset",
+                            "op": "set",
+                            "var": "$government",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                _text_block("government-next", "government-next-text"),
+            ],
+            {
+                "government-next-text": {
+                    "kind": "text",
+                    "text": "Government selector advanced; cabinet rules are not modeled.",
+                }
+            },
+        ),
+    )
+    add(
+        "spaceship-build-step",
+        _program(
+            "spaceship-build-step",
+            [
+                {
+                    "id": "spaceship-bound",
+                    "op": "require",
+                    "condition": {
+                        "op": "ge",
+                        "left": 16,
+                        "right": {"var": "$spaceship_parts"},
+                    },
+                },
+                {
+                    "id": "spaceship-add",
+                    "op": "add",
+                    "var": "$spaceship_parts",
+                    "value": 1,
+                },
+                _text_block("spaceship-build-step", "spaceship-build-step-text"),
+            ],
+            {
+                "spaceship-build-step-text": {
+                    "kind": "text",
+                    "text": "Spaceship part placed; part arrays and launch rules are not modeled.",
+                }
+            },
+        ),
+    )
+    add(
+        "hall-entry-next",
+        _program(
+            "hall-entry-next",
+            [
+                {
+                    "id": "hall-entry-add",
+                    "op": "add",
+                    "var": "$hall_entry",
+                    "value": 1,
+                },
+                {
+                    "id": "hall-entry-wrap",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$hall_entry"},
+                        "right": 6,
+                    },
+                    "then": [
+                        {
+                            "id": "hall-entry-reset",
+                            "op": "set",
+                            "var": "$hall_entry",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                _text_block("hall-entry-next", "hall-entry-next-text"),
+            ],
+            {
+                "hall-entry-next-text": {
+                    "kind": "text",
+                    "text": "Hall of Fame cursor advanced and wrapped over six entries.",
+                }
+            },
+        ),
+    )
+    if not 1 <= len(programs) <= 128:
         raise ValueError(f"program count {len(programs)} exceeds the scene budget")
     return programs
 

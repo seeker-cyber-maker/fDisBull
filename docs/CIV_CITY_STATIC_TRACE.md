@@ -233,7 +233,7 @@ gives `b = 300`, `300*300 mod 65536 = 24464`, `24464/20 = 1223`, price
 costs buys it for zero: `base` clamps to 0 and the price follows.
 
 The box text is built at `0x746F..0x7560` (cost, item name, treasury, then
-"CIVIL DISORDER" when status bit 1 is set on an improvement), and
+"CIVIL DISORDER" when status bit 1 is set and the production is a unit), and
 `0x1EA8:1F6A`/`0x1EA8:1E22` append the decimal fields.
 
 ### Guard (`0x75D2..0x75E2`)
@@ -381,11 +381,70 @@ call is an `int 3F` overlay entry `0x0013`, so the overlay-to-segment mapping of
 
 ### Retracted earlier reading
 
-`0x4C00..0x4E03` also ends with `add [bx+0x70fa], ax` and
-`shl ax,1 / sub [bx-0x4e2a], ax`, which reads like a purchase, but it is not
-reached from the `b` branch and it masks production status with
-`and byte [bx+0x70f2], 0xef`. Its caller and action stay unattributed
-(candidate); no model claims it.
+`0x4C00..0x4E03` is an offset in module segment `0A99`, linear
+`0x11D90..0x11F93`, which is `R:0D12:4C70..4E73`; it sits inside
+`_city_process` but is a different span from Civ64's box. It ends with
+`add [bx+0x70fa], ax` and `shl ax,1 / sub [bx-0x4e2a], ax`, which reads like a
+purchase, but it is not reached from the `b` branch and it masks production
+status with `and byte [bx+0x70f2], 0xef`. Its caller and action stay
+unattributed (candidate); no model claims it.
+
+## Three-way source standoff
+
+Scope: the **Buy price, guard and commit semantics** for DOS 474.05. This does
+not establish that the city-screen `b`/BUY control reaches those bytes at
+runtime, and it does not establish byte equivalence with the Win16 build.
+
+Sources are qualified, not treated as interchangeable:
+
+- **civd**: revision `d9214fcd36aa6003d28aae60c3974b665f752280`, branch
+  `main` (474.05 reconstruction). `CITYMGT.C` 1404-1434 contains the buy
+  block; `docs/CIV_EXE_ATLAS.md` records the build correspondence (430/430
+  function entry opcodes, 5,951/5,951 call targets) for the same
+  `CIV_UNP.EXE`, SHA-256
+  `aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57`.
+- **Civ64**: commit `4e46572d727544722d90c24dc2ce51a9c6d22f15`, documentation
+  only (the author does not publish the recovered source). The recovered
+  Win16 core is reported at `1030:5A51..5D25` in
+  `docs/verify/seg007_1030_p1.part4.md`; the DOS question box
+  `R:0D12:4CDF..4E37` is recorded in `docs/ext-D7f-record.md`. This is an
+  attributed NE correspondence, not a DOS build equivalence.
+- **This trace**: DOS 474.05 `CIV_UNP.EXE`, `0x7387..0x7608`.
+
+| Step | civd | Civ64 (Win16 recovery) | This trace | Result |
+| --- | --- | --- | --- | --- |
+| Base | `clamp(10*cost - shield_box, 0, 999)`; `cost` is the shield cost / 10 | `ClampInt(W16(aux*10) - shieldsStored, 0, 0x3E7)` | `ClampInt(10*cost10 - shield_box, 0, 999)` | Agree |
+| Unit price | `base*base/20 + base*2` | `W16(scratch*2) + IDIV16(W16(s*s), 20)` | `2*b + i16(b*b)/20` | Agree |
+| Improvement price | `base*2`; `*2` when `-production > 21` | `*2`; `*2 again for -prod > 0x15` | `2*b`; `*2` when `k > 21` | Agree |
+| Empty box | `*2` when `shield_box == 0` | `*2` when `shieldsStored == 0` | `*2` when `shield_box == 0` | Agree |
+| Guard | `money >= price`; commit only when `show_menu == 0` | suffix `Yes/No` only when `treasury >= price`; commit only on result 1 and `treasury >= price` | `cmp treasury, price`; skip commit when short | Agree |
+| Commit | `shield_box = 10*cost`; `money -= price` | `shieldsStored = aux*10`; `treasury -= price` | `shield_box = 10*item_cost`; `treasury -= price` | Agree |
+| Disorder text | only when `production >= 0` and status bit 1 | reported as `CIVIL DISORDER`, condition not stated | `test status,1` under `production >= 0` at `0x11EF0..0x11F12` | Agree; Civ64 silent on the condition |
+
+Residual differences, not rule disagreements:
+
+- **Yes/No index.** civd returns zero for the first row; the Win16 core uses
+  item 1 for Yes. Civ64 documents that the DOS box maps its row 0 to the
+  core's item 1. The visible rule is the same.
+- **Disorder condition.** civd gates the `CIVIL DISORDER` line on unit
+  production (`production >= 0`) and status bit 1. The earlier wording in this
+  trace said "on an improvement"; that was wrong and is corrected here. Civ64
+  does not state the condition, so it neither confirms nor contradicts it.
+- **Address binding.** Civ64's `R:0D12:4CDF..4E37` maps to linear
+  `0x11DFF..0x11F57`, exactly this trace's text-build start at `0x746F`
+  (module `0A99`) and its `ShowMenu` call. The key handler, box and commit all
+  lie in `_city_process`; the two address representations agree. What remains
+  unproven is the **runtime call path** from the city-screen `b` key to this
+  block, not the price/guard/commit address.
+
+Verdict for `CIV-DOS-CITY-BUY-001`: **semantically confirmed by three-way
+agreement** on clamp, unit price, improvement price, both doublings, guard and
+commit. No runtime test is required for those semantics under the standoff
+rule. The runtime reachability of the city-screen BUY control, the exact DOS
+box/commit call path and all persistence claims remain outside this verdict and
+stay candidate. `recovery-research.md` still applies: civd is byte-qualified
+to this DOS build; Civ64 is a different-edition corroborating source, so its
+agreement is not independent proof of DOS bytecode.
 
 ## Limits
 
@@ -409,7 +468,10 @@ reached from the `b` branch and it masks production status with
 identity, the calling sites, the shield reset block and the fifteen-site key
 dispatch. The `a` and `s` handlers are now decoded with civd source agreement
 for their cursor loop, clamp, commit/exit and sell-path guard.
-`CIV-DOS-CITY-BUY-001` is statically proven for the guard, price and commit
-stores. `CIV-UI-001` stays `candidate`: scene geometry and controls still need
-a runtime display/state comparison.
+`CIV-DOS-CITY-BUY-001` is semantically confirmed by the three-way agreement
+recorded above (civd 474.05 source, Civ64's attributed Win16/DOS correspondence
+and this DOS 474.05 trace) for the guard, unit price, improvement price, both
+doublings and commit stores. Runtime reachability of the city-screen BUY
+control remains unproven. `CIV-UI-001` stays `candidate`: scene geometry and
+controls still need a runtime display/state comparison.
 

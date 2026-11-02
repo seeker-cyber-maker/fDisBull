@@ -63,8 +63,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 95
-    assert len(scene["programs"]) == 47
+    assert len(scene["objects"]) == 123
+    assert len(scene["programs"]) == 90
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -328,6 +328,126 @@ def test_game_over_context_is_state_reachable_and_new_game_resets():
     assert backend.observe()["context"]["id"] == "title"
     assert backend.state["$screen"] == TITLE
     assert backend.state["$game_over"] is False
+
+
+def test_title_earth_branch_sets_flag_and_enters_birth():
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "activate", "title-earth")["status"] == "success"
+    assert backend.state["$earth_world"] is True
+    assert backend.observe()["context"]["id"] == "birth"
+
+
+def test_customize_menu_binds_all_four_world_parameters():
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "open", "title-customize")["status"] == "success"
+    cases = (
+        ("land", "small", 0),
+        ("land", "normal", 1),
+        ("land", "large", 2),
+        ("temperature", "cool", 0),
+        ("temperature", "temperate", 1),
+        ("temperature", "warm", 2),
+        ("climate", "arid", 0),
+        ("climate", "normal", 1),
+        ("climate", "wet", 2),
+        ("age", "3-billion", 0),
+        ("age", "4-billion", 1),
+        ("age", "5-billion", 2),
+    )
+    for parameter, slug, value in cases:
+        target = f"custom-{parameter}-{slug}"
+        assert _act(backend, "choose", target)["status"] == "success", target
+        assert backend.state[f"$custom_{parameter}"] == value
+        assert backend.observe()["context"]["id"] == "customize"
+
+
+def test_load_slots_bind_slot_and_enter_world():
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "open", "title-load")["status"] == "success"
+    for slot in range(10):
+        target = f"load-slot-{slot}"
+        assert _act(backend, "load", target)["status"] == "success", target
+        assert backend.state["$load_slot"] == slot
+        assert backend.observe()["context"]["id"] == "world"
+        if slot != 9:
+            backend = ILSceneBackend(build_scene())
+            assert _act(backend, "open", "title-load")["status"] == "success"
+
+
+def test_city_tabs_set_view_mode():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-city")["status"] == "success"
+    for target, mode in (
+        ("city-tab-info", 0),
+        ("city-tab-happy", 1),
+        ("city-tab-map", 2),
+    ):
+        assert _act(backend, "activate", target)["status"] == "success"
+        assert backend.state["$view_mode"] == mode
+        assert backend.observe()["context"]["id"] == "city"
+
+
+def test_all_report_pages_bind_report_selector():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-reports")["status"] == "success"
+    pages = (
+        ("city", 0),
+        ("military", 1),
+        ("intelligence", 2),
+        ("attitude", 3),
+        ("trade", 4),
+        ("science", 5),
+        ("wonders", 6),
+        ("top5", 7),
+        ("score", 8),
+        ("world", 9),
+        ("demographics", 10),
+    )
+    for slug, value in pages:
+        target = f"report-{slug}"
+        assert _act(backend, "open", target)["status"] == "success", target
+        assert backend.state["$report"] == value
+        assert backend.observe()["context"]["id"] == "reports"
+
+
+def test_pedia_selector_wraps_category_and_entry():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-pedia")["status"] == "success"
+    assert backend.state["$pedia_entries"] == 72
+    assert _act(backend, "next", "pedia-index")["status"] == "success"
+    assert backend.state["$pedia_category"] == 1
+    assert backend.state["$pedia_entries"] == 28
+    assert backend.state["$pedia_entry"] == 0
+    assert _act(backend, "next", "pedia-entry")["status"] == "success"
+    assert backend.state["$pedia_entry"] == 1
+    assert _act(backend, "previous", "pedia-entry-previous")["status"] == "success"
+    assert backend.state["$pedia_entry"] == 0
+    assert _act(backend, "previous", "pedia-entry-previous")["status"] == "success"
+    assert backend.state["$pedia_entry"] == 27
+    assert _act(backend, "previous", "pedia-index-previous")["status"] == "success"
+    assert backend.state["$pedia_category"] == 0
+    assert backend.state["$pedia_entries"] == 72
+
+
+def test_government_spaceship_and_hall_selectors_advance():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-diplomacy")["status"] == "success"
+    assert _act(backend, "next", "government-change")["status"] == "success"
+    assert backend.state["$government"] == 1
+    assert _act(backend, "exit", "diplomacy-back")["status"] == "success"
+    assert _act(backend, "open", "world-spaceship")["status"] == "success"
+    assert _act(backend, "build", "spaceship-build")["status"] == "success"
+    assert backend.state["$spaceship_parts"] == 1
+    assert _act(backend, "exit", "spaceship-back")["status"] == "success"
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "open", "title-hall")["status"] == "success"
+    for expected in (1, 2, 3, 4, 5, 0):
+        assert _act(backend, "next", "hall-entries")["status"] == "success"
+        assert backend.state["$hall_entry"] == expected
 
 
 def test_committed_scene_and_provenance_match_and_all_anchors_resolve():

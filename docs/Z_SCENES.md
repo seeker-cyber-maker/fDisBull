@@ -55,7 +55,7 @@ An interactive terminal displays `> `; piped and model protocols have no prompt.
 
 `fdisbull-il-scene-1` is a small projection envelope, not a new UIL core version.
 It contains exactly `format`, `programs`, `contexts`, `objects` and `partial`.
-It admits at most 1 MiB, 48 programs, 64 contexts and 256 objects.
+It admits at most 1 MiB, 128 programs, 64 contexts and 256 objects.
 
 - `programs` maps private names to existing, unchanged `fdisbull-il-1` documents
   or `{"revision":"immutable-project-IL-id"}` references. Programs share the

@@ -60,4 +60,6 @@ include examples/civ/civ_city_buy_udc.py
 include examples/civ/civ_city_original.py
 include examples/civ/civ_city_original_compare.py
 include examples/civ/civ_city_scene.json
+include examples/civ/civ_media.py
+include examples/civ/civ_world_uil.py
 include examples/udc/civ_production.py

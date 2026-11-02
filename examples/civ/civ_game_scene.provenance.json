@@ -1,7 +1,7 @@
 {
  "format": "fdisbull-civ-game-uil-provenance-1",
  "scene": "examples/civ/civ_game_scene.json",
- "scene_sha256": "626ba7cb7c04de0c0f289073e723d2a2768ed572c96225b710f7c401f97d61e9",
+ "scene_sha256": "69c640573f0aae4f2cf4330d743622f68be5ef0975fc50f6b200e08426831a9b",
  "edition": {
   "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
   "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
@@ -146,7 +146,7 @@
    "civd": [
     "GAME.C"
    ],
-   "objects": 4,
+   "objects": 5,
    "anchors": [
     {
      "address": "R:01A8:0486",
@@ -168,7 +168,7 @@
    "civd": [
     "SAVE.C"
    ],
-   "objects": 2,
+   "objects": 11,
    "anchors": [
     {
      "address": "O11:0000",
@@ -190,7 +190,7 @@
    "civd": [
     "GAME.C"
    ],
-   "objects": 6,
+   "objects": 14,
    "anchors": [
     {
      "address": "R:01A8:0591",
@@ -451,7 +451,7 @@
    "civd": [
     "CITYMGT.C"
    ],
-   "objects": 14,
+   "objects": 16,
    "anchors": [
     {
      "address": "R:0D12:0045",
@@ -624,7 +624,7 @@
     "REPORTS.C",
     "TURN.C"
    ],
-   "objects": 7,
+   "objects": 13,
    "anchors": [
     {
      "address": "O14:0000",
@@ -691,7 +691,7 @@
    "civd": [
     "PEDIA.C"
    ],
-   "objects": 3,
+   "objects": 5,
    "anchors": [
     {
      "address": "O8:0000",
@@ -1122,7 +1122,85 @@
    "name": "$earth_world",
    "type": "bool",
    "initial": false,
-   "evidence": "DGROUP:D76A EARTH branch; Civ64 SCENES 7.3."
+   "evidence": "DGROUP:D76A EARTH branch; civd GAME.C:case 2 sets it before Birth; Civ64 SCENES.md 7.3."
+  },
+  {
+   "name": "$custom_land",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EF6 custom land mass 0..2; civd GAME.C:702 writes the menu result, default 1; WORLDGEN.C:75 uses it."
+  },
+  {
+   "name": "$custom_temperature",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EF8 custom temperature 0..2; civd GAME.C:716 writes the menu result, default 1; WORLDGEN.C:110 uses it."
+  },
+  {
+   "name": "$custom_climate",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EFA custom climate 0..2; civd GAME.C:730 writes the menu result, default 1; WORLDGEN.C:147 uses it."
+  },
+  {
+   "name": "$custom_age",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EFC custom age 0..2; civd GAME.C:742 writes the menu result, default 1; WORLDGEN.C:200 uses it."
+  },
+  {
+   "name": "$load_slot",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "UIL selector for the ten CIVIL0..9.SVE slots; Civ64 SCENES.md 7.2. No save parser is modelled."
+  },
+  {
+   "name": "$view_mode",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "City tab selection: 0 INFO, 1 HAPPY, 2 MAP; civd CITYMGT.C key loop i/h/m and Civ64 SCENES-PLAY 7.1."
+  },
+  {
+   "name": "$pedia_category",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Civilopedia category selector 0 advances, 1 units, 2 terrain; Civ64 SCENES-PLAY 7.13 tables at R:271E."
+  },
+  {
+   "name": "$pedia_entry",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Zero-based Civilopedia entry index; Civ64 SCENES-PLAY 7.13."
+  },
+  {
+   "name": "$pedia_entries",
+   "type": "u8",
+   "initial": 72,
+   "evidence": "Exclusive category entry bound: 72 advances, 28 units, 12 terrain from the Civ64 R:271E byte tables; Civ64 SCENES-PLAY 7.13."
+  },
+  {
+   "name": "$government",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Government selector; civd DIPLOMAC.C `_set_government` and Civ64 SCENES-PLAY 7.10."
+  },
+  {
+   "name": "$government_count",
+   "type": "u8",
+   "initial": 6,
+   "evidence": "Authored government list bound (six Civ1 governments); Civ64 SCENES-PLAY 7.10."
+  },
+  {
+   "name": "$spaceship_parts",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Authored count of placed spaceship parts; source O18:0F83 build path, Civ64 SCENES-PLAY 7.16. The part array is not modeled."
+  },
+  {
+   "name": "$hall_entry",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Zero-based Hall of Fame entry cursor over six FAME.DTA entries; Civ64 SCENES.md 7.5."
   },
   {
    "name": "$game_over",

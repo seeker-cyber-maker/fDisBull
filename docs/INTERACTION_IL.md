@@ -66,6 +66,11 @@ checks file-bound evidence against immutable project bytes when saving and
 loading. Revisions retain a parent and author; updates require the current
 parent. Evidence identity alone does not prove behavioral equivalence.
 
+For recovered records that need zero-based slot references, bounded strings,
+fixed arrays and `print_text(slot,x,y)`, use the additive
+[`fdisbull-uil-record-1`](UIL_RECORD.md) evaluator. It does not change the
+v1 document, evaluator or scene envelope described above.
+
 The CLI offers `fdisbull il-check PROGRAM`, `fdisbull il-run PROGRAM [--state JSON]`,
 `fdisbull il-store PROJECT NAME PROGRAM [--parent REVISION] [--version VERSION]`,
 and `fdisbull il-info PROJECT REVISION`. `recover_v3_attributes` is a bounded
