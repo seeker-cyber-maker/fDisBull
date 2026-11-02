@@ -7,10 +7,12 @@ import hashlib
 import io
 import json
 import threading
+import time
 import uuid
 
 from .debug_rewind import READ_ONLY, _bounded
 from .operation_budget import rpc_budget
+from . import frame_state_codec as state_codec
 
 
 FORMAT = 'fdisbull-frame-timeline-1'
@@ -144,6 +146,13 @@ def validate_timeline_policy(policy, *, allow_references=False):
         raise ValueError('Preserved RAM exceeds 64 KiB')
 
 
+def validate_storage(storage_mode='full', keyframe_interval=8, *, allow_references=False):
+    if not _reference(storage_mode, allow_references) and storage_mode not in ('full', 'delta'):
+        raise ValueError('Timeline storage_mode must be full or delta')
+    if not _reference(keyframe_interval, allow_references):
+        _bounded(keyframe_interval, 'keyframe_interval', 1, 128)
+
+
 def timeline_locked(function):
     @wraps(function)
     def locked(self, *args, **kwargs):
@@ -262,6 +271,85 @@ class FrameTimelineSessionMixin:
     def _timeline_bytes(self, history):
         return sum(p['bytes'] for p in history['points']) + sum(len(_encoded(i)) for i in history['inputs'])
 
+    def _timeline_raw_size(self, point):
+        return point['checkpoint']['size'] if 'delta' in point else len(point['checkpoint']['data'])
+
+    def _timeline_state_payload_size(self, point):
+        return len(point['delta']['payload']) if 'delta' in point else len(point['checkpoint']['data'])
+
+    def _timeline_descriptor_size(self, point):
+        return len(_encoded(state_codec.descriptor(point['delta']))) if 'delta' in point else 0
+
+    def _timeline_point_bytes(self, point):
+        return (self._timeline_state_payload_size(point) + self._timeline_descriptor_size(point)
+                + len(_encoded(point['checkpoint']['metadata'])) + (len(point['image']) if point['image'] else 0)
+                + len(_encoded(point['image_metadata'])))
+
+    def _timeline_codec_deadline(self):
+        deadline = getattr(self, '_rpc_deadline', None)
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('Frame timeline codec exceeded the shared operation deadline')
+
+    def _timeline_materialize(self, history, point):
+        """Verify the bounded dependency chain before returning ordinary native bytes."""
+        begun = time.perf_counter_ns()
+        stats = history['codec_stats']
+        stats['materialize_count'] += 1
+        try:
+            self._timeline_codec_deadline()
+            index = next((i for i, item in enumerate(history['points']) if item is point), None)
+            if index is None:
+                raise ValueError('Native delta point is not owned by this timeline')
+            chain = []
+            while True:
+                current = history['points'][index]
+                self._timeline_check_point(current, history)
+                if 'delta' not in current:
+                    data = current['checkpoint']['data']
+                    break
+                if index == 0 or len(chain) >= history['keyframe_interval'] - 1:
+                    raise ValueError('Native delta base is missing or chain exceeds its bound')
+                parent = history['points'][index - 1]
+                delta = current['delta']
+                if (delta['base_point'] != parent['id'] or delta['base_sha256'] != parent['checkpoint']['sha256']
+                        or delta['base_size'] != self._timeline_raw_size(parent)
+                        or delta['depth'] != parent.get('delta', {}).get('depth', 0) + 1):
+                    raise ValueError('Native delta dependency identity mismatch')
+                chain.append(current)
+                index -= 1
+            for current in reversed(chain):
+                self._timeline_codec_deadline()
+                data = state_codec.decode(data, current['delta'], max_bytes=history['max_state_bytes'],
+                                          max_depth=history['keyframe_interval'] - 1)
+                stats['delta_decode_count'] += 1
+            self._timeline_codec_deadline()
+            return dict(data=data, sha256=point['checkpoint']['sha256'],
+                        metadata=deepcopy(point['checkpoint']['metadata']))
+        finally:
+            stats['decode_elapsed_ns'] += time.perf_counter_ns() - begun
+
+    def _timeline_rebase_first(self, history):
+        """Promote a successor before evicting its base; never edit a shared point."""
+        successor = history['points'][1]
+        if 'delta' in successor:
+            promoted = dict(successor, checkpoint=self._timeline_materialize(history, successor))
+            del promoted['delta']
+            promoted['bytes'] = self._timeline_point_bytes(promoted)
+            history['points'][1] = promoted
+            # Descriptors bind their actual retained dependency depth. Replace
+            # descendants too, so a speculative preflight never edits shared
+            # points and the selected state's existing envelope remains stable.
+            depth = 0
+            for index in range(2, len(history['points'])):
+                descendant = history['points'][index]
+                if 'delta' not in descendant:
+                    break
+                self._timeline_check_point(descendant, history)
+                depth += 1
+                updated = dict(descendant, delta=state_codec.rebase_depth(descendant['delta'], depth))
+                updated['bytes'] = self._timeline_point_bytes(updated)
+                history['points'][index] = updated
+
     def _timeline_branch(self, history):
         if history['needs_branch'] or history['cursor'] + 1 < len(history['points']):
             point = history['points'][history['cursor']]
@@ -279,6 +367,7 @@ class FrameTimelineSessionMixin:
                or self._timeline_bytes(history) + reserve > history['max_bytes']):
             if history['cursor'] == 0:
                 raise ValueError('Frame timeline cannot reserve the next capture within its byte budget')
+            self._timeline_rebase_first(history)
             del history['points'][0]
             history['cursor'] -= 1
             retained = {p['id'] for p in history['points']}
@@ -287,6 +376,8 @@ class FrameTimelineSessionMixin:
     def _timeline_prepare_forward(self, history, extra=0):
         # Branch/eviction preflight changes only this owned cache. A refusal
         # before native mutation must retain the old future and rewind depth.
+        if history['storage_mode'] == 'delta':
+            self._timeline_materialize(history, history['points'][history['cursor']])
         saved = {key: history[key] for key in ('points', 'inputs', 'cursor', 'branch', 'needs_branch', 'next_frame')}
         history['points'], history['inputs'] = list(history['points']), list(history['inputs'])
         try:
@@ -299,13 +390,20 @@ class FrameTimelineSessionMixin:
     def _timeline_envelope(self, point):
         return dict(id=point['id'], frame=point['frame'], kind=point['kind'],
                     checkpoint_sha256=point['checkpoint']['sha256'],
-                    checkpoint_size=len(point['checkpoint']['data']), metadata=point['checkpoint']['metadata'],
+                    checkpoint_size=self._timeline_raw_size(point), metadata=point['checkpoint']['metadata'],
                     image_sha256=_sha(point['image']) if point['image'] is not None else None,
                     image_metadata=point['image_metadata'])
 
-    def _timeline_check_point(self, point):
-        if (_sha(point['checkpoint']['data']) != point['checkpoint']['sha256']
-                or _sha(_encoded(self._timeline_envelope(point))) != point['envelope_sha256']):
+    def _timeline_check_point(self, point, history=None):
+        if 'delta' in point:
+            if 'data' in point['checkpoint']:
+                raise ValueError('Delta point unexpectedly retains a full payload')
+            state_codec.validate(point['delta'], result_sha256=point['checkpoint']['sha256'],
+                result_size=point['checkpoint']['size'], max_bytes=history['max_state_bytes'] if history else 256 * 1024**2,
+                max_depth=history['keyframe_interval'] - 1 if history else 127)
+        elif _sha(point['checkpoint']['data']) != point['checkpoint']['sha256']:
+            raise ValueError('Frame timeline cached checkpoint hash mismatch')
+        if _sha(_encoded(self._timeline_envelope(point))) != point['envelope_sha256']:
             raise ValueError('Frame timeline cached checkpoint/image envelope hash mismatch')
 
     def _timeline_capture(self, history, *, boundary=None):
@@ -348,14 +446,31 @@ class FrameTimelineSessionMixin:
                      kind='initial-paused' if boundary is None else 'completed-frame',
                      checkpoint=checkpoint, image=image, image_metadata=image_metadata)
         point['envelope_sha256'] = _sha(_encoded(self._timeline_envelope(point)))
-        point['bytes'] = len(data) + len(_encoded(checkpoint['metadata'])) + (len(image) if image else 0) + len(_encoded(image_metadata))
+        if history['storage_mode'] == 'delta' and history['points']:
+            parent = history['points'][history['cursor']]
+            depth = parent.get('delta', {}).get('depth', 0) + 1
+            if depth < history['keyframe_interval']:
+                base = self._timeline_materialize(history, parent)
+                begun = time.perf_counter_ns()
+                try:
+                    self._timeline_codec_deadline()
+                    delta = state_codec.encode(base['data'], data, base_point=parent['id'], depth=depth)
+                    self._timeline_codec_deadline()
+                finally:
+                    history['codec_stats']['encode_count'] += 1
+                    history['codec_stats']['encode_elapsed_ns'] += time.perf_counter_ns() - begun
+                if delta is not None:
+                    point['delta'] = delta
+                    point['checkpoint'] = dict(sha256=checkpoint['sha256'], size=len(data), metadata=checkpoint['metadata'])
+        point['bytes'] = self._timeline_point_bytes(point)
         history['captures_used'] += 1
         history['next_frame'] += 1
         return point
 
     @timeline_locked
     def timeline_start(self, max_frames=120, max_bytes=64 * 1024**2, max_state_bytes=8 * 1024**2,
-                       max_image_bytes=2 * 1024**2, max_captures=4096):
+                       max_image_bytes=2 * 1024**2, max_captures=4096, storage_mode='full', keyframe_interval=8):
+        validate_storage(storage_mode, keyframe_interval)
         for name, value, hi in (('max_frames', max_frames, 4096), ('max_bytes', max_bytes, 256 * 1024**2),
                 ('max_state_bytes', max_state_bytes, 256 * 1024**2), ('max_image_bytes', max_image_bytes, 16 * 1024**2),
                 ('max_captures', max_captures, 65536)):
@@ -375,7 +490,10 @@ class FrameTimelineSessionMixin:
                 manifest=deepcopy(self._disk_manifest()), valid=True, invalid_reason=None, points=[], inputs=[],
                 cursor=0, current_dirty=False, needs_branch=False, next_frame=0, captures_used=0, input_events_used=0,
                 last_native_frame_id=None, max_frames=max_frames, max_bytes=max_bytes, max_state_bytes=max_state_bytes,
-                max_image_bytes=max_image_bytes, max_captures=max_captures, mixed_frozen=False)
+                max_image_bytes=max_image_bytes, max_captures=max_captures, mixed_frozen=False,
+                storage_mode=storage_mode, keyframe_interval=keyframe_interval,
+                codec_stats=dict(encode_count=0, encode_elapsed_ns=0, materialize_count=0,
+                                 decode_elapsed_ns=0, delta_decode_count=0))
             history['points'].append(self._timeline_capture(history))
             self._frame_timeline = history
         result = self.timeline_status()
@@ -394,6 +512,17 @@ class FrameTimelineSessionMixin:
         point = history['points'][history['cursor']]
         experiment = self.metadata.get('timeline_experiment') or self.metadata.get('delta_experiment')
         return dict(result, timeline=history['id'], branch=history['branch'], active=not self.closed,
+            storage_mode=history['storage_mode'], keyframe_interval=history['keyframe_interval'],
+            full_state_points=sum('delta' not in p for p in history['points']),
+            delta_state_points=sum('delta' in p for p in history['points']),
+            retained_encoded_state_payload_bytes=sum(self._timeline_state_payload_size(p) for p in history['points']),
+            reconstructed_state_payload_bytes=sum(self._timeline_raw_size(p) for p in history['points']),
+            retained_delta_descriptor_bytes=sum(self._timeline_descriptor_size(p) for p in history['points']),
+            raw_checkpoint_limit_bytes=history['max_state_bytes'],
+            codec_transient_bound_bytes=(6 * history['max_state_bytes'] + 8 * 1024**2 + 4 * state_codec.BLOCK) if history['storage_mode'] == 'delta' else 0,
+            codec_stats=deepcopy(history['codec_stats']),
+            capture_contract='Complete native state capture at every point; delta encoding changes retention only',
+            cache_budget_excludes='Codec transient workspace, native serialization/emulator RAM and Python allocator overhead',
             valid=history['valid'] and not self.closed, invalid_reason=history['invalid_reason'], cursor=point['frame'],
             retained_points=len(history['points']), available_back=history['cursor'] if history['valid'] and not self.closed else 0,
             current_dirty=history['current_dirty'], current_cached=not history['current_dirty'] and history['valid'],
@@ -401,16 +530,19 @@ class FrameTimelineSessionMixin:
             bytes_used=self._timeline_bytes(history), captures_used=history['captures_used'], input_events_used=history['input_events_used'],
             max_frames=history['max_frames'], max_bytes=history['max_bytes'], max_captures=history['max_captures'],
             max_state_bytes=history['max_state_bytes'], max_image_bytes=history['max_image_bytes'],
-            state_bytes_used=sum(len(p['checkpoint']['data']) + len(_encoded(p['checkpoint']['metadata'])) for p in history['points']),
+            state_bytes_used=sum(self._timeline_state_payload_size(p) + self._timeline_descriptor_size(p) + len(_encoded(p['checkpoint']['metadata'])) for p in history['points']),
             image_bytes_used=sum((len(p['image']) if p['image'] else 0) + len(_encoded(p['image_metadata'])) for p in history['points']),
-            state_payload_bytes=sum(len(p['checkpoint']['data']) for p in history['points']),
+            state_payload_bytes=sum(self._timeline_state_payload_size(p) for p in history['points']),
             image_payload_bytes=sum(len(p['image']) if p['image'] else 0 for p in history['points']),
             input_bytes_used=sum(len(_encoded(i)) for i in history['inputs']),
             experiment=deepcopy(experiment), resume_safe=not bool(experiment) and not history['mixed_frozen'] and not self.closed,
             points=[dict(point=p['id'], frame=p['frame'], kind=p['kind'], checkpoint_sha256=p['checkpoint']['sha256'],
-                         state_bytes=len(p['checkpoint']['data']) + len(_encoded(p['checkpoint']['metadata'])),
+                         state_bytes=self._timeline_state_payload_size(p) + self._timeline_descriptor_size(p) + len(_encoded(p['checkpoint']['metadata'])),
                          image_bytes=(len(p['image']) if p['image'] else 0) + len(_encoded(p['image_metadata'])),
-                         checkpoint_size=len(p['checkpoint']['data']), image_size=len(p['image']) if p['image'] else 0,
+                         checkpoint_size=self._timeline_raw_size(p), image_size=len(p['image']) if p['image'] else 0,
+                         encoded_state_size=self._timeline_state_payload_size(p),
+                         storage_kind='delta' if 'delta' in p else 'full', delta_depth=p.get('delta', {}).get('depth', 0),
+                         image_sha256=_sha(p['image']) if p['image'] is not None else None,
                          envelope_sha256=p['envelope_sha256']) for p in history['points']],
             execution_allowed=not history['mixed_frozen'] and not self.closed)
 
@@ -605,7 +737,7 @@ class FrameTimelineSessionMixin:
             raise ValueError('Timeline rewind exceeds available frames or requires a dirty current point for zero')
         target_index = history['cursor'] - frames
         point = history['points'][target_index]
-        self._timeline_check_point(point)
+        checkpoint = self._timeline_materialize(history, point)
         attempted = False
         with self._timeline_owned():
             try:
@@ -619,7 +751,7 @@ class FrameTimelineSessionMixin:
                     address = _address(item['address'])
                     preserved.append((address, self._timeline_runtime_read(address, item['length'])))
                 attempted = True
-                restored = self._restore_native_checkpoint(deepcopy(point['checkpoint']))
+                restored = self._restore_native_checkpoint(checkpoint)
                 plans = [(address, self._timeline_runtime_read(address, len(data)), data) for address, data in preserved]
                 for address, old, new in plans:
                     if old != new:
@@ -660,8 +792,7 @@ class FrameTimelineSessionMixin:
         if history['current_dirty']:
             raise ValueError('Current timeline point is dirty; complete a fresh frame before pinning')
         point = history['points'][history['cursor']]
-        self._timeline_check_point(point)
-        checkpoint = point['checkpoint']
+        checkpoint = self._timeline_materialize(history, point)
         return self._artifact(name, 'state', checkpoint['data'], deepcopy(checkpoint['metadata']))
 
     @timeline_locked

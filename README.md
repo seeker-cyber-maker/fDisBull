@@ -220,8 +220,9 @@ For short debugging histories, [Anchor Stone history](docs/DEBUGGER_REWIND.md)
 records full native states and lets an agent jump to an earlier recorded boundary.
 
 The [automatic frame/input timeline](docs/FRAME_INPUT_TIMELINE.md) keeps recent
-native DOS frames ready for rewind and input branching. It uses full states
-first, with optional durable Anchor Stone pins. This requires the separately
+native DOS frames ready for rewind and input branching. It offers full-state
+or [lossless delta storage](docs/FRAME_STATE_DELTAS.md), with durable Anchor Stone
+pins. Both modes still capture full native state each frame. This requires the separately
 built frame-capable backend; its live cache does not survive closing the session.
 
 Full native saved states are called [Anchor Stones](docs/ANCHOR_STONES.md), a nod

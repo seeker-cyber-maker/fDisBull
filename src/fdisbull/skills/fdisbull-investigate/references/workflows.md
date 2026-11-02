@@ -83,7 +83,10 @@ For native DOS input retries, a backend advertising `frame_timeline` supports
 `debug-timeline-start`, `debug-timeline-advance` and `debug-timeline-rewind`.
 This automatically caches full states and completed-frame images, with physical
 keyboard make/break edges scheduled before selected frames. It is a bounded
-live cache, not an instruction-delta history. `debug-timeline-pin` persists a
+live cache, not an instruction-delta history. `storage_mode='delta'` optionally
+retains lossless native-payload deltas with bounded keyframes; full native capture
+still happens each frame. This can reduce retained payload while adding codec
+work, and does not promise faster recording. `debug-timeline-pin` persists a
 cached point as an Anchor Stone without recapturing it. An explicit preservation
 policy can retain identified current conventional RAM, such as RNG, while
 marking the result as an experimental mixed state. Ordinary queued input or

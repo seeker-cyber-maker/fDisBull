@@ -89,9 +89,9 @@ def validate_script(script):
                         from .debug_cpu_deltas import validate_policy
                         validate_policy(params['policy'],allow_references=True)
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
-                        from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy
+                        from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
                         limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
-                                'max_frames':(1,4096),'max_captures':(1,65536),
+                                'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
                                 'max_bytes':(1,256*1024*1024),
                                 'max_state_bytes':(1,256*1024*1024),
                                 'max_image_bytes':(1,16*1024*1024),
@@ -109,6 +109,7 @@ def validate_script(script):
                                 from .external_files import _file_name
                                 _file_name(params['name'])
                         if op=='timeline-start':
+                            validate_storage(params.get('storage_mode','full'), params.get('keyframe_interval',8), allow_references=True)
                             sizes=[params.get('max_state_bytes',8*1024**2),
                                    params.get('max_image_bytes',2*1024**2),
                                    params.get('max_bytes',64*1024**2)]

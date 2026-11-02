@@ -205,7 +205,7 @@ METHODS = {
     "debug-delta-recover": "Load the recovery Anchor Stone and clear the partial-state guard; run",
     "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",
     "debug-frame-inputs": "Apply physical keyboard edges at a stopped frame boundary; run,edges",
-    "debug-timeline-start": "Start bounded automatic full-state and input frame history; run,[max_frames,max_bytes,max_state_bytes,max_image_bytes,max_captures]",
+    "debug-timeline-start": "Start bounded native frame/input history with full or lossless delta retention; run,[max_frames,max_bytes,max_state_bytes,max_image_bytes,max_captures,storage_mode,keyframe_interval]",
     "debug-timeline-status": "Inspect live frame history, cursor, input log, retained bytes and validity; run",
     "debug-timeline-advance": "Advance and automatically capture each native frame, with optional frame input edges; run,[frames,inputs,timeout_ms]",
     "debug-timeline-rewind": "Restore a recent full frame state; explicit policy can preserve declared runtime RAM as an experiment; run,[frames,policy]",

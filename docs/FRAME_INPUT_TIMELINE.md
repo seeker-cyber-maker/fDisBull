@@ -1,7 +1,10 @@
 # Automatic frame and input timeline
 
-The native DOS frame timeline automatically retains complete native saved states
-and their completed-frame PNGs in a bounded live RAM cache. An agent can return
+The native DOS frame timeline automatically records complete native saved states
+and their completed-frame PNGs in a bounded live RAM cache. Native payloads are
+retained in full by default; opt-in [lossless delta storage](FRAME_STATE_DELTAS.md)
+retains keyframes and serialized-state differences. Both still perform a full
+native capture at each point. An agent can return
 through recent frames and try another input branch without naming a saved-state
 artifact for every frame. A pinned point is an ordinary durable **Anchor Stone**.
 This is separate from the selected CPU/RAM instruction deltas in
