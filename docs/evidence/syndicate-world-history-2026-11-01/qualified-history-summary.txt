@@ -1,0 +1,9 @@
+World history (diagnostic); individual events are retained.
+#1 [pistol-qualified] experiment-start: Original weapon type 2; RAM-only test; ammo=200; no health edits.
+#2 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- person-11; projectile [native-observed].
+#3 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- person-11; projectile [native-observed].
+#4 [pistol-qualified] experiment-end: guest-budget
+#5 [minigun-qualified] experiment-start: Original weapon type 6; RAM-only test; ammo=200; no health edits.
+#6..#10 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- person-11; projectile [native-observed].
+#11..#15 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- person-11; projectile [native-observed].
+#16 [minigun-qualified] experiment-end: guest-budget

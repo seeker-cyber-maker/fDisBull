@@ -1,0 +1,809 @@
+{
+  "source_bytes_distributed": false,
+  "trials": [
+    {
+      "actor": "person-1",
+      "complete": true,
+      "events": [
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1439,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 386386,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1440,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 396095,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "kind": "producer-entry",
+          "result": {
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 3.46,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          }
+        },
+        {
+          "bytes": 2,
+          "kind": "diagnostic-write",
+          "native_revision": 1444,
+          "new_sha256": "f549d1a0b41fedd4f6933d23cb7446758e0c6308522a51be38b05dc529b98a0a",
+          "old_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "preferred": 396050,
+          "purpose": "diagnostic selected-vehicle hit-test"
+        },
+        {
+          "command": 25,
+          "expected_command": 25,
+          "kind": "order-produced",
+          "result": {
+            "guest_elapsed_ms": 1,
+            "host_elapsed_ms": 3.441,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "target_reference": 23554
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 269,
+            "host_elapsed_ms": 24.967,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": true,
+          "game_sha256": "a7168c8d83eebe95eb0c5d743e99f62334170d3a1264a6b99f3fcfb741f7517e",
+          "index": 0,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15497,
+            9145,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 0
+        }
+      ],
+      "id": "vehicle-022b426a3190474db92f3e6f19696cbf",
+      "vehicle": "vehicle-0",
+      "verb": "exit",
+      "windows": [
+        {
+          "length": 3696,
+          "preferred": 185872,
+          "sha256": "a8f10722c60cbb3d35503ee040ccebba24c94fbdca0e328fd01db1180e567baa"
+        },
+        {
+          "length": 40,
+          "preferred": 168800,
+          "sha256": "5ff4793ab18b35bdc18370c6e733d51480b1142532960c6680050dae57f5f50a"
+        },
+        {
+          "length": 608,
+          "preferred": 205568,
+          "sha256": "e2d6d6b2866e2b34a1f2ffc155c94c18068c6acbd0011bc6262f0cdcc31605c9"
+        },
+        {
+          "length": 64,
+          "preferred": 234656,
+          "sha256": "e5796ce2a679f1077445e4c87a34ee17c6a2f92e43f08bc46683be42724f5fb7"
+        }
+      ],
+      "writes": 3
+    },
+    {
+      "actor": "person-0",
+      "complete": true,
+      "events": [
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1424,
+          "new_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "old_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "preferred": 386386,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1425,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 396095,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "kind": "producer-entry",
+          "result": {
+            "guest_elapsed_ms": 1,
+            "host_elapsed_ms": 3.767,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          }
+        },
+        {
+          "bytes": 2,
+          "kind": "diagnostic-write",
+          "native_revision": 1429,
+          "new_sha256": "f549d1a0b41fedd4f6933d23cb7446758e0c6308522a51be38b05dc529b98a0a",
+          "old_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "preferred": 396050,
+          "purpose": "diagnostic selected-vehicle hit-test"
+        },
+        {
+          "command": 25,
+          "expected_command": 25,
+          "kind": "order-produced",
+          "result": {
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 3.489,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "target_reference": 23554
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 269,
+            "host_elapsed_ms": 26.41,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": true,
+          "game_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+          "index": 0,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-1"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15497,
+            9145,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 0
+        }
+      ],
+      "id": "vehicle-740f2ff167ea42aabad4888d853fee7d",
+      "vehicle": "vehicle-0",
+      "verb": "exit",
+      "windows": [
+        {
+          "length": 3696,
+          "preferred": 185872,
+          "sha256": "a8f10722c60cbb3d35503ee040ccebba24c94fbdca0e328fd01db1180e567baa"
+        },
+        {
+          "length": 40,
+          "preferred": 168800,
+          "sha256": "5ff4793ab18b35bdc18370c6e733d51480b1142532960c6680050dae57f5f50a"
+        },
+        {
+          "length": 608,
+          "preferred": 205568,
+          "sha256": "e2d6d6b2866e2b34a1f2ffc155c94c18068c6acbd0011bc6262f0cdcc31605c9"
+        },
+        {
+          "length": 64,
+          "preferred": 234656,
+          "sha256": "e5796ce2a679f1077445e4c87a34ee17c6a2f92e43f08bc46683be42724f5fb7"
+        }
+      ],
+      "writes": 3
+    },
+    {
+      "actor": "person-0",
+      "complete": true,
+      "events": [
+        {
+          "bytes": 4,
+          "kind": "diagnostic-write",
+          "native_revision": 1338,
+          "new_sha256": "f625e6f8860a165d6331d6396688703a5a8c61cc49e7023d79354b8361ab9aa6",
+          "old_sha256": "b5e3d425dccd1943e2f64d78e3f2bc2e4cc5a286dd699da169b2f7a7e576127b",
+          "preferred": 349072,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "bytes": 4,
+          "kind": "diagnostic-write",
+          "native_revision": 1339,
+          "new_sha256": "f625e6f8860a165d6331d6396688703a5a8c61cc49e7023d79354b8361ab9aa6",
+          "old_sha256": "b5e3d425dccd1943e2f64d78e3f2bc2e4cc5a286dd699da169b2f7a7e576127b",
+          "preferred": 396066,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1340,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 396095,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "kind": "producer-entry",
+          "result": {
+            "guest_elapsed_ms": 1,
+            "host_elapsed_ms": 3.658,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          }
+        },
+        {
+          "bytes": 2,
+          "kind": "diagnostic-write",
+          "native_revision": 1344,
+          "new_sha256": "f549d1a0b41fedd4f6933d23cb7446758e0c6308522a51be38b05dc529b98a0a",
+          "old_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "preferred": 396050,
+          "purpose": "diagnostic selected-vehicle hit-test"
+        },
+        {
+          "command": 9,
+          "expected_command": 9,
+          "kind": "order-produced",
+          "result": {
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 3.349,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "target_reference": 23554
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 276,
+            "host_elapsed_ms": 24.601,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "e1d9a052046fa77cee4de87b97bbfe08121b0828cf9791799faddd10a89978b4",
+          "index": 0,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9328,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 263,
+            "host_elapsed_ms": 31.475,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "16dec84027193702ee15bb8b0d0459a633e8598cf01bec5ea62cb185a92d027b",
+          "index": 1,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9312,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 265,
+            "host_elapsed_ms": 22.767,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "88d64e63af1c6371ca47df401a568476171b53ec941064db5ada0c636878a610",
+          "index": 2,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9296,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 270,
+            "host_elapsed_ms": 23.796,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "0c070a4826eca5aa3f53f4909802357e802f34637dc7cba20d49d0bbce1cd286",
+          "index": 3,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9280,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 26.441,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "8bb0feb7d8d0c0a302abfb67eeacc1fc67dd25225a1a59cd191a88bbe05250fd",
+          "index": 4,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9264,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 277,
+            "host_elapsed_ms": 25.057,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "6e4e9853d941f712ae40b7973b3b9736d0d58c7428b49a3c6f44ab733727f5f2",
+          "index": 5,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9264,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 6
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 284,
+            "host_elapsed_ms": 24.073,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": true,
+          "game_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+          "index": 6,
+          "kind": "observation",
+          "membership": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 0
+        }
+      ],
+      "id": "vehicle-c6179bb5a57d4f2bbe8beefc1e868f59",
+      "vehicle": "vehicle-0",
+      "verb": "board",
+      "windows": [
+        {
+          "length": 3696,
+          "preferred": 185872,
+          "sha256": "a8f10722c60cbb3d35503ee040ccebba24c94fbdca0e328fd01db1180e567baa"
+        },
+        {
+          "length": 40,
+          "preferred": 168800,
+          "sha256": "5ff4793ab18b35bdc18370c6e733d51480b1142532960c6680050dae57f5f50a"
+        },
+        {
+          "length": 608,
+          "preferred": 205568,
+          "sha256": "e2d6d6b2866e2b34a1f2ffc155c94c18068c6acbd0011bc6262f0cdcc31605c9"
+        },
+        {
+          "length": 64,
+          "preferred": 234656,
+          "sha256": "e5796ce2a679f1077445e4c87a34ee17c6a2f92e43f08bc46683be42724f5fb7"
+        }
+      ],
+      "writes": 4
+    },
+    {
+      "actor": "person-1",
+      "complete": true,
+      "events": [
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1385,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 386386,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "bytes": 1,
+          "kind": "diagnostic-write",
+          "native_revision": 1386,
+          "new_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "old_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "preferred": 396095,
+          "purpose": "native selection/input latch"
+        },
+        {
+          "kind": "producer-entry",
+          "result": {
+            "guest_elapsed_ms": 2,
+            "host_elapsed_ms": 3.549,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          }
+        },
+        {
+          "bytes": 2,
+          "kind": "diagnostic-write",
+          "native_revision": 1390,
+          "new_sha256": "f549d1a0b41fedd4f6933d23cb7446758e0c6308522a51be38b05dc529b98a0a",
+          "old_sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "preferred": 396050,
+          "purpose": "diagnostic selected-vehicle hit-test"
+        },
+        {
+          "command": 9,
+          "expected_command": 9,
+          "kind": "order-produced",
+          "result": {
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 3.347,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "target_reference": 23554
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 265,
+            "host_elapsed_ms": 22.174,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "9221e59d9d30ca3f1d7accf030e1fe79b718b69f06e17ee8bbfada116cc6b33d",
+          "index": 0,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9328,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 274,
+            "host_elapsed_ms": 24.896,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "4fd24f36e74ab0251fbc784578b4ec6ba30d1893706c199858bd42638b48d9a9",
+          "index": 1,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9312,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 332,
+            "host_elapsed_ms": 29.566,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "e67c086520ca0d97b047f5990dfbd803e766c5ccb6573f6e728bf1355aa84515",
+          "index": 2,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9296,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.491,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "3a33256fdc41456b16900bdcb9586da6c846ee7b817e06b9147643585cb07531",
+          "index": 3,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9280,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 267,
+            "host_elapsed_ms": 23.401,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "b7ad7caf5aa33c691ea32251dd40a37c1cd67ef423ab7145c59cd0406d788424",
+          "index": 4,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9264,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 5
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 255,
+            "host_elapsed_ms": 20.708,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": false,
+          "game_sha256": "c1724ba6a1c7b8b181f60e9a65c496b16af5504b7d372501f7b529adcd03259e",
+          "index": 5,
+          "kind": "observation",
+          "membership": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15488,
+            9264,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 6
+        },
+        {
+          "advance": {
+            "guest_elapsed_ms": 270,
+            "host_elapsed_ms": 22.618,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "attachments_settled": true,
+          "complete": true,
+          "game_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+          "index": 6,
+          "kind": "observation",
+          "membership": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "occupancy_valid": true,
+          "occupants": [
+            "person-0",
+            "person-1"
+          ],
+          "other_occupants_preserved": true,
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "spatial_valid": true,
+          "state_raw": 8
+        }
+      ],
+      "id": "vehicle-e94764bfdb6c459289b4136bc00895db",
+      "vehicle": "vehicle-0",
+      "verb": "board",
+      "windows": [
+        {
+          "length": 3696,
+          "preferred": 185872,
+          "sha256": "a8f10722c60cbb3d35503ee040ccebba24c94fbdca0e328fd01db1180e567baa"
+        },
+        {
+          "length": 40,
+          "preferred": 168800,
+          "sha256": "5ff4793ab18b35bdc18370c6e733d51480b1142532960c6680050dae57f5f50a"
+        },
+        {
+          "length": 608,
+          "preferred": 205568,
+          "sha256": "e2d6d6b2866e2b34a1f2ffc155c94c18068c6acbd0011bc6262f0cdcc31605c9"
+        },
+        {
+          "length": 64,
+          "preferred": 234656,
+          "sha256": "e5796ce2a679f1077445e4c87a34ee17c6a2f92e43f08bc46683be42724f5fb7"
+        }
+      ],
+      "writes": 3
+    }
+  ]
+}

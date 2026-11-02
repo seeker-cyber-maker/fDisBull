@@ -1,0 +1,60 @@
+{
+  "core_version": "0.29.0",
+  "player_version": "0.29.0",
+  "python": "3.13.5 (main, Jun 25 2025, 18:55:22) [GCC 14.2.0]",
+  "run_id": "c9a908e5f7184992a2db271f01ee1a6c",
+  "session_id": "ses-1",
+  "main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "backend_launcher_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
+  "backend_native_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "objects": [
+    {
+      "id": 1,
+      "preferred": 65536,
+      "size": 261620,
+      "runtime": 1851440
+    },
+    {
+      "id": 2,
+      "preferred": 327680,
+      "size": 81504,
+      "runtime": 2113584
+    },
+    {
+      "id": 3,
+      "preferred": 458752,
+      "size": 3072,
+      "runtime": 1641360
+    },
+    {
+      "id": 4,
+      "preferred": 524288,
+      "size": 116274,
+      "runtime": 2195504
+    }
+  ],
+  "cs": "0x0158",
+  "ds": "0x0160",
+  "initial_binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "saved_ds_qualified": true,
+    "observed_render_pointer_data_bytes": 32,
+    "differing_render_data_bytes": 24,
+    "unexplained_code_object_differences": 0,
+    "registered_entities": 44
+  },
+  "final_binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "saved_ds_qualified": true,
+    "observed_render_pointer_data_bytes": 32,
+    "differing_render_data_bytes": 24,
+    "unexplained_code_object_differences": 0,
+    "registered_entities": 44
+  },
+  "game_initial_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+  "native_baseline_sha256": "577ef20d16d527d3f9e1a7f44fb4eac6046d4b8952c13261b9d2b7977bfbe593",
+  "installation": "fresh isolated unchanged official installer from supplied offline archive",
+  "prior_session_reused": false
+}

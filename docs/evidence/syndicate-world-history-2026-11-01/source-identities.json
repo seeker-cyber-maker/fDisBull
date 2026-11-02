@@ -1,0 +1,117 @@
+{
+  "core_version": "0.29.0",
+  "files": [
+    {
+      "path": "research/history/tools/capture_contacts.py",
+      "sha256": "bc5ac977a2b389ed240f0251aba9ae6f667c81caed4390409183e6638c316944"
+    },
+    {
+      "path": "research/history/tools/capture_hits.py",
+      "sha256": "04fcb4a4e51825424829b11580eb8cebc1ac5b100610a1eee15648f72e878e31"
+    },
+    {
+      "path": "research/history/tools/capture_vehicle_contact.py",
+      "sha256": "80d23a4f816a9a6fdfba8ba0b149ffdb1897000106dc2410aba096fa79fd7855"
+    },
+    {
+      "path": "research/history/tools/locate_health_writer.py",
+      "sha256": "4291b51581dd76686cbc4cc0b1c0dfc3ff68c37c8c216dbb3b0b70e7107324db"
+    },
+    {
+      "path": "research/history/tools/stress_history.py",
+      "sha256": "fb18fa2c77f6798dd4c673783c8008d89b2b710542bfcad7675964f68938b22c"
+    },
+    {
+      "path": "scene/tests/test_agent_map.py",
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2"
+    },
+    {
+      "path": "scene/tests/test_damage_observation.py",
+      "sha256": "28fbaede937c2f557ccfe2b3c7bb7f2cea0d754ac1653f60512c04b95edfd853"
+    },
+    {
+      "path": "scene/tests/test_interactions.py",
+      "sha256": "b796d708d2c9ece908d7aae3f306f8401302ed4e098dd1fbfd9f58e31f68f45b"
+    },
+    {
+      "path": "scene/tests/test_navigation.py",
+      "sha256": "5c72dc7d771f23331d269a97c0f12f7f2a7acbe46bcbbcfadc4b0e9ec0dd5760"
+    },
+    {
+      "path": "scene/tests/test_scene.py",
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d"
+    },
+    {
+      "path": "scene/tests/test_world_history.py",
+      "sha256": "271bbe1c556adaa71a5ae278fadc0e49a2a5574e07205eab1c4a5ca934117d2b"
+    },
+    {
+      "path": "scene/tools/agent_map.py",
+      "sha256": "488d5974bb99140d5713d707399be43c08940e1d98cd07b019448bf7f302954e"
+    },
+    {
+      "path": "scene/tools/bind_scene.py",
+      "sha256": "0f5d5a3b6ea913b8a8e1f56a03cf1f4e3a18b731988fc04a0a913e2f458afe1a"
+    },
+    {
+      "path": "scene/tools/build_map.py",
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08"
+    },
+    {
+      "path": "scene/tools/damage_observation.py",
+      "sha256": "38110ee6895790b52d871b4eb3d18d6cded7fc8afa0873e0223a28fc6e20450a"
+    },
+    {
+      "path": "scene/tools/history_provider.py",
+      "sha256": "365014a829d8714185ac91f181f9b646fba36efbf113d82007fa5dfb501b67b5"
+    },
+    {
+      "path": "scene/tools/interaction_contracts.py",
+      "sha256": "bfb49ad666555c29a41b36f09e53fce5f6720662a61c49a34135eaf0db7420a1"
+    },
+    {
+      "path": "scene/tools/original_interactions.py",
+      "sha256": "24558f9df02d5bf8e01d6537089601b99bbf2eb0a12fb8bbb3a4e571cafa9ae2"
+    },
+    {
+      "path": "scene/tools/original_navigation.py",
+      "sha256": "34d12a922ae970fdedc1caf1a30d2a377a56c1d2abadf3efb8f0f8caf7009ab7"
+    },
+    {
+      "path": "scene/tools/render_static_map.py",
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028"
+    },
+    {
+      "path": "scene/tools/session_controller.py",
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95"
+    },
+    {
+      "path": "scene/tools/syndicate_scene.py",
+      "sha256": "54d774e01cb7b040ddb0a5c087adece6b29565754f95e80dd9b835ff57bb9a6e"
+    },
+    {
+      "path": "scene/tools/world_history.py",
+      "sha256": "6037413433cdf3433ce80a32e33baa073b27b4b99451652e33dabacbf8727989"
+    },
+    {
+      "path": "scene/tools/z_provider.py",
+      "sha256": "5391d26a1047b6fdfb3a995803617959a0e96e42a4be6acb0ac9cddc805e12a9"
+    },
+    {
+      "path": "research/history/tools/import_recorded_conditions.py",
+      "scope": "retrospective receipt import; not a native collector",
+      "sha256": "c685a8b3b90e1dfd87fae97af517d8822964732236dacb1cbc495683cdaed9e6"
+    }
+  ],
+  "fresh_broad_instruction_census": false,
+  "fresh_repository_suite": false,
+  "launcher_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
+  "native_binary_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "native_scripts_used": [
+    "capture_hits.py",
+    "capture_contacts.py",
+    "capture_vehicle_contact.py"
+  ],
+  "player_version": "0.29.0",
+  "python": "Python 3.13.5"
+}

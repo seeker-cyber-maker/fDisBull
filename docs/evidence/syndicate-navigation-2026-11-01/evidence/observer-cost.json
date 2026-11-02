@@ -1,0 +1,22 @@
+{
+  "scope": "Entire research controller request log, including exploratory/repeated trials, not just final acceptance; not intrinsic backend overhead",
+  "requests": 18162,
+  "by_operation": {
+    "breakpoints.create": 1359,
+    "breakpoints.delete": 1359,
+    "breakpoints.list": 1,
+    "close": 1,
+    "debugger.command": 1,
+    "key": 4,
+    "memory.read": 7653,
+    "memory.write": 191,
+    "regs": 4553,
+    "run": 1366,
+    "screenshot": 13,
+    "session.status": 1647,
+    "state.load": 13,
+    "state.save": 1
+  },
+  "private_log_sha256": "b3586da79845a79c4e827997aa295ce50d9559983923aae2da08440d858005f0",
+  "timing_is_not_game_timing_parity": true
+}

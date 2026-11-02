@@ -1,0 +1,593 @@
+{
+  "pistol-qualified": {
+    "label": "pistol-qualified",
+    "weapon_type": 2,
+    "preparation_writes": [
+      {
+        "preferred": "0x9175c",
+        "before": 12,
+        "after": 200,
+        "bytes": 2,
+        "purpose": "matched test ammunition"
+      }
+    ],
+    "first_fire": null,
+    "hit_count": 2,
+    "victim_hits": 2,
+    "victim_hp_before": 16,
+    "victim_hp_after": 14,
+    "recorded_victim_loss": 2,
+    "final_health_accounting_gap": 0,
+    "weapon_ammo_after": 198,
+    "guest_start_tick": 108446,
+    "guest_last_observed_tick": 128451,
+    "wall_seconds": 2.752079503999994,
+    "stop_reason": "guest-budget",
+    "requests": {
+      "state.load": 1,
+      "session.status": 3,
+      "regs": 29,
+      "memory.read": 24,
+      "breakpoints.list": 1,
+      "memory.write": 1,
+      "execution.timing": 1,
+      "breakpoints.create": 4,
+      "run": 25,
+      "breakpoints.delete": 4
+    },
+    "hits": [
+      {
+        "kind": "damage",
+        "guest_tick": 111661,
+        "victim_id": "person-0",
+        "health_before": 16,
+        "health_after": 15,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-0",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 2,
+        "id": "event-a0c706e220044dc0a6a71f182fcef56f",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 122180,
+        "victim_id": "person-0",
+        "health_before": 15,
+        "health_after": 14,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-0",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18328,
+            9625,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 3,
+        "id": "event-5244ae7ffa374efa9eb1a59747fd6bd9",
+        "inserted": true
+      }
+    ],
+    "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+    "run_id": "5d8912fed1da4e3bb08ecece47685679",
+    "no_rewind_during_capture": true,
+    "per_projectile_creation_watches": 0,
+    "first_fire_watches": 0,
+    "binding_windows": [
+      {
+        "preferred": "0x127a0",
+        "bytes": 24,
+        "sha256": "247189106751806a0532633e62e2501f6185684781cdd9b82fc8a757ad43db3b",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x13b62",
+        "bytes": 157,
+        "sha256": "34fb6875a7cca0af679cd5af4d30687559dd5d60df09836eb1dd95f2db0cceea",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x3aa89",
+        "bytes": 223,
+        "sha256": "b25f89c94e37acdf21ff69db9e0f6846f758746b2fb6805a12cfed060c615f87",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x3add0",
+        "bytes": 232,
+        "sha256": "89250f761d457b4cf9b21d362d75d0092a590d98702689e5ea4b9cd03f214b72",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x12b4a",
+        "bytes": 101,
+        "sha256": "4671a2cd1e01f99ef23e8cced79b33685fa28f1377ecc0c2f4d9a1965fb5bd9c",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x32ce0",
+        "bytes": 208,
+        "sha256": "53b8fa31db6ff548336fcba9cb42b1d609ae6c7aa2ec19406656d2d8e615e92b",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x32f60",
+        "bytes": 238,
+        "sha256": "69bde1b737ba9a20efc27f840cc269200fcc507a627758b11b8570760051a64e",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x396b2",
+        "bytes": 91,
+        "sha256": "1bc5516dbe63b3bb5d59b4fa68abb6683a3d3cc4e5fa7205c60085290f950c0f",
+        "relocation_context": "current verified object mapping"
+      }
+    ]
+  },
+  "minigun-qualified": {
+    "label": "minigun-qualified",
+    "weapon_type": 6,
+    "preparation_writes": [
+      {
+        "preferred": "0x9175c",
+        "before": 12,
+        "after": 200,
+        "bytes": 2,
+        "purpose": "matched test ammunition"
+      },
+      {
+        "preferred": "0x91761",
+        "before": 2,
+        "after": 6,
+        "bytes": 1,
+        "purpose": "requested weapon substitution"
+      }
+    ],
+    "first_fire": null,
+    "hit_count": 10,
+    "victim_hits": 10,
+    "victim_hp_before": 16,
+    "victim_hp_after": 6,
+    "recorded_victim_loss": 10,
+    "final_health_accounting_gap": 0,
+    "weapon_ammo_after": 190,
+    "guest_start_tick": 108446,
+    "guest_last_observed_tick": 128501,
+    "wall_seconds": 3.1848839299996143,
+    "stop_reason": "guest-budget",
+    "requests": {
+      "state.load": 1,
+      "session.status": 3,
+      "regs": 44,
+      "memory.read": 49,
+      "breakpoints.list": 1,
+      "memory.write": 2,
+      "execution.timing": 1,
+      "breakpoints.create": 12,
+      "run": 40,
+      "breakpoints.delete": 12
+    },
+    "hits": [
+      {
+        "kind": "damage",
+        "guest_tick": 111662,
+        "victim_id": "person-0",
+        "health_before": 16,
+        "health_after": 15,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-0",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 6,
+        "id": "event-2e0e6c1548234ffabca9223762fd3608",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 111664,
+        "victim_id": "person-0",
+        "health_before": 15,
+        "health_after": 14,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-1",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 7,
+        "id": "event-03696870b0314a20a8e86ab159cb9a6d",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 111666,
+        "victim_id": "person-0",
+        "health_before": 14,
+        "health_after": 13,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-2",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 8,
+        "id": "event-addd98a5ce5743b1a8c9e4fe49dcd2f1",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 111668,
+        "victim_id": "person-0",
+        "health_before": 13,
+        "health_after": 12,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-3",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 9,
+        "id": "event-5ada4b13dd604512a803e07df69bd429",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 111670,
+        "victim_id": "person-0",
+        "health_before": 12,
+        "health_after": 11,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-4",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18304,
+            9856,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 10,
+        "id": "event-b5ac91f558b04cfb8e68b3fbaad7a2ea",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 121566,
+        "victim_id": "person-0",
+        "health_before": 11,
+        "health_after": 10,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-0",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18327,
+            9622,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 11,
+        "id": "event-fd007db5c0b44da384f7e1e1c8388890",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 121568,
+        "victim_id": "person-0",
+        "health_before": 10,
+        "health_after": 9,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-1",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18327,
+            9622,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 12,
+        "id": "event-e78315496ebb4676be36b11c69aae4f1",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 121571,
+        "victim_id": "person-0",
+        "health_before": 9,
+        "health_after": 8,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-2",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18327,
+            9622,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 13,
+        "id": "event-8d94e5c18e38452cad8ba093cd1ed36e",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 121574,
+        "victim_id": "person-0",
+        "health_before": 8,
+        "health_after": 7,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-3",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18327,
+            9622,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 14,
+        "id": "event-c0a9d3a61c6b447ba8876f23121bcf31",
+        "inserted": true
+      },
+      {
+        "kind": "damage",
+        "guest_tick": 121577,
+        "victim_id": "person-0",
+        "health_before": 7,
+        "health_after": 6,
+        "amount": 1,
+        "cause": {
+          "actor_id": "person-11",
+          "damage_type": "projectile",
+          "basis": "immediate qualified effect context at committed health store"
+        },
+        "certainty": "native-observed",
+        "observation_basis": "before/after original health store; no rewind and no per-bullet watches",
+        "context": {
+          "effect_id": "effect-4",
+          "kind_raw": 3,
+          "subtype_raw": 30,
+          "owner_ref": 1014,
+          "owner_id": "person-11",
+          "victim_position_raw": [
+            18327,
+            9622,
+            256
+          ],
+          "before_pc": "0x13be4"
+        },
+        "profile_scope": "known decrement sink only",
+        "after_pc": "0x13be8",
+        "seq": 15,
+        "id": "event-cc1bed14cd48400a939fa422bc3888da",
+        "inserted": true
+      }
+    ],
+    "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+    "run_id": "5d8912fed1da4e3bb08ecece47685679",
+    "no_rewind_during_capture": true,
+    "per_projectile_creation_watches": 0,
+    "first_fire_watches": 0,
+    "binding_windows": [
+      {
+        "preferred": "0x127a0",
+        "bytes": 24,
+        "sha256": "247189106751806a0532633e62e2501f6185684781cdd9b82fc8a757ad43db3b",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x13b62",
+        "bytes": 157,
+        "sha256": "34fb6875a7cca0af679cd5af4d30687559dd5d60df09836eb1dd95f2db0cceea",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x3aa89",
+        "bytes": 223,
+        "sha256": "b25f89c94e37acdf21ff69db9e0f6846f758746b2fb6805a12cfed060c615f87",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x3add0",
+        "bytes": 232,
+        "sha256": "89250f761d457b4cf9b21d362d75d0092a590d98702689e5ea4b9cd03f214b72",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x12b4a",
+        "bytes": 101,
+        "sha256": "4671a2cd1e01f99ef23e8cced79b33685fa28f1377ecc0c2f4d9a1965fb5bd9c",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x32ce0",
+        "bytes": 208,
+        "sha256": "53b8fa31db6ff548336fcba9cb42b1d609ae6c7aa2ec19406656d2d8e615e92b",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x32f60",
+        "bytes": 238,
+        "sha256": "69bde1b737ba9a20efc27f840cc269200fcc507a627758b11b8570760051a64e",
+        "relocation_context": "current verified object mapping"
+      },
+      {
+        "preferred": "0x396b2",
+        "bytes": 91,
+        "sha256": "1bc5516dbe63b3bb5d59b4fa68abb6683a3d3cc4e5fa7205c60085290f950c0f",
+        "relocation_context": "current verified object mapping"
+      }
+    ]
+  }
+}

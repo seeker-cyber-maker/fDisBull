@@ -11,7 +11,7 @@ from syndicate_scene import Mission,digest
 from z_provider import MAIN_SHA
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--controller-root',type=Path,required=True);ap.add_argument('--main',type=Path,required=True);ap.add_argument('--code-base',type=lambda s:int(s,0),required=True);ap.add_argument('--output',type=Path,required=True);a=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('--controller-root',type=Path,required=True);ap.add_argument('--main',type=Path,required=True);ap.add_argument('--code-base',type=lambda s:int(s,0),required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--enable-original-vehicle-actions',action='store_true',help='Opt in to diagnostic input preparations for the bounded original vehicle profile');ap.add_argument('--enable-original-navigation',action='store_true',help='Opt in to bounded diagnostic original walking, using conditional terrain plans');a=ap.parse_args()
  if a.output.exists():raise ValueError('Refuse to overwrite binding')
  root=a.controller_root.resolve();launch=json.loads((root/'launch.json').read_text());original=a.main.read_bytes()
  if digest(original)!=MAIN_SHA:raise ValueError('Foreign source')
@@ -61,5 +61,8 @@ def main():
       'move_helper':{'preferred':0x29530,'length':len(helper),'sha256':digest(helper)},
       'private_action_log':str(root/'scene-actions.jsonl'),
       'binding_evidence':{'code_bytes_checked':len(live),'code_side_fixup_records':sum(f['source_object']==1 for f in fixups),'saved_ds_qualified':True,'observed_render_pointer_data_bytes':32,'differing_render_data_bytes':changed_data,'unexplained_code_object_differences':0,'registered_entities':scene['spatial_index']['entity_count']}}
+ if a.enable_original_vehicle_actions or a.enable_original_navigation:
+  cfg.update(original_vehicle_source=str(a.main.resolve()),private_vehicle_trials=str(root/'vehicle-trials'))
+ if a.enable_original_navigation:cfg.update(enable_original_navigation=True,private_navigation_trials=str(root/'navigation-trials'))
  a.output.write_text(json.dumps(cfg,indent=2));print(json.dumps(cfg['binding_evidence']))
 if __name__=='__main__':main()

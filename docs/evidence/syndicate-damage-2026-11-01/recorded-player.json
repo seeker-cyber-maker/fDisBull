@@ -1,0 +1,80 @@
+{
+  "commands": [
+    {
+      "command": "examine last damage",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Recorded native witness: person-0 lost 1 raw health (16 -> 15) from guard person-11 using PISTOL (weapon-6). Firing, projectile-owner store, hit query and health write were traced. Same-checkpoint native replay; not attribution from nearest-entity distance. Effect slot IDs are reusable, not permanent projectile identities. This is a frozen diagnostic evidence view, not fair-play visibility or a live monitor.",
+        "status": "read"
+      }
+    },
+    {
+      "command": "examine damage source",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Recorded native witness: person-0 lost 1 raw health (16 -> 15) from guard person-11 using PISTOL (weapon-6). Firing, projectile-owner store, hit query and health write were traced. Same-checkpoint native replay; not attribution from nearest-entity distance. Effect slot IDs are reusable, not permanent projectile identities. This is a frozen diagnostic evidence view, not fair-play visibility or a live monitor.",
+        "status": "read"
+      }
+    },
+    {
+      "command": "examine last hit",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Recorded native witness: person-0 lost 1 raw health (16 -> 15) from guard person-11 using PISTOL (weapon-6). Firing, projectile-owner store, hit query and health write were traced. Same-checkpoint native replay; not attribution from nearest-entity distance. Effect slot IDs are reusable, not permanent projectile identities. This is a frozen diagnostic evidence view, not fair-play visibility or a live monitor.",
+        "status": "read"
+      }
+    },
+    {
+      "command": "examine guards",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "4 registered guard entities in this entire mission snapshot, not a visible/alive count. Nearest other: person-10 at (72.586, 35.852, z=2); XY straight-line distance 2.862 tiles. Route not verified.",
+        "status": "read"
+      }
+    },
+    {
+      "command": "examine nearest car",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 11.316 tiles. Route not verified. vehicle-0 occupants: none recorded. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read"
+      }
+    },
+    {
+      "command": "attack last damage",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Action is not supported for that target; no action sent.",
+        "status": "rejected"
+      }
+    }
+  ],
+  "fact": {
+    "damage_raw": 1,
+    "effect_slot": "effect-0",
+    "health_after": 15,
+    "health_before": 16,
+    "record_id": "17e949a1537406df13961cff494024fa4c52f3d6c1fbe9406473c72e7affb82b",
+    "shooter_category": "guard",
+    "shooter_id": "person-11",
+    "validation_scope": "recorded-packet consistency only",
+    "victim_id": "person-0",
+    "weapon_id": "weapon-6",
+    "weapon_name": "PISTOL"
+  },
+  "no_guest_action": true,
+  "observation_unchanged": true,
+  "scope": "Six passive/refused commands through installed Player0.29.0 over frozen, source-bound native event; not live event collection"
+}

@@ -1,0 +1,1284 @@
+{
+  "conclusion": "car is distant and stationary across samples; guards/effect correlate; semantic projection has no causal damage-source field so exact shooter/cause cannot be certified from these snapshots alone",
+  "observations": [
+    {
+      "health": 16,
+      "i": 0,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 917.263866071263,
+          "id": "person-11",
+          "position_raw": [
+            18822,
+            10757,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 979.081201943945,
+          "id": "person-10",
+          "position_raw": [
+            18622,
+            9074,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2569.329289912058,
+          "id": "person-9",
+          "position_raw": [
+            20482,
+            11363,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2823.671368980463,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2935.5749011054036,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3383.2717892596215,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5106.623150380298,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5130.69196112961,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5141.956048042418,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6630.820160432644,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        10000,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 1,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 910.2664445095184,
+          "id": "person-11",
+          "position_raw": [
+            18811,
+            10740,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 944.9910052481981,
+          "id": "person-10",
+          "position_raw": [
+            18616,
+            9092,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2579.399154842073,
+          "id": "person-9",
+          "position_raw": [
+            20492,
+            11350,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2811.632977470566,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2930.949334260147,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3392.603719858834,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5107.462775194745,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5131.926733693691,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5143.586297516549,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6640.185539576436,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9984,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 2,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 903.3498768472822,
+          "id": "person-11",
+          "position_raw": [
+            18800,
+            10723,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 910.9335870413386,
+          "id": "person-10",
+          "position_raw": [
+            18610,
+            9110,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2589.4719538933027,
+          "id": "person-9",
+          "position_raw": [
+            20502,
+            11337,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2799.634261827784,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2926.403936574717,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3401.985302731333,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5108.352376255969,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5133.211080795334,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5145.265785166011,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6649.576227098987,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9968,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 3,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 877.5112534890934,
+          "id": "person-10",
+          "position_raw": [
+            18603,
+            9127,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 896.5160344355253,
+          "id": "person-11",
+          "position_raw": [
+            18789,
+            10706,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2599.5476529581065,
+          "id": "person-9",
+          "position_raw": [
+            20512,
+            11324,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2787.6757343708396,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2921.9390821849793,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3411.4161282376563,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5109.291927459225,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5134.5449652330435,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5146.994462790882,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6658.992115928656,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9952,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 4,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 844.1137364123391,
+          "id": "person-10",
+          "position_raw": [
+            18596,
+            9144,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 890.2999494552383,
+          "id": "person-11",
+          "position_raw": [
+            18779,
+            10689,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2609.6262184458524,
+          "id": "person-9",
+          "position_raw": [
+            20522,
+            11311,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2775.7579145163218,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2917.5551408670926,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3420.895789117231,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5110.281401253751,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5135.928348409857,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5148.772280845212,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6668.433099312011,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9936,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 5,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 810.7441026612528,
+          "id": "person-10",
+          "position_raw": [
+            18589,
+            9161,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 884.1543982812052,
+          "id": "person-11",
+          "position_raw": [
+            18769,
+            10672,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2619.7076172733478,
+          "id": "person-9",
+          "position_raw": [
+            20532,
+            11298,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2763.8813288562155,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2913.252477901632,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3430.4238805138934,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5111.320768646789,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5137.361190338869,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5150.599188444001,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6677.899070815611,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9920,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 6,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 777.4059428638296,
+          "id": "person-10",
+          "position_raw": [
+            18582,
+            9178,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 878.0808618800435,
+          "id": "person-11",
+          "position_raw": [
+            18759,
+            10655,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2630.3170911507987,
+          "id": "person-9",
+          "position_raw": [
+            20542,
+            11286,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2752.0465112348666,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2909.031453937891,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3440.0,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5112.40999920781,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5138.843449648958,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5152.475133370369,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6687.3899243277265,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9904,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 7,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 762.4854096964741,
+          "id": "person-10",
+          "position_raw": [
+            18582,
+            9178,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 872.0808448762076,
+          "id": "person-11",
+          "position_raw": [
+            18749,
+            10638,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2640.9278672466617,
+          "id": "person-9",
+          "position_raw": [
+            20552,
+            11274,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2740.2540028252856,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2904.892424858449,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3449.6237475991493,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5113.549061072945,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5140.37508359069,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5154.40006208288,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6696.905554060024,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9888,
+        256
+      ]
+    },
+    {
+      "health": 16,
+      "i": 8,
+      "nearby": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 747.6095237488619,
+          "id": "person-10",
+          "position_raw": [
+            18582,
+            9178,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 866.1558751171755,
+          "id": "person-11",
+          "position_raw": [
+            18739,
+            10621,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2651.015843030743,
+          "id": "person-9",
+          "position_raw": [
+            20562,
+            11261,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2728.5043522047017,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2900.8357416441213,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3459.2947258075596,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5114.737920949616,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5141.956048042418,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5156.373919723045,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6706.445854549189,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9872,
+        256
+      ]
+    },
+    {
+      "health": 15,
+      "i": 9,
+      "nearby": [
+        {
+          "category": "effect",
+          "distance_xy_raw": 137.6117727521886,
+          "id": "effect-0",
+          "position_raw": [
+            18388,
+            9965,
+            384
+          ],
+          "status_raw": 31
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 732.7810041206036,
+          "id": "person-10",
+          "position_raw": [
+            18582,
+            9178,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 880.0284086323577,
+          "id": "person-11",
+          "position_raw": [
+            18739,
+            10621,
+            256
+          ],
+          "status_raw": 43
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 2661.10653676248,
+          "id": "person-9",
+          "position_raw": [
+            20572,
+            11248,
+            256
+          ],
+          "status_raw": 29
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 2716.798115429264,
+          "id": "person-8",
+          "position_raw": [
+            16448,
+            7872,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2896.8617502393863,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "civilian",
+          "distance_xy_raw": 3469.012539614119,
+          "id": "person-13",
+          "position_raw": [
+            15552,
+            11968,
+            256
+          ],
+          "status_raw": 40
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5115.976544121367,
+          "id": "person-3",
+          "position_raw": [
+            23404,
+            10260,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5143.586297516549,
+          "id": "person-2",
+          "position_raw": [
+            23420,
+            10388,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "agent",
+          "distance_xy_raw": 5158.396650122982,
+          "id": "person-1",
+          "position_raw": [
+            23420,
+            10516,
+            256
+          ],
+          "status_raw": 0
+        },
+        {
+          "category": "guard",
+          "distance_xy_raw": 6716.010720658507,
+          "id": "person-12",
+          "position_raw": [
+            12924,
+            13876,
+            256
+          ],
+          "status_raw": 0
+        }
+      ],
+      "position_raw": [
+        18304,
+        9856,
+        256
+      ]
+    }
+  ],
+  "player_reads": [
+    {
+      "command": "examine team",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "person-0: (71.500, 38.500, z=2); health raw 15; status 2; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-1: (91.484, 41.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read"
+      },
+      "wall_seconds": 0.0009069630000340112
+    },
+    {
+      "command": "examine guards",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "4 registered guard entities in this entire mission snapshot, not a visible/alive count. Nearest other: person-10 at (72.586, 35.852, z=2); XY straight-line distance 2.862 tiles. Route not verified.",
+        "status": "read"
+      },
+      "wall_seconds": 0.0007430450000356359
+    },
+    {
+      "command": "examine police",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "0 registered police entities in this entire mission snapshot, not a visible/alive count. No matching registered entity in this snapshot; future spawns are not excluded.",
+        "status": "read"
+      },
+      "wall_seconds": 0.0005794270000478718
+    },
+    {
+      "command": "examine nearest car",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 11.316 tiles. Route not verified. vehicle-0 occupants: none recorded. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read"
+      },
+      "wall_seconds": 0.0006006290000186709
+    },
+    {
+      "command": "examine effect-0",
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Object is ambiguous or not visible.",
+        "status": "read"
+      },
+      "wall_seconds": 0.0007752139999865904
+    }
+  ],
+  "scope": "same checkpoint sample384; existing semantic fields only, no writer/source analysis added"
+}

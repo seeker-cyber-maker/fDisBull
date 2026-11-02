@@ -1,0 +1,105 @@
+{
+  "attribution_scope": "same-checkpoint-native-replay",
+  "checkpoint_sample": 384,
+  "events": [
+    {
+      "ammo_before": 11,
+      "args": {
+        "direction": 147,
+        "effect_subtype": 29,
+        "range": 10,
+        "source_ref": 1014,
+        "vertical_direction": 0,
+        "x": 18739,
+        "y": 10621,
+        "z": 384
+      },
+      "owner_id": "person-11",
+      "owner_ref": 1014,
+      "phase": "fire-request",
+      "preferred_pc": "0x3ab34",
+      "weapon_id": "weapon-6",
+      "weapon_type": 2
+    },
+    {
+      "effect_id": "effect-0",
+      "effect_kind": 3,
+      "effect_subtype": 29,
+      "old_source_ref": 1014,
+      "phase": "owner-store-before",
+      "preferred_pc": "0x3a8f3",
+      "source_ref_in_ax": 1014
+    },
+    {
+      "effect_id": "effect-0",
+      "phase": "owner-store-after",
+      "preferred_pc": "0x3a8f7",
+      "source_id": "person-11",
+      "source_ref": 1014
+    },
+    {
+      "ammo_after": 10,
+      "phase": "ammo-after",
+      "preferred_pc": "0x3ab45",
+      "weapon_id": "weapon-6"
+    },
+    {
+      "args": [
+        128,
+        128,
+        256,
+        64
+      ],
+      "effect_id": "effect-0",
+      "effect_subtype": 30,
+      "phase": "projectile-hit-query",
+      "preferred_pc": "0x1f0f6",
+      "query_position_raw": [
+        18681,
+        10507,
+        256
+      ]
+    },
+    {
+      "effect_id": "effect-0",
+      "health_before": 16,
+      "health_value_in_ax": 15,
+      "phase": "health-store-before",
+      "preferred_pc": "0x13be4",
+      "source_ref": 1014,
+      "victim_id": "person-0"
+    },
+    {
+      "health_after": 15,
+      "phase": "health-store-after",
+      "preferred_pc": "0x13be8",
+      "victim_id": "person-0"
+    },
+    {
+      "phase": "hit-query-return",
+      "preferred_pc": "0x1f0fb",
+      "returned_id": "person-0"
+    }
+  ],
+  "interventions": {
+    "code_edits": 0,
+    "health_writes": 0,
+    "register_edits": 0
+  },
+  "main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "run_id": "d1c814dbd55d4e9391b126450ed7c3c4",
+  "schema": "syndicate-recorded-damage-1",
+  "scope": "Recorded observed event, not passive-world independent proof or a live monitor; all replays share one qualified same-session checkpoint",
+  "snapshot_sha256": "9784c21a6a2bd9fc8fed93b0a82c1687a4d712a904aed3bbafc131a491f57eb2",
+  "victim_position_raw": [
+    18304,
+    9856,
+    256
+  ],
+  "weapon_label": {
+    "consumer_window_sha256": "5c4a561b427dc898666da7eff7e3117f2e93722b2d43fecc2ac37799152df45e",
+    "name": "PISTOL",
+    "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+    "type": 2
+  }
+}

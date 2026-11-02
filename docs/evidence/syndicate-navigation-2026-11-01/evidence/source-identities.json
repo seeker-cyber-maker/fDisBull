@@ -1,0 +1,61 @@
+{
+  "scope": "Final delivered scene modules/tests; native final route/control trials used these runtime modules",
+  "files": {
+    "scene/tests/test_agent_map.py": {
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2",
+      "bytes": 11168
+    },
+    "scene/tests/test_interactions.py": {
+      "sha256": "b796d708d2c9ece908d7aae3f306f8401302ed4e098dd1fbfd9f58e31f68f45b",
+      "bytes": 12263
+    },
+    "scene/tests/test_navigation.py": {
+      "sha256": "5c72dc7d771f23331d269a97c0f12f7f2a7acbe46bcbbcfadc4b0e9ec0dd5760",
+      "bytes": 9277
+    },
+    "scene/tests/test_scene.py": {
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "bytes": 5931
+    },
+    "scene/tools/agent_map.py": {
+      "sha256": "488d5974bb99140d5713d707399be43c08940e1d98cd07b019448bf7f302954e",
+      "bytes": 22226
+    },
+    "scene/tools/bind_scene.py": {
+      "sha256": "0f5d5a3b6ea913b8a8e1f56a03cf1f4e3a18b731988fc04a0a913e2f458afe1a",
+      "bytes": 5378
+    },
+    "scene/tools/build_map.py": {
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "bytes": 12127
+    },
+    "scene/tools/interaction_contracts.py": {
+      "sha256": "bfb49ad666555c29a41b36f09e53fce5f6720662a61c49a34135eaf0db7420a1",
+      "bytes": 2631
+    },
+    "scene/tools/original_interactions.py": {
+      "sha256": "24558f9df02d5bf8e01d6537089601b99bbf2eb0a12fb8bbb3a4e571cafa9ae2",
+      "bytes": 14535
+    },
+    "scene/tools/original_navigation.py": {
+      "sha256": "34d12a922ae970fdedc1caf1a30d2a377a56c1d2abadf3efb8f0f8caf7009ab7",
+      "bytes": 17042
+    },
+    "scene/tools/render_static_map.py": {
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "bytes": 3846
+    },
+    "scene/tools/session_controller.py": {
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "bytes": 2886
+    },
+    "scene/tools/syndicate_scene.py": {
+      "sha256": "54d774e01cb7b040ddb0a5c087adece6b29565754f95e80dd9b835ff57bb9a6e",
+      "bytes": 18081
+    },
+    "scene/tools/z_provider.py": {
+      "sha256": "5391d26a1047b6fdfb3a995803617959a0e96e42a4be6acb0ac9cddc805e12a9",
+      "bytes": 25870
+    }
+  }
+}

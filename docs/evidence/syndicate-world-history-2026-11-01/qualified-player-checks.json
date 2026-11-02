@@ -1,0 +1,80 @@
+{
+  "commands": [
+    {
+      "command": "examine history",
+      "result": {
+        "outcome": "World history (diagnostic); individual events are retained.\n#1 [pistol-qualified] experiment-start: Original weapon type 2; RAM-only test; ammo=200; no health edits.\n#2 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- person-11; projectile [native-observed].\n#3 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- person-11; projectile [native-observed].\n#4 [pistol-qualified] experiment-end: guest-budget\n#5 [minigun-qualified] experiment-start: Original weapon type 6; RAM-only test; ammo=200; no health edits.\n#6..#10 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- person-11; projectile [native-observed].\n#11..#15 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- person-11; projectile [native-observed].\n#16 [minigun-qualified] experiment-end: guest-budget",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine history notices",
+      "result": {
+        "outcome": "#1 experiment-start: Original weapon type 2; RAM-only test; ammo=200; no health edits.\n#4 experiment-end: guest-budget\n#5 experiment-start: Original weapon type 6; RAM-only test; ammo=200; no health edits.\n#16 experiment-end: guest-budget",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine event 15",
+      "result": {
+        "outcome": "{\"after_pc\":\"0x13be8\",\"amount\":1,\"cause\":{\"actor_id\":\"person-11\",\"basis\":\"immediate qualified effect context at committed health store\",\"damage_type\":\"projectile\"},\"certainty\":\"native-observed\",\"context\":{\"before_pc\":\"0x13be4\",\"effect_id\":\"effect-4\",\"kind_raw\":3,\"owner_id\":\"person-11\",\"owner_ref\":1014,\"subtype_raw\":30,\"victim_position_raw\":[18327,9622,256]},\"guest_tick\":121577,\"health_after\":6,\"health_before\":7,\"id\":\"event-cc1bed14cd48400a939fa422bc3888da\",\"kind\":\"damage\",\"observation_basis\":\"before/after original health store; no rewind and no per-bullet watches\",\"profile_scope\":\"known decrement sink only\",\"seq\":15,\"stream\":\"minigun-qualified\",\"victim_id\":\"person-0\"}",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine event 14",
+      "result": {
+        "outcome": "{\"after_pc\":\"0x13be8\",\"amount\":1,\"cause\":{\"actor_id\":\"person-11\",\"basis\":\"immediate qualified effect context at committed health store\",\"damage_type\":\"projectile\"},\"certainty\":\"native-observed\",\"context\":{\"before_pc\":\"0x13be4\",\"effect_id\":\"effect-3\",\"kind_raw\":3,\"owner_id\":\"person-11\",\"owner_ref\":1014,\"subtype_raw\":30,\"victim_position_raw\":[18327,9622,256]},\"guest_tick\":121574,\"health_after\":7,\"health_before\":8,\"id\":\"event-c0a9d3a61c6b447ba8876f23121bcf31\",\"kind\":\"damage\",\"observation_basis\":\"before/after original health store; no rewind and no per-bullet watches\",\"profile_scope\":\"known decrement sink only\",\"seq\":14,\"stream\":\"minigun-qualified\",\"victim_id\":\"person-0\"}",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine team",
+      "result": {
+        "outcome": "person-0: (71.680, 36.699, z=2); health raw 6; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-1: (91.484, 41.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Target is not visible or supported; no action sent.",
+        "status": "rejected",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "board car",
+      "result": {
+        "outcome": "Action is not supported for that target; no action sent.",
+        "status": "rejected",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    }
+  ],
+  "provider_reaped": true,
+  "history_records_before": 16,
+  "history_records_after": 16,
+  "semantic_view_only": true,
+  "guest_actions_sent": 0,
+  "scope": "installed Player and child-process history provider; global diagnostic world is NOT certified fair-play visibility"
+}

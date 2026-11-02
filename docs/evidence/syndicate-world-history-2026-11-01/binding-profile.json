@@ -1,0 +1,138 @@
+{
+  "additional_source_leads": {
+    "explosion_like_mask_128": {
+      "qualification": "source-derived caller/category lead; no observed explosion or full attribution chain"
+    },
+    "terrain_class_10": {
+      "dispatch_table": "0x312f8",
+      "qualification": "static original-source lead only; water/fall/other label unresolved",
+      "writer": "0x313f9"
+    },
+    "vehicle_collision_call": {
+      "call": "0x39705",
+      "callee": "0x12880",
+      "mask": 1,
+      "qualification": "source plus selected original driven contact; universal driving not qualified"
+    }
+  },
+  "binding": "load LE object bases afresh; confirm source windows before installing watches",
+  "cpu": "i386 protected mode",
+  "delayed": {
+    "flame": {
+      "after": "0x32d21",
+      "before": "0x32d1b",
+      "effect_subtype": 33,
+      "mask": 8,
+      "victim_register": "eax",
+      "victim_state_observed": 20
+    },
+    "laser": {
+      "after": "0x33009",
+      "before": "0x33003",
+      "effect_subtype": 39,
+      "mask": 16,
+      "victim_register": "ebx",
+      "victim_state_observed": 17
+    },
+    "vehicle_contact": {
+      "after": "0x32fa6",
+      "before": "0x32fa0",
+      "mask": 1,
+      "source_kind": 2,
+      "victim_register": "eax",
+      "victim_state_observed": 19
+    }
+  },
+  "immediate_projectile": {
+    "after": "0x13be8",
+    "amount": "qualified committed decrement, not net snapshot loss",
+    "before": "0x13be4",
+    "effect_kind": 3,
+    "effect_register": "ebp",
+    "health_offset": 20,
+    "owner_ref_offset": 28,
+    "tested_effect_subtype": 30,
+    "victim_register": "ebx"
+  },
+  "recipient_contact": {
+    "after_flags_write": "0x12b83",
+    "damage_mask_register": "ax",
+    "scope": "flag application is a contact, not itself a health decrement",
+    "source_register": "esi",
+    "victim_flags_offset": 12,
+    "victim_register": "ebx"
+  },
+  "schema": "syndicate-qualified-damage-bindings-1",
+  "sentinel": {
+    "meaning": "selected original terminal-state path; do not report arithmetic 17 HP damage for 16 -> -1",
+    "signed": -1,
+    "stored_word": 65535
+  },
+  "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "source_transfer": {
+    "entry": "0x127a0",
+    "guard": "contact caller invokes only for effect-kind 3; vehicle-kind 2 bypasses the transfer",
+    "return": "0x127b7",
+    "victim_last_source_offset": 22
+  },
+  "unqualified": [
+    "all game damage writers",
+    "all armor variants",
+    "generic effect-instance birth identity",
+    "general police/guard hostility",
+    "fair-play visibility",
+    "direct HUD damage source",
+    "complete vehicle driving",
+    "explosion chain reaction origin"
+  ],
+  "windows": [
+    {
+      "bytes": 24,
+      "preferred": "0x127a0",
+      "relocation_context": "current verified object mapping",
+      "sha256": "247189106751806a0532633e62e2501f6185684781cdd9b82fc8a757ad43db3b"
+    },
+    {
+      "bytes": 157,
+      "preferred": "0x13b62",
+      "relocation_context": "current verified object mapping",
+      "sha256": "34fb6875a7cca0af679cd5af4d30687559dd5d60df09836eb1dd95f2db0cceea"
+    },
+    {
+      "bytes": 223,
+      "preferred": "0x3aa89",
+      "relocation_context": "current verified object mapping",
+      "sha256": "b25f89c94e37acdf21ff69db9e0f6846f758746b2fb6805a12cfed060c615f87"
+    },
+    {
+      "bytes": 232,
+      "preferred": "0x3add0",
+      "relocation_context": "current verified object mapping",
+      "sha256": "89250f761d457b4cf9b21d362d75d0092a590d98702689e5ea4b9cd03f214b72"
+    },
+    {
+      "bytes": 101,
+      "preferred": "0x12b4a",
+      "relocation_context": "current verified object mapping",
+      "sha256": "4671a2cd1e01f99ef23e8cced79b33685fa28f1377ecc0c2f4d9a1965fb5bd9c"
+    },
+    {
+      "bytes": 208,
+      "preferred": "0x32ce0",
+      "relocation_context": "current verified object mapping",
+      "sha256": "53b8fa31db6ff548336fcba9cb42b1d609ae6c7aa2ec19406656d2d8e615e92b"
+    },
+    {
+      "bytes": 238,
+      "preferred": "0x32f60",
+      "relocation_context": "current verified object mapping",
+      "sha256": "69bde1b737ba9a20efc27f840cc269200fcc507a627758b11b8570760051a64e"
+    },
+    {
+      "bytes": 91,
+      "preferred": "0x396b2",
+      "relocation_context": "current verified object mapping",
+      "sha256": "1bc5516dbe63b3bb5d59b4fa68abb6683a3d3cc4e5fa7205c60085290f950c0f"
+    }
+  ]
+}

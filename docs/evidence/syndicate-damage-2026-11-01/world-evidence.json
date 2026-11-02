@@ -1,0 +1,187 @@
+{
+  "car_id": "vehicle-0",
+  "car_moved_in_observed_snapshots": false,
+  "car_positions_raw": [
+    [
+      15496,
+      9144,
+      256
+    ]
+  ],
+  "full_world_log_sha256": "b824dec892a830cd9721e2e34aa7e9737a18018a7429431b583e5dcb5bbc0ba1",
+  "health_after": 15,
+  "health_before": 16,
+  "last_two_world_boundaries": [
+    {
+      "entities": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 866.1558751171755,
+          "family": "person",
+          "flags": [
+            4,
+            16
+          ],
+          "health_raw": 0,
+          "id": "person-11",
+          "position_raw": [
+            18739,
+            10621,
+            256
+          ],
+          "status_raw": 32
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2900.8357416441213,
+          "family": "vehicle",
+          "flags": [
+            4,
+            0
+          ],
+          "health_raw": 30,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        }
+      ],
+      "health": 16,
+      "index": 392,
+      "position_raw": [
+        18304,
+        9872,
+        256
+      ]
+    },
+    {
+      "entities": [
+        {
+          "category": "guard",
+          "distance_xy_raw": 880.0284086323577,
+          "family": "person",
+          "flags": [
+            12,
+            16
+          ],
+          "health_raw": 0,
+          "id": "person-11",
+          "position_raw": [
+            18739,
+            10621,
+            256
+          ],
+          "status_raw": 43
+        },
+        {
+          "category": "vehicle",
+          "distance_xy_raw": 2896.8617502393863,
+          "family": "vehicle",
+          "flags": [
+            4,
+            0
+          ],
+          "health_raw": 30,
+          "id": "vehicle-0",
+          "position_raw": [
+            15496,
+            9144,
+            256
+          ],
+          "status_raw": 13
+        },
+        {
+          "category": "effect",
+          "distance_xy_raw": 137.6117727521886,
+          "family": "effect",
+          "flags": [
+            4,
+            0
+          ],
+          "health_raw": 10,
+          "id": "effect-0",
+          "position_raw": [
+            18388,
+            9965,
+            384
+          ],
+          "status_raw": 31
+        }
+      ],
+      "health": 15,
+      "index": 393,
+      "position_raw": [
+        18304,
+        9856,
+        256
+      ]
+    }
+  ],
+  "nearest_guard_id": "person-10",
+  "police_count_each_snapshot": 0,
+  "scope": "Existing semantic snapshot fields; observed distances do not prove cause",
+  "selected_nearby_at_loss": [
+    {
+      "category": "vehicle",
+      "causation": "unqualified",
+      "delta_z_raw": 0,
+      "distance_xy_raw": 2896.8617502393863,
+      "distance_xy_tiles": 11.315866211872603,
+      "id": "vehicle-0",
+      "position_raw": [
+        15496,
+        9144,
+        256
+      ]
+    },
+    {
+      "category": "guard",
+      "causation": "unqualified",
+      "delta_z_raw": 0,
+      "distance_xy_raw": 732.7810041206036,
+      "distance_xy_tiles": 2.862425797346108,
+      "id": "person-10",
+      "position_raw": [
+        18582,
+        9178,
+        256
+      ]
+    },
+    {
+      "category": "guard",
+      "causation": "unqualified",
+      "delta_z_raw": 0,
+      "distance_xy_raw": 880.0284086323577,
+      "distance_xy_tiles": 3.4376109712201472,
+      "id": "person-11",
+      "position_raw": [
+        18739,
+        10621,
+        256
+      ]
+    },
+    {
+      "category": "effect",
+      "causation": "unqualified",
+      "delta_z_raw": 128,
+      "distance_xy_raw": 137.6117727521886,
+      "distance_xy_tiles": 0.5375459873132368,
+      "id": "effect-0",
+      "position_raw": [
+        18388,
+        9965,
+        384
+      ]
+    }
+  ],
+  "snapshots": 393,
+  "source_guard_id_after_native_trace": "person-11",
+  "victim_position_raw": [
+    18304,
+    9856,
+    256
+  ]
+}

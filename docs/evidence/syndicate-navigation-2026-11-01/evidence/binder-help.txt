@@ -1,0 +1,17 @@
+usage: bind_scene.py [-h] --controller-root CONTROLLER_ROOT --main MAIN
+                     --code-base CODE_BASE --output OUTPUT
+                     [--enable-original-vehicle-actions]
+                     [--enable-original-navigation]
+
+options:
+  -h, --help            show this help message and exit
+  --controller-root CONTROLLER_ROOT
+  --main MAIN
+  --code-base CODE_BASE
+  --output OUTPUT
+  --enable-original-vehicle-actions
+                        Opt in to diagnostic input preparations for the
+                        bounded original vehicle profile
+  --enable-original-navigation
+                        Opt in to bounded diagnostic original walking, using
+                        conditional terrain plans

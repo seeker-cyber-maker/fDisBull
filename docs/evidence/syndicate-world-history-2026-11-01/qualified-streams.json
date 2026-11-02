@@ -1,0 +1,53 @@
+[
+  {
+    "id": "pistol-qualified",
+    "metadata": {
+      "metadata": {
+        "checkpoint_sha256": "ded1e4fce3d99c91c55a498270b50015f576f28851502b3f95e3bc75e5721b2a",
+        "diagnostic_edits": [
+          {
+            "after": 200,
+            "before": 12,
+            "bytes": 2,
+            "preferred": "0x9175c",
+            "purpose": "matched test ammunition"
+          }
+        ],
+        "run_id": "5d8912fed1da4e3bb08ecece47685679",
+        "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+        "weapon_type": 2
+      },
+      "parent": null
+    },
+    "fingerprint": "df48f10bcdc0be5c48884fa0cb558cccefd9b04f3b5eafe5a67950d843271466"
+  },
+  {
+    "id": "minigun-qualified",
+    "metadata": {
+      "metadata": {
+        "checkpoint_sha256": "ded1e4fce3d99c91c55a498270b50015f576f28851502b3f95e3bc75e5721b2a",
+        "diagnostic_edits": [
+          {
+            "after": 200,
+            "before": 12,
+            "bytes": 2,
+            "preferred": "0x9175c",
+            "purpose": "matched test ammunition"
+          },
+          {
+            "after": 6,
+            "before": 2,
+            "bytes": 1,
+            "preferred": "0x91761",
+            "purpose": "requested weapon substitution"
+          }
+        ],
+        "run_id": "5d8912fed1da4e3bb08ecece47685679",
+        "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+        "weapon_type": 6
+      },
+      "parent": null
+    },
+    "fingerprint": "d05b43e6305d65319f28ddd920ba55c87acce1e9bccac5153db80e36fd6e5339"
+  }
+]
