@@ -1,0 +1,72 @@
+{
+  "format": "fdisbull-research-workspaces-proposal-1",
+  "status": "illustrative-design-not-an-executable-core-schema",
+  "pool": {
+    "reference_slots": 1,
+    "worker_slots": 3,
+    "configurable": true,
+    "nested_fanout": "requires-resource-admission"
+  },
+  "default_profile": "hybrid-linked",
+  "shared": {
+    "assets": "immutable-content-addressed",
+    "source_history": "shared-git-object-store",
+    "analysis": "pinned-baseline-plus-private-overlays",
+    "observations": "immutable-published-snapshots",
+    "knowledge": "versioned-evidence-with-private-hypotheses",
+    "writable_guest_ram": false
+  },
+  "private_per_execution": [
+    "runtime-process",
+    "cpu-ram-devices",
+    "input-queue-and-ownership",
+    "debugger-socket-and-watch-set",
+    "writable-filesystem",
+    "analysis-writes",
+    "event-sequence-and-branch"
+  ],
+  "capsule_requirements": [
+    "target-and-backend-identities",
+    "capture-boundary",
+    "state-level-and-coverage",
+    "filesystem-snapshot",
+    "code-and-analysis-revisions",
+    "parent-lineage",
+    "replay-prefix-if-needed",
+    "budgets-and-policy"
+  ],
+  "runtime_adapter_capabilities": [
+    "application-save-seed",
+    "native-checkpoint-export-import",
+    "mount-rebinding",
+    "protected-mode-context",
+    "deterministic-replay",
+    "disk-copy-on-write",
+    "ram-copy-on-write"
+  ],
+  "capability_rule": "Every capability must be separately discovered and qualified; listing it here grants none.",
+  "promotion_modes": [
+    "evidence-review",
+    "code-review-and-tests",
+    "explicit-whole-branch-selection",
+    "revalidate-action-plan-on-reference",
+    "separately-qualified-state-transplant"
+  ],
+  "defaults": {
+    "parent_mutation": "not-granted-to-workers",
+    "worker_network": "isolated-or-recorded",
+    "worker_visible_windows": false,
+    "worker_host_audio": "muted-without-removing-emulated-devices",
+    "automatically_merge_runtime_state": false,
+    "launch_now": false
+  },
+  "benchmark": [
+    "parent-capture-pause",
+    "child-startup",
+    "restore-validation",
+    "parent-publication-p95-p99-max-gap",
+    "private-memory",
+    "disk-and-overlay-growth",
+    "observation-lag"
+  ]
+}
