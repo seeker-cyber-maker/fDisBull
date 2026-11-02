@@ -1,0 +1,1094 @@
+{
+  "artifacts": {
+    "dispatch_uil": {
+      "bytes": 95600,
+      "filename": "Zork-I.rule-links.json",
+      "sha256": "97a56eed69dd476cf81ae79fd727d496c3901f157a7812cd7f11307cd91adcad"
+    },
+    "package": {
+      "bytes": 1675811,
+      "filename": "Zork-I.scenes.json.gz",
+      "sha256": "405d7398b5190b428ec11b089b11064e366060484026531a8694f6618d5e65db"
+    },
+    "udl": {
+      "bytes": 194273,
+      "filename": "Zork-I.scene-definitions.json.gz",
+      "sha256": "85344b69951f95285e3d2986febc2c58719a2237ef8c1f11039834b596f0164e"
+    },
+    "uil": {
+      "bytes": 74585,
+      "filename": "Zork-I.scene-rules.json",
+      "sha256": "fefe9a4b37bdd1056810d5846bb64f290aee3dbc9e87bff7f783b071d80f1abb"
+    }
+  },
+  "canonical_bindings": {
+    "base_intents_sha256": "d4e1f586a39b6fe59987c4b2e25bd17d9e0a009c3bb5208b0a8d4f5122f11d01",
+    "dispatch_uil_sha256": "e617f6df0ab4d35eb27405799d3c2ed782109a1f58d5e691df44a37244da2fc0",
+    "source_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "uil_sha256": "dab825eac678c6b1fdc51414d6771799cdf147afa2d3031babd44140585a6e05"
+  },
+  "date": "2026-10-30",
+  "distribution": {
+    "all_packaged_source_bytes_equal": true,
+    "build_receipt_sha256": "213a0b1143d7d6cd11f17336c872ad0ef43cb0324a062e703f2b8a1c27597231",
+    "build_result": "passed",
+    "console_receipt_sha256": "ca75f5c64198993e605fc7a8862a790dc28ddce1ee54e924a477c7ba6653da79",
+    "export_comparison": {
+      "base_intents_preserved": true,
+      "exact_embedded_views": {
+        "dispatch_uil": true,
+        "udl": true,
+        "uil": true
+      },
+      "gzip_bytes_equal": true,
+      "package_equals_recovered_v2": true,
+      "package_sha256": "405d7398b5190b428ec11b089b11064e366060484026531a8694f6618d5e65db"
+    },
+    "gates": {
+      "core": 0,
+      "player": 0
+    },
+    "house_boundaries": 17,
+    "house_game_results_equal": true,
+    "initial_checkpoint_equal": true,
+    "installed_setuptools_backend_without_downloads": true,
+    "isolation": {
+      "all_imports_from_named_wheels": true,
+      "audits": {
+        "export": {
+          "active_guard_probes": 1,
+          "exit_code": 0,
+          "imported_modules": 13,
+          "result": "passed",
+          "violations": []
+        },
+        "play": {
+          "active_guard_probes": 3,
+          "exit_code": 0,
+          "imported_modules": 12,
+          "result": "passed",
+          "violations": []
+        },
+        "resume": {
+          "active_guard_probes": 3,
+          "exit_code": 0,
+          "imported_modules": 12,
+          "result": "passed",
+          "violations": []
+        }
+      },
+      "console_entrypoints_loaded_from_exact_wheel_metadata": true,
+      "fresh_python_isolated_mode": true,
+      "network_and_child_processes_denied": true,
+      "player_original_story_and_prior_conversion_inputs_denied": true,
+      "source_checkouts_and_build_stages_denied": true
+    },
+    "python": "3.12.14",
+    "reference_house_receipt_matches_final_run": true,
+    "resumed_final": {
+      "location": 180,
+      "moves": 16,
+      "pc": 22800,
+      "score": 10,
+      "status": "input"
+    },
+    "resumed_final_checkpoint_equal": true,
+    "scene_execution": {
+      "fallbacks": {},
+      "primitive_hits": {
+        "discourse.remember_mentioned_object": 1,
+        "narration.emit": 3,
+        "narration.name": 1,
+        "scene.move_actor": 6,
+        "scene.select_exit": 9
+      },
+      "replaced_source_blocks": 258
+    },
+    "source_unchanged_during_build": true,
+    "split_commands": [
+      8,
+      8
+    ],
+    "wheel_console_result": "passed",
+    "wheels": {
+      "core": {
+        "bytes": 690233,
+        "entries": 167,
+        "filename": "fdisbull-0.25.0-py3-none-any.whl",
+        "sha256": "14211f5c4c50f9fd0b978a81f65a7218dcb6e2c72e106bcfd57cf77cc93921b1"
+      },
+      "player": {
+        "bytes": 73406,
+        "entries": 17,
+        "filename": "fdisbull_player-0.25.0-py3-none-any.whl",
+        "sha256": "45a4098cbac71de72bbccdba1e255e2693c8ff8cf2c92044498c4f6c5aa813ac"
+      }
+    }
+  },
+  "execution": {
+    "all_equal": true,
+    "boundaries": 477,
+    "cases": {
+      "first_repeat_empty": {
+        "all_equal": true,
+        "baseline_effects": 654,
+        "baseline_steps": 4082,
+        "boundaries": 6,
+        "boundaries_sha256": "fe66b3ec05783c8ce454468b794e907a660e78091e3fc9797bb73a413f7a9917",
+        "candidate_effects": 654,
+        "candidate_steps": 3982,
+        "commands": 5,
+        "distinct_selected_handler_identities": 7,
+        "final": {
+          "location": 180,
+          "moves": 5,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "e644fa4148e06d068378c0f0e93220e74126441d2a3d1bd5edd7bb594ffe09e8",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "ee1f71a6f80ee7f13ae174239745e59b08f29437b1df479f44b9616ef7eade78",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 5,
+            "container_action": 5,
+            "direct_object_action": 5,
+            "scene_before_action": 5,
+            "source_call_5722": 5,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 5,
+            "verb_before_action": 5
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 89
+        }
+      },
+      "full_route": {
+        "all_equal": true,
+        "baseline_effects": 42544,
+        "baseline_steps": 386619,
+        "boundaries": 397,
+        "boundaries_sha256": "b30acbe21b720d3b6333c393423881e568fc1a4bca0c25a853f1e9d741d7b1eb",
+        "candidate_effects": 42544,
+        "candidate_steps": 381055,
+        "commands": 396,
+        "distinct_selected_handler_identities": 101,
+        "final": {
+          "location": 178,
+          "moves": 394,
+          "pc": 28167,
+          "score": 350,
+          "status": "halted"
+        },
+        "final_snapshot_sha256": "20b6f2231a332f1deefd5927471dc275aabe7944e497664d7e9b44d555ac28fa",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "8beae790115b67c2121d6ce21eaac7919395a7805d4c4ad91dea130e0e23e058",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 408,
+            "container_action": 162,
+            "direct_object_action": 162,
+            "indirect_object_action": 47,
+            "scene_before_action": 408,
+            "source_call_5722": 394,
+            "source_call_723d": 1,
+            "source_call_8d1a": 89,
+            "source_call_8d36": 158,
+            "source_call_8d47": 4,
+            "source_call_8da7": 103,
+            "source_call_9401": 243,
+            "source_call_ff6c": 2,
+            "verb_action": 378,
+            "verb_before_action": 404
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {
+            "condition_true": 23,
+            "direct": 194,
+            "door_open": 11,
+            "routine": 8
+          },
+          "fallbacks": {
+            "move_actor_or_scene_not_qualified": 2
+          },
+          "primitive_hits": {
+            "scene.move_actor": 237,
+            "scene.select_exit": 236
+          },
+          "replaced_source_blocks": 7364
+        }
+      },
+      "house_progression": {
+        "all_equal": true,
+        "baseline_effects": 1592,
+        "baseline_steps": 9337,
+        "boundaries": 17,
+        "boundaries_sha256": "04b95bd2b8c58e926c93e47db11f12d416aa650f07fabbc824cfae0e53213792",
+        "candidate_effects": 1592,
+        "candidate_steps": 9054,
+        "commands": 16,
+        "distinct_selected_handler_identities": 11,
+        "final": {
+          "location": 180,
+          "moves": 16,
+          "pc": 22800,
+          "score": 10,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "6e83ca00a7c16cad2a0ac645de1f9fb910848d1c995ef8b54ea883c1864c9040",
+        "forbidden_original_blocks": 77,
+        "reference_sha256": "a84286270376c11a9d74a2320177752f75357a7e2d663d66b450627d7b0a7410",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 16,
+            "container_action": 7,
+            "direct_object_action": 7,
+            "scene_before_action": 16,
+            "source_call_5722": 13,
+            "source_call_8d1a": 5,
+            "source_call_8d36": 2,
+            "source_call_8da7": 2,
+            "source_call_9401": 6,
+            "verb_action": 15,
+            "verb_before_action": 16
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {
+            "blocked": 1,
+            "condition_false": 1,
+            "direct": 4,
+            "door_closed": 1,
+            "door_open": 2
+          },
+          "fallbacks": {},
+          "primitive_hits": {
+            "discourse.remember_mentioned_object": 1,
+            "narration.emit": 3,
+            "narration.name": 1,
+            "scene.move_actor": 6,
+            "scene.select_exit": 9
+          },
+          "replaced_source_blocks": 258
+        }
+      },
+      "parser_alternatives": {
+        "all_equal": true,
+        "baseline_effects": 2543,
+        "baseline_steps": 18801,
+        "boundaries": 26,
+        "boundaries_sha256": "0bb6c31f504260f87d6b4116b10efab9ef1f59ef1076980386c101800c1348dc",
+        "candidate_effects": 2543,
+        "candidate_steps": 18566,
+        "commands": 25,
+        "distinct_selected_handler_identities": 15,
+        "final": {
+          "location": 78,
+          "moves": 21,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "b9fe453826953ffdbd540d06a36cb2e1dd22d9e50dcd8f4160ce683ed22626ed",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "57c652a72c728f2220c7cd381141a706eab770576a9e91ebd8559d30ac184b07",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 17,
+            "container_action": 7,
+            "direct_object_action": 7,
+            "scene_before_action": 17,
+            "source_call_5722": 20,
+            "source_call_8d1a": 7,
+            "source_call_8d36": 1,
+            "source_call_8da7": 2,
+            "source_call_9401": 5,
+            "verb_action": 16,
+            "verb_before_action": 17
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {
+            "blocked": 1,
+            "direct": 5
+          },
+          "fallbacks": {},
+          "primitive_hits": {
+            "narration.emit": 1,
+            "scene.move_actor": 5,
+            "scene.select_exit": 6
+          },
+          "replaced_source_blocks": 286
+        }
+      },
+      "pronoun_close_reopen": {
+        "all_equal": true,
+        "baseline_effects": 439,
+        "baseline_steps": 3039,
+        "boundaries": 4,
+        "boundaries_sha256": "5351ab40c861013b02465f808e29bad570d0ca97dc5b248845c7817664bc45af",
+        "candidate_effects": 439,
+        "candidate_steps": 2933,
+        "commands": 3,
+        "distinct_selected_handler_identities": 5,
+        "final": {
+          "location": 180,
+          "moves": 3,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "de9a6e43af1ceb221a58896bc943afdface8382a11507de8d27e48881072d479",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "4ab995a1565069f8899c12d6db73330625bc458ad7caa1c3c11a869f04e2d09a",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 3,
+            "container_action": 3,
+            "direct_object_action": 3,
+            "scene_before_action": 3,
+            "source_call_5722": 3,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 3,
+            "verb_before_action": 3
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 55
+        }
+      },
+      "pronoun_drop": {
+        "all_equal": true,
+        "baseline_effects": 525,
+        "baseline_steps": 3874,
+        "boundaries": 5,
+        "boundaries_sha256": "85437b930eda86f14e147040525dfb7ecf420ab53e1ad92a81ad47061b786f03",
+        "candidate_effects": 525,
+        "candidate_steps": 3795,
+        "commands": 4,
+        "distinct_selected_handler_identities": 9,
+        "final": {
+          "location": 180,
+          "moves": 4,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "928351f35aab84be86344089ffdbea011fff7426f22c25f721e3bae26bfd76c2",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "f376498f96fc6e821c2c44e80c2ff202272e01ac6b446956539ede79f6048a34",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 4,
+            "container_action": 3,
+            "direct_object_action": 3,
+            "scene_before_action": 4,
+            "source_call_5722": 4,
+            "source_call_8d1a": 2,
+            "source_call_8da7": 3,
+            "verb_action": 4,
+            "verb_before_action": 4
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 73
+        }
+      },
+      "pronoun_put": {
+        "all_equal": true,
+        "baseline_effects": 702,
+        "baseline_steps": 4970,
+        "boundaries": 6,
+        "boundaries_sha256": "e302426b3184b8d73c2d999fb2dd2242c58f9aa1c1222f13a65b70ae9eee65db",
+        "candidate_effects": 702,
+        "candidate_steps": 4845,
+        "commands": 5,
+        "distinct_selected_handler_identities": 9,
+        "final": {
+          "location": 180,
+          "moves": 5,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "6b8c635f612b3e54dda53e08dc93d9ed34b6b9b0eedb9f18ff4c9cf48491fa24",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "6149724f1b12728e57d610dd6ebbb8b259fe2810efb9bbbe6b4fca9abf11cbe5",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 5,
+            "container_action": 5,
+            "direct_object_action": 5,
+            "indirect_object_action": 1,
+            "scene_before_action": 5,
+            "source_call_5722": 5,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 5,
+            "verb_before_action": 5
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 91
+        }
+      },
+      "pronoun_read": {
+        "all_equal": true,
+        "baseline_effects": 325,
+        "baseline_steps": 2413,
+        "boundaries": 3,
+        "boundaries_sha256": "75c3ee042b4708680b688b7437914dbd8d07b4d6a28eef977a8c18bbcd85cc68",
+        "candidate_effects": 325,
+        "candidate_steps": 2354,
+        "commands": 2,
+        "distinct_selected_handler_identities": 6,
+        "final": {
+          "location": 180,
+          "moves": 2,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "3c9577d7e4347cc5b25f9cf1203c60584211129143698fe4041ba583ec49badf",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "7a3f448e089f00dad137fbe8931c032b146bf93c0f026d8cc20554881cea4f70",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 2,
+            "container_action": 2,
+            "direct_object_action": 2,
+            "scene_before_action": 2,
+            "source_call_5722": 2,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 2,
+            "verb_before_action": 2
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 38
+        }
+      },
+      "pronoun_take": {
+        "all_equal": true,
+        "baseline_effects": 404,
+        "baseline_steps": 2871,
+        "boundaries": 4,
+        "boundaries_sha256": "5c2e36c382b1c341a5e5917bb66788ad4b198dc08538da92acfb86b29f83611b",
+        "candidate_effects": 404,
+        "candidate_steps": 2805,
+        "commands": 3,
+        "distinct_selected_handler_identities": 7,
+        "final": {
+          "location": 180,
+          "moves": 3,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "e6b161920820e4f167273580be3f84616b3044fc0185e1534591d1c540b01084",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "a0b55b1067b8de750d118f5a48843c8a4395da49792e710cbc149acd21b7debf",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 3,
+            "container_action": 2,
+            "direct_object_action": 2,
+            "scene_before_action": 3,
+            "source_call_5722": 3,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 3,
+            "verb_before_action": 3
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 50
+        }
+      },
+      "unavailable_target": {
+        "all_equal": true,
+        "baseline_effects": 293,
+        "baseline_steps": 2017,
+        "boundaries": 3,
+        "boundaries_sha256": "9dd830340e13077ef7d6ac6f02f2e45fee44e1a56c97fb894dff6eca134000af",
+        "candidate_effects": 293,
+        "candidate_steps": 1998,
+        "commands": 2,
+        "distinct_selected_handler_identities": 3,
+        "final": {
+          "location": 81,
+          "moves": 2,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "e1e02e7f7697a294bae2b1df46561d2ce16019dcfa25ab33bf5ef910c3cf5062",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "dd237031fea9a2bbca428652c843ed5d5a5ec919634ff8bd7a9fab5b9bb89f4d",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 1,
+            "scene_before_action": 1,
+            "source_call_5722": 2,
+            "source_call_8d1a": 2,
+            "source_call_8da7": 1,
+            "source_call_9401": 1,
+            "verb_action": 1,
+            "verb_before_action": 1
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {
+            "direct": 1
+          },
+          "fallbacks": {},
+          "primitive_hits": {
+            "scene.move_actor": 1,
+            "scene.select_exit": 1
+          },
+          "replaced_source_blocks": 25
+        }
+      },
+      "unknown_and_meta": {
+        "all_equal": true,
+        "baseline_effects": 205,
+        "baseline_steps": 805,
+        "boundaries": 3,
+        "boundaries_sha256": "55575646d3bce4a30fb6839a903f4e96b6bb535bf3de1c6989f76412f613480d",
+        "candidate_effects": 205,
+        "candidate_steps": 796,
+        "commands": 2,
+        "distinct_selected_handler_identities": 3,
+        "final": {
+          "location": 180,
+          "moves": 0,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "0c0aef9539529417be6b4a82d81d54b0b58d57bda9bed8975045c745a7c452ae",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "a7632f6fd590cf46c005808d755a1b0ba047160f9525db7a1978da020c32e90a",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 1,
+            "scene_before_action": 1,
+            "source_call_5722": 1,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 1,
+            "verb_before_action": 1
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 16
+        }
+      },
+      "wait_turns": {
+        "all_equal": true,
+        "baseline_effects": 265,
+        "baseline_steps": 1321,
+        "boundaries": 3,
+        "boundaries_sha256": "57c2ce7c55abf94c95c1593a0fdbbf11cfbbfc5f4d384de45f1ec893a4261f9e",
+        "candidate_effects": 265,
+        "candidate_steps": 1305,
+        "commands": 2,
+        "distinct_selected_handler_identities": 4,
+        "final": {
+          "location": 180,
+          "moves": 3,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "20d29b1d1f376d62373ec9146c1172e4f00b16b265da64a28908b15c7b63e9d5",
+        "forbidden_original_blocks": 0,
+        "reference_sha256": "5cb480023be13a1969a874500bab67ad7efc0fd3cce8d322c12c63d1c6e9ef2c",
+        "scene_execution": {
+          "dispatch_sites": {
+            "actor_action": 2,
+            "scene_before_action": 2,
+            "source_call_5722": 2,
+            "source_call_8d1a": 1,
+            "source_call_8da7": 1,
+            "verb_action": 2,
+            "verb_before_action": 2
+          },
+          "dropped_segments": 0,
+          "exit_outcomes": {},
+          "fallbacks": {},
+          "primitive_hits": {},
+          "replaced_source_blocks": 28
+        }
+      }
+    },
+    "checker_sha256": "6fc27ea7a02089624b794b471c70ee32a9396c91746baef8e69957fb27507b6b",
+    "command_source_sha256": "31b809f79bf961d642366b4c996f586de717b956202f35cae6b34ecf1c4be009",
+    "commands": 465,
+    "comparison_contract": {
+      "effects": "every ordered physical memory assignment, text fragment and random draw",
+      "game_result": "every result field except implementation dispatch count and recovery audits",
+      "reference": "fresh dfrotz; original checker narrative normalization and score/move fields",
+      "state": "every machine snapshot field, normalizing only recursive package identity",
+      "trap": "all recovered dispatch-site instructions, exit selection operations and on-foot movement blocks refused in house progression"
+    },
+    "consumer_sources_sha256": {
+      "game_intents.py": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+      "intent_runtime.py": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c",
+      "scene_bindings.py": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0",
+      "scene_intents.py": "bb265e5c9a3e5fae298374257647145b07ba5a252b6a6eab39dcf6507321e49e",
+      "scene_runtime.py": "6e07a6bf2bd26d09507bc62ce34713455dc5fca3015be9c0192356b2580680f9",
+      "word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168"
+    },
+    "consumer_sources_unchanged_during_final_run": true,
+    "existing_native_capture_comparison": {
+      "all_game_memory_equal": true,
+      "all_input_boundaries_equal": true,
+      "boundaries": 34,
+      "compared_game_bytes_per_boundary": 11795,
+      "fresh_native_execution": false,
+      "header_exclusion": [
+        0,
+        63
+      ],
+      "original_capture_identity": {
+        "dosbox_elf_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+        "interpreter_sha256": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+        "rng_coupling": "observe original output; never replace native PRNG",
+        "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd"
+      },
+      "receipt_sha256": "bb450dc5419a69205f5cb8b41145d40baf75de7c604f77c1037d9ab8eae72e6b",
+      "rng_events": 7,
+      "rng_events_equal": true
+    },
+    "fresh_frotz_binary_sha256": "350a783fc5468e2239a27fa61a5d4cca26353c209980631baf43b285fdd524f2",
+    "fresh_process_resume": {
+      "all_equal": true,
+      "commands": 296,
+      "complete_snapshot_equal": true,
+      "isolation": "fresh Python -I; only six copied consumer modules, package, checkpoint and commands; external reads, source imports, network and subprocesses refused",
+      "results_equal": true,
+      "source_modules_loaded": []
+    },
+    "private_full_receipt_sha256": "10f1b4de9a8b4ea4418eb36ccc48dcde1a4733c2ec668e22b22e879a97caa6d5",
+    "seed": 12
+  },
+  "format": "fdisbull-zork-scenes-sanitized-verification-1",
+  "integration": {
+    "processor_pr": 28,
+    "processor_pr_head": "bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c",
+    "proposal_adoption_claimed": false,
+    "reviewed_proposals": {
+      "29": "366c89a0da3f840bc55f759606fff2672456675d",
+      "30": "263998798d3d4d526e26a9130341c92613846d34"
+    },
+    "upstream_main": "85503c0e895842424faa7db62f020b879d08568a",
+    "upstream_tree": "c012442ecf05037b586e5c8b768057fdaf321ec8"
+  },
+  "integration_026": {
+    "all_17_protected_files_unchanged": true,
+    "all_packaged_source_bytes_equal": true,
+    "build_receipt_sha256": "aa653047a7d02555d22281852e74865565464913dafb155bec8bb284a64e1697",
+    "build_result": "passed",
+    "complete_new_local_suite_claimed": false,
+    "console_receipt_sha256": "818ac8dc2aa95de381c51a491f3edaae04305d8557e19f3af5d64e2077b15ba2",
+    "consumer_files_sha256": {
+      "game_intents.py": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+      "intent_runtime.py": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c",
+      "scene_bindings.py": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0",
+      "scene_intents.py": "bb265e5c9a3e5fae298374257647145b07ba5a252b6a6eab39dcf6507321e49e",
+      "scene_runtime.py": "6e07a6bf2bd26d09507bc62ce34713455dc5fca3015be9c0192356b2580680f9",
+      "word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168"
+    },
+    "distribution_gates": {
+      "core": 0,
+      "player": 0
+    },
+    "export_comparison": {
+      "dispatch_view_equal": true,
+      "gzip_bytes_equal": true,
+      "package_equal": true,
+      "package_sha256": "405d7398b5190b428ec11b089b11064e366060484026531a8694f6618d5e65db",
+      "preserved_base_equal": true,
+      "udl_view_equal": true,
+      "uil_view_equal": true
+    },
+    "focused_and_packaging_gate": {
+      "errors": 0,
+      "failed": 0,
+      "files": 21,
+      "passed": 535,
+      "receipt_sha256": "e5b4a2a6580652288a60906a4b9200b504c37b41dcf857d88148c2eb2c54484f",
+      "skipped": 5,
+      "tests": 540
+    },
+    "generated_game_package_unchanged": true,
+    "house_boundaries": 17,
+    "house_game_results_equal": true,
+    "initial_checkpoint_equal": true,
+    "isolation": {
+      "all_imports_from_named_wheels": true,
+      "audits": {
+        "export": {
+          "active_guard_probes": 1,
+          "exit_code": 0,
+          "imported_modules": 13,
+          "result": "passed",
+          "violations": []
+        },
+        "play": {
+          "active_guard_probes": 3,
+          "exit_code": 0,
+          "imported_modules": 12,
+          "result": "passed",
+          "violations": []
+        },
+        "resume": {
+          "active_guard_probes": 3,
+          "exit_code": 0,
+          "imported_modules": 12,
+          "result": "passed",
+          "violations": []
+        }
+      },
+      "checkout_and_build_source_reads_denied": true,
+      "console_entrypoints_from_exact_wheel_metadata": true,
+      "fresh_python_isolated_mode": true,
+      "network_and_child_processes_denied": true,
+      "player_original_story_and_prior_IR_reads_denied": true
+    },
+    "original_consumer_files_unchanged": true,
+    "original_full_reference_check_still_binds_exact_consumers": true,
+    "processor_implementation_now_in_upstream": true,
+    "reconstruction_receipt_sha256": "566f33cac68b95e621031e83a1773d95b972ac4dbc05c17cb7c329db29a59d8a",
+    "resumed_final": {
+      "location": 180,
+      "moves": 16,
+      "pc": 22800,
+      "score": 10,
+      "status": "input"
+    },
+    "resumed_final_checkpoint_equal": true,
+    "scene_execution": {
+      "fallbacks": {},
+      "primitive_hits": {
+        "discourse.remember_mentioned_object": 1,
+        "narration.emit": 3,
+        "narration.name": 1,
+        "scene.move_actor": 6,
+        "scene.select_exit": 9
+      },
+      "replaced_source_blocks": 258
+    },
+    "source_files_sha256": {
+      "MANIFEST.in": "a73b704984a1f6d033b5bbcbe05c2dbe4f59a8f34b354843023d07d342fe62f0",
+      "player/fdisbull_player/__main__.py": "9a4781eec4970b46e05b98101ccb304224717a21ee20c4b97f0adade5a006047",
+      "player/fdisbull_player/player.py": "c762a2e5323f14ba04a3748371fc22c6bd69eb50eb2592f4f221bfabaa345212",
+      "player/fdisbull_player/scene_bindings.py": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0",
+      "player/fdisbull_player/scene_intents.py": "bb265e5c9a3e5fae298374257647145b07ba5a252b6a6eab39dcf6507321e49e",
+      "player/fdisbull_player/scene_runtime.py": "6e07a6bf2bd26d09507bc62ce34713455dc5fca3015be9c0192356b2580680f9",
+      "player/pyproject.toml": "25acf25c56b990c54853271e79c54cd7ee67961f8b2aa8d8582e4f4b5dae478d",
+      "pyproject.toml": "b804ce2f16042967fbf9a0199dfc4462df56d7f1f695d82a2203b262319e7ec5",
+      "scripts/build_release.py": "24bb5cf6ad44b376a63c457f79af03b65d5279f42aefe03b35452d252637a72f",
+      "scripts/check_dist.py": "8144a378eaafa46f9264cd8789802b880b3607fb6e1f7076bbcf4860b443754d",
+      "scripts/verify_zork_scenes.py": "6fc27ea7a02089624b794b471c70ee32a9396c91746baef8e69957fb27507b6b",
+      "src/fdisbull/__init__.py": "37e062d3b4b5288605ba84ed5e43910e17c863fde0c94a7dd637b53998f166dd",
+      "src/fdisbull/_zork_scene_symbols.py": "cafef54afd2a8d0597fe6727c8ce2cee3cfa12cb93239f2409b7512b4c79ba71",
+      "src/fdisbull/cli.py": "60e1dcae4a6bf9ca52d327ceaf565cc3cac68bf723bb73e7f0abd181d0ded123",
+      "src/fdisbull/zork_scene_dispatch.py": "0bee91847d2eabcf44dc9acce60d18d90d965b019cba42fd932efc6e5d2e7af5",
+      "src/fdisbull/zork_scene_export.py": "9a6ee5a4df7b5847150c2cf0ad3d6a73ec4f5db15ea0713eea5616ac699a7e04",
+      "src/fdisbull/zork_scenes.py": "f21bc999cf5f6be17e20d62b01dff36de8110d63cc32312b5894cbc7b303f321",
+      "tests/test_distribution.py": "3ec348f7853bebada35bcd5d43989ae541c98bc66b2a5d2746cc9e62db7e784a",
+      "tests/test_offline_kit.py": "21be2251d1f7da9d786674e6cc7ac247ed88b623b54d0183fa4100b9c600a8aa",
+      "tests/test_scene_bindings.py": "5b3ccf71adaf557fea5afd2f9c412a859bdcac28b996979fa94a30b61aa8c2a9",
+      "tests/test_scene_intents.py": "6adeccad6a9fb6aa3ab9348c037d6d6657bd225e61ea5481c77568979f6c17b2",
+      "tests/test_text_distribution.py": "720dc5c12d0c796219cc84951a8b2edd2ea64ac16d33bd88619b6c68be93ce6c",
+      "tests/test_zork_scene_dispatch.py": "0729a27e88ba90f673ec036b2fd5b3260115961f4e479858c8c0a284d08adab1",
+      "tests/test_zork_scene_runtime.py": "29b096e14aee9aee5621ed5a6eeabdd7e9cf4d908af0ecbba9cb955e5950d80b",
+      "tests/test_zork_scenes.py": "473b9f2be938f83fc7c763662531d8289e701305acfe5be1a919f766aafbe657",
+      "tests/test_zork_scenes_cli.py": "130fd1c5ed21c6855f8e122012231827ebd168a5577d8ec2038c3534829e9410"
+    },
+    "source_unchanged_during_build": true,
+    "split_commands": [
+      8,
+      8
+    ],
+    "upstream_main": "8ba24d62b5010d3a6a5d604524aad72e2e047b77",
+    "upstream_tree": "656f1a0a4e3b7fb229fe5a34a78690b08192caa6",
+    "versions": {
+      "core": "0.26.0",
+      "player": "0.26.0"
+    },
+    "wheel_console_result": "passed",
+    "wheels": {
+      "core": {
+        "bytes": 692180,
+        "entries": 167,
+        "filename": "fdisbull-0.26.0-py3-none-any.whl",
+        "sha256": "503e00bc088f60c6714ccf800059502542c9d7892bed087a4e3acc5c8ac7b4b1"
+      },
+      "player": {
+        "bytes": 73437,
+        "entries": 17,
+        "filename": "fdisbull_player-0.26.0-py3-none-any.whl",
+        "sha256": "9299e761b4084a6c7c205d54bdd3b3b84895911b1373622a66897317fd2eda3f"
+      }
+    }
+  },
+  "inventory": {
+    "all_game_intent_recovered": false,
+    "decoded_instruction_starts": 6013,
+    "default_action_links": 146,
+    "directional_exits": 352,
+    "door_entities": 3,
+    "exit_kinds": {
+      "blocked": 37,
+      "conditional": 25,
+      "direct": 277,
+      "door": 6,
+      "routine": 7
+    },
+    "initial_nonzero_property_callbacks": 135,
+    "live_boolean_selectors": 12,
+    "named_residual_handler_identities": 305,
+    "narrative_resources": 147,
+    "nonzero_preactions": 13,
+    "property_default_mappings": 750,
+    "qualified_dispatch_sites": 18,
+    "room_callback_references": 40,
+    "scenes": 110,
+    "scenes_with_both_description_and_callback": 17,
+    "source_defined_callback_mutation_origins": 23,
+    "source_entry_roots": 292,
+    "static_long_descriptions": 87
+  },
+  "limits": {
+    "all_game_intent_recovered": false,
+    "all_runtime_paths_exhausted": false,
+    "binary_and_prose_in_public_evidence": false,
+    "generic_shared_contract_conformance_claimed": false,
+    "original_selector_forbidden_scope": "16-command house interaction only; 77 original blocks",
+    "other_residual": [
+      "PERFORM stage admission and first-handled branching",
+      "movement admission and vehicle cases"
+    ],
+    "private_snapshots_and_transcripts_in_public_evidence": false,
+    "residual": [
+      "input parser",
+      "room and routine-exit handler bodies",
+      "missing direction hazards",
+      "most arrival behavior",
+      "background events",
+      "condition setters",
+      "other game actions"
+    ],
+    "static_truth_table_is_reachability_proof": false,
+    "udc_patch_propagation_or_compilation_proof_claimed": false
+  },
+  "preservation": {
+    "all_unchanged": true,
+    "embedded_base_intents_unchanged": true,
+    "files_checked": 17,
+    "protected_files_sha256": {
+      "player/fdisbull_player/game_intents.py": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+      "player/fdisbull_player/intent_runtime.py": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c",
+      "player/fdisbull_player/word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+      "scripts/verify_zork_intents.py": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6",
+      "scripts/verify_zork_uil.py": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a",
+      "src/fdisbull/zmachine.py": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5",
+      "src/fdisbull/zmachine_analysis.py": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8",
+      "src/fdisbull/zmachine_processor.py": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22",
+      "src/fdisbull/zork_intents.py": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc",
+      "src/fdisbull/zork_uil.py": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+      "tests/test_game_intents.py": "22bf971349a869142d71ccd46310d0838ffcafc3872b69c4be32dae17606979d",
+      "tests/test_uil_word16_runtime.py": "59a2e87e840a06d643725deddf4e3469f1a93960c56ad5e151804fd7841660c0",
+      "tests/test_zork_intent_runtime.py": "00b2c1b546585a5984beede0b45c4a9a1f33342458fb6e4e5a254432d3409cd2",
+      "tests/test_zork_intents_cli.py": "a4c3e6a50853d10882f919d98e9553ba0d72850a53f6df4f0670623af30b8b87",
+      "tests/test_zork_intents_mapper.py": "d48b9399990f2adb3c261430adc2f020a1397bbca6e56935142ae543118cfd63",
+      "tests/test_zork_uil.py": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3",
+      "tests/test_zork_uil_cli.py": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a"
+    }
+  },
+  "source": {
+    "checksum": 41257,
+    "declared_bytes": 84876,
+    "file_bytes": 92160,
+    "release": 88,
+    "serial": "840726",
+    "sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "trailing_bytes": 7284,
+    "trailing_sha256": "1f37b7288d7dfc293e157924c3f00e56e1629f73fd4911e7722fb9727edd94d5",
+    "version": 3
+  },
+  "source_files_sha256": {
+    "player/fdisbull_player/__main__.py": "9a4781eec4970b46e05b98101ccb304224717a21ee20c4b97f0adade5a006047",
+    "player/fdisbull_player/scene_bindings.py": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0",
+    "player/fdisbull_player/scene_intents.py": "bb265e5c9a3e5fae298374257647145b07ba5a252b6a6eab39dcf6507321e49e",
+    "player/fdisbull_player/scene_runtime.py": "6e07a6bf2bd26d09507bc62ce34713455dc5fca3015be9c0192356b2580680f9",
+    "scripts/verify_zork_scenes.py": "6fc27ea7a02089624b794b471c70ee32a9396c91746baef8e69957fb27507b6b",
+    "src/fdisbull/_zork_scene_symbols.py": "cafef54afd2a8d0597fe6727c8ce2cee3cfa12cb93239f2409b7512b4c79ba71",
+    "src/fdisbull/cli.py": "60e1dcae4a6bf9ca52d327ceaf565cc3cac68bf723bb73e7f0abd181d0ded123",
+    "src/fdisbull/zork_scene_dispatch.py": "0bee91847d2eabcf44dc9acce60d18d90d965b019cba42fd932efc6e5d2e7af5",
+    "src/fdisbull/zork_scene_export.py": "9a6ee5a4df7b5847150c2cf0ad3d6a73ec4f5db15ea0713eea5616ac699a7e04",
+    "src/fdisbull/zork_scenes.py": "f21bc999cf5f6be17e20d62b01dff36de8110d63cc32312b5894cbc7b303f321",
+    "tests/test_distribution.py": "febfed9d44c367e9dfaca4c64e76ef8d41dfbb93a9cceec5d7df22af92ccfc2b",
+    "tests/test_offline_kit.py": "21be2251d1f7da9d786674e6cc7ac247ed88b623b54d0183fa4100b9c600a8aa",
+    "tests/test_scene_bindings.py": "5b3ccf71adaf557fea5afd2f9c412a859bdcac28b996979fa94a30b61aa8c2a9",
+    "tests/test_scene_intents.py": "6adeccad6a9fb6aa3ab9348c037d6d6657bd225e61ea5481c77568979f6c17b2",
+    "tests/test_text_distribution.py": "720dc5c12d0c796219cc84951a8b2edd2ea64ac16d33bd88619b6c68be93ce6c",
+    "tests/test_zork_scene_dispatch.py": "0729a27e88ba90f673ec036b2fd5b3260115961f4e479858c8c0a284d08adab1",
+    "tests/test_zork_scene_runtime.py": "29b096e14aee9aee5621ed5a6eeabdd7e9cf4d908af0ecbba9cb955e5950d80b",
+    "tests/test_zork_scenes.py": "473b9f2be938f83fc7c763662531d8289e701305acfe5be1a919f766aafbe657",
+    "tests/test_zork_scenes_cli.py": "130fd1c5ed21c6855f8e122012231827ebd168a5577d8ec2038c3534829e9410"
+  },
+  "static_truth_table": {
+    "all_equal": true,
+    "claim_limit": "static correspondence and pure evaluator coverage; no runtime reachability assertion",
+    "comparison": "independent property parsing, every named direction, Boolean alternatives, packed target headers, exact source narration and discourse effect",
+    "counts": {
+      "blocked": 37,
+      "condition_false": 25,
+      "condition_true": 25,
+      "condition_unknown": 25,
+      "direct": 277,
+      "door_false": 6,
+      "door_true": 6,
+      "door_unknown": 6,
+      "evaluations": 1492,
+      "missing_direction": 1078,
+      "routine_residual": 7
+    },
+    "uil_sha256": "dab825eac678c6b1fdc51414d6771799cdf147afa2d3031babd44140585a6e05"
+  },
+  "tests": {
+    "baseline_categories": {
+      "optional_managed_dependencies": {
+        "count": 10,
+        "explanation": "The unchanged baseline reports missing dnfile==0.18.0 and dncil==1.0.2 optional managed packages; dependent metadata assertions then fail.",
+        "failed_node_ids": [
+          "tests/test_managed.py::test_managed_metadata_names_tokens_and_rvas_are_real_cli_fields",
+          "tests/test_managed.py::test_cil_decoder_resolves_call_string_and_method_local_branch",
+          "tests/test_managed.py::test_cil_instruction_budget_reports_partial_without_claiming_complete",
+          "tests/test_managed.py::test_fat_cil_header_and_switch_targets_are_decoded_with_eh_left_explicit",
+          "tests/test_managed.py::test_bad_switch_and_truncated_instruction_are_bounded_errors",
+          "tests/test_managed.py::test_invalid_metadata_token_stays_unresolved_while_cil_bytes_decode",
+          "tests/test_managed.py::test_metadata_row_budget_is_checked_before_external_parser_and_output_is_capped",
+          "tests/test_managed.py::test_wrong_or_missing_method_tokens_and_native_method_are_explicit",
+          "tests/test_managed_api.py::test_managed_path_api_and_method_token_resolution",
+          "tests/test_managed_api.py::test_project_retains_managed_source_and_refuses_native_il_analysis"
+        ]
+      },
+      "private_output_git_boundary": {
+        "count": 30,
+        "explanation": "The unchanged baseline refuses temporary paths as inside Git / not outside Git; dependent artifact and compiler assertions then fail. This is an existing environmental boundary outcome, not a scene implementation change.",
+        "failed_node_ids": [
+          "tests/test_advanced_cli.py::test_summary_and_signature_files_are_qualified_and_persistent",
+          "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[False]",
+          "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[True]",
+          "tests/test_output_artifacts.py::test_roundtrip_restart_unicode_range_and_pointer",
+          "tests/test_output_artifacts.py::test_quotas_errors_and_stale_files",
+          "tests/test_output_artifacts.py::test_corruption_and_no_clobber_export",
+          "tests/test_output_artifacts.py::test_paths_privacy_id_validation_and_git",
+          "tests/test_output_artifacts.py::test_concurrent_dedup",
+          "tests/test_output_artifacts.py::test_generator_failure_removes_partial_without_error_content",
+          "tests/test_output_artifacts.py::test_replaced_store_directory_is_refused",
+          "tests/test_output_artifacts.py::test_empty_chunk_stream_is_bounded",
+          "tests/test_output_artifacts.py::test_read_ranges_and_invalid_json_are_refused",
+          "tests/test_output_cli.py::test_cli_spills_then_fresh_process_selects_without_execution",
+          "tests/test_output_cli.py::test_bounded_selection_and_projectless_retrieval",
+          "tests/test_output_cli.py::test_server_bounds_each_line_and_continues_with_a_selective_query",
+          "tests/test_output_cli.py::test_full_skill_export_round_trips_through_output_artifact[fdisbull-investigate-references/semantic-contracts.md]",
+          "tests/test_output_cli.py::test_full_skill_export_round_trips_through_output_artifact[write-gamefaqs-guide-references/technical-mechanics.md]",
+          "tests/test_output_limits.py::test_large_result_retains_the_complete_original_with_execution_scope",
+          "tests/test_output_limits.py::test_small_values_and_exact_wire_byte_boundary_are_unchanged",
+          "tests/test_output_limits.py::test_large_failed_rpc_retains_error_without_promoting_it",
+          "tests/test_output_limits.py::test_unknown_execution_fields_are_not_invented_or_partially_labeled",
+          "tests/test_pr17_examples.py::test_native_probe_rejects_wrong_executable_hash_under_python_optimized",
+          "tests/test_udc.py::test_reconstruct_from_blocks_after_restart_without_source_file",
+          "tests/test_udc.py::test_asm_udl_uil_original_backing_roundtrip_and_negative",
+          "tests/test_udc.py::test_unavailable_proof_never_becomes_parity",
+          "tests/test_udc.py::test_immutable_parent_and_patch_isolation",
+          "tests/test_udc.py::test_tampered_backing_missing_block_and_metadata_refused",
+          "tests/test_udc.py::test_competing_directory_is_never_replaced",
+          "tests/test_udc.py::test_mz_fixups_and_overlay_are_preserved_but_not_misproved",
+          "tests/test_udc_cli.py::test_private_compilation_and_compact_replies"
+        ]
+      },
+      "socket_permissions_and_downstream_transport_failures": {
+        "count": 10,
+        "explanation": "The unchanged baseline reports PermissionError (Operation not permitted) on socket operations. Two IDA and one text-host assertion surface timeout, EOF or empty-queue consequences instead; grouping those consequences uses the source calls and direct permission evidence in sibling tests and warning traces.",
+        "failed_node_ids": [
+          "tests/test_dosbox_window.py::test_dos_endpoint_passes_window_only_for_native_backend",
+          "tests/test_ida_wire.py::test_fragmented_frame_and_packet_budget",
+          "tests/test_ida_wire.py::test_mismatched_interface_never_sends_a_debug_request",
+          "tests/test_ida_wire.py::test_request_handles_interleaved_server_message_and_does_not_replay",
+          "tests/test_qemu_machine.py::test_gdb_packet_checksum_failure_is_not_retried",
+          "tests/test_qemu_machine.py::test_gdb_run_length_and_escaped_bytes_are_decoded_from_wire",
+          "tests/test_text_host.py::test_real_loopback_roundtrip_and_cleanup",
+          "tests/test_text_host.py::test_explicit_preparation_runs_after_bindings_before_listening",
+          "tests/test_wine_advanced.py::test_qmp_handles_fragmented_replies_and_async_stop_event",
+          "tests/test_z_process_backend.py::test_socket_peer_without_response_obeys_cli_timeout"
+        ]
+      }
+    },
+    "baseline_worktree_clean": true,
+    "classification_receipt_sha256": "862972157868ec848b3f2d7bc98a5e324e26118cc3065354a6dbe5b339dc8b67",
+    "failed_ids_rechecked_on_unchanged_baseline": {
+      "errors": 0,
+      "failures": 50,
+      "passed": 16,
+      "skipped": 0,
+      "tests": 66
+    },
+    "final_focused_gate": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 494,
+      "receipt_sha256": "f960bdbb6a2f47a505145e2e5eea9f831b7b48dabc285fbab0b819dcea900490",
+      "skipped": 5,
+      "tests": 499
+    },
+    "introduced_packaging_fixture_failures_fixed": 16,
+    "new_scene_tests": {
+      "test_scene_bindings": 34,
+      "test_scene_intents": 59,
+      "test_zork_scene_dispatch": 35,
+      "test_zork_scene_runtime": 22,
+      "test_zork_scenes": 32,
+      "test_zork_scenes_cli": 46
+    },
+    "no_originally_failed_introduced_case_remains": true,
+    "original_full_candidate_run": {
+      "errors": 0,
+      "failures": 66,
+      "passed": 2163,
+      "skipped": 109,
+      "tests": 2338
+    },
+    "postfix_packaging_gate": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 41,
+      "receipt_sha256": "dbc38d7a7beb751b0b83110ed51f3e3a0e834f5251c50632a9d733e78483499c",
+      "skipped": 0,
+      "tests": 41
+    },
+    "second_full_local_suite_claimed": false
+  }
+}

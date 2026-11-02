@@ -1,6 +1,7 @@
 """Immutable whole-VM PE checkpoints in hash-bound private project sidecars."""
 from __future__ import annotations
 
+from contextlib import nullcontext
 import gzip
 import hashlib
 import json
@@ -12,6 +13,7 @@ import zipfile
 
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
+from .anchor_stones import AnchorStoneSessionMixin
 
 FORMAT='fdisbull-qemu-native-1'
 REGISTERS={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags'}
@@ -126,7 +128,7 @@ def apply_edits(debug,memory,registers):
     debug._event('state-edits',evidence);return evidence
 
 
-class PEStateSessionMixin:
+class PEStateSessionMixin(AnchorStoneSessionMixin):
     def _state_host(self):
         self._layer_setup()
         return {'breakpoints':self.breakpoints,'watchpoints':self.watchpoints,'active':self._layers,
@@ -146,7 +148,16 @@ class PEStateSessionMixin:
             setattr(self,name,{int(a,16):b for a,b in values.items()})
         self._layer_generations[self._layer_generation]=list(self._layers)
 
-    def save_state(self,name='checkpoint.sav'):
+    def save_state(self,name='checkpoint.sav',*,max_bytes=None):
+        lock=getattr(self,'_delta_lock',None) or getattr(self.rpc,'lock',None)
+        with lock if lock is not None else nullcontext():
+            guard=getattr(self,'_cpu_delta_before_call',None)
+            if guard is not None:guard('state.save')
+            return self._save_native_state(name,max_bytes=max_bytes)
+
+    def _save_native_state(self,name='checkpoint.sav',*,max_bytes=None):
+        if max_bytes is not None and (type(max_bytes) is not int or not 1<=max_bytes<=2*1024**3):
+            raise ValueError('PE native state max_bytes must be 1..2 GiB including manifest and sidecar')
         _file_name(name);self._layer_setup()
         if self._pending_exec:raise ValueError('Finish the pending execution-layer instruction before native capture')
         directory=sidecar(self.project)
@@ -164,30 +175,56 @@ class PEStateSessionMixin:
                     expanded+=len(chunk)
                     if expanded>8*1024**3:raise ValueError('Native checkpoint exceeds expanded budget')
             digest=file_hash(path);destination=directory/(digest+'.mig.gz')
+            native_size=path.stat().st_size
+            metadata={**self.metadata,'format':FORMAT,'registers':registers,'native_sha256':digest,
+                      'native_size':native_size,'storage':'private-project-sidecar','capture':capture,
+                      'target_paused':True,'host_files_restored':False}
+            if hasattr(self,'_state_provenance'):metadata['derivation']=self._state_provenance
+            document={'format':FORMAT,'machine_sha256':digest,'machine_size':native_size,'metadata':metadata,'host':host}
+            data=json.dumps(document,sort_keys=True,separators=(',',':')).encode()
+            if max_bytes is not None and native_size+len(data)>max_bytes:
+                raise ValueError('PE native state manifest and sidecar exceed remaining delta byte budget')
             if destination.is_symlink():raise ValueError('Native sidecar file cannot be a symbolic link')
             if destination.exists():
                 if file_hash(destination)!=digest:raise ValueError('Existing native sidecar hash mismatch')
             else:path.replace(destination);destination.chmod(0o400)
-        metadata={**self.metadata,'format':FORMAT,'registers':registers,'native_sha256':digest,
-                  'native_size':destination.stat().st_size,'storage':'private-project-sidecar','capture':capture,
-                  'target_paused':True,'host_files_restored':False}
-        if hasattr(self,'_state_provenance'):metadata['derivation']=self._state_provenance
-        document={'format':FORMAT,'machine_sha256':digest,'machine_size':destination.stat().st_size,'metadata':metadata,'host':host}
-        result=self._artifact(name,'state',json.dumps(document,sort_keys=True,separators=(',',':')).encode(),metadata)
+        result=self._artifact(name,'state',data,metadata)
         result['native_size']=destination.stat().st_size;return result
 
     def load_state(self,artifact):
+        lock=getattr(self,'_delta_lock',None) or getattr(self.rpc,'lock',None)
+        with lock if lock is not None else nullcontext():
+            if getattr(self,'_cpu_delta_history',None) is None:
+                return self._load_native_state(artifact)
+            with self._cpu_delta_full_load():
+                result=self._load_native_state(artifact)
+                self._cpu_delta_loaded(self.metadata.get('delta_experiment'))
+                return result
+
+    def _load_native_state(self,artifact):
         row,document,path=get_state(self.project,artifact,self.version['id'])
         for name in ('qemu','kernel','initramfs'):
             if self.rpc.inputs[name]['sha256']!=document['metadata']['runtime_inputs'][name]['sha256']:
                 raise ValueError('Native state backend identity mismatch: '+name)
+            if file_hash(self.rpc.inputs[name]['path'])!=self.rpc.inputs[name]['sha256']:
+                raise ValueError('Native state runtime file identity changed: '+name)
         if self.metadata['files']!=document['metadata']['files']:raise ValueError('Native state program inputs mismatch')
+        if hasattr(self,'_disk_manifest') and self._disk_manifest()!=document['metadata']['files']:
+            raise ValueError('Native state host program input identities changed')
         if self.metadata['runtime_profile']!=document['metadata']['runtime_profile']:raise ValueError('Native state runtime profile mismatch')
         from .wine_rpc import WineQemuRPC
         options=[self.rpc.inputs[n]['path'] for n in ('qemu','kernel','initramfs')]
         self.rpc.close()
         try:
-            self.rpc=WineQemuRPC(*options,restore=path)
+            replacement=WineQemuRPC(*options,restore=path)
+            try:
+                if any(replacement.inputs[n]['sha256']!=document['metadata']['runtime_inputs'][n]['sha256']
+                       for n in ('qemu','kernel','initramfs')):
+                    raise ValueError('Native state runtime identity changed during VM replacement')
+                if hasattr(self,'_cpu_delta_bind_rpc'):self._cpu_delta_bind_rpc(replacement)
+            except BaseException:
+                replacement.close();raise
+            self.rpc=replacement
             self.runtime_base=int(document['metadata']['runtime_image_base'],16);self.delta=self.runtime_base-self.static_base
             self._expected={r.start:bytearray(r.data) for r in self.regions};self._relocate_expected()
             old_metadata=document['metadata']
@@ -196,7 +233,7 @@ class PEStateSessionMixin:
             self.metadata.update(qemu_pid=self.rpc.process.pid,runtime_inputs=self.rpc.inputs,restored_from=artifact)
             self._load_state_host(document['host']);self._frame=None;self.mode_id+=1
             registers=self.registers()
-            for name in ('rip','rflags','general'):
+            for name in ('rip','rflags','general','thread'):
                 if registers[name]!=document['metadata']['registers'][name]:raise DebuggerError('Native restored registers differ: '+name)
             result={'artifact':artifact,'sha256':row['sha256'],'registers':registers,'state':'stopped','native_size':document['machine_size']}
             with self.project.transaction(True):
@@ -205,4 +242,8 @@ class PEStateSessionMixin:
         except BaseException:self.close();raise
 
     def write_registers(self,registers):
-        return apply_edits(self,[],registers)
+        lock=getattr(self,'_delta_lock',None) or getattr(self.rpc,'lock',None)
+        with lock if lock is not None else nullcontext():
+            guard=getattr(self,'_cpu_delta_before_call',None)
+            if guard is not None:guard('setregs')
+            return apply_edits(self,[],registers)

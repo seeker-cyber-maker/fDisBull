@@ -1,0 +1,216 @@
+[
+  {
+    "edition": "SYNDICAT",
+    "tables": [
+      {
+        "name": "HSPR-0",
+        "entries": 1802,
+        "nonempty": 1799,
+        "width_counts": {
+          "0": 3,
+          "16": 1520,
+          "32": 160,
+          "64": 119
+        },
+        "transparent_color_overlap_groups": 0
+      },
+      {
+        "name": "HSPR-1",
+        "entries": 1802,
+        "nonempty": 1799,
+        "width_counts": {
+          "0": 3,
+          "16": 1520,
+          "32": 160,
+          "64": 119
+        },
+        "transparent_color_overlap_groups": 0
+      },
+      {
+        "name": "HPOINTER",
+        "entries": 7,
+        "nonempty": 6,
+        "width_counts": {
+          "0": 1,
+          "32": 6
+        },
+        "transparent_color_overlap_groups": 0
+      }
+    ],
+    "element_flag_counts": {
+      "0": 7252,
+      "1": 3232,
+      "2": 2
+    },
+    "selected_frames": {
+      "1767": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          1749
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      },
+      "2306": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          2310
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      },
+      "2310": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          1767
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      }
+    },
+    "start_390": 1749
+  },
+  {
+    "edition": "DATADISK",
+    "tables": [
+      {
+        "name": "HSPR-0-D",
+        "entries": 1802,
+        "nonempty": 1799,
+        "width_counts": {
+          "0": 3,
+          "16": 1520,
+          "32": 160,
+          "64": 119
+        },
+        "transparent_color_overlap_groups": 0
+      },
+      {
+        "name": "HSPR-1-D",
+        "entries": 1802,
+        "nonempty": 1799,
+        "width_counts": {
+          "0": 3,
+          "16": 1520,
+          "32": 160,
+          "64": 119
+        },
+        "transparent_color_overlap_groups": 0
+      },
+      {
+        "name": "HPOINTER",
+        "entries": 7,
+        "nonempty": 6,
+        "width_counts": {
+          "0": 1,
+          "32": 6
+        },
+        "transparent_color_overlap_groups": 0
+      }
+    ],
+    "element_flag_counts": {
+      "0": 7252,
+      "1": 3232,
+      "2": 2
+    },
+    "selected_frames": {
+      "1767": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          1749
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      },
+      "2306": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          2310
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      },
+      "2310": {
+        "chain": [
+          4235,
+          4236,
+          4237,
+          4238,
+          4239
+        ],
+        "resource_fields": [
+          4235,
+          101,
+          66,
+          0,
+          1767
+        ],
+        "flag2_elements": [
+          4238,
+          4239
+        ]
+      }
+    },
+    "start_390": 1749
+  }
+]

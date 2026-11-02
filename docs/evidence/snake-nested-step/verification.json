@@ -1,0 +1,510 @@
+{
+  "format": "fdisbull-snake-nested-step-qualification-1",
+  "status": "finite_original_match",
+  "source_commit": "2671456848a72b2d9b95c50c344c0bd5aba21aea",
+  "qualification": "local changes based on this commit; publication and CI not attempted",
+  "original": {
+    "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "bytes": 3851,
+    "unchanged": true
+  },
+  "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+  "canonical_program_unchanged": true,
+  "persisted_contracts_layers_selections_unchanged": true,
+  "baseline_preserved": [
+    {
+      "name": "snake.uil.json",
+      "sha256": "de6081c53596a252ac77c32ecfd6a32b9b2018e154de7cb363a73550d4809c79",
+      "unchanged": true
+    },
+    {
+      "name": "browser-study-06.json",
+      "sha256": "c64ed82937a9ee31e045241d3fec0e456d34381be7298e10bd56ad8bb5833e5a",
+      "unchanged": true
+    },
+    {
+      "name": "original-cases.json",
+      "sha256": "2671875c9929a02cfa5c56b86dd267394973fb8eda4be12f0f1eaeb0226e612e",
+      "unchanged": true
+    },
+    {
+      "name": "carried-native-to-uil-06.json",
+      "sha256": "092c40d1e7ba7c3d4abd4e3483dfb51cdfd95127fa9e072144e4cfcdaa5ab80f",
+      "unchanged": true
+    },
+    {
+      "name": "memory-shell.json",
+      "sha256": "f5bd4ed84910c6e214d7c64b3e99b333d9a146f1529e924963fbf3e00aec65be",
+      "unchanged": true
+    },
+    {
+      "name": "node-result.json",
+      "sha256": "86a5600c194a3c5f58e022ac7e948c221b876737d18a3118bd684aa04a689eec",
+      "unchanged": true
+    },
+    {
+      "name": "browser-result.json",
+      "sha256": "ed6c1e1c6cb6dea1fcbcb916c347474caa116cb3f87c02f2ee48c1c9a9a5f62e",
+      "unchanged": true
+    },
+    {
+      "name": "SNAKE.EXE",
+      "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+      "unchanged": true
+    },
+    {
+      "name": "originals.json",
+      "sha256": "1a1daa34fdbb8e827b98208dcf9046514a4834d42f630bb219c095e117e82f5a",
+      "unchanged": true
+    }
+  ],
+  "cut_plan_sha256": "0e9ca65bfbd61712966be2c85114845f4aef39bfbc468cff8658ede8876fce95",
+  "cut_lowering_sha256": "6966bed1819b65966c0d29acf857f6fc0d290c39869ee5544972fd6ecdeeb153",
+  "cuts": [
+    {
+      "caller": "action",
+      "entry": "action.87",
+      "callee": "step"
+    },
+    {
+      "caller": "action",
+      "entry": "action.153",
+      "callee": "step"
+    }
+  ],
+  "arena_words": 70000,
+  "source_budget": 4000000,
+  "phase_bounds": {
+    "entry": 1879,
+    "resume_1": 2,
+    "resume_2": 2
+  },
+  "orchestration": {
+    "captured_binding_map": true,
+    "private_continuation_local": true,
+    "original_memory_bound": true,
+    "aggregate_source_budget": true,
+    "adapter_charges_subtracted_per_yield": 2,
+    "guarded_atomic_commit": true,
+    "phase_and_nested_provider_leases": true,
+    "callee_topology_bound_to_document": true,
+    "no_guard_checkpoint_inside_private_phases": true,
+    "actual_invocation_receipts": true,
+    "negative_checks": [
+      "aggregate-budget rollback",
+      "first out-of-bounds application word",
+      "binding epoch change while pending",
+      "cancel and physical drain",
+      "missing or closed phase",
+      "shared provider ownership",
+      "tampered callee metadata",
+      "reserved JavaScript function names"
+    ]
+  },
+  "execution": {
+    "node": {
+      "runtime": "v22.22.3",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "cpu_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "carried_arms": [
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "events": 79,
+          "interventions": 1,
+          "step": "alternating",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "events": 79,
+          "interventions": 1,
+          "step": "opposite",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        }
+      ],
+      "receipt_sha256": "11199ba5718bd29813f231326e02b424714781dbd18642905353b2c94e7b0d6c"
+    },
+    "chrome": {
+      "runtime": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "cpu_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "carried_arms": [
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "events": 79,
+          "interventions": 1,
+          "step": "alternating",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "webgpu",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "events": 79,
+          "interventions": 1,
+          "step": "wasm",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "events": 79,
+          "interventions": 1,
+          "step": "opposite",
+          "step_invocations": 38,
+          "phase_invocations": 117,
+          "observations": 69,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        }
+      ],
+      "receipt_sha256": "2f01c0e8b3321f40347843d83fdaa9218c4dfbcac13aadae81ae07e2653cf167"
+    }
+  },
+  "browser_ui": {
+    "arms": [
+      {
+        "backend": "wasm",
+        "status": "passed",
+        "normalized_events": 79,
+        "trusted_dom_events": 75,
+        "full_canvas_rgb": true,
+        "exit_disposed": true,
+        "dom_backend_selectors": "value+change through the production handler; native select-popup keyboard driver is unavailable in this headless Mac profile",
+        "instrumentation": "Real CDP trusted game keyboard/mouse; declared frozen clock adapter; explicit DOM change events for backend selectors; read-only after-commit snapshot observer; initialization once and one declared original RAM intervention",
+        "observations": 69
+      },
+      {
+        "backend": "webgpu",
+        "status": "passed",
+        "normalized_events": 79,
+        "trusted_dom_events": 75,
+        "full_canvas_rgb": true,
+        "exit_disposed": true,
+        "dom_backend_selectors": "value+change through the production handler; native select-popup keyboard driver is unavailable in this headless Mac profile",
+        "instrumentation": "Real CDP trusted game keyboard/mouse; declared frozen clock adapter; explicit DOM change events for backend selectors; read-only after-commit snapshot observer; initialization once and one declared original RAM intervention",
+        "observations": 69
+      }
+    ],
+    "regressions": [
+      {
+        "name": "post-exit-square-canvas-uses-intrinsic-aspect",
+        "status": "passed",
+        "measurements": {
+          "intrinsic": [
+            2,
+            2
+          ],
+          "content": [
+            800,
+            800
+          ],
+          "border_box": [
+            804,
+            804
+          ],
+          "closed": true
+        }
+      },
+      {
+        "name": "ctrl-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "alt-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "meta-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "keyboard-focus-excludes-toolbar-keys",
+        "status": "passed"
+      },
+      {
+        "name": "production-logic-and-render-change-handlers-change-bindings-both-ways",
+        "status": "passed",
+        "instrumentation": "Explicit value+change; native popup driver not qualified"
+      },
+      {
+        "name": "lost-native-pointer-capture-ends-logical-gesture",
+        "status": "passed"
+      },
+      {
+        "name": "window-blur-handler-releases-held-button",
+        "status": "passed",
+        "native_blur_observed": false,
+        "instrumentation": "Native blur unavailable in this headless profile; explicit isTrusted:false blur event tests the production handler only"
+      },
+      {
+        "name": "backend-change-ends-held-gesture-and-next-press-is-consumed",
+        "status": "passed"
+      }
+    ],
+    "process_reaped": true,
+    "exit": {
+      "code": 0,
+      "signal": null
+    },
+    "screenshot_sha256": "9b8b5ff92d1b33d9ca544b1f48ae97c175f66cb6abeb74c0a24ea85221ec2b04"
+  },
+  "local_verification": {
+    "passed": 2371,
+    "skipped": 132,
+    "deselected": 2,
+    "seconds": 57.73,
+    "log_sha256": "d222cb660b8755f5921dd6ed9c724c0275db9b8d1f0915f771c04acd32a083af",
+    "ignored": [
+      "tests/test_elf_metadata.py",
+      "tests/test_platform_calls.py"
+    ],
+    "deselected_tests": [
+      "test_actual_elf_exports_and_unresolved_imports_are_honest",
+      "test_real_elf_retains_entry_and_named_function"
+    ],
+    "exclusion_reason": "Established GNU/ELF-dependent fixture limitations on this Mac; Linux CI separate"
+  },
+  "identities": {
+    "browser_manifest_sha256": "4b01db86763c81dca5dd9ccc4e0bc3f20a7f6926136d2298ab84a17af7428132",
+    "original_study_file_sha256": "c64ed82937a9ee31e045241d3fec0e456d34381be7298e10bd56ad8bb5833e5a",
+    "runner_sha256": "9145ddc7f5b5e66816432147badfc6ecda463fdfc35bfc63ea8e66372670da1c",
+    "study_helper_sha256": "ad4d57fb98983448a546c93067da5d40b0bac8d61c3a320bb75dc151eae350c5",
+    "runtime_artifacts": {
+      "memory.mjs": "0b924c60f0f1b6e5ace415e34f2b60b497ff07e306b6714b3f076164b3c5eece",
+      "memory-shell.mjs": "d9b7ce68f5f7ee88441270da1b3fc288057ccdba879988a9280844fa37d59174",
+      "memory-canvas.mjs": "4b83f5973f1d6fc14ae6ffc04a15d46118f8444335086a42b7f30647018fad9c",
+      "index.html": "0c2602bf77fdf8d9f953afcf2a11bc4f80a3e23018c352aed79df344b251b8b1"
+    }
+  },
+  "scope": {
+    "qualified": "Exact region cuts through selected canonical step; finite original-derived CPU and carried state/frame comparisons on actual Wasm/Metal GPU",
+    "excluded": [
+      "All-input mathematical proof",
+      "arbitrary native call stacks or loop-enclosed cuts",
+      "local-value continuation transport",
+      "identical failure timing or instruction scheduling",
+      "GPU speedup",
+      "separately selectable RNG subregion",
+      "Linux or Windows browser execution"
+    ],
+    "source_original_edge": "Existing frozen original native/CPU observations reused and identity-checked; no fresh DOS guest session in this continuation",
+    "input_boundary": "Mixed nested backends exercised by normalized input replay in Node/Chrome; trusted DOM input arms use each full logic backend",
+    "ui_limit": "Native selector popup and window blur remain unqualified; labelled handler tests retained"
+  },
+  "privacy": {
+    "public": "Compiler, runtime, recipes, authored fixtures and sanitized evidence only",
+    "private": "Original, ROM font, raw rasters, FDB, full UIL/UDL, emitted browser and profiles"
+  },
+  "github_requests_made": false,
+  "system_installation_changed": false
+}

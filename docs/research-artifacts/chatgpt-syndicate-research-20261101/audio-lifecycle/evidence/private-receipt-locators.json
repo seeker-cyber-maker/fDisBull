@@ -1,0 +1,65 @@
+{
+  "scope": "Identifiers only. Raw payloads intentionally private; their hashes do not constitute independent validation.",
+  "receipts": [
+    {
+      "locator": "live-1793467634627406386/rpc.ndjson",
+      "size": 1175385,
+      "sha256": "12bd030561e1483d91dde31d7d6386e20c33a6c9d600ed0d5b390ac35e393d1b"
+    },
+    {
+      "locator": "live-1793467634627406386/commands.ndjson",
+      "size": 8977,
+      "sha256": "03ff5c2394758c2afe358f3fa6e7abcc90deba4d901ba4a979fcd0044122ff25"
+    },
+    {
+      "locator": "live-1793467634627406386/cleanup.json",
+      "size": 77,
+      "sha256": "03951d72ddc391362e5faad4e4f6b3101b996eace39adcbcd563b05d35e1da1b"
+    },
+    {
+      "locator": "live-1793467634627406386/intro-explicit-stop.json",
+      "size": 2656,
+      "sha256": "e4a0223cba0e34dd1425666b2d495f43d6b10039f7ecdeeaf20fdbd9ee4ed3ab"
+    },
+    {
+      "locator": "live-1793468641929235432/rpc.ndjson",
+      "size": 694779,
+      "sha256": "f5ce403a2ad76f2e96261f7855e87df682c8c41b179dd7b59fc1e7f31eac3cb2"
+    },
+    {
+      "locator": "live-1793468641929235432/commands.ndjson",
+      "size": 11425,
+      "sha256": "e2dbdc5ba055a156f3f8f6c94f2f14a1dc45f160b19ee8155ad368abbfd05e55"
+    },
+    {
+      "locator": "live-1793468641929235432/cleanup.json",
+      "size": 79,
+      "sha256": "5eb03682f9a8afa3765d78dd5d4b89ee8be7bb2672e7c90390d1f2e211037274"
+    },
+    {
+      "locator": "live-1793468641929235432/post-eot-caller-chain.json",
+      "size": 6847,
+      "sha256": "cf1dee58f0b9c33feebe35815014d158c8d4dc7809b8c1738a1646806b904225"
+    },
+    {
+      "locator": "live-1793468641929235432/diagnostic-preservation.json",
+      "size": 136,
+      "sha256": "5a7b1f48a935f4ec35634fa28cbe5de87133da0312ec129e9fa7953946e81f35"
+    },
+    {
+      "locator": "live-1793468641929235432/eot-callback-return.json",
+      "size": 700,
+      "sha256": "9f7f2ffd9d2ce90a1f64826de15130131283e8fc980e8c61c3807620f3102944"
+    },
+    {
+      "locator": "live-1793468641929235432/timeline-stop-after-eot.json",
+      "size": 799,
+      "sha256": "ce4de11517fa4e139e434c72a6ec9e294d68dc8e05ca6cc53ed496044b4ddb7d"
+    },
+    {
+      "locator": "live-1793468641929235432/delayed-loop-callback-return.json",
+      "size": 2078,
+      "sha256": "133d337ea4c7914436b3cfb86e11f6dc21d4a1da62b414d1d9dcbcdaeb93338f"
+    }
+  ]
+}

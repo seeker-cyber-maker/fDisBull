@@ -1,0 +1,177 @@
+{
+  "format": "fdisbull-agi-leprechaun-player-verification-1",
+  "complete": true,
+  "scope": "One observed physical branch and an authored partial scene. In-memory checkpoints only; no full-game recovery, durable saves, native/player parity or independent execution authentication.",
+  "capture_sha256": "8e98ebee4e29a3f7752f86b7c222a8c2384bbb67c2ae6494a40b01d4126f54af",
+  "native_result_sha256": "6bbfbbdda47d75539fd17393f9b932105e45c00a778d8e2bd0609f68a0c608b6",
+  "scene_sha256": "a9e3dfdff35230552dde86e8aab05dc2ea98eb361e08bf74def21ca559340668",
+  "provenance_sha256": "bca9cf198eb9f17c4c8acbdd86a360b60654068e442976d7595d950eb91a4832",
+  "implementation_sha256": {
+    "collector": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628",
+    "exporter": "40c395701638a694e0c46cdf66607d88a212f9a74cd1c824256dc7932b8ac593"
+  },
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "object_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+      "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db",
+      "33": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+      "34": "a89cda3ef5bd15a577135c4378272a67dad21d5bae8a81d6fa69586b3e2e56ad",
+      "47": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+      "48": "967da543cab4708290f3e6d4c45b93522ed45bb394199d5206800bfa05300611",
+      "6": "4622b05dbd277739b2538aaf240637195b30e742fcd002cfdff6ff5b1281c817",
+      "7": "2c3adaebf8c05b343272c486286ff74600e343a1109f69025b9e8ec623cf2149",
+      "23": "fcfdd892ef197a23c8dc5536d1c8263871f013fbf3e72e72a5ae37412e5e33cc",
+      "24": "f56c760eef37bc539c6f421d685a9e6af98b4acbf2ff18cb3c8faf3e787f8e74",
+      "36": "7d23fc56b137bf5ac84c16b04557bdf5534b6dd946769c6236646122e891a340",
+      "73": "fd59d6cf54e6fa451fb41d519fc3f0de2c506f295f28c7192843875fe8917899",
+      "74": "ae1ef292d6bf0b313792c4d993661384b36b37abea204b2b1d4c550ea762d560",
+      "75": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+      "76": "a16dfce687a6459d0266a6f38dfbca9d5212bff1a2f5f48f687f2af7e2d8be48",
+      "77": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+      "78": "4649ac1307fcd2dc0e042cb9c46d03cb0f6023d892a4d30fa22ef91659931a97"
+    }
+  },
+  "native_checks": {
+    "seven_complete_actions": true,
+    "source_post_teardown_unchanged": true,
+    "copy_post_teardown_unchanged": true,
+    "copy_manifest_independently_matches": true,
+    "frame_hashes_pngs_verified": 18,
+    "shield_trace_fetches": 32
+  },
+  "installed": {
+    "versions": {
+      "fdisbull": "0.28.0",
+      "fdisbull-player": "0.28.0"
+    },
+    "module_sha256": {
+      "fdisbull.il_scenes": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+      "fdisbull_player.player": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+    },
+    "isolated": true,
+    "pythonpath_absent": true,
+    "all_modules_loaded_from_installation": true
+  },
+  "player_checks": {
+    "commands": [
+      "use hole",
+      "use bag",
+      "use tunnel",
+      "use rat",
+      "use throne",
+      "take shield",
+      "use exit"
+    ],
+    "direct": {
+      "checked_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "inventory_matches_capture": true,
+      "stale_and_repeat_preserve_state": true,
+      "before_exit_in_memory_checkpoint_restore": true,
+      "restore_invalidates_old_token": true
+    },
+    "separate_content_process": {
+      "checked_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "inventory_matches_capture": true,
+      "stale_and_repeat_preserve_state": true,
+      "before_exit_in_memory_checkpoint_restore": true,
+      "restore_invalidates_old_token": true
+    },
+    "all_modeled_scalar_phases_match_capture": true,
+    "failed_precondition_preserved_direct_and_process": true,
+    "fresh_checkpoint_missing_direct_and_process": true
+  },
+  "inventory_by_phase": [
+    [
+      "bag",
+      "clover",
+      "mushroom"
+    ],
+    [
+      "bag",
+      "clover",
+      "mushroom"
+    ],
+    [
+      "clover",
+      "diamonds",
+      "mushroom"
+    ],
+    [
+      "clover",
+      "diamonds",
+      "mushroom"
+    ],
+    [
+      "clover",
+      "mushroom"
+    ],
+    [
+      "clover",
+      "mushroom"
+    ],
+    [
+      "clover",
+      "mushroom",
+      "shield"
+    ],
+    [
+      "clover",
+      "shield"
+    ]
+  ],
+  "final_state": {
+    "$room": 36,
+    "$score": 14,
+    "$x": 88,
+    "$y": 131,
+    "$direction": 0,
+    "$ego_width": 6,
+    "$ego_view": 0,
+    "$step_size": 1,
+    "$swimming": 0,
+    "$drawn": true,
+    "$in_water": false,
+    "$dead": false,
+    "$clover_carried": true,
+    "$bag_carried": false,
+    "$diamonds_carried": false,
+    "$mushroom_carried": false,
+    "$shield_carried": true,
+    "$clover_active": true,
+    "$mushroom_available": false,
+    "$small": false,
+    "$rat_removed": true,
+    "$phase": 7
+  }
+}

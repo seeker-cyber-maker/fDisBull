@@ -1,0 +1,63 @@
+{
+  "version": "0.26.0",
+  "fixture_bytes": 4500,
+  "evidence_origin": "Results captured from the earlier actual in-memory probe in this audit; persisting them does not rerun it.",
+  "results": [
+    {
+      "case": "resident_names_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "entry_table_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "resource_table_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "directive_table_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "debug_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "nonresident_names_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "loader_extent_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    },
+    {
+      "case": "page_checksums_outside_file",
+      "load_accepted": true,
+      "le_warnings": [],
+      "inspect_warnings": [],
+      "exports": []
+    }
+  ]
+}

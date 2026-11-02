@@ -1,0 +1,9 @@
+EXPERIMENTAL fixture-level semantic contract, version 1, NOT fDisBull UIL syntax.
+Three turns in fixed order: SUM, PAIR, FIVE. Each begins with five draws.
+Commands 1..5 toggle hold for that die. R rerolls unheld dice in ascending
+index order if fewer than three rolls have occurred. S records the active
+category and begins the next turn, or terminates after FIVE. SUM is all dice;
+PAIR is twice the highest value appearing at least twice, else 0; FIVE is 50
+if all equal, else 0. Total is sum of turn scores. Invalid commands have no
+state effect. Holds reset each turn. Output shows dice, holds, roll number and
+total. The separate DOS game implements this contract directly.

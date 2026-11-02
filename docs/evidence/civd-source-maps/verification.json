@@ -1,0 +1,2461 @@
+{
+  "builds": [
+    {
+      "artifacts_manifest_sha256": "cdee8a8d3b5a2a581d02387e741b89ded8b9cb9efd0eb824afacdb5271009c17",
+      "config_sha256": "b55a433afb8efde1968a3591081f0c87bb7b668985374ed2820aa56091c348b0",
+      "dosbox_sha256": "ce67eb513fbd7a87022624b47a36cf5ae073bb65bc99df1a67d9ca163d1e10bd",
+      "edition": "474.01",
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "original_unchanged": true,
+      "outputs": [
+        {
+          "actual": "b04fc0ba243d446047708b04142024391877c52dd21f13bdfee2020ec4579466",
+          "expected": "b04fc0ba243d446047708b04142024391877c52dd21f13bdfee2020ec4579466",
+          "match": true,
+          "path": "CIVRAW.EXE"
+        },
+        {
+          "actual": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+          "expected": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+          "match": true,
+          "path": "CIV.EXE"
+        },
+        {
+          "actual": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "expected": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "match": true,
+          "path": "MGRAPHIC.EXE"
+        },
+        {
+          "actual": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "expected": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "match": true,
+          "path": "ASOUND.CVL"
+        },
+        {
+          "actual": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "expected": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "match": true,
+          "path": "MISC.EXE"
+        }
+      ],
+      "receipt_sha256": "affc6e67c6d7ec0359f1e81b6a7d3f0f540a8ea208a13432c3265abbc0a0b0d5",
+      "revision": "c425f7ba45411111c7c71d926e1ce8d4fa641571",
+      "seconds": 47.59745687500981,
+      "source_inputs_manifest_sha256": "2500d331612d3c9fc177c3dca9b3408920e243fa0ca4858325c509cd682d47b5",
+      "startup_correction": [
+        {
+          "corrected": 195,
+          "file_offset": 132606,
+          "raw": 70
+        },
+        {
+          "corrected": 1,
+          "file_offset": 132607,
+          "raw": 4
+        },
+        {
+          "corrected": 167,
+          "file_offset": 132608,
+          "raw": 88
+        },
+        {
+          "corrected": 1,
+          "file_offset": 132609,
+          "raw": 32
+        }
+      ],
+      "toolchain_entries": 54,
+      "toolchain_unchanged": true,
+      "verified": true
+    },
+    {
+      "artifacts_manifest_sha256": "91919c9bf2b5fc8a6d76c4b67fbaaf9e9df127f98ae120489192fff99681aa6b",
+      "config_sha256": "b55a433afb8efde1968a3591081f0c87bb7b668985374ed2820aa56091c348b0",
+      "dosbox_sha256": "ce67eb513fbd7a87022624b47a36cf5ae073bb65bc99df1a67d9ca163d1e10bd",
+      "edition": "474.03",
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "original_unchanged": true,
+      "outputs": [
+        {
+          "actual": "f9d0cbe806d767b268e678838e4885425254ddbdb84be9e7f64ddaca9545e15c",
+          "expected": "f9d0cbe806d767b268e678838e4885425254ddbdb84be9e7f64ddaca9545e15c",
+          "match": true,
+          "path": "CIVRAW.EXE"
+        },
+        {
+          "actual": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+          "expected": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+          "match": true,
+          "path": "CIV.EXE"
+        },
+        {
+          "actual": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "expected": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "match": true,
+          "path": "MGRAPHIC.EXE"
+        },
+        {
+          "actual": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "expected": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "match": true,
+          "path": "ASOUND.CVL"
+        },
+        {
+          "actual": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "expected": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "match": true,
+          "path": "MISC.EXE"
+        }
+      ],
+      "receipt_sha256": "93aeca5b6306c06f5d549a601bc1c8b80fcad4800ef7b95d8d00dee97a00a7c7",
+      "revision": "9aefe00fce1b4d014bbc7a1dc9b2a25914cce9e5",
+      "seconds": 47.57701479100797,
+      "source_inputs_manifest_sha256": "489d51e985c0a4da6662d17d6befc06a53d8a8c9406b8e1104a8ffe6925ded4c",
+      "startup_correction": [
+        {
+          "corrected": 193,
+          "file_offset": 130224,
+          "raw": 72
+        },
+        {
+          "corrected": 1,
+          "file_offset": 130225,
+          "raw": 4
+        },
+        {
+          "corrected": 168,
+          "file_offset": 130226,
+          "raw": 195
+        },
+        {
+          "corrected": 1,
+          "file_offset": 130227,
+          "raw": 31
+        }
+      ],
+      "toolchain_entries": 54,
+      "toolchain_unchanged": true,
+      "verified": true
+    },
+    {
+      "artifacts_manifest_sha256": "c39b4b9897d0adc666baa73a919a1240eb015f5c16040592fcf3382e981389d6",
+      "config_sha256": "b55a433afb8efde1968a3591081f0c87bb7b668985374ed2820aa56091c348b0",
+      "dosbox_sha256": "ce67eb513fbd7a87022624b47a36cf5ae073bb65bc99df1a67d9ca163d1e10bd",
+      "edition": "474.05",
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "original_unchanged": true,
+      "outputs": [
+        {
+          "actual": "2100870700200b2618f963e9aa15afa34825af2576dcf3580c17b7fd9f0d95e7",
+          "expected": "2100870700200b2618f963e9aa15afa34825af2576dcf3580c17b7fd9f0d95e7",
+          "match": true,
+          "path": "CIVRAW.EXE"
+        },
+        {
+          "actual": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+          "expected": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+          "match": true,
+          "path": "CIV.EXE"
+        },
+        {
+          "actual": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "expected": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+          "match": true,
+          "path": "MGRAPHIC.EXE"
+        },
+        {
+          "actual": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "expected": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+          "match": true,
+          "path": "ASOUND.CVL"
+        },
+        {
+          "actual": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "expected": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+          "match": true,
+          "path": "MISC.EXE"
+        }
+      ],
+      "receipt_sha256": "0faa53c537da52b2516d0ad306fa779cfe0815881957969e45af8e4a22c21fcb",
+      "revision": "d9214fcd36aa6003d28aae60c3974b665f752280",
+      "seconds": 47.9330398329912,
+      "source_inputs_manifest_sha256": "9012e83de44e18935f4e2de5e578ea67072a21801ca088097f403ae336923ded",
+      "startup_correction": [
+        {
+          "corrected": 193,
+          "file_offset": 132298,
+          "raw": 66
+        },
+        {
+          "corrected": 1,
+          "file_offset": 132299,
+          "raw": 4
+        },
+        {
+          "corrected": 168,
+          "file_offset": 132300,
+          "raw": 69
+        },
+        {
+          "corrected": 1,
+          "file_offset": 132301,
+          "raw": 32
+        }
+      ],
+      "toolchain_entries": 54,
+      "toolchain_unchanged": true,
+      "verified": true
+    }
+  ],
+  "compiler_archive_sha512": "5837e2efbaa68285d5c2587e3dd2a6eae2693a21b4efc6a42b41ad22f81791c40c2da64eed5463fd9e0857c2381efe0ce32084ea6d6eab11735c057ccfc3ba80",
+  "counts": {
+    "builds": 3,
+    "independently_requalified_transfers": 12,
+    "native_snippet_links": 12,
+    "pinned_outputs": 15,
+    "selected_direct_call_sites": 51,
+    "source_native_maps": 18
+  },
+  "food_kernel_adapter_locations": [
+    {
+      "basis": "checked linker globals, compiler local allocation, and native operand cross-check",
+      "city_argument_bp_offset": 6,
+      "city_food_stock_field_offset": 12,
+      "city_population_field_offset": 7,
+      "city_record_stride": 28,
+      "edition": "474.01",
+      "linked_symbols": {
+        "_colonist_homed": {
+          "offset": 62182,
+          "segment": 10779
+        },
+        "_town_res_sums": {
+          "offset": 28762,
+          "segment": 10779
+        },
+        "_townbuf": {
+          "offset": 28780,
+          "segment": 10779
+        }
+      },
+      "runtime_register_values_observed": false,
+      "settler_food_cost_bp_offset": -70
+    },
+    {
+      "basis": "checked linker globals, compiler local allocation, and native operand cross-check",
+      "city_argument_bp_offset": 6,
+      "city_food_stock_field_offset": 12,
+      "city_population_field_offset": 7,
+      "city_record_stride": 28,
+      "edition": "474.03",
+      "linked_symbols": {
+        "_colonist_homed": {
+          "offset": 58310,
+          "segment": 10880
+        },
+        "_town_res_sums": {
+          "offset": 28890,
+          "segment": 10880
+        },
+        "_townbuf": {
+          "offset": 28908,
+          "segment": 10880
+        }
+      },
+      "runtime_register_values_observed": false,
+      "settler_food_cost_bp_offset": -72
+    },
+    {
+      "basis": "checked linker globals, compiler local allocation, and native operand cross-check",
+      "city_argument_bp_offset": 6,
+      "city_food_stock_field_offset": 12,
+      "city_population_field_offset": 7,
+      "city_record_stride": 28,
+      "edition": "474.05",
+      "linked_symbols": {
+        "_colonist_homed": {
+          "offset": 58310,
+          "segment": 11009
+        },
+        "_town_res_sums": {
+          "offset": 28890,
+          "segment": 11009
+        },
+        "_townbuf": {
+          "offset": 28908,
+          "segment": 11009
+        }
+      },
+      "runtime_register_values_observed": false,
+      "settler_food_cost_bp_offset": -72
+    }
+  ],
+  "maps": [
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:70f01fa3a203ddc32fdd09d41052b8607e6a1682fdc4a6827d2d2e0531b81288",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1c91",
+      "native_snippet": "snippet:27643e1c78b01a248e51e8a2adc426483001e6ce81a50dc6b96fbd436494a3b3",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:95120a7d797a9b45f7616015bb9df333dbdc6c6de8b3f35a4ecf02a8f1bb48ee",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "da75a9c10026b66a4defa8b2d3f542abe645bc29d9807ec9b6e44edcfb49cce9",
+          "module_offset": 78786,
+          "offset": 27314,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 78786,
+              "packed_offset": 78769,
+              "size": 475
+            }
+          ],
+          "segment": 3217,
+          "sha256": "5ba7f5520554c3ad8890a4336f37ded2854b2f374ada0ebda4908607972a3d45",
+          "size": 475
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:f8b59952e6c113321983f23780ac05a6d762458cbc8852b47329e84b8ce00453",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d07",
+      "native_snippet": "snippet:aa457a69b49c68f246519e6decb7e5134ed7ad3994d56a70a4189d145f2313f1",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:9c0028bbac17ae70db7cb54ed361824edf3de634f0c301ae9141bdaeb83ef972",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "75b5b0f91dc54a33f99709b57206b77414a1d0c129da57cce073319376741bb8",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "b65af14de08f2ad26580807abe8ddef707a54b147e162c1c18f84d7cfdd45ed9",
+          "module_offset": 80224,
+          "offset": 26864,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 80224,
+              "packed_offset": 80207,
+              "size": 475
+            }
+          ],
+          "segment": 3335,
+          "sha256": "212b47565730dd01975e4a87d05bf81c5ebcd173014f48714e16b05de5847ec7",
+          "size": 475
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:14a3b61a79e703767933b215cfe9970e27a92a3059012172f3905008088cacd3",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d12",
+      "native_snippet": "snippet:22f25d9a3da5fa6698ab44cd419fe202bd494cdef911d393f9a8be2db6e71516",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:6efdadf58fb6853921284b79d2b9ab4ee22f388b236450f8c447a7f348bc1c83",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "b6b3e72e7a3c6fdae1c6d21ff5f7f39bd724366f5ac7f4e05c595d32819aa990",
+          "module_offset": 80860,
+          "offset": 27324,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 80860,
+              "packed_offset": 80843,
+              "size": 475
+            }
+          ],
+          "segment": 3346,
+          "sha256": "d6c8ba111de96134527a8f4b67fc09147e8892a850b4a1785a54709a0a8a7db0",
+          "size": 475
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "add_tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:5d03d4be75560c70626ae3890d8c0aa6ef99c09508dc9a15a64cd859007c8b88",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1c91",
+      "native_snippet": "snippet:fc44f4076c10f2d37c94a970029cbc220c1ea81f3e94025116b3b1d7f149da0f",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:0d188583bf87fa4af2e136a0bb8a7d467767aa14ce2e2f4c242286096eb7443d",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "2234376a541491ad1a53f5d77170689ab284733feefcf5168d60a1a02fd66fd9",
+          "module_offset": 78387,
+          "offset": 26915,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 78387,
+              "packed_offset": 78370,
+              "size": 399
+            }
+          ],
+          "segment": 3217,
+          "sha256": "56ed5ae5bcbfbf617462217fb44ab8c177d79cabe09e921824d4e3ad85da3afa",
+          "size": 399
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "add_tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:83fdd4f43f7f841a74c322e67e3e434dac4fd899f879204d8a92e0d6f0cf8eb1",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d07",
+      "native_snippet": "snippet:03879ed308d5925f932d91ff2f63688206985a182db83f55d4deaa4faa97654d",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:e93b5f9f53ccf2994161e2279dfb3e4f3dca39eae7ea12ea664b98b0dc6cffe7",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "75b5b0f91dc54a33f99709b57206b77414a1d0c129da57cce073319376741bb8",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "e713c8585d787e2fcfad7c43788eb4fa540f83a5261e6fdb69a7a72e60c2659e",
+          "module_offset": 79825,
+          "offset": 26465,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 79825,
+              "packed_offset": 79808,
+              "size": 399
+            }
+          ],
+          "segment": 3335,
+          "sha256": "e2aac82ac13a9915d73a2d000c3f14587d4518d38f9ee2f31a28b499982441dd",
+          "size": 399
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "add_tile_yield",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:c502e4da7b9983dd0908219411917ade644a22baef7b667a7f2af0383624f370",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d12",
+      "native_snippet": "snippet:14f800be087bef4ef0317f5a41d2f546f25472d08e0c2a062e18e602e9be8041",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:4ca0ea1de33eb24d953c72fe88336cc5fa430cf7a0e44f394c399fe178e813ba",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "8c884920bb29cbb4039c01bbdae42422ec6b2369d842256623ae45529cbc594d",
+          "module_offset": 80461,
+          "offset": 26925,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 80461,
+              "packed_offset": 80444,
+              "size": 399
+            }
+          ],
+          "segment": 3346,
+          "sha256": "b80a487f5d46f284fada53aab3ccdf06e2c53148b8c4e4ded31dab3ad640f4cf",
+          "size": 399
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "city_process",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:591eb51360b6b68c2503bb79667e44b3cf93907bb54a6c1c33dd2bde26d560aa",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1c91",
+      "native_snippet": "snippet:d2eed6283e41206ef839fbd9d4b87bbe41240232c10176150b39c0e79eb2b38c",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:f85e16628b77bc6fc44ee95a132a98f17a42138272ed5b066305cb2737b9475d",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "eb3ab3adf8eca8d08512af13485f71ceb731c41900eba8682430679cecb15515",
+          "module_offset": 51531,
+          "offset": 59,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 51531,
+              "packed_offset": 51511,
+              "size": 16588
+            },
+            {
+              "kind": "literal",
+              "module_offset": 68119,
+              "packed_offset": 68102,
+              "size": 10268
+            }
+          ],
+          "segment": 3217,
+          "sha256": "65ad85e78f8083c1385e1d2c0e9c4c1b594ac01f60454687bdac2cd821ad4e6a",
+          "size": 26856
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "city_process",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:8983ba8b63778a32284cb171fd69817ef8378d9887c78d739059485670d2fdac",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d07",
+      "native_snippet": "snippet:e1f5fb0c93b6c424b9002880ecb510646c234f15a9c9fd12a55c92beab8e6c9e",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:9cc9227ada086847e7209b09ad1c0f9164a69743dee649b9735f9d7a0089c841",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "75b5b0f91dc54a33f99709b57206b77414a1d0c129da57cce073319376741bb8",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "4c90786386a3723b19e49db71e8b86b9ffb5b2a3bcaa7440a49ae7ea9142c09b",
+          "module_offset": 53427,
+          "offset": 67,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 53427,
+              "packed_offset": 53407,
+              "size": 14678
+            },
+            {
+              "kind": "literal",
+              "module_offset": 68105,
+              "packed_offset": 68088,
+              "size": 11720
+            }
+          ],
+          "segment": 3335,
+          "sha256": "d44510d083a357b578d504c9e0b6f48c479ba5d42d5b899fa84e259a40c49771",
+          "size": 26398
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "city_process",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:69106bf463411924d342c64f7cd7eb6c3d2cc2aa1d4c8073909a9a72bd6fbed9",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d12",
+      "native_snippet": "snippet:1003b16ff5148bf0d4d9f109591ae15bdf5c0305a79a83217ca3f40c3c0195dc",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:8ccbabc1d51efb759533b267d9d617086726d64d6d83eb8b4a7f71939ea4c33d",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "40a5959fd565240deddfb8303355a91451f2e0161ba81a3d96d8e4adf94a1c02",
+          "module_offset": 53605,
+          "offset": 69,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 53605,
+              "packed_offset": 53585,
+              "size": 14514
+            },
+            {
+              "kind": "literal",
+              "module_offset": 68119,
+              "packed_offset": 68102,
+              "size": 12342
+            }
+          ],
+          "segment": 3346,
+          "sha256": "e79db37f9f27fc59cec41c72eb93b8aa9b1d1a499d8a429fb1ebe9adffe42eda",
+          "size": 26856
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "civ_economy",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:622fd45b8feabcc4e28a5271c9434e8b2d699a58f244dc3f0cfdae5236332113",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1a5e",
+      "native_snippet": "snippet:eb6b7a7b2bc126eafed4f83c970a846182bdb2cf69b3e579452b08fafe9427ab",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:f2a39a1b0be436070561b5bca1257d727316492f6af6be31fc482f3f97c9b255",
+      "source_file": "src/ECONOMY.C",
+      "source_file_sha256": "a723130b99b972252f0f25a37d6d1dfa42cdc00924f7d44755c10e922440473a",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "2f30ae0a56be08f1821996142af555b3ee124ed4f37b81fbe0182fe009e5334b",
+          "module_offset": 42466,
+          "offset": 2,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 42466,
+              "packed_offset": 42446,
+              "size": 392
+            }
+          ],
+          "segment": 2654,
+          "sha256": "3597e73ac823ffdb844b5dc5843c1cb5f6c8db895d3ddd216875d5a7fd79d20f",
+          "size": 392
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "civ_economy",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:68f24abbfb5a642090b8f7b74ac0c9f88e30d52f8a7d18ee033d40af02f656fb",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1ad5",
+      "native_snippet": "snippet:5edfbf3700affd275fe4f68cd08021b32fc14c69c2ba41dcce0207012f712c25",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:30150440bf89f63b2f517dd65e1815ca4b0cfbd695e33a80e34e21880c76d324",
+      "source_file": "src/ECONOMY.C",
+      "source_file_sha256": "2dd6ecdd8eacd3d585db9752bfba4d2b29cb0f3858efcb3592be9270737b6059",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "9359322fa046a79498e8b15f28a4adda80c562e19327ac97a413fd517f57f710",
+          "module_offset": 44376,
+          "offset": 8,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 44376,
+              "packed_offset": 44356,
+              "size": 392
+            }
+          ],
+          "segment": 2773,
+          "sha256": "15672b22eecb79083b2f4941048ed0f40995d2c17395d2b86400b08e1b40c883",
+          "size": 392
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "civ_economy",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:a7a7a901a7805e0473bf82a0aeed9e9433e3820734273783d49ae35444b9f969",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1ade",
+      "native_snippet": "snippet:b479ae3885974c9da17f5a0c0755d6349a1d6c1cc0b20c434f22815494b8d84e",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:7ce0990ebb3c24bacaeaaf07de0e7d2f830ec99c608a92221f836b7073a6ef78",
+      "source_file": "src/ECONOMY.C",
+      "source_file_sha256": "0303da40260eab3e19ae8a4c1cc1fd6d2df4c60b94981ebe063c768579ef03ef",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "f1cd70d0dcc599e4260561968f8769069a480d60edc293babdf47db17c393833",
+          "module_offset": 44518,
+          "offset": 6,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 44518,
+              "packed_offset": 44498,
+              "size": 392
+            }
+          ],
+          "segment": 2782,
+          "sha256": "639f3e15e71682aa8da9fb1e48cf6bd54f80ab29ac40c0cf57b144430dd38e8a",
+          "size": 392
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "game_turn",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:0bf786fbb539961b3b11346d76a90e411048e8aefe2dff11a68cbc8bc93ce7bf",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1238",
+      "native_snippet": "snippet:0910f4330e3eafbe5a4d9304b96d85fdd7e649a8d34cc97083265e897df2b41f",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:9fb4ac8778a24ed6ef20442dcc436310500cb1548b4b49b2af82161e4e0aa006",
+      "source_file": "src/TURN.C",
+      "source_file_sha256": "82a75ea97c79945a53910d12e3d9ee9fbedf1875c7bb8b61c4b67b8fbf14f211",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "1f815d10af03c540981b0b1446d28aaebdfec91606b3cbc2050828f46173b1e2",
+          "module_offset": 9234,
+          "offset": 146,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 9234,
+              "packed_offset": 9214,
+              "size": 2062
+            }
+          ],
+          "segment": 568,
+          "sha256": "7266ab651df85a860eca016c7bd9069a00c837be475e3a60389a11eea4c2631d",
+          "size": 2062
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "game_turn",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:abdcf62b84321dd981d54a64a4bea5975d860acb3dd35cb31061733e115d7bfe",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1237",
+      "native_snippet": "snippet:5e2c9c3bf7991cd8d8d97c35cb857e2ba85f632b20afb81760aa232e138ccead",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:3785b90e1570fb5e0996b852f5669dce483cd2eedad03894db2addbe0ad4c134",
+      "source_file": "src/TURN.C",
+      "source_file_sha256": "85683ec82f565087d09bc3b2efb9b02c7def0a626279482ce13a654786a6692a",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "0d6dc70c6b1cb94ae5284aca0fc984e3417efb09ccf9c07fcc2953d005b4b967",
+          "module_offset": 9220,
+          "offset": 148,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 9220,
+              "packed_offset": 9200,
+              "size": 2062
+            }
+          ],
+          "segment": 567,
+          "sha256": "39231326aaf23e19dba87804d608600b901276397179c3f36d5c2f0da4a02f88",
+          "size": 2062
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "game_turn",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:891899e1509e2c61223a84f79a8f9fec4398845f412ba9eeb1d6d4324ee82386",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1238",
+      "native_snippet": "snippet:3d4d29dff6cbbbda3f81e3083ff269d30c9b86603311fcd80bba3b0de3253388",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:5b693b470bbc3d300b8a220e60ab56db5968f765313b536c1353bdb2b4ab383e",
+      "source_file": "src/TURN.C",
+      "source_file_sha256": "82a75ea97c79945a53910d12e3d9ee9fbedf1875c7bb8b61c4b67b8fbf14f211",
+      "source_line": null,
+      "source_line_sha256": null,
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "5df24b248a72f84dffdd180f7e66a7236600d33a89153dee8a61e1666945a49d",
+          "module_offset": 9234,
+          "offset": 146,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 9234,
+              "packed_offset": 9214,
+              "size": 2062
+            }
+          ],
+          "segment": 568,
+          "sha256": "c1bcb47e04a4fb3aa8f01efccccdf70bd7cf21fcb7b17f670b05aed0344dc901",
+          "size": 2062
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "edition": "474.03",
+      "family": "food_stock_update",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1c91",
+      "native_snippet": "snippet:40d3af4174ba084d82943b53f46bcca218563306699a332b3876ecd119725191",
+      "native_version": 1,
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:f85e16628b77bc6fc44ee95a132a98f17a42138272ed5b066305cb2737b9475d",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": 633,
+      "source_line_sha256": "07cdcf8f03382037f6d14d61dd9d075edeae0afd5740b4cc6220016fe1824fbe",
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+          "module_offset": 56804,
+          "offset": 5332,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 56804,
+              "packed_offset": 56784,
+              "size": 36
+            }
+          ],
+          "segment": 3217,
+          "sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+          "size": 36
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "edition": "474.01",
+      "family": "food_stock_update",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:9b2c2ab53c748834244b18f97e1ad7f7c6ecd166e016da96cd0ca861a9fa9046",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d07",
+      "native_snippet": "snippet:4cb5e1501a4d1bb269b172403abe33d863d8bf467301db33e67530d3952409c9",
+      "native_version": 1,
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:9cc9227ada086847e7209b09ad1c0f9164a69743dee649b9735f9d7a0089c841",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "75b5b0f91dc54a33f99709b57206b77414a1d0c129da57cce073319376741bb8",
+      "source_line": 633,
+      "source_line_sha256": "07cdcf8f03382037f6d14d61dd9d075edeae0afd5740b4cc6220016fe1824fbe",
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+          "module_offset": 58682,
+          "offset": 5322,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 58682,
+              "packed_offset": 58662,
+              "size": 36
+            }
+          ],
+          "segment": 3335,
+          "sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+          "size": 36
+        }
+      ]
+    },
+    {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "edition": "474.05",
+      "family": "food_stock_update",
+      "generated_startup_correction_outside_spans": true,
+      "id": "source-native-map:a6529b3c3f6074494cad59916e209b3b38b530fb08366f0c67521226450f2eef",
+      "layer_admission": false,
+      "native_context": "x86:16:little:cs=1d12",
+      "native_snippet": "snippet:f915dbab17a52bfca63dbf8ac30fef451b6c080ad0f10e487e6620452064ba96",
+      "native_version": 1,
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "runtime_observed": false,
+      "semantic_equivalence": false,
+      "source_entity": "entity:8ccbabc1d51efb759533b267d9d617086726d64d6d83eb8b4a7f71939ea4c33d",
+      "source_file": "src/CITYMGT.C",
+      "source_file_sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc",
+      "source_line": 633,
+      "source_line_sha256": "07cdcf8f03382037f6d14d61dd9d075edeae0afd5740b4cc6220016fe1824fbe",
+      "spans": [
+        {
+          "dos_relocation_normalized_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+          "module_offset": 58878,
+          "offset": 5342,
+          "packed_spans": [
+            {
+              "kind": "literal",
+              "module_offset": 58878,
+              "packed_offset": 58858,
+              "size": 36
+            }
+          ],
+          "segment": 3346,
+          "sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+          "size": 36
+        }
+      ]
+    }
+  ],
+  "native_game_execution": false,
+  "native_snippet_links": [
+    {
+      "edition": "474.01",
+      "family": "tile_yield",
+      "id": "link:80c1982a464e74456a888e9ab95900a5c0fb28ebe3e26288daf8abd3294a1165"
+    },
+    {
+      "edition": "474.01",
+      "family": "add_tile_yield",
+      "id": "link:f677d98b17a9879cd6573b89748dc1f52185189bd7a61b4aed0a2a8864de7aa7"
+    },
+    {
+      "edition": "474.01",
+      "family": "city_process",
+      "id": "link:b65462e1845166b58394b454bb578934fd52a0b98b1a12aee414a5a3f72bb8c5"
+    },
+    {
+      "edition": "474.01",
+      "family": "civ_economy",
+      "id": "link:26ab32c80a8f69090f168434df7255970659709b7d5118b3a47e8ab247a08c5a"
+    },
+    {
+      "edition": "474.01",
+      "family": "game_turn",
+      "id": "link:96103bee1953b84eb790c08b6a157c4f9be950b491b236b665c067bb4ebf79d7"
+    },
+    {
+      "edition": "474.01",
+      "family": "food_stock_update",
+      "id": "link:4d44f566a4b102276e97f9685c40be68de0b6008b40102d14a85064ae990acee"
+    },
+    {
+      "edition": "474.05",
+      "family": "tile_yield",
+      "id": "link:019f84cc85e2216b75f4d78b76a670e3953ee2afe20299640aea19dc41407b76"
+    },
+    {
+      "edition": "474.05",
+      "family": "add_tile_yield",
+      "id": "link:51d2592da1832a2999294e6bc915c978a3cd56155055d8df661515b799106b4a"
+    },
+    {
+      "edition": "474.05",
+      "family": "city_process",
+      "id": "link:dd911ea97b0e70435d0927813b4622d0e3f6f886347089d4b7848eb876a47fad"
+    },
+    {
+      "edition": "474.05",
+      "family": "civ_economy",
+      "id": "link:0a7ecec73bc937b135fd364e06ed7afe737e9ab776a8aff10a9441611a5539db"
+    },
+    {
+      "edition": "474.05",
+      "family": "game_turn",
+      "id": "link:96715d683d215151fb5638e433c201bca2a2e4e1a84c4792e564003d20cee7c8"
+    },
+    {
+      "edition": "474.05",
+      "family": "food_stock_update",
+      "id": "link:b5337f0ba0abeda10c6d0ddfd0e69af9c17fd0442fee7a258707180a023da766"
+    }
+  ],
+  "observations": [
+    {
+      "canonical_project_version": 1,
+      "edition": "474.01",
+      "image_exports": [
+        {
+          "bytes": 8177,
+          "format": "svg",
+          "height": 1123,
+          "sha256": "5ab6111b5c034566d06d00512464a1283188d1bb064e4fa2e9259ce5ced34bfc",
+          "width": 1560
+        },
+        {
+          "bytes": 144194,
+          "format": "png",
+          "height": 1123,
+          "sha256": "5cdf1930ea0ad606271cab5ee596257879be54000c5df405c014cdccf18bf63e",
+          "width": 1560
+        }
+      ],
+      "isolation_project": "474.01-isolation.fdb",
+      "original_version_sha256": "a24ea5d509e6c8a0871d5727971eafe858e208b21d29ed3f0b2cae0a8b600af1",
+      "parent_bytes_preserved": true,
+      "remaining_analysis_stable": false,
+      "stored_food_instructions": 13
+    },
+    {
+      "canonical_project_version": 1,
+      "edition": "474.03",
+      "image_exports": [
+        {
+          "bytes": 8177,
+          "format": "svg",
+          "height": 1123,
+          "sha256": "0cd0bcedff2a6ca0010b0e4603f41d9a83194416d374ff7db40d7b3013cbdae6",
+          "width": 1560
+        },
+        {
+          "bytes": 140768,
+          "format": "png",
+          "height": 1123,
+          "sha256": "5c805ac8afb34021958a24459937ab45db53b030efdb33dc5550da1bc2130972",
+          "width": 1560
+        }
+      ],
+      "isolation_project": "474.03-isolation.fdb",
+      "original_version_sha256": "2093ced7ef9e11bda0521d35785693865ea41ac470a7db85ef16aa716acf41df",
+      "parent_bytes_preserved": true,
+      "remaining_analysis_stable": false,
+      "stored_food_instructions": 13
+    },
+    {
+      "canonical_project_version": 1,
+      "edition": "474.05",
+      "image_exports": [
+        {
+          "bytes": 8177,
+          "format": "svg",
+          "height": 1123,
+          "sha256": "23db947ad6fe2202b3e7150b14652a3afb251f1b226a880c2d1e62d21fc9f10a",
+          "width": 1560
+        },
+        {
+          "bytes": 137083,
+          "format": "png",
+          "height": 1123,
+          "sha256": "e8e6c44d673d1762a04d7ca5349db0d7649cdb3d8dec301353a06c65f1c75504",
+          "width": 1560
+        }
+      ],
+      "isolation_project": "474.05-isolation.fdb",
+      "original_version_sha256": "f4b58d8af19a001bd748eb4eb3285e379de3bba304b782fe03f0112aa8c10a4e",
+      "parent_bytes_preserved": true,
+      "remaining_analysis_stable": false,
+      "stored_food_instructions": 13
+    }
+  ],
+  "original_hashes_unchanged": true,
+  "private_evidence_sha256": {
+    "report.json": "44a2aeaeb90eab1aa49acc447d02eb1e266da07b2aadf23e9be1cb4a9d7ca154",
+    "source-native.sqlite": "c0aa0b6257e7483dcfb7d6eab3ba485427c02a6fc47f7bf0726145d729cad0ae"
+  },
+  "reference_decoder": {
+    "binary_sha256": "f52736a1180da68017e9da9b3998f619fc9150f997f11dc1f72a8f4e00fdc05e",
+    "repository": "https://github.com/w4kfu/unEXEPACK",
+    "revision": "db26f9e2d23af37e6508436b62cb98cbbb86a275",
+    "source_sha256": "fb092548a90501e3d330b7b3db0b527396ef488cd3f88376811fa09f1dba615d"
+  },
+  "restart_verified": true,
+  "schema": "fdisbull-civd-native-links-1",
+  "scope": "Build-checked resident source/native correspondences and independently requalified transfers; not gameplay, historical symbol names, whole-game recovery or semantic equivalence.",
+  "source_assisted": true,
+  "source_concept_relationships": [
+    {
+      "document": {
+        "assertion_status": "authored-declaration",
+        "assurance": "source-and-build-supported static relationship",
+        "author": "verified-source-build",
+        "binary_equivalence": false,
+        "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+        "entity": "entity:9cc9227ada086847e7209b09ad1c0f9164a69743dee649b9735f9d7a0089c841",
+        "evidence": "Compiled source statement updates food_box; exact original-byte witness source-native-map:9b2c2ab53c748834244b18f97e1ad7f7c6ecd166e016da96cd0ca861a9fa9046. Execution conditions and dynamic reachability were not observed.",
+        "layer_admission": false,
+        "relation": "related"
+      },
+      "id": "concept-link:54637626e3f8f51bb9a9b4c16e93ebcb215bfd6d71e2825f647056cc29692b35"
+    },
+    {
+      "document": {
+        "assertion_status": "authored-declaration",
+        "assurance": "source-and-build-supported static relationship",
+        "author": "verified-source-build",
+        "binary_equivalence": false,
+        "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+        "entity": "entity:f85e16628b77bc6fc44ee95a132a98f17a42138272ed5b066305cb2737b9475d",
+        "evidence": "Compiled source statement updates food_box; exact original-byte witness source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40. Execution conditions and dynamic reachability were not observed.",
+        "layer_admission": false,
+        "relation": "related"
+      },
+      "id": "concept-link:124bf38257618b5c05c96fd4f7eed3aced016780685551e6ee8f7aaf8cb9e73e"
+    },
+    {
+      "document": {
+        "assertion_status": "authored-declaration",
+        "assurance": "source-and-build-supported static relationship",
+        "author": "verified-source-build",
+        "binary_equivalence": false,
+        "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+        "entity": "entity:8ccbabc1d51efb759533b267d9d617086726d64d6d83eb8b4a7f71939ea4c33d",
+        "evidence": "Compiled source statement updates food_box; exact original-byte witness source-native-map:a6529b3c3f6074494cad59916e209b3b38b530fb08366f0c67521226450f2eef. Execution conditions and dynamic reachability were not observed.",
+        "layer_admission": false,
+        "relation": "related"
+      },
+      "id": "concept-link:4bc3e79e94f6546a86dbe50a5064a5966cfd728fcbe7635e28762c41bcc13a48"
+    }
+  ],
+  "sqlite_integrity": "ok",
+  "static_call_sites": [
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_civ_economy",
+      "caller": "_game_turn",
+      "edition": "474.01",
+      "module_offset": 9471,
+      "offset": 399,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 9471,
+          "packed_offset": 9451,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 567,
+      "size": 5,
+      "source_line": 160
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.01",
+      "module_offset": 44451,
+      "offset": 83,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 44451,
+          "packed_offset": 44431,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2773,
+      "size": 5,
+      "source_line": 60
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.01",
+      "module_offset": 44517,
+      "offset": 149,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 44517,
+          "packed_offset": 44497,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2773,
+      "size": 5,
+      "source_line": 65
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 56891,
+      "offset": 3531,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 56891,
+          "packed_offset": 56871,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 472
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57102,
+      "offset": 3742,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57102,
+          "packed_offset": 57082,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 497
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57338,
+      "offset": 3978,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57338,
+          "packed_offset": 57318,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 512
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57362,
+      "offset": 4002,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57362,
+          "packed_offset": 57342,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 513
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57420,
+      "offset": 4060,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57420,
+          "packed_offset": 57400,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 516
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57529,
+      "offset": 4169,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57529,
+          "packed_offset": 57509,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 526
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57807,
+      "offset": 4447,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57807,
+          "packed_offset": 57787,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 550
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57836,
+      "offset": 4476,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57836,
+          "packed_offset": 57816,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 552
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 57912,
+      "offset": 4552,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57912,
+          "packed_offset": 57892,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 554
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 58051,
+      "offset": 4691,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 58051,
+          "packed_offset": 58031,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 565
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 76397,
+      "offset": 23037,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 76397,
+          "packed_offset": 76380,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 1698
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.01",
+      "module_offset": 76492,
+      "offset": 23132,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 76492,
+          "packed_offset": 76475,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 5,
+      "source_line": 1706
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.01",
+      "module_offset": 79919,
+      "offset": 26559,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 79919,
+          "packed_offset": 79902,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 3,
+      "source_line": 1972
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.01",
+      "module_offset": 80052,
+      "offset": 26692,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 80052,
+          "packed_offset": 80035,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3335,
+      "size": 3,
+      "source_line": 1982
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_civ_economy",
+      "caller": "_game_turn",
+      "edition": "474.03",
+      "module_offset": 9485,
+      "offset": 397,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 9485,
+          "packed_offset": 9465,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 568,
+      "size": 5,
+      "source_line": 159
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.03",
+      "module_offset": 42541,
+      "offset": 77,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 42541,
+          "packed_offset": 42521,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2654,
+      "size": 5,
+      "source_line": 60
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.03",
+      "module_offset": 42607,
+      "offset": 143,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 42607,
+          "packed_offset": 42587,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2654,
+      "size": 5,
+      "source_line": 65
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55013,
+      "offset": 3541,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55013,
+          "packed_offset": 54993,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 472
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55224,
+      "offset": 3752,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55224,
+          "packed_offset": 55204,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 497
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55460,
+      "offset": 3988,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55460,
+          "packed_offset": 55440,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 512
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55484,
+      "offset": 4012,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55484,
+          "packed_offset": 55464,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 513
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55542,
+      "offset": 4070,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55542,
+          "packed_offset": 55522,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 516
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55651,
+      "offset": 4179,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55651,
+          "packed_offset": 55631,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 526
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55929,
+      "offset": 4457,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55929,
+          "packed_offset": 55909,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 550
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 55958,
+      "offset": 4486,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 55958,
+          "packed_offset": 55938,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 552
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 56034,
+      "offset": 4562,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 56034,
+          "packed_offset": 56014,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 554
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 56173,
+      "offset": 4701,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 56173,
+          "packed_offset": 56153,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 565
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 74959,
+      "offset": 23487,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 74959,
+          "packed_offset": 74942,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 1722
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.03",
+      "module_offset": 75054,
+      "offset": 23582,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 75054,
+          "packed_offset": 75037,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 5,
+      "source_line": 1730
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.03",
+      "module_offset": 78481,
+      "offset": 27009,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 78481,
+          "packed_offset": 78464,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 3,
+      "source_line": 1998
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.03",
+      "module_offset": 78614,
+      "offset": 27142,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 78614,
+          "packed_offset": 78597,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3217,
+      "size": 3,
+      "source_line": 2008
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_civ_economy",
+      "caller": "_game_turn",
+      "edition": "474.05",
+      "module_offset": 9485,
+      "offset": 397,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 9485,
+          "packed_offset": 9465,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 568,
+      "size": 5,
+      "source_line": 159
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.05",
+      "module_offset": 44593,
+      "offset": 81,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 44593,
+          "packed_offset": 44573,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2782,
+      "size": 5,
+      "source_line": 60
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_city_process",
+      "caller": "_civ_economy",
+      "edition": "474.05",
+      "module_offset": 44659,
+      "offset": 147,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 44659,
+          "packed_offset": 44639,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 2782,
+      "size": 5,
+      "source_line": 65
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57087,
+      "offset": 3551,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57087,
+          "packed_offset": 57067,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 472
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57298,
+      "offset": 3762,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57298,
+          "packed_offset": 57278,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 497
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57534,
+      "offset": 3998,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57534,
+          "packed_offset": 57514,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 512
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57558,
+      "offset": 4022,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57558,
+          "packed_offset": 57538,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 513
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57616,
+      "offset": 4080,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57616,
+          "packed_offset": 57596,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 516
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 57725,
+      "offset": 4189,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 57725,
+          "packed_offset": 57705,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 526
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 58003,
+      "offset": 4467,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 58003,
+          "packed_offset": 57983,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 550
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 58032,
+      "offset": 4496,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 58032,
+          "packed_offset": 58012,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 552
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 58108,
+      "offset": 4572,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 58108,
+          "packed_offset": 58088,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 554
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 58247,
+      "offset": 4711,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 58247,
+          "packed_offset": 58227,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 565
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_add_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 77033,
+      "offset": 23497,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 77033,
+          "packed_offset": 77016,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 1722
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_city_process",
+      "edition": "474.05",
+      "module_offset": 77128,
+      "offset": 23592,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 77128,
+          "packed_offset": 77111,
+          "size": 5
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 5,
+      "source_line": 1730
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.05",
+      "module_offset": 80555,
+      "offset": 27019,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 80555,
+          "packed_offset": 80538,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 3,
+      "source_line": 1998
+    },
+    {
+      "basis": "native direct-call operand and checked linker symbol",
+      "callee": "_tile_yield",
+      "caller": "_add_tile_yield",
+      "edition": "474.05",
+      "module_offset": 80688,
+      "offset": 27152,
+      "packed_spans": [
+        {
+          "kind": "literal",
+          "module_offset": 80688,
+          "packed_offset": 80671,
+          "size": 3
+        }
+      ],
+      "runtime_observed": false,
+      "segment": 3346,
+      "size": 3,
+      "source_line": 2008
+    }
+  ],
+  "transfers": [
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:70f01fa3a203ddc32fdd09d41052b8607e6a1682fdc4a6827d2d2e0531b81288",
+        "target_map": "source-native-map:f8b59952e6c113321983f23780ac05a6d762458cbc8852b47329e84b8ce00453"
+      },
+      "family": "tile_yield",
+      "id": "source-map-transfer:fe32b285dba624e7130f7a5cdd0f6f37ae13b53bb46e9706d5d12a271cd9f66a",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:70f01fa3a203ddc32fdd09d41052b8607e6a1682fdc4a6827d2d2e0531b81288",
+        "target_map": "source-native-map:14a3b61a79e703767933b215cfe9970e27a92a3059012172f3905008088cacd3"
+      },
+      "family": "tile_yield",
+      "id": "source-map-transfer:cd7f0c53dc152b901e01270d6540b47452818f77c3e4aeea0afe575f6d46626b",
+      "target_edition": "474.05"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:5d03d4be75560c70626ae3890d8c0aa6ef99c09508dc9a15a64cd859007c8b88",
+        "target_map": "source-native-map:83fdd4f43f7f841a74c322e67e3e434dac4fd899f879204d8a92e0d6f0cf8eb1"
+      },
+      "family": "add_tile_yield",
+      "id": "source-map-transfer:24c6c73523377c387f409114c5df3bde19d05e8e4c6654ea5ec6618a813b496a",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:5d03d4be75560c70626ae3890d8c0aa6ef99c09508dc9a15a64cd859007c8b88",
+        "target_map": "source-native-map:c502e4da7b9983dd0908219411917ade644a22baef7b667a7f2af0383624f370"
+      },
+      "family": "add_tile_yield",
+      "id": "source-map-transfer:eaf26d48836c310b5edbf726ca3ed1e4f846f94a8f3c8cfcbcf86c56bca8d82e",
+      "target_edition": "474.05"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": false,
+        "source_map": "source-native-map:591eb51360b6b68c2503bb79667e44b3cf93907bb54a6c1c33dd2bde26d560aa",
+        "target_map": "source-native-map:8983ba8b63778a32284cb171fd69817ef8378d9887c78d739059485670d2fdac"
+      },
+      "family": "city_process",
+      "id": "source-map-transfer:fcca953b833e734ddf15a02d29f69d540caa39987a2a2458a1201caf53a7cba9",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:591eb51360b6b68c2503bb79667e44b3cf93907bb54a6c1c33dd2bde26d560aa",
+        "target_map": "source-native-map:69106bf463411924d342c64f7cd7eb6c3d2cc2aa1d4c8073909a9a72bd6fbed9"
+      },
+      "family": "city_process",
+      "id": "source-map-transfer:13c974a2be5043039eca21e59173df601fe6a140db34a1d85433ed005a8bafcd",
+      "target_edition": "474.05"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:622fd45b8feabcc4e28a5271c9434e8b2d699a58f244dc3f0cfdae5236332113",
+        "target_map": "source-native-map:68f24abbfb5a642090b8f7b74ac0c9f88e30d52f8a7d18ee033d40af02f656fb"
+      },
+      "family": "civ_economy",
+      "id": "source-map-transfer:de752fc512b679691df7d490de0a881a7eee16d8e0bdfc35f779f8d67611225c",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:622fd45b8feabcc4e28a5271c9434e8b2d699a58f244dc3f0cfdae5236332113",
+        "target_map": "source-native-map:a7a7a901a7805e0473bf82a0aeed9e9433e3820734273783d49ae35444b9f969"
+      },
+      "family": "civ_economy",
+      "id": "source-map-transfer:f29f77c229f54932822916c5951557ff4d6623ea844d51c3ca66a4bcb85a97e8",
+      "target_edition": "474.05"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:0bf786fbb539961b3b11346d76a90e411048e8aefe2dff11a68cbc8bc93ce7bf",
+        "target_map": "source-native-map:abdcf62b84321dd981d54a64a4bea5975d860acb3dd35cb31061733e115d7bfe"
+      },
+      "family": "game_turn",
+      "id": "source-map-transfer:42fe0751eeee1108dbda130beabc6ffb029eba7e42898efd813ddcac65965a11",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:0bf786fbb539961b3b11346d76a90e411048e8aefe2dff11a68cbc8bc93ce7bf",
+        "target_map": "source-native-map:891899e1509e2c61223a84f79a8f9fec4398845f412ba9eeb1d6d4324ee82386"
+      },
+      "family": "game_turn",
+      "id": "source-map-transfer:5c85e78f00daf505c2a4e5fb0a1a854d70fcfa49f2e970911f2cbedf06cbf944",
+      "target_edition": "474.05"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": false,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": false,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": false,
+        "source_map": "source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40",
+        "target_map": "source-native-map:9b2c2ab53c748834244b18f97e1ad7f7c6ecd166e016da96cd0ca861a9fa9046"
+      },
+      "family": "food_stock_update",
+      "id": "source-map-transfer:79828f2ccd6a02c735e18e115c160d82f995564ec3e6820f28e63fe0dec0b3d2",
+      "target_edition": "474.01"
+    },
+    {
+      "document": {
+        "dos_relocation_normalized_identical": true,
+        "inherited_native_address": false,
+        "layer_admission": false,
+        "native_bytes_identical": true,
+        "qualification": "candidate located, then independently checked against target build",
+        "selector": "same-source-name/path; exact stripped source line when selected",
+        "semantic_equivalence": false,
+        "source_body_identical": true,
+        "source_map": "source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40",
+        "target_map": "source-native-map:a6529b3c3f6074494cad59916e209b3b38b530fb08366f0c67521226450f2eef"
+      },
+      "family": "food_stock_update",
+      "id": "source-map-transfer:6ec06f64ac18c8789f99790602d6a50501fa82c0c84b0cdaacff024da4aa6f47",
+      "target_edition": "474.05"
+    }
+  ],
+  "witnesses": {
+    "474.01": {
+      "decoded_image_sha256": "e704dd2d6ae9468844fed1232a7298e19cd7cd81eed22323c8db9f5e5b2cf11a",
+      "decoded_module_sha256": "014af0a349da959d7f7762f3a15ecaca2e8a31b5b4cb2e82d4c5f31a89384bba",
+      "entry_analysis_stable": false,
+      "independent_decoder_module_match": true,
+      "independent_decoder_relocations_match": true,
+      "overlay_bytes_not_loaded": 126401,
+      "plain_image_sha256": "3667f217d55e91e50be8bceed39f75ba8148da79b3683f813b7f5b4896cb7357",
+      "plain_relink_functions_match": [
+        "tile_yield",
+        "add_tile_yield",
+        "city_process",
+        "civ_economy",
+        "game_turn"
+      ],
+      "reference_image_sha256": "07f7db27963bcb35d372da3caf90a34a5d7b4e4612f74672f20cf3539f58b86a"
+    },
+    "474.03": {
+      "decoded_image_sha256": "337db483fe62b4f61676abc0c8bdf35441c4e2e9d2f934a861a4a698c8b86331",
+      "decoded_module_sha256": "69fe75ecb897db956bbb30ad04e41e294e08b10f7fa7b27e5f51013f03d6a94b",
+      "entry_analysis_stable": false,
+      "independent_decoder_module_match": true,
+      "independent_decoder_relocations_match": true,
+      "overlay_bytes_not_loaded": 127227,
+      "plain_image_sha256": "1a173547bc0c3723fae21b3463da49dfc722d4aac69a120b38aa5c093e3c68cc",
+      "plain_relink_functions_match": [
+        "tile_yield",
+        "add_tile_yield",
+        "city_process",
+        "civ_economy",
+        "game_turn"
+      ],
+      "reference_image_sha256": "8d6879a7248c29a592f341e77bf22a620ce33d1b49410c4384efbf687a5b5406"
+    },
+    "474.05": {
+      "decoded_image_sha256": "8c559a91d18fe7d25f34445b617c0a946fa87add3960a557f17b1bffbd52d9db",
+      "decoded_module_sha256": "2253fba41b44bf63403a080998960697bf81e15ecc4b7d3e91c5f403b3750756",
+      "entry_analysis_stable": false,
+      "independent_decoder_module_match": true,
+      "independent_decoder_relocations_match": true,
+      "overlay_bytes_not_loaded": 127079,
+      "plain_image_sha256": "100a67b869335bf074e3be2c43c3e574803526bde378d5773bc84910c4556acb",
+      "plain_relink_functions_match": [
+        "tile_yield",
+        "add_tile_yield",
+        "city_process",
+        "civ_economy",
+        "game_turn"
+      ],
+      "reference_image_sha256": "b69a9ec45a2fc50637bdba53b8c1e827c1f84397db982eae4ccf3352d536805e"
+    }
+  }
+}

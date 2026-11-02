@@ -24,6 +24,11 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         raise ValueError("instruction address must fit in an unsigned 64-bit integer")
     if not data:
         return None
+    if arch == 'thumb':
+        if bits != 32:
+            raise ValueError('Thumb decoding requires 32 bits')
+        from .thumb import decode_thumb
+        return decode_thumb(data, address)
     references = []
     immediates = []
     if arch == "x86":

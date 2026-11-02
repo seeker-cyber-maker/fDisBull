@@ -1,0 +1,174 @@
+--- a/container_storage_guard.py
++++ b/container_storage_guard.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/python3
+ """Fail-closed launcher for the approved external Apple container store."""
+-import os,sys,subprocess,plistlib,json,time
++import os,sys,subprocess,plistlib,json,uuid,re
+ MOUNT='/Volumes/CACHE'
+ ROOT='/Volumes/CACHE/AppleContainer'
+ UUID='DB098A4B-7968-418F-8B20-61597F42392A'
+@@ -25,42 +25,122 @@
+  return {'app_root':ROOT,'volume_uuid':actual,'minimum_bytes':MINIMUM}
+ 
+ HOST_PLISTS='/Users/tiga/.local/state/apple-container-launchd'
++PREPARED_SERVICE_MARKER='_CodexGuardPreparation'
++PREPARED_SERVICE_VALUE='internal-launchd-path-preseed-v1'
++
++def _check_real_directory(path,label):
++ if os.path.lexists(path):
++  if os.path.islink(path) or not os.path.isdir(path) or os.path.realpath(path)!=path:raise RuntimeError(label+' must be a real directory.')
++ elif os.path.realpath(os.path.dirname(path))!=os.path.dirname(path):raise RuntimeError(label+' has a symlinked parent path.')
+ 
+ def bridge_plists():
++ _check_real_directory(HOST_PLISTS,'Internal launch-plist directory')
+  os.makedirs(HOST_PLISTS,mode=0o700,exist_ok=True)
+  result={}
+- for parent,dirs,files in os.walk(ROOT,followlinks=False):
+-  for name in files:
+-   if not name.endswith('.plist'):continue
+-   path=os.path.join(parent,name);relative=os.path.relpath(path,ROOT)
+-   host=os.path.join(HOST_PLISTS,relative.replace('/','__'))
+-   with open(path,'rb') as f:data=plistlib.load(f)
+-   if not isinstance(data,dict) or 'Label' not in data:continue
+-   env=data.setdefault('EnvironmentVariables',{});env['CONTAINER_APP_ROOT']=ROOT
+-   args=data.get('ProgramArguments',[])
+-   if data['Label']=='com.apple.container.apiserver':data['ProgramArguments']=['/usr/bin/python3',GUARD,'--server']
+-   elif args and not (len(args)>2 and args[1]==GUARD):data['ProgramArguments']=['/usr/bin/python3',GUARD,'--service']+args
+-   temporary=host+'.tmp'
+-   with open(temporary,'wb') as f:plistlib.dump(data,f);f.flush();os.fsync(f.fileno())
+-   os.chmod(temporary,0o600);os.replace(temporary,host)
+-   if not os.path.islink(path) or os.path.realpath(path)!=host:
+-    temporary=path+'.internal-launch-link'
+-    if os.path.lexists(temporary):raise RuntimeError('Unexpected temporary launch link')
+-    os.symlink(host,temporary);os.replace(temporary,path)
+-   result[data['Label']]=host
++ paths=[]
++ for subtree in ('containers','networks','plugin-state'):
++  managed_root=os.path.join(ROOT,subtree)
++  if os.path.islink(managed_root) or (os.path.exists(managed_root) and os.path.realpath(managed_root)!=managed_root):raise RuntimeError('Unexpected symlink in managed '+subtree+' service parent path.')
++  if not os.path.isdir(managed_root):continue
++  with os.scandir(managed_root) as entries:
++   for entry in entries:
++    if entry.is_symlink():raise RuntimeError('Unexpected symlink in managed '+subtree+' service parent path.')
++    if not entry.is_dir(follow_symlinks=False):continue
++    path=os.path.join(entry.path,'service.plist')
++    if os.path.lexists(path):paths.append((path,subtree+'__'+entry.name+'__service.plist'))
++ apiserver_root=os.path.join(ROOT,'apiserver')
++ apiserver=os.path.join(apiserver_root,'apiserver.plist')
++ if os.path.islink(apiserver_root) or (os.path.exists(apiserver_root) and os.path.realpath(apiserver_root)!=apiserver_root):raise RuntimeError('Unexpected symlink in managed API-service parent path.')
++ if os.path.lexists(apiserver):paths.append((apiserver,'apiserver__apiserver.plist'))
++ for path,host_name in paths:
++  host=os.path.join(HOST_PLISTS,host_name)
++  if os.path.lexists(host) and (os.path.islink(host) or not os.path.isfile(host)):raise RuntimeError('Internal launch plist target must be a regular file.')
++  if os.path.islink(path) and os.path.realpath(path)!=host:raise RuntimeError('Managed launch plist points outside its verified internal bridge path.')
++  with open(path,'rb') as f:data=plistlib.load(f)
++  if not isinstance(data,dict) or 'Label' not in data:continue
++  if set(data)=={'Label',PREPARED_SERVICE_MARKER} and data.get(PREPARED_SERVICE_MARKER)==PREPARED_SERVICE_VALUE:continue
++  env=data.setdefault('EnvironmentVariables',{});env['CONTAINER_APP_ROOT']=ROOT
++  args=data.get('ProgramArguments',[])
++  if data['Label']=='com.apple.container.apiserver':data['ProgramArguments']=['/usr/bin/python3',GUARD,'--server']
++  elif args and not (len(args)>2 and args[1]==GUARD):data['ProgramArguments']=['/usr/bin/python3',GUARD,'--service']+args
++  temporary=host+'.tmp'
++  fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
++  with os.fdopen(fd,'wb') as f:plistlib.dump(data,f);f.flush();os.fsync(f.fileno())
++  os.replace(temporary,host)
++  if not os.path.islink(path) or os.path.realpath(path)!=host:
++   temporary=path+'.internal-launch-link'
++   if os.path.lexists(temporary):raise RuntimeError('Unexpected temporary launch link')
++   os.symlink(host,temporary);os.replace(temporary,path)
++  result[data['Label']]=host
+  return result
+ 
+ def start_guarded_api():
+  mapping=bridge_plists();domain='gui/'+str(os.getuid())
+- probe=subprocess.run(['/bin/launchctl','list','com.apple.container.apiserver'],capture_output=True)
++ probe=subprocess.run(['/bin/launchctl','list','com.apple.container.apiserver'],capture_output=True,timeout=8)
+  if probe.returncode!=0:
+-  subprocess.run(['/bin/launchctl','bootstrap',domain,mapping['com.apple.container.apiserver']],check=True)
+- deadline=time.monotonic()+15
+- while time.monotonic()<deadline:
+-  probe=subprocess.run([REAL_CLI,'system','status'],capture_output=True,text=True)
+-  if probe.returncode==0:return
+-  time.sleep(0.25)
+- raise RuntimeError('Guarded external-root API service did not become ready.')
++  subprocess.run(['/bin/launchctl','bootstrap',domain,mapping['com.apple.container.apiserver']],check=True,timeout=8)
++
++_VALUE_OPTIONS={
++ '--env','-e','--env-file','--gid','-u','--user','--uid','-w','--workdir','--cwd','--ulimit',
++ '-c','--cpus','-m','--memory','-a','--arch','--cap-add','--cap-drop','--cidfile','--dns',
++ '--dns-domain','--dns-option','--dns-search','--entrypoint','-k','--kernel','--kernel-arg',
++ '-l','--label','--mount','--name','--network','-p','--publish','--publish-socket','--runtime',
++ '--shm-size','--tmpfs','-v','--volume','--max-concurrent-downloads','--scheme','--init-image',
++ '--platform','--os','--progress','--masked-path','--read-only-path',
++}
++
++def _subcommand_index(args):
++ return 1 if args and args[0]=='--debug' else 0
++
++def _prepare_container_service_link(args):
++ command_index=_subcommand_index(args)
++ if len(args)<=command_index or args[command_index] not in ['create','run']:return
++ name=None;i=command_index+1
++ while i<len(args):
++  token=args[i]
++  if token=='--':break
++  if token in ['-h','--help','--version']:return
++  if token=='--name':
++   if i+1>=len(args) or args[i+1].startswith('-'):return
++   name=args[i+1];i+=2;continue
++  if token.startswith('--name='):
++   name=token.split('=',1)[1];i+=1;continue
++  if token.startswith('-'):
++   if token in _VALUE_OPTIONS:
++    if i+1>=len(args):return
++    i+=2
++   else:i+=1
++   continue
++  break
++ if name is None:
++  name=str(uuid.uuid4()).lower()
++  args[command_index+1:command_index+1]=['--name',name]
++ if len(name)>63 or re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]+',name) is None:
++  raise RuntimeError('Container name is unsafe for guarded service-path preparation.')
++ containers=os.path.join(ROOT,'containers')
++ _check_real_directory(containers,'External container directory')
++ _check_real_directory(HOST_PLISTS,'Internal launch-plist directory')
++ container_dir=os.path.join(containers,name)
++ external=os.path.join(container_dir,'service.plist')
++ host=os.path.join(HOST_PLISTS,'containers__'+name+'__service.plist')
++ if os.path.lexists(container_dir) and (os.path.islink(container_dir) or os.path.realpath(container_dir)!=container_dir):raise RuntimeError('Existing container bundle path must not be a symlink.')
++ if os.path.lexists(host) and (os.path.islink(host) or not os.path.isfile(host)):raise RuntimeError('Internal launch plist target must be a regular file.')
++ if os.path.isdir(container_dir):
++  if os.path.islink(external):
++   if os.path.realpath(external)!=host or not os.path.isfile(host):raise RuntimeError('Existing service link does not match its verified internal target.')
++   return
++  if os.path.isfile(os.path.join(container_dir,'config.json')):return
++  raise RuntimeError('Container bundle path already exists without its verified internal service bridge.')
++ if os.path.lexists(container_dir) or os.path.lexists(host):
++  raise RuntimeError('Container service bridge path already exists; refusing to replace it.')
++ os.makedirs(HOST_PLISTS,mode=0o700,exist_ok=True)
++ os.makedirs(os.path.dirname(container_dir),mode=0o755,exist_ok=True)
++ os.mkdir(container_dir,0o755)
++ fd=os.open(host,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
++ with os.fdopen(fd,'wb') as f:
++  plistlib.dump({'Label':'com.apple.container.container-runtime-linux.'+name,PREPARED_SERVICE_MARKER:PREPARED_SERVICE_VALUE},f)
++  f.flush();os.fsync(f.fileno())
++ os.symlink(host,external)
+ 
+ def main():
+  args=sys.argv[1:]
+@@ -75,7 +155,12 @@
+  if mode=='--service':
+   if not args or not args[0].startswith('/usr/local/') or not os.path.basename(args[0]).startswith('container-'):raise RuntimeError('Unexpected service executable')
+   os.execve(args[0],args,env)
+- starting=len(args)>=2 and args[0] in ['system','s'] and args[1]=='start'
++ command_index=_subcommand_index(args)
++ if mode=='--cli' and len(args)>command_index and args[command_index] in ['create','run']:
++  _prepare_container_service_link(args)
++ if mode=='--cli' and len(args)>command_index and args[command_index]=='start':
++  bridge_plists()
++ starting=len(args)>command_index+1 and args[command_index] in ['system','s'] and args[command_index+1]=='start'
+  if starting:
+   for value in args:
+    if value.startswith('--app-root=') and os.path.realpath(value.split('=',1)[1])!=ROOT:raise RuntimeError('App-root must remain on the approved external store.')

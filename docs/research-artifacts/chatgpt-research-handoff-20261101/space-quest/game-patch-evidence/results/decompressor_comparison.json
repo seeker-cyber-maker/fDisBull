@@ -1,0 +1,6 @@
+{
+  "all_equal": true,
+  "resources": 147,
+  "scope": "offset-table decoder versus string-dictionary decoder; same documented SCI1 profile, not independent proof of that format",
+  "wall_ms": 343.503771000087
+}

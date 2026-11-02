@@ -1,0 +1,215 @@
+{
+  "format": "sq1-ultima-static-intake-report-1",
+  "date": "2026-10-29",
+  "inputs": [
+    {
+      "id": "patch",
+      "filename": "patch_space_quest_1_-_the_sarien_encounter_2.2_galaxy_hotfix_(20261)_to_2.2_GOG_v2_(88857).exe",
+      "size_bytes": 9531080,
+      "sha256": "7b3ae423b768c1176229ad0c43260c677de615a17f6e8cedb75509ac3fa2815c",
+      "unchanged_at_final_check": true
+    },
+    {
+      "id": "space_quest",
+      "filename": "setup_space_quest_1_-_the_sarien_encounter_2.2_gog_v2_(88857).exe",
+      "size_bytes": 450025368,
+      "sha256": "99dc2a147e55d49c77e0dd83084118601fb1a2e958cb06dad34a064087beeb94",
+      "unchanged_at_final_check": true
+    },
+    {
+      "id": "ultima",
+      "filename": "setup_ultima_iv_-_quest_of_the_avatar_1.0_cs_(28045).exe",
+      "size_bytes": 12806032,
+      "sha256": "0a1274103fa6cad2dc79982be6623c091e9d2489c9e4ed059deeee35ff7d31a9",
+      "unchanged_at_final_check": true
+    }
+  ],
+  "method": {
+    "inno_profile": "5.6.2 Unicode, narrow source-informed Python parser",
+    "native_installer_execution": false,
+    "native_game_execution": false,
+    "fdisbull_version": "0.22.0",
+    "whole_installer_control_flow_recovered": false,
+    "old_build_20261_available": false,
+    "reproduction": "fresh output directory; all 36 patch targets match again",
+    "authenticode_signature_validation": false
+  },
+  "patch": {
+    "target_count": 36,
+    "vga_target_count": 33,
+    "gog_metadata_target_count": 3,
+    "expanded_target_bytes": 5845403,
+    "all_targets_full_zlib_replacements": true,
+    "targets_matching_full_installer": 36,
+    "declared_support_actions": 10,
+    "config_overwrite_declared": true,
+    "original_agi_resources_in_replacement_set": false
+  },
+  "space_quest": {
+    "original_interpreter_version_string": "2.917",
+    "vga_version_file": "2.000",
+    "original_launch_target": "sq1",
+    "vga_launch_target": "sq1sci",
+    "logic_probes": [
+      {
+        "logic": 0,
+        "profile": "2.917",
+        "code_bytes": 4175,
+        "instruction_records": 109,
+        "unsupported_frontier_records": 22,
+        "complete": false,
+        "budget_reached": false,
+        "errors": [],
+        "support": "partial static decode; not execution",
+        "directory_sha256": "1aeef7bd675ac6c3907181b619df3c53f14f42bc64ea2965e6b3ab7f81f8a1fd",
+        "volume_sha256": "3b63425d27b981e16a5570ff068d1663d714776192183ea7dfde03cf61fc9aed"
+      },
+      {
+        "logic": 1,
+        "profile": "2.917",
+        "code_bytes": 2083,
+        "instruction_records": 237,
+        "unsupported_frontier_records": 36,
+        "complete": false,
+        "budget_reached": false,
+        "errors": [],
+        "support": "partial static decode; not execution",
+        "directory_sha256": "1aeef7bd675ac6c3907181b619df3c53f14f42bc64ea2965e6b3ab7f81f8a1fd",
+        "volume_sha256": "3b63425d27b981e16a5570ff068d1663d714776192183ea7dfde03cf61fc9aed"
+      },
+      {
+        "logic": 2,
+        "profile": "2.917",
+        "code_bytes": 1300,
+        "instruction_records": 20,
+        "unsupported_frontier_records": 7,
+        "complete": false,
+        "budget_reached": false,
+        "errors": [],
+        "support": "partial static decode; not execution",
+        "directory_sha256": "1aeef7bd675ac6c3907181b619df3c53f14f42bc64ea2965e6b3ab7f81f8a1fd",
+        "volume_sha256": "3b63425d27b981e16a5570ff068d1663d714776192183ea7dfde03cf61fc9aed"
+      }
+    ],
+    "large_runtime_support_groups": [
+      {
+        "path": "__support/app/scummvm/scummvm-2026.1.0.zip",
+        "part_count": 26,
+        "stored_bytes": 276272482,
+        "parts_seen": 26
+      },
+      {
+        "path": "__support/app/scummvm/scummvm.exe",
+        "part_count": 19,
+        "stored_bytes": 120360470,
+        "parts_seen": 19
+      },
+      {
+        "path": "__support/app/set_config/Game Configurator.exe",
+        "part_count": 3,
+        "stored_bytes": 37868557,
+        "parts_seen": 3
+      }
+    ],
+    "large_groups_fraction_of_installer": 0.9655044801829927
+  },
+  "ultima": {
+    "town_count": 17,
+    "town_files_all_size_1280": true,
+    "town_coordinates_in_0_31": true,
+    "dialogue_file_count": 16,
+    "dialogue_record_slots": 256,
+    "dialogue_file_size": 4608,
+    "world_bytes": 65536,
+    "party_template_bytes": 502,
+    "party_template_matches_packaged_save": true,
+    "candidate_field_names": [
+      "food_hundredths",
+      "gold",
+      "torches",
+      "gems",
+      "keys",
+      "sextants"
+    ],
+    "meanings_unverified_against_original_code": true,
+    "native_execution": false
+  },
+  "selected_game_identities": {
+    "space_quest": [
+      {
+        "path": "AGI",
+        "bytes": 39424,
+        "sha256": "d21ccfcdf9020734e5357d4723fb11e0f20bf368b23eb62aa16a5d5540ef3fc2"
+      },
+      {
+        "path": "AGIDATA.OVL",
+        "bytes": 8192,
+        "sha256": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383"
+      },
+      {
+        "path": "SQ.COM",
+        "bytes": 3121,
+        "sha256": "9f801e8c3e9fca8bc1ef21f9698a75787958eb12876e20a7f570159ac52db3e3"
+      },
+      {
+        "path": "vga/SCIDHUV.EXE",
+        "bytes": 62238,
+        "sha256": "3e85e5a23dce88cd457dddce7b85f42ecb16346e966fa4345fe635990af8ff9a"
+      },
+      {
+        "path": "vga/VERSION",
+        "bytes": 7,
+        "sha256": "c348a507b0168157722a68d16161142f9e104c8f5e7b8deb8d703311c63597c1"
+      }
+    ],
+    "ultima": [
+      {
+        "path": "AVATAR.EXE",
+        "bytes": 98208,
+        "sha256": "84ec144394cb561b047d6ef80b7bd8e8652f0159891ff273a3c051b3f9dfd368"
+      },
+      {
+        "path": "TITLE.EXE",
+        "bytes": 44672,
+        "sha256": "d372686cf4b2500cc9087462c5a565bd261ca8b2f61b8e7be0814852fc2a3218"
+      },
+      {
+        "path": "WORLD.MAP",
+        "bytes": 65536,
+        "sha256": "255ed28a43fa25549bbc43a8ecf242e11264f9809d6ca5896f234ff0ebe6cb70"
+      },
+      {
+        "path": "PARTY.NEW",
+        "bytes": 502,
+        "sha256": "f647ceab6d0e9dd619335988e0dfd5dfdc5b1d7690f9eac1cf686d32f04a0acb"
+      }
+    ]
+  },
+  "extraction": {
+    "patch": {
+      "file_records": 78,
+      "inno_data_records": 77,
+      "verified_extracted_records_or_groups": 78,
+      "skipped_runtime_groups": 0
+    },
+    "space_quest": {
+      "file_records": 249,
+      "inno_data_records": 247,
+      "verified_extracted_records_or_groups": 65,
+      "skipped_runtime_groups": 34
+    },
+    "ultima": {
+      "file_records": 277,
+      "inno_data_records": 272,
+      "verified_extracted_records_or_groups": 156,
+      "skipped_runtime_groups": 16
+    }
+  },
+  "limits": [
+    "Target-set analysis is not an old/new gameplay-code diff.",
+    "Recorded support actions have not been dynamically executed.",
+    "Static imports and partial AGI decodes are not recovered playable scenes.",
+    "Documented Ultima field meanings remain unverified against the supplied executable.",
+    "No held-out multi-agent, performance, save/reopen or full project regression experiment was run."
+  ]
+}

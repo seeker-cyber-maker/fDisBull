@@ -1,0 +1,78 @@
+{
+  "format": "fdisbull-shadowrun-scene-assets-evidence-1",
+  "date": "2026-11-01",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "private_index_sha256": "9ebeede5d3bedbd83c6d974d0e7861543b59d7ceb5ce7c0d7106a8ea21ddaab5",
+  "decoder_sha256": "ef405b67d6f278d2ad86e8ac7e5660c7297c714d678c66903ca49e66ece7884d",
+  "field_background_alignment": {
+    "exact_pixels": 10481664,
+    "eligible_pixels": 10481664,
+    "fraction": 1.0,
+    "scope": "same-frame exact RGB x0..255, linked SAT bounds masked"
+  },
+  "actor_overlay_validation": {
+    "exact_pixels": 71042,
+    "eligible_pixels": 71042,
+    "fraction": 1.0,
+    "scope": "SAT index1 nontransparent native pixels over decoded background, exact RGB against same-frame original screenshot"
+  },
+  "mosaic": {
+    "width": 512,
+    "height": 480,
+    "origin_absolute_world": [
+      768,
+      512
+    ],
+    "screen_crop_width": 256,
+    "basis": "source-qualified absolute render-camera origin + screen coordinate; unwrapped",
+    "field_snapshot_count": 180,
+    "covered_pixels": 116808,
+    "conflict_pixels": 0,
+    "rgb_sha256": "edce6bcd35ee612fd04210bf5bb864568982c83f91e65b893e3b46895f399a0f",
+    "coverage_sha256": "824a30070345c8d0c70575a4b8c2007ea6a4771eb9f999cc56272385f971ce1e",
+    "conflict_sha256": "9eb8fa54d87a9b9775dd55c07b3d164453884695bd1ed83fe2f63259ee9e6afc",
+    "coverage_semantics": "zero means unobserved; positive value counts observations",
+    "conflict_semantics": "one means multiple RGB observations disagree",
+    "limits": [
+      "mosaic combines only sampled field frames and captures a bounded portion of the map",
+      "unknown pixels are not treated as walls or empty ground"
+    ]
+  },
+  "vdp_background_reconstruction": {
+    "basis": "same decoded Genesis Plane A/B/Window background compositor and per-frame CRAM, placed at source-qualified absolute render-camera origins",
+    "includes_pixels_under_sat": true,
+    "raster_validated_mosaic_remains_separate": true,
+    "rgb_sha256": "edce6bcd35ee612fd04210bf5bb864568982c83f91e65b893e3b46895f399a0f",
+    "coverage_sha256": "8b88873e4c48de164e1c3ee2410a4c1c180d8e01d668307ba8d08d4f717b6e18",
+    "conflict_sha256": "9eb8fa54d87a9b9775dd55c07b3d164453884695bd1ed83fe2f63259ee9e6afc",
+    "vdp_under_sat_only_coverage_sha256": "3347dd912d1a24477dd4a1fa58a8cf80c925966f785381b79150debeeef23a73",
+    "vdp_under_sat_only_pixels": 9120,
+    "unmasked_conflict_pixels": 0,
+    "unknown_pixels_are_not_filled": true,
+    "limits": [
+      "under-SAT background values are reconstructed from captured VDP planes/patterns and CRAM, not directly visible in the screenshot",
+      "pixels conflicting across captures remain flagged and must not be treated as stable"
+    ]
+  },
+  "camera_viewport_coverage_reference": {
+    "path": "camera-viewport-coverage.json",
+    "sha256": "91296dc87b117464793cd21233db76867554ea55a5450a10b352df5c297d7845",
+    "sampled_field_views": 180,
+    "all_sampled_viewports_raster_complete_conflict_free": true,
+    "all_sampled_viewports_vdp_complete_conflict_free": true,
+    "unsampled_intermediate_camera_states_claimed": false
+  },
+  "corrections": [
+    "Horizontal VDP scroll samples screenX minus rawHScroll; zero-scroll snapshots did not qualify sign.",
+    "Ring coordinates alias different world rows; absolute source-camera coordinates remove 11414 false mosaic conflicts."
+  ],
+  "limitations": [
+    "pixel validation is Genesis decoder versus original screenshots, not NES visual parity",
+    "camera coverage audit covers180 captured viewpoints, not all possible player paths",
+    "unknown or conflicting pixels do not become passable terrain",
+    "NES palette and frozen actor pose are separately declared adaptations",
+    "all source patterns, images, states and generated ROMs remain private"
+  ],
+  "post_exit_coverage": "Only actually visible source field frames are added; black reentry captures are excluded. Target reentry must wait for an observed viewport."
+}

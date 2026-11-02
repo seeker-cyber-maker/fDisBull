@@ -26,5 +26,6 @@ Use the [README](README.md) when explaining the product to a person. Use the
 quickstart, command help and the relevant skill reference when operating it.
 Keep game-specific knowledge in the user's project evidence, with source,
 version, runtime and claim boundaries. The repository ships the tool and
-authored fixtures; original games, saved states and project databases stay
-private.
+authored fixtures, including the explicitly approved three-game freeware corpus
+described in AGENTS.md. Other original games, saved states and project databases
+stay private.

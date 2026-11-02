@@ -1,0 +1,530 @@
+{
+  "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+  "authored_tests": {
+    "files": [
+      "tests/test_agi_dragon_mirror_route.py",
+      "tests/test_agi_gnome_giant_route.py",
+      "tests/test_agi_goat_branch_route.py",
+      "tests/test_agi_goat_route.py",
+      "tests/test_agi_leprechaun_route.py",
+      "tests/test_agi_mushroom_route.py",
+      "tests/test_agi_river_route.py",
+      "tests/test_agi_troll_route.py",
+      "tests/test_native_controller.py",
+      "tests/test_scene_receipts.py",
+      "tests/test_agi_bridge_clip.py",
+      "tests/test_agi_clip_scene.py",
+      "tests/test_agi_bridge_bottom.py",
+      "tests/test_agi_bottom_scene.py",
+      "tests/test_agent_skill_gate.py"
+    ],
+    "log": {
+      "path": "affected-tests.log",
+      "role": "authored-test-log",
+      "sha256": "b11f3f6620c6478bf98242bb3e7e1fe05aac01a7bbb04a26fc1403ee43bd2cde",
+      "visibility": "public"
+    },
+    "result": "710 passed in 1.53s",
+    "system": "macOS ARM64 Python3.13.13"
+  },
+  "base_commit": "958380ea3fdb857a3a946b82c4ef9dd5513a08cc",
+  "format": "fdisbull-shared-native-scenes-verification-1",
+  "frames": [
+    {
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "path": "west-exit.png",
+      "sha256": "3c70aefd8e69c07254e68422f54c14427b328f4adceba0b6892b176a0f72ba2f"
+    },
+    {
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "path": "adjacent-row.png",
+      "sha256": "299a99d9e6a410ed2102169a438cf9763d7639d560dc80f188b7e41a7007fc39"
+    }
+  ],
+  "guest_accounting": {
+    "candidate": {
+      "dialogue_ms": 142,
+      "ordinary_run_ms": 83994,
+      "total_ms": 84136
+    },
+    "control": {
+      "dialogue_ms": 0,
+      "ordinary_run_ms": 74070,
+      "total_ms": 74070
+    }
+  },
+  "independent_audit_sha256": "5bbdaab84da774c2bf6ffc4307c145fef3050f2fe10bc49425d8508e03748fb7",
+  "library": {
+    "jpc_rr_zip": "Listed, still unretrieved; viewer unavailable and no supported explicit external download destination.",
+    "new_raw_bridge_controller_evidence_retrieved": false,
+    "readable_reports": [
+      "KQ1-JPC-RR-Evaluation-2026-11-01.md",
+      "KQ1_ROBB_RECREATION_REPORT_2026-11-01.md"
+    ],
+    "scope": "Scoped current Library UI search only; report claims do not replace native observations."
+  },
+  "limits": [
+    "Two sampled fresh sessions, not complete water-handler instruction proof or all82-origin qualification.",
+    "Last-completed screenshots are not atomic with memory reads.",
+    "Receipt completeness means supplied-record assembly, not native authenticity.",
+    "No fresh Linux/full-native/hosted CI result, release, tag, merge or system fDisBull update.",
+    "Game inputs, states, databases, complete captures/journals and generated scene/provenance remain private."
+  ],
+  "linux": {
+    "admitted": false,
+    "last_observed_cache_free_bytes": 20132036608,
+    "minimum_reserve_bytes": 20000000000,
+    "new_container_started": false,
+    "prior_MR33_linux_result_is_not_current_qualification": true,
+    "refused_estimates_bytes": [
+      1073741824,
+      536870912,
+      268435456
+    ],
+    "status": "not_run_storage_refusal"
+  },
+  "native_backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "original_manifest_count": 24,
+  "paired_observation": {
+    "candidate_water": false,
+    "candidate_y": 167,
+    "control_water": true,
+    "control_y": 166,
+    "source_priorities_candidate": [
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "source_priorities_control": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "x": 86
+  },
+  "scene_receipt": {
+    "artifacts": [
+      {
+        "path": "affected-tests.log",
+        "role": "authored-test-log",
+        "sha256": "b11f3f6620c6478bf98242bb3e7e1fe05aac01a7bbb04a26fc1403ee43bd2cde",
+        "visibility": "public"
+      },
+      {
+        "path": "west-exit.png",
+        "role": "candidate-167-01-frame",
+        "sha256": "3c70aefd8e69c07254e68422f54c14427b328f4adceba0b6892b176a0f72ba2f",
+        "visibility": "public"
+      },
+      {
+        "path": "adjacent-row.png",
+        "role": "control-166-01-frame",
+        "sha256": "299a99d9e6a410ed2102169a438cf9763d7639d560dc80f188b7e41a7007fc39",
+        "visibility": "public"
+      },
+      {
+        "role": "candidate-167-01-full-journal",
+        "sha256": "c770d2feebee4f34af30d8a402132385b3269dfb9413c434974d98fc73d4d3d7",
+        "visibility": "private"
+      },
+      {
+        "role": "candidate-167-01-native-capture",
+        "sha256": "2f655203168afdbb63918ebc8bf3d86435bac2efc2c80869b4a8d3afda4e5b05",
+        "visibility": "private"
+      },
+      {
+        "role": "candidate-167-01-final-native-report",
+        "sha256": "d84a94a5c5e207583fd23e70c85bb04528bd4044ab5fe77f88141fc6caac1653",
+        "visibility": "private"
+      },
+      {
+        "role": "control-166-01-full-journal",
+        "sha256": "94f371e2b945e49d18b9942f7d6af52e822caf009b569dbd144f32cf146fba5c",
+        "visibility": "private"
+      },
+      {
+        "role": "control-166-01-native-capture",
+        "sha256": "426036555acb57bbc4cc2e6dc9b51af0127af0f522902b8ace90096965069c95",
+        "visibility": "private"
+      },
+      {
+        "role": "control-166-01-final-native-report",
+        "sha256": "237ff2a2898b098a1be0803d9d6088e7f684244fdd893d0a479aa7295e077e85",
+        "visibility": "private"
+      },
+      {
+        "role": "generated-player-scene",
+        "sha256": "dc383d97d3b394a2435bd7b13a8e4a146bbd28b356bf076271b114dfb8a6bf47",
+        "visibility": "private"
+      }
+    ],
+    "complete": true,
+    "edges": [
+      {
+        "after": "row-start",
+        "before": "east-bank",
+        "complete": true,
+        "program": "take-bottom-row"
+      },
+      {
+        "after": "west-exit",
+        "before": "row-start",
+        "complete": true,
+        "program": "cross-bottom"
+      }
+    ],
+    "format": "fdisbull-scene-receipt-1",
+    "issues": [],
+    "missing": [],
+    "observations": [
+      {
+        "frame": {
+          "metadata": {
+            "captured_ticks": 70344,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 4198,
+            "height": 200,
+            "mode_id": 5,
+            "screenshot_hooks": {
+              "bypassed": "explicit"
+            },
+            "session_id": "ses-1",
+            "sha256": "a57521cf66a860c3fdd0d6301c68440f6650ac050b00f92a86a5dbe499f92b69",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 1091,
+            "width": 320
+          },
+          "sha256": "a57521cf66a860c3fdd0d6301c68440f6650ac050b00f92a86a5dbe499f92b69"
+        },
+        "frame_scope": "last completed guest frame; freshness relative to this read is not asserted",
+        "guest_ms": 54792,
+        "id": "bridge-entry",
+        "input_count": 34,
+        "message_count": 0,
+        "state": {
+          "bridge_active": false,
+          "control_direction": 0,
+          "dead": false,
+          "direction": 0,
+          "drawn": true,
+          "edge": 0,
+          "ego_view": 0,
+          "ego_width": 6,
+          "ignore_blocks": true,
+          "in_water": false,
+          "initializing": false,
+          "room": 39,
+          "score": 0,
+          "step_size": 1,
+          "swimming": 0,
+          "troll_paid": false,
+          "troll_removed": false,
+          "x": 113,
+          "y": 46
+        }
+      },
+      {
+        "frame": {
+          "metadata": {
+            "captured_ticks": 87323,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 5214,
+            "height": 200,
+            "mode_id": 5,
+            "screenshot_hooks": {
+              "bypassed": "explicit"
+            },
+            "session_id": "ses-1",
+            "sha256": "598dde22396fe3be6842422ce1bc08f186bd59bab93d43dd953976f5aae306af",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 1333,
+            "width": 320
+          },
+          "sha256": "598dde22396fe3be6842422ce1bc08f186bd59bab93d43dd953976f5aae306af"
+        },
+        "frame_scope": "last completed guest frame; freshness relative to this read is not asserted",
+        "guest_ms": 71763,
+        "id": "east-bank",
+        "input_count": 50,
+        "message_count": 0,
+        "state": {
+          "bridge_active": false,
+          "control_direction": 0,
+          "dead": false,
+          "direction": 0,
+          "drawn": true,
+          "edge": 0,
+          "ego_view": 0,
+          "ego_width": 6,
+          "ignore_blocks": true,
+          "in_water": false,
+          "initializing": false,
+          "room": 39,
+          "score": 0,
+          "step_size": 1,
+          "swimming": 0,
+          "troll_paid": false,
+          "troll_removed": false,
+          "x": 110,
+          "y": 166
+        }
+      },
+      {
+        "frame": {
+          "metadata": {
+            "captured_ticks": 87595,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 5231,
+            "height": 200,
+            "mode_id": 5,
+            "screenshot_hooks": {
+              "bypassed": "explicit"
+            },
+            "session_id": "ses-1",
+            "sha256": "98d4b5836763d9ad7679a6ea08adec7374c774d3d58a3e81237c75574fff969a",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 1338,
+            "width": 320
+          },
+          "sha256": "98d4b5836763d9ad7679a6ea08adec7374c774d3d58a3e81237c75574fff969a"
+        },
+        "frame_scope": "last completed guest frame; freshness relative to this read is not asserted",
+        "guest_ms": 72034,
+        "id": "row-start",
+        "input_count": 52,
+        "message_count": 0,
+        "state": {
+          "bridge_active": false,
+          "control_direction": 0,
+          "dead": false,
+          "direction": 0,
+          "drawn": true,
+          "edge": 0,
+          "ego_view": 0,
+          "ego_width": 6,
+          "ignore_blocks": true,
+          "in_water": false,
+          "initializing": false,
+          "room": 39,
+          "score": 0,
+          "step_size": 1,
+          "swimming": 0,
+          "troll_paid": false,
+          "troll_removed": false,
+          "x": 110,
+          "y": 167
+        }
+      },
+      {
+        "frame": {
+          "metadata": {
+            "captured_ticks": 90662,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 5414,
+            "height": 200,
+            "mode_id": 5,
+            "screenshot_hooks": {
+              "bypassed": "explicit"
+            },
+            "session_id": "ses-1",
+            "sha256": "4499f3e4810e96063f6bf80f9fb084c636c28444dba7602ca93999b8a8d594e2",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 1423,
+            "width": 320
+          },
+          "sha256": "4499f3e4810e96063f6bf80f9fb084c636c28444dba7602ca93999b8a8d594e2"
+        },
+        "frame_scope": "last completed guest frame; freshness relative to this read is not asserted",
+        "guest_ms": 75105,
+        "id": "over-water",
+        "input_count": 53,
+        "message_count": 0,
+        "state": {
+          "bridge_active": false,
+          "control_direction": 7,
+          "dead": false,
+          "direction": 7,
+          "drawn": true,
+          "edge": 0,
+          "ego_view": 0,
+          "ego_width": 6,
+          "ignore_blocks": true,
+          "in_water": false,
+          "initializing": false,
+          "room": 39,
+          "score": 0,
+          "step_size": 1,
+          "swimming": 0,
+          "troll_paid": false,
+          "troll_removed": false,
+          "x": 80,
+          "y": 167
+        }
+      },
+      {
+        "frame": {
+          "metadata": {
+            "captured_ticks": 99694,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 5935,
+            "height": 200,
+            "mode_id": 5,
+            "screenshot_hooks": {
+              "bypassed": "explicit"
+            },
+            "session_id": "ses-1",
+            "sha256": "3c70aefd8e69c07254e68422f54c14427b328f4adceba0b6892b176a0f72ba2f",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 1687,
+            "width": 320
+          },
+          "sha256": "3c70aefd8e69c07254e68422f54c14427b328f4adceba0b6892b176a0f72ba2f"
+        },
+        "frame_scope": "last completed guest frame; freshness relative to this read is not asserted",
+        "guest_ms": 84136,
+        "id": "west-exit",
+        "input_count": 54,
+        "message_count": 1,
+        "state": {
+          "bridge_active": false,
+          "control_direction": 0,
+          "dead": false,
+          "direction": 0,
+          "drawn": true,
+          "edge": 0,
+          "ego_view": 0,
+          "ego_width": 6,
+          "ignore_blocks": true,
+          "in_water": false,
+          "initializing": false,
+          "room": 40,
+          "score": 0,
+          "step_size": 1,
+          "swimming": 0,
+          "troll_paid": false,
+          "troll_removed": false,
+          "x": 151,
+          "y": 167
+        }
+      }
+    ],
+    "runtime": {
+      "fresh_game": true,
+      "guest_elapsed_ms": 84136,
+      "interventions": [],
+      "policy": "physical",
+      "session_id": "ses-1"
+    },
+    "scope": "Supplied records and byte hashes only; no native execution authentication.",
+    "source": {
+      "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+      "resources": {
+        "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+        "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+        "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+        "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db",
+        "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+        "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+        "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+        "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+        "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+        "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+        "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+        "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+        "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8"
+      }
+    }
+  },
+  "source_sha256": {
+    "examples/agi/build_bottom_scene.py": "b2fa6d635407d0466a6403722bbec27cb3e6846ba5ec932f1f2b2c2abcccc4bc",
+    "examples/agi/build_clip_scene.py": "1fa5bba2947c0d019ad9e8c51eb410333ad029bd86931e7d45df83230b2a5beb",
+    "examples/agi/verify_bridge_clip.py": "0d7b11a37ceae5ec1fa57a2f3562991f084d922a4d7267ada7df74f1309d0df3",
+    "examples/agi/verify_goat.py": "801b241080be7402042b82c2329b75cdf6708595b6ed31acc684856162453935",
+    "examples/agi/verify_leprechaun.py": "cff8190fa42729433ee3ff0887850324b9e62b7bb7104c8f232873d09204c72f",
+    "src/fdisbull/native_controller.py": "530e75cbb1ed1fc19b6183c2c286da9081c8947e39efc6c6f0d1652f68633b18",
+    "src/fdisbull/scene_receipts.py": "b6f6bf8cf6dff7cacfe83f96e67fef400a1442dfc499e930095abbd5ae0c2a82",
+    "tests/test_agi_goat_route.py": "31f40dde035d4defdd210005aa3b5fb2899677fe35fe804fb829ded54bda3899",
+    "tests/test_agi_leprechaun_route.py": "b609c3f811ce03d5bd9d262c173919e969e5b3d6ccccd134e586518899a08b55",
+    "tests/test_agi_mushroom_route.py": "0babe8e304d1f61cc2665bd2e34df1d5cb361892666ceeec8b78a4ebd2a09edc",
+    "tests/test_native_controller.py": "e4431265370a124ca49bbeb5d718ddb6946d6776e435261204cf02b2432194d8",
+    "tests/test_scene_receipts.py": "22e927b0661d65a62e8ea090a97f02abdbc0114bfd1c7e583a837299583eac5b"
+  },
+  "storage": {
+    "interrupted_CACHE_attempt": {
+      "process_sha256": "b11cff63dcf5c2e85d93b8dcf9dd6acf807fdf9436f61a4467b87c2aa0d8ef46",
+      "report_sha256": "9dd81b1ab27428258293228dd2201aaff2fbfd416ad8188c9580c7b049d1f7c7",
+      "scope": "Root incorrectly chained native launch after a rejected admission; interrupted and retained, not qualification.",
+      "supervisor_exit": 1,
+      "timed_out": false
+    },
+    "irreversible_cleanup": false,
+    "native_workspace": "Existing CODEX private verification workspace,20GB minimum after user go-ahead;800MiB checks admitted before both fresh phases."
+  },
+  "trials": {
+    "candidate-167-01": {
+      "backend_unchanged": true,
+      "blocked_reason": null,
+      "copied_files_unchanged": true,
+      "fresh_ordinary_input": true,
+      "frozen_dependencies_unchanged": 184,
+      "guest_code_or_coordinate_edits": false,
+      "guest_elapsed_ms": 84136,
+      "input_count": 54,
+      "native_state_load": false,
+      "outcome": "bottom-row-west-exit",
+      "source_files_unchanged": true,
+      "supervisor_sha256": "e371f6efef65eeb8f144f7adecf9be4d574599da10f2c376b1a6e0f7d83702e8"
+    },
+    "control-166-01": {
+      "backend_unchanged": true,
+      "blocked_reason": null,
+      "copied_files_unchanged": true,
+      "fresh_ordinary_input": true,
+      "frozen_dependencies_unchanged": 184,
+      "guest_code_or_coordinate_edits": false,
+      "guest_elapsed_ms": 74070,
+      "input_count": 51,
+      "native_state_load": false,
+      "outcome": "adjacent-row-water-observed",
+      "source_files_unchanged": true,
+      "supervisor_sha256": "d8a1815be4f1fec34d6a7d2d2c54973fa7ed2d73437484d4093efac917bb8815"
+    }
+  },
+  "z_scene": {
+    "byte_identical_to_MR33": true,
+    "compatibility_scope": "Reuse prior installed0.29 direct/process qualification for the byte-identical player payload; rebuilt receipt and native sessions are fresh.",
+    "fresh_player_run": false,
+    "sha256": "dc383d97d3b394a2435bd7b13a8e4a146bbd28b356bf076271b114dfb8a6bf47",
+    "shared_receipt_complete": true,
+    "shared_receipt_edges": 2
+  }
+}

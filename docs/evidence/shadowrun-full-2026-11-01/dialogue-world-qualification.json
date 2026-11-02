@@ -1,0 +1,83 @@
+{
+  "format": "fdisbull-shadowrun-dialogue-world-qualification-1",
+  "status": "passed",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "tracked_source_sha256": {
+    "scripts/check_shadowrun_dialogue_extra.py": "b911ddd2fde3ad2319841be27ab80bf60ef3c46090790a646c72f647350e4439",
+    "scripts/probe_genesis_function.py": "499596176217180cc748ee5cd941e4602dfaa36819ac84316c22d752b7539863",
+    "src/fdisbull/shadowrun_world.py": "1c1d95babbe1f60428a1557fdb200ea02b03b94fa0dff84f2ec6905073169f43",
+    "src/fdisbull/shadowrun_dialogue.py": "015bc96b9ed19fbf4a62e336b91057a294211745666f8faad0c0384790078d84",
+    "src/fdisbull/game_sources/shadowrun_dialogue.c": "9f11b5eb9e540b88d1c497d331aa9a51495a203e4d9273a78dc6e4f747ddf427",
+    "src/fdisbull/game_il.py": "05dafe6347f890c221bfb897155919cd7e6e7d5c045e7d88190c7662b24d990b"
+  },
+  "native_boundaries": {
+    "source-prompts": {
+      "cases": 16,
+      "contract_sha256": "d1fba482527a9df0b892795641d40739959c3d6d9a34243ac34629127a6f6f66",
+      "trace_sha256": "27edb03288502fbc8a097dc40f7d5abe48307f4f2ef1eca4fed433dc547ad465",
+      "instructions_executed": 116
+    },
+    "three": {
+      "cases": 8,
+      "contract_sha256": "495bba1f889a21821257b2b10fa5fec4b30fdc538bc391d96f9cb0a1e2e9c5a9",
+      "trace_sha256": "1467cfb57ecee8c08ba28e8b4b8e73b87c00d96e12312c67b59770620a61434e",
+      "instructions_executed": 68
+    },
+    "terminal": {
+      "cases": 3,
+      "contract_sha256": "e806cd356c3478078a282369e68730d17b902ab993295c3a11755b865835210b",
+      "trace_sha256": "3e4e08ffd21fa3e2258c443f714402829a0665abbcb6da410767346015cb9955",
+      "instructions_executed": 9
+    },
+    "payment": {
+      "cases": 6,
+      "contract_sha256": "4d179dbe045eb6c4e20289c0ee06d4c336f7aa7ee7d34feb27709479654761b0",
+      "trace_sha256": "bf30a54c8b3339cf47738c3333cdd23999a70f0d60077b24f26f8cb1491cd857",
+      "instructions_executed": 42
+    },
+    "stream": {
+      "cases": 1,
+      "contract_sha256": "8ea8c880f8e4b15eede8d40dd1f9f917378fbb4b3484fa47843a0aff513f1f00",
+      "trace_sha256": "ebf5507e2956b235e8367f3e7ff985c409b82f5407cbeade6109f9393e45d5aa",
+      "instructions_executed": 69
+    },
+    "scene0-stream": {
+      "cases": 1,
+      "contract_sha256": "d99eb6aca57a86f488ffaf7b40cd6e7664e4e0e95c63e69e466ae5084e581d1a",
+      "trace_sha256": "602a410a36374088c647b902e17af06320e9d5b83cb036b099bd011e32b3729a",
+      "instructions_executed": 71469
+    },
+    "scene2-stream": {
+      "cases": 1,
+      "contract_sha256": "a6c35b32c3918d244d80516d14936376d8d46bc179952138931fa567a19eadb0",
+      "trace_sha256": "56d352f9267f27af4e8c62fbc6c682a5d6d4a1535a9cc76699ab736edd4520d6",
+      "instructions_executed": 112567
+    },
+    "flag-30": {
+      "cases": 4,
+      "contract_sha256": "7ebe0b568f53cc96bf7cc1ffdcad179c1ec8b6d6c9ee81644c2ee049a5d0512f",
+      "trace_sha256": "e3dcdf7072eae50de29d38cb8d4c39f595b0aee2e7af6186fe3adcd7473d62ea",
+      "instructions_executed": 16
+    },
+    "flag-31": {
+      "cases": 4,
+      "contract_sha256": "eec946e2aad2ecafedb8615bc8a62c98e9397957b44c59130f38159e449a31d7",
+      "trace_sha256": "22c13bfcada4d3ed7531c9a61702e5691274c16b24fc7bde5be1d0849cdacb46",
+      "instructions_executed": 16
+    }
+  },
+  "streams": {
+    "0": {
+      "decoded_bytes": 13568,
+      "decoded_sha256": "91ca4e10b596213993d5df6bcb0dab38acacea05d239479821f6a0cf0ce6993d",
+      "all_bytes_match": true
+    },
+    "2": {
+      "decoded_bytes": 20288,
+      "decoded_sha256": "96dfec04a6a4313ea06c40b47e5597255bce89effcdb1f1b482789dd181b971c",
+      "all_bytes_match": true
+    }
+  },
+  "scope": "controlled original-core entry; synthetic three-choice and terminal, payment and flag leaves, source stream decoding; no ordinary gameplay or full-game parity"
+}

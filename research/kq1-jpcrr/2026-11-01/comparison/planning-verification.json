@@ -1,0 +1,12 @@
+{
+  "format": "kq1-public-controller-planning-verification-1",
+  "guest_launches": 0,
+  "new_benchmark_output_directories": 0,
+  "both_cli_help_passed": true,
+  "both_valid_private_input_plans_passed": true,
+  "derivative_guests_not_executed": true,
+  "controller_sha256": {
+    "jpcrr-loop-benchmark.py": "02f81e2c2134244f5fa9bb2c5076b68bdbd4a2771be6e2e6d88b227f115ba26b",
+    "fdisbull-loop-benchmark.py": "d0569ee2d8bcaca4e0f97cc56f8ba1f48687192d57d86963e55dca31b3b0a933"
+  }
+}

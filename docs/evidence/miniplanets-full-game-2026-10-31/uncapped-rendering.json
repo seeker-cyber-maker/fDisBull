@@ -1,0 +1,345 @@
+{
+  "format": "fdisbull-miniplanets-uncapped-rendering-1",
+  "date": "2026-10-31",
+  "status": "bounded-native-qualification-passed-with-route-dnf",
+  "previous_commit": "f34f6ef06f8a9e708073d095499205345d3950a6",
+  "previous_cartridge_sha256": "265f3f1ea51baf46cc5e49bfb647348370d13ca929ac6a7c6def19a79587da35",
+  "cartridge_sha256": "8da56a19cf65be2aae46a913584d72776df0da6819d9784ec577e3ca75c012e6",
+  "source_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "uil_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "adapter_sources": {
+    "miniplanets_audio_nes.c": "36501b380fddd1049a109c10767ea8cd7ad9baf4e63c5f8faa45c1a6a20e7387",
+    "nes_globe_renderer.c": "488ada70cec7312387d1294658f101363b0656b398de360f1279260f093f3e21",
+    "nes_game_platform.c": "37b3106a9b7bfc7687ab010873474bb96c70a7ffa2fa75555ba016efa709d94d",
+    "nes_game_start.s": "8bc7358d67258e5346a1aaf8069d3a611be5bc74ebd3d5d56366ea1c16c482d3",
+    "miniplanets_audio_fast.s": "cdcbd917c8d55fac4817fc80339183045716b32a950c82c70eae8f69d4e1c9f6",
+    "nes_globe_fast.s": "d9ae3b5d9b9653a7a4d38785dabad21b765b666cdab585802af1ac1a3c120e08",
+    "nes_display_fast.s": "bf87e60e2997c1f06a72c2caf7909e3c97d5cc0e5b3437f41add705187dd8ead",
+    "nes_game_fast.s": "db0d46010adb701c91bb91a59e72b2a0469c23fab6393bcb28678d940d426500",
+    "nes_audio_clock.c": "cecd691bc67a4e853a27c5da42e579be6c229936d620f996bdbb846ce25d20a8"
+  },
+  "toolchain": {
+    "cc65": {
+      "sha256": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559"
+    },
+    "ca65": {
+      "sha256": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7"
+    },
+    "ld65": {
+      "sha256": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+    },
+    "od65": {
+      "sha256": "08b7168660b527289fd72a647c5c8e8b4c15e69b102d8044a5dc4aabc474a816"
+    }
+  },
+  "runtime_resources": {
+    "nes.lib": {
+      "sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+      "length": 1533247,
+      "captured_path": "build/nes.lib"
+    }
+  },
+  "code_bank_bytes": [
+    7952,
+    5011,
+    6872,
+    5945
+  ],
+  "data_banks": 55,
+  "render_contract": {
+    "software_frame_rate_cap": false,
+    "minimum_logical_epoch_spacing": null,
+    "schedule": "After every completed game update, start drawing if the previous immutable upload has finished. No rendered_epoch test. Game updates remain physical-frame synchronized.",
+    "preserved_outputs": "Same terrain, palettes, overlays, OAM composition, controller and game-state contracts; cached output is exact within the reviewed profile.",
+    "upload_budget": "At most7 fixed <=16-byte jobs per NMI; full-dirty296-byte transfer remains4 data frames.",
+    "terrain_cache": "Full world/camera and conservative animation-mask keys; defer capture during movement; invalidate before different terrain; first-row restore only with known unchanged staging.",
+    "planner_certificate": "Per-NT cached-base bits plus exact pause overlay; any terrain miss invalidates both bits. Nonterrain/diagnostic views clear target bit, debug253 invalidates staging. HUD always compared."
+  },
+  "benchmark": {
+    "physical_frames": 3100,
+    "warmup_frames": 100,
+    "measured_intervals": 2999,
+    "core_fps": 60.099826520671044,
+    "time_basis": "emulated hardware time, not host wall throughput",
+    "assistance": "Same valid source-initialized stage and invulnerability; neutral controllers for four static-camera benchmarks.",
+    "scope": "Deterministic bounded workloads, with byte-neutral observer/control replay; no confidence interval or general all-level FPS claim.",
+    "swaps": "Coherent completed NT flips; not necessarily different pixels; separate from game update rate."
+  },
+  "performance": [
+    {
+      "stage": 0,
+      "previous_capped_game_hz": 41.18210853617172,
+      "previous_capped_complete_swaps_hz": 20.60107424583189,
+      "uncapped_game_hz": 49.05781104454909,
+      "uncapped_complete_swaps_hz": 29.759333905700732,
+      "previous_uncapped_whole_restore_game_hz": 46.51273669705818,
+      "previous_uncapped_whole_restore_swaps_hz": 25.490823385893155,
+      "coherent_flips_checked": 1485,
+      "violations": 0,
+      "buffer_or_active_nt_differences": 0,
+      "minimum_stack_s": 177,
+      "observer_neutral": true,
+      "inputs_unchanged": true
+    },
+    {
+      "stage": 40,
+      "previous_capped_game_hz": 27.59501871255886,
+      "previous_capped_complete_swaps_hz": 13.787489378533403,
+      "uncapped_game_hz": 29.017855552494723,
+      "uncapped_complete_swaps_hz": 28.396616932241038,
+      "previous_uncapped_whole_restore_game_hz": 25.591023163353427,
+      "previous_uncapped_whole_restore_swaps_hz": 25.009864454083846,
+      "coherent_flips_checked": 1417,
+      "violations": 0,
+      "buffer_or_active_nt_differences": 0,
+      "minimum_stack_s": 176,
+      "observer_neutral": true,
+      "inputs_unchanged": true
+    },
+    {
+      "stage": 43,
+      "previous_capped_game_hz": 33.32644598328641,
+      "previous_capped_complete_swaps_hz": 16.673242969389232,
+      "uncapped_game_hz": 41.0618688032194,
+      "uncapped_complete_swaps_hz": 32.244288386715475,
+      "previous_uncapped_whole_restore_game_hz": 34.78936273420638,
+      "previous_uncapped_whole_restore_swaps_hz": 28.657136353637743,
+      "coherent_flips_checked": 1609,
+      "violations": 0,
+      "buffer_or_active_nt_differences": 0,
+      "minimum_stack_s": 173,
+      "observer_neutral": true,
+      "inputs_unchanged": true
+    },
+    {
+      "stage": 44,
+      "previous_capped_game_hz": 25.87158254024219,
+      "previous_capped_complete_swaps_hz": 12.94581124786712,
+      "uncapped_game_hz": 28.09601759986022,
+      "uncapped_complete_swaps_hz": 26.292421605575328,
+      "previous_uncapped_whole_restore_game_hz": 24.72930507719509,
+      "previous_uncapped_whole_restore_swaps_hz": 23.106068682338684,
+      "coherent_flips_checked": 1312,
+      "violations": 0,
+      "buffer_or_active_nt_differences": 0,
+      "minimum_stack_s": 173,
+      "observer_neutral": true,
+      "inputs_unchanged": true
+    }
+  ],
+  "movement": {
+    "physical_frames": 3000,
+    "ppu_data_writes": 104044,
+    "coherent_flips": 744,
+    "game_hz": 43.53557629989969,
+    "complete_swap_hz": 15.424032746250175,
+    "latest_write_dot": 6533.0,
+    "vblank_exclusive_deadline_dot": 7161,
+    "timing_violations": 0,
+    "inputs_unchanged": true,
+    "observer_neutrality": {
+      "audio.wav": true,
+      "state.bin": true,
+      "save_ram.bin": true,
+      "system_ram.bin": true,
+      "frame.png": true,
+      "ram_trace.json": true
+    },
+    "limits": "Assisted stage seed plus ordinary varied controller input and active audio; not a natural whole-game playthrough.",
+    "dot_origin": "FCEUmm frame boundary, not the beginning of vblank"
+  },
+  "accuracy": {
+    "original_genesis_common_cases": 2678,
+    "original_genesis_common_instructions": 146905,
+    "original_genesis_actor_cases": 1262,
+    "original_genesis_actor_instructions": 292870,
+    "original_hv_samples": 192,
+    "assisted_uil_flow_frames": 6044,
+    "native_complete_state_cases": 4822,
+    "native_complete_state_fields": 79,
+    "completed_state_and_controller_checks": 11599,
+    "projection_fields": 34,
+    "replayed_hv_words": 280,
+    "native_projection_pairs": 33282,
+    "native_terrain_cases": 40960,
+    "native_cache_cases_full_invalidation": 65536,
+    "native_cache_cases_honest_sequence": 65536,
+    "native_hint_planner_calls": 2236,
+    "atlas_same_mask_frame_pairs": 21504,
+    "wrong_zero_animation_mask_differences": 13824,
+    "coherent_static_camera_flips": 5823,
+    "matched_render_states_vs_f34": 229,
+    "matching_rule": "All616 game-state bytes and equal render/logic epoch; ready staging. Full plane/palette/attributes/projection cache/OAM count/selected OAM match.",
+    "feedback_goal_epoch": 896,
+    "feedback_goal_host_frame": 1194,
+    "feedback_next_stage_epoch": 1146,
+    "feedback_next_stage_host_frame": 1576,
+    "initial_feedback_tail_frames": 1500,
+    "audio_timing_feedback_tail_frames": 1524,
+    "extended_feedback_prefix": "All3077 original frames identical; append24 neutral frames for strict timing window. A separate1600-frame tail capture is retained but not counted again.",
+    "fixed_host_frame_route": "DNF retained"
+  },
+  "audio": {
+    "tracks": 32,
+    "mixed_case": 1,
+    "service_calls": 270752,
+    "completed_commands": 1161,
+    "ordered_apu_writes": 2579855,
+    "ordered_apu_sha256": "ef55062422ed09ff010efc93b069350cf632653e9e12030ea13e438ea0de4a57",
+    "tempo_sessions": 5,
+    "tempo_protocol": 2,
+    "source_target_hz": 118.89963993409864,
+    "source_measured_hz": [
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421
+    ],
+    "original_512_mean_cycles_before": 6763.46875,
+    "original_512_mean_cycles_after": 6254.46875,
+    "expanded_512_mean_cycles_before": 5469.58203125,
+    "expanded_512_mean_cycles_after": 4871.021484375,
+    "psg_cartesian_pairs": 32768,
+    "limits": "Simulator datasets are reported separately. Mapped ordered writes and normal cadence have separate checks; no Genesis-to-NES waveform identity."
+  },
+  "tests": {
+    "full_mac_passed": 2771,
+    "full_mac_skipped": 142,
+    "full_mac_failed": 3,
+    "full_mac_errors": 23,
+    "failure_ids_match_prior": true,
+    "scope": "Full suite remains not green; same26 Linux/ELF/filesystem fixture failures/errors. Final packaging guard additions checked separately."
+  },
+  "negative_controls": [
+    "Omitted staging invalidation produces stale-plane mismatch.",
+    "Ignoring target-valid certificate produces missing-job mismatch.",
+    "Wrong zero animation masks differ on13824 atlas pairs.",
+    "Old mapper race remains detected.",
+    "Too-short3077-frame feedback observation rejected by unchanged minimum3101-row timing rule."
+  ],
+  "limits": [
+    "No software render cap, but60Hz is not reached in these game benchmarks.",
+    "Only tested static stage43 exceeds30 complete swaps/s; movement is slower and reported separately.",
+    "Audio/IRQ still consumes a large part of native CPU time; full-dirty uploads remain multi-frame.",
+    "Finite source-bound comparisons, not whole-game formal equivalence, all-level natural completion, generic ROM translation or physical NES qualification.",
+    "Publication/readback evidence for the local and GitLab PRs is recorded separately after commit."
+  ],
+  "private_receipts": {
+    "stage0-candidate03-partial/display-receipt.json": {
+      "sha256": "2c58e459b7464aeca5b254f0f6e3885d90be6328f5e11eb79e7d1983caa67591"
+    },
+    "stage0-candidate02-hints-audio/display-receipt.json": {
+      "sha256": "cd3563fa6bc1b8c4fe1e2f9c24bbd72e643578af5e08b96d89f78f1c089fe996"
+    },
+    "stage0-candidate01-cache/display-receipt.json": {
+      "sha256": "5385803c3ab03ffcbeef0afb56e4946d6086f4c03a3bd76538d5b65ea7a94c02"
+    },
+    "stage40-candidate03-partial/display-receipt.json": {
+      "sha256": "0df01ffdf5718df9a974d077472cb706ad1f2a80bd45eeccc5c339fb6170408f"
+    },
+    "stage40-candidate02-hints-audio/display-receipt.json": {
+      "sha256": "dea1d1825e339a3d319c10b7a2896d6c524271824629dc9f61559dd70ec3e035"
+    },
+    "stage40-candidate01-cache/display-receipt.json": {
+      "sha256": "5ea3276436e4915c58b61a04a87130f8f5893930c99080d9e17e7a92a1cc437d"
+    },
+    "stage43-candidate03-partial/display-receipt.json": {
+      "sha256": "0248eac0cfe6e6ce46323204b09e710fbcf4dfed0563ae216e7cade0f9e99afd"
+    },
+    "stage43-candidate02-hints-audio/display-receipt.json": {
+      "sha256": "63ba0b4ef538e459d6dc40c88c5b865bd8b4cc959a691d30007f76ff636466ab"
+    },
+    "stage43-candidate01-cache/display-receipt.json": {
+      "sha256": "b9f864999fcfac090a1a4578cf7f563445997fa4833b67b5190aaa4bff850732"
+    },
+    "stage44-candidate03-partial/display-receipt.json": {
+      "sha256": "f6e2fe22e255c526a2881fa6fd871cf6a6b1acff5383c9381e7082ab6bd1063e"
+    },
+    "stage44-candidate02-hints-audio/display-receipt.json": {
+      "sha256": "516e2c239dbee02246c7227d4d56b45a5ec4f2283c4618efc29652cdd453c6bb"
+    },
+    "stage44-candidate01-cache/display-receipt.json": {
+      "sha256": "3067e9ff2754ace1fca10aab12e0002dcbd1a34ebaef77a482a54f8afa2005e6"
+    },
+    "candidate-03-partial/manifest.json": {
+      "sha256": "21f785798845805d7b3ad586585afb4e09978f87617699fbb7935f8eb706a724"
+    },
+    "native-final-03/summary.json": {
+      "sha256": "e3f54a2d74cbd284061803e753993bbc6a895b22bfe615f5a9c8573c48f119d1"
+    },
+    "audio-native-03/receipt.json": {
+      "sha256": "cee914705f5615a5714f3ee01c6494d87b501e9b52c8bf63c770c72caa2e9dd0"
+    },
+    "projection-native-03/receipt.json": {
+      "sha256": "e6b7b8253974a973012afe2ef19070f7fa3e1e8b53f6995b1d152096559ae68b"
+    },
+    "timing-native-03/summary.json": {
+      "sha256": "004b444d26ec5a754be364378158a24ff92765f18e34dd2cffe0d486dfa5ed36"
+    },
+    "timing-native-03-r2/summary.json": {
+      "sha256": "1f92713eaa062db5672c398c018e658325f3dfc6c979138745b25f07b2e7ad61"
+    },
+    "genesis/input-hashes.json": {
+      "sha256": "6d94af7f2a382903cedd95ddbd4deef504a8fbfcbe5fbc121215ab19be632091"
+    },
+    "genesis/common-native/summary.json": {
+      "sha256": "86c7721efde0785be28187f071790049b366ded9b1d00f319f44fa8c4dfc600d"
+    },
+    "genesis/actors/summary.json": {
+      "sha256": "97d73a836e952296c38e93b1208f7562d223f73411f9d6cf875a91c4f3c9afad"
+    },
+    "genesis/full-flow/summary.json": {
+      "sha256": "ba2b468aff97a6f7f58272ba121ce1ef7e6bf6778a920e359801384be87c9c7c"
+    },
+    "candidate03-partial-movement/display-receipt.json": {
+      "sha256": "72ac693445330f647a0e17baf8e0c0024f24a2995b4d9bd09c102850402a197d"
+    },
+    "candidate03-partial-stress/stress-receipt.json": {
+      "sha256": "5829eed88f60945efef9d048cac1394d5e711fae090789e3b05a7f19ce95ccb7"
+    },
+    "partial03-to-f34-render-match/receipt.json": {
+      "sha256": "4e1c1ea437bedaf8137f813a73cf5a9e8e32cea331e3ffd23143eb3a28c51bce"
+    },
+    "cache-04/receipt.json": {
+      "sha256": "5eaba98353c99deb06d09345b398c2a84ccf4ab40a9986b9e6bc8dc5bc650ef6"
+    },
+    "cache-sequence-01/receipt.json": {
+      "sha256": "cb4e6294dbfc2c558bfc01372441af64642d36970dbd77ea894d3ceb886f66d5"
+    },
+    "cache-sequence-neg-02/receipt.json": {
+      "sha256": "596764e7faa89f5db18d99e5f95c11f25c047e439bfe81008ee213ee4fa1d625"
+    },
+    "hints-01/receipt.json": {
+      "sha256": "63b7f71e7b7683499f64a5f9ff9d9a53b86470c2589f46964f012244941a105f"
+    },
+    "review-planner-01/receipt.json": {
+      "sha256": "4eac105398db4c77a3bf09c2650b892007db0640b9f3a6bcb9d0b3aab991e3d2"
+    },
+    "planner-cycle-bench/receipt.json": {
+      "sha256": "b186b8f57ad4b0ac9f54f2248f824d1622ec2d4e369848f8c1fb17ad43842eed"
+    },
+    "atlas-mask-proof.json": {
+      "sha256": "0a542ca63aad035beb9c6203d2e64e92ef406bf66c09d8b37881013fc5f59717"
+    },
+    "audio-opt/optimization-summary.json": {
+      "sha256": "8898557114845480209e5b51440a9bec6161c661b5bd9f9b410f424badec285c"
+    },
+    "profile-comparison-balanced-uncapped03.json": {
+      "sha256": "93079fe746c79dbae07758166d09ab8ea408b4dd5d3a5ddb9f5a236681ce2e9e"
+    },
+    "profile-candidate03-partial-stage0/profile-receipt.json": {
+      "sha256": "83baee3c2c6ee365dbc49e129ca5d8c1320ea5173f046e765ceb111ac7b4115d"
+    },
+    "profile-candidate03-partial-stage44/profile-receipt.json": {
+      "sha256": "924e56a2c68424b9551335c66fa85bb80c05271516d02e2be3c638b98cc0f669"
+    },
+    "mapper-final-03/receipt.json": {
+      "sha256": "995507cbccf814efd045c55f1ba66f881618f79301573d16e515fb4c10ffe6b1"
+    },
+    "pytest-full-03.log": {
+      "sha256": "8c197fec2dc3e57db0bf8319cec5e942a2725e66dc9becd60593a6b7c4c038d6"
+    }
+  }
+}

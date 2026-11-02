@@ -1,0 +1,158 @@
+{
+  "format": "fdisbull-private-target-intake-1",
+  "status": "accepted",
+  "date": "2026-10-31",
+  "target": "fixture-snake",
+  "title": "Minimal Snake v1",
+  "provenance": "newly authored known-source fixture, CC0-1.0; not a commercial game or recovered source",
+  "program": {
+    "path": "targets/fixture-snake/SNAKE.EXE",
+    "bytes": 3851,
+    "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be"
+  },
+  "platform": {
+    "format": "DOS MZ",
+    "cpu": "8086 real mode",
+    "graphics": "VGA mode 13h, 320x200 indexed",
+    "keyboard": "BIOS INT16h arrows/WASD/pause/step/reset/quit",
+    "mouse": "INT33h polling and left-press edges",
+    "clock": "BIOS INT1Ah, four ticks per automatic step"
+  },
+  "build": {
+    "canonical": {
+      "path": "analysis/snake-intake-2026-10-31/build-04/build.json",
+      "bytes": 1942,
+      "sha256": "2f34e7cb27bc232cd127c0dacc785134d05056e816968b691a52a4e0ccbb6c77"
+    },
+    "repeated": {
+      "path": "analysis/snake-intake-2026-10-31/build-05/build.json",
+      "bytes": 1942,
+      "sha256": "c251a0cd6315860f0d96a819bf5c582c7c1a7ba9ada3b74bb76554f6a1dffcaf"
+    },
+    "same_source_and_map": true,
+    "same_executable_bytes": true,
+    "executed_binary_identical_to_canonical": true,
+    "source": {
+      "path": "sources/snake-fixture-v1/oracle/SNAKE.ASM",
+      "bytes": 17810,
+      "sha256": "64649c533e4943a15f433c79ac871ed69c3f505ed55984e3d12148669159662e"
+    },
+    "source_license": "CC0-1.0"
+  },
+  "verification": {
+    "pure": {
+      "path": "analysis/snake-intake-2026-10-31/pure-04.json",
+      "bytes": 2574,
+      "sha256": "a0ade427ebdcef724def8cb795200dc7b4a8fcbd9c5932bf60a77ea52b974568"
+    },
+    "pure_cases": 17,
+    "native": {
+      "path": "analysis/snake-intake-2026-10-31/native-05.json",
+      "bytes": 25099,
+      "sha256": "93973017a4c23f5e0f1f13eaaab1608d82596e94d6f9fabecad1010f32957da1"
+    },
+    "native_checks": 35,
+    "original_unpatched": true,
+    "process_reaped": true,
+    "scope": "Original step + exercised VGA, keyboard, mouse, timer, reset and exit; no converted backing",
+    "static_native_queue_stable": true,
+    "advanced_pending": 18,
+    "static_issues": 257,
+    "complete_recovery": false,
+    "unknown": [
+      "Absent-mouse-driver fallback not runtime-tested",
+      "Whole-frame equality after conversion not tested",
+      "No converted Snake backings or UDL/UIL recovery yet"
+    ]
+  },
+  "inventory": {
+    "before_programs": 184,
+    "before_targets": 37,
+    "after_programs": 185,
+    "after_targets": 38,
+    "earlier_programs_unchanged": 184,
+    "only_new_program": "targets/fixture-snake/SNAKE.EXE",
+    "updater": {
+      "status": "rebuilt",
+      "archive": "${PRIVATE_PROJECTS}/fDisBull-targets-private/fDisBull-target-executables.zip",
+      "archive_bytes": 21420854,
+      "archive_sha256": "381fcaaf7d294d9bc5db6534b1194d06fb39aa40e850a2f85363f28a019ce85d",
+      "targets": 38,
+      "programs": 185,
+      "uncompressed_program_bytes": 42890662
+    },
+    "independent_check": {
+      "status": "verified",
+      "archive": "${PRIVATE_PROJECTS}/fDisBull-targets-private/fDisBull-target-executables.zip",
+      "archive_bytes": 21420854,
+      "archive_sha256": "381fcaaf7d294d9bc5db6534b1194d06fb39aa40e850a2f85363f28a019ce85d",
+      "targets": 38,
+      "programs": 185,
+      "uncompressed_program_bytes": 42890662
+    }
+  },
+  "privacy": {
+    "private_root": "${PRIVATE_PROJECTS}/fDisBull-targets-private",
+    "tracked_files": [],
+    "remotes": [],
+    "checked_paths_ignored": [
+      "targets/fixture-snake/SNAKE.EXE",
+      "sources/snake-fixture-v1/oracle/SNAKE.ASM",
+      "fDisBull-target-executables.zip"
+    ],
+    "game_bytes_not_added_to_tool_repository": true
+  },
+  "source_oracle_separate_from_learner": true,
+  "fixture_source_files": [
+    {
+      "path": "sources/snake-fixture-v1/LICENSE.txt",
+      "bytes": 464,
+      "sha256": "59a66f50f3e35ccdbc85c9dcd57823dee87030e1857133d3a9ba90aa58dc4ef6"
+    },
+    {
+      "path": "sources/snake-fixture-v1/README.md",
+      "bytes": 2537,
+      "sha256": "77d5c551ce48b1a345d0eebf3669df28e1710c1ff26e831409cea68c313e8978"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/BUILD-IDENTITY.json",
+      "bytes": 1942,
+      "sha256": "2f34e7cb27bc232cd127c0dacc785134d05056e816968b691a52a4e0ccbb6c77"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/CONTRACT.md",
+      "bytes": 4854,
+      "sha256": "4ecc15dc4047d85b01c444429ded6c4a9574ef2e5b5c543269fa0c8d3b9639ec"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/PORTING.md",
+      "bytes": 3902,
+      "sha256": "a01e5484e2e1143ab3c90f04110d2c35a5a9bd204b17cfba8dc065b7d87729b5"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/SNAKE.ASM",
+      "bytes": 17810,
+      "sha256": "64649c533e4943a15f433c79ac871ed69c3f505ed55984e3d12148669159662e"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/SNAKE.MAP",
+      "bytes": 1590,
+      "sha256": "1a72757fc86cf64043d987fde0d01c60bdeaa33c1e8a2c7bdab12e7e7572ec28"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/build.py",
+      "bytes": 3326,
+      "sha256": "fcdc5f2504c4920e13c2894796befe191268a4d35b342ed97fb3db144b995ed2"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/vectors.json",
+      "bytes": 50237,
+      "sha256": "d1ebb2b48a4da538643ab18d0cbf9c282eb203f38ff599078f274c36fb16cffa"
+    },
+    {
+      "path": "sources/snake-fixture-v1/oracle/verify.py",
+      "bytes": 13835,
+      "sha256": "f2ad2e3f0758fc495e0efe92902bf6ccb3c1dd39b6c786396e08e0972e77385e"
+    }
+  ]
+}

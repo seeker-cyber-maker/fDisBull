@@ -1,0 +1,34 @@
+{
+  "kind": "observation-index",
+  "screenshots": [
+    {
+      "attachment": "codex-clipboard-31d44bf9-4fa5-42b4-8701-34e69196f522.png",
+      "sha256": "c963f0aa4da4ec3b8f16a144fcaa7bf50732b6571dcae1474adc84ffb66ae5f9",
+      "kind": "user_supplied_static_screenshot",
+      "observation": "Original standard dashboard: metric cards, network addresses and active Prevent Sleep footer.",
+      "limit": "appearance only; no action delivery, completion, persistence or original handler trace"
+    },
+    {
+      "attachment": "codex-clipboard-77bb460a-f869-4587-a5f1-56ca221e93b2.png",
+      "sha256": "4187bd6148b2699bd2020bf0e8d2256e33b361d814693bf7b797efe549fb7b52",
+      "kind": "user_supplied_static_screenshot",
+      "observation": "Original Dashboard layout submenu with Simple, Developer, Battery, Custom and section checkmarks.",
+      "limit": "appearance only; no action delivery, completion, persistence or original handler trace"
+    },
+    {
+      "attachment": "codex-clipboard-0bde0e9c-cd0b-432c-8f4e-3b0577d7bd34.png",
+      "sha256": "4ed7e61dd670e98c3abdc244195e8f718b2b533cbaea2db025f02044e5f90d74",
+      "kind": "user_supplied_static_screenshot",
+      "observation": "Original Sleep Details with collapsed Additional options.",
+      "limit": "appearance only; no action delivery, completion, persistence or original handler trace"
+    },
+    {
+      "attachment": "codex-clipboard-099442b6-8aac-4299-9f2a-56cec89872d7.png",
+      "sha256": "e877b50d1908d493a580a21321657a8ec64edab63a8d3569374a1661808a5fe5",
+      "kind": "user_supplied_static_screenshot",
+      "observation": "Side-by-side memory details and main dashboards; visible decorations, labels and values.",
+      "limit": "appearance only; no action delivery, completion, persistence or original handler trace"
+    }
+  ],
+  "image_bytes_included": false
+}

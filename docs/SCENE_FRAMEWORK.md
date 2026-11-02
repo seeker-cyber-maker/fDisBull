@@ -10,6 +10,10 @@ For published packages, tag CI and copied qualification, see the
 Scenes are now project database objects. A versioned manifest drives both the
 headless overlay and named guest actions. Clean snapshots, object identities,
 context, earlier revisions and failed observations survive project restart.
+Optional [coordinate-domain metadata](SCENE_COORDINATE_DOMAINS.md) adds a stored,
+offline audit of object extents against explicit world, room, collision and
+viewport bounds. Expected off-screen margins retain designer notices. The audit
+does not grant action readiness or safe movement.
 This implementation supports native DOSBox RGB probes; the Wine/QEMU and IDA
 backends do not yet expose this scene runtime. No released 0.16.0 package is
 silently upgraded by these source changes.
@@ -102,8 +106,22 @@ guest execution if the condition is already true. Guest progress and wall time
 are separate budgets; measured guest time may overshoot a requested slice by
 the backend's scheduling granularity. A breakpoint, watchpoint, hook, guest error,
 missing capture, ambiguity or exhausted budget is an explicit stop/exception.
-The framework does not continue through debugger stops. Diagnostics and artifact
-export are separate from the guest-driving timeout.
+Debugger stops remain stops by default. A local passive collector can explicitly
+register its exact breakpoint IDs with
+`fdisbull.scenes.register_scene_observer(session, 'collector-name', breakpoint_ids=[...])`.
+Refresh that registration when its hooks change. Only a single matching observer
+hook with a matching native breakpoint ID, run, source version and runtime epoch
+can be consumed by a scene wait; a reply's observer name alone is insufficient.
+An empty ID list disables the registration. Restore/version changes invalidate it.
+This does not change raw debugger `run(stop_on_hook=True)` behavior. Intentional,
+unregistered, mixed, unknown and other stop kinds remain explicit stops.
+
+Consumed stops retain their full native replies in linked project scene
+observations. The wait reply includes a count and at most sixteen recent
+observation references. They retain measured guest progress and share the
+original wall/guest/poll limits, including the zero-progress guard; they do not
+repeat the scene input. Diagnostics and artifact export are separate from the
+guest-driving timeout.
 
 Scenes in the same `exclusive_group` (default `main`) cannot both match. Objects
 can declare an `exclusive_group` for mutually exclusive visible variants.

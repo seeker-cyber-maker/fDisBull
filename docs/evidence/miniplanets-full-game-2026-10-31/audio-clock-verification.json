@@ -1,0 +1,59 @@
+{
+  "format": "fdisbull-nes-audio-clock-check-1",
+  "source_sha256": "cecd691bc67a4e853a27c5da42e579be6c229936d620f996bdbb846ce25d20a8",
+  "passed": true,
+  "cases": [
+    "future-half",
+    "lost-half-catchup",
+    "no-retroactive-request",
+    "producer-phase2",
+    "fifo-coincident",
+    "fifo-head-blocks",
+    "counter-wrap",
+    "counter-wrap-nmi",
+    "nmi-during-tick",
+    "nmi-during-request",
+    "bounded-four",
+    "nmi-every-tick-bounded",
+    "debug-bypass",
+    "half-range-ambiguous",
+    "ring-wrap-fifo"
+  ],
+  "negative_controls": [
+    {
+      "variant": "future-half",
+      "exit_code": 1,
+      "observed_failure": "FAIL future-half: phase0 released the future second slot used2 ticks2 served10 due10"
+    },
+    {
+      "variant": "retroactive-stamp",
+      "exit_code": 1,
+      "observed_failure": "FAIL no-retroactive-request: new event stamped into old backlog used0 ticks0 served7 due10"
+    },
+    {
+      "variant": "stale-frontier",
+      "exit_code": 1,
+      "observed_failure": "FAIL nmi-during-tick: stale frontier after NMI crossing used1 ticks1 served10 due12"
+    },
+    {
+      "variant": "unbounded-five",
+      "exit_code": 1,
+      "observed_failure": "FAIL bounded-four: service budget exceeded or future request drained used5 ticks5 served5 due10"
+    }
+  ],
+  "toolchain_sha256": {
+    "cl65": "00530a81fb76e3a9ce992fd2c678790957f2870a3f234db9324cd25a9c09766a",
+    "cc65": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559",
+    "ca65": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7",
+    "ld65": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68",
+    "sim65": "ecfc71e317607555b3ff9d6195fda50a7bb0b56689e8e779e6faee63405b2d43"
+  },
+  "harness_sha256": "5dda95543635f9667a7e46144cfc4ddbe4d6086aa03d62759ec2e70841c9a0af",
+  "verifier_sha256": "f4c8f4b5878895b955f0ea03ec03a79bba92412a8baf28dc23753b944d4828f0",
+  "assumptions": [
+    "forward outstanding slot distance is less than32768",
+    "NMI is modeled as an indivisible FRAME/due/phase update",
+    "only audio_request/audio_tick are stubs"
+  ],
+  "claim": "actual production C compiled to6502 matches authored temporal/FIFO/wrap/budget scenarios; actual mapper IRQ timing and real-time throughput require a separate console gate"
+}

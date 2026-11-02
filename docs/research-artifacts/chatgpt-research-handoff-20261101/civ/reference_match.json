@@ -1,0 +1,43 @@
+{
+  "kind": "uploaded_original_vs_published_reference_hashes",
+  "repository": "sjmelia/civd",
+  "commit": "c425f7ba45411111c7c71d926e1ce8d4fa641571",
+  "manifest": "civ.sha256",
+  "checks": [
+    {
+      "path": "CIV.EXE",
+      "size": 304512,
+      "sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "expected_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "match": true
+    },
+    {
+      "path": "MISC.EXE",
+      "size": 980,
+      "sha256": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+      "expected_sha256": "95b18daf25bc51fdd1c989a1d992f3e46ed17a5b73952856f783f8f31766e7fc",
+      "match": true
+    },
+    {
+      "path": "MGRAPHIC.EXE",
+      "size": 7142,
+      "sha256": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+      "expected_sha256": "bf8907e955ed52d4a629945756010cedd0b00174e06d370b87e0edd6e92471c6",
+      "match": true
+    },
+    {
+      "path": "ASOUND.CVL",
+      "size": 37923,
+      "sha256": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+      "expected_sha256": "8a9b5b097bf7e5d3cf3202c065c58d7a3e2bf1bcf6a1adfebc021e407bec86f9",
+      "match": true
+    }
+  ],
+  "all_match": true,
+  "not_tested": [
+    "source rebuild",
+    "runtime behavior",
+    "TD0/IMA equality",
+    "original release authenticity beyond digest correspondence"
+  ]
+}

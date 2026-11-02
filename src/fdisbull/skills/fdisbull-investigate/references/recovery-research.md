@@ -241,8 +241,12 @@ investigator checkpoint.
 
 ## From code to semantics
 
-Trace a candidate from native bytes and offset/version through instruction
-meaning, data access and control flow; establish whether a guest interpreter
+For UIL scene extraction, start with the required scene elements and their missing
+evidence using [scene-recovery.md](scene-recovery.md). Follow the relevant source
+dependencies before expanding the investigation to unrelated code.
+
+Trace each needed candidate from native or guest bytes and offset/version through
+instruction meaning, data access and control flow; establish whether a guest interpreter
 loads and executes a resource before attributing its behavior to it. Bind
 source spans and assumptions to supported UDL lifts, propagate those into UIL
 state/effects and retain unmodeled edges. Verify a changed candidate only at

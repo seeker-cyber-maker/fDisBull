@@ -1,0 +1,131 @@
+{
+  "after_sha256": "daade69a05a30aa936d43b2a4ae84deb71c6250df516d854ef08eee6743d5405",
+  "before_sha256": "acad860c5ead7e1447e30c8db80c56ffbd75219f69548ccf96096d0765d3b5d4",
+  "changed_offsets": [
+    766
+  ],
+  "declared_written_offsets": [
+    766
+  ],
+  "effect": "Signed comparison changes from <= 2 to > 2.",
+  "id": "bar_detail_predicate",
+  "offset": 755,
+  "original_size": 17060,
+  "script": 43,
+  "selected_spans": [
+    {
+      "after_effects": {
+        "acc": [
+          "gt",
+          [
+            "snapshot",
+            "read_0"
+          ],
+          [
+            "integer",
+            2
+          ]
+        ],
+        "events": [
+          [
+            "read_selector",
+            [
+              "global_ref",
+              1
+            ],
+            291,
+            "read_0",
+            761
+          ]
+        ],
+        "prev": [
+          "integer",
+          2
+        ],
+        "stack": []
+      },
+      "after_instruction_count": 7,
+      "asm_edits": [
+        [
+          "replace",
+          6,
+          7,
+          6,
+          7
+        ]
+      ],
+      "before_effects": {
+        "acc": [
+          "le",
+          [
+            "snapshot",
+            "read_0"
+          ],
+          [
+            "integer",
+            2
+          ]
+        ],
+        "events": [
+          [
+            "read_selector",
+            [
+              "global_ref",
+              1
+            ],
+            291,
+            "read_0",
+            761
+          ]
+        ],
+        "prev": [
+          "integer",
+          2
+        ],
+        "stack": []
+      },
+      "before_instruction_count": 7,
+      "byte_changes": [
+        [
+          11,
+          36,
+          30
+        ]
+      ],
+      "size": 12,
+      "start": 755,
+      "unordered_instruction_bag_equal": false
+    }
+  ],
+  "signature": [
+    56,
+    null,
+    null,
+    118,
+    129,
+    1,
+    74,
+    4,
+    54,
+    53,
+    2,
+    36
+  ],
+  "slices": [
+    [
+      0,
+      12
+    ]
+  ],
+  "source_profile": "retrieved_master_excerpt",
+  "upstream_patch": "sq1vgaPatchBarPatronAnimation",
+  "upstream_signature": "sq1vgaSignatureBarPatronAnimation",
+  "writes": [
+    [
+      11,
+      [
+        30
+      ]
+    ]
+  ]
+}

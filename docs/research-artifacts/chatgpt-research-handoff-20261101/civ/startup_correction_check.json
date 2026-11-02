@@ -1,0 +1,22 @@
+{
+  "kind": "in_memory_inverse_of_documented_startup_correction",
+  "source_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+  "source_size": 304512,
+  "call_file_offset": "0x205fd",
+  "edited_offsets": [
+    "0x205fe",
+    "0x205ff",
+    "0x20600",
+    "0x20601"
+  ],
+  "source_crc32": "45f95f3b",
+  "inverse_crc32": "18631131",
+  "inverse_sha256": "b04fc0ba243d446047708b04142024391877c52dd21f13bdfee2020ec4579466",
+  "expected_raw_link_sha256": "b04fc0ba243d446047708b04142024391877c52dd21f13bdfee2020ec4579466",
+  "matches_published_raw_link_hash": true,
+  "bytes_changed": 4,
+  "source_files_modified": false,
+  "target_code_executed": false,
+  "is_source_rebuild": false,
+  "caveat": "Confirms relationship between uploaded final image and published raw-link reference; does not independently reproduce compiler output or explain historical intent."
+}

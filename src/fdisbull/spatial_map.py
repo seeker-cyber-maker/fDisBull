@@ -70,7 +70,9 @@ def _mask(shape, w, h):
 
 
 def validate_spatial_map(doc):
-    if not isinstance(doc, dict) or set(doc) != {'format','source','space','actor','known','safe','layers','evidence'} or doc['format'] != 'fdisbull-spatial-map-1':
+    required={'format','source','space','actor','known','safe','layers','evidence'}
+    if (not isinstance(doc, dict) or not required <= set(doc)
+            or set(doc)-required-{'coordinate_domains'} or doc['format'] != 'fdisbull-spatial-map-1'):
         raise ValueError('Invalid spatial map schema')
     if len(_encoded(doc)) > 1024*1024: raise ValueError('Spatial map exceeds one MiB')
     source = doc['source']
@@ -81,6 +83,13 @@ def validate_spatial_map(doc):
     if not isinstance(space, dict) or set(space) != {'name','width','height','unit'} or any(not isinstance(space[k], str) or not space[k] for k in ('name','unit')):
         raise ValueError('Invalid game coordinate space')
     w,h=space['width'],space['height']; dimensions(w,h)
+    if 'coordinate_domains' in doc:
+        from .scene_domains import validate_coordinate_domains
+        domains=validate_coordinate_domains(doc['coordinate_domains'])
+        if domains['space'] != {'name':space['name'],'unit':space['unit']}:
+            raise ValueError('Map coordinate domains must use the map coordinate space and unit')
+        if domains['bounds']['room'] not in (None,[0,0,w,h]):
+            raise ValueError('Map room bounds must match its declared dimensions')
     actor=doc['actor']
     if not isinstance(actor,dict) or set(actor) != {'width','height','anchor'}: raise ValueError('Invalid actor footprint')
     integer(actor['width'],1,w); integer(actor['height'],1,h); _point(actor['anchor'],actor['width'],actor['height'])

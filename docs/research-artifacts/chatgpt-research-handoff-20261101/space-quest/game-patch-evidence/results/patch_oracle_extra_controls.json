@@ -1,0 +1,57 @@
+[
+  {
+    "case": "timepod_cel",
+    "passed": true,
+    "test": "reject_wrong_result_outside_write_set"
+  },
+  {
+    "case": "timepod_cel",
+    "passed": true,
+    "test": "reject_wrong_result_inside_write_set"
+  },
+  {
+    "case": "generator_branch",
+    "passed": true,
+    "test": "reject_wrong_result_outside_write_set"
+  },
+  {
+    "case": "generator_branch",
+    "passed": true,
+    "test": "reject_wrong_result_inside_write_set"
+  },
+  {
+    "case": "id_card_counter",
+    "passed": true,
+    "test": "reject_wrong_result_outside_write_set"
+  },
+  {
+    "case": "id_card_counter",
+    "passed": true,
+    "test": "reject_wrong_result_inside_write_set"
+  },
+  {
+    "case": "id_card_counter",
+    "passed": true,
+    "test": "C_getter_evaluated_once_before_store"
+  },
+  {
+    "case": "bar_detail_predicate",
+    "passed": true,
+    "test": "reject_wrong_result_outside_write_set"
+  },
+  {
+    "case": "bar_detail_predicate",
+    "passed": true,
+    "test": "reject_wrong_result_inside_write_set"
+  },
+  {
+    "case": "orat_state_storage",
+    "passed": true,
+    "test": "reject_wrong_result_outside_write_set"
+  },
+  {
+    "case": "orat_state_storage",
+    "passed": true,
+    "test": "reject_wrong_result_inside_write_set"
+  }
+]

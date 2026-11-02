@@ -3,7 +3,7 @@ from .debugger import bounded
 
 KEYS = frozenset('abcdefghijklmnopqrstuvwxyz0123456789-=[];\',./\\`') | {
     'enter','escape','esc','tab','backspace','space','left','right','up','down',
-    'home','end','insert','delete','pageup','pagedown','shift','ctrl','alt',
+    'home','end','insert','delete','pageup','pagedown','shift','ctrl','alt','kp5',
     *(f'f{i}' for i in range(1,13))}
 
 

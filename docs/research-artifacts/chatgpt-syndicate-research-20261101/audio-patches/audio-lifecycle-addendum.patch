@@ -1,0 +1,1292 @@
+diff --git a/docs/AUDIO_LIFECYCLE_2026-10-31.md b/docs/AUDIO_LIFECYCLE_2026-10-31.md
+new file mode 100644
+index 0000000..be2aa94
+--- /dev/null
++++ b/docs/AUDIO_LIFECYCLE_2026-10-31.md
+@@ -0,0 +1,293 @@
++# Syndicate music: cancellation, repeat, end-of-track, and caller policy
++
++Investigation date: 31 October 2026. All work remained local. GitHub was not
++contacted, no PR was submitted, and no original file was changed.
++
++## Result and evidence boundary
++
++The missing lifecycle distinction is now established for the examined paths.
++The intro starts a looping sequence and later **explicitly stops it**. That
++ordinary stop changes its status from 1 to 0; it is not evidence that the event
++stream reached its end marker. In a separate, explicitly prepared DOSBox run,
++the original end handler changed status from 1 to 2, returned through the real
++timer caller, and left the sequence registered. The later intro stop preserved
++status 2, and shutdown released the registration.
++
++This pass used the actual original DOSBox environment for both experiments.
++The second experiment contains exactly two guarded four-byte writes to the
++sequence's event cursor. It did not alter event data, instructions, status words,
++CPU registers, returned values, or original files. Its end-of-track observation
++is **diagnostic reachability**, not ordinary completion of the shipped track.
++
++The source-free [summary](evidence/audio-lifecycle-2026-10-31/lifecycle-summary.json) records identities,
++observations, intervention boundaries, cleanup results, and scope. The two new
++research tools inspect event structure and a narrow register model; they are
++not a production player or a general fDisBull runtime feature.
++
++## 1. Original intro execution cancels the sequence
++
++A fresh baseline session used the original MZ launcher, INTRO, and FM driver.
++The intro and subsequent MAIN FM bindings were checked against the selected
++original driver: 38 service-entry windows and 395 internal relocation records
++per observed load. The observed intro allocation was `0x349188`; MAIN used
++`0x284048`. These addresses belong to those loads, not future runs.
++
++The baseline supplies five matched service entry/return pairs:
++
++| Boundary | Before | After | Meaning of this observation |
++| --- | ---: | ---: | --- |
++| Start, service 170 | 0 | 1 | Active cursor initialized |
++| Intro's explicit stop, service 171 | 1 | 0 | Cancellation, not end-of-track |
++| Shutdown's internal stop | 0 | 0 | Repeated inactive stop |
++| Release, service 152 | Registered | Unregistered | Handle-table entry cleared |
++| Shutdown, service 104 | Entered | Returned | Original driver shutdown returned |
++
++Every matched service return had the expected stack selector, return address,
++and four-byte stack unwind. Status refers to the sequence word at `+0x1E`, not
++the separate start marker at `+0x1C` or an incidental EAX return value.
++
++At the first stop, the event cursor was 11,622 bytes into the payload. The EOT
++record is at offset 12,068. No EOT breakpoint hit preceded that stop. Shutdown
++then issued an internal stop and released the object. Menu appearance or the
++intro-to-MAIN transition must not be relabeled as natural track completion.
++
++## 2. A small embedded presentation script explains the stop
++
++The original INTRO executable has a table at preferred address `0x20ABC` with
++**149 seven-byte records**, followed by a frame value of `0xFFFF`:
++
++```text
+++0  frame:   u16 little endian
+++2  command: u8
+++3  operand: u32 little endian
++```
++
++The source dispatch connects command `M` to music selection/start and command
++`X` to the explicit stop helper. The two decisive records are:
++
++| Row | Frame | Command | Operand | Recovered role |
++| --- | ---: | --- | ---: | --- |
++| 7 | 19 | M | 0 | Select/start sequence 0 |
++| 134 | 929 | X | 0 | Explicitly stop music |
++
++The other counted commands are L (15), E (2), A (26), S (68), and T (36).
++Their full semantics are not specified by this lifecycle study. The seven-byte
++table is embedded data consumed by the presentation dispatcher, not a newly
++identified external file format or a general game-script language.
++
++The diagnostic run caught the actual X dispatch: row index 134, current frame
++929, matching record frame/command/operand, and the source-linked stop call.
++The unmodified baseline reached the same stop caller. The live row/frame read
++was collected in the diagnostic run, not retroactively attributed to baseline.
++The frame numbers are presentation indices; no wall-time conversion is claimed.
++
++## 3. The actual XMI files distinguish looping music from finite cues
++
++The bounded, source-informed reader parsed two original files and six EVNT
++streams. It records the actual source hashes and offsets and preserves any
++trailing data after EOT. Delays below are event-clock units, **not seconds**.
++
++| File / stream | Zero-count repeat | Positive-delay records inside repeat | EOT offset within EVNT |
++| --- | --- | ---: | ---: |
++| INTRO.XMI / 0 | Yes | 100 | 12,068 |
++| SYNGAME.XMI / 0 | Yes | 300 | 1,721 |
++| SYNGAME.XMI / 1 | Yes | 172 | 1,249 |
++| SYNGAME.XMI / 2 | Yes | 900 | 10,382 |
++| SYNGAME.XMI / 3 | No lexical repeat | Not applicable | 218 |
++| SYNGAME.XMI / 4 | No lexical repeat | Not applicable | 719 |
++
++The intro's repeat begins at event offset 10,596, with body immediately after
++that control and an end control at 12,065. The zero-count path rewinds without
++decrementing its counter. EOT follows the repeat end. An EOT marker existing in
++the file therefore does not establish that ordinary linear playback reaches it.
++
++This is a lexical/control interpretation supported by the inspected consumer.
++The parser is not a complete runtime simulator. It does not prove all branches,
++external mutations, timing, instrument behavior, or player reachability. No
++lexical-repeat issues were reported for the six selected streams. Three streams
++retain one zero byte after EOT; those bytes were neither deleted nor called
++meaningless. The full census is in [xmi-lifecycle.json](evidence/audio-lifecycle-2026-10-31/xmi-lifecycle.json).
++
++## 4. The shipped repeat yields in the real DOSBox environment
++
++A second fresh guest was paused at a genuine FM timer callback after validating
++the live EVNT payload against the complete original INTRO.XMI payload hash.
++The first intervention moved only the four-byte event cursor to the original
++repeat-begin event, skipping the long prelude. It used the current field's exact
++SHA-256 as the expected-old guard and verified the resulting value.
++
++The original timer code then:
++
++1. Encountered the shipped zero-count repeat end.
++2. Rewound the cursor through its genuine branch.
++3. Reached the callback return and resumed the original timer caller.
++4. Retained active status 1 and a positive delay counter of 3.
++5. Reached the repeat's rewind path again on a later callback sequence.
++
++Two rewind hits and the intervening callback return were observed. The return
++used SS `0x0088`, with the expected four-byte unwind to caller `0158:0024C9C7`.
++This validates a yielding repeat under the diagnostic starting position, not an
++unmodified full-playthrough route. Interrupts and device instructions were not
++replaced with host no-ops.
++
++The previous synthetic no-delay experiment remains a separate result. This
++pass did not deliberately run its non-yielding stream inside DOSBox, measure
++CPU load, or claim that the shipped track is defective. The useful contrast is
++that the actual loop contains delay events and returned from the timer callback.
++
++## 5. End-of-track is now observed, under a declared intervention
++
++At another original callback entry, the second and final guarded cursor write
++selected the genuine EOT record at event offset 12,068. It deliberately bypassed
++the repeat. No other field was edited and the original event bytes were retained.
++
++The debugger caught the original handler at driver offset `0x2F5A`, then stopped
++after its status store at `+0x2F69`. Status changed **1 to 2**. The deferred-release
++flag at sequence `+0x20` was zero, so the object remained registered. The callback
++returned to its original caller, with cursor advanced by the three-byte EOT
++record and its expected stack unwind.
++
++Persistent start, resume, status-query, stop, release, and shutdown watches then
++followed the caller reaction. No watched start/resume/status-query entry occurred
++before the intro's scripted stop. At row 134 / frame 929, the same sequence was
++still registered with status 2. The subsequent stop left **2 unchanged**; shutdown
++made another stop attempt, released the handle, and returned. Four complete
++service pairs cover this post-EOT chain.
++
++This establishes the selected intro caller's reaction after an injected EOT
++position. It does not prove that every caller avoids restarting, that the track
++ends naturally, or that silence means completion. Registration, active playback,
++completion status, and release are distinct lifecycle facts.
++
++### Intervention ledger
++
++| Write | Field | Selected original event offset | Scope |
++| --- | --- | ---: | --- |
++| 1 | Sequence event cursor, four bytes | 10,596 | Skip prelude to actual repeat-begin control |
++| 2 | Same cursor, four bytes | 12,068 | Bypass repeat and exercise actual EOT handler |
++
++The baseline has **zero memory writes**. The diagnostic guest has **exactly two
++memory-write requests and zero register writes**. All 38 checked entry windows,
++395 relocation fields, and the full live intro event payload still matched their
++expected originals before shutdown cleanup. Arbitrary mutable driver memory was
++not claimed to be byte-identical to its file.
++
++## 6. MAIN's source implements a different selection policy
++
++MAIN's helper at preferred `0x3B8A0` compares the requested sequence index with
++its cached selection. If they are equal, it returns without starting again.
++For a changed selection, it stops the previous nonnegative selection and starts
++the chosen handle. This is not a general "restart whenever not playing" policy.
++
++The caller at `0x10010` selects indices 3 or 4 under terminal-state flag bits
++and a latch, then calls the status helper at `0x3BA10`. For admitted status values
++0/1/2, that helper reports whether status equals 1. The caller clears its latch
++when the result is zero. The two selected streams are precisely the two without
++lexical repeat controls in the inspected SYNGAME.XMI. This supports their role as
++finite terminal cues; their player-facing names and live mission outcomes were
++not tested here.
++
++The intro contains a separate source helper that queries status and restarts
++when it is not active. A bounded direct-call scan found no callers to that helper,
++and the watched intro path did not invoke its status query in the post-EOT window.
++That is not proof the helper is globally dead or never indirectly called.
++
++### A source-derived partial-register edge case
++
++MAIN's status projection compares full EAX, writes the result to AL, and clears
++AH. It does not clear EAX's upper sixteen bits. Thus the established valid
++statuses map correctly, but the driver's `0xFFFFFFFF` sentinel becomes
++**`0xFFFF0000`**, still nonzero when the caller tests EAX.
++
++The exact operations are bound to the inspected original source. A separately
++packaged Z3 model proves the valid 0/1/2-domain projection and supplies the
++sentinel counterexample. This is a conditional error-path lead, **not a verified
++player-visible bug**: no legitimate path supplying the sentinel at that caller
++was established or executed. Do not silently normalize the full register in a
++reimplementation. See [model receipt](evidence/audio-lifecycle-2026-10-31/status-projection-model.json).
++
++## 7. Runtime identity, cleanup, and preserved friction
++
++The research runtime is fDisBull 0.26.0 with Python 3.13.5 from the supplied offline
++kit. The installer checks passed. This turn's actual DOSBox binary SHA-256 is:
++
++```text
++45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346
++```
++
++It matches this kit's manifest. It differs from the backend hash in the previous
++audio report (`60f5496...`). These are separately identified experiments; previous
++results are not being relabeled as tests of this binary. The original MAIN and
++GAMEFM file hashes remain the same as the prior study.
++
++Final verification rehashed all **897 restored original paths**, with no changed,
++missing, or new game files. Neither guest created a persistent save. No new static
++MAIN traversal was run; the previous 68,186 instructions / 87.49% figure remains
++historical.
++
++**Cleanup is not universally clean exit:** baseline debugger cleanup returned
++emulator code 0. In the diagnostic session, `session.stop` still reported running
++after its three-second wait, and close eventually reaped the process with code
++**-9 (SIGKILL)**. Both owned PIDs were absent at final audit. All decisive target
++observations and the preservation check preceded this cleanup. The result is a
++bounded cleanup escalation, not proof of a guest hang or a DOS program exit.
++
++Other retained friction:
++
++- A breakpoint requested before its selector/address existed was refused. The
++  observer later waited for a validated module binding instead.
++- The second guest's fixed early start-watch window missed the natural start.
++  The preparation stopped without edits, then switched to a genuine timer-callback
++  entry. An undefined local variable in a preliminary observer command likewise
++  failed before any write. These are instrumentation errors, not game failures.
++- Protected-mode absolute mouse clicking remained refused. Twenty bounded mode
++  samples did not provide a qualified real/v8086 click boundary. No substitute
++  input injection or mission-success claim was made.
++- A source-informed proof draft initially mixed integer and bit-vector sorts.
++  A summary draft initially expected the wrong receipt field name. Both failed
++  before producing their final result; the corrected tools did not rerun actions.
++- One auxiliary baseline event file used literal escaped separators. The valid
++  full JSON event arrays and raw RPC log remain intact and supplied the audit;
++  no event reconstruction from that malformed auxiliary file is claimed.
++
++The recorded RPC log contains **5,823 requests** (3,552 baseline, 2,271 diagnostic).
++The client sequence counters are larger by three per session because startup
++requests preceded logger installation. Timing/wait polling accounts for 5,370
++logged requests. Only 74 created/deleted breakpoints. This is observed research
++instrumentation cost, not a proven unavoidable backend cost or speedup estimate.
++
++## 8. Local PR recommendations and acceptance cases
++
++These are prospective implementation/skill requirements, not new production
++features or already-passing acceptance tests.
++
++| ID | Requirement |
++| --- | --- |
++| LC01 | Preserve completion reason separately from active/stopped status and registration. Original stop 1→0 and EOT 1→2 must not collapse into one success certificate. |
++| LC02 | Bind cue identity, EVNT stream extent, source-relative cursor, repeat/yield structure, handle, and load generation. An EOT marker after an unbounded repeat is not automatically reachable completion. |
++| LC03 | Trace caller policy explicitly: same-selection suppression, finite terminal cues, automatic restart, explicit cancellation, deferred release, and shutdown are different contracts. |
++| LC04 | Diagnostic cursor changes require exact expected-old identity, source-bound event boundaries, explicit intervention provenance, readback, bounded execution, and no inherited ordinary-reachability claim. |
++| LC05 | Module-aware deferred breakpoint setup must distinguish unmapped-yet, wrong load, unsupported address form, and valid binding; fixed startup delays cannot substitute for readiness. |
++| LC06 | Preserve register width in service adapters. A valid-domain Boolean projection must not silently erase an invalid/sentinel upper-half value without a declared semantic change. |
++| LC07 | Record stop acknowledgment, timeout, forced termination, reaping, and selected-program exit independently. A closed controller or status 2 must not certify clean guest shutdown. |
++| LC08 | Report observer requests by category and reuse persistent watches where supported. Investigate wait/timing polling overhead without claiming measured speedup or weakening evidence. |
++
++The recommendations extend the earlier DG/AP local draft. The add-only patch
++adds this report, the source-free receipts, two authored research tools, and
++the parser tests. It does not edit current runtime behavior or bundled skills,
++contact GitHub, rebuild a release, or alter #69. Upstream reconciliation remains
++required before later publication.
++
++## Verification and next work
++
++Twenty-one authored reader tests passed. A fresh census with the delivered
++reader exactly reproduced the earlier census from this turn for both original
++files and all six streams. Two typed Z3 checks returned the expected unsat/sat
++outcomes. Their script identity is recorded. Live baseline and diagnostic evidence
++are separate from those parser/model tests.
++
++The next discriminating target is one finite MAIN cue (index 3 or 4), reached
++through a source-supported terminal-state context: observe start, natural EOT,
++the real status query, latch clearing, and release or reselection. No such mission
++or native finite-cue sequence is claimed here. The source-derived sentinel path
++also needs a legitimate registration/error route before being called a game bug.
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/lifecycle-summary.json b/docs/evidence/audio-lifecycle-2026-10-31/lifecycle-summary.json
+new file mode 100644
+index 0000000..d6ac686
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/lifecycle-summary.json
+@@ -0,0 +1,419 @@
++{
++  "format": "syndicate-audio-lifecycle-study-1",
++  "date": "2026-10-31",
++  "github_contacted": false,
++  "runtime": {
++    "fdisbull": "0.26.0",
++    "python": "3.13.5",
++    "source_commit": "8ba24d62b5010d3a6a5d604524aad72e2e047b77",
++    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
++    "backend_matches_this_kit_manifest": true,
++    "same_backend_as_prior_report": false,
++    "prior_report_backend_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
++    "backend_note": "Separate qualifying runtime. The new hash is explicit; prior tests are not relabeled as same-binary tests."
++  },
++  "original_identity": {
++    "MAIN.EXE": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
++    "INTRO.EXE": "5fd1494311ba8d75ad823720a7b75f9f36bcbf0294c3dfc332b3149629c524f2",
++    "DATA/GAMEFM.DLL": "520db726d034394e7ea7f62b9bfa90767898990836522fc09f89931f2c388a7e",
++    "DATA/INTRO.XMI": "570bb41f9cbfceabed47fdb8828fb8bdaf512a23445946624a2dced171672940",
++    "DATA/SYNGAME.XMI": "21088107f3d65af9a10a733fd21b5b9640144e4f53a4eb6908d4e95207be0d9c"
++  },
++  "preservation": {
++    "files_checked": 897,
++    "changed": [],
++    "missing": [],
++    "new_files": [],
++    "entry_windows_unchanged": true,
++    "fixups_still_match": true,
++    "event_data_still_original": true,
++    "registration_cleared": true
++  },
++  "timeline": {
++    "source_base": "0x20abc",
++    "record_size": 7,
++    "record_fields": [
++      "frame:u16le",
++      "command:u8",
++      "operand:u32le"
++    ],
++    "records": 149,
++    "following_frame_sentinel": "0xffff",
++    "command_counts": {
++      "L": 15,
++      "E": 2,
++      "A": 26,
++      "S": 68,
++      "T": 36,
++      "M": 1,
++      "X": 1
++    },
++    "music_start": {
++      "row": 7,
++      "frame": 19,
++      "command": "M",
++      "value": 0
++    },
++    "music_stop": {
++      "row": 134,
++      "frame": 929,
++      "command": "X",
++      "value": 0
++    },
++    "live_stop_witness": {
++      "index": 134,
++      "frame_global": 929,
++      "record_frame": 929,
++      "record_command": "X",
++      "record_value": 0,
++      "status": 2,
++      "registered": true,
++      "runtime_pc": "0x24acdb",
++      "source_pc": "0x106eb"
++    },
++    "other_commands": "Counted, not fully specified by this lifecycle study."
++  },
++  "baseline": {
++    "observed_service_pairs": 5,
++    "events": [
++      {
++        "kind": "entry",
++        "site": "start",
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "start",
++        "stack_matches": true,
++        "states": [
++          {
++            "handle": 0,
++            "status": 1,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "stop",
++        "states": [
++          {
++            "handle": 0,
++            "status": 1,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "stop",
++        "stack_matches": true,
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "shutdown",
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "stop",
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "stop",
++        "stack_matches": true,
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "release",
++        "states": [
++          {
++            "handle": 0,
++            "status": 0,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "release",
++        "stack_matches": true,
++        "states": []
++      },
++      {
++        "kind": "return",
++        "site": "shutdown",
++        "stack_matches": true,
++        "states": []
++      }
++    ],
++    "stop_cursor_relative": 11622,
++    "eot_breakpoint_hits": 0,
++    "reachability": "Original unmodified intro. Explicit stop is not natural EOT."
++  },
++  "diagnostic": {
++    "edits": [
++      {
++        "field": "sequence.event_cursor",
++        "address": "0x253af4",
++        "new_cursor": "0x343b4e",
++        "event_offset": 10596,
++        "before_sha256": "f59934683d3df316410bb725a95f6c53a3d60dd359964c28e817aa11005084a7",
++        "after_sha256": "e9ac25fc98b33d38513a66ca7161f783df7371ad5a183e92b8b2432eaed05423",
++        "bytes_written": 4
++      },
++      {
++        "field": "sequence.event_cursor",
++        "address": "0x253af4",
++        "new_cursor": "0x34410e",
++        "event_offset": 12068,
++        "before_sha256": "27f0366fafe3fc9b6181c3ef0c2ff9d88a227b0275cb1ec586ee9c4097872d79",
++        "after_sha256": "af725eed869c4b37a92b1a665250a83156d75717597e3c9590e0d57d8bf332d2",
++        "bytes_written": 4
++      }
++    ],
++    "target_code_edits": 0,
++    "media_file_edits": 0,
++    "sequence_status_edits": 0,
++    "repeat": {
++      "loop_begin_event_offset": 10596,
++      "original_zero_count_loop": true,
++      "rewind_hits": 2,
++      "callback_return_captured": true,
++      "callback_return_ss": "0x0088",
++      "status_after_return": 1,
++      "delay_after_return": 3,
++      "claim": "Real loop with positive delay yields in DOSBox after a diagnostic jump to its original loop-begin event."
++    },
++    "eot": {
++      "event_offset": 12068,
++      "status_before": 1,
++      "status_after": 2,
++      "deferred_release": 0,
++      "registered_after_callback": true,
++      "callback_return_verified": true,
++      "cursor_after_event_offset": 12071,
++      "watched_start_resume_status_hits_before_script_stop": 0,
++      "scope": "No automatic restart observed at the selected registered entry watches through subsequent shutdown. This does not prove every program path lacks restart."
++    },
++    "post_eot_service_pairs": 4,
++    "post_eot_events": [
++      {
++        "kind": "entry",
++        "site": "stop",
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "stop",
++        "stack_matches": true,
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "shutdown",
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "stop",
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "stop",
++        "stack_matches": true,
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "entry",
++        "site": "release",
++        "states": [
++          {
++            "handle": 0,
++            "status": 2,
++            "registered": true
++          }
++        ]
++      },
++      {
++        "kind": "return",
++        "site": "release",
++        "stack_matches": true,
++        "states": []
++      },
++      {
++        "kind": "return",
++        "site": "shutdown",
++        "stack_matches": true,
++        "states": []
++      }
++    ],
++    "reachability": "Diagnostic event-cursor preparations; not ordinary completion of INTRO.XMI."
++  },
++  "main_source_policy": {
++    "same_selection_short_circuits_restart": true,
++    "selector": "0x3b8a0",
++    "status_projection": "0x3ba10",
++    "terminal_branch_selector_indices": [
++      3,
++      4
++    ],
++    "valid_statuses": [
++      0,
++      1,
++      2
++    ],
++    "sentinel_projection": "0xffffffff -> 0xffff0000",
++    "normal_invalid_handle_path_established": false,
++    "source_projection_anchors_match": true,
++    "scope": "Static source and authored model; no MAIN mission or finite-cue native finish recorded."
++  },
++  "sessions": [
++    {
++      "run_id": "e5bb76a8dc5048fe8640a90de02bc352",
++      "kind": "unmodified_baseline",
++      "logged_rpc_requests": 3552,
++      "rpc_client_sequence_end": 3555,
++      "logging_scope": "The first three client requests precede logger installation; final client sequence is not the logged-row count.",
++      "methods": {
++        "state.get_registers": 52,
++        "execution.timing": 1679,
++        "execution.continue": 48,
++        "execution.wait": 1584,
++        "execution.pause": 38,
++        "memory.read": 101,
++        "breakpoints.create": 20,
++        "video.screenshot": 7,
++        "breakpoints.delete": 19,
++        "input.keyboard.press": 2,
++        "input.mouse.click": 1,
++        "session.stop": 1
++      },
++      "reported_errors": [
++        {
++          "method": "breakpoints.create",
++          "error": "DebuggerError('Unable to resolve breakpoint address (ADDRESS_NOT_MAPPED)')"
++        },
++        {
++          "method": "input.mouse.click",
++          "error": "DebuggerError('Absolute mouse input requires the built-in DOS INT33 driver in real/v8086 mode; PS/2/AUX, PC-98 and guest-OS mouse drivers are unsupported (COMMAND_REJECTED)')"
++        }
++      ],
++      "memory_write_requests": 0,
++      "register_write_requests": 0,
++      "emulator_returncode": 0,
++      "closed": true,
++      "owned_pid_absent_at_final_audit": true,
++      "cleanup_scope": "Debugger-owned process cleanup, not DOS program exit."
++    },
++    {
++      "run_id": "1ac5bed3bb7147748f7cb4b8ec1d902c",
++      "kind": "guarded_cursor_diagnostic",
++      "logged_rpc_requests": 2271,
++      "rpc_client_sequence_end": 2274,
++      "logging_scope": "The first three client requests precede logger installation; final client sequence is not the logged-row count.",
++      "methods": {
++        "state.get_registers": 28,
++        "execution.timing": 1079,
++        "execution.continue": 26,
++        "execution.wait": 1028,
++        "execution.pause": 6,
++        "memory.read": 66,
++        "breakpoints.create": 22,
++        "breakpoints.delete": 13,
++        "memory.write": 2,
++        "session.stop": 1
++      },
++      "reported_errors": [],
++      "memory_write_requests": 2,
++      "register_write_requests": 0,
++      "emulator_returncode": -9,
++      "closed": true,
++      "owned_pid_absent_at_final_audit": true,
++      "cleanup_scope": "Debugger-owned process cleanup, not DOS program exit. Diagnostic session.stop stayed running through its 3s wait and close forcibly reaped it (SIGKILL/-9)."
++    }
++  ],
++  "validation": {
++    "authored_parser_tests": 21,
++    "parser_test_result": "passed",
++    "shipped_xmi_files": 2,
++    "shipped_evnt_streams": 6,
++    "parser_results_match_prior_census_in_this_turn": true,
++    "source_bound_projection_model": "evidence/status-projection-model.json",
++    "tools_sha256": {
++      "tools/check_status_projection.py": "20d29153892f2de39b7719c38e32c355cd194e0a4a31634a8d05357a020278ab",
++      "tools/xmi_lifecycle.py": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe"
++    }
++  },
++  "limits": [
++    "No new static MAIN traversal. Prior 68186 instructions and 87.49% remain historical.",
++    "No native zero-delay hang trial in this pass. Previous host-harness negative control remains separate.",
++    "No audible output fidelity, native timing, full mission, completed ordinary-play track, saved-game persistence or guest-exit claim.",
++    "Cleanup is separate from source behavior; the diagnostic backend required forced close.",
++    "No repository suite, release, shared installation, GitHub operation or submitted PR."
++  ]
++}
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/local-tool-checks.json b/docs/evidence/audio-lifecycle-2026-10-31/local-tool-checks.json
+new file mode 100644
+index 0000000..e3f6c7b
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/local-tool-checks.json
+@@ -0,0 +1,10 @@
++{
++  "parser_tests": 21,
++  "result": "passed",
++  "python": "3.13.5",
++  "test_sha256": "e85b763ac69f81f99fdef2b95495611d38b97ca80d8cacccded81795bdd41a2b",
++  "parser_sha256": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe",
++  "actual_resource_census_repeat": "byte-identical to this turn initial census",
++  "model_checks": "two expected results in status-projection-model.json",
++  "scope": "Local authored tests and source data replay, not repository suite, player qualification or independent native execution."
++}
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/private-receipt-locators.json b/docs/evidence/audio-lifecycle-2026-10-31/private-receipt-locators.json
+new file mode 100644
+index 0000000..b267edc
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/private-receipt-locators.json
+@@ -0,0 +1,65 @@
++{
++  "scope": "Identifiers only. Raw payloads intentionally private; their hashes do not constitute independent validation.",
++  "receipts": [
++    {
++      "locator": "live-1793467634627406386/rpc.ndjson",
++      "size": 1175385,
++      "sha256": "12bd030561e1483d91dde31d7d6386e20c33a6c9d600ed0d5b390ac35e393d1b"
++    },
++    {
++      "locator": "live-1793467634627406386/commands.ndjson",
++      "size": 8977,
++      "sha256": "03ff5c2394758c2afe358f3fa6e7abcc90deba4d901ba4a979fcd0044122ff25"
++    },
++    {
++      "locator": "live-1793467634627406386/cleanup.json",
++      "size": 77,
++      "sha256": "03951d72ddc391362e5faad4e4f6b3101b996eace39adcbcd563b05d35e1da1b"
++    },
++    {
++      "locator": "live-1793467634627406386/intro-explicit-stop.json",
++      "size": 2656,
++      "sha256": "e4a0223cba0e34dd1425666b2d495f43d6b10039f7ecdeeaf20fdbd9ee4ed3ab"
++    },
++    {
++      "locator": "live-1793468641929235432/rpc.ndjson",
++      "size": 694779,
++      "sha256": "f5ce403a2ad76f2e96261f7855e87df682c8c41b179dd7b59fc1e7f31eac3cb2"
++    },
++    {
++      "locator": "live-1793468641929235432/commands.ndjson",
++      "size": 11425,
++      "sha256": "e2dbdc5ba055a156f3f8f6c94f2f14a1dc45f160b19ee8155ad368abbfd05e55"
++    },
++    {
++      "locator": "live-1793468641929235432/cleanup.json",
++      "size": 79,
++      "sha256": "5eb03682f9a8afa3765d78dd5d4b89ee8be7bb2672e7c90390d1f2e211037274"
++    },
++    {
++      "locator": "live-1793468641929235432/post-eot-caller-chain.json",
++      "size": 6847,
++      "sha256": "cf1dee58f0b9c33feebe35815014d158c8d4dc7809b8c1738a1646806b904225"
++    },
++    {
++      "locator": "live-1793468641929235432/diagnostic-preservation.json",
++      "size": 136,
++      "sha256": "5a7b1f48a935f4ec35634fa28cbe5de87133da0312ec129e9fa7953946e81f35"
++    },
++    {
++      "locator": "live-1793468641929235432/eot-callback-return.json",
++      "size": 700,
++      "sha256": "9f7f2ffd9d2ce90a1f64826de15130131283e8fc980e8c61c3807620f3102944"
++    },
++    {
++      "locator": "live-1793468641929235432/timeline-stop-after-eot.json",
++      "size": 799,
++      "sha256": "ce4de11517fa4e139e434c72a6ec9e294d68dc8e05ca6cc53ed496044b4ddb7d"
++    },
++    {
++      "locator": "live-1793468641929235432/delayed-loop-callback-return.json",
++      "size": 2078,
++      "sha256": "133d337ea4c7914436b3cfb86e11f6dc21d4a1da62b414d1d9dcbcdaeb93338f"
++    }
++  ]
++}
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/status-projection-model.json b/docs/evidence/audio-lifecycle-2026-10-31/status-projection-model.json
+new file mode 100644
+index 0000000..ee88693
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/status-projection-model.json
+@@ -0,0 +1,19 @@
++{
++  "scope": "Source-informed CMP/SETE AL/XOR AH model, not original-code execution or normal-game reachability.",
++  "main_preferred_helper": "0x3ba10",
++  "valid_status_domain": [
++    0,
++    1,
++    2
++  ],
++  "valid_domain_mismatch_solver_result": "unsat",
++  "sentinel": {
++    "eax_in": "0xffffffff",
++    "eax_out": "0xffff0000",
++    "nonzero_solver_result": "sat"
++  },
++  "driver_sentinel_handle": "0xffffffff",
++  "z3_version": "5.3.2",
++  "script_sha256": "20d29153892f2de39b7719c38e32c355cd194e0a4a31634a8d05357a020278ab",
++  "interpretation": "Finite valid statuses project correctly. The driver sentinel does not become full-width false. No ordinary caller path supplying that sentinel was established."
++}
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/tests/test_xmi_lifecycle.py b/docs/evidence/audio-lifecycle-2026-10-31/tests/test_xmi_lifecycle.py
+new file mode 100644
+index 0000000..00ef410
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/tests/test_xmi_lifecycle.py
+@@ -0,0 +1,131 @@
++"""Authored fixtures only; these checks do not execute the original driver."""
++from __future__ import annotations
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++TOOLS = Path(__file__).resolve().parents[1] / 'tools'
++sys.path.insert(0, str(TOOLS))
++from xmi_lifecycle import FormatError, analyze, chunks, events
++
++EOT = bytes([255, 47, 0])
++BEGIN = bytes([176, 116, 0])
++END = bytes([176, 117, 127])
++
++
++def chunk(kind: bytes, payload: bytes) -> bytes:
++    return kind + len(payload).to_bytes(4, 'big') + payload + (b'\0' if len(payload) & 1 else b'')
++
++
++def asset(payload: bytes) -> bytes:
++    return chunk(b'FORM', b'XMID' + chunk(b'EVNT', payload))
++
++
++class CensusTests(unittest.TestCase):
++    def test_bounded_nested_chunk(self):
++        [(offset, payload)] = list(chunks(asset(EOT)))
++        self.assertEqual((offset, payload), (20, EOT))
++
++    def test_multiple_streams(self):
++        data = chunk(b'CAT ', b'XMID' + asset(EOT) + asset(b'\x01' + EOT))
++        self.assertEqual(len(list(chunks(data))), 2)
++
++    def test_delay_units_and_eot(self):
++        result = analyze(b'\x7f\x01' + EOT)
++        self.assertEqual(result['delay_ticks_linear_pass'], 128)
++        self.assertEqual(result['eot_offset'], 2)
++
++    def test_note_duration_vlq(self):
++        rows, _ = events(bytes([144, 60, 100, 129, 0]) + EOT)
++        self.assertEqual(rows[0]['duration'], 128)
++        self.assertEqual(rows[0]['size'], 5)
++
++    def test_two_note_statuses_in_admitted_profile(self):
++        rows, _ = events(bytes([128, 60, 0, 1, 144, 61, 100, 2]) + EOT)
++        self.assertEqual([row.get('duration') for row in rows[:2]], [1, 2])
++
++    def test_program_event_width(self):
++        rows, _ = events(bytes([192, 4]) + EOT)
++        self.assertEqual(rows[0]['size'], 2)
++
++    def test_zero_tail_retained(self):
++        result = analyze(EOT + b'\0')
++        self.assertEqual(result['tail_size'], 1)
++        self.assertTrue(result['tail_all_zero'])
++
++    def test_nonzero_tail_not_discarded(self):
++        result = analyze(EOT + b'\x7f')
++        self.assertFalse(result['tail_all_zero'])
++
++    def test_unbounded_no_delay(self):
++        result = analyze(BEGIN + END + EOT)
++        self.assertTrue(result['loops'][0]['unbounded_by_zero_count'])
++        self.assertEqual(result['loops'][0]['positive_delay_records'], 0)
++
++    def test_delay_outside_loop_is_not_body_delay(self):
++        result = analyze(BEGIN + END + b'\x01' + EOT)
++        self.assertEqual(result['loops'][0]['positive_delay_records'], 0)
++        self.assertEqual(result['delay_records'], 1)
++
++    def test_delay_inside_loop(self):
++        result = analyze(BEGIN + b'\x03' + END + EOT)
++        self.assertEqual(result['loops'][0]['positive_delay_records'], 1)
++        self.assertEqual(result['loops'][0]['delay_ticks_linear_body'], 3)
++
++    def test_finite_repeat(self):
++        result = analyze(bytes([176, 116, 2]) + END + EOT)
++        self.assertFalse(result['loops'][0]['unbounded_by_zero_count'])
++
++    def test_unmatched_lexical_controls_reported(self):
++        self.assertIn('repeat end without lexical begin', analyze(END + EOT)['lexical_issues'])
++        self.assertIn('unclosed lexical repeat', analyze(BEGIN + EOT)['lexical_issues'])
++
++    def test_slot_overflow_is_not_accepted_as_four_loops(self):
++        result = analyze(BEGIN * 5 + END * 5 + EOT)
++        self.assertEqual(len(result['loops']), 5)
++        self.assertIn('more than four lexical repeat slots', result['lexical_issues'])
++
++    def test_truncated_chunk_rejected(self):
++        with self.assertRaises(FormatError):
++            list(chunks(asset(EOT)[:-1]))
++
++    def test_event_extent_rejected(self):
++        with self.assertRaises(FormatError):
++            events(bytes([255, 1, 8, 42]))
++
++    def test_vlq_budget(self):
++        with self.assertRaises(FormatError):
++            events(bytes([255, 1, 128, 128, 128, 128, 0]))
++
++    def test_missing_end_rejected(self):
++        with self.assertRaises(FormatError):
++            events(b'\x01')
++
++    def test_unsupported_system_rejected(self):
++        with self.assertRaises(FormatError):
++            events(bytes([248]) + EOT)
++
++    def test_nonzero_eot_payload_rejected(self):
++        with self.assertRaises(FormatError):
++            events(bytes([255, 47, 1, 0]))
++
++    def test_cli_and_no_overwrite(self):
++        with tempfile.TemporaryDirectory(prefix='authored-xmi-') as temporary:
++            root = Path(temporary)
++            source, output = root / 'authored.xmi', root / 'receipt.json'
++            source.write_bytes(asset(BEGIN + b'\x03' + END + EOT))
++            command = [sys.executable, str(TOOLS / 'xmi_lifecycle.py'), str(source), '--output', str(output)]
++            first = subprocess.run(command, capture_output=True, text=True, timeout=10)
++            self.assertEqual(first.returncode, 0, first.stderr)
++            original = output.read_bytes()
++            self.assertEqual(len(json.loads(original)['files']), 1)
++            second = subprocess.run(command, capture_output=True, text=True, timeout=10)
++            self.assertNotEqual(second.returncode, 0)
++            self.assertEqual(output.read_bytes(), original)
++
++
++if __name__ == '__main__':
++    unittest.main(verbosity=2)
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/tools/check_status_projection.py b/docs/evidence/audio-lifecycle-2026-10-31/tools/check_status_projection.py
+new file mode 100644
+index 0000000..34104f8
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/tools/check_status_projection.py
+@@ -0,0 +1,55 @@
++"""Check a source-informed partial-register model, not game reachability.
++
++Requires the separately installed z3-solver. No original input bytes are used.
++"""
++from __future__ import annotations
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import z3
++
++
++def check() -> dict:
++    eax = z3.BitVec('eax_before_projection', 32)
++    equal_bit = z3.If(eax == 1, z3.BitVecVal(1, 8), z3.BitVecVal(0, 8))
++    after_sete_al = z3.Concat(z3.Extract(31, 8, eax), equal_bit)
++    after_xor_ah = z3.Concat(z3.Extract(31, 16, after_sete_al), z3.BitVecVal(0, 8), z3.Extract(7, 0, after_sete_al))
++    expected = z3.If(eax == 1, z3.BitVecVal(1, 32), z3.BitVecVal(0, 32))
++    solver = z3.Solver()
++    solver.add(z3.Or(eax == 0, eax == 1, eax == 2), after_xor_ah != expected)
++    valid = str(solver.check())
++    solver = z3.Solver()
++    solver.add(eax == 0xffffffff, after_xor_ah != 0)
++    sentinel = str(solver.check())
++    if valid != 'unsat' or sentinel != 'sat':
++        raise RuntimeError(f'Unexpected solver results: {valid}, {sentinel}')
++    result = solver.model().eval(after_xor_ah).as_long()
++    if result != 0xffff0000:
++        raise RuntimeError('Unexpected sentinel projection')
++    return {
++        'scope': 'Source-informed CMP/SETE AL/XOR AH model, not original-code execution or normal-game reachability.',
++        'main_preferred_helper': '0x3ba10',
++        'valid_status_domain': [0, 1, 2],
++        'valid_domain_mismatch_solver_result': valid,
++        'sentinel': {'eax_in': '0xffffffff', 'eax_out': hex(result), 'nonzero_solver_result': sentinel},
++        'driver_sentinel_handle': '0xffffffff',
++        'z3_version': z3.get_version_string(),
++        'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
++        'interpretation': 'Finite valid statuses project correctly. The driver sentinel does not become full-width false. No ordinary caller path supplying that sentinel was established.',
++    }
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--output', type=Path, required=True)
++    args = parser.parse_args()
++    result = check()
++    with args.output.open('x', encoding='utf-8') as stream:
++        json.dump(result, stream, indent=2)
++        stream.write('\n')
++    print(json.dumps(result, indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/tools/xmi_lifecycle.py b/docs/evidence/audio-lifecycle-2026-10-31/tools/xmi_lifecycle.py
+new file mode 100644
+index 0000000..86cbdf8
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/tools/xmi_lifecycle.py
+@@ -0,0 +1,94 @@
++"""Bounded, source-informed XMIDI event census for this Syndicate study.
++
++This is not a player. Delay totals are event-clock units, not wall time.
++Raw resource bytes are never written by the census. Original GAMEFM semantics
++motivated explicit statuses, additive delay bytes and duration VLQs on notes.
++"""
++from __future__ import annotations
++import argparse, hashlib, json
++from pathlib import Path
++
++class FormatError(ValueError): pass
++
++def chunks(data: bytes, lo: int = 0, hi: int | None = None, depth: int = 0):
++    if hi is None: hi = len(data)
++    if depth > 12 or not 0 <= lo <= hi <= len(data): raise FormatError('invalid chunk bounds')
++    p = lo
++    while p < hi:
++        if p + 8 > hi: raise FormatError('truncated IFF chunk')
++        kind = data[p:p+4]; size = int.from_bytes(data[p+4:p+8], 'big'); end = p+8+size
++        if end > hi: raise FormatError('chunk exceeds parent')
++        if kind in (b'FORM', b'CAT ', b'LIST'):
++            if size < 4: raise FormatError('container missing form type')
++            yield from chunks(data, p+12, end, depth+1)
++        elif kind == b'EVNT': yield p+8, data[p+8:end]
++        p = end + (size & 1)
++    if p != hi: raise FormatError('missing IFF alignment byte')
++
++def events(data: bytes):
++    p = 0; rows = []
++    def need(n):
++        if p+n > len(data): raise FormatError('truncated event')
++    def vlq():
++        nonlocal p
++        value = 0
++        for _ in range(4):
++            need(1); b = data[p]; p += 1; value = (value << 7) | (b & 127)
++            if not b & 128: return value
++        raise FormatError('VLQ exceeds admitted four bytes')
++    while p < len(data):
++        start=p; b=data[p]; p+=1; row={'offset':start}
++        if b < 128: row.update(kind='delay',ticks=b)
++        elif b == 255:
++            need(1); kind=data[p];p+=1;n=vlq();need(n);p+=n
++            row.update(kind='meta',meta=kind,payload_size=n)
++            if kind==47:
++                if n != 0: raise FormatError('nonempty EOT outside profile')
++                row['size']=p-start;rows.append(row)
++                return rows, {'eot_offset':start,'parsed_bytes':p,'tail_size':len(data)-p,'tail_all_zero':not any(data[p:])}
++        elif b >= 240:
++            if b not in (240,247): raise FormatError('unsupported system event')
++            n=vlq();need(n);p+=n;row.update(kind='sysex',payload_size=n)
++        else:
++            kind=b>>4;n=1 if kind in (12,13) else 2
++            need(n);payload=data[p:p+n];p+=n
++            if any(x>=128 for x in payload): raise FormatError('non-data byte in event operands')
++            row.update(kind='channel',channel=b&15,command=kind)
++            if kind in (8,9): row['duration']=vlq()
++            if kind==11: row.update(controller=payload[0],value=payload[1])
++        row['size']=p-start;rows.append(row)
++        if len(rows)>1000000:raise FormatError('event budget')
++    raise FormatError('no end-of-track within EVNT')
++
++def analyze(data: bytes):
++    rows,end=events(data); stack=[];loops=[];errors=[]
++    for i,r in enumerate(rows):
++        if r.get('controller')==116:
++            if len(stack)>=4:errors.append('more than four lexical repeat slots')
++            stack.append((i,r))
++        elif r.get('controller')==117 and r['value']>=64:
++            if not stack:errors.append('repeat end without lexical begin');continue
++            begin_i,begin=stack.pop();body=rows[begin_i+1:i]
++            loops.append({'begin_offset':begin['offset'],'body_offset':begin['offset']+begin['size'],
++                'end_offset':r['offset'],'count':begin['value'],'end_value':r['value'],
++                'positive_delay_records':sum(x['kind']=='delay' and x['ticks']>0 for x in body),
++                'delay_ticks_linear_body':sum(x.get('ticks',0) for x in body),
++                'unbounded_by_zero_count':begin['value']==0})
++    if stack:errors.append('unclosed lexical repeat')
++    return {'event_records':len(rows),'delay_records':sum(x['kind']=='delay' for x in rows),
++      'delay_ticks_linear_pass':sum(x.get('ticks',0) for x in rows),**end,'loops':loops,
++      'lexical_issues':errors,'scope':'Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution.'}
++
++def main():
++    ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('inputs',nargs='+',type=Path);ap.add_argument('--output',required=True,type=Path);a=ap.parse_args()
++    if a.output.exists(): raise FileExistsError('Refusing to overwrite an earlier receipt')
++    result=[]
++    for path in a.inputs:
++        data=path.read_bytes()
++        if len(data)>16*1024*1024:raise FormatError('input too large')
++        result.append({'name':path.name,'sha256':hashlib.sha256(data).hexdigest(),'size':len(data),
++          'streams':[{'file_payload_offset':off,'size':len(ev),'sha256':hashlib.sha256(ev).hexdigest(),**analyze(ev)} for off,ev in chunks(data)]})
++    with a.output.open('x', encoding='utf-8') as stream:
++        stream.write(json.dumps({'files':result},indent=2)+'\n')
++    print(json.dumps(result,indent=2))
++if __name__=='__main__':main()
+diff --git a/docs/evidence/audio-lifecycle-2026-10-31/xmi-lifecycle.json b/docs/evidence/audio-lifecycle-2026-10-31/xmi-lifecycle.json
+new file mode 100644
+index 0000000..66296ed
+--- /dev/null
++++ b/docs/evidence/audio-lifecycle-2026-10-31/xmi-lifecycle.json
+@@ -0,0 +1,152 @@
++{
++  "files": [
++    {
++      "name": "INTRO.XMI",
++      "sha256": "570bb41f9cbfceabed47fdb8828fb8bdaf512a23445946624a2dced171672940",
++      "size": 12170,
++      "streams": [
++        {
++          "file_payload_offset": 98,
++          "size": 12072,
++          "sha256": "02e04890269404b8162ce12d7b7049f02e5ad9b99058ec40eb785a04b91bc686",
++          "event_records": 3915,
++          "delay_records": 1184,
++          "delay_ticks_linear_pass": 13714,
++          "eot_offset": 12068,
++          "parsed_bytes": 12071,
++          "tail_size": 1,
++          "tail_all_zero": true,
++          "loops": [
++            {
++              "begin_offset": 10596,
++              "body_offset": 10599,
++              "end_offset": 12065,
++              "count": 0,
++              "end_value": 127,
++              "positive_delay_records": 100,
++              "delay_ticks_linear_body": 1372,
++              "unbounded_by_zero_count": true
++            }
++          ],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        }
++      ]
++    },
++    {
++      "name": "SYNGAME.XMI",
++      "sha256": "21088107f3d65af9a10a733fd21b5b9640144e4f53a4eb6908d4e95207be0d9c",
++      "size": 14566,
++      "streams": [
++        {
++          "file_payload_offset": 78,
++          "size": 1724,
++          "sha256": "931666af9652e0a169001bd440788ed333b702b0868f55d07fd74208e2dbd07f",
++          "event_records": 647,
++          "delay_records": 301,
++          "delay_ticks_linear_pass": 13829,
++          "eot_offset": 1721,
++          "parsed_bytes": 1724,
++          "tail_size": 0,
++          "tail_all_zero": true,
++          "loops": [
++            {
++              "begin_offset": 90,
++              "body_offset": 93,
++              "end_offset": 1717,
++              "count": 0,
++              "end_value": 127,
++              "positive_delay_records": 300,
++              "delay_ticks_linear_body": 13824,
++              "unbounded_by_zero_count": true
++            }
++          ],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        },
++        {
++          "file_payload_offset": 1844,
++          "size": 1252,
++          "sha256": "82f26f6701414321324caf2debc9fa5e6c1e55aaec83157af29963746fa51f51",
++          "event_records": 445,
++          "delay_records": 172,
++          "delay_ticks_linear_pass": 4406,
++          "eot_offset": 1249,
++          "parsed_bytes": 1252,
++          "tail_size": 0,
++          "tail_all_zero": true,
++          "loops": [
++            {
++              "begin_offset": 97,
++              "body_offset": 100,
++              "end_offset": 1246,
++              "count": 0,
++              "end_value": 127,
++              "positive_delay_records": 172,
++              "delay_ticks_linear_body": 4406,
++              "unbounded_by_zero_count": true
++            }
++          ],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        },
++        {
++          "file_payload_offset": 3154,
++          "size": 10386,
++          "sha256": "b051b35dd016d459f3fec50fdc5fadad7fef3cd22f3ffa208b1f47d97c4c4f71",
++          "event_records": 3339,
++          "delay_records": 1000,
++          "delay_ticks_linear_pass": 14400,
++          "eot_offset": 10382,
++          "parsed_bytes": 10385,
++          "tail_size": 1,
++          "tail_all_zero": true,
++          "loops": [
++            {
++              "begin_offset": 1046,
++              "body_offset": 1049,
++              "end_offset": 10379,
++              "count": 0,
++              "end_value": 127,
++              "positive_delay_records": 900,
++              "delay_ticks_linear_body": 12960,
++              "unbounded_by_zero_count": true
++            }
++          ],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        },
++        {
++          "file_payload_offset": 13578,
++          "size": 222,
++          "sha256": "2beceab633d3ad7e007144b84da685e0ac430f9f32786b6cc125747054bdba17",
++          "event_records": 64,
++          "delay_records": 12,
++          "delay_ticks_linear_pass": 864,
++          "eot_offset": 218,
++          "parsed_bytes": 221,
++          "tail_size": 1,
++          "tail_all_zero": true,
++          "loops": [],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        },
++        {
++          "file_payload_offset": 13844,
++          "size": 722,
++          "sha256": "a565561e32cb7fd04640e8067ede7e37522896a13f77c3334158668e1cea56f5",
++          "event_records": 223,
++          "delay_records": 54,
++          "delay_ticks_linear_pass": 696,
++          "eot_offset": 719,
++          "parsed_bytes": 722,
++          "tail_size": 0,
++          "tail_all_zero": true,
++          "loops": [],
++          "lexical_issues": [],
++          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
++        }
++      ]
++    }
++  ]
++}

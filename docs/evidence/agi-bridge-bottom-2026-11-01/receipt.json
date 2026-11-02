@@ -1,0 +1,220 @@
+{
+  "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+  "base_commit": "4c096c9066ea00e9af25a42271fa51e9253cb425",
+  "container_repair": {
+    "after_guard_sha256": "54c80f439cb7c3ad69cc3ab226d477694a8e5823c099eddecbc660ad19027660",
+    "before_guard_sha256": "c8f8a75be16ec4f4b4b9a56b59c0962db254c1ecf27c63b11923fa43e80c1e62",
+    "cli": "1.6.1 build aa8d76b",
+    "failed_setup_attempts": [
+      {
+        "python": "3.13.18 aarch64",
+        "result": "dependency install failed before pytest because iced-x86 1.21.0 source build required absent Rust compiler; genuine Linux Python 3.12 image was used under the published >=3.12 project requirement"
+      },
+      {
+        "python": "3.12.16 aarch64",
+        "result": "first pytest runner had default cwd / and exited 4 with tests/test_scene_domains.py not found; no tests ran in that attempt; corrected runner cd /work and passed 386 tests"
+      }
+    ],
+    "guard_tests": "20 passed in 0.06s",
+    "limits": [
+      "Existing duplicate separated app-root validation issue is outside this repair; approved exact app-root was used.",
+      "An interrupted preseed-only attempt required preserved marker recovery before service restart; no broad cleanup or deletion."
+    ],
+    "public_checks_sha256": "41f23a3c12857bc4d7c5303cae9192041be46ea9658a7eb354c580296fcf1398",
+    "public_patch_sha256": "fb55345db0e1a0b8963df20d8ffed700982d63e0054237b20411e3cb53d999d1",
+    "reason": "Generated service.plist on ownership-ignored external APFS was rejected by launchd. Preseed internal launch-control link before native write; preserve external rootfs. Correct startup ordering without unbounded full-status prewait.",
+    "recovered_exact_owned_marker_sha256": "090e73da297728850a7aeff25b68f06eae0dbaa7964df05287899c3e70290fc0",
+    "rootfs_external": true,
+    "running_containers_after": 0,
+    "security_ownership_settings_changed": false
+  },
+  "format": "fdisbull-agi-bridge-bottom-verification-1",
+  "independent_native_audit_sha256": "c053d73f326a7e65b6448c033ad62d384bc2dea05f7a90ef5ced0be879e1e469",
+  "installed_player": {
+    "checkpoint_scope": "In-memory same backend only; no durable save claim",
+    "direct_and_process_refusal_stale_restore": true,
+    "direct_phase_checks": [
+      {
+        "phase": 0,
+        "variables_matched": 20
+      },
+      {
+        "phase": 1,
+        "variables_matched": 20
+      },
+      {
+        "phase": 2,
+        "variables_matched": 20
+      },
+      {
+        "phase": 1,
+        "variables_matched": 20
+      },
+      {
+        "phase": 2,
+        "variables_matched": 20
+      }
+    ],
+    "isolated": true,
+    "origins_verified_site_packages": true,
+    "process_reaped": true,
+    "receipt_sha256": "1af9c6868a052daec1ef8c9f60dbfcd908c6dac7bb2d77e29da068f67c57152e",
+    "scene_sha256": "dc383d97d3b394a2435bd7b13a8e4a146bbd28b356bf076271b114dfb8a6bf47",
+    "version": "0.29.0"
+  },
+  "limits": [
+    "Independent sampled sessions, not an atomic continuous state trace.",
+    "No complete native water-handler instruction proof or all82-origin qualification.",
+    "Last-completed screenshots are not asserted atomic with memory reads.",
+    "Standalone scene is a two-action partial projection; no durable-save or autonomous-time claim.",
+    "No hosted/full-native Linux CI, merge, tag, release or system fDisBull update."
+  ],
+  "linux_tests": {
+    "dependency_build": "iced-x86==1.21.0 built from the genuine pinned PyPI source distribution with task-private Rust 1.99.1/Cargo 1.99.1 and GCC 14.2.0 inside the Linux container; dependencies pytest 9.2.0, dnfile 0.18.0, dncil 1.0.2, z3-solver 5.3.2.0, capstone 5.0.9, lief 1.0.0, Pillow 12.3.0",
+    "files": [
+      "tests/test_scene_domains.py",
+      "tests/test_scene_domain_integration.py",
+      "tests/test_scene_world_domains.py",
+      "tests/test_agi_clip_scene.py",
+      "tests/test_agi_collision_candidates.py",
+      "tests/test_agi_bridge_bottom.py",
+      "tests/test_agi_bottom_scene.py",
+      "tests/test_agent_skill_gate.py"
+    ],
+    "log_sha256": "2e9f6fc5221fbb9daf00d5c2a2f578c0f4663245458c95fa14180a61291698bd",
+    "platform": "Linux-6.18.35-aarch64-with-glibc2.41",
+    "private_receipt_sha256": "0eda2bf639b4567ab4e99fb4a00f82c76aed8b07c99ba0849f1312dcd4a69258",
+    "python": "3.12.16",
+    "result": "386 passed in 4.28s",
+    "scope": "Focused local Linux ARM64 tests, not hosted GitLab CI or full native Linux backend acceptance.",
+    "source_files_before_after": 585,
+    "source_hash_changes": []
+  },
+  "local_authored_tests": {
+    "files": [
+      "tests/test_agi_bridge_bottom.py",
+      "tests/test_agi_bottom_scene.py"
+    ],
+    "note": "Own fresh run; overlapping Linux cases are not summed.",
+    "result": "30 passed in0.30s",
+    "system": "macOS arm64 Python3.13.13"
+  },
+  "native_backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "observations_sha256": "c1d502f6fdbb24718a6e4ca0fb7f5b2af4af88691636e9643dd249e4f0a0a704",
+  "original_game_manifest_count": 24,
+  "paired_sample": {
+    "candidate": {
+      "priority": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "room": 39,
+      "water": false,
+      "x": 86,
+      "y": 167
+    },
+    "control": {
+      "priority": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "room": 39,
+      "water": true,
+      "x": 86,
+      "y": 166
+    },
+    "same_normal_geometry": {
+      "step": 1,
+      "view": 0,
+      "width": 6
+    }
+  },
+  "privacy": {
+    "excluded": [
+      "Original game/story inputs",
+      "native states",
+      "project databases",
+      "full captures/journals",
+      "generated scene/provenance",
+      "toolchain/rootfs",
+      "original user archives"
+    ],
+    "included": [
+      "Authored controllers/exporter/tests/docs/skill",
+      "three selected unedited native PNGs without text/EXIF chunks",
+      "sanitized observation trace/receipt",
+      "host service-bridge patch and authored checks"
+    ]
+  },
+  "retained_partial_attempts": [
+    {
+      "case": "candidate-167-01",
+      "outcome": "Collector stopped at expected west-border flag4 at0,167; partial route only",
+      "report_sha256": "5f6980455ecc73621643ddceabc38c69aa6f51f94bac93161bd8ca1d15a4c574"
+    },
+    {
+      "case": "candidate-167-02",
+      "outcome": "Collector stopped during room40 initialization before actor drawn; partial route only",
+      "report_sha256": "87512cacfc2aa6a199bc4072485dc57da82a55b2409dfa8617898aa935b42329"
+    }
+  ],
+  "reviews": {
+    "bottom_collector_exporter": "No material findings in final source/test review.",
+    "guard": "New bridge/parser/sweep/containment findings corrected and covered by focused checks; pre-existing app-root issue recorded separately.",
+    "mr29_exact_head": "No material source finding at4c096c9; original14 code/test hashes matched."
+  },
+  "scope": "One native bottom-row route plus one adjacent fresh-session water control, partial Z scene and repaired local Linux verification; no release or installation.",
+  "source_sha256": {
+    "examples/agi/build_bottom_scene.py": "d0ac568231fdfc5848eb9a98c6d9f3f677bde1cb3f2eb79634a97677f6939ffe",
+    "examples/agi/verify_bridge_bottom.py": "6b48a0cd118bbf8511606d07cb04d649046603872725a7500f26729d222101e3",
+    "src/fdisbull/skills/fdisbull-investigate/SKILL.md": "f0213aad99016cf2c97671c8c1a0ddbefd6b696cf7e6ba35c5151c0e49b4b1de",
+    "src/fdisbull/skills/fdisbull-investigate/references/scenes.md": "d0f20ae60de5a25df043b7110e63e1ed7e1c5a608fc0c40bae1c5208a6826aee",
+    "tests/test_agi_bottom_scene.py": "425d18e59e83d45f3be12775387bf7e84d2589c5958d4727e5bbf1f596162cf4",
+    "tests/test_agi_bridge_bottom.py": "48f22f7ada4da71374050face2a36b6850368ede670290edcc2d5d9713c01088"
+  },
+  "storage": {
+    "deletions": false,
+    "linux": "User-approved bounded CI20GB floor;4GiB new-rootfs admission later refused and honored; existing stopped prepared container reused after256MiB pytest admission.",
+    "native_exception": "User explicitly approved bounded CACHE capture with20GB floor;800MiB estimate admitted before phases."
+  },
+  "trials": {
+    "candidate-167-03": {
+      "backend_unchanged": true,
+      "capture_sha256": "bdd3830993f04ccbe8e67dfe1c5c90945fd92e54921227cad3a31177741932a2",
+      "copy_unchanged": true,
+      "frozen_181_dependencies_unchanged": true,
+      "input_count": 54,
+      "journal_sha256": "74e714fdfe00485612ed7f2909f915f08fc53272c4addc481852b4960d00f4c4",
+      "report_sha256": "ce6595673f48c2a7f4f36143d7836df50c77ed5cd346ba5b8023c85087a04ace",
+      "result": "bottom-row-west-exit",
+      "scope": "Fresh ordinary keyboard gameplay; no state restore or guest patch/edit. Helper baseline saved privately.",
+      "source_unchanged": true,
+      "supervisor_exit": 0,
+      "supervisor_sha256": "1f71dda7387d0fd047142eca4421ed9b21074542c145fa3ab26f36e2cd9cfee6",
+      "timed_out": false
+    },
+    "control-166-03": {
+      "backend_unchanged": true,
+      "capture_sha256": "94b375775d34d6bd3e604287b19a199860e5772492e563e99adb86004d580530",
+      "copy_unchanged": true,
+      "frozen_181_dependencies_unchanged": true,
+      "input_count": 51,
+      "journal_sha256": "4c253ba63ba8513f5f4a264434dc344588e98db05fbb2ff41e0c28315acd2eab",
+      "report_sha256": "5546c08257c2c9bfbbdfe047252c3e9556a44b3564d3358bdaacfe3d3684b669",
+      "result": "adjacent-row-water-observed",
+      "scope": "Fresh ordinary keyboard gameplay; no state restore or guest patch/edit. Helper baseline saved privately.",
+      "source_unchanged": true,
+      "supervisor_exit": 0,
+      "supervisor_sha256": "2965dde0ae4d4d4a454241a04335213355e25f02af8949f0fb347487404402fb",
+      "timed_out": false
+    }
+  }
+}

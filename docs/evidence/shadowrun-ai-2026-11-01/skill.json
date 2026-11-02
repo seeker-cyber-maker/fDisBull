@@ -1,0 +1,26 @@
+{
+  "format": "fdisbull-analysis-approach-evidence-1",
+  "source_files_sha256": {
+    "src/fdisbull/skills/fdisbull-investigate/SKILL.md": "48144b766da559b6f831d19e8597d9a3748cf0bb90d2ea6bbe7aae4706c5fe0e",
+    "src/fdisbull/skills/fdisbull-investigate/references/analysis-approach.md": "a7dd018bc53291c19c8a9cda8c34f07add2e66c4fe9e97b9d8a19145025c61c7",
+    "docs/AGENT_QUICKSTART.md": "f3920edcd7ad68264ca56b602db987954052d76191ead4719a7bc573ecb5c8e9",
+    "tests/test_analysis_approach_skill.py": "be48c969ee198034b8c522cbc8230a830a35379105514ea8832f67fc950e3da0",
+    "tests/test_scenes.py": "0a8994c8a22c8f52160e0743d369dcb0e4aa5e9e931061bfd6f9b8686dc29a50"
+  },
+  "focused_checks": {
+    "passed": 4,
+    "scope": "approach index and selective CLI/protocol retrieval without a project, bundled skill retrieval, and invalid reference refusal"
+  },
+  "guidance_scope": [
+    "identity and topology before behavioral claims",
+    "actors and placed items, interactions, and text projection as distinct capabilities",
+    "probe selection by information gain, risk and cost with stop and refusal criteria",
+    "unfamiliar-game and source-constructed Shadowrun decision examples",
+    "complete vertical-path prioritization and dependency-specific unknowns after read-set closure"
+  ],
+  "limits": [
+    "Guidance is not evidence that an unfamiliar game has a particular interaction or behavior.",
+    "A source-constructed assisted encounter does not establish ordinary encounter reachability."
+  ],
+  "privacy": "No original game bytes, assets, emulator state or private filesystem paths are included."
+}

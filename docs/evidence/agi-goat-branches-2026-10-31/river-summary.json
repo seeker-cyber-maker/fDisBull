@@ -1,0 +1,462 @@
+{
+  "format": "fdisbull-kq1-river-boundary-verification-1",
+  "public_edition_anchors": {
+    "AGI": {
+      "length": 39424,
+      "md5": "4771062c7f64bf64c185178613fd665a"
+    },
+    "KQ1.COM": {
+      "length": 3121,
+      "md5": "f579e8fb39209a321d575ebdc5f79014"
+    },
+    "LOGDIR": {
+      "length": 315,
+      "md5": "10ad66e2ecbd66951534a50aedcd0128"
+    },
+    "OBJECT": {
+      "length": 331,
+      "md5": "6eca02fa540337308529ff13e9e764aa"
+    }
+  },
+  "technique": "Historical boundary water-walking; ordinary physical keyboard input; no debugger state/data/code/register writes or native-state loads.",
+  "sources": [
+    {
+      "title": "Runner glitch guide",
+      "url": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/2r57k"
+    },
+    {
+      "title": "2023 runner route",
+      "url": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/77vht"
+    },
+    {
+      "title": "2021-04-20 TAS submission",
+      "url": "https://tasvideos.org/7105S",
+      "access": "Author submission search-index text; direct page blocked during research."
+    }
+  ],
+  "runs": [
+    {
+      "id": "river-edge-02",
+      "result": {
+        "complete": true,
+        "result": "boundary-waterwalk",
+        "state": {
+          "room": 40,
+          "score": 0,
+          "carrot": false,
+          "following": false,
+          "gate_open": false,
+          "ego": {
+            "x": 154,
+            "y": 46,
+            "direction": 0,
+            "drawn": true
+          },
+          "goat": {
+            "x": 0,
+            "y": 0,
+            "direction": 0,
+            "drawn": false
+          },
+          "gate_actor": {
+            "x": 29,
+            "y": 99,
+            "direction": 8,
+            "drawn": true
+          },
+          "inside_pen": false,
+          "control_direction": 0,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "in_water": false,
+          "swimming": 0,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "dead": false,
+          "edge": 0
+        }
+      },
+      "target_x": 154,
+      "route_guest_elapsed_ms": 42395,
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "picture_sha256": "e1d1c86bd3d12844c16dbb52f61f9d5fdd57123818b38913bd9f0cc9781960ae",
+      "picture_baseline_at_y120": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        15
+      ],
+      "sample_count": 109,
+      "all_observed_samples_dry": true,
+      "frames": [
+        {
+          "id": "river-before",
+          "state": {
+            "room": 41,
+            "score": 0,
+            "carrot": false,
+            "following": false,
+            "gate_open": false,
+            "ego": {
+              "x": 154,
+              "y": 45,
+              "direction": 0,
+              "drawn": true
+            },
+            "goat": {
+              "x": 0,
+              "y": 0,
+              "direction": 0,
+              "drawn": false
+            },
+            "gate_actor": {
+              "x": 95,
+              "y": 154,
+              "direction": 0,
+              "drawn": false
+            },
+            "inside_pen": false,
+            "control_direction": 0,
+            "distance": 0,
+            "initializing": false,
+            "window": 0,
+            "in_water": false,
+            "swimming": 0,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "dead": false,
+            "edge": 0
+          },
+          "sha256": "ad5a38a6e0abf95eb2b977ba39c09b80ea0923b93638388eef060958bdfb94ad"
+        },
+        {
+          "id": "river-middle",
+          "state": {
+            "room": 41,
+            "score": 0,
+            "carrot": false,
+            "following": false,
+            "gate_open": false,
+            "ego": {
+              "x": 154,
+              "y": 110,
+              "direction": 0,
+              "drawn": true
+            },
+            "goat": {
+              "x": 0,
+              "y": 0,
+              "direction": 0,
+              "drawn": false
+            },
+            "gate_actor": {
+              "x": 95,
+              "y": 154,
+              "direction": 0,
+              "drawn": false
+            },
+            "inside_pen": false,
+            "control_direction": 0,
+            "distance": 0,
+            "initializing": false,
+            "window": 0,
+            "in_water": false,
+            "swimming": 0,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "dead": false,
+            "edge": 0
+          },
+          "sha256": "0f7f6af3321dda40abf521e50c522141051f0ed7d2c2e363464f1e7d4315496c"
+        },
+        {
+          "id": "river-crossed",
+          "state": {
+            "room": 40,
+            "score": 0,
+            "carrot": false,
+            "following": false,
+            "gate_open": false,
+            "ego": {
+              "x": 154,
+              "y": 46,
+              "direction": 0,
+              "drawn": true
+            },
+            "goat": {
+              "x": 0,
+              "y": 0,
+              "direction": 0,
+              "drawn": false
+            },
+            "gate_actor": {
+              "x": 29,
+              "y": 99,
+              "direction": 8,
+              "drawn": true
+            },
+            "inside_pen": false,
+            "control_direction": 0,
+            "distance": 0,
+            "initializing": false,
+            "window": 0,
+            "in_water": false,
+            "swimming": 0,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "dead": false,
+            "edge": 0
+          },
+          "sha256": "eb9322fea3f3c00864e055e79b4ca8cde048279fc8d48fb8cc29af9e495932c0"
+        }
+      ],
+      "messages": [
+        {
+          "logic": 40,
+          "source_offset": 175,
+          "message_id": 1,
+          "status": "completed",
+          "handler_return_observed": true,
+          "input_settled": true,
+          "window_closed": true
+        }
+      ],
+      "capture_sha256": "b7e92506c61c9df2f7d59058aa3a32ad9fc44cfa4a2120befa22a507c6521056",
+      "journal_sha256": "a4ca869f35aeb53bb5a1be47e8ee6306a11656b909ba15e7ccc140a67e28b86c",
+      "receipt_sha256": "9286cb4831d6fd5b9f6b6ccbce0d4246d9411c4d4943e70c297e259f13e00ae0",
+      "source_and_copy_unchanged_after_teardown": true
+    },
+    {
+      "id": "river-control-02",
+      "result": {
+        "complete": true,
+        "result": "adjacent-pixel-enters-water",
+        "trigger_state": {
+          "room": 41,
+          "score": 0,
+          "carrot": false,
+          "following": false,
+          "gate_open": false,
+          "ego": {
+            "x": 153,
+            "y": 109,
+            "direction": 5,
+            "drawn": true
+          },
+          "goat": {
+            "x": 0,
+            "y": 0,
+            "direction": 0,
+            "drawn": false
+          },
+          "gate_actor": {
+            "x": 95,
+            "y": 154,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 5,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "in_water": true,
+          "swimming": 0,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "dead": false,
+          "edge": 0
+        },
+        "state": {
+          "room": 41,
+          "score": 0,
+          "carrot": false,
+          "following": false,
+          "gate_open": false,
+          "ego": {
+            "x": 153,
+            "y": 109,
+            "direction": 5,
+            "drawn": true
+          },
+          "goat": {
+            "x": 0,
+            "y": 0,
+            "direction": 0,
+            "drawn": false
+          },
+          "gate_actor": {
+            "x": 95,
+            "y": 154,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 5,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "in_water": true,
+          "swimming": 0,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "dead": false,
+          "edge": 0
+        }
+      },
+      "target_x": 153,
+      "route_guest_elapsed_ms": 35139,
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "picture_sha256": "e1d1c86bd3d12844c16dbb52f61f9d5fdd57123818b38913bd9f0cc9781960ae",
+      "picture_baseline_at_y120": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "sample_count": 56,
+      "all_observed_samples_dry": false,
+      "frames": [
+        {
+          "id": "river-before",
+          "state": {
+            "room": 41,
+            "score": 0,
+            "carrot": false,
+            "following": false,
+            "gate_open": false,
+            "ego": {
+              "x": 153,
+              "y": 46,
+              "direction": 0,
+              "drawn": true
+            },
+            "goat": {
+              "x": 0,
+              "y": 0,
+              "direction": 0,
+              "drawn": false
+            },
+            "gate_actor": {
+              "x": 95,
+              "y": 154,
+              "direction": 0,
+              "drawn": false
+            },
+            "inside_pen": false,
+            "control_direction": 0,
+            "distance": 0,
+            "initializing": false,
+            "window": 0,
+            "in_water": false,
+            "swimming": 0,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "dead": false,
+            "edge": 0
+          },
+          "sha256": "fff9885105333fd02a494b563396afb565410016b42417583aa9ade33ca6bec0"
+        },
+        {
+          "id": "adjacent-enters-water",
+          "state": {
+            "room": 41,
+            "score": 0,
+            "carrot": false,
+            "following": false,
+            "gate_open": false,
+            "ego": {
+              "x": 153,
+              "y": 109,
+              "direction": 5,
+              "drawn": true
+            },
+            "goat": {
+              "x": 0,
+              "y": 0,
+              "direction": 0,
+              "drawn": false
+            },
+            "gate_actor": {
+              "x": 95,
+              "y": 154,
+              "direction": 0,
+              "drawn": false
+            },
+            "inside_pen": false,
+            "control_direction": 5,
+            "distance": 0,
+            "initializing": false,
+            "window": 0,
+            "in_water": true,
+            "swimming": 0,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "dead": false,
+            "edge": 0
+          },
+          "sha256": "b246e7e5b528d5e1dbab7e9949e1abec876c1e71b33b59e8ff981cf655516bf9"
+        }
+      ],
+      "messages": [
+        {
+          "logic": 41,
+          "source_offset": 1123,
+          "message_id": 24,
+          "status": "completed",
+          "handler_return_observed": true,
+          "input_settled": true,
+          "window_closed": true
+        }
+      ],
+      "capture_sha256": "8d0e3c1657ad29596263215e462876a208998f565713df8d0afa2fdbe02c395d",
+      "journal_sha256": "f3720e3ad43a4f0a64eb385a1ca659d4d7c128964d46b5f7d1ba0909fa74c522",
+      "receipt_sha256": "24809c769bb47cb90de022186ba70d209c343f232efa0415486523c091290336",
+      "source_and_copy_unchanged_after_teardown": true
+    }
+  ],
+  "implementation_sha256": {
+    "examples/agi/verify_goat.py": "efcc64c7d7c5ad81f105be1c13cdbc8f405fac5096e5600f7c82efab30424672",
+    "src/fdisbull/agi_print.py": "9edbbf5b217acea6b98d2b4adb285036ac4d0d4acf3238e016c64d55e62fa61f",
+    "src/fdisbull/agi_host.py": "a302e79f42e0ff8476b999d99850a4d900d29c8c1bce2091f0b5bc7042cfff91",
+    "src/fdisbull/agi_dos.py": "ef57ef690e17032b26240844cb12712ac7bc06210ce04eb0a766c6256837f414",
+    "src/fdisbull/agi_resources.py": "ef31df40324059e6858749c2a5513a1387cb973a0d1d717279a3bbc9b227d1bd",
+    "examples/agi/verify_river_walk.py": "1c7a6ed41b4f4cc6ab2f5cb18355720fc1d5d1c4d569f43c4b0da8e162ed2608"
+  },
+  "limits": [
+    "Numeric route is our source/PIC adaptation, not a published coordinate recipe.",
+    "Matched four public file anchors do not authenticate the complete distribution.",
+    "Observed control state is recorded before its later diagnostic frame interval.",
+    "Decoded control-plane and matched native1pixel result support the explanation; original collision routine was not instruction-traced.",
+    "Three-pixel bridge clip and mushroom-island crossing were not reproduced."
+  ]
+}

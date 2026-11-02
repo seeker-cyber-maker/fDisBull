@@ -1,0 +1,28 @@
+--- before/drive_route.py
++++ after/drive_route.py
+@@ -504,6 +504,7 @@
+             module=importlib.reload(module)
+             self.__class__=module.Driver
+             return {'refreshed':True,'time_ns':self.now}
++        if kind=='header': return self.a.command('header',args['key'],*args.get('fields',[]))
+         if kind=='save_movie': return self.a.command('save_movie',self.out/(args['label']+'.jrsr'))
+         if kind=='boundary_smoke':
+             before=self.a.command('info')['time_ns']
+
+--- before/route_support.py
++++ after/route_support.py
+@@ -537,10 +537,11 @@
+ _add(209,"lower cut rope",[condition("room",12),f(176),f(179,False),rect(60,108,77,129)],
+      [condition("room",12),condition("score",43),f(179)],source=["L12@749..77E"],output=[(12,25)])
+ _add(210,"wait until rope and crank stop",[condition("room",12),f(179)],
+-     [condition("room",12),condition("score",43),f(179),f(24,False),condition("actor.3.cel",2),
++     [condition("room",12),condition("score",43),f(179),f(24,False),
++      condition("actor.3.view",17),condition("actor.3.loop",0),condition("actor.3.cel",5),
+       condition("actor.3.cycling",False),condition("actor.1.updating",False)],
+-     source=["L12@785..78F; initialized lowered rope cel2 at95"],
+-     notes="Missing actor state is unknown, not confirmation from f179 alone.")
++     source=["L12@779 end.of.loop(3,f24); L12@785..78F; VIEW17 loop0 has six cels"],
++     notes="The live lowering animation ends at cel5. Cel2 at L12@95 is a separate already-lowered room-entry pose. Missing actor state is unknown.")
+ _add(211,"climb lowered rope",[condition("room",12),f(179),f(75,False),f(79,False),rect(10,100,75,150)],
+      [f(180),{"any":[{"all":[condition("room",12),condition("view",143)]},{"all":[condition("room",49),condition("view",74)]}]}],
+      source=["L12 lowered-rope climbing branch; L49 entry"],

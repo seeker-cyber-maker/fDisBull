@@ -69,9 +69,12 @@ class TargetSourcesMixin:
         if not row:
             raise ValueError('source binding requires an external-source identity; explicitly migrate legacy projects first')
         document = json.loads(row[0])
+        selected_entry = self._entry_address(version)
+        if selected_entry is None:
+            raise ValueError('selected version has no valid entry; exact source binding is unavailable')
         # load_image reads once and returns the immutable validated snapshot.
         image = load_image(path, **document['loader_options'])
-        if (image.arch, image.bits, image.format, image.entry) != (self.arch, self.bits, self.meta['format'], self.meta['entry']):
+        if (image.arch, image.bits, image.format, image.entry) != (self.arch, self.bits, self.meta['format'], selected_entry):
             raise ValueError('candidate layout/processor/entry differs; explicitly start a separate analysis')
         # LE/NE interpretation currently retains one project-wide declaration set.
         # Matching mapped bytes/entry cannot qualify changed relocation targets,

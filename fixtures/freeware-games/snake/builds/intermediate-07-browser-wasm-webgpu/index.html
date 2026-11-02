@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Game fixture</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#11151d;color:#edf2fa}body{max-width:900px;margin:32px auto;padding:0 20px}h1{font-size:26px;margin-bottom:8px}p{color:#b9c5d5;line-height:1.6}.toolbar{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}label{display:flex;gap:10px;align-items:center}select,button{font:inherit;padding:8px 12px;background:#202a3a;color:inherit;border:1px solid #65758d;border-radius:6px}canvas{width:min(100%,800px);height:auto;aspect-ratio:8/5;background:#000;border:2px solid #71839b;image-rendering:pixelated;touch-action:none;display:block;outline-offset:5px}canvas:focus{outline:2px solid #86b8ff}#status{min-height:1.6em;color:#a7d7b8}footer{font-size:13px;color:#96a8be;margin:24px 0}
+</style></head><body>
+<h1 id="title">Game fixture</h1>
+<p id="help">Loading controls…</p>
+<div class="toolbar"><label>Game logic <select id="logic-backend"><option value="wasm">Wasm · CPU</option><option value="webgpu">WebGPU · GPU</option></select></label><label>Drawing <select id="render-backend"><option value="wasm">Wasm · CPU</option><option value="webgpu">WebGPU · GPU</option></select></label></div>
+<canvas id="game" width="320" height="200" tabindex="0" aria-label="Game board and mouse controls"></canvas>
+<p id="status" role="status">Loading…</p>
+<footer>The game and drawing blocks share one recovered UIL. Backend changes cancel pending inputs; calculation failures are reported without switching backend. Reload starts a new session.</footer>
+<script type="module" src="./memory-canvas.mjs"></script></body></html>

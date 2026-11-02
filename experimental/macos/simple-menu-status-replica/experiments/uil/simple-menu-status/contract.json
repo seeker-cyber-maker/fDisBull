@@ -1,0 +1,173 @@
+{
+  "kind": "sidecar-contract-not-uil-syntax",
+  "status": "authored_candidate",
+  "claim": "bounded replica-source/observation-assisted control model; no ARM64 semantic lift",
+  "program": "candidate.uil.json",
+  "actions": {
+    "0": "render_current_projection",
+    "1": "toggle_dashboard",
+    "2": "select_layout",
+    "3": "toggle_section",
+    "4": "memory_pressure_event",
+    "5": "request_sleep_start",
+    "6": "complete_sleep_start",
+    "7": "request_sleep_stop",
+    "8": "complete_sleep_stop",
+    "9": "toggle_additional_options",
+    "10": "select_sleep_mode",
+    "11": "select_detail",
+    "12": "select_icon",
+    "13": "toggle_settings",
+    "14": "complete_preference_write"
+  },
+  "original_identity": {
+    "file": "original-identity.json",
+    "sha256": "f09007ac1abae7017df79a0265ff0c4790da9c626c605429f6e70c172d0a38c6",
+    "behavior_binding": "unresolved"
+  },
+  "enums": {
+    "layout": {
+      "0": "Simple",
+      "1": "Developer",
+      "2": "Battery",
+      "3": "Local AI",
+      "4": "Custom"
+    },
+    "section": {
+      "0": "show_gpu",
+      "1": "show_storage",
+      "2": "show_battery",
+      "3": "show_network",
+      "4": "show_processes",
+      "5": "show_details"
+    },
+    "memory_mood": {
+      "0": "unknown",
+      "1": "normal",
+      "2": "warning",
+      "3": "critical"
+    },
+    "icon": {
+      "0": "Memory emoji",
+      "1": "CPU Emoji",
+      "2": "CPU & Memory",
+      "3": "CPU & Battery",
+      "4": "Animated Pulse",
+      "5": "Animated Dots",
+      "6": "Car Animation"
+    },
+    "detail_page": {
+      "0": "none",
+      "1": "CPU",
+      "2": "GPU",
+      "3": "Memory",
+      "4": "Storage",
+      "5": "Sleep"
+    },
+    "sleep_pending": {
+      "0": "none",
+      "1": "start request",
+      "2": "stop request"
+    },
+    "completion_arg": {
+      "0": "failure",
+      "1": "success"
+    }
+  },
+  "host_boundary": {
+    "effect.sleep.start.request": "declarative text token only; no IOPM assertion acquired",
+    "effect.sleep.stop.request": "declarative text token only; no IOPM assertion released",
+    "effect.preferences.write.request": "declarative text token only; no UserDefaults write",
+    "completion_actions": "supplied by test driver; not an observed native completion",
+    "completion_identity": "ack_id must match the current sleep_request_id or preferences_revision; counters refuse exhaustion rather than wrapping",
+    "sleep_scope": "untimed idle-sleep state only; process tracking and timer expiry unresolved"
+  },
+  "unresolved": [
+    "original SwiftUI event dispatch and function-to-control mapping",
+    "exact original preset semantics and preferences encoding",
+    "native sleep/persistence effect binding",
+    "metrics sampling, units, graph history, startup memory estimate and pressure acquisition",
+    "fonts, geometry, SF Symbols, colors and image rendering",
+    "alerts, network/VPN, volume scans, sharing, localization, process tracking and login registration"
+  ],
+  "source_inventory": {
+    "replica.layout": {
+      "kind": "replica_source",
+      "file": "Sources/StatusReplica/main.swift",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb",
+      "lines": [
+        316,
+        327
+      ],
+      "selection_sha256": "cd333649873a244f401c1bc74d9f79a31d78dcfb82b2793e9d35b149a576e0f9",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "replica.memory": {
+      "kind": "replica_source",
+      "file": "Sources/StatusCore/MemoryMood.swift",
+      "sha256": "3e30b41bb3f523d71d07abfd4b1907a15366972eaf3c7cf250c68bbf611b9c1e",
+      "lines": [
+        1,
+        23
+      ],
+      "selection_sha256": "3e30b41bb3f523d71d07abfd4b1907a15366972eaf3c7cf250c68bbf611b9c1e",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "replica.sleep": {
+      "kind": "replica_source",
+      "file": "Sources/StatusReplica/main.swift",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb",
+      "lines": [
+        219,
+        236
+      ],
+      "selection_sha256": "e973602e17074878343a87c06a9b8ec36a278ba041d7c21547e43a5b4f6cd747",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "replica.sleep_ui": {
+      "kind": "replica_source",
+      "file": "Sources/StatusReplica/main.swift",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb",
+      "lines": [
+        1099,
+        1150
+      ],
+      "selection_sha256": "2e0c3f98d1c3b0438174e94873da2c48e2de26fb9692a2eb8ebd0325ace89587",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "replica.sleep_footer": {
+      "kind": "replica_source",
+      "file": "Sources/StatusReplica/main.swift",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb",
+      "lines": [
+        669,
+        669
+      ],
+      "selection_sha256": "7bc21c2e4336af1dc1c3de93b8a931e5a9f0664bdbdc4bfa7bab8419b3e7afc8",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "replica.preferences": {
+      "kind": "replica_source",
+      "file": "Sources/StatusCore/ReplicaPreferences.swift",
+      "sha256": "16fa758311e71324548a9e576afab3c933abe668d5080040bc5b721f4d647b32",
+      "lines": [
+        1,
+        54
+      ],
+      "selection_sha256": "16fa758311e71324548a9e576afab3c933abe668d5080040bc5b721f4d647b32",
+      "claim": "replica source projection; original correspondence unproved"
+    },
+    "observed.controls": {
+      "kind": "observation_ledger",
+      "file": "PARITY.md",
+      "sha256": "8257b43e6623918be0b4c53e4a218a4ead79a50cf9586367b952e0cc262f5440",
+      "observation_index": "observations.json",
+      "observation_index_sha256": "8e8905a1eecbcbd2b7582ceab240d7dd648236efc43ad223c178f21d2de9d27e",
+      "claim": "screen-visible labels and surfaces; not a native execution trace"
+    },
+    "authored.host_protocol": {
+      "kind": "authored_candidate",
+      "claim": "request/ack protocol authored for this experiment; not recovered from original"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "initial_counter": 1,
+  "stored_counter": 2,
+  "correct_saved_read_comparison": true,
+  "incorrect_reloaded_comparison": false,
+  "description": "Rendering defect in the experimental lifter, not a game defect."
+}

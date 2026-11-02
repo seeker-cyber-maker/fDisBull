@@ -1,0 +1,3167 @@
+{
+  "format": "fdisbull-civd-z-source-inventory-1",
+  "families": 38,
+  "source_vocabulary": [
+    "ad_wait",
+    "city_process",
+    "city_scene",
+    "edit_line",
+    "getch",
+    "kbhit",
+    "key_cmd",
+    "load_picture",
+    "load_screen",
+    "menu_choose",
+    "menu_core",
+    "menu_dialog",
+    "news_box",
+    "news_effect",
+    "poll_mouse",
+    "show_help",
+    "show_menu",
+    "show_msg"
+  ],
+  "native_screens_visited": 0,
+  "scope": "All C units scanned for a declared UI-call vocabulary. Parser gaps, indirect calls, dynamic content and native reachability remain explicit.",
+  "source_inventory_sha256": "3b687b838f52b6b5eb9251ecb7ea5138076390412d50d00f3f625a4938cc86f3",
+  "screen_catalog_sha256": "eaa01b3e7e89750ef3ac920bec46d128462e73c276e79627079bca9dd58bf8bf",
+  "editions": [
+    {
+      "edition": "474.01",
+      "revision": "c425f7ba45411111c7c71d926e1ce8d4fa641571",
+      "files": [
+        {
+          "path": "src/ADVISORS.C",
+          "sha256": "2b24812e9b8dd8b102dded1df3c76a7e46bbe9089bef463af6ca3e5862759155"
+        },
+        {
+          "path": "src/AUDIENCE.C",
+          "sha256": "90a99917cd190bf1198e18b67d8ec01bcb172368da2374d13510adda0a9d5f3f"
+        },
+        {
+          "path": "src/BATTLE.C",
+          "sha256": "ebf14a7d284645188490849356bfb13c685b0b56afaaf30a5962464cb260f294"
+        },
+        {
+          "path": "src/CAPTURE.C",
+          "sha256": "901f8897989f90fa024d8d33ee67b7167e87963ce392a69f4ccce92fea1d5872"
+        },
+        {
+          "path": "src/CITY.C",
+          "sha256": "9ffb6a17301b95c51a5d79eafa403594632b394db22d34acf2006d22a345f459"
+        },
+        {
+          "path": "src/CITYMGT.C",
+          "sha256": "75b5b0f91dc54a33f99709b57206b77414a1d0c129da57cce073319376741bb8"
+        },
+        {
+          "path": "src/CITYVIEW.C",
+          "sha256": "5c57f46e8f49b7f261952273fcc0fb8539fd159301c24f6c2b731fd221f1f2f6"
+        },
+        {
+          "path": "src/CIVWAR.C",
+          "sha256": "6cd32fe1de728a5630c44bc6c27b94e1284c308c6c8854cfb2533bdaeb7582c1"
+        },
+        {
+          "path": "src/CONTROL.C",
+          "sha256": "d0d69f0857ac543122e7467fa6b49fcc5850ad31fc298d4d2fec9252f2973eea"
+        },
+        {
+          "path": "src/CORE.C",
+          "sha256": "80eaf7830ef8006cb09ba509eb0f72c81eb15ddd6864f0a137e0b35f2acc0a90"
+        },
+        {
+          "path": "src/CRTEDIT.C",
+          "sha256": "042521e0135dacd526b9772ef7c2e70648fbb59d33b70727c327ad1da8a5371d"
+        },
+        {
+          "path": "src/DIALOG.C",
+          "sha256": "cdd61a8c106629da65342c7ad7f42638458ef259e99011f952f9be4eacb17e8c"
+        },
+        {
+          "path": "src/DIPLOMAC.C",
+          "sha256": "74b5beb1766b825b1b3f2e9769ec8fb282e715c58b55c068a9a7504e38655563"
+        },
+        {
+          "path": "src/DIPLOMAT.C",
+          "sha256": "5bd6aae24a4fe6a21ddb05983c066b6577bd4ef73fe6e52eaf38eb9f63f2a145"
+        },
+        {
+          "path": "src/DRAW.C",
+          "sha256": "0d8d55729dbbd109e1812dee83ffe303228413723f160c60cfbf4a8018dd0ee8"
+        },
+        {
+          "path": "src/ECONOMY.C",
+          "sha256": "2dd6ecdd8eacd3d585db9752bfba4d2b29cb0f3858efcb3592be9270737b6059"
+        },
+        {
+          "path": "src/FAME.C",
+          "sha256": "059fc18654bffeaeff1999c0044be42ca7e77bf3f467d2ecd1a2314e86a9b2c7"
+        },
+        {
+          "path": "src/FILEIO.C",
+          "sha256": "7f0045df8386c35d1cc58ffd9e2cb3235450510bc4624e74c37eac33f023e2fe"
+        },
+        {
+          "path": "src/GAME.C",
+          "sha256": "9e10e714c0cba7ce921a8c5954afdb43c589990ab3cff0c6d8b76841da885941"
+        },
+        {
+          "path": "src/GLOBALS.C",
+          "sha256": "a5c43faf7b2e40651a7b5d13726f8f871fbf379ee8ddebb69d9e4766146d796f"
+        },
+        {
+          "path": "src/IMAGE.C",
+          "sha256": "708e7e0e1b08075cc3f1513b48a4f4f54dffacac6228018eff1045a98410da00"
+        },
+        {
+          "path": "src/INTRO.C",
+          "sha256": "bfc48ab671bd7ebecb731dc1f465fa14ff8ea4a791aa732bb7883c1385d45a7c"
+        },
+        {
+          "path": "src/MAP.C",
+          "sha256": "2844ea522ffa8c22c9c54f1655b49d5d4edcac6179c260d9c2dce3ecb9fd58bc"
+        },
+        {
+          "path": "src/MAPVIEW.C",
+          "sha256": "6d86b82cd58f973e89dd281dafb6ead9cb01fdda28647673bcde65c65a9e61fd"
+        },
+        {
+          "path": "src/MENUS.C",
+          "sha256": "dde7c82a7cd50c185ae2d1d4e0728884dcf35d4cc95db30834602ef69dfdc640"
+        },
+        {
+          "path": "src/MESSAGE.C",
+          "sha256": "7a53e62f69094234f3b63550782e64d038234989f3c9c96c34cacf94b891cb1f"
+        },
+        {
+          "path": "src/NAMES.C",
+          "sha256": "1c012ae28ca5d9cd9e6bc335e4e517302eb62329a960486465a7d8fca7c72a5b"
+        },
+        {
+          "path": "src/NEWGAME.C",
+          "sha256": "b90bb2ad0dd28d854f1b436ab9c917109bdd115a03081e833b6589cf72985810"
+        },
+        {
+          "path": "src/NEWS.C",
+          "sha256": "100fbe456a73dec3f04833bf3685239fca2a78a293297702e791bb0f9436e388"
+        },
+        {
+          "path": "src/NOTES.C",
+          "sha256": "95d12893d431f630f51277d72b9be63ae85cbdab41667a5f38bd71eac6f0a184"
+        },
+        {
+          "path": "src/PALACE.C",
+          "sha256": "c5d848f8d17c42ea1990e7ed85f22b8fa73b06db9380907d8afd42a7f9049466"
+        },
+        {
+          "path": "src/PATH.C",
+          "sha256": "03a3801a77309396b47457b62ebbad3f63a157b42ddd098dd0b0959454e9d19b"
+        },
+        {
+          "path": "src/PEDIA.C",
+          "sha256": "1cf4a2380be01b2cf4073e8c893c6ddcc329cceef9ce05d659ffede406883a9d"
+        },
+        {
+          "path": "src/QUIZ.C",
+          "sha256": "1bf0fe4c797ad3bc4fd498fca4293da1f310095bf202a09db898ecdbf2d11a6b"
+        },
+        {
+          "path": "src/REPLAY.C",
+          "sha256": "2bb09695816f33e73e3f890420f02d24ec3f248b9614d895c68a4c7fb21f7025"
+        },
+        {
+          "path": "src/REPORTS.C",
+          "sha256": "6e85b7e19632c0a3673cf445648a4a29bdb65c907d04a8efe0ddeff37ccdbb46"
+        },
+        {
+          "path": "src/SAVE.C",
+          "sha256": "bf7dde591d346aa8e74c58d6f26a6fadb6ea07a93cf5b7b3691a0dedd25dc034"
+        },
+        {
+          "path": "src/SETUP.C",
+          "sha256": "0d174ace7bd17f732a9d9c12f143103c767d7aa0ceb87e3a9d5403f601888b77"
+        },
+        {
+          "path": "src/SPACESHP.C",
+          "sha256": "782326773761b6324063613a51ae4078e194ac96bd7d6099d7278291d0110acc"
+        },
+        {
+          "path": "src/STATUS.C",
+          "sha256": "ad47ee173fbcee3969efdfb01bb8da9e4e2b80baba6c5fb185f3418745ecd607"
+        },
+        {
+          "path": "src/TURN.C",
+          "sha256": "85683ec82f565087d09bc3b2efb9b02c7def0a626279482ce13a654786a6692a"
+        },
+        {
+          "path": "src/UNITAI.C",
+          "sha256": "8b7f4568911a06653e84c18a92b28b340d3feecefa700cb6c3816518eb517dbd"
+        },
+        {
+          "path": "src/UNITS.C",
+          "sha256": "e355ce12caf475149ee35f515adee83ab8234573824f1f6e0b1725beb962e84e"
+        },
+        {
+          "path": "src/WORLDGEN.C",
+          "sha256": "972963b9cc94b79b87c32a2b1a6b04dc4a555c2c5ab96e9b646397a998abe18c"
+        }
+      ],
+      "function_count": 430,
+      "parser_error_files": [
+        "src/ADVISORS.C",
+        "src/AUDIENCE.C",
+        "src/CAPTURE.C",
+        "src/CITY.C",
+        "src/CITYMGT.C",
+        "src/CITYVIEW.C",
+        "src/CORE.C",
+        "src/ECONOMY.C",
+        "src/FAME.C",
+        "src/FILEIO.C",
+        "src/GAME.C",
+        "src/GLOBALS.C",
+        "src/INTRO.C",
+        "src/NAMES.C",
+        "src/NEWGAME.C",
+        "src/PEDIA.C",
+        "src/QUIZ.C",
+        "src/REPLAY.C",
+        "src/REPORTS.C",
+        "src/SAVE.C",
+        "src/SPACESHP.C",
+        "src/STATUS.C",
+        "src/TURN.C",
+        "src/UNITAI.C",
+        "src/UNITS.C",
+        "src/WORLDGEN.C"
+      ],
+      "anchors": [
+        {
+          "scene": "boot",
+          "path": "src/SETUP.C",
+          "name": "setup_main",
+          "start_line": 25,
+          "end_line": 139,
+          "sha256": "34fa5e893b7537c2f3735872391420bb7ce6650f39a584ea6e34d2a04f7f0f1b"
+        },
+        {
+          "scene": "boot",
+          "path": "src/INTRO.C",
+          "name": "game_startup",
+          "start_line": 54,
+          "end_line": 304,
+          "sha256": "57c9f94401d1b7e1168b0abf1e380208089870e6bcba39f5276d4f48bb2860ad"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "main",
+          "start_line": 472,
+          "end_line": 525,
+          "sha256": "d1abc3b5210f55a3600a8964adc1258a264db52bf3d5be6cdbc38eaa36fbc81b"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "start_game",
+          "start_line": 788,
+          "end_line": 801,
+          "sha256": "5707fb87d1b2e1fd5d8e769d53071be04275321dc3fa1bd29013af26f7fef729"
+        },
+        {
+          "scene": "main-menu",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/WORLDGEN.C",
+          "name": "make_world",
+          "start_line": 60,
+          "end_line": 247,
+          "sha256": "cafa1cf6283db1fe7331a4b6d763d1a8dd016667e5fa46ef316a49f3a4193af5"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NEWGAME.C",
+          "name": "new_game",
+          "start_line": 47,
+          "end_line": 195,
+          "sha256": "6723c139fe387161c7e77dfdc1cc49a1e34ce24a479bf64b13ea5413a7817bf9"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "load_game",
+          "start_line": 47,
+          "end_line": 80,
+          "sha256": "818763a13cad113a79a13f6bdbad52a3dbbe78bbb1e993b6555e26c8d4d0294b"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "save_game",
+          "start_line": 133,
+          "end_line": 175,
+          "sha256": "88ab1af1d49a71d931f4540d42d914e638f8ceb76ee9b5ef27656cd032d63e83"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "map",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 80,
+          "end_line": 1291,
+          "sha256": "78bff37425595b87e5632e454844895b8f19eece5affcfd3a3a3c606a6b6c673"
+        },
+        {
+          "scene": "map",
+          "path": "src/TURN.C",
+          "name": "sel_player",
+          "start_line": 726,
+          "end_line": 739,
+          "sha256": "9de083e2559c49541943a71e9adf5b5aee72632eec18137dea59927ed884b7dc"
+        },
+        {
+          "scene": "game-menu",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "unit-orders",
+          "path": "src/MENUS.C",
+          "name": "unit_orders_menu",
+          "start_line": 137,
+          "end_line": 240,
+          "sha256": "4f7088f1fd4d2f5bc610de8e02c80cf94f15f0dd771e8a25a42bb55d1c0bf390"
+        },
+        {
+          "scene": "options",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "rates",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 80,
+          "end_line": 1291,
+          "sha256": "78bff37425595b87e5632e454844895b8f19eece5affcfd3a3a3c606a6b6c673"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "goto_city",
+          "start_line": 93,
+          "end_line": 109,
+          "sha256": "c919a20ed1881a25da290f79e7e19f313d93fbd1bb5e171a549a7f008ad4a317"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "find_city",
+          "start_line": 114,
+          "end_line": 134,
+          "sha256": "271640ab308ed0a437099b7613b72b754f5ee20a45c00fe2e400769a16728265"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 129,
+          "end_line": 1935,
+          "sha256": "55a9bb6c4e64577200252ddae0480e8c42531591c152094ef64d3788366a7825"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYVIEW.C",
+          "name": "city_scene",
+          "start_line": 38,
+          "end_line": 387,
+          "sha256": "bc359b7c98a9639625adf16df776df18cf0a5e826a9ada773e35b5e6866b745b"
+        },
+        {
+          "scene": "city",
+          "path": "src/ECONOMY.C",
+          "name": "kill",
+          "start_line": 155,
+          "end_line": 166,
+          "sha256": "f0134aa59c7d51e43626d8195c97f06c8490e4788964c69a5d86516ffcb5cbb7"
+        },
+        {
+          "scene": "production",
+          "path": "src/ECONOMY.C",
+          "name": "find_slot",
+          "start_line": 171,
+          "end_line": 549,
+          "sha256": "6aeb8e305c2d72d5147b04b16e702afcc0ee240a26803f0b7bcaba9dbc35f065"
+        },
+        {
+          "scene": "city-unit-list",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 129,
+          "end_line": 1935,
+          "sha256": "55a9bb6c4e64577200252ddae0480e8c42531591c152094ef64d3788366a7825"
+        },
+        {
+          "scene": "building-sale",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 129,
+          "end_line": 1935,
+          "sha256": "55a9bb6c4e64577200252ddae0480e8c42531591c152094ef64d3788366a7825"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_city",
+          "start_line": 31,
+          "end_line": 51,
+          "sha256": "e5007fb0b37cf4ff14358bc515b7b03238fc641db6a35d991175b7335ece4c51"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "edit_line",
+          "start_line": 139,
+          "end_line": 226,
+          "sha256": "61c5de8f1cb2e7eb7207e154b1f329f0fc8278cfedfbc2cf39af1e3573afeef6"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "city_rpt",
+          "start_line": 619,
+          "end_line": 674,
+          "sha256": "f2fb8bc842e2b3eb9dd5d5899338595b7afdd08b8b27d21e1639de549902412b"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mil_rpt",
+          "start_line": 118,
+          "end_line": 156,
+          "sha256": "b274fa71b99efaf1da7cb9eb83e6d9371576ebe687238bd58325f0b80413c708"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "spy_rpt",
+          "start_line": 320,
+          "end_line": 433,
+          "sha256": "9580eb9f713a2a09d1e5a25f5d2ee2f3c1c8130fc288491017135a603cc57d88"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mood_rpt",
+          "start_line": 549,
+          "end_line": 608,
+          "sha256": "8cd30f19861bd1f657b5af5d806cf232e7363f5e24337aefa2c42a9b2ca02a33"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "trade_rpt",
+          "start_line": 202,
+          "end_line": 314,
+          "sha256": "22263715114077dae5ff9a3678858cc4709d52f3126fda3cfc069be70394d902"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "sci_rpt",
+          "start_line": 65,
+          "end_line": 113,
+          "sha256": "3e31a93008c4c31f8c11413c7ba52e0a0b94c8a4ae54c4d66b5694f17f0d12d1"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "civ_dossier",
+          "start_line": 437,
+          "end_line": 547,
+          "sha256": "d5e1b8a1ba43ecd829b25fc7eb8600c34397b1bb6a637d19e5a186b18dc41061"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "military_losses",
+          "start_line": 158,
+          "end_line": 197,
+          "sha256": "47ab8e2f6a28ac6928142b1685f87403186ce218ec7e638a16f6c7c13c9a9eeb"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "wonders",
+          "start_line": 252,
+          "end_line": 297,
+          "sha256": "cc5b0104397a65b888ac5afc37fb0709df4251c7ef90e74fa2f25f402b265898"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "demographics",
+          "start_line": 433,
+          "end_line": 708,
+          "sha256": "22eca70dd699f91121d098a4184249e981dc198a12314c54f8b14d270b5da750"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "world_map",
+          "start_line": 45,
+          "end_line": 134,
+          "sha256": "8c2e5c85c1f6132abc3cbcada8af8e2f77eda975388745fb87fe43c41125261c"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "power_graph",
+          "start_line": 177,
+          "end_line": 241,
+          "sha256": "71d6b694a21565524fdd21538d99df0bffd2af46a567e18eb8bfec800b90a808"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "historian_report",
+          "start_line": 325,
+          "end_line": 430,
+          "sha256": "0c706d09b8281d01fb210973f2ee3d913a04c97e5e4f33ecf614a200949798b4"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "cont_table",
+          "start_line": 139,
+          "end_line": 174,
+          "sha256": "2d20605b60a5a15232b925f8f9d1f709eca6859de3f47918d90ba038bfce9f93"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/FAME.C",
+          "name": "top_five",
+          "start_line": 256,
+          "end_line": 320,
+          "sha256": "96dc8b47b5425494658bf3cc7f805341d18cf8d2b24d02659e64207dff7d8bfd"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "civ_info",
+          "start_line": 25,
+          "end_line": 110,
+          "sha256": "d579fd378e3db6a01ba77d1fb985dd26f8541fe7b8cb5740082bbc9d8143bb05"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "unit_table",
+          "start_line": 112,
+          "end_line": 164,
+          "sha256": "b0e56a44c4ec5464852e15e9a360d8d7b96ccf1dd6bab81b7a9a0a5636c0e86c"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "kill_table",
+          "start_line": 166,
+          "end_line": 194,
+          "sha256": "529dfe15edd7c9d8ee4c2bfc363d8e8919d4a52995c9e647a4c43a0ca4667426"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "civilopedia",
+          "start_line": 53,
+          "end_line": 73,
+          "sha256": "5f4bee7b09658f0e03efd084e153c69cb4a16e98ab8b3ab6efe01b1105e7f4ee"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_list",
+          "start_line": 78,
+          "end_line": 238,
+          "sha256": "661aa88c2386e8e84c284e19a92f9ac087a3fa09aefaba3c8d0d38128c0d3fb4"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_show",
+          "start_line": 245,
+          "end_line": 565,
+          "sha256": "1002716de7379c7a36c82c3f76e6c4e7dd243a4cdb4ea428a1512d577e521c8d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_audience",
+          "start_line": 51,
+          "end_line": 653,
+          "sha256": "151020eb54dbc0d5740c79b995d7bad4654640ffc19f9019d44021f2870f974d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_menu",
+          "start_line": 1117,
+          "end_line": 1131,
+          "sha256": "7eb5fe6e414057c8fae9c9728f36fe8c015be0863db392c8a79d8e97e7531e4c"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "treaty_prompt",
+          "start_line": 769,
+          "end_line": 777,
+          "sha256": "b9245db105d4a760c4ed04c1407096171ee0046088cf950a8729c8f66fdfd86a"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "dip_menu",
+          "start_line": 54,
+          "end_line": 223,
+          "sha256": "b5c862e65c9879d01c5816ea73dd6d99e00534e553d302e6b1a5ddac9268e4ec"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "buy_u",
+          "start_line": 236,
+          "end_line": 301,
+          "sha256": "c7746205bb5bc719da005c5f8c33d2a276ce45b6883c2af2e458270660cfb33d"
+        },
+        {
+          "scene": "research",
+          "path": "src/ECONOMY.C",
+          "name": "give_advance",
+          "start_line": 735,
+          "end_line": 872,
+          "sha256": "8effbe28b6a511a7f292cae5007cd8c7167b72081124838d5fa15563bc8ddf51"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "new_government",
+          "start_line": 570,
+          "end_line": 597,
+          "sha256": "f327c23a77367cf7932936bb057178f209be427d68f8c22cfebaf74545ebdc73"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "cabinet",
+          "start_line": 550,
+          "end_line": 565,
+          "sha256": "66da274189f901d2008508439bb6e2c83ac07abd91623b4f378fba6d13969ad2"
+        },
+        {
+          "scene": "government",
+          "path": "src/DIPLOMAC.C",
+          "name": "set_government",
+          "start_line": 131,
+          "end_line": 192,
+          "sha256": "bc38dc3cfffb088d37ff2fda62ea223b037f62e32b2b12dad3152c4a50af72a7"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_inspect",
+          "start_line": 537,
+          "end_line": 555,
+          "sha256": "c0ac976f72af53dd3c22f15c684a8ce37cd7ba00dd34980dcb58c97269daad01"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_view",
+          "start_line": 111,
+          "end_line": 285,
+          "sha256": "c3d3b92d56c3020678746734656171ae51fa9ee67a0e8d3fa8a591d1322356b1"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_build",
+          "start_line": 389,
+          "end_line": 478,
+          "sha256": "9aba9a3b1e676b764cf26771995b4756debfed8e26faf2552bc1da72cecc4111"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_launch",
+          "start_line": 558,
+          "end_line": 579,
+          "sha256": "f88597838a266eaab7c4ca0a4bd8256df3d953f19934af1d3016c8f0e1b0dd65"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palace_view",
+          "start_line": 41,
+          "end_line": 217,
+          "sha256": "d3477d55e0e03c05bc00652a719850386cb627a5462bb4a2bb2b95ee68fcdec8"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palpic",
+          "start_line": 222,
+          "end_line": 352,
+          "sha256": "d8feb86f4a62e4776dc71b00a0fc0b2c782ea7a41e59b556a6839aac190f3149"
+        },
+        {
+          "scene": "replay",
+          "path": "src/REPLAY.C",
+          "name": "replay",
+          "start_line": 40,
+          "end_line": 235,
+          "sha256": "1e9e70dc9065141927e994c95dff22b04f8805a837a4f80c754eee443fd114f9"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/FAME.C",
+          "name": "show_fame",
+          "start_line": 71,
+          "end_line": 153,
+          "sha256": "ec85143d365d8db6b9a8def0731f60f375a20d20c5b14419d371613861137efa"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/TURN.C",
+          "name": "show_hall_of_fame",
+          "start_line": 343,
+          "end_line": 360,
+          "sha256": "2eb0917be7781e6738db48d902779e8638401612c4bdee200c17780fd0bfc8c1"
+        },
+        {
+          "scene": "score",
+          "path": "src/CITY.C",
+          "name": "civ_score",
+          "start_line": 476,
+          "end_line": 646,
+          "sha256": "3ed13f3e4abf79c1a1f635a0e2d652a7167464c2787791fbb65788cda52d2876"
+        },
+        {
+          "scene": "score",
+          "path": "src/TURN.C",
+          "name": "rate_civs",
+          "start_line": 438,
+          "end_line": 490,
+          "sha256": "27feea96cde2a70cc402dd6ec6bbb6966c141bfc70a3ee232c29e7651fbf69cd"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NEWS.C",
+          "name": "news_box",
+          "start_line": 19,
+          "end_line": 108,
+          "sha256": "d45de1bec29d546005696a9e26531a43ef6edfb75d975385e6ae4ff63e42e91a"
+        },
+        {
+          "scene": "notification",
+          "path": "src/MESSAGE.C",
+          "name": "news_effect",
+          "start_line": 35,
+          "end_line": 64,
+          "sha256": "0e80da437d30eb0c3276de396969913a52c6cd01a2f0ae5487444cbaaac4184f"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_a",
+          "start_line": 100,
+          "end_line": 120,
+          "sha256": "987a896387487e49389011a6738814f2144c824c5ab380a71c053c6667cd139e"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_b",
+          "start_line": 125,
+          "end_line": 145,
+          "sha256": "4d2ff79c7ad145a33ee9ed9483178fb5bf3c5faf492a00e6c414f7e37fc6a6a0"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "show_help",
+          "start_line": 42,
+          "end_line": 60,
+          "sha256": "c465ef023f3801d9addc80b9fac57a509e49877311c0ce1f8d2b38594e069055"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "advice",
+          "start_line": 64,
+          "end_line": 97,
+          "sha256": "f41e18b3277f8a7d15dc0622d345b125873d854540b9b56da8dac9d9052b8d33"
+        },
+        {
+          "scene": "help",
+          "path": "src/MESSAGE.C",
+          "name": "help_open",
+          "start_line": 141,
+          "end_line": 157,
+          "sha256": "0127870ee982f525f3b0cec8c63f824f38c17b1733cce0d00242bb874717e7b3"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz_event",
+          "start_line": 31,
+          "end_line": 38,
+          "sha256": "2ce80b0b8df946afb105350e61742b664b94b45b99344972a97d8d95e0a19d53"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz",
+          "start_line": 43,
+          "end_line": 145,
+          "sha256": "aba90c4871e233752d9f5e19266f5fd5d9e7ab639f0cd25268b27b9d203e8a36"
+        },
+        {
+          "scene": "resource-prompt",
+          "path": "src/GAME.C",
+          "name": "disk_insert",
+          "start_line": 595,
+          "end_line": 628,
+          "sha256": "7a7c3c78c4922e3740b99d413cf9dabc47700a2c6e5ffa1dca73ed31947c266e",
+          "parse_recovery": "explicit-int parsing view of original implicit-int declaration"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_choose",
+          "start_line": 35,
+          "end_line": 38,
+          "sha256": "2209adfff267dd0598db6fda5513720813879aab380eadd564a3ef63ee9482a9"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_core",
+          "start_line": 46,
+          "end_line": 172,
+          "sha256": "db5f9115295c4fb5909a730318a345e833d8c933b5e8ae4379b18ea9edb5a834"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_menu",
+          "start_line": 102,
+          "end_line": 105,
+          "sha256": "2953e35379b72d63aa5a752d2de6c07e3c66d5e61c509fb45ee15dd818fec39a"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_msg",
+          "start_line": 107,
+          "end_line": 119,
+          "sha256": "a1c5c1f3878f1886e50a1ec429ba69ad3a41166d74b7caaabe813e73ac7382c7"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/TURN.C",
+          "name": "game_turn",
+          "start_line": 122,
+          "end_line": 336,
+          "sha256": "475b0dcfb4efe9a9d67a37c7fe21194b493bae95ae0436907d4f6c8f50e56937"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/ECONOMY.C",
+          "name": "civ_economy",
+          "start_line": 52,
+          "end_line": 91,
+          "sha256": "b62f0fa4d99118bd132cd26519324410d30311c6a3043b4b05957dc6e51f9b0f"
+        },
+        {
+          "scene": "combat",
+          "path": "src/BATTLE.C",
+          "name": "battle",
+          "start_line": 31,
+          "end_line": 230,
+          "sha256": "89749200308c7e93561e754b7361f14442a429c8ae607a081e8e653fae80373c"
+        },
+        {
+          "scene": "combat",
+          "path": "src/DIPLOMAT.C",
+          "name": "nuke_animation",
+          "start_line": 306,
+          "end_line": 334,
+          "sha256": "e4e5a2d0b61994ad44d38625d789aa0cbfe777326c416a37c016edc3c4bff5ff"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CITY.C",
+          "name": "city_disaster",
+          "start_line": 239,
+          "end_line": 446,
+          "sha256": "6cf8a02b3d2c16776522f37d83a2577897b68ed1e3ab802d580c0f939b3ecaa0"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CAPTURE.C",
+          "name": "capunit",
+          "start_line": 66,
+          "end_line": 193,
+          "sha256": "193d9eace07ff64ab14d1ed2cafe747b32228d645f5079c083dccc161336a3a1"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/DIPLOMAC.C",
+          "name": "diplomacy_event",
+          "start_line": 197,
+          "end_line": 251,
+          "sha256": "eb16b35212774b454fed4e71749030033e50c79fa5d625fd3752826b037a0117"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CIVWAR.C",
+          "name": "civil_war",
+          "start_line": 22,
+          "end_line": 199,
+          "sha256": "cd77bedfc6082c6a109dfd7739a8c7db66e2861c817d3f2c0aca7a34eb742814"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "spaceship_arrival",
+          "start_line": 309,
+          "end_line": 477,
+          "sha256": "fd11e565f9ad9b6c8082e5f9029947cce25aa42f19cde4021ad3840ceab3bf23"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "civ_destroyed",
+          "start_line": 482,
+          "end_line": 536,
+          "sha256": "0e30f9eff290544abc63e6b5731f717d280a1af6b4fff6f4f694a347ab5c815a"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/TURN.C",
+          "name": "show_ad_screen",
+          "start_line": 364,
+          "end_line": 374,
+          "sha256": "c614bfb91c621b2ee26f3195a452ca054471b7ce25bdd288bf1a4a9e564fa59a"
+        }
+      ],
+      "missing_anchors": [],
+      "unclassified_sites": 0,
+      "unparsed_sites": 0,
+      "indirect_calling_functions": 0,
+      "ui_site_count": 360,
+      "candidate_ancestor_counts": {
+        "advisor": 18,
+        "audience": 13,
+        "boot": 16,
+        "building-sale": 64,
+        "city": 76,
+        "city-unit-list": 64,
+        "civilopedia": 21,
+        "combat": 11,
+        "confirmation": 10,
+        "diplomat": 13,
+        "endgame": 17,
+        "event-choice": 29,
+        "find-city": 10,
+        "game-menu": 5,
+        "government": 12,
+        "hall-of-fame": 9,
+        "help": 10,
+        "load": 9,
+        "main-menu": 16,
+        "map": 60,
+        "new-game": 24,
+        "notification": 14,
+        "options": 5,
+        "palace": 23,
+        "production": 4,
+        "quiz": 15,
+        "rates": 60,
+        "rename": 11,
+        "replay": 7,
+        "research": 12,
+        "resource-prompt": 1,
+        "save": 13,
+        "score": 10,
+        "spaceship": 18,
+        "turn-processing": 41,
+        "unit-orders": 1,
+        "world-report": 22,
+        "world-setup": 20
+      }
+    },
+    {
+      "edition": "474.03",
+      "revision": "9aefe00fce1b4d014bbc7a1dc9b2a25914cce9e5",
+      "files": [
+        {
+          "path": "src/ADVISORS.C",
+          "sha256": "084a39a92206d17eac187d312cb892e1ec4a6d7bc25cfd05975ac5fba00bae41"
+        },
+        {
+          "path": "src/AUDIENCE.C",
+          "sha256": "90a99917cd190bf1198e18b67d8ec01bcb172368da2374d13510adda0a9d5f3f"
+        },
+        {
+          "path": "src/BATTLE.C",
+          "sha256": "33553e63c49686aca4a23139e9ea0e8cce15f41be41315ed8932a6e12b669862"
+        },
+        {
+          "path": "src/CAPTURE.C",
+          "sha256": "b4c24bef2ce16d59ee255911e9521db56a9e2432dcd03efff53ac8b6c6123f91"
+        },
+        {
+          "path": "src/CITY.C",
+          "sha256": "44dc6c0f163827f0ac8d315511b6c9b2922b7834af977958ad42fa79a26ea39d"
+        },
+        {
+          "path": "src/CITYMGT.C",
+          "sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc"
+        },
+        {
+          "path": "src/CITYVIEW.C",
+          "sha256": "9ff2508046e7c57d39299dbe85be87467d24b82787646dd4b68cb34d9d150ad4"
+        },
+        {
+          "path": "src/CIVWAR.C",
+          "sha256": "6cd32fe1de728a5630c44bc6c27b94e1284c308c6c8854cfb2533bdaeb7582c1"
+        },
+        {
+          "path": "src/CONTROL.C",
+          "sha256": "73b12de7687c412e4437742d079977d2a0f946d9b4e4a103be730e12f3333ef3"
+        },
+        {
+          "path": "src/CORE.C",
+          "sha256": "45ec1a139205bfeb2294ce288ac8a9707bf982250b6bc3467d0d30f0dd6afa69"
+        },
+        {
+          "path": "src/CRTEDIT.C",
+          "sha256": "5f476e8c30343e90aff8c391d79c167a1a431f7a84297924b92cc661dd3549b7"
+        },
+        {
+          "path": "src/DIALOG.C",
+          "sha256": "cdd61a8c106629da65342c7ad7f42638458ef259e99011f952f9be4eacb17e8c"
+        },
+        {
+          "path": "src/DIPLOMAC.C",
+          "sha256": "74b5beb1766b825b1b3f2e9769ec8fb282e715c58b55c068a9a7504e38655563"
+        },
+        {
+          "path": "src/DIPLOMAT.C",
+          "sha256": "008ccea3f4bf7426b0111f7aa560aea7d7fe8645f126bcc7ab9bec014bb55ae4"
+        },
+        {
+          "path": "src/DRAW.C",
+          "sha256": "0d8d55729dbbd109e1812dee83ffe303228413723f160c60cfbf4a8018dd0ee8"
+        },
+        {
+          "path": "src/ECONOMY.C",
+          "sha256": "a723130b99b972252f0f25a37d6d1dfa42cdc00924f7d44755c10e922440473a"
+        },
+        {
+          "path": "src/FAME.C",
+          "sha256": "059fc18654bffeaeff1999c0044be42ca7e77bf3f467d2ecd1a2314e86a9b2c7"
+        },
+        {
+          "path": "src/FILEIO.C",
+          "sha256": "7f0045df8386c35d1cc58ffd9e2cb3235450510bc4624e74c37eac33f023e2fe"
+        },
+        {
+          "path": "src/GAME.C",
+          "sha256": "d0ff8a960a49e7fbb90bb221f70efa891e65ffc88a6b5f0aa471bd78f07d1246"
+        },
+        {
+          "path": "src/GLOBALS.C",
+          "sha256": "295f7283daed9c5a3ad0511aa4cde89e7ef7468e55e82a026e8f61fe9aa77a5f"
+        },
+        {
+          "path": "src/IMAGE.C",
+          "sha256": "708e7e0e1b08075cc3f1513b48a4f4f54dffacac6228018eff1045a98410da00"
+        },
+        {
+          "path": "src/INTRO.C",
+          "sha256": "9be6415984d4a7407824e7c717419290f22a17571dca027c9c1ff04d36d8c6d3"
+        },
+        {
+          "path": "src/MAP.C",
+          "sha256": "180be2caf8ff5ed830f3ca5aed1cb2faae6803c5d4c35ba50b43597081e9e25a"
+        },
+        {
+          "path": "src/MAPVIEW.C",
+          "sha256": "d8953f79a8395c221751a57ba274a73bac1da604619dd9f2492f75eaee360b54"
+        },
+        {
+          "path": "src/MENUS.C",
+          "sha256": "dde7c82a7cd50c185ae2d1d4e0728884dcf35d4cc95db30834602ef69dfdc640"
+        },
+        {
+          "path": "src/MESSAGE.C",
+          "sha256": "5642f8b6593e4662856a10969dca3b0f18ac870bb0ae80c1c499f0c786e2a947"
+        },
+        {
+          "path": "src/NAMES.C",
+          "sha256": "f9ffa0acdca92f0777f8acc96d0009f37589ea9bcb482174a90d561c9a01b38e"
+        },
+        {
+          "path": "src/NEWGAME.C",
+          "sha256": "9b1f2d095ebaa4b192f38b1d353fa107ad336f219fd38c477bfc9c2eaff4697d"
+        },
+        {
+          "path": "src/NEWS.C",
+          "sha256": "100fbe456a73dec3f04833bf3685239fca2a78a293297702e791bb0f9436e388"
+        },
+        {
+          "path": "src/NOTES.C",
+          "sha256": "95d12893d431f630f51277d72b9be63ae85cbdab41667a5f38bd71eac6f0a184"
+        },
+        {
+          "path": "src/PALACE.C",
+          "sha256": "c5d848f8d17c42ea1990e7ed85f22b8fa73b06db9380907d8afd42a7f9049466"
+        },
+        {
+          "path": "src/PATH.C",
+          "sha256": "03a3801a77309396b47457b62ebbad3f63a157b42ddd098dd0b0959454e9d19b"
+        },
+        {
+          "path": "src/PEDIA.C",
+          "sha256": "1cf4a2380be01b2cf4073e8c893c6ddcc329cceef9ce05d659ffede406883a9d"
+        },
+        {
+          "path": "src/QUIZ.C",
+          "sha256": "1bf0fe4c797ad3bc4fd498fca4293da1f310095bf202a09db898ecdbf2d11a6b"
+        },
+        {
+          "path": "src/REPLAY.C",
+          "sha256": "023e1afb83eac7a7a649916a7684b71c4b0033cb594fa03e5155a26966fdd3ac"
+        },
+        {
+          "path": "src/REPORTS.C",
+          "sha256": "889f913dc1b7ef083eb71c1043ed17a13545d67477d17074eea780b818cda043"
+        },
+        {
+          "path": "src/SAVE.C",
+          "sha256": "e061c53d2092f1b09e3902ff81d675caa45d1d2e5bb1307169dd136884075b79"
+        },
+        {
+          "path": "src/SETUP.C",
+          "sha256": "baddfe9009abbe614f8ce5787ef267e1e1df036f4df28ebfae726fbf7578a989"
+        },
+        {
+          "path": "src/SPACESHP.C",
+          "sha256": "94056ff549a38741183e458bcf571fc2c1a97c7f09f5cfaf85fa928cc6376189"
+        },
+        {
+          "path": "src/STATUS.C",
+          "sha256": "ad47ee173fbcee3969efdfb01bb8da9e4e2b80baba6c5fb185f3418745ecd607"
+        },
+        {
+          "path": "src/TURN.C",
+          "sha256": "82a75ea97c79945a53910d12e3d9ee9fbedf1875c7bb8b61c4b67b8fbf14f211"
+        },
+        {
+          "path": "src/UNITAI.C",
+          "sha256": "3c093f620d2be51dc8cd07ff10f38047a98b051d772c7e65303d01ad6ef44c7d"
+        },
+        {
+          "path": "src/UNITS.C",
+          "sha256": "ad2cc36f5db94b07a0ed2235588aa058af39d1e354988bd9c115555770d97005"
+        },
+        {
+          "path": "src/WORLDGEN.C",
+          "sha256": "2eca4d53ca8f5d8017baa572b7e5770b12a1fd206cf2a9552139794d68758e87"
+        }
+      ],
+      "function_count": 432,
+      "parser_error_files": [
+        "src/ADVISORS.C",
+        "src/AUDIENCE.C",
+        "src/CAPTURE.C",
+        "src/CITY.C",
+        "src/CITYMGT.C",
+        "src/CITYVIEW.C",
+        "src/CONTROL.C",
+        "src/CORE.C",
+        "src/DIPLOMAT.C",
+        "src/ECONOMY.C",
+        "src/FAME.C",
+        "src/FILEIO.C",
+        "src/GAME.C",
+        "src/GLOBALS.C",
+        "src/INTRO.C",
+        "src/MAP.C",
+        "src/MAPVIEW.C",
+        "src/NAMES.C",
+        "src/NEWGAME.C",
+        "src/PEDIA.C",
+        "src/QUIZ.C",
+        "src/REPLAY.C",
+        "src/REPORTS.C",
+        "src/SAVE.C",
+        "src/SPACESHP.C",
+        "src/STATUS.C",
+        "src/TURN.C",
+        "src/UNITAI.C",
+        "src/UNITS.C",
+        "src/WORLDGEN.C"
+      ],
+      "anchors": [
+        {
+          "scene": "boot",
+          "path": "src/SETUP.C",
+          "name": "setup_main",
+          "start_line": 25,
+          "end_line": 144,
+          "sha256": "2889c85571925ed9acb5c8d8ab1dad8cbfa0fdbdb9e4adb2ca92a8798cb928a8"
+        },
+        {
+          "scene": "boot",
+          "path": "src/INTRO.C",
+          "name": "game_startup",
+          "start_line": 54,
+          "end_line": 305,
+          "sha256": "c58eb01b78057195ddcce26301a1cd75cb464b8ffa07642f6085586b2fdd20d5"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "main",
+          "start_line": 472,
+          "end_line": 525,
+          "sha256": "d1abc3b5210f55a3600a8964adc1258a264db52bf3d5be6cdbc38eaa36fbc81b"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "start_game",
+          "start_line": 788,
+          "end_line": 801,
+          "sha256": "5707fb87d1b2e1fd5d8e769d53071be04275321dc3fa1bd29013af26f7fef729"
+        },
+        {
+          "scene": "main-menu",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/WORLDGEN.C",
+          "name": "make_world",
+          "start_line": 60,
+          "end_line": 247,
+          "sha256": "cafa1cf6283db1fe7331a4b6d763d1a8dd016667e5fa46ef316a49f3a4193af5"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NEWGAME.C",
+          "name": "new_game",
+          "start_line": 46,
+          "end_line": 194,
+          "sha256": "e4efcda1608246eddde0e352cacbca64e7f896647f21d1fc9168418f0f948949"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "load_game",
+          "start_line": 47,
+          "end_line": 80,
+          "sha256": "818763a13cad113a79a13f6bdbad52a3dbbe78bbb1e993b6555e26c8d4d0294b"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "save_game",
+          "start_line": 133,
+          "end_line": 175,
+          "sha256": "88ab1af1d49a71d931f4540d42d914e638f8ceb76ee9b5ef27656cd032d63e83"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "map",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 79,
+          "end_line": 1286,
+          "sha256": "0a9fc62a48e3a4dccd1b0797c7eaa30958897427cb7328716f9e370997a44271"
+        },
+        {
+          "scene": "map",
+          "path": "src/TURN.C",
+          "name": "sel_player",
+          "start_line": 725,
+          "end_line": 738,
+          "sha256": "9de083e2559c49541943a71e9adf5b5aee72632eec18137dea59927ed884b7dc"
+        },
+        {
+          "scene": "game-menu",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "unit-orders",
+          "path": "src/MENUS.C",
+          "name": "unit_orders_menu",
+          "start_line": 137,
+          "end_line": 240,
+          "sha256": "4f7088f1fd4d2f5bc610de8e02c80cf94f15f0dd771e8a25a42bb55d1c0bf390"
+        },
+        {
+          "scene": "options",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "rates",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 79,
+          "end_line": 1286,
+          "sha256": "0a9fc62a48e3a4dccd1b0797c7eaa30958897427cb7328716f9e370997a44271"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "goto_city",
+          "start_line": 93,
+          "end_line": 109,
+          "sha256": "677b5949e90f0d3d9fc15d98458ae5f81042783a518d5d69be8f352cd428051d"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "find_city",
+          "start_line": 114,
+          "end_line": 134,
+          "sha256": "271640ab308ed0a437099b7613b72b754f5ee20a45c00fe2e400769a16728265"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYVIEW.C",
+          "name": "city_scene",
+          "start_line": 38,
+          "end_line": 387,
+          "sha256": "91372fb51638336392a286d36fd681faf5dd05b0df54598e87b07ed944a18142"
+        },
+        {
+          "scene": "city",
+          "path": "src/ECONOMY.C",
+          "name": "kill",
+          "start_line": 155,
+          "end_line": 166,
+          "sha256": "f0134aa59c7d51e43626d8195c97f06c8490e4788964c69a5d86516ffcb5cbb7"
+        },
+        {
+          "scene": "production",
+          "path": "src/ECONOMY.C",
+          "name": "find_slot",
+          "start_line": 171,
+          "end_line": 543,
+          "sha256": "6d62cf7b1d505d1665c07b333cc0152e6e939b7bc861ebd75adc8d0c4c6da813"
+        },
+        {
+          "scene": "city-unit-list",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "building-sale",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_city",
+          "start_line": 31,
+          "end_line": 51,
+          "sha256": "e5007fb0b37cf4ff14358bc515b7b03238fc641db6a35d991175b7335ece4c51"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "edit_line",
+          "start_line": 139,
+          "end_line": 226,
+          "sha256": "61c5de8f1cb2e7eb7207e154b1f329f0fc8278cfedfbc2cf39af1e3573afeef6"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "city_rpt",
+          "start_line": 619,
+          "end_line": 674,
+          "sha256": "f2fb8bc842e2b3eb9dd5d5899338595b7afdd08b8b27d21e1639de549902412b"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mil_rpt",
+          "start_line": 118,
+          "end_line": 156,
+          "sha256": "b274fa71b99efaf1da7cb9eb83e6d9371576ebe687238bd58325f0b80413c708"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "spy_rpt",
+          "start_line": 320,
+          "end_line": 433,
+          "sha256": "9580eb9f713a2a09d1e5a25f5d2ee2f3c1c8130fc288491017135a603cc57d88"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mood_rpt",
+          "start_line": 549,
+          "end_line": 608,
+          "sha256": "8cd30f19861bd1f657b5af5d806cf232e7363f5e24337aefa2c42a9b2ca02a33"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "trade_rpt",
+          "start_line": 202,
+          "end_line": 314,
+          "sha256": "71f921c73799c40c9b177a763dee85e73293d6aab53cf34d148d8d63c8018269"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "sci_rpt",
+          "start_line": 65,
+          "end_line": 113,
+          "sha256": "3e31a93008c4c31f8c11413c7ba52e0a0b94c8a4ae54c4d66b5694f17f0d12d1"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "civ_dossier",
+          "start_line": 437,
+          "end_line": 547,
+          "sha256": "d5e1b8a1ba43ecd829b25fc7eb8600c34397b1bb6a637d19e5a186b18dc41061"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "military_losses",
+          "start_line": 158,
+          "end_line": 197,
+          "sha256": "47ab8e2f6a28ac6928142b1685f87403186ce218ec7e638a16f6c7c13c9a9eeb"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "wonders",
+          "start_line": 252,
+          "end_line": 297,
+          "sha256": "cc5b0104397a65b888ac5afc37fb0709df4251c7ef90e74fa2f25f402b265898"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "demographics",
+          "start_line": 433,
+          "end_line": 708,
+          "sha256": "22eca70dd699f91121d098a4184249e981dc198a12314c54f8b14d270b5da750"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "world_map",
+          "start_line": 45,
+          "end_line": 134,
+          "sha256": "10290e70576f20ed9ca6a598379ebdd08b0f7f15e389ec222fa50fe89890f356"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "power_graph",
+          "start_line": 177,
+          "end_line": 241,
+          "sha256": "71d6b694a21565524fdd21538d99df0bffd2af46a567e18eb8bfec800b90a808"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "historian_report",
+          "start_line": 325,
+          "end_line": 430,
+          "sha256": "0c706d09b8281d01fb210973f2ee3d913a04c97e5e4f33ecf614a200949798b4"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "cont_table",
+          "start_line": 139,
+          "end_line": 174,
+          "sha256": "2d20605b60a5a15232b925f8f9d1f709eca6859de3f47918d90ba038bfce9f93"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/FAME.C",
+          "name": "top_five",
+          "start_line": 256,
+          "end_line": 320,
+          "sha256": "96dc8b47b5425494658bf3cc7f805341d18cf8d2b24d02659e64207dff7d8bfd"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "civ_info",
+          "start_line": 25,
+          "end_line": 110,
+          "sha256": "d579fd378e3db6a01ba77d1fb985dd26f8541fe7b8cb5740082bbc9d8143bb05"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "unit_table",
+          "start_line": 112,
+          "end_line": 164,
+          "sha256": "b0e56a44c4ec5464852e15e9a360d8d7b96ccf1dd6bab81b7a9a0a5636c0e86c"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "kill_table",
+          "start_line": 166,
+          "end_line": 194,
+          "sha256": "529dfe15edd7c9d8ee4c2bfc363d8e8919d4a52995c9e647a4c43a0ca4667426"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "civilopedia",
+          "start_line": 53,
+          "end_line": 73,
+          "sha256": "5f4bee7b09658f0e03efd084e153c69cb4a16e98ab8b3ab6efe01b1105e7f4ee"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_list",
+          "start_line": 78,
+          "end_line": 238,
+          "sha256": "661aa88c2386e8e84c284e19a92f9ac087a3fa09aefaba3c8d0d38128c0d3fb4"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_show",
+          "start_line": 245,
+          "end_line": 565,
+          "sha256": "1002716de7379c7a36c82c3f76e6c4e7dd243a4cdb4ea428a1512d577e521c8d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_audience",
+          "start_line": 51,
+          "end_line": 653,
+          "sha256": "151020eb54dbc0d5740c79b995d7bad4654640ffc19f9019d44021f2870f974d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_menu",
+          "start_line": 1117,
+          "end_line": 1131,
+          "sha256": "7eb5fe6e414057c8fae9c9728f36fe8c015be0863db392c8a79d8e97e7531e4c"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "treaty_prompt",
+          "start_line": 769,
+          "end_line": 777,
+          "sha256": "b9245db105d4a760c4ed04c1407096171ee0046088cf950a8729c8f66fdfd86a"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "dip_menu",
+          "start_line": 54,
+          "end_line": 223,
+          "sha256": "b5c862e65c9879d01c5816ea73dd6d99e00534e553d302e6b1a5ddac9268e4ec"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "buy_u",
+          "start_line": 236,
+          "end_line": 301,
+          "sha256": "c7746205bb5bc719da005c5f8c33d2a276ce45b6883c2af2e458270660cfb33d"
+        },
+        {
+          "scene": "research",
+          "path": "src/ECONOMY.C",
+          "name": "give_advance",
+          "start_line": 729,
+          "end_line": 866,
+          "sha256": "25911eae2506e947a5a3ed1183a981fe00a74d6d5ad1769262e077a784c84983"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "new_government",
+          "start_line": 570,
+          "end_line": 597,
+          "sha256": "f327c23a77367cf7932936bb057178f209be427d68f8c22cfebaf74545ebdc73"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "cabinet",
+          "start_line": 550,
+          "end_line": 565,
+          "sha256": "66da274189f901d2008508439bb6e2c83ac07abd91623b4f378fba6d13969ad2"
+        },
+        {
+          "scene": "government",
+          "path": "src/DIPLOMAC.C",
+          "name": "set_government",
+          "start_line": 131,
+          "end_line": 192,
+          "sha256": "bc38dc3cfffb088d37ff2fda62ea223b037f62e32b2b12dad3152c4a50af72a7"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_inspect",
+          "start_line": 539,
+          "end_line": 557,
+          "sha256": "c0ac976f72af53dd3c22f15c684a8ce37cd7ba00dd34980dcb58c97269daad01"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_view",
+          "start_line": 113,
+          "end_line": 287,
+          "sha256": "c3d3b92d56c3020678746734656171ae51fa9ee67a0e8d3fa8a591d1322356b1"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_build",
+          "start_line": 391,
+          "end_line": 480,
+          "sha256": "9aba9a3b1e676b764cf26771995b4756debfed8e26faf2552bc1da72cecc4111"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_launch",
+          "start_line": 560,
+          "end_line": 582,
+          "sha256": "ff8610513837d533138e0f56eeb67d308f2345ca3bd2c1c3f1da4e6d52fca89b"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palace_view",
+          "start_line": 41,
+          "end_line": 217,
+          "sha256": "d3477d55e0e03c05bc00652a719850386cb627a5462bb4a2bb2b95ee68fcdec8"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palpic",
+          "start_line": 222,
+          "end_line": 352,
+          "sha256": "d8feb86f4a62e4776dc71b00a0fc0b2c782ea7a41e59b556a6839aac190f3149"
+        },
+        {
+          "scene": "replay",
+          "path": "src/REPLAY.C",
+          "name": "replay",
+          "start_line": 39,
+          "end_line": 234,
+          "sha256": "1e9e70dc9065141927e994c95dff22b04f8805a837a4f80c754eee443fd114f9"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/FAME.C",
+          "name": "show_fame",
+          "start_line": 71,
+          "end_line": 153,
+          "sha256": "ec85143d365d8db6b9a8def0731f60f375a20d20c5b14419d371613861137efa"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/TURN.C",
+          "name": "show_hall_of_fame",
+          "start_line": 342,
+          "end_line": 359,
+          "sha256": "2eb0917be7781e6738db48d902779e8638401612c4bdee200c17780fd0bfc8c1"
+        },
+        {
+          "scene": "score",
+          "path": "src/CITY.C",
+          "name": "civ_score",
+          "start_line": 476,
+          "end_line": 658,
+          "sha256": "ac5de1bc99f5cfdc674388a7c654ccc105386a626132b2193a693522668ba956"
+        },
+        {
+          "scene": "score",
+          "path": "src/TURN.C",
+          "name": "rate_civs",
+          "start_line": 437,
+          "end_line": 489,
+          "sha256": "27feea96cde2a70cc402dd6ec6bbb6966c141bfc70a3ee232c29e7651fbf69cd"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NEWS.C",
+          "name": "news_box",
+          "start_line": 19,
+          "end_line": 108,
+          "sha256": "d45de1bec29d546005696a9e26531a43ef6edfb75d975385e6ae4ff63e42e91a"
+        },
+        {
+          "scene": "notification",
+          "path": "src/MESSAGE.C",
+          "name": "news_effect",
+          "start_line": 35,
+          "end_line": 64,
+          "sha256": "0e80da437d30eb0c3276de396969913a52c6cd01a2f0ae5487444cbaaac4184f"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_a",
+          "start_line": 100,
+          "end_line": 120,
+          "sha256": "987a896387487e49389011a6738814f2144c824c5ab380a71c053c6667cd139e"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_b",
+          "start_line": 125,
+          "end_line": 145,
+          "sha256": "4d2ff79c7ad145a33ee9ed9483178fb5bf3c5faf492a00e6c414f7e37fc6a6a0"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "show_help",
+          "start_line": 42,
+          "end_line": 60,
+          "sha256": "c465ef023f3801d9addc80b9fac57a509e49877311c0ce1f8d2b38594e069055"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "advice",
+          "start_line": 64,
+          "end_line": 97,
+          "sha256": "f41e18b3277f8a7d15dc0622d345b125873d854540b9b56da8dac9d9052b8d33"
+        },
+        {
+          "scene": "help",
+          "path": "src/MESSAGE.C",
+          "name": "help_open",
+          "start_line": 141,
+          "end_line": 157,
+          "sha256": "0127870ee982f525f3b0cec8c63f824f38c17b1733cce0d00242bb874717e7b3"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz_event",
+          "start_line": 31,
+          "end_line": 38,
+          "sha256": "2ce80b0b8df946afb105350e61742b664b94b45b99344972a97d8d95e0a19d53"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz",
+          "start_line": 43,
+          "end_line": 145,
+          "sha256": "aba90c4871e233752d9f5e19266f5fd5d9e7ab639f0cd25268b27b9d203e8a36"
+        },
+        {
+          "scene": "resource-prompt",
+          "path": "src/GAME.C",
+          "name": "disk_insert",
+          "start_line": 595,
+          "end_line": 628,
+          "sha256": "7a7c3c78c4922e3740b99d413cf9dabc47700a2c6e5ffa1dca73ed31947c266e",
+          "parse_recovery": "explicit-int parsing view of original implicit-int declaration"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_choose",
+          "start_line": 35,
+          "end_line": 38,
+          "sha256": "2209adfff267dd0598db6fda5513720813879aab380eadd564a3ef63ee9482a9"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_core",
+          "start_line": 46,
+          "end_line": 172,
+          "sha256": "db5f9115295c4fb5909a730318a345e833d8c933b5e8ae4379b18ea9edb5a834"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_menu",
+          "start_line": 101,
+          "end_line": 104,
+          "sha256": "2953e35379b72d63aa5a752d2de6c07e3c66d5e61c509fb45ee15dd818fec39a"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_msg",
+          "start_line": 106,
+          "end_line": 118,
+          "sha256": "a1c5c1f3878f1886e50a1ec429ba69ad3a41166d74b7caaabe813e73ac7382c7"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/TURN.C",
+          "name": "game_turn",
+          "start_line": 121,
+          "end_line": 335,
+          "sha256": "475b0dcfb4efe9a9d67a37c7fe21194b493bae95ae0436907d4f6c8f50e56937"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/ECONOMY.C",
+          "name": "civ_economy",
+          "start_line": 52,
+          "end_line": 91,
+          "sha256": "b62f0fa4d99118bd132cd26519324410d30311c6a3043b4b05957dc6e51f9b0f"
+        },
+        {
+          "scene": "combat",
+          "path": "src/BATTLE.C",
+          "name": "battle",
+          "start_line": 31,
+          "end_line": 230,
+          "sha256": "e604e99a371cbe4c9ac29087a1720be12100967e006346a7db48b291a9f792d0"
+        },
+        {
+          "scene": "combat",
+          "path": "src/DIPLOMAT.C",
+          "name": "nuke_animation",
+          "start_line": 306,
+          "end_line": 334,
+          "sha256": "e4e5a2d0b61994ad44d38625d789aa0cbfe777326c416a37c016edc3c4bff5ff"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CITY.C",
+          "name": "city_disaster",
+          "start_line": 239,
+          "end_line": 446,
+          "sha256": "5bfe13532f3405708d0eac1619af286e6eb3554b9679e00eee28dd5f9c7f128b"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CAPTURE.C",
+          "name": "capunit",
+          "start_line": 66,
+          "end_line": 184,
+          "sha256": "97692d3e9f1c2c7c0f655b09bb83d2020f90f905da8e5ae313368abbcca59932"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/DIPLOMAC.C",
+          "name": "diplomacy_event",
+          "start_line": 197,
+          "end_line": 251,
+          "sha256": "eb16b35212774b454fed4e71749030033e50c79fa5d625fd3752826b037a0117"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CIVWAR.C",
+          "name": "civil_war",
+          "start_line": 22,
+          "end_line": 199,
+          "sha256": "cd77bedfc6082c6a109dfd7739a8c7db66e2861c817d3f2c0aca7a34eb742814"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "spaceship_arrival",
+          "start_line": 310,
+          "end_line": 478,
+          "sha256": "fd11e565f9ad9b6c8082e5f9029947cce25aa42f19cde4021ad3840ceab3bf23"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "civ_destroyed",
+          "start_line": 483,
+          "end_line": 537,
+          "sha256": "0e30f9eff290544abc63e6b5731f717d280a1af6b4fff6f4f694a347ab5c815a"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/TURN.C",
+          "name": "show_ad_screen",
+          "start_line": 363,
+          "end_line": 373,
+          "sha256": "c614bfb91c621b2ee26f3195a452ca054471b7ce25bdd288bf1a4a9e564fa59a"
+        }
+      ],
+      "missing_anchors": [],
+      "unclassified_sites": 0,
+      "unparsed_sites": 0,
+      "indirect_calling_functions": 0,
+      "ui_site_count": 361,
+      "candidate_ancestor_counts": {
+        "advisor": 18,
+        "audience": 13,
+        "boot": 16,
+        "building-sale": 66,
+        "city": 78,
+        "city-unit-list": 66,
+        "civilopedia": 21,
+        "combat": 11,
+        "confirmation": 10,
+        "diplomat": 13,
+        "endgame": 17,
+        "event-choice": 29,
+        "find-city": 10,
+        "game-menu": 5,
+        "government": 12,
+        "hall-of-fame": 9,
+        "help": 10,
+        "load": 9,
+        "main-menu": 16,
+        "map": 60,
+        "new-game": 24,
+        "notification": 14,
+        "options": 5,
+        "palace": 23,
+        "production": 4,
+        "quiz": 15,
+        "rates": 60,
+        "rename": 11,
+        "replay": 7,
+        "research": 12,
+        "resource-prompt": 1,
+        "save": 13,
+        "score": 10,
+        "spaceship": 18,
+        "turn-processing": 43,
+        "unit-orders": 1,
+        "world-report": 22,
+        "world-setup": 20
+      }
+    },
+    {
+      "edition": "474.05",
+      "revision": "d9214fcd36aa6003d28aae60c3974b665f752280",
+      "files": [
+        {
+          "path": "src/ADVISORS.C",
+          "sha256": "084a39a92206d17eac187d312cb892e1ec4a6d7bc25cfd05975ac5fba00bae41"
+        },
+        {
+          "path": "src/AUDIENCE.C",
+          "sha256": "90a99917cd190bf1198e18b67d8ec01bcb172368da2374d13510adda0a9d5f3f"
+        },
+        {
+          "path": "src/BATTLE.C",
+          "sha256": "33553e63c49686aca4a23139e9ea0e8cce15f41be41315ed8932a6e12b669862"
+        },
+        {
+          "path": "src/CAPTURE.C",
+          "sha256": "b4c24bef2ce16d59ee255911e9521db56a9e2432dcd03efff53ac8b6c6123f91"
+        },
+        {
+          "path": "src/CITY.C",
+          "sha256": "44dc6c0f163827f0ac8d315511b6c9b2922b7834af977958ad42fa79a26ea39d"
+        },
+        {
+          "path": "src/CITYMGT.C",
+          "sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc"
+        },
+        {
+          "path": "src/CITYVIEW.C",
+          "sha256": "9ff2508046e7c57d39299dbe85be87467d24b82787646dd4b68cb34d9d150ad4"
+        },
+        {
+          "path": "src/CIVWAR.C",
+          "sha256": "6cd32fe1de728a5630c44bc6c27b94e1284c308c6c8854cfb2533bdaeb7582c1"
+        },
+        {
+          "path": "src/CONTROL.C",
+          "sha256": "40f717b6adce7c310dc7b9da7a151afbc2e70e451b83a33e6f5779af2c3029e7"
+        },
+        {
+          "path": "src/CORE.C",
+          "sha256": "45ec1a139205bfeb2294ce288ac8a9707bf982250b6bc3467d0d30f0dd6afa69"
+        },
+        {
+          "path": "src/CRTEDIT.C",
+          "sha256": "d5badb55f2d68b41adcb4e8ebc27cf864511f09cdb4c3fe8f38eef911bca7b52"
+        },
+        {
+          "path": "src/DIALOG.C",
+          "sha256": "cdd61a8c106629da65342c7ad7f42638458ef259e99011f952f9be4eacb17e8c"
+        },
+        {
+          "path": "src/DIPLOMAC.C",
+          "sha256": "74b5beb1766b825b1b3f2e9769ec8fb282e715c58b55c068a9a7504e38655563"
+        },
+        {
+          "path": "src/DIPLOMAT.C",
+          "sha256": "008ccea3f4bf7426b0111f7aa560aea7d7fe8645f126bcc7ab9bec014bb55ae4"
+        },
+        {
+          "path": "src/DRAW.C",
+          "sha256": "0d8d55729dbbd109e1812dee83ffe303228413723f160c60cfbf4a8018dd0ee8"
+        },
+        {
+          "path": "src/ECONOMY.C",
+          "sha256": "0303da40260eab3e19ae8a4c1cc1fd6d2df4c60b94981ebe063c768579ef03ef"
+        },
+        {
+          "path": "src/FAME.C",
+          "sha256": "059fc18654bffeaeff1999c0044be42ca7e77bf3f467d2ecd1a2314e86a9b2c7"
+        },
+        {
+          "path": "src/FILEIO.C",
+          "sha256": "7f0045df8386c35d1cc58ffd9e2cb3235450510bc4624e74c37eac33f023e2fe"
+        },
+        {
+          "path": "src/GAME.C",
+          "sha256": "d0ff8a960a49e7fbb90bb221f70efa891e65ffc88a6b5f0aa471bd78f07d1246"
+        },
+        {
+          "path": "src/GLOBALS.C",
+          "sha256": "295f7283daed9c5a3ad0511aa4cde89e7ef7468e55e82a026e8f61fe9aa77a5f"
+        },
+        {
+          "path": "src/IMAGE.C",
+          "sha256": "708e7e0e1b08075cc3f1513b48a4f4f54dffacac6228018eff1045a98410da00"
+        },
+        {
+          "path": "src/INTRO.C",
+          "sha256": "9be6415984d4a7407824e7c717419290f22a17571dca027c9c1ff04d36d8c6d3"
+        },
+        {
+          "path": "src/MAP.C",
+          "sha256": "180be2caf8ff5ed830f3ca5aed1cb2faae6803c5d4c35ba50b43597081e9e25a"
+        },
+        {
+          "path": "src/MAPVIEW.C",
+          "sha256": "d8953f79a8395c221751a57ba274a73bac1da604619dd9f2492f75eaee360b54"
+        },
+        {
+          "path": "src/MENUS.C",
+          "sha256": "dde7c82a7cd50c185ae2d1d4e0728884dcf35d4cc95db30834602ef69dfdc640"
+        },
+        {
+          "path": "src/MESSAGE.C",
+          "sha256": "5642f8b6593e4662856a10969dca3b0f18ac870bb0ae80c1c499f0c786e2a947"
+        },
+        {
+          "path": "src/NAMES.C",
+          "sha256": "f9ffa0acdca92f0777f8acc96d0009f37589ea9bcb482174a90d561c9a01b38e"
+        },
+        {
+          "path": "src/NEWGAME.C",
+          "sha256": "9b1f2d095ebaa4b192f38b1d353fa107ad336f219fd38c477bfc9c2eaff4697d"
+        },
+        {
+          "path": "src/NEWS.C",
+          "sha256": "100fbe456a73dec3f04833bf3685239fca2a78a293297702e791bb0f9436e388"
+        },
+        {
+          "path": "src/NOTES.C",
+          "sha256": "95d12893d431f630f51277d72b9be63ae85cbdab41667a5f38bd71eac6f0a184"
+        },
+        {
+          "path": "src/PALACE.C",
+          "sha256": "c5d848f8d17c42ea1990e7ed85f22b8fa73b06db9380907d8afd42a7f9049466"
+        },
+        {
+          "path": "src/PATH.C",
+          "sha256": "03a3801a77309396b47457b62ebbad3f63a157b42ddd098dd0b0959454e9d19b"
+        },
+        {
+          "path": "src/PEDIA.C",
+          "sha256": "1cf4a2380be01b2cf4073e8c893c6ddcc329cceef9ce05d659ffede406883a9d"
+        },
+        {
+          "path": "src/QUIZ.C",
+          "sha256": "1bf0fe4c797ad3bc4fd498fca4293da1f310095bf202a09db898ecdbf2d11a6b"
+        },
+        {
+          "path": "src/REPLAY.C",
+          "sha256": "023e1afb83eac7a7a649916a7684b71c4b0033cb594fa03e5155a26966fdd3ac"
+        },
+        {
+          "path": "src/REPORTS.C",
+          "sha256": "889f913dc1b7ef083eb71c1043ed17a13545d67477d17074eea780b818cda043"
+        },
+        {
+          "path": "src/SAVE.C",
+          "sha256": "e061c53d2092f1b09e3902ff81d675caa45d1d2e5bb1307169dd136884075b79"
+        },
+        {
+          "path": "src/SETUP.C",
+          "sha256": "423673b2b02e8f80cf16f0378cb52a4aec7fb3b41530c78292335a32d84845d3"
+        },
+        {
+          "path": "src/SPACESHP.C",
+          "sha256": "94056ff549a38741183e458bcf571fc2c1a97c7f09f5cfaf85fa928cc6376189"
+        },
+        {
+          "path": "src/STATUS.C",
+          "sha256": "ad47ee173fbcee3969efdfb01bb8da9e4e2b80baba6c5fb185f3418745ecd607"
+        },
+        {
+          "path": "src/TURN.C",
+          "sha256": "82a75ea97c79945a53910d12e3d9ee9fbedf1875c7bb8b61c4b67b8fbf14f211"
+        },
+        {
+          "path": "src/UNITAI.C",
+          "sha256": "3c093f620d2be51dc8cd07ff10f38047a98b051d772c7e65303d01ad6ef44c7d"
+        },
+        {
+          "path": "src/UNITS.C",
+          "sha256": "ad2cc36f5db94b07a0ed2235588aa058af39d1e354988bd9c115555770d97005"
+        },
+        {
+          "path": "src/WORLDGEN.C",
+          "sha256": "937f512ede20589bb14f120d38fdc5204a39cc2ebbdfea1a83fb093b7ef27b38"
+        }
+      ],
+      "function_count": 432,
+      "parser_error_files": [
+        "src/ADVISORS.C",
+        "src/AUDIENCE.C",
+        "src/CAPTURE.C",
+        "src/CITY.C",
+        "src/CITYMGT.C",
+        "src/CITYVIEW.C",
+        "src/CONTROL.C",
+        "src/CORE.C",
+        "src/DIPLOMAT.C",
+        "src/ECONOMY.C",
+        "src/FAME.C",
+        "src/FILEIO.C",
+        "src/GAME.C",
+        "src/GLOBALS.C",
+        "src/INTRO.C",
+        "src/MAP.C",
+        "src/MAPVIEW.C",
+        "src/NAMES.C",
+        "src/NEWGAME.C",
+        "src/PEDIA.C",
+        "src/QUIZ.C",
+        "src/REPLAY.C",
+        "src/REPORTS.C",
+        "src/SAVE.C",
+        "src/SPACESHP.C",
+        "src/STATUS.C",
+        "src/TURN.C",
+        "src/UNITAI.C",
+        "src/UNITS.C",
+        "src/WORLDGEN.C"
+      ],
+      "anchors": [
+        {
+          "scene": "boot",
+          "path": "src/SETUP.C",
+          "name": "setup_main",
+          "start_line": 25,
+          "end_line": 144,
+          "sha256": "5fe3c60fa7f105edd6140d13d72c079e048c97cbe4e68735aed597362f94016e"
+        },
+        {
+          "scene": "boot",
+          "path": "src/INTRO.C",
+          "name": "game_startup",
+          "start_line": 54,
+          "end_line": 305,
+          "sha256": "c58eb01b78057195ddcce26301a1cd75cb464b8ffa07642f6085586b2fdd20d5"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "main",
+          "start_line": 472,
+          "end_line": 525,
+          "sha256": "d1abc3b5210f55a3600a8964adc1258a264db52bf3d5be6cdbc38eaa36fbc81b"
+        },
+        {
+          "scene": "boot",
+          "path": "src/GAME.C",
+          "name": "start_game",
+          "start_line": 788,
+          "end_line": 801,
+          "sha256": "5707fb87d1b2e1fd5d8e769d53071be04275321dc3fa1bd29013af26f7fef729"
+        },
+        {
+          "scene": "main-menu",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/GAME.C",
+          "name": "game_menu",
+          "start_line": 660,
+          "end_line": 786,
+          "sha256": "51a7f72e74dca0c7a20996a34d60b94282a5d6f9569e6f44d5ab3c1e301b5620"
+        },
+        {
+          "scene": "world-setup",
+          "path": "src/WORLDGEN.C",
+          "name": "make_world",
+          "start_line": 60,
+          "end_line": 247,
+          "sha256": "cafa1cf6283db1fe7331a4b6d763d1a8dd016667e5fa46ef316a49f3a4193af5"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NEWGAME.C",
+          "name": "new_game",
+          "start_line": 46,
+          "end_line": 194,
+          "sha256": "e4efcda1608246eddde0e352cacbca64e7f896647f21d1fc9168418f0f948949"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "new-game",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "load_game",
+          "start_line": 47,
+          "end_line": 80,
+          "sha256": "818763a13cad113a79a13f6bdbad52a3dbbe78bbb1e993b6555e26c8d4d0294b"
+        },
+        {
+          "scene": "load",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "save_game",
+          "start_line": 133,
+          "end_line": 175,
+          "sha256": "88ab1af1d49a71d931f4540d42d914e638f8ceb76ee9b5ef27656cd032d63e83"
+        },
+        {
+          "scene": "save",
+          "path": "src/SAVE.C",
+          "name": "choose_drive",
+          "start_line": 212,
+          "end_line": 254,
+          "sha256": "b2ab3b7372e672f856bde1db2f4f94456250089e14bf07d7569d774d96dc3830"
+        },
+        {
+          "scene": "map",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 80,
+          "end_line": 1287,
+          "sha256": "0a9fc62a48e3a4dccd1b0797c7eaa30958897427cb7328716f9e370997a44271"
+        },
+        {
+          "scene": "map",
+          "path": "src/TURN.C",
+          "name": "sel_player",
+          "start_line": 725,
+          "end_line": 738,
+          "sha256": "9de083e2559c49541943a71e9adf5b5aee72632eec18137dea59927ed884b7dc"
+        },
+        {
+          "scene": "game-menu",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "unit-orders",
+          "path": "src/MENUS.C",
+          "name": "unit_orders_menu",
+          "start_line": 137,
+          "end_line": 240,
+          "sha256": "4f7088f1fd4d2f5bc610de8e02c80cf94f15f0dd771e8a25a42bb55d1c0bf390"
+        },
+        {
+          "scene": "options",
+          "path": "src/MENUS.C",
+          "name": "game_menu_a",
+          "start_line": 86,
+          "end_line": 135,
+          "sha256": "259a1072eacaaafac4998c73dbf4e62f12faa3068e4c81fc012368ac995342c7"
+        },
+        {
+          "scene": "rates",
+          "path": "src/CONTROL.C",
+          "name": "ai_turn",
+          "start_line": 80,
+          "end_line": 1287,
+          "sha256": "0a9fc62a48e3a4dccd1b0797c7eaa30958897427cb7328716f9e370997a44271"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "goto_city",
+          "start_line": 93,
+          "end_line": 109,
+          "sha256": "677b5949e90f0d3d9fc15d98458ae5f81042783a518d5d69be8f352cd428051d"
+        },
+        {
+          "scene": "find-city",
+          "path": "src/NAMES.C",
+          "name": "find_city",
+          "start_line": 114,
+          "end_line": 134,
+          "sha256": "271640ab308ed0a437099b7613b72b754f5ee20a45c00fe2e400769a16728265"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "city",
+          "path": "src/CITYVIEW.C",
+          "name": "city_scene",
+          "start_line": 38,
+          "end_line": 387,
+          "sha256": "91372fb51638336392a286d36fd681faf5dd05b0df54598e87b07ed944a18142"
+        },
+        {
+          "scene": "city",
+          "path": "src/ECONOMY.C",
+          "name": "kill",
+          "start_line": 155,
+          "end_line": 166,
+          "sha256": "f0134aa59c7d51e43626d8195c97f06c8490e4788964c69a5d86516ffcb5cbb7"
+        },
+        {
+          "scene": "production",
+          "path": "src/ECONOMY.C",
+          "name": "find_slot",
+          "start_line": 171,
+          "end_line": 546,
+          "sha256": "9624df544577f2b6f1e392f04c16af530f84075c4a3a52792252739923222015"
+        },
+        {
+          "scene": "city-unit-list",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "building-sale",
+          "path": "src/CITYMGT.C",
+          "name": "city_process",
+          "start_line": 127,
+          "end_line": 1961,
+          "sha256": "1aa1704f4f5be82359a46e4054a963238de4b291f2f458dbec281839a15d673a"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_city",
+          "start_line": 31,
+          "end_line": 51,
+          "sha256": "e5007fb0b37cf4ff14358bc515b7b03238fc641db6a35d991175b7335ece4c51"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_leader",
+          "start_line": 56,
+          "end_line": 66,
+          "sha256": "07cda960df4e7f627df645493dff0ddc39a1a8710e3cfb4a9ab3cf037ade1a60"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "rename_tribe",
+          "start_line": 71,
+          "end_line": 88,
+          "sha256": "5e30a054b008a1f47d699508a503aade29495920e41a183047c798bda1f2b7c7"
+        },
+        {
+          "scene": "rename",
+          "path": "src/NAMES.C",
+          "name": "edit_line",
+          "start_line": 139,
+          "end_line": 226,
+          "sha256": "61c5de8f1cb2e7eb7207e154b1f329f0fc8278cfedfbc2cf39af1e3573afeef6"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "city_rpt",
+          "start_line": 619,
+          "end_line": 674,
+          "sha256": "f2fb8bc842e2b3eb9dd5d5899338595b7afdd08b8b27d21e1639de549902412b"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mil_rpt",
+          "start_line": 118,
+          "end_line": 156,
+          "sha256": "b274fa71b99efaf1da7cb9eb83e6d9371576ebe687238bd58325f0b80413c708"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "spy_rpt",
+          "start_line": 320,
+          "end_line": 433,
+          "sha256": "9580eb9f713a2a09d1e5a25f5d2ee2f3c1c8130fc288491017135a603cc57d88"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "mood_rpt",
+          "start_line": 549,
+          "end_line": 608,
+          "sha256": "8cd30f19861bd1f657b5af5d806cf232e7363f5e24337aefa2c42a9b2ca02a33"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "trade_rpt",
+          "start_line": 202,
+          "end_line": 314,
+          "sha256": "71f921c73799c40c9b177a763dee85e73293d6aab53cf34d148d8d63c8018269"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "sci_rpt",
+          "start_line": 65,
+          "end_line": 113,
+          "sha256": "3e31a93008c4c31f8c11413c7ba52e0a0b94c8a4ae54c4d66b5694f17f0d12d1"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "civ_dossier",
+          "start_line": 437,
+          "end_line": 547,
+          "sha256": "d5e1b8a1ba43ecd829b25fc7eb8600c34397b1bb6a637d19e5a186b18dc41061"
+        },
+        {
+          "scene": "advisor",
+          "path": "src/ADVISORS.C",
+          "name": "military_losses",
+          "start_line": 158,
+          "end_line": 197,
+          "sha256": "47ab8e2f6a28ac6928142b1685f87403186ce218ec7e638a16f6c7c13c9a9eeb"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "wonders",
+          "start_line": 252,
+          "end_line": 297,
+          "sha256": "cc5b0104397a65b888ac5afc37fb0709df4251c7ef90e74fa2f25f402b265898"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "demographics",
+          "start_line": 433,
+          "end_line": 708,
+          "sha256": "22eca70dd699f91121d098a4184249e981dc198a12314c54f8b14d270b5da750"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "world_map",
+          "start_line": 45,
+          "end_line": 134,
+          "sha256": "10290e70576f20ed9ca6a598379ebdd08b0f7f15e389ec222fa50fe89890f356"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "power_graph",
+          "start_line": 177,
+          "end_line": 241,
+          "sha256": "71d6b694a21565524fdd21538d99df0bffd2af46a567e18eb8bfec800b90a808"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "historian_report",
+          "start_line": 325,
+          "end_line": 430,
+          "sha256": "0c706d09b8281d01fb210973f2ee3d913a04c97e5e4f33ecf614a200949798b4"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/REPORTS.C",
+          "name": "cont_table",
+          "start_line": 139,
+          "end_line": 174,
+          "sha256": "2d20605b60a5a15232b925f8f9d1f709eca6859de3f47918d90ba038bfce9f93"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/FAME.C",
+          "name": "top_five",
+          "start_line": 256,
+          "end_line": 320,
+          "sha256": "96dc8b47b5425494658bf3cc7f805341d18cf8d2b24d02659e64207dff7d8bfd"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "civ_info",
+          "start_line": 25,
+          "end_line": 110,
+          "sha256": "d579fd378e3db6a01ba77d1fb985dd26f8541fe7b8cb5740082bbc9d8143bb05"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "unit_table",
+          "start_line": 112,
+          "end_line": 164,
+          "sha256": "b0e56a44c4ec5464852e15e9a360d8d7b96ccf1dd6bab81b7a9a0a5636c0e86c"
+        },
+        {
+          "scene": "world-report",
+          "path": "src/STATUS.C",
+          "name": "kill_table",
+          "start_line": 166,
+          "end_line": 194,
+          "sha256": "529dfe15edd7c9d8ee4c2bfc363d8e8919d4a52995c9e647a4c43a0ca4667426"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "civilopedia",
+          "start_line": 53,
+          "end_line": 73,
+          "sha256": "5f4bee7b09658f0e03efd084e153c69cb4a16e98ab8b3ab6efe01b1105e7f4ee"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_list",
+          "start_line": 78,
+          "end_line": 238,
+          "sha256": "661aa88c2386e8e84c284e19a92f9ac087a3fa09aefaba3c8d0d38128c0d3fb4"
+        },
+        {
+          "scene": "civilopedia",
+          "path": "src/PEDIA.C",
+          "name": "pedia_show",
+          "start_line": 245,
+          "end_line": 565,
+          "sha256": "1002716de7379c7a36c82c3f76e6c4e7dd243a4cdb4ea428a1512d577e521c8d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_audience",
+          "start_line": 51,
+          "end_line": 653,
+          "sha256": "151020eb54dbc0d5740c79b995d7bad4654640ffc19f9019d44021f2870f974d"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "leader_menu",
+          "start_line": 1117,
+          "end_line": 1131,
+          "sha256": "7eb5fe6e414057c8fae9c9728f36fe8c015be0863db392c8a79d8e97e7531e4c"
+        },
+        {
+          "scene": "audience",
+          "path": "src/AUDIENCE.C",
+          "name": "treaty_prompt",
+          "start_line": 769,
+          "end_line": 777,
+          "sha256": "b9245db105d4a760c4ed04c1407096171ee0046088cf950a8729c8f66fdfd86a"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "dip_menu",
+          "start_line": 54,
+          "end_line": 223,
+          "sha256": "b5c862e65c9879d01c5816ea73dd6d99e00534e553d302e6b1a5ddac9268e4ec"
+        },
+        {
+          "scene": "diplomat",
+          "path": "src/DIPLOMAT.C",
+          "name": "buy_u",
+          "start_line": 236,
+          "end_line": 301,
+          "sha256": "c7746205bb5bc719da005c5f8c33d2a276ce45b6883c2af2e458270660cfb33d"
+        },
+        {
+          "scene": "research",
+          "path": "src/ECONOMY.C",
+          "name": "give_advance",
+          "start_line": 732,
+          "end_line": 869,
+          "sha256": "25911eae2506e947a5a3ed1183a981fe00a74d6d5ad1769262e077a784c84983"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "new_government",
+          "start_line": 570,
+          "end_line": 597,
+          "sha256": "f327c23a77367cf7932936bb057178f209be427d68f8c22cfebaf74545ebdc73"
+        },
+        {
+          "scene": "government",
+          "path": "src/NEWGAME.C",
+          "name": "cabinet",
+          "start_line": 550,
+          "end_line": 565,
+          "sha256": "66da274189f901d2008508439bb6e2c83ac07abd91623b4f378fba6d13969ad2"
+        },
+        {
+          "scene": "government",
+          "path": "src/DIPLOMAC.C",
+          "name": "set_government",
+          "start_line": 131,
+          "end_line": 192,
+          "sha256": "bc38dc3cfffb088d37ff2fda62ea223b037f62e32b2b12dad3152c4a50af72a7"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_inspect",
+          "start_line": 539,
+          "end_line": 557,
+          "sha256": "c0ac976f72af53dd3c22f15c684a8ce37cd7ba00dd34980dcb58c97269daad01"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_view",
+          "start_line": 113,
+          "end_line": 287,
+          "sha256": "c3d3b92d56c3020678746734656171ae51fa9ee67a0e8d3fa8a591d1322356b1"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_build",
+          "start_line": 391,
+          "end_line": 480,
+          "sha256": "9aba9a3b1e676b764cf26771995b4756debfed8e26faf2552bc1da72cecc4111"
+        },
+        {
+          "scene": "spaceship",
+          "path": "src/SPACESHP.C",
+          "name": "spaceship_launch",
+          "start_line": 560,
+          "end_line": 582,
+          "sha256": "ff8610513837d533138e0f56eeb67d308f2345ca3bd2c1c3f1da4e6d52fca89b"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palace_view",
+          "start_line": 41,
+          "end_line": 217,
+          "sha256": "d3477d55e0e03c05bc00652a719850386cb627a5462bb4a2bb2b95ee68fcdec8"
+        },
+        {
+          "scene": "palace",
+          "path": "src/PALACE.C",
+          "name": "palpic",
+          "start_line": 222,
+          "end_line": 352,
+          "sha256": "d8feb86f4a62e4776dc71b00a0fc0b2c782ea7a41e59b556a6839aac190f3149"
+        },
+        {
+          "scene": "replay",
+          "path": "src/REPLAY.C",
+          "name": "replay",
+          "start_line": 39,
+          "end_line": 234,
+          "sha256": "1e9e70dc9065141927e994c95dff22b04f8805a837a4f80c754eee443fd114f9"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/FAME.C",
+          "name": "show_fame",
+          "start_line": 71,
+          "end_line": 153,
+          "sha256": "ec85143d365d8db6b9a8def0731f60f375a20d20c5b14419d371613861137efa"
+        },
+        {
+          "scene": "hall-of-fame",
+          "path": "src/TURN.C",
+          "name": "show_hall_of_fame",
+          "start_line": 342,
+          "end_line": 359,
+          "sha256": "2eb0917be7781e6738db48d902779e8638401612c4bdee200c17780fd0bfc8c1"
+        },
+        {
+          "scene": "score",
+          "path": "src/CITY.C",
+          "name": "civ_score",
+          "start_line": 476,
+          "end_line": 658,
+          "sha256": "ac5de1bc99f5cfdc674388a7c654ccc105386a626132b2193a693522668ba956"
+        },
+        {
+          "scene": "score",
+          "path": "src/TURN.C",
+          "name": "rate_civs",
+          "start_line": 437,
+          "end_line": 489,
+          "sha256": "27feea96cde2a70cc402dd6ec6bbb6966c141bfc70a3ee232c29e7651fbf69cd"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NEWS.C",
+          "name": "news_box",
+          "start_line": 19,
+          "end_line": 108,
+          "sha256": "d45de1bec29d546005696a9e26531a43ef6edfb75d975385e6ae4ff63e42e91a"
+        },
+        {
+          "scene": "notification",
+          "path": "src/MESSAGE.C",
+          "name": "news_effect",
+          "start_line": 35,
+          "end_line": 64,
+          "sha256": "0e80da437d30eb0c3276de396969913a52c6cd01a2f0ae5487444cbaaac4184f"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_a",
+          "start_line": 100,
+          "end_line": 120,
+          "sha256": "987a896387487e49389011a6738814f2144c824c5ab380a71c053c6667cd139e"
+        },
+        {
+          "scene": "notification",
+          "path": "src/NOTES.C",
+          "name": "notice_b",
+          "start_line": 125,
+          "end_line": 145,
+          "sha256": "4d2ff79c7ad145a33ee9ed9483178fb5bf3c5faf492a00e6c414f7e37fc6a6a0"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "show_help",
+          "start_line": 42,
+          "end_line": 60,
+          "sha256": "c465ef023f3801d9addc80b9fac57a509e49877311c0ce1f8d2b38594e069055"
+        },
+        {
+          "scene": "help",
+          "path": "src/NOTES.C",
+          "name": "advice",
+          "start_line": 64,
+          "end_line": 97,
+          "sha256": "f41e18b3277f8a7d15dc0622d345b125873d854540b9b56da8dac9d9052b8d33"
+        },
+        {
+          "scene": "help",
+          "path": "src/MESSAGE.C",
+          "name": "help_open",
+          "start_line": 141,
+          "end_line": 157,
+          "sha256": "0127870ee982f525f3b0cec8c63f824f38c17b1733cce0d00242bb874717e7b3"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz_event",
+          "start_line": 31,
+          "end_line": 38,
+          "sha256": "2ce80b0b8df946afb105350e61742b664b94b45b99344972a97d8d95e0a19d53"
+        },
+        {
+          "scene": "quiz",
+          "path": "src/QUIZ.C",
+          "name": "quiz",
+          "start_line": 43,
+          "end_line": 145,
+          "sha256": "aba90c4871e233752d9f5e19266f5fd5d9e7ab639f0cd25268b27b9d203e8a36"
+        },
+        {
+          "scene": "resource-prompt",
+          "path": "src/GAME.C",
+          "name": "disk_insert",
+          "start_line": 595,
+          "end_line": 628,
+          "sha256": "7a7c3c78c4922e3740b99d413cf9dabc47700a2c6e5ffa1dca73ed31947c266e",
+          "parse_recovery": "explicit-int parsing view of original implicit-int declaration"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_choose",
+          "start_line": 35,
+          "end_line": 38,
+          "sha256": "2209adfff267dd0598db6fda5513720813879aab380eadd564a3ef63ee9482a9"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/DIALOG.C",
+          "name": "menu_core",
+          "start_line": 46,
+          "end_line": 172,
+          "sha256": "db5f9115295c4fb5909a730318a345e833d8c933b5e8ae4379b18ea9edb5a834"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_menu",
+          "start_line": 101,
+          "end_line": 104,
+          "sha256": "2953e35379b72d63aa5a752d2de6c07e3c66d5e61c509fb45ee15dd818fec39a"
+        },
+        {
+          "scene": "confirmation",
+          "path": "src/TURN.C",
+          "name": "show_msg",
+          "start_line": 106,
+          "end_line": 118,
+          "sha256": "a1c5c1f3878f1886e50a1ec429ba69ad3a41166d74b7caaabe813e73ac7382c7"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/TURN.C",
+          "name": "game_turn",
+          "start_line": 121,
+          "end_line": 335,
+          "sha256": "475b0dcfb4efe9a9d67a37c7fe21194b493bae95ae0436907d4f6c8f50e56937"
+        },
+        {
+          "scene": "turn-processing",
+          "path": "src/ECONOMY.C",
+          "name": "civ_economy",
+          "start_line": 52,
+          "end_line": 91,
+          "sha256": "b62f0fa4d99118bd132cd26519324410d30311c6a3043b4b05957dc6e51f9b0f"
+        },
+        {
+          "scene": "combat",
+          "path": "src/BATTLE.C",
+          "name": "battle",
+          "start_line": 31,
+          "end_line": 230,
+          "sha256": "e604e99a371cbe4c9ac29087a1720be12100967e006346a7db48b291a9f792d0"
+        },
+        {
+          "scene": "combat",
+          "path": "src/DIPLOMAT.C",
+          "name": "nuke_animation",
+          "start_line": 306,
+          "end_line": 334,
+          "sha256": "e4e5a2d0b61994ad44d38625d789aa0cbfe777326c416a37c016edc3c4bff5ff"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CITY.C",
+          "name": "city_disaster",
+          "start_line": 239,
+          "end_line": 446,
+          "sha256": "5bfe13532f3405708d0eac1619af286e6eb3554b9679e00eee28dd5f9c7f128b"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CAPTURE.C",
+          "name": "capunit",
+          "start_line": 66,
+          "end_line": 184,
+          "sha256": "97692d3e9f1c2c7c0f655b09bb83d2020f90f905da8e5ae313368abbcca59932"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/DIPLOMAC.C",
+          "name": "diplomacy_event",
+          "start_line": 197,
+          "end_line": 251,
+          "sha256": "eb16b35212774b454fed4e71749030033e50c79fa5d625fd3752826b037a0117"
+        },
+        {
+          "scene": "event-choice",
+          "path": "src/CIVWAR.C",
+          "name": "civil_war",
+          "start_line": 22,
+          "end_line": 199,
+          "sha256": "cd77bedfc6082c6a109dfd7739a8c7db66e2861c817d3f2c0aca7a34eb742814"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "spaceship_arrival",
+          "start_line": 310,
+          "end_line": 478,
+          "sha256": "fd11e565f9ad9b6c8082e5f9029947cce25aa42f19cde4021ad3840ceab3bf23"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/INTRO.C",
+          "name": "civ_destroyed",
+          "start_line": 483,
+          "end_line": 537,
+          "sha256": "0e30f9eff290544abc63e6b5731f717d280a1af6b4fff6f4f694a347ab5c815a"
+        },
+        {
+          "scene": "endgame",
+          "path": "src/TURN.C",
+          "name": "show_ad_screen",
+          "start_line": 363,
+          "end_line": 373,
+          "sha256": "c614bfb91c621b2ee26f3195a452ca054471b7ce25bdd288bf1a4a9e564fa59a"
+        }
+      ],
+      "missing_anchors": [],
+      "unclassified_sites": 0,
+      "unparsed_sites": 0,
+      "indirect_calling_functions": 0,
+      "ui_site_count": 361,
+      "candidate_ancestor_counts": {
+        "advisor": 18,
+        "audience": 13,
+        "boot": 16,
+        "building-sale": 66,
+        "city": 78,
+        "city-unit-list": 66,
+        "civilopedia": 21,
+        "combat": 11,
+        "confirmation": 10,
+        "diplomat": 13,
+        "endgame": 17,
+        "event-choice": 29,
+        "find-city": 10,
+        "game-menu": 5,
+        "government": 12,
+        "hall-of-fame": 9,
+        "help": 10,
+        "load": 9,
+        "main-menu": 16,
+        "map": 60,
+        "new-game": 24,
+        "notification": 14,
+        "options": 5,
+        "palace": 23,
+        "production": 4,
+        "quiz": 15,
+        "rates": 60,
+        "rename": 11,
+        "replay": 7,
+        "research": 12,
+        "resource-prompt": 1,
+        "save": 13,
+        "score": 10,
+        "spaceship": 18,
+        "turn-processing": 43,
+        "unit-orders": 1,
+        "world-report": 22,
+        "world-setup": 20
+      }
+    }
+  ]
+}

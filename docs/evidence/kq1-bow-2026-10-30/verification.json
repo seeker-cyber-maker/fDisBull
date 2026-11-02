@@ -1,0 +1,149 @@
+{
+  "all_game_intent_recovered": false,
+  "bindings": {
+    "all_game_intent_recovered": false,
+    "edition": "kq1-dos-agi-2.917-pinned-resources",
+    "edition_qualification": "exact_original_resource_identity",
+    "low_level_ir_sha256": "5f86e87107c351be9e8bb4f472124f2ebb7f10cf2d29b1b53a6eb44840ca3f03",
+    "native_execution_verified": false,
+    "qualified_profile": "2.917",
+    "source_logic_sha256": "672b526d9606dbc59221c96b95f56556da581a5db1c1b73b8761e1c860d7f3bd",
+    "uil_sha256": "272991a8d2d7fd0a420cb677a9d6a4ec2c74b3fe81fa57aef167cee987bd54ca",
+    "verification": "exact_source_and_mapping_bindings",
+    "witness_count": 18
+  },
+  "claim": "one bounded initial-audience interaction: intent execution and source-state/request equivalence, with selected native observations",
+  "complete_game_player": false,
+  "format": "fdisbull-kq1-bow-verification-1",
+  "implementation_sha256": {
+    "scripts/verify_kq1_bow.py": "6d5b175a7b2022c576cb507ef9dc103b1f9b1c0748dd98b3272291fb8a438a1f",
+    "src/fdisbull/agi_slice.py": "81892c3500a0b97802bac93039ba97c39cfef22dc8f47d6530b272c05f3237f0",
+    "src/fdisbull/cli.py": "1ae51553c61d0cff63cad78dbf2bda2a36e3492dd746607071991c49d1f452a3",
+    "src/fdisbull/court_adapter.py": "a4973976c577db68ebcdbc2ac7617ee5bc4b6d919c0c50cdf2ca9ef34f1b0ffd",
+    "src/fdisbull/court_intents.py": "d91a2d257a9e1b6abd43dd1ee38b5c251b0c463a525935ced1b8ac59ceaba190",
+    "src/fdisbull/kq1_bow.py": "e82dd01dd17c15d39acd8d7975f7f463dea39d11a5d58b7622abb2be79036c33"
+  },
+  "native_reference": {
+    "animation_cels_observed": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "compared_actor_fields": [
+      "x",
+      "y"
+    ],
+    "compared_flags": [
+      4,
+      21,
+      22,
+      24,
+      98,
+      168
+    ],
+    "compared_variables": [
+      3,
+      6,
+      31,
+      60,
+      61
+    ],
+    "fresh_native_cases": 3,
+    "host_timing_reimplemented": false,
+    "model_boundary_comparisons": [
+      {
+        "boundary": "bow_admission",
+        "input_flags": "native_observed",
+        "matched": true,
+        "observed_pose": {
+          "cel": 0,
+          "loop": 0,
+          "view": 71
+        },
+        "unbound_control_alternatives_checked": 2
+      },
+      {
+        "boundary": "bow_completion",
+        "input_flags": "native_observed",
+        "matched": true,
+        "observed_pose": {
+          "cel": 0,
+          "loop": 1,
+          "view": 0
+        },
+        "unbound_control_alternatives_checked": 2
+      },
+      {
+        "boundary": "distant_refusal",
+        "input_flags": "explicit_parser_bridge",
+        "matched": true,
+        "observed_pose": {
+          "cel": 1,
+          "loop": 1,
+          "view": 0
+        },
+        "unbound_control_alternatives_checked": 2
+      },
+      {
+        "boundary": "completed_repeat",
+        "input_flags": "explicit_parser_bridge",
+        "matched": true,
+        "observed_pose": {
+          "cel": 1,
+          "loop": 1,
+          "view": 0
+        },
+        "unbound_control_alternatives_checked": 2
+      }
+    ],
+    "native_backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "native_completion_pose": {
+      "modal": {
+        "cel": 0,
+        "loop": 1,
+        "view": 0
+      },
+      "resumed_sample": {
+        "cel": 1,
+        "loop": 1,
+        "view": 0
+      }
+    },
+    "native_player_control_field": "unbound; both Boolean alternatives checked",
+    "native_renderer_replaced": false,
+    "output": "bound message requests and source text hashes match visually checked native frames; no OCR claim",
+    "parsed_groups": "declared typed command plus source-correlated native buffer; parser outside model",
+    "receipt_sha256": "43e7ec46cb2b217f8d060593d5db36f66fba95734e467efeaac02df7cf6e8bcd",
+    "timing": {
+      "admission_sample_tick": 115130,
+      "claim": "Sampled phase boundaries and bracketed restoration only. No exact native cycle count, instruction-to-frame latency, general duration, or speedup claim.",
+      "command_ready_tick": 114965,
+      "first_restored_actor_tick": 116969,
+      "last_bow_cel8_tick": 116837,
+      "response_frame_tick": 117974,
+      "score_write_tick": 115056,
+      "units": "guest milliseconds"
+    }
+  },
+  "source_matrix": {
+    "command_cases": 7040,
+    "completion_and_tie_cases": 450,
+    "explicit_context_refusals": 11,
+    "intent:court.award_first_respect": 320,
+    "intent:court.begin_bow": 640,
+    "intent:court.finish_bow": 450,
+    "intent:input.claim": 7340,
+    "intent:narration.modal": 7150,
+    "modal_acknowledgements": 7150,
+    "segments_compared": 14640,
+    "source_actions_compared": 29000
+  },
+  "source_scope": "selected dispatch segment; original parser, room/global scheduler and host engine remain outside the evaluator",
+  "status": "passed"
+}

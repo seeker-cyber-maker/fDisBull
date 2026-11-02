@@ -1,0 +1,10 @@
+Ancient TicTacToe adaptation: source, build and evidence
+
+Official upstream https://github.com/lunakurame/ancient-tictactoe, commit f6cd09a59a75cfe24fe15d654c4362ed11bfd6c3; fetched 2026-10-30. Original files attt.asm, make.bat, README and LICENSE preserved. Original license is Unlicense. Original recipe uses TASM and TLINK; those were unavailable. This is an adapted build, not an exact upstream build.
+
+Adaptation: mechanical translation of MASM/TASM procedure directives and memory operand syntax to NASM; replace MZ segment/stack directives with COM origin 100h, initial jump to the original start, and the DOS COM loader's shared code/data/stack segment. No intentional game-rule changes. Output is DOS COM, not MZ. Diff in adaptation.patch; attt-nasm.asm is the built source. convert.py reproduces it when run from a directory directly below a parent containing source/attt.asm (the original build used a separate port/ directory).
+
+Build with NASM 2.16.03: nasm -f bin -o ATTT.COM attt-nasm.asm
+ATTT.COM SHA-256 b582a31d28d9a265c38d29ed09dffe0396f47e6bf4497569766c036f6674fc43, size 1755 bytes.
+
+Evidence: fDisBull 0.26.0, DOSBox-X backend SHA-256 6dea7e6ac612adb31a213ee92b4871d6a28b18db51edc66fa47ac57383575c8f, SDL_AUDIODRIVER=dummy, 2026-10-30. Actual queued physical keys were followed by bounded execution, then sampled game variables and saved screenshots. Wrong-player input and an occupied square left state unchanged; q,4,w,5,e produced Player 1 win; q,8,e,5,a,6,x,1,c produced a draw. Screenshots show the corresponding end screens. native-evidence.json records each state. native_test.py is the original task-layout test script; requires fDisBull, compatible backend and a learner/ATTT.COM sibling, and creates a disposable test database. This covers representative paths, not every win line or complete equivalence to a TASM build.

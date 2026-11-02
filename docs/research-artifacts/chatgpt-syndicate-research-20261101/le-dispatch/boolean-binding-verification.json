@@ -1,0 +1,42 @@
+{
+  "sites": [
+    {
+      "dispatch": "0x4398c",
+      "slice_start": "0x4395f",
+      "matching_instructions": 13,
+      "conditional_escape_targets": [],
+      "exact_predicate_and_index_binding": true,
+      "limitations": "Conditional on reaching this slice and then its dispatch, valid flat accesses and unchanged table/code; earlier global reachability is not proved."
+    },
+    {
+      "dispatch": "0x4878e",
+      "slice_start": "0x48749",
+      "matching_instructions": 18,
+      "conditional_escape_targets": [
+        "0x48826"
+      ],
+      "exact_predicate_and_index_binding": true,
+      "limitations": "Conditional on reaching this slice and then its dispatch, valid flat accesses and unchanged table/code; earlier global reachability is not proved."
+    },
+    {
+      "dispatch": "0x488b7",
+      "slice_start": "0x48872",
+      "matching_instructions": 18,
+      "conditional_escape_targets": [
+        "0x48936"
+      ],
+      "exact_predicate_and_index_binding": true,
+      "limitations": "Conditional on reaching this slice and then its dispatch, valid flat accesses and unchanged table/code; earlier global reachability is not proved."
+    },
+    {
+      "dispatch": "0x4a3a1",
+      "slice_start": "0x4a374",
+      "matching_instructions": 13,
+      "conditional_escape_targets": [],
+      "exact_predicate_and_index_binding": true,
+      "limitations": "Conditional on reaching this slice and then its dispatch, valid flat accesses and unchanged table/code; earlier global reachability is not proved."
+    }
+  ],
+  "all_pass": true,
+  "original_game_execution": false
+}

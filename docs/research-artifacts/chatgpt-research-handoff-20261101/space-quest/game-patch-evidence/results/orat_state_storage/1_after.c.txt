@@ -1,0 +1,3 @@
+write_property(self, 0x1a, acc_in);
+acc_out = acc_in;
+prev_out = prev_in;

@@ -1,0 +1,302 @@
+{
+  "format": "fdisbull-independent-boundary-pair-summary-1",
+  "complete": true,
+  "material_findings": [],
+  "witness": {
+    "format": "fdisbull-agi-source-boundary-pair-witness-1",
+    "status": "qualified-restored-branch-pair",
+    "origin": {
+      "kind": "two-independent-supported-checkpoint-forks",
+      "fresh_game": false,
+      "donor_capture_sha256": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+      "donor_result_sha256": "9643db84d1b51a01408fa587910c215b18da8e9d2b050bad50f0547d740c9eda",
+      "donor_database_sha256": "8a1a79cc4fd33a5b9abc333e5e0daef6c0457799119a325d617c2580916a4a72",
+      "checkpoint_sha256": "5f336675f378d6c403c1bd32baa75ec1f06bc2b3e89fced92d2e7f34180d2edf"
+    },
+    "source": {
+      "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+      "object_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+      "logic": 51,
+      "logic_sha256": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580"
+    },
+    "forks": [
+      {
+        "name": "inside-02",
+        "branch": "inside",
+        "diagnostic_sha256": "b1995c5766475bdfb7e6d281e872f4f6f0b3b0e15b9963f0845655ce34a4bfc1",
+        "process_receipt_sha256": "1e72d6092a3795055e3856ebb4c791c38ac440092f68b6c990cf3e96e9c5e83b",
+        "producer_sha256": "808fccf1a36f7e135e441afd876bcb40881f7ca7bb5ac0c579dd4b2084f49e8b",
+        "inside_probe_sha256": "5770575f684de363662c1780b5d5c4d809ae08ad3763881c9e721208783b7d3f",
+        "database_sha256": "51a49fc3e5a9062789cba13ede7f3ae77bc70398e611f5b27d62bfac283ced3f",
+        "run_id": "bde312f981b54f59ae3c49e076f99bea",
+        "checkpoint_load_count": 1,
+        "command_inputs": {
+          "typed_commands": 1,
+          "submission_enter": 1,
+          "ordinary_direction_presses": 4,
+          "completed_modal_acknowledgements": 1
+        },
+        "frozen_pose_metric": {
+          "name": "Manhattan baseline-centre distance",
+          "value": 74,
+          "basis": "supplied launch ego/actor pose and widths; native distance opcode not observed"
+        },
+        "launch": {
+          "ego": {
+            "x": 130,
+            "y": 166,
+            "direction": 0,
+            "drawn": true
+          },
+          "actor_3": {
+            "x": 43,
+            "y": 164,
+            "view": 33,
+            "width": 37,
+            "height": 25,
+            "direction": 2,
+            "motion": 2,
+            "drawn": true
+          },
+          "score": 15,
+          "item26_location": 255,
+          "guest_ms": 3741,
+          "frame_id": 1166,
+          "frame_sha256": "cb9321ef8e2d92ed00cf511cfca12b582cec975ca3dcbea6ed87bb20e4ed3310"
+        },
+        "outcome": {
+          "ego": {
+            "x": 130,
+            "y": 166,
+            "direction": 0,
+            "drawn": true
+          },
+          "actor_3": {
+            "x": 46,
+            "y": 155,
+            "view": 33,
+            "width": 23,
+            "height": 25,
+            "direction": 8,
+            "motion": 2,
+            "drawn": true
+          },
+          "score": 13,
+          "item26_location": 0,
+          "guest_ms": 4166,
+          "frame_id": 1187,
+          "frame_sha256": "4b0dce9e3209d6e97b5c4aad11f1c8fce7ad5bb3ee1b0f22a6378f7841c559a1"
+        },
+        "source_predicate": {
+          "if_offset": 991,
+          "if_sha256": "0987f7f56a9a97353b36876d71448ff5111591c14b3d50c9e5adbcc451fcec8f",
+          "predicate": "posn",
+          "object": 0,
+          "inclusive_rectangle": [
+            105,
+            96,
+            145,
+            166
+          ],
+          "and_variable": 75,
+          "and_value": 0
+        },
+        "source_posn_value_from_captured_origin": true,
+        "native_posn_handler_trace": "not_captured",
+        "message": {
+          "logic": 51,
+          "offset": 1065,
+          "id": 33,
+          "text_sha256": "57df545eb9494f3016a30c7ca9f5122e1f015ca8e121b24ec180ec5b80475d3c",
+          "frame_sha256": "9ab255f22aec8761e7748647bdb3e7fa974f11cccecef0afc94926a68fea2be6"
+        },
+        "proof_sha256": "cc9b2dadf72d2b513cd36dc144e1f5ea5c7c8c37b14d548b1f027cab92e22a98",
+        "trace_sha256": "b5776c30f822627f4f4b23017ed264f5fefd3beaf3804a28aced3d942c06801f",
+        "trace_events": 6,
+        "stage_order": [
+          "print",
+          "drop",
+          "return",
+          "subtract"
+        ],
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 1069,
+          "stack_verified": true
+        },
+        "drop_writer": {
+          "cause_offset": 29882,
+          "resume_offset": 29886,
+          "di_offset": 14739
+        },
+        "subtract_writer": {
+          "cause_offset": 29434,
+          "resume_offset": 29438,
+          "bx": 3,
+          "al": 2
+        },
+        "writer_instruction_completed": null
+      },
+      {
+        "name": "outside-01",
+        "branch": "outside",
+        "diagnostic_sha256": "57b8eca9f03fd096f97b6942d52392a79a7548416e3284a8093ef92b4c032bac",
+        "process_receipt_sha256": "d682eaee8663b34a9a68b59e5a4ff535d6e2ccad3739bf98dded4eeb5b827508",
+        "producer_sha256": "808fccf1a36f7e135e441afd876bcb40881f7ca7bb5ac0c579dd4b2084f49e8b",
+        "inside_probe_sha256": "5770575f684de363662c1780b5d5c4d809ae08ad3763881c9e721208783b7d3f",
+        "database_sha256": "a3fa528060a7f46488f76edeac676e815f16c5b1a2192d63f4f0b908866f321c",
+        "run_id": "acc602e38b8440789b805046afee210a",
+        "checkpoint_load_count": 1,
+        "command_inputs": {
+          "typed_commands": 1,
+          "submission_enter": 1,
+          "ordinary_direction_presses": 4,
+          "completed_modal_acknowledgements": 1
+        },
+        "frozen_pose_metric": {
+          "name": "Manhattan baseline-centre distance",
+          "value": 75,
+          "basis": "supplied launch ego/actor pose and widths; native distance opcode not observed"
+        },
+        "launch": {
+          "ego": {
+            "x": 130,
+            "y": 167,
+            "direction": 0,
+            "drawn": true
+          },
+          "actor_3": {
+            "x": 46,
+            "y": 161,
+            "view": 33,
+            "width": 37,
+            "height": 25,
+            "direction": 2,
+            "motion": 2,
+            "drawn": true
+          },
+          "score": 15,
+          "item26_location": 255,
+          "guest_ms": 3803,
+          "frame_id": 1165,
+          "frame_sha256": "ed4c944a08fa5f8af2418adf8079ccc8d2f8c7c81ae8c0dbea656b4058603c25"
+        },
+        "outcome": {
+          "ego": {
+            "x": 130,
+            "y": 167,
+            "direction": 0,
+            "drawn": true
+          },
+          "actor_3": {
+            "x": 40,
+            "y": 152,
+            "view": 33,
+            "width": 23,
+            "height": 25,
+            "direction": 1,
+            "motion": 3,
+            "drawn": true
+          },
+          "score": 20,
+          "item26_location": 0,
+          "guest_ms": 4273,
+          "frame_id": 1184,
+          "frame_sha256": "654e9b36b72a30ffc19b35916c554a84715ca4c64b8a344ec08c84fdbcdaa83b"
+        },
+        "source_predicate": {
+          "if_offset": 1074,
+          "if_sha256": "01c208a516351b813ad956c0e961e7def212b47b886e99d41ff4163e9a6fb850",
+          "predicate": "NOT posn",
+          "object": 0,
+          "inclusive_rectangle": [
+            105,
+            96,
+            145,
+            166
+          ],
+          "and_variable": 75,
+          "and_value": 0
+        },
+        "source_posn_value_from_captured_origin": false,
+        "native_posn_handler_trace": "not_captured",
+        "message": {
+          "logic": 51,
+          "offset": 1118,
+          "id": 34,
+          "text_sha256": "294670952cd011c8719a8bc0807d69e9dfb829cc8088f7a3c216062de5357971",
+          "frame_sha256": "c6b3801c51cdd0501ffd3cc34739ad781f285be164c0d6d3cb28b2cf888494b5"
+        },
+        "proof_sha256": "120fe1d1d96d1668f8b2d8258b7ffcf984b236a625dbf017bdbbf20ff087b7b3",
+        "trace_sha256": "c67e9fd40c4652a76b4d85fa4d3419e5b7ab41b235ae5304bfc03f96fb877d2d",
+        "trace_events": 6,
+        "stage_order": [
+          "print",
+          "drop",
+          "return",
+          "subtract",
+          "add"
+        ],
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 1122,
+          "stack_verified": true
+        },
+        "drop_writer": {
+          "cause_offset": 29882,
+          "resume_offset": 29886,
+          "di_offset": 14739
+        },
+        "subtract_writer": {
+          "cause_offset": 29434,
+          "resume_offset": 29438,
+          "bx": 3,
+          "al": 2
+        },
+        "add_writer": {
+          "cause_offset": 29402,
+          "resume_offset": 29406,
+          "bx": 3,
+          "al": 7
+        },
+        "writer_instruction_completed": null
+      }
+    ],
+    "frozen_pose_comparison": {
+      "inside_metric": 74,
+      "outside_metric": 75,
+      "outside_no_closer_in_supplied_metric": true,
+      "scope": "Comparison of these supplied launch snapshots only; no native distance/throw-range gating proof."
+    },
+    "limits": [
+      "Each fork used a separate process and one supported load; neither is a fresh-game qualification.",
+      "Dragon actor poses differ between forks, so this is not a single-variable physics experiment or a throw-radius claim.",
+      "Posn truth is derived from source and captured ego origins; its native handler was not directly traced.",
+      "Final outcome stops at the watched score access, with instruction completion null, before a whole room cycle or dragon retirement is qualified.",
+      "Source/receipt/hash consistency is not independent authentication or a claim about designer intent."
+    ]
+  },
+  "earlier_failed_admission": {
+    "name": "inside-01",
+    "diagnostic_sha256": "b9df4c024fd17a8ca3707e5a6839048c66021a6aa560a27ec0849f26b64323e3",
+    "process_receipt_sha256": "2af13369f89c822d1f3b665ff9bb7d1b5b3e3a9cd52535d9419597ed93ce941f",
+    "complete": false,
+    "producer_sha256": "8258a531d1c309086557492ecf36a9beecc65036f62dd8c2290de3d09542525a",
+    "error": "Restored runtime identity differs",
+    "scope": "Earlier runtime-identity admission failed after supported load and before test input; no post-load run/input recorded. Historical producer preimage not retained here; its identity is the process receipt hash."
+  },
+  "checks": {
+    "native07_sealed_acceptance_and_donor_hashes_unchanged": true,
+    "current_originals_and_game_copy_24_files_match": true,
+    "all_successful_fork_27_input_hashes_match_pre_post_current": true,
+    "supported_load_cpu_and_unmodified_save_identity_checked": true,
+    "six_referenced_pngs_bound_to_new_db_artifacts": true,
+    "canonical_report_retained_proofs_and_six_fetch_traces_match": true,
+    "one_pretyped_command_and_one_submission_enter_per_successful_fork": true,
+    "no_recorded_guest_edits_or_teleports": true,
+    "all_fork_children_reaped": true,
+    "no_recorded_successful_fork_cleanup_or_persistence_errors": true
+  }
+}

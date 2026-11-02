@@ -39,6 +39,34 @@ def test_scene_timeout_retains_the_original_queued_input_and_before_witness():
     assert len(inputs) == 1
 
 
+@pytest.mark.parametrize('error', [TimeoutError('RPC admission expired'),
+                                  RuntimeError('destination readback failed')])
+def test_native_readback_exception_retains_queued_scene_input(error):
+    handle = SceneHandle.__new__(SceneHandle)
+    handle.revision = 'street-revision'
+    handle.session = SimpleNamespace(project=SimpleNamespace(
+        debug_scene_info=lambda *a, **k: {'definition': {}}), version={'id': 1}, run_id='run')
+    handle._object = lambda name: dict(id='employment-object', name=name,
+        action={'kind': 'click'}, point=[270, 66], guest_ms=12000, timeout_ms=40000,
+        outcome={'constant': False})
+    handle._observe = lambda *a: {'status': 'matched', 'initial_outcome': False,
+                                 'frame': {}, 'baseline': {}}
+    handle._store = lambda result, **kw: dict(result, observation='stored-observation')
+    inputs = []
+    def queue(*args):
+        inputs.append(args)
+        return {'accepted': True, 'delivery': 'queued', 'operation_id': 'only-click'}
+    handle._input = queue
+    def failed(*a, **kw): raise error
+    handle._wait_outcome = failed
+    with pytest.raises(SceneError) as caught:
+        handle.act('street.employment')
+    assert caught.value.result['input']['operation_id'] == 'only-click'
+    assert caught.value.result['action_name'] == 'street.employment'
+    assert caught.value.result['before_observation'] == 'stored-observation'
+    assert caught.value.result['complete'] is False and len(inputs) == 1
+
+
 def held_service(tmp_path, monkeypatch, *, destination=True, command='go dinomart', ticket=True, confirmed=False):
     writer = io.StringIO(); service = bridge.ZService(tmp_path, io.StringIO(), writer)
     calls = []

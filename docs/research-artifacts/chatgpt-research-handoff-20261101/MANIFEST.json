@@ -1,0 +1,407 @@
+{
+  "package": "chatgpt-research-handoff-20261101",
+  "source_archive": {
+    "path": "pr-registry/pending/research-implementation-handoff-20261101/fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip",
+    "sha256": "aa3627a4ac061fdccb9f816e0d8e685417275220e60dee119b8a9db655e8fdf2"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2211,
+      "sha256": "fd6f0eee7e4aa7ce01bad4bf6c638f676dc955a1769467087c0f8ab4ed836c9e"
+    },
+    {
+      "path": "civ/PLAN.md",
+      "bytes": 24521,
+      "sha256": "b02f77cae403c1b03d93d966644e5e5f54df776eb75041a8fb02f5613b0ce0c5"
+    },
+    {
+      "path": "civ/reference_match.json",
+      "bytes": 1408,
+      "sha256": "9bb715d757b223269d33855f83fdb9497d43a703c52bfb3226889f8ced217c0b"
+    },
+    {
+      "path": "civ/startup_correction_check.json",
+      "bytes": 886,
+      "sha256": "87597b34ed561ed7e52a2860e22e795b76caf86c973fc1c4019abd6fc9a96199"
+    },
+    {
+      "path": "ff7/FF7_GameFAQs_Localization_Case_Study.md",
+      "bytes": 12879,
+      "sha256": "79799031cc645931eb0858bdd7d111ed9d2e1a353b8c6fa1e218ae581abe108a"
+    },
+    {
+      "path": "pr20/GAME_PATCH_DIFFERENTIAL_STUDY.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d"
+    },
+    {
+      "path": "pr20/PR20-game-patch-study.patch",
+      "bytes": 13129,
+      "sha256": "b3923ba9fc19eded47e98db2f4c82a9d9e114de12975dc30797bcb89c58863fb"
+    },
+    {
+      "path": "space-quest/Space_Quest_Game_Patch_Benchmark.json",
+      "bytes": 3441,
+      "sha256": "91644ae96f982f7ad5d3382e3fcf5f353b57c0d146c1ee5b9db57360aa27a514"
+    },
+    {
+      "path": "space-quest/Space_Quest_Game_Patch_Comparison.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d"
+    },
+    {
+      "path": "space-quest/Space_Quest_Patch_and_Ultima_Intake.md",
+      "bytes": 12650,
+      "sha256": "4b13ae8443eeead1153c1943cf152eff3429bc39b7d26a9f36e5c9263496a69b"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/DELIVERY_MANIFEST.json",
+      "bytes": 7639,
+      "sha256": "0a7a85e17172e301972246307a059976674e3e19f7bb52e26d8dc50ca14139d8"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/GAME_PATCH_DIFFERENTIAL_STUDY.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/PR20-game-patch-study.patch",
+      "bytes": 13129,
+      "sha256": "b3923ba9fc19eded47e98db2f4c82a9d9e114de12975dc30797bcb89c58863fb"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/README_REPRODUCE.md",
+      "bytes": 4222,
+      "sha256": "04fadd1aa2bde755e56060849d99053cfc2ec3d56ef9d54fd9a88a24b1d87c0f"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/bootstrap_intake.py",
+      "bytes": 4631,
+      "sha256": "04288afaf44b80f7ec06fd70bdbf87c60711fc2ea4f91f861d961b340d3996ed"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/compare_game_patches.py",
+      "bytes": 16917,
+      "sha256": "4420ca11e397740c87abd91bcfbdb66cf841e11f7c29bb473223907a406d8abc"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/extract_verified_payloads.py",
+      "bytes": 4354,
+      "sha256": "eae45228d5b68e184044a0bd01b0da8bddc2894dd2f6eb40103d724e686bdcc9"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/inno_probe.py",
+      "bytes": 3898,
+      "sha256": "8b5531007259a5427942feddc435575dc1d7bdbba549e1c3be644b7837bd9f0d"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/make_report.py",
+      "bytes": 13984,
+      "sha256": "94b3e5d8ca77127c6a7a53d209022d8b865c360f6e510aa039d7a2b1da3eea16"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/prepare_sq_intake.py",
+      "bytes": 1071,
+      "sha256": "09855a6f41dfcc1737b0011670d9b47c098afd50eb4590e8eaec92d299d118c0"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/resource_manifest.json",
+      "bytes": 44512,
+      "sha256": "248397d3b357a70e992bf1ead57ec51c58f80fc8b5489b1d786c0b7f3cb63148"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/bar_detail_predicate/0_after.asm",
+      "bytes": 176,
+      "sha256": "1fa749f11dbec3128da402cee917c156b4788995a6ff389dd7601cc2cc3d3f03"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/bar_detail_predicate/0_after.c.txt",
+      "bytes": 105,
+      "sha256": "40fca32932d5026be45f430704d12da3cd9449fcae78ce22d31f6b0a0f3ed479"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/bar_detail_predicate/0_before.asm",
+      "bytes": 176,
+      "sha256": "4dbd5f444f89ba4d1b60018d2c43e8a42d2c329289b31cd398421a501f25f4a5"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/bar_detail_predicate/0_before.c.txt",
+      "bytes": 106,
+      "sha256": "bf01d93fc1bb969e557beb94f0432bfe3088810249b7b1e9cf451c57033e3e52"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/bar_detail_predicate/comparison.json",
+      "bytes": 2226,
+      "sha256": "2d9abd546d29ba585f1c502581188d1214761377927af3b48747d9fc774c4724"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/benchmarks.json",
+      "bytes": 3441,
+      "sha256": "91644ae96f982f7ad5d3382e3fcf5f353b57c0d146c1ee5b9db57360aa27a514"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/c_compile.stderr",
+      "bytes": 1270,
+      "sha256": "e71abd230a964d9ba3d8316f5b9aaef40c38a06b5168e8a70fd0a4c72b497efe"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/c_saved_read_regression.json",
+      "bytes": 217,
+      "sha256": "cd6f6aba874348926562efbdea9788d639ef69c48052e1290b541b37c9dc6fcb"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/c_validation.json",
+      "bytes": 554,
+      "sha256": "198c03cbbeb1813684ddd646a009477127fd3838dc9c38f955aa3c9140f22453"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/comparison_summary.json",
+      "bytes": 24282,
+      "sha256": "16575a0145c3d226de71a2bcd533ef62cb5221a5e7243205310e57759f1fbd9c"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/decompressor_comparison.json",
+      "bytes": 211,
+      "sha256": "c39d832dc15249abf7b2473f8056a4ca994dfdb7a1b805e4ebb8ff9d6a6378f5"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generated_models_and_vm.c",
+      "bytes": 9868,
+      "sha256": "f4c65a930461899bc2883275cae61195362fbb854635fb55877bf833e6479e87"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generator_branch/0_after.asm",
+      "bytes": 57,
+      "sha256": "5cc0aed159790d87f8bea87e27669feee9b8e1d3c90bd9479054893f83703509"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generator_branch/0_after.c.txt",
+      "bytes": 71,
+      "sha256": "622d2041ff54aed4e735f3f56026e838205a48d3923ce5f8668e3e52f26709ac"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generator_branch/0_before.asm",
+      "bytes": 62,
+      "sha256": "008f1d3c4b44806923df5b46c2ad29a333430a6e9c6b515a4931b0e89ede7dff"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generator_branch/0_before.c.txt",
+      "bytes": 111,
+      "sha256": "e7170816d8e53f8bfe5ed46be0f5a2d05add57fd60450bf5d2d45ae1c4d74efd"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/generator_branch/comparison.json",
+      "bytes": 2545,
+      "sha256": "ad0d61f055bcda05e8fec9e5d85a087bb9c4a24589526e7bd4a634028376a6ff"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/gog_patch_oracle.json",
+      "bytes": 11416,
+      "sha256": "a5ee6f662eb16ef1feba1628b6d8a74d855d1592d7dade67f6cb785bb30609e9"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/id_card_counter/0_after.asm",
+      "bytes": 385,
+      "sha256": "980787500b3e3c9eca4b1304f31d0d785d28c7b7c682325166500a5f3def28d0"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/id_card_counter/0_after.c.txt",
+      "bytes": 175,
+      "sha256": "f2c1ca5fa93c5a2d257f03dcb30eec7c72dde0be05d3c885e4ec8e83cff4c01f"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/id_card_counter/0_before.asm",
+      "bytes": 385,
+      "sha256": "ba86920e6091e29e18456ca9df67be8c873ea0f0ac70515d01832b53d572b6cf"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/id_card_counter/0_before.c.txt",
+      "bytes": 188,
+      "sha256": "f051a02331b468ac2e0f0d17641dca001854f4eea42779db13afe49bd5eeb47e"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/id_card_counter/comparison.json",
+      "bytes": 5093,
+      "sha256": "fe3e35115c8e17b5da1333c93e59bb320d5f65e9037701087c0c64f6ee906701"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/implementation_manifest.json",
+      "bytes": 924,
+      "sha256": "60c04ea99fd7ba60c8fd590c5027e09743bd9b58393f14197da1a9e7226edaee"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/0_after.asm",
+      "bytes": 27,
+      "sha256": "d23dbe11fef7b91f54f3b59d46b26c467cb4ed37d9b26f60daef68f4a21ddd7c"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/0_after.c.txt",
+      "bytes": 80,
+      "sha256": "9021ba95683eaf0796b8d4abb06975e687ba8b3ddd25956d4b10244c0a9899ca"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/0_before.asm",
+      "bytes": 25,
+      "sha256": "e1334a36b5e5da948e80f94d6039fca35e2ee6588d970b1f65e193d79d66253e"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/0_before.c.txt",
+      "bytes": 68,
+      "sha256": "2cdc071380f97960e00c8e34fbc610f93ce2669c489ea1e1917a9453c0e27da5"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/1_after.asm",
+      "bytes": 27,
+      "sha256": "a34813d61019b22f3bc205234a9c378404157c1624f3ff03016af0faf5979640"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/1_after.c.txt",
+      "bytes": 74,
+      "sha256": "faf944605b9e31cf1ebf89fcd2d2559f5f3ac1892372d66510afbb8a1b560c78"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/1_before.asm",
+      "bytes": 25,
+      "sha256": "fa0a0e9c520061bbe500e283957374d6e4e04f8c11519820a143947ec676f7a5"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/1_before.c.txt",
+      "bytes": 62,
+      "sha256": "3e551fef627cebd7bb893ef13552a4629f720b66da95fb514f6de6fe2330a3cb"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/orat_state_storage/comparison.json",
+      "bytes": 5113,
+      "sha256": "4bfe9724e64c110f9fccb9ee1e071f7d7aa0ea0f330298415947a9696f264ccd"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/patch_oracle_extra_controls.json",
+      "bytes": 1239,
+      "sha256": "7335923a3e5d054e7900b39156947525030fe0d0d1bf06cac7bf316e1d8cb1ca"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/pilot_timing_superseded.json",
+      "bytes": 3068,
+      "sha256": "d7394580643f6251bb107a5d34554da084d2f742ed812f834a7b8100b1db364d"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/timepod_cel/0_after.asm",
+      "bytes": 108,
+      "sha256": "9d8c75feacee54f18fd5d7acd8512eb60db512899ed889352d74762a816cd1a3"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/timepod_cel/0_after.c.txt",
+      "bytes": 112,
+      "sha256": "a1458c681c929557024d162eeff522c21e7ecf34d5c8340373b3c4a7feb9ab4f"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/timepod_cel/0_before.asm",
+      "bytes": 109,
+      "sha256": "5dae4fe5adba56fa0898a26e1a99ca3ddd677f4e903eadea05014cd1c1efcea4"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/timepod_cel/0_before.c.txt",
+      "bytes": 113,
+      "sha256": "face50527779f52c74180330429d6d9769017176a6b992cfda85460891e13d6f"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/results/timepod_cel/comparison.json",
+      "bytes": 2186,
+      "sha256": "c5001787fb8b639ae61efe994c87154e6c27ef61b72be9d67c1d9df4e17a5051"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/sci_extract.py",
+      "bytes": 3645,
+      "sha256": "119880b05c3baa55276354e1968fcba9af191f44dd94b7e1009a42c37323df4a"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/verify_generated_c.py",
+      "bytes": 8118,
+      "sha256": "ee5d54f58fdbcca559521677271ac00a0a8883b0106c921ba3bab6f5ead74616"
+    },
+    {
+      "path": "space-quest/game-patch-evidence/verify_patch_oracles.py",
+      "bytes": 5168,
+      "sha256": "2402e998d291ebc47aceb0333a5d4ffb8de92bea4aff6bb8aa8d3130f2ae1de7"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/README.md",
+      "bytes": 1628,
+      "sha256": "9eba0663791e4aa49bc0c718af6ec2209a8f2172e7768438dac18bd434e21ca0"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/REPORT.md",
+      "bytes": 12650,
+      "sha256": "4b13ae8443eeead1153c1943cf152eff3429bc39b7d26a9f36e5c9263496a69b"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/SHA256SUMS",
+      "bytes": 1196,
+      "sha256": "8fb95f54d0491694db499aeaf9b563b07d457aba0781151830b615ffc2a165cf"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/patch-declared-support-actions.json",
+      "bytes": 3393,
+      "sha256": "ee0501a63fae216f253848f4c3c90e7106fd27a103eff2be378dd7e034a3f712"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/patch-target-manifest.json",
+      "bytes": 12578,
+      "sha256": "3c5fbf597cf96e8ef8d732dd5c10077f56477e19db32fe85069bee73cd1c3afe"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/patch-versus-full.json",
+      "bytes": 2882,
+      "sha256": "f186b2eb97c592ad52222f96578515dedca42aa7cfbd9dbc62265d39f18b286c"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/space-quest-launch-tasks.json",
+      "bytes": 670,
+      "sha256": "e6fee866ab60bacda226430c32e3a605d3052daaa04b037507365cbe4928593a"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/sq1_agi_loader-analysis-summary.json",
+      "bytes": 669,
+      "sha256": "838afb48306e8de3890613353e81e82c91b42506e34e361d0f6d80efb5f60a7e"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/summary.json",
+      "bytes": 7011,
+      "sha256": "5cf903dd545cc44b01ebac69cf544a8cb3dd60dd646be749137d7c3554325e2c"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/tools/bootstrap_intake.py",
+      "bytes": 4631,
+      "sha256": "04288afaf44b80f7ec06fd70bdbf87c60711fc2ea4f91f861d961b340d3996ed"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/tools/extract_verified_payloads.py",
+      "bytes": 4354,
+      "sha256": "eae45228d5b68e184044a0bd01b0da8bddc2894dd2f6eb40103d724e686bdcc9"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/tools/inno_probe.py",
+      "bytes": 3898,
+      "sha256": "8b5531007259a5427942feddc435575dc1d7bdbba549e1c3be644b7837bd9f0d"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/ultima_avatar-analysis-summary.json",
+      "bytes": 664,
+      "sha256": "22820a27c904fe7b559dd0b22acc3db61489461abc9af1982287beb692b3f9c8"
+    },
+    {
+      "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/ultima_title-analysis-summary.json",
+      "bytes": 674,
+      "sha256": "5f5c94a1098aa3c8df7fba9bf7f6c4e9182860f00b282468a8e833e71bafc53e"
+    }
+  ],
+  "excluded_because_existing_pr_or_integrated": [
+    "console synthesis (MR !28)",
+    "colonization shared UIL (PR #70)",
+    "PR29/Rosetta (PR #29)",
+    "Lost in Time, UDL/UIL/UDC, Polyglot and v0.26 reviewed packs",
+    "historical duplicate experiment archives"
+  ],
+  "evidence_boundary": "No test or native run rerun; source results remain attributed to their original runtime."
+}

@@ -59,7 +59,7 @@ test-and-package:
     - apt-get install -y --no-install-recommends git build-essential nodejs libx11-dev
   script:
     - python -m pip install --upgrade pip
-    - python -m pip install ".[test]" build
+    - python -m pip install ".[test,source]" build
     - python -m pytest -q
     - python -m build
     - python -m build --wheel ./player --outdir dist
