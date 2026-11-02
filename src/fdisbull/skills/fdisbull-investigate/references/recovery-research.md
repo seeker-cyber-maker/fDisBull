@@ -255,6 +255,22 @@ original-runtime outcomes where authorized. A narrow Z3 result proves equality
 of supplied models at that boundary, not model fidelity, full-game equivalence
 or independent generated code. See [udl-uil-udc.md](udl-uil-udc.md).
 
+Report whether a result was read in prior research, checked against its source
+artifact or reproduced by an execution in this investigation. Retain the
+original result's revision, assumptions and untested edges when reusing it.
+A helper that consumes precomputed supply, demand or production quantities can
+qualify bounded accounting arithmetic; it does not establish the upstream
+worker rates, building rules, commodity mapping or complete turn process.
+Connect those claims to the relevant producers, tables, callers and committed
+effects before expanding the recovered contract. Algebraic equality alone
+does not establish either model's correspondence to the executable.
+
+Treat gameplay guides and sibling implementations as attributed leads. For
+each externally supplied rule, identify the target edition, exact claim, source
+span or table, input/output meaning and relevant conditions. Mark a missing
+connection unresolved. Precise addresses and proof terminology do not turn a
+guide-derived rule into recovered behavior.
+
 ## Compare depth and cost fairly
 
 Use this procedure when reporting efficiency or comparing recovery strategies,
@@ -287,3 +303,30 @@ with the same failures as the baseline is still a failing full suite, with the
 comparison reported separately. Stop benchmarking when the requested decision
 is supported; carry the remaining investigation forward rather than rerunning
 settled measurements.
+
+### Evaluate skill and context interventions
+
+A reported agent experiment is evidence about what its report says until its
+underlying prompts, outputs and checks are inspected. Preserve the task,
+revision, model/settings when available, context mode, tool/web access, budgets,
+assistance, raw outputs and resulting evidence artifacts. Attribute missing
+records and do not infer that named sub-agents had fresh contexts. One task and
+one run per setup can reveal friction and motivate improvements; they cannot
+establish general effectiveness or reliable causal rankings.
+
+Compare the intervention that answers the question. A no-skill worker with
+repository research is a documentation-assisted baseline. If separating skill
+guidance from web access matters, compare skill present/absent with web
+present/absent, or explicitly retain the confounding limitation. Hold other
+conditions and accessible repository artifacts fixed, isolate sibling outputs,
+and use additional matched tasks/runs only when needed for the decision.
+Follow the methodology reference's role/context policy for the actual host
+separation. This is evaluation guidance, not a required benchmark for each edit.
+
+Score correctly supported claims, appropriately bounded unknowns and successful
+authorized actions. Evidence headings, longer answers, precise addresses and
+reported tool-call totals are not substitutes. Define what a call counts and
+report accepted scope, errors, time/tokens and worker costs when measured before
+claiming efficiency. Keep unavailable metrics unavailable. Distinguish an
+improved report structure from a reproduced proof or demonstrated gameplay
+recovery; retain counterexamples and incomplete runs in the result.
