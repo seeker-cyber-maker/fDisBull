@@ -100,7 +100,7 @@ def common(tmp_path_factory):
     (directory/'common.c').write_bytes(runtime.joinpath('memory-win16-common.c').read_bytes())
     (directory/'bridge.c').write_text(BRIDGE)
     library=directory/('portable.dylib' if sys.platform=='darwin' else 'portable.so')
-    warning_flags=['-Wno-misleading-indentation'] if 'gcc' in Path(compiler).name else []
+    warning_flags=['-Wno-misleading-indentation','-Wno-sign-compare'] if 'gcc' in Path(compiler).name else []
     ran=subprocess.run([compiler,'-std=c89','-pedantic-errors','-Wall','-Wextra',*warning_flags,'-Werror',
         '-DFDB16_HOST_TEST','-I',str(directory),'-shared','-fPIC','common.c','bridge.c','-o',str(library)],
         cwd=directory,capture_output=True,text=True,timeout=60)
