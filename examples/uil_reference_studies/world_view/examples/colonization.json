@@ -1,0 +1,675 @@
+{
+  "format": "z-world-view-study-1",
+  "world": {
+    "id": "colonization-authored-world",
+    "setting": "Original Colonization-inspired synthetic colony and voyage",
+    "evidence": "authored-design-fixture",
+    "coverage": "illustrative-partial"
+  },
+  "clock": {
+    "unit": "turn",
+    "position": 12
+  },
+  "spaces": [
+    {
+      "id": "america",
+      "kind": "grid",
+      "parent": null,
+      "dimensions": 2
+    },
+    {
+      "id": "colony-workplaces",
+      "kind": "abstract",
+      "parent": "america",
+      "dimensions": 0
+    },
+    {
+      "id": "colony-harbor",
+      "kind": "abstract",
+      "parent": "america",
+      "dimensions": 0
+    },
+    {
+      "id": "europe-harbor",
+      "kind": "abstract",
+      "parent": null,
+      "dimensions": 0
+    },
+    {
+      "id": "outbound-transit",
+      "kind": "abstract",
+      "parent": null,
+      "dimensions": 0
+    },
+    {
+      "id": "return-transit",
+      "kind": "abstract",
+      "parent": null,
+      "dimensions": 0
+    }
+  ],
+  "entities": [
+    {
+      "id": "colony-1",
+      "kind": "colony",
+      "state": {
+        "label": "Colony A",
+        "kind": "colony",
+        "location": {
+          "space": "america",
+          "position": [
+            5,
+            6
+          ]
+        },
+        "warehouse_food": 40,
+        "construction": "warehouse"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:colony-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "colonist-1",
+      "kind": "colonist",
+      "state": {
+        "label": "Worker A",
+        "kind": "colonist",
+        "location": {
+          "space": "colony-workplaces"
+        },
+        "assignment": "farm",
+        "assigned_tile": "tile-1"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:colonist-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "colonist-2",
+      "kind": "colonist",
+      "state": {
+        "label": "Worker B",
+        "kind": "colonist",
+        "location": {
+          "space": "colony-workplaces"
+        },
+        "assignment": "workshop"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:colonist-2",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "tile-1",
+      "kind": "tile",
+      "state": {
+        "label": "Worked field",
+        "kind": "tile",
+        "location": {
+          "space": "america",
+          "position": [
+            6,
+            6
+          ]
+        },
+        "worked_by": "colonist-1"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:tile-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "ship-1",
+      "kind": "ship",
+      "state": {
+        "label": "Merchant A",
+        "kind": "ship",
+        "location": {
+          "space": "europe-harbor"
+        },
+        "cargo": {
+          "goods": "tobacco",
+          "amount": 30
+        }
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:ship-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "ship-2",
+      "kind": "ship",
+      "state": {
+        "label": "Merchant B",
+        "kind": "ship",
+        "location": {
+          "space": "outbound-transit"
+        },
+        "destination": "europe-harbor",
+        "transit_remaining": 2
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:ship-2",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "ship-3",
+      "kind": "ship",
+      "state": {
+        "label": "Merchant C",
+        "kind": "ship",
+        "location": {
+          "space": "return-transit"
+        },
+        "destination": "america",
+        "transit_remaining": 1
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:ship-3",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "market",
+      "kind": "market",
+      "state": {
+        "label": "European market",
+        "kind": "market",
+        "location": {
+          "space": "europe-harbor"
+        },
+        "tobacco_price": 5
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:market",
+        "source_registers_or_addresses": "not recovered"
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "world",
+      "title": "Known American map",
+      "parent": null,
+      "spaces": [
+        "america"
+      ],
+      "descendants": true,
+      "kinds": [],
+      "entities": []
+    },
+    {
+      "id": "colony-1",
+      "title": "Colony A settlement",
+      "parent": "world",
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": [
+        "colony-1",
+        "colonist-1",
+        "colonist-2",
+        "tile-1"
+      ]
+    },
+    {
+      "id": "people",
+      "title": "Colony A people",
+      "parent": "colony-1",
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": [
+        "colonist-1",
+        "colonist-2"
+      ]
+    },
+    {
+      "id": "europe",
+      "title": "Europe and voyage states",
+      "parent": null,
+      "spaces": [
+        "europe-harbor",
+        "outbound-transit",
+        "return-transit"
+      ],
+      "descendants": false,
+      "kinds": [],
+      "entities": []
+    },
+    {
+      "id": "ships",
+      "title": "Known ships across all locations",
+      "parent": null,
+      "spaces": [],
+      "descendants": false,
+      "kinds": [
+        "ship"
+      ],
+      "entities": []
+    },
+    {
+      "id": "economy",
+      "title": "Colonial economy overview",
+      "parent": null,
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": []
+    }
+  ],
+  "observers": [
+    {
+      "id": "player",
+      "records": [
+        {
+          "entity": "colony-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Colony A",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "colony",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "america",
+                "position": [
+                  5,
+                  6
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "warehouse_food": {
+              "knowledge": "current",
+              "value": 40,
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "construction": {
+              "knowledge": "current",
+              "value": "warehouse",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "colonist-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Worker A",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "colonist",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "colony-workplaces"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "assignment": {
+              "knowledge": "current",
+              "value": "farm",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "assigned_tile": {
+              "knowledge": "current",
+              "value": "tile-1",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "colonist-2",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Worker B",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "colonist",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "colony-workplaces"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "assignment": {
+              "knowledge": "current",
+              "value": "workshop",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "tile-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Worked field",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "tile",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "america",
+                "position": [
+                  6,
+                  6
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "worked_by": {
+              "knowledge": "current",
+              "value": "colonist-1",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "ship-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Merchant A",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "ship",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "europe-harbor"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "cargo": {
+              "knowledge": "current",
+              "value": {
+                "goods": "tobacco",
+                "amount": 30
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "ship-2",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Merchant B",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "ship",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "outbound-transit"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "destination": {
+              "knowledge": "current",
+              "value": "europe-harbor",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "transit_remaining": {
+              "knowledge": "current",
+              "value": 2,
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "ship-3",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Merchant C",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "ship",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "return-transit"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "destination": {
+              "knowledge": "current",
+              "value": "america",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "transit_remaining": {
+              "knowledge": "current",
+              "value": 1,
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        },
+        {
+          "entity": "market",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "European market",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "market",
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "europe-harbor"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            },
+            "tobacco_price": {
+              "knowledge": "current",
+              "value": 5,
+              "observed_at": {
+                "unit": "turn",
+                "position": 12
+              }
+            }
+          }
+        }
+      ],
+      "actions": [
+        "assign-worker",
+        "load-cargo",
+        "sail-to-europe",
+        "sell-cargo"
+      ]
+    },
+    {
+      "id": "uninformed",
+      "records": [],
+      "actions": []
+    }
+  ],
+  "actions": [
+    {
+      "id": "assign-worker",
+      "label": "Request worker reassignment",
+      "uil_contract_ref": "proposed.colonization.assign_worker",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "load-cargo",
+      "label": "Request cargo loading",
+      "uil_contract_ref": "proposed.colonization.load_cargo",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "sail-to-europe",
+      "label": "Request voyage to Europe",
+      "uil_contract_ref": "proposed.colonization.sail_to_europe",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "sell-cargo",
+      "label": "Request market sale",
+      "uil_contract_ref": "proposed.colonization.sell_cargo",
+      "binding_status": "unbound"
+    }
+  ]
+}
