@@ -23,13 +23,13 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^(\[Draft\]|\(Draft\)|Draft:)/i && $FDISBULL_RUN_DRAFT_CI != "1"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: on_success
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: on_success
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/'
-      when: on_success
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "trigger"'
-      when: on_success
+      when: always
     - when: never
 
 default:
@@ -54,6 +54,9 @@ stages:
 test-and-package:
   stage: verify
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends git build-essential nodejs libx11-dev
   script:
     - python -m pip install --upgrade pip
     - python -m pip install ".[test]" build
@@ -65,8 +68,10 @@ test-and-package:
       python -m venv --system-site-packages "$RUNNER_TEMP/fdisbull-skill-gate"
       "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" -m pip install --no-index --no-deps --force-reinstall dist/fdisbull-*.whl
       mkdir -p artifacts/receipts
-      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --output artifacts/receipts/fdisbull-skill-gate-receipt.json
-      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --skill write-gamefaqs-guide --output artifacts/receipts/fdisbull-guide-skill-gate-receipt.json
+      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --output "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json"
+      cp "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json" artifacts/receipts/
+      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --skill write-gamefaqs-guide --output "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json"
+      cp "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json" artifacts/receipts/
       python -m venv "$RUNNER_TEMP/fdisbull-player-smoke"
       "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -m pip install --no-index --no-deps dist/fdisbull_player-*.whl
       "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
