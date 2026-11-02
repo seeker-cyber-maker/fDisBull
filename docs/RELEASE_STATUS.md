@@ -1,3 +1,21 @@
+# Release status checked on 2026-11-02 (America/New_York)
+
+## 0.30.0 release published on GitLab; local shared installation active
+
+`v0.30.0` is an annotated GitLab tag and release candidate at source
+`v0.30.0`. It unifies the post-GitHub migration consolidation with the full
+slate of common indexed UIL contracts (MR !24), console synthesis (PR #56),
+AGI King's Quest I native alignment, debugger rewind history, standing probes,
+and verified trial-safe GitLab CI.
+
+Hosted GitLab CI passed on the `integration` baseline (Pipeline `#3016197597`
+at commit `d39390ef`, completing 3 jobs across 2 stages).
+
+See [release notes](RELEASE-0.30.0.md), [system commands](SYSTEM_INSTALLATION.md),
+and the [common UIL specification](COMMON_UIL_CONTRACT.md).
+
+---
+
 # Release status checked on 2026-11-01 (America/New_York)
 
 ## 0.29.0 published on GitLab; local shared installation active
