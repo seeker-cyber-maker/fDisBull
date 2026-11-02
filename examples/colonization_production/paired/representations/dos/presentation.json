@@ -1,0 +1,119 @@
+{
+  "format": "fdisbull-uil-presentation-1",
+  "program_sha256": "706ef699d9ab295f219ea65b13022229e5b3f37ccabe0f5a37f36c77c646e3aa",
+  "functions": [
+    {
+      "constants": [
+        "0"
+      ],
+      "initial": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "constants": [
+        false,
+        true
+      ],
+      "initial": [
+        "0",
+        "0",
+        false,
+        "0",
+        false,
+        "0",
+        "0",
+        "0",
+        false
+      ]
+    },
+    {
+      "constants": [
+        "1",
+        "100",
+        "0"
+      ],
+      "initial": [
+        "0",
+        "0"
+      ]
+    },
+    {
+      "constants": [],
+      "initial": [
+        "0",
+        "0",
+        "0",
+        false
+      ]
+    },
+    {
+      "constants": [
+        "32",
+        "0",
+        "1",
+        "0",
+        "4",
+        "15"
+      ],
+      "initial": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "constants": [
+        "3",
+        "2",
+        "2",
+        "3",
+        "0",
+        true,
+        false
+      ],
+      "initial": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        false
+      ]
+    },
+    {
+      "constants": [],
+      "initial": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        false,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    }
+  ],
+  "resources": []
+}

@@ -1,0 +1,287 @@
+{
+  "input_balance": {
+    "slots": [
+      "supply",
+      "demand",
+      "available",
+      "consumed",
+      "shortage",
+      "unmet",
+      "total"
+    ],
+    "inputs": [
+      "supply",
+      "demand",
+      "available"
+    ],
+    "outputs": [
+      "consumed",
+      "shortage",
+      "unmet"
+    ]
+  },
+  "net_production": {
+    "slots": [
+      "produced",
+      "consumed",
+      "has_adjustment",
+      "adjustment",
+      "has_report",
+      "prior_report",
+      "net",
+      "report",
+      "written"
+    ],
+    "inputs": [
+      "produced",
+      "consumed",
+      "has_adjustment",
+      "adjustment",
+      "has_report",
+      "prior_report"
+    ],
+    "outputs": [
+      "net",
+      "report",
+      "written"
+    ]
+  },
+  "capacity_from_level": {
+    "slots": [
+      "level",
+      "capacity"
+    ],
+    "inputs": [
+      "level"
+    ],
+    "outputs": [
+      "capacity"
+    ]
+  },
+  "stock_available": {
+    "slots": [
+      "stock",
+      "produced",
+      "consumed",
+      "available"
+    ],
+    "inputs": [
+      "stock",
+      "produced",
+      "consumed"
+    ],
+    "outputs": [
+      "available"
+    ]
+  },
+  "packed_slot_read": {
+    "slots": [
+      "population",
+      "index",
+      "packed_byte",
+      "value"
+    ],
+    "inputs": [
+      "population",
+      "index",
+      "packed_byte"
+    ],
+    "outputs": [
+      "value"
+    ]
+  },
+  "production_input_pipeline": {
+    "slots": [
+      "supply",
+      "stock",
+      "production",
+      "building_count",
+      "scaled",
+      "consumed",
+      "shortage",
+      "unmet",
+      "net",
+      "report",
+      "written"
+    ],
+    "inputs": [
+      "supply",
+      "stock",
+      "production",
+      "building_count"
+    ],
+    "outputs": [
+      "consumed",
+      "shortage",
+      "unmet",
+      "net"
+    ]
+  },
+  "comparison_suite": {
+    "slots": [
+      "level",
+      "stock",
+      "supply",
+      "demand",
+      "population",
+      "index",
+      "packed_byte",
+      "production",
+      "building_count",
+      "capacity",
+      "available",
+      "nibble",
+      "consumed",
+      "shortage",
+      "unmet",
+      "net"
+    ],
+    "inputs": [
+      "level",
+      "stock",
+      "supply",
+      "demand",
+      "population",
+      "index",
+      "packed_byte",
+      "production",
+      "building_count"
+    ],
+    "outputs": [
+      "capacity",
+      "available",
+      "nibble",
+      "consumed",
+      "shortage",
+      "unmet",
+      "net"
+    ]
+  },
+  "difficulty_morale": {
+    "slots": [
+      "difficulty",
+      "population",
+      "rebel_percent",
+      "human_european",
+      "majority_flag",
+      "unanimous_flag",
+      "tories",
+      "divisor",
+      "modifier"
+    ],
+    "inputs": [
+      "difficulty",
+      "population",
+      "rebel_percent",
+      "human_european",
+      "majority_flag",
+      "unanimous_flag"
+    ],
+    "outputs": [
+      "tories",
+      "divisor",
+      "modifier"
+    ]
+  },
+  "center_food_stage": {
+    "slots": [
+      "difficulty",
+      "terrain",
+      "food"
+    ],
+    "inputs": [
+      "difficulty",
+      "terrain"
+    ],
+    "outputs": [
+      "food"
+    ]
+  },
+  "center_secondary_bonus": {
+    "slots": [
+      "difficulty",
+      "bonus"
+    ],
+    "inputs": [
+      "difficulty"
+    ],
+    "outputs": [
+      "bonus"
+    ]
+  },
+  "manufacturing_worker_output": {
+    "slots": [
+      "rate",
+      "modifier",
+      "building_count",
+      "expert",
+      "production"
+    ],
+    "inputs": [
+      "rate",
+      "modifier",
+      "building_count",
+      "expert"
+    ],
+    "outputs": [
+      "production"
+    ]
+  },
+  "difficulty_composition": {
+    "slots": [
+      "difficulty",
+      "population",
+      "rebel_percent",
+      "nation",
+      "controller",
+      "status_flags",
+      "terrain",
+      "rate",
+      "expert",
+      "building_count",
+      "fixed_production",
+      "supply",
+      "stock",
+      "use_worker",
+      "tories",
+      "divisor",
+      "modifier",
+      "center_food",
+      "secondary_bonus",
+      "worker_output",
+      "production",
+      "consumed",
+      "shortage",
+      "unmet",
+      "net"
+    ],
+    "inputs": [
+      "difficulty",
+      "population",
+      "rebel_percent",
+      "nation",
+      "controller",
+      "status_flags",
+      "terrain",
+      "rate",
+      "expert",
+      "building_count",
+      "fixed_production",
+      "supply",
+      "stock",
+      "use_worker"
+    ],
+    "outputs": [
+      "tories",
+      "divisor",
+      "modifier",
+      "center_food",
+      "secondary_bonus",
+      "worker_output",
+      "consumed",
+      "shortage",
+      "unmet",
+      "net"
+    ]
+  }
+}
