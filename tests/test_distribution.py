@@ -190,12 +190,29 @@ def test_distribution_check_requires_dinopark_terminal_resource(tmp_path, kind):
         members.add('fdisbull-0.dist-info/METADATA')
         required = 'fdisbull/' + resource
     archive = tmp_path / ('fdisbull-resource.whl' if kind == 'wheel' else 'fdisbull-resource.zip')
+    metadata = ('Metadata-Version: 2.1\nName: fdisbull\nVersion: 0\n'
+                'Requires-Dist: z3-solver==5.3.2.0\n')
     with zipfile.ZipFile(archive, 'w') as output:
         for member in sorted(members):
-            output.writestr(member, '')
+            output.writestr(member, metadata if member.endswith('/METADATA') else '')
     assert check(archive) == len(members)
     with zipfile.ZipFile(archive, 'w') as output:
         for member in sorted(members - {required}):
-            output.writestr(member, '')
+            output.writestr(member, metadata if member.endswith('/METADATA') else '')
     with pytest.raises(ValueError, match=re.escape(resource)):
+        check(archive)
+
+
+def test_distribution_check_requires_z3_core_dependency(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    members = {path.removeprefix('src/') for path in REQUIRED_SOURCE_FILES
+               if path.startswith('src/fdisbull/')}
+    members.add('fdisbull-0.dist-info/METADATA')
+    archive = tmp_path / 'fdisbull-no-z3.whl'
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members):
+            payload = ('Metadata-Version: 2.1\nName: fdisbull\nVersion: 0\n'
+                       if member.endswith('/METADATA') else '')
+            output.writestr(member, payload)
+    with pytest.raises(ValueError, match='z3-solver'):
         check(archive)

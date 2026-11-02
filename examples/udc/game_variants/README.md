@@ -95,7 +95,7 @@ example `build['c_modules']['terminal']['source']` or
 `build['c_modules']['roll1']['source']`. Its source digest is recorded beside it,
 so an A/B run can preserve the exact code that was compiled.
 
-Run focused checks from the checkout with the optional `proof` dependency:
+Run focused checks from the checkout; Z3 is part of the core install:
 
 ```sh
 PYTHONPATH=src:. python -m pytest -q \

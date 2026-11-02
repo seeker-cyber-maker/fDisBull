@@ -26,7 +26,7 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 FORMAT = "fdisbull-offline-dependencies-1"
-DEFAULT_EXTRAS = ("proof",)
+DEFAULT_EXTRAS = ()
 TARGET = {
     "python_tag": "cp313",
     "python": "3.13",

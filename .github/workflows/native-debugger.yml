@@ -142,7 +142,7 @@ jobs:
           mkdir -p .native/offline/packages .native/offline/wheels .native/offline/lib native-evidence/offline
           python -m build --wheel --outdir .native/offline/packages
           kit_wheel=$(find .native/offline/packages -name '*.whl' -print -quit)
-          python -m pip download --only-binary=:all: --dest .native/offline/wheels "$kit_wheel[proof]"
+          python -m pip download --only-binary=:all: --dest .native/offline/wheels "$kit_wheel"
           python -m build --wheel ./player --outdir .native/offline/wheels
           kit_sdl=$(ldd "$FDISBULL_DOSBOX" | awk '/libSDL2_net/{print $3; exit}')
           test -f "$kit_sdl"

@@ -12,7 +12,8 @@ spec.loader.exec_module(kit)
 def wheel(path, name, version):
     with zipfile.ZipFile(path, 'w') as z:
         dist = name.replace('-', '_')
-        z.writestr(f'{dist}-{version}.dist-info/METADATA', f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n')
+        requirement = 'Requires-Dist: z3-solver==5.3.2.0\n' if name == 'fdisbull' else ''
+        z.writestr(f'{dist}-{version}.dist-info/METADATA', f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n{requirement}')
         if name == 'fdisbull':
             guard_spec = importlib.util.spec_from_file_location('distribution_guard', Path(__file__).resolve().parents[1] / 'scripts/check_dist.py')
             guard = importlib.util.module_from_spec(guard_spec); guard_spec.loader.exec_module(guard)

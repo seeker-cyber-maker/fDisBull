@@ -102,6 +102,7 @@ fdisbull functions analysis.fdb
 On Windows, activate `.venv\Scripts\Activate.ps1` in PowerShell. Use `--image
 com` when importing a DOS COM file: the filename extension alone is not format
 evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
+The core install includes the genuine Z3 solver used by bounded proof checks.
 See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
 [platform support](docs/PLATFORMS.md) for more options.
 

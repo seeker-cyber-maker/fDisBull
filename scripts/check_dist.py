@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import argparse
-from email.parser import BytesParser
-from pathlib import Path, PurePosixPath
+import re
 import tarfile
 import zipfile
+from email.parser import BytesParser
+from pathlib import Path, PurePosixPath
 
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
@@ -111,6 +112,16 @@ def check_archive(path: Path) -> int:
         elif len(core_metadata) == 1 and roots == {"fdisbull", *core_metadata}:
             if "fdisbull/__init__.py" not in names:
                 raise ValueError("Wheel is missing fdisbull/__init__.py")
+            with zipfile.ZipFile(path) as archive:
+                message = BytesParser().parsebytes(
+                    archive.read(next(iter(core_metadata)) + "/METADATA")
+                )
+            requires = message.get_all("Requires-Dist") or []
+            if not any(
+                re.fullmatch(r"z3-solver==5\.3\.2\.0", item.strip(), re.IGNORECASE)
+                for item in requires
+            ):
+                raise ValueError("Core wheel must require z3-solver==5.3.2.0")
             missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
             if missing:
                 raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")

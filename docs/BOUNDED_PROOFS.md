@@ -1,6 +1,6 @@
 # Bounded expression checks
 
-The optional `z3-solver` dependency checks a supplied model, not the correctness
+The required `z3-solver` runtime dependency checks a supplied model, not the correctness
 of its relationship to instructions, recovered C/C++, runtime observations, a
 game, or a future UIL export. No C parser, decompiler, or UIL engine is implied.
 The caller supplies the correspondence and supporting evidence. See the
@@ -32,7 +32,8 @@ unsupported behavior must remain unknown rather than silently wrap.
 Assumptions are checked for satisfiability before comparison. The statuses are
 `vacuous` for inconsistent assumptions, `counterexample` with input bits,
 `equivalent_under_assumptions`, `unknown` on solver uncertainty or timeout, and
-`unavailable` when Z3 is absent. The time budget is shared by both checks.
+`unavailable` only when a source checkout is missing the required Z3
+dependency. The time budget is shared by both checks.
 Equivalent means only equality of the supplied expressions over their declared
 finite-width inputs under the supplied assumptions. The API bounds expression
 size, depth, node count, width and solver time; unsupported input is rejected.

@@ -258,7 +258,7 @@ an independent player's checkpoint have different persistence boundaries.
 
 ## Read a proof narrowly
 
-`udl-verify` uses the optional Z3 dependency to compare a source block model with
+`udl-verify` uses the installed Z3 dependency to compare a source block model with
 a candidate UIL program over the declared register inputs and outputs. The
 result `equivalent_under_assumptions` means only that those modeled outputs
 match under the recorded assumptions. A `counterexample` is an input to

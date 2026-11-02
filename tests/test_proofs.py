@@ -21,7 +21,7 @@ ONE = {'const':1, 'width':8}
 
 
 def needs_z3():
-    if proofs._load_z3() is None: pytest.skip('optional z3-solver is not installed')
+    if proofs._load_z3() is None: pytest.skip('z3-solver is not installed in this source environment')
 
 
 def test_real_solver_counterexample_and_identity():

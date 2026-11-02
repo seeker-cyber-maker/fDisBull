@@ -1,5 +1,4 @@
 """Bounded authored Five-Dice UIL variants; no private-source fidelity claim."""
-import pytest
 
 from examples.udc.game_variants.five_dice import contract, turn_program, variants
 from fdisbull.interaction_il import execute_il
@@ -17,7 +16,7 @@ def test_three_distinct_uil_programs_match_for_every_u16_seed():
     assert counts['compact'] < counts['clean'] < counts['verbose']
     for program in impls.values():
         result = qualify_uil(c, {'backend': 'uil', 'program': program})
-        # Solver-backed proof is optional in lightweight installs; exhaustive
+        # Solver-backed proof is part of the core install; exhaustive
         # execution below remains the independent full-u16 check.
         assert result['status'] in ('equivalent_under_contract', 'unknown')
         if result['status'] == 'unknown':

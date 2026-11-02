@@ -6,9 +6,9 @@ x86-64 / Python 3.13. It contains third-party dependencies only; `fdisbull` and
 release reuse the previous dependency bundle when the constraints have not
 changed.
 
-The default group is the core runtime plus the `proof` extra: Capstone,
-iced-x86, LIEF, Pillow and Z3. Use `--extra managed` or `--extra test` to add a
-declared optional group. The selected groups are part of the fingerprint.
+The default group is the core runtime: Capstone, iced-x86, LIEF, Pillow and Z3.
+Use `--extra managed` or `--extra test` to add a declared optional group. The
+selected groups are part of the fingerprint.
 
 ## Build once
 

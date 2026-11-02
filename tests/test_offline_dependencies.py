@@ -1,10 +1,11 @@
 import importlib.util
 import io
-from argparse import Namespace
-from pathlib import Path
 import sys
 import tarfile
+import tomllib
 import zipfile
+from argparse import Namespace
+from pathlib import Path
 
 import pytest
 
@@ -34,7 +35,7 @@ def make_wheel(path, name, version):
 
 
 def fake_wheelhouse(tmp_path):
-    requirements = deps.load_requirements(ROOT, ("proof",))
+    requirements = deps.load_requirements(ROOT, ())
     wheelhouse = tmp_path / "wheelhouse"
     wheels = {}
     sources = {}
@@ -53,20 +54,29 @@ def fake_wheelhouse(tmp_path):
 def build_fake_bundle(tmp_path):
     requirements, wheels, sources = fake_wheelhouse(tmp_path)
     archive = tmp_path / "fdisbull-dependencies.tar.gz"
-    deps.write_bundle(requirements, ("proof",), wheels, sources, archive)
+    deps.write_bundle(requirements, (), wheels, sources, archive)
     return requirements, archive
 
 
-def test_requirements_are_canonical_and_proof_included():
-    requirements = deps.load_requirements(ROOT, ("proof",))
+def test_requirements_are_canonical_and_include_z3():
+    requirements = deps.load_requirements(ROOT, ())
     assert "capstone==5.0.9" in requirements
     assert "iced-x86==1.21.0" in requirements
     assert "lief==1.0.0" in requirements
     assert "pillow>=10.4,<13" in requirements
     assert "z3-solver==5.3.2.0" in requirements
     assert deps.canonical_requirement(" Pillow >= 10.4, < 13 ") == "pillow>=10.4,<13"
-    assert deps.fingerprint(requirements, ("proof",)) == deps.fingerprint(
-        list(reversed(requirements)), ("proof",)
+    assert deps.fingerprint(requirements, ()) == deps.fingerprint(
+        list(reversed(requirements)), ()
+    )
+
+
+def test_z3_is_core_runtime_not_an_extra():
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
+    assert "z3-solver==5.3.2.0" in project["dependencies"]
+    assert all(
+        "z3-solver" not in requirements
+        for requirements in project.get("optional-dependencies", {}).values()
     )
 
 
@@ -74,14 +84,14 @@ def test_bundle_is_reproducible_and_extractable(tmp_path):
     requirements, wheels, sources = fake_wheelhouse(tmp_path)
     first = tmp_path / "first.tar.gz"
     second = tmp_path / "second.tar.gz"
-    deps.write_bundle(requirements, ("proof",), wheels, sources, first)
-    deps.write_bundle(requirements, ("proof",), wheels, sources, second)
+    deps.write_bundle(requirements, (), wheels, sources, first)
+    deps.write_bundle(requirements, (), wheels, sources, second)
     assert first.read_bytes() == second.read_bytes()
     extracted = deps.extract_bundle(first, tmp_path / "extracted")
     assert (extracted / "manifest.json").is_file()
     assert len(list((extracted / "wheels").glob("*.whl"))) == len(requirements)
     assert deps.load_bundle(first)["manifest"]["fingerprint"] == deps.fingerprint(
-        requirements, ("proof",)
+        requirements, ()
     )
 
 
@@ -134,7 +144,7 @@ def test_changed_constraint_reports_rebuild(tmp_path):
     requirements, previous = build_fake_bundle(tmp_path)
     changed = list(requirements)
     changed[0] = "capstone==6.0.0"
-    difference = deps.compare_specs(deps.load_bundle(previous), changed, ("proof",))
+    difference = deps.compare_specs(deps.load_bundle(previous), changed, ())
     assert difference["changed"] is True
     assert difference["version_changed"] == ["capstone"]
 
