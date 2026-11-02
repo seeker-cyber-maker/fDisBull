@@ -7,271 +7,220 @@ emulator, target executable, game files, saved states or project databases.
 ## Contents
 
 - [Start from the user's outcome](#start-from-the-users-outcome)
-- [Static analysis](#static-analysis)
-- [Native investigation](#native-investigation)
+- [Static analysis, media and source catalogs](#static-analysis-media-and-source-catalogs)
+- [Native investigation, rewind and macOS capture](#native-investigation-rewind-and-macos-capture)
 - [Scenes, maps and movement](#scenes-maps-and-movement)
 - [Seed scene hypotheses from guides](#seed-scene-hypotheses-from-guides)
-- [Player and live text workflows](#player-and-live-text-workflows)
+- [Player, Z scenes and direct guest interpreters](#player-z-scenes-and-direct-guest-interpreters)
+- [Common UIL, multi-target UDC and console synthesis](#common-uil-multi-target-udc-and-console-synthesis)
 - [Research-backed progression](#research-backed-progression)
-- [Retain knowledge](#retain-knowledge-without-overstating-it)
+- [Retain knowledge without overstating it](#retain-knowledge-without-overstating-it)
 - [Retrieve bounded output](#retrieve-bounded-output)
+- [Compare related programs](#compare-related-programs)
 
 ## Start from the user's outcome
 
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
-| Unpack an owned local GOG Inno Setup installer | `gog-list`, then `gog-unpack INSTALLER NEW_PRIVATE_DIRECTORY` | Native external innoextract reads payloads without Wine or running the installer; listing and hash manifests do not prove game execution or loader support. See `docs/GOG_UNPACKING.md`. |
-| Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
-| Inspect a qualified raw Z-machine v3 story | `zmachine-disasm STORY`, `zmachine-analyze STORY` | Bounded source instruction facts, separate from the generic Z scene interface. Retain unresolved calls, overlaps and worklist frontiers; a drained graph is not whole-game coverage. No native-to-guest mapping or guest project persistence is implied. |
-| Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
-| Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
-| Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
-| Run an authored text slice | `python -m fdisbull_player --package FILE` | The independent player evaluates the declared slice; this does not emulate or recover the source game. |
-| Preserve supported Z-machine v3 behavior in an independent player | `zork-uil STORY --output PRIVATE_IR`, then `fdisbull-player --uil PRIVATE_IR` | Executable word16 IR preserves low-level operations; semantic recovery is a separate claim. Derived story content stays private. |
-| Exercise the qualified Zork mailbox intent layer | `zork-intents STORY --output PRIVATE_PACKAGE`, then `fdisbull-player --intents PRIVATE_PACKAGE` | A source-bound partial semantic layer with explicit retained IR; inspect fault receipts and restore the last successful checkpoint before resuming. |
-| Recover named Zork scene rules | `zork-scenes STORY --intents PRIVATE_INTENTS --output PRIVATE_PACKAGE`, then `fdisbull-player --scenes PRIVATE_PACKAGE` | Qualified Zork I R88 only: named exit and dispatch rules with live guards and explicit residual bodies. Exit selection, movement and arrival have separate boundaries. Use [scene-recovery.md](scene-recovery.md) for the investigation procedure. |
-| Qualify a supported code-to-semantics block | UDL/UIL/UDC commands and APIs | Only the exact supported source span and declared effect boundary; see [udl-uil-udc.md](udl-uil-udc.md). |
-| Inspect AGI 2.917 logic bytes | `agi-logic LOGDIR VOLUME_DIRECTORY LOGIC --profile 2.917` | Bounded, read-only partial decoding; it does not establish that the logic was loaded or executed. |
+| Check local decoders, debuggers, C diagnostics and UIL scope | `capabilities`, `methods`, `doctor` | `capabilities` detects code and PATH/Python dependencies without running tools (`runtime_validation: not_run`); `doctor` runs separate runtime acceptance. |
+| Unpack GOG installers, extract MZ/AGI members or audit AVI video | `media-modules`, `media-inspect`, `media-extract`, `gog-list`/`gog-unpack`, `capture-audit` | Non-executing structural extraction or full-frame RGBA hashing only; no guest clock mapping or execution proof. See [media-modules.md](media-modules.md). |
+| Identify or analyze an x86, ARM64 or Cortex-M binary | `identify`, `inspect`, `import`, `analyze`, `auto-analyze`, `analysis-status`, `functions`, `disasm`, `xrefs`, `render` | Static decoder facts and stored SQLite analysis only; candidate functions, indirect transfers and budget frontiers stay labeled. |
+| Prove or falsify a stored-value, writer or trigger claim in a binary | Decoded image offsets, xrefs and positive/negative writer controls | Scoped to pinned decoded editions and static scan windows; see [binary-claim-verification.md](binary-claim-verification.md). |
+| Inspect console cartridges, CUE/ISO discs or Saturn SH-2 / SNES 65816 | `rom-inspect`, `disc-inspect`, `rom-disasm`, `fdisbull.snes_decode` | Header/track facts and mode-explicit instruction decoding; decoding never proves a region is reachable code. |
+| Index edition-pinned source or verify period build-to-byte maps | `source-create`, `source-import`, `source-search`, `source-concept`, `source-build`, `source-map-native` | Separate from `.fdb` projects; lexical/vector ranks and symbol names require independent native qualification. See [source-and-concepts.md](source-and-concepts.md). |
+| Observe actual DOS, Windows PE64 or macOS ARM64 behavior | `debug PROJECT ...`, `Project.debugger()`, `macos-observe`, `macos-snapshot`/`macos-session` | Requires a compatible external backend and authorized target; verify live source/version binding and real guest or UI effects. |
+| Reuse visible controls, audit coordinate domains or map a route | Versioned scenes, `debug-scene-domain-audit`, spatial maps, `debug-spatial-domain-audit`, `session.move()` | Authored geometry or observed segments; unknown cells, scrolling overhangs and engine movement remain separate. |
+| Run an authored slice, `text-host` projection or shared-IL Z service | `fdisbull-player` (`--package`, `--connect`, `--backend-command`), `fdisbull text-host` | Projections are bounded interfaces, not full game parsers; action freshness, batch journals and checkpoints have distinct contracts. |
+| Inspect or lift Sierra AGI v2 or Z-machine v3 guest scripts directly | `decoder-modules`, `module-analyze`, `module-lift`, `agi-logic`, `agi-scenes`, `kq1-bow-*`, `story-info`, `zmachine-*`, `zork-uil`/`zork-intents`/`zork-scenes` | Guest-language front ends work without an x86 `.fdb`; unmodeled engine effects and residual IR remain explicit. |
+| Compose typed indexed UIL into Python/JS, native links or desktop windows | `uil-check`, `uil-catalog`, `uil-run`, `uil-link`, `uil-components`, `uil-compile`, `uil-build`/`uil-seal`, `uil-desktop*`, `uil-fold`/`uil-expand`, `uil-store` | Emits standalone code or fixed-arena AppKit/X11/Win32 shells; build/seal is not runtime or source-equivalence qualification. See [common-uil.md](common-uil.md). |
+| Reconstruct DOS blocks, retarget memory UIL or synthesize console ROMs | `udl-*`, `udc-*`, `code-backings`, `build-memory-*-shell`, `console-udc`, `rom-game-lift`, `genesis-replay-*`, `nes-multicart-*`, `shadowrun-*` | Scoped to declared spans, arenas or reviewed ROM profiles; qualify `original → UIL` and `UIL → target` edges separately. See [udl-uil-udc.md](udl-uil-udc.md). |
 
-For concise command routes, read `docs/AGENT_QUICKSTART.md` in a source checkout.
-The command `fdisbull methods` lists the JSON interface. For detailed static
-behavior, live debugger setup or target-specific contracts, use the relevant
-source documentation rather than guessing flags.
+For concise command routes in a source checkout, read `docs/AGENT_QUICKSTART.md`.
+Use `fdisbull methods` and `<subcommand> --help` rather than guessing flags.
 
-## Static analysis
+## Static analysis, media and source catalogs
 
-For an executable file, inspect before importing so you can confirm format and
-architecture. COM images require explicit `--image com`; a filename suffix is
-not format evidence. Start recursive analysis with a reasonable instruction
-budget and inspect `analysis-status` or `status` for remaining work. A bounded
-run does not establish convergence. Use `render` only for stored project state;
-it does not operate a GUI or launch a target.
+Inspect before importing so format, slice and image profile are explicit:
 
-For installer extraction, nested images, overlays, edition comparison or media
-reduction, use [formats-and-media.md](formats-and-media.md). Select optional
-commands from the installed method inventory; an open proposal or a successful
-container listing does not provide a missing loader or processor.
+- **DOS & 16/32-bit x86:** pass `--image com` for DOS COM files (a `.com` suffix
+  alone is not format evidence), `--image ne` (or auto-detection) for 16-bit
+  Win16 NE logical `ne:seg:offset` segments, and `--image ail` for Miles AIL 2
+  `.ADV` audio drivers (`dos-services` names DIGPAK/MIDPAK `INT 66h` calls;
+  `omf-catalog` builds OMF library signature catalogs). Bounded 32-bit DOS/4GW
+  LE objects and internal fixups load into the existing x86 analyzer.
+- **Desktop & embedded:** import PE32/PE64 (plus optional `managed` .NET CIL),
+  Linux ELF, Mach-O ARM64 (`--slice-arch arm64`, with `code-backings` and
+  optional source-bound `ghidra-arm64` instruction/C diagnostics), or static
+  Armv7-M Cortex-M flash profiles (Thumb/Thumb-2 vector-table traversal).
+- **Console & recorded media:** inspect cartridge headers (`rom-inspect`),
+  CUE/BIN + ISO 9660 tracks (`disc-inspect`), bounded Saturn SH-2 ranges
+  (`rom-disasm` across Capstone, Ghidra and `saturn-recomp`), and mode-explicit
+  SNES 65C816 spans (`fdisbull.snes_decode`). For finalized AVI recordings,
+  `capture-audit` verifies every decoded RGBA frame hash before pixel review.
 
-Static call-flow can screen for a script interpreter, asset reader or dispatch
-table. A data file that resembles code is still not proof of a load or execution
-edge. Read the interpreter section of
-[methodology.md](methodology.md) when the task needs that distinction.
+Start recursive analysis with an explicit instruction budget and check
+`analysis-status` or `advanced-status` for pending work; a bounded stop never
+establishes convergence. `render` and `render-cfg` export PNGs from stored
+project state without launching a GUI or target. For container extraction,
+collection intake, edition diffs and consumer-safe media reduction, read
+[formats-and-media.md](formats-and-media.md). When screening for an embedded
+bytecode VM or cross-file loader edge, read [methodology.md](methodology.md).
 
-## Native investigation
+## Native investigation, rewind and macOS capture
 
 Launch only with the user's actual executable, game directory, byte version and
-compatible backend. DOS, PE/Wine and machine-level backends have different
-capabilities; check the selected run before using optional features. Live JSON
-operations require a retained server session (`serve` alone or `debug`), not a
-one-shot `request` call. See `docs/DOSBOX_DEBUGGER.md` and the relevant backend
-guide. A debugger capability does not imply target or game support.
+compatible backend. DOS (`dosbox` or QEMU), PE64 (`wine`/QEMU) and macOS probes
+have distinct capabilities; live JSON debugging requires a retained session
+(`serve` or `debug`), never a one-shot `request`. Prefer ordinary guest input
+with explicit guest-time and wall-time ceilings, and verify input consumption
+before interpreting display or memory changes. Checkpoint restore never rolls
+back mounted host files or external services.
 
-Prefer ordinary input with explicit guest-time and wall-time bounds. Check
-parser/readiness and input consumption before interpreting a response. Native
-screenshots and traces are stored in the project and can be exported later;
-exporting an existing artifact is different from claiming a fresh capture.
-Checkpoint restore does not roll back mounted host files or external services.
-
-A full native saved state is an **Anchor Stone**, named for TiGa's Blob to General
-game. Use `debug-save-anchor-stone`, `debug-load-anchor-stone` and offline
-`debug-anchor-stone-info` for direct save/load/inspection. Existing state API names
-remain compatible. Delta rewind follows recorded changes instead; its unit is
-a DOS next-fetch interval or Wine completed instruction, not a video frame.
-See `docs/ANCHOR_STONES.md`.
-
-For native DOS input retries, a backend advertising `frame_timeline` supports
-`debug-timeline-start`, `debug-timeline-advance` and `debug-timeline-rewind`.
-This automatically caches full states and completed-frame images, with physical
-keyboard make/break edges scheduled before selected frames. It is a bounded
-live cache, not an instruction-delta history. `debug-timeline-pin` persists a
-cached point as an Anchor Stone without recapturing it. An explicit preservation
-policy can retain identified current conventional RAM, such as RNG, while
-marking the result as an experimental mixed state. Ordinary queued input or
-unrecorded execution invalidates this history. Frame cadence depends on the
-guest mode; use its completion receipt, not a guessed 60 Hz or a guest-ms wait.
-See `docs/FRAME_INPUT_TIMELINE.md` for bounds, dirty-input cancellation, recovery
-and the manual/automatic/combined comparison. Other backends remain unsupported.
-
-For a short native DOS debugging history, use `debug-rewind-start`, advance with
-`debug-rewind-record`, inspect `debug-rewind-status`, then `debug-rewind` a
-declared count. This records bounded next-fetch intervals with native states;
-instruction retirement remains unknown. Unrecorded mutations invalidate the
-cursor, and capture/byte budgets include discarded branches. It restores existing
-states rather than replaying instructions; use ordinary `debug-load-state` when
-the checkpoint is already known. See `docs/DEBUGGER_REWIND.md` for limits and the
-local comparison procedure. Other execution backends are outside this first scope.
-
-The experimental `debug-delta-*` methods record net exposed-register and declared
-RAM changes with one full recovery anchor. They are selected-state diagnostics,
-not full machine rewind or a native write journal. Default delta undo blocks execution,
-capture and snapshots until explicit native recovery. Inspect `debug-delta-status`
-and read `docs/CPU_RAM_DELTAS.md` before using it; do not infer restored devices,
-hidden CPU state, unselected RAM or resumable historical execution.
-Wine/QEMU also supports bounded selected-thread x86-64 deltas: one completed
-instruction per interval, writable non-executable main-image RAM only, no active
-layers/breakpoints, and default no resume/capture after undo until full recovery. Native
-sidecar bytes count toward the 2 GiB default budget; DOS's limits are unchanged.
-See `docs/WINE_CPU_RAM_DELTAS.md`. IDA and native ARM64 target debugging remain
-outside this delta contract.
-
-For an intentional input experiment, `delta-rewind` also accepts `policy` with
-an experiment `name`, `preserve_registers`, `preserve_memory` address/length
-ranges, and the explicit boolean `allow_partial_resume`. Preserved ranges must
-fit the recorded projection; target-specific RNG identity is caller evidence,
-not automatically discovered by the recorder. The complete selected projection
-and resulting preserved values are checked before/after undo. Any policy ends
-the old chain and retains its recovery Anchor Stone. Only
-`allow_partial_resume:true` permits later execution/capture; the result remains
-`partial_restored:true` and `resume_safe:false`, with `execution_allowed:true`
-describing the explicit experiment permission. A new history captures a new
-recovery Anchor Stone before further recording. The `experiment` receipt/status
-object retains the policy, preserved register values, memory hashes and full
-projection fingerprints; subsequent captures retain that provenance. Read
-`docs/CPU_RAM_DELTAS.md` for the schema and recovery lifecycle; do not describe
-an accepted partial experiment as deterministic TAS replay or machine parity.
-
-A DOS data watch confirms the observed access boundary, not whole-instruction
-completion. Starting with 0.26, normalized DOS watch stops report
-`instruction_completed=null` and `registers_stage="after-access"`. A REP copy
-can yield with the same PC and a nonzero remaining count; inspect raw registers
-and memory before claiming completion of the copy or the enclosing transaction.
-Do not use older unconditional completion labels as that evidence.
-
-For a rebuilt DOS backend advertising `lifecycle.dos_guest_exit`, a
-`guest_exit` run result retains the selected PSP's completed DOS cleanup in
-`session.stop_reason.guest_exit`; `guest_tsr` separately reports remaining
-resident. Record target registers before exit because DOS has restored the
-parent context at this boundary. A legacy `program_exit` on debugger closure,
-a pause outside the image, or an exit interrupt alone is not this evidence.
+- **Anchor Stones:** full native saved states use `debug-save-anchor-stone`,
+  `debug-load-anchor-stone` and offline `debug-anchor-stone-info` (legacy state
+  method names remain compatible; see `docs/ANCHOR_STONES.md`).
+- **Automatic DOS frame/input timeline (`frame_timeline` backends):**
+  `debug-timeline-start`, `debug-timeline-advance`, `debug-timeline-rewind` and
+  `debug-timeline-pin` maintain a live cache of completed frames and full states
+  with physical keyboard make/break edges scheduled before selected frames.
+  Unrecorded input or execution invalidates the cursor; frame cadence depends on
+  the guest video mode rather than an assumed 60 Hz (`docs/FRAME_INPUT_TIMELINE.md`).
+- **Bounded next-fetch DOS rewind:** `debug-rewind-start`, `debug-rewind-record`,
+  `debug-rewind-status` and `debug-rewind` step across recorded next-fetch
+  states without instruction-retirement claims (`docs/DEBUGGER_REWIND.md`).
+- **CPU and RAM delta rewind (DOSBox & Wine/QEMU x86-64):** `debug-delta-*`
+  records net exposed-register and declared writable RAM changes anchored to one
+  full recovery stone (`docs/CPU_RAM_DELTAS.md`, `docs/WINE_CPU_RAM_DELTAS.md`).
+  Default undo blocks execution, capture and snapshots until full native
+  recovery. Passing an explicit `policy` (`name`, `preserve_registers`,
+  `preserve_memory`, and `allow_partial_resume: true`, e.g., for caller-evidenced
+  RNG bytes) ends the chain and permits experimental continuation with
+  `partial_restored: true` and `resume_safe: false`—never report such a run as
+  deterministic TAS replay or machine parity.
+- **DOS watchpoints and guest exit:** normalized DOS data watches report
+  `instruction_completed=null` and `registers_stage="after-access"` (check
+  remaining `CX` on `REP` operations before claiming completion). Backends
+  advertising `lifecycle.dos_guest_exit` distinguish selected-PSP `guest_exit`
+  cleanup from resident `guest_tsr` or session shutdown.
+- **macOS ARM64 & reversible UI capture:** `macos-observe` runs a source-bound
+  ARM64 executable to a single LLDB breakpoint. On macOS 14+, `macos-snapshot`
+  inspects displays and target accessibility without input; `macos-session`
+  journals bounded captures (and, only with `--live`, declared status-menu or
+  `CFPreferences` trials) using CoreGraphics global logical coordinates, while
+  `macos-session-recover` restores owned pending changes (`docs/MACOS_REVERSIBLE_CAPTURE.md`).
 
 ## Scenes, maps and movement
 
-Use scenes for versioned screen context, recognition masks, readiness and
-guarded input actions. Use spatial maps for game-unit known/safe regions, actor
-footprints, obstacles, hazards and interaction zones. These models answer
-different questions. See [scenes.md](scenes.md) for scene authoring and
-[runtime-navigation.md](runtime-navigation.md) for spatial policies, movement
-and observation choices.
-
-The default route is ordinary movement. Assisted placement and story-mode guard
-waivers are explicit interventions with narrower contracts, not equivalent
-forms of physical traversal. Unknown map cells are not safe; map proposals do
-not guarantee engine movement or survival. A state edit can test a mechanism
-without showing that a player can reach it.
+Use scenes for versioned screen context, pixel masks, `visible`/`ready`/`enabled`
+predicates and guarded actions, and spatial maps for game-unit safe regions,
+actor footprints, obstacles, hazards and interaction zones. Audit off-screen
+objects and scrolling margins with `debug-scene-domain-audit` or
+`debug-spatial-domain-audit`. Read [scenes.md](scenes.md) for scene authoring
+and [runtime-navigation.md](runtime-navigation.md) for spatial policies
+(`physical`, `assisted`, `story`, and voluntary `--fair-play`), bounded route
+proposals and sparse pixel/memory probes.
 
 ## Seed scene hypotheses from guides
 
-Start with the current scene and a small likely frontier. A guide's labels,
-objects, exits and prerequisites are hypotheses until bound to the selected
-source and, where required, observed at runtime. A transcript supports its text;
-visual claims need viewed frames or other direct evidence. Retain inferred
-intermediate steps and discrepancies in the private scene ledger described in
-[Research-backed progression](#research-backed-progression). Keep future
-discoveries out of player narration and include research preparation in cost.
+Start with the current scene and a small likely frontier. External guide labels,
+exits and prerequisites remain hypotheses until bound to the selected source and
+observed at runtime where required. Visual claims need viewed frames rather than
+text transcripts alone; keep future guide spoilers out of live player narration.
 
-## Player and live text workflows
+## Player, Z scenes and direct guest interpreters
 
-`fdisbull-player` is a separate, standard-library package. Its `--package` mode
-runs an authored JSON slice; `--connect HOST:PORT` connects to a line-oriented
-backend. `--live` restores and checkpoints turns, but cannot verify a remote
-backend's durability. Optional external agents are trusted processes, not
-sandboxed programs. Read `docs/TEXT_PLAYER.md` and `docs/PLAYER_LIVE.md` before
-choosing this surface.
+- **Standalone `fdisbull-player` & `text-host`:** `--package` evaluates an
+  authored JSON slice; `--connect HOST:PORT` attaches to `fdisbull text-host`
+  over trusted local loopback; `--backend-command` runs a local Z scene service
+  (such as `python -m fdisbull.il_scenes`, `fdisbull.strategy_z` or
+  `fdisbull shadowrun-z`) without a shell and with `--backend-timeout`. `--live`
+  checkpoints turns; `--batch-plan` and `--batch-journal` record ordered
+  dispatches and pause partial or notice-interrupted steps for certified
+  checkpoint reconciliation (`docs/Z_BATCH_RECOVERY.md`, `docs/Z_REPLY_RECOVERY.md`).
+- **Original-backed DinoPark Z (`fdisbull.dinopark_z`):** verifies and launches
+  the user's original game via DOS UDC in a new private work directory. Supports
+  loans, land, fencing, supplies, Coelophysis/catalogue purchases, hiring, park
+  opening, month rollover, `save park` disk persistence and named menu/quit
+  actions (`docs/DINOPARK_Z.md`). When an error leaves a stopped reachable guest
+  in `recovery_required`, new actions and checkpoints refuse until an explicit,
+  previously qualified checkpoint restore re-verifies native fields and scene
+  identity.
+- **Direct AGI v2 & Z-machine v3 front ends:** `decoder-modules` and
+  `module-analyze` inspect AGI v2 logic or checksum-qualified Z-machine v3
+  stories (`story-info`, `zmachine-disasm`, `zmachine-analyze`) without a native
+  `.fdb`. For AGI 2.917, run `agi-scenes --stage outline|resolve` (see
+  [agi-scenes.md](agi-scenes.md)), lift bounded components with `module-lift`
+  (including `--control-flow compact` and `--effect-profile agi-2.917`), compare
+  leaf invocations against live DOS via `AGIDOSHostAdapter`, or evaluate the
+  qualified KQ1 bow (`kq1-bow-intents` / `kq1-bow-evaluate`). For Zork I R88,
+  `zork-uil` lowers word16 IR, `zork-intents` adds source-linked mailbox rules
+  with fault receipts, and `zork-scenes` recovers 110 named rooms and 352 exits
+  with live guards and explicit residual IR (see [scene-recovery.md](scene-recovery.md)).
 
-Z scene consumption is available through
-`--backend-command`: select a trusted local content service and a finite
-`--backend-timeout`. `python -m fdisbull.il_scenes /private/scene.json` consumes
-shared IL without starting a debugger. The player supports public object verbs,
-compass aliases, partial observations and opaque freshness tokens. A failed
-exchange stops the connection; inspect unknown effects before any retry.
-`--quiet` keeps external-driver transcripts private. Checkout examples are not
-installed runtime resources; provide your own authored or qualified scene input.
-Read `docs/Z_SCENES.md` for the envelope and exact limits.
+## Common UIL, multi-target UDC and console synthesis
 
-For an ordered route, `--batch-plan` and `--batch-journal` journal each dispatch
-before it crosses the provider boundary. A continuation needs both the plan's
-permission and the original provider response's matching context/command.
-Canonical action identity blocks aliases from resending the original action.
-An acknowledged notice or successful `look` cannot complete an original
-partial effect. Current providers supply no bound original-intent completion
-certificate, so such steps remain paused. Inspect the original result and use
-only a certified checkpoint rewind when its live-session/resource contract
-holds. See `docs/Z_BATCH_RECOVERY.md`; do not combine this protocol with the
-separate Word16/intent command loop.
-
-For the original-backed DinoPark provider, run
-`python -m fdisbull.dinopark_z` as the selected service with explicit original
-game, compatible backend and a new private work directory. It uses the v0.23
-DOS UDC before launching the original engine. Verify native receipts, keep
-unfinished or interrupted sessions distinct from successful cleanup, and never
-repeat an action solely because its follow-up view failed. `save park` uses the
-original disk writer and a fresh loader; a live snapshot is a separate facility.
-The qualified scene surface is partial. See `docs/DINOPARK_Z.md`.
-
-Starting with 0.26, an action error can leave that provider available only when
-the same native guest is still reachable and freshly confirmed stopped.
-`recovery_required` is not success: new actions and new checkpoints are refused;
-only an explicitly requested, previously qualified checkpoint restore can clear
-the gate after native fields match and the saved scene qualifies again. Preserve
-confirmed effects separately from unknown effects, including when EOF closes the
-session. A running, unreachable or terminated guest is not recoverable through
-this path. Checkpoint rewind does not undo mounted-file writes.
-
-The debugger-backed `text-host` exposes a deliberately qualified public
-projection over a live session. It needs a private configuration, project,
-backend, game directory, resource root and explicit runtime witnesses. It is
-single-client loopback transport without authentication or encryption; use it
-only in a trusted local environment. The projection is not a secrecy or process
-isolation boundary. `--fair-play` locks the host to physical movement. Otherwise
-choose `--spatial-mode physical|assisted|story` explicitly for a controlled
-experiment. Read `docs/TEXT_PROJECTION.md` and `docs/SPATIAL_MAPS.md`.
+- **Indexed Common UIL (`uil-*`):** validate (`uil-check`), build UDL semantic
+  catalogs (`uil-catalog`), evaluate copy-in/copy-out frames (`uil-run`), fold
+  or expand hierarchies (`uil-fold`/`uil-expand`), persist immutable packages
+  (`uil-store`/`uil-info`/`uil-list`), emit standalone Python/JavaScript or link
+  and compile native `macos-arm64`, `linux-x64` and `windows-x64` realizations
+  with C/ASM component selection (`uil-link`, `uil-components`, `uil-compile`,
+  `uil-build`, `uil-seal`), and build fixed-arena AppKit/X11/Win32 desktop
+  shells (`uil-desktop`, `uil-desktop-build`, `uil-desktop-seal`). Follow
+  `common-uil.md` for schemas and qualification gates.
+- **DOS, Web and Multi-Target Memory UDC:** capture byte-exact MZ/COM definitions
+  (`udc-*`, `udc-native-*`), overlapping x86 `code-backings` / `code-layout`,
+  and selectable block/memory layers (`store-*-contract`, `store-*-udl-layer`,
+  `select-*-udl-layers`), retargeting pure or bounded-memory word arenas across
+  Wasm/WebGPU (`build-web-*`, `build-memory-web-*`), macOS ARM64 AppKit
+  (`build-memory-macos-shell`), 32/64-bit Windows GDI and Linux X11
+  (`build-memory-desktop-shell`), and segmented 16-bit Win16 NE
+  (`build-memory-win16-shell`).
+- **Console synthesis (`console-udc`, Genesis, NES, SNES):** compile shared
+  8/16-bit UIL to native NES or Sega Genesis ROMs (`console-udc`), package
+  authored-compatible NROM pairs (`nes-multicart-*`), export repeatable
+  *Miniplanets* procedural game/audio/display/PSG bundles to banked NES or
+  native Genesis (`rom-game-lift`, `genesis-replay-*`), or build bounded
+  prepared-state *Shadowrun* Genesis and SNES slices (`shadowrun-*`, with native
+  `macos-arm64` recommended for desktop play and NES slices scoped as bounded
+  research). Follow `udl-uil-udc.md` for every target's exact contract.
 
 ## Research-backed progression
 
-When the goal is normal progression or recovery, read
-[recovery-research.md](recovery-research.md) for version-qualified prior work,
-a source-attributed milestone checklist and tests of candidate scene transitions.
-Do not confuse a guide-derived route with a route observed on this target.
-
-For the meaning of an interaction across code, a text view and a proposed
-reconstruction, use [semantic-contracts.md](semantic-contracts.md). Retain the
-working lower-level representation and explicit unknowns as individual intent
-contracts are qualified.
+For normal progression or source-assisted recovery, read
+[recovery-research.md](recovery-research.md) to pin editions, build
+source-attributed milestone checklists and test candidate transitions. Use
+[semantic-contracts.md](semantic-contracts.md) to compare guards, effects,
+timing and projection losses across representations while keeping unrecovered
+behavior in working lower-level IR.
 
 ## Retain knowledge without overstating it
 
-Promote verified reusable facts into versioned scene objects, named anchors,
-route segments, source mappings or interaction definitions only when doing so
-reduces later probe cost. Preserve the evidence and authority behind the
-shortcut. Revalidate after a source/version, resource, room, backend or runtime
-context change. Keep target-specific addresses, masks and paths in project
-evidence rather than this reusable skill.
+Promote verified facts into versioned scenes, spatial anchors, type/signature
+catalogs, source links or UIL packages only when doing so lowers future probe
+cost. Preserve provenance and revalidate whenever source bytes, resources,
+rooms, layers or backends change. Keep target-specific addresses and private
+paths in project evidence rather than in reusable skills.
 
 ## Retrieve bounded output
 
-The core defaults to 64 KiB inline. An `fdisbull-output-ref-1` marker with
-`complete: false` and `status: artifact_required` replaces an oversized reply;
-the separate execution summary keeps the original status/completeness, including
-unknown values. The marker is in a successful wrapped `request` result, in `output` for a
-wrapped error, or is the raw `il-run` response. It is not a failure, a rollback or proof of equality.
-`output-info ARTIFACT` inspects the private archived JSON; `output-select
-ARTIFACT JSON_POINTER --max-bytes N` returns a selected value only if complete,
-`output-read ARTIFACT --offset N --length N` reads bounded base64 byte ranges,
-and `output-export ARTIFACT NEW_FILE` exports to a new private path outside Git.
-For example, use `/state` for a raw `il-run` artifact and `/result/state` for a
-wrapped `request`. Do not repeat a side effect to obtain its response. Retrieval
-does not run the target or refresh state. `output_unavailable` means full output could not be retained, including
-a storage or serialization failure, with no artifact; it does not undo execution or authorize a retry. These
-output references differ from project debug artifact IDs. The default private
-store is user-data `fdisbull/output-artifacts`; `FDISBULL_OUTPUT_ARTIFACT_DIR`
-may select a location outside Git. Artifacts have no automatic deletion.
+Core JSON replies default to 64 KiB inline. Oversized results return an
+`fdisbull-output-ref-1` marker (`complete: false`, `status: artifact_required`)
+while retaining the execution summary separately. Inspect or slice the archived
+JSON with `output-info`, `output-select ARTIFACT POINTER --max-bytes N` (use
+`/state` for raw `il-run` and `/result/state` for wrapped `request`),
+`output-read ARTIFACT --offset N --length N`, or `output-export ARTIFACT
+NEW_PRIVATE_PATH` outside Git. Retrieval never reruns the target.
+`output_unavailable` means serialization or storage failed and no artifact
+exists; it never implies rollback or permission to replay a side effect. Output
+artifact IDs are distinct from `.fdb` debugger artifact IDs and live in
+user-data `fdisbull/output-artifacts` (or `FDISBULL_OUTPUT_ARTIFACT_DIR`).
 
 ## Compare related programs
 
-Use explicit `export-types` / `import-types` to share unbound structural
-interpretations after checking each target's own layout evidence. Keep byte
-identity signatures separate from semantic correspondences: equivalent arithmetic
-can have different code, pointer widths and calling conventions. Catalog origin
-is a declared source claim, not native evidence. Apply a received type only at a
-locally qualified memory/file location; fixed pointer segments cannot be
-transferred. Record accepted, rejected and still-candidate correspondences.
+Use `export-types` / `import-types` and `export-signatures` / `import-signatures`
+to transfer unbound structural layouts and closed function signatures after
+verifying each target's own alignment, pointer width, endianness and ABI. Keep
+byte signatures distinct from semantic correspondence (`link-snippets`), refuse
+fixed segment transfers across models, and record accepted, rejected and
+still-candidate links explicitly.
