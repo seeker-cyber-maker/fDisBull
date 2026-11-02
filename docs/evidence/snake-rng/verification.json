@@ -1,0 +1,774 @@
+{
+  "format": "fdisbull-snake-rng-qualification-1",
+  "status": "finite_original_match_and_intentional_variant",
+  "base_commit": "cb38f6e1960c10138ded93aba7e08c6aeffdf5bf",
+  "original": {
+    "bytes": 3851,
+    "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "unchanged": true,
+    "fresh_cpu_outcome_calls": 26,
+    "adapter": "Same declared pending-direction/step schedule; original executable CPU verifies each original step. Native keyboard consumption not tested here.",
+    "probe_sha256": "55d2dbfa558a9c6f983d8c41977eaaf351edfc11f45c9fd49aadb63a76d33cd3"
+  },
+  "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+  "canonical_program_unchanged": true,
+  "previous_frozen_files_checked": 9,
+  "database_reopened_and_region_selections_revalidated": true,
+  "execution_uil_sha256": "682ba1cbdd8fe779786de4e7715d66a4bc671562ae2da1882b94b251d28bd7be",
+  "region_plan_sha256": "6d669bfb7ff797984bf2ff2a87177f655e5a172b6d08a14cca6434f01c426df1",
+  "source_region": {
+    "name": "rng",
+    "output": {
+      "index": 606,
+      "max": 65535,
+      "min": 0
+    },
+    "reads": [
+      606
+    ],
+    "source": {
+      "count": 1,
+      "entry": "step.44",
+      "function": "step"
+    }
+  },
+  "implementations": {
+    "original": {
+      "label": "Original LCG",
+      "assurance": "exact-source-region",
+      "implementation_uil_sha256": "84877092fa8b7bf08c448a01481844376e15c3659e45698a6fdeecb450cb7635",
+      "endpoints": {
+        "wasm": {
+          "selection": "selection:44188eb1498a5d0eccf519795391af3ff588ef3b3e1e98c2b494524516d7fb84",
+          "selection_sha256": "44188eb1498a5d0eccf519795391af3ff588ef3b3e1e98c2b494524516d7fb84",
+          "layer": "layer:ab81c0aaf526f9591eb17455bdb60a661ba6c700a1d333293b53df0aa91d4b58",
+          "layer_sha256": "ab81c0aaf526f9591eb17455bdb60a661ba6c700a1d333293b53df0aa91d4b58",
+          "contract": "contract:ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "contract_sha256": "ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+          "implementation_uil_sha256": "84877092fa8b7bf08c448a01481844376e15c3659e45698a6fdeecb450cb7635",
+          "assurance": "exact-source-region",
+          "region": {
+            "name": "rng",
+            "output": {
+              "index": 606,
+              "max": 65535,
+              "min": 0
+            },
+            "reads": [
+              606
+            ],
+            "source": {
+              "count": 1,
+              "entry": "step.44",
+              "function": "step"
+            }
+          }
+        },
+        "webgpu": {
+          "selection": "selection:b01af7570f257dadd9adc04fc948efa5f26db086ff1a4bd58cfd2991bd4d50dc",
+          "selection_sha256": "b01af7570f257dadd9adc04fc948efa5f26db086ff1a4bd58cfd2991bd4d50dc",
+          "layer": "layer:cfbfa8537d48a06896e961b72c7a60319c38d4823e969d4c4e78b5206ebe5280",
+          "layer_sha256": "cfbfa8537d48a06896e961b72c7a60319c38d4823e969d4c4e78b5206ebe5280",
+          "contract": "contract:ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "contract_sha256": "ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+          "implementation_uil_sha256": "84877092fa8b7bf08c448a01481844376e15c3659e45698a6fdeecb450cb7635",
+          "assurance": "exact-source-region",
+          "region": {
+            "name": "rng",
+            "output": {
+              "index": 606,
+              "max": 65535,
+              "min": 0
+            },
+            "reads": [
+              606
+            ],
+            "source": {
+              "count": 1,
+              "entry": "step.44",
+              "function": "step"
+            }
+          }
+        }
+      }
+    },
+    "lfsr16": {
+      "label": "LFSR16 \u00b7 changes food placement",
+      "assurance": "intentional-behavior-variant",
+      "implementation_uil_sha256": "7a99ec21da74e1990462120f9e7691b2405de1c8f9b1cb6c15d508930712d7a1",
+      "endpoints": {
+        "wasm": {
+          "selection": "selection:d8bac456b946314c083044ed91bbea31de906c2dd857963165c28c6867b66c7d",
+          "selection_sha256": "d8bac456b946314c083044ed91bbea31de906c2dd857963165c28c6867b66c7d",
+          "layer": "layer:44d32099735af9ea57660778b7a4d2f9df66b2bb3fe3e8de02752964ddccaafa",
+          "layer_sha256": "44d32099735af9ea57660778b7a4d2f9df66b2bb3fe3e8de02752964ddccaafa",
+          "contract": "contract:ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "contract_sha256": "ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+          "implementation_uil_sha256": "7a99ec21da74e1990462120f9e7691b2405de1c8f9b1cb6c15d508930712d7a1",
+          "assurance": "intentional-behavior-variant",
+          "region": {
+            "name": "rng",
+            "output": {
+              "index": 606,
+              "max": 65535,
+              "min": 0
+            },
+            "reads": [
+              606
+            ],
+            "source": {
+              "count": 1,
+              "entry": "step.44",
+              "function": "step"
+            }
+          }
+        },
+        "webgpu": {
+          "selection": "selection:e051f3d52f0b1ff25fdfb54974767dcb9f66b45712985431e412427f7189f66c",
+          "selection_sha256": "e051f3d52f0b1ff25fdfb54974767dcb9f66b45712985431e412427f7189f66c",
+          "layer": "layer:02d76974bd21d61f46b9e20546ce540f1737d6435790a1c7838638ed91509c9c",
+          "layer_sha256": "02d76974bd21d61f46b9e20546ce540f1737d6435790a1c7838638ed91509c9c",
+          "contract": "contract:ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "contract_sha256": "ec4f153aa48be54196079b5eb14ff082facad14210cbcf3d1282db932ea48ef3",
+          "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+          "implementation_uil_sha256": "7a99ec21da74e1990462120f9e7691b2405de1c8f9b1cb6c15d508930712d7a1",
+          "assurance": "intentional-behavior-variant",
+          "region": {
+            "name": "rng",
+            "output": {
+              "index": 606,
+              "max": 65535,
+              "min": 0
+            },
+            "reads": [
+              606
+            ],
+            "source": {
+              "count": 1,
+              "entry": "step.44",
+              "function": "step"
+            }
+          }
+        }
+      }
+    }
+  },
+  "behavior": {
+    "original": "(seed*25173+13849)&65535",
+    "lfsr16": "(((seed>>1)^((-(seed&1))&0xb400))|((seed==0)*0xace1))&65535",
+    "selection": "Keeps current state, seed and existing food; the next actual RNG call uses the selected realization",
+    "first_meal": {
+      "step": 4,
+      "original_seed": 10589,
+      "original_food": 389,
+      "lfsr16_seed": 2330,
+      "lfsr16_food": 530
+    },
+    "outcome": "Same26moves: original length5 score2 dies; LFSR length4 score1 survives by vacating its tail",
+    "range_and_cycles": {
+      "original": {
+        "start": 4660,
+        "period": 65536,
+        "transient": 0,
+        "return_value": 4660,
+        "sequence_sha256": "dac919d7a7265f97a93c136f245926101e52206a4c3316410f4d600564643e1b"
+      },
+      "alternate_nonzero": {
+        "start": 4660,
+        "period": 65535,
+        "transient": 0,
+        "return_value": 4660,
+        "sequence_sha256": "74f218e2a5802d4e5d5baf4cc78ff9af42eb44f7bb46e99458abee5841ca436b"
+      },
+      "alternate_from_zero": {
+        "start": 0,
+        "period": 65535,
+        "transient": 1,
+        "return_value": 44257,
+        "sequence_sha256": "cef51c4042a26fbffe489d0e370241cb3b4e8e0fba19830bf14a97cb81ec7052"
+      }
+    },
+    "numeric_domain": {
+      "seeds": 65536,
+      "original_distinct_outputs": 65536,
+      "alternate_distinct_outputs": 65535,
+      "equal_transitions": 0,
+      "original_output_sha256": "2c1da9756c8841286fbdf802260041bb93d96357135a908580a0ac9ce14b9718",
+      "alternate_output_sha256": "28a3a4f04ba7e901103adf7d0e9bd02311ea81e0eda3a420f8c029708f684dfa",
+      "alternate_zero_absorbing": false,
+      "quality_claim": "No statistical/security quality claim; modulo600 and first-free scan remain biased projections."
+    }
+  },
+  "execution": {
+    "node": {
+      "runtime": "v22.22.3",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "original_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "original_carried_arms": 10,
+      "observations_per_arm": 69,
+      "events_per_arm": 79,
+      "alternative_cases": {
+        "wasm": {
+          "cases": 342,
+          "changed": 84,
+          "unchanged": 258,
+          "region_invocations": 84,
+          "mismatches": 0
+        },
+        "webgpu": {
+          "cases": 342,
+          "changed": 84,
+          "unchanged": 258,
+          "region_invocations": 84,
+          "mismatches": 0
+        }
+      },
+      "seed_probes": 20,
+      "alternative_carried_arms": [
+        {
+          "owner": "wasm",
+          "rng": "wasm",
+          "draw": "wasm",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "wasm",
+          "rng": "webgpu",
+          "draw": "webgpu",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "webgpu",
+          "rng": "wasm",
+          "draw": "wasm",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "webgpu",
+          "rng": "webgpu",
+          "draw": "webgpu",
+          "observations": 69,
+          "region_invocations": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "backend": "wasm",
+          "choice": "original",
+          "steps": 26,
+          "region_invocations": 2,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "frame_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "head": 358,
+            "length": 5,
+            "score": 2,
+            "seed": 35834,
+            "food": 434,
+            "game_status": 1
+          }
+        },
+        {
+          "backend": "wasm",
+          "choice": "lfsr16",
+          "steps": 26,
+          "region_invocations": 1,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "frame_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "head": 359,
+            "length": 4,
+            "score": 1,
+            "seed": 2330,
+            "food": 530,
+            "game_status": 0
+          }
+        },
+        {
+          "backend": "webgpu",
+          "choice": "original",
+          "steps": 26,
+          "region_invocations": 2,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "frame_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "head": 358,
+            "length": 5,
+            "score": 2,
+            "seed": 35834,
+            "food": 434,
+            "game_status": 1
+          }
+        },
+        {
+          "backend": "webgpu",
+          "choice": "lfsr16",
+          "steps": 26,
+          "region_invocations": 1,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "frame_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "head": 359,
+            "length": 4,
+            "score": 1,
+            "seed": 2330,
+            "food": 530,
+            "game_status": 0
+          }
+        }
+      ],
+      "direct_seed_switches": [
+        {
+          "from": "original",
+          "to": "lfsr16",
+          "seed": 10589,
+          "next": 41134,
+          "backend": "webgpu",
+          "state_preserved_on_selection": true
+        },
+        {
+          "from": "lfsr16",
+          "to": "original",
+          "seed": 2330,
+          "next": 12219,
+          "backend": "webgpu",
+          "state_preserved_on_selection": true
+        }
+      ],
+      "receipt_sha256": "e4e01f8025c999efee1b7261fc16b45f1777a00c9d8a3fbbe4637c1aeee26a73"
+    },
+    "chrome": {
+      "runtime": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "original_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "original_carried_arms": 10,
+      "observations_per_arm": 69,
+      "events_per_arm": 79,
+      "alternative_cases": {
+        "wasm": {
+          "cases": 342,
+          "changed": 84,
+          "unchanged": 258,
+          "region_invocations": 84,
+          "mismatches": 0
+        },
+        "webgpu": {
+          "cases": 342,
+          "changed": 84,
+          "unchanged": 258,
+          "region_invocations": 84,
+          "mismatches": 0
+        }
+      },
+      "seed_probes": 20,
+      "alternative_carried_arms": [
+        {
+          "owner": "wasm",
+          "rng": "wasm",
+          "draw": "wasm",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "wasm",
+          "rng": "webgpu",
+          "draw": "webgpu",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "webgpu",
+          "rng": "wasm",
+          "draw": "wasm",
+          "observations": 69,
+          "region_invocations": 1
+        },
+        {
+          "owner": "webgpu",
+          "rng": "webgpu",
+          "draw": "webgpu",
+          "observations": 69,
+          "region_invocations": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "backend": "wasm",
+          "choice": "original",
+          "steps": 26,
+          "region_invocations": 2,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "frame_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "head": 358,
+            "length": 5,
+            "score": 2,
+            "seed": 35834,
+            "food": 434,
+            "game_status": 1
+          }
+        },
+        {
+          "backend": "wasm",
+          "choice": "lfsr16",
+          "steps": 26,
+          "region_invocations": 1,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "frame_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "head": 359,
+            "length": 4,
+            "score": 1,
+            "seed": 2330,
+            "food": 530,
+            "game_status": 0
+          }
+        },
+        {
+          "backend": "webgpu",
+          "choice": "original",
+          "steps": 26,
+          "region_invocations": 2,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "9b3528baa142b9df9b7a0895474cdaa0ddb0972c3b6eb1a782b7b819aef590dd",
+            "frame_sha256": "1cc16839b774b3e4bb60da02fba1e694d513c0a93761d90648ebfded063eaca8",
+            "head": 358,
+            "length": 5,
+            "score": 2,
+            "seed": 35834,
+            "food": 434,
+            "game_status": 1
+          }
+        },
+        {
+          "backend": "webgpu",
+          "choice": "lfsr16",
+          "steps": 26,
+          "region_invocations": 1,
+          "final": {
+            "id": "outcome-step-26",
+            "state_sha256": "3cfb37fdc42203247ac2e253874bc6d71d84768bf3f92559304591fc4a826456",
+            "frame_sha256": "d9fede1ba51188dccde2dcd864de4b55ffc7ab41c2d56c293b7ee4dd598c1b6a",
+            "head": 359,
+            "length": 4,
+            "score": 1,
+            "seed": 2330,
+            "food": 530,
+            "game_status": 0
+          }
+        }
+      ],
+      "direct_seed_switches": [
+        {
+          "from": "original",
+          "to": "lfsr16",
+          "seed": 10589,
+          "next": 41134,
+          "backend": "webgpu",
+          "state_preserved_on_selection": true
+        },
+        {
+          "from": "lfsr16",
+          "to": "original",
+          "seed": 2330,
+          "next": 12219,
+          "backend": "webgpu",
+          "state_preserved_on_selection": true
+        }
+      ],
+      "receipt_sha256": "20e1f4731d7aaad23bef9e525cec85b253fe986c1bc2fa0e91a3bd5eb1536ce2"
+    }
+  },
+  "natural_midgame_switch": {
+    "status": "passed",
+    "arms": [
+      {
+        "owner": "wasm",
+        "rng": "webgpu",
+        "selection": {
+          "after_step": 4,
+          "seed": 10589,
+          "food": 389,
+          "state_unchanged": true
+        },
+        "steps": 26,
+        "region_invocations": [
+          {
+            "function": "rng",
+            "backend": "webgpu",
+            "kind": "region",
+            "implementation": "original",
+            "implementation_uil_sha256": "84877092fa8b7bf08c448a01481844376e15c3659e45698a6fdeecb450cb7635",
+            "assurance": "exact-source-region",
+            "status": "complete",
+            "steps": 1,
+            "step": 4
+          },
+          {
+            "function": "rng",
+            "backend": "webgpu",
+            "kind": "region",
+            "implementation": "lfsr16",
+            "implementation_uil_sha256": "7a99ec21da74e1990462120f9e7691b2405de1c8f9b1cb6c15d508930712d7a1",
+            "assurance": "intentional-behavior-variant",
+            "status": "complete",
+            "steps": 1,
+            "step": 23
+          }
+        ],
+        "after_second_meal": {
+          "id": "outcome-step-23",
+          "state_sha256": "3b5057e2b1024742337bea47fe5a35253179d8fef23877bf5e8beb744a540ad3",
+          "frame_sha256": "fb369c059be8636e43295832b73f95ec12e530d28989bbdd485951569923e61d",
+          "seed": 41134,
+          "food": 334,
+          "length": 5,
+          "score": 2,
+          "game_status": 0
+        }
+      },
+      {
+        "owner": "webgpu",
+        "rng": "wasm",
+        "selection": {
+          "after_step": 4,
+          "seed": 10589,
+          "food": 389,
+          "state_unchanged": true
+        },
+        "steps": 26,
+        "region_invocations": [
+          {
+            "function": "rng",
+            "backend": "wasm",
+            "kind": "region",
+            "implementation": "original",
+            "implementation_uil_sha256": "84877092fa8b7bf08c448a01481844376e15c3659e45698a6fdeecb450cb7635",
+            "assurance": "exact-source-region",
+            "status": "complete",
+            "steps": 1,
+            "step": 4
+          },
+          {
+            "function": "rng",
+            "backend": "wasm",
+            "kind": "region",
+            "implementation": "lfsr16",
+            "implementation_uil_sha256": "7a99ec21da74e1990462120f9e7691b2405de1c8f9b1cb6c15d508930712d7a1",
+            "assurance": "intentional-behavior-variant",
+            "status": "complete",
+            "steps": 1,
+            "step": 23
+          }
+        ],
+        "after_second_meal": {
+          "id": "outcome-step-23",
+          "state_sha256": "3b5057e2b1024742337bea47fe5a35253179d8fef23877bf5e8beb744a540ad3",
+          "frame_sha256": "fb369c059be8636e43295832b73f95ec12e530d28989bbdd485951569923e61d",
+          "seed": 41134,
+          "food": 334,
+          "length": 5,
+          "score": 2,
+          "game_status": 0
+        }
+      }
+    ],
+    "adapters": [
+      {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      }
+    ],
+    "receipt_sha256": "2087f3b985908fbb86c39a7607aaf4554f1a02fcca024dd96d4b75541057cbab",
+    "board_or_seed_interventions": 0,
+    "scope": "Natural game-input route; switch after first meal without board or seed edits; production loader over finite loopback allowlist"
+  },
+  "browser_ui": {
+    "arms": [
+      {
+        "backend": "wasm",
+        "implementation": "original",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_events": 75,
+        "full_canvas_rgb": true
+      },
+      {
+        "backend": "webgpu",
+        "implementation": "original",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_events": 75,
+        "full_canvas_rgb": true
+      },
+      {
+        "backend": "wasm",
+        "implementation": "lfsr16",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_events": 75,
+        "full_canvas_rgb": true
+      },
+      {
+        "backend": "webgpu",
+        "implementation": "lfsr16",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_events": 75,
+        "full_canvas_rgb": true
+      }
+    ],
+    "regressions": [
+      {
+        "name": "post-exit-square-canvas-uses-intrinsic-aspect",
+        "status": "passed",
+        "measurements": {
+          "intrinsic": [
+            2,
+            2
+          ],
+          "content": [
+            800,
+            800
+          ],
+          "border_box": [
+            804,
+            804
+          ],
+          "closed": true
+        }
+      },
+      {
+        "name": "ctrl-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "alt-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "meta-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "keyboard-focus-excludes-toolbar-keys",
+        "status": "passed"
+      },
+      {
+        "name": "production-logic-and-render-change-handlers-change-bindings-both-ways",
+        "status": "passed",
+        "instrumentation": "Explicit value+change; native popup driver not qualified"
+      },
+      {
+        "name": "lost-native-pointer-capture-ends-logical-gesture",
+        "status": "passed"
+      },
+      {
+        "name": "window-blur-handler-releases-held-button",
+        "status": "passed",
+        "native_blur_observed": false,
+        "instrumentation": "Native blur unavailable in this headless profile; explicit isTrusted:false blur event tests the production handler only"
+      },
+      {
+        "name": "backend-change-ends-held-gesture-and-next-press-is-consumed",
+        "status": "passed"
+      }
+    ],
+    "process_reaped": true,
+    "exit": {
+      "code": 0,
+      "signal": null
+    },
+    "selector_instrumentation": "Explicit DOM value+change invokes production handlers; game keyboard/mouse events are trusted CDP inputs"
+  },
+  "local_verification": {
+    "passed": 2418,
+    "skipped": 132,
+    "deselected": 2,
+    "seconds": 67.56,
+    "log_sha256": "f5bb4a87d6844aa4ff9ea01d675ad73c711c425447b066a49c6f90e4336b43f5",
+    "ignored_modules": [
+      "tests/test_elf_metadata.py",
+      "tests/test_platform_calls.py"
+    ],
+    "deselected_tests": [
+      "test_actual_elf_exports_and_unresolved_imports_are_honest",
+      "test_real_elf_retains_entry_and_named_function"
+    ],
+    "reason": "Established GNU/ELF fixture limitations on Mac; no Linux CI attempted"
+  },
+  "identities": {
+    "browser_manifest_sha256": "00469dd32124d566213cb4ff2d0c003c34760a4770f92e210ce5e03e1692a65c",
+    "study01_sha256": "4179a5d4fade66ce6d82f163a8b57997a08028008884dffc4bc3defb75df18e0",
+    "study02_sha256": "f9349c934e4db4a2abf6d29f75a2e0e5c5182930ac6f61f0f57c12a7d59aeeae",
+    "runner_sha256": "2e06213c74bcde7efa926a80408e73318c9307258ff590dd4f51500be71f6faf",
+    "rng_helper_sha256": "4644ade4c315f186179fcc0e35933508ad850ccf715433647f6d009b50a235da",
+    "switch_runner_sha256": "a3846308e27550d599c2909037c106a90127e801c14806465237025a64fc9746"
+  },
+  "scope": {
+    "source_fidelity": "Original mode against preserved342original-code cases/69native observations plus26fresh isolated original CPU steps",
+    "alternative": "Deliberate recurrence override; independently calculated scalar values plus private modified reference state/render comparisons",
+    "limits": [
+      "Finite game-input qualification",
+      "One-store pure word-update regions only",
+      "No general stack or local-value continuation transport",
+      "No statistical/security randomness quality claim",
+      "No new native DOS keyboard-consumption claim for26step route",
+      "Native selector popup/window blur remain unqualified",
+      "Live browser choice is session state; reload defaults to original"
+    ]
+  },
+  "privacy": "Tool sources, authored recipes and sanitized evidence may enter local Git; original, font, FDB, full models, rasters and bundles remain private",
+  "github_requests_made": false,
+  "system_installation_changed": false
+}

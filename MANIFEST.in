@@ -1,15 +1,31 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/native_runtime *.c *.h *.m
+recursive-include src/fdisbull/web_runtime *.mjs *.html
+recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
+include src/fdisbull/game_sources/LICENSE.txt
+recursive-include src/fdisbull/ghidra_scripts *.java
 recursive-include src/fdisbull/data *.json *.txt
+include src/fdisbull/data/FdisbullMacCapture.swift
+include tests/macos_capture_fixture.swift
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/ida_rpc_vectors.json
+include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/evidence/shadowrun-ai-2026-11-01/source.json
+include docs/evidence/shadowrun-ai-2026-11-01/nes.json
+include docs/evidence/shadowrun-ai-2026-11-01/skill.json
+include docs/evidence/shadowrun-ai-2026-11-01/verification.json
+include docs/evidence/shadowrun-ai-2026-11-01/suite.json
+include docs/evidence/shadowrun-ai-2026-11-01/z.json
+include docs/evidence/shadowrun-macos-2026-11-01/verification.json
+recursive-include docs/evidence/shadowrun-extended-2026-11-01 *.json
 include docs/CLOUD-0.27.0-MANIFEST.json
 include docs/verification/kq1-tas-2026-10-31.json
 prune docs/uil-rfcs/0001
@@ -26,6 +42,39 @@ include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
+include docs/evidence/common-uil-2026-11-01/verification.json
+include docs/evidence/agi-scenes-2026-10-30/verification.json
+include docs/evidence/kq1-bow-2026-10-30/verification.json
+include docs/evidence/common-uil-native-2026-11-01/verification.json
+include docs/evidence/common-uil-desktop-2026-11-01/verification.json
+include docs/evidence/source-search-pilot/verification.json
+include docs/evidence/civd-source-maps/verification.json
+include docs/evidence/civd-food-swaps/verification.json
+include docs/evidence/civd-food-swaps/shared-uil.json
+include docs/evidence/civd-food-swaps/source-ui-inventory.json
+include docs/evidence/rom-asm-2026-10-30/benchmark.json
+include docs/evidence/rom-asm-2026-10-30/accuracy.json
+include docs/evidence/rom-asm-2026-10-30/benchmark-persistent.json
+include docs/evidence/rom-asm-2026-10-30/capstone-profile.json
+include docs/evidence/rom-asm-2026-10-30/decoder-census.json
+include docs/evidence/rom-asm-2026-10-30/semantic-route.json
+include docs/evidence/console-udc-2026-10-30/verification.json
+include docs/evidence/genesis-rom-route-2026-10-30/verification.json
+include docs/evidence/miniplanets-nes-level-2026-10-31/verification.json
+recursive-include docs/evidence/miniplanets-full-game-2026-10-31 *.json
+include docs/evidence/nes-multicart-2026-10-31/verification.json
+include docs/evidence/console-intake-2026-10-31/intake.json
+recursive-include docs/evidence/mario-minus-world-2026-11-01 *.json
+recursive-include docs/evidence/shadowrun-uil-2026-11-01 *.json
+recursive-include docs/evidence/shadowrun-full-2026-11-01 *.json
+include docs/evidence/shadowrun-assisted-original-b-target.json
+recursive-include docs/evidence/shadowrun-play-2026-11-01 *.json
+include patches/capstone-5.0.9-sh-profile-gating.patch
+include scripts/rom_semantic_route/DecompileAuthoredSh2.java
+include scripts/rom_semantic_route/README.md
+include scripts/miniplanets_display_observer.c
+include docs/evidence/agi-scenes-2026-10-30/verification.json
+include docs/evidence/kq1-bow-2026-10-30/verification.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
@@ -33,6 +82,11 @@ include docs/evidence/zork-intents-2026-10-29/verification.json
 include docs/evidence/scene-recovery-2026-10-29/representation-paths.json
 include docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json
 include docs/evidence/zmachine-processor-2026-10-29/verification.json
+include docs/evidence/zork-scenes-2026-10-30/verification.json
+include docs/evidence/scene-methodology-2026-10-30/authored-cases.json
+include docs/evidence/scene-methodology-2026-10-30/applications.json
+include docs/evidence/scene-methodology-2026-10-30/verification.json
+include docs/evidence/zork-window-2026-10-30/verification.json
 include docs/evidence/udc-2026-10-29/dino.json
 include docs/evidence/udc-2026-10-29/zork.json
 include docs/evidence/udc-2026-10-29/synthetic.json
@@ -51,4 +105,42 @@ prune experimental
 prune build
 prune dist
 prune .github
+exclude .gitlab-ci.yml
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
+include docs/evidence/civd-food-arm64/verification.json
+# Exact authored food recipes; the private target/outputs remain excluded.
+include examples/recovery/civd_food_swap.py
+include examples/recovery/civd_food_arm64.py
+include examples/recovery/civd_food_web.py
+include examples/recovery/run_web_blocks.mjs
+include examples/recovery/run_web_browser.mjs
+include docs/evidence/civd-food-web/verification.json
+include tests/web_shell_checks.mjs
+include examples/recovery/civd_browser_shell.py
+include examples/recovery/web_shell_study.mjs
+include examples/recovery/run_browser_shell.mjs
+include docs/evidence/civd-browser-shell/verification.json
+include examples/recovery/snake_model.py
+include examples/recovery/snake_original.py
+include examples/recovery/snake_browser.py
+include examples/recovery/run_snake_browser.mjs
+include examples/recovery/snake_browser_study.mjs
+include tests/memory_shell_checks.mjs
+include tests/metrics_checks.mjs
+include tests/memory_cut_shell_checks.mjs
+include tests/memory_region_shell_checks.mjs
+include examples/recovery/prepare_snake_rng_study.py
+include examples/recovery/snake_rng_study.mjs
+include examples/recovery/run_snake_rng_switch.mjs
+include examples/recovery/snake_macos.py
+include examples/recovery/verify_snake_macos.py
+include examples/recovery/verify_snake_appkit.py
+include examples/recovery/snake_desktop.py
+include examples/recovery/verify_snake_desktop.py
+include docs/evidence/snake-browser/verification.json
+include docs/evidence/snake-nested-step/verification.json
+include docs/evidence/snake-rng/verification.json
+include docs/evidence/snake-macos-arm64/verification.json
+include docs/evidence/snake-desktop-x64/verification.json
+include docs/evidence/snake-win16-win32/verification.json
+global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT *.nes *.rom *.gen *.smd *.iso *.cue *.wav *.pcm *.lut *.4bpp *.slz *.sona *.swav *.spat *.tfi *.chr

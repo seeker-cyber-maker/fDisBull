@@ -1,0 +1,419 @@
+{
+  "format": "syndicate-audio-lifecycle-study-1",
+  "date": "2026-10-31",
+  "github_contacted": false,
+  "runtime": {
+    "fdisbull": "0.26.0",
+    "python": "3.13.5",
+    "source_commit": "8ba24d62b5010d3a6a5d604524aad72e2e047b77",
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "backend_matches_this_kit_manifest": true,
+    "same_backend_as_prior_report": false,
+    "prior_report_backend_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
+    "backend_note": "Separate qualifying runtime. The new hash is explicit; prior tests are not relabeled as same-binary tests."
+  },
+  "original_identity": {
+    "MAIN.EXE": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+    "INTRO.EXE": "5fd1494311ba8d75ad823720a7b75f9f36bcbf0294c3dfc332b3149629c524f2",
+    "DATA/GAMEFM.DLL": "520db726d034394e7ea7f62b9bfa90767898990836522fc09f89931f2c388a7e",
+    "DATA/INTRO.XMI": "570bb41f9cbfceabed47fdb8828fb8bdaf512a23445946624a2dced171672940",
+    "DATA/SYNGAME.XMI": "21088107f3d65af9a10a733fd21b5b9640144e4f53a4eb6908d4e95207be0d9c"
+  },
+  "preservation": {
+    "files_checked": 897,
+    "changed": [],
+    "missing": [],
+    "new_files": [],
+    "entry_windows_unchanged": true,
+    "fixups_still_match": true,
+    "event_data_still_original": true,
+    "registration_cleared": true
+  },
+  "timeline": {
+    "source_base": "0x20abc",
+    "record_size": 7,
+    "record_fields": [
+      "frame:u16le",
+      "command:u8",
+      "operand:u32le"
+    ],
+    "records": 149,
+    "following_frame_sentinel": "0xffff",
+    "command_counts": {
+      "L": 15,
+      "E": 2,
+      "A": 26,
+      "S": 68,
+      "T": 36,
+      "M": 1,
+      "X": 1
+    },
+    "music_start": {
+      "row": 7,
+      "frame": 19,
+      "command": "M",
+      "value": 0
+    },
+    "music_stop": {
+      "row": 134,
+      "frame": 929,
+      "command": "X",
+      "value": 0
+    },
+    "live_stop_witness": {
+      "index": 134,
+      "frame_global": 929,
+      "record_frame": 929,
+      "record_command": "X",
+      "record_value": 0,
+      "status": 2,
+      "registered": true,
+      "runtime_pc": "0x24acdb",
+      "source_pc": "0x106eb"
+    },
+    "other_commands": "Counted, not fully specified by this lifecycle study."
+  },
+  "baseline": {
+    "observed_service_pairs": 5,
+    "events": [
+      {
+        "kind": "entry",
+        "site": "start",
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "start",
+        "stack_matches": true,
+        "states": [
+          {
+            "handle": 0,
+            "status": 1,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "stop",
+        "states": [
+          {
+            "handle": 0,
+            "status": 1,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "stop",
+        "stack_matches": true,
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "shutdown",
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "stop",
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "stop",
+        "stack_matches": true,
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "release",
+        "states": [
+          {
+            "handle": 0,
+            "status": 0,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "release",
+        "stack_matches": true,
+        "states": []
+      },
+      {
+        "kind": "return",
+        "site": "shutdown",
+        "stack_matches": true,
+        "states": []
+      }
+    ],
+    "stop_cursor_relative": 11622,
+    "eot_breakpoint_hits": 0,
+    "reachability": "Original unmodified intro. Explicit stop is not natural EOT."
+  },
+  "diagnostic": {
+    "edits": [
+      {
+        "field": "sequence.event_cursor",
+        "address": "0x253af4",
+        "new_cursor": "0x343b4e",
+        "event_offset": 10596,
+        "before_sha256": "f59934683d3df316410bb725a95f6c53a3d60dd359964c28e817aa11005084a7",
+        "after_sha256": "e9ac25fc98b33d38513a66ca7161f783df7371ad5a183e92b8b2432eaed05423",
+        "bytes_written": 4
+      },
+      {
+        "field": "sequence.event_cursor",
+        "address": "0x253af4",
+        "new_cursor": "0x34410e",
+        "event_offset": 12068,
+        "before_sha256": "27f0366fafe3fc9b6181c3ef0c2ff9d88a227b0275cb1ec586ee9c4097872d79",
+        "after_sha256": "af725eed869c4b37a92b1a665250a83156d75717597e3c9590e0d57d8bf332d2",
+        "bytes_written": 4
+      }
+    ],
+    "target_code_edits": 0,
+    "media_file_edits": 0,
+    "sequence_status_edits": 0,
+    "repeat": {
+      "loop_begin_event_offset": 10596,
+      "original_zero_count_loop": true,
+      "rewind_hits": 2,
+      "callback_return_captured": true,
+      "callback_return_ss": "0x0088",
+      "status_after_return": 1,
+      "delay_after_return": 3,
+      "claim": "Real loop with positive delay yields in DOSBox after a diagnostic jump to its original loop-begin event."
+    },
+    "eot": {
+      "event_offset": 12068,
+      "status_before": 1,
+      "status_after": 2,
+      "deferred_release": 0,
+      "registered_after_callback": true,
+      "callback_return_verified": true,
+      "cursor_after_event_offset": 12071,
+      "watched_start_resume_status_hits_before_script_stop": 0,
+      "scope": "No automatic restart observed at the selected registered entry watches through subsequent shutdown. This does not prove every program path lacks restart."
+    },
+    "post_eot_service_pairs": 4,
+    "post_eot_events": [
+      {
+        "kind": "entry",
+        "site": "stop",
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "stop",
+        "stack_matches": true,
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "shutdown",
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "stop",
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "stop",
+        "stack_matches": true,
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "entry",
+        "site": "release",
+        "states": [
+          {
+            "handle": 0,
+            "status": 2,
+            "registered": true
+          }
+        ]
+      },
+      {
+        "kind": "return",
+        "site": "release",
+        "stack_matches": true,
+        "states": []
+      },
+      {
+        "kind": "return",
+        "site": "shutdown",
+        "stack_matches": true,
+        "states": []
+      }
+    ],
+    "reachability": "Diagnostic event-cursor preparations; not ordinary completion of INTRO.XMI."
+  },
+  "main_source_policy": {
+    "same_selection_short_circuits_restart": true,
+    "selector": "0x3b8a0",
+    "status_projection": "0x3ba10",
+    "terminal_branch_selector_indices": [
+      3,
+      4
+    ],
+    "valid_statuses": [
+      0,
+      1,
+      2
+    ],
+    "sentinel_projection": "0xffffffff -> 0xffff0000",
+    "normal_invalid_handle_path_established": false,
+    "source_projection_anchors_match": true,
+    "scope": "Static source and authored model; no MAIN mission or finite-cue native finish recorded."
+  },
+  "sessions": [
+    {
+      "run_id": "e5bb76a8dc5048fe8640a90de02bc352",
+      "kind": "unmodified_baseline",
+      "logged_rpc_requests": 3552,
+      "rpc_client_sequence_end": 3555,
+      "logging_scope": "The first three client requests precede logger installation; final client sequence is not the logged-row count.",
+      "methods": {
+        "state.get_registers": 52,
+        "execution.timing": 1679,
+        "execution.continue": 48,
+        "execution.wait": 1584,
+        "execution.pause": 38,
+        "memory.read": 101,
+        "breakpoints.create": 20,
+        "video.screenshot": 7,
+        "breakpoints.delete": 19,
+        "input.keyboard.press": 2,
+        "input.mouse.click": 1,
+        "session.stop": 1
+      },
+      "reported_errors": [
+        {
+          "method": "breakpoints.create",
+          "error": "DebuggerError('Unable to resolve breakpoint address (ADDRESS_NOT_MAPPED)')"
+        },
+        {
+          "method": "input.mouse.click",
+          "error": "DebuggerError('Absolute mouse input requires the built-in DOS INT33 driver in real/v8086 mode; PS/2/AUX, PC-98 and guest-OS mouse drivers are unsupported (COMMAND_REJECTED)')"
+        }
+      ],
+      "memory_write_requests": 0,
+      "register_write_requests": 0,
+      "emulator_returncode": 0,
+      "closed": true,
+      "owned_pid_absent_at_final_audit": true,
+      "cleanup_scope": "Debugger-owned process cleanup, not DOS program exit."
+    },
+    {
+      "run_id": "1ac5bed3bb7147748f7cb4b8ec1d902c",
+      "kind": "guarded_cursor_diagnostic",
+      "logged_rpc_requests": 2271,
+      "rpc_client_sequence_end": 2274,
+      "logging_scope": "The first three client requests precede logger installation; final client sequence is not the logged-row count.",
+      "methods": {
+        "state.get_registers": 28,
+        "execution.timing": 1079,
+        "execution.continue": 26,
+        "execution.wait": 1028,
+        "execution.pause": 6,
+        "memory.read": 66,
+        "breakpoints.create": 22,
+        "breakpoints.delete": 13,
+        "memory.write": 2,
+        "session.stop": 1
+      },
+      "reported_errors": [],
+      "memory_write_requests": 2,
+      "register_write_requests": 0,
+      "emulator_returncode": -9,
+      "closed": true,
+      "owned_pid_absent_at_final_audit": true,
+      "cleanup_scope": "Debugger-owned process cleanup, not DOS program exit. Diagnostic session.stop stayed running through its 3s wait and close forcibly reaped it (SIGKILL/-9)."
+    }
+  ],
+  "validation": {
+    "authored_parser_tests": 21,
+    "parser_test_result": "passed",
+    "shipped_xmi_files": 2,
+    "shipped_evnt_streams": 6,
+    "parser_results_match_prior_census_in_this_turn": true,
+    "source_bound_projection_model": "evidence/status-projection-model.json",
+    "tools_sha256": {
+      "tools/check_status_projection.py": "20d29153892f2de39b7719c38e32c355cd194e0a4a31634a8d05357a020278ab",
+      "tools/xmi_lifecycle.py": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe"
+    }
+  },
+  "limits": [
+    "No new static MAIN traversal. Prior 68186 instructions and 87.49% remain historical.",
+    "No native zero-delay hang trial in this pass. Previous host-harness negative control remains separate.",
+    "No audible output fidelity, native timing, full mission, completed ordinary-play track, saved-game persistence or guest-exit claim.",
+    "Cleanup is separate from source behavior; the diagnostic backend required forced close.",
+    "No repository suite, release, shared installation, GitHub operation or submitted PR."
+  ]
+}

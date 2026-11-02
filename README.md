@@ -1,12 +1,18 @@
 # fDisBull
 
-This checkout contains the **0.27.0 cloud release candidate**: private external
-target storage, recovery reconciliation, reusable media adapters, structural
-type sharing and bounded Win16 NE analysis. See the
-[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
-published release at this cut is
-[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
-Publication, environment promotion and installation are separate steps.
+The **0.29.0** release candidate carries the unpublished 0.28.0 candidate scope
+and adds read-only Civilization I world snapshots plus the Z world language and
+a full Zork I room/exit map. See the
+[release notes](docs/RELEASE-0.29.0.md) for scope, qualification and gates. The
+latest published release is
+[0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0);
+0.29.0 is not published yet.
+
+See the [feature history](docs/FEATURE_HISTORY.md) for what shipped in each
+version and what remains in review. This development branch adds direct AGI
+lifting and original-DOS qualification to the earlier source line; those
+additions are in the open PR stack described in the feature map. Check the
+installed capabilities when choosing a workflow.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -23,12 +29,16 @@ play an authored text projection without opening the debugger yourself.
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 
-**Do not upload game binaries or game files.** Keep originals, modified binaries,
-assets, story images, saves and byte-containing databases/archives private.
+**Game files stay private by default.** The user-approved
+[Tic-tac-toe, Five Dice and Snake fixture collection](docs/FREEWARE_GAME_VERSIONS.md)
+is a narrow exception, including their original and generated versions. Other
+originals, modified binaries, assets, story images, saves and byte-containing
+databases/archives stay private.
 New FDBs reference private external payloads by size and SHA-256. A divergent
 source requires explicit approval for its exact identity and base before it
 can become a separate analysis layer. Semantic UIL/game representations remain
-allowed pending sanitation; embedded original files are excluded. See
+allowed pending sanitation; embedded original files outside that named fixture
+exception are excluded. See
 [external targets and publication policy](docs/EXTERNAL_TARGETS.md) for scope,
 legacy migration and remaining export limits.
 
@@ -36,18 +46,29 @@ legacy migration and remaining export limits.
 
 | I want to… | Start here |
 | --- | --- |
+| Check this copy's decoder, debugger, decompiler and UIL scope without running a target | [`capabilities`](docs/CAPABILITIES.md) |
+| Capture a Mac status menu with explicit display coordinates and restore owned changes | [Reversible native sessions](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Investigate a macOS ARM64 executable with source-bound Ghidra and LLDB probes | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) |
+| Identify NES, SNES or Sega cartridges and inspect a Sega data-track header | [Console media parsing](docs/CONSOLE_MEDIA_PARSING.md) |
+| Inventory CUE/BIN tracks and primary ISO 9660 files without running them | [Disc parsing](docs/CUE_ISO_PARSING.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
 | Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
+| Inventory a collection or add another game edition | [Collection intake and version relationships](docs/TARGET_COLLECTION_INTAKE.md) |
+| Recover named Zork rooms, exits and direct rule links | [Scene UIL](docs/ZORK_SCENES.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
+| Run recovered graphics and input with selectable browser backends | [Bounded browser conversion](docs/UDC_MEMORY_BROWSER.md) |
+| Combine source blocks under a typed indexed UIL and emit a new standalone program | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Conformance examples](docs/COMMON_UIL_CONFORMANCE.md) |
+| Resolve nested block requirements and realize common UIL as native code | [Native UIL and component linking](docs/COMMON_UIL_NATIVE.md) |
+| Build a native window and input shell over fixed-arena common UIL | [Common UIL desktop shells](docs/COMMON_UIL_DESKTOP.md) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
@@ -57,6 +78,21 @@ and their boundaries; they do not turn an inferred result into observed fact.
 The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
 the language, interface, scene and proof proposals together and shows which
 parts are working, partial or still proposed.
+
+This source also adds an unreleased, read-only `fdisbull capabilities` report.
+It distinguishes implemented code, detected dependencies and runtime validation;
+it does not infer release contents from the package version. The
+[macOS app replication case study](docs/MACOS_APP_REPLICATION.md) records the
+remaining investigation features and the authored UIL model's limits.
+
+The [cpuinfo comparison](docs/CPUINFO_REPLICATION_COMPARISON.md) applies the
+native session tools to a separately identified AppKit replica. It retains
+authored source and measured default-menu/bar geometry with explicit limits.
+
+The [latest macOS replica update](docs/MACOS_REPLICA_UPDATES.md) also retains
+the combined Simple Menu app: selectable CPU Graph and CPU Graph + Memory Emoji,
+its existing dashboard/preferences, and a one-time keep-awake handover. Both
+app snapshots are experimental and excluded from normal fDisBull packages.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
@@ -97,6 +133,12 @@ evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
 See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
 [platform support](docs/PLATFORMS.md) for more options.
 
+Miles AIL music drivers can be recognized and inspected directly, including
+their exported functions and device descriptions. DOS disassembly also names
+documented DIGPAK/MIDPAK audio calls. See [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md)
+for commands and the limits of static recognition; execution and hardware
+support require separate original-runtime evidence.
+
 ## Disassemble and analyze
 
 Import x86 16/32/64 or ARM64 programs in supported DOS MZ, COM, PE, ELF,
@@ -111,11 +153,35 @@ files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
 
+The [source catalog](docs/SOURCE_CONCEPT_SEARCH.md) adds private source snapshots,
+concept relationships and combined text/vector retrieval across editions.
+Its CivD pilot measures source-assisted search while preserving edition identity
+and keeping native equivalence separately qualified.
+
+[Verified CivD builds](docs/CIVD_VERIFIED_SOURCE_MAPS.md) now connect selected food
+and turn-processing source to original bytes across three DOS editions, with
+independent version checks and explicit packed/unpacked address identities.
+The [shared-food experiment](docs/CIVD_SHARED_FOOD_AND_Z.md) selects each
+edition's original kernel under one UIL and compares all nine combinations.
+It also introduces a source-backed Z interface design with one reusable city
+view; the shipped strategy interface reads observations and prepares action
+plans while native screen navigation remains unqualified.
+
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
 logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
 shows how related DOS and Windows code can guide an investigation.
+
+For Mach-O ARM64, `code-backings` retains exact source-file offsets and bytes
+for selected native blocks. Optional Ghidra and one-stop LLDB probes are
+described in [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md). Native facts,
+diagnostic C and runtime observations do not constitute a UIL translation.
+
+The [Cortex-M static profile](docs/CORTEX_M.md) imports a declared flash image
+with an Armv7-M vector table, decodes Thumb/Thumb-2 code and exports stored analysis images.
+It preserves unknown transfers and peripheral state. The first static milestone
+has been tested on the 121GW 2.05 firmware on macOS; it does not emulate the meter.
 
 ## Debug the original program
 
@@ -248,11 +314,66 @@ and output are planned future work; the player currently supplies the text and
 state interface.
 
 The [AGI inspector](docs/AGI_LOGIC.md) reads a limited version-2 logic subset;
-unsupported operations remain unresolved. The [Z-machine harness](docs/ZORK_HARNESS.md)
+unsupported operations remain unresolved. The [AGI scene census](docs/AGI_SCENE_CENSUS.md)
+inventories qualified PQ1/KQ1 resource sets, scene elements and unresolved
+references before complete interactions are accepted as UIL.
+The separate [KQ1 audience interaction](docs/KQ1_BOW_INTENT.md) executes one
+qualified bow through named intent rules and UDL correspondence. Admission,
+reward, animation completion and modal acknowledgement are compared with
+source execution and selected original-game observations; the host engine
+and remaining game behavior stay explicit dependencies or low-level IR.
+The [Z-machine harness](docs/ZORK_HARNESS.md)
 can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+[Direct decoder modules](docs/DECODER_MODULES.md) make AGI logic and Z-machine
+stories inputs in their own languages. Inspect them without creating an x86
+analysis project. Follow scalar AGI decisions, branches and direct logic calls
+into UDL/UIL with source evidence and explicit state. The guest-language front
+end can grow independently of the DOS interpreter's assembly; supported source
+components and their boundaries stay explicit. Compact control flow keeps shared
+paths once, making larger routines easier to inspect. Unmodeled engine actions
+stay visible and block execution until their effects are implemented.
+An explicit [object/resource effect profile](docs/AGI_EFFECTS.md) now models
+AGI positions, views, queries and controller changes. Drawing and message
+windows use resumable host requests, so an agent can inspect a routine without
+silently treating a requested external action as completed.
+The [original DOS host adapter](docs/AGI_DOS_HOST.md) can now check selected
+KQ1 routines against the running original: follow the same decisions, observe
+real handler returns, and compare the declared state at the routine boundary.
+Interrupted work keeps its evidence and stops for inspection.
+The [eastern bridge case study](docs/AGI_BRIDGE_CLIP.md) follows a speedrunner's
+description to a reproduced KQ1 corner clip, a neighboring failure control,
+and a reusable partial scene in the separate player.
+The [mushroom-island follow-up](docs/AGI_MUSHROOM_CROSSING.md) carries that
+workflow through a river crossing and a real inventory pickup, then offers the
+recorded journey through the separate text player.
+The [clover-and-diamonds cave route](docs/AGI_LEPRECHAUN_ROUTE.md) follows
+ordinary game input through a moving rat, the shield pickup and the small
+opening, then turns the recorded journey into seven guarded text actions.
+The [gnome/key and giant's chest follow-up](docs/AGI_GNOME_GIANT_ROUTE.md)
+continues from a verified native checkpoint through the original game's
+riddle, tree and clouds. Its eight guarded text actions retain the recorded
+inventory, score and source evidence in the separate player.
+The [dragon and magic mirror route](docs/AGI_DRAGON_MIRROR_ROUTE.md) starts a
+fresh game, uses water to clear the dragon, takes the mirror and returns to the
+surface. Original inventory writes and short traces support eight guarded
+text actions, with the preparation, failures and final evidence kept inspectable.
+Its [boundary analysis](docs/AGI_BOUNDARY_EXCEPTIONS.md) also exposes the dragon
+rule's last-row exception, with adjacent outcomes checked in the original game.
+The [coordinate-domain audit](docs/SCENE_COORDINATE_DOMAINS.md) keeps world,
+viewport and collision bounds distinct, flags object overhangs and retains
+designer notes for expected scrolling margins.
+The [bottom-row bridge route](docs/AGI_BRIDGE_BOTTOM.md) now has a fresh-game
+witness, an adjacent water control and a two-action scene for the separate
+player, with the original game files unchanged.
+Agents can now reuse [bounded native control and scene receipts](docs/BOUNDED_NATIVE_SCENES.md)
+for their own routes, carrying partial results and evidence forward without
+rewriting the same transport and capture bookkeeping.
+A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
+preserves the visible route and its unresolved inputs for another investigator.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,
@@ -274,7 +395,99 @@ parser, background callbacks, uncertain flag effects and unsupported cases as
 explicit low-level IR. Recovery is partial; the verification report distinguishes
 successful play from evidence that the higher-level rules actually executed.
 
+[Scene recovery](docs/ZORK_SCENES.md) extracts the qualified edition's 110 named
+rooms and 352 exits into explicit destinations, live conditions, door rules and
+refusals. Its player executes exit selection and on-foot actor relocation from
+those definitions, and uses pre-resolved rule links in place of the original
+table-to-stack dispatch. UDL keeps the source correspondence. Special exit and
+room handler bodies, the parser and most arrival/background behavior remain
+explicit residual IR; recovering their entry points does not recover their intent.
+
+Console media can be inspected without running a game. A separate bounded
+ROM-to-assembly interface offers Capstone, Ghidra and saturn-recomp for explicitly
+mapped Saturn SH-2 bytes. Results retain source identity and unknown words;
+decoding does not establish that a region is executable code. See
+[console parsing](docs/CONSOLE_MEDIA_PARSING.md) and
+[ROM-to-assembly modules and comparison](docs/ROM_ASM.md).
+
+Native NES and Genesis compiler modules can also turn a small shared UIL
+program into runnable cartridges. Both have been checked in real emulator
+cores, including one bounded Genesis machine-code → UIL → NES experiment.
+See [console UDC](docs/CONSOLE_UDC.md) for the supported profile and results.
+
+A source-bound Miniplanets profile includes all 55 stages, moving hazards and
+terrain, score, lives, timer, menus, ending and an NES soundtrack arrangement.
+Its NES presentation uses the original globe projection with adapted graphics.
+Game rules are compared with original Genesis instructions and native NES play;
+the documentation records the tested scope and measured running speed.
+The full-game cartridge remains experimental. The latest moving-player NES
+benchmark reaches about 43.68 game updates and 18.26 completed globe swaps per
+second, with adapted graphics and sound. All 55 stages load; natural completion
+of every stage has not been verified.
+See the [full-game build and controls](docs/MINIPLANETS_FULL_GAME.md).
+The [repeatable Genesis UIL workflow](docs/GENESIS_UIL_REPLAY.md) captures the
+reviewed game, audio, display-planner and PSG representations and builds either
+NES or a new native Genesis cartridge. The Genesis rules passed the same 4,822
+original-backed cases; its display is adapted and its audio retains the original
+Sona hardware driver. Larger ROMs need their own recovered semantic profile.
+The [Genesis performance follow-up](docs/GENESIS_PERFORMANCE.md) reaches about
+59.92 completed display uploads per second in the bounded ordinary test and
+59.55–59.92 in three assisted later-stage tests, while retaining all 79 state
+fields in verification. A constructed 48-actor stress scene still runs at
+about 29.96 uploads per second.
+The [NES multicart prototype](docs/NES_MULTICART.md) packages two compatible
+generated NES games behind a bank-switching menu. The accompanying analysis
+examines the supplied mapper-227 “1200-in-1” and mapper-66 Mario/Duck Hunt
+cartridges; the advertised number is not a verified count of distinct games.
+The [Shadowrun opening experiment](docs/SHADOWRUN_UIL_OPENING.md) builds a
+bounded NES scene from the reviewed Genesis version, with movement, wall
+collisions, a following camera and a projected motel conversation. Its
+prepared starting state and captured graphics keep the scope explicit;
+general dialogue and the rest of the game remain unrecovered.
+The [full-game recovery work](docs/SHADOWRUN_FULL_GAME_PROGRESS.md) adds tested
+UIL components and a separate animated walking probe. A full playable NES
+conversion, including sound, is still incomplete.
+The [playable field experiment](docs/SHADOWRUN_PLAYABLE_FIELD.md) adds persistent
+scene-2 movement beyond the captured graphics, a symbolic city display, captured
+pistol and armor equipment, targeting, firing and damage. Its ordinary walk-and-fire
+route matches sampled original player, target, ammo and HP effects; NPCs remain
+frozen and projectile handling is adapted. An assisted placement mode and a
+separate text and interactive city view support investigation of the large map.
+These are bounded prepared-state profiles, not a full Shadowrun conversion.
+The [Pac-Man-like actor stage](docs/SHADOWRUN_AI_EXPERIMENT.md) adds a separate
+assisted arena with source-derived actor movement, enemy target selection,
+burst fire, player damage and recovery. Original captures, the shared UIL model
+and native NES execution are compared separately. The test presets use a
+source-constructed armed actor; ordinary encounter reachability, unrestricted
+AI, original graphics/audio and normal-speed play remain unverified.
+The active [macOS ARM64 output](docs/SHADOWRUN_MACOS_ARM64.md) compiles the same
+Genesis-bound UIL into a local window with keyboard controls. The NES route is
+preserved as [research with a handoff](docs/GENESIS_NES_RESEARCH_HANDOFF.md),
+possible for bounded slices but not recommended as the primary Genesis target.
+Native speed and source coverage are verified separately.
+The [actor-stage extension](docs/SHADOWRUN_MACOS_EXTENDED.md) adds source-backed
+menu navigation and a separate captured courtyard with player movement and
+three moving civilians. Original comparison windows and remaining combat
+boundaries are recorded alongside the native model checks.
+The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
+minus-world warp in the supplied cartridge and traces the incorrect table
+selection that produces it.
+The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
+available with its separate contract and results.
+
 ## The bounded UDC pipeline
+
+The browser pilot runs a small recovered Snake fixture with graphics, keyboard
+and mouse input. Game logic and drawing can independently select Wasm or WebGPU
+while keeping the same UIL. The known-source fixture is recovered with source
+assistance and compared with original instruction executions, guest inputs and
+complete frames. See the [browser conversion contract and measured limits](docs/UDC_MEMORY_BROWSER.md).
+The same recovered game also compiles into native 32-bit and 16-bit Windows
+shells with selectable RNG blocks and Windows graphics/input adapters. See the
+[native desktop guide](docs/UDC_MEMORY_DESKTOP.md) and [Win16 guide](docs/UDC_MEMORY_WIN16.md)
+for the finite DOS-reference comparisons and the tested runtime boundaries.
+
+Original programs, fonts and generated game bundles remain private inputs.
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):
 explicitly mapped ASM blocks can be lifted to shared UDL/UIL primitives and
@@ -289,6 +502,16 @@ not generate arbitrary DOS code or claim whole-game semantic recovery. The
 authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
+
+The [selectable block-layer prototype](docs/UDL_BLOCK_LAYERS.md) keeps one
+logical operation while choosing an explicitly bound implementation. It retains
+source relationships and immutable selections, with separate checks for modeled
+behavior, isolated original instructions and new native output.
+The [shared-UIL milestone](docs/milestones/2026-10-30-shared-uil-native-shells.md)
+records the demonstrated results and the next step: reusing the same semantic
+modules across different program shells.
+The [Linux and C pilot](docs/UDC_LINUX_AND_C.md) demonstrates shared native module
+bytes across Windows and Linux, plus C regeneration of supported scalar logic.
 
 ## Status, testing and history
 

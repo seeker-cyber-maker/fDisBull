@@ -34,9 +34,10 @@ Include `project` in params when there is no session default, or to override it.
 | Method | Required params beyond project | Optional params |
 | --- | --- | --- |
 | identify | path; no project needed | |
-| inspect | path; no project needed | slice_arch (`x86`, `x86_64`, `arm64`), image (`auto`, `pe`, `mz`) |
+| inspect | path; no project needed | slice_arch (`x86`, `x86_64`, `arm64`), image (`auto`, `pe`, `le`, `ne`, `mz`, `com`, `ail`) |
 | capture-audit | inputs (1–16 AVI paths), output (fresh private directory outside Git); no project needed | every, html, timeout, max_frames, max_frame_bytes, max_input_bytes, max_metadata_bytes, max_output_bytes, ffmpeg, ffprobe; see [capture audit](TAS_CAPTURE_AUDIT.md) |
-| import | path | arch, bits, base, entry, module, load_segment (MZ; default `0x1000`), slice_arch, image |
+| import | path | arch, bits, base, entry, module, load_segment (MZ/COM; default `0x1000`), slice_arch, image |
+| dos-services | no project needed | vector (0–255), registers (pre-call register object), ax (0–65535); no params lists the catalog |
 | analyze-module | path, project (new target) | export (name, integer ordinal or `#ordinal`), entry, max_instructions, slice_arch, image |
 | managed | path **or** project | token (MethodDef), max_instructions (with token), version (project only) |
 | decoder-check | data (hex bytes), bits; no project needed | address, arch (`x86`), scan_offsets, max_candidates |

@@ -1,0 +1,114 @@
+{
+  "format": "fdisbull-installed-clip-player-check-1",
+  "python": "3.13.18",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "version": "0.28.0",
+  "scene_sha256": "169f16f489e11e4834e0dd2bd3abbf7524ae681d676559fd9e48261996692756",
+  "installed_il_scenes_sha256": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+  "direct": {
+    "initial": {
+      "$phase": 0,
+      "$room": 39,
+      "$score": 0,
+      "$x": 85,
+      "$y": 100,
+      "$direction": 0,
+      "$ego_width": 6,
+      "$ego_view": 0,
+      "$step_size": 1,
+      "$swimming": 0,
+      "$drawn": true,
+      "$in_water": false,
+      "$dead": false,
+      "$bridge_active": false,
+      "$troll_removed": false,
+      "$troll_paid": false
+    },
+    "corner": {
+      "$phase": 1,
+      "$room": 39,
+      "$score": 0,
+      "$x": 72,
+      "$y": 88,
+      "$direction": 0,
+      "$ego_width": 6,
+      "$ego_view": 0,
+      "$step_size": 1,
+      "$swimming": 0,
+      "$drawn": true,
+      "$in_water": false,
+      "$dead": false,
+      "$bridge_active": false,
+      "$troll_removed": false,
+      "$troll_paid": false
+    },
+    "bank": {
+      "$phase": 2,
+      "$room": 39,
+      "$score": 0,
+      "$x": 10,
+      "$y": 87,
+      "$direction": 0,
+      "$ego_width": 6,
+      "$ego_view": 0,
+      "$step_size": 1,
+      "$swimming": 0,
+      "$drawn": true,
+      "$in_water": false,
+      "$dead": false,
+      "$bridge_active": false,
+      "$troll_removed": false,
+      "$troll_paid": false
+    },
+    "final": {
+      "$phase": 3,
+      "$room": 40,
+      "$score": 0,
+      "$x": 151,
+      "$y": 87,
+      "$direction": 0,
+      "$ego_width": 6,
+      "$ego_view": 0,
+      "$step_size": 1,
+      "$swimming": 0,
+      "$drawn": true,
+      "$in_water": false,
+      "$dead": false,
+      "$bridge_active": false,
+      "$troll_removed": false,
+      "$troll_paid": false
+    },
+    "complete": true,
+    "stale_repeat_rejected": true,
+    "checkpoint_restore": true,
+    "restore_invalidates_token": true,
+    "fresh_checkpoint_missing": true
+  },
+  "process": {
+    "complete": true,
+    "turns": [
+      {
+        "command": "use corner",
+        "context": "phase-1",
+        "response": "Success: The recorded approach reaches the corner at (72, 88)."
+      },
+      {
+        "command": "use gap",
+        "context": "phase-2",
+        "response": "Success: The recorded route crosses the gap to the western bank."
+      },
+      {
+        "command": "use route",
+        "context": "phase-3",
+        "response": "Success: The recorded route reaches room 40."
+      }
+    ],
+    "stale_repeat_rejected": true,
+    "checkpoint_restore": true,
+    "restore_invalidates_token": true,
+    "final_context": "phase-3",
+    "fresh_checkpoint_missing": true
+  },
+  "scope": "Partial authored scene playback; no native game execution or durable saves.",
+  "complete": true
+}

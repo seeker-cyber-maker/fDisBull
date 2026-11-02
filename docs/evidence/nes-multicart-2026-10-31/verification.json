@@ -1,0 +1,99 @@
+{
+  "format": "fdisbull-nes-multicart-evidence-1",
+  "qualification": "bounded FCEUmm synthetic and generated two-game runs; no hardware claim",
+  "source_hashes": {
+    "src/fdisbull/nes_multicart.py": "7d99aaf5d3c26f57ffdfa0bf8c3a14232f2e985ce5be59738acbe88bf3ae9b32",
+    "scripts/check_nes_multicart.py": "addf68db3e7b1a4217c0ed74cbbd97afff2a328ff1604786e4321325b9dc3f7c",
+    "tests/test_nes_multicart.py": "6ea03d86fe34f79c43f54b2f353c7cb2748cb1364a0987bc4cbfdaebffc2cb5c"
+  },
+  "native_core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "generated_probe": {
+    "format": "fdisbull-nes-multicart-native-check-1",
+    "status": "passed",
+    "cartridge_sha256": "bfc19014067db5102b317f7ba3d3234dd07c1604a042ae274ee9a9b5a207d44b",
+    "selection": {
+      "A": {
+        "observed_marker": 16,
+        "nmi_count": 44,
+        "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+        "trace_sha256": "eaa54afe84a7dbb519e05483526d423b879fc53795ca1119b867844fc23daf5f"
+      },
+      "B": {
+        "observed_marker": 32,
+        "nmi_count": 44,
+        "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+        "trace_sha256": "e483e750ee7054dac14b38953d2f8715ca3580653f9a9e5e9cac6b0dad52c24e"
+      }
+    },
+    "fceumm_reset_then_reselect": {
+      "before": 16,
+      "after": 32
+    },
+    "uil_standalone_comparison": {
+      "A": {
+        "matched_ticks": 100,
+        "fields": [
+          "buttons",
+          "copy",
+          "x"
+        ],
+        "standalone_first_tick_frame": 4,
+        "multicart_first_tick_frame": 58
+      },
+      "B": {
+        "matched_ticks": 100,
+        "fields": [
+          "buttons",
+          "copy",
+          "x"
+        ],
+        "standalone_first_tick_frame": 4,
+        "multicart_first_tick_frame": 58
+      }
+    },
+    "uil_cartridge_sha256": "7b57d1b8bcd523d93a759f30035455830d15c460f2482de273ca01f5ea3c43b2",
+    "scope": "synthetic NROM programs on pinned FCEUmm; hardware and general game compatibility unverified"
+  },
+  "sample_analysis": {
+    "source_sha256": "a6cc62f11d6d872e9b0f3105089f31ea8a3d0c0593d24fa3adf73e4d62bfd78e",
+    "mapper": 227,
+    "prg_rom_bytes": 524288,
+    "chr_rom_bytes": 0,
+    "distinct_16k_prg_bank_hashes": 32,
+    "menu_observations": [
+      "Bomber Man title",
+      "Ice Climber title"
+    ],
+    "selection_write_addresses": [
+      "0x8018",
+      "0x8008"
+    ],
+    "first_route_observer_neutral": {
+      "serialized_state": true,
+      "screen": true,
+      "system_ram": true
+    },
+    "unique_games": "unknown",
+    "duplicate_variants": "unknown",
+    "menu_pages_observed": 4,
+    "menu_slots_observed": 80,
+    "numbered_menu_labels": [
+      "GAMBO 1",
+      "GAMBO 2",
+      "GAMBO 3",
+      "RAGWEED 2",
+      "RAGWEED 3"
+    ],
+    "numbered_label_scope": "observed text only; duplicate code and behavior not established"
+  },
+  "comparator": {
+    "mapper": 66,
+    "prg_rom_bytes": 65536,
+    "chr_rom_bytes": 16384
+  },
+  "limitations": [
+    "game identity and menu uniqueness are not inferred from PRG bank hashes",
+    "real hardware not tested",
+    "source cartridge and media remain private"
+  ]
+}

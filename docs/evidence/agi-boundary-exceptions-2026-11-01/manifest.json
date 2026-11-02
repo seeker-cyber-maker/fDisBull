@@ -1,0 +1,21 @@
+{
+  "format": "fdisbull-public-boundary-evidence-manifest-1",
+  "files": {
+    "export-verification.json": "6ffe678772384837ad8688bf8d0bd6e3d1c7e188b2fc00dd9d12ac9fef7c3b21",
+    "frames.json": "fbe274630c56fdddb262353b312ddae12b86d33bd4d93a54ffc6bfb6551b1a84",
+    "inside-02-launch.png": "cb9321ef8e2d92ed00cf511cfca12b582cec975ca3dcbea6ed87bb20e4ed3310",
+    "inside-02-message.png": "9ab255f22aec8761e7748647bdb3e7fa974f11cccecef0afc94926a68fea2be6",
+    "native-pair.json": "4ff1eb638bdc9694da9b9d62844bc1d46569b8ac4724fed96412803bc5b7772f",
+    "outside-01-launch.png": "ed4c944a08fa5f8af2418adf8079ccc8d2f8c7c81ae8c0dbea656b4058603c25",
+    "outside-01-message.png": "c6b3801c51cdd0501ffd3cc34739ad781f285be164c0d6d3cb28b2cf888494b5",
+    "player-attempts.json": "cdc20643cbecf59e4f43393d7176315ace76ce0a2e5ad1e6f6faacc821da7629",
+    "player-verification.json": "cdab758adb67e0559d495f845883cbe02ecad96de71bf1562b04cd17869b84d9",
+    "portable-controller.json": "da09ba0ff74ced49e7abb9e8c03698b779dae9abc1022175efde2ba94fc6b851",
+    "receipt.json": "7b1f65c1ff9575da2605c07da1aa1adc7036fc948f9a1d46aafc092a6749fa34",
+    "source-binding.json": "c4926cd763385fc24a0fc656e643646309a68fe0453f7a3863c73f4adc13a156",
+    "tests.json": "e1645b46c7455c085cfcd15a60dc45c2e3e6f2c2116175beb2b5257038e77cc5",
+    "tests.log": "8b58ea5996f69655892bfc1001d02669f333e81c212c2610731136c4fa6375cd",
+    "trace-summary.json": "6f5dbee051e07f307489ac4692c87d28b7e674aef46bf39466f761816da6c7a4"
+  },
+  "scope": "Sanitized authored metadata, test output and four original-engine PNGs. Native states, databases, raw instruction payloads and generated scenes excluded."
+}

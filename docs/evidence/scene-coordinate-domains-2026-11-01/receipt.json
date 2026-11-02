@@ -1,0 +1,266 @@
+{
+  "base_commit": "8e65d331169a5bdec037b6f427b62164e3338c29",
+  "bridge_scene_reanalysis": {
+    "audit_relations": 8,
+    "bottom_candidates": {
+      "count": 82,
+      "native_reachability": "unqualified",
+      "x_inclusive": [
+        5,
+        86
+      ],
+      "y": 167
+    },
+    "contained": 3,
+    "in_memory_current_export_programs_equal_prior": true,
+    "new_files_written": 0,
+    "new_native_calls": 0,
+    "programs": 3,
+    "raised_anomalies": 0,
+    "retained_capture_sha256": "140e45e8d2dfd2e0cb1fd9ff50c2f22c620cd8889defb95f3aca0b8d877fd990",
+    "sealed_scene_sha256": "169f16f489e11e4834e0dd2bd3abbf7524ae681d676559fd9e48261996692756",
+    "source_edge_scan_complete": true,
+    "source_edge_scan_examined": 646,
+    "unknown": 5,
+    "variable_declarations_equal": true
+  },
+  "format": "fdisbull-scene-coordinate-domain-verification-1",
+  "historical_local_river_reanalysis": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "audit_relations": 16,
+    "conclusion": "Right-edge hazard seam with contained footprints; neither outside-viewport traversal nor complete native collision-mechanism proof.",
+    "contained": 4,
+    "limits": [
+      "Independent sessions and sampled rather than continuous behavior.",
+      "Native interpreter collision decision not instruction traced.",
+      "Collision domain is the buffer extent, not a passable-water model.",
+      "The separately recovered user archive is a restored continuation and is not incorporated in this fresh-session audit."
+    ],
+    "logic41_sha256": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+    "picture41_sha256": "e1d1c86bd3d12844c16dbb52f61f9d5fdd57123818b38913bd9f0cc9781960ae",
+    "raised_anomalies": 0,
+    "receipt_sha256": "14cdd2975b8b63bf31aaf33145de9f7a6cc8d06ab1409810afc2433a88f167a5",
+    "right_overhang": 0,
+    "samples": [
+      {
+        "collision_bounds": [
+          154,
+          109,
+          160,
+          110
+        ],
+        "guest_ticks": 35005,
+        "priority": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          15
+        ],
+        "room": 41,
+        "view": 0,
+        "water": false,
+        "width": 6,
+        "x": 154,
+        "y": 109
+      },
+      {
+        "collision_bounds": [
+          153,
+          109,
+          159,
+          110
+        ],
+        "guest_ticks": 34890,
+        "priority": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "room": 41,
+        "view": 0,
+        "water": true,
+        "width": 6,
+        "x": 153,
+        "y": 109
+      }
+    ],
+    "scope": "Two source-linked historical fresh-game observations, and derived geometry only; no current runtime or water-interpreter proof.",
+    "unknown": 12
+  },
+  "linux_verification": {
+    "attempts": 2,
+    "ci_workflow_python": "3.12",
+    "error": "XPC connection error: Connection invalid",
+    "intended_files": 55,
+    "intended_image": "python:3.13-slim",
+    "intended_platform": "linux/arm64",
+    "native_linux_ci": "unqualified",
+    "ordinary_hosted_ci": "unqualified",
+    "process_started": false,
+    "receipt_sha256": "6f876e32dfa7ab08ec8199c16c5b73efe162aa52094a6128cf3857ebd7ad35dd",
+    "running_containers_after": 0,
+    "source_before_after_sha256": "fa21b45c8e6a81214b23188d5feee46f24df7d0e2efb7ca81927a0a7e6cd7554",
+    "status": "inconclusive_infrastructure_blocker",
+    "tests_executed": 0
+  },
+  "offline_checks": [
+    {
+      "command": "PYTHONPATH=src:player:. PYTHONDONTWRITEBYTECODE=1 python -B -m pytest -q -p no:cacheprovider --basetemp <PRIVATE_TMP> tests/test_agi_clip_scene.py tests/test_agi_collision_candidates.py tests/test_scene_domain_integration.py",
+      "files": [
+        "tests/test_agi_clip_scene.py",
+        "tests/test_agi_collision_candidates.py",
+        "tests/test_scene_domain_integration.py"
+      ],
+      "passed": 226,
+      "python": "3.13.13",
+      "seconds": 1.32,
+      "system": "macOS arm64"
+    },
+    {
+      "files": [
+        "tests/test_scene_world_domains.py",
+        "tests/test_scene_domain_integration.py",
+        "tests/test_scene_domains.py"
+      ],
+      "independent_review": true,
+      "passed": 112,
+      "python": "3.13.13",
+      "seconds": 1.17,
+      "system": "macOS arm64"
+    }
+  ],
+  "privacy": {
+    "excluded": [
+      "game/story resources",
+      "supplied archives",
+      "native states",
+      "local databases",
+      "raw captures",
+      "generated scenes",
+      "full world documents"
+    ],
+    "included": "Authored source/tests/docs and sanitized receipts only"
+  },
+  "recovered_user_archives": {
+    "all_20_declared_game_hashes_match_selected_originals": true,
+    "archive_bytes_changed": false,
+    "archives": [
+      {
+        "bytes": 253380,
+        "filename": "ROBB_RECREATION_2026-11-01.zip",
+        "sha256": "b7fe64960d807812f0bc60fd2c77fc59847ad657389a1e55e82475a480219b03"
+      },
+      {
+        "bytes": 10362258,
+        "filename": "ROBB_PRIVATE_CONTINUATION_2026-11-01.tar.gz",
+        "sha256": "08f070b9e9379d81afa5fd8198f6abac065a71443d35ef2a8a24bfb7840c1e66"
+      }
+    ],
+    "checkpoint_sha256": "8b65e6f49c0cbfd319056a330f0c341a6c76f4d06baf499ee4f269be43483451",
+    "limits": [
+      "Restored/checkpointed route continuation with exploratory corrections/retries; not an uninterrupted fresh replay.",
+      "No exact Robb/TAS input schedule, timing equivalence or stock JPC-RR reproduction is established by these archives.",
+      "These are recovered supplied-record consistency checks, not new native execution or independent authentication.",
+      "No bridge posn-handler trace or full intermediate movement-state sequence is claimed.",
+      "TAR object store, state/database payloads, game resources and bulk captures were not extracted or executed."
+    ],
+    "native_policy": {
+      "fair_play": true,
+      "fresh_game": false,
+      "memory_writes": false,
+      "patches": false,
+      "physical": true,
+      "starting_lineage": "restored native checkpoint from prior documented ordinary-input run",
+      "teleports": false
+    },
+    "path": [
+      {
+        "action": 5,
+        "dead": false,
+        "guest_ticks": 261113,
+        "method": "move",
+        "room": 41,
+        "water": false,
+        "x": 152,
+        "y": 90
+      },
+      {
+        "action": 6,
+        "dead": false,
+        "guest_ticks": 261424,
+        "method": "cycle_precise",
+        "room": 41,
+        "water": false,
+        "x": 154,
+        "y": 90
+      },
+      {
+        "action": 7,
+        "dead": false,
+        "guest_ticks": 270288,
+        "method": "move",
+        "room": 40,
+        "water": false,
+        "x": 154,
+        "y": 47
+      }
+    ],
+    "payloads_extracted": false,
+    "room39_records_in_scoped_export": 0,
+    "scripts_executed": false,
+    "selected_result_member": "resume-20261101T043028Z-a3fe98ee/result.json",
+    "selected_result_sha256": "8920bf60bb85e3e8bdebdce566f6ece23dddcf6871566b10060f3b4acdb43493",
+    "selected_run": "8248a56bee3c45e7adab8d8904416056",
+    "summary_sha256": "9a949c16172f3148ea599e6c5447d1dfcf98e1dac4970b3d7cd4a4776ff20863"
+  },
+  "reviews": {
+    "adapter_review_receipt_sha256": "235696e9e2b618b4e1b3764bad03a6121a4737fbc556be76c3c234f3d4ca419b",
+    "clip_review": "Source review and retained checks; all programs unchanged and static/native scopes separated.",
+    "material_findings": []
+  },
+  "scope": "Engine source, authored offline checks and read-only reanalysis. No new native guest launched, game inputs replayed, release, tag or installation.",
+  "source_sha256": {
+    "examples/agi/build_clip_scene.py": "2f4e57dfaef738443dc93fb6f879032f6d4908d9c2eb26e001d32e62e8b52a96",
+    "examples/agi/scan_collision_candidates.py": "7f4786710ccc791bd5ba716a5cfbfbbe3bd492aaf2d793f65b4959590ccd7c6d",
+    "examples/scene_domains/__init__.py": "f874b26682916d92c9171b5e0f95ecfc4216d1fd70f40298fffab4b82c10abf2",
+    "examples/scene_domains/world_adapters.py": "0dbe6fdfcd8d61b1056b12049d848c59c2bb0a9cf3e8570ceb18e69ad2a2047c",
+    "src/fdisbull/cli.py": "9e216d1fd227a64d9fb720e0463c8f94ab75cc0176129c35c9e059e13b288466",
+    "src/fdisbull/scene_domains.py": "b37200848be4f2ccaeadb984780e5d33ce3d69c7b8ba16f0743ebd02f02736ca",
+    "src/fdisbull/scenes.py": "b6997bf1034317fa9189574ea559fa19099e52f2d0a3d62fe3fb6af883bb14f9",
+    "src/fdisbull/spatial.py": "f53bcf0abac23d346a76255489d7ca9118eb1205586ea482c7f9476365d48284",
+    "src/fdisbull/spatial_map.py": "878344201690fb076ffc15f6ab28d86810490c1e6222fc4d7d8f388020ec245f",
+    "tests/test_agi_clip_scene.py": "dd4dcc7f348168146e0386a58c02bc876a8ad554b26b5be51dcf36088f3e00dd",
+    "tests/test_agi_collision_candidates.py": "6ce71fcd3b6caf54ccf8a0cf8a6c2e3bc74578d4c97c5c794ab1f46c305ec6df",
+    "tests/test_scene_domain_integration.py": "b80fcab980fb013bdbeebd1e285691b6e140e82cb2d3ea0503ebd37c6714dc67",
+    "tests/test_scene_domains.py": "9f1cc2f00b078a665667d140b9699626a97b7c4afcf896611d1cabb30d13a6ae",
+    "tests/test_scene_world_domains.py": "5666fe2365613144001a777a5ea31b63527dc2f34ff983676fd5a0c69c5c46aa"
+  },
+  "storage": {
+    "bounded_linux_ci_cache_admission": "explicitly approved20GB reserve;4GiB estimate admitted; two bootstrap attempts then stopped",
+    "cache_40GB_admission": "refused",
+    "codex_40GB_admission": "refused; new bulk work stopped",
+    "deletions": false
+  },
+  "test_count_note": "Suites overlap at scene-domain integration; counts are not summed. Prior suites and the base branch native checks are not presented as fresh full-suite/native passes.",
+  "world_inventory_check": {
+    "all_relationships_unknown": true,
+    "civ_json_sha256": "c7fd3ba242e04643f655b5ba6ce2639b1075422ca9095fb58d704a8feebd2b86",
+    "definitions_commit": "121ce8274ebdb731349d0577f850959f8affb412",
+    "descriptor_sha256": "6831c560cc6cca335d86dfcb9d35695905fb32cb68f720f5c17e5567a0b9b1bd",
+    "destination_execution_and_safety": "unknown; adapters issue no native input",
+    "objects": 443,
+    "relationships": 3544,
+    "roles": {
+      "city": 41,
+      "resource": 230,
+      "unit": 172
+    },
+    "scope": "Read-only committed JSON metadata check. No native game, download, gameplay, transform, safety or teleport qualification.",
+    "syndicate": "Authored schema fixtures only; no actual mission semantic snapshot found in the scoped private verification roots."
+  }
+}

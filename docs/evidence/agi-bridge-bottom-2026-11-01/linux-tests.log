@@ -1,0 +1,4 @@
+Python 3.12.16; Linux 6.18.35; aarch64
+Read-only checkout, genuine pinned dependencies; source hashes unchanged.
+Files: tests/test_scene_domains.py, tests/test_scene_domain_integration.py, tests/test_scene_world_domains.py, tests/test_agi_clip_scene.py, tests/test_agi_collision_candidates.py, tests/test_agi_bridge_bottom.py, tests/test_agi_bottom_scene.py, tests/test_agent_skill_gate.py
+386 passed in 4.28s

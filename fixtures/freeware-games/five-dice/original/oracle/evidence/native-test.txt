@@ -1,0 +1,143 @@
+[
+  {
+    "label": "initial",
+    "seed": 27202,
+    "total": 0,
+    "scores": [
+      0,
+      0,
+      0
+    ],
+    "turn": 0,
+    "rolls": 1,
+    "holds": 0,
+    "dice": [
+      3,
+      4,
+      1,
+      6,
+      5
+    ]
+  },
+  {
+    "label": "hold",
+    "seed": 27202,
+    "total": 0,
+    "scores": [
+      0,
+      0,
+      0
+    ],
+    "turn": 0,
+    "rolls": 1,
+    "holds": 1,
+    "dice": [
+      3,
+      4,
+      1,
+      6,
+      5
+    ]
+  },
+  {
+    "label": "reroll",
+    "seed": 37566,
+    "total": 0,
+    "scores": [
+      0,
+      0,
+      0
+    ],
+    "turn": 0,
+    "rolls": 2,
+    "holds": 1,
+    "dice": [
+      3,
+      6,
+      5,
+      6,
+      1
+    ]
+  },
+  {
+    "label": "roll-limit",
+    "seed": 57466,
+    "total": 0,
+    "scores": [
+      0,
+      0,
+      0
+    ],
+    "turn": 0,
+    "rolls": 3,
+    "holds": 1,
+    "dice": [
+      3,
+      6,
+      5,
+      6,
+      5
+    ]
+  },
+  {
+    "label": "turn2",
+    "seed": 58439,
+    "total": 25,
+    "scores": [
+      25,
+      0,
+      0
+    ],
+    "turn": 1,
+    "rolls": 1,
+    "holds": 0,
+    "dice": [
+      6,
+      1,
+      4,
+      1,
+      6
+    ]
+  },
+  {
+    "label": "turn3",
+    "seed": 51464,
+    "total": 37,
+    "scores": [
+      25,
+      12,
+      0
+    ],
+    "turn": 2,
+    "rolls": 1,
+    "holds": 0,
+    "dice": [
+      1,
+      4,
+      1,
+      4,
+      3
+    ]
+  },
+  {
+    "label": "terminal",
+    "seed": 51464,
+    "total": 37,
+    "scores": [
+      25,
+      12,
+      0
+    ],
+    "turn": 3,
+    "rolls": 1,
+    "holds": 0,
+    "dice": [
+      1,
+      4,
+      1,
+      4,
+      3
+    ]
+  }
+]
+PASS: native DOS initial, hold, reroll, roll limit, scoring and terminal

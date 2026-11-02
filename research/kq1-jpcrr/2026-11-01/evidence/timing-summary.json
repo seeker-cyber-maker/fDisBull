@@ -1,0 +1,62 @@
+{
+  "format": "kq1-jpcrr-timing-evaluation-1",
+  "clock": "Native JPC-RR nanoseconds from power-on; image endpoints are first complete captured native VGA frames.",
+  "intro_dismissal_key_ns": 2844838218,
+  "first_new_gameplay_key_ns": 3500698326,
+  "shared_king_entry_checkpoint_ns": 32035330750,
+  "variants": {
+    "automatic": {
+      "score": 63,
+      "visible_king_endpoint_ns": 32736528222,
+      "visible_credits_ns": 33378593764,
+      "king_endpoint_since_intro_dismissal_ns": 29891690004,
+      "king_endpoint_since_first_gameplay_key_ns": 29235829896,
+      "credits_since_intro_dismissal_ns": 30533755546,
+      "credits_since_first_gameplay_key_ns": 29877895438,
+      "last_input_endpoint_movie_ns": 32035146312,
+      "last_input_complete_movie_ns": 33323066766,
+      "complete_movie_sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "native_capture_sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2",
+      "host_replay_ns": [
+        66869211883,
+        66515641507
+      ],
+      "native_capture_end_ns": 35000000000,
+      "native_frames": 2450,
+      "input_key_edges": 1672
+    },
+    "bow": {
+      "score": 66,
+      "visible_king_endpoint_ns": 32351288898,
+      "visible_credits_ns": 32864941331,
+      "king_endpoint_since_intro_dismissal_ns": 29506450680,
+      "king_endpoint_since_first_gameplay_key_ns": 28850590572,
+      "credits_since_intro_dismissal_ns": 30020103113,
+      "credits_since_first_gameplay_key_ns": 29364243005,
+      "last_input_endpoint_movie_ns": 32290010430,
+      "last_input_complete_movie_ns": 32823005100,
+      "complete_movie_sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "native_capture_sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269",
+      "host_replay_ns": [
+        67662908548,
+        67884776130
+      ],
+      "native_capture_end_ns": 35000000000,
+      "native_frames": 2450,
+      "input_key_edges": 1690
+    }
+  },
+  "improvement_ns": {
+    "same_visible_king_message": 385239324,
+    "same_visible_complete_credits": 513652433,
+    "complete_movie_last_input": 500061666
+  },
+  "video": {
+    "native_start_ns": 15000000,
+    "native_end_ns": 35000000000,
+    "presentation_duration_ns": 34985001000,
+    "synthetic_endpoint_ns": 1000,
+    "rate": 1,
+    "max_video_pts_quantization_error_ns": 500
+  }
+}

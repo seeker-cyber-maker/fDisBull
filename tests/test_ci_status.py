@@ -1,4 +1,4 @@
-"""Finite CI observations enforce a shared budget without contacting GitHub."""
+"""Finite CI observations enforce a shared budget without contacting GitHub/GitLab."""
 import importlib.util
 import json
 import os
@@ -19,12 +19,20 @@ SPEC.loader.exec_module(gate)
 SHA = 'a' * 40
 OTHER = 'b' * 40
 REPO = 'example/project'
+GITLAB_REPO = 'brewster-jennings-group/fdisbull'
 
 
 def response(sha=SHA, count=1, total=None):
     return dict(total_count=count if total is None else total, workflow_runs=[
         dict(id=100+i, workflow_id=20, name='Tests', event='push', status='completed',
              conclusion='success', run_attempt=1, head_sha=sha) for i in range(count)])
+
+
+def gitlab_response(sha=SHA, count=1, status='success', source='merge_request_event'):
+    return [
+        dict(id=3000+i, iid=40+i, sha=sha, ref='main', status=status, source=source)
+        for i in range(count)
+    ]
 
 
 def check(tmp_path, *, now=1000, sha=SHA, refresh=True, owner='coordinator', fetch=None, **options):
@@ -52,6 +60,17 @@ print(os.environ.get('CI_TEST_ERROR',''),file=sys.stderr)
 raise SystemExit(int(os.environ.get('CI_TEST_EXIT','0')))
 ''')
     command.chmod(0o755)
+    glab_cmd = binary / 'glab'
+    glab_cmd.write_text(f'#!{sys.executable}\n' + '''
+import json, os, sys, time
+with open(os.environ['CI_TEST_CALLS'], 'a') as stream:
+    stream.write(json.dumps(['glab'] + sys.argv[1:])+'\\n')
+time.sleep(float(os.environ.get('CI_TEST_DELAY','0')))
+print(os.environ.get('CI_TEST_RESPONSE','[]'))
+print(os.environ.get('CI_TEST_ERROR',''),file=sys.stderr)
+raise SystemExit(int(os.environ.get('CI_TEST_EXIT','0')))
+''')
+    glab_cmd.chmod(0o755)
     calls = tmp_path / 'calls.jsonl'
     monkeypatch.setenv('PATH', str(binary) + os.pathsep + os.environ['PATH'])
     monkeypatch.setenv('CI_TEST_CALLS', str(calls))
@@ -81,6 +100,27 @@ def test_one_cli_read_is_exact_and_later_agents_use_the_same_cache(tmp_path, fak
     assert cached['observed_at'] == 1000 and cached['runs'] == row['runs']
     throttled = check(tmp_path, now=1299, fetch=forbidden)
     assert throttled['refresh_reason'] == 'cooldown' and not throttled['refresh_performed']
+
+
+def test_gitlab_host_uses_glab_api_and_normalizes_pipelines(tmp_path, fake_gh, monkeypatch):
+    monkeypatch.setenv('CI_TEST_RESPONSE', json.dumps(gitlab_response(SHA, count=1, status='success')))
+    row = gate.check_status(repo=GITLAB_REPO, sha=SHA, host='gitlab.com', state_dir=tmp_path,
+                            refresh=True, owner='coordinator', clock=lambda: 1000)
+    assert row['status'] == 'fresh' and row['host'] == 'gitlab.com' and row['repo'] == GITLAB_REPO
+    assert len(row['runs']) == 1
+    assert row['runs'][0]['status'] == 'completed' and row['runs'][0]['conclusion'] == 'success'
+    assert row['runs'][0]['head_sha'] == SHA
+    command = json.loads(fake_gh.read_text())
+    assert command == ['glab', 'api', '--hostname', 'gitlab.com', '--method', 'GET',
+                       f'projects/brewster-jennings-group%2Ffdisbull/pipelines?sha={SHA}&per_page=100']
+
+
+def test_retired_github_repository_blocks_before_spawning_gh(tmp_path, fake_gh):
+    row = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=SHA, host='github.com',
+                            state_dir=tmp_path, refresh=True, owner='coordinator', clock=lambda: 1000)
+    assert row['status'] == 'error' and row['error'] == 'provider_retired_repository'
+    assert row['provider_stop'] == {'reason': 'provider_retired_repository', 'observed_at': 1000}
+    assert not fake_gh.exists()
 
 
 def test_different_sha_cannot_bypass_repository_gate_or_read_other_sha_cache(tmp_path):

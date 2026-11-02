@@ -9,6 +9,7 @@ import lief
 from .model import Image, Region, Seed
 
 MAX_IMAGE_SIZE = 64 * 1024 * 1024
+MAX_MACHO_FUNCTION_STARTS = 100_000
 
 
 def _address(value: int, label: str) -> int:
@@ -48,9 +49,36 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
     return any(region.executable and region.start <= address < region.start + len(region.data) for region in regions)
 
 
+def _macho_instruction_start(address: int, sections, regions: list[Region],
+                             file_mappings: list[dict], source_size: int) -> bool:
+    """Require one aligned ARM64 instruction in file-backed executable code."""
+    return (0 <= address < 1 << 64 and address % 4 == 0 and
+            any(section.virtual_address <= address and
+                address + 4 <= section.virtual_address + section.size for section in sections) and
+            any(region.executable and region.start <= address and
+                address + 4 <= region.start + len(region.data) for region in regions) and
+            any(mapping['virtual_address'] <= address and
+                address + 4 <= mapping['virtual_address'] + mapping['file_size'] and
+                0 <= mapping['file_offset'] and
+                mapping['file_offset'] + address - mapping['virtual_address'] + 4 <= source_size
+                for mapping in file_mappings))
+
+
+def _macho_function_address(raw: int, text_base: int | None, sections, regions: list[Region],
+                            file_mappings: list[dict], source_size: int) -> tuple[int, bool]:
+    """Keep a valid VA, otherwise resolve a valid __TEXT-relative LIEF offset."""
+    if _macho_instruction_start(raw, sections, regions, file_mappings, source_size):
+        return raw, False
+    candidate = text_base + raw if text_base is not None and raw >= 0 else -1
+    if _macho_instruction_start(candidate, sections, regions, file_mappings, source_size):
+        return candidate, True
+    return raw, False
+
+
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
-               base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
-               module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
+               base: int | None = None, entry: int | None = None, load_segment: int = 0x1000,
+               module: bool = False, slice_arch: str | None = None, image: str | None = None,
+               profile: str | None = None, vector_count: int | None = None) -> Image:
     """Load classic MZ, Win16 NE, DOS/4GW LE, ELF, PE, Mach-O, COM or raw code.
 
     Native flat mappings use preferred image addresses (PIE load bias is not
@@ -59,7 +87,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','le','ne','mz','com'):raise ValueError('image must be auto, pe, le, ne, mz or com')
+    if image not in (None,'pe','le','ne','mz','com','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com or ail')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -72,19 +100,33 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         data = stream.read(MAX_IMAGE_SIZE + 1)
     if not 0 < len(data) <= MAX_IMAGE_SIZE:
         raise ValueError("input file must be nonempty and at most 64 MiB")
-    base = _address(base, "base address")
+    explicit_base = base is not None
+    base = _address(0 if base is None else base, "base address")
     if entry is not None:
         entry = _address(entry, "entry address")
+    if profile is not None:
+        if profile != 'cortex-m':
+            raise ValueError('profile must be cortex-m')
+        if not explicit_base or vector_count is None:
+            raise ValueError('Cortex-M requires an explicit base and vector_count')
+        if arch not in (None, 'thumb') or bits not in (None, 32) or image is not None or slice_arch is not None or module or load_segment != 0x1000:
+            raise ValueError('Cortex-M profile cannot use other architecture/container/module options')
+        from .cortex_m import load
+        return load(data, path.name, base, vector_count, entry)
+    if vector_count is not None:
+        raise ValueError('vector_count requires profile=cortex-m')
     if arch is not None:
         if image is not None:raise ValueError('image selects a container view; arch selects raw mode')
         if slice_arch is not None:raise ValueError('slice_arch selects a Mach-O image; arch selects raw mode')
-        if arch not in ("x86", "arm64"):
-            raise ValueError("raw architecture must be x86 or arm64")
-        bits = 64 if bits is None else bits
+        if arch not in ("x86", "arm64", "thumb"):
+            raise ValueError("raw architecture must be x86, arm64 or thumb")
+        bits = (32 if arch == "thumb" else 64) if bits is None else bits
         if isinstance(bits,bool) or not isinstance(bits,int):
             raise ValueError("raw bitness must be an integer")
         if (arch == "x86" and bits not in (16, 32, 64)) or (arch == "arm64" and bits != 64):
             raise ValueError("raw x86 requires 16/32/64 bits; arm64 requires 64 bits")
+        if arch == 'thumb' and (bits != 32 or base & 1 or base + len(data) > 1 << 32):
+            raise ValueError('raw Thumb requires 32 bits, halfword base alignment and a 32-bit mapping')
         if arch == "arm64" and (base % 4 or len(data) % 4):
             raise ValueError("raw arm64 base and byte length must be 4-byte aligned")
         if arch == "x86" and bits in (16, 32) and base + len(data) > 1 << bits:
@@ -95,8 +137,15 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("entry address is outside the raw image")
         if arch == "arm64" and entry % 4:
             raise ValueError("arm64 entry point must be 4-byte aligned")
+        if arch == 'thumb' and entry & 1:
+            raise ValueError('Thumb entry must be a canonical halfword-aligned code address')
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
+    from .ail import ail_signature, load_ail
+    if image=='ail' or image is None and ail_signature(data):
+        if bits is not None or base or load_segment != 0x1000 or slice_arch is not None:
+            raise ValueError('AIL uses module-relative offsets; bits/base/load_segment/slice overrides are not supported')
+        return load_ail(data, entry=entry)
     if image=='com':
         if slice_arch is not None or bits is not None or base or module:
             raise ValueError('COM uses load_segment and cannot use raw, module or slice options')
@@ -273,15 +322,72 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         excluded_seeds={item['address'] for item in exports
                         if item['address'] is not None and not item['is_code']}
         excluded_seeds-={item['address'] for item in exports if item['is_code']}
+    macho_text_base = None
+    macho_code_sections = []
+    macho_unwind_offsets = set()
+    if file_format == "Mach-O" and arch == "arm64":
+        text_segments = [segment for segment in binary.segments if segment.name == "__TEXT"]
+        if len(text_segments) == 1:
+            macho_text_base = int(text_segments[0].virtual_address)
+        executable_segments = {segment.name for segment in binary.segments
+                               if segment.init_protection & 4}
+        macho_code_sections = [section for section in binary.sections
+                               if section.segment_name in executable_segments and
+                               (section.has(lief.MachO.Section.FLAGS.PURE_INSTRUCTIONS) or
+                                section.has(lief.MachO.Section.FLAGS.SOME_INSTRUCTIONS))]
+        macho_unwind_offsets = {int(function.address) for function in binary.unwind_functions}
+    normalized_unwind = 0
     for function in binary.functions:
-        address = int(function.address)
+        raw_address = int(function.address)
+        address = raw_address
+        source = "symbol_or_unwind"
         if file_format == "PE":
             address += imagebase  # LIEF PE function entries are RVAs.
+        elif file_format == "Mach-O" and arch == "arm64":
+            address, relative = _macho_function_address(raw_address, macho_text_base,
+                                                        macho_code_sections, regions,
+                                                        metadata['file_mappings'], len(data))
+            if relative:
+                source = "LC_UNWIND_INFO" if raw_address in macho_unwind_offsets else "symbol_or_unwind_relative"
         if present and address == entry and function.name and seeds[0].name == "entry":
             seeds[0] = Seed(entry, function.name, "entry + symbol_or_unwind")
-        if address not in seen and address not in excluded_seeds and _is_executable(address, regions):
+        valid = (_macho_instruction_start(address, macho_code_sections, regions,
+                                          metadata['file_mappings'], len(data))
+                 if file_format == "Mach-O" and arch == "arm64" else _is_executable(address, regions))
+        if address not in seen and address not in excluded_seeds and valid:
             seen.add(address)
-            seeds.append(Seed(address, function.name or f"sub_{address:x}", "symbol_or_unwind"))
+            seeds.append(Seed(address, function.name or f"sub_{address:x}", source))
+            normalized_unwind += int(source == "LC_UNWIND_INFO")
+    if file_format == "Mach-O" and arch == "arm64" and binary.has_function_starts:
+        # LIEF exposes LC_FUNCTION_STARTS as offsets from __TEXT, whereas its
+        # symbols and `binary.entrypoint` use preferred virtual addresses.
+        # Treating those offsets as absolute loses nearly every Swift function.
+        starts = list(binary.function_starts.functions)
+        if len(starts) > MAX_MACHO_FUNCTION_STARTS:
+            raise ValueError("Mach-O LC_FUNCTION_STARTS exceeds the supported seed limit")
+        if macho_text_base is None:
+            raise ValueError("Mach-O LC_FUNCTION_STARTS requires one __TEXT segment")
+        if starts and not macho_code_sections:
+            raise ValueError("Mach-O LC_FUNCTION_STARTS has no declared instruction section")
+        seeded = 0
+        for relative in starts:
+            offset = int(relative)
+            address = macho_text_base + offset
+            if (offset < 0 or address >= 1 << 64 or address % 4 or
+                address in excluded_seeds or
+                not _macho_instruction_start(address, macho_code_sections, regions,
+                                             metadata['file_mappings'], len(data))):
+                raise ValueError(f"invalid Mach-O LC_FUNCTION_STARTS entry at relative offset 0x{offset:x}")
+            if address not in seen:
+                seen.add(address)
+                seeds.append(Seed(address, f"sub_{address:x}", "LC_FUNCTION_STARTS"))
+                seeded += 1
+        metadata["macho_function_starts"] = {
+            "declared": len(starts), "seeded": seeded,
+            "source": "LC_FUNCTION_STARTS relative to __TEXT", "status": "validated",
+        }
+    if normalized_unwind:
+        metadata["macho_unwind_relative_seeds"] = normalized_unwind
     metadata["seed_count"] = len(seeds)
     metadata["relocations"] = "recorded mapping only; no runtime relocation applied"
     if selection and selection['offset']:

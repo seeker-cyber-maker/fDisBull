@@ -1,0 +1,1062 @@
+{
+  "format": "fdisbull-browser-shell-verification-1",
+  "status": "passed",
+  "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+  "module_program": {
+    "body": [
+      {
+        "binding": "food",
+        "contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "id": "maintain-stock",
+        "inputs": {
+          "population": {
+            "var": "$population"
+          },
+          "produced": {
+            "var": "$produced"
+          },
+          "stock": {
+            "var": "$stock"
+          },
+          "support_cost": {
+            "var": "$support_cost"
+          },
+          "supported": {
+            "var": "$supported"
+          }
+        },
+        "op": "invoke",
+        "outputs": {
+          "new_stock": "$new_stock"
+        }
+      }
+    ],
+    "format": "fdisbull-module-uil-1",
+    "resources": {},
+    "role": "uil",
+    "variables": {
+      "$new_stock": {
+        "initial": 0,
+        "type": "i16"
+      },
+      "$population": {
+        "initial": 0,
+        "type": "i8"
+      },
+      "$produced": {
+        "initial": 0,
+        "type": "i16"
+      },
+      "$stock": {
+        "initial": 0,
+        "type": "i16"
+      },
+      "$support_cost": {
+        "initial": 0,
+        "type": "i16"
+      },
+      "$supported": {
+        "initial": 0,
+        "type": "i16"
+      }
+    }
+  },
+  "plan": {
+    "format": "fdisbull-web-orchestration-1",
+    "title": "Food production",
+    "state": {
+      "stock": {
+        "type": "i16",
+        "initial": 10,
+        "label": "Food stored"
+      },
+      "produced": {
+        "type": "i16",
+        "initial": 9,
+        "label": "Food produced"
+      },
+      "population": {
+        "type": "i8",
+        "initial": 3,
+        "label": "Population"
+      },
+      "supported": {
+        "type": "i16",
+        "initial": 2,
+        "label": "Supported units"
+      },
+      "support_cost": {
+        "type": "i16",
+        "initial": 1,
+        "label": "Support cost"
+      },
+      "sentinel": {
+        "type": "u16",
+        "initial": 23130,
+        "label": "Preserved control"
+      }
+    },
+    "inputs": {
+      "stock": "stock",
+      "produced": "produced",
+      "population": "population",
+      "supported": "supported",
+      "support_cost": "support_cost"
+    },
+    "outputs": {
+      "new_stock": "stock"
+    },
+    "concurrency": "latest-request-wins"
+  },
+  "plan_sha256": "afb502194d678fa939373661e953cfe262e5d70a90c6ba74ad21b70d1d97e2be",
+  "layout": {
+    "cells": {
+      "population": {
+        "offset": 0,
+        "size": 1,
+        "type": "i8"
+      },
+      "produced": {
+        "offset": 2,
+        "size": 2,
+        "type": "i16"
+      },
+      "sentinel": {
+        "offset": 4,
+        "size": 2,
+        "type": "u16"
+      },
+      "stock": {
+        "offset": 6,
+        "size": 2,
+        "type": "i16"
+      },
+      "support_cost": {
+        "offset": 8,
+        "size": 2,
+        "type": "i16"
+      },
+      "supported": {
+        "offset": 10,
+        "size": 2,
+        "type": "i16"
+      }
+    },
+    "stride": 12
+  },
+  "interface": {
+    "inputs": {
+      "population": "i8",
+      "produced": "i16",
+      "stock": "i16",
+      "support_cost": "i16",
+      "supported": "i16"
+    },
+    "outputs": {
+      "new_stock": "i16"
+    },
+    "domain": {
+      "population": {
+        "min": -128,
+        "max": 127
+      },
+      "produced": {
+        "min": -32768,
+        "max": 32767
+      },
+      "stock": {
+        "min": -32768,
+        "max": 32767
+      },
+      "support_cost": {
+        "min": 1,
+        "max": 2
+      },
+      "supported": {
+        "min": -32768,
+        "max": 32767
+      }
+    }
+  },
+  "artifacts": {
+    "index.html": "1f4ad6897c4a0bb86e743db4f50e1ae9a7a4cf6da824b838da73412c57b5f0b6",
+    "app.mjs": "7c9abc3401c65ec5f9d017c3650ea4d47758971c930e8f0855185478ca5461da",
+    "shell.mjs": "ab093b44623525d51399ebcb21cb5f2fafa83dedf941e522b57fa75ad10cb215",
+    "block.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+    "blocks/wasm/block.wat": "27ea99856b70306f078fd52604a387355ca59c49ed3e21d521eef8d1e5a80996",
+    "blocks/wasm/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+    "blocks/wasm/block.wasm": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+    "blocks/wasm/build.json": "3640995deb4fbdbf6760127479f455e3d6791247ba9cec0d2b35967b34d9f65b",
+    "blocks/webgpu/block.wgsl": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4",
+    "blocks/webgpu/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+    "blocks/webgpu/build.json": "eab18b9eb1185ef7fcf9de8c60145d1675ae90250812da1c74ee6ac825006eae"
+  },
+  "normal_cases_per_backend_per_host": 2018,
+  "chain_steps_per_host": 24,
+  "original_native": [
+    {
+      "edition": "474.01",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    },
+    {
+      "edition": "474.03",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    },
+    {
+      "edition": "474.05",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    }
+  ],
+  "original_cpu_invocations": 6054,
+  "original_dosbox_invocations": 6054,
+  "chain_cpu_derivation_invocations": 24,
+  "chain_cpu_validation_invocations": 72,
+  "chain_dosbox_invocations": 72,
+  "host_results": {
+    "node": {
+      "status": "passed",
+      "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+      "checks": [
+        {
+          "name": "owned-pinned-description",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot-memory-ownership",
+          "status": "passed"
+        },
+        {
+          "name": "original-rows-and-output-only-commits",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "computed-ready-is-not-committed",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "other-record-and-hidden-memory-preserved",
+          "backend": "wasm",
+          "status": "passed"
+        },
+        {
+          "name": "typed-edit-refusal-is-atomic",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 4
+        },
+        {
+          "name": "domain-refusal-never-commits",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2
+        },
+        {
+          "name": "state-change-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "state-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "view-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "binding-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "binding-changed"
+        },
+        {
+          "name": "entity-generation-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "cancel-computed-result",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "canceled"
+        },
+        {
+          "name": "overlap-physical-completion-latest-only-commit",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "cancel-and-new-run-without-fallback",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "single-finish-consumer",
+          "backend": "wasm",
+          "status": "passed"
+        },
+        {
+          "name": "original-rows-and-output-only-commits",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "computed-ready-is-not-committed",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "other-record-and-hidden-memory-preserved",
+          "backend": "webgpu",
+          "status": "passed"
+        },
+        {
+          "name": "typed-edit-refusal-is-atomic",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 4
+        },
+        {
+          "name": "domain-refusal-never-commits",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2
+        },
+        {
+          "name": "state-change-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "state-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "view-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "binding-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "binding-changed"
+        },
+        {
+          "name": "entity-generation-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "cancel-computed-result",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "canceled"
+        },
+        {
+          "name": "overlap-physical-completion-latest-only-commit",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "cancel-and-new-run-without-fallback",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "single-finish-consumer",
+          "backend": "webgpu",
+          "status": "passed"
+        },
+        {
+          "name": "alternating-backend-carried-state-chain",
+          "status": "passed",
+          "steps": 24,
+          "initializations": 1
+        },
+        {
+          "name": "borrowed-device-retained-after-shell-disposal",
+          "status": "passed"
+        }
+      ],
+      "host": "node",
+      "runtime": "v22.22.3",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "apple-m1-max",
+        "isFallbackAdapter": false
+      },
+      "identities": {
+        "shell_manifest_sha256": "905988b5ceff0112503477b6ed3940e2b1cd2885fb4db8ed5486ef9fd00dc5f8",
+        "study_sha256": "da53c2455fdff9b583ed438eb07d6b2f88cb25f22a2781a303210dc2a8cfb2f0",
+        "study_helper_sha256": "be189fc4bf09dc3b33a39d8372be196f0aad2284060980be8ad748d136f2baa6",
+        "artifacts": {
+          "index.html": "1f4ad6897c4a0bb86e743db4f50e1ae9a7a4cf6da824b838da73412c57b5f0b6",
+          "app.mjs": "7c9abc3401c65ec5f9d017c3650ea4d47758971c930e8f0855185478ca5461da",
+          "shell.mjs": "ab093b44623525d51399ebcb21cb5f2fafa83dedf941e522b57fa75ad10cb215",
+          "block.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/wasm/block.wat": "27ea99856b70306f078fd52604a387355ca59c49ed3e21d521eef8d1e5a80996",
+          "blocks/wasm/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/wasm/block.wasm": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+          "blocks/wasm/build.json": "3640995deb4fbdbf6760127479f455e3d6791247ba9cec0d2b35967b34d9f65b",
+          "blocks/webgpu/block.wgsl": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4",
+          "blocks/webgpu/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/webgpu/build.json": "eab18b9eb1185ef7fcf9de8c60145d1675ae90250812da1c74ee6ac825006eae"
+        }
+      },
+      "normal": {
+        "wasm": {
+          "cases": 2018,
+          "mismatches": 0,
+          "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+        },
+        "webgpu": {
+          "cases": 2018,
+          "mismatches": 0,
+          "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+        }
+      },
+      "chain": {
+        "steps": 24,
+        "mismatches": 0,
+        "outputs_sha256": "97e140cba99c2f23d19d0bd47fa81c51c8829a19b2f053e4b6e9cd9f10d68ac6",
+        "alternating_backends": true
+      }
+    },
+    "browser": {
+      "status": "passed",
+      "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+      "checks": [
+        {
+          "name": "owned-pinned-description",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot-memory-ownership",
+          "status": "passed"
+        },
+        {
+          "name": "original-rows-and-output-only-commits",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "computed-ready-is-not-committed",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "other-record-and-hidden-memory-preserved",
+          "backend": "wasm",
+          "status": "passed"
+        },
+        {
+          "name": "typed-edit-refusal-is-atomic",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 4
+        },
+        {
+          "name": "domain-refusal-never-commits",
+          "backend": "wasm",
+          "status": "passed",
+          "cases": 2
+        },
+        {
+          "name": "state-change-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "state-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "view-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "binding-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "binding-changed"
+        },
+        {
+          "name": "entity-generation-aba-after-computation",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "cancel-computed-result",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "canceled"
+        },
+        {
+          "name": "overlap-physical-completion-latest-only-commit",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "cancel-and-new-run-without-fallback",
+          "backend": "wasm",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "single-finish-consumer",
+          "backend": "wasm",
+          "status": "passed"
+        },
+        {
+          "name": "original-rows-and-output-only-commits",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "computed-ready-is-not-committed",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2018
+        },
+        {
+          "name": "other-record-and-hidden-memory-preserved",
+          "backend": "webgpu",
+          "status": "passed"
+        },
+        {
+          "name": "typed-edit-refusal-is-atomic",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 4
+        },
+        {
+          "name": "domain-refusal-never-commits",
+          "backend": "webgpu",
+          "status": "passed",
+          "cases": 2
+        },
+        {
+          "name": "state-change-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "state-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "state-changed"
+        },
+        {
+          "name": "view-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "binding-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "binding-changed"
+        },
+        {
+          "name": "entity-generation-aba-after-computation",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "view-changed"
+        },
+        {
+          "name": "cancel-computed-result",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": "complete",
+          "outcome": "discarded",
+          "reason": "canceled"
+        },
+        {
+          "name": "overlap-physical-completion-latest-only-commit",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "cancel-and-new-run-without-fallback",
+          "backend": "webgpu",
+          "status": "passed",
+          "computed": 2,
+          "committed": 1
+        },
+        {
+          "name": "single-finish-consumer",
+          "backend": "webgpu",
+          "status": "passed"
+        },
+        {
+          "name": "alternating-backend-carried-state-chain",
+          "status": "passed",
+          "steps": 24,
+          "initializations": 1
+        }
+      ],
+      "host": "chrome",
+      "runtime": "Chrome/156.0.0.0",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "",
+        "isFallbackAdapter": false
+      },
+      "uiChecks": [
+        {
+          "name": "production-controls-follow-pinned-input-map",
+          "status": "passed"
+        },
+        {
+          "name": "actual-wasm-control-step-matches-original",
+          "status": "passed"
+        },
+        {
+          "name": "actual-webgpu-control-step-matches-original",
+          "status": "passed"
+        },
+        {
+          "name": "pending-view-aba-discards-through-real-controls",
+          "status": "passed"
+        },
+        {
+          "name": "cancel-new-run-guards-current-action-and-commits-once",
+          "status": "passed"
+        },
+        {
+          "name": "add-record-reuses-the-same-scene",
+          "status": "passed"
+        }
+      ],
+      "instrumentation": {
+        "production_html": "unchanged apart from test module inserted before app.mjs",
+        "gpu_observer": "delegates native requestAdapter and returns exact native objects; removed after initialization",
+        "interface": "public production UI facade; real DOM events",
+        "test_module_sha256": "be20fc060023070199877a214156bc1f14bbd66897971128724f7071cbf7d808",
+        "original_html_sha256": "1f4ad6897c4a0bb86e743db4f50e1ae9a7a4cf6da824b838da73412c57b5f0b6",
+        "served_html_sha256": "c2c1d178b9557cab9ad34d49c0b5f0fb5d4cc3d5879cd8c979709703f63927a4"
+      },
+      "identities": {
+        "shell_manifest_sha256": "905988b5ceff0112503477b6ed3940e2b1cd2885fb4db8ed5486ef9fd00dc5f8",
+        "study_sha256": "da53c2455fdff9b583ed438eb07d6b2f88cb25f22a2781a303210dc2a8cfb2f0",
+        "study_helper_sha256": "be189fc4bf09dc3b33a39d8372be196f0aad2284060980be8ad748d136f2baa6",
+        "artifacts": {
+          "index.html": "1f4ad6897c4a0bb86e743db4f50e1ae9a7a4cf6da824b838da73412c57b5f0b6",
+          "app.mjs": "7c9abc3401c65ec5f9d017c3650ea4d47758971c930e8f0855185478ca5461da",
+          "shell.mjs": "ab093b44623525d51399ebcb21cb5f2fafa83dedf941e522b57fa75ad10cb215",
+          "block.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/wasm/block.wat": "27ea99856b70306f078fd52604a387355ca59c49ed3e21d521eef8d1e5a80996",
+          "blocks/wasm/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/wasm/block.wasm": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+          "blocks/wasm/build.json": "3640995deb4fbdbf6760127479f455e3d6791247ba9cec0d2b35967b34d9f65b",
+          "blocks/webgpu/block.wgsl": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4",
+          "blocks/webgpu/host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "blocks/webgpu/build.json": "eab18b9eb1185ef7fcf9de8c60145d1675ae90250812da1c74ee6ac825006eae"
+        }
+      },
+      "launch_flags": [
+        "--headless=new",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--enable-unsafe-webgpu",
+        "--use-angle=metal",
+        "--window-size=1280,1100",
+        "--remote-debugging-port=0"
+      ],
+      "screenshot": {
+        "status": "captured",
+        "file": "browser-shell.png",
+        "sha256": "5b72bb0034ad476f4017dd416c2fcb1abf9d794425b4b73d613eefbbe23fb0ba"
+      },
+      "normal": {
+        "wasm": {
+          "cases": 2018,
+          "mismatches": 0,
+          "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+        },
+        "webgpu": {
+          "cases": 2018,
+          "mismatches": 0,
+          "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+        }
+      },
+      "chain": {
+        "steps": 24,
+        "mismatches": 0,
+        "outputs_sha256": "97e140cba99c2f23d19d0bd47fa81c51c8829a19b2f053e4b6e9cd9f10d68ac6",
+        "alternating_backends": true
+      }
+    }
+  },
+  "original_kernel_source": "fresh original CPU and DOSBox inputs; separate original-derived carried-state chain",
+  "original_baseline_sha256": "2e8a82576685cc19f1f0e226d718462a20610dfa206db7ffa4c8d048300c6dd8",
+  "original_chain_summary_sha256": "c15720b897399fbe844cd359588440e96d0e14113d6a7e73a65de56836c612b7",
+  "originals_unchanged": true,
+  "scope": "finite original-backed kernels and owned browser state transitions; no full-game or timing qualification",
+  "unchanged_kernels": {
+    "wasm": {
+      "artifact": "block.wasm",
+      "sha256": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+      "byte_identical_to_scalar_study": true
+    },
+    "webgpu": {
+      "artifact": "block.wgsl",
+      "sha256": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4",
+      "byte_identical_to_scalar_study": true
+    }
+  },
+  "implementation_sources": {
+    "src/fdisbull/udc_web_shell.py": "46ed11af98e1a726c490ff5fe5335343885ff4a7a9630ddf754762f1b09974f3",
+    "src/fdisbull/web_runtime/shell.mjs": "ab093b44623525d51399ebcb21cb5f2fafa83dedf941e522b57fa75ad10cb215",
+    "src/fdisbull/web_runtime/app.mjs": "7c9abc3401c65ec5f9d017c3650ea4d47758971c930e8f0855185478ca5461da",
+    "src/fdisbull/web_runtime/index.html": "1f4ad6897c4a0bb86e743db4f50e1ae9a7a4cf6da824b838da73412c57b5f0b6",
+    "src/fdisbull/web_runtime/block.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+    "examples/recovery/civd_browser_shell.py": "4f79d3a3d3249277977878eb2c38d55daac237e93d0ca5b14188b7c45220378f",
+    "examples/recovery/web_shell_study.mjs": "be189fc4bf09dc3b33a39d8372be196f0aad2284060980be8ad748d136f2baa6",
+    "examples/recovery/run_browser_shell.mjs": "87e644f7bcccb7e695c87d0fd9c49e8374bcbff3c575eb87ab12321e50d03af4",
+    "tests/web_shell_checks.mjs": "5a22d440ae2ed1387b511d633901e37910acd4285a48f3a294e597212775a25c"
+  },
+  "runtime_boundary_checks": {
+    "format": "fdisbull-web-shell-checks-1",
+    "status": "passed",
+    "runtime": "v22.22.3",
+    "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+    "gpu": {
+      "status": "physical_device",
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "apple-m1-max",
+      "isFallbackAdapter": false
+    },
+    "checks": [
+      {
+        "name": "owned snapshots and output-only commit",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "independent signed-word and signed-byte answer",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "same-value edit invalidates a staged result",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "state ABA invalidates a staged result",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "entity selection ABA invalidates a staged result",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "removed and recreated entity has a new generation",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "reselecting a backend invalidates a staged result",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "superseded completion cannot clear a newer operation",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "reverse completion order commits the latest request once",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "overlapping starts retain the device lease and commit only the latest request",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "cancel and immediate replacement retain the physical compute lease",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "concurrent finish calls cannot consume one result twice",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "cancellation invalidates before physical completion",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "typed edit validates the whole transaction",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "domain refusal never commits partial state",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "disposal invalidates synchronously and drains computation",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "manifest ownership, defaults, missing GPU and exclusive provider ownership",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "owned snapshots and output-only commit",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "independent signed-word and signed-byte answer",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "same-value edit invalidates a staged result",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "state ABA invalidates a staged result",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "entity selection ABA invalidates a staged result",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "removed and recreated entity has a new generation",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "reselecting a backend invalidates a staged result",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "superseded completion cannot clear a newer operation",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "reverse completion order commits the latest request once",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "overlapping starts retain the device lease and commit only the latest request",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "cancel and immediate replacement retain the physical compute lease",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "concurrent finish calls cannot consume one result twice",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "cancellation invalidates before physical completion",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "typed edit validates the whole transaction",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "domain refusal never commits partial state",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "disposal invalidates synchronously and drains computation",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "backend ABA invalidates even after returning to the original provider",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "Wasm and GPU alternate through one persistent stock arena",
+        "backend": "wasm",
+        "status": "passed"
+      },
+      {
+        "name": "independent shells share a borrowed GPU device without state or token contamination",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "borrowed GPU device remains usable after shell disposal",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "loader failure destroys a transferred device before GPU provider assignment",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "loader failure preserves a borrowed device before GPU provider assignment",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "owned GPU device is destroyed and drained on shell disposal",
+        "backend": "webgpu",
+        "status": "passed"
+      },
+      {
+        "name": "device loss discards staged GPU output; explicit Wasm switch remains usable",
+        "backend": "webgpu",
+        "status": "passed"
+      }
+    ],
+    "check_count": 41,
+    "wasm_cases": 19,
+    "gpu_cases": 22
+  },
+  "local_validation": {
+    "macos_pytest": {
+      "passed": 2272,
+      "skipped": 132,
+      "deselected": 2,
+      "ignored_modules": [
+        "tests/test_elf_metadata.py",
+        "tests/test_platform_calls.py"
+      ],
+      "deselected_nodes": [
+        "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+        "tests/test_loading.py::test_real_elf_retains_entry_and_named_function"
+      ],
+      "real_gpu_dependency_root_supplied": true
+    },
+    "new_python_shell_tests": 6,
+    "malformed_output_negative_control": "actual Wasm returns40000 for i16; failed before record write"
+  }
+}

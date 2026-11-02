@@ -1,11 +1,103 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [return-to-park deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md)
+addresses the subsequent original return timeout. It retains the actual queued
+input before the continuous guest interval, shares the complete host deadline,
+and qualifies the existing Park destination without guest execution or input.
+Recognized notice continuations and committed-head readback retries remain
+separate from arrival confirmation. The original native-save case qualifies both
+normal return and repeated read-only recovery with all 97 probes armed. Older
+held providers remain preserved, including a new confirmed-purchase presentation
+blocker found during fresh setup.
+
+The [park-exit deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md)
+qualifies the normal original exit after month rollover and the final-source
+fault/reconciliation/retry path, with all 97 probes verified armed through the
+held states. It preserves committed scene heads and original queued inputs;
+the older held exit and a separate return-to-park failure remain retained.
+It also records the uploaded Library files missed by the Pages listing and the
+verified relocation of inactive test outputs that admitted the final native case.
+
+The [visitor-gate and month-rollover continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md)
+adds 32 ordinary time advances with the 97 probes armed and source-bound
+attendance/actor predicates. It records a new park-exit observer-budget failure,
+an authoritative queued input absent from the outer error trace, and retained
+read-only recovery. BUS.ACT/PEOPLE.ACT and all 97/13 cases remain open.
+[GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31)
+proposes durable selective probes and strengthens the bundled skill guidance.
+
+The [park preparation and standing-probe follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md)
+qualifies hiring, food, park entry and three advances after correcting legacy
+settling waits. All 97 unresolved probes are verified armed in the retained live
+park. The PC union remains 47/201; all 13 asset candidates remain open. It also
+records Borland object-module retention evidence, the failed Guide attempt,
+private inventory-reply/routing friction and the explicit CACHE reserve decision.
+
+The [fence deadline and recovery follow-up](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md)
+replaces fixed fence sleeps with retained phases and native commit evidence,
+adds pre-observation shared deadlines and a reusable deadline intersection,
+and corrects observer allowance renewal. Two original-game runs qualify the first
+fence slice; repeated read-only reconciliation preserves the first provider.
+The additional registered-observer scene policy passes the original Employment
+transition through 479 passive stops while retaining full evidence off-reply.
+It distinguishes the remaining caller,
+producer-domain, configuration and coverage gaps from unfinished body decoding.
+Raw inputs and live contexts remain private.
+
+The [land purchase recovery follow-up](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
+qualifies the original first plot and two read-only reconciliation attempts,
+separates draft from committed allocation, and excludes cursor regions from
+land predicates. Its same-guest tracing adds 14 caller snapshots and 440 matching
+read prefixes; a separate retained-code pass normalizes 54 filename origins
+using `PUSH CS; CALL rel16`. All 97 unresolved entries and 13 asset candidates
+remain open. A later instrumented fence timeout killed the worker through the
+transport failure path; the fence outcome remains unknown. The report records
+the observer deadline widening, process-lifetime limits and next changes.
+
+The [Employment recovery follow-up](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
+qualifies bounded business entry and original-action read-only reconciliation,
+including repeated witness failures. Its same-guest batch covers all eight
+locations and adds three indirect-call witnesses, bringing the inventory PC
+union to 47/201. All 97 unresolved entries and 13 asset candidates remain open;
+the separately guarded startup prefix is partial. The report also records the
+land setup failure, resource-fixture mismatch, request-schema/exit-code errors,
+long legacy actions and GitLab integration conflicts.
+
+The [Coelophysis purchase follow-up](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+replaces fixed purchase sleeps in Z with bounded original-input phases, retains
+the paused provider and order receipts, and exposes a guarded continuation plus
+read-only purchase reconciliation. It also continues the remaining entry and
+asset investigation without equating an unobserved path with unused content.
+
+The [DinoMart reconciliation follow-up](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+extends the scene host budget, retains failed-navigation input evidence and
+qualifies read-only recovery in the same original guest. It continues the
+97-entry/13-asset ledgers, fixes batch certificate durability and records a
+separate unreplayed purchase transport timeout. Reusable investigation guidance
+is proposed independently in [PR #80](https://github.com/seeker-cyber-maker/fDisBull/pull/80).
+
+The [caller/filename-producer follow-up](VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md)
+traces 62 more entries to pointer publications, identifies matching dispatch
+consumers for 61 of them, and explains the static mechanisms behind all 41
+previously observed PCs. It retains 97 unresolved caller/producer cases and
+the remaining asset-use limits rather than treating them as dead content.
+
+The [residual-analysis follow-up](VERIFICATION-DINOPARK-RESIDUAL-ANALYSIS-2026-10-31.md)
+implements call-identity and monotone-join fixes, clears all 172 partial jobs,
+and records original-native witnesses and callback publications for 42 of the
+201 entry hypotheses. It also revisits all 13 resource candidates with Luna.
+
+The [October 31 content-accounting follow-up](VERIFICATION-DINOPARK-CONTENT-ACCOUNTING-2026-10-31.md)
+closes the file/format and physical-byte inventory, adds a native sound-expander
+comparison and diagnoses the original demo's early stop. Its later measurements
+retain the distinction between byte accounting and complete semantic analysis.
+
 This records observed analysis limits and proposed follow-ups from a private
 DinoPark MZ investigation on 2026-10-30, followed by bounded native asset tracing.
 The PR now also implements [oversized Z reply recovery](Z_REPLY_RECOVERY.md):
 the original result is retained before transmission and can be retrieved without
-repeating an input. The static-analysis and remaining observer/menu proposals
-stay prospective. No original routine or resource is certified unused.
+repeating an input. Other analysis and observer/menu proposals remain
+prospective. No original routine or resource is certified unused.
 
 The investigation used source version **0.26.1**, pinned at
 `43d24a73d744516653d53d3bc8828787c499d299`, with the source import path set
@@ -264,3 +356,14 @@ The [named-action native batch](VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-3
 passed through the public Player in one guest. It also records the existing
 pre-entry operating-report refusal and unsupported modal checkpoint creation
 as concrete follow-ups, without upgrading either to unknown game effects.
+
+### Resumed unused-content investigation
+
+The [subsequent producer and runtime study](VERIFICATION-DINOPARK-UNUSED-CONTENT-2026-10-30.md)
+accounts for filename sources for 54 of 57 ACT files, distinguishes a selective
+sprite reader from full actor loading, and retains BUS/OFFICE/PEOPLE as open
+producer gaps. A muted original-game route completed setup and 24 time advances.
+The candidate visitor-message binding remains unqualified, and an optional
+quit extension exposed a private controller assumption about accepted modal
+results. The record preserves that limitation separately from native gameplay
+and cleanup, along with concrete resource-telemetry follow-ups.

@@ -1,0 +1,3 @@
+next_pc = 8716;
+acc_out = (stack_top_in == acc_in);
+prev_out = acc_in;

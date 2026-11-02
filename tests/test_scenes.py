@@ -242,6 +242,34 @@ def test_real_availability_collisions_revision_history_and_stop(
             p.debug_save_scene("test", bad, parent=second["id"])
 
 
+def test_real_failed_destination_wait_keeps_input_receipt_after_restart(
+    mouse_game, emulator
+):
+    path, binary = mouse_game
+    with Project(path) as p, p.debugger(emulator, binary.parent) as d:
+        d.run(guest_ms=100, timeout_ms=3000, fast_forward=True)
+        doc = definition(d.screenshot())
+        doc["objects"][0].update(outcome={"constant": False}, guest_ms=100)
+        saved = p.debug_save_scene("held-input", doc)
+        with pytest.raises(SceneError) as held:
+            d.scene_click(saved["id"], "test.button")
+        result = held.value.result
+        assert result["status"] == "timeout" and result["input"]["accepted"] is True
+        assert result["input"]["delivery"] == "queued" and result["before_observation"]
+        assert result["action_name"] == "test.button"
+        observation = result["observation"]
+        d.screenshot("after-held-input.png", hooks=False)
+    with Project(path) as restarted:
+        stored = restarted.debug_scene_observation(observation)["result"]
+        assert stored["input"] == result["input"]
+        assert (
+            restarted.debug_scene_observation(stored["before_observation"])["result"][
+                "status"
+            ]
+            == "matched"
+        )
+
+
 def test_real_wait_initial_timeout_and_missing_capture(mouse_game, emulator):
     path, binary = mouse_game
     with Project(path) as p, p.debugger(emulator, binary.parent) as d:
@@ -316,9 +344,16 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/runtime-navigation.md",
         "references/proofs.md",
         "references/workflows.md",
+        "references/analysis-approach.md",
         "references/udl-uil-udc.md",
+        "references/common-uil.md",
+        "references/agi-scenes.md",
         "references/recovery-research.md",
         "references/semantic-contracts.md",
+        "references/scene-recovery.md",
+        "references/reconstruction.md",
+        "references/source-and-concepts.md",
+        "references/sweding.md",
         "references/formats-and-media.md",
         "references/media-modules.md",
         "references/binary-claim-verification.md",

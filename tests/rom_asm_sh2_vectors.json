@@ -1,0 +1,28 @@
+{
+  "source": "Renesas, SH-1/SH-2/SH-DSP Software Manual, instruction descriptions and instruction code table: https://www.renesas.com/en/document/mah/sh-1sh-2sh-dsp-software-manual",
+  "base_address": 100728832,
+  "cases": [
+    {"name":"mov_signed_imm", "hex":"e0ff", "mnemonic":"mov", "operands":"#-1,r0", "formula":"1110 nnnn iiii iiii; sign-extend imm8 0xff"},
+    {"name":"add_imm", "hex":"7001", "mnemonic":"add", "operands":"#1,r0", "formula":"0111 nnnn iiii iiii; sign-extend imm8 1"},
+    {"name":"bra_forward", "hex":"a001", "mnemonic":"bra", "operands":"100728838", "formula":"1010 dddd dddd dddd; instruction address + 4 + sign_extend(disp12)*2"},
+    {"name":"bra_backward", "hex":"affe", "mnemonic":"bra", "operands":"100728832", "formula":"1010 dddd dddd dddd; instruction address + 4 + sign_extend(0xffe)*2"},
+    {"name":"mov_l_aligned_pc", "hex":"d001", "mnemonic":"mov.l", "operands":"100728840,r0", "formula":"1101 nnnn dddd dddd; ((instruction address + 4) & ~3) + disp8*4"},
+    {"name":"mov_l_unaligned_pc", "address":100728834, "hex":"d001", "mnemonic":"mov.l", "operands":"100728840,r0", "formula":"1101 nnnn dddd dddd; ((instruction address + 4) & ~3) + disp8*4"},
+    {"name":"mov_w_pc", "hex":"9001", "mnemonic":"mov.w", "operands":"100728838,r0", "formula":"1001 nnnn dddd dddd; instruction address + 4 + disp8*2"},
+    {"name":"stc_sr", "hex":"0002", "mnemonic":"stc", "operands":"sr,r0", "formula":"0000 nnnn 0000 0010; SR to Rn"},
+    {"name":"ldc_sr", "hex":"400e", "mnemonic":"ldc", "operands":"r0,sr", "formula":"0100 mmmm 0000 1110; Rm to SR"},
+    {"name":"mov_indirect", "hex":"6012", "mnemonic":"mov.l", "operands":"@r1,r0", "formula":"0110 nnnn mmmm 0010; n=0,m=1; long indirect load"},
+    {"name":"mov_store_indirect", "hex":"2012", "mnemonic":"mov.l", "operands":"r1,@r0", "formula":"0010 nnnn mmmm 0010; n=0,m=1; long indirect store"},
+    {"name":"mov_predecrement", "hex":"2f16", "mnemonic":"mov.l", "operands":"r1,@-r15", "formula":"0010 nnnn mmmm 0110; n=15,m=1; long predecrement store"},
+    {"name":"mov_postincrement", "hex":"61f6", "mnemonic":"mov.l", "operands":"@r15+,r1", "formula":"0110 nnnn mmmm 0110; n=1,m=15; long postincrement load"},
+    {"name":"sts_pr_predecrement", "hex":"4f22", "mnemonic":"sts.l", "operands":"pr,@-r15", "formula":"0100 nnnn 0010 0010; n=15; PR predecrement store"},
+    {"name":"lds_pr_postincrement", "hex":"4f26", "mnemonic":"lds.l", "operands":"@r15+,pr", "formula":"0100 mmmm 0010 0110; m=15; PR postincrement load"},
+    {"name":"mov_indexed", "hex":"006e", "mnemonic":"mov.l", "operands":"@(r0,r6),r0", "formula":"0000 nnnn mmmm 1110; n=0,m=6; long R0-indexed load"},
+    {"name":"mov_displacement", "hex":"5213", "mnemonic":"mov.l", "operands":"@(12,r1),r2", "formula":"0101 nnnn mmmm dddd; n=2,m=1,d=3; displacement scaled by 4"},
+    {"name":"rts", "hex":"000b", "mnemonic":"rts", "operands":"", "formula":"0000 0000 0000 1011; delayed return"},
+    {"name":"nop", "hex":"0009", "mnemonic":"nop", "operands":"", "formula":"0000 0000 0000 1001; no operation"},
+    {"name":"invalid_sh2_fpu", "hex":"f000", "mnemonic":null, "operands":null, "formula":"1111 encoding belongs to later FPU extensions, not SH-2"},
+    {"name":"invalid_word", "hex":"ffff", "mnemonic":null, "operands":null, "formula":"reserved on SH-2"},
+    {"name":"truncated_word", "hex":"e0", "mnemonic":null, "operands":null, "formula":"SH-2 instructions occupy two bytes"}
+  ]
+}

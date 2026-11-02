@@ -1,0 +1,33 @@
+{
+  "format": "fdisbull-shadowrun-extended-integration-1",
+  "status": "bounded_public_cli_and_stored_state_checks_passed",
+  "source_files_sha256": {
+    "src/fdisbull/shadowrun_ai.py": "bc81ad5b50060913b650a3289f62264d5e8da58e959b5e296dd0a292d9c15438",
+    "src/fdisbull/cli.py": "db008b8c571da27970fee4a722f0ac691c6502e8f2c20bdc2e71754033363947",
+    "tests/test_shadowrun_ai_api.py": "81029da23e2b6c513c48df6c024954d8e33e0d616407a50c770194ebea6514c1",
+    "docs/SHADOWRUN_MACOS_EXTENDED.md": "c24df95d3bb9cdda20e1774c061967a58de66e0f2348d2a3bc7a5147107a3f3b"
+  },
+  "cli_output_sha256": "671c84df48826f6c08ae9b490c4a16be196bde7c0a23c79dee7468d8da0b810b",
+  "private_integration_sha256": "e8f572ae22126e657943b69da3e9304506f613b0d36f89f7e510bbf11b566182",
+  "profile": "captured-courtyard",
+  "target": "macos-arm64",
+  "preset_default": "courtyard",
+  "completed_courtyard_updates": 451,
+  "source_final_frame": 6450,
+  "player_hp": 10,
+  "final_source_position_matches": true,
+  "menu_cases": {
+    "main_menu_zero_arena_ticks": "passed",
+    "archetype_menu_zero_arena_ticks": "passed",
+    "initializer_boundary_zero_arena_ticks": "passed",
+    "arena_input_without_explicit_entry": "refused",
+    "explicit_prepared_entry_then_directional_route": "passed"
+  },
+  "viewport_sha256": "603b1ce61da3579784eeb3c2657c982a8f44396b3a195b86fdcf8b1306955b7c",
+  "focused_public_api_tests_passed": 8,
+  "limits": [
+    "Stored-state app rendering and public CLI were run, not a live keyboard replay.",
+    "Source archetype initialization and Load Game are boundaries.",
+    "Captured courtyard is a prepared entry and directional actor profile, not full-story boot or complete combat."
+  ]
+}

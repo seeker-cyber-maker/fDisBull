@@ -13,15 +13,47 @@ separate analysis, legacy migration and remaining export limits. Semantic
 UIL/game representations are permitted pending sanitation, without embedded
 original files. Hash equality is byte identity, not publisher authenticity.
 
+For recovery, translation or a backing swap, retrieve
+`agent-skill --reference references/reconstruction.md`. It provides a first-use
+recipe, a runnable counterexample exercise and separate original/UIL/target
+acceptance gates. It requires no earlier conversation or project history.
+
+For array/loop state and browser graphics/input, see
+[bounded-memory browser reconstruction](UDC_MEMORY_BROWSER.md). Its strict
+memory UIL and selected per-function Wasm/WebGPU backings are separate from the
+scalar food profile. The Snake study checks original instructions, real input,
+complete rasters and guarded state commits; finite comparisons are scoped in
+its receipt.
+
+For a native macOS ARM64 window over the same memory UIL, see
+[native memory reconstruction](UDC_MEMORY_MACOS.md). The native compiler and
+AppKit adapters have separate execution and input/view qualification gates;
+source selection target metadata remains provenance.
+
+For Windows x86/Win64 and Linux x86-64/X11 shells over that same memory UIL, see
+[native desktop reconstruction](UDC_MEMORY_DESKTOP.md). Source emission,
+compilation, immutable artifact admission and native input/view qualification
+are separate gates; Wine execution does not qualify Microsoft Windows itself.
+
+For a genuine Win16 NE shell, see [segmented memory reconstruction](UDC_MEMORY_WIN16.md).
+It retains the same logical u32 arena, cuts and selectable RNG regions through
+paged storage, C89 blocks, native far-buffer file transfer and streamed GDI/RGBA.
+Use its explicit emit/compile/seal route and qualify source, artifact, native
+boundary and original/composed behavior separately. A supported Wine 11 route
+does not establish original Windows 3.x or whole-game compatibility.
+
 ## Discover commands and bundled skills
 
-For repository CI, first read [CI coordination](CI_COORDINATION.md). One named
-owner refreshes a shared, dated status receipt at most every five minutes;
-other agents read the receipt instead of polling GitHub separately. The finite
-`scripts/ci_status.py` helper defaults to cache-only operation.
+For repository CI and dual-mirror updates (Local Git + GitLab), first read
+[CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
+keep local Git and GitLab (`brewster-jennings-group/fdisbull`) synchronized,
+and use `scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull`
+in cache-only mode by default.
 
 ```text
 fdisbull --version
+fdisbull capabilities
+fdisbull macos-snapshot com.example.authorized-app
 fdisbull methods
 fdisbull agent-skill --list
 fdisbull agent-skill --index
@@ -30,7 +62,21 @@ fdisbull agent-skill --skill write-gamefaqs-guide --index
 fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
-`methods` prints the JSON method names and their parameter summaries.
+`capabilities` reports the imported copy's bounded analysis, debugger, C and
+UIL support, provider hashes and dependency detection without launching tools
+or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+before treating dependency presence as working support. `doctor` is a separate
+explicit runtime acceptance test. `methods` prints the JSON method names and
+their parameter summaries; some language operations are CLI-only and appear
+in the capability report with `cli:` interface names.
+
+On macOS 14+, `macos-snapshot` observes running-app, accessibility and display
+state without input or permission prompts. `macos-session` records a private
+capture journal; `--live` explicitly enables declared menu/preference actions.
+Select a display and CoreGraphics global logical rectangle from the snapshot,
+including negative origins. Read [reversible native capture](MACOS_REVERSIBLE_CAPTURE.md)
+before a live operation or `macos-session-recover`. Never reopen an unrelated
+app or treat failed capture as permission to repeat an uncertain action.
 `agent-skill --list` returns the small skill catalogue. Use `--skill` to select
 one, then `--index` to list its references and their purposes without fetching
 their text. Choose a reference and retrieve it with `--reference`.
@@ -43,12 +89,15 @@ It reads no project and does not register or install a skill into an agent's
 own discovery directory. Fetch a single resource when needed:
 
 ```text
+fdisbull agent-skill --reference references/analysis-approach.md
 fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
+fdisbull agent-skill --reference references/common-uil.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/scene-recovery.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/routes-and-discoveries.md
@@ -70,8 +119,20 @@ request cannot keep a live emulator attached.
 The full skill may exceed the inline response budget and return an output
 artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
+The analysis-approach guide helps choose what to investigate next, including
+actor, item, interaction and text-projection dependencies.
+For the preserved Genesis-to-NES research and its native ARM64 successor, see
+[the handoff](GENESIS_NES_RESEARCH_HANDOFF.md) and
+[native Shadowrun output](SHADOWRUN_MACOS_ARM64.md). Select
+`shadowrun-ai-build --target macos-arm64` for the same bounded model on a Mac.
+For the separately recovered SNES opening-scene movement study, see
+[SNES native transfer](SHADOWRUN_SNES_MACOS.md). Its `shadowrun-snes-build`
+command uses the exact caller-owned SNES ROM, WRAM and save-RAM capture; it is
+a prepared source-specific profile, not a whole-ROM conversion command.
 The semantic-contract guide connects intent, effects, time and projection loss;
-the formats/media guide covers input mapping and qualified media reduction.
+the scene-recovery guide starts UIL extraction from required scene elements and
+bounded source dependencies. The formats/media guide covers input mapping and
+qualified media reduction.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
 human-readable review, route or mechanics reference. Cover recovered unused code,
@@ -112,10 +173,52 @@ budgets and failed-run diagnostics.
 
 ## Choose a route
 
+### Intake a collection or a single addition
+
+Use [collection intake](TARGET_COLLECTION_INTAKE.md) for the common per-artifact
+workflow, source/member identities, unsupported formats and version decisions.
+Inventory the batch before choosing programs, preserve learner/oracle separation,
+and compare extracted hashes with the current private roster. An exact repeat
+adds provenance rather than another program copy. A different release gets its
+own original artifact before any snippet/layer relationship is proposed.
+
+Identification, extraction, image loading, bounded analysis and native execution
+are separate observations. Use a qualified archive/filesystem reader outside the
+tool where needed; inspect the installed commands before assuming support.
+Unknown formats remain catalogued inputs with an explicit capability gap.
+The bundled `references/formats-and-media.md` carries the portable summary.
+
+### Compose a new program from recovered or authored blocks
+
+Use [the common indexed UIL contract](COMMON_UIL_CONTRACT.md) for the additive
+`uil-*` methods. UIL references typed zero-based variable/constant slots;
+presentation binds values/resources and orchestration selects exact catalog
+implementations through owned call shims. The initial single-instruction
+fallback admits decoded register MOV/INC/ADD/ADC, not arbitrary native execution.
+Recoverable groups retain their children; a group label alone grants no semantic
+or execution authority. [Conformance](COMMON_UIL_CONFORMANCE.md) demonstrates
+mixed-source reconstruction, food arithmetic and Snake memory-model migration.
+Run generated code and qualify original/source correspondence separately.
+
+For [native common UIL](COMMON_UIL_NATIVE.md), `uil-link` resolves exact module
+versions/types/ABI and nested providers before `uil-compile` builds a selected
+macOS ARM64, Linux x86-64 or Win64 realization. `uil-components` describes finite
+cascaded choices. Use `--source-only` for another prepared environment, then
+`uil-build` or `uil-seal`; media services remain planned effects. Register-copy
+pruning retains source children, logical slots and step charges.
+
 ### Inspect an executable without running it
+
+When source is available, use the separate [source catalog](SOURCE_CONCEPT_SEARCH.md)
+and `source-*` JSON methods to retain revisions and search across editions.
+The bundled `references/source-and-concepts.md` gives the portable workflow.
+Source names, spelling occurrences and similarity do not automatically become
+native symbols, resolved variables or equivalent code.
 
 ```text
 fdisbull identify /path/to/program
+fdisbull rom-inspect /path/to/console-cartridge-or-sega-data-track
+fdisbull disc-inspect /path/to/disc.cue
 fdisbull inspect /path/to/program
 fdisbull import /path/to/program /path/to/analysis.fdb
 fdisbull analyze /path/to/analysis.fdb --max-instructions 10000
@@ -128,6 +231,22 @@ For DOS COM files, select `--image com` explicitly when importing. A suffix
 alone does not establish the file format. Analysis limits may leave work
 pending; inspect status and do not call a budget stop complete. `render` exports
 from saved project state without operating a GUI.
+
+For a macOS ARM64 executable, select the `arm64` Mach-O slice explicitly and
+keep the FDB and original file private. The 0.29.0 candidate includes exact ARM64
+`code-backings`, source-bound `ghidra-arm64` instruction/C diagnostics and a
+one-stop `macos-observe` LLDB launch. Read
+[macOS ARM64 analysis](MACOS_ARM64_ANALYSIS.md) for commands, source hashes,
+static/runtime address separation and the still-unimplemented app-level UIL
+export.
+
+Miles AIL 2 driver libraries (often `.ADV`) are recognized by validated bytes
+and expose named exports and a bounded descriptor candidate. They import
+automatically or with `--image ail`; addresses remain module-relative and no
+runtime driver is installed. Use `dos-services --vector 0x66 --ax 0x688` to
+describe a DIGPAK call, or `--ax 0x702` for MIDPAK. Stored DOS disassembly uses
+the same names when AX is known, retaining unverified-handler and unknown-outcome
+qualifications. See [DOS audio drivers](DOS_AUDIO_DRIVERS.md).
 
 ### Observe a real DOS target
 
@@ -258,6 +377,27 @@ data, so they must remain private. See [Zork IR](ZORK_UIL.md) and
 interrupted-effect uncertainty; the CLI preserves the prior successful
 checkpoint. A transcript-write failure is a separate delivery failure.
 
+### Recover named Zork scenes and direct rules
+
+```text
+fdisbull zork-scenes /private/ZORK1.DAT \
+  --intents /private/zork.intents.json.gz \
+  --output /private/zork.scenes.json.gz \
+  --uil /private/zork.scene-rules.json \
+  --dispatch /private/zork.rule-links.json \
+  --udl /private/zork.scene-definitions.json.gz
+fdisbull-player --scenes /private/zork.scenes.json.gz \
+  --checkpoint /private/zork.scene-progress.json
+```
+
+This retains the supplied intent/IR package and adds executable, address-free
+scene rules plus direct named-handler links. Conditions and doors are read live;
+the source's packed target values are resolved during production. The compatibility
+adapter skips admitted selector operations and on-foot relocation instructions.
+Changed or unqualified source dependencies use an explicit residual path.
+The scene checkpoint binds the full new package. See [the scene contract](ZORK_SCENES.md)
+for actual effect boundaries, unresolved handler bodies and source-qualified scope.
+
 ### Inspect interpreted game data
 
 For a checksum-qualified raw Z-machine v3 story, including the supplied Zork I
@@ -290,6 +430,134 @@ loaded or executed those bytes. To claim runtime behavior, qualify the resource
 mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
+For direct guest inputs, `fdisbull decoder-modules` lists the explicitly
+registered AGI and Z-machine front ends. `module-analyze` reads their source
+instructions without a native project; `module-lift` provides the first narrow
+AGI state projection into shared UDL/UIL. See [decoder modules](DECODER_MODULES.md)
+for commands, source identities, required state witnesses and unsupported cases.
+Choose the actual guest language before spending effort on the interpreter's
+ASM; qualify runtime effects separately.
+
+For an original-game route and reusable scene example, see the
+[KQ1 bridge-corner investigation](AGI_BRIDGE_CLIP.md). Its fresh-game collector,
+source-linked predicate observation and separate scene exporter have distinct
+checks. The companion collision scanner proposes bounded static candidates;
+it does not certify safe movement or glitches.
+The [mushroom-island follow-up](AGI_MUSHROOM_CROSSING.md) combines a qualified
+crossing with a normal parser command and separate native score/inventory
+observations, then exports the observed route to the shared Z player.
+The [leprechaun-cave follow-up](AGI_LEPRECHAUN_ROUTE.md) adds preparation,
+range-sensitive parser input, the original shield writes and handler return,
+and the game's shrink/regrowth sequence. Its exporter requires complete
+observations and exposes the carried inventory in the separate player.
+The [gnome/key and chest segment](AGI_GNOME_GIANT_ROUTE.md) adds a reusable
+native-checkpoint continuation, an explicit origin receipt and eight guarded
+text actions. Keep the prepared checkpoint, full single-session observations,
+source-bound writes/returns and player verification as separate gates. A
+scratch variable can be stale: the chest example observes the original
+distance operation inside the command before continuing its effects.
+The [dragon and mirror route](AGI_DRAGON_MIRROR_ROUTE.md) qualifies eight
+fresh-game actions through a safe surface return. It adds source-bound water
+consumption and mirror pickup, pretyped input with guarded movement, and a
+coast-tolerant exit corridor. End short handler traces before blocking dialogue
+and observe later score effects separately. A physical priority-plane flag is
+not a story-state label: the underwater example binds actual PIC52 baseline
+classes, swimming state and carried water. Its separate Z scene checks all
+44 modeled native fields plus phase; original-game timing remains outside it.
+The [boundary follow-up](AGI_BOUNDARY_EXCEPTIONS.md) derives thin complement
+bands from paired AGI position predicates. Keep source candidates, picture
+clearance and native reachability separate. Independent checkpoint forks
+confirm the dragon rule at rows 166/167; other points remain unqualified.
+For off-screen objects and scrolling margins, use the
+[coordinate-domain audit](SCENE_COORDINATE_DOMAINS.md). Store its descriptor
+with the scene/map, then call `debug-scene-domain-audit` or
+`debug-spatial-domain-audit`. Expected mechanisms retain layout notices and
+never grant movement or teleport authority.
+The [bottom-row bridge follow-up](AGI_BRIDGE_BOTTOM.md) shows a complete bounded
+source-candidate → ordinary-input witness → standalone scene workflow, including
+expected border/room-initialization stages and the one-row-higher control.
+Use the [shared controller and receipt helpers](BOUNDED_NATIVE_SCENES.md) when
+authoring another native investigation. Keep the source-specific state/stop
+policy in the adapter; routine saved scripts continue to use their existing API.
+For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
+keeps visible key highlights, inferred directions and unknown dispatch separate.
+Qualify those proposed actions in the original game before using them as evidence.
+
+### Compare console instruction proposals
+
+Use `rom-inspect` / `disc-inspect` for container facts first. When a payload's
+load mapping has independent evidence, `rom-disasm` can decode a bounded SH-2
+range with Capstone, Ghidra or saturn-recomp. Supply the address mapping file
+offset zero; keep extracted files and returned instruction bytes private.
+`--mode word-scan` tests aligned words independently, including data hypotheses.
+Neither mode discovers executable code or updates a native project. See
+[ROM-to-ASM](ROM_ASM.md) for external engine setup, the shared output contract,
+the Civilization Saturn comparison and the known Capstone CPU-profile issue.
+
+### Generate a bounded native console cartridge
+
+`console-udc-targets` lists the common NES/Genesis UIL profile. Compile an
+authored script with `console-udc script.uil.json --target nes --output
+/private/new-cartridge --display-variable '$x'`; change only `--target genesis`
+for a Genesis cartridge. Outputs must be new directories outside Git.
+Both modules emit native CPU and console startup code. See
+[console UDC](CONSOLE_UDC.md) for the supported arithmetic/condition subset,
+workload limits and real emulator results, including a bounded Genesis ROM →
+UIL → NES test. This does not automatically recover a commercial game's UIL.
+
+For the reviewed full Miniplanets profile, `rom-game-lift ORIGINAL_ROM --output
+/private/new-uil` exports procedural game/audio UIL. `console-udc
+/private/new-uil/program.uil.json --target nes --region ORIGINAL_ROM
+--cc65-root /private/tools/cc65 --output /private/new-game` compiles the same
+rules into a banked NES cartridge. See the [full-game contract and measured
+qualification](MINIPLANETS_FULL_GAME.md); original data remains external and
+this source-bound profile is separate from arbitrary ROM decompilation.
+For a locked game/audio/presentation/PSG export with repeatable native builds,
+use `genesis-replay-export ORIGINAL_ROM --target nes --cc65-root TOOLS --output
+/private/new-bundle`. Select `--target genesis --m68k-root TOOLS` to compile
+the full procedural game back to Genesis. `genesis-replay-source` reports
+whether an intake has a reviewed semantic profile; parsing alone is insufficient.
+See [Genesis UIL replay](GENESIS_UIL_REPLAY.md) for build/replay commands,
+tool trust and the target-specific validation limits.
+
+For a post-compilation two-game NES cartridge, discover
+`nes-multicart-profiles` and inspect candidates with
+`nes-multicart-inspect CARTRIDGE`. Use `nes-multicart-build GAME1 GAME2
+--authored-compatible --output /private/new-multicart` only for authored
+NROM games satisfying the declared mapper restrictions. The flag asserts
+behavioral compatibility that a header cannot establish. The
+[multicart contract and native checks](NES_MULTICART.md) describe the menu,
+bank switching, input handoff and tested emulator reset behavior.
+
+For a complete resource census and scene-element outline of a qualified DOS
+AGI 2.917 resource directory:
+
+```text
+fdisbull agi-scenes /private/game --profile 2.917 --stage outline
+fdisbull agi-scenes /private/game --profile 2.917 --stage resolve
+```
+
+The second stage adds conservative local value resolution. Use `--include-ir`
+and `--include-text` for private source investigation. It retains every LOGIC
+as low-level IR or an opaque source obligation; it is not an executable game
+model. Read [AGI scene census](AGI_SCENE_CENSUS.md) and the bundled
+`references/agi-scenes.md` before interpreting its coverage counts.
+
+For the separately qualified KQ1 initial-audience bow:
+
+```text
+fdisbull kq1-bow-intents /private/kq1 --output /private/bow.package.json.gz
+fdisbull kq1-bow-evaluate /private/bow.package.json.gz --state-file /private/before-bow.json
+```
+
+The second command executes named UIL rules and bound engine requests against
+a declared state. It does not operate a guest or supply animation timing.
+Follow [the interaction contract](KQ1_BOW_INTENT.md) for state qualification,
+completion events and explicit modal acknowledgements, and read
+[verification](VERIFICATION-KQ1-BOW-2026-10-30.md) for the distinction between
+source comparisons and selected native observations. Unknown contexts return
+`unrecovered`; the complete census remains low-level IR.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using
@@ -301,6 +569,16 @@ register boundary and assumptions. Read `docs/UDC_DOS.md`,
 limits.
 
 ## Keep results within their evidence
+
+For one pure selected byte/word block, `build-web-block` emits guarded Wasm or
+WGSL under the same module UIL. Read [Web UDC profiles](UDC_WEB.md) for target
+names, host ABI and original-backed CivD qualification. Browser/GPU availability
+and application state commits need separate checks.
+
+`build-web-shell` adds an explicit typed record arena and orchestration plan over
+two interchangeable selected blocks. Read [the browser shell](UDC_BROWSER_SHELL.md)
+before binding async results to application state; computation readiness is not
+a commit, and cancellation does not release a submitted GPU job early.
 
 Static decode, authored scene geometry, diagnostic state edits, text
 projections, bounded proofs and live ordinary input are different evidence

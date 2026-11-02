@@ -29,6 +29,48 @@ def _union(spans):
     return merged
 
 
+def _arm_macho_source(project, version):
+    """Identify the selected ARM64 slice in the retained file byte version."""
+    from .macho_slices import macho_slices
+
+    selection = project.meta['loader_metadata'].get('macho_slice')
+    row = project.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',
+                             (version,)).fetchone()
+    if not isinstance(selection, dict) or row is None or row[0] is None:
+        raise ValueError('ARM64 Mach-O backings require retained source bytes and slice identity')
+    source_bytes = bytes(row[0])
+    slices = macho_slices(source_bytes)
+    matches = [item for item in slices if item['index'] == selection.get('slice_index')
+               and item['offset'] == selection.get('slice_offset')
+               and item['size'] == selection.get('slice_size')
+               and item['selector'] == 'arm64' and item['bits'] == 64]
+    if len(matches) != 1:
+        raise ValueError('selected ARM64 Mach-O slice differs from retained source bytes')
+    selected = matches[0]
+    identity = {'index': selected['index'], 'offset': selected['offset'],
+                'size': selected['size'], 'selector': 'arm64',
+                'sha256': hashlib.sha256(source_bytes[selected['offset']:selected['end_exclusive']]).hexdigest()}
+    return identity, source_bytes, project._document(version).get('file_mappings', [])
+
+
+def _arm_file_offset(address, raw, slice_identity, source_bytes, mappings):
+    """Reject unmapped or ambiguous native bytes instead of guessing file offsets."""
+    candidates = []
+    for mapping in mappings:
+        va, offset, size = (mapping.get(key) for key in
+                            ('virtual_address', 'file_offset', 'file_size'))
+        if all(type(value) is int for value in (va, offset, size)) and size >= len(raw) \
+                and va <= address and address + len(raw) <= va + size:
+            candidates.append(offset + address - va)
+    if len(candidates) != 1:
+        raise ValueError('ARM64 instruction needs one exact file mapping')
+    offset = candidates[0]
+    start, end = slice_identity['offset'], slice_identity['offset'] + slice_identity['size']
+    if not start <= offset or offset + len(raw) > end or source_bytes[offset:offset + len(raw)] != raw:
+        raise ValueError('ARM64 instruction differs from selected Mach-O file bytes')
+    return offset
+
+
 def materialize_code_backing(backing):
     """Return complete local bytes without consulting any sibling's storage."""
     if not isinstance(backing, dict):
@@ -42,13 +84,28 @@ def materialize_code_backing(backing):
         bits = backing['bits']
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError('invalid backing encoding') from error
-    if (backing.get('isa') != 'x86' or type(bits) is not int or bits not in (16, 32)
-            or type(size) is not int or not 1 <= size <= 15 or len(raw) != size
+    isa = backing.get('isa')
+    if (type(bits) is not int or type(size) is not int or len(raw) != size
             or hashlib.sha256(raw).hexdigest() != backing.get('sha256')):
         raise ValueError('invalid or incomplete backing encoding')
-    instruction = ix.Decoder(bits, raw).decode()
-    if instruction.is_invalid or instruction.len != len(raw):
-        raise ValueError('backing must contain exactly one complete instruction')
+    if isa == 'x86' and bits in (16, 32) and 1 <= size <= 15:
+        instruction = ix.Decoder(bits, raw).decode()
+        if instruction.is_invalid or instruction.len != len(raw):
+            raise ValueError('backing must contain exactly one complete instruction')
+    elif isa == 'arm64' and bits == 64 and size == 4:
+        from .decoder import decode
+        try:
+            address = int(backing['address'], 16)
+            native = decode(raw, address, 'arm64', 64)
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError('invalid ARM64 backing address') from error
+        if (native is None or native['size'] != 4 or native['bytes'] != backing['bytes']
+                or any(native[field] != backing['instruction'][field]
+                       for field in ('size', 'mnemonic', 'operands'))
+                or native['flow'] != backing.get('flow')):
+            raise ValueError('backing must contain exactly one complete native ARM64 instruction')
+    else:
+        raise ValueError('invalid or incomplete backing encoding')
     return raw
 
 
@@ -71,12 +128,24 @@ def validate_source(project, document, *, version=None):
                 or project.arch != source.get('arch') or project.bits != source.get('bits')
                 or project.digest(project.regions(selected['id'])) != selected['sha256']):
             raise ValueError('code backings are stale for the selected source version')
+        arm_source = None
+        if project.arch == 'arm64' and project.meta['format'] == 'Mach-O':
+            arm_source = _arm_macho_source(project, selected['id'])
+            slice_identity, source_bytes, mappings = arm_source
+            if (source.get('file_sha256') != hashlib.sha256(source_bytes).hexdigest()
+                    or source.get('slice') != slice_identity):
+                raise ValueError('code backings are stale for the selected Mach-O slice')
         for block in document['blocks']:
             raw = materialize_code_backing(block)
             address = int(block['address'], 16)
             region = project._mapping(selected['id'], address)
             if region is None or region.data[address-region.start:address-region.start+len(raw)] != raw:
                 raise ValueError('backing bytes differ from their source occurrence')
+            if arm_source is not None:
+                file_offset = _arm_file_offset(address, raw, slice_identity, source_bytes, mappings)
+                if (block['provenance'].get('file_offset') != file_offset
+                        or block['provenance'].get('slice_relative_offset') != file_offset - slice_identity['offset']):
+                    raise ValueError('ARM64 backing file offset differs from source occurrence')
         # A public content digest is not an authentication token. Re-query the
         # selected entries rather than accepting a caller's relabeling of a
         # budget-incomplete capture or an altered set of instruction edges.
@@ -108,8 +177,10 @@ class CodeBackingsMixin:
         are not recursively captured or silently assumed to be local code.
         """
         from .project import integer, number
-        if self.arch != 'x86' or self.bits not in (16, 32):
-            raise ValueError('code backings currently support x86 16/32-bit projects')
+        x86 = self.arch == 'x86' and self.bits in (16, 32)
+        arm_macho = self.arch == 'arm64' and self.bits == 64 and self.meta['format'] == 'Mach-O'
+        if not (x86 or arm_macho):
+            raise ValueError('code backings support x86 16/32-bit or ARM64 Mach-O projects')
         if not isinstance(entries, (list, tuple)) or not 1 <= len(entries) <= 64:
             raise ValueError('entries must contain 1..64 exact instruction addresses')
         budget = integer(max_instructions, 'max_instructions', 1, 100000)
@@ -133,6 +204,7 @@ class CodeBackingsMixin:
             v = selected['id']
             if self.digest(self.regions(v)) != selected['sha256']:
                 raise ValueError('source image version digest mismatch')
+            arm_source = _arm_macho_source(self, v) if arm_macho else None
             blocks, roots, incoming, problems, root_evidence = {}, [], {}, [], []
             used = 0
             for index, item in enumerate(requests):
@@ -189,26 +261,41 @@ class CodeBackingsMixin:
                     region = self._mapping(v, a)
                     if region is None or region.data[a-region.start:a-region.start+len(raw)] != raw:
                         raise ValueError('stored instruction bytes differ from source version')
-                    decoder = ix.Decoder(self.bits, raw)
-                    instruction = decoder.decode()
-                    if instruction.is_invalid or instruction.len != len(raw) or len(raw) != node['size']:
-                        raise ValueError('stored instruction is not a complete native encoding')
-                    offsets = decoder.get_constant_offsets(instruction)
-                    roles = ['instruction_encoding'] * len(raw)
-                    for offset, size, role in ((offsets.immediate_offset, offsets.immediate_size, 'immediate'),
-                                               (offsets.immediate_offset2, offsets.immediate_size2, 'immediate'),
-                                               (offsets.displacement_offset, offsets.displacement_size, 'displacement')):
-                        roles[offset:offset+size] = [role] * size
+                    if x86:
+                        decoder = ix.Decoder(self.bits, raw)
+                        instruction = decoder.decode()
+                        if instruction.is_invalid or instruction.len != len(raw) or len(raw) != node['size']:
+                            raise ValueError('stored instruction is not a complete native encoding')
+                        offsets = decoder.get_constant_offsets(instruction)
+                        roles = ['instruction_encoding'] * len(raw)
+                        for offset, size, role in ((offsets.immediate_offset, offsets.immediate_size, 'immediate'),
+                                                   (offsets.immediate_offset2, offsets.immediate_size2, 'immediate'),
+                                                   (offsets.displacement_offset, offsets.displacement_size, 'displacement')):
+                            roles[offset:offset+size] = [role] * size
+                    else:
+                        from .decoder import decode
+                        native = decode(raw, a, 'arm64', 64)
+                        if (native is None or len(raw) != 4 or node['size'] != 4
+                                or any(native[field] != node[field]
+                                       for field in ('mnemonic', 'operands', 'flow'))):
+                            raise ValueError('stored instruction is not a complete native ARM64 encoding')
+                        roles = ['instruction_encoding'] * 4
+                        slice_identity, source_bytes, mappings = arm_source
+                        file_offset = _arm_file_offset(a, raw, slice_identity, source_bytes, mappings)
+                    provenance = {'address': node['address'], 'size': len(raw), 'local_offset': 0,
+                                  'source_sha256': self.meta['source_sha256'],
+                                  'version_sha256': selected['sha256'], 'context': node['context'],
+                                  'byte_roles': roles}
+                    if arm_macho:
+                        provenance.update(file_offset=file_offset,
+                                          slice_relative_offset=file_offset - slice_identity['offset'])
                     blocks[node['id']] = {
-                        'id': node['id'], 'isa': 'x86', 'bits': self.bits,
+                        'id': node['id'], 'isa': self.arch, 'bits': self.bits,
                         'address': node['address'], 'context': node['context'],
                         'bytes': raw.hex(), 'sha256': hashlib.sha256(raw).hexdigest(),
                         'flow': node['flow'], 'instruction': {k: node[k] for k in ('size', 'mnemonic', 'operands')},
                         'exits': exits, 'references': deepcopy(node['references']),
-                        'provenance': {'address': node['address'], 'size': len(raw), 'local_offset': 0,
-                                       'source_sha256': self.meta['source_sha256'],
-                                       'version_sha256': selected['sha256'], 'context': node['context'],
-                                       'byte_roles': roles},
+                        'provenance': provenance,
                         'effects': {'status': 'native_backing_residual',
                                     'scope': 'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.'}}
             for block in blocks.values():
@@ -233,6 +320,10 @@ class CodeBackingsMixin:
                 'budget': {'limit': budget, 'visits': used},
                 'qualification': 'native_backings_only',
                 'scope': 'Entry-qualified stored encodings and explicit edges; no recovered intent, reachability or equivalence claim.'}
+            if arm_macho:
+                slice_identity, source_bytes, _ = arm_source
+                document['source']['slice'] = slice_identity
+                document['source']['file_sha256'] = hashlib.sha256(source_bytes).hexdigest()
             document['sha256'] = digest(document)
             return document
 

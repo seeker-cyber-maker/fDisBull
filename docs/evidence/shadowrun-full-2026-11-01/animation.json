@@ -1,0 +1,37 @@
+{
+  "format": "fdisbull-shadowrun-animation-verification-1",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "nes_sha256": "9aafcb13c6ca54958f98ed659ad305065a99fa081021f99e04c04c8e535b9281",
+  "counter_gameil_sha256": "0d699009b721e7f44d3ced6d17c673c15720f521128589cac02bde9200b970fb",
+  "genesis_native_receipt_sha256": [
+    "e2e5f059e82b21396dc0351a890d9d121b3e4c707b81340a9c25b00e0db38728",
+    "2a22b0d29eb1d5b6e9f82c7a1fbcba53f2ed0cdb2ff83171ecbe3f5fe2005129",
+    "857639ead5b8b49a9d676b1b3fc6d54fcf0300cec033edbf5f288fa86a0c9167"
+  ],
+  "right_run_receipt_sha256": "cfc6682c6381247944e4ea2e1203a94958a31b5cc67c2f16cd95a6103e824a22",
+  "right_up_run_receipt_sha256": "296e7385d279c4135c4c81db77b71ee4ba565a6a8ba5a8d06c312b74f0675bfa",
+  "release_run_receipt_sha256": "20c7c007b42db3528dfb4a65f90ff54d64887756fbc0ccb06c587d5b7a144f14",
+  "logical_ticks": 60,
+  "sampled_poses": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "pixel_samples": 2737,
+  "pixel_inconsistencies": 0,
+  "mismatches": [],
+  "scope": "bounded prepared-state ordinary right walk; no audio or hardware equivalence",
+  "root_comparison_sha256": "7b2ccbfe67a0431147ed5f35e2aaba8efc9e96a9b8177ce5e80b4b60d7c8cab1",
+  "source_counter_cases": 96,
+  "source_wrap_cases": 32,
+  "source_selector_cases": 32,
+  "source_execution": "fresh root executions of original Genesis CPU contracts",
+  "target_execution": "fresh root build through public replay wrapper and three ordinary-input FCEUmm runs",
+  "physical_frames_per_completed_tick": 2,
+  "limit_right_updates": 60,
+  "full_game": false
+}

@@ -1,0 +1,25 @@
+{
+  "format": "fdisbull-agi-gnome-giant-research-1",
+  "guide": "docs/research/kq1-robb-guide/README.md",
+  "document_title": "KQ1 guide for SCM route",
+  "author": "runner Robb",
+  "written": "2022-06-28",
+  "pages": 11,
+  "pdf_sha256": "50fba9d91d0026e1a7969329a4d593ba2235817f25cc9c9e5c50954db8ba3722",
+  "scope": "Attributed route leads; historical SCM guide differs from later9.89TAS. Native claims use separate captured evidence.",
+  "private_static_notes_sha256": {
+    "room68-avoidance-static.md": "1a77e6cefc94234ce77e78162c0e9bebfa401bdf37285ab1e6a1a628b906b768",
+    "room68-avoidance-static.json": "481c5867087d581573a7ccaa20de205fcb47c93eb020657bbad09ef867d9f045",
+    "rat-payment-race-static.md": "0a4494d5bd026ea570685cb47a05fa8a08c6aaab5c5cf27b7635dcc5db061ce7",
+    "rat-payment-race-static.json": "be7d5c2e6b9ba743ad3d2263da413351513a5f4fcfda04bc1639b97b278e8c09"
+  },
+  "rat_future_candidate": {
+    "point": [
+      98,
+      127
+    ],
+    "implemented": false,
+    "native_qualified": false
+  },
+  "third_party_pdf_and_media_included": false
+}

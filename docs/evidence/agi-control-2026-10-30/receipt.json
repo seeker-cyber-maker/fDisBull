@@ -1,0 +1,162 @@
+{
+  "format": "fdisbull-agi-control-verification-1",
+  "scope": "private original-resource static component model vs IL; no original runtime or game execution",
+  "base_pr": 67,
+  "base_commit": "7bf8c1abe7376853925ac7aba29fef11d04dc813",
+  "nominal_source_model_only": true,
+  "original_interpreter_executed": false,
+  "game_parity": false,
+  "branch_sites": 13,
+  "branch_comparisons": 4352,
+  "call_components": 2,
+  "negative_mutants_detected": 13,
+  "source_hashes_unchanged": true,
+  "components": [
+    {
+      "target": "PQ1",
+      "logic": 82,
+      "entry": 9,
+      "kind": "branch",
+      "comparisons": 768,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 82,
+      "entry": 56,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 82,
+      "entry": 25,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 82,
+      "entry": 38,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 83,
+      "entry": 0,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 83,
+      "entry": 22,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 83,
+      "entry": 47,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 83,
+      "entry": 72,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 27,
+      "entry": 50,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 27,
+      "entry": 59,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 27,
+      "entry": 68,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 27,
+      "entry": 77,
+      "kind": "branch",
+      "comparisons": 256,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 104,
+      "entry": 0,
+      "kind": "branch",
+      "comparisons": 768,
+      "negative_mutant_detected": true
+    },
+    {
+      "target": "PQ1",
+      "logic": 82,
+      "entry": 23,
+      "kind": "call-to-declared-stop",
+      "comparisons": 1,
+      "callee": 81,
+      "caller_continuation": "not_executed",
+      "full_callee_refused": true
+    },
+    {
+      "target": "KQ1",
+      "logic": 27,
+      "entry": 92,
+      "kind": "call-to-declared-stop",
+      "comparisons": 1,
+      "callee": 103,
+      "caller_continuation": "not_executed",
+      "full_callee_refused": true
+    }
+  ],
+  "scan_entries": "caller-supplied assumptions, statically checked candidate boundaries; not runtime observations",
+  "oracle_sha256": "5346710661171e69b21f7670bbe4c0983adaa65f3465d64adbc895409c4e9a53",
+  "engine_source_sha256": {
+    "src/fdisbull/agi.py": "0dc90bdb8cc138019af25bb50395e4fa927adb0b271979010e63b089cdf2a0f2",
+    "src/fdisbull/agi_source.py": "344797d8348afba8a89c6e38df4cee46a22ae743b9869b7e3ccb16e5d72d135e",
+    "src/fdisbull/agi_control.py": "77a699a12fc40b5f199f851bd70f3122f6c19d89a91974673e41ed0221fd404b",
+    "src/fdisbull/agi_lift.py": "930c53a22f67a7d350f549286f350e6a975a3cd63ec63f5c33fbc5b48eb07bff",
+    "src/fdisbull/interaction_il.py": "67da8ba20c5e55e766b378f62f8c9e357f6090215feb634b9fa0f909207a2faf"
+  },
+  "oracle_authored_controls": "unsigned IF 0x8000, signed backward GOTO, scalar, direct call/return, global stop and OR/NOT passed",
+  "primary_semantics": {
+    "if_unsigned": "https://github.com/scummvm/scummvm/blob/f7403b6efaae2f033e8abea80b3fb6bee5303369/engines/agi/op_test.cpp#L437-L441",
+    "goto_signed": "https://peterkelly.github.io/agi-re/spec/logic_bytecode.html#main-stream-grammar"
+  },
+  "local_tests": {
+    "passed": 317,
+    "skipped": 1,
+    "skip_reason": "case-sensitive filesystem needed"
+  },
+  "proof": "bounded Z3 model of authored callee returns and caller continuation, with SAT mutation control",
+  "privacy": "No game/story bytes, saved states, project databases, raw private outputs or absolute target paths included.",
+  "public_reference_sha256": "91419db73d200cb28a7eca31eb8bf70d809b1cecff308f772788f48ef45b5643"
+}

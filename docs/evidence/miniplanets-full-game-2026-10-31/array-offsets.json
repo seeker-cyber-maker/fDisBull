@@ -1,0 +1,238 @@
+{
+  "format": "fdisbull-native-array-canary-1",
+  "passed": true,
+  "cases": 101704,
+  "cycles": 3376700467,
+  "arrays": [
+    {
+      "name": "array_u8_plain",
+      "typ": "u8",
+      "bits": 8,
+      "signed": false,
+      "count": 256,
+      "mutable": true
+    },
+    {
+      "name": "array_u8_volatile",
+      "typ": "u8",
+      "bits": 8,
+      "signed": false,
+      "count": 256,
+      "mutable": true
+    },
+    {
+      "name": "array_u8_const",
+      "typ": "u8",
+      "bits": 8,
+      "signed": false,
+      "count": 256,
+      "mutable": false
+    },
+    {
+      "name": "array_u8_cv",
+      "typ": "u8",
+      "bits": 8,
+      "signed": false,
+      "count": 256,
+      "mutable": false
+    },
+    {
+      "name": "array_i8_plain",
+      "typ": "i8",
+      "bits": 8,
+      "signed": true,
+      "count": 256,
+      "mutable": true
+    },
+    {
+      "name": "array_i8_volatile",
+      "typ": "i8",
+      "bits": 8,
+      "signed": true,
+      "count": 256,
+      "mutable": true
+    },
+    {
+      "name": "array_i8_const",
+      "typ": "i8",
+      "bits": 8,
+      "signed": true,
+      "count": 256,
+      "mutable": false
+    },
+    {
+      "name": "array_i8_cv",
+      "typ": "i8",
+      "bits": 8,
+      "signed": true,
+      "count": 256,
+      "mutable": false
+    },
+    {
+      "name": "array_u16_plain",
+      "typ": "u16",
+      "bits": 16,
+      "signed": false,
+      "count": 128,
+      "mutable": true
+    },
+    {
+      "name": "array_u16_volatile",
+      "typ": "u16",
+      "bits": 16,
+      "signed": false,
+      "count": 128,
+      "mutable": true
+    },
+    {
+      "name": "array_u16_const",
+      "typ": "u16",
+      "bits": 16,
+      "signed": false,
+      "count": 128,
+      "mutable": false
+    },
+    {
+      "name": "array_u16_cv",
+      "typ": "u16",
+      "bits": 16,
+      "signed": false,
+      "count": 128,
+      "mutable": false
+    },
+    {
+      "name": "array_i16_plain",
+      "typ": "i16",
+      "bits": 16,
+      "signed": true,
+      "count": 128,
+      "mutable": true
+    },
+    {
+      "name": "array_i16_volatile",
+      "typ": "i16",
+      "bits": 16,
+      "signed": true,
+      "count": 128,
+      "mutable": true
+    },
+    {
+      "name": "array_i16_const",
+      "typ": "i16",
+      "bits": 16,
+      "signed": true,
+      "count": 128,
+      "mutable": false
+    },
+    {
+      "name": "array_i16_cv",
+      "typ": "i16",
+      "bits": 16,
+      "signed": true,
+      "count": 128,
+      "mutable": false
+    },
+    {
+      "name": "array_u32_plain",
+      "typ": "u32",
+      "bits": 32,
+      "signed": false,
+      "count": 64,
+      "mutable": true
+    },
+    {
+      "name": "array_u32_volatile",
+      "typ": "u32",
+      "bits": 32,
+      "signed": false,
+      "count": 64,
+      "mutable": true
+    },
+    {
+      "name": "array_u32_const",
+      "typ": "u32",
+      "bits": 32,
+      "signed": false,
+      "count": 64,
+      "mutable": false
+    },
+    {
+      "name": "array_u32_cv",
+      "typ": "u32",
+      "bits": 32,
+      "signed": false,
+      "count": 64,
+      "mutable": false
+    },
+    {
+      "name": "array_i32_plain",
+      "typ": "i32",
+      "bits": 32,
+      "signed": true,
+      "count": 64,
+      "mutable": true
+    },
+    {
+      "name": "array_i32_volatile",
+      "typ": "i32",
+      "bits": 32,
+      "signed": true,
+      "count": 64,
+      "mutable": true
+    },
+    {
+      "name": "array_i32_const",
+      "typ": "i32",
+      "bits": 32,
+      "signed": true,
+      "count": 64,
+      "mutable": false
+    },
+    {
+      "name": "array_i32_cv",
+      "typ": "i32",
+      "bits": 32,
+      "signed": true,
+      "count": 64,
+      "mutable": false
+    }
+  ],
+  "index_forms": [
+    "index",
+    "(i16)index",
+    "(u32)index",
+    "((i16)index-7)+7",
+    "((u32)index+65535UL)-65535UL",
+    "index_once(index)"
+  ],
+  "shadow_pointer_large_array_cases": 968,
+  "nested_lookup_cases": 256,
+  "typedef_inherited_qualification_cases": 128,
+  "lowered_element_qualification_checks": 97,
+  "generator_source_sha256": "8ee0b32cb5a33d4ac1ceaf9b09f50aa195d575cb7f93fc72716d36a05bd7b429",
+  "negative_controls": [
+    "wrong two-byte element scale",
+    "illegal truncation of 257-byte array index"
+  ],
+  "hashes": {
+    "source.c": "d97eca273ff0fd1c24406bd38463ef7bb5324e7a6be2b29e2f9e0fee9453e5e2",
+    "lowered.c": "82b8396495ccaf78fcefdee3c4f01d315bf96cb0bf1e31e722de52f03725876f",
+    "control.c": "67b0d67722c917e3b3ea0c8851bfcc99384a26b64b3a48960d5fd2ea4e908a9e",
+    "check": "2722dc42b6dbd05311fc9e7437193f7e18e68e6ddb33ae57162b840d26dc0d3a"
+  },
+  "limits": [
+    "actual sim65 6502 procedure check, not NES IRQ/mapper/full-game acceptance",
+    "array equality is for valid in-bounds indices; no new bounds or fault behavior is asserted",
+    "cycle count includes control loops and reference checks and is not a speed comparison",
+    "qualified volatile source accesses tested without an interrupting device"
+  ],
+  "verifier_sha256": "b21477fb649a45b499e6de00f59f6f93975787acc54aed80a4eb807e8091d02b",
+  "tool_hashes": {
+    "cl65": "00530a81fb76e3a9ce992fd2c678790957f2870a3f234db9324cd25a9c09766a",
+    "sim65": "ecfc71e317607555b3ff9d6195fda50a7bb0b56689e8e779e6faee63405b2d43"
+  },
+  "control": "Independent ordinary-C accesses and byte-by-byte expected object representations in a separate translation unit, retaining volatile-qualified byte accesses. Every mutated256-bytearray is checked in full.",
+  "source_changes": "No game or adapter authoring source changed; the candidate emitter regenerates C from the same UIL AST.",
+  "review": "No material C or ABI issue found within the existing in-bounds cc65-int16-long32 contract. Whole-array char pointer provenance, element signedness, qualifiers, scope shadowing and pointer exclusions are checked.",
+  "private_evidence": "Generated source, emitted C, executable, maps, build and positive/negative CPU logs remain in a fresh private directory."
+}

@@ -5,9 +5,11 @@ https://peterkelly.github.io/agi-re/spec/logic_bytecode.html.
 Only explicitly modeled instruction encodings are decoded.
 """
 from collections import deque
+from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from .processor import ProcessorInfo, Location, Successor, DecodedInstruction, decode_instruction
+from .agi_layout import _ACTION_WIDTHS
 
 # Encoding lengths only; no assertion that actions have been executed.
 _ACTIONS = {1:('increment',1),2:('decrement',1),3:('assignn',2),4:('assignv',2),
@@ -18,10 +20,43 @@ _ACTIONS = {1:('increment',1),2:('decrement',1),3:('assignn',2),4:('assignv',2),
             101:('print',1),102:('print.v',1)}
 _COND_LENGTHS = {0:0,1:2,2:2,3:2,4:2,5:2,6:2,7:1,8:1,9:1,10:2,
                  11:5,12:1,13:0,15:2,16:5,17:5,18:5}
+_SCALAR_CONDITIONS = {1:'equaln', 2:'equalv', 3:'lessn', 4:'lessv',
+                      5:'greatern', 6:'greaterv', 7:'isset'}
+# Encodings needed by the KQ1 logic-103 control-flow case. These are facts,
+# not effect implementations. Widths share the explicit v2.917 layout profile.
+_ENGINE_ACTIONS = {30:'load.view',33:'animate.obj',35:'draw',36:'erase',
+                   37:'position',38:'position.v',39:'get.posn',41:'set.view',
+                   61:'ignore.horizon',65:'object.on.land',69:'distance',
+                   70:'stop.cycling',71:'start.cycling',77:'stop.motion',
+                   78:'start.motion',79:'step.size',83:'follow.ego',84:'wander',
+                   85:'normal.motion',88:'ignore.blocks',89:'observe.blocks'}
+
+
+@dataclass(frozen=True)
+class AGILogicResource:
+    code: bytes
+    payload: bytes
+    logic: int
+    profile: str
+    space: str
+    directory_sha256: str
+    volume_sha256: str
+    volume: int
+    resource_offset: int
+    resource_length: int
+    code_offset: int
+    resource_sha256: str
+    _directory: bytes = field(repr=False)
+    _volume: bytes = field(repr=False)
+
+    def provenance(self):
+        return {name: getattr(self, name) for name in (
+            'logic', 'profile', 'space', 'directory_sha256', 'volume_sha256',
+            'volume', 'resource_offset', 'resource_length', 'code_offset', 'resource_sha256')}
 
 class AGI2917Processor:
     def __init__(self, space):
-        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','1',space,'byte',('decode','static_successors'),None)
+        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','3',space,'byte',('decode','static_successors'),None)
 
     def decode(self, code, location):
         pos=location.offset
@@ -53,22 +88,49 @@ class AGI2917Processor:
                     require(1); n=1+code[cursor]*2
                 elif cond in _COND_LENGTHS: n=_COND_LENGTHS[cond]
                 else: raise ValueError(f'unsupported condition {cond:#x} at {pos:#x}')
-                require(n); conditions.append({'opcode':cond,'operands':list(code[cursor:cursor+n])});cursor+=n;negate=False
-            require(2);delta=int.from_bytes(code[cursor:cursor+2],'little',signed=True);cursor+=2
+                require(n)
+                item={'opcode':cond,'operands':list(code[cursor:cursor+n]),
+                      'bytes':code[cursor-1:cursor+n].hex()}
+                if cond in _SCALAR_CONDITIONS:
+                    item['mnemonic']=_SCALAR_CONDITIONS[cond]
+                    if cond == 7:
+                        item['typed_operands']=[{'kind':'flag','index':code[cursor]}]
+                    else:
+                        item['typed_operands']=[{'kind':'variable','index':code[cursor]},
+                            {'kind':'variable','index':code[cursor+1]} if cond % 2 == 0
+                            else {'kind':'u8','value':code[cursor+1]}]
+                conditions.append(item);cursor+=n;negate=False
+            # IF skips are unsigned; GOTO above has a signed displacement.
+            require(2);delta=int.from_bytes(code[cursor:cursor+2],'little');cursor+=2
             edge('true',cursor);edge('false',cursor+delta)
+        elif op in (22, 23):
+            require(1);cursor+=1;name='call' if op == 22 else 'call.v'
+            edges.append(Successor('call',None,'callee logic requires explicit resource binding' if op == 22
+                                   else 'callee logic depends on runtime variable and resource binding'))
+            edge('fallthrough',cursor)
         elif op in _ACTIONS:
             name,n=_ACTIONS[op];require(n);cursor+=n;edge('fallthrough',cursor)
+        elif op in _ENGINE_ACTIONS:
+            name=_ENGINE_ACTIONS[op];require(_ACTION_WIDTHS[op]);cursor+=_ACTION_WIDTHS[op];edge('fallthrough',cursor)
         else:
             name='unsupported'; edges.append(Successor('unknown',None,'unsupported opcode; no length inferred'))
         facts={'opcode':op,'mnemonic':name,'size':cursor-pos,'bytes':code[pos:cursor].hex()}
+        if op in _ENGINE_ACTIONS:
+            facts['effect_status']='unmodeled'
+        if op == 3:
+            facts['operands'] = [{'kind':'variable', 'index':code[pos+1]},
+                                 {'kind':'u8', 'value':code[pos+2]}]
+        elif op in (12, 13):
+            facts['operands'] = [{'kind':'flag', 'index':code[pos+1]}]
+        elif op in (22, 23):
+            facts['operands'] = [{'kind':'logic' if op == 22 else 'variable', 'index':code[pos+1]}]
         if conditions: facts['conditions']=conditions
         return DecodedInstruction(location,facts,tuple(edges))
 
 
-def inspect_logic(logdir, volume_dir, logic, *, profile, max_instructions=1000):
+def load_logic(logdir, volume_dir, logic, *, profile):
     if profile!='2.917': raise ValueError('only explicit AGI 2.917 subset is supported')
     if isinstance(logic,bool) or not isinstance(logic,int) or not 0<=logic<=255: raise ValueError('logic must be 0..255')
-    if isinstance(max_instructions,bool) or not isinstance(max_instructions,int) or not 1<=max_instructions<=10000: raise ValueError('max_instructions must be 1..10000')
     with Path(logdir).open('rb') as stream:
         directory=stream.read(769)
     if len(directory)>768 or len(directory)%3: raise ValueError('invalid LOGDIR size')
@@ -90,6 +152,16 @@ def inspect_logic(logdir, volume_dir, logic, *, profile, max_instructions=1000):
     if not code_length: raise ValueError('empty logic bytecode')
     if 2+code_length>len(payload): raise ValueError('truncated logic bytecode')
     code=payload[2:2+code_length]; space=f'agi.logic.{logic}.{sha256(payload).hexdigest()}'
+    return AGILogicResource(code=code, payload=payload, logic=logic, profile=profile, space=space,
+        directory_sha256=sha256(directory).hexdigest(), volume_sha256=sha256(data).hexdigest(),
+        volume=volume, resource_offset=offset, resource_length=length, code_offset=start+2,
+        resource_sha256=sha256(payload).hexdigest(), _directory=directory, _volume=data)
+
+
+def inspect_logic(logdir, volume_dir, logic, *, profile, max_instructions=1000):
+    if isinstance(max_instructions,bool) or not isinstance(max_instructions,int) or not 1<=max_instructions<=10000: raise ValueError('max_instructions must be 1..10000')
+    resource=load_logic(logdir, volume_dir, logic, profile=profile)
+    code=resource.code; code_length=len(code); space=resource.space
     processor=AGI2917Processor(space); pending=deque([0] if code else []); seen=set(); instructions=[]; errors=[]
     while pending and len(instructions)<max_instructions:
         pc=pending.popleft()
@@ -106,7 +178,7 @@ def inspect_logic(logdir, volume_dir, logic, *, profile, max_instructions=1000):
     spans=sorted((i['offset'],i['offset']+i['size']) for i in instructions)
     overlaps=any(start<previous_end for (_,previous_end),(start,_) in zip(spans,spans[1:]))
     return {'format':'fdisbull-agi-logic-1','profile':profile,'support':'partial static decode; not execution',
-            'logic':logic,'directory_sha256':sha256(directory).hexdigest(),'volume_sha256':sha256(data).hexdigest(),
-            'volume':volume,'resource_offset':offset,'resource_length':length,'code_offset':start+2,
+            'logic':logic,'directory_sha256':resource.directory_sha256,'volume_sha256':resource.volume_sha256,
+            'volume':resource.volume,'resource_offset':resource.resource_offset,'resource_length':resource.resource_length,'code_offset':resource.code_offset,
             'code_length':code_length,'space':space,'instructions':instructions,'errors':errors,'overlapping_instructions':overlaps,
             'budget_reached':bool(pending),'complete':not pending and not errors and not overlaps and all(i['mnemonic']!='unsupported' and all(e['offset'] is not None for e in i['successors']) for i in instructions)}

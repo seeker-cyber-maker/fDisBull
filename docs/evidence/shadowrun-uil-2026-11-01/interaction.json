@@ -1,0 +1,113 @@
+{
+  "format": "fdisbull-shadowrun-opening-interaction-evidence-1",
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "pinned_core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "source_files_sha256": {
+    "src/fdisbull/shadowrun_interaction.py": "8ffe83d67b3189658e37f520e1e12445cbc842112572dfa68e3fde172b064fd3",
+    "src/fdisbull/game_sources/shadowrun_interaction.c": "b7dd05af4e76d2f1ae750e6784072766bf26904ebd8c0a95fb4100214d4d972e",
+    "scripts/check_shadowrun_interaction.py": "2ab39ad45b1c713d9b9cc967b0a0228d9da9ee8fa862ee4c1783c8daeb1f9e7b",
+    "tests/test_shadowrun_interaction.py": "40d763d112cbf3e5e592f19e005652a174f35ea0e964feb8b97337fb07248ba5"
+  },
+  "uil_canonical_sha256": "fed8ce045a23b3504aa200a41d03a49857e2b54b2c392016bde896584869874b",
+  "source_code_ranges": [
+    {
+      "range": [
+        128798,
+        128880
+      ],
+      "sha256": "c3fe3559b339cd9a938833904d017d05cee91615ef5552702e793c8a483b4152"
+    },
+    {
+      "range": [
+        47192,
+        47206
+      ],
+      "sha256": "17facf5e4d703729c8dac49f1f97802141d467a586eb75202de06bc5a01bef7c"
+    },
+    {
+      "range": [
+        47098,
+        47156
+      ],
+      "sha256": "70022fdfa3d4981bb5c53abf3c7df02eece2cb558bde43f97f473a23e10b665f"
+    },
+    {
+      "range": [
+        47674,
+        47740
+      ],
+      "sha256": "cd4dee0efd5f235cc7fa49bfd69fc8da37e6de0be3e2644c68325b1d33ed8fcf"
+    },
+    {
+      "range": [
+        47746,
+        47778
+      ],
+      "sha256": "5f0ec34ae1a08c47904481f5388ce1fc7113dd523c85074242f00df75f06ef67"
+    },
+    {
+      "range": [
+        47032,
+        47098
+      ],
+      "sha256": "a10a7f731be4ae696fd1c1474f85e1dbd1733d2da133ce78b8de7f480e44905a"
+    }
+  ],
+  "controlled_native_qualification": {
+    "format": "fdisbull-shadowrun-interaction-qualification-1",
+    "status": "passed",
+    "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "authoring_sha256": "b7dd05af4e76d2f1ae750e6784072766bf26904ebd8c0a95fb4100214d4d972e",
+    "interaction_module_sha256": "8ffe83d67b3189658e37f520e1e12445cbc842112572dfa68e3fde172b064fd3",
+    "game_il_module_sha256": "05dafe6347f890c221bfb897155919cd7e6e7d5c045e7d88190c7662b24d990b",
+    "native_cases": 271,
+    "phase_cases": 256,
+    "unsupported_pair_controls": 15,
+    "native_trace_sha256": "0a7349a68728ddd2e355e05f32173be1b02d23c44295adb4f9d0adb31095e94f",
+    "collision_projection_cases": 262,
+    "collision_trace_sha256": "9084f039a0e4b67a24d8af5f3168635a9ab703bd1a48d29946678d4eaa495422",
+    "corner_gate_cases": 257,
+    "corner_gate_trace_sha256": "d87aa33b8249279340692436dc8274f809b32b488ac6f10dadc55884574c6790",
+    "source_branch_cases": 128,
+    "source_branch_trace_sha256": "9abfc2039a31d47476e0c43b1be837595707de4adf09c0c1c98f6c0070cfde05",
+    "source_transition_cases": 2,
+    "source_transition_trace_sha256": "0f70b53f5c4aca11c66da9e990ff8e162d5f6d3cfd17e40639eba84652912b80",
+    "scope": "controlled original-CPU branch slices vs typed UIL; opaque dispatcher side effects and target UI adapter excluded"
+  },
+  "total_controlled_cases": 920,
+  "observed_door": {
+    "route": "ordinary UP after an original-core opening checkpoint; independent full-boot trace also observed",
+    "full_boot_contact_frame": 6448,
+    "collision_word": "0xffc2",
+    "negative_corner_samples": 2,
+    "event_index": 2,
+    "source_scene_word": 2,
+    "source_event_mode_word": 0,
+    "context_byte": 2,
+    "phase_byte": 0
+  },
+  "guarded_request": {
+    "scope": "observed source guard subset, exact raw collision and explicit carry-set input",
+    "dispatcher_carry": "externally supplied; observed set on the captured route",
+    "excluded": "original $1651E activity side effects are not modeled"
+  },
+  "target_adapter": {
+    "type": "NES-only presentation projection; not original script interpreter",
+    "observed_path": [
+      "A: sign to choices",
+      "B: later-conversation choice to farewell",
+      "A: farewell to release wait",
+      "release: return to field"
+    ],
+    "other_actions": "explicitly unsupported",
+    "original_text_and_assets": "not included"
+  },
+  "limits": [
+    "not full dispatcher parity",
+    "not full dialogue interpreter parity",
+    "not all choices or quests",
+    "not integrated NES runtime qualification",
+    "original game bytes and raw states omitted"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "format": "fdisbull-native-boundary-frame-bindings-1",
+  "frames": [
+    {
+      "file": "inside-02-launch.png",
+      "source_case": "inside-02",
+      "source_frame": "boundary-launch.png",
+      "sha256": "cb9321ef8e2d92ed00cf511cfca12b582cec975ca3dcbea6ed87bb20e4ed3310",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "inside-02-message.png",
+      "source_case": "inside-02",
+      "source_frame": "message-0.png",
+      "sha256": "9ab255f22aec8761e7748647bdb3e7fa974f11cccecef0afc94926a68fea2be6",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "outside-01-launch.png",
+      "source_case": "outside-01",
+      "source_frame": "boundary-launch.png",
+      "sha256": "ed4c944a08fa5f8af2418adf8079ccc8d2f8c7c81ae8c0dbea656b4058603c25",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "outside-01-message.png",
+      "source_case": "outside-01",
+      "source_frame": "message-0.png",
+      "sha256": "c6b3801c51cdd0501ffd3cc34739ad781f285be164c0d6d3cb28b2cf888494b5",
+      "byte_identical_to_native": true
+    }
+  ],
+  "scope": "Stored original-engine frames; game-coordinate positions come from paired state observations, not pixel inference."
+}

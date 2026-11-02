@@ -55,6 +55,10 @@ class AdvancedMixin:
         self.db.execute("UPDATE advanced_jobs SET state='pending',reason='candidate entry restored' WHERE version=? AND state='orphaned' AND EXISTS(SELECT 1 FROM functions f JOIN instructions i ON i.version=f.version AND i.context=f.context AND i.address=f.address WHERE f.version=advanced_jobs.version AND f.context=advanced_jobs.context AND f.address=advanced_jobs.address)",(v,))
 
     def advanced_status(self,version=None):
+        if self.arch == 'thumb':
+            return dict(version=self.version(version)['id'],supported=False,stable=None,
+                        pending=0,states={},scope='derived-analysis adapter unavailable',
+                        note='Use native analyze; Thumb semantics and ABI analysis are not implemented.')
         with self.transaction():
             v=self.version(version)['id']
             states=dict(self.db.execute('SELECT state,count(*) FROM advanced_jobs WHERE version=? GROUP BY state',(v,)))
@@ -389,6 +393,8 @@ class AdvancedMixin:
         return dict(address=hex(address),context=context,state=state,generation=generation,added_edges=added,budget_exhausted=partial)
 
     def auto_analyze(self,version=None,start=None,cs=None,ds=None,es=None,ss=None,max_instructions=10000,max_functions=200,max_steps=100000,max_entries=256,max_rounds=8,abi=None):
+        if self.arch == 'thumb':
+            raise ValueError('Thumb supports native analyze; derived semantics/ABI auto-analysis is not implemented')
         if self.meta['format'] == 'NE':
             raise ValueError('NE advanced IR/ABI analysis requires a selector-aware model; use analyze for native static traversal')
         from .project import integer
@@ -422,7 +428,7 @@ class AdvancedMixin:
             selected=abi if abi is not None else previous.get('abi',self._default_abi())
             _select_abi(dict(arch=self.arch,bits=self.bits),{},selected)
             options=dict(max_instructions=max_instructions,max_steps=max_steps,max_entries=max_entries,abi=selected,
-                         analysis_revision='dos-knowledge-1',
+                         analysis_revision='monotone-symbols-3',
                          signature_catalog_sha256=hashlib.sha256(_dump(builtin_signatures()).encode()).hexdigest())
             if previous and previous!=options:self._invalidate_derived(v,reason='analysis options changed')
             self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(option_key,_dump(options)))

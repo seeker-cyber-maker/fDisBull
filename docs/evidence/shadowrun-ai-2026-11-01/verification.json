@@ -1,0 +1,81 @@
+{
+  "format": "fdisbull-shadowrun-ai-integration-verification-1",
+  "status": "bounded_local_integration_passed",
+  "source_files_sha256": {
+    "src/fdisbull/shadowrun_ai.py": "e11be8b99951ea3bf962886def21ec17d9751fcc91c820a4a18b3ba9d22d5f26",
+    "src/fdisbull/cli.py": "00dccef888d2082d78b0ced0dab3d4824b37bd08f37e4f14fe24d7093f1840f9",
+    "tests/test_shadowrun_ai_api.py": "abd9da951319fa460af35ee3eac6e12697475e68819b4fa27bb66ce86df08d66",
+    "docs/SHADOWRUN_AI_EXPERIMENT.md": "42ec18f429fb95b122f007432243af18b2c73a10eca96d95c429dead0705edbb",
+    "src/fdisbull/game_sources/shadowrun_assisted_controller.c": "aecd06e301bd97abffb5727c338e633e001e287ff09e9aeb7871713073ead28c",
+    "src/fdisbull/shadowrun_nes_banked.py": "b5141bd3ec04eb7bc9d0292e1a5f4a9a94289303ed884fa2d6bcdad708621e54",
+    "scripts/check_shadowrun_arena_refusal.py": "79aa66c66917b7805dfba8f475bb132da7ec4391cc7e44df1a327febe3fe38c3"
+  },
+  "private_cli_summary_sha256": "f40f354249365b3d4b692ca8ef4fdba3ae7a8570370e0ae9e6fd827980694476",
+  "cli": {
+    "projectless_catalog": "passed",
+    "build_presets": {
+      "moving": {
+        "exit_code": 0,
+        "rom_sha256": "e615b9aa9ffe74d2b75d2ec5a4947e52058a9eb211b62dc60f3aecdf348cb0a8",
+        "matches_independent_native_build": true
+      },
+      "stationary": {
+        "exit_code": 0,
+        "rom_sha256": "be99441ad8d7afce009ccb816af16077767a7ddc5e1675e3aae1fe97f91ab608",
+        "matches_independent_native_build": true
+      }
+    },
+    "city_export": {
+      "profile": "assisted-arena",
+      "preset": "moving",
+      "formats": [
+        "json",
+        "text",
+        "html"
+      ],
+      "javascript_syntax_checks": 1,
+      "browser_interaction": "not tested"
+    },
+    "z_protocol": {
+      "profile": "assisted-arena",
+      "preset": "moving",
+      "policy": "physical",
+      "completed_actions": 3,
+      "exchanges": 7,
+      "unmodeled_npcs": "current position and presence remain unknown"
+    }
+  },
+  "focused_api_and_damage_tests": {
+    "passed": 21,
+    "scope": "profile discovery and invalid-profile refusal before filesystem access; controlled damage fixtures"
+  },
+  "claim_limits": [
+    "Assisted source-constructed scene, not natural encounter reachability.",
+    "Bounded branches; original source, composed model and compiled target are qualified separately.",
+    "No full game, original sprite/audio, hardware or real-time parity.",
+    "No release or system installation performed."
+  ],
+  "storage": {
+    "new_bulk_pool": "CACHE",
+    "admission_expected_bytes": 268435456,
+    "explicit_destination_reserve_bytes": 20000000000,
+    "existing_CODEX_inputs": "read only; new bulk work stopped after target reserve denial"
+  },
+  "ci": {
+    "platform": "macOS local",
+    "linux_ci": "not run",
+    "hosted_ci": "not established by local checks"
+  },
+  "privacy": "No original game bytes, assets, emulator states or private filesystem paths included.",
+  "shared_program_sha256": "bed27370cb4625331b9c2de870a48acfff8f4c91d5630d24d2d1c8874fcf7227",
+  "refusal_boundary": {
+    "cases": [
+      "unequipped pistol",
+      "empty ammo",
+      "unsupported target selector"
+    ],
+    "z": "discard candidate state",
+    "nes": "retain completed publication/epoch and halt; interrupted internal state unqualified",
+    "ordinary_fire": "12 to11 ammo still succeeds"
+  }
+}

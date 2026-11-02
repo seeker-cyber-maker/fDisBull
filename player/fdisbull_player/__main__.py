@@ -17,6 +17,7 @@ def main():
     source.add_argument("--package", help="local JSON text-slice package")
     source.add_argument("--uil", help="executable word16 IR (.json or .json.gz; legacy option name)")
     source.add_argument("--intents", help="partial game-intent UIL package with explicit residual IR")
+    source.add_argument("--scenes", help="recovered scene rules, direct handler links and explicit residual IR")
     source.add_argument("--connect", help="JSON-lines backend host:port")
     source.add_argument("--backend-command", help="local content-service command, without a shell")
     parser.add_argument("--backend-timeout", type=float, default=60,
@@ -30,25 +31,27 @@ def main():
     parser.add_argument("--agent-timeout", type=float, default=10)
     parser.add_argument("--transcript", help="write private structured self-play transcript")
     parser.add_argument("--quiet", action="store_true", help="print only session status; requires an agent and transcript")
-    parser.add_argument("--seed", type=int, default=12, help="reproducible random seed for --uil or --intents")
-    parser.add_argument("--commands", help="JSON command list for --uil or --intents")
-    parser.add_argument("--checkpoint", help="durable continuation after each --uil or --intents command")
-    parser.add_argument("--resume", help="resume a compatible --uil or --intents checkpoint")
+    parser.add_argument("--seed", type=int, default=12, help="reproducible seed for --uil, --intents or --scenes")
+    parser.add_argument("--commands", help="JSON command list for --uil, --intents or --scenes")
+    parser.add_argument("--checkpoint", help="durable continuation after each --uil, --intents or --scenes command")
+    parser.add_argument("--resume", help="resume a compatible --uil, --intents or --scenes checkpoint")
     parser.add_argument('--batch-plan', help='JSON ordered command plan; read batch operations as JSON lines')
     parser.add_argument('--batch-journal', help='private durable journal for --batch-plan')
     args = parser.parse_args()
     if bool(args.batch_plan) != bool(args.batch_journal):
         parser.error('--batch-plan and --batch-journal are required together')
-    if args.batch_plan and (args.live or args.agent_command or args.transcript or args.quiet or args.uil or args.intents):
+    if args.batch_plan and (args.live or args.agent_command or args.transcript or args.quiet or args.uil or args.intents or args.scenes):
         parser.error('--batch-plan uses its own JSON operation protocol with a qualified scene provider')
-    if args.uil or args.intents:
+    if args.uil or args.intents or args.scenes:
         if args.live or args.agent_command or args.save_dir or args.quiet:
-            parser.error('--uil and --intents use --checkpoint/--resume and their own command loop')
-        if args.intents:
+            parser.error('--uil, --intents and --scenes use --checkpoint/--resume and their own command loop')
+        if args.scenes:
+            from .scene_runtime import main as run_program
+        elif args.intents:
             from .intent_runtime import main as run_program
         else:
             from .word16 import main as run_program
-        options = [args.intents or args.uil, '--seed', str(args.seed)]
+        options = [args.scenes or args.intents or args.uil, '--seed', str(args.seed)]
         for flag in ('commands', 'checkpoint', 'resume', 'transcript'):
             if getattr(args, flag):
                 options.extend(['--' + flag, getattr(args, flag)])
@@ -58,7 +61,7 @@ def main():
             print(f"Program player stopped: {exc}", file=sys.stderr)
             return 1
     if args.commands or args.checkpoint or args.resume:
-        parser.error('--commands, --checkpoint and --resume require --uil or --intents')
+        parser.error('--commands, --checkpoint and --resume require --uil, --intents or --scenes')
     if args.backend_command is not None and not args.backend_command.strip():
         parser.error('--backend-command must not be blank')
     if not math.isfinite(args.backend_timeout) or not 0 < args.backend_timeout <= 60:

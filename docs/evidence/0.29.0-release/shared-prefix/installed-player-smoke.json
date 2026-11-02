@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "new_processes": 2,
+  "restore": "restored",
+  "context": "hall",
+  "inventory": [
+    "key"
+  ],
+  "tick": 3,
+  "events": [
+    {
+      "tick": 2,
+      "name": "bell"
+    }
+  ],
+  "private_permissions": true
+}

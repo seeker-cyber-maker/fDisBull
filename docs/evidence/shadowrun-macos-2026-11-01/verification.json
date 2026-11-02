@@ -1,0 +1,136 @@
+{
+  "format": "fdisbull-shadowrun-macos-verification-1",
+  "status": "bounded_native_differential_passed",
+  "platform": {
+    "os": "macOS 27.2",
+    "architecture": "arm64",
+    "compiler": "Homebrew clang 23.1.4",
+    "cpu": "Apple M1 Max"
+  },
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "shared_program_sha256": "bed27370cb4625331b9c2de870a48acfff8f4c91d5630d24d2d1c8874fcf7227",
+  "source_files_sha256": {
+    "src/fdisbull/udc_macos.py": "492c3934a1e385432b92031a0380497d88ddcdf54b7769091262ecccf9629506",
+    "src/fdisbull/shadowrun_macos.py": "76de1a247921a7ffb5b7a8c88e160690b063ea915198eff01a20d0964396361c",
+    "src/fdisbull/game_sources/shadowrun_macos_app.m": "2668d6f9fea1b17dc70c7a97373bbba4bddc1e398f5cf8cd82b2d12d40163caa",
+    "scripts/check_shadowrun_macos.py": "8c5caf8b81f4c83374eb1a8b0d66ce41bca17cd49f6bb882c2c6e831d6bcd897",
+    "tests/test_udc_macos.py": "64585d28d35ab8d08fc55c4e188c489632e6c03b56dfde130d62af636023b813",
+    "tests/test_shadowrun_macos.py": "691f205f5f946de27874df0e267387f9a7c425e939431e49a51442cbd2b43e95"
+  },
+  "native_dylib_sha256": {
+    "stationary": "60cd417305e268b13cac25beaa9138704f19700c610992c747fb1298a5f8147a",
+    "moving": "f3cba61b99345dd97b66dac3da6ce017dfdba3bfc2bdd53f51b7d1cc74f2bae9"
+  },
+  "native_build_receipt_sha256": {
+    "stationary": "a6e0d514194dd30f342627a55666736ecf101414e18ae27e59779e17c8f65798",
+    "moving": "a82d60eb7ba9aec6a0c01030e59bf355955e02b67b08ec0cf10c1ebebdafb75d"
+  },
+  "differential": {
+    "summary_sha256": "82c9ac3444eab139f189c10a72aa98375c941c77d18f6f5f570c76a70a85716d",
+    "complete_state_elements_per_tick": 3651,
+    "stationary_completed_ticks": 243,
+    "stationary_source_checkpoints": 97,
+    "moving_completed_ticks": 124,
+    "moving_source_checkpoints": 103,
+    "held_fire_completed_ticks": 80,
+    "held_fire_source_checkpoints": 15,
+    "unsupported_step_rollback": "passed",
+    "terminal_hold_and_reset": "passed",
+    "invalid_rom_names_indices_null_and_typed_casting": "passed",
+    "interleaved_contexts_ticks_each": 15,
+    "source_receipt_sha256": {
+      "moving": "731cb1ec2f51c207d3acaf3443a4de0c231bd4db9922a9b7f0c57a6333858ff6",
+      "extension": "68d87f40204f975f293479dcea72249ad045fc10a583401d901bddbca1111d6b",
+      "stationary": "b40dd5e704b7bba2c3c746a10473f120978f884e9528573da966c2245b4e8510",
+      "terminal": "a1c969d5c64b651e9be1fb53bc840b60c223d7ef30eb2b3defadeadfc31a982f",
+      "held": "3e8ea721088dfaea695ead43633f2a21b98a6bfecab46594e0d50be8c9cca32a"
+    },
+    "scope": "Complete GameIL state versus generated native state per completed tick; selected original source actor/HP/RNG fields independently compared at reviewed assisted checkpoints."
+  },
+  "frontend": {
+    "app_executable_sha256": "5365d3d99a49ef5c7b6d1fb8753fdfb905d07b1722b890917353253d36324f61",
+    "build_receipt_sha256": "57535736f223e64ac93ad56d48412bbc606bb180447d3074b75a0ded6f1b4360",
+    "offscreen_summary_sha256": "d4ad09d727f61bd666403fc6054640ededf3757e75c168d10546cbeb3ecd8742",
+    "offscreen_runs": 5,
+    "draws_each": 120,
+    "source_frame": 6021,
+    "source_projection_fields": [
+      "player_x",
+      "player_y",
+      "player_hp"
+    ],
+    "image_size": [
+      960,
+      760
+    ],
+    "image_sha256": "69e7920c3bd5cbcca5688483874aa634d664d7e4f96930bef1f1f13662ef6708",
+    "live_manual_ax_observation_sha256": "e32dc8912ee47aca6e0493983bcc375eec849d1db51aea1b232d40905f9f9c82",
+    "live_scope": "Separate manual accessibility observation: final frontend inventory tap and stationary held-fire; earlier moving keyboard observation used prior frontend. Not automated replay.",
+    "public_cli_build_result_sha256": "d2303cc91a158c7617f12d09dc22dbd6254406d6ff87589ce66edf18dcb61c1a",
+    "public_cli_matches_frontend_and_core": true
+  },
+  "timing": {
+    "native_update": {
+      "repeats": 10,
+      "completed_ticks_per_repeat": 60,
+      "total_ns_each": [
+        124708,
+        92375,
+        91875,
+        89917,
+        90041,
+        90459,
+        90334,
+        90208,
+        90375,
+        92042
+      ],
+      "median_repeat_mean_ns_per_tick": 1506.95,
+      "slowest_repeat_mean_ns_per_tick": 2078.4666666666667,
+      "scope": "native update calls including ctypes overhead, excluding rendering and setup"
+    },
+    "offscreen_render": {
+      "repeats": 5,
+      "draws_per_repeat": 120,
+      "total_ns_each": [
+        112476000,
+        111247000,
+        125032000,
+        119721000,
+        111551000
+      ],
+      "median_ns_per_draw": 937300.0,
+      "max_repeat_mean_ns_per_draw": 1041933.3333333334,
+      "scope": "warmed offscreen draw of stored native state; excludes process startup, model updates, PNG encoding and onscreen presentation"
+    },
+    "clang_compile_link_once": {
+      "status": "passed",
+      "elapsed_ns": 4757592250,
+      "source_sha256": "c1106e980586ab87eb11bfc874afd7baefe1164d295458c20f6eb36e3e4d213f",
+      "scope": "one Clang compilation/link only; source generation, model lift, app launch, rendering and ROM binding excluded",
+      "returncode": 0
+    },
+    "model_lift_and_seed_setup": {
+      "status": "passed",
+      "repeats": 3,
+      "total_ns_each": [
+        4038164125,
+        3572938708,
+        4228507542
+      ],
+      "median_ns": 4038164125,
+      "scope": "Python assisted GameMachine lift and captured-seed setup; excludes ROM file read, native generation, compilation and rendering"
+    },
+    "compile_summary_sha256": "1cfc1378a702a03add9882287057de02614e960468cb6b522ce2ca7cbcf7bd0c",
+    "setup_summary_sha256": "d84f5b41b16f5a6c04f98e9dbffce3f295498abdf22430b23c1ae3a5213b306a",
+    "interpretation": "On the measured machine, separate native update and offscreen drawing repeat means are below the 16.67 ms 60 Hz interval. These are not combined onscreen frame deadlines, per-frame worst-case latency, or future hardware guarantees."
+  },
+  "limits": [
+    "Source encounter is an explicitly assisted constructed arena; natural reachability is not established.",
+    "Only bounded modeled source paths are supported; unsupported transitions refuse.",
+    "Visuals are authored symbolic representation; original art, audio and source game-over continuation are not reproduced.",
+    "Manual live UI observation and offscreen drawing checks are separate from the full-state differential.",
+    "Local macOS results do not establish Linux CI, package qualification or whole-game parity."
+  ],
+  "privacy": "No game binaries, raw terrain, screenshots, emulator RAM or private filesystem paths are included."
+}

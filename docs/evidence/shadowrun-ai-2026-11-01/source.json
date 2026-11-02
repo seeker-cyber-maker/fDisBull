@@ -1,0 +1,166 @@
+{
+  "format": "fdisbull-shadowrun-ai-source-evidence-1",
+  "status": "bounded source component comparisons; target integration assessed separately",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "civilian_components": {
+    "clear_movement": {
+      "matched": 31,
+      "summary_sha256": "650eda09d9c259a48477696d08767c7d7410bc7a5f6047cfb7c42bd0ee6f7bed"
+    },
+    "scheduler": {
+      "matched": 89,
+      "summary_sha256": "e9391633047071646a62deb49f37c9b65927162c139d2d1e7f4f1ea8822a3b63"
+    },
+    "waypoint_arrival": {
+      "matched": 27,
+      "summary_sha256": "f5f02f34e4aac1a8bb94c973356845b0067da1a33c811d7eacbf68b2080dd978"
+    },
+    "no_overlap_actor_scans": {
+      "matched": 105,
+      "summary_sha256": "1bb2325f3102cebbe1bc4fd28037268e8fdc9ab887bd9880d28d887a9ea991e2"
+    },
+    "facing_away_service": {
+      "matched": 7,
+      "summary_sha256": "31ac1c9438700b3252677997e87fb2eca855eb1557c29c6e18dacc2d6a4153bc"
+    },
+    "scope": "Captured civilian profile with controlled service, position and timer interventions; branches outside each declared guard refuse. Overlap response and general visibility are not represented."
+  },
+  "prepared_hostile_components": {
+    "corridor_pursuit": {
+      "matched": 20,
+      "summary_sha256": "c1b02aacea1e357aee3a0435f6243ca2c2e69df277c13cbee26af8f749fdd01d"
+    },
+    "clear_movement": {
+      "matched": 20,
+      "summary_sha256": "ffa142bda5321e3d438048d503b29deef289efe5e518725ebe55664ae3accdc8"
+    },
+    "received_hit": {
+      "matched": 32,
+      "summary_sha256": "71a09749fabf131f52dd1c8721bbf365f3a5eb10d920e3f1e7d68a4fbb3a5746"
+    },
+    "self_hit": {
+      "matched": 32,
+      "captured_transition_matched": true,
+      "summary_sha256": "4c34f069b8e87bfdc9435db7dda678f6857be671dac6c757fb162531fb1b931a"
+    },
+    "stationary_shooter": {
+      "start_cases": 8,
+      "matched_frames": 21,
+      "summary_sha256": "0e633baad85b9f7e89617fb3b1029c14d62f2f14814e3d92c597fc6cfbbc16d6"
+    },
+    "idle_shooter": {
+      "matched_frames": 39,
+      "summary_sha256": "7aed314129bcb2bd0b95edd5e788c09cfe543f882c3a9248e2624d634ca1c3cb"
+    },
+    "second_launch_pose": {
+      "matched_frames": 9,
+      "summary_sha256": "00c4cce5aed969986ba22494e0aa6fe377dee6a6b02e10c5a9b0e294d2706b72"
+    },
+    "second_launch_to_player_impact": {
+      "matched_cases": 1,
+      "summary_sha256": "5a2cbccae2ac3e8c89499e6b6dc6c8cdc05488deeef4ff4537f8f7d3d9b6fb7a"
+    },
+    "scope": "Source-constructed armed actor in an assisted arena or controlled corridor. Component projections have different inputs and are not an uninterrupted whole-game comparison. Natural encounter reachability is unestablished.",
+    "expired_timer_pose": {
+      "matched_frames": 6,
+      "summary_sha256": "e2fb697570a3471bdd6c947bdd3f31231d8aaa04c087a094ae9fc5b26071f6c3"
+    },
+    "zero_counter_service": {
+      "matched_frames": 10,
+      "summary_sha256": "ecae6e04cb3809805b5a9c737424f398f2e2e94a6ce7e862b3ee6d88600dfeb3"
+    },
+    "zero_counter_relaunch": {
+      "matched_frames": 8,
+      "summary_sha256": "1565748293e2c08568d8c4d9bd766e7bff151b828182c5eb38eb92fe94694aef"
+    },
+    "source_hit_loop_reentry": {
+      "matched_cases": 2,
+      "summary_sha256": [
+        "4a3e22a82bcf6eaf70dba205887492c181a42c06178dc82e2efdc7ab978e23fa",
+        "388dc9f0d3922ff3c8d702fc50704c43e685da12846f16069e27dcab89550b40"
+      ]
+    },
+    "moving_constructor_chain": {
+      "matched_cases": 1,
+      "summary_sha256": "2e51bd421eb168618c5e107184051d3bff27139ac59dd91526619827a95b252b"
+    },
+    "moving_actor_route": {
+      "matched_frames": 20,
+      "summary_sha256": "87d3188707584ae3385fa43efdf9985459e56f6677c8cb6a1857a6f79b96dffd"
+    },
+    "moving_shot_and_hit": {
+      "matched_cases": 1,
+      "summary_sha256": "ce59ec1ce7f9d824e30efc46b73052c4689aa92d724580a759da9f0f26b8c2df"
+    },
+    "moving_shot_pose": {
+      "matched_cases": 1,
+      "summary_sha256": "54ce36532d0a9ad273149319d4b8ecdb0f440f6edd5fff96c3185268a16fa5cf"
+    },
+    "moving_origin_negative_pose": {
+      "matched_frames": 21,
+      "summary_sha256": "ce623584ee70d75bb6bf93acff3cd0f263335a3a8ff2534925860cdf8839bb9a"
+    },
+    "moving_origin_idle": {
+      "matched_frames": 20,
+      "summary_sha256": "c30b3a9626bd01e3e8fcad2f42a492b450e21d339270cf7372cc28f7fcb21cd8"
+    },
+    "moving_origin_relaunch_pose": {
+      "matched_cases": 1,
+      "summary_sha256": "f189f3a5f59c742cef632f299a2bdc3d854556edebfc55eb134bb3e8de7c288a"
+    },
+    "zero_effect_player_contact": {
+      "matched_cases": 1,
+      "summary_sha256": "7a60281034f3147c82fabcc872de219aad2b6fd460673753a66f07c655ea03b2"
+    },
+    "moving_origin_relaunch_chain": {
+      "matched_cases": 1,
+      "summary_sha256": "0e380abb2ba239cae8c94b6d0813c2bc3db5a560098c9c1fbc8ba2d8bb79f6de"
+    }
+  },
+  "party_reaction": {
+    "controlled_source_summary_sha256": "374184934e52d1e2398b9b2ee660e7991d966728527955b0fb5db86d1badbfa6",
+    "two_no_input_recovery_windows_sha256": "92aa3f5be1227773da79277c77c6d32b948cfd604235746911102f6969ce5320",
+    "held_a_recovery_summary_sha256": "b5dd4caf48287cb08f5b04d0e2e599bef05b888b9b4efa848618ba18fe90c3c5",
+    "held_a_source_transition": [
+      6041,
+      6042
+    ],
+    "next_source_fire_frame": 6043,
+    "scope": "Stationary positive-health party actor. Held-A recovery is compared separately; the following original shot is observed, not modeled in that comparison. Sound and sprite payloads are excluded.",
+    "combat_walk": {
+      "matched_frames": 20,
+      "summary_sha256": "faa06ad4acd1d9244ce8977b4a176218b8b70b94b178ff124af3f84ff511e94c",
+      "scope": "assisted encounter, ordinary LEFT input, captured party clear combat movement; sprite timing separate"
+    },
+    "normal_clock": {
+      "matched_normal_frames": 21,
+      "matched_first_wound_pass": 1,
+      "summary_sha256": "00af946c3dfec0089e94eae4957a43813c7f1d4f714613b3144ef0affc7acabc",
+      "scope": "original movement fields supplied as component inputs; sprite clock is model-owned"
+    },
+    "held_direction_recovery": {
+      "source_transition": [
+        6032,
+        6033
+      ],
+      "summary_sha256": "b7be3d1cd98f744dfb2596968a2e9554c0c5e3324d17510fab2510214c9d75e4",
+      "scope": "composed direction admission, combat movement and party sprite clock; source walking sprite speed supplied",
+      "following_walk_frames": 7,
+      "route_summary_sha256": "6a84926dff311d6f16c7cb8bc9fcae86a1be65e43ff05c13592e3f0e87acb3af"
+    },
+    "idle_after_combat_walk": {
+      "matched_source_transition": [
+        6062,
+        6063
+      ],
+      "summary_sha256": "81af1add60c8bb6fe6146d92eca2a952b0aa1ea06ceb7cd731a88cc529d74ce1",
+      "scope": "source actor step speed16 and supplied party sprite speed28; audio and graphics payload excluded"
+    }
+  },
+  "boundaries": [
+    "Component evidence does not establish that every qualified branch is integrated into the target build.",
+    "Unknown movement, overlap, visibility, pursuit, animation, death and input branches remain outside their respective bounded contracts.",
+    "Assisted source setup and original runtime observations are distinct from a natural encounter and whole-game parity."
+  ],
+  "privacy": "No original game bytes, assets, memory dumps, raw terrain grids or private filesystem paths are included."
+}

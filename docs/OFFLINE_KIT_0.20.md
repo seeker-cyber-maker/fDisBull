@@ -1,5 +1,9 @@
 # Linux offline kit 0.20
 
+For 0.29 and later, third-party dependency wheels are built and reused through
+[`OFFLINE_DEPENDENCIES.md`](OFFLINE_DEPENDENCIES.md); the full kit builder can
+consume that bundle with `--dependency-bundle`.
+
 The builder packages only explicitly selected tool artifacts, never game files, user states, or databases. It targets Linux x86-64 and Python 3.13.5. The wheelhouse must contain one compatible wheel each for fdisbull 0.20.0, iced-x86 1.21.0, capstone 5.0.9, lief 1.0.0, Pillow >=10.4,<13 and z3-solver 5.3.2.0. The fdisbull wheel and native backend must be the artifacts actually built and tested for the release; their identity is an input to the build, not something wheel metadata can establish.
 
 ```sh

@@ -19,6 +19,13 @@ context, not a certificate that every point is safe in every game state.
 | `safe` | Candidate standing cells within known coverage, before subtracting active exclusions |
 | `layers` | Separately named obstacles, hazards, object interaction zones and portals |
 | `evidence` | Source spans, supporting screenshot artifacts, observations and qualification claims |
+| `coordinate_domains` (optional) | Explicit world/room/collision/viewport extents and scoped expected off-screen margins; inspection only |
+
+Use the [coordinate-domain audit](SCENE_COORDINATE_DOMAINS.md) to retain signed
+object bounds and explain expected scrolling margins. Its unknowns and notices
+do not enlarge these masks or confer movement authority. Existing composite
+masks remain authoritative for their stated purpose; a bounding rectangle does
+not reproduce a composite mask's holes or collision coverage.
 
 A `source.sha256` is the **project version** hash, not a picture hash. Attach
 resources to the project and bind their exact hashes and spans in `evidence`.

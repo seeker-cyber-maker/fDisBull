@@ -1,0 +1,78 @@
+{
+  "checker_sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd",
+  "domain": "0 <= left < right <= 640, different 8-column cells; signed 32-bit comparisons",
+  "exhaustive": {
+    "endpoint_pairs": 202880,
+    "maximum_middle_iterations": 39,
+    "negative_controls": {
+      "lost_endpoint_order_remainder": -40,
+      "signed_upper_bound_without_lower_bound": -1
+    },
+    "status": "passed",
+    "tail_index_counts": {
+      "0": 640,
+      "1": 12800,
+      "2": 12800,
+      "3": 12800,
+      "4": 12800,
+      "5": 12800,
+      "6": 12800,
+      "7": 12800,
+      "8": 12800,
+      "9": 12480,
+      "10": 12480,
+      "11": 12480,
+      "12": 12480,
+      "13": 12480,
+      "14": 12480,
+      "15": 12480,
+      "16": 12480
+    }
+  },
+  "format": "authored-diagnostic-graphics-model-checks-1",
+  "scope": "Authored arithmetic domain only; no source-to-model, native or product conformance claim.",
+  "solver": {
+    "checks": [
+      {
+        "case": "caller_initial_nonnegative",
+        "expected": "unsat",
+        "result": "unsat"
+      },
+      {
+        "case": "loop_preserves_and_decreases",
+        "expected": "unsat",
+        "result": "unsat"
+      },
+      {
+        "case": "exit_index_0_through_16",
+        "expected": "unsat",
+        "result": "unsat"
+      },
+      {
+        "case": "upper_bound_only_counterexample",
+        "counterexample": {
+          "left": 0,
+          "remainder": 2147483648,
+          "right": 0
+        },
+        "counterexample_encoding": "unsigned representation of 32-bit bit vectors",
+        "expected": "sat",
+        "result": "sat"
+      },
+      {
+        "case": "lost_order_counterexample",
+        "counterexample": {
+          "left": 257,
+          "remainder": 0,
+          "right": 8
+        },
+        "counterexample_encoding": "unsigned representation of 32-bit bit vectors",
+        "expected": "sat",
+        "result": "sat"
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "version": "5.3.2"
+  }
+}

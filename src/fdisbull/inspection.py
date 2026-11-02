@@ -36,6 +36,18 @@ def _identify_header(data: bytes) -> dict:
             return False
         return True
 
+    from .ail import ail_signature, inspect_ail
+    if ail_signature(data):
+        h.update(format='AIL', family='DOS', bits=16, arch='x86', endian='little',
+                 entrypoint=None, address_space='module-relative')
+        try:
+            metadata=inspect_ail(data)
+            h.update(valid=True, directory_offset=metadata['directory_offset'],
+                     export_count=len(metadata['exports']))
+        except ValueError as exc:
+            h['warnings'].append(str(exc))
+        return h
+
     if data.startswith(b'LE'):
         h.update(format='LE', family='DOS', bits=32, arch='x86', endian='little')
         h['valid'] = need(196, 'truncated LE header')
@@ -208,6 +220,12 @@ def _identify_header(data: bytes) -> dict:
             if not need(offset + size, "fat Mach-O slice exceeds file"):
                 return h
         h["valid"] = True
+    from .roms import probe_rom
+    rom = probe_rom(data) if h['format'] == 'unknown' else None
+    if rom is not None:
+        return {key: rom[key] for key in ('format', 'family', 'platform', 'valid',
+            'bits', 'arch', 'endian', 'header_offset', 'detection', 'warnings',
+            'loadable', 'validation_scope')} | {'source': 'console-media header bytes'}
     return h
 
 
@@ -254,7 +272,8 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','le','ne','mz','com'):raise ValueError('image must be auto, pe, le, ne, mz or com')
+    if image not in (None,'pe','le','ne','mz','com','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com or ail')
+    if image=='ail' and header['format']!='AIL':raise ValueError('requested AIL image is not present')
     container_header=None
     if image=='com':
         if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
@@ -308,9 +327,15 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
         from .image_views import image_views
         result['image_views']=image_views(data)
     if container_header is not None:result['container_header']=container_header
-    result['selected_image']=image or ('pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'ne' if header['format']=='NE' else 'mz' if header['format']=='DOS MZ' else None)
+    result['selected_image']=image or ('ail' if header['format']=='AIL' else 'pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'ne' if header['format']=='NE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['family'] in ('console ROM', 'console disc'):
+        from .roms import inspect_rom
+        result['rom'] = inspect_rom(data)
+        result['rom_regions'] = result['rom']['regions']
+        result['strings'] = _strings(data, [], warnings)
+        return result
     if header['format'] == 'NE':
         from .ne import inspect_ne
         # A recognized but malformed NE image cannot silently become the DOS
@@ -331,6 +356,20 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
             warnings.append(f"Standalone NE inspection lists {MAX_ITEMS} of {metadata['fixup_count']} symbolic fixup records; imported projects retain every record for the paginated relocations query.")
         mappings = [(item['file_offset'], item['file_size'], item['virtual_address']) for item in metadata['file_mappings']]
         result['strings'] = _strings(data, mappings, warnings)
+    if header['format']=='AIL':
+        from .ail import inspect_ail
+        try:
+            metadata=inspect_ail(data)
+            result['ail']=metadata
+            result['exports']=metadata['exports']
+            result['sections']=[dict(name='ail_module',virtual_address=0,
+                virtual_size=len(data),file_offset=0,file_size=len(data),permissions='rwx')]
+            result['file_mappings']=[dict(virtual_address=0,file_offset=0,file_size=len(data))]
+            mappings=[(0,len(data),0)]
+            warnings.extend(metadata['warnings'])
+        except ValueError as exc:
+            warnings.append(str(exc))
+        result['strings']=_strings(data,mappings,warnings)
         return result
     if header['format'] == 'LE':
         try:

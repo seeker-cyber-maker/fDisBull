@@ -1,0 +1,95 @@
+{
+  "format": "fdisbull-agi-gnome-giant-attempts-1",
+  "attempts": [
+    {
+      "run": "explore-01",
+      "kind": "multirevision exploratory",
+      "complete_route": false,
+      "facts": "Timed movement near a stair turn moved two AGI units instead of one; original fall-trigger flag observed, not an observed death. Later guest state after shutdown is not invented.",
+      "private_artifact_sha256": {
+        "result.json": "1c7a3d39fe33ae2bd79211cdfe96f84f4e5ef09a321f0eb8e3e452abada6a9e9"
+      }
+    },
+    {
+      "run": "motion-native-preflight-01",
+      "kind": "isolated original-room component",
+      "complete_route": false,
+      "completed_goals": 40,
+      "facts": "Same motion component, different collector producer; no full-route claim.",
+      "private_artifact_sha256": {
+        "result.json": "94ce0dbb68539bc39a03234cadc45947b31d3750b629058c696cad08162e982b",
+        "partial-capture.private.json": "a8db78bbc1af58d327e73d78b2195edd9a1320269e2b05502622eaf9a9c10ece"
+      }
+    },
+    {
+      "run": "native-01",
+      "complete_route": false,
+      "facts": "Host interrupt while reading state. Earlier retained room10 state is not treated as current at interrupt; final guest state unknown.",
+      "private_artifact_sha256": {
+        "result.json": "ac1c015935f2e8fa58bf2840cb0a2539d98a1df8976f41758c8c20f52d6bbd1c",
+        "partial-capture.private.json": "ad481dc2d36d4386fbeb11000dd1d72506276e6623e0ad931f8b9241210e3a81"
+      }
+    },
+    {
+      "run": "native-02",
+      "complete_route": false,
+      "completed_actions": 6,
+      "settled_motion_goals": 629,
+      "owned_after_access_stops": 863,
+      "facts": "Reached original sleep/score26. Guard rejected stale pre-commandv70=0 versus derived24 before any GET CHEST input. No distance-probe execution.",
+      "private_artifact_sha256": {
+        "result.json": "54ef48584893366c1908983d38729a8ec2eaa5ea85e6d442740431f737c1c09b",
+        "partial-capture.private.json": "5560c87c365c6d4cc848ae43d4cd33742e2569aff36e6aebc8cb4b8b48509291"
+      }
+    },
+    {
+      "run": "native-03",
+      "complete_route": false,
+      "completed_actions": 5,
+      "settled_motion_goals": 372,
+      "incomplete_motion_goals": 1,
+      "facts": "Room68 observed score19\u219211/shield255\u21920; key retained, chest absent, no death flag. Cause writer untraced. Prepared quest-start checkpoint itself preceded this failure and is hash-bound.",
+      "private_artifact_sha256": {
+        "result.json": "85af3044267223aa7d39e42fb99fb303c7ee41f9a3bd3809a6a81e747f6b23bb",
+        "partial-capture.private.json": "34a9cc0b06499f0110fd6a8c8c174a1b6f8e87a1f71b10ed9bd8e90e5fa5ddf3"
+      }
+    },
+    {
+      "run": "native-04",
+      "complete_route": false,
+      "completed_actions": 3,
+      "facts": "Cold-start attempt stopped at rat: original gift response completed, diamonds consumed and score3, then death observed. Payment action incomplete; no quest segment/checkpoint/giant/chest was reached. Source suggests a timing hazard; no native cause-writer trace.",
+      "private_artifact_sha256": {
+        "result.json": "7a516adffd7f0e8f2b56ca65550d31c402252b759e9c220b5b66be973ee1208d",
+        "partial-capture.private.json": "fcd45fcf5bb31dc2e64c7b282a1415b02a692f09f05ddbf3644fd598b3895626"
+      }
+    },
+    {
+      "run": "tree-restore-room68-diagnostic-01",
+      "complete_component": true,
+      "fresh_game": false,
+      "load_count": 1,
+      "settled_motion_goals": 631,
+      "chest_trace_events": 68,
+      "facts": "Separate restored component confirmed room68 retreat/no-init selection and distance/write-return/chest; not used to splice the final eight-action capture.",
+      "private_artifact_sha256": {
+        "diagnostic.private.json": "d6712a1656fe5b01a5513afa17803ac7c55c50abcba69aa80b8dade9c1aba2df"
+      }
+    },
+    {
+      "run": "quest-start-restored-01",
+      "complete_segment": true,
+      "fresh_game": false,
+      "load_count": 1,
+      "actions": 8,
+      "anchors": 9,
+      "facts": "Final continuous eight-action capture from supported prepared native checkpoint; all artifacts and actual origin recorded separately.",
+      "private_artifact_sha256": {
+        "diagnostic.private.json": "724e24fc0c44594866a052b0790b7633a23c3d1e3476c4c8e0b39c9a31ec3e5b",
+        "partial-capture.private.json": "0c840eb1bf94a563a3ab6442594a557ce037a007c55980bcc1f25395a059bf6e",
+        "capture.private.json": "0c840eb1bf94a563a3ab6442594a557ce037a007c55980bcc1f25395a059bf6e"
+      }
+    }
+  ],
+  "scope": "Successful components do not erase failed/unknown attempts. Full private captures, game files, states and databases remain excluded."
+}

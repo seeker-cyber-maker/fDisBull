@@ -1,5 +1,13 @@
 # DinoPark scenes through the original-backed UDC
 
+The [return-to-park recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md) retains the original return input under a shared deadline and adds guest-read-only Park reconciliation, including retry after host scene publication or witness failure. A source-bound native-save case qualifies normal return, repeated read-only recovery and all 97 probes armed; fresh-load first-scene publication is included.
+
+The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts, including the earlier unknown return, remain preserved.
+
+The [visitor continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md) adds 32 time advances through month rollover, separates numerical attendance from actor replenishment, and records the retained unknown park-to-street transition. Durable selective probes and stronger skill guidance are proposed separately in [GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31).
+
+The [park preparation follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md) qualifies the first guide, food order and running park with short readiness-driven waits and a shared deadline; standing unresolved-entry probes remain armed for later play.
+
 Continuation candidate on v0.24.0, 29 October 2026. PRs #18 and #19 are merged.
 This connects the DinoPark native scenes to the installed Z player through the
 original-backed DOS UDC. The current
@@ -138,6 +146,76 @@ restores the first catalogue page and checks the original species and price
 before BUY; the last inspected page cannot silently change the intended order.
 
 ## Saving and stopping
+
+An incomplete original action holds further action input while its reachable
+provider remains available. For a held business-entry command (`go dinomart`,
+`go employment`, `go store` or `go diner`), `reconcile` can confirm the
+destination from the paused original frame and current selector without
+sending input, running the guest or restoring a checkpoint. This requires the
+retained original input receipt, source scene revision and same live session.
+An unqualified destination leaves the hold intact. Other unknown action effects
+remain unresolved; this command does not authorize replay or reconnect an exited
+guest. Observation and session receipts expose `reconciliation_available` and
+the held attempt's `recovery_id`.
+
+These business entries share a finite 40-second native request budget, with a
+separate bounded recovery-status check. A later final-witness failure retains
+the original queued click and any matched navigation effect. Repeated read-only
+failures retain published scene revisions for retry. Reconciliation observes
+the destination; it does not advance an unfinished transition. The
+[Employment verification](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
+records normal entry/return, two witness failures, the successful original-action
+certificate, all eight locations and the remaining legacy-action limitations.
+
+The qualified Park-to-Street exit and Street-to-Park return also offer
+`reconcile` after an unknown queued navigation. The return retains its original
+80 ms press and continuous 8,000 ms guest interval under a shared 40-second
+deadline beginning before initial observation. Recovery requires the original
+run, source revision, before-observation and queued input. It checks the current
+Park frame and selector without execution, input or restore. A recognized
+quarter notice or parking advisory stays an explicit notice continuation;
+it is not certified as Park arrival. A read-only retry follows the committed
+host scene head after a publication/readback failure. This does not reload
+code into an older provider or recover its retained guest automatically.
+
+A held Coelophysis order retains its delivered input receipts. Use `look` to
+obtain its current guarded actions. When offered, `continue dinosaur order`
+waits for the retained phase and sends only later inputs; it does not repeat
+the buy command. Each request has a host deadline and phase guest allowances
+remain cumulative. After the remaining phases finish, use `reconcile` to
+certify the original buy from cash, pen, expense, display and released-pointer
+observations. This final step is read-only. A confirmed effect survives a
+failed display readback, while an unproved effect stays unknown. See the
+[purchase recovery verification](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+for the tested scope and retained failures.
+
+A held first-desert-plot order similarly offers `continue land purchase` when
+its recorded phase can proceed. The adapter distinguishes the original draft
+allocation and reserved working cash from the committed pen array and cash.
+The next press waits for pointer preparation and fresh phase checks. A known
+commit survives later display failure; `reconcile` certifies the original
+`buy desert plot` without another click or guest execution. Guest phase budgets
+remain cumulative, and uncertain execution does not authorize continuation.
+See the [land recovery verification](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
+for the bounded first-plot contract and original-game cursor recognition finding.
+
+A held wood-fence order offers `continue fence order` for later phases of its
+original twelve-input sequence. The confirmation ticket and native fence effect
+survive failures during inspection or return. A shared 40-second deadline starts
+before observation; composed observers must preserve the incoming deadline.
+After the Street return qualifies, `reconcile` certifies the original
+`buy wood fence` without new input, execution or restore. See the
+[fence verification and tracing blockers](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md).
+
+The JSON-line backend accepts `{"op":"reconcile"}` and an optional
+`recovery_id` selecting the already-held attempt. A successful result carries
+`read_only: true`, the original canonical action and a fresh destination witness.
+Batch journal reconciliation checks the attempt ID, action and session before
+accepting that certificate, then refreshes its observation without replaying the
+step. The original failure diagnostic is retained. An already confirmed purchase
+keeps its known commit if an unsupported follow-up hold cannot be reconciled.
+See the [DinoMart recovery verification](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+for the actual tested boundary and remaining analysis obligations.
 
 `save park` uses the original native writer and creates a new backup each time:
 `zpark`, `zpark-002`, and so on. `--slot` chooses the base name. Earlier backups

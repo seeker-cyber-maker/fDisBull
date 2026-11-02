@@ -1,0 +1,384 @@
+{
+  "after_sha256": "343633fd55de6a92f9cd2d71d4fb89343a3c283b8464c5a830d3d5933ecafbc1",
+  "before_sha256": "b89dfd822e7bc2e9969ff5090d366e75050b0688bcbb4d70a0e4c5da3f7f3de7",
+  "changed_offsets": [
+    2607,
+    2608,
+    2801,
+    2802
+  ],
+  "declared_written_offsets": [
+    2607,
+    2608,
+    2801,
+    2802
+  ],
+  "effect": "Selected read and write move from local slot 7 to self property byte offset 0x1a. The intervening 192 bytes are opaque here.",
+  "id": "orat_state_storage",
+  "offset": 2607,
+  "original_size": 6962,
+  "script": 28,
+  "selected_spans": [
+    {
+      "after_effects": {
+        "acc": [
+          "input",
+          "acc_in"
+        ],
+        "events": [],
+        "prev": [
+          "input",
+          "prev_in"
+        ],
+        "stack": [
+          [
+            "read_property",
+            26
+          ]
+        ]
+      },
+      "after_instruction_count": 1,
+      "asm_edits": [
+        [
+          "replace",
+          0,
+          1,
+          0,
+          1
+        ]
+      ],
+      "before_effects": {
+        "acc": [
+          "input",
+          "acc_in"
+        ],
+        "events": [],
+        "prev": [
+          "input",
+          "prev_in"
+        ],
+        "stack": [
+          [
+            "read_local",
+            7
+          ]
+        ]
+      },
+      "before_instruction_count": 1,
+      "byte_changes": [
+        [
+          0,
+          139,
+          103
+        ],
+        [
+          1,
+          7,
+          26
+        ]
+      ],
+      "size": 2,
+      "start": 2607,
+      "unordered_instruction_bag_equal": false
+    },
+    {
+      "after_effects": {
+        "acc": [
+          "input",
+          "acc_in"
+        ],
+        "events": [
+          [
+            "write_property",
+            26,
+            [
+              "input",
+              "acc_in"
+            ],
+            2801
+          ]
+        ],
+        "prev": [
+          "input",
+          "prev_in"
+        ],
+        "stack": []
+      },
+      "after_instruction_count": 1,
+      "asm_edits": [
+        [
+          "replace",
+          0,
+          1,
+          0,
+          1
+        ]
+      ],
+      "before_effects": {
+        "acc": [
+          "input",
+          "acc_in"
+        ],
+        "events": [
+          [
+            "write_local",
+            7,
+            [
+              "input",
+              "acc_in"
+            ],
+            2801
+          ]
+        ],
+        "prev": [
+          "input",
+          "prev_in"
+        ],
+        "stack": []
+      },
+      "before_instruction_count": 1,
+      "byte_changes": [
+        [
+          0,
+          163,
+          101
+        ],
+        [
+          1,
+          7,
+          26
+        ]
+      ],
+      "size": 2,
+      "start": 2801,
+      "unordered_instruction_bag_equal": false
+    }
+  ],
+  "signature": [
+    139,
+    7,
+    57,
+    7,
+    118,
+    129,
+    0,
+    74,
+    4,
+    28,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    57,
+    7,
+    118,
+    129,
+    0,
+    74,
+    4,
+    163,
+    7
+  ],
+  "slices": [
+    [
+      0,
+      2
+    ],
+    [
+      194,
+      196
+    ]
+  ],
+  "source_profile": "retrieved_master_excerpt",
+  "upstream_patch": "sq1vgaPatchOratSounds",
+  "upstream_signature": "sq1vgaSignatureOratSounds",
+  "writes": [
+    [
+      0,
+      [
+        103,
+        26
+      ]
+    ],
+    [
+      194,
+      [
+        101,
+        26
+      ]
+    ]
+  ]
+}

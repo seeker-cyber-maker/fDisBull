@@ -85,3 +85,58 @@ def test_bounded_inputs_and_empty_bytecode_rejected(tmp_path):
     log=fixture(tmp_path,b'\x00')
     (tmp_path/'VOL.0').write_bytes(b'\0'*(2*1024*1024+1))
     with pytest.raises(ValueError,match='volume exceeds'): inspect_logic(log,tmp_path,0,profile='2.917')
+
+
+def test_loaded_resource_is_immutable_and_typed_facts_keep_encoding(tmp_path):
+    from dataclasses import FrozenInstanceError
+    from hashlib import sha256
+    from fdisbull.agi import load_logic
+    log=fixture(tmp_path, bytes.fromhex('0305f00c070d0700'))
+    resource=load_logic(log,tmp_path,0,profile='2.917')
+    assert resource.code == bytes.fromhex('0305f00c070d0700')
+    assert resource.resource_sha256 == sha256(resource.payload).hexdigest()
+    assert resource.code_offset == 10 and resource.resource_offset == 3
+    with pytest.raises(FrozenInstanceError): resource.code=b'\0'
+    before=resource.provenance();before['logic']=99
+    assert resource.provenance()['logic']==0
+    rows=inspect_logic(log,tmp_path,0,profile='2.917')['instructions']
+    assert rows[0]['bytes']=='0305f0' and rows[0]['operands']==[
+        {'kind':'variable','index':5},{'kind':'u8','value':240}]
+    assert rows[1]['operands']==[{'kind':'flag','index':7}]
+    (tmp_path/'VOL.0').write_bytes(b'changed')
+    assert resource.code == bytes.fromhex('0305f00c070d0700')
+
+
+@pytest.mark.parametrize('opcode,name,second_kind', [(1,'equaln','u8'),(2,'equalv','variable'),
+    (3,'lessn','u8'),(4,'lessv','variable'),(5,'greatern','u8'),(6,'greaterv','variable')])
+def test_scalar_condition_facts_preserve_raw_and_typed_operands(tmp_path,opcode,name,second_kind):
+    result=inspect(tmp_path,bytes([255,opcode,4,9,255,0,0,0]))
+    condition=result['instructions'][0]['conditions'][0]
+    assert condition['mnemonic']==name and condition['operands']==[4,9]
+    assert condition['bytes']==bytes([opcode,4,9]).hex()
+    assert condition['typed_operands']==[{'kind':'variable','index':4},
+        {'kind':'u8','value':9} if second_kind=='u8' else {'kind':'variable','index':9}]
+
+
+def test_condition_flags_and_markers_remain_explicit(tmp_path):
+    result=inspect(tmp_path,bytes.fromhex('fffc0702fd010103fcff000000'))
+    conditions=result['instructions'][0]['conditions']
+    assert [x.get('marker') for x in conditions]==['or',None,'not',None,'or']
+    assert conditions[1]['mnemonic']=='isset' and conditions[1]['typed_operands']==[{'kind':'flag','index':2}]
+    assert conditions[1]['bytes']=='0702'
+
+
+@pytest.mark.parametrize('code',['fffdfd0701ff000000','fffdff000000','fffc0701ff000000','fffdfc0701fcff000000'])
+def test_malformed_boolean_markers_refused(tmp_path,code):
+    result=inspect(tmp_path,bytes.fromhex(code))
+    assert result['errors'] and not result['complete']
+
+
+@pytest.mark.parametrize('opcode,name,kind', [(22,'call','logic'),(23,'call.v','variable')])
+def test_call_retains_fallthrough_and_unresolved_cross_resource_edge(tmp_path,opcode,name,kind):
+    result=inspect(tmp_path,bytes([opcode,5,0]))
+    call=result['instructions'][0]
+    assert call['mnemonic']==name and call['bytes']==bytes([opcode,5]).hex()
+    assert call['operands']==[{'kind':kind,'index':5}]
+    assert [(x['kind'],x['offset']) for x in call['successors']]==[('call',None),('fallthrough',2)]
+    assert 'binding' in call['successors'][0]['evidence'] and not result['complete']

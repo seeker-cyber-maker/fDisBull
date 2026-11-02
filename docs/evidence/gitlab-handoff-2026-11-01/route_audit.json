@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-31",
+  "purpose": "Local route connectivity audit, no implementation changes",
+  "baseline": "supplied fdisbull 0.26.0 wheel + delivered first-party console_synthesis overlay",
+  "github_accessed": false,
+  "external_source_retrieved": false,
+  "original_console_cpu_run": false,
+  "whole_rom_analyzed": false,
+  "checks": [
+    {
+      "name": "6502_fragment_to_shared_uil",
+      "status": "passed",
+      "result": 1,
+      "instructions": 5,
+      "scope": "Authored fragment, not whole ROM or original CPU execution"
+    },
+    {
+      "name": "shared_uil_to_c",
+      "status": "passed",
+      "bytes": 2188,
+      "direction": "C output, not a C parser"
+    },
+    {
+      "name": "generated_c_to_native_execution",
+      "status": "passed",
+      "result": 1,
+      "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+      "scope": "One fresh native case, not repeat of previous exhaustive tests"
+    },
+    {
+      "name": "generated_c_to_host_asm",
+      "status": "passed",
+      "target": "x86_64-linux-gnu",
+      "command": [
+        "/usr/bin/gcc",
+        "-std=c11",
+        "-O2",
+        "-S",
+        "/mnt/data/rom_route_audit/generated.c",
+        "-o",
+        "/mnt/data/rom_route_audit/generated_host.s"
+      ],
+      "scope": "Compiler output; no target-ASM-to-UIL lifter attached"
+    },
+    {
+      "name": "baseline_restricted_c_to_uil",
+      "status": "passed",
+      "input": "ax += 200; ax -= 1;",
+      "result": 200,
+      "scope": "16-bit register outputs at straight-line block exit; flags, memory, control flow, ABI, timing, intermediate state and external effects excluded"
+    },
+    {
+      "name": "baseline_x86_16_bytes_to_c_to_uil",
+      "status": "passed",
+      "c": "ax += 200;\nax -= 1;",
+      "identical_uil": true,
+      "scope": "Same bounded ASM decoder, not independent decompilation; excludes flags, memory, control flow and ABI"
+    },
+    {
+      "name": "first_party_generated_c_to_baseline_c_importer",
+      "status": "refused",
+      "error": "invalid C subset source"
+    },
+    {
+      "name": "ordinary_c_function_to_baseline_c_importer",
+      "status": "refused",
+      "error": "missing semicolon"
+    },
+    {
+      "name": "branching_c_to_baseline_c_importer",
+      "status": "refused",
+      "error": "unsupported C statement"
+    },
+    {
+      "name": "original_cpu_reference",
+      "status": "unavailable_without_provider",
+      "error": "no original-CPU executor supplied; UDL role is not execution authority"
+    }
+  ],
+  "functions_inspected": {
+    "baseline": [
+      "lift_asm_block",
+      "lift_c_block",
+      "asm_to_c"
+    ],
+    "first_party": [
+      "recover",
+      "emit_c",
+      "compile_c",
+      "emit_retained",
+      "execute_original"
+    ]
+  }
+}

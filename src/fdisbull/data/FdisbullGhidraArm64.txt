@@ -1,0 +1,132 @@
+// Read-only evidence from explicit Mach-O ARM64 preferred virtual addresses.
+// The imported file is a byte-identical thin slice in a temporary project.
+// Automatic analysis is disabled; fDisBull owns traversal and persistence.
+import ghidra.app.script.GhidraScript;
+import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileResults;
+import ghidra.app.cmd.disassemble.DisassembleCommand;
+import ghidra.framework.Application;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressSet;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.Instruction;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.io.PrintWriter;
+
+public class FdisbullGhidraArm64 extends GhidraScript {
+    private static String encoded(String value) {
+        if (value == null) value = "";
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String hex(byte[] value) {
+        StringBuilder text = new StringBuilder(value.length * 2);
+        for (byte octet : value) text.append(String.format("%02x", octet & 0xff));
+        return text.toString();
+    }
+
+    private static String address(Address value) {
+        return value == null ? "" : Long.toUnsignedString(value.getOffset(), 16);
+    }
+
+    private boolean decode(Address start, int windowBytes, boolean followFlow) throws Exception {
+        AddressSet allowed = new AddressSet(start, start.add(windowBytes - 1));
+        DisassembleCommand command = new DisassembleCommand(start, allowed, followFlow);
+        command.enableCodeAnalysis(false);
+        return command.applyTo(currentProgram, monitor);
+    }
+
+    public void run() throws Exception {
+        String[] args = getScriptArgs();
+        if (args.length < 2) throw new Exception("facts path and count are required");
+        int count = Integer.parseInt(args[1]);
+        boolean decompile = args.length == count + 4;
+        if (count < 1 || count > 256 || (!decompile && args.length != count + 2))
+            throw new Exception("invalid ARM64 probe address count");
+        try (PrintWriter out = new PrintWriter(args[0], "UTF-8")) {
+            out.println("VERSION\t" + Application.getApplicationVersion());
+            out.println("FORMAT\t" + encoded(currentProgram.getExecutableFormat()));
+            out.println("LANGUAGE\t" + encoded(currentProgram.getLanguageID().toString()));
+            for (int index = 0; index < count; index++) {
+                monitor.checkCancelled();
+                String requested = args[index + 2];
+                try {
+                    Address at = toAddr(requested);
+                    if (at == null) throw new Exception("address is not mapped");
+                    Instruction instruction = getInstructionAt(at);
+                    if (instruction == null) {
+                        if (!decode(at, 4, false)) throw new Exception("disassembly failed");
+                        instruction = getInstructionAt(at);
+                    }
+                    if (instruction == null || instruction.getLength() != 4)
+                        throw new Exception("no complete ARM64 instruction at requested address");
+                    StringBuilder operands = new StringBuilder();
+                    for (int operand = 0; operand < instruction.getNumOperands(); operand++) {
+                        if (operand != 0) operands.append('\u001f');
+                        operands.append(instruction.getDefaultOperandRepresentation(operand));
+                    }
+                    StringBuilder flows = new StringBuilder();
+                    for (Address target : instruction.getFlows()) {
+                        if (flows.length() != 0) flows.append(',');
+                        flows.append(address(target));
+                    }
+                    out.println("INS\t" + address(at) + "\t" + instruction.getLength() + "\t" +
+                        hex(instruction.getBytes()) + "\t" + encoded(instruction.getMnemonicString()) +
+                        "\t" + encoded(instruction.toString()) + "\t" + encoded(operands.toString()) +
+                        "\t" + encoded(instruction.getFlowType().toString()) + "\t" + flows.toString() +
+                        "\t" + address(instruction.getFallThrough()));
+                } catch (Exception failure) {
+                    String value = requested.startsWith("0x") ? requested.substring(2) : requested;
+                    out.println("ERROR\t" + value + "\t" + encoded(failure.toString()));
+                }
+            }
+            if (decompile) {
+                String entryText = args[count + 2];
+                String entryHex = entryText.startsWith("0x") ? entryText.substring(2) : entryText;
+                int seconds = Integer.parseInt(args[count + 3]);
+                if (seconds < 1 || seconds > 60) throw new Exception("invalid decompiler timeout");
+                try {
+                    Address entry = toAddr(entryText);
+                    if (entry == null) throw new Exception("decompiler entry is not mapped");
+                    if (getInstructionAt(entry) == null && !decode(entry, 4, false))
+                        throw new Exception("decompiler entry cannot be disassembled");
+                    // Diagnostic function body is bounded to 4 KiB from entry.
+                    // A call/branch outside this set is intentionally incomplete.
+                    decode(entry, 4096, true);
+                    Function function = getFunctionAt(entry);
+                    if (function == null) function = createFunction(entry, "fdisbull_diagnostic");
+                    if (function == null) throw new Exception("function creation failed");
+                    if (function.getBody().getMinAddress().compareTo(entry) < 0 ||
+                        function.getBody().getMaxAddress().compareTo(entry.add(4095)) > 0)
+                        throw new Exception("function body exceeds the 4 KiB diagnostic window");
+                    DecompInterface engine = new DecompInterface();
+                    try {
+                        if (!engine.openProgram(currentProgram)) throw new Exception("decompiler cannot open program");
+                        DecompileResults result = engine.decompileFunction(function, seconds, monitor);
+                        if (!result.decompileCompleted() || result.getDecompiledFunction() == null) {
+                            String warning = result.getErrorMessage();
+                            if (warning == null || warning.isEmpty()) warning = "decompilation did not complete";
+                            out.println("DECOMP\t" + entryHex + "\tfailed\t" + encoded("") + "\t" + encoded(warning));
+                        } else {
+                            String c = result.getDecompiledFunction().getC();
+                            String warning = result.getErrorMessage();
+                            String status = "complete";
+                            if (c.length() > 131072) {
+                                c = c.substring(0, 131072);
+                                status = "truncated";
+                            }
+                            out.println("DECOMP\t" + entryHex + "\t" + status + "\t" + encoded(c) +
+                                "\t" + encoded(warning));
+                        }
+                    } finally {
+                        engine.dispose();
+                    }
+                } catch (Exception failure) {
+                    out.println("DECOMP\t" + entryHex + "\tfailed\t" + encoded("") + "\t" + encoded(failure.toString()));
+                }
+            }
+            out.println("COMPLETE\t" + count);
+        }
+    }
+}

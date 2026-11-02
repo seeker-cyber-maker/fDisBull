@@ -89,6 +89,22 @@ class Player:
         command = command.strip()
         if not command:
             return "Enter a command."
+        if command.casefold() == 'reconcile':
+            self.pending = None
+            reconcile = getattr(self.backend,'reconcile',None)
+            if reconcile is None:
+                return 'Provider reconciliation is unavailable; no action sent.'
+            result = reconcile()
+            if (not isinstance(result,dict) or result.get('read_only') is not True or
+                    result.get('status') not in ('success','incomplete','not-needed') or
+                    type(result.get('complete')) is not bool or
+                    result.get('effects') not in ('unknown','applied-confirmed','none-confirmed')):
+                self.last_status = 'incomplete'
+                self.last_result.update(status='incomplete',complete=False,effects='unknown')
+                return 'Reconciliation unavailable; no action sent.'
+            self.last_status = result['status'] if result['complete'] else 'incomplete'
+            self.last_result = {**deepcopy(result),'status':self.last_status,'action_sent':False}
+            return str(result.get('message','Original outcome remains unresolved.'))
         obs = self._observe()
         if obs is None:
             self.pending = None
@@ -126,7 +142,7 @@ class Player:
                 return "No inventory items are recorded in this partial view."
             return "Carrying: " + (", ".join(o["label"] for o in obs["inventory"]) or "nothing") + "."
         if lower in ("help", "?"):
-            return "Passive reads: look, examine <object>, inventory, help. Actions: <verb> <object>, go <direction> (or n/e/s/w/u/d), use <item> on <target>. Clarify by number."
+            return "Passive reads: look, examine <object>, inventory, help. Actions: <verb> <object>, go <direction> (or n/e/s/w/u/d), use <item> on <target>. Clarify by number. Recovery: reconcile to check a held outcome without sending another action."
         if lower in _DIRECTIONS:
             return self._resolve(obs, "go", _DIRECTIONS[lower], None)
         match = re.fullmatch(r"(?:examine|x)\s+(.+)", command, re.I)
@@ -198,6 +214,8 @@ class Player:
         self.last_result.update(status=self.last_status, complete=result['complete'], effects=effects)
         if type(result.get('recovery_required')) is bool:
             self.last_result['recovery_required'] = result['recovery_required']
+        if isinstance(result.get('recovery_id'),str) and 1 <= len(result['recovery_id']) <= 128:
+            self.last_result['recovery_id'] = result['recovery_id']
         for key in ('continuation', 'session_transition', 'witness'):
             value = result.get(key)
             if isinstance(value, dict) and len(json.dumps(value, allow_nan=False).encode()) <= 2048:
@@ -231,6 +249,9 @@ class JsonLineBackend:
 
     def observe(self):
         return self._request({"op": "observe"})
+
+    def reconcile(self, recovery_id=None):
+        return self._request({'op':'reconcile', **({'recovery_id':recovery_id} if recovery_id is not None else {})})
 
     def act(self, request):
         return self._request({"op": "act", "action": request})

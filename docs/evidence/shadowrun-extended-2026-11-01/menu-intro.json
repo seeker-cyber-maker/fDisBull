@@ -1,0 +1,97 @@
+{
+  "format": "fdisbull-shadowrun-menu-intro-evidence-1",
+  "status": "bounded_source_and_model_checks_passed",
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "menu_program_sha256": "4a7ad0580e61453e25646c6de3e4417761cb436606065db749f6e2c6668fdb0e",
+  "source_files_sha256": {
+    "src/fdisbull/game_sources/shadowrun_menu.c": "792da8c4e001d95087b01ce2e5e254685699445aedc1cddf87ee42222b5e0f3d",
+    "src/fdisbull/shadowrun_menu.py": "e4cf1ba15bd4b17372d82484c5b709b1294bba615c59142a7853bf3bc1c89b5f",
+    "scripts/check_shadowrun_menu.py": "d9cf1464ff3b523dac8d0f36bc6ab5c355b4b8b90098c0eee7f6b14e9f2145f7",
+    "tests/test_shadowrun_menu.py": "cdc5363b7c33172d3e5d19f8bb0bb29d25bb36b3667d9fdf3ffff8b2cd9874b0"
+  },
+  "private_summary_sha256": "88bad1e8b3fa0b3883409970c4512bbc48e8df4fd75a1f2350831ed6a40086b2",
+  "menu": {
+    "source_labels": [
+      "New Game",
+      "Load Game"
+    ],
+    "archetype_labels": [
+      "Samurai",
+      "Decker",
+      "Gator Shaman"
+    ],
+    "edge_word": "FFDD22",
+    "cursor_byte": "FFF0DC",
+    "source_dispatch_ranges": [
+      "590D2-59170",
+      "59264-59316"
+    ],
+    "cursor_helper": "C37E-C3A2",
+    "native_cursor_cases_matched": 15,
+    "full_core_action_frames": [
+      1370,
+      1380,
+      1390,
+      1410,
+      1420,
+      1430
+    ],
+    "start_button_confirmed_ignored": true,
+    "scope": "input edge, cursor wrap and source branch boundary only; video, sound, load flow and archetype initializer are not modeled",
+    "start_edge_capture_sha256": "76973a51067312c657b8b05c3e32c4638c507bd84d83078be8f20c78832ef843"
+  },
+  "intro": {
+    "source_capture_sha256": "d41be0da39d9461d5aa1c37ed7ace2082b41869a34b0742d54ce943d1d714eb6",
+    "sampled_cinematic_actor_frames": [
+      1799,
+      2000,
+      2200,
+      2400,
+      2600,
+      2800,
+      3000,
+      3200,
+      3400,
+      3600,
+      3800,
+      4000,
+      4200,
+      4400
+    ],
+    "sampled_player_record": "kind 3, position 1920/1920 and callback B45C at those samples",
+    "arrival_capture_sha256": "6512e6aff12ad978feec46a5b1a65234ace1e9c695477cf5665997562d6ac182",
+    "arrival_frames": [
+      5249,
+      5250,
+      5251
+    ],
+    "arrival_input": "no controller press on sampled frames; no controller inputs scheduled after frame4765",
+    "arrival_player_positions": [
+      [
+        15584,
+        10440
+      ],
+      [
+        15584,
+        10410
+      ],
+      [
+        15584,
+        10380
+      ]
+    ],
+    "source_position_writer_pc": [
+      "BBEC",
+      "BBF0"
+    ],
+    "source_callback": "B574",
+    "scope": "bounded automatic opening field-walk witness using the same source writer/callback identity as ordinary movement; no full scripted sequence or live combat claim"
+  },
+  "limits": [
+    "The model returns a boundary for original archetype initialization or Load Game; neither is an automatic transition into the prepared arena.",
+    "Sampled cinematic actor values and visual combat imagery do not establish cinematic AI, combat or continuous actor inactivity.",
+    "The source arrival writer evidence is not yet a modeled complete opening script or route.",
+    "Natural boot/menu was observed on the original; full-story, dialogue and whole-game parity remain unverified."
+  ],
+  "privacy": "No original game bytes, screenshots, runtime states or private paths are included."
+}

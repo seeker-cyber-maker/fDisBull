@@ -1,0 +1,13 @@
+/path/to/private/game_patch_study/results/generated_models_and_vm.c: In function ‘vm’:
+/path/to/private/game_patch_study/results/generated_models_and_vm.c:43:6: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+   43 |      if(!sp)return 5;left=st[--sp];prev=a;
+      |      ^~
+/path/to/private/game_patch_study/results/generated_models_and_vm.c:43:22: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   43 |      if(!sp)return 5;left=st[--sp];prev=a;
+      |                      ^~~~
+/path/to/private/game_patch_study/results/generated_models_and_vm.c:46:6: warning: this ‘else’ clause does not guard... [-Wmisleading-indentation]
+   46 |      else if(op==0x0f)a=s16(left)>s16(a);else if(op==0x11)a=s16(left)<s16(a);else a=s16(left)<=s16(a);break;
+      |      ^~~~
+/path/to/private/game_patch_study/results/generated_models_and_vm.c:46:103: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+   46 |      else if(op==0x0f)a=s16(left)>s16(a);else if(op==0x11)a=s16(left)<s16(a);else a=s16(left)<=s16(a);break;
+      |                                                                                                       ^~~~~

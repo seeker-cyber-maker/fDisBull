@@ -19,7 +19,7 @@ class Image:
     format: str
     arch: str
     bits: int
-    entry: int
+    entry: int | None
     regions: list[Region]
     seeds: list[Seed]
     metadata: dict = field(default_factory=dict)

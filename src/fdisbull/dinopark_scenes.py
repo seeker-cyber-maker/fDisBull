@@ -14,6 +14,7 @@ from collections import deque
 from PIL import Image
 import fdisbull
 from fdisbull.action_continuations import ActionContinuation
+from fdisbull.dinopark_purchase import bounded_preparation
 from fdisbull.project import Project
 
 EXPECTED_EXE = '2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c'
@@ -180,13 +181,13 @@ def pixel_predicate(pattern):
     return {'all': [base] + [{'not': pixel_predicate(other)} for other in rejected]} if rejected else base
 
 
-def take_frame(project, debug, name):
+def take_frame(project, debug, name, *, hooks=True):
     filename = name + '.png'
     number = 2
     while (project.path.parent / filename).exists():
         filename = f'{name}-{number}.png'
         number += 1
-    frame = debug.screenshot(filename)
+    frame = debug.screenshot(filename, hooks=hooks)
     project.debug_export(frame['artifact'], project.path.parent / filename)
     row = project.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
     with Image.open(io.BytesIO(row['data'])) as picture:
@@ -343,13 +344,18 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
 prepare_bank_pointer = prepare_scene_pointer
 
 
-def park_catalogue_pointer(text):
+def park_catalogue_pointer(text, *, budget=None):
     """Move the original software cursor away from labels and toolbar probes."""
+    if budget is not None:
+        budget.timeout()
     moved = text.debug.call('input.mouse.move', {'x': 270, 'y': 170})
     text.event({'phase': 'mart_pointer_parked', 'point': [270, 170], 'result': moved})
     if moved.get('accepted') is not True:
         raise RuntimeError('Catalogue pointer movement unavailable; no purchase input sent')
-    run_guest(text.debug, 150)
+    if budget is None:
+        run_guest(text.debug, 150)
+    else:
+        budget.run(text.debug, 150)
 
 
 def catalogue_pan_valid(text, frame, image, selector):
@@ -387,12 +393,14 @@ class KnownSceneNotice(RuntimeError):
         self.notice, self.frame = notice, frame
 
 
-def prepare_mart_first_page(text):
+def prepare_mart_first_page(text, *, budget=None):
     """Resolve the Coelophysis intent independently of the last catalogue read."""
     text.debug.scene_assert(text.mart, object='mart.back')
-    park_catalogue_pointer(text)
+    park_catalogue_pointer(text, budget=budget)
     selector = text.debug.memory('4020:3c5c', length=2)['hex']
     for attempt in range(49):
+        if budget is not None:
+            budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'mart-first-page')
         if matches(image, text.patterns['coel_page']):
             predicate = pixel_predicate(text.patterns['coel_page'])
@@ -407,17 +415,22 @@ def prepare_mart_first_page(text):
             raise RuntimeError('Catalogue navigation context changed; purchase input withheld')
         if attempt == 48:
             break
+        if budget is not None:
+            budget.timeout()
         moved = text.debug.call('input.mouse.move', {'x': 0, 'y': 50})
         text.event({'phase': 'mart_pan_input', 'result': moved, 'point': [0, 50]})
         if moved.get('accepted') is not True:
             raise RuntimeError('Catalogue movement outcome unknown; do not retry')
-        run_guest(text.debug, 80)
-        park_catalogue_pointer(text)
+        if budget is None:
+            run_guest(text.debug, 80)
+        else:
+            budget.run(text.debug, 80)
+        park_catalogue_pointer(text, budget=budget)
     raise RuntimeError('First catalogue page not reached within the pan budget; purchase input withheld')
 
 
 def definition(reference, title, predicate, selector, action, point, outcome):
-    return {'format': 'fdisbull-scene-1', 'reference': reference['artifact'],
+    document = {'format': 'fdisbull-scene-1', 'reference': reference['artifact'],
         'width': 320, 'height': 200, 'mode_id': reference['metadata']['mode_id'],
         'context': {'state': title, 'triggers': ['original guest navigation'],
                     'qualification': 'visual samples plus observed selector correlation; not universal control readiness'},
@@ -428,6 +441,140 @@ def definition(reference, title, predicate, selector, action, point, outcome):
                      'visible': predicate, 'ready': selector, 'enabled': selector,
                      'action': {'kind': 'click'}, 'outcome': outcome,
                      'guest_ms': 12000, 'timeout_ms': 10000}]}
+    if action == 'park.back':
+        # Returning to MALL loads original assets through registered observers,
+        # just like business entry. Bound loading without another queued press.
+        document['objects'][0]['timeout_ms'] = 40000
+    return document
+
+
+BUSINESS_ENTRIES = {
+    'dinomart': ('street.mart', [160, 66], ('mart', 'after')),
+    'employment': ('street.employment', [270, 66], ('employment',)),
+    'dino_diner': ('street.diner', [55, 65], ('dino_diner', 'food_menu', 'food_selected')),
+    'general_store': ('street.store', [270, 140], ('general_store', 'fence_tab', 'fence_selected')),
+}
+
+
+def business_entry_object(reference, predicate, selector, patterns, view):
+    name, point, views = BUSINESS_ENTRIES[view]
+    outcome = {'any': [pixel_predicate(patterns[v]) for v in views]}
+    obj = definition(reference, 'street', predicate, selector, name, point, outcome)['objects'][0]
+    # Loading a business reads several original assets. Native observation
+    # hooks can consume host time while only a few guest seconds have elapsed.
+    # Keep both budgets finite and below the player's 60-second request bound.
+    obj['timeout_ms'] = 40000
+    return obj
+
+
+def mart_entry_object(reference, predicate, selector, patterns):
+    return business_entry_object(reference, predicate, selector, patterns, 'dinomart')
+
+
+def click_business(text, command, scene, name):
+    """Retain navigation input evidence even when destination observation raises."""
+    from .scenes import SceneError
+    def retain(result):
+        receipt = dict(result)
+        for field, value in (('scene_revision', scene), ('action_name', name), ('run', text.debug.run_id)):
+            receipt.setdefault(field, value)
+        text.event({'phase': 'navigation_input_result', 'command': command, 'result': receipt})
+    try:
+        result = text.debug.scene_click(scene, name)
+    except SceneError as error:
+        retain(error.result)
+        raise
+    retain(result)
+    return result
+
+
+def qualify_street(text):
+    """Read and bind the original street destination without guest execution."""
+    frame, image = take_frame(text.project, text.debug, 'park-exit-street', hooks=False)
+    if not matches(image, text.patterns['shop_street']):
+        raise RuntimeError('Street destination not recognized; outcome unknown')
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    predicate = pixel_predicate(text.patterns['shop_street'])
+    office = text.project.debug_scene_info(text.office)['definition']['match']
+    doc = definition(frame, 'street', predicate, selector,
+                     'street.office', [175, 140], office)
+    for view in BUSINESS_ENTRIES:
+        doc['objects'].append(business_entry_object(frame, predicate, selector, text.patterns, view))
+    version = text.debug.version['id']
+    original = text.project.debug_scene_info(text.street, version=version)
+    latest = text.project.debug_scene_info(original['name'], version=version)
+    if latest['scene'] != original['scene']:
+        raise RuntimeError('Street scene root changed; outcome unknown')
+    # Publication can commit before its return readback raises. Re-read the
+    # committed host head so a later read-only retry never forks a stale parent.
+    saved = text.project.debug_save_scene('street', doc, parent=latest['id'], version=version)
+    text.street, text.current = saved['id'], 'street'
+    return {'frame': frame, 'view': 'street', 'scene': saved}
+
+
+def qualify_park(text):
+    """Bind the existing original park from reads only; never repeat entry."""
+    frame, image = take_frame(text.project, text.debug, 'park-revisited', hooks=False)
+    if (not matches(image, text.patterns['park_view']) or
+            any(matches(image, text.patterns[n]) for n in ('quarter_popup', 'parking_hint'))):
+        raise RuntimeError('Park destination not uniquely recognized; outcome unknown')
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    doc = definition(frame, 'park', pixel_predicate(text.patterns['park_view']), selector,
+                     'park.back', [173, 187], pixel_predicate(text.patterns['street_view']))
+    version = text.debug.version['id']
+    if text.park is None:
+        # Native save loading restores qualifications into a new project, not
+        # scene IDs. A failed first publication may already have committed.
+        heads = [s for s in text.project.debug_scenes(version=version)['scenes'] if s['name'] == 'park']
+        parent = heads[0]['id'] if heads else None
+    else:
+        original = text.project.debug_scene_info(text.park, version=version)
+        latest = text.project.debug_scene_info(original['name'], version=version)
+        if latest['scene'] != original['scene']:
+            raise RuntimeError('Park scene root changed; outcome unknown')
+        parent = latest['id']
+    saved = text.project.debug_save_scene('park', doc, parent=parent, version=version)
+    text.park, text.current, text.pending_park_entry = saved['id'], 'park', False
+    return {'frame': frame, 'view': 'park', 'scene': saved}
+
+
+def qualify_business(text, view):
+    """Publish a fresh destination from host reads only, including scene re-entry."""
+    if view == 'dinomart':
+        return qualify_dinomart(text)
+    _, _, views = BUSINESS_ENTRIES[view]
+    frame, image = take_frame(text.project, text.debug, view + '-entry', hooks=False)
+    if not any(matches(image, text.patterns[v]) for v in views):
+        raise RuntimeError('Location not recognized; outcome unknown: ' + view)
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    street = text.project.debug_scene_info(text.street)['definition']['match']
+    target, point = ((view + '.catalogue', [205, 105]) if view == 'general_store'
+                     else (view + '.back', [173, 187]))
+    predicate = {'any': [pixel_predicate(text.patterns[v]) for v in views]}
+    doc = definition(frame, view, predicate, selector, target, point, street)
+    saved = text.project.debug_save_scene(view, doc, parent=text.locations.get(view))
+    text.locations[view], text.current = saved['id'], view
+    return {'frame': frame, 'view': view, 'scene': saved}
+
+
+def qualify_dinomart(text):
+    """Read the current destination and publish its scene; never send guest input."""
+    frame, image = take_frame(text.project, text.debug, 'dinomart-before', hooks=False)
+    views = [view for view in ('mart', 'after') if matches(image, text.patterns[view])]
+    if not views:
+        raise RuntimeError('DinoMart catalogue not recognized; outcome unknown')
+    view = views[0]
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    street = text.project.debug_scene_info(text.street)['definition']['match']
+    doc = definition(frame, 'dinomart', pixel_predicate(text.patterns[view]), selector,
+                     'mart.back', [216, 187], street)
+    saved = text.project.debug_save_scene('dinomart', doc, parent=text.mart)
+    text.mart, text.current = saved['id'], 'dinomart'
+    return {'frame': frame, 'view': view, 'scene': saved}
 
 
 def balances(debug):
@@ -556,6 +703,10 @@ class TextScene:
         self.vegasaurus_proof = None
         self.vegasaurus_extinct = False
         self.last_continuation = None
+        self.bounded_purchases = False
+        self.dinosaur_order = None
+        self.land_order = None
+        self.fence_order = None
 
     def save_preflight(self, name):
         try:
@@ -812,7 +963,7 @@ class TextScene:
                     'persistence': 'unknown'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             raise RuntimeError('shop input not queued; outcome unknown')
-        return run_guest(self.debug, ms)
+        return result if ms is None else run_guest(self.debug, ms)
 
     def observe_resources(self, expected, label):
         observed = park_resources(self.debug)
@@ -1031,35 +1182,8 @@ class TextScene:
         raise RuntimeError('view not uniquely recognized: ' + label + '; outcome unknown')
 
     def buy_land(self):
-        if self.current != 'street':
-            return 'That action is not available in this scene.'
-        before = balances(self.debug)
-        if self.land_bought or (before['cash'], before['loan'], before['working_cash']) != (5000, 5000, 5000):
-            self.event({'phase': 'refused', 'command': 'buy desert plot', 'input': 'not_sent',
-                        'reason': 'unqualified land or balances', 'before': before})
-            return 'This land purchase is not qualified for the current state; no input was sent.'
-        self.debug.scene_assert(self.street, object='street.office')
-        self.event({'phase': 'intent', 'command': 'buy desert plot', 'before': before, 'input': 'not_yet_sent'})
-        unchanged = {'cash': 5000, 'loan': 5000, 'working_cash': 5000}
-        self.shop_click((60, 140), 7500, 'enter real estate')
-        self.shop_observe('estate', unchanged, 'land-estate')
-        self.shop_click((60, 100), 1000, 'select desert')
-        self.shop_observe('choice', unchanged, 'land-choice')
-        self.shop_click((145, 187), 3000, 'open inventory')
-        self.shop_observe('inventory', unchanged, 'land-inventory', wait_slices=24)
-        self.shop_click((172, 187), 5000, 'close inventory')
-        self.shop_observe('plot', unchanged, 'land-map')
-        self.shop_click((42, 52), 1800, 'select desert plot')
-        staged = {'cash': 5000, 'loan': 5000, 'working_cash': 4500}
-        self.shop_observe('plot_staged', staged, 'land-staged')
-        self.shop_click((201, 187), 6000, 'confirm land')
-        committed = {'cash': 4500, 'loan': 5000, 'working_cash': 4500}
-        self.shop_observe('shop_street', committed, 'land-committed')
-        self.debug.scene_assert(self.street, object='street.office')
-        self.land_bought = True
-        self.event({'phase': 'result', 'command': 'buy desert plot', 'before': before,
-                    'after': committed, 'persistence': 'unknown'})
-        return 'Desert plot purchased for $500. Cash: $4,500. You are on the street.'
+        from .dinopark_land import buy
+        return buy(self)
 
     def mart_observe(self, view, label, *, wait_slices=12):
         for attempt in range(wait_slices + 1):
@@ -1221,6 +1345,9 @@ class TextScene:
                 'The finances retain a $25,000 dinosaur-purchase expense. You are in DinoMart.')
 
     def buy_dinosaur(self):
+        if self.bounded_purchases:
+            from .dinopark_purchase import buy
+            return buy(self)
         if self.current != 'dinomart':
             return 'That action is not available in this scene.'
         before = balances(self.debug)
@@ -1365,44 +1492,23 @@ class TextScene:
                     'before': before, 'after': balances(self.debug), 'persistence': 'unknown'})
         return self.describe()
 
-    def buy_fence(self):
-        if self.current != 'general_store':
-            return 'That action is not available in this scene.'
-        before = balances(self.debug)
-        if not self.dinosaur_bought or self.fence_bought or (before['cash'], before['loan'], before['working_cash']) != (3250, 5000, 3250):
-            self.event({'phase': 'refused', 'command': 'buy wood fence', 'input': 'not_sent',
-                        'reason': 'unqualified dinosaur, fence history or balances', 'before': before})
-            return 'This fence purchase requires the first dinosaur and $3,250 cash, and is qualified once. No input was sent.'
-        self.event({'phase': 'intent', 'command': 'buy wood fence', 'before': before, 'input': 'not_yet_sent'})
-        self.store_fences_tab(before)
-        self.shop_click((110, 109), 5000, 'select wood fence price')
-        self.shop_observe('fence_tab', before, 'fence-price', wait_slices=12)
-        self.shop_click((60, 85), 5000, 'select wood fence')
-        self.shop_observe('fence_selected', before, 'fence-selected', wait_slices=12)
-        self.shop_click((160, 54), 2500, 'reopen fences tab')
-        self.shop_observe('fence_selected', before, 'fence-order-ready', wait_slices=12)
-        self.shop_click((160, 188), 8000, 'open fence placement map')
-        self.shop_observe('fence_map', before, 'fence-placement', wait_slices=24)
-        self.shop_click((42, 50), 1800, 'place wood fence around occupied pen')
-        staged = {'cash': 3250, 'loan': 5000, 'working_cash': 2250}
-        self.shop_observe('fence_staged', staged, 'fence-staged', wait_slices=12)
-        self.shop_click((216, 187), 12000, 'confirm fence placement')
-        committed = {'cash': 2250, 'loan': 5000, 'working_cash': 2250}
-        self.shop_observe('fence_selected', committed, 'fence-committed', wait_slices=12)
-        # Reopen the same placement map without selecting a pen. The border is
-        # a separate post-confirmation observation, not a second purchase.
-        self.shop_click((160, 188), 8000, 'inspect committed fence map')
-        self.shop_observe('fence_reopened', committed, 'fence-reopened', wait_slices=24)
-        self.shop_click((188, 187), 6000, 'cancel inspection map')
-        self.shop_observe('fence_selected', committed, 'fence-inspection-closed', wait_slices=12)
-        self.shop_click((216, 187), 8000, 'return from store')
-        self.shop_observe('shop_street', committed, 'fence-return-street', wait_slices=12)
-        self.debug.scene_assert(self.street, object='street.office')
-        self.current, self.fence_bought = 'street', True
-        self.event({'phase': 'result', 'command': 'buy wood fence', 'before': before,
-                    'after': committed, 'persistence': 'unknown'})
-        return 'Wood fence placed around the dinosaur’s pen for $1,000. Cash: $2,250. You are on the street.'
+    def leave_park(self):
+        from .dinopark_purchase import PurchaseBudget
+        with PurchaseBudget(label='Park exit').bind(self.debug):
+            self.event({'phase': 'intent', 'command': 'go street', 'scene': 'park',
+                        'input': 'not_yet_sent'})
+            self.last_action = click_business(self, 'go street', self.park, 'park.back')
+            qualified = qualify_street(self)
+            self.event({'phase': 'result', 'command': 'go street', 'scene': 'street',
+                        'result': self.last_action, 'frame': qualified['frame'],
+                        'persistence': 'live original destination; disk save separate'})
+            return self.describe()
 
+    def buy_fence(self):
+        from .dinopark_fence import buy
+        return buy(self)
+
+    @bounded_preparation
     def hire_guide(self):
         if self.current != 'employment':
             return 'That action is not available in this scene.'
@@ -1415,21 +1521,38 @@ class TextScene:
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'before hire')
         self.observe_pending_guide(0, 'before hire')
         self.event({'phase': 'intent', 'command': 'hire tour guide', 'input': 'not_yet_sent', 'before': before})
-        self.shop_click((55, 140), 1000, 'select tour guide poster')
+        self.shop_click((55, 140), 250, 'select tour guide poster')
         view = self.observe_one_of(['guide_posters', 'guide_detail'], before, 'guide-poster')
         if view == 'guide_posters':
-            self.shop_click((55, 160), 2500, 'open tour guide details', hold_ms=200)
+            self.shop_click((55, 160), 250, 'open tour guide details', hold_ms=200)
             self.shop_observe('guide_detail', before, 'guide-detail', wait_slices=12)
         self.observe_pending_guide(0, 'guide detail')
-        self.shop_click((226, 148), 1200, 'stage tour guide hire')
+        self.shop_click((226, 148), 250, 'stage tour guide hire')
         self.shop_observe('guide_staged', before, 'guide-staged', wait_slices=12)
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'guide staged')
         self.observe_pending_guide(1, 'guide staged')
-        self.shop_click((201, 187), 5000, 'accept guide detail')
+        self.shop_click((201, 187), 250, 'accept guide detail')
         self.shop_observe('employment', before, 'guide-detail-accepted', wait_slices=12)
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'guide detail accepted')
         self.observe_pending_guide(1, 'guide detail accepted')
-        self.shop_click((201, 187), 7000, 'commit employment roster')
+        queued = self.shop_click((201, 187), None, 'commit employment roster')
+        run_guest(self.debug, 250)
+        # Native roster commitment precedes the first presentation read. A
+        # missing frame must not erase a completed original hire.
+        for attempt in range(13):
+            committed = self.observe_resources({'small_feeders':0}, 'guide commit candidate')
+            if balances(self.debug) != before:
+                raise RuntimeError('Guide commit balances remain unqualified')
+            if committed['guides'] == 1:
+                self.event({'phase':'guide_hire_confirmed','command':'hire tour guide',
+                            'before':before,'guides_before':0,'guides_after':1,
+                            'input':queued,'presentation':'not_yet_qualified'})
+                break
+            if committed['guides'] != 0:
+                raise RuntimeError('unexpected committed resources: guide roster; outcome unknown')
+            if attempt < 12:run_guest(self.debug, 500)
+        else:
+            raise RuntimeError('Guide roster commit remains unqualified')
         self.shop_observe('shop_street', before, 'guide-committed', wait_slices=12)
         self.observe_resources({'guides': 1, 'small_feeders': 0}, 'guide committed')
         self.debug.scene_assert(self.street, object='street.office')
@@ -1526,6 +1649,7 @@ class TextScene:
             self.food_advice_count += 1
             return True
 
+    @bounded_preparation
     def buy_food(self):
         if self.current != 'dino_diner':
             return 'That action is not available in this scene.'
@@ -1555,7 +1679,7 @@ class TextScene:
         self.food_advice_count = 0
         self.event({'phase': 'intent', 'command': 'buy 20 small feeders', 'input': 'not_yet_sent', 'before': before})
         if not menu_open:
-            opened = self.shop_click((133, 54), 4000, 'open meat menu')
+            opened = self.shop_click((133, 54), 250, 'open meat menu')
             try:
                 self.shop_observe('food_menu', {}, 'food-menu',
                                   wait_slices=12, interrupts=('parking_hint',))
@@ -1566,7 +1690,7 @@ class TextScene:
                             'purchase_input': 'not_sent', 'food_order_submitted': False})
                 return ('Parking advice interrupted the food menu before an order was submitted. '
                         'Use acknowledge notice, then inspect the available actions.')
-        self.shop_click((44, 101), 600, 'select small feeders', hold_ms=80)
+        self.shop_click((44, 101), 250, 'select small feeders', hold_ms=80)
         self.food_order_view('food-selected')
         selected_balances = balances(self.debug)
         if selected_balances['cash'] != selected_balances['working_cash']:
@@ -1606,7 +1730,7 @@ class TextScene:
     def finish_food_return(self, proof, before, start_food):
         """Keep a proven purchase separate from its modal-obscured destination."""
         try:
-            run_guest(self.debug, 6000)
+            run_guest(self.debug, 250)
             self.shop_observe('shop_street', {}, 'food-committed', wait_slices=12,
                               interrupts=('quarter_popup', 'parking_hint'))
             committed = balances(self.debug)
@@ -1640,6 +1764,7 @@ class TextScene:
                 f"Stock now: {final_resources['small_feeders']} (change while returning: {change:+d}). "
                 f"Cash: ${committed['cash']:,}. Guides: {final_resources['guides']}. You are on the street.")
 
+    @bounded_preparation
     def open_park(self):
         if self.current != 'street':
             return 'That action is not available in this scene.'
@@ -1653,7 +1778,7 @@ class TextScene:
         day_before = int.from_bytes(bytes.fromhex(self.debug.memory('4020:6fcb', length=2)['hex']), 'little')
         self.event({'phase': 'intent', 'command': 'open park', 'input': 'not_yet_sent',
                     'before': before, 'day_before': day_before})
-        self.shop_click((201, 187), 8000, 'enter park view', hold_ms=80)
+        self.shop_click((201, 187), 250, 'enter park view', hold_ms=80)
         for attempt in range(13):
             frame, image = take_frame(self.project, self.debug, 'park-running')
             day = int.from_bytes(bytes.fromhex(self.debug.memory('4020:6fcb', length=2)['hex']), 'little')
@@ -1679,6 +1804,7 @@ class TextScene:
                     'open_closed_status': 'unknown', 'persistence': 'unknown'})
         return self.describe()
 
+    @bounded_preparation
     def revisit_park(self):
         if self.current != 'street':
             return 'That action is not available in this scene.'
@@ -1691,27 +1817,36 @@ class TextScene:
             return message
         self.event({'phase': 'intent', 'command': 'go park', 'input': 'not_yet_sent',
                     'before': before, 'persistence': 'unknown'})
-        entry_run = self.shop_click((201, 187), 8000, 'return to park view', hold_ms=80)
-        frame, image = take_frame(self.project, self.debug, 'park-revisited')
-        notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
-        if notices:
-            if len(notices) == 1:
-                self.pending_park_entry = True
-                self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
-                            'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
-                label = 'A quarter notice' if notices == ['quarter_popup'] else 'Parking advice'
-                return label + ' interrupted park entry. Use acknowledge notice to continue.'
-            self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
-                        'notices': notices, 'persistence': 'unknown'})
-            raise RuntimeError('notice during park entry; outcome unknown')
-        if not matches(image, self.patterns['park_view']):
-            raise RuntimeError('park revisit not recognized; outcome unknown')
-        selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                               'hex': self.debug.memory('4020:3c5c', length=2)['hex']}}
-        doc = definition(frame, 'park', pixel_predicate(self.patterns['park_view']), selector,
-                         'park.back', [173, 187], pixel_predicate(self.patterns['street_view']))
-        self.park = self.project.debug_save_scene('park', doc, parent=self.park)['id']
-        self.current = 'park'
+        source = self.street
+        observed = self.debug.scene_assert(source, object='street.office')
+        receipt = {'complete': False, 'status': 'observation-failed',
+                   'run': self.debug.run_id, 'scene_revision': source, 'action_name': 'street.park',
+                   'before_observation': observed['observation']}
+        try:
+            # Preserve the original press and continuous guest interval. Capture
+            # its actual ticket before a wait/readback can raise.
+            receipt['input'] = self.shop_click((201, 187), None, 'return to park view', hold_ms=80)
+            entry_run = self.debug.run(guest_ms=8000, timeout_ms=40000, fast_forward=True)
+            if entry_run.get('outcome') != 'guest_time':
+                raise RuntimeError('park entry stopped unexpectedly; outcome unknown')
+            frame, image = take_frame(self.project, self.debug, 'park-entry-notices')
+            notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
+            if notices:
+                if len(notices) == 1:
+                    self.pending_park_entry = True
+                    self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
+                                'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
+                    label = 'A quarter notice' if notices == ['quarter_popup'] else 'Parking advice'
+                    return label + ' interrupted park entry. Use acknowledge notice to continue.'
+                self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
+                            'notices': notices, 'persistence': 'unknown'})
+                raise RuntimeError('notice during park entry; outcome unknown')
+            qualified = qualify_park(self)
+            frame = qualified['frame']
+            receipt.update(complete=True, status='matched', frame=frame)
+            self.last_action = receipt
+        finally:
+            self.event({'phase': 'navigation_input_result', 'command': 'go park', 'result': receipt})
         after = park_snapshot(self.debug)
         self.event({'phase': 'result', 'command': 'go park', 'before': before, 'after': after,
                     'frame': frame, 'persistence': 'unknown'})
@@ -1729,16 +1864,27 @@ class TextScene:
             return self.describe()
         if command in ('borrow', 'repay'):
             return self.transact(command)
+        if command == 'continue land purchase':
+            from .dinopark_land import resume
+            return resume(self)
         if command == 'buy desert plot':
             return self.buy_land()
         if command == 'buy coelophysis':
             return self.buy_dinosaur()
+        if command == 'continue dinosaur order':
+            if self.dinosaur_order is None:
+                return 'There is no active dinosaur order. No input was sent.'
+            from .dinopark_purchase import resume
+            return resume(self)
         if command in ('buy vegasaurus', 'buy vegasosaurus'):
             return self.buy_vegasaurus()
         if command == 'read vegasaurus':
             return self.read_vegasaurus()
         if command == 'check inventory':
             return self.check_inventory()
+        if command == 'continue fence order':
+            from .dinopark_fence import resume
+            return resume(self)
         if command == 'buy wood fence':
             return self.buy_fence()
         if command == 'hire tour guide':
@@ -1759,6 +1905,8 @@ class TextScene:
             return self.leave_store()
         if self.current == 'dinomart' and command == 'go street':
             return self.leave_mart()
+        if self.current == 'park' and command == 'go street':
+            return self.leave_park()
         if self.current == 'street' and command in ('go dinomart', 'go store', 'go employment', 'go diner') and not self.land_bought:
             self.event({'phase': 'refused', 'command': command, 'input': 'not_sent',
                         'reason': 'location is closed before land purchase'})
@@ -1782,6 +1930,14 @@ class TextScene:
         # scene_click has already matched the fresh target predicate.
         self.current = target
         return self.describe()
+
+
+def dispatch_local_action(text, command):
+    """Use the same local action dispatcher for CLI and Z; route travel separately."""
+    if command.startswith('go ') and command != 'go park' and not (
+            text.current == 'park' and command == 'go street'):
+        return None
+    return text.act(command)
 
 
 def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, on_event=None, on_spawn=None,
@@ -2012,8 +2168,9 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             event(observed)
                             say(rendered, flush=True)
                             continue
-                        if command in ('borrow', 'repay', 'buy desert plot', 'buy coelophysis', 'buy vegasaurus', 'buy vegasosaurus', 'read vegasaurus', 'buy wood fence', 'hire tour guide', 'buy 20 small feeders', 'open park', 'go park', 'check inventory', 'status', 'advance time', 'acknowledge notice'):
-                            say(text.act(command), flush=True)
+                        local_result = dispatch_local_action(text, command)
+                        if local_result is not None:
+                            say(local_result, flush=True)
                             continue
                         if text.current == 'general_store' and command == 'go street':
                             say(text.act(command), flush=True)
@@ -2059,21 +2216,11 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                                                           'hex': debug.memory('4020:3c5c', length=2)['hex']}}
                             street_doc = definition(street_frame, 'street', street_pred, street_selector,
                                                     'street.office', [175, 140], office_pred)
-                            street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                'street.mart', [160, 66], {'any': [pixel_predicate(patterns['mart']),
-                                                                  pixel_predicate(patterns['after'])]})['objects'][0])
-                            for obj, point, view in [('street.employment', [270, 66], 'employment'),
-                                                     ('street.diner', [55, 65], 'dino_diner'),
-                                                     ('street.store', [270, 140], 'general_store')]:
-                                outcome = pixel_predicate(patterns[view])
-                                if view == 'general_store':
-                                    outcome = {'any': [outcome, pixel_predicate(patterns['fence_tab']),
-                                                       pixel_predicate(patterns['fence_selected'])]}
-                                elif view == 'dino_diner':
-                                    outcome = {'any': [outcome, pixel_predicate(patterns['food_menu']),
-                                                       pixel_predicate(patterns['food_selected'])]}
-                                street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                    obj, point, outcome)['objects'][0])
+                            street_doc['objects'].append(mart_entry_object(
+                                street_frame, street_pred, street_selector, patterns))
+                            for view in ('employment', 'dino_diner', 'general_store'):
+                                street_doc['objects'].append(business_entry_object(
+                                    street_frame, street_pred, street_selector, patterns, view))
                             street = project.debug_save_scene('street', street_doc)
                             text.street, text.current = street['id'], 'street'
                             event({'phase': 'street_guard_live_qualified', 'frame': street_frame,
@@ -2082,17 +2229,9 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             rendered = text.describe()
                             receipt['street_after'] = street_frame
                         elif command == 'go dinomart':
-                            action = debug.scene_click(street['id'], 'street.mart')
-                            mart_frame, mart_image = take_frame(project, debug, 'dinomart-before')
-                            view = 'mart' if matches(mart_image, patterns['mart']) else 'after'
-                            if not matches(mart_image, patterns[view]):
-                                raise RuntimeError('DinoMart catalogue not recognized after input')
-                            mart_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                        'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                            mart_doc = definition(mart_frame, 'dinomart', pixel_predicate(patterns[view]),
-                                                  mart_selector, 'mart.back', [216, 187], street_pred)
-                            mart = project.debug_save_scene('dinomart', mart_doc, parent=text.mart)
-                            text.mart, text.current = mart['id'], 'dinomart'
+                            action = click_business(text, command, text.street, 'street.mart')
+                            qualified = qualify_dinomart(text)
+                            mart_frame, mart = qualified['frame'], qualified['scene']
                             text.vegasaurus_extinct = False
                             rendered = text.describe()
                             receipt['dinomart_before'] = mart_frame
@@ -2100,24 +2239,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             view, obj = {'go employment': ('employment', 'street.employment'),
                                          'go diner': ('dino_diner', 'street.diner'),
                                          'go store': ('general_store', 'street.store')}[command]
-                            action = debug.scene_click(street['id'], obj)
-                            location_frame, location_image = take_frame(project, debug, view + '-entry')
-                            if view == 'general_store':
-                                views = [view, 'fence_tab', 'fence_selected']
-                            elif view == 'dino_diner':
-                                views = [view, 'food_menu', 'food_selected']
-                            else:
-                                views = [view]
-                            if not any(matches(location_image, patterns[v]) for v in views):
-                                raise RuntimeError('location not recognized: ' + view)
-                            location_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                            target, point = (view + '.catalogue', [205, 105]) if view == 'general_store' else (view + '.back', [173, 187])
-                            view_predicate = {'any': [pixel_predicate(patterns[v]) for v in views]} if len(views) > 1 else pixel_predicate(patterns[view])
-                            doc = definition(location_frame, view, view_predicate,
-                                             location_selector, target, point, street_pred)
-                            saved = project.debug_save_scene(view, doc, parent=text.locations.get(view))
-                            text.locations[view], text.current = saved['id'], view
+                            action = click_business(text, command, text.street, obj)
+                            qualify_business(text, view)
                             rendered = text.describe()
                         else:
                             rendered = text.act(command)

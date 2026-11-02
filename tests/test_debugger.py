@@ -159,6 +159,23 @@ def test_real_timeout_is_not_breakpoint_and_speed_is_restored(game,emulator):
         assert not debug._timing()['fast_forward']
 
 
+def test_real_shared_deadline_keeps_paused_guest_and_exports_frame(game, emulator, tmp_path):
+    import time
+    from fdisbull.operation_budget import deadline_scope
+    with Project(game[0]) as db, db.debugger(emulator, game[1].parent) as debug:
+        with deadline_scope(debug, time.monotonic() + .5,
+                            rpc_ms=200, admission_ms=200, cleanup_ms=1000):
+            with pytest.raises(TimeoutError, match='before RPC dispatch'):
+                debug.run(timeout_ms=5000, fast_forward=True)
+        assert not debug.closed
+        assert debug.call('session.status')['state'] == 'stopped'
+        assert not debug._timing()['fast_forward']
+        frame = debug.screenshot('after-shared-deadline.png', hooks=False)
+        target = tmp_path/'after-shared-deadline.png'
+        db.debug_export(frame['artifact'], target)
+        assert target.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+
+
 def test_real_relocated_instruction_bytes_are_checked(game,emulator):
     path,binary=game
     relocated=binary.with_name('RELOC.EXE')

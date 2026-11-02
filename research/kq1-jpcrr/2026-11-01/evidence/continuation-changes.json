@@ -1,0 +1,27 @@
+{
+  "scope": "Authoring/checking helpers only; no original game or emulator modifications.",
+  "changes": [
+    {
+      "file": "route_support.py",
+      "reason": "Separate live rope-lowering completion (VIEW17 loop0 cel5) from already-lowered room-entry pose (cel2).",
+      "logic12_sha256": "a775fb8f56bd56109d335a7ee97f62188ca14b708ee6bc0a089fbce98db2ffc6",
+      "view17_sha256": "821ba2511fd26490045588cd6e0124c75f2c039773be1182bdcfdbde56ba641a"
+    },
+    {
+      "file": "drive_route.py",
+      "reason": "Expose existing stock supplementary-header API for authorship/provenance metadata."
+    },
+    {
+      "type": "route adjustment",
+      "reason": "Native arrival in room7 was at y48 instead of historical y50. Two ordinary downward steps to(29,50) before existing diagonal avoided the source-defined water rectangles.",
+      "native_receipt": "tas-authoring-3/005-room7-align-and-return.response.json",
+      "logic7_sha256": "2c3adaebf8c05b343272c486286ff74600e343a1109f69025b9e8ec623cf2149",
+      "picture7_sha256": "f50927c5ab65461038c8380b98dbbf388e2280e0d5db045f3b35423e76800f82"
+    }
+  ],
+  "new_helpers": [
+    "send_request.py",
+    "replay_batch.py",
+    "scan_landmarks.py"
+  ]
+}

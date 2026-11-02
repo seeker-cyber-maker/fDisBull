@@ -1,0 +1,43 @@
+{
+  "app_receipt_sha256": "24b60e9babb45d15d54fe623e618d9c699677937936785750073c2bfbe401753",
+  "command": "shadowrun-snes-build",
+  "display": "authored coordinate grid and point, no original camera or artwork",
+  "format": "fdisbull-shadowrun-snes-cli-integration-1",
+  "frontend_sha256": "159d2bd90e13f01fcbd5506a01208a9d5ac464256295eb5308f718f3fe3e76b7",
+  "frontend_source_sha256": "33c19a14b447fba720a9033ea54ee159be6b13237280ef8471be9f2dd6b4839a",
+  "headless_completed": 14,
+  "headless_player_xyz": [
+    1404,
+    2023,
+    256
+  ],
+  "headless_sequence": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    0,
+    1,
+    1,
+    0
+  ],
+  "keyboard_operation": "source inspected; live keyboard operation not independently qualified",
+  "native_core_sha256": "9bdf73a4959d20521bd52a902c5ff9cf4ae3c10c006358415620983ec39035d7",
+  "program_sha256": "0d4145ecdeb8fb33080605324a3e83bd685b75fe4e621e40e8ac65e6a43cdb46",
+  "refused_completed": 0,
+  "refused_player_xyz": [
+    1428,
+    2008,
+    256
+  ],
+  "refused_sequence": [
+    3
+  ],
+  "snapshot_sha256": "dd7c19979a20bdb61bd9ac125d7ad0201b4b5b0c001fe1df3a10935f47c986a0"
+}

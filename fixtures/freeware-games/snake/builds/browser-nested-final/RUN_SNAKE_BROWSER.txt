@@ -1,0 +1,24 @@
+Snake: selected nested step backing
+
+This private browser build preserves the accepted recovered UDL/UIL and original
+DOS executable. The two exact inline step regions in action now call the selected
+step UDC before resuming the caller. Logic/drawing selectors still control their
+usual groups. An agent may independently set step through:
+  (await fdisbullMemoryReady).api.selectBackend('webgpu', ['step'])
+Use 'wasm' to switch it back. The entire input operation commits atomically.
+
+Serve this directory with Python 3:
+  python3 -m http.server 8000 --bind 127.0.0.1
+Then open http://localhost:8000/ in a browser with WebAssembly/WebGPU support.
+Starts paused. Arrows/WASD turn, Space/P pauses, N steps, R resets, Esc quits;
+click the game to focus or use the blue on-screen controls.
+
+No original EXE or database is included. This derived private build contains the
+recovered model and original observed font data, so keep it out of GitHub and
+public tool distributions. It is not a saved-game format. Reload starts fresh.
+
+Qualification is finite: 342 original-derived step cases per backing per host,
+10 carried-play combinations per Node/Chrome host, 69 observations/79 events per
+arm, 38 actual selected step calls per arm. The original native evidence corpus
+was reused after exact identity checks. No all-input proof or identical timing
+claim is made. See the study verification.json and local review note.

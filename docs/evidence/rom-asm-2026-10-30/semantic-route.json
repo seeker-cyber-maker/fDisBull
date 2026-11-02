@@ -1,0 +1,559 @@
+{
+  "format": "fdisbull-authored-rom-semantic-experiment-1",
+  "lifts": [
+    {
+      "source_kind": "sh2-authored-block",
+      "sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "source": "60437001000b0009",
+      "uil": {
+        "format": "fdisbull-il-1",
+        "role": "uil",
+        "variables": {
+          "$r0": {
+            "type": "u32",
+            "initial": 0
+          },
+          "$r4": {
+            "type": "u32",
+            "initial": 0
+          }
+        },
+        "resources": {},
+        "body": [
+          {
+            "id": "copy",
+            "op": "set",
+            "var": "$r0",
+            "value": {
+              "var": "$r4"
+            }
+          },
+          {
+            "id": "add",
+            "op": "add",
+            "var": "$r0",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "source_kind": "ghidra-c-uint32-assumed",
+      "sha256": "c553fbecaf3baa2883dbfca7470621934ae72cb9c8fad85d0d7403544f8408c0",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "source": "\nuint authored(uint value)\n\n{\n  return value + 1;\n}\n\n",
+      "uil": {
+        "format": "fdisbull-il-1",
+        "role": "uil",
+        "variables": {
+          "$r0": {
+            "type": "u32",
+            "initial": 0
+          },
+          "$r4": {
+            "type": "u32",
+            "initial": 0
+          }
+        },
+        "resources": {},
+        "body": [
+          {
+            "id": "copy",
+            "op": "set",
+            "var": "$r0",
+            "value": {
+              "var": "$r4"
+            }
+          },
+          {
+            "id": "add",
+            "op": "add",
+            "var": "$r0",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "source_kind": "saturn-cpp-uint32-assumed",
+      "sha256": "2b10f5d9db6112bcf892d6b102339fb555e6f407d449cfe803ad62eddba0efad",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "source": "#include \"p_typed_funcs.h\"\n\nnamespace p_typed {\n\nvoid f_06010000(SH2Context& c) {\n    ran[0] = 1;\n    c.r[0] = c.r[4];  // 06010000 mov r4,r0\n    c.r[0] += 1;  // 06010002 add #1,r0\n    { const uint32_t x = c.pr; c.pc = x; return; }  // 06010004 rts ; nop\n}\n\n}  // namespace p_typed\n",
+      "uil": {
+        "format": "fdisbull-il-1",
+        "role": "uil",
+        "variables": {
+          "$r0": {
+            "type": "u32",
+            "initial": 0
+          },
+          "$r4": {
+            "type": "u32",
+            "initial": 0
+          }
+        },
+        "resources": {},
+        "body": [
+          {
+            "id": "copy",
+            "op": "set",
+            "var": "$r0",
+            "value": {
+              "var": "$r4"
+            }
+          },
+          {
+            "id": "add",
+            "op": "add",
+            "var": "$r0",
+            "value": 1
+          }
+        ]
+      }
+    }
+  ],
+  "proofs": {
+    "sh2_to_ghidra": {
+      "format": "fdisbull-proof-result-1",
+      "spec_sha256": "baa661a90e9368f99ea5f3d6fde23811c5350500fdf38bf15185eb77378c3b6b",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "timeout_ms": 1000,
+      "semantics": "explicit fixed-width modular bit vectors; no implied C/C++ definedness or model fidelity",
+      "solver": "Z3 5.3.2",
+      "status": "equivalent_under_assumptions"
+    },
+    "sh2_to_saturn": {
+      "format": "fdisbull-proof-result-1",
+      "spec_sha256": "baa661a90e9368f99ea5f3d6fde23811c5350500fdf38bf15185eb77378c3b6b",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "timeout_ms": 1000,
+      "semantics": "explicit fixed-width modular bit vectors; no implied C/C++ definedness or model fidelity",
+      "solver": "Z3 5.3.2",
+      "status": "equivalent_under_assumptions"
+    },
+    "negative_mutant": {
+      "format": "fdisbull-proof-result-1",
+      "spec_sha256": "91b6ab8b0373e4ac25ffe2bfbe4f958ced996cb5b4ae722545944d60b3ac0ff1",
+      "scope": "r0 at straight-line arithmetic boundary from r4; user-supplied unsigned 32-bit ABI binding; return control, other registers, flags, memory, timing, and game behavior excluded",
+      "timeout_ms": 1000,
+      "semantics": "explicit fixed-width modular bit vectors; no implied C/C++ definedness or model fidelity",
+      "solver": "Z3 5.3.2",
+      "status": "counterexample",
+      "inputs": {
+        "r4": {
+          "width": 32,
+          "unsigned": 0
+        }
+      }
+    }
+  },
+  "decodes": {
+    "capstone": {
+      "report_format": "fdisbull-rom-asm-1",
+      "backend": "capstone",
+      "engine_version": "Capstone distribution 5.0.9; bindings 5.0.7; native (5, 0, 1280)",
+      "arch": "sh2",
+      "bits": 32,
+      "endian": "big",
+      "engine_identity": {
+        "distribution_version": "5.0.9",
+        "binding_version": "5.0.7",
+        "native_api_version": [
+          5,
+          0,
+          1280
+        ],
+        "native_library_sha256": "016084c6e70d929249a2abb22f1afda95095294e6cd70f509964ffc54006bf94",
+        "sh2_profile_correction": {
+          "id": "capstone-5.0.9-sh-negative-level-v1",
+          "guard": "reject known non-SH2 encodings while retaining native facts",
+          "source_patch_sha256": "6f88d820337bcd18cb9bcee116b66ac41036f3e8a25f0af3e58d2adaa753f570"
+        }
+      },
+      "mode": "linear",
+      "source_size": 8,
+      "source_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "mapping": {
+        "base_address": 100728832,
+        "file_offset": 0,
+        "address": 100728832,
+        "length": 8,
+        "provenance": "caller-supplied static mapping; not execution evidence"
+      },
+      "range_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "max_instructions": 4,
+      "attempted_words": 4,
+      "decoded_words": 4,
+      "instructions": [
+        {
+          "address": 100728832,
+          "size": 2,
+          "bytes": "6043",
+          "mnemonic": "mov",
+          "operands": "r4,r0",
+          "file_offset": 0,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "mov",
+            "operands": "r4,r0"
+          }
+        },
+        {
+          "address": 100728834,
+          "size": 2,
+          "bytes": "7001",
+          "mnemonic": "add",
+          "operands": "#1,r0",
+          "file_offset": 2,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "add",
+            "operands": "#1,r0"
+          }
+        },
+        {
+          "address": 100728836,
+          "size": 2,
+          "bytes": "000b",
+          "mnemonic": "rts",
+          "operands": "",
+          "file_offset": 4,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "rts",
+            "operands": ""
+          }
+        },
+        {
+          "address": 100728838,
+          "size": 2,
+          "bytes": "0009",
+          "mnemonic": "nop",
+          "operands": "",
+          "file_offset": 6,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "nop",
+            "operands": ""
+          }
+        }
+      ],
+      "undecoded_words": [],
+      "rejected_native_facts": [],
+      "complete_scope": true,
+      "status": "complete",
+      "stop_reason": "range_end",
+      "trailing_bytes": "",
+      "backend_elapsed_seconds": 0.017074499977752566,
+      "decode_seconds": 0.00010212499182671309,
+      "session_startup_seconds": null,
+      "engine_lifecycle": "per-call backend",
+      "elapsed_seconds": 0.06775387498782948,
+      "executed": false,
+      "code_discovered": false,
+      "persisted": false,
+      "diagnostics": [],
+      "validation_scope": "bounded static instruction decoding; agreement does not prove code or semantics"
+    },
+    "ghidra": {
+      "report_format": "fdisbull-rom-asm-1",
+      "backend": "ghidra",
+      "engine_version": "12.2",
+      "arch": "sh2",
+      "bits": 32,
+      "endian": "big",
+      "engine_identity": {
+        "application_properties_sha256": "7bf69ade52e5530d6534a1202cc4ded88ca1940747456fe3d38ea03b2e3d99be",
+        "sh2_sla_sha256": "e69e099854e5b6c9e8f4d6b2deae1c038f87abfbc99484ca733e84cbdb897390",
+        "headless_launcher_sha256": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970"
+      },
+      "mode": "linear",
+      "source_size": 8,
+      "source_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "mapping": {
+        "base_address": 100728832,
+        "file_offset": 0,
+        "address": 100728832,
+        "length": 8,
+        "provenance": "caller-supplied static mapping; not execution evidence"
+      },
+      "range_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "max_instructions": 4,
+      "attempted_words": 4,
+      "decoded_words": 4,
+      "instructions": [
+        {
+          "address": 100728832,
+          "size": 2,
+          "bytes": "6043",
+          "mnemonic": "mov",
+          "operands": "r4,r0",
+          "file_offset": 0,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "mov",
+            "operands": "r4,r0"
+          }
+        },
+        {
+          "address": 100728834,
+          "size": 2,
+          "bytes": "7001",
+          "mnemonic": "add",
+          "operands": "0x1,r0",
+          "file_offset": 2,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "add",
+            "operands": "#1,r0"
+          }
+        },
+        {
+          "address": 100728836,
+          "size": 2,
+          "bytes": "000b",
+          "mnemonic": "rts",
+          "operands": "",
+          "file_offset": 4,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "rts",
+            "operands": ""
+          }
+        },
+        {
+          "address": 100728838,
+          "size": 2,
+          "bytes": "0009",
+          "mnemonic": "_nop",
+          "operands": "",
+          "file_offset": 6,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "nop",
+            "operands": ""
+          }
+        }
+      ],
+      "undecoded_words": [],
+      "rejected_native_facts": [],
+      "complete_scope": true,
+      "status": "complete",
+      "stop_reason": "range_end",
+      "trailing_bytes": "",
+      "backend_elapsed_seconds": 3.5357337500026915,
+      "decode_seconds": 0.01429325,
+      "session_startup_seconds": null,
+      "engine_lifecycle": "per-call backend",
+      "elapsed_seconds": 3.5365756249811966,
+      "executed": false,
+      "code_discovered": false,
+      "persisted": false,
+      "diagnostics": [],
+      "validation_scope": "bounded static instruction decoding; agreement does not prove code or semantics"
+    },
+    "saturn-recomp": {
+      "report_format": "fdisbull-rom-asm-1",
+      "backend": "saturn-recomp",
+      "engine_version": "saturn-recomp 0.1.0 (532fd6054ba3171339c972fab05ebd159f29260d)",
+      "arch": "sh2",
+      "bits": 32,
+      "endian": "big",
+      "engine_identity": {
+        "revision": "532fd6054ba3171339c972fab05ebd159f29260d",
+        "sh2_py_sha256": "0add78272f1ee398881fbca2850d8d89b4cbd5a7767448299b39498f60d703dd",
+        "hw_py_sha256": "a0a1e036358474b41fd594a1dd2fae9024e3e63059682367aca57eac257d231d"
+      },
+      "mode": "linear",
+      "source_size": 8,
+      "source_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "mapping": {
+        "base_address": 100728832,
+        "file_offset": 0,
+        "address": 100728832,
+        "length": 8,
+        "provenance": "caller-supplied static mapping; not execution evidence"
+      },
+      "range_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11",
+      "max_instructions": 4,
+      "attempted_words": 4,
+      "decoded_words": 4,
+      "instructions": [
+        {
+          "address": 100728832,
+          "size": 2,
+          "bytes": "6043",
+          "mnemonic": "mov",
+          "operands": "r4,r0",
+          "file_offset": 0,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "mov",
+            "operands": "r4,r0"
+          }
+        },
+        {
+          "address": 100728834,
+          "size": 2,
+          "bytes": "7001",
+          "mnemonic": "add",
+          "operands": "#1,r0",
+          "file_offset": 2,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "add",
+            "operands": "#1,r0"
+          }
+        },
+        {
+          "address": 100728836,
+          "size": 2,
+          "bytes": "000b",
+          "mnemonic": "rts",
+          "operands": "",
+          "file_offset": 4,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "rts",
+            "operands": ""
+          }
+        },
+        {
+          "address": 100728838,
+          "size": 2,
+          "bytes": "0009",
+          "mnemonic": "nop",
+          "operands": "",
+          "file_offset": 6,
+          "classification": "unconfirmed decode proposal",
+          "normalized": {
+            "mnemonic": "nop",
+            "operands": ""
+          }
+        }
+      ],
+      "undecoded_words": [],
+      "rejected_native_facts": [],
+      "complete_scope": true,
+      "status": "complete",
+      "stop_reason": "range_end",
+      "trailing_bytes": "",
+      "backend_elapsed_seconds": 0.06341304202214815,
+      "decode_seconds": 3.591598942875862e-05,
+      "session_startup_seconds": null,
+      "engine_lifecycle": "per-call backend",
+      "elapsed_seconds": 0.06418558297445998,
+      "executed": false,
+      "code_discovered": false,
+      "persisted": false,
+      "diagnostics": [],
+      "validation_scope": "bounded static instruction decoding; agreement does not prove code or semantics"
+    }
+  },
+  "compiler_versions": {
+    "cc": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "c++": "Apple clang version 21.0.0 (clang-2100.3.34.2)"
+  },
+  "compile_commands": [
+    [
+      "cc",
+      "-std=c11",
+      "<private-temporary>/ghidra.c",
+      "-o",
+      "<private-temporary>/c"
+    ],
+    [
+      "c++",
+      "-std=c++17",
+      "<private-temporary>/saturn.cpp",
+      "-o",
+      "<private-temporary>/cpp"
+    ]
+  ],
+  "compiled_source_sha256": {
+    "ghidra.c": "f120abfbaf140cf6ef40476c5cf548a687498648477a2f1869811f89150c6c60",
+    "saturn.cpp": "d2582a30d465e400aae66108d40878b93c9bebd755a7fde6dbb1485cd75d9bba",
+    "p_typed_funcs.h": "c945417b69847999f1b55895ee9f9c02363e2ebf254edbac9c062e17aa2193a4"
+  },
+  "generation_recipe": "scripts/rom_semantic_route/README.md",
+  "ghidra_generator_sha256": "f8487ff451961164e29b0bd01cacec94dfaacd417656acf3a6c46f7b4bfb4279",
+  "saturn_revision": "532fd6054ba3171339c972fab05ebd159f29260d",
+  "saturn_sh2_header_sha256": "ddf6dd96d62454d3164d0505b0b9878cf342a479fc1fb48b5c20f094f2dc57a6",
+  "native_edge_inputs": [
+    0,
+    2147483647,
+    4294967295
+  ],
+  "native_edge_outputs": {
+    "c": [
+      1,
+      2147483648,
+      0
+    ],
+    "cpp": [
+      1,
+      2147483648,
+      0
+    ]
+  },
+  "uil_edge_outputs": [
+    1,
+    2147483648,
+    0
+  ],
+  "limitations": [
+    "ABI and uint32 type bindings are assumed",
+    "proof compares parsed arithmetic models, not native execution for all inputs",
+    "return control, instrumentation, memory, flags, timing, other registers and game behavior excluded"
+  ],
+  "generation_log_sha256": {
+    "ghidra": "a8ded656e37b07f97d35cb6b3309c01194d4554050df51c09c7b7c402d5fdb02",
+    "saturn": "76a9f74bab26c6c0017e68b5506c2df4bc7295504d9e0a7abb62509a7610db30"
+  },
+  "private_receipt_sha256": "0d3a1da71ecd73fddd5e93c5c0ef4b2b90458478aac6213c53c4428000bcbd5f",
+  "source_file_hashes": {
+    "src/fdisbull/rom_semantics.py": "fefc9da7a3ab35a14b09bd8aaad89e55f2a16e76b1b63093e34537aadc2b55a5",
+    "src/fdisbull/interaction_il.py": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee",
+    "src/fdisbull/proofs.py": "fa361b4810ca9a650e1248ca85df1ec3be23c2d97a02d67040b2425cb7dd7b42",
+    "scripts/check_rom_semantic_route.py": "82f6e8eb97befce0b842a82d1247641af87b736679c0a0fa60e22393bf2cf331",
+    "scripts/rom_semantic_route/DecompileAuthoredSh2.java": "f8487ff451961164e29b0bd01cacec94dfaacd417656acf3a6c46f7b4bfb4279",
+    "scripts/rom_semantic_route/README.md": "2af7b02dbc545a15e5471c22c46d510688ba2935a008283462bdb3d7392f5699"
+  },
+  "negative_route_findings": {
+    "untyped_ghidra_c": {
+      "source": "int authored(void) { int in_r0; return in_r0 + 1; }",
+      "gate": "refused",
+      "reason": "unbound incoming register and possible signed-overflow undefined behavior as standalone C",
+      "raw_output_sha256": "bbb07dddfabfc252139c2f262fd1abb7619449fa84cc4a31e9e35e3fcea06b52"
+    },
+    "reko": {
+      "version": "0.12.5",
+      "arch": "superH",
+      "endianness": "be",
+      "process_exit": 0,
+      "decompile_qualified": false,
+      "error": "This architecture has no stack pointer. The platform must define it.",
+      "output": "empty function; no usable arithmetic C",
+      "scope": "tested configuration only; no claim that every Reko configuration fails",
+      "reko_dll_sha256": "ca4d2dc9d7222347ea670ff1738d50a66f1269b9dde6684365fca59c268c1dd3",
+      "superh_dll_sha256": "fb41f37fb987fc1c97a707233e06348cd733df49182f4f4e5c3999d5503f7491",
+      "raw_output_sha256": "c0a8b9a969447aad8317a16cc6dbadc8acbcd4c5ccc59d1c559d7514a5e42fc0",
+      "authored_input_sha256": "a985aa7de93fde5ccfd9d1ada06278eb78c4080a9669857bdde64611ef1c6f11"
+    }
+  },
+  "conclusion": "Qualified only for the explicit authored unsigned register-output contract; a general Civilization ROM-to-C-to-UIL route remains unqualified.",
+  "verification": {
+    "real_engine_focused": "57 passed",
+    "focused_public_media_distribution": "121 passed, 6 optional-engine skips",
+    "full_macos": {
+      "passed": 2186,
+      "skipped": 141,
+      "failed": 2,
+      "errors": 23,
+      "remaining_groups": "unchanged Linux ELF fixtures on macOS",
+      "green": false
+    },
+    "independent_review": "No remaining material source/evidence finding after interruption, queue-deadline and C-identifier fixes; no independent runtime-ISA proof."
+  }
+}

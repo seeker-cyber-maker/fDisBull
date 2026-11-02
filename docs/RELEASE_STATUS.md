@@ -1,3 +1,63 @@
+# Release status checked on 2026-11-02 (America/New_York)
+
+## 0.30.0 release published on GitLab; local shared installation active
+
+`v0.30.0` is an annotated GitLab tag and release candidate at source
+`v0.30.0`. It unifies the post-GitHub migration consolidation with the full
+slate of common indexed UIL contracts (MR !24), console synthesis (PR #56),
+AGI King's Quest I native alignment, debugger rewind history, standing probes,
+and verified trial-safe GitLab CI.
+
+Hosted GitLab CI passed on the `integration` baseline (Pipeline `#3016197597`
+at commit `d39390ef`, completing 3 jobs across 2 stages).
+
+See [release notes](RELEASE-0.30.0.md), [system commands](SYSTEM_INSTALLATION.md),
+and the [common UIL specification](COMMON_UIL_CONTRACT.md).
+
+---
+
+# Release status checked on 2026-11-01 (America/New_York)
+
+## 0.29.0 published on GitLab; local shared installation active
+
+`v0.29.0` is an annotated GitLab tag and GitLab Release at source
+`09a820952ad3f54d0d0707db0515a8010f7eceb1`. The
+local candidate was promoted at user direction; hosted Linux CI, the hosted
+native matrix and the macOS backend rebuild remain pending and are explicitly
+not claimed.
+
+Package bytes are published under two generic packages:
+
+- `fdisbull-tool-packages` `0.29.0-20261101` (wheel, player wheel, sdist, tool
+  ZIP);
+- `fdisbull-release-packages` `0.29.0-20261101` (offline kit, dependency kit,
+  source companion, dependency checksum, `SHA256SUMS`, `BUILD.json`).
+
+All ten remote files were downloaded and SHA-256 matched the local delivery.
+The release branch is `release/0.29.0`; the package build source is
+`c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`.
+
+The shared selector `/Users/Shared/fDisBull/current` points to
+`releases/0.29.0-c03dc4f` at source
+`c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`. `INSTALLATION.json` records
+`active_verified`; the complete 3,221-entry payload passed before and after
+activation.
+
+The fresh Python 3.13.18 prefix passed **818 installed-package tests** with no
+failures, errors or skips. DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed
+native-state restoration; the global DOSBox alias also passed. The installed
+player restored `hall`/`key` state across two fresh processes. The backend was
+inherited from the 0.28.0 prefix by an APFS clone; it was requalified, not
+rebuilt. The 0.28.0 prefix and guarded rollback helper remain available, and
+rollback preflight was checked without switching.
+
+These checks qualify this host and prefix only. Historical published entries
+below describe their own source cuts. See
+[installation](SYSTEM_INSTALLATION.md), [release notes](RELEASE-0.29.0.md), and
+the [candidate evidence](evidence/0.29.0-release/README.md).
+
+---
+
 # Release status checked on 2026-10-30 (America/New_York)
 
 ## Published 0.25.0 and active shared installation

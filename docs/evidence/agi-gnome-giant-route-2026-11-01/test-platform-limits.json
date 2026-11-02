@@ -1,0 +1,10 @@
+{
+  "format": "fdisbull-test-platform-limits-1",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.13",
+  "linux_ci": "No hosted ordinary/native Linux acceptance is claimed.",
+  "full_mac_suite": "Not rerun for this source. Parent MR archive has inherited ELF/GNU fixture failures; do not call the full suite green.",
+  "cold_boot": "Native04 failed in rat prefix after payment effects and death; no complete cold-boot qualification.",
+  "native_checkpoint": "One supported native load was verified; no RAM/register editing or teleportation.",
+  "player_checkpoints": "In-memory restoration/token invalidation; fresh process does not inherit saved checkpoint."
+}

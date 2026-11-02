@@ -1,0 +1,4 @@
+unsigned int read_0 = read_selector(class_ref(124), 582);
+write_selector(class_ref(124), 582, wrap16(read_0 + 1));
+acc_out = UNRESOLVED_object_numeric_lt(class_ref(124), 3);
+prev_out = 3;

@@ -1,0 +1,695 @@
+{
+  "format": "fdisbull-scene-methodology-verification-1",
+  "date": "2026-10-30",
+  "scope": "Skill methodology, bounded authored-case use, packaging, unchanged source, and descriptive warm production timings. No new game interaction or native execution.",
+  "baseline": {
+    "remote_commit": "91308535d9967c1e277a1272fd7b0c49b20a6897",
+    "local_equivalent_commit": "fc673720850407cfd3cfda902f65e1ef74aa2ff9",
+    "tree": "4963b277ed75d34c92a4cee746e188b23b2424a3"
+  },
+  "guide": {
+    "reference": "references/scene-recovery.md",
+    "sha256": "8aea4f67b8d143f3c85136c9e49075aadf87e33b16d53ca86098d5fe8c289ba0",
+    "bytes": 24611
+  },
+  "pilot": {
+    "case_sha256": "d712890c972ab2795dcf64f34cf5d96fe389cabae22688a10aee061dc0e2e9b9",
+    "guide_sha256": "8aea4f67b8d143f3c85136c9e49075aadf87e33b16d53ca86098d5fe8c289ba0",
+    "cases": 5,
+    "independent_top_level_contexts": 2,
+    "additional_boundary_reviewers": 1,
+    "inputs": "Only the frozen revised guide and authored-cases.json; no expected answers, source tests or recovered game package.",
+    "oracle": "The following 29 requirements were fixed before the application agents began; the coordinator manually compared both complete outputs to them.",
+    "assessments": [
+      {
+        "id": "A1",
+        "required_decision": "direct north selects terrace; source witness payload 09",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A2",
+        "required_decision": "east is nonzero live bridge_ready; initial zero not folded; observed two is true",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A3",
+        "required_decision": "west tests live glass_door open attribute 11, not initial zero",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A4",
+        "required_decision": "default door refusal emits prefix/name/suffix/newline then discourse object and scene",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A5",
+        "required_decision": "custom door refusal does not invent discourse writes",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A6",
+        "required_decision": "south routine header 768 entry773 default locals11,7; body/destination residual",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A7",
+        "required_decision": "missing direction omitted path M stays residual",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "A8",
+        "required_decision": "selection not committed travel or inferred one turn; residual admission/arrival/completion",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B1",
+        "required_decision": "B1 target selects residual.inspect or residual.turn_handle by live action_index",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B2",
+        "required_decision": "B1 args ordered tool_object then target_object",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B3",
+        "required_decision": "B1 consumes stack to empty, stores return local2, resumes b12; no target stack in semantic rule",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B4",
+        "required_decision": "B2 unknown_helper may change mutable callback; cannot freeze initial target",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B5",
+        "required_decision": "B2 smallest next dependency is helper writes/target validation; retain helper effect",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "B6",
+        "required_decision": "B3 consumes tool_object, makes no routine call, pushes zero, resumes b31",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "C1",
+        "required_decision": "entry_gallery=7, end_gallery=8 via graph despite wrong numeric hints",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "C2",
+        "required_decision": "second graph symmetric; both mappings possible; no arbitrary unique symbols",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "C3",
+        "required_decision": "record reorder cannot change justified names or resolve ambiguity",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "C4",
+        "required_decision": "source graph not claim of actual play reachability",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D1",
+        "required_decision": "static gallery description conditional on omitted callback declining",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D2",
+        "required_decision": "nested input requires caller locals1640,4,0 or equivalent preserved boundary",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D3",
+        "required_decision": "narrative/world-memory equality insufficient; checkpoint mismatch retained",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D4",
+        "required_decision": "no automatic fallback/retry after actor insertion",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D5",
+        "required_decision": "current_scene write unknown, not rolled back or inferred committed",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "D6",
+        "required_decision": "turn/RNG/scheduler remain unknown with no trace",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "E1",
+        "required_decision": "nonzero padding E1 unqualified/rejected; not normalized",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "E2",
+        "required_decision": "truncated E2 unqualified/rejected",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "E3",
+        "required_decision": "null text E3 invalid given explicit blocked constraint",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "E4",
+        "required_decision": "one lit refusal E4 does not fix universal missing behavior/time",
+        "application_a": "supported",
+        "application_b": "supported"
+      },
+      {
+        "id": "E5",
+        "required_decision": "metadata vs actual branch conflict retained; R88 profile not applied to sibling",
+        "application_a": "supported",
+        "application_b": "supported"
+      }
+    ],
+    "supported_requirements_per_application": {
+      "a": 29,
+      "b": 29
+    },
+    "false_acceptances_among_scored_requirements": {
+      "a": 0,
+      "b": 0
+    },
+    "runtime_probes": 0,
+    "execution_notes": [
+      "Application A requested one independent reasoning review of cases B and D using the same already-read raw evidence.",
+      "Application B had one failed pre-write command and one authorized corrective write; the analysis was not changed to fit an expected answer."
+    ],
+    "limits": [
+      "Authored fixtures supply qualified layout/consumer facts; this is not cold discovery from an unknown binary.",
+      "No original-versus-revised skill arm was run; no comparative speedup or universal accuracy is claimed.",
+      "Human assessment of 29 selected decisions is not a complete machine-checked proof.",
+      "The semantic decisions agree; the prose/JSON outputs are not byte-identical and agent reasoning is not claimed deterministic.",
+      "Wall time, aggregate reasoning effort and token cost were not measured for the applications."
+    ],
+    "raw_private_output_sha256": {
+      "a": "e9009c2bf6dcd809e852101a655646fb2c66ad2701bc447c23e7c26d041b11ea",
+      "b": "bc07ceb3f1a20945390aabcd5c781b8ff90af32e5cd297a0741929d8bdfc5ad6"
+    },
+    "published_applications_sha256": "6e11e4fcc90d0eaf14342cc3baacb954ebe185e86f3b8338e0f69925e9831a76"
+  },
+  "tests": {
+    "focused_final": {
+      "command": "python -m pytest -q --basetemp <qualified-private-temp> tests/test_agent_discovery.py tests/test_agent_skill_gate.py tests/test_output_cli.py tests/test_distribution.py tests/test_scenes.py::test_bundled_investigation_skill_is_readable_without_project tests/test_scenes.py::test_bundled_skill_selective_read_and_invalid_paths",
+      "exit_code": 0,
+      "passed": 91,
+      "pytest_seconds": 6.4,
+      "guide_sha256_at_test": "ecae1deb5a4cd9dc72d6970e8350285b29cab778c32d5ca9d7e3de28a0060253",
+      "subsequent_change": "CLI discovery wording corrected in the guide; final guide independently exercised by the installed wheel gate and both applications."
+    },
+    "initial_failure": {
+      "passed": 86,
+      "failed": 5,
+      "cause": "Default temporary paths were beneath a Git marker; the existing private-output guard rejected them. Unchanged tests passed from a qualified temporary directory. No guard change."
+    },
+    "installed_skill": {
+      "status": "passed",
+      "reference_count": 11,
+      "local_markdown_link_count": 36,
+      "isolated_subprocesses": true,
+      "final_guide_verified": true
+    },
+    "wheel": {
+      "sha256": "a76796c9e29e4587c11142933505aef1269d91d82f663e8fdcfe63e837ced3c4",
+      "bytes": 702968,
+      "skill_files_byte_identical": 11,
+      "distribution_check": "passed",
+      "entries": 168
+    },
+    "runtime_integrity": {
+      "protected_file_count": 45,
+      "cli_ast_equal_except_skill_catalogue": true,
+      "protected_files_unchanged": [
+        {
+          "path": "player/examples/key-and-gate.json",
+          "sha256": "116a6526b5feb2c4244d1eddf3574103a2618b11cf7bf471c92340bf18a04dd8"
+        },
+        {
+          "path": "player/fdisbull_player/__init__.py",
+          "sha256": "5aba0f26e3280a65904e0d2272103cf4bc63d87e088ccf69b8288642384ca4d6"
+        },
+        {
+          "path": "player/fdisbull_player/__main__.py",
+          "sha256": "9a4781eec4970b46e05b98101ccb304224717a21ee20c4b97f0adade5a006047"
+        },
+        {
+          "path": "player/fdisbull_player/batch.py",
+          "sha256": "1e851ae7b14b19e77ce39f9b15822379756ae5eee0e337921e251662d392922a"
+        },
+        {
+          "path": "player/fdisbull_player/game_intents.py",
+          "sha256": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f"
+        },
+        {
+          "path": "player/fdisbull_player/intent_runtime.py",
+          "sha256": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c"
+        },
+        {
+          "path": "player/fdisbull_player/live.py",
+          "sha256": "f92d10b2ddc07b6e72320d3a07ad3efc2c3fa9d2eb1bbcd794ebe24d3db47afe"
+        },
+        {
+          "path": "player/fdisbull_player/player.py",
+          "sha256": "c762a2e5323f14ba04a3748371fc22c6bd69eb50eb2592f4f221bfabaa345212"
+        },
+        {
+          "path": "player/fdisbull_player/runtime.py",
+          "sha256": "3f29d223b3f36b46ca8c1bb956234a0ae423d467ac3a6e986da8c90f80fe5f80"
+        },
+        {
+          "path": "player/fdisbull_player/scene_bindings.py",
+          "sha256": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0"
+        },
+        {
+          "path": "player/fdisbull_player/scene_intents.py",
+          "sha256": "bb265e5c9a3e5fae298374257647145b07ba5a252b6a6eab39dcf6507321e49e"
+        },
+        {
+          "path": "player/fdisbull_player/scene_runtime.py",
+          "sha256": "6e07a6bf2bd26d09507bc62ce34713455dc5fca3015be9c0192356b2580680f9"
+        },
+        {
+          "path": "player/fdisbull_player/word16.py",
+          "sha256": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168"
+        },
+        {
+          "path": "player/pyproject.toml",
+          "sha256": "25acf25c56b990c54853271e79c54cd7ee67961f8b2aa8d8582e4f4b5dae478d"
+        },
+        {
+          "path": "src/fdisbull/_zork_scene_symbols.py",
+          "sha256": "cafef54afd2a8d0597fe6727c8ce2cee3cfa12cb93239f2409b7512b4c79ba71"
+        },
+        {
+          "path": "src/fdisbull/zmachine.py",
+          "sha256": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5"
+        },
+        {
+          "path": "src/fdisbull/zmachine_analysis.py",
+          "sha256": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8"
+        },
+        {
+          "path": "src/fdisbull/zmachine_processor.py",
+          "sha256": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22"
+        },
+        {
+          "path": "src/fdisbull/zork.py",
+          "sha256": "eb1ab714668045655a10ecb2a0174d40b0bf1c678d620738d4c47f04680d40a7"
+        },
+        {
+          "path": "src/fdisbull/zork_intent_export.py",
+          "sha256": "90028d1074104775a5974fca275c0611f2b79b2317b3466438c23030bb4dd2c5"
+        },
+        {
+          "path": "src/fdisbull/zork_intents.py",
+          "sha256": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc"
+        },
+        {
+          "path": "src/fdisbull/zork_recovery.py",
+          "sha256": "70011eeb57897ccd911e6f9928cad941836ef0e181e7d834d9ed9cf31d85c25d"
+        },
+        {
+          "path": "src/fdisbull/zork_scene_dispatch.py",
+          "sha256": "0bee91847d2eabcf44dc9acce60d18d90d965b019cba42fd932efc6e5d2e7af5"
+        },
+        {
+          "path": "src/fdisbull/zork_scene_export.py",
+          "sha256": "9a6ee5a4df7b5847150c2cf0ad3d6a73ec4f5db15ea0713eea5616ac699a7e04"
+        },
+        {
+          "path": "src/fdisbull/zork_scenes.py",
+          "sha256": "f21bc999cf5f6be17e20d62b01dff36de8110d63cc32312b5894cbc7b303f321"
+        },
+        {
+          "path": "src/fdisbull/zork_uil.py",
+          "sha256": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a"
+        },
+        {
+          "path": "src/fdisbull/zork_worker.py",
+          "sha256": "cf6e161ffa083c47c6801f992d8dc00d753da2eaab750a1aa661ff49940cbec1"
+        },
+        {
+          "path": "tests/test_scene_bindings.py",
+          "sha256": "5b3ccf71adaf557fea5afd2f9c412a859bdcac28b996979fa94a30b61aa8c2a9"
+        },
+        {
+          "path": "tests/test_scene_intents.py",
+          "sha256": "6adeccad6a9fb6aa3ab9348c037d6d6657bd225e61ea5481c77568979f6c17b2"
+        },
+        {
+          "path": "tests/test_zmachine.py",
+          "sha256": "3d2b263f0b33f25f3bf73e496ad2ad3fef3312d161c68ed8566c81e527d7eade"
+        },
+        {
+          "path": "tests/test_zmachine_analysis.py",
+          "sha256": "14dcc44201b334deb982c63a4355b4fce83faacd085f86ee477fe93013d9435d"
+        },
+        {
+          "path": "tests/test_zmachine_processor.py",
+          "sha256": "53a0db775b7fd385e3343c53b554af196d5da534664c9aab5543f9f4efca5d0a"
+        },
+        {
+          "path": "tests/test_zmachine_processor_acceptance.py",
+          "sha256": "4bd77fcbbde589580e12ab99c7fefc8948a35dbf9fca0ec14402dd9bb6b231cb"
+        },
+        {
+          "path": "tests/test_zork.py",
+          "sha256": "354f03460d585c6647b012880b22301e54c6bf3cb8ec7c62f949972b61043167"
+        },
+        {
+          "path": "tests/test_zork_intent_runtime.py",
+          "sha256": "00b2c1b546585a5984beede0b45c4a9a1f33342458fb6e4e5a254432d3409cd2"
+        },
+        {
+          "path": "tests/test_zork_intents_cli.py",
+          "sha256": "a4c3e6a50853d10882f919d98e9553ba0d72850a53f6df4f0670623af30b8b87"
+        },
+        {
+          "path": "tests/test_zork_intents_mapper.py",
+          "sha256": "d48b9399990f2adb3c261430adc2f020a1397bbca6e56935142ae543118cfd63"
+        },
+        {
+          "path": "tests/test_zork_recovery_example.py",
+          "sha256": "3bdd72f17801b73f5a06e0becc5955dfc1a9fd5b8803195ea9689202b715c303"
+        },
+        {
+          "path": "tests/test_zork_scene_dispatch.py",
+          "sha256": "0729a27e88ba90f673ec036b2fd5b3260115961f4e479858c8c0a284d08adab1"
+        },
+        {
+          "path": "tests/test_zork_scene_runtime.py",
+          "sha256": "29b096e14aee9aee5621ed5a6eeabdd7e9cf4d908af0ecbba9cb955e5950d80b"
+        },
+        {
+          "path": "tests/test_zork_scenes.py",
+          "sha256": "473b9f2be938f83fc7c763662531d8289e701305acfe5be1a919f766aafbe657"
+        },
+        {
+          "path": "tests/test_zork_scenes_cli.py",
+          "sha256": "130fd1c5ed21c6855f8e122012231827ebd168a5577d8ec2038c3534829e9410"
+        },
+        {
+          "path": "tests/test_zork_uil.py",
+          "sha256": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3"
+        },
+        {
+          "path": "tests/test_zork_uil_cli.py",
+          "sha256": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a"
+        },
+        {
+          "path": "tests/zork_worker_fixture.py",
+          "sha256": "28da9d2fae702d35a258efacc78d7baff6e95c38d0116fb0a5c6db361d752307"
+        }
+      ]
+    },
+    "integration": {
+      "application_evidence_selectors_resolved": 79,
+      "all_cited_local_ids_resolve": true,
+      "case_and_application_hashes_match": true,
+      "source_archive_evidence_exact": true,
+      "root_focused_tests": {
+        "passed": 82,
+        "seconds": 1.37
+      },
+      "source_archive_entries": 580
+    }
+  },
+  "warm_measurements": {
+    "all_package_digests_equal": true,
+    "base_copy_substage_measurement": {
+      "copy_canonical_digest_equal": true,
+      "deepcopy_base_intents_ms": 4475.645657001223,
+      "intent_uncompressed_json_bytes": 18446665,
+      "ir_block_count": 55891,
+      "original_canonical_digest_unchanged": true,
+      "samples": 1,
+      "scope": "Standalone measurement of the same copy.deepcopy(base) operation used by recover_scenes; separate process, no recovery, runtime, serialization output, or changes to current copy/isolation contract."
+    },
+    "base_intent_canonical_sha256": "d4e1f586a39b6fe59987c4b2e25bd17d9e0a009c3bb5208b0a8d4f5122f11d01",
+    "base_intent_unchanged": true,
+    "created_utc": "2026-10-30T14:40:45.521358+00:00",
+    "dispatch_discovery": {
+      "all_runtime_targets_proven": false,
+      "instruction_count": 6013,
+      "root_count": 292,
+      "worklist_drained": true
+    },
+    "dispatch_site_count": 18,
+    "exit_count": 352,
+    "format": "fdisbull-scene-methodology-warm-stage-measurement-1",
+    "implementation_hashes": {
+      "player/fdisbull_player/scene_bindings.py": "6613ea78e28f5bafcd56d9aec42ad81a220e38a5c9f60d5384c493ab7e21c2a0",
+      "src/fdisbull/zork_intents.py": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc",
+      "src/fdisbull/zork_scene_dispatch.py": "0bee91847d2eabcf44dc9acce60d18d90d965b019cba42fd932efc6e5d2e7af5",
+      "src/fdisbull/zork_scenes.py": "f21bc999cf5f6be17e20d62b01dff36de8110d63cc32312b5894cbc7b303f321"
+    },
+    "imports_ms": 71.93602299958002,
+    "independent_player_validation_ms": 3369.143625999641,
+    "intent_compressed_bytes": 1462224,
+    "intent_file_sha256": "9d68e08f4bcb3da6bf16e40b1697fd2e2a2ab119b1891e9b51ead0f45f42c3b5",
+    "intent_read_decompress_parse_ms": 1271.43543999955,
+    "package_canonical_sha256": "43e8b845cdce96aea441bb5d273a7a898829d6e9bc1f271e41b10ba705ce108d",
+    "python": "3.12.14",
+    "recovery_total_median_ms": 13044.233180999072,
+    "repository_branch": "feature/zork-scene-uil",
+    "repository_commit": "fc673720850407cfd3cfda902f65e1ef74aa2ff9",
+    "runs": [
+      {
+        "recovery_total_ms": 11961.322839999411,
+        "repetition": 1,
+        "stages": {
+          "dispatch_grammar": {
+            "calls": 1,
+            "total_ms": 4.527912000412471
+          },
+          "dispatch_object_decode": {
+            "calls": 1,
+            "total_ms": 11.085252999691875
+          },
+          "dispatch_pseudo_definitions": {
+            "calls": 1,
+            "total_ms": 0.20838899945374578
+          },
+          "dispatch_recovery_inclusive": {
+            "calls": 1,
+            "total_ms": 154.91325199946004
+          },
+          "dispatch_seeded_static_traversal": {
+            "calls": 1,
+            "total_ms": 108.82040899923595
+          },
+          "dispatch_transport_recognition": {
+            "calls": 1,
+            "total_ms": 7.831540999177378
+          },
+          "final_producer_validation_inclusive": {
+            "calls": 1,
+            "total_ms": 1756.5892130005523
+          },
+          "preserved_intent_integrity": {
+            "calls": 2,
+            "total_ms": 1200.0990999986243
+          },
+          "scene_documents_inclusive": {
+            "calls": 1,
+            "total_ms": 648.3671839996532
+          },
+          "scene_graph_association": {
+            "calls": 1,
+            "total_ms": 3.561473000445403
+          },
+          "scene_module_canonical_digest": {
+            "calls": 6,
+            "total_ms": 1509.2039570008637
+          },
+          "scene_object_decode": {
+            "calls": 1,
+            "total_ms": 575.0206720003916
+          },
+          "source_ir_identity": {
+            "calls": 1,
+            "total_ms": 0.11814800018328242
+          }
+        }
+      },
+      {
+        "recovery_total_ms": 16135.559415999523,
+        "repetition": 2,
+        "stages": {
+          "dispatch_grammar": {
+            "calls": 1,
+            "total_ms": 3.7738450009783264
+          },
+          "dispatch_object_decode": {
+            "calls": 1,
+            "total_ms": 6.878189000417478
+          },
+          "dispatch_pseudo_definitions": {
+            "calls": 1,
+            "total_ms": 0.3715509992616717
+          },
+          "dispatch_recovery_inclusive": {
+            "calls": 1,
+            "total_ms": 2636.2863590002235
+          },
+          "dispatch_seeded_static_traversal": {
+            "calls": 1,
+            "total_ms": 2603.7491089991818
+          },
+          "dispatch_transport_recognition": {
+            "calls": 1,
+            "total_ms": 4.437965999386506
+          },
+          "final_producer_validation_inclusive": {
+            "calls": 1,
+            "total_ms": 1131.1056520007696
+          },
+          "preserved_intent_integrity": {
+            "calls": 2,
+            "total_ms": 2131.364578999637
+          },
+          "scene_documents_inclusive": {
+            "calls": 1,
+            "total_ms": 133.2467979991634
+          },
+          "scene_graph_association": {
+            "calls": 1,
+            "total_ms": 2.381860998866614
+          },
+          "scene_module_canonical_digest": {
+            "calls": 6,
+            "total_ms": 1047.741694999786
+          },
+          "scene_object_decode": {
+            "calls": 1,
+            "total_ms": 5.359540999052115
+          },
+          "source_ir_identity": {
+            "calls": 1,
+            "total_ms": 0.12638899897865485
+          }
+        }
+      },
+      {
+        "recovery_total_ms": 13044.233180999072,
+        "repetition": 3,
+        "stages": {
+          "dispatch_grammar": {
+            "calls": 1,
+            "total_ms": 2.7587819986365503
+          },
+          "dispatch_object_decode": {
+            "calls": 1,
+            "total_ms": 3.792343000895926
+          },
+          "dispatch_pseudo_definitions": {
+            "calls": 1,
+            "total_ms": 0.18599999930302147
+          },
+          "dispatch_recovery_inclusive": {
+            "calls": 1,
+            "total_ms": 162.9502499999944
+          },
+          "dispatch_seeded_static_traversal": {
+            "calls": 1,
+            "total_ms": 137.13822700083256
+          },
+          "dispatch_transport_recognition": {
+            "calls": 1,
+            "total_ms": 6.452550998801598
+          },
+          "final_producer_validation_inclusive": {
+            "calls": 1,
+            "total_ms": 1500.248427999395
+          },
+          "preserved_intent_integrity": {
+            "calls": 2,
+            "total_ms": 1240.4929760014056
+          },
+          "scene_documents_inclusive": {
+            "calls": 1,
+            "total_ms": 120.68744200041692
+          },
+          "scene_graph_association": {
+            "calls": 1,
+            "total_ms": 3.132218000246212
+          },
+          "scene_module_canonical_digest": {
+            "calls": 6,
+            "total_ms": 1332.4986009993154
+          },
+          "scene_object_decode": {
+            "calls": 1,
+            "total_ms": 4.082977999132709
+          },
+          "source_ir_identity": {
+            "calls": 1,
+            "total_ms": 0.08938700011640321
+          }
+        }
+      }
+    ],
+    "scene_count": 110,
+    "scope": "Three warm in-memory scene recovery passes with one existing qualified intent package; current producer checks remain enabled. No original gameplay, emulator, full-story conversion, or fresh intent recovery was run. No generated game package was written.",
+    "source_file_bytes": 92160,
+    "source_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "stage_medians_ms": {
+      "dispatch_grammar": 3.7738450009783264,
+      "dispatch_object_decode": 6.878189000417478,
+      "dispatch_pseudo_definitions": 0.20838899945374578,
+      "dispatch_recovery_inclusive": 162.9502499999944,
+      "dispatch_seeded_static_traversal": 137.13822700083256,
+      "dispatch_transport_recognition": 6.452550998801598,
+      "final_producer_validation_inclusive": 1500.248427999395,
+      "preserved_intent_integrity": 1240.4929760014056,
+      "scene_documents_inclusive": 133.2467979991634,
+      "scene_graph_association": 3.132218000246212,
+      "scene_module_canonical_digest": 1332.4986009993154,
+      "scene_object_decode": 5.359540999052115,
+      "source_ir_identity": 0.11814800018328242
+    },
+    "timing_limits": [
+      "Instrumented stage timers have small wrapper overhead; three samples are descriptive, not a statistical benchmark.",
+      "Stage timings are inclusive and nested; do not sum all rows.",
+      "Top-level recovery includes source read, qualification, scene/dispatch production, canonical digests, package deepcopy, and final producer validation.",
+      "Import and compressed intent read/decompress/JSON costs are reported separately and excluded from recovery totals.",
+      "Independent player validation is a single additional static source-correspondence check, not execution equivalence.",
+      "Existing analyst work, source research, naming profile, prior conversion, and native evidence preparation are not measured. This is not cold semantic discovery cost.",
+      "CPU and filesystem were not isolated from concurrent agent work. No speedup is claimed from these measurements, and copying/integrity checks must not be removed without preserving the current isolation contract."
+    ]
+  }
+}
