@@ -1,0 +1,26 @@
+SYNDICATE CAMPAIGN | MODS | cash 27600
+Recorded semantic view; no game time advances and no native actions are sent.
+Active: running
+UZI: 600/2400; 25.00% threshold progress
+Funding 9: 400/hour; 9600/day; +100 points/hour
+MOD PROJECTS
+mod-00 LEGS V1              complete
+mod-01 LEGS V2              0/2400
+mod-02 LEGS V3              locked
+mod-03 ARMS V1              complete
+mod-04 ARMS V2              0/2400
+mod-05 ARMS V3              locked
+mod-06 CHEST V1             complete
+mod-07 CHEST V2             0/2400
+mod-08 CHEST V3             locked
+mod-09 HEART V1             complete
+mod-10 HEART V2             0/2400
+mod-11 HEART V3             locked
+mod-12 EYES V1              complete
+mod-13 EYES V2              0/2400
+mod-14 EYES V3              locked
+mod-15 BRAIN V1             complete
+mod-16 BRAIN V2             0/2400
+mod-17 BRAIN V3             locked
+RECORDED HOURLY GRAPH: 100 200 300 400 500 600
+Completion, active graph, unlocks and equipment price are separate state fields.

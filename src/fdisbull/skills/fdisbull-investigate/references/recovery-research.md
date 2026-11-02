@@ -239,6 +239,53 @@ the chosen player-information policy consistently to narration, JSON, action
 lists and visual summaries. A concise player description is not a complete
 investigator checkpoint.
 
+## Use a compatible save corpus to reach later systems
+
+Look for existing compatible saves early when a new game cannot expose the
+requested feature efficiently. Classify donor title, edition, platform, patch,
+language, expansion and mod/ruleset before loading. A sequel, remake or another
+platform's similarly named save is not a qualified input. An external save is
+someone else's entry state; its ordinary progression or editing history can
+remain unknown. Do not execute a bundled trainer or editor merely to use its data.
+
+Select a small corpus by discriminating state: new, active, paused, nearly
+complete, just unlocked, missing a prerequisite, or a relevant failure boundary.
+Keep strategic and tactical saves separate when the system has both. Preserve
+source URLs, original bytes and hashes; inspect archive paths, file sets and
+budgets; use a private writable clone. Preserve linked files and identities as a
+dependency group rather than copying a convenient unlock flag.
+
+Qualification requires more than parsing or seeing a menu. Load in the original,
+check the required system and linked invariants, advance one relevant original
+update, then save/reload and compare. A fresh-process original-save load and a
+same-session emulator checkpoint have different scopes. Record initialization,
+cache rebuilding, schema migration and all assisted preparation. When no suitable
+donor is obtained, label an original-generated or diagnostic seed accurately;
+keep unserved late-game coverage open instead of pretending an all-unlocks edit
+is a normal progression witness.
+
+Investigate saving as an operation with effects. Verify the actual configured
+path, file creation and contents, not just a return to a menu. The selected
+Syndicate writer subtracts funds above a threshold before attempting file-open;
+its active research graph can be newer than the per-project progress word.
+Those findings motivate generic safeguards, not hard-coded behavior for every
+program. Record pre-save, committed effects and post-load separately. Do not
+replay an uncertain save or assume native-state recovery restores host files.
+
+Use source ports, converters and format notes as attributed hypotheses. They may
+repair or normalize the original and do not replace original behavior checks.
+For X-COM-like research, include base, staffing, inventory, discovered topics and
+active-project dependencies; investigate the chosen edition before asserting
+exact formats or rules. The same method applies to project/document examples in
+other applications, with embedded code and external I/O handled explicitly.
+
+The bounded Syndicate example under `examples/syndicate_campaign` includes a
+private-input reader, separate research update/finalization models, safe archive
+intake checks and a read-only Player projection. Its tests are not authority to
+execute an arbitrary donor or claim complete campaign reconstruction. Preserve
+profile-specific unknowns and origin labels. See that example's report and
+`SAVE_CORPUS_METHOD.md` for evidence and acceptance requirements SC01-SC08.
+
 ## From code to semantics
 
 For UIL scene extraction, start with the required scene elements and their missing

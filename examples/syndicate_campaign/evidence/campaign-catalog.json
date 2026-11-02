@@ -1,0 +1,984 @@
+{
+  "format": "syndicate-campaign-catalog-1",
+  "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "qualification": "source-derived; admission additionally tested in an isolated original-CPU profile",
+  "language_index": 0,
+  "territories": [
+    {
+      "id": 0,
+      "label": "ALASKA",
+      "mission_number": 17,
+      "outgoing": [
+        1,
+        8
+      ],
+      "map_rectangle_raw": [
+        46,
+        18,
+        28,
+        18
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 1,
+      "label": "NORTHWEST TERRITORIES",
+      "mission_number": 39,
+      "outgoing": [
+        8,
+        2
+      ],
+      "map_rectangle_raw": [
+        90,
+        16,
+        14,
+        24
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 2,
+      "label": "NORTHEAST TERRITORIES",
+      "mission_number": 8,
+      "outgoing": [
+        3,
+        15
+      ],
+      "map_rectangle_raw": [
+        122,
+        6,
+        60,
+        28
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 3,
+      "label": "GREENLAND",
+      "mission_number": 16,
+      "outgoing": [
+        27
+      ],
+      "map_rectangle_raw": [
+        218,
+        16,
+        32,
+        22
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 4,
+      "label": "SCANDINAVIA",
+      "mission_number": 20,
+      "outgoing": [
+        10
+      ],
+      "map_rectangle_raw": [
+        320,
+        22,
+        24,
+        38
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 5,
+      "label": "URALS",
+      "mission_number": 18,
+      "outgoing": [
+        6,
+        13,
+        12
+      ],
+      "map_rectangle_raw": [
+        370,
+        20,
+        32,
+        40
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 6,
+      "label": "SIBERIA",
+      "mission_number": 22,
+      "outgoing": [
+        7,
+        13
+      ],
+      "map_rectangle_raw": [
+        434,
+        10,
+        22,
+        36
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 7,
+      "label": "KAMCHATKA",
+      "mission_number": 12,
+      "outgoing": [
+        0
+      ],
+      "map_rectangle_raw": [
+        482,
+        30,
+        44,
+        22
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 8,
+      "label": "YUKON",
+      "mission_number": 21,
+      "outgoing": [
+        1,
+        18,
+        17,
+        16
+      ],
+      "map_rectangle_raw": [
+        70,
+        36,
+        28,
+        26
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 9,
+      "label": "WESTERN EUROPE",
+      "mission_number": 1,
+      "outgoing": [
+        4
+      ],
+      "map_rectangle_raw": [
+        290,
+        70,
+        24,
+        26
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 10,
+      "label": "CENTRAL EUROPE",
+      "mission_number": 15,
+      "outgoing": [
+        11
+      ],
+      "map_rectangle_raw": [
+        334,
+        54,
+        24,
+        32
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 11,
+      "label": "EASTERN EUROPE",
+      "mission_number": 10,
+      "outgoing": [
+        5
+      ],
+      "map_rectangle_raw": [
+        372,
+        58,
+        32,
+        30
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 12,
+      "label": "KAZAKHSTAN",
+      "mission_number": 9,
+      "outgoing": [
+        24,
+        23
+      ],
+      "map_rectangle_raw": [
+        436,
+        74,
+        14,
+        26
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 13,
+      "label": "MONGOLIA",
+      "mission_number": 3,
+      "outgoing": [
+        7,
+        14
+      ],
+      "map_rectangle_raw": [
+        434,
+        62,
+        52,
+        18
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 14,
+      "label": "FAR EAST",
+      "mission_number": 2,
+      "outgoing": [
+        16
+      ],
+      "map_rectangle_raw": [
+        532,
+        76,
+        8,
+        16
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 15,
+      "label": "NEWFOUNDLAND",
+      "mission_number": 42,
+      "outgoing": [
+        19
+      ],
+      "map_rectangle_raw": [
+        160,
+        52,
+        16,
+        16
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 16,
+      "label": "CALIFORNIA",
+      "mission_number": 5,
+      "outgoing": [
+        17,
+        25
+      ],
+      "map_rectangle_raw": [
+        56,
+        76,
+        16,
+        14
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 17,
+      "label": "ROCKIES",
+      "mission_number": 23,
+      "outgoing": [
+        25,
+        26
+      ],
+      "map_rectangle_raw": [
+        76,
+        76,
+        18,
+        16
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 18,
+      "label": "MID WEST",
+      "mission_number": 34,
+      "outgoing": [
+        19,
+        26
+      ],
+      "map_rectangle_raw": [
+        110,
+        76,
+        6,
+        14
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 19,
+      "label": "NEW ENGLAND",
+      "mission_number": 29,
+      "outgoing": [
+        18,
+        26,
+        27
+      ],
+      "map_rectangle_raw": [
+        140,
+        76,
+        16,
+        14
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 20,
+      "label": "ALGERIA",
+      "mission_number": 28,
+      "outgoing": [],
+      "map_rectangle_raw": [
+        278,
+        124,
+        20,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 21,
+      "label": "LYBIA",
+      "mission_number": 35,
+      "outgoing": [
+        20,
+        28,
+        29
+      ],
+      "map_rectangle_raw": [
+        288,
+        124,
+        36,
+        28
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 22,
+      "label": "IRAQ",
+      "mission_number": 6,
+      "outgoing": [
+        21,
+        30
+      ],
+      "map_rectangle_raw": [
+        344,
+        116,
+        40,
+        20
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 23,
+      "label": "IRAN",
+      "mission_number": 4,
+      "outgoing": [
+        31,
+        22,
+        30
+      ],
+      "map_rectangle_raw": [
+        398,
+        106,
+        28,
+        22
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 24,
+      "label": "CHINA",
+      "mission_number": 50,
+      "outgoing": [
+        31,
+        32
+      ],
+      "map_rectangle_raw": [
+        474,
+        98,
+        36,
+        20
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 25,
+      "label": "COLORADO",
+      "mission_number": 32,
+      "outgoing": [
+        26,
+        33
+      ],
+      "map_rectangle_raw": [
+        56,
+        98,
+        28,
+        14
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 26,
+      "label": "SOUTHERN STATES",
+      "mission_number": 24,
+      "outgoing": [
+        33,
+        34,
+        25
+      ],
+      "map_rectangle_raw": [
+        100,
+        106,
+        6,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 27,
+      "label": "ATLANTIC ACCELERATOR",
+      "mission_number": 37,
+      "outgoing": [],
+      "map_rectangle_raw": [
+        198,
+        130,
+        8,
+        6
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 28,
+      "label": "MAURITANIA",
+      "mission_number": 41,
+      "outgoing": [],
+      "map_rectangle_raw": [
+        266,
+        140,
+        16,
+        22
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 29,
+      "label": "SUDAN",
+      "mission_number": 33,
+      "outgoing": [
+        21,
+        35,
+        36,
+        30
+      ],
+      "map_rectangle_raw": [
+        336,
+        156,
+        20,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 30,
+      "label": "ARABIA",
+      "mission_number": 38,
+      "outgoing": [
+        29,
+        37
+      ],
+      "map_rectangle_raw": [
+        378,
+        146,
+        22,
+        12
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 31,
+      "label": "INDIA",
+      "mission_number": 7,
+      "outgoing": [
+        24,
+        32
+      ],
+      "map_rectangle_raw": [
+        440,
+        118,
+        26,
+        24
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 32,
+      "label": "PACIFIC RIM",
+      "mission_number": 48,
+      "outgoing": [
+        49
+      ],
+      "map_rectangle_raw": [
+        492,
+        136,
+        16,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 33,
+      "label": "MEXICO",
+      "mission_number": 26,
+      "outgoing": [
+        26,
+        34
+      ],
+      "map_rectangle_raw": [
+        66,
+        122,
+        12,
+        12
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 34,
+      "label": "COLOMBIA",
+      "mission_number": 44,
+      "outgoing": [
+        38,
+        39
+      ],
+      "map_rectangle_raw": [
+        120,
+        172,
+        16,
+        16
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 35,
+      "label": "NIGERIA",
+      "mission_number": 45,
+      "outgoing": [],
+      "map_rectangle_raw": [
+        280,
+        170,
+        30,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 36,
+      "label": "ZAIRE",
+      "mission_number": 27,
+      "outgoing": [
+        37,
+        41
+      ],
+      "map_rectangle_raw": [
+        326,
+        166,
+        24,
+        38
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 37,
+      "label": "KENYA",
+      "mission_number": 40,
+      "outgoing": [
+        36,
+        42
+      ],
+      "map_rectangle_raw": [
+        370,
+        172,
+        14,
+        30
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 38,
+      "label": "PERU",
+      "mission_number": 14,
+      "outgoing": [
+        46,
+        47
+      ],
+      "map_rectangle_raw": [
+        118,
+        206,
+        12,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 39,
+      "label": "VENEZUALA",
+      "mission_number": 36,
+      "outgoing": [
+        40,
+        46
+      ],
+      "map_rectangle_raw": [
+        142,
+        184,
+        16,
+        26
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 40,
+      "label": "BRAZIL",
+      "mission_number": 46,
+      "outgoing": [
+        27,
+        48
+      ],
+      "map_rectangle_raw": [
+        180,
+        196,
+        14,
+        26
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 41,
+      "label": "SOUTH AFRICA",
+      "mission_number": 31,
+      "outgoing": [
+        27,
+        42
+      ],
+      "map_rectangle_raw": [
+        328,
+        226,
+        12,
+        22
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 42,
+      "label": "MOZAMBIQUE",
+      "mission_number": 13,
+      "outgoing": [
+        41
+      ],
+      "map_rectangle_raw": [
+        354,
+        212,
+        8,
+        30
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 43,
+      "label": "WESTERN AUSTRALIA",
+      "mission_number": 11,
+      "outgoing": [
+        44,
+        45
+      ],
+      "map_rectangle_raw": [
+        502,
+        250,
+        18,
+        34
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 44,
+      "label": "NORTHERN TERRITORIES",
+      "mission_number": 19,
+      "outgoing": [
+        43,
+        45
+      ],
+      "map_rectangle_raw": [
+        542,
+        246,
+        26,
+        24
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 45,
+      "label": "NEW SOUTH WALES",
+      "mission_number": 43,
+      "outgoing": [
+        43,
+        44,
+        34
+      ],
+      "map_rectangle_raw": [
+        542,
+        282,
+        24,
+        10
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 46,
+      "label": "PARAGUAY",
+      "mission_number": 49,
+      "outgoing": [
+        48
+      ],
+      "map_rectangle_raw": [
+        152,
+        230,
+        20,
+        12
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 47,
+      "label": "ARGENTINA",
+      "mission_number": 30,
+      "outgoing": [
+        48
+      ],
+      "map_rectangle_raw": [
+        148,
+        242,
+        10,
+        38
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 48,
+      "label": "URUGUAY",
+      "mission_number": 47,
+      "outgoing": [
+        46,
+        47
+      ],
+      "map_rectangle_raw": [
+        170,
+        252,
+        8,
+        16
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    },
+    {
+      "id": 49,
+      "label": "INDONESIA",
+      "mission_number": 25,
+      "outgoing": [
+        43,
+        44
+      ],
+      "map_rectangle_raw": [
+        504,
+        160,
+        36,
+        44
+      ],
+      "rectangle_semantics": "source metadata; original display transform not recovered"
+    }
+  ],
+  "projects": {
+    "weapon": [
+      {
+        "id": 0,
+        "label": "PERSUADERTRON"
+      },
+      {
+        "id": 1,
+        "label": "PISTOL"
+      },
+      {
+        "id": 2,
+        "label": "GAUSS GUN"
+      },
+      {
+        "id": 3,
+        "label": "SHOTGUN"
+      },
+      {
+        "id": 4,
+        "label": "UZI"
+      },
+      {
+        "id": 5,
+        "label": "MINI-GUN"
+      },
+      {
+        "id": 6,
+        "label": "LASER"
+      },
+      {
+        "id": 7,
+        "label": "FLAMER"
+      },
+      {
+        "id": 8,
+        "label": "LONG RANGE"
+      },
+      {
+        "id": 9,
+        "label": "SCANNER"
+      },
+      {
+        "id": 10,
+        "label": "MEDIKIT"
+      },
+      {
+        "id": 11,
+        "label": "TIME BOMB"
+      },
+      {
+        "id": 12,
+        "label": "ACCESS CARD"
+      },
+      {
+        "id": 13,
+        "label": "ACCESS CARD1"
+      },
+      {
+        "id": 14,
+        "label": "ACCESS CARD2"
+      },
+      {
+        "id": 15,
+        "label": "AUTO MAPPER"
+      },
+      {
+        "id": 16,
+        "label": "ENERGY SHIELD"
+      },
+      {
+        "id": 17,
+        "label": "unidentified record 17"
+      },
+      {
+        "id": 18,
+        "label": "unidentified record 18"
+      },
+      {
+        "id": 19,
+        "label": "unidentified record 19"
+      }
+    ],
+    "mod": [
+      {
+        "id": 0,
+        "label": "LEGS V1"
+      },
+      {
+        "id": 1,
+        "label": "LEGS V2"
+      },
+      {
+        "id": 2,
+        "label": "LEGS V3"
+      },
+      {
+        "id": 3,
+        "label": "ARMS V1"
+      },
+      {
+        "id": 4,
+        "label": "ARMS V2"
+      },
+      {
+        "id": 5,
+        "label": "ARMS V3"
+      },
+      {
+        "id": 6,
+        "label": "CHEST V1"
+      },
+      {
+        "id": 7,
+        "label": "CHEST V2"
+      },
+      {
+        "id": 8,
+        "label": "CHEST V3"
+      },
+      {
+        "id": 9,
+        "label": "HEART V1"
+      },
+      {
+        "id": 10,
+        "label": "HEART V2"
+      },
+      {
+        "id": 11,
+        "label": "HEART V3"
+      },
+      {
+        "id": 12,
+        "label": "EYES V1"
+      },
+      {
+        "id": 13,
+        "label": "EYES V2"
+      },
+      {
+        "id": 14,
+        "label": "EYES V3"
+      },
+      {
+        "id": 15,
+        "label": "BRAIN V1"
+      },
+      {
+        "id": 16,
+        "label": "BRAIN V2"
+      },
+      {
+        "id": 17,
+        "label": "BRAIN V3"
+      }
+    ]
+  },
+  "source_windows": [
+    {
+      "preferred_start": "0x28610",
+      "length": 194,
+      "sha256": "b5f739768aebfec9c65797f61234967f3282ec9cf0857ec2a224d42ec2c42caf"
+    },
+    {
+      "preferred_start": "0x28d60",
+      "length": 304,
+      "sha256": "d5d2e36b45faace570ca7759b2b3f615ceb5d9c99fb1fa95d41df3102f400844"
+    },
+    {
+      "preferred_start": "0x35e20",
+      "length": 866,
+      "sha256": "ff3be885b1e23a2cd08a98a55274a026e9f76e54860b7b294dd159328e8475ac"
+    },
+    {
+      "preferred_start": "0x36190",
+      "length": 418,
+      "sha256": "b9d94374e7befc3e337f22a80f6d8a869f40e494d56bb299b94d05b89cf461d3"
+    },
+    {
+      "preferred_start": "0x38350",
+      "length": 208,
+      "sha256": "516660fdfc3ff188c66a0e979bc480e325149c57da3545036c96f7c3641c83c9"
+    },
+    {
+      "preferred_start": "0x38420",
+      "length": 288,
+      "sha256": "819c57280e1f0d5bd83501632c07dee92587affe4304d3f1e602fbfb581058ce"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+test_civilization_city_and_tiles_have_one_identity_across_views (test_world_view.LargeWorldViews.test_civilization_city_and_tiles_have_one_identity_across_views) ... ok
+test_colonist_identity_matches_people_settlement_and_world (test_world_view.LargeWorldViews.test_colonist_identity_matches_people_settlement_and_world) ... ok
+test_cursor_rejects_cross_view_observer_page_size_and_session (test_world_view.LargeWorldViews.test_cursor_rejects_cross_view_observer_page_size_and_session) ... ok
+test_defensive_copies_preserve_authority_and_knowledge (test_world_view.LargeWorldViews.test_defensive_copies_preserve_authority_and_knowledge) ... ok
+test_equal_snapshot_restore_changes_epoch_and_rejects_old_cursor (test_world_view.LargeWorldViews.test_equal_snapshot_restore_changes_epoch_and_rejects_old_cursor) ... ok
+test_malformed_fields_knowledge_parentage_actions_and_limits_refuse (test_world_view.LargeWorldViews.test_malformed_fields_knowledge_parentage_actions_and_limits_refuse) ... ok
+test_observation_does_not_change_authority_clock_or_epoch (test_world_view.LargeWorldViews.test_observation_does_not_change_authority_clock_or_epoch) ... ok
+test_offmap_ships_retain_identity_without_inventing_coordinates (test_world_view.LargeWorldViews.test_offmap_ships_retain_identity_without_inventing_coordinates) ... ok
+test_pages_cover_known_matches_once_with_stable_order (test_world_view.LargeWorldViews.test_pages_cover_known_matches_once_with_stable_order) ... ok
+test_remembered_location_controls_membership_not_hidden_current_location (test_world_view.LargeWorldViews.test_remembered_location_controls_membership_not_hidden_current_location) ... ok
+test_squad_and_district_share_interior_agent_identity (test_world_view.LargeWorldViews.test_squad_and_district_share_interior_agent_identity) ... ok
+test_three_fixtures_validate_and_actions_are_unbound (test_world_view.LargeWorldViews.test_three_fixtures_validate_and_actions_are_unbound) ... ok
+test_unseen_entities_bindings_and_private_counts_are_not_exposed (test_world_view.LargeWorldViews.test_unseen_entities_bindings_and_private_counts_are_not_exposed) ... ok
+test_checkpoints_restore_hidden_state_and_invalidate_old_context (test_z_harness.HarnessContracts.test_checkpoints_restore_hidden_state_and_invalidate_old_context) ... ok
+test_comparator_includes_preserved_flags_and_excludes_declared_temporary (test_z_harness.HarnessContracts.test_comparator_includes_preserved_flags_and_excludes_declared_temporary) ... ok
+test_history_capacity_counts_retained_branches_and_never_advances_on_refusal (test_z_harness.HarnessContracts.test_history_capacity_counts_retained_branches_and_never_advances_on_refusal) ... ok
+test_last_change_reports_net_changes_not_same_value_writes (test_z_harness.HarnessContracts.test_last_change_reports_net_changes_not_same_value_writes) ... ok
+test_model_matches_one_retained_original_machine_observation (test_z_harness.HarnessContracts.test_model_matches_one_retained_original_machine_observation) ... ok
+test_modeled_refusal_keeps_committed_state_and_history (test_z_harness.HarnessContracts.test_modeled_refusal_keeps_committed_state_and_history) ... ok
+test_named_action_updates_authoritative_state_and_public_projection (test_z_harness.HarnessContracts.test_named_action_updates_authoritative_state_and_public_projection) ... ok
+test_pending_host_is_a_plan_and_does_not_commit_or_execute_effects (test_z_harness.HarnessContracts.test_pending_host_is_a_plan_and_does_not_commit_or_execute_effects) ... ok
+test_returned_copies_and_caller_documents_do_not_mutate_authority (test_z_harness.HarnessContracts.test_returned_copies_and_caller_documents_do_not_mutate_authority) ... ok
+test_rewind_and_new_action_preserve_both_branches (test_z_harness.HarnessContracts.test_rewind_and_new_action_preserve_both_branches) ... ok
+test_same_public_narration_does_not_pass_hidden_state_comparison (test_z_harness.HarnessContracts.test_same_public_narration_does_not_pass_hidden_state_comparison) ... ok
+test_strict_scene_requests_slots_and_foreign_checkpoints (test_z_harness.HarnessContracts.test_strict_scene_requests_slots_and_foreign_checkpoints) ... ok
+test_player_imports (__main__.run_tests.<locals>.PlayerOfflineTests.test_player_imports) ... ok
+test_word16_arithmetic (__main__.run_tests.<locals>.PlayerOfflineTests.test_word16_arithmetic) ... ok
+test_cli_skills_index (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_cli_skills_index) ... ok
+test_common_uil_catalog_and_runtime (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_common_uil_catalog_and_runtime) ... ok
+test_console_udc_targets (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_console_udc_targets) ... ok
+test_fdisbull_version_and_exports (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_fdisbull_version_and_exports) ... ok
+test_genesis_replay_profiles (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_genesis_replay_profiles) ... ok
+test_nes_multicart_profiles (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_nes_multicart_profiles) ... ok
+test_shadowrun_ai_profiles (__main__.run_tests.<locals>.FDisBullAppAndConsoleTests.test_shadowrun_ai_profiles) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 0.091s
+
+OK
+======================================================================
+fDisBull v0.30.0 ChatGPT Offline Bundle — Master Self-Verification
+======================================================================
+----------------------------------------------------------------------
+Results: 34 tests run, 0 errors, 0 failures
+Master verification receipt written to: VERIFICATION.json

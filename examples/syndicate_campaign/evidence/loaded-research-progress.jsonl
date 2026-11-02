@@ -1,0 +1,5 @@
+{"run": "695f191889e94be8afcdb356cb342855", "outcome": "guest_time", "cash": 26000, "state": 0, "progress": 1000}
+{"run": "695f191889e94be8afcdb356cb342855", "outcome": "guest_time", "cash": 25600, "state": 0, "progress": 1100}
+{"run": "695f191889e94be8afcdb356cb342855", "outcome": "guest_time", "cash": 24800, "state": 0, "progress": 1300}
+{"run": "695f191889e94be8afcdb356cb342855", "outcome": "guest_time", "cash": 24400, "state": 0, "progress": 1400}
+{"run": "695f191889e94be8afcdb356cb342855", "outcome": "timeout", "cash": 24000, "state": 0, "progress": 1500}

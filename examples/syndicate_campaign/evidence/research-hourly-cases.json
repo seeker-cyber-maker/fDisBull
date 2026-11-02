@@ -1,0 +1,119 @@
+[
+  {
+    "funding_index": 0,
+    "budget_before": 30000,
+    "budget_after": 29996,
+    "first_progress": 10,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 1,
+    "budget_before": 30000,
+    "budget_after": 29992,
+    "first_progress": 20,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 2,
+    "budget_before": 30000,
+    "budget_after": 29984,
+    "first_progress": 30,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 3,
+    "budget_before": 30000,
+    "budget_after": 29976,
+    "first_progress": 40,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 4,
+    "budget_before": 30000,
+    "budget_after": 29960,
+    "first_progress": 50,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 5,
+    "budget_before": 30000,
+    "budget_after": 29940,
+    "first_progress": 60,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 6,
+    "budget_before": 30000,
+    "budget_after": 29880,
+    "first_progress": 70,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 7,
+    "budget_before": 30000,
+    "budget_after": 29800,
+    "first_progress": 80,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 8,
+    "budget_before": 30000,
+    "budget_after": 29700,
+    "first_progress": 90,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 9,
+    "budget_before": 30000,
+    "budget_after": 29600,
+    "first_progress": 100,
+    "return_al": 0,
+    "diagnostic_edits": 0,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 9,
+    "budget_before": 399,
+    "budget_after": 399,
+    "first_progress": 0,
+    "return_al": 3,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": 9,
+    "budget_before": 400,
+    "budget_after": 0,
+    "first_progress": 100,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  },
+  {
+    "funding_index": -1,
+    "budget_before": 30000,
+    "budget_after": 30000,
+    "first_progress": 0,
+    "return_al": 0,
+    "diagnostic_edits": 1,
+    "stopped_at_return": true
+  }
+]

@@ -1,0 +1,497 @@
+{
+  "scope": "Comparison of recovered models against retained original executions, with distinct DOSBox and isolated-CPU boundaries",
+  "checks": [
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 0,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 1,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 2,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 3,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 4,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 5,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 6,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 7,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 8,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 9,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 9,
+      "budget_before": 399,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": 9,
+      "budget_before": 400,
+      "match": true
+    },
+    {
+      "kind": "DOSBox-hourly",
+      "funding_index": -1,
+      "budget_before": 30000,
+      "match": true
+    },
+    {
+      "kind": "isolated-original-CPU",
+      "family": "weapon",
+      "phase": "complete",
+      "entry": "0x35e20",
+      "instructions": 5785,
+      "match_all_decoded_sections": true,
+      "cash_before": 30000,
+      "cash_after": 29600,
+      "project": 4,
+      "project_progress_after": 2400,
+      "next_project": 5,
+      "next_project_progress_after": 0,
+      "price_before": -750,
+      "price_after": -750,
+      "active_state_after": 0,
+      "return_al": 1,
+      "not_dos": true
+    },
+    {
+      "kind": "isolated-original-CPU",
+      "family": "weapon",
+      "phase": "finalize",
+      "entry": "0x36190",
+      "instructions": 8832,
+      "match_all_decoded_sections": true,
+      "cash_before": 29600,
+      "cash_after": 29600,
+      "project": 4,
+      "project_progress_after": 2400,
+      "next_project": 5,
+      "next_project_progress_after": 0,
+      "price_before": -750,
+      "price_after": 750,
+      "active_state_after": 2,
+      "return_al": 23,
+      "not_dos": true
+    },
+    {
+      "kind": "isolated-original-CPU",
+      "family": "mod",
+      "phase": "complete",
+      "entry": "0x35e20",
+      "instructions": 5783,
+      "match_all_decoded_sections": true,
+      "cash_before": 30000,
+      "cash_after": 11500,
+      "project": 1,
+      "project_progress_after": 2400,
+      "next_project": 2,
+      "next_project_progress_after": 0,
+      "price_before": 30000,
+      "price_after": 30000,
+      "active_state_after": 0,
+      "return_al": 1,
+      "not_dos": true
+    },
+    {
+      "kind": "isolated-original-CPU",
+      "family": "mod",
+      "phase": "finalize",
+      "entry": "0x36190",
+      "instructions": 8358,
+      "match_all_decoded_sections": true,
+      "cash_before": 11500,
+      "cash_after": 11500,
+      "project": 1,
+      "project_progress_after": 2400,
+      "next_project": 2,
+      "next_project_progress_after": 0,
+      "price_before": 30000,
+      "price_after": 30000,
+      "active_state_after": 2,
+      "return_al": 23,
+      "not_dos": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 0,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 1,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 2,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 3,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 4,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 5,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 6,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 7,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 8,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 9,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 10,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 11,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 12,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 13,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 14,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 15,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 16,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 17,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 18,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 19,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 20,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 21,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 22,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 23,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 24,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 25,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 26,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 27,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 28,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 29,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 30,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 31,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 32,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 33,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 34,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 35,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 36,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 37,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 38,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 39,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 40,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 41,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 42,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 43,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 44,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 45,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 46,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 47,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 48,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "starting",
+      "territory": 49,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "western-owned",
+      "territory": 4,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "western-owned",
+      "territory": 9,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "western-owned",
+      "territory": 10,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "western-owned",
+      "territory": 20,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "completed-marker",
+      "territory": 9,
+      "match": true
+    },
+    {
+      "kind": "original-admission",
+      "case": "override",
+      "territory": 27,
+      "match": true
+    }
+  ],
+  "count": 73,
+  "all_passed": true
+}
