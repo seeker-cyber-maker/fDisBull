@@ -22,6 +22,7 @@ SCALAR_TYPES = {
     *(f"{sign}{bits}" for sign in "ui" for bits in (8, 16, 32, 64)),
 }
 SLOT_TYPES = SCALAR_TYPES | {"string", "array"}
+_INTEGER_OPERAND_TYPES = (SCALAR_TYPES - {"bool"}) | {"integer"}
 MAX_BYTES = 1024 * 1024
 MAX_SLOTS = 4096
 MAX_STEPS = 65536
@@ -226,7 +227,7 @@ def validate_record(document: object) -> bool:
             )
             if op == "ge":
                 _require(
-                    lt not in ("bool", "string") and rt not in ("bool", "string"),
+                    lt in _INTEGER_OPERAND_TYPES and rt in _INTEGER_OPERAND_TYPES,
                     "ge compares integers only",
                 )
             else:
@@ -241,7 +242,7 @@ def validate_record(document: object) -> bool:
             _fields(cond, ("op", "value", "bit"))
             _require(
                 _slot_ref(cond["value"], slots)
-                and _slot_type(cond["value"], slots) not in ("bool", "string"),
+                and _slot_type(cond["value"], slots) in _INTEGER_OPERAND_TYPES,
                 "invalid bit test value",
             )
             _require(
@@ -325,7 +326,7 @@ def validate_record(document: object) -> bool:
                 for key in ("x", "y"):
                     _require(
                         _slot_ref(block[key], slots)
-                        and _slot_type(block[key], slots) not in ("bool", "string"),
+                        and _slot_type(block[key], slots) in _INTEGER_OPERAND_TYPES,
                         "invalid text coordinate",
                     )
                 if "font" in block:
@@ -347,7 +348,7 @@ def validate_record(document: object) -> bool:
                 )
                 _require(
                     _slot_ref(block["index"], slots)
-                    and _slot_type(block["index"], slots) not in ("bool", "string"),
+                    and _slot_type(block["index"], slots) in _INTEGER_OPERAND_TYPES,
                     "invalid array index",
                 )
                 element = slots[block["slot"]]["element"]
@@ -355,7 +356,7 @@ def validate_record(document: object) -> bool:
                 vtyp = _slot_type(block["value"], slots)
                 _require(
                     (vtyp == "bool") == (element == "bool")
-                    and (vtyp == "integer" or element == "bool"),
+                    and (vtyp in _INTEGER_OPERAND_TYPES or element == "bool"),
                     "incompatible array value",
                 )
                 if not isinstance(block["value"], dict):
