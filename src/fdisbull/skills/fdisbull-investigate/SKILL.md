@@ -43,6 +43,13 @@ counterexample exercise. Preserve the user's full outcome in a coverage ledger;
 finish one bounded operation at a time without silently replacing the requested
 result with a smaller demonstration.
 
+For cartridge compatibility, console hardware support or a console UDC, follow
+[progressive console support](references/reconstruction.md#progressive-console-support).
+Choose one required capability, retain declared reference components around it,
+and qualify the actual composition. Keep lesson completion, target-console
+compatibility and application behavior as separate claims. This procedure adds
+skill guidance; it does not add methods or widen an installed target profile.
+
 Before describing behavior as recovered or equivalent, compare **original →
 UIL** and **UIL → generated/selected output** separately on the same declared
 inputs, and then compare the composed results. Two models with shared ancestry,

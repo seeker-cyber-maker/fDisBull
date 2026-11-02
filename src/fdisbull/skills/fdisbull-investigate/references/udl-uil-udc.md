@@ -366,6 +366,10 @@ a general slicing pass or change the installed exporter's prerequisites.
 
 ## Native console UDC profile
 
+Use [progressive console support](reconstruction.md#progressive-console-support)
+to develop and qualify one required hardware capability at a time. The method
+does not widen the installed compiler or cartridge profiles below.
+
 `console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
 and Genesis. `console-udc` accepts `path`, `target`, `output` and optional
 `display_variable`; output must be a new private directory outside Git. Both
@@ -391,6 +395,14 @@ metadata. Pass both to `write_console_rom`, or replay saved inputs with
 recovery, not generic 68000 decompilation. Source-checkout
 `docs/MINIPLANETS_NES_LEVEL.md` records playable controls, original CPU checks and
 aligned natural Genesis/NES replays, plus rendering/reset and score/time exclusions.
+
+The post-compilation `fdisbull.nes_multicart` prototype admits exactly two attested
+authored legacy iNES mapper-0 images: 32 KiB PRG, 8 KiB CHR, matching mirroring,
+no trainer/battery/four-screen/header extensions, no cartridge RAM dependency and
+no writes to `$8000-$FFFF`. Headers cannot establish the last two conditions.
+Read `multicart_profiles()` from the selected runtime and source-checkout
+`docs/NES_MULTICART.md`; refuse unattested inputs. Its mapper-225 output does not
+convert mapper 66 or 227.
 
 ## Read a proof narrowly
 
