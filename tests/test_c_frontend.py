@@ -126,6 +126,11 @@ class FrontendTests(unittest.TestCase):
     def test_out_of_bounds_buffer_refused(self):
         with self.assertRaises(m.CFrontendRefused):self.get('unsigned f(unsigned *p){return p[1];}',{'p':{'kind':'input_buffer','cells':[{'label':'$in'}]}})
 
+    def test_pointer_to_pointer_refused(self):
+        with self.assertRaisesRegex(m.CFrontendRefused,'one-level'):
+            self.get('unsigned f(unsigned **p){if(p[0])return 1;return 0;}',
+                     {'p':{'kind':'input_buffer','cells':[{'label':'$in'}]}})
+
     def test_existing_c_generator_roundtrips_all_owned_fields(self):
         from fdisbull.console_synthesis import Bindings, NativeBacking, emit_c, recover
         from fdisbull.interaction_il import execute_il

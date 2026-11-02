@@ -378,8 +378,12 @@ class Builder:
                 if spec.get('kind') not in ('input_buffer','output_buffer'):raise CFrontendRefused('pointer requires explicit fixed-buffer contract')
                 cells=spec.get('cells',[])
                 if not 1<=len(cells)<=32:raise CFrontendRefused('buffer arity outside profile')
-                # Fixed, non-null, disjoint uint32 word buffers only.
-                base=param['type'].get('desugaredQualType',param['type']['qualType']).replace('*','').strip()
+                # Fixed, non-null, disjoint uint32 word buffers only. A
+                # pointer-to-pointer is not a flat cell buffer and must not
+                # borrow the one-level binding contract.
+                pointer_type=param['type'].get('desugaredQualType',param['type']['qualType'])
+                if pointer_type.count('*')!=1:raise CFrontendRefused('only one-level fixed buffers are admitted')
+                base=pointer_type.replace('*','').strip()
                 if self.typ(base)!='u32':raise CFrontendRefused('buffer element type must be uint32')
                 labels=[]
                 for cell in cells:
