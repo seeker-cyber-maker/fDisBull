@@ -1,5 +1,30 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+Read this reference only when the task is to relate source operations to a
+shared interaction representation or test a bounded source block. It is not a
+general compiler manual.
+
+## Contents
+
+- [Bounded-memory web and macOS shells](#bounded-memory-web-and-macos-shells)
+- [Keep the terms separate](#keep-the-terms-separate)
+- [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
+- [Original-backed DOS block boundary](#original-backed-dos-block-boundary)
+- [Overlapping instruction backings](#overlapping-instruction-backings)
+- [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
+- [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
+- [Qualified Zork scene rules](#qualified-zork-scene-rules)
+- [Multi-scale Z worlds and larger scenes](#multi-scale-z-worlds-and-larger-scenes)
+- [Native console UDC, replay and synthesis profiles](#native-console-udc-replay-and-synthesis-profiles)
+- [Read a proof narrowly](#read-a-proof-narrowly)
+- [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
+- [Linux and generated C realization](#linux-and-generated-c-realization)
+- [Windows x86/x64 and Linux bounded-memory desktop realization](#windows-x86x64-and-linux-bounded-memory-desktop-realization)
+- [Win16 segmented memory shell](#win16-segmented-memory-shell)
+- [Direct guest-language front ends](#direct-guest-language-front-ends)
+
+## Bounded-memory web and macOS shells
+
 The separate `fdisbull-memory-uil-1` profile admits fixed unsigned word arenas,
 indexed loads/stores and bounded loops. `store-memory-block-contract`,
 `store-memory-udl-layer` and `select-memory-udl-layers` retain exact program,
@@ -72,24 +97,6 @@ qualification; this does not imply general native-shell or whole-game support.
 For first use and source-to-model acceptance, follow the
 [repeatable reconstruction recipe](reconstruction.md).
 
-
-Read this reference only when the task is to relate source operations to a
-shared interaction representation or test a bounded source block. It is not a
-general compiler manual.
-
-## Contents
-
-- [Keep the terms separate](#keep-the-terms-separate)
-- [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
-- [Current DOS block boundary](#current-023-dos-block-boundary)
-- [Overlapping instruction backings](#overlapping-instruction-backings)
-- [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
-- [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
-- [Qualified Zork scene rules](#qualified-zork-scene-rules)
-- [Read a proof narrowly](#read-a-proof-narrowly)
-- [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
-- [Direct guest-language front ends](#direct-guest-language-front-ends)
-
 ## Keep the terms separate
 
 The additive `fdisbull-common-uil-1` profile uses indexed typed variables,
@@ -111,6 +118,39 @@ Read [common-uil.md](common-uil.md) for a complete installed-package example.
   behavior to an implementation. The original DOS profile can select retained
   block backings. The selectable-layer prototype adds immutable contracts,
   isolated CPU providers and separately admitted native output profiles.
+- **Recovery harness:** an executable interface that observes and operates a
+  backing, manages experiment boundaries and checkpoints, and records evidence.
+  Its named observations, actions, guards and bindings form an architectural
+  precursor to explicit UIL contracts, continuing as a test platform as
+  backings are replaced.
+- **Z:** an optional scene, object, relation, action and observation interface
+  for an agent-facing world. The world owns authoritative state and behavior; a
+  scene is a bounded observer view at a declared execution boundary. Z can
+  operate a source-backed harness during recovery, expose recovered UIL through
+  a selected realization, or supply authored behavior that lowers into UIL.
+
+The recovery direction is supported by a feedback loop through the harness:
+`waexecution` records qualified physical execution facts and restore coverage;
+`waorchestration` uses those facts to connect logical objects, typed values,
+dependencies and behavioral boundaries. Z names the observations and actions
+used to investigate and test those boundaries. A checkpoint supplies both the
+starting witness for an experiment and the state relation for comparing an
+original-backed operation with a candidate. In a source checkout,
+`docs/UDL_UIL_UDC_CONSOLIDATED.md` consolidates all schemas and profiles.
+
+A register name does not define a permanent logical variable. Bind physical
+definition/use occurrences or valid location intervals to logical values, slots
+or object views. Preserve widths, overlapping views, aliases, lifetime, control
+dependencies and relevant flags/faults. Internal value versions support
+analysis without changing the mutable UIL slot grammar. Unobserved temporaries
+may disappear from the portable contract; physical live-outs required by a
+retained continuation remain an adapter obligation.
+
+A qualified pass-through backing can retain opaque internal registers and
+storage. Values and effects that cross its boundary still require an explicit
+relation, which may initially be a coarse retained machine-context dependency.
+Pass-through postpones internal abstraction; it does not remove entry,
+continuation, runtime, state-ownership or effect obligations.
 
 For v1 `fdisbull-il-1`, UDL and UIL are role metadata over the same primitive
 nodes and evaluator; changing role does not perform a translation. The separate
@@ -139,7 +179,7 @@ semantic, input-domain, capability and assurance contracts, then measure cost
 on comparable inputs and conditions. Retain unsupported effects and the
 original-backed fallback; an unmeasured candidate is not free.
 
-## Current 0.23 DOS block boundary
+## Original-backed DOS block boundary
 
 UDC currently accepts original static x86-16 MZ or COM version 1. It rebuilds
 the original files byte-for-byte from immutable project backings, including
@@ -364,7 +404,27 @@ execution contract. Read [scene-recovery.md](scene-recovery.md) for the procedur
 that starts from required scene elements; its proposed analysis steps do not add
 a general slicing pass or change the installed exporter's prerequisites.
 
-## Native console UDC profile
+### Multi-scale Z worlds and larger scenes
+
+A scene can expose a room, tactical district, settlement, continent, resource
+network or off-map destination. Overlapping views preserve entity identity and
+share authoritative state. Geometry, topology, containment, ownership,
+dependencies and view membership remain distinct. Changing observation scale
+does not authorize changing simulation scope. Current, remembered and unknown
+fields govern public query membership and counts. Continuations bind observer,
+view and execution epoch; restored values do not revive old tokens. UIL slot IDs
+remain scoped to operations and invocation bindings, while world entities bind
+through object/field identities and recovered lifetime relations.
+
+Rewind selects both a return boundary and an explicit restoration policy.
+Preserve the existing TAS option for gameplay rewind with continued random
+progression, used to retry room entries with random events or locations. Exact
+repetition requires matched RNG and other nondeterministic inputs; exploratory
+retries use a deliberately different random context. Record the selected policy
+and actual context in the branch evidence. Pointwise original/replacement
+comparisons must use matched or explicitly related random contexts.
+
+## Native console UDC, replay and synthesis profiles
 
 `console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
 and Genesis. `console-udc` accepts `path`, `target`, `output` and optional
@@ -391,6 +451,32 @@ metadata. Pass both to `write_console_rom`, or replay saved inputs with
 recovery, not generic 68000 decompilation. Source-checkout
 `docs/MINIPLANETS_NES_LEVEL.md` records playable controls, original CPU checks and
 aligned natural Genesis/NES replays, plus rendering/reset and score/time exclusions.
+
+For repeatable procedural game, display-planner and PSG audio synthesis across
+targets, inspect `genesis-replay-profiles`, `genesis-replay-source`,
+`genesis-replay-inspect`, `genesis-replay-export` and `genesis-replay-build`, or
+`rom-game-lift` for the reviewed full-game Miniplanets profile. Builds emit into
+a new private directory for banked NES (`--cc65-root`) or native Genesis
+(`--m68k-root`). `genesis-replay-source` checks whether a supplied ROM matches a
+reviewed semantic profile; it does not perform generic 68000 decompilation
+(`docs/MINIPLANETS_FULL_GAME.md`, `docs/GENESIS_UIL_REPLAY.md`).
+
+For NES multicart packaging, use `nes-multicart-profiles`,
+`nes-multicart-inspect` and `nes-multicart-build --authored-compatible`. Menu
+and bank-switching synthesis requires explicit caller compatibility assertions
+that iNES/NES 2.0 headers alone cannot prove, and advertised multicart counts
+remain marketing labels rather than distinct-game counts (`docs/NES_MULTICART.md`).
+
+For bounded Genesis and SNES Shadowrun profiles, inspect `shadowrun-opening-*`,
+`shadowrun-systems`, `shadowrun-system-*`, `shadowrun-play-build`,
+`shadowrun-ai-profiles`, `shadowrun-ai-build`, `shadowrun-city-export`,
+`shadowrun-z` and `shadowrun-snes-build`. Each command operates on a declared
+prepared state or bounded subsystem (movement, combat, Karma, Matrix, cyberdeck,
+contacts or city/text projection) rather than recovering the full commercial
+game. Native `macos-arm64` compilation is the active desktop realization for
+combined Shadowrun slices, while NES outputs remain bounded research profiles
+(`docs/SHADOWRUN_MACOS_ARM64.md`, `docs/SHADOWRUN_SNES_MACOS.md`,
+`docs/GENESIS_NES_RESEARCH_HANDOFF.md`).
 
 ## Read a proof narrowly
 
@@ -440,7 +526,7 @@ effects/types and unimplemented contract profiles refuse. Model qualification,
 source preservation, compiler output and native execution remain separate.
 Capture descriptor3 observations only in the explicit analysis profile, validate
 complete frames and bind the executable/process identity before making claims.
-Source-checkout docs/UDC_LINUX_AND_C.md records the actual pilot and limits.
+Source-checkout `docs/UDC_LINUX_AND_C.md` records the actual pilot and limits.
 
 ## Windows x86/x64 and Linux bounded-memory desktop realization
 
@@ -461,7 +547,7 @@ X server queue events do not establish physical hardware/global hit-testing.
 `windows-x86` admits I386/PE32 and uses i686 MinGW; `windows-x64` retains
 AMD64/PE32+ and its x64 compiler. Both use Win32 services with different pointer
 ABIs. Windows execution under Wine does not qualify Microsoft Windows OS execution.
-Source-checkout docs/UDC_MEMORY_DESKTOP.md documents APIs, recipes and limits.
+Source-checkout `docs/UDC_MEMORY_DESKTOP.md` documents APIs, recipes and limits.
 
 ## Win16 segmented memory shell
 
@@ -490,7 +576,7 @@ pointer carriers are signed16 and fractional clock division is retained.
 Source recipes, compiler/NE admission, native API observations and original
 DOS/UIL/composed comparisons remain separate. Authored NE/GDI/input checks in
 Wine 11 new WoW64 do not qualify original Windows 3.x, physical hardware or
-whole-game behavior. Source-checkout docs/UDC_MEMORY_WIN16.md documents the
+whole-game behavior. Source-checkout `docs/UDC_MEMORY_WIN16.md` documents the
 Python/JSON APIs, SDK recipe, storage and current limits.
 
 ## Direct guest-language front ends
