@@ -9,17 +9,16 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.31.0 candidate):** the local `release/0.31.0` line is a
-packaging candidate, not a published tag. It carries the 0.30.0 release plus
-lossless frame-timeline delta storage, the bounded typed-C to UIL frontend,
-read-only Windows original-runtime preflight, CHIP-8 ISA/corpus pilots, and
-UDC registry and fresh-agent swede examples. See the
+**Release status (0.31.0 published):** `v0.31.0` is an annotated GitLab tag at
+`10d01062`, with a GitLab Release and generic packages. It carries the 0.30.0
+release plus lossless frame-timeline delta storage, the bounded typed-C to UIL
+frontend, read-only Windows original-runtime preflight, CHIP-8 ISA/corpus
+pilots, and UDC registry and fresh-agent swede examples. See the
 [0.31.0 release notes](docs/RELEASE-0.31.0.md),
 [release status](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates. [`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/tags/v0.30.0)
-remains the latest published GitLab tag (`dc6d7e77`); the 0.31.0 candidate has
-no tag or Release package yet.
+gates. Shared-prefix activation remains separate; the selector is still on the
+0.29.0 prefix.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >

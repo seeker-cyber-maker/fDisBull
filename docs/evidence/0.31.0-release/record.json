@@ -1,8 +1,17 @@
 {
   "format": "fdisbull-release-evidence-1",
   "version": "0.31.0",
-  "status": "release_candidate",
-  "published": false,
+  "status": "published",
+  "published": true,
+  "release": {
+    "tag": "v0.31.0",
+    "tag_object": "5f061f700a71021db57abf1a30da1fcaf1f2ee61",
+    "tag_sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "gitlab_release": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.0",
+    "package": "fdisbull-tool-packages",
+    "package_version": "0.31.0-20261103",
+    "package_id": 75116571
+  },
   "source": {
     "branch": "release/0.31.0",
     "base_main": "f861d17ed4837f753e000f53cc777a7d906fde82",
@@ -10,21 +19,35 @@
     "code_tree": "dba4fa1c5dde5eaf363d71b614b2ef9f3c409515",
     "candidate_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
     "candidate_tree": "e6f79878671ee57bc5610f85159edb59193fbc0f",
-    "artifact_source_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2"
+    "artifact_source_commit": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "artifact_source_tree": "9956d54a16ad49c80bacf8cef58af776cabd706f"
   },
   "ci": {
     "host": "gitlab.com",
-    "pipeline": 3020223207,
-    "sha": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
+    "pipeline": 3022313149,
+    "sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
     "status": "success",
-    "duration_seconds": 574,
     "test_and_package": {
       "passed": 8958,
       "skipped": 402,
       "skill_gates": "passed",
       "packages": "core 564; player 19; tool zip 1820; sdist 1842"
     },
-    "native_jobs": "manual, not run"
+    "tag_pipeline": {
+      "pipeline": 3022469643,
+      "ref": "v0.31.0",
+      "sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+      "status": "success",
+      "passed": 8958,
+      "skipped": 402
+    },
+    "native_jobs": "Linux jobs compiled then failed at emulator startup in the SDL2/headless environment; not claimed"
+  },
+  "native": {
+    "macos_stable": "86 passed",
+    "macos_layers": "148 passed",
+    "backend": "/Users/Shared/fDisBull/current/backend/native-macos-arm64/dosbox-x",
+    "linux_ci": "failed at emulator startup; not claimed"
   },
   "included_merges": {
     "frame_timeline_deltas": "2baaa1c",
@@ -69,12 +92,12 @@
     {
       "file": "fdisbull-0.31.0-py3-none-any.whl",
       "bytes": 1895363,
-      "sha256": "835e956eb38b22575020d76931997233e425315084a76c56fcb22e7de10a501c"
+      "sha256": "a676c98e2d9c5c24f901d66ea03742d7e1f92351eb25c92530db861c5a1bf025"
     },
     {
       "file": "fdisbull_player-0.31.0-py3-none-any.whl",
       "bytes": 86673,
-      "sha256": "7bf80e2af986c8470cbe7571ab8f2bcdc00df4c0496ef2838c489ad00b0f52c1"
+      "sha256": "d80e27589174ca119b33bf7ca4d3f08f7cc5f930f5b934362028472d6205d8fc"
     },
     {
       "file": "fdisbull-0.31.0-tool.zip",
@@ -83,8 +106,8 @@
     },
     {
       "file": "fdisbull-0.31.0.tar.gz",
-      "bytes": 5245304,
-      "sha256": "3892dbd7ff56a7cb2260764635f8ceb3c26b5879e92a24bd5bf6e835a4ba819e"
+      "bytes": 5258070,
+      "sha256": "e2f93e875cb3ed624525e10f7669810ee17da06de398f3f114cc1c63787ddb9a"
     }
   ],
   "exclusions": [
@@ -96,13 +119,16 @@
     "Draft deterministic execution guidance (!53)",
     "native Windows Win16/PE32 debugger and Wine guest image",
     "historical CHIP-8 emulator qualification",
-    "Git tag, GitLab Release, hosted CI, native backend rebuild and shared-prefix activation"
+    "shared-prefix activation"
   ],
   "logs": [
     "full-suite.log",
     "targeted.log",
     "check-dist.log",
     "installed-smoke.log",
-    "artifact-sha256.txt"
+    "artifact-sha256.txt",
+    "native-macos-stable.log",
+    "native-macos-layers.log",
+    "tag-ci.log"
   ]
 }

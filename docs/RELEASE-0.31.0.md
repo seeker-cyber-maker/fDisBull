@@ -1,9 +1,10 @@
 # 0.31.0 release
 
-Status: **release candidate, not tagged or published**. This line carries the
-0.30.0 release plus the reviewed post-release code merges and the new bounded
-research examples. Publication, a Git tag and a GitLab Release package remain
-separate gates.
+Status: **tagged and published** as `v0.31.0` at
+`10d01062092a47bdc984ee59cd817b8ab57b6f1b`. This line carries the 0.30.0
+release plus the reviewed post-release code merges and the new bounded research
+examples. The annotated tag, GitLab Release and generic packages are published;
+shared-prefix activation remains separate.
 
 ## New in 0.31.0
 
@@ -62,10 +63,14 @@ separate gates.
   passed, with the known macOS-only baseline of 3 failures and 23 errors
   (Linux ELF/GCC fixtures and one case-sensitive media fixture). No new failure
   is in the added feature suites.
-- Hosted GitLab `test-and-package` on the candidate code commit (`bda8107`):
-  **success** (pipeline `3020223207`), 8,958 passed, 402 skipped, both skill
-  gates and all package checks passed. Native debugger jobs remain manual and
-  unplayed.
+- Hosted GitLab `test-and-package` on `10d0106`: **success** (pipeline
+  `3022313149`), 8,958 passed, 402 skipped, both skill gates and all package
+  checks passed. The tag pipeline `3022469643` repeated the same result on
+  `v0.31.0`.
+- macOS native qualification using the installed backend: stable **86 passed**,
+  layers **148 passed**. The Linux native jobs compiled successfully but then
+  failed at emulator startup in the hosted SDL2/headless environment; they are
+  not claimed as qualified.
 - Candidate identities, artifact hashes and raw logs are in
   [`docs/evidence/0.31.0-release/`](evidence/0.31.0-release/README.md).
 
@@ -78,5 +83,5 @@ separate gates.
   are on their branches, not in this package.
 - No native Windows Win16/PE32 debugger, Wine 11 guest image, CHIP-8 historical
   emulator qualification, or general swede compiler is claimed.
-- No Git tag, GitLab Release, shared-prefix activation or publication is
-  performed by this candidate.
+- Shared-prefix activation is not performed. The `v0.31.0` tag and GitLab
+  Release are publication records only; activation remains a separate gate.

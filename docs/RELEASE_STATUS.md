@@ -1,13 +1,23 @@
-# Release status checked on 2026-11-02 (America/New_York)
+# Release status checked on 2026-11-03 (America/New_York)
 
-## 0.31.0 release candidate under packaging
+## 0.31.0 published on GitLab; shared-prefix activation separate
 
-The local `release/0.31.0` line carries 0.30.0 plus frame-timeline delta
-storage, the bounded typed-C frontend, Windows runtime preflight, CHIP-8 and
-UDC/swede examples, and the cold-agent benchmark/skill refresh. It is not
-tagged, published or activated. Hosted GitLab `test-and-package` passed on the
-code commit (`bda8107`, pipeline `3020223207`); native debugger jobs remain
-manual. See [0.31.0 release notes](RELEASE-0.31.0.md).
+`v0.31.0` is an annotated GitLab tag at source
+`10d01062092a47bdc984ee59cd817b8ab57b6f1b`, with a GitLab Release and generic
+package `fdisbull-tool-packages` `0.31.0-20261103`. The release branch is
+`release/0.31.0`.
+
+Hosted `test-and-package` passed on the exact source (`10d0106`, pipeline
+`3022313149`; tag pipeline `3022469643` also passed), with 8,958 passed and 402
+skipped. The macOS native stable and layers suites passed 86 and 148 tests
+against the installed backend. The hosted Linux native jobs compiled but failed
+at emulator startup in the CI SDL2/headless environment; they are not claimed as
+qualified. The full local suite retains the known 3 failures and 23 errors from
+Linux ELF/GCC/media fixtures.
+
+The shared selector remains on the 0.29.0 prefix. No shared-prefix activation is
+claimed; that remains a separate gate. See [0.31.0 release notes](RELEASE-0.31.0.md)
+and [candidate evidence](evidence/0.31.0-release/README.md).
 
 ## 0.30.0 release published on GitLab; local shared installation active
 
