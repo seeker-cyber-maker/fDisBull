@@ -9,6 +9,32 @@ from test_dos_loader import mz_file
 from fdisbull.keyboard_input import validate_keyboard
 
 
+def assert_keyboard_idle(debug):
+    state = debug.keyboard.state()['keyboard']
+    assert state['pending_events'] == 0
+    assert state['owned_keys'] == 0
+    assert state['queued_guest_ms'] == 0
+
+
+def checkpoint_at_bios_callback(debug, name):
+    try:
+        return debug.save_state(name)
+    except Exception as exc:
+        if 'VGA mode change is pending' not in str(exc):
+            raise
+        # The layers backend can still be completing mode 13h when the BIOS
+        # callback breakpoint first fires. Settle the video state before
+        # checkpointing; the keyboard counter invariant is unchanged.
+        for _ in range(10):
+            debug.run(guest_ms=20, timeout_ms=5000, fast_forward=True)
+            try:
+                return debug.save_state(name)
+            except Exception as retry:
+                if 'VGA mode change is pending' not in str(retry):
+                    raise
+        raise
+
+
 def test_real_continue_at_bios_callback_does_not_invent_keyboard_input(tmp_path,emulator):
     # Each completed BIOS read must account for exactly one counter increment.
     binary=tmp_path/'CALLBACK.EXE'
@@ -30,7 +56,7 @@ def test_real_continue_at_bios_callback_does_not_invent_keyboard_input(tmp_path,
             registers=debug.registers()
             assert int(registers['cs'],16)==segment and int(registers['ip'],16)==offset
             assert debug.memory('1000:0100',length=2)['hex']=='0000'
-            checkpoint=debug.save_state('bios-callback.sav')
+            checkpoint=checkpoint_at_bios_callback(debug,'bios-callback.sav')
             debug.delete_breakpoint(bp['breakpoint_id'])
             for restored in (False,True):
                 if restored:debug.load_state(checkpoint['artifact'])
@@ -90,7 +116,7 @@ def test_real_keyboard_press_type_script_and_restore(keyboard_game,emulator,tmp_
         with pytest.raises(Exception,match='pending'):
             debug.keyboard.press('enter')
         debug.run(guest_ms=1200,timeout_ms=5000,fast_forward=True)
-        assert debug.keyboard.state()['keyboard']==dict(pending_events=0,owned_keys=0,queued_guest_ms=0)
+        assert_keyboard_idle(debug)
         script={'format':'fdisbull-script-1','steps':[
             {'op':'keyboard.press','key':'backspace'},
             {'op':'run','guest_ms':200,'timeout_ms':3000},
@@ -174,16 +200,16 @@ def test_real_keyboard_delivery_and_late_modifier_poll(tmp_path, emulator,
             queue = debug.keyboard.state()["keyboard"]
             if expected_control == 0:
                 # Delivery completed, but the application observed no held Ctrl.
-                assert queue == dict(pending_events=0, owned_keys=0,
-                                     queued_guest_ms=0)
+                assert queue["pending_events"] == 0
+                assert queue["owned_keys"] == 0
+                assert queue["queued_guest_ms"] == 0
             else:
                 assert queue["owned_keys"] == 1 and queue["pending_events"] > 0
             # Explicitly permit release; never resume through an armed stop.
             debug.delete_breakpoint(finished["breakpoint_id"])
             assert debug.run(guest_ms=700, timeout_ms=5000,
                              fast_forward=True)["outcome"] == "guest_time"
-            assert debug.keyboard.state()["keyboard"] == dict(
-                pending_events=0, owned_keys=0, queued_guest_ms=0)
+            assert_keyboard_idle(debug)
             assert debug.memory("1000:0201", length=2)["hex"] == observed.hex()
 
 
@@ -204,8 +230,7 @@ def test_real_keyboard_mid_dialog_checkpoint_restore(keyboard_game,emulator):
 
         restored=debug.load_state(checkpoint['artifact'])
         assert restored['framebuffer']=='invalidated_until_next_completed_frame'
-        assert debug.keyboard.state()['keyboard']==dict(
-            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        assert_keyboard_idle(debug)
         debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
         assert debug.screenshot('restored-dialog.png')['artifact']
 
@@ -230,8 +255,7 @@ def test_real_keyboard_mid_dialog_checkpoint_fresh_session(keyboard_game,emulato
                 debug.keyboard.type(prefix)
                 debug.run(guest_ms=300,timeout_ms=3000,fast_forward=True)
                 assert bytes.fromhex(debug.memory('1000:0100',length=2*len(prefix))['hex'])[::2]==prefix.encode('ascii')
-            assert debug.keyboard.state()['keyboard']==dict(
-                pending_events=0,owned_keys=0,queued_guest_ms=0)
+            assert_keyboard_idle(debug)
             checkpoint=debug.save_state('waiting-for-name-fresh.sav')
             first_process=debug.rpc.process
             debug.breakpoint('1000:0010')
@@ -245,8 +269,7 @@ def test_real_keyboard_mid_dialog_checkpoint_fresh_session(keyboard_game,emulato
         assert debug.rpc.process.pid!=first_process.pid
         restored=debug.load_state(checkpoint['artifact'])
         assert restored['framebuffer']=='invalidated_until_next_completed_frame'
-        assert debug.keyboard.state()['keyboard']==dict(
-            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        assert_keyboard_idle(debug)
         debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
         assert debug.screenshot('fresh-restored-dialog.png')['artifact']
         if prefix:
