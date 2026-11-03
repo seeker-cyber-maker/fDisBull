@@ -15,11 +15,16 @@ def assert_keyboard_idle(debug):
     assert state["pending_events"] == 0
     assert state["owned_keys"] == 0
     assert state["queued_guest_ms"] == 0
+    assert state["frame_keys"] == []
 
 
 def checkpoint_at_bios_callback(debug, address, breakpoint, name):
     for attempt in range(5):
         try:
+            registers = debug.registers()
+            assert int(registers["cs"], 16) == int(address["segment"], 16)
+            assert int(registers["ip"], 16) == int(address["offset"], 16)
+            assert debug.memory("1000:0100", length=2)["hex"] == "0000"
             return debug.save_state(name), breakpoint
         except Exception as exc:
             if "VGA mode change is pending" not in str(exc) or attempt == 4:
