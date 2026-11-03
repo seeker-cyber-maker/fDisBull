@@ -1,0 +1,117 @@
+{
+  "format": "shadowrun-snes-intro-attempt-evidence-1",
+  "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+  "instrumented_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+  "input": "ordinary START pulses, no memory patch; exact schedule in capture receipts",
+  "source_steps": [
+    {
+      "frames": "840",
+      "path": "START at title: 81:E274 \u2192 E2DD, return selection 0 to 81:E1A2, branch to E22A then E315"
+    },
+    {
+      "frames": "840\u2013872",
+      "path": "E315 repeated transition/presentation work; E22D, E230, E233 and E237 at 872"
+    },
+    {
+      "frames": "888",
+      "path": "E23B/E23F/E241/E242 return A=FFFF; caller 80:A152/A166/A16C/A0C7/A0D0 enters 81:EF24 then F053 with A=0"
+    },
+    {
+      "frames": "888 onward",
+      "path": "EF24/F053 reach EFC8 and EFFB writes to $2140\u2013$2142 APU ports; audio/port transfer, not established scene/task initialization"
+    }
+  ],
+  "source_checkpoints": [
+    {
+      "start_video_frame": 1079,
+      "seed_sha256": "6b841eb2ace7d029a8bb3b0b4e804eae4b785553eedc5815f031e89a04c059f1",
+      "next_sha256": "899721a310b90f9853962ddef5de87a991b43ff9b1cf7f1f4ba8fa6b88415d6f",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1100,
+      "seed_sha256": "0de48141e838e428c2c26c0ab70ae508bda6ad47c78cea38bc0e6ae2347967cd",
+      "next_sha256": "6b5ed58a70959c6e441cd05a4cbbeaf54df194bae12c3af5ae6f1342984c40c3",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1200,
+      "seed_sha256": "cf8032bc0bbeda2ba4f4be89271c8f5171420dd4f0495aaad374eefac2d67a32",
+      "next_sha256": "20aa016163954dc1f762dc6920160f4a202e87e78cc388920f700d1db6c4b22c",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1300,
+      "seed_sha256": "8654746c5e7d00afd74f55c534ec5acba9d353c2654aef7c81a1179bddfe9278",
+      "next_sha256": "68679a2ebf8381b264f863bd8ed41fa6100aa273759d4d7fda0cda1bc5c0831f",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1400,
+      "seed_sha256": "3fff0ae5b092369eb0d00a4bcc078f860f80d676f0bf4bd796cd0006efefc30b",
+      "next_sha256": "3e85d37a44b0ebccda8680a587a8bfffbb34e9c21ba66bd40fe40d6f9af742b5",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1600,
+      "seed_sha256": "529c7335b4c944fbabeb335df55eb2258539bf8e28f640107813072d0749741e",
+      "next_sha256": "4ccb968082e9d158b4f351c67b23114690829aa43330fab182a1afdae9dbe460",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1800,
+      "seed_sha256": "27e9ea2d2e6d96be12f8488b839e8c4db42c133a29da9f3a127a5e0a8fbba472",
+      "next_sha256": "792109c189a137799c49db123479998e88e3333600476638b177a6d22a069664",
+      "active_tasks": 27,
+      "compared_task_fields": 108,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    },
+    {
+      "start_video_frame": 1990,
+      "seed_sha256": "a3750d86ede5aee4bc358ffd2282f45adb5d44cfb130880663a0f695579634e8",
+      "next_sha256": "c8afeb9e6f5d5eb12c02c817082a3d24dbd2e26772bab867d6b38f33e49b49ac",
+      "active_tasks": 26,
+      "compared_task_fields": 104,
+      "mismatches": 0,
+      "scope": "source-seeded one scheduler pass, task PC/wait/delay/flags; no future state fed into pass"
+    }
+  ],
+  "checkpoint_pc": "80:962E, before opcode; paired checkpoint serials consecutive, zero dropped",
+  "coarse_first_checkpoint_search": "No checkpoint in sampled frames 900\u20131045 at five-frame spacing; frame 1050 contained serial 2. Exact first pass and source task creation writer remain unobserved.",
+  "limitations": [
+    "Single-pass checks each seed from a separate original source state; they do not form an autonomous trajectory or establish initialization from the title.",
+    "Only selected task fields were compared; graphics, audio, actor movement, other scene state and intervening passes excluded.",
+    "The checker and model source hashes were not pinned at execution; these checks are bounded diagnostic evidence, not a reproducible frozen-artifact qualification.",
+    "The bridge from NEW GAME through loading, scene/task creation, interpreter execution, actor and presentation state to player-ready morgue remains unimplemented and unverified."
+  ],
+  "next_probe": "Trace and attribute the task-list creation writers and scene initialization immediately before the first 80:962E checkpoint, then qualify the producer-to-scheduler state edge before extending the modeled intro.",
+  "capture_receipts_sha256": {
+    "newgame-transition": "fb697c76faa9cde310e7050f37068f44e40860a561f34a2b62832534711df9ee",
+    "intro-transition-bank80": "7d4dbd333b1bd9c3882dca4da1950bfc459562ea9c83f85cfa3e8246b2f0adab",
+    "intro-transition-bank81": "3afb6887b01d50515ed530be7bbf500c7d137ccf1d91cca00bc9217508c4f672",
+    "intro-1080": "64ac18865244bfa8979bee9a26d2a02155e232b29974152c20d40a68a978d820",
+    "intro-sparse": "5bc11cb2163e7b08ef5c4b5f640148a825d056ab0b800cca4b8d02b5bfcf5178",
+    "intro-sparse2": "ba50e6976c90ab558467ba466af66bf56a138576f20e9d30699e03b31f81cc3e",
+    "intro-first-pass-search": "3f726dccb7f627acb0ec3069685852387aa247610edbded1fa81ed08db8d7b0d"
+  },
+  "private_receipt_sha256": "9efe7bb735717c86ff707166d072194ff660d936557a2cae6481cc516d4203dd"
+}

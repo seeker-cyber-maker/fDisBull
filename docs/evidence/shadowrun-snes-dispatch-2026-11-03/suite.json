@@ -1,0 +1,36 @@
+{
+  "counts": {
+    "tests": 4096,
+    "failures": 3,
+    "errors": 23,
+    "skipped": 142
+  },
+  "passed": 3928,
+  "same_non_green_cases_and_types": true,
+  "non_green": 26,
+  "baseline_non_green": 26,
+  "unexpected": [],
+  "missing": [],
+  "source_unchanged": true,
+  "junit_sha256": "a5fd2b0fe40c5142ab04566c409ec2bfb4201ebad495db009edc237c900f6bd1",
+  "baseline_junit_sha256": "3d66be577d9e0d7406e245bbdd81ddc5385f8bb87868d42fea505d18624b6db9",
+  "log_sha256": "6a508c758c1208522d3963cd872fe480bbe19b618a4c3fae6694b93713bf967b",
+  "post_broad_changes": [
+    "scripts/check_shadowrun_snes_menu.py",
+    "src/fdisbull/game_sources/shadowrun_snes_macos_app.m",
+    "src/fdisbull/shadowrun_snes_macos.py",
+    "src/fdisbull/skills/fdisbull-investigate/references/analysis-approach.md",
+    "tests/test_shadowrun_snes_macos.py"
+  ],
+  "focused_after_review": {
+    "passed": 98,
+    "failed": 0,
+    "junit_sha256": "210110c0a9523411a46807734499a2500b7b3d9a554a083cacbd3a1dfadbddc5",
+    "scope": "NPC/task/scripted/menu/native build routing and console host checks"
+  },
+  "limits": [
+    "Broad run preceded the listed review fixes; focused checks and fresh native CLI/menu qualification cover those changes.",
+    "26 non-green cases/types match prior baseline; suite is not fully green.",
+    "Hosted required-native Linux CI, release and global installation not performed."
+  ]
+}

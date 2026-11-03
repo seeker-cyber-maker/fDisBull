@@ -51,7 +51,7 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
     CGFloat px=cx+(x-self.originX),py=cy-(y-self.originY);
     [[NSColor colorWithCalibratedRed:.25 green:.85 blue:.72 alpha:1] setFill];
     [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(px-7,py-7,14,14)] fill];
-    if(profile(self.context)==2) {
+    if(profile(self.context)>=2) {
         CGFloat nx=cx+indexed(self.context,"demo_x",1)-self.originX;
         CGFloat ny=cy-indexed(self.context,"demo_y",1)+self.originY;
         [[NSColor orangeColor] setFill];
@@ -59,11 +59,11 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
     }
     [NSGraphicsContext restoreGraphicsState];
     NSColor *white=[NSColor colorWithCalibratedWhite:.88 alpha:1];
-    text(profile(self.context)==2?@"Shadowrun SNES · NPC walking study":(profile(self.context)==1?@"Shadowrun SNES · Live collision study":@"Shadowrun SNES · Opening movement study"),25,r.size.height-37,20,white);
-    text(@"World-coordinate view · source camera and artwork not reproduced",25,r.size.height-62,12,white);
-    text([NSString stringWithFormat:@"%@: x=%lld  y=%lld  z=%lld   updates=%lu",profile(self.context)==2?@"NPC 44":@"Player",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
-    text(self.stopped?@"Unqualified action or state · R resets":(self.paused?@"Paused · Space starts movement":@"Running · Space pauses"),25,43,14,white);
-    text(profile(self.context)==2?@"NPCs walk autonomously · R resets · Esc closes · bounded projection":(profile(self.context)==1?@"Arrows move · R resets · Esc closes · bounded scene experiment":@"Arrows move · R resets · Esc closes · captured static scene"),25,21,12,white);
+    text(profile(self.context)==3?@"Shadowrun SNES · Scripted NPC study":(profile(self.context)>=2?@"Shadowrun SNES · NPC walking study":(profile(self.context)==1?@"Shadowrun SNES · Live collision study":@"Shadowrun SNES · Opening movement study")),25,r.size.height-37,20,white);
+    text(profile(self.context)==3?@"Logical game-loop passes · source video pacing and audio excluded":@"World-coordinate view · source camera and artwork not reproduced",25,r.size.height-62,12,white);
+    text([NSString stringWithFormat:@"%@: x=%lld  y=%lld  z=%lld   updates=%lu",profile(self.context)>=2?@"NPC 44":@"Player",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
+    text(self.stopped?(profile(self.context)==3 && self.ticks>=60?@"60-pass study complete · R resets":@"Unsupported input or state · R resets"):(self.paused?@"Paused · Space starts movement":@"Running · Space pauses"),25,43,14,white);
+    text(profile(self.context)>=2?@"NPCs walk autonomously · R resets · Esc closes · bounded projection":(profile(self.context)==1?@"Arrows move · R resets · Esc closes · bounded scene experiment":@"Arrows move · R resets · Esc closes · captured static scene"),25,21,12,white);
 }
 @end
 @interface StudyController : NSObject <NSApplicationDelegate,NSWindowDelegate>
@@ -80,7 +80,7 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
 - (BOOL)canBecomeKeyWindow {return YES;}
 - (void)keyDown:(NSEvent *)event {
     StudyController *c=self.controller;
-    if(profile(c.context)==2 && event.keyCode>=123 && event.keyCode<=126)return;
+    if(profile(c.context)>=2 && event.keyCode>=123 && event.keyCode<=126)return;
     switch(event.keyCode) {
         case 126:c.pad|=1;break;case 125:c.pad|=2;break;case 123:c.pad|=4;break;case 124:c.pad|=8;break;
         case 49:if(!event.isARepeat && !c.view.stopped)c.view.paused=!c.view.paused;break;
@@ -96,7 +96,7 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
 @implementation StudyController
 - (void)applicationDidFinishLaunching:(NSNotification *)note {
     (void)note;StudyWindow *window=[[StudyWindow alloc] initWithContentRect:NSMakeRect(0,0,900,680) styleMask:(NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:NO];
-    self.window=window;window.controller=self;window.delegate=self;window.title=profile(self.context)==2?@"Shadowrun SNES · NPC Walking":(profile(self.context)==1?@"Shadowrun SNES · Live Collision":@"Shadowrun SNES · Movement Study");
+    self.window=window;window.controller=self;window.delegate=self;window.title=profile(self.context)==3?@"Shadowrun SNES · Scripted NPCs":(profile(self.context)>=2?@"Shadowrun SNES · NPC Walking":(profile(self.context)==1?@"Shadowrun SNES · Live Collision":@"Shadowrun SNES · Movement Study"));
     self.view=[[StudyView alloc] initWithFrame:window.contentView.bounds];self.view.context=self.context;self.view.paused=YES;
     self.view.originX=state(self.context,"shadowrun_snes_player_x");self.view.originY=state(self.context,"shadowrun_snes_player_y");
     self.view.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;window.contentView=self.view;

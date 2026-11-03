@@ -1,0 +1,79 @@
+{
+  "format": "shadowrun-snes-menu-controller-evidence-1",
+  "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+  "instrumented_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+  "phase": "zero-based containing retro_run; instruction-entry registers; screenshot after retro_run",
+  "input": "ordinary controller, no patches",
+  "receipts_sha256": {
+    "menu-control-trace": "3fe9bc2cb5538cde8bc692555673179fa9d3ad8dc7e44d76d3a63747f5a28df1",
+    "menu-init-trace": "4a8445f2eb60f5b8578eefe0ccdebcde5b46ea9c4648f1fdcb918cd2268d445d",
+    "newgame-trace": "dc0c67476644e2219e408a644f5f4985d0481c97026ffb3bd02153423cab4b90",
+    "confirm-A": "620bb1d64a7e4fb3fcd9f77e949ccdfe4a6bac1857e8cab9793139ffc08b5f24",
+    "confirm-B": "2f3a8acfe1acc76704da13d81ea60d04726e75346b1066097f9771c00f7c0c69",
+    "confirm-SELECT": "d94510b5729f7b8ab2763e961098a14a8851234b23979d8d2189aaa6c2205724",
+    "wrapdown": "1c8234531422408e78dd06188e9e685f85b31436697b9705a19666ab9862cc18",
+    "wrapup": "f44c8806d039784295ae12387e3b27b540a921ba9122e725919838de5bca31f6",
+    "both": "ab943bdac8cff14b22b8a3405ba4f73dafcccc8bb16fb80661afa8e8293f90b1"
+  },
+  "source_observations": [
+    {
+      "pc": "81:E195",
+      "operation": "STZ direct-page word $0E, title initialization",
+      "video_frame": 736,
+      "status": "observed"
+    },
+    {
+      "pc": "81:E197",
+      "operation": "LDX #3 for main title choices",
+      "status": "traced source"
+    },
+    {
+      "pc": "81:E274-E2EF",
+      "operation": "read edge word $01EA; first test 0x9000 confirm; then 0x0800 up; then 0x2400 down/select",
+      "status": "observed separate buttons; combined nonzero masks static flow only"
+    },
+    {
+      "pc": "81:E30C",
+      "operation": "store word selection to direct-page $0E after drawing previous selection",
+      "status": "observed D=0 M=0 X=0"
+    },
+    {
+      "pc": "81:E29E and 81:E2D5",
+      "operation": "read word $11C0+2*selection and loop when nonzero",
+      "status": "executed zero cases; nonzero semantics source-derived only"
+    },
+    {
+      "pc": "81:E1A2-E1A6",
+      "operation": "selection 0 branches to 81:E22A; calls 81:E315",
+      "status": "observed START new-game frame 840; subsequent transition incomplete"
+    }
+  ],
+  "ordinary_routes": {
+    "DOWN": [
+      1,
+      2,
+      0
+    ],
+    "UP_from_zero": [
+      2
+    ],
+    "START": "confirm new at mask 0x1000",
+    "B": "confirm new at mask 0x8000",
+    "A": "mask 0x0080, no selection or confirm branch in observed iteration",
+    "SELECT": "mask 0x2000 enters down branch",
+    "UP_and_DOWN": "requested together but $01EA read zero in tested core, so source combined precedence was not dynamically exercised"
+  },
+  "selection_labels": [
+    "START NEW GAME",
+    "START SAVED GAME",
+    "OPTIONS"
+  ],
+  "timing": "DOWN at 850 updates $0E during frame 850; displayed cursor changes at post-frame 851",
+  "disproved_candidate": "WRAM $1CD2 is NMI stack copy of Y at 00:C0FA PHY, not durable selection",
+  "limitations": [
+    "No general title-to-morgue script equivalence established",
+    "Other menu screens and disabled-entry scenarios not qualified",
+    "PC filters do not establish all source execution; all selected trace frames reported zero drops"
+  ],
+  "private_receipt_sha256": "0e96ff65def2098441184ca365e24915cc483ebe0e4ec191b0da7c5eac78fedc"
+}

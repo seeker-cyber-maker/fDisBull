@@ -1,5 +1,11 @@
 # SNES Shadowrun live actor research: handoff
 
+Follow-up: [NPC direction, task dispatch and title investigation](SHADOWRUN_SNES_SCRIPT_DISPATCH.md)
+adds the separate `scripted-intro` profile, a coherent logical-update clock and
+60 original-backed actor/task updates. The results below describe the prior
+delivery. The follow-up corrects `C9B0` to an actor-control selector; the actual
+script interpreter is `F342` under the `C1C9` task scheduler.
+
 Date: 2026-11-03. Base: `c813158d24c19e4781973acb8c9e0a5f455ee111`.
 The resumed checkout was clean at that commit. Its GitLab draft !40 was closed
 when inspected; this follow-up preserves that history and supplies a new local

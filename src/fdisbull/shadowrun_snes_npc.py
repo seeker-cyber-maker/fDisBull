@@ -11,7 +11,13 @@ FIELDS={'npc_x':0x0e44,'npc_y':0x0e9c,'npc_z':0x0ef4,'npc_target_x':0x416c,
         'npc_target_y':0x41c4,'npc_timer':0x40bc,'npc_control':0x4114,
         'npc_flags':0x1474,'npc_direction':0x11b4,'npc_action':0x1054,
         'npc_task':0x136c,'npc_velocity_x':0x0d3c,'npc_velocity_y':0x0d94,
-        'npc_velocity_z':0x0dec,'npc_depth':0x0f4c}
+        'npc_velocity_z':0x0dec,'npc_depth':0x0f4c,
+        'npc_anim_table':0x10ac,'npc_anim_reload':0x1104,
+        'npc_anim_selector':0x120c,'npc_anim_phase':0x400c,
+        'npc_anim_increment':0x4064,'npc_anim_timer':0x3fb4,
+        'npc_anim_pending':0x115c,'npc_anim_kind':0x3f04,'npc_anim_mode':0x1264,
+        'npc_anim_dx':0x421c,'npc_anim_dy':0x4274,'npc_anim_dz':0x42cc,
+        'npc_anim_dh':0x4324,'npc_anim_extra':0x437c}
 
 
 def control_from_capture(rom, snapshot, slot):
@@ -22,10 +28,10 @@ def control_from_capture(rom, snapshot, slot):
     raw=SOURCE.read_bytes()
     program=author_program(raw.decode(),[{'id':0,'length':len(rom),'sha256':ROM_SHA256}],
         evidence={'kind':'source-npc-coordinate-target-control',
-                  'source_range':'80:C7DC-C8E2; unchanged-direction branch of80:AA3C',
+                  'source_range':'80:C7DC-C8E2; 80:AA3C-AA96; 80:ABCD-AC58',
                   'snapshot_sha256':hashlib.sha256(snapshot).hexdigest(),
                   'authoring_sha256':hashlib.sha256(raw).hexdigest(),
-                  'slot':slot,'scope':'coordinate-target controller and noncolliding kinematic projection; source script dispatch, rendering flags, animation and colliding/gravity actors excluded'})
+                  'slot':slot,'scope':'coordinate-target controller, looping-animation timing and noncolliding kinematics; script dispatch, rendering and colliding/gravity actors excluded'})
     machine=GameMachine(program,{0:rom})
     machine.set_state({name:int.from_bytes(snapshot[base+slot:base+slot+2],'little') for name,base in FIELDS.items()})
     if SOURCE.read_bytes()!=raw:raise ValueError('NPC source changed')
@@ -36,8 +42,9 @@ def demo_from_capture(rom,snapshot,save_ram):
     """Two source NPCs in a prepared, noncolliding walking projection.
 
     Both controllers evolve their own countdown/target state. The entire frame
-    refuses when either reaches an unqualified direction, task or physics edge.
-    Rendering flags, animation and the rest of the original scene are excluded.
+    refuses when either changes direction or reaches an unqualified task or
+    physics edge. Looping animation timing is projected; rendering and the rest
+    of the original scene are excluded.
     """
     if hashlib.sha256(snapshot).hexdigest()!=INTRO_SHA256:
         raise ValueError('wrong captured NPC intro scene')
@@ -50,10 +57,11 @@ def demo_from_capture(rom,snapshot,save_ram):
     load=''.join(name+'=demo_'+name[4:]+'[i];' for name in FIELDS)
     save=''.join('demo_'+name[4:]+'[i]='+name+';' for name in FIELDS)
     wrapper='''void shadowrun_snes_frame(u8 pad) {
-      u16 i;shadowrun_snes_frame_status=2U;if(pad)return;
+      u16 i,old_direction;shadowrun_snes_frame_status=2U;if(pad)return;
       for(i=0U;i<2U;i+=1U) { LOAD
+        old_direction=npc_direction;
         shadowrun_snes_npc_frame(0U);
-        if(shadowrun_snes_npc_frame_status!=1U)return;
+        if(shadowrun_snes_npc_frame_status!=1U || npc_direction!=old_direction)return;
         SAVE
       }
       shadowrun_snes_player_x=demo_x[0];shadowrun_snes_player_y=demo_y[0];
@@ -64,7 +72,7 @@ def demo_from_capture(rom,snapshot,save_ram):
         evidence={'kind':'prepared-two-npc-kinematic-projection','source_sha256':ROM_SHA256,
                   'snapshot_sha256':INTRO_SHA256,'source_frame':2000,
                   'authoring_sha256':hashlib.sha256(source.encode()).hexdigest(),
-                  'scope':'two noncolliding coordinate-target controllers and kinematics; no source script dispatch, rendering flags, animation or scene equivalence'})
+                  'scope':'two noncolliding coordinate-target controllers, looping animation timing and kinematics; no source script dispatch, rendering flags or scene equivalence'})
     machine=GameMachine(program,{0:rom})
     state={'demo_actor_id':[0x44,0x46]}
     state.update({'demo_'+name[4:]:[a.snapshot()[name] for a in actors] for name in FIELDS})

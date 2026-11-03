@@ -1,0 +1,76 @@
+{
+  "status": "passed",
+  "source_cases": [
+    {
+      "video_frame": 850,
+      "before": 0,
+      "source_edge_word": 1024,
+      "after": 1
+    },
+    {
+      "video_frame": 900,
+      "before": 1,
+      "source_edge_word": 1024,
+      "after": 2
+    },
+    {
+      "video_frame": 950,
+      "before": 2,
+      "source_edge_word": 2048,
+      "after": 1
+    }
+  ],
+  "native_elements": 24,
+  "program_sha256": "c4acef29906c715016da25c5d31e87d4c4e26dc55f0d417b1ea8c05f28579a42",
+  "native_build": {
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "format": "fdisbull-macos-native-1",
+    "program_sha256": "c4acef29906c715016da25c5d31e87d4c4e26dc55f0d417b1ea8c05f28579a42",
+    "source_sha256": "f7c6f311d160f8a32b7f84a46a036808f74f942e2ba89a66315f9493bb9535f2",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "dylib_sha256": "defef5c337be2c023d76c00efeb77daf78d582a10b3dfffaefb169136d184c9c",
+    "seed_sha256": "ae2fd2547350cb830d0be0d334d75647f78af920b28712ba7c7024039aa012c4",
+    "integer_model": "cc65-int16-long32",
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "header": "fdisbull_native.h",
+    "entry": "menu_frame",
+    "unsupported_status": "menu_frame_status",
+    "logical_input_bits": 8,
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ]
+  },
+  "entry_receipt_sha256": "373edc8a8191203a64a252d3d5015d86fa5cb42182cf7d3d366dadda751c388c",
+  "store_receipt_sha256": "d98cb0430d6f6eaa32175b74ed7dcc1f07eafeb57dd7208ab7012cf4c51e7015",
+  "source_hashes": {
+    "src/fdisbull/game_sources/shadowrun_snes_menu.c": "46ece52d0115ebe5cd7cf77f83a7cb48097cdb8b0141d793c9574b517a927511",
+    "scripts/check_shadowrun_snes_menu.py": "747c264fc5b8ed76f84bec36ca3aed7fc0cb7125b5cb301fade447afb20a44a8"
+  },
+  "scope": "source-fed three title-selection component cases; input producer, display, other menus and intro continuation unqualified",
+  "negative_cases": {
+    "empty": {
+      "status": "rejected",
+      "exit": 1,
+      "last_error": "ValueError: three complete source case boundaries are required"
+    },
+    "different-run": {
+      "status": "rejected",
+      "exit": 1,
+      "last_error": "ValueError: checkpoint runs have different inputs, configuration or final state"
+    },
+    "duplicate": {
+      "status": "rejected",
+      "exit": 1,
+      "last_error": "ValueError: duplicate checkpoint frame"
+    }
+  }
+}

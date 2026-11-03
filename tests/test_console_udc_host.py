@@ -15,6 +15,15 @@ HOST = module_from_spec(SPEC)
 SPEC.loader.exec_module(HOST)
 
 
+def test_instruction_checkpoint_plan_requires_explicit_phase_and_bounded_storage():
+    assert HOST.checkpoint_plan(None,None,10)==[]
+    assert HOST.checkpoint_plan(0x80962e,'0,3,9',10,2)==[0,3,9]
+    for pc,frames,limit in [(None,'0',1),(0x80962e,None,1),(0,'0',1),
+                            (0x1000000,'0',1),(True,'0',1),(0x80962e,'0',9)]:
+        with pytest.raises(ValueError):HOST.checkpoint_plan(pc,frames,10,limit)
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(129))),130)
+
+
 def test_watch_defaults_preserve_system_ram_and_allow_save_ram():
     watches = [{'name': 'old', 'offset': 0, 'length': 1},
                {'name': 'save', 'memory_id': 0, 'offset': 8191, 'length': 1}]

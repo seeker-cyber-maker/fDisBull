@@ -31,12 +31,12 @@ def _input(path, size):
 def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     """Compile the exact captured SNES scene to a private native ARM64 app.
 
-    The caller owns the ROM, frame-2999 WRAM and qualified save-RAM capture.
+    The caller owns the ROM, profile-specific WRAM and qualified save-RAM capture.
     Their hashes are checked by the source adapter. The app embeds private
     collision data and seed values, and references the caller's original ROM.
     None of these generated files are tool publication artifacts.
     """
-    if profile not in ('static-morgue','live-morgue','npc-intro'):
+    if profile not in ('static-morgue','live-morgue','npc-intro','scripted-intro'):
         raise ValueError('Unknown SNES study profile')
     destination=_private_directory(output)
     if destination.exists():
@@ -51,6 +51,9 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     elif profile=='npc-intro':
         from .shadowrun_snes_npc import demo_from_capture
         factory=demo_from_capture
+    elif profile=='scripted-intro':
+        from .shadowrun_snes_scripted import machine_from_scripted_capture
+        factory=machine_from_scripted_capture
     else:factory=None
     if factory:machine,regions=factory(rom,snapshot,save)
     else:machine=machine_from_capture(rom,snapshot,save);regions={0:rom,1:snapshot}
@@ -67,7 +70,7 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     if _sha((binary/'libfdisbull_native.dylib').read_bytes())!=native['dylib_sha256']:
         raise ValueError('Native core changed while assembling the app')
     info={'CFBundleIdentifier':'org.fdisbull.shadowrun.snes.study.'+profile,
-          'CFBundleName':{'static-morgue':'Shadowrun SNES Study','live-morgue':'Shadowrun SNES Live Collision','npc-intro':'Shadowrun SNES NPC Walking'}[profile],'CFBundleExecutable':'ShadowrunSNESStudy',
+          'CFBundleName':{'static-morgue':'Shadowrun SNES Study','live-morgue':'Shadowrun SNES Live Collision','npc-intro':'Shadowrun SNES NPC Walking','scripted-intro':'Shadowrun SNES Scripted NPCs'}[profile],'CFBundleExecutable':'ShadowrunSNESStudy',
           'CFBundlePackageType':'APPL','CFBundleVersion':'1','NSHighResolutionCapable':True,
           'FDisBullSourceROM':str(rom_file)}
     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
@@ -89,6 +92,7 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     capture=dict(CAPTURE)
     if profile=='live-morgue':capture['scope']='prepared scene; reconstructed mutable collision lists and projected actor flags, fixed captured 7F tables, bounded analysis updates'
     if profile=='npc-intro':capture={'frame':2000,'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'actor_slots':[0x44,0x46],'scope':'two coordinate-target, noncolliding NPC kinematic projections'}
+    if profile=='scripted-intro':capture={'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'actor_slots':[0x44,0x46,0x4e],'clock':'one source main-loop pass','scope':program['evidence']['scope']}
     receipt={'format':'fdisbull-shadowrun-snes-macos-1','architecture':'arm64','profile':profile,
              'capture':capture,'program_sha256':_sha(canonical(program)),
              'seed_sha256':_sha((destination/'seed.json').read_bytes()),'native_core':native,
@@ -103,5 +107,6 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     if profile=='live-morgue':receipt['limits']+=['experimental live collision rebuild, fixed captured 7F tables and explicit analysis-step budget']
     if profile=='static-morgue':receipt['limits']+=['captured static collision data; autonomous actors unqualified']
     if profile=='npc-intro':receipt['limits']+=['two noncolliding NPC controllers/kinematics only; rendering flags and animation excluded; direction/task changes refuse']
+    if profile=='scripted-intro':receipt['limits']+=['source-seeded NPC/task projection on logical main-loop passes; source video pacing and APU audio delivery excluded']
     (destination/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt

@@ -280,6 +280,31 @@ Suppose the task asks for a bounded player-damage encounter. A useful chain is:
    independently scoped. Repeat under ordinary input when required; keep an
    assisted placement and its claim visibly separate.
 
+When investigating a menu or scripted opening, record the full controller
+interval and sample before, during and after each press. In one SNES Shadowrun
+title run, the source consumed DOWN and updated its selection during the first
+held frame, while the display changed on the following frame. A correlated WRAM
+byte was an interrupt stack copy of Y, not the selection variable; the trace
+identified the actual direct-page writer. Treat these as run-specific observations
+and qualify input, state and presentation separately.
+
+Align comparisons to the clock that runs the modeled work. In the same opening,
+two video frames elapsed without another observed actor pass; a
+video-frame-aligned NPC step therefore reported a false divergence. Compare
+coherent source loop checkpoints for logical state, while preserving video-frame
+checks for presentation timing. Recover script, scheduler, actor and scene
+dependencies separately before claiming the complete opening transition.
+
+Follow dependencies beyond the actor that first diverges. In that opening, one
+task set an entity flag and another actor's task cleared it before completing
+an animation and resuming a waiting script. Freezing other ready tasks or
+acknowledging a callback without its state effects would skip a producer.
+Trace the active scheduler and callback ABI before treating a function name
+as a script-dispatch boundary; the initially suspected selector chose actor
+control, while a separate interpreter consumed the bytecode. Keep native-only
+continuation and separately source-seeded single-pass checks below the claim
+ceiling of a continuous original-backed replay.
+
 **When the first actors cannot exercise the claim:** In a locally inspected
 Shadowrun source run, the three captured moving actor records had item/weapon
 byte `+$57 = 0` in each of 15 sampled states from frame 5999 through 7399.

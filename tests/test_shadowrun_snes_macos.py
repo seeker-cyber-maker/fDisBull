@@ -27,11 +27,12 @@ def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     assert not output.exists()
 
 
-def test_snes_build_cli_and_standalone_protocol(tmp_path,capsys):
-    params={'rom_path':str(tmp_path/'missing'),'ram':'missing','save_ram':'missing','output':str(tmp_path/'app')}
+@pytest.mark.parametrize('profile',['static-morgue','live-morgue','npc-intro','scripted-intro'])
+def test_snes_build_cli_and_standalone_protocol(tmp_path,capsys,profile):
+    params={'rom_path':str(tmp_path/'missing'),'ram':'missing','save_ram':'missing','output':str(tmp_path/'app'),'profile':profile}
     result=respond({'method':'shadowrun-snes-build','params':params},default_project='unrelated.fdb')
     assert not result['ok'] and 'regular file' in result['error']['message']
     code=main(['shadowrun-snes-build','--rom',params['rom_path'],'--ram','missing',
-               '--save-ram','missing','--output',params['output']])
+               '--save-ram','missing','--output',params['output'],'--profile',profile])
     output=json.loads(capsys.readouterr().out)
     assert code==1 and not output['ok'] and 'regular file' in output['error']['message']
