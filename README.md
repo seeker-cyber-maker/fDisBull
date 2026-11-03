@@ -16,8 +16,8 @@ published `v0.31.0` tag remains at `10d01062`. See the
 [0.31.0 release notes](docs/RELEASE-0.31.0.md),
 [release status](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates. The local shared selector is on `0.31.0-a12441b`; 0.31.1 installation is
-a separate gate.
+gates. The local shared selector is on `0.31.1-27b388d`; the 0.31.1 prefix,
+doctors and player smoke are qualified.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
