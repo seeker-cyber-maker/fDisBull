@@ -151,6 +151,10 @@ the investigation skill:
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
 
+For multi-agent benchmarking, lead-dossier preparation, and zero-context worker
+verification under the Elephant-Goldfish Method (EGM), see
+[cold-agent skill evaluation and the Elephant-Goldfish Method](COLD_AGENT_EGM_BENCHMARK.md).
+
 ## Reuse media readers
 
 Run `fdisbull media-modules` to discover shipped parser APIs, dependencies and
