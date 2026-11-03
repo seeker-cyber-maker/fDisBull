@@ -1,0 +1,90 @@
+{
+  "format": "fdisbull-release-evidence-1",
+  "version": "0.31.0",
+  "status": "release_candidate",
+  "published": false,
+  "source": {
+    "branch": "release/0.31.0",
+    "base_main": "f861d17ed4837f753e000f53cc777a7d906fde82",
+    "code_commit": "518572040eda679933cddec7eb66b3dbe9ffc527",
+    "tree": "dba4fa1c5dde5eaf363d71b614b2ef9f3c409515"
+  },
+  "included_merges": {
+    "frame_timeline_deltas": "2baaa1c",
+    "typed_c_frontend": "f861d17",
+    "typed_c_pointer_fix": "d92e613",
+    "windows_runtime_preflight": "0c44bd48b307",
+    "chip8_pilot": "a7eb55cade66",
+    "udc_registry": "5ef7b5f1666e",
+    "swede_trial": "33762992f012",
+    "cold_agent_benchmark": "70c871b8487d",
+    "skill_refresh": "99c0f8c"
+  },
+  "qualification": {
+    "full_suite": {
+      "passed": 8992,
+      "skipped": 335,
+      "failed": 3,
+      "errors": 23,
+      "subtests_passed": 2316,
+      "baseline": "known macOS ELF/GCC fixtures and one case-sensitive media fixture"
+    },
+    "focused_feature_suites": {
+      "passed": 67,
+      "skipped": 13
+    },
+    "targeted": {
+      "frame_timeline": 148,
+      "typed_c": 26
+    },
+    "check_dist": "core 564 entries; player 19; tool zip 1819; sdist 1841",
+    "installed_wheel": {
+      "command_version": "0.31.0",
+      "methods_version": "0.31.0",
+      "capabilities_runtime_version": "0.31.0",
+      "capabilities_distribution_version": "0.31.0",
+      "venv": "/tmp/fdisbull-031-venv",
+      "system_prefix_activated": false
+    }
+  },
+  "artifacts": [
+    {
+      "file": "fdisbull-0.31.0-py3-none-any.whl",
+      "bytes": 1895363,
+      "sha256": "3c022497c672487291d93d4f6d9e3af106f3db692b0c0dfee2631f0b6aa6d724"
+    },
+    {
+      "file": "fdisbull_player-0.31.0-py3-none-any.whl",
+      "bytes": 86673,
+      "sha256": "73e2537b3e3d9715c79a1ad2f9095e95345efb6575992b8f09051c084dbd7c4d"
+    },
+    {
+      "file": "fdisbull-0.31.0-tool.zip",
+      "bytes": 6376371,
+      "sha256": "449ffc1dcc92a7acba30917e7b5638d72d9da35b2c81fa8317bd35eb61bccf81"
+    },
+    {
+      "file": "fdisbull-0.31.0.tar.gz",
+      "bytes": 5245180,
+      "sha256": "c999b7fef3b47cb88fbb0ffd74df5d218cb18b96775b6632193e92ebc9e0817e"
+    }
+  ],
+  "exclusions": [
+    "large indexed-UIL/Civilization z-work candidate",
+    "record-validation follow-up (!49)",
+    "Draft consolidated UDL/UIL/UDC (!45)",
+    "Draft console skill (!46)",
+    "Draft delegation guidance (!47)",
+    "Draft deterministic execution guidance (!53)",
+    "native Windows Win16/PE32 debugger and Wine guest image",
+    "historical CHIP-8 emulator qualification",
+    "Git tag, GitLab Release, hosted CI, native backend rebuild and shared-prefix activation"
+  ],
+  "logs": [
+    "full-suite.log",
+    "targeted.log",
+    "check-dist.log",
+    "installed-smoke.log",
+    "artifact-sha256.txt"
+  ]
+}

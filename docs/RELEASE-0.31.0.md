@@ -53,15 +53,17 @@ separate gates.
 
 ## Qualification
 
-- Focused release-candidate tests: 61 passed / 3 skipped for the UDC registry,
-  CHIP-8, Windows preflight and cold-agent benchmark suites; swede adds
-  6 passed / 10 skipped on macOS (the compiler checks are Linux-only).
+- Focused release-candidate tests: 67 passed / 13 skipped across the UDC
+  registry, swede trial, CHIP-8, Windows preflight and cold-agent benchmark
+  suites. The swede compiler checks skip off Linux x86-64.
 - Targeted frame-timeline and typed-C suites passed on the merged commits
   (148 and 26 tests respectively, plus subtests).
 - Full release-candidate suite: 8,992 passed, 335 skipped, 2,316 subtests
   passed, with the known macOS-only baseline of 3 failures and 23 errors
   (Linux ELF/GCC fixtures and one case-sensitive media fixture). No new failure
   is in the added feature suites.
+- Candidate identities, artifact hashes and raw logs are in
+  [`docs/evidence/0.31.0-release/`](evidence/0.31.0-release/README.md).
 
 ## Explicitly not included
 
