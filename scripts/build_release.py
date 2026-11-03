@@ -144,6 +144,7 @@ SOURCE_PATTERNS = (
     ("examples/recovery", "snake_desktop.py"),
     ("examples/recovery", "verify_snake_desktop.py"),
     ("tests/fixtures", "frame_capture.S"),
+    ("tests/fixtures", "protected_mode_mouse.S"),
     ("tests", "macos_capture_fixture.swift"),
     ("tests", "memory_shell_checks.mjs"),
     ("tests", "web_shell_checks.mjs"),

@@ -17,7 +17,7 @@ OPERATIONS = {
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
-    'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory',
+    'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
     'workflow-observe':'workflow_observe','workflow-act':'workflow_act','text-observe':'text_observe','text-act':'text_act',
     'wait':'wait',
     'screenshot-hooks':'screenshot_hooks',
@@ -152,6 +152,18 @@ def validate_script(script, *, session=None):
                                 raise ValueError('Windows waits do not support DOS fast-forward')
                             validate_wait(**checked,guest_ms=active if active is not None else legacy)
                         else:validate_wait(**params)
+                    if op=='write-runtime-memory':
+                        from .debug_state import byte_string
+                        literal={}
+                        for key in ('data_hex','expected_hex'):
+                            value=params[key]
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                literal[key]=byte_string(value)
+                        if len(literal)==2 and len(literal['data_hex'])!=len(literal['expected_hex']):
+                            raise ValueError('Runtime RAM edits cannot resize a binding')
+                        offset=params.get('offset',0)
+                        if not (isinstance(offset,str) and offset.startswith('$')):
+                            bounded(offset,'runtime view offset',0,65535)
                     if op=='step':
                         for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
                             value=params.get(key)

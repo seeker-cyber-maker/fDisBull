@@ -14,6 +14,7 @@ recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
+include tests/fixtures/protected_mode_mouse.S
 include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt

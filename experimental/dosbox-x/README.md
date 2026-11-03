@@ -113,7 +113,9 @@ The default launcher selects SDL dummy video/audio drivers, private explicit pip
 
 ## Limits and license
 
-Acceptance covers authored DOS fixtures and the documented bounded DinoPark session on native macOS Apple Silicon. It does not establish every-game compatibility, Windows/Linux runtime behavior, PS/2/AUX, PC-98, external guest drivers, protected-mode input, or complete memory-access tracing. Absolute input is scoped to the built-in real/v8086 INT33 driver. CPU instruction tracing is distinct from tracing every memory access.
+Acceptance covers authored DOS fixtures and the documented bounded DinoPark session on native macOS Apple Silicon. The protected-mode regression additionally queues a click while an authored COM runs in actual 32-bit protected mode with paging enabled and linear page zero remapped away from the physical IVT. The program returns to real mode, polls INT33 to observe the expected button and coordinates, and verifies release after the requested guest time. The queue requires the active built-in DOS INT33 driver and its original physical IVT vector; upstream IRQ/callback mode guards remain in place. See [the authored probe](../../tests/fixtures/protected_mode_mouse.S) and [native acceptance](../../tests/test_protected_mode_native.py).
+
+This does not establish every-game compatibility, arbitrary DOS extender callback delivery, Windows/Linux runtime behavior, PS/2/AUX, PC-98, external guest drivers, or complete memory-access tracing. Queue acceptance, program consumption, live RAM edits and full native checkpoint restoration are separate observations. CPU instruction tracing is distinct from tracing every memory access. Live stopped register snapshots now include the actual CPU mode, paging/control registers, A20 state and code/stack widths in `address_context`; that context is omitted from historical trace samples that did not capture it.
 
 Headless emulation does not provide security sandbox isolation. Screenshot conversion refreshes a bounded RGBA buffer on every completed frame while capture is enabled; high-resolution throughput has not been benchmarked.
 

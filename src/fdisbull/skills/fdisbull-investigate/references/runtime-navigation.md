@@ -201,6 +201,20 @@ state change within the tested frame; it does not by itself explain the cause.
 
 ## Checkpoints, replay and evidence
 
+DOS CPU mode is observed at the stopped instruction. Matching native backends
+allow built-in INT33 mouse queueing and full native checkpoints in protected
+and v86 modes. A protected selector must never be interpreted as a DOS paragraph.
+Explicit runtime RAM bindings can name physical RAM, or unpaged linear RAM with
+observed CPU/A20 context. Paged linear allocation identity remains unqualified.
+`write_runtime_memory` requires expected bytes and readback, records a live edit
+without save/load, and closes an uncertain guest without replay. A state load
+instead records a full-native-checkpoint intervention, including any fork
+derivation. Both invalidate or recheck the relevant live identities. Original
+application input consumption, HUD presentation and whole-game support need
+separate evidence. Windows uses its own source/RVA or selector memory interface;
+the DOS runtime-binding API refuses it. In a source checkout, read
+`docs/DOS_PROTECTED_RUNTIME.md` for examples and remaining limits.
+
 Save a qualified checkpoint before destructive authoring probes when the task
 allows it. A rewind restores only the state covered by that checkpoint; mounted
 files, external services, input queues and host-side clocks may require separate

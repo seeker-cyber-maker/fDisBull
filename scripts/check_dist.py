@@ -879,6 +879,7 @@ REQUIRED_TEST_HELPERS |= {
     "tests/test_capture_audit.py",
     "tests/test_media_modules.py",
     "tests/fixtures/frame_capture.S",
+    "tests/fixtures/protected_mode_mouse.S",
     "tests/test_macos_capture.py",
     "tests/test_macos_session.py",
     "tests/macos_capture_fixture.swift",

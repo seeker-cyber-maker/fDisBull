@@ -1,7 +1,7 @@
 {
   "feature": "Bounded automatic frame stepping and physical frame input; complete native keyboard state and frame ownership restoration",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "bce55cffd0211ba58fca4629efa336a00face6e803eb916f1796d3c7884a6820",
+  "patch_sha256": "1290e35c32eba78956abc86ab275e670df57beeb77ee300488a1dbee115274fe",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -45,8 +45,8 @@
     },
     {
       "path": "include/agent/debugger_adapter.h",
-      "sha256": "f404140b22eb369cd22c3b5f33c2ebff196de602db0ef52f74fb93b32da4e2f7",
-      "size": 3878
+      "sha256": "68c84cc37335b234d5864c4a2ef0f240c8f8deddc178d3d0798980e78c4599c0",
+      "size": 4215
     },
     {
       "path": "include/agent/input_adapter.h",
@@ -60,8 +60,8 @@
     },
     {
       "path": "include/debug.h",
-      "sha256": "e70c49e9bcd7c7fb770acd6eb0ee8c738006d3e473b2803a29ee68627113549e",
-      "size": 3604
+      "sha256": "adee7054955d180f9e898255dd4cb54eb5ee6fa0dfd2995a75f37f3db91bde9e",
+      "size": 3737
     },
     {
       "path": "include/paging.h",
@@ -85,8 +85,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "sha256": "3489f24551ec09384c3b1c20cdc45bd475bdb7c91112f7fe3b014d83aea91e44",
-      "size": 24619
+      "sha256": "e5a136c5779972097bb317ff7901496130f835e49f4d5f3b9f8014ebcf6fbde2",
+      "size": 25145
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -95,8 +95,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "2b7344fc2699b01f0090567fcbe47efcaedaf9e3e3a9228ad88fe814889931b5",
-      "size": 214373
+      "sha256": "5c2b14306dee1ec8b50965dc9ee5d46f4a255fac28782fae595a25197a898db4",
+      "size": 215523
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -115,8 +115,8 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "sha256": "f1c4c6b4b8ac1c61681e133b40efc783948244e1e8c5ce8e1aa9558b809c94b8",
-      "size": 234613
+      "sha256": "38ad875c90003b5b167e871caf806c13cdfb04a26c724bb2a24949edd54a3563",
+      "size": 234866
     },
     {
       "path": "src/debug/debug_gui.cpp",
@@ -165,8 +165,8 @@
     },
     {
       "path": "src/ints/mouse.cpp",
-      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
-      "size": 112554
+      "sha256": "e5c9fc067fc93d48c1f0e07349ecfbc388b0fa98049b88be2cce2d7cc7131164",
+      "size": 112813
     },
     {
       "path": "src/misc/savestates.cpp",
@@ -267,5 +267,17 @@
       "pending VGA resize"
     ],
     "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
+  },
+  "protected_mode_mouse": {
+    "queue": "built-in INT33 internal event/state queue; physical IVT identity; active DOS kernel required",
+    "cpu_modes": [
+      "real",
+      "v86",
+      "protected"
+    ],
+    "delivery": "IRQ/callback delivery retains upstream mode guards; acceptance is queued, not application consumption",
+    "address_context": "live stopped registers include CPU mode, paging/control registers, A20 and actual code/stack widths; historical trace context omitted",
+    "trace_mode": "Each historical event carries captured CPU mode and code/stack widths; never inferred from the final stop",
+    "data_access_mode": "Each watch access captures its own real/v86/protected CPU mode before the later stop; source writer projection requires that captured mode"
   }
 }

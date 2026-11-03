@@ -68,6 +68,11 @@ does not establish original Windows 3.x or whole-game compatibility.
 
 ## Discover commands and bundled skills
 
+For a DOS program that enters protected/v86 mode, read
+[protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
+Keep guarded live RAM edits separate from edited-checkpoint interventions;
+queue acceptance alone does not prove game input consumption.
+
 For repository CI and dual-mirror updates (Local Git + GitLab), first read
 [CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
 keep local Git and GitLab (`brewster-jennings-group/fdisbull`) synchronized,

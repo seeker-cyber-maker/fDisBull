@@ -876,10 +876,24 @@ index 6f920d3..61ec3a2 100644
                                    std::uint64_t generation,
                                    std::uint16_t segment,
 diff --git a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
-index d1abe84..fa82753 100644
+index d1abe84..f0962c1 100644
 --- a/include/agent/debugger_adapter.h
 +++ b/include/agent/debugger_adapter.h
-@@ -52,6 +52,8 @@ struct RegisterSnapshot {
+@@ -47,11 +47,22 @@
+     std::uint32_t instruction_pointer = 0;
+     std::uint32_t flags = 0;
+     std::string cpu_mode;
++    // Valid only for a live stopped snapshot, not reconstructed trace samples.
++    bool address_context_available = false;
++    bool paging_enabled = false;
++    std::uint32_t cr0 = 0;
++    std::uint32_t cr3 = 0;
++    std::uint32_t cr4 = 0;
++    bool a20_enabled = false;
++    std::uint32_t code_bits = 16;
++    std::uint32_t stack_bits = 16;
+ };
+ 
  struct TraceSample {
      MemoryAddress address;
      RegisterSnapshot registers;
@@ -888,7 +902,7 @@ index d1abe84..fa82753 100644
      std::string instruction;
      std::string analysis;
  };
-@@ -63,7 +65,7 @@ enum class StepMode {
+@@ -63,7 +74,7 @@
  
  enum class BreakpointKind {
      Execution,
@@ -897,7 +911,7 @@ index d1abe84..fa82753 100644
  };
  
  struct NativeBreakpoint {
-@@ -80,6 +82,7 @@ public:
+@@ -80,6 +91,7 @@
      bool IsShellReady() const;
      bool IsReadyForTargetStart() const;
      std::uint64_t EntryBreakpointSequence() const;
@@ -1035,10 +1049,10 @@ index 0000000..a5b3e3f
 +
 +#endif
 diff --git a/include/debug.h b/include/debug.h
-index f4ee552..55e3e3f 100644
+index f4ee552..1c99105 100644
 --- a/include/debug.h
 +++ b/include/debug.h
-@@ -33,16 +33,36 @@ Bitu DEBUG_EnableDebugger(void);
+@@ -33,16 +33,37 @@
  #if C_DEBUG
  bool DEBUG_AgentStep(bool over, bool* continued);
  bool DEBUG_AgentResumeAfterTerminate(void);
@@ -1055,6 +1069,7 @@ index f4ee552..55e3e3f 100644
 +    uint32_t address = 0, length = 0, ip = 0;
 +    uint16_t cs = 0;
 +    bool write = false;
++    bool protected_mode = false, virtual8086 = false;
 +};
 +bool DEBUG_AgentLastAccess(DEBUG_AgentAccessEvent* event);
  void DEBUG_AgentClearLastBreakpoint(void);
@@ -1075,10 +1090,12 @@ index f4ee552..55e3e3f 100644
  struct DEBUG_AgentTraceEvent {
      uint16_t cs = 0;
      uint32_t instruction_pointer = 0;
-@@ -60,6 +80,8 @@ struct DEBUG_AgentTraceEvent {
+@@ -60,6 +81,10 @@
      uint16_t gs = 0;
      uint16_t ss = 0;
      uint32_t flags = 0;
++    bool protected_mode = false;
++    uint32_t code_bits = 16, stack_bits = 16;
 +    std::string ram_bytes, execution_bytes;
 +    uint64_t layer_generation = 0;
      std::string instruction;
@@ -1222,7 +1239,7 @@ index d087ecc..e285d95 100644
  {
      if (error == NULL)
 diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
-index 465f7e7..0e63098 100644
+index 465f7e7..eee6a09 100644
 --- a/src/agent/debugger/debugger_adapter.cpp
 +++ b/src/agent/debugger/debugger_adapter.cpp
 @@ -241,8 +241,7 @@ bool DebuggerAdapter::Continue(std::string* error) const
@@ -1255,7 +1272,22 @@ index 465f7e7..0e63098 100644
      dos.errorcode = 0;
      first_shell->DoCommand(&debugbox_command[0]);
      if (dos.errorcode != 0) {
-@@ -491,6 +496,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
+@@ -370,6 +375,14 @@
+     registers->instruction_pointer = reg_eip;
+     registers->flags = static_cast<std::uint32_t>(reg_flags);
+     registers->cpu_mode = !cpu.pmode ? "real" : ((reg_flags & FLAG_VM) ? "v86" : "protected");
++    registers->address_context_available = true;
++    registers->paging_enabled = (cpu.cr0 & CR0_PAGING) != 0;
++    registers->cr0 = static_cast<std::uint32_t>(cpu.cr0);
++    registers->cr3 = paging.cr3;
++    registers->cr4 = static_cast<std::uint32_t>(cpu.cr4);
++    registers->a20_enabled = MEM_A20_Enabled();
++    registers->code_bits = cpu.code.big ? 32 : 16;
++    registers->stack_bits = cpu.stack.big ? 32 : 16;
+     return true;
+ #else
+     return false;
+@@ -491,6 +504,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
                  *error = "Debugger rejected the execution breakpoint";
              return false;
          }
@@ -1273,10 +1305,14 @@ index 465f7e7..0e63098 100644
      } else {
  #if C_HEAVY_DEBUG
          if (once) {
-@@ -653,6 +669,8 @@ bool DebuggerAdapter::ReadTrace(std::vector<TraceSample>* samples,
+@@ -652,7 +676,11 @@
+         sample.registers.ss = it->ss;
          sample.registers.instruction_pointer = it->instruction_pointer;
          sample.registers.flags = it->flags;
-         sample.registers.cpu_mode = !cpu.pmode ? "real" : ((reg_flags & FLAG_VM) ? "v86" : "protected");
+-        sample.registers.cpu_mode = !cpu.pmode ? "real" : ((reg_flags & FLAG_VM) ? "v86" : "protected");
++        sample.registers.cpu_mode = !it->protected_mode ? "real" : ((it->flags & FLAG_VM) ? "v86" : "protected");
++        sample.registers.code_bits = it->code_bits;
++        sample.registers.stack_bits = it->stack_bits;
 +        sample.ram_bytes = it->ram_bytes; sample.execution_bytes = it->execution_bytes;
 +        sample.layer_generation = it->layer_generation;
          sample.instruction = Trim(it->instruction);
@@ -1304,7 +1340,7 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..4bad1e6 100644
+index 29363cf..c3b76e2 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -1435,7 +1471,16 @@ index 29363cf..4bad1e6 100644
          JsonValue address = Object();
          Add(&address, "space", String("segmented"));
          std::ostringstream segment;
-@@ -987,6 +1027,10 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
+@@ -981,12 +1021,19 @@
+     JsonValue result = Object();
+     Add(&result, "sequence", Number(event.sequence));
+     Add(&result, "address", EncodeMemoryAddress(event.sample.address));
++    Add(&result, "cpu_mode", String(event.sample.registers.cpu_mode));
++    Add(&result, "code_bits", Number(event.sample.registers.code_bits));
++    Add(&result, "stack_bits", Number(event.sample.registers.stack_bits));
+     std::string instruction = event.sample.instruction;
+     if (detail == "csip")
+         instruction = Hex16(event.sample.address.segment) + ":" + Hex32(event.sample.address.offset);
      else if (detail == "long" && !event.sample.analysis.empty())
          instruction += " ; " + event.sample.analysis;
      Add(&result, "instruction", String(instruction));
@@ -1446,7 +1491,28 @@ index 29363cf..4bad1e6 100644
      JsonValue changes = Object();
      for (std::vector<TraceRegisterChange>::const_iterator change = event.register_changes.begin();
           change != event.register_changes.end(); ++change) {
-@@ -1185,15 +1229,148 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1021,6 +1068,20 @@
+     Add(&result, "instruction_pointer", String(Hex32(registers.instruction_pointer)));
+     Add(&result, "flags", String(Hex32(registers.flags)));
+     Add(&result, "cpu_mode", String(registers.cpu_mode));
++    Add(&result, "code_bits", Number(registers.code_bits));
++    Add(&result, "stack_bits", Number(registers.stack_bits));
++    if (registers.address_context_available) {
++        JsonValue context = Object();
++        Add(&context, "cpu_mode", String(registers.cpu_mode));
++        Add(&context, "paging_enabled", JsonValue::Bool(registers.paging_enabled));
++        Add(&context, "cr0", String(Hex32(registers.cr0)));
++        Add(&context, "cr3", String(Hex32(registers.cr3)));
++        Add(&context, "cr4", String(Hex32(registers.cr4)));
++        Add(&context, "a20_enabled", JsonValue::Bool(registers.a20_enabled));
++        Add(&context, "code_bits", Number(registers.code_bits));
++        Add(&context, "stack_bits", Number(registers.stack_bits));
++        Add(&result, "address_context", context);
++    }
+     return result;
+ }
+ 
+@@ -1185,15 +1246,148 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -1595,7 +1661,7 @@ index 29363cf..4bad1e6 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1381,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1398,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1603,7 +1669,7 @@ index 29363cf..4bad1e6 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1282,6 +1460,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1282,6 +1477,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1613,7 +1679,7 @@ index 29363cf..4bad1e6 100644
  
      if (!impl->transport->Start(config, [state](const std::string& request) {
              return HandleJsonRpcImpl(state, request);
-@@ -1291,6 +1472,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1291,6 +1489,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
          impl->started = false;
          impl->stopping = false;
          AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1621,7 +1687,7 @@ index 29363cf..4bad1e6 100644
          return false;
      }
      return true;
-@@ -1330,6 +1512,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
+@@ -1330,6 +1529,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1631,7 +1697,7 @@ index 29363cf..4bad1e6 100644
      return true;
  }
  
-@@ -1355,6 +1540,7 @@ void AgentServer::Stop()
+@@ -1355,6 +1557,7 @@ void AgentServer::Stop()
      // The callback may already have been copied by the emulation thread. It
      // holds shared state and observes stopping, rather than touching this.
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1639,7 +1705,7 @@ index 29363cf..4bad1e6 100644
      if (transport)
          transport->Stop();
  
-@@ -1754,6 +1940,523 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1957,523 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2163,7 +2229,7 @@ index 29363cf..4bad1e6 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1801,6 +2504,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1801,6 +2521,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "memory.read") {
@@ -2174,7 +2240,7 @@ index 29363cf..4bad1e6 100644
          const JsonValue* length_value = parsed.params.Find("length");
          std::uint32_t length = 0;
          MemoryAddress address;
-@@ -1820,12 +2527,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1820,12 +2544,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          } else {
              const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
              const std::string session_id = session->id;
@@ -2194,7 +2260,7 @@ index 29363cf..4bad1e6 100644
                      {
                          std::lock_guard<std::mutex> operation_lock(operation->mutex);
                          operation->success = success;
-@@ -1857,6 +2570,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1857,6 +2587,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  } else {
                      JsonValue result = SessionResult(*session);
                      Add(&result, "address", EncodeMemoryAddress(address));
@@ -2204,7 +2270,7 @@ index 29363cf..4bad1e6 100644
                      Add(&result, "byte_count", Number(operation->data.size()));
                      Add(&result, "data_base64", String(EncodeBase64(operation->data)));
                      Add(&result, "sha256", String(Sha256Hex(operation->data)));
-@@ -1865,9 +2581,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1865,9 +2598,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "session.stop") {
@@ -2223,7 +2289,7 @@ index 29363cf..4bad1e6 100644
              response = AGENT_MakeJsonRpcResult(parsed.id, result);
          } else if (session->state == Impl::SessionState::Starting ||
                     session->state == Impl::SessionState::Failed) {
-@@ -1934,6 +2658,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1934,6 +2675,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      }
                  }) == 0) {
                  session->operations.erase(operation_id);
@@ -2231,7 +2297,7 @@ index 29363cf..4bad1e6 100644
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
                                   "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
              } else {
-@@ -1955,7 +2680,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2697,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -2240,7 +2306,7 @@ index 29363cf..4bad1e6 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2695,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2712,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -2249,7 +2315,7 @@ index 29363cf..4bad1e6 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2707,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2724,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -2258,7 +2324,7 @@ index 29363cf..4bad1e6 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2153,9 +2878,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2153,9 +2895,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2271,7 +2337,7 @@ index 29363cf..4bad1e6 100644
              response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
          } else if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -2169,12 +2895,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2169,12 +2912,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              operation->registers.reset(new Impl::AdapterOperation());
              const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
              const std::string session_id = session->id;
@@ -2291,7 +2357,7 @@ index 29363cf..4bad1e6 100644
                  if (success && !continued)
                      success = adapter.GetRegisters(&registers, &adapter_error);
                  {
-@@ -2190,7 +2921,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2190,7 +2938,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (impl->session && impl->session->id == session_id &&
                          impl->session->state == Impl::SessionState::Stopped) {
                          impl->session->state = Impl::SessionState::Running;
@@ -2300,7 +2366,7 @@ index 29363cf..4bad1e6 100644
                          impl->state_changed.notify_all();
                      }
                  }
-@@ -2203,7 +2934,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2203,7 +2951,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  Impl::DeferredRequest pending;
                  pending.request = parsed;
                  pending.fingerprint = parsed.fingerprint;
@@ -2309,7 +2375,7 @@ index 29363cf..4bad1e6 100644
                      {
                          std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
                          if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
-@@ -2223,7 +2954,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2223,7 +2971,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                          })) {
                              return false;
                          }
@@ -2319,7 +2385,7 @@ index 29363cf..4bad1e6 100644
                              return true;
                      }
  
-@@ -2235,16 +2967,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2235,16 +2984,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                              submit_registers = true;
                          }
                      }
@@ -2343,7 +2409,7 @@ index 29363cf..4bad1e6 100644
                                  operation->registers->done = true;
                              }
                              operation->registers->completed.notify_all();
-@@ -2260,7 +2997,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2260,7 +3014,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
                                                                      [operation]() { return operation->registers->done; });
                  };
@@ -2352,7 +2418,7 @@ index 29363cf..4bad1e6 100644
                      bool dispatch_success = false;
                      bool continued = false;
                      std::string dispatch_error;
-@@ -2280,6 +3017,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2280,6 +3034,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (!impl->session || impl->session->id != session_id)
                          return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
                      Impl::Session& active = *impl->session;
@@ -2364,7 +2430,7 @@ index 29363cf..4bad1e6 100644
                      if (!continued) {
                          active.last_stop_kind = "step";
                          active.last_stop_breakpoint_id.clear();
-@@ -2314,6 +3056,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2314,6 +3073,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      JsonValue result = SessionResult(active);
                      Add(&result, "stop_reason", StopReason(active));
                      Add(&result, "registers", RegistersResult(registers, active));
@@ -2380,7 +2446,7 @@ index 29363cf..4bad1e6 100644
                      return AGENT_MakeJsonRpcResult(response_id, result);
                  };
                  if (parsed.has_id && parsed.id.type != JsonType::Null)
-@@ -2856,6 +3607,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3624,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2388,7 +2454,7 @@ index 29363cf..4bad1e6 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3640,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2888,6 +3657,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
          return;
      }
  
@@ -2410,7 +2476,7 @@ index 29363cf..4bad1e6 100644
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3697,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3714,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2418,7 +2484,7 @@ index 29363cf..4bad1e6 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2998,6 +3766,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2998,6 +3783,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
      impl->state_changed.notify_all();
  }
  
@@ -2466,7 +2532,7 @@ index 29363cf..4bad1e6 100644
  void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                      const std::uint64_t generation,
                                      const std::uint16_t segment,
-@@ -3008,6 +3817,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3834,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -2475,7 +2541,7 @@ index 29363cf..4bad1e6 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,7 +3848,19 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,7 +3865,21 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2490,13 +2556,15 @@ index 29363cf..4bad1e6 100644
 +        origin.segment = access.cs; origin.offset = access.ip;
 +        Add(&value, "instruction", EncodeMemoryAddress(origin));
 +        Add(&value, "stop_timing", String("after_access_before_next_instruction"));
++        Add(&value, "cpu_mode", String(!access.protected_mode ? "real" :
++            (access.virtual8086 ? "v86" : "protected")));
 +        impl->session->last_data_access = value;
 +    }
 +    impl->session->last_stop_kind = DEBUG_AgentLayerConflict() ? "layer_conflict" : startup ? "startup" :
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
                (trace_completed ? "pause" : "breakpoint")));
-@@ -3058,8 +3881,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3058,8 +3900,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              break;
          }
      }
@@ -3164,7 +3232,7 @@ index e582cc0..80944d7 100644
  		switch (core.opcode_index+Fetchb()) {
  		#include "core_normal/prefix_none.h"
 diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
-index 36c909c..3dbe8a5 100644
+index 36c909c..6c0bb8e 100644
 --- a/src/debug/debug.cpp
 +++ b/src/debug/debug.cpp
 @@ -45,6 +45,7 @@ using namespace std;
@@ -3235,7 +3303,7 @@ index 36c909c..3dbe8a5 100644
  bool DEBUG_AgentCanStartTarget(void)
  {
  #if !defined(OSFREE)
-@@ -1175,6 +1196,46 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
+@@ -1175,6 +1196,48 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
  	return agent_entry_breakpoint_sequence.load(std::memory_order_relaxed);
  }
  
@@ -3258,6 +3326,8 @@ index 36c909c..3dbe8a5 100644
 +            agent_last_access.address = address; agent_last_access.length = length;
 +            agent_last_access.cs = SegValue(cs); agent_last_access.ip = reg_eip;
 +            agent_last_access.write = write;
++            agent_last_access.protected_mode = cpu.pmode;
++            agent_last_access.virtual8086 = (reg_flags & FLAG_VM) != 0;
 +            return;
 +        }
 +    }
@@ -3282,7 +3352,7 @@ index 36c909c..3dbe8a5 100644
  bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle)
  {
  	if (handle == nullptr || GetAddress(seg,off) == mem_no_address)
-@@ -1221,7 +1282,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
+@@ -1221,7 +1284,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
  
  bool DEBUG_AgentDeleteBreakpoint(uintptr_t handle)
  {
@@ -3294,7 +3364,7 @@ index 36c909c..3dbe8a5 100644
  }
  
  uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
-@@ -1231,6 +1295,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
+@@ -1231,6 +1297,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
  
  void DEBUG_AgentClearLastBreakpoint(void)
  {
@@ -3311,7 +3381,7 @@ index 36c909c..3dbe8a5 100644
  	(void)CBreakpoint::ConsumeLastTriggered();
  }
  
-@@ -4814,6 +4888,9 @@ static int dbg_getch_vt(void) {
+@@ -4814,6 +4890,9 @@ static int dbg_getch_vt(void) {
  #endif
  
  uint32_t DEBUG_CheckKeys(void) {
@@ -3321,7 +3391,7 @@ index 36c909c..3dbe8a5 100644
  	Bits ret=0;
  	bool numberrun = false;
  	bool skipDraw = false;
-@@ -5287,7 +5364,12 @@ Bitu DEBUG_Loop(void) {
+@@ -5287,7 +5366,12 @@ Bitu DEBUG_Loop(void) {
          // Interrupt started ? - then skip it
          uint16_t oldCS	= SegValue(cs);
          uint32_t oldEIP	= reg_eip;
@@ -3335,7 +3405,7 @@ index 36c909c..3dbe8a5 100644
          SDL_Delay(1);
  
  #if (C_DYNAMIC_X86)
-@@ -5359,6 +5441,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5359,6 +5443,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  	if (!pressed || control->opt_display2)
  		return;
  
@@ -3345,7 +3415,7 @@ index 36c909c..3dbe8a5 100644
      if (hidedebugger) {
          hidedebugger=false;
  #if defined(WIN32) && !defined(_WIN32_WINDOWS)
-@@ -5377,6 +5462,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5377,6 +5464,9 @@ void DEBUG_Enable_Handler(bool pressed) {
          if (runnormal) return;
      }
  
@@ -3355,7 +3425,7 @@ index 36c909c..3dbe8a5 100644
      /* this command is now a toggle! */
      /* However this should break back into the debugger if RUNWATCH is active */
      if (debug_running) {
-@@ -5416,6 +5504,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5416,6 +5506,9 @@ void DEBUG_Enable_Handler(bool pressed) {
      if (!isatty(0) || !isatty(1) || !isatty(2))
  	    allow = false;
  
@@ -3365,7 +3435,7 @@ index 36c909c..3dbe8a5 100644
      if (!allow) {
  # if defined(MACOSX)
  	    LOG_MSG("Debugger in Mac OS X is not available unless you start DOSBox-X from a terminal or from the Terminal application");
-@@ -5457,6 +5548,7 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5457,6 +5550,7 @@ void DEBUG_Enable_Handler(bool pressed) {
      GFX_SetTitle(-1,-1,-1,false);
      runnormal = false;
  #if defined(C_DOSBOX_AGENT)
@@ -3373,7 +3443,7 @@ index 36c909c..3dbe8a5 100644
      dosbox_agent::AGENT_NotifyDebuggerStopped(SegValue(cs), reg_eip);
  #endif
      if (debugrunmode==1) {char command[] = "RUN"; ParseCommand(command);}
-@@ -5464,6 +5556,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5464,6 +5558,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  }
  
  void DEBUG_DrawScreen(void) {
@@ -3383,7 +3453,7 @@ index 36c909c..3dbe8a5 100644
  	DrawData();
  	DrawCode();
      DrawInput();
-@@ -6185,6 +6280,9 @@ void DBGBlock::set_data_view(unsigned int view) {
+@@ -6185,6 +6282,9 @@ void DBGBlock::set_data_view(unsigned int view) {
  }
  
  void DEBUG_SetupConsole(void) {
@@ -3393,7 +3463,7 @@ index 36c909c..3dbe8a5 100644
  	if (dbg.win_main == NULL) {
          LOG(LOG_MISC, LOG_DEBUG)("DEBUG_SetupConsole initializing GUI");
  
-@@ -6505,6 +6603,69 @@ struct TLogInst {
+@@ -6505,6 +6605,69 @@ struct TLogInst {
  
  TLogInst logInst[LOGCPUMAX];
  #if defined(C_DOSBOX_AGENT)
@@ -3463,17 +3533,20 @@ index 36c909c..3dbe8a5 100644
  static bool agent_trace_active = false;
  static uint32_t agent_trace_remaining = 0;
  #endif
-@@ -6617,6 +6778,9 @@ static void DEBUG_AgentCaptureTraceEvent(void)
+@@ -6617,6 +6780,12 @@
  	event.gs = inst.s_gs;
  	event.ss = inst.s_ss;
  	event.flags = inst.flags;
++	event.protected_mode = cpu.pmode;
++	event.code_bits = cpu.code.big ? 32 : 16;
++	event.stack_bits = cpu.stack.big ? 32 : 16;
 +	event.ram_bytes = AgentCodeHex(SegPhys(cs)+reg_eip,false);
 +	event.execution_bytes = AgentCodeHex(SegPhys(cs)+reg_eip,true);
 +	event.layer_generation = agent_layer_generation;
  	event.instruction = inst.dline;
  	event.analysis = inst.res;
  	agent_trace_events.push_back(event);
-@@ -6664,6 +6828,19 @@ void DEBUG_HeavyWriteLogInstruction(void) {
+@@ -6664,6 +6833,19 @@ void DEBUG_HeavyWriteLogInstruction(void) {
  
  bool DEBUG_HeavyIsBreakpoint(void) {
  #if defined(C_DOSBOX_AGENT)
@@ -3493,7 +3566,7 @@ index 36c909c..3dbe8a5 100644
  	const bool agent_trace_was_active = agent_trace_active;
      if (agent_trace_active) {
  		DEBUG_AgentCaptureTraceEvent();
-@@ -6725,6 +6902,18 @@ void DEBUG_StopLog(void) {
+@@ -6725,6 +6907,18 @@ void DEBUG_StopLog(void) {
  }
  
  #endif // HEAVY DEBUG
@@ -4431,7 +4504,7 @@ index dd7ed8b..f9b5f36 100644
  	//**********************************************
  	//**********************************************
 diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
-index 84ada2d..0ae2528 100644
+index 84ada2d..e0e39d3 100644
 --- a/src/ints/mouse.cpp
 +++ b/src/ints/mouse.cpp
 @@ -43,6 +43,10 @@
@@ -4461,7 +4534,7 @@ index 84ada2d..0ae2528 100644
      if (call_mouse_bd != 0) {
          CALLBACK_DeAllocate(call_mouse_bd);
          call_mouse_bd = 0;
-@@ -1341,6 +1352,179 @@ void Mouse_WheelMoved(int32_t scroll) {
+@@ -1341,6 +1352,182 @@ void Mouse_WheelMoved(int32_t scroll) {
  	mouse.last_scrolled_y=POS_Y;
  }
  
@@ -4474,13 +4547,16 @@ index 84ada2d..0ae2528 100644
 +
 +bool RequireAbsoluteMouse(std::string* error)
 +{
-+    if (!en_int33 || !AllowINT33RMAccess() || CurMode == NULL ||
++    // Queue driver state/events without reading guest selectors or invoking a
++    // real-mode callback here. IRQ delivery retains the driver's own mode guards.
++    // The IVT identity is physical even while paging changes CPU linear address 0.
++    if (!en_int33 || dos_kernel_disabled || CurMode == NULL ||
 +        IS_PC98_ARCH || useps2callback || KEYBOARD_AUX_Active() ||
 +        agent_builtin_int33_vector == 0 ||
-+        real_readd(0, 0x33u << 2) != agent_builtin_int33_vector) {
++        phys_readd(0x33u * 4) != agent_builtin_int33_vector) {
 +        if (error) {
 +            *error = "Absolute mouse input requires the built-in DOS INT33 driver "
-+                     "in real/v8086 mode; PS/2/AUX, PC-98 and guest-OS mouse drivers are unsupported";
++                     "with its original physical IVT vector; PS/2/AUX, PC-98 and guest-OS mouse drivers are unsupported";
 +        }
 +        return false;
 +    }
@@ -4641,7 +4717,7 @@ index 84ada2d..0ae2528 100644
  static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
      if ((px!=0) && (py!=0)) {
          mouse.mickeysPerPixel_x  = (float)px/X_MICKEY;
-@@ -1544,6 +1728,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
+@@ -1544,6 +1731,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
  
  //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
  static void Mouse_Reset(void) {
@@ -4651,7 +4727,7 @@ index 84ada2d..0ae2528 100644
      Mouse_BeforeNewVideoMode(false);
      Mouse_AfterNewVideoMode(false);
      Mouse_SetMickeyPixelRate(8,16);
-@@ -2517,6 +2704,9 @@ void MOUSE_Startup(Section *sec) {
+@@ -2517,6 +2707,9 @@ void MOUSE_Startup(Section *sec) {
  
      // Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
      real_writed(0,0x33<<2,i33loc);

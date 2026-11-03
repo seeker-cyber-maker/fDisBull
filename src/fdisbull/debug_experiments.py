@@ -63,11 +63,15 @@ def _trace_event(event):
     # Runtime mappings and host/layer generations are provenance, not CPU changes.
     result = {key: event[key] for key in (
         'project_address', 'project_segmented_address', 'address', 'instruction',
-        'bytes', 'ram_bytes', 'execution_bytes', 'registers', 'register_changes', 'completed') if key in event}
+        'bytes', 'ram_bytes', 'execution_bytes', 'registers', 'register_changes', 'completed',
+        'cpu_mode', 'code_bits', 'stack_bits') if key in event}
     if isinstance(event.get('address'), dict) and event.get('execution_bytes'):
         from iced_x86 import Decoder
+        from .debug_semantics import trace_decode_bits
+        bits=trace_decode_bits(event)
+        if bits is None:return result
         raw = bytes.fromhex(event['execution_bytes'])
-        instruction = Decoder(16, raw, ip=int(event['address']['offset'], 16)).decode()
+        instruction = Decoder(bits, raw, ip=int(event['address']['offset'], 16)).decode()
         if not instruction.is_invalid:
             # DOS records a 15-byte lookahead. Later instructions are not part of this fetch.
             for name in ('ram_bytes', 'execution_bytes'):

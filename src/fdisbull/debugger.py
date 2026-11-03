@@ -564,30 +564,30 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
             "session": result,
         }
         evidence["hook_hits"] = hook_hits
-        if result and result.get("stop_reason", {}).get("address"):
-            result["stop_reason"]["project_address"] = self.project_address(
-                result["stop_reason"]["address"]
-            )
-        if result and result.get("stop_reason", {}).get("data_access"):
-            access = result["stop_reason"]["data_access"]
-            access["project_instruction"] = self.project_address(access["instruction"])
         from .debug_semantics import normalize_stop
 
         stopped_pc = None
-        if (
-            result
-            and result.get("stop_reason", {}).get("data_access")
-            and result.get("state") != "exited"
-        ):
+        stopped_registers = None
+        if result and result.get('state') != 'exited' and callable(getattr(self,'registers',None)):
             try:
-                registers = self.registers()
-                stopped_pc = {
-                    "space": "segmented",
-                    "segment": registers["segments"]["cs"],
-                    "offset": registers["instruction_pointer"],
-                }
+                stopped_registers = self.registers()
+                stopped_pc = {'space':'segmented',
+                    'segment':stopped_registers['segments']['cs'],
+                    'offset':stopped_registers['instruction_pointer']}
             except (DebuggerError, KeyError):
-                pass  # Preserve the stop evidence even if the post-stop PC is unavailable.
+                pass  # Preserve native evidence when the stopped context is unavailable.
+        real_mode = stopped_registers is not None and stopped_registers.get('cpu_mode') == 'real'
+        stop_reason = (result or {}).get('stop_reason', {})
+        if stop_reason.get('address'):
+            stop_reason['project_address'] = self.project_address(stop_reason['address']) if real_mode else None
+        if stop_reason.get('data_access'):
+            access = stop_reason['data_access']
+            access['project_instruction'] = (self.project_address(access['instruction'])
+                if access.get('cpu_mode')=='real' else None)
+            if access.get('cpu_mode')!='real':
+                access['source_mapping']='causing instruction mode unqualified for DOS source projection'
+        if stopped_registers is not None:
+            stop_reason['cpu_mode'] = stopped_registers.get('cpu_mode')
         evidence["stop"] = normalize_stop(
             self.metadata.get("backend", "dosbox"),
             (result or {}).get("stop_reason", {}),
@@ -609,11 +609,18 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
     def registers(self):
         result = self.call('state.get_registers')
         result.update(cs=result['segments']['cs'],ip=result['instruction_pointer'])
-        result['project_address'] = self.project_address({'space':'segmented',
+        # Protected-mode CS is a selector, never a DOS paragraph. The stopped
+        # CPU remains inspectable without inventing a static source address.
+        result['project_address'] = (self.project_address({'space':'segmented',
             'segment':result['segments']['cs'],'offset':result['instruction_pointer']})
+            if result.get('cpu_mode')=='real' else None)
+        if result.get('cpu_mode')!='real':
+            result['source_mapping']='unqualified protected/v86 selector; no DOS paragraph projection'
         return result
 
     def breakpoint(self, address, *, cs=None, access='x', length=1, view='static'):
+        if self.call('state.get_registers').get('cpu_mode')!='real':
+            raise ValueError('DOS source breakpoints require real mode; protected/v86 selectors need explicit runtime qualification')
         if view not in ('static','execute'):
             raise ValueError('Breakpoint view must be static or execute')
         if access not in ('x','r','w','rw'):
@@ -689,6 +696,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         return evidence
 
     def memory(self, address, *, cs=None, length=16):
+        if self.call('state.get_registers').get('cpu_mode')!='real':
+            raise ValueError('DOS source memory requires real mode; use an explicitly qualified runtime RAM binding')
         bounded(length,'length',1,65536)
         linear, _ = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
@@ -734,11 +743,13 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 raise ValueError('Run until queued keyboard input completes before saving a state')
         before = self._disk_manifest()
         layer_state = self._layer_state()
+        registers = self.registers()
+        if registers.get('cpu_mode') not in ('real','v86','protected'):
+            raise ValueError('Native project checkpoint has an unknown CPU mode')
+        if registers['cpu_mode']!='real' and (layer_state['active'] or layer_state.get('ram_applied')):
+            raise ValueError('Disable real-mode code layers before a protected/v86 checkpoint')
         if layer_state['active']:
             self.layers(layer_state['active'])
-        registers = self.registers()
-        if registers['cpu_mode']!='real':
-            raise ValueError('Native project checkpoints currently require real mode')
         with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'
             saved = self.call('state.save',{'path':str(path)})
@@ -750,7 +761,9 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         if before != self._disk_manifest():
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
-                    'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state}
+                    'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state,
+                    'checkpoint_scope':'full native machine; CPU mode/descriptor state belongs to the serializer',
+                    'register_verification':'exposed registers, CPU mode and observed address context'}
         if self.rpc.capabilities.get('frame_timeline'):
             metadata['frame_keys'] = saved.get('frame_keys', [])
         if hasattr(self,'_state_provenance'):
@@ -789,6 +802,10 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 raise ValueError('State compatibility mismatch: '+field)
         if metadata['disk_manifest'] != self._disk_manifest():
             raise ValueError('Mounted game files differ from state; restore the matching files first')
+        protected_snapshot=metadata['registers'].get('cpu_mode') in ('protected','v86')
+        saved_layers=metadata.get('code_layers',{})
+        if protected_snapshot and (saved_layers.get('active') or saved_layers.get('ram_applied')):
+            raise ValueError('Protected/v86 checkpoint cannot restore real-mode code layers')
         frame_keys = metadata.get('frame_keys', [])
         from .keyboard_input import KEYS
         if (not isinstance(frame_keys, list) or any(not isinstance(key, str) or key not in KEYS for key in frame_keys)
@@ -807,10 +824,15 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                     raise DebuggerError('Restored frame input ownership differs from saved state')
                 _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
                 registers = self.registers()
-                for field in ('general','segments','instruction_pointer','flags'):
+                for field in ('general','segments','instruction_pointer','flags','cpu_mode'):
                     if registers.get(field) != metadata['registers'].get(field):
                         raise DebuggerError('Restored CPU differs from saved state: '+field)
-                self._restore_layer_state(metadata.get('code_layers',{}))
+                if ('address_context' in metadata['registers']
+                        and registers.get('address_context')!=metadata['registers']['address_context']):
+                    raise DebuggerError('Restored CPU differs from saved state: address_context')
+                if protected_snapshot:
+                    self._layer_setup();self._layers=[];self._ram_base={};self._ram_applied={}
+                else:self._restore_layer_state(saved_layers)
             except BaseException:
                 self.close() # A partially failed native restore must never be resumed.
                 raise
@@ -818,6 +840,14 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                       framebuffer='invalidated_until_next_completed_frame')
         self._keyboard_leases={}
         self._invalidate_runtime_bindings()
+        self.metadata['execution_origin']='restored-full-native-checkpoint'
+        self.metadata['checkpoint_intervention']=metadata.get('derivation')
+        if metadata.get('derivation') is not None:self._state_provenance=metadata['derivation']
+        elif hasattr(self,'_state_provenance'):del self._state_provenance
+        result['intervention']={'kind':'full-native-checkpoint-restore',
+                                'edited_fork':metadata.get('derivation') is not None,
+                                'derivation':metadata.get('derivation'),
+                                'live_session_ram_edit':False,'host_files_restored':False}
         for key in ('delta_experiment', 'timeline_experiment'):
             self.metadata.pop(key, None)
             if metadata.get(key) is not None:
@@ -993,7 +1023,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         finally:
             self.call('trace.stop')
         for event in events:
-            event['project_address'] = self.project_address(event['address'])
+            event['project_address'] = (self.project_address(event['address'])
+                if event.get('cpu_mode')=='real' else None)
             if event['project_address'] is not None:
                 segment = int(event['address']['segment'],16)-self.runtime_load+self.dos['load_segment']
                 event['project_segmented_address'] = (f"{segment:04x}:{int(event['address']['offset'],16):04x}"
@@ -1117,7 +1148,7 @@ class DebugWorkspace:
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
                         'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
-                        'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
+                        'debug-runtime-memory':'runtime_memory','debug-write-runtime-memory':'write_runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})
