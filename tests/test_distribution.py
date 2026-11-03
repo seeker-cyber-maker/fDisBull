@@ -915,6 +915,15 @@ REQUIRED_SOURCE_FILES += tuple(
 DESKTOP_EVIDENCE_FILE = "docs/evidence/common-uil-desktop-2026-11-01/verification.json"
 
 
+WINDOWS_RUNTIME_MODULES=('wine_guest/selftest32.c','wine_arch.py','windows_ui.py','win16_debugger.py')
+
+WINDOWS_RUNTIME_FILES=tuple('src/fdisbull/'+name for name in WINDOWS_RUNTIME_MODULES)+tuple('tests/'+name for name in (
+    'test_wine_pe32.py','test_wine_pe32_state.py','test_wine_guest_bridge.py','test_windows_interfaces.py',
+    'test_windows_scenes.py','test_windows_dot_mode.py','test_windows_native.py','test_win16_debugger.py','test_win16_native.py'))
+
+REQUIRED_SOURCE_FILES+=WINDOWS_RUNTIME_FILES
+
+
 def source_archive(path, files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path, "w") as output:
         for required in files:
@@ -1341,3 +1350,23 @@ def test_distribution_check_requires_dinopark_terminal_resource(tmp_path, kind):
             output.writestr(member, "")
     with pytest.raises(ValueError, match=re.escape(resource)):
         check(archive)
+
+
+@pytest.mark.parametrize('required',WINDOWS_RUNTIME_FILES)
+def test_source_distribution_requires_windows_adapter_and_reproducible_native_checks(tmp_path,required):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-windows.zip'
+    source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=required))
+    with pytest.raises(ValueError,match=re.escape(required)):check(archive)
+
+
+@pytest.mark.parametrize('required',WINDOWS_RUNTIME_MODULES)
+def test_wheel_requires_windows_adapter_and_actual_pe32_guest_source(tmp_path,required):
+    checker=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))
+    resources=checker['REQUIRED_PE_RESOURCES']|checker['REQUIRED_KNOWLEDGE_RESOURCES']|checker['REQUIRED_CONSOLE_RESOURCES']
+    archive=tmp_path/'fdisbull-windows.whl'
+    with zipfile.ZipFile(archive,'w') as output:
+        output.writestr('fdisbull-windows.dist-info/METADATA','Name: fdisbull\n')
+        output.writestr('fdisbull/__init__.py','')
+        for name in resources- {required}:output.writestr('fdisbull/'+name,'')
+    with pytest.raises(ValueError,match=re.escape(required)):checker['check_archive'](archive)
