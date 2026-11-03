@@ -235,9 +235,14 @@ def run_case(project_type, backend, root, mode, fixture, ledger, budget_check, t
             require(same_projection(record['golden_projection'], replay),
                     'Recovered suffix CPU/full DS differs from the golden suffix')
             screenshot = fresh.call('video.screenshot')
-            require(screenshot['sha256'] == golden_image['sha256'],
+            replay_png = base64.b64decode(screenshot['png_base64'], validate=True)
+            require(replay_png.startswith(b'\x89PNG\r\n\x1a\n')
+                    and sha(replay_png) == screenshot['sha256'] == golden_image['sha256'],
                     'Recovered suffix PNG differs from the golden image')
+            with (directory / 'replayed.png').open('xb') as stream:
+                stream.write(replay_png)
             record['replayed_png_sha256'] = screenshot['sha256']
+            record['replayed_png_private_file'] = 'replayed.png'
         record['recovery_backend_returncode'] = fresh_process.poll()
         require(fresh_process.poll() is not None, 'Recovery backend was not reaped')
         record['offline_image_after_recovery_exit'] = export(
@@ -273,6 +278,10 @@ def main():
     require(Path(fixture_module.__file__).resolve() == repo / 'scripts/benchmark_frame_timeline.py',
             'Fixture module is outside selected checkout')
     fixture = fixture_module.authored_com()
+    fixture_source = Path(fixture_module.__file__).read_bytes()
+    committed_fixture = subprocess.run(['git', 'show', head + ':scripts/benchmark_frame_timeline.py'],
+                                       cwd=repo, capture_output=True, check=True).stdout
+    require(fixture_source == committed_fixture, 'Fixture source differs from declared commit')
     from fdisbull.project import Project
     loaded = source_modules(repo, head)
     plan = {'format': 'fdisbull-authored-native-crash-recovery-1', 'status': 'plan',
