@@ -1,7 +1,7 @@
 # Generic UDL → UIL → UDC roadmap: milestone and qualification gates
 
 **Proposed:** 2026-11-03; **baseline:** `main` `2866c414bff33510ab58e3186f96960eddd0cb94` / published `v0.30.0`.  
-**Decision record:** [Maturity and gap analysis](../RECONSTRUCTION_MATURITY_AUDIT_2026-11-03.md).  
+**Decision records:** [Maturity and gap analysis](../RECONSTRUCTION_MATURITY_AUDIT_2026-11-03.md) · [Deterministic pipeline orchestration audit](../DETERMINISTIC_PIPELINE_ORCHESTRATION_AUDIT_2026-11-03.md).  
 **Status:** Proposed development milestones, **not** pre-existing GitLab milestone records or a promise of release dates.
 
 ## Core outcome

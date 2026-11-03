@@ -3,7 +3,7 @@
 **Audit date:** 2026-11-03  
 **Baseline:** GitLab `main` at `2866c414bff33510ab58e3186f96960eddd0cb94`; published `v0.30.0` is tagged at `dc6d7e7709802e743e79cf46e648a4e87b2a0a27`.  
 **Status:** Architectural assessment and proposed roadmap. Documentation only; no newly executed native experiments or implementation change is claimed.  
-**Companion:** [Capability milestones and acceptance gates](milestones/2026-11-03-generic-reconstruction-gates.md).
+**Companions:** [Capability milestones and acceptance gates](milestones/2026-11-03-generic-reconstruction-gates.md) · [Deterministic pipeline orchestration and agent responsibility audit](DETERMINISTIC_PIPELINE_ORCHESTRATION_AUDIT_2026-11-03.md).
 
 ## Executive conclusion
 
