@@ -91,6 +91,15 @@ hash-verified Node 22.23.4 toolchain and checks real Web Crypto/WebAssembly
 availability before the suite; a distro's older Node must not silently replace
 the runtime used by the former workflow.
 
+Cheap package and installed-skill checks run before the full suite, with a
+final payload/privacy recheck afterward. The exact installed-package recipe
+is `scripts/ci/package-smoke.sh`; local verification can reuse it with an
+external `CI_BUILDS_DIR`, the real checkout in `CI_PROJECT_DIR`, and optional
+`FDISBULL_CI_PYTHON`, `FDISBULL_CI_PACKAGES` and `FDISBULL_CI_RECEIPTS` paths.
+It uses existing genuine dependencies and fresh environments, generates skill
+receipts outside the checkout, and copies successful receipts into the selected
+artifact directory. Local execution is a smoke check, not a hosted Linux result.
+
 `qualify-candidate` depends on every required job. It rechecks receipt source,
 pipeline and job identities, interpreters, JUnit coverage and artifact hashes.
 Missing, skipped, canceled, failed or wrong-source evidence cannot produce

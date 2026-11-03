@@ -48,9 +48,9 @@ kit_install="$kit_install_parent/venv"
 "$kit_install/bin/python" -I scripts/verify_offline_kit.py \
   --kit "$kit_root" --output "$NATIVE_EVIDENCE/offline"/acceptance.json
 python scripts/check_agent_skill.py --python "$kit_install/bin/python" \
-  --output "$CI_PROJECT_DIR/.native/tmp/fdisbull-native-skill-gate.json"
-cp "$CI_PROJECT_DIR/.native/tmp/fdisbull-native-skill-gate.json" "$NATIVE_EVIDENCE/offline"/agent-skill.json
+  --output "$kit_install_parent/agent-skill.json"
+cp "$kit_install_parent/agent-skill.json" "$NATIVE_EVIDENCE/offline"/agent-skill.json
 python scripts/check_agent_skill.py --python "$kit_install/bin/python" --skill write-gamefaqs-guide \
-  --output "$CI_PROJECT_DIR/.native/tmp/fdisbull-native-guide-skill-gate.json"
-cp "$CI_PROJECT_DIR/.native/tmp/fdisbull-native-guide-skill-gate.json" "$NATIVE_EVIDENCE/offline"/guide-skill.json
+  --output "$kit_install_parent/guide-skill.json"
+cp "$kit_install_parent/guide-skill.json" "$NATIVE_EVIDENCE/offline"/guide-skill.json
 sha256sum .native/offline/output/* > "$NATIVE_EVIDENCE/offline"/SHA256SUMS

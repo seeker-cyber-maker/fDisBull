@@ -41,11 +41,18 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
 
 def test_ordinary_job_requires_inventory_and_isolated_install_receipts():
     script = (ROOT / 'scripts/ci/test-and-package.sh').read_text()
-    for operation in ('check_dist.py', 'check_package_payloads.py', 'check_agent_skill.py', '-I -m fdisbull_player', '--write-ordinary'):
+    smoke = (ROOT / 'scripts/ci/package-smoke.sh').read_text()
+    for operation in ('check_dist.py', 'check_package_payloads.py', 'bash scripts/ci/package-smoke.sh', '--write-ordinary'):
         assert operation in script
+    assert script.index('bash scripts/ci/package-smoke.sh') < script.index('python -m pytest')
     assert script.index('check_package_payloads.py') < script.index('--write-ordinary')
-    assert script.index('check_agent_skill.py') < script.index('--write-ordinary')
-    assert 'mktemp -d "$CI_BUILDS_DIR/' in script
+    for operation in ('check_agent_skill.py', '-I -m fdisbull_player', '--output "$smoke_root/agent-skill.json"', '--output "$smoke_root/guide-skill.json"'):
+        assert operation in smoke
+    assert 'mktemp -d "$CI_BUILDS_DIR/' in smoke
+    assert '--output artifacts/' not in smoke
+    offline = (ROOT / 'scripts/ci/native-offline.sh').read_text()
+    assert '--output "$kit_install_parent/agent-skill.json"' in offline
+    assert '--output "$kit_install_parent/guide-skill.json"' in offline
 
 
 def run_receipt(tmp_path, monkeypatch, source='candidate'):
