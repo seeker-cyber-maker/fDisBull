@@ -2,7 +2,8 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates git build-essential clang rustc nodejs libx11-dev autoconf automake pkg-config nasm llvm ffmpeg libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
+apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang rustc libx11-dev autoconf automake pkg-config nasm llvm ffmpeg libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
+bash scripts/ci/install-node.sh
 python -m pip install ".[test]" build
 export NATIVE_EVIDENCE="native-evidence/$FDISBULL_PROFILE"
 export FDISBULL_FRAME_EVIDENCE="$CI_PROJECT_DIR/$NATIVE_EVIDENCE/frame-capture"

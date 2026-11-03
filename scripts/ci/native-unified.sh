@@ -2,7 +2,8 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl git build-essential clang nodejs libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libpng16-16 zlib1g libfreetype6
+apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libpng16-16 zlib1g libfreetype6
+bash scripts/ci/install-node.sh
 mkdir -p .native/pe native-evidence/pe native-evidence/unified
 chmod +x "$FDISBULL_DOSBOX"
 sha256sum "$FDISBULL_DOSBOX"

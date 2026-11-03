@@ -29,6 +29,7 @@ def qualified(tmp_path):
         artifact.write_bytes(b'authored fixture')
         receipt = {'status': 'passed', 'source_commit': SHA, 'pipeline_id': '123', 'job_id': str(index),
                    'job_name': job, 'profile': profile, 'python_version': '3.13.5' if profile == 'layers' else '3.12.12',
+                   'node_version': 'v22.23.4',
                    'test_results': [gate.identity(tmp_path, name) for name in gate.JUNIT[profile]],
                    'artifacts': [gate.identity(tmp_path, artifact.name)], 'backend_identity': {'source_commit': SHA}}
         if profile == 'unified':
@@ -58,7 +59,7 @@ def test_complete_same_pipeline_and_source_qualifies_without_authorizing_release
 
 @pytest.mark.parametrize('field,value', [('status', 'manual'), ('status', 'skipped'), ('status', 'failed'),
                                         ('source_commit', 'b' * 40), ('pipeline_id', '999'),
-                                        ('python_version', '3.12.12'), ('job_name', 'other')])
+                                        ('python_version', '3.12.12'), ('node_version', 'v18.20.4'), ('job_name', 'other')])
 def test_partial_or_different_run_never_qualifies(qualified, field, value):
     path = qualified / 'artifacts/receipts/native-layers.json'
     receipt = json.loads(path.read_text())

@@ -86,7 +86,10 @@ test and support files, then compares bytes in the wheel, player wheel, sdist
 and tool ZIP. Newly added resources cannot disappear unnoticed because their
 extension was absent from an older selector. Privacy/archive checks still run
 separately. Built-wheel skills and isolated core/player/sdist/tool installations
-are checked outside the source tree. Failure logs are retained.
+are checked outside the source tree. Failure logs are retained. CI pins a
+hash-verified Node 22.23.4 toolchain and checks real Web Crypto/WebAssembly
+availability before the suite; a distro's older Node must not silently replace
+the runtime used by the former workflow.
 
 `qualify-candidate` depends on every required job. It rechecks receipt source,
 pipeline and job identities, interpreters, JUnit coverage and artifact hashes.

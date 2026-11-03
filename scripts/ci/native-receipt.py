@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import platform
 import sys
+import subprocess
 import xml.etree.ElementTree as ET
 
 profile = sys.argv[1]
@@ -44,6 +45,7 @@ receipt = {'status': 'passed',
            'pipeline_id': os.environ['CI_PIPELINE_ID'], 'job_id': os.environ['CI_JOB_ID'],
            'job_name': os.environ['CI_JOB_NAME'], 'source_commit': os.environ['CI_COMMIT_SHA'],
            'profile': profile, 'python_version': platform.python_version(),
+           'node_version': subprocess.check_output(['node', '--version'], text=True).strip(),
            'backend_identity': identity, 'test_results': [digest(p) for p in junit],
            'artifacts': [digest(p) for p in outputs]}
 out = Path('artifacts/receipts')

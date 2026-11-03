@@ -64,7 +64,7 @@ test-and-package:
     - when: on_success
   before_script:
     - apt-get update
-    - apt-get install -y --no-install-recommends git build-essential clang nodejs libx11-dev
+    - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev
   script:
     - bash scripts/ci/test-and-package.sh
   artifacts:

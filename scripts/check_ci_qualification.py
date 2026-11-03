@@ -14,6 +14,7 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import subprocess
 import xml.etree.ElementTree as ET
 
 JOBS = {"ordinary": "test-and-package", "stable": "native-debugger-stable",
@@ -86,6 +87,8 @@ def validate(root, source_commit, pipeline_id):
         python = receipt.get('python_version', '')
         if (profile == 'layers' and python != '3.13.5') or (profile != 'layers' and not python.startswith('3.12.')):
             raise ValueError(f"Unexpected qualification interpreter: {job}: {python}")
+        if receipt.get('node_version') != 'v22.23.4':
+            raise ValueError(f"Unexpected qualification Node runtime: {job}")
         tests, artifacts = receipt.get('test_results'), receipt.get('artifacts')
         if (not isinstance(tests, list) or [i.get('path') for i in tests if isinstance(i, dict)] != JUNIT[profile]
             or not isinstance(artifacts, list) or not artifacts):
@@ -129,6 +132,7 @@ def write_ordinary(root):
     return {"status": "passed", "profile": "ordinary", "source_commit": os.environ['CI_COMMIT_SHA'],
             "pipeline_id": os.environ['CI_PIPELINE_ID'], "job_id": os.environ['CI_JOB_ID'],
             "job_name": os.environ['CI_JOB_NAME'], "python_version": platform.python_version(),
+            "node_version": subprocess.check_output(['node', '--version'], text=True).strip(),
             "test_results": [identity(root, 'artifacts/ordinary/tests.xml')],
             "artifacts": [identity(root, 'dist/' + v['name']) for v in payload['artifacts'].values()]}
 

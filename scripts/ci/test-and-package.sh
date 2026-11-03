@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 mkdir -p artifacts/ordinary artifacts/receipts
+bash scripts/ci/install-node.sh
 python -m pip install --upgrade pip
 python -m pip install ".[test,source]" build
 python -m pytest -q --junitxml=artifacts/ordinary/tests.xml 2>&1 | tee artifacts/ordinary/tests.log
