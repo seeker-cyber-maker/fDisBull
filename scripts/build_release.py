@@ -9,7 +9,14 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
+ROOT_FILES = (
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "pyproject.toml",
+    "MANIFEST.in",
+    "player/pyproject.toml",
+)
 DOC_EXAMPLE_FILES = (
     "docs/CLOUD-0.27.0-MANIFEST.json",
     "docs/uil-rfcs/0001/README.md",
@@ -42,6 +49,7 @@ SOURCE_PATTERNS = (
     ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
     ("src/fdisbull/data", "*.txt"),
+    ("src/fdisbull/data", "*.swift"),
     ("src/fdisbull/skills", "*.md"),
     ("src/fdisbull/wine_guest", "*.c"),
     ("src/fdisbull/wine_guest", "*.sh"),
@@ -106,7 +114,8 @@ SOURCE_PATTERNS = (
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),
     ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
-    ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),    ("scripts", "*.py"),
+    ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),
+    ("scripts", "*.py"),
     ("scripts", "miniplanets_display_observer.c"),
     ("docs/evidence/civd-browser-shell", "verification.json"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
@@ -145,11 +154,16 @@ def release_files(root: Path) -> list[Path]:
     """Select tool sources plus the exact authored RFC fixture allowlist."""
     files = [root / name for name in (*ROOT_FILES, *DOC_EXAMPLE_FILES)]
     for directory, pattern in SOURCE_PATTERNS:
-        candidates = ((root / directory).glob(pattern) if directory == "player/fdisbull_player"
-                      else (root / directory).rglob(pattern))
+        candidates = (
+            (root / directory).glob(pattern)
+            if directory == "player/fdisbull_player"
+            else (root / directory).rglob(pattern)
+        )
         if directory == "docs":
             fixture_root = root / "docs/uil-rfcs/0001"
-            files.extend(path for path in candidates if fixture_root not in path.parents)
+            files.extend(
+                path for path in candidates if fixture_root not in path.parents
+            )
         else:
             files.extend(candidates)
     selected = []
@@ -173,7 +187,9 @@ def main() -> None:
     destination = args.output_dir / f"fdisbull-{version}-tool.zip"
     with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in files:
-            archive.write(path, f"fdisbull-{version}/{path.relative_to(ROOT).as_posix()}")
+            archive.write(
+                path, f"fdisbull-{version}/{path.relative_to(ROOT).as_posix()}"
+            )
     print(f"Built {destination} ({len(files)} source files)")
 
 
