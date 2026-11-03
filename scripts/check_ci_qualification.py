@@ -15,6 +15,9 @@ from pathlib import Path, PurePosixPath
 import platform
 import re
 import subprocess
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent / "ci"))
+from execution_identity import canonical_uuid, execution_identity
 import xml.etree.ElementTree as ET
 
 JOBS = {"ordinary": "test-and-package", "stable": "native-debugger-stable",
@@ -68,21 +71,56 @@ def passing_junit(path, *, native=False):
     return counts
 
 
-def validate(root, source_commit, pipeline_id):
-    if not re.fullmatch('[0-9a-f]{40}', source_commit) or not re.fullmatch('[0-9]+', str(pipeline_id)):
-        raise ValueError("Qualification requires an exact commit and pipeline ID")
+def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
+    if not isinstance(source_commit, str) or not re.fullmatch('[0-9a-f]{40}', source_commit):
+        raise ValueError("Qualification requires an exact commit")
+    if local_run_id is None:
+        if not re.fullmatch('[0-9]+', str(pipeline_id)):
+            raise ValueError("Qualification requires an exact pipeline ID")
+    else:
+        canonical_uuid(local_run_id)
+        if pipeline_id is not None:
+            raise ValueError("Local qualification cannot claim a GitLab pipeline")
     results, job_ids = {}, set()
     for profile, job in JOBS.items():
         name = 'ordinary' if profile == 'ordinary' else 'native-' + profile
         path = root / f'artifacts/receipts/{name}.json'
         receipt = read(path)
         if (receipt.get('status') != 'passed' or receipt.get('source_commit') != source_commit
-            or str(receipt.get('pipeline_id')) != str(pipeline_id) or receipt.get('job_name') != job
-            or receipt.get('profile') != profile):
-            raise ValueError(f"Job status, source, pipeline or profile mismatch: {job}")
-        job_id = str(receipt.get('job_id'))
-        if not re.fullmatch('[0-9]+', job_id) or job_id in job_ids:
-            raise ValueError(f"Missing or duplicate job identity: {job}")
+            or receipt.get('job_name') != job or receipt.get('profile') != profile):
+            raise ValueError(f"Job status, source or profile mismatch: {job}")
+        if local_run_id is None:
+            if (receipt.get('execution_origin', 'gitlab') != 'gitlab'
+                or str(receipt.get('pipeline_id')) != str(pipeline_id)
+                or 'local_run_id' in receipt or 'local_job_id' in receipt):
+                raise ValueError(f"Job origin or pipeline mismatch: {job}")
+            job_id = str(receipt.get('job_id'))
+            if not re.fullmatch('[0-9]+', job_id):
+                raise ValueError(f"Missing job identity: {job}")
+        else:
+            if (receipt.get('execution_origin') != 'local-linux'
+                or receipt.get('local_run_id') != local_run_id
+                or 'pipeline_id' in receipt or 'job_id' in receipt):
+                raise ValueError(f"Job origin or local run mismatch: {job}")
+            job_id = canonical_uuid(receipt.get('local_job_id'))
+            process_path = root / f'artifacts/receipts/local-process-{profile}.json'
+            process = read(process_path)
+            if (process.get('execution_origin') != 'local-linux'
+                or process.get('local_run_id') != local_run_id
+                or process.get('local_job_id') != job_id
+                or process.get('job_name') != job or process.get('source_commit') != source_commit
+                or process.get('termination') != 'exited' or type(process.get('exit_code')) is not int
+                or process.get('exit_code') != 0
+                or process.get('container_state_after_stop') != 'stopped'
+                or not isinstance(process.get('runtime'), dict)
+                or process['runtime'].get('system') != 'linux'
+                or process['runtime'].get('machine') != 'x86_64'
+                or process['runtime'].get('python') != receipt.get('python_version')
+                or not isinstance(process.get('image_digest'), str)
+                or not re.fullmatch(r'sha256:[0-9a-f]{64}', process['image_digest'])):
+                raise ValueError(f"Missing, failed or mismatched local process evidence: {job}")
+        if job_id in job_ids:
+            raise ValueError(f"Duplicate job identity: {job}")
         job_ids.add(job_id)
         python = receipt.get('python_version', '')
         if (profile == 'layers' and python != '3.13.5') or (profile != 'layers' and not python.startswith('3.12.')):
@@ -101,8 +139,11 @@ def validate(root, source_commit, pipeline_id):
             verify_artifact(root, item)
         if profile != 'ordinary' and receipt.get('backend_identity', {}).get('source_commit') != source_commit:
             raise ValueError(f"Wrong native backend source: {job}")
-        results[job] = {"job_id": job_id, "receipt": identity(root, str(path.relative_to(root))),
+        results[job] = {"local_job_id" if local_run_id else "job_id": job_id,
+                        "receipt": identity(root, str(path.relative_to(root))),
                         "test_counts": counts, "artifacts": artifacts}
+        if local_run_id is not None:
+            results[job]['process_receipt'] = identity(root, str(process_path.relative_to(root)))
     payload = read(root / 'artifacts/receipts/package-payloads.json')
     if payload.get('source_commit') != source_commit or payload.get('tracked_worktree_dirty') is not False:
         raise ValueError("Package inventory is absent, dirty or from another commit")
@@ -118,10 +159,15 @@ def validate(root, source_commit, pipeline_id):
     tested = results['native-unified']['artifacts']
     if len(tested) != 1 or (tested[0]['sha256'], tested[0]['size']) != (core['sha256'], core['size_bytes']):
         raise ValueError("The installed-wheel native acceptance did not test the ordinary core wheel")
-    return {"schema": "fdisbull-ci-qualification-1", "status": "qualified", "source_commit": source_commit,
-            "pipeline_id": str(pipeline_id), "required_jobs": results,
-            "package_inventory": identity(root, 'artifacts/receipts/package-payloads.json'),
-            "release_authorized": False}
+    result = {"schema": "fdisbull-ci-qualification-1", "status": "qualified", "source_commit": source_commit,
+              "required_jobs": results,
+              "package_inventory": identity(root, 'artifacts/receipts/package-payloads.json'),
+              "release_authorized": False}
+    if local_run_id is not None:
+        result.update(execution_origin='local-linux', local_run_id=local_run_id)
+    else:
+        result['pipeline_id'] = str(pipeline_id)
+    return result
 
 
 def write_ordinary(root):
@@ -130,8 +176,7 @@ def write_ordinary(root):
         raise ValueError("Cannot certify dirty or wrong-source package inventory")
     passing_junit(root / 'artifacts/ordinary/tests.xml')
     return {"status": "passed", "profile": "ordinary", "source_commit": os.environ['CI_COMMIT_SHA'],
-            "pipeline_id": os.environ['CI_PIPELINE_ID'], "job_id": os.environ['CI_JOB_ID'],
-            "job_name": os.environ['CI_JOB_NAME'], "python_version": platform.python_version(),
+            **execution_identity(), "python_version": platform.python_version(),
             "node_version": subprocess.check_output(['node', '--version'], text=True).strip(),
             "test_results": [identity(root, 'artifacts/ordinary/tests.xml')],
             "artifacts": [identity(root, 'dist/' + v['name']) for v in payload['artifacts'].values()]}
@@ -142,19 +187,20 @@ def main():
     parser.add_argument('--root', type=Path, default=Path('.'))
     parser.add_argument('--source-commit', default=os.environ.get('CI_COMMIT_SHA'))
     parser.add_argument('--pipeline-id', default=os.environ.get('CI_PIPELINE_ID'))
+    parser.add_argument('--local-run-id', default=None)
     parser.add_argument('--write-ordinary', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Receipt exists; preserve it and choose a new output')
     try:
-        result = write_ordinary(args.root) if args.write_ordinary else validate(args.root, args.source_commit, args.pipeline_id)
+        result = write_ordinary(args.root) if args.write_ordinary else validate(args.root, args.source_commit, args.pipeline_id, local_run_id=args.local_run_id)
     except (ValueError, OSError, KeyError, TypeError, ET.ParseError) as exc:
         parser.exit(2, f'Incomplete qualification: {exc}\n')
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open('x') as stream:
         stream.write(json.dumps(result, indent=2) + '\n')
-    print(f"{result['status']}: {result['source_commit']} (pipeline {result['pipeline_id']})")
+    print(f"{result['status']}: {result['source_commit']} ({result.get('execution_origin', 'gitlab')}: {result.get('local_run_id', result.get('pipeline_id'))})")
 
 
 if __name__ == '__main__':

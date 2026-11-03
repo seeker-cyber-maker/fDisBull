@@ -113,3 +113,109 @@ def test_duplicate_pe_capture_cannot_stand_in_for_boot_acceptance(qualified):
     p.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match='captures absent'):
         gate.validate(qualified, SHA, '123')
+
+LOCAL_RUN = 'b4f5594b-2d10-4f1a-bd00-e25412e0f851'
+
+
+@pytest.fixture
+def local_qualified(qualified):
+    for index, (profile, job) in enumerate(gate.JOBS.items(), 1):
+        filename = 'ordinary' if profile == 'ordinary' else 'native-' + profile
+        p = qualified / f'artifacts/receipts/{filename}.json'
+        receipt = json.loads(p.read_text())
+        receipt.pop('pipeline_id')
+        receipt.pop('job_id')
+        job_id = f'00000000-0000-4000-8000-{index:012d}'
+        receipt.update(execution_origin='local-linux', local_run_id=LOCAL_RUN, local_job_id=job_id)
+        p.write_text(json.dumps(receipt))
+        write(qualified, f'artifacts/receipts/local-process-{profile}.json',
+              {'execution_origin': 'local-linux', 'local_run_id': LOCAL_RUN, 'local_job_id': job_id,
+               'job_name': job, 'source_commit': SHA, 'termination': 'exited', 'exit_code': 0,
+               'image_digest': 'sha256:' + 'b' * 64, 'container_state_after_stop': 'stopped',
+               'runtime': {'system': 'linux', 'machine': 'x86_64',
+                           'python': '3.13.5' if profile == 'layers' else '3.12.12'}})
+    return qualified
+
+
+def test_local_run_qualifies_without_claiming_gitlab(local_qualified):
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    assert result['execution_origin'] == 'local-linux'
+    assert result['local_run_id'] == LOCAL_RUN
+    assert 'pipeline_id' not in result
+    assert all('process_receipt' in job for job in result['required_jobs'].values())
+
+
+@pytest.mark.parametrize('field,value', [('exit_code', 1), ('exit_code', None), ('exit_code', False),
+                                        ('termination', 'signaled'), ('image_digest', 'python:3.12'),
+                                        ('local_run_id', 'other'), ('local_job_id', None)])
+def test_local_failed_or_incomplete_host_process_is_rejected(local_qualified, field, value):
+    p = local_qualified / 'artifacts/receipts/local-process-layers.json'
+    data = json.loads(p.read_text())
+    data[field] = value
+    p.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_local_missing_host_process_is_rejected(local_qualified):
+    (local_qualified / 'artifacts/receipts/local-process-stable.json').unlink()
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_mixed_origin_cannot_qualify(local_qualified):
+    p = local_qualified / 'artifacts/receipts/native-stable.json'
+    data = json.loads(p.read_text())
+    data['pipeline_id'] = '123'
+    p.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, '123')
+
+
+def test_local_duplicate_job_or_invalid_run_cannot_qualify(local_qualified):
+    p = local_qualified / 'artifacts/receipts/native-stable.json'
+    data = json.loads(p.read_text())
+    data['local_job_id'] = '00000000-0000-4000-8000-000000000001'
+    p.write_text(json.dumps(data))
+    process = local_qualified / 'artifacts/receipts/local-process-stable.json'
+    proof = json.loads(process.read_text())
+    proof['local_job_id'] = data['local_job_id']
+    process.write_text(json.dumps(proof))
+    with pytest.raises(ValueError, match='Duplicate'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id='not-a-uuid')
+
+
+def test_local_ordinary_writer_uses_local_identity_without_provider_ids(qualified, monkeypatch):
+    monkeypatch.setenv('CI_COMMIT_SHA', SHA)
+    monkeypatch.setenv('CI_JOB_NAME', 'test-and-package')
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'local-linux')
+    monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', LOCAL_RUN)
+    monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', '00000000-0000-4000-8000-000000000001')
+    monkeypatch.setattr(gate.subprocess, 'check_output', lambda *a, **k: 'v22.23.4\n')
+    receipt = gate.write_ordinary(qualified)
+    assert receipt['execution_origin'] == 'local-linux'
+    assert receipt['local_run_id'] == LOCAL_RUN
+    assert 'pipeline_id' not in receipt and 'job_id' not in receipt
+
+
+@pytest.mark.parametrize('field,value', [
+    ('runtime', None),
+    ('runtime', {'system': 'darwin', 'machine': 'x86_64', 'python': '3.13.5'}),
+    ('runtime', {'system': 'linux', 'machine': 'arm64', 'python': '3.13.5'}),
+    ('runtime', {'system': 'linux', 'machine': 'x86_64', 'python': '3.13.4'}),
+    ('runtime', {'system': 'linux', 'machine': 'x86_64'}),
+    ('container_state_after_stop', None),
+    ('container_state_after_stop', 'running'),
+    ('container_state_after_stop', 'unknown'),
+])
+def test_local_guest_runtime_and_stopped_state_required(local_qualified, field, value):
+    p = local_qualified / 'artifacts/receipts/local-process-layers.json'
+    data = json.loads(p.read_text())
+    data[field] = value
+    p.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='local process evidence'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)

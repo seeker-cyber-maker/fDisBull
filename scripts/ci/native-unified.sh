@@ -5,6 +5,9 @@ apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libpng16-16 zlib1g libfreetype6
 bash scripts/ci/install-node.sh
 mkdir -p .native/pe native-evidence/pe native-evidence/unified
+if [ "${FDISBULL_LOCAL_DOCKER:-}" = 1 ]; then
+  source scripts/ci/local-docker.sh
+fi
 # Admit runtime inputs before spending time compiling QEMU or building Wine.
 timeout 30s docker info > native-evidence/pe/docker-info.txt
 curl --fail --location --retry 3 \
@@ -51,7 +54,12 @@ ninja -j2 qemu-system-x86_64
 ./qemu-system-x86_64 --version
 )
 
-docker build --platform linux/amd64 -f experimental/wine/ci/Containerfile -t fdisbull-pe-ci .
+docker_build_network=()
+if [ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux ]; then
+  test "${FDISBULL_LOCAL_DOCKER_BUILD_NETWORK:-}" = host
+  docker_build_network=(--network host)
+fi
+docker build "${docker_build_network[@]}" --platform linux/amd64 -f experimental/wine/ci/Containerfile -t fdisbull-pe-ci .
 docker create --name fdisbull-pe-libraries --network none fdisbull-pe-ci \
   sh -ec 'ldd /opt/dosbox-x > /tmp/dos-libraries; cat /tmp/dos-libraries; ! grep -q "not found" /tmp/dos-libraries'
 docker cp "$FDISBULL_DOSBOX" fdisbull-pe-libraries:/opt/dosbox-x

@@ -19,6 +19,12 @@ def ci_section(name):
 
 
 def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
+    workflow = ci_section('workflow')
+    assert "- if: \'$CI_PIPELINE_SOURCE == \"web\" || $CI_PIPELINE_SOURCE == \"api\"\'" in workflow
+    assert 'merge_request_event' not in workflow and '$CI_COMMIT_BRANCH' not in workflow
+    assert '$CI_COMMIT_TAG' not in workflow and '$CI_PIPELINE_SOURCE == "trigger"' not in workflow
+    assert workflow.rstrip().endswith('- when: never')
+    assert re.search(r'^  tags:\n    - fdisbull-local-linux$', ci_section('default'), re.M)
     gate = ci_section('native-qualification')
     assert 'when: manual' in gate and 'allow_failure: false' in gate
     for name in ('native-qualification', '.native_qualification_rules'):
@@ -109,3 +115,21 @@ def test_native_receipt_rejects_failed_or_all_skipped_suite(tmp_path, monkeypatc
         (evidence / 'tests.xml').write_text(f'<testsuites><testsuite {attrs}/></testsuites>')
         assert run_receipt(tmp_path, monkeypatch).returncode != 0
     assert not (tmp_path / 'artifacts/receipts/native-stable.json').exists()
+
+
+def test_native_local_receipt_does_not_fabricate_gitlab_ids(tmp_path, monkeypatch):
+    evidence = tmp_path / 'native-evidence/stable'
+    evidence.mkdir(parents=True)
+    (evidence / 'backend-identity.json').write_text(json.dumps({'source_commit': 'candidate'}))
+    (evidence / 'tests.xml').write_text('<testsuites><testsuite tests="1"/></testsuites>')
+    (tmp_path / 'backend').write_bytes(b'backend')
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'local-linux')
+    monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', 'b4f5594b-2d10-4f1a-bd00-e25412e0f851')
+    monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', '00000000-0000-4000-8000-000000000002')
+    result = run_receipt(tmp_path, monkeypatch)
+    assert result.returncode == 0, result.stderr
+    receipt = json.loads((tmp_path / 'artifacts/receipts/native-stable.json').read_text())
+    assert receipt['execution_origin'] == 'local-linux'
+    assert receipt['local_run_id'] == 'b4f5594b-2d10-4f1a-bd00-e25412e0f851'
+    assert receipt['local_job_id'] == '00000000-0000-4000-8000-000000000002'
+    assert 'pipeline_id' not in receipt and 'job_id' not in receipt

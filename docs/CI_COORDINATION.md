@@ -4,80 +4,75 @@ fDisBull maintains **equal repository state** across local Git (`/Volumes/CODEX/
 
 Agents are required to update **both** local Git and GitLab when landing or syncing branches and tags, while strictly preventing duplicate or unthrottled CI pipeline runs that could trigger provider abuse filters.
 
-## Workflow routing (`.gitlab-ci.yml` and portable `.github/workflows/*`)
+## Local-first workflow and provider routing
 
-This table describes admission by the GitLab YAML. A skipped push, a commit
-message containing `[skip ci]` / `[ci skip]`, or `FDISBULL_DISABLE_CI=1` can
-still prevent jobs from being created. An admitted pipeline is not evidence
-that a job ran or that native qualification passed.
+Routine pushes, all merge requests and tags do not admit GitLab pipelines.
+Run ordinary and native qualification locally against the exact candidate SHA
+using the finite local Linux runner, `scripts/ci/local-linux.py`. Inspect its
+help and runtime preflight before starting; a missing prerequisite is incomplete,
+not a passed gate. Use separate local execution identities and receipts. Local
+results do not establish a GitLab pipeline or hosted CI success.
 
-| Event | `test-and-package` (fast Python/package gate) | `native-debugger-*` (45-min C++ emulator build) |
-| --- | --- | --- |
-| Feature, agent, or archive branch push (`codex/*`, `pr/*`, `archive/*`) | **No automatic run** (`when: never`) | **No automatic run** (`when: never`) |
-| Draft Merge Request (`Draft:` / `[Draft]`) opened or updated | **No automatic run**; use an explicit API/web pipeline for qualification | No native jobs |
-| Ready (non-Draft) Merge Request opened or updated | **Run** (superseded MR work is interruptible) | No native jobs |
-| Default branch (`main`) push | **Run** | No native jobs |
-| Explicit version tag push matching `vX.Y.Z` | **Run** | No native jobs |
-| Explicit web / API pipeline | **Run** | Wait for blocking manual `native-qualification`; then run stable, layers, unified and final qualification |
-| Trigger-token pipeline | **Run** | No native jobs |
+The retained GitLab workflow admits only explicit web/API pipelines. Every job
+requires the `fdisbull-local-linux` runner tag, including the ordinary job; it
+must never fall back to hosted instance runners. A dedicated runner would need
+separate user authorization and setup before that route can run. No runner or
+credentials are created by this policy. Native qualification remains behind a
+blocking manual start and requires stable, layers, unified and summary jobs.
+Source configuration does not prove runner registration or provider settings.
 
-### Why heavy native jobs are manual-only on GitLab
+Apply the storage admission rules before image pulls, builds and each material
+growth phase. Use bounded external workspaces and finite commands; a rejected
+admission stops new bulk work. A local Linux run, including any emulation,
+records its actual platform and must not be presented as hosted CI.
 
-Compiling `dosbox-x` from source downloads system packages and runs a 30–45 minute C++ build. Explicit native qualification limits repeated builds and quota use. The configuration alone does not establish the cause of any provider account restriction. In `.gitlab-ci.yml`:
-
-1. Routine pushes to topic branches do not admit jobs. GitLab can retain a skipped pipeline record with no jobs.
-2. Bulk branch mirroring via `python scripts/sync_mirrors.py` always passes `-o ci.skip` on topic branches.
-3. `Draft:` Merge Requests do not start automatic pipelines until marked Ready. An API/web pipeline is a separate explicit request and does not need a pipeline-variable override.
-4. Jobs use `retry: 0`. Only superseded MR fast checks are interruptible; main, tag and explicit qualification work is retained. Fast checks use a per-ref resource group. These controls do not guarantee an empty queue or prohibit different refs from running concurrently.
-5. API/web pipelines expose one blocking manual `native-qualification` job. Playing it once starts both complete DOSBox legs, then installed-wheel PE64/DOS/QEMU/boot acceptance and the `qualify-candidate` job. Native jobs are absent from routine push/MR pipelines, so routine fast checks do not wait for an unplayed native gate.
-
-Native qualification is blocking and requires all declared jobs to succeed.
-The DOSBox legs use explicit Python 3.12/3.13.5, source/patch/backend identities,
-the full preserved suites and `--require-native`. Selected native tests may not
-skip: missing prerequisites fail qualification. Layers verifies the offline kit
-with genuine dependencies and Z3. Unified acceptance installs the ordinary
-job's exact core wheel, and the kit carries its exact core/player wheels.
-Docker-in-Docker support is a required runner capability for the unified leg;
-an unavailable daemon fails that leg.
-
-This route works when pipeline-variable overrides are prohibited by
-`ci_pipeline_variables_minimum_override_role=no_one_allowed`. The old
-`FDISBULL_RUN_NATIVE_CI` / `FDISBULL_RUN_DRAFT_CI` overrides are unnecessary and
-no longer start native jobs. No project permission needs to be weakened.
-
-## Dual synchronization between Local Git and GitLab
-
-Whenever an agent updates `main`, a topic branch, or release tags, both the local Git repository and GitLab must be kept in sync:
+The direct runner uses the guarded `container` command on this Mac. It snapshots
+a clean candidate into separate shallow Git clones, pins the pulled amd64 image
+by digest, and retains logs, stopped containers and failed attempts. It admits
+both the result filesystem and the CACHE container store before growth. It
+never mounts the original checkout's Git credentials or private game directory.
 
 ```sh
-# Dry-run planned sync commands across local-hub and gitlab:
-python scripts/sync_mirrors.py --dry-run
-
-# Sync a specific branch to both local-hub and gitlab (automatically passes -o ci.skip on GitLab):
-python scripts/sync_mirrors.py --branch codex/my-feature --no-tags
-
-# Or push directly to the configured dual remote with ci.skip:
-git push -o ci.skip dual refs/heads/codex/my-feature:refs/heads/codex/my-feature
+# Choose a new output directory beneath an existing authorized external parent.
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile ordinary
+# Continue the same exact commit and run directory, deliberately, one leg at a time.
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile stable
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile layers
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile qualify
 ```
 
-`sync_mirrors.py` admits fast checks for main by default and omits tags unless
-requested. Topic/archive pushes always carry `-o ci.skip`. `--tag vX.Y.Z`
-selects an explicit local version tag and admits its fast checks; `--tags`
-mirrors all tags as archives with CI suppressed, avoiding a pipeline for every
-old version. `--skip-ci` explicitly suppresses main/selected-tag checks for an
-archival sync. `--no-tags` and `--ci-on-main` remain compatible options.
-An up-to-date push is not a CI trigger. Do not resynchronize every ref or push
-an empty commit to obtain checks: select the candidate and coordinate one
-bounded API/web qualification with the CI owner. No version tag is needed.
+`--profile all` is an explicit start of all four legs; heavy work is never
+automatic on a push or MR. The default allocation estimate is 12 GB, destination
+reserve 40 GB, and per-container wall timeout two hours. Use a measured conservative
+estimate for the planned phase; a bounded local run may explicitly use the
+user-authorized 20 GB minimum. Storage is admission-only, not a running quota.
+Inspect the retained log after failure; no automatic retry or cleanup occurs.
+Do not overwrite a failed run or reuse it for a changed commit.
 
-GitLab's `ci.skip` push option does not suppress a separate merge-request
-pipeline. Draft-MR rules are what keep a draft handoff from admitting jobs.
-MR pipelines use the source branch's YAML, so an old branch without
-`.gitlab-ci.yml` does not inherit the target's configuration merely by opening
-an MR. See GitLab's [skip behavior](https://docs.gitlab.com/ci/pipelines/#skip-a-pipeline),
-[manual job semantics](https://docs.gitlab.com/ci/jobs/job_control/#types-of-manual-jobs),
-[pipeline-variable permissions](https://docs.gitlab.com/ci/variables/#restrict-pipeline-variables)
-and [MR pipeline contract](https://docs.gitlab.com/ci/pipelines/merge_request_pipelines/).
+Before native compiler work, establish the actual local Docker route with a
+bounded daemon/build/create/start/copy/export preflight. Unified acceptance uses
+a dedicated guest VM with Linux capabilities for its nested Docker daemon,
+VFS storage and host networking *inside that VM* for dependency downloads. It
+does not connect to a macOS Docker socket or register a persistent runner. Missing
+kernel, namespace, Docker or Rosetta support leaves that leg incomplete; do not
+substitute another platform and claim the declared gate passed.
+
+The final `qualification/qualification.json` binds all four leg receipts and
+their host process exits, run/job UUIDs, image digests, test captures and package
+hashes. A zero process exit alone is not a completed leg; source checks and
+artifact collection must also finish. A missing required capture never becomes
+successful equality or qualification.
+
+## Dual synchronization between local Git and GitLab
+
+Sync only authorized refs with `scripts/sync_mirrors.py`; inspect its current
+help and dry run before pushing. Its suppression options and workflow rules are
+separate controls. The YAML prevents automatic pipelines for ordinary push and
+MR events; GitLab push option `ci.skip` alone does not suppress an independent
+MR pipeline. Existing refs with different source-branch configuration may have
+different behavior. Never push an empty commit or resync every ref to request a
+check. Tags and release actions require separate authorization.
 
 ## Candidate and package acceptance
 
@@ -100,28 +95,18 @@ It uses existing genuine dependencies and fresh environments, generates skill
 receipts outside the checkout, and copies successful receipts into the selected
 artifact directory. Local execution is a smoke check, not a hosted Linux result.
 
-`qualify-candidate` depends on every required job. It rechecks receipt source,
-pipeline and job identities, interpreters, JUnit coverage and artifact hashes.
-Missing, skipped, canceled, failed or wrong-source evidence cannot produce
-`qualification.json`. Fast-only pipeline success is not release qualification.
+The required evidence covers ordinary, stable DOSBox, layers DOSBox and
+installed-wheel PE64/DOS/QEMU/boot on the same exact source SHA. The layers leg
+also verifies the offline kit. Missing, skipped, canceled, failed or wrong-source
+required tests leave qualification incomplete. The local runner's receipts use
+local execution identities, not fabricated GitLab IDs. The retained GitLab
+`qualify-candidate` validates GitLab pipeline and job identities only when that
+explicit runner route actually executes.
 
-Before packaging a release for publication, obtain the successful
-`qualify-candidate` artifact for the exact source commit. Preserve the package
-hashes; do not silently rebuild or substitute a local wheel. The artifact
-includes the raw receipts/JUnit and tested payloads so the offline validator can
-be rerun from its extracted root:
-
-```sh
-python scripts/check_ci_qualification.py --root /external/qualified-candidate \
-  --source-commit FULL_COMMIT_SHA --pipeline-id PIPELINE_ID \
-  --output /external/rechecked-qualification.json
-```
-
-This validates the evidence, not permission to publish. Provider completion and
-the exact pipeline/job IDs remain part of the release review. Tagging,
-publication and installation require their separate user authorization. Keep
-the historical [migration comparison](CI_MIGRATION_HANDOFF.md) as the rationale
-for these gates.
+A local pass does not establish hosted CI and does not by itself authorize
+merging, tagging, publication or installation. The exact-SHA Linux CI release
+requirement in [AGENTS.md](../AGENTS.md) remains a separate release decision. Preserve exact artifact hashes and raw evidence.
+See the [migration handoff](CI_MIGRATION_HANDOFF.md) for the historical baseline.
 
 ## One owner and a finite status command
 

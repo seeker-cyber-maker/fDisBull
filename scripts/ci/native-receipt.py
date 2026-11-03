@@ -9,6 +9,8 @@ import sys
 import subprocess
 import xml.etree.ElementTree as ET
 
+from execution_identity import execution_identity
+
 profile = sys.argv[1]
 if profile not in {'stable', 'layers', 'unified'}:
     raise SystemExit('unknown native profile')
@@ -42,8 +44,7 @@ for path in junit:
     if totals['tests'] <= 0 or totals['skipped'] or totals['failures'] or totals['errors']:
         raise SystemExit(f'native test results not passing: {path}: {totals}')
 receipt = {'status': 'passed',
-           'pipeline_id': os.environ['CI_PIPELINE_ID'], 'job_id': os.environ['CI_JOB_ID'],
-           'job_name': os.environ['CI_JOB_NAME'], 'source_commit': os.environ['CI_COMMIT_SHA'],
+           **execution_identity(), 'source_commit': os.environ['CI_COMMIT_SHA'],
            'profile': profile, 'python_version': platform.python_version(),
            'node_version': subprocess.check_output(['node', '--version'], text=True).strip(),
            'backend_identity': identity, 'test_results': [digest(p) for p in junit],

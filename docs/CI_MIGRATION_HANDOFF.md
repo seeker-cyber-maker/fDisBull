@@ -1,12 +1,11 @@
 # GitLab release qualification: implementation handoff
 
-This records the reviewed migration baseline and implementation plan. The
-follow-up implementation is described in [the coordination guide](CI_COORDINATION.md):
-manual native admission, complete suites, package inventories and dependent
-qualification receipts. Neither the plan nor the source implementation is a
-passing hosted result. Read the exact candidate's pipeline and qualification
-receipt before making that claim. No provider setting or job should be changed
-merely by reading this document.
+This records the historical migration baseline and the local-first direction.
+Use the [coordination guide](CI_COORDINATION.md) for current routing: all routine
+push/MR/tag pipelines are disabled by source policy, and direct finite local
+Linux qualification is the default. An explicit web/API pipeline requires a
+separately authorized dedicated `fdisbull-local-linux` runner. Neither source
+configuration nor local evidence establishes a passing hosted CI result.
 
 ## Source identities and comparison
 
@@ -36,52 +35,21 @@ Source entry points: [GitLab YAML](../.gitlab-ci.yml),
 [offline-kit verifier](../scripts/verify_offline_kit.py) and
 [coordination policy](CI_COORDINATION.md).
 
-The GitLab configure command omits the former explicit `--enable-sdl2` and
+The reviewed baseline GitLab configure command omitted the former explicit `--enable-sdl2` and
 `--enable-dosbox_agent` options. Establish the pinned configure defaults and
 inspect the resulting build features before diagnosing this as a disabled
 backend; a different command alone does not prove the binary unusable.
 
-## Ordered implementation slices
+## Local-first implementation and acceptance
 
-1. **Settle push intent.** Choose and document whether the mirror helper should
-   default to suppression for archive synchronization or admission for main/tag
-   qualification. Keep an explicit way to do each, and preserve topic/archive
-   suppression. Extend `tests/test_sync_mirrors.py` to cover main, version tags,
-   topics, non-GitLab remotes, dry runs and already-synchronized refs. No bulk
-   mirror or empty commit should be needed to request one candidate's checks.
-2. **Make admission usable.** Read the current pipeline-variable restriction
-   once. Select a supported explicit route for native and draft qualification.
-   Do not loosen account permissions or create credentials as an implementation
-   shortcut. Validate the YAML with the provider's normal lint mechanism and
-   prove that a routine topic push and a draft MR do not launch native builds.
-3. **Restore native scope and identity.** Port the applicable stable/layers test
-   lists and shared suite additions from the preserved workflow to the current
-   tree; review renamed/new tests rather than blindly copying stale paths.
-   Require an executable backend with `--require-native`, explicit Python
-   versions, manifest checks, intended build features, source SHA and backend
-   hash. Preserve bounded build concurrency and useful failure artifacts.
-4. **Restore downstream acceptance.** Build and verify the offline kit with Z3
-   and its DOSBox source companion. Test the installed wheel, PE64, DOS/QEMU and
-   boot paths after the required DOSBox legs. Carry the old strict runtime flags
-   (`FDISBULL_REQUIRE_PE`, `FDISBULL_REQUIRE_MACHINE`,
-   `FDISBULL_REQUIRE_DOS_QEMU`) forward where their current fixtures support them.
-5. **Define the release decision.** Enumerate required jobs in the qualification
-   receipt. A manual, skipped, canceled, missing, failed or wrong-SHA required
-   job leaves qualification incomplete. Keep main/tag/manual candidate runs
-   from being silently replaced by unrelated work; cancellation behavior should
-   be an explicit choice, distinct from superseded MR checks.
-6. **Apply provider protections separately.** A maintainer can decide whether to
-   require passing pipelines for merging and how to handle skipped pipelines.
-   A general passing-pipeline rule alone cannot require optional native jobs.
-   Record the exact settings and acceptance test after any authorized change.
-
-## Acceptance and efficient execution
-
-Start with command-construction and CI contract tests, YAML validation and one
-selected ready-MR fast gate. Proceed to one coordinated native qualification on
-that exact commit. Do not launch native jobs on every edit. Before local builds,
-apply the storage admission rules and stop on a rejected estimate. Assign one
-CI owner; use the finite status receipt described in the coordination policy.
+Run ordinary, stable, layers and unified acceptance for the exact candidate SHA
+through the finite local Linux route after storage admission. Preserve the
+ordinary wheels through the offline-kit and installed-wheel legs. Record local
+process, platform, interpreter, test, backend and artifact identities without
+inventing GitLab IDs. A separate explicitly authorized dedicated runner may use
+the retained web/API GitLab graph; it is not a fallback to hosted runners. Heavy
+work requires a deliberate start. Registration, credentials, provider settings,
+merge, tag, publication and installation are separate actions.
 
 The qualification should demonstrate that:
 
@@ -94,7 +62,7 @@ The qualification should demonstrate that:
 - Installed-wheel PE64, DOS/QEMU and boot acceptance runs with strict fixture
   requirements and reports unavailable prerequisites as incomplete or failed.
 - A deliberately missing or failed required job cannot produce a successful
-  qualification receipt, even if GitLab paints the overall pipeline green.
+  qualification receipt, even if a provider pipeline is green.
 - Logs/artifacts are sufficient to investigate a failure without repeating the
   original action or creating duplicate pipelines.
 

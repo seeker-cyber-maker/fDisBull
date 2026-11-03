@@ -1,39 +1,21 @@
-# GitLab CI/CD configuration for fDisBull (30-day trial safe configuration).
-#
-# Anti-abuse and quota-protection guarantees:
-# 1. Feature, agent, and archive branch pushes NEVER start automatic pipelines.
-# 2. Draft Merge Requests skip automatic runs. Explicit API/web pipelines work
-#    without pipeline-variable overrides (which the project may prohibit).
-# 3. Ready Merge Requests, default-branch (main) pushes, v* release tags, and
-#    explicit web/API dispatches run the fast `test-and-package` gate.
-# 4. Heavy 45-minute C++ emulator compilation (`native-debugger-*`) NEVER runs
-#    automatically on ordinary pushes/MRs; an API/web pipeline waits for one
-#    blocking manual start before running the required native chain.
-# 5. Only superseded MR checks are interruptible; qualification runs are retained.
-
+# Local-first CI: pushes, merge requests and tags do not create pipelines.
+# Only deliberate web/API pipelines are admitted, and every job requires the
+# dedicated local-runner tag. Heavy qualification has a blocking manual start.
 workflow:
   name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME)"
-  auto_cancel:
-    on_new_commit: interruptible
   rules:
     - if: '$CI_COMMIT_MESSAGE =~ /\[(skip ci|ci skip)\]/i'
       when: never
     - if: '$FDISBULL_DISABLE_CI == "1"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^(\[Draft\]|\(Draft\)|Draft:)/i'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/'
-      when: always
-    - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "trigger"'
+    - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"'
       when: always
     - when: never
 
 default:
   image: python:3.12-slim-bookworm
+  tags:
+    - fdisbull-local-linux
   interruptible: false
   timeout: 20m
   retry: 0
@@ -58,10 +40,6 @@ test-and-package:
   stage: verify
   timeout: 40m
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      interruptible: true
-    - when: on_success
   before_script:
     - apt-get update
     - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev
@@ -78,8 +56,7 @@ test-and-package:
     reports:
       junit: artifacts/ordinary/tests.xml
 
-# A deliberate API or web pipeline has one blocking manual start. Ordinary
-# MR, main and tag pipelines have no unplayed native jobs.
+# A deliberate API or web pipeline has one blocking manual native start.
 .native_qualification_rules:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'

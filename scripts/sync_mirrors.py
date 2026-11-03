@@ -15,8 +15,8 @@ Key behaviors:
 3. Phase 2 (Push to all remotes): Pushes only branches that are missing or behind
    on each remote, ensuring branches imported from `gitlab` also propagate to
    `local-hub` (and vice versa) in a single run. Always passes `-o ci.skip` on
-   topic/archive branches and bulk archived tags for GitLab. Main and selected
-   version-tag fast checks are admitted by default; tags are otherwise omitted.
+   all ordinary branch and tag syncs for GitLab. CI compute is local by default;
+   tags are otherwise omitted.
 """
 from __future__ import annotations
 
@@ -151,10 +151,10 @@ def build_push_commands(
     is_gitlab: bool,
     branches: list[str],
     include_tags: bool = False,
-    ci_on_main: bool = True,
+    ci_on_main: bool = False,
     selected_tags: list[str] | None = None,
 ) -> list[list[str]]:
-    """Admit main/selected version tags; suppress topic and bulk archive CI."""
+    """Suppress provider compute by default, including main and selected tags."""
     selected_tags = selected_tags or []
     if include_tags and selected_tags:
         raise MirrorSyncError("Choose bulk archive tags or selected version tags")
@@ -208,7 +208,7 @@ def sync_mirrors(
     remotes: tuple[str, ...] = (DEFAULT_LOCAL_HUB_REMOTE, DEFAULT_GITLAB_REMOTE),
     branches: list[str] | None = None,
     include_tags: bool = False,
-    ci_on_main: bool = True,
+    ci_on_main: bool = False,
     selected_tags: list[str] | None = None,
     dry_run: bool = False,
 ) -> dict[str, object]:
@@ -339,12 +339,12 @@ def main(argv: list[str] | None = None) -> int:
     tags = parser.add_mutually_exclusive_group()
     tags.add_argument("--no-tags", action="store_true", help="Compatibility option: tags are omitted by default")
     tags.add_argument("--tags", action="store_true", help="Mirror all tags as archives with GitLab CI suppressed")
-    tags.add_argument("--tag", action="append", dest="selected_tags", help="Publish one explicit version tag; admit its fast GitLab CI")
+    tags.add_argument("--tag", action="append", dest="selected_tags", help="Publish one explicit version tag with CI suppressed by default")
     ci = parser.add_mutually_exclusive_group()
-    ci.add_argument("--ci-on-main", action="store_true", dest="ci_on_main", default=True,
-                    help="Compatibility option: main/selected-tag CI is admitted by default")
+    ci.add_argument("--ci-on-main", action="store_true", dest="ci_on_main", default=False,
+                    help="Legacy push option override; server workflow still requires explicit web/API admission")
     ci.add_argument("--skip-ci", action="store_false", dest="ci_on_main",
-                    help="Explicit archival sync: also suppress CI on main/selected tags")
+                    help="Suppress CI on every pushed ref (the default)")
     parser.add_argument("--dry-run", action="store_true", help="Print planned commands without executing git push")
     args = parser.parse_args(argv)
     try:
