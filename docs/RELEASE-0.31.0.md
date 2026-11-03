@@ -94,3 +94,11 @@ fields in keyboard-state assertions, and settle a pending VGA mode before the
 BIOS-callback checkpoint. Native pipeline `3022926784` passed stable
 **86/86** and layers **148/148**. Those fixes are not inside the immutable
 `v0.31.0` tag.
+
+The tool source ZIP was also missing the shipped Swift capture helper
+`src/fdisbull/data/FdisbullMacCapture.swift`. Follow-up commit `a12441b` adds it
+to the release allowlist and makes `check_dist.py` require `REQUIRED_MACOS_RESOURCES`
+in both source ZIPs and wheels; regression tests cover both. A local 0.31.0
+macOS prefix was installed from corrected artifacts and qualified (97 installed
+tests, three doctors, two-process player smoke). The published tag's tool ZIP
+still predates the repair.

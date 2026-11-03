@@ -1,6 +1,6 @@
 # Release status checked on 2026-11-03 (America/New_York)
 
-## 0.31.0 published on GitLab; shared-prefix activation separate
+## 0.31.0 published on GitLab; local shared-prefix active
 
 `v0.31.0` is an annotated GitLab tag at source
 `10d01062092a47bdc984ee59cd817b8ab57b6f1b`, with a GitLab Release and generic
@@ -10,20 +10,25 @@ package `fdisbull-tool-packages` `0.31.0-20261103`. The release branch is
 Hosted `test-and-package` passed on the exact source (`10d0106`, pipeline
 `3022313149`; tag pipeline `3022469643` also passed), with 8,958 passed and 402
 skipped. The macOS native stable and layers suites passed 86 and 148 tests
-against the installed backend. The hosted Linux native jobs compiled but failed
-at emulator startup in the CI SDL2/headless environment; they are not claimed as
-qualified. The full local suite retains the known 3 failures and 23 errors from
-Linux ELF/GCC/media fixtures.
+against the installed backend. Post-tag native CI was repaired on
+`release/0.31.0`; pipeline `3022926784` passed stable 86/86 and layers 148/148.
+The full local suite retains the known 3 failures and 23 errors from Linux
+ELF/GCC/media fixtures.
 
-The shared selector remains on the 0.29.0 prefix. No shared-prefix activation is
-claimed; that remains a separate gate. See [0.31.0 release notes](RELEASE-0.31.0.md)
-and [candidate evidence](evidence/0.31.0-release/README.md).
+The local shared selector now points to
+`releases/0.31.0-a12441b` (branch tip `a12441b`, version `0.31.0`). It is a local
+candidate, not a new tag: 97 installed tests passed with no failures or skips,
+all three backend doctors restored native state, and the two-process player
+smoke restored `hall`/`key`. The previous 0.30.0 prefix and rollback helper are
+intact. See [0.31.0 release notes](RELEASE-0.31.0.md) and
+[candidate evidence](evidence/0.31.0-release/README.md).
 
-Post-tag CI repair on `release/0.31.0` (tip `7537454`): the native jobs now pass
-— stable 86/86 and layers 148/148 — after enabling `--enable-dosbox_agent`,
-accepting backend frame-key fields, and settling a pending VGA mode before the
-BIOS-callback checkpoint. Pipeline `3022926784` is green. The published
-`v0.31.0` tag remains at `10d0106` and was not moved.
+Post-tag packaging repair on `release/0.31.0` (`a12441b`): the tool source ZIP
+was missing `src/fdisbull/data/FdisbullMacCapture.swift`. The release allowlist
+now includes it, and the distribution checker requires the macOS Swift capture
+resources in both wheel and source ZIP. The published `v0.31.0` tag tool ZIP
+still predates this repair; the local 0.31.0 prefix was built with the corrected
+ZIP.
 
 ## 0.30.0 release published on GitLab; local shared installation active
 

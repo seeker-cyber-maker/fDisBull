@@ -43,8 +43,15 @@ swede compiler is claimed.
 | macOS native stable | 86 passed |
 | macOS native layers | 148 passed |
 | Linux native CI (post-tag) | stable 86 passed; layers 148 passed on pipeline `3022926784` |
+| Tool source ZIP at `v0.31.0` | 1,819 entries; **missing** `src/fdisbull/data/FdisbullMacCapture.swift` |
+| Tool source ZIP at `a12441b` | 1,821 entries; includes the Swift capture helper |
+| Local shared prefix `0.31.0-a12441b` | 97 installed tests, 3 doctors, two-process player smoke; `check_local_install.py` passed |
 
-The installed smoke used a throwaway venv; no system prefix was activated.
+The published `v0.31.0` tool ZIP predates the Swift allowlist repair. The local
+prefix was built from the corrected `a12441b` artifacts.
+
+The earlier artifact smoke used a throwaway venv. The final local prefix
+`0.31.0-a12441b` was activated and verified with `check_local_install.py`.
 
 The published tag remains at `10d0106`. Native CI was repaired in follow-up
 commits on `release/0.31.0`; pipeline `3022926784` passed stable 86/86 and

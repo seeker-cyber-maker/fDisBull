@@ -12,6 +12,25 @@
     "package_version": "0.31.0-20261103",
     "package_id": 75116571
   },
+  "post_tag_packaging": {
+    "commit": "a12441b3a6ba9d6816721d59a3d94727bea1eb3b",
+    "defect": "tool source ZIP omitted src/fdisbull/data/FdisbullMacCapture.swift",
+    "fix": "release allowlist and REQUIRED_MACOS_RESOURCES enforcement; source/wheel regression tests",
+    "corrected_tool_zip_entries": 1821,
+    "published_tag_contains_fix": false
+  },
+  "local_install": {
+    "prefix": "/Users/Shared/fDisBull/releases/0.31.0-a12441b",
+    "source_commit": "a12441b3a6ba9d6816721d59a3d94727bea1eb3b",
+    "status": "active_verified",
+    "installed_tests": 97,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "doctors": ["dosbox", "dosbox-qemu", "wine-qemu"],
+    "player_smoke": "two fresh processes restored hall/key",
+    "check_local_install": "passed"
+  },
   "source": {
     "branch": "release/0.31.0",
     "base_main": "f861d17ed4837f753e000f53cc777a7d906fde82",
