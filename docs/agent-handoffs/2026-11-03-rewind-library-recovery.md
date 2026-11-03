@@ -16,7 +16,8 @@ The observed local and GitLab `main` head is
 `3dc5c50d35f310a3ba39b1cf0cf82a20b8df69f7`. Its package source version is
 `0.30.0`; this does not verify an installed prefix or establish release readiness.
 The handoff branch is `codex/rewind-library-handoff-20261103`, based on that exact
-main head. Its changes are documentation only.
+main head. It adds authored documentation and a bounded native validation probe;
+the product core and package version are unchanged.
 
 Project `88349936`,
 [brewster-jennings-group/fdisbull](https://gitlab.com/brewster-jennings-group/fdisbull),
@@ -105,7 +106,7 @@ external temporary output. No production code was changed.
 
 The two pytest selections are disjoint: 391 passed in total. They are not a full
 repository suite. No macOS native guest, KQ1/JPC-RR replay, Wine runtime, Linux CI,
-hosted check, package build or installed-prefix check was rerun in this recovery.
+hosted check, package build or installed-prefix check ran in that earlier phase.
 The earlier 2,826-pass/142-skip/26-deselection record and 3-failure/23-error
 unrestricted result belong to their older source/environment; they are not
 assertions about the entire current main suite.
@@ -162,7 +163,7 @@ checks and the older native benchmarks; they are not native/game execution.
 See [the completed review](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/0d4f7f4c3cc307e9c2084b942aa9924eaea3a360/research/library-handoffs/2026-11-01/REVIEW_2026-11-03.md)
 and [the maintained utility and repeat commands](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/0d4f7f4c3cc307e9c2084b942aa9924eaea3a360/research/library-handoffs/2026-11-01/tools/README.md).
 
-## Fresh checks for this handoff update
+## Earlier source-backed handoff update checks
 
 The documentation update reran the 13 recovery selectors above plus
 `tests/test_sync_mirrors.py`: **395 tests passed** on the unchanged product source
@@ -176,6 +177,8 @@ Both updated documents passed local-link and bounded privacy checks. A larger
 target was unmet; that bulk phase was not performed. Only ordinary documentation
 edits, small control receipts and the lightweight existing checks were used.
 Their retained task output was under 2 MiB when measured after the test runs.
+The subsequently requested native proof received its own explicit bounded
+64 MiB storage override and is recorded separately below.
 
 ## Library intake still awaiting integration
 
@@ -213,8 +216,47 @@ execution or instrumentation changes can invalidate it, and failure-triggered
 close clears it. Pin verified Anchor Stones before risky execution and export a
 stored image separately if needed. Instruction rewind/CPU-delta operations also
 create recovery artifacts; their existence is distinct from a valid live cursor.
-No native crash-survival experiment or automatic durable crash recorder is
-qualified by this handoff.
+The later native proof below qualifies precommitted artifact survival for one
+specific injected backend-loss boundary. It does not add an automatic durable
+crash recorder.
+
+## Native authored-target backend-loss proof
+
+The new [finite probe](../../scripts/check_native_crash_recovery.py) passed full
+and delta cases at source `1afeb55cfa9822874d2d4a9435ed972ce901e75d` on
+macOS/ARM64. It uses a 512-byte authored COM, verifies its signature and consumed
+input, commits a pinned Anchor and stored PNG, and records a golden one-frame
+suffix. SIGKILL is sent only to that session's owned backend after the next frame
+request has been written, before the response is read. Guest progress at that
+boundary is unknown; this is injected backend loss, not a discovered target bug.
+
+Both backends returned -9; each failed operation closed its session and cleared
+the unpinned cache. Committed state/PNG exports retained their hashes after loss
+and after project reopen. New native processes loaded the pins with exact
+exposed CPU and full 64 KiB DS matches. The one-frame suffix reproduced the
+golden CPU/DS and actual PNG bytes within each mode. Delta's selected pinned
+point used one full base and two retained deltas, exercising materialization.
+
+The final proof used four serial owned processes; all were reaped. A prior
+setup error failed before injection and its process exited normally. An earlier
+successful proof was repeated to retain actual replay PNG bytes for independent
+hashing. All nine processes across the three attempts were reaped; every receipt
+was preserved. The combined native output stayed within the approved 64 MiB
+task bound and preserved the 20 GB floor. No game assets were used or uploaded.
+
+An independent audit verified eight raw DS sidecars, 14 state/image exports,
+both retained replay PNGs, six persisted artifact rows, 27 stored objects and all
+75 post-run source modules. All within-mode CPU/DS/PNG comparisons matched.
+The final local codec/timeline/interface regression selection passed 148 tests.
+Raw evidence stays private; the guide records the exact receipt/audit hashes.
+
+The exact source/controller/backend/target identities, private evidence boundary,
+repeat command and limits are in [the crash replay guide](../CRASH_REPLAY.md).
+That guide also records what was useful from
+[wrfuzz](https://gitlab.com/mscupcakegkill/wrfuzz/-/tree/1fb1a8907700dcc48193b7535c62d85156862822):
+explicit failure classification, exact reproducing inputs and clean state between
+attempts. Its Windows SEH handler is not a macOS crash-recovery implementation.
+No framework code was installed or executed, and no GitHub source was accessed.
 
 ## Next bounded action and stop conditions
 
@@ -225,7 +267,8 @@ qualified by this handoff.
    The independent review/fixes are complete; the remaining decision is
    integration. Preserve both drafts and their targets until separately directed.
    Keep imported originals, native evidence and raw archives out of new changes.
-3. Only if a new native behavior or performance question requires a replay,
+3. The injected backend-loss proof is complete. Only if a different guest-fault,
+   controller-loss or performance question requires a new replay,
    re-admit storage, verify the exact source/backend/preparation identities, use
    one guest owner and a fresh private output directory. Preserve the old sealed
    receipts. Test ordinary restoration and any explicit partial-resume policy
