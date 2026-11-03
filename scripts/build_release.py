@@ -42,6 +42,7 @@ SOURCE_PATTERNS = (
     ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
     ("src/fdisbull/data", "*.txt"),
+    ("src/fdisbull/data", "*.swift"),
     ("src/fdisbull/skills", "*.md"),
     ("src/fdisbull/wine_guest", "*.c"),
     ("src/fdisbull/wine_guest", "*.sh"),

@@ -616,6 +616,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {"media.py", "capabilities.py", "capture_audit.p
 REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
                             "data/FdisbullGhidraArm64.txt", "macos_capture.py", "macos_session.py",
                             "data/FdisbullMacCapture.swift"}
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_MACOS_RESOURCES
 REQUIRED_NATIVE_RUNTIME_RESOURCES = {"uil_desktop.py"} | {
     "native_runtime/" + name for name in
     ("memory-desktop.c", "memory-desktop.h", "memory-appkit.m", "memory-x11.c", "memory-win32.c")}
