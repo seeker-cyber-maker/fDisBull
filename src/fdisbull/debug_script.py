@@ -152,6 +152,10 @@ def validate_script(script, *, session=None):
                                 raise ValueError('Windows waits do not support DOS fast-forward')
                             validate_wait(**checked,guest_ms=active if active is not None else legacy)
                         else:validate_wait(**params)
+                    if op in ('scene-act','scene-click') and 'slice_ms' in params:
+                        value=params['slice_ms']
+                        if not (isinstance(value,str) and value.startswith('$')):
+                            bounded(value,'slice_ms',1,1000)
                     if op=='write-runtime-memory':
                         from .debug_state import byte_string
                         literal={}

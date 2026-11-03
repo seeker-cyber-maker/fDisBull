@@ -317,3 +317,10 @@ This skill paraphrases selected investigation principles from the user-provided
 `tell-story-ai` and `systematic-debugging` skills. Their OMP/macOS-specific attach,
 re-signing, orchestration and output machinery is not imported. Cost/reward is
 an explicit priority alongside evidence-backed confidence at the user's request.
+
+
+Named `scene-act` and `scene-click` accept optional `slice_ms` (1–1000, default
+100) for execution between outcome observations. Large Windows frames can make
+capture slower than execution: choose a larger explicit interval when appropriate,
+retain the host deadline, and send the named action only once. A timeout keeps its
+input receipt; observe again rather than replaying the input automatically.

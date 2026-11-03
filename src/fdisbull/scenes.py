@@ -450,9 +450,9 @@ class SceneSessionMixin:
 
     def scene_assert(self, scene, *, object=None, compact=False):return self.scene(scene).assert_current(object,compact=compact)
 
-    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
+    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None, slice_ms=100, compact=False):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
 
-    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
+    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, slice_ms=100, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
 
     def scene_wait(self, scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100, compact=False):
         return self.scene(scene).wait(object,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
@@ -684,14 +684,16 @@ class SceneHandle:
         return SceneError(self._store(failed))
 
     @reply_option
-    def click(self, object, *, handle_popups=False, timeout_ms=None):
+    def click(self, object, *, handle_popups=False, timeout_ms=None, slice_ms=100):
+        integer(slice_ms,1,1000)
         obj=self._object(object)
         if obj['action']['kind']!='click':raise ValueError('Named click requires a mouse action')
-        return self.act(object,handle_popups=handle_popups,timeout_ms=timeout_ms)
+        return self.act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms)
 
     @reply_option
-    def act(self, object, *, handle_popups=False, timeout_ms=None):
+    def act(self, object, *, handle_popups=False, timeout_ms=None, slice_ms=100):
         if type(handle_popups) is not bool:raise ValueError('handle_popups must be boolean')
+        integer(slice_ms,1,1000)
         self.info=self.session.project.debug_scene_info(self.revision,version=self.session.version['id'])
         obj=self._object(object);handlers=[];elapsed=0
         if timeout_ms is not None:integer(timeout_ms,1,60000)
@@ -702,7 +704,7 @@ class SceneHandle:
                 result=dict(status='timeout',complete=False,scene_revision=self.revision,run=self.session.run_id)
                 self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            return dict(guest_ms=max(1,int(guest)),timeout_ms=host)
+            return dict(guest_ms=max(1,int(guest)),timeout_ms=host,slice_ms=slice_ms)
         for _ in range(5):
             before=self._observe(object)
             if before['status']=='blocked' and handle_popups and len(before['handlers'])==1:
@@ -756,7 +758,8 @@ class SceneHandle:
         outcome.update(action_object=obj['id'],outcome_phase=obj.get('outcome_phase','unspecified'),before_observation=checked['observation'],input=queued,handlers=handlers)
         return self._store(outcome)
 
-    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None, dismissing_handler=None):
+    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None, dismissing_handler=None, slice_ms=100):
+        integer(slice_ms,1,1000)
         started=time.monotonic();elapsed=0;polls=[];observer_stops=[]
         while True:
             result=self._observe(extra=predicate,baseline=baseline)
@@ -779,7 +782,7 @@ class SceneHandle:
                 result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls)
                 self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            stop=self._advance(guest_ms=max(1,int(min(100,guest_ms-elapsed))),timeout_ms=max(1,remaining))
+            stop=self._advance(guest_ms=max(1,int(min(slice_ms,guest_ms-elapsed))),timeout_ms=max(1,remaining))
             elapsed+=self._progress(stop)
             if scene_observer_stop(self.session,stop):
                 observer_stops.append(self._observer_stop(stop,observer_stops[-1]['observation'] if observer_stops else None))

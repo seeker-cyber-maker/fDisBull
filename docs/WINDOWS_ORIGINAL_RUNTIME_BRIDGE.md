@@ -128,6 +128,13 @@ with project.debugger(qemu, game_dir, backend="wine-qemu", kernel=kernel,
 ```
 
 Use addresses, scene IDs and object names authored for the selected program.
+For a large or slow client frame, pass an explicit outcome polling interval:
+`debug.scene(scene_id).act("step", slice_ms=1000)`. Named actions default to
+100 ms execution slices; `slice_ms` accepts 1–1000 ms and controls execution
+between observations without repeating input or extending the host deadline.
+A frame capture can take much longer than the execution slice. Queue/OS delivery,
+application commit and painted output remain separate observations.
+
 For a generic observation wait use `active_ms`, `slice_ms`, `timeout_ms` and
 explicit memory/register predicates. Windows scene budgets use host execution
 slices and report `time_basis: host`; a legacy scene `guest_ms` field is an
