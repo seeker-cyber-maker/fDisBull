@@ -1,5 +1,11 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [November 3 interruption handoff](agent-handoffs/2026-11-03-dinopark-interruption.md)
+refreshes source/installation/runtime authority and continues the confirmed
+Coelophysis presentation diagnosis from retained original-game evidence. The
+historical 97-probe inventories remain valid receipts; their native sessions
+have exited and must not be treated as presently armed.
+
 The [return-to-park deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md)
 addresses the subsequent original return timeout. It retains the actual queued
 input before the continuous guest interval, shares the complete host deadline,
