@@ -4,7 +4,9 @@ Status: **local release candidate, not tagged or published**.
 
 - Source branch: `release/0.31.0`
 - Code commit: `518572040eda679933cddec7eb66b3dbe9ffc527`
-- Tree: `dba4fa1c5dde5eaf363d71b614b2ef9f3c409515`
+- Code tree: `dba4fa1c5dde5eaf363d71b614b2ef9f3c409515`
+- Candidate commit used to build artifacts: `bda8107cf9f6c275e7db894e67217012fb49ecf2`
+- Candidate tree: `e6f79878671ee57bc5610f85159edb59193fbc0f`
 - Base `main`: `f861d17ed4837f753e000f53cc777a7d906fde82`
 - Package version: `0.31.0` (core, player, sdist and tool ZIP)
 
@@ -32,7 +34,7 @@ swede compiler is claimed.
 | Full suite | 8,992 passed, 335 skipped, 2,316 subtests; 3 failures + 23 errors are the known macOS ELF/GCC/media baseline |
 | Focused feature suites | 67 passed, 13 skipped |
 | Frame timeline / typed-C targeted | 148 + 26 tests passed |
-| `check_dist.py` | core wheel 564 entries; player 19; tool ZIP 1,819; sdist 1,841 |
+| `check_dist.py` | core wheel 564 entries; player 19; tool ZIP 1,820; sdist 1,842 |
 | Installed-wheel smoke | `fdisbull 0.31.0`; methods `0.31.0`; capabilities runtime/distribution `0.31.0` |
 
 Hosted CI, native backend rebuilds, shared-prefix qualification and publication
