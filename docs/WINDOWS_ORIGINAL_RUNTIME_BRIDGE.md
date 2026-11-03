@@ -37,7 +37,7 @@ For an **original PE32 process**, macOS itself cannot execute 32-bit Windows cod
 
 A Linux x86-64 runner may compile, reproduce, or run the *same* offline guest as an **optional CI/remote route**. Native Windows or compatible-Wine runs provide their own scoped OS evidence; no Mac-specific result is inferred from Linux CI, or vice versa. Mac-local build checks use the host toolchain where applicable. Avoid requiring Open Watcom or Win16 setup before PE32 work can begin.
 
-**macOS acceptance is its own gate**: native `fdisbull` CLI and Mach-O/ARM64 observation, local compiler/probe, QEMU guest launch and data transfer when requested, and an exact backend/host identity receipt. Missing tools or privileges must yield a specific refusal, not silently route the whole workflow to Linux. The read-only `qemu-host` preflight can run on macOS but currently does not certify macOS LLDB access, Wine-guest functionality or Apple-native execution.
+**macOS acceptance is its own gate**: native `fdisbull` CLI and Mach-O/ARM64 observation, local compiler/probe, QEMU guest launch and data transfer when requested, and an exact backend/host identity receipt. Missing tools or privileges must yield a specific refusal, not silently route the whole workflow to Linux. The read-only `qemu-host` preflight runs on macOS. The new `macos-native` preflight checks a Darwin host and presence of Clang, LLDB and xcrun *without Wine*, but does not certify debugger entitlement or live original-code execution. Neither gate certifies Wine-guest functionality.
 
 The planned common runtime is **Wine 11 new WoW64** in a contained x86-64 Linux environment (using QEMU full emulation on ARM64 hosts). Wine 11 supports 16-bit programs in new WoW64 but **does not thereby guarantee Win16 debugger events or selector contexts**. The default 64-bit prefix or an explicitly new WoW64-compatible prefix must be used; do not automatically migrate or replace a user's existing prefix. See [official Wine 11.0 announcement](https://list.winehq.org/hyperkitty/list/wine-releases%40list.winehq.org/message/UL6L2GJ55VYUJ5KUMBZ3TZSXRFJ52QG6/).
 
@@ -45,10 +45,15 @@ A **second, historical oracle** is Windows 3.1/3.11 under DOSBox-X, using user-s
 
 ### What is implemented by this MR: read-only readiness inventory
 
-A small Python script reports only tool presence and versions. Its three modes are independent. The `qemu-host` mode is host-neutral, including macOS. A distinct macOS-native LLDB/Clang runtime gate is **planned**, not implemented by this preflight:
+A small Python script reports only tool presence and versions. Its four modes are independent; `qemu-host` supports macOS and Linux, and `macos-native` checks the local Apple toolchain without assuming a Windows guest:
 
 ~~~sh
-python scripts/windows_runtime_preflight.py --mode compilers
+# PE32 is the first target: do not require Open Watcom/Win16 or PE64 GCC.
+python scripts/windows_runtime_preflight.py --mode compilers --target pe32 --strict
+# On the actual Mac, check native Clang/LLDB/xcrun independently.
+python scripts/windows_runtime_preflight.py --mode macos-native --strict
+# Optional backwards-compatible whole toolchain gate:
+python scripts/windows_runtime_preflight.py --mode compilers --target all
 python scripts/windows_runtime_preflight.py --mode qemu-host \
   --qemu /private/qemu-system-x86_64 --kernel /private/bzImage \
   --initramfs /private/wine11.cpio.gz --strict
@@ -56,7 +61,7 @@ python scripts/windows_runtime_preflight.py --mode qemu-host \
 WINEARCH=wow64 python scripts/windows_runtime_preflight.py --mode wine-guest --strict
 ~~~
 
-The script invokes **only** Wine and QEMU version commands where available, checks tool/file presence, and produces machine-readable JSON with qualification explicitly equal to "preflight-only." It installs nothing, does not start QEMU/Wine on a target executable, does not initialize a Wine prefix, does not execute private game files, and does not build anything. A successful tool check is **readiness to attempt further tests**, not a native acceptance. Kernel/initramfs presence is not integrity/boot verification. The tool does not inspect or qualify a Wine prefix's on-disk architecture or a live X display. See tests/test_windows_runtime_preflight.py.
+The script invokes **only** Wine and QEMU version commands where available, checks tool/file presence, permits an **independent PE32-only compiler gate**, and produces machine-readable JSON with qualification explicitly equal to "preflight-only." It installs nothing, does not start QEMU/Wine on a target executable, does not initialize a Wine prefix, does not execute private game files, and does not build anything. A successful tool check is **readiness to attempt further tests**, not a native acceptance. Kernel/initramfs presence is not integrity/boot verification. The tool does not inspect or qualify a Wine prefix's on-disk architecture, a live X display, Apple debugging permissions or original native execution. The macOS gate is **host tool presence only**. Four new test cases have been authored for PE32 isolation, Mac tool presence and argument validation; fresh test execution is still required on the revised commit. See tests/test_windows_runtime_preflight.py.
 
 ### Milestone 1 (P0): original PE32 executable probe before Win16
 
@@ -104,6 +109,6 @@ Do not store original games, Windows installation media, guest images, private F
 
 ## Build/ownership status
 
-The phase-zero script and unit tests previously passed in an isolated Linux x86-64 Python 3.13.5 sandbox; this revision primarily changes roadmap and acceptance scope, not delivered debugging capability. The tested sandbox did not contain Wine, QEMU, Open Watcom or MinGW. The first real native build should be executed in a prepared guest, preferably driven **locally by macOS on the Mac Studio**, with Linux CI as a complementary route. Mac-local LLDB and original PE32 Wine debugging have **not** been freshly tested by this MR. The local-hub Git mirror remains pending in this tool environment.
+The original phase-zero script and unit tests previously passed in an isolated Linux x86-64 Python 3.13.5 sandbox. This revision adds a PE32-only compiler selector and a local Mac-native tool presence gate, plus four new tests. **Those new tests and the Mac gate have not been run on a real Mac by this contribution; no expanded native debugger capability is claimed.** The tested sandbox did not contain Wine, QEMU, Open Watcom or MinGW. The first real native build should be executed in a prepared guest, preferably driven **locally by macOS on the Mac Studio**, with Linux CI as a complementary route. Mac-local LLDB and original PE32 Wine debugging have **not** been freshly tested by this MR. The local-hub Git mirror remains pending in this tool environment.
 
 Release alignment: v0.31.0 was tagged from a dedicated release line containing the earlier preflight, but MR !60 remains **open and not integrated into GitLab `main`** at this update. The release tag and the default branch are different histories; neither proves this revised priority matrix is shipped.
