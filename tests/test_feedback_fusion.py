@@ -75,7 +75,7 @@ def test_z3_catches_wrong_optimized_reconstruction():
 
 def test_false_compiler_result_does_not_promote(monkeypatch):
     pytest.importorskip("z3")
-    monkeypatch.setattr(fusion, "compile_roundtrip", lambda expr, clang: ({"const": 0}, "c" * 64, "i" * 64, "test clang"))
+    monkeypatch.setattr(fusion, "compile_roundtrip", lambda expr, clang, **kwargs: ({"const": 0}, "c" * 64, "i" * 64, "test clang"))
     src = [[{"op": "xor", "constant": 1}], [{"op": "xor", "constant": 2}]]
     r = fusion.discover(src)
     assert r["status"] == "not_equivalent_refused"
@@ -101,3 +101,27 @@ def test_a_shortened_unstable_result_is_not_promoted():
     assert result["best_nodes"] == 1
     assert not result["promotion_eligible"]
     assert result["default"] == "original"
+
+
+def test_macos_local_host_target_is_independent_of_windows_guest():
+    """Use the installed host Clang (including Apple clang) for pure IR work.
+
+    Does not claim that a Mach-O or Windows executable was compiled or run.
+    """
+    pytest.importorskip("z3")
+    if not shutil.which("clang"): pytest.skip("Host Clang unavailable")
+    blocks = [[{"op": "xor", "constant": 0x5A}], [{"op": "xor", "constant": 0xA5}]]
+    result = fusion.discover(blocks, llvm_target="host")
+    assert result["status"] == "fixed_point"
+    assert result["requested_llvm_target"] == "host"
+    assert result["history"][0]["requested_llvm_target"] == "host"
+    assert result["original_children"] == blocks
+    assert result["native_original_equivalence"] is False
+
+
+def test_invalid_target_refuses_before_compilation():
+    blocks = [[{"op": "xor", "constant": 1}], [{"op": "xor", "constant": 2}]]
+    with pytest.raises(fusion.Refused, match="unsupported LLVM IR target"):
+        fusion.discover(blocks, llvm_target="arbitrary-PE32-executable")
+    with pytest.raises(fusion.Refused, match="unsupported LLVM IR target"):
+        fusion.compile_roundtrip(fusion.original_expr(blocks), "clang", llvm_target="bad")
