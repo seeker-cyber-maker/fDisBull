@@ -41,7 +41,8 @@ for name, path in zip(('fdisbull', 'fdisbull-player'), map(Path, sys.argv[2:])):
         raise SystemExit(f'offline kit wheel mismatch: {name}')
 print('Offline kit source commit and ordinary wheel hashes verified')
 PYCODE
-kit_install="$CI_PROJECT_DIR/.native/tmp/fdisbull-offline-installed"
+kit_install_parent=$(mktemp -d "$CI_BUILDS_DIR/fdisbull-offline-installed.XXXXXX")
+kit_install="$kit_install_parent/venv"
 "$kit_root/install.sh" "$kit_install" \
   2>&1 | tee "$NATIVE_EVIDENCE/offline"/install.log
 "$kit_install/bin/python" -I scripts/verify_offline_kit.py \

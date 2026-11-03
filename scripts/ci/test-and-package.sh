@@ -15,7 +15,9 @@ python scripts/check_package_payloads.py --core dist/fdisbull-*.whl --player dis
 
 # Run every installed entry point outside both the checkout and unpacked roots.
 # A source-tree import or a missing helper must not be hidden by the build cwd.
-smoke_root=$(mktemp -d "$CI_PROJECT_DIR/.package-smoke.XXXXXX")
+# CI_BUILDS_DIR is the runner parent, not CI_PROJECT_DIR. The installed-skill
+# gate deliberately refuses even a venv's site-packages beneath the checkout.
+smoke_root=$(mktemp -d "$CI_BUILDS_DIR/fdisbull-package-smoke.XXXXXX")
 python -m venv --system-site-packages "$smoke_root/core"
 "$smoke_root/core/bin/python" -m pip install --no-index --no-deps --force-reinstall dist/fdisbull-*.whl
 python scripts/check_agent_skill.py --python "$smoke_root/core/bin/python" --output artifacts/receipts/agent-skill.json
