@@ -312,6 +312,13 @@ static void setcontext(TargetContext *c) {
         if(!Wow64SetThreadContext(thread(ev.dwThreadId),&c->wow)) fatal("set-wow64-context");
     } else if(!SetThreadContext(thread(ev.dwThreadId),&c->native)) fatal("set-context");
 }
+/* Internal IP/TF edits must not rewrite unrelated integer/segment state. */
+static void setcontrolcontext(const TargetContext *c) {
+    TargetContext control=*c;
+    if(target_bits==32) control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
+    else control.native.ContextFlags=CONTEXT_CONTROL;
+    setcontext(&control);
+}
 static int query_selector(DWORD selector,WOW64_LDT_ENTRY *entry) {
     typedef LONG (WINAPI *SelectorQuery)(HANDLE,PVOID,ULONG,PULONG);
     SelectorQuery query=(SelectorQuery)(uintptr_t)GetProcAddress(GetModuleHandleA("ntdll.dll"),"RtlWow64GetThreadSelectorEntry");
@@ -476,7 +483,7 @@ static int wait_event(DWORD timeout,int pausing) {
                 for(int i=0;i<MAX_BP;i++) if(bp[i].used && bp[i].armed && bp[i].address==stop_address) {
                     TargetContext c=context();
                     if(!writemem(stop_address,&bp[i].original,1)) fatal("restore-breakpoint-byte");
-                    bp[i].armed=0;context_set_ip(&c,stop_address);setcontext(&c);hit=i;
+                    bp[i].armed=0;context_set_ip(&c,stop_address);setcontrolcontext(&c);hit=i;
                     strcpy(reason,initializing?(ne_carrier?"carrier-entry":"entry"):"breakpoint");return 1;
                 }
                 if(pausing && target_bits!=32) {strcpy(reason,"timeout");return 1;}
@@ -500,13 +507,13 @@ static void logical_read(uintptr_t addr,BYTE *data,int n) {
 static int single_step(DWORD timeout) {
     int displaced=hit;DWORD tid=ev.dwThreadId;TargetContext c=context();
     stepping_tid=tid;
-    hold_others(1);context_set_flags(&c,context_flags(&c)|0x100);setcontext(&c);resume_event();
+    hold_others(1);context_set_flags(&c,context_flags(&c)|0x100);setcontrolcontext(&c);resume_event();
     int ok=wait_event(timeout,0);
     if(!ok) fatal("single-step-timeout");
     stepping_tid=0;
     if(!exited && ev.dwThreadId!=tid) fatal("step-thread-mismatch");
     if(!exited && ev.dwThreadId==tid) {
-        c=context();context_set_flags(&c,context_flags(&c)&~0x100);setcontext(&c);
+        c=context();context_set_flags(&c,context_flags(&c)&~0x100);setcontrolcontext(&c);
     }
     /* Release exactly the threads suspended above, regardless of stopping tid. */
     for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle && threads[i].suspended) {
