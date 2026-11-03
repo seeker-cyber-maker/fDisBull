@@ -113,7 +113,10 @@ DOS: `scene-check`, `scene-assert`, `scene-act`, `scene-click` and `scene-wait`,
 plus sparse `frame-probe`, screenshots, grids and stored exports. Scene memory
 predicates use flat project addresses for PE and observed logical bindings for
 NE. Frame signatures bind source, resources, runtime and display identity.
-A click tied to an outdated frame/mode refuses before input.
+A click tied to an outdated frame/mode refuses before input. Fresh client frames use bounded lossless compression when it reduces
+transfer size. Exact BGRA length, complete streams, dimensions and frame/context
+identities are verified; both scene freshness captures remain independent.
+
 
 Keyboard methods queue physical US scan codes in the guest. They include
 `keyboard_press`, bounded ASCII `keyboard_type`, `keyboard_state` and explicit
