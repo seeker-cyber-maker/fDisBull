@@ -6,8 +6,9 @@ This is **proposed architecture and acceptance guidance** distilled from four
 authored chapters of `UDL_UIL_UDC_Reference_v0.10.zip`. It adds no runtime,
 callable operation, parser field, status enum, or profile version. The source
 baseline is fDisBull main
-`dc6d7e7709802e743e79cf46e648a4e87b2a0a27`; the provenance section identifies
-the reference edition and exact chapter bytes.
+`f861d17ed4837f753e000f53cc777a7d906fde82` (the 0.30.0 release line after the
+reviewed 0.30.0 development merges); the provenance section identifies the
+reference edition and exact chapter bytes.
 
 Use the [common indexed contract](COMMON_UIL_CONTRACT.md),
 [native realization contract](COMMON_UIL_NATIVE.md),
@@ -241,10 +242,10 @@ scope.
 
 ## Provenance and pinned evidence
 
-The source is [UDL_UIL_UDC_Reference_v0.10.zip][library-reference], Library ID
-`libfile_f496d1e247dc8191b6df5621581971bd`, **version 8**. The four chapters
-were read in full. Their SHA-256 identities below pin this intake; the Library
-link identifies the artifact, so a later revision must be checked separately.
+The source was a privately supplied `UDL_UIL_UDC_Reference_v0.10.zip`,
+**version 8**. The four chapters were read in full. Their SHA-256 identities
+below pin this intake; the original private library link is intentionally not
+reproduced, so a later revision must be checked separately.
 
 | Chapter | Source sections used | SHA-256 |
 | --- | --- | --- |
@@ -259,15 +260,14 @@ claims above were checked against the pinned repository files. The reference's
 proposals and outside-tool recommendations are attributed design input, not
 newly executed integrations.
 
-[library-reference]: https://chatgpt.com/library?file_id=libfile_f496d1e247dc8191b6df5621581971bd&account_id=personal
 [mr45]: https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/45
-[canonical45]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/cc0321e3a2d8c0a5df75b9e26bf64a8073546378/docs/UDL_UIL_UDC_CONSOLIDATED.md
+[canonical45]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/9e5788f/docs/UDL_UIL_UDC_CONSOLIDATED.md
 [mr47]: https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/47
 [methodology47]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/22903caf22cb380be0fef6e1ae2481c9722e0424/src/fdisbull/skills/fdisbull-investigate/references/methodology.md
-[common-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/src/fdisbull/common_uil.py
-[catalog-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/src/fdisbull/uil_catalog.py
-[link-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/src/fdisbull/uil_link.py
-[quickstart-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/docs/AGENT_QUICKSTART.md
-[capabilities-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/src/fdisbull/capabilities.py
-[cli-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/src/fdisbull/cli.py
-[native-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/docs/COMMON_UIL_NATIVE.md
+[common-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/src/fdisbull/common_uil.py
+[catalog-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/src/fdisbull/uil_catalog.py
+[link-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/src/fdisbull/uil_link.py
+[quickstart-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/docs/AGENT_QUICKSTART.md
+[capabilities-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/src/fdisbull/capabilities.py
+[cli-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/src/fdisbull/cli.py
+[native-source]: https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/f861d17ed4837f753e000f53cc777a7d906fde82/docs/COMMON_UIL_NATIVE.md
