@@ -142,6 +142,47 @@ not a separately booted operating system or arbitrary protected-mode lifecycle.
 
 Read `mode_id` from your actual screenshot; do not assume the example's value. Click coordinates are native screenshot pixels. Input queued while stopped is consumed on subsequent execution; the release timer uses guest milliseconds. Fast-forward accelerates that guest time too.
 
+### Optional lossless native screenshot encodings
+
+The rebuilt native backend advertises `video.screenshot_encodings`. Existing
+calls still request the original RGBA PNG. Select an encoding explicitly:
+
+```python
+frame = debug.screenshot("catalogue.png", hooks=False, encoding="png-indexed")
+frame = debug.screenshot("catalogue-transfer.png", hooks=False, encoding="rgba-zstd")
+```
+
+The JSON method accepts the same `encoding` parameter. `png-indexed` constructs
+an exact palette from the completed RGBA snapshot, with no quantization. If a
+frame has more than 256 colours or nonopaque pixels, it returns the original
+RGBA PNG and an explicit `fallback_reason`. Palette contents are rebuilt for
+every screenshot, including palette-only animation.
+
+`rgba-zstd` compresses the completed RGBA8 buffer with Zstandard level 1. It is
+advertised only when the backend was built with Zstandard. Configure detects
+the library automatically; `--enable-agent-zstd` requires it, and
+`--disable-agent-zstd` omits it. The Python client needs the optional
+`fdisbull[screenshot]` dependency. Unsupported encodings or a missing decoder
+are refused before screenshot preparation hooks run.
+
+Stored screenshots remain PNG for existing exports, grids, scene bundles and
+offline consumers. For raw transport, the client validates the compressed
+payload hash, exact RGBA layout, bounded frame size and decoded-pixel hash,
+then encodes a canonical PNG. Its artifact hash identifies that PNG;
+`metadata.transport` separately records the native compressed-payload and raw
+pixel hashes. This host conversion is additional work, so a faster native
+encoder does not establish a faster stored-screenshot call.
+
+For a wire-only experiment, call `video.screenshot` with `encoding` and optional
+`measure:true`. PNG replies retain `format:"png"` and `png_base64`; raw replies
+use `format:"rgba-zstd"`, `data_base64`, `pixel_format:"RGBA8"`, `stride`,
+`uncompressed_bytes` and `raw_sha256`. `sha256` identifies the encoded payload.
+All encodings retain the same completed-frame, mode and guest-tick identity.
+`encode_us`, present only when requested, measures native encoding including
+palette construction; it excludes snapshot acquisition, hashing, base64,
+JSON, IPC, host decoding and persistence. Older backends keep the default PNG
+path and do not gain codecs without rebuilding.
+
 ### Optional screenshot coordinate grid (0.11.0)
 
 `debug.screenshot("menu-grid.png", grid=True, grid_step=32)` saves a clean native frame and a separate annotated `screenshot-grid` artifact. The JSON equivalent is:

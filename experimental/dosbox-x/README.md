@@ -45,6 +45,13 @@ Local corrections select native-resolution rendering, refresh RGBA pixels on eve
 
 ## Apply and build
 
+The candidate also supports explicitly selected lossless screenshot encodings:
+exact indexed PNG with RGBA fallback, and optional raw RGBA8 plus Zstandard.
+The original PNG remains the default. Configure automatically detects Zstandard;
+use `--enable-agent-zstd` to require it or `--disable-agent-zstd` to omit it.
+Inspect `video.screenshot_encodings` before requesting an alternate encoding.
+See the [transport and stored-artifact contract](../../docs/DOSBOX_DEBUGGER.md#optional-lossless-native-screenshot-encodings).
+
 In a clean upstream checkout at the baseline:
 
 ```bash

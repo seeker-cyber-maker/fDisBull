@@ -827,6 +827,37 @@ index 0000000..aed1ff4
 +
 +if __name__ == '__main__':
 +    unittest.main()
+diff --git a/configure.ac b/configure.ac
+index 6829395..3f31b94 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1447,6 +1447,26 @@ if test x$enable_dosbox_agent = xyes; then
+     AC_MSG_NOTICE([enabled RPC debugger agent output support])
+ fi
+ 
++dnl Optional lossless screenshot transport; PNG remains available without Zstd.
++AC_ARG_ENABLE([agent-zstd],
++    AS_HELP_STRING([--enable-agent-zstd], [Require Zstandard screenshot transport (default: auto)]),
++    [enable_agent_zstd=$enableval], [enable_agent_zstd=auto])
++AS_CASE([$enable_agent_zstd], [yes|no|auto], [],
++    [AC_MSG_ERROR([--enable-agent-zstd expects yes, no or auto])])
++if test x$enable_dosbox_agent = xyes -a x$enable_agent_zstd != xno; then
++    have_agent_zstd=no
++    AC_CHECK_HEADER([zstd.h], [
++        AC_CHECK_LIB([zstd], [ZSTD_compress], [
++            AC_DEFINE([C_DOSBOX_AGENT_ZSTD], [1], [Define for Zstandard screenshot transport])
++            LIBS="$LIBS -lzstd"
++            have_agent_zstd=yes
++        ])
++    ])
++    if test x$enable_agent_zstd = xyes -a x$have_agent_zstd != xyes; then
++        AC_MSG_ERROR([Zstandard headers and library required for --enable-agent-zstd])
++    fi
++fi
++
+ dnl FEATURE: Whether to use Direct3D 9 output
+ AH_TEMPLATE(HAVE_D3D9_H,[Define to 1 to use Direct3D 9 display output support])
+ AC_ARG_ENABLE(d3d9,AC_HELP_STRING([--enable-d3d9],[Enable Direct3D 9 support]),enable_d3d9=$enableval,enable_d3d9=no)
 diff --git a/include/agent/agent_bridge.h b/include/agent/agent_bridge.h
 index e11bf5a..ca0c8ce 100644
 --- a/include/agent/agent_bridge.h
@@ -879,7 +910,7 @@ diff --git a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
 index d1abe84..f0962c1 100644
 --- a/include/agent/debugger_adapter.h
 +++ b/include/agent/debugger_adapter.h
-@@ -47,11 +47,22 @@
+@@ -47,11 +47,22 @@ struct RegisterSnapshot {
      std::uint32_t instruction_pointer = 0;
      std::uint32_t flags = 0;
      std::string cpu_mode;
@@ -902,7 +933,7 @@ index d1abe84..f0962c1 100644
      std::string instruction;
      std::string analysis;
  };
-@@ -63,7 +74,7 @@
+@@ -63,7 +74,7 @@ enum class StepMode {
  
  enum class BreakpointKind {
      Execution,
@@ -911,7 +942,7 @@ index d1abe84..f0962c1 100644
  };
  
  struct NativeBreakpoint {
-@@ -80,6 +91,7 @@
+@@ -80,6 +91,7 @@ public:
      bool IsShellReady() const;
      bool IsReadyForTargetStart() const;
      std::uint64_t EntryBreakpointSequence() const;
@@ -1052,7 +1083,7 @@ diff --git a/include/debug.h b/include/debug.h
 index f4ee552..1c99105 100644
 --- a/include/debug.h
 +++ b/include/debug.h
-@@ -33,16 +33,37 @@
+@@ -33,16 +33,37 @@ Bitu DEBUG_EnableDebugger(void);
  #if C_DEBUG
  bool DEBUG_AgentStep(bool over, bool* continued);
  bool DEBUG_AgentResumeAfterTerminate(void);
@@ -1090,7 +1121,7 @@ index f4ee552..1c99105 100644
  struct DEBUG_AgentTraceEvent {
      uint16_t cs = 0;
      uint32_t instruction_pointer = 0;
-@@ -60,6 +81,10 @@
+@@ -60,6 +81,10 @@ struct DEBUG_AgentTraceEvent {
      uint16_t gs = 0;
      uint16_t ss = 0;
      uint32_t flags = 0;
@@ -1272,7 +1303,7 @@ index 465f7e7..eee6a09 100644
      dos.errorcode = 0;
      first_shell->DoCommand(&debugbox_command[0]);
      if (dos.errorcode != 0) {
-@@ -370,6 +375,14 @@
+@@ -370,6 +375,14 @@ bool DebuggerAdapter::GetRegisters(RegisterSnapshot* registers, std::string* err
      registers->instruction_pointer = reg_eip;
      registers->flags = static_cast<std::uint32_t>(reg_flags);
      registers->cpu_mode = !cpu.pmode ? "real" : ((reg_flags & FLAG_VM) ? "v86" : "protected");
@@ -1305,7 +1336,7 @@ index 465f7e7..eee6a09 100644
      } else {
  #if C_HEAVY_DEBUG
          if (once) {
-@@ -652,7 +676,11 @@
+@@ -652,7 +676,11 @@ bool DebuggerAdapter::ReadTrace(std::vector<TraceSample>* samples,
          sample.registers.ss = it->ss;
          sample.registers.instruction_pointer = it->instruction_pointer;
          sample.registers.flags = it->flags;
@@ -1340,10 +1371,10 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..c3b76e2 100644
+index 29363cf..b7ffeed 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
-@@ -5,6 +5,12 @@
+@@ -5,6 +5,15 @@
  #include "agent/debugger_adapter.h"
  #include "agent/debugger_output_parser.h"
  #include "agent/trace_store.h"
@@ -1353,10 +1384,13 @@ index 29363cf..c3b76e2 100644
 +#include "pic.h"
 +#include "debug.h"
 +#include <zlib.h>
++#if defined(C_DOSBOX_AGENT_ZSTD)
++#include <zstd.h>
++#endif
  #include "../transport/rpc_transport.h"
  
  #include <algorithm>
-@@ -14,6 +20,7 @@
+@@ -14,6 +23,7 @@
  #include <condition_variable>
  #include <deque>
  #include <functional>
@@ -1364,7 +1398,15 @@ index 29363cf..c3b76e2 100644
  #include <iomanip>
  #include <limits>
  #include <map>
-@@ -31,6 +38,11 @@
+@@ -21,6 +31,7 @@
+ #include <mutex>
+ #include <sstream>
+ #include <utility>
++#include <unordered_map>
+ #include <vector>
+ #include <thread>
+ 
+@@ -31,6 +42,11 @@
  #include <unistd.h>
  #endif
  
@@ -1376,7 +1418,7 @@ index 29363cf..c3b76e2 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -445,9 +457,14 @@ static bool IsKnownMethod(const std::string& method)
+@@ -445,9 +461,14 @@ static bool IsKnownMethod(const std::string& method)
             method == "session.stop" ||
             method == "execution.continue" ||
             method == "execution.pause" ||
@@ -1392,15 +1434,19 @@ index 29363cf..c3b76e2 100644
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -506,6 +523,7 @@ public:
+@@ -506,6 +527,11 @@ public:
      };
  
      struct AdapterOperation {
++        std::string screenshot_encoding;
++        std::string screenshot_fallback;
++        std::uint32_t palette_colors = 0;
++        std::uint64_t encode_us = 0;
 +        std::string state_hash;
          std::mutex mutex;
          std::condition_variable completed;
          bool done = false;
-@@ -518,6 +536,16 @@ public:
+@@ -518,6 +544,16 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
@@ -1417,7 +1463,7 @@ index 29363cf..c3b76e2 100644
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +581,12 @@ public:
+@@ -553,6 +589,12 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -1430,7 +1476,7 @@ index 29363cf..c3b76e2 100644
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -601,6 +635,7 @@ public:
+@@ -601,6 +643,7 @@ public:
      virtual std::uint64_t SubmitAfter(std::uint32_t delay_ms, Command command) = 0;
      virtual bool IsReadyForTargetStart() const = 0;
      virtual std::uint64_t EntryBreakpointSequence() const = 0;
@@ -1438,7 +1484,7 @@ index 29363cf..c3b76e2 100644
      virtual bool Continue(std::string* error) const = 0;
      virtual bool Pause(std::string* error) const = 0;
      virtual bool StartTargetAtEntry(const std::string& command,
-@@ -658,6 +693,7 @@ public:
+@@ -658,6 +701,7 @@ public:
      signature override { DebuggerAdapter adapter; return adapter.method args; }
      AGENT_RUNTIME_FORWARD(IsReadyForTargetStart, bool IsReadyForTargetStart() const, ())
      AGENT_RUNTIME_FORWARD(EntryBreakpointSequence, std::uint64_t EntryBreakpointSequence() const, ())
@@ -1446,7 +1492,7 @@ index 29363cf..c3b76e2 100644
      AGENT_RUNTIME_FORWARD(Continue, bool Continue(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(Pause, bool Pause(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(StartTargetAtEntry, bool StartTargetAtEntry(const std::string& command, const std::vector<std::string>& arguments, const std::string& workdir, std::string* error) const, (command, arguments, workdir, error))
-@@ -692,6 +728,7 @@ public:
+@@ -692,6 +736,7 @@ public:
  
      bool IsReadyForTargetStart() const override { return true; }
      std::uint64_t EntryBreakpointSequence() const override { return 0; }
@@ -1454,7 +1500,7 @@ index 29363cf..c3b76e2 100644
  
      bool Continue(std::string*) const override { return true; }
  
-@@ -941,12 +978,15 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,12 +986,15 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1471,7 +1517,7 @@ index 29363cf..c3b76e2 100644
          JsonValue address = Object();
          Add(&address, "space", String("segmented"));
          std::ostringstream segment;
-@@ -981,12 +1021,19 @@
+@@ -981,12 +1029,19 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
      JsonValue result = Object();
      Add(&result, "sequence", Number(event.sequence));
      Add(&result, "address", EncodeMemoryAddress(event.sample.address));
@@ -1491,7 +1537,7 @@ index 29363cf..c3b76e2 100644
      JsonValue changes = Object();
      for (std::vector<TraceRegisterChange>::const_iterator change = event.register_changes.begin();
           change != event.register_changes.end(); ++change) {
-@@ -1021,6 +1068,20 @@
+@@ -1021,6 +1076,20 @@ static JsonValue RegistersResult(const RegisterSnapshot& registers,
      Add(&result, "instruction_pointer", String(Hex32(registers.instruction_pointer)));
      Add(&result, "flags", String(Hex32(registers.flags)));
      Add(&result, "cpu_mode", String(registers.cpu_mode));
@@ -1512,7 +1558,7 @@ index 29363cf..c3b76e2 100644
      return result;
  }
  
-@@ -1185,15 +1246,148 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,15 +1254,227 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -1559,6 +1605,77 @@ index 29363cf..c3b76e2 100644
 +    PngChunk(png, "IEND", std::vector<std::uint8_t>());
 +    return true;
 +}
++
++// Construct an exact palette from the completed RGBA snapshot. No quantization
++// or palette reuse: palette-only animation must remain visible. A true-color or
++// nonopaque frame falls back to the original RGBA PNG without changing pixels.
++static bool EncodeFrameIndexedPng(const FrameSnapshot& frame,
++                                  std::vector<std::uint8_t>* png,
++                                  std::uint32_t* colors, std::string* fallback)
++{
++    const std::size_t stride = static_cast<std::size_t>(frame.width) * 4u;
++    if (!frame.width || !frame.height || frame.rgba.size() > 16u * 1024u * 1024u ||
++        frame.rgba.size() != stride * frame.height) return false;
++    *colors = 0;
++    fallback->clear();
++    std::unordered_map<std::uint32_t, std::uint8_t> lookup;
++    lookup.reserve(256);
++    std::vector<std::uint8_t> palette, rows;
++    palette.reserve(256u * 3u);
++    rows.reserve((static_cast<std::size_t>(frame.width) + 1u) * frame.height);
++    for (std::uint32_t y = 0; y < frame.height; ++y) {
++        rows.push_back(0);
++        for (std::uint32_t x = 0; x < frame.width; ++x) {
++            const std::size_t offset = (static_cast<std::size_t>(y) * frame.width + x) * 4u;
++            if (frame.rgba[offset + 3] != 255) {
++                *fallback = "nonopaque_frame";
++                return EncodeFramePng(frame, png);
++            }
++            const std::uint32_t key = (static_cast<std::uint32_t>(frame.rgba[offset]) << 16u) |
++                (static_cast<std::uint32_t>(frame.rgba[offset + 1]) << 8u) | frame.rgba[offset + 2];
++            auto found = lookup.find(key);
++            if (found == lookup.end()) {
++                if (lookup.size() == 256u) {
++                    *fallback = "more_than_256_colors";
++                    return EncodeFramePng(frame, png);
++                }
++                const std::uint8_t index = static_cast<std::uint8_t>(lookup.size());
++                found = lookup.emplace(key, index).first;
++                palette.insert(palette.end(), frame.rgba.begin() + offset, frame.rgba.begin() + offset + 3);
++            }
++            rows.push_back(found->second);
++        }
++    }
++    uLongf size = compressBound(static_cast<uLong>(rows.size()));
++    std::vector<std::uint8_t> compressed(size);
++    if (compress2(compressed.data(), &size, rows.data(), static_cast<uLong>(rows.size()), Z_BEST_SPEED) != Z_OK)
++        return false;
++    compressed.resize(size);
++    const std::uint8_t signature[] = {137,80,78,71,13,10,26,10};
++    png->assign(signature, signature + 8);
++    std::vector<std::uint8_t> header;
++    PngU32(&header, frame.width); PngU32(&header, frame.height);
++    const std::uint8_t attributes[] = {8,3,0,0,0};
++    header.insert(header.end(), attributes, attributes + 5);
++    PngChunk(png, "IHDR", header); PngChunk(png, "PLTE", palette);
++    PngChunk(png, "IDAT", compressed); PngChunk(png, "IEND", std::vector<std::uint8_t>());
++    *colors = static_cast<std::uint32_t>(lookup.size());
++    return true;
++}
++
++#if defined(C_DOSBOX_AGENT_ZSTD)
++static bool EncodeFrameZstd(const FrameSnapshot& frame, std::vector<std::uint8_t>* data)
++{
++    const std::size_t stride = static_cast<std::size_t>(frame.width) * 4u;
++    if (!frame.width || !frame.height || frame.rgba.size() > 16u * 1024u * 1024u ||
++        frame.rgba.size() != stride * frame.height) return false;
++    data->resize(ZSTD_compressBound(frame.rgba.size()));
++    const std::size_t size = ZSTD_compress(data->data(), data->size(), frame.rgba.data(), frame.rgba.size(), 1);
++    if (ZSTD_isError(size)) return false;
++    data->resize(size);
++    return true;
++}
++#endif
 +
 +static JsonValue SignedNumber(const std::int32_t value)
 +{
@@ -1626,6 +1743,14 @@ index 29363cf..c3b76e2 100644
 +    Add(&video, "screenshot", JsonValue::Bool(true));
 +    Add(&video, "pixel_probe", JsonValue::Bool(true));
 +    Add(&video, "format", String("png"));
++    JsonValue encodings = JsonValue::Array();
++    encodings.array.push_back(String("png"));
++    encodings.array.push_back(String("png-indexed"));
++#if defined(C_DOSBOX_AGENT_ZSTD)
++    encodings.array.push_back(String("rgba-zstd"));
++#endif
++    Add(&video, "screenshot_encodings", encodings);
++    Add(&video, "screenshot_timing", JsonValue::Bool(true));
 +    Add(&video, "source", String("last_completed_guest_frame"));
 +    Add(&video, "headless", JsonValue::Bool(AGENT_IsHeadless()));
 +#if defined(C_SDL2)
@@ -1661,7 +1786,7 @@ index 29363cf..c3b76e2 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1398,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1485,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1669,7 +1794,7 @@ index 29363cf..c3b76e2 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1282,6 +1477,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1282,6 +1564,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1679,7 +1804,7 @@ index 29363cf..c3b76e2 100644
  
      if (!impl->transport->Start(config, [state](const std::string& request) {
              return HandleJsonRpcImpl(state, request);
-@@ -1291,6 +1489,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1291,6 +1576,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
          impl->started = false;
          impl->stopping = false;
          AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1687,7 +1812,7 @@ index 29363cf..c3b76e2 100644
          return false;
      }
      return true;
-@@ -1330,6 +1529,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
+@@ -1330,6 +1616,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1697,7 +1822,7 @@ index 29363cf..c3b76e2 100644
      return true;
  }
  
-@@ -1355,6 +1557,7 @@ void AgentServer::Stop()
+@@ -1355,6 +1644,7 @@ void AgentServer::Stop()
      // The callback may already have been copied by the emulation thread. It
      // holds shared state and observes stopping, rather than touching this.
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1705,7 +1830,7 @@ index 29363cf..c3b76e2 100644
      if (transport)
          transport->Stop();
  
-@@ -1754,6 +1957,523 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +2044,560 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -1793,6 +1918,8 @@ index 29363cf..c3b76e2 100644
 +    } else if (parsed.method == "video.screenshot" || parsed.method == "video.probe" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
 +        const bool screenshot = parsed.method == "video.screenshot";
 +        const bool probe = parsed.method == "video.probe";
++        std::string encoding = "png";
++        bool measure = false;
 +        std::vector<std::pair<std::uint32_t,std::uint32_t>> points;
 +        const bool move = parsed.method == "input.mouse.move";
 +        const bool click = parsed.method == "input.mouse.click";
@@ -1804,6 +1931,11 @@ index 29363cf..c3b76e2 100644
 +        std::string button_name = "left";
 +        bool valid = OptionalFrameNumber(parsed.params, "frame_id", &has_frame, &frame_id) &&
 +                     OptionalFrameNumber(parsed.params, "mode_id", &has_mode, &mode_id);
++        if (screenshot) {
++            if (parsed.params.Find("encoding")) valid = valid && GetString(parsed.params, "encoding", &encoding);
++            if (parsed.params.Find("measure")) valid = valid && GetBool(parsed.params, "measure", &measure);
++            valid = valid && (encoding == "png" || encoding == "png-indexed" || encoding == "rgba-zstd");
++        }
 +        if (probe) {
 +            const JsonValue* samples = parsed.params.Find("points");
 +            valid = valid && samples && samples->type == JsonType::Array && samples->array.size() <= 4096;
@@ -1834,12 +1966,17 @@ index 29363cf..c3b76e2 100644
 +        if (click && (hold_ms < 1 || hold_ms > 1000)) valid = false;
 +        if (!valid) {
 +            response = InvalidParams(parsed.id, "Invalid mouse coordinates, frame/mode id, button, pressed or hold_ms (1..1000)");
++#if !defined(C_DOSBOX_AGENT_ZSTD)
++        } else if (screenshot && encoding == "rgba-zstd") {
++            response = Error(parsed.id, kErrorCapabilityUnavailable,
++                             "Backend was built without Zstandard screenshot transport", "CAPABILITY_UNAVAILABLE");
++#endif
 +        } else if (session->state != Impl::SessionState::Running && session->state != Impl::SessionState::Stopped) {
 +            response = SessionError(parsed.id, kErrorCapabilityUnavailable, "Target is not active", "TARGET_EXITED", session);
 +        } else {
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id = session->id;
-+            if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op,
++            if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op, encoding, measure,
 +                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id](const std::uint64_t) {
 +                    std::string error;
 +                    FrameSnapshot frame;
@@ -1857,7 +1994,20 @@ index 29363cf..c3b76e2 100644
 +                        success = false; stale = true; error = "Screenshot frame or video mode has changed";
 +                    }
 +                    if (success && screenshot) {
-+                        success = EncodeFramePng(frame, &png);
++                        const auto started = std::chrono::steady_clock::now();
++                        operation->screenshot_encoding = encoding;
++                        if (encoding == "png-indexed") {
++                            success = EncodeFrameIndexedPng(frame, &png, &operation->palette_colors,
++                                                            &operation->screenshot_fallback);
++                            if (!operation->screenshot_fallback.empty()) operation->screenshot_encoding = "png";
++#if defined(C_DOSBOX_AGENT_ZSTD)
++                        } else if (encoding == "rgba-zstd") {
++                            success = EncodeFrameZstd(frame, &png);
++#endif
++                        } else success = EncodeFramePng(frame, &png);
++                        if (measure) operation->encode_us = static_cast<std::uint64_t>(
++                            std::chrono::duration_cast<std::chrono::microseconds>(
++                                std::chrono::steady_clock::now() - started).count());
 +                        if (!success) error = "Unable to encode guest framebuffer";
 +                    } else if (success && move) {
 +                        success = AGENT_MouseMoveAbsolute(x, y, frame.width, frame.height, &mouse, &error);
@@ -1884,7 +2034,7 @@ index 29363cf..c3b76e2 100644
 +                    return operation->completed.wait_for(operation_lock, std::chrono::milliseconds(timeout_ms),
 +                                                          [operation]() { return operation->done; });
 +                };
-+                pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation]() {
++                pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation, encoding, measure]() {
 +                    if (!operation->success)
 +                        return Error(response_id, kErrorCapabilityUnavailable, operation->error,
 +                                     operation->stale_frame ? "STALE_FRAME" : "COMMAND_REJECTED");
@@ -1898,7 +2048,7 @@ index 29363cf..c3b76e2 100644
 +                        // Include JSON metadata and base64 expansion in the configured message budget.
 +                        if ((operation->data.size() + 2) / 3 * 4 + 1024 > impl->config.max_message_bytes)
 +                            return Error(response_id, kErrorRequestTooLarge,
-+                                         "PNG exceeds max_message_bytes; raise the configured response budget", "RESPONSE_TOO_LARGE");
++                                         "Screenshot exceeds max_message_bytes; raise the configured response budget", "RESPONSE_TOO_LARGE");
 +                        if (probe) {
 +                            JsonValue samples=JsonValue::Array();
 +                            for (const auto& point : points) {
@@ -1910,9 +2060,21 @@ index 29363cf..c3b76e2 100644
 +                            }
 +                            Add(&result,"samples",samples); Add(&result,"format",String("rgb-samples"));
 +                        } else {
-+                        Add(&result, "format", String("png"));
-+                        Add(&result, "png_base64", String(EncodeBase64(operation->data)));
++                        const bool raw = operation->screenshot_encoding == "rgba-zstd";
++                        Add(&result, "format", String(raw ? "rgba-zstd" : "png"));
++                        Add(&result, raw ? "data_base64" : "png_base64", String(EncodeBase64(operation->data)));
 +                        Add(&result, "sha256", String(Sha256Hex(operation->data)));
++                        if (encoding != "png") Add(&result, "encoding", String(operation->screenshot_encoding));
++                        if (measure) Add(&result, "encode_us", Number(operation->encode_us));
++                        if (!operation->screenshot_fallback.empty())
++                            Add(&result, "fallback_reason", String(operation->screenshot_fallback));
++                        if (operation->palette_colors) Add(&result, "palette_colors", Number(operation->palette_colors));
++                        if (raw) {
++                            Add(&result, "pixel_format", String("RGBA8"));
++                            Add(&result, "stride", Number(static_cast<std::uint64_t>(frame.width) * 4u));
++                            Add(&result, "uncompressed_bytes", Number(frame.rgba.size()));
++                            Add(&result, "raw_sha256", String(Sha256Hex(frame.rgba)));
++                        }
 +                        }
 +                        Add(&result, "width", Number(frame.width)); Add(&result, "height", Number(frame.height));
 +                        Add(&result, "source_bpp", Number(frame.source_bpp));
@@ -2229,7 +2391,7 @@ index 29363cf..c3b76e2 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1801,6 +2521,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1801,6 +2645,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "memory.read") {
@@ -2240,7 +2402,7 @@ index 29363cf..c3b76e2 100644
          const JsonValue* length_value = parsed.params.Find("length");
          std::uint32_t length = 0;
          MemoryAddress address;
-@@ -1820,12 +2544,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1820,12 +2668,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          } else {
              const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
              const std::string session_id = session->id;
@@ -2260,7 +2422,7 @@ index 29363cf..c3b76e2 100644
                      {
                          std::lock_guard<std::mutex> operation_lock(operation->mutex);
                          operation->success = success;
-@@ -1857,6 +2587,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1857,6 +2711,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  } else {
                      JsonValue result = SessionResult(*session);
                      Add(&result, "address", EncodeMemoryAddress(address));
@@ -2270,7 +2432,7 @@ index 29363cf..c3b76e2 100644
                      Add(&result, "byte_count", Number(operation->data.size()));
                      Add(&result, "data_base64", String(EncodeBase64(operation->data)));
                      Add(&result, "sha256", String(Sha256Hex(operation->data)));
-@@ -1865,9 +2598,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1865,9 +2722,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "session.stop") {
@@ -2289,7 +2451,7 @@ index 29363cf..c3b76e2 100644
              response = AGENT_MakeJsonRpcResult(parsed.id, result);
          } else if (session->state == Impl::SessionState::Starting ||
                     session->state == Impl::SessionState::Failed) {
-@@ -1934,6 +2675,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1934,6 +2799,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      }
                  }) == 0) {
                  session->operations.erase(operation_id);
@@ -2297,7 +2459,7 @@ index 29363cf..c3b76e2 100644
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
                                   "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
              } else {
-@@ -1955,7 +2697,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2821,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -2306,7 +2468,7 @@ index 29363cf..c3b76e2 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2712,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2836,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -2315,7 +2477,7 @@ index 29363cf..c3b76e2 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2724,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2848,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -2324,7 +2486,7 @@ index 29363cf..c3b76e2 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2153,9 +2895,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2153,9 +3019,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2337,7 +2499,7 @@ index 29363cf..c3b76e2 100644
              response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
          } else if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -2169,12 +2912,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2169,12 +3036,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              operation->registers.reset(new Impl::AdapterOperation());
              const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
              const std::string session_id = session->id;
@@ -2357,7 +2519,7 @@ index 29363cf..c3b76e2 100644
                  if (success && !continued)
                      success = adapter.GetRegisters(&registers, &adapter_error);
                  {
-@@ -2190,7 +2938,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2190,7 +3062,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (impl->session && impl->session->id == session_id &&
                          impl->session->state == Impl::SessionState::Stopped) {
                          impl->session->state = Impl::SessionState::Running;
@@ -2366,7 +2528,7 @@ index 29363cf..c3b76e2 100644
                          impl->state_changed.notify_all();
                      }
                  }
-@@ -2203,7 +2951,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2203,7 +3075,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  Impl::DeferredRequest pending;
                  pending.request = parsed;
                  pending.fingerprint = parsed.fingerprint;
@@ -2375,7 +2537,7 @@ index 29363cf..c3b76e2 100644
                      {
                          std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
                          if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
-@@ -2223,7 +2971,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2223,7 +3095,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                          })) {
                              return false;
                          }
@@ -2385,7 +2547,7 @@ index 29363cf..c3b76e2 100644
                              return true;
                      }
  
-@@ -2235,16 +2984,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2235,16 +3108,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                              submit_registers = true;
                          }
                      }
@@ -2409,7 +2571,7 @@ index 29363cf..c3b76e2 100644
                                  operation->registers->done = true;
                              }
                              operation->registers->completed.notify_all();
-@@ -2260,7 +3014,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2260,7 +3138,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
                                                                      [operation]() { return operation->registers->done; });
                  };
@@ -2418,7 +2580,7 @@ index 29363cf..c3b76e2 100644
                      bool dispatch_success = false;
                      bool continued = false;
                      std::string dispatch_error;
-@@ -2280,6 +3034,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2280,6 +3158,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (!impl->session || impl->session->id != session_id)
                          return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
                      Impl::Session& active = *impl->session;
@@ -2430,7 +2592,7 @@ index 29363cf..c3b76e2 100644
                      if (!continued) {
                          active.last_stop_kind = "step";
                          active.last_stop_breakpoint_id.clear();
-@@ -2314,6 +3073,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2314,6 +3197,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      JsonValue result = SessionResult(active);
                      Add(&result, "stop_reason", StopReason(active));
                      Add(&result, "registers", RegistersResult(registers, active));
@@ -2446,7 +2608,7 @@ index 29363cf..c3b76e2 100644
                      return AGENT_MakeJsonRpcResult(response_id, result);
                  };
                  if (parsed.has_id && parsed.id.type != JsonType::Null)
-@@ -2856,6 +3624,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3748,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2454,7 +2616,7 @@ index 29363cf..c3b76e2 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3657,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2888,6 +3781,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
          return;
      }
  
@@ -2476,7 +2638,7 @@ index 29363cf..c3b76e2 100644
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3714,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3838,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2484,7 +2646,7 @@ index 29363cf..c3b76e2 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2998,6 +3783,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2998,6 +3907,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
      impl->state_changed.notify_all();
  }
  
@@ -2532,7 +2694,7 @@ index 29363cf..c3b76e2 100644
  void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                      const std::uint64_t generation,
                                      const std::uint16_t segment,
-@@ -3008,6 +3834,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3958,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -2541,7 +2703,7 @@ index 29363cf..c3b76e2 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,7 +3865,21 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,7 +3989,21 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2564,7 +2726,7 @@ index 29363cf..c3b76e2 100644
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
                (trace_completed ? "pause" : "breakpoint")));
-@@ -3058,8 +3900,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3058,8 +4024,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              break;
          }
      }
@@ -3533,7 +3695,7 @@ index 36c909c..6c0bb8e 100644
  static bool agent_trace_active = false;
  static uint32_t agent_trace_remaining = 0;
  #endif
-@@ -6617,6 +6780,12 @@
+@@ -6617,6 +6780,12 @@ static void DEBUG_AgentCaptureTraceEvent(void)
  	event.gs = inst.s_gs;
  	event.ss = inst.s_ss;
  	event.flags = inst.flags;

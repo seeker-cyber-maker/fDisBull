@@ -1,9 +1,11 @@
 # DinoPark interruption recovery and handoff — 2026-11-03
 
-This documentation handoff continues the original-backed DinoPark Z investigation.
-It records a fresh project audit and a bounded analysis of the remaining purchase
-presentation issue. It does not launch or reconnect a guest, change acceptance
-predicates, package a release, or complete the binary/asset investigation.
+This handoff continues the original-backed DinoPark Z investigation. The initial
+documentation contribution records a fresh project audit and a bounded analysis
+of the remaining purchase presentation issue. A subsequent user-requested native
+screenshot experiment adds optional lossless encodings; its separate qualification
+is linked below. The historical recovery sessions remain expired, and neither
+contribution changes purchase acceptance or completes the binary/asset investigation.
 
 ## Source and delivery state
 
@@ -146,6 +148,19 @@ value watches, with capture/latch/rearm handling. Arbitrary null padding is not
 a useful default target. Recreate and verify actual bindings in every new run;
 do not claim persisted definitions reattach a dead native session.
 
+## Native screenshot follow-up
+
+The user-requested follow-up implements and tests optional exact indexed PNG
+and raw RGBA8 plus Zstandard in the real native screenshot path. See the
+[implementation, original-game measurements and friction record](../VERIFICATION-DINOPARK-SCREENSHOT-CODECS-2026-11-03.md)
+for the separate source/backend identities and measured scope. The original PNG
+remains the default. Luna's finite original-game trial verifies pixel equality,
+paused-state neutrality, sound-off settings and process shutdown. Indexed PNG
+improves the measured title-screen transport and stored-artifact path; raw
+Zstandard's faster compression does not produce an end-to-end speedup in that
+same compatibility path. These trials do not resume historical recovery
+sessions or advance the unresolved 97-entry / 13-asset investigation.
+
 ## Next owner: evidence and acceptance
 
 1. Start from current source and pin the chosen backend, original files and a
@@ -177,6 +192,7 @@ Private locations are local selectors, not portable or public downloads:
 | Full E55 research archive | `/Volumes/PATRIOT/Downloads/DinoPark-E55-UIL-Research-Handoff.zip` |
 | Recovered KQ1/PQ1/Zork archive | `/Volumes/PATRIOT/Downloads/GOG-KQ1-PQ1-Zork-Recovered-Files.zip` |
 
-The source PR includes authored documentation only. Original game files, retained
+The source PR now includes the authored native screenshot implementation, client
+support, regression checks and this documentation. Original game files, retained
 frames, saves, FDBs, raw traces and ZIPs stay private. No background run or
 automatic monitoring is implied by this handoff.

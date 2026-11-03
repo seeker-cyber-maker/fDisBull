@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "81a21dd65dcd83fed7e25e4b063da0885b5da2a40028014c15752b3566e9fba9",
+  "patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -26,6 +26,11 @@
       "path": "client/python/tests/test_unix_transport.py",
       "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
       "size": 9847
+    },
+    {
+      "path": "configure.ac",
+      "sha256": "86c58d9d4447eeaeb2981a7aa59fc289ffd4beb16291a2655f43436f74ffb637",
+      "size": 54858
     },
     {
       "path": "include/agent/agent_bridge.h",
@@ -89,8 +94,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "687d864058895a776ef9b2f50abe7a60ea99088c295b147a797047604cea3243",
-      "size": 209240
+      "sha256": "70cd74a6c75b2efcffdb2589576807dc02c85cc37ec1cf34129bd62c6ac76e01",
+      "size": 216172
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -225,17 +230,5 @@
       "pending VGA resize"
     ],
     "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
-  },
-  "protected_mode_mouse": {
-    "queue": "built-in INT33 internal event/state queue; physical IVT identity; active DOS kernel required",
-    "cpu_modes": [
-      "real",
-      "v86",
-      "protected"
-    ],
-    "delivery": "IRQ/callback delivery retains upstream mode guards; acceptance is queued, not application consumption",
-    "address_context": "live stopped registers include CPU mode, paging/control registers, A20 and actual code/stack widths; historical trace context omitted",
-    "trace_mode": "Each historical event carries captured CPU mode and code/stack widths; never inferred from the final stop",
-    "data_access_mode": "Each watch access captures its own real/v86/protected CPU mode before the later stop; source writer projection requires that captured mode"
   }
 }
