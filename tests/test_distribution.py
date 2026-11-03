@@ -7,7 +7,9 @@ import zipfile
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scripts/check_agent_skill.py',
+REQUIRED_SOURCE_FILES=('.gitlab-ci.yml', '.github/workflows/ci.yml', '.github/workflows/native-debugger.yml',
+                       'scripts/console_synthesis_oracle.c', 'tests/metrics_checks.mjs',
+                       'tests/memory_cut_shell_checks.mjs', 'tests/memory_region_shell_checks.mjs', 'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scripts/check_agent_skill.py',
                        'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py','player/fdisbull_player/word16.py',
                        'player/fdisbull_player/game_intents.py','player/fdisbull_player/intent_runtime.py','player/fdisbull_player/batch.py',

@@ -2,14 +2,14 @@
 #
 # Anti-abuse and quota-protection guarantees:
 # 1. Feature, agent, and archive branch pushes NEVER start automatic pipelines.
-# 2. Draft Merge Requests skip automatic runs unless FDISBULL_RUN_DRAFT_CI=1.
+# 2. Draft Merge Requests skip automatic runs. Explicit API/web pipelines work
+#    without pipeline-variable overrides (which the project may prohibit).
 # 3. Ready Merge Requests, default-branch (main) pushes, v* release tags, and
 #    explicit web/API dispatches run the fast `test-and-package` gate.
 # 4. Heavy 45-minute C++ emulator compilation (`native-debugger-*`) NEVER runs
-#    automatically on ordinary pushes/MRs; it requires explicit manual play or
-#    FDISBULL_RUN_NATIVE_CI=1 during pre-release qualification.
-# 5. Jobs are interruptible, serialized per ref via resource_group, and never
-#    auto-retry on failure.
+#    automatically on ordinary pushes/MRs; an API/web pipeline waits for one
+#    blocking manual start before running the required native chain.
+# 5. Only superseded MR checks are interruptible; qualification runs are retained.
 
 workflow:
   name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME)"
@@ -20,7 +20,7 @@ workflow:
       when: never
     - if: '$FDISBULL_DISABLE_CI == "1"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^(\[Draft\]|\(Draft\)|Draft:)/i && $FDISBULL_RUN_DRAFT_CI != "1"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^(\[Draft\]|\(Draft\)|Draft:)/i'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: always
@@ -33,8 +33,8 @@ workflow:
     - when: never
 
 default:
-  image: python:3.12-slim
-  interruptible: true
+  image: python:3.12-slim-bookworm
+  interruptible: false
   timeout: 20m
   retry: 0
 
@@ -49,93 +49,169 @@ cache:
 
 stages:
   - verify
+  - native-gate
   - native-qualification
+  - native-unified
+  - qualification
 
 test-and-package:
   stage: verify
+  timeout: 40m
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      interruptible: true
+    - when: on_success
   before_script:
     - apt-get update
-    - apt-get install -y --no-install-recommends git build-essential nodejs libx11-dev
+    - apt-get install -y --no-install-recommends git build-essential clang nodejs libx11-dev
   script:
-    - python -m pip install --upgrade pip
-    - python -m pip install ".[test,source]" build
-    - python -m pytest -q
-    - python -m build
-    - python -m build --wheel ./player --outdir dist
-    - |
-      RUNNER_TEMP="$(mktemp -d)"
-      python -m venv --system-site-packages "$RUNNER_TEMP/fdisbull-skill-gate"
-      "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" -m pip install --no-index --no-deps --force-reinstall dist/fdisbull-*.whl
-      mkdir -p artifacts/receipts
-      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --output "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json"
-      cp "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json" artifacts/receipts/
-      python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --skill write-gamefaqs-guide --output "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json"
-      cp "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json" artifacts/receipts/
-      python -m venv "$RUNNER_TEMP/fdisbull-player-smoke"
-      "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -m pip install --no-index --no-deps dist/fdisbull_player-*.whl
-      "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
-      "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -m fdisbull_player --help
-      rm -rf "$RUNNER_TEMP"
-    - python scripts/check_dist.py
-    - python scripts/build_release.py
-    - python scripts/check_dist.py
+    - bash scripts/ci/test-and-package.sh
   artifacts:
     name: "fdisbull-packages-$CI_COMMIT_SHORT_SHA"
-    when: on_success
+    when: always
     expire_in: 7 days
     paths:
       - dist/*
       - artifacts/receipts/*.json
+      - artifacts/ordinary/
+    reports:
+      junit: artifacts/ordinary/tests.xml
+
+# A deliberate API or web pipeline has one blocking manual start. Ordinary
+# MR, main and tag pipelines have no unplayed native jobs.
+.native_qualification_rules:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
+      when: on_success
+    - when: never
+
+native-qualification:
+  stage: native-gate
+  interruptible: false
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: false
+    - when: never
+  script:
+    - 'echo "Starting native qualification for $CI_COMMIT_SHA"'
 
 .native_debugger_template:
+  extends: .native_qualification_rules
   stage: native-qualification
-  image: ubuntu:24.04
-  timeout: 45m
-  resource_group: "fdisbull-native-$CI_COMMIT_REF_SLUG"
-  rules:
-    - if: '$FDISBULL_RUN_NATIVE_CI == "1"'
-      when: on_success
-      allow_failure: false
-    - when: manual
-      allow_failure: true
+  interruptible: false
+  timeout: 60m
+  needs:
+    - native-qualification
+    - job: test-and-package
+      artifacts: true
+  variables:
+    FDISBULL_DOSBOX: "$CI_PROJECT_DIR/.native/backends/$FDISBULL_PROFILE/dosbox-x"
+    FDISBULL_DOSBOX_SOURCE: "$CI_PROJECT_DIR/.native/dosbox-x"
+    FDISBULL_FRAME_EVIDENCE: "$CI_PROJECT_DIR/native-evidence/frame-capture"
   script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv build-essential autoconf automake pkg-config nasm llvm ffmpeg libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
-    - git clone --no-checkout https://github.com/joncampbell123/dosbox-x.git .native/dosbox-x
-    - git -C .native/dosbox-x checkout 029bd65c5dcc7cdc7f2e14e35278620d9707d969
-    - |
-      python3 - <<'PY'
-      import hashlib, json, os, subprocess
-      from pathlib import Path
-      checkout = Path('.native/dosbox-x').resolve()
-      directory = Path(os.environ['FDISBULL_PATCH_DIRECTORY']).resolve()
-      manifest = json.loads((directory / 'source-manifest.json').read_text())
-      head = subprocess.check_output(['git', '-C', str(checkout), 'rev-parse', 'HEAD'], text=True).strip()
-      assert head == manifest['baseline_commit'], 'Wrong upstream baseline'
-      patch = directory / 'headless-agent.patch'
-      assert hashlib.sha256(patch.read_bytes()).hexdigest() == manifest['patch_sha256'], 'Patch hash mismatch'
-      subprocess.run(['git', '-C', str(checkout), 'apply', '--check', str(patch)], check=True)
-      subprocess.run(['git', '-C', str(checkout), 'apply', str(patch)], check=True)
-      for item in manifest['source_files']:
-          path = checkout / item['path']
-          assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256'], item['path']
-      print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
-      PY
-    - (cd .native/dosbox-x && ./autogen.sh && ./configure --enable-debug=heavy --disable-sdl2test --disable-alsatest && make -j"$(nproc)")
-    - python3 -m venv .native-venv
-    - .native-venv/bin/pip install ".[test]" build
-    - FDISBULL_DOSBOX="$CI_PROJECT_DIR/.native/dosbox-x/src/dosbox-x" FDISBULL_DOSBOX_SOURCE="$CI_PROJECT_DIR/.native/dosbox-x" .native-venv/bin/pytest -q $FDISBULL_NATIVE_TESTS
+    - bash scripts/ci/native-debugger.sh
+    - python scripts/ci/native-receipt.py "$FDISBULL_PROFILE"
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - native-evidence/
+      - artifacts/receipts/native-*.json
+      - .native/offline/output/
+      - .native/backends/
+    reports:
+      junit: native-evidence/$FDISBULL_PROFILE/tests.xml
 
 native-debugger-stable:
   extends: .native_debugger_template
+  image: python:3.12-bookworm
   variables:
-    FDISBULL_PATCH_DIRECTORY: "experimental/dosbox-x"
-    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py"
+    FDISBULL_PROFILE: stable
+    FDISBULL_PATCH_DIRECTORY: experimental/dosbox-x
 
 native-debugger-layers:
   extends: .native_debugger_template
+  image: python:3.13.5-bookworm
   variables:
-    FDISBULL_PATCH_DIRECTORY: "experimental/dosbox-x/layers"
-    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py"
+    FDISBULL_PROFILE: layers
+    FDISBULL_PATCH_DIRECTORY: experimental/dosbox-x/layers
+
+native-unified:
+  extends: .native_qualification_rules
+  stage: native-unified
+  image: python:3.12-bookworm
+  interruptible: false
+  timeout: 90m
+  needs:
+    - job: test-and-package
+      artifacts: true
+    - job: native-debugger-stable
+      artifacts: false
+    - job: native-debugger-layers
+      artifacts: true
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+    FDISBULL_PE_QEMU: "$CI_PROJECT_DIR/.native/pe/qemu-9.2.4/build/qemu-system-x86_64"
+    FDISBULL_PE_KERNEL: "$CI_PROJECT_DIR/.native/pe/linux-amd64"
+    FDISBULL_PE_INITRAMFS: "$CI_PROJECT_DIR/.native/pe/runtime.cpio.gz"
+    FDISBULL_PE_FIXTURE: "$CI_PROJECT_DIR/.native/pe/oracle.exe"
+    FDISBULL_PE_EVIDENCE: "$CI_PROJECT_DIR/native-evidence/pe/artifacts"
+    FDISBULL_REQUIRE_PE: "1"
+    FDISBULL_DOSBOX: "$CI_PROJECT_DIR/.native/backends/layers/dosbox-x"
+    FDISBULL_MACHINE_QEMU: "$CI_PROJECT_DIR/.native/pe/qemu-9.2.4/build/qemu-system-x86_64"
+    FDISBULL_DOS_KERNEL: "$CI_PROJECT_DIR/.native/pe/linux-amd64"
+    FDISBULL_DOS_INITRAMFS: "$CI_PROJECT_DIR/.native/pe/dos-runtime.cpio.gz"
+    FDISBULL_MACHINE_EVIDENCE: "$CI_PROJECT_DIR/native-evidence/unified/boot"
+    FDISBULL_DOS_QEMU_EVIDENCE: "$CI_PROJECT_DIR/native-evidence/unified/dos"
+    FDISBULL_REQUIRE_MACHINE: "1"
+    FDISBULL_REQUIRE_DOS_QEMU: "1"
+  script:
+    - bash scripts/ci/native-unified.sh
+    - python scripts/ci/native-receipt.py unified
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - native-evidence/pe/
+      - native-evidence/unified/
+      - artifacts/receipts/native-unified.json
+      - .native/pe/packages/*.whl
+    reports:
+      junit:
+        - native-evidence/pe/tests.xml
+        - native-evidence/unified/tests.xml
+
+qualify-candidate:
+  extends: .native_qualification_rules
+  stage: qualification
+  image: python:3.12-slim-bookworm
+  interruptible: false
+  timeout: 10m
+  needs:
+    - test-and-package
+    - native-debugger-stable
+    - native-debugger-layers
+    - native-unified
+  script:
+    - python scripts/check_ci_qualification.py --output artifacts/receipts/qualification.json
+  artifacts:
+    when: on_success
+    name: "fdisbull-qualified-$CI_COMMIT_SHORT_SHA"
+    expire_in: 30 days
+    paths:
+      - artifacts/receipts/
+      - dist/
+      - .native/offline/output/
+      - .native/backends/
+      - .native/pe/packages/*.whl
+      - artifacts/ordinary/tests.xml
+      - native-evidence/stable/tests.xml
+      - native-evidence/layers/tests.xml
+      - native-evidence/pe/tests.xml
+      - native-evidence/unified/tests.xml

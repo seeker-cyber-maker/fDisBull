@@ -9,7 +9,7 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
+ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml", ".gitlab-ci.yml")
 DOC_EXAMPLE_FILES = (
     "docs/CLOUD-0.27.0-MANIFEST.json",
     "docs/uil-rfcs/0001/README.md",
@@ -108,6 +108,10 @@ SOURCE_PATTERNS = (
     ("scripts/rom_semantic_route", "README.md"),
     ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
     ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),    ("scripts", "*.py"),
+    ("scripts", "*.c"),
+    ("scripts", "*.sh"),
+    ("scripts", "*.txt"),
+    (".github/workflows", "*.yml"),
     ("scripts", "miniplanets_display_observer.c"),
     ("docs/evidence/civd-browser-shell", "verification.json"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
@@ -138,7 +142,7 @@ SOURCE_PATTERNS = (
     ("tests/fixtures", "frame_capture.S"),
     ("tests", "macos_capture_fixture.swift"),
     ("tests", "memory_shell_checks.mjs"),
-    ("tests", "web_shell_checks.mjs"),
+    ("tests", "*.mjs"),
 )
 
 

@@ -1,9 +1,12 @@
 # GitLab release qualification: implementation handoff
 
-This is an implementation plan, not a completed CI migration or a release
-qualification. Keep routine topic mirroring and draft MRs inexpensive while
-restoring a deliberate, required native gate for an exact candidate commit.
-No provider setting or job should be changed merely by reading this document.
+This records the reviewed migration baseline and implementation plan. The
+follow-up implementation is described in [the coordination guide](CI_COORDINATION.md):
+manual native admission, complete suites, package inventories and dependent
+qualification receipts. Neither the plan nor the source implementation is a
+passing hosted result. Read the exact candidate's pipeline and qualification
+receipt before making that claim. No provider setting or job should be changed
+merely by reading this document.
 
 ## Source identities and comparison
 

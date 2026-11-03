@@ -8,19 +8,18 @@ Agents are required to update **both** local Git and GitLab when landing or sync
 
 This table describes admission by the GitLab YAML. A skipped push, a commit
 message containing `[skip ci]` / `[ci skip]`, or `FDISBULL_DISABLE_CI=1` can
-still prevent those jobs from being created. In particular, the current mirror
-helper suppresses **main and tag pushes as well as topic pushes by default**;
-see the synchronization section below. An admitted pipeline is not evidence
+still prevent jobs from being created. An admitted pipeline is not evidence
 that a job ran or that native qualification passed.
 
 | Event | `test-and-package` (fast Python/package gate) | `native-debugger-*` (45-min C++ emulator build) |
 | --- | --- | --- |
 | Feature, agent, or archive branch push (`codex/*`, `pr/*`, `archive/*`) | **No automatic run** (`when: never`) | **No automatic run** (`when: never`) |
-| Draft Merge Request (`Draft:` / `[Draft]`) opened or updated | **No automatic run** unless `FDISBULL_RUN_DRAFT_CI=1` | No job unless the draft pipeline is admitted; then manual / `FDISBULL_RUN_NATIVE_CI=1` |
-| Ready (non-Draft) Merge Request opened or updated | **Run** (interruptible, serialized per ref) | Manual / `FDISBULL_RUN_NATIVE_CI=1` only |
-| Default branch (`main`) push | **Run** | Manual / `FDISBULL_RUN_NATIVE_CI=1` only |
-| Version tag push matching `vX.Y.Z` | **Run** | Manual / `FDISBULL_RUN_NATIVE_CI=1` only |
-| Explicit web / API / manual trigger | **Run** | **Run** when manually played or `FDISBULL_RUN_NATIVE_CI=1` |
+| Draft Merge Request (`Draft:` / `[Draft]`) opened or updated | **No automatic run**; use an explicit API/web pipeline for qualification | No native jobs |
+| Ready (non-Draft) Merge Request opened or updated | **Run** (superseded MR work is interruptible) | No native jobs |
+| Default branch (`main`) push | **Run** | No native jobs |
+| Explicit version tag push matching `vX.Y.Z` | **Run** | No native jobs |
+| Explicit web / API pipeline | **Run** | Wait for blocking manual `native-qualification`; then run stable, layers, unified and final qualification |
+| Trigger-token pipeline | **Run** | No native jobs |
 
 ### Why heavy native jobs are manual-only on GitLab
 
@@ -28,25 +27,23 @@ Compiling `dosbox-x` from source downloads system packages and runs a 30–45 mi
 
 1. Routine pushes to topic branches do not admit jobs. GitLab can retain a skipped pipeline record with no jobs.
 2. Bulk branch mirroring via `python scripts/sync_mirrors.py` always passes `-o ci.skip` on topic branches.
-3. `Draft:` Merge Requests do not start automatic pipelines until marked Ready (or explicitly dispatched with `FDISBULL_RUN_DRAFT_CI=1`).
-4. Jobs use `interruptible: true`, `retry: 0`, and per-ref `resource_group` values. These permit cancellation of superseded interruptible work and serialize jobs sharing a resource group; they do not guarantee immediate cancellation or an empty queue. Different refs can still run concurrently.
-5. `native-debugger-stable` and `native-debugger-layers` are `when: manual` by default on admitted pipelines. Release qualification requires deliberately running the required jobs on the candidate SHA before tagging; the YAML does not restrict manual play to releases.
+3. `Draft:` Merge Requests do not start automatic pipelines until marked Ready. An API/web pipeline is a separate explicit request and does not need a pipeline-variable override.
+4. Jobs use `retry: 0`. Only superseded MR fast checks are interruptible; main, tag and explicit qualification work is retained. Fast checks use a per-ref resource group. These controls do not guarantee an empty queue or prohibit different refs from running concurrently.
+5. API/web pipelines expose one blocking manual `native-qualification` job. Playing it once starts both complete DOSBox legs, then installed-wheel PE64/DOS/QEMU/boot acceptance and the `qualify-candidate` job. Native jobs are absent from routine push/MR pipelines, so routine fast checks do not wait for an unplayed native gate.
 
-The default manual native jobs have `allow_failure: true`. A successful pipeline
-can therefore contain native jobs that were never played; a failed optional
-native job also does not make the whole pipeline fail. The current GitLab
-native path uses shorter test selections than the preserved GitHub workflow,
-does not pass `--require-native`, and does not include the downstream installed
-wheel PE64/DOS/QEMU/boot or offline-kit qualification. Its green status must not
-be described as the full former native gate. The
-[migration handoff](CI_MIGRATION_HANDOFF.md) defines the remaining work.
+Native qualification is blocking and requires all declared jobs to succeed.
+The DOSBox legs use explicit Python 3.12/3.13.5, source/patch/backend identities,
+the full preserved suites and `--require-native`. Selected native tests may not
+skip: missing prerequisites fail qualification. Layers verifies the offline kit
+with genuine dependencies and Z3. Unified acceptance installs the ordinary
+job's exact core wheel, and the kit carries its exact core/player wheels.
+Docker-in-Docker support is a required runner capability for the unified leg;
+an unavailable daemon fails that leg.
 
-The variable opt-ins in the table also depend on project permissions. If
-`ci_pipeline_variables_minimum_override_role` is `no_one_allowed`, callers cannot
-supply these overrides as pipeline variables through the web/API/trigger routes.
-That restriction does not disable variables already defined in YAML, project
-settings or group settings. Verify the intended admission route before starting
-a qualification; changing project permissions is a separate authorized action.
+This route works when pipeline-variable overrides are prohibited by
+`ci_pipeline_variables_minimum_override_role=no_one_allowed`. The old
+`FDISBULL_RUN_NATIVE_CI` / `FDISBULL_RUN_DRAFT_CI` overrides are unnecessary and
+no longer start native jobs. No project permission needs to be weakened.
 
 ## Dual synchronization between Local Git and GitLab
 
@@ -63,14 +60,15 @@ python scripts/sync_mirrors.py --branch codex/my-feature --no-tags
 git push -o ci.skip dual refs/heads/codex/my-feature:refs/heads/codex/my-feature
 ```
 
-`sync_mirrors.py` currently defaults to `ci_on_main=False` and includes tags
-unless `--no-tags` is supplied. Thus its default main **and tag** push commands
-carry `-o ci.skip`. `--ci-on-main` removes that option from both main and tag
-pushes; topic/archive pushes remain suppressed. This flag does not rerun an
-already synchronized ref, and an up-to-date push is not a CI trigger. It also
-does not make native jobs mandatory. Do not resynchronize every ref or push an
-empty commit to obtain checks: select the intended candidate and coordinate
-one bounded qualification with the CI owner.
+`sync_mirrors.py` admits fast checks for main by default and omits tags unless
+requested. Topic/archive pushes always carry `-o ci.skip`. `--tag vX.Y.Z`
+selects an explicit local version tag and admits its fast checks; `--tags`
+mirrors all tags as archives with CI suppressed, avoiding a pipeline for every
+old version. `--skip-ci` explicitly suppresses main/selected-tag checks for an
+archival sync. `--no-tags` and `--ci-on-main` remain compatible options.
+An up-to-date push is not a CI trigger. Do not resynchronize every ref or push
+an empty commit to obtain checks: select the candidate and coordinate one
+bounded API/web qualification with the CI owner. No version tag is needed.
 
 GitLab's `ci.skip` push option does not suppress a separate merge-request
 pipeline. Draft-MR rules are what keep a draft handoff from admitting jobs.
@@ -80,6 +78,38 @@ an MR. See GitLab's [skip behavior](https://docs.gitlab.com/ci/pipelines/#skip-a
 [manual job semantics](https://docs.gitlab.com/ci/jobs/job_control/#types-of-manual-jobs),
 [pipeline-variable permissions](https://docs.gitlab.com/ci/variables/#restrict-pipeline-variables)
 and [MR pipeline contract](https://docs.gitlab.com/ci/pipelines/merge_request_pipelines/).
+
+## Candidate and package acceptance
+
+The ordinary job derives a payload inventory from tracked runtime, player,
+test and support files, then compares bytes in the wheel, player wheel, sdist
+and tool ZIP. Newly added resources cannot disappear unnoticed because their
+extension was absent from an older selector. Privacy/archive checks still run
+separately. Built-wheel skills and isolated core/player/sdist/tool installations
+are checked outside the source tree. Failure logs are retained.
+
+`qualify-candidate` depends on every required job. It rechecks receipt source,
+pipeline and job identities, interpreters, JUnit coverage and artifact hashes.
+Missing, skipped, canceled, failed or wrong-source evidence cannot produce
+`qualification.json`. Fast-only pipeline success is not release qualification.
+
+Before packaging a release for publication, obtain the successful
+`qualify-candidate` artifact for the exact source commit. Preserve the package
+hashes; do not silently rebuild or substitute a local wheel. The artifact
+includes the raw receipts/JUnit and tested payloads so the offline validator can
+be rerun from its extracted root:
+
+```sh
+python scripts/check_ci_qualification.py --root /external/qualified-candidate \
+  --source-commit FULL_COMMIT_SHA --pipeline-id PIPELINE_ID \
+  --output /external/rechecked-qualification.json
+```
+
+This validates the evidence, not permission to publish. Provider completion and
+the exact pipeline/job IDs remain part of the release review. Tagging,
+publication and installation require their separate user authorization. Keep
+the historical [migration comparison](CI_MIGRATION_HANDOFF.md) as the rationale
+for these gates.
 
 ## One owner and a finite status command
 
