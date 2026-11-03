@@ -922,6 +922,7 @@ def invoke(method, params, debugger=None):
             "debug-save-script",
             "debug-scripts",
             "debug-state-info",
+            "debug-anchor-stone-info",
             "debug-fork-state",
             "debug-layer",
             "debug-layer-info",

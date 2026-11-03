@@ -56,6 +56,23 @@ user-authorized 20 GB minimum. Storage is admission-only, not a running quota.
 Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
+For a fixture/client-only correction, `--reuse-stable-backend` can explicitly
+select a prior stable leg's `guest-data/exported` directory. It verifies the
+binary hash and ELF architecture, original local build process/image, upstream,
+patch, configure flags, and byte-identical current/source-commit manifests.
+The original build identity/configuration records are retained unchanged and
+`build_source_commit` stays distinct from the current qualification source.
+Only C++ recompilation is reused: the complete current stable test selection,
+strict native checks and evidence export still run. A failed original test run
+does not become a passing run through reuse. The pinned upstream fetch is
+shallow; checked-out commit and patched-file hashes remain mandatory. Select the original compiled-leg export; an export from a previously reused leg is rejected so its later test commit cannot replace the original build provenance.
+
+Synthetic checkpoint fixtures explicitly settle the video device before their
+first target instruction and verify restored CPU, program/stack bytes and
+keyboard state. This setup advances device time, not a whole-machine replay.
+It is confined to authored test programs; production checkpoint calls still
+refuse a pending video mode change and never silently execute the target.
+
 Before native compiler work, establish the actual local Docker route with a
 bounded daemon/build/create/start/copy/export preflight. On Apple Silicon,
 unified acceptance uses a native ARM64 guest VM for Docker and a pinned AMD64

@@ -10,6 +10,7 @@ import pytest
 from fdisbull.project import Project
 from fdisbull.debug_experiments import validate_observations, compare_trials
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 def test_observations_are_bounded_and_explicit():
@@ -106,6 +107,7 @@ def test_real_experiment_restart_controls_layers_and_offline_exports(tmp_path,ex
             baseline=[p.debug_layer('RAM baseline',kind='ram',patches=[
                 {'address':'1000:0003','expected_hex':'1111','data_hex':'3333'}])['layer']]
         with p.debugger(experiment_backend,binary.parent) as d:
+            prepare_native_fixture(d)
             d.layers(baseline)
             bp=d.breakpoint('0x10008')
             watch=d.breakpoint('0x10020',access='w',length=2)

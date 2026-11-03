@@ -8,8 +8,10 @@ python -m pip install ".[test]" build
 export NATIVE_EVIDENCE="native-evidence/$FDISBULL_PROFILE"
 export FDISBULL_FRAME_EVIDENCE="$CI_PROJECT_DIR/$NATIVE_EVIDENCE/frame-capture"
 mkdir -p .native "$NATIVE_EVIDENCE"
-git clone --no-checkout https://github.com/joncampbell123/dosbox-x.git .native/dosbox-x
-git -C .native/dosbox-x checkout 029bd65c5dcc7cdc7f2e14e35278620d9707d969
+git init -q .native/dosbox-x
+git -C .native/dosbox-x remote add origin https://github.com/joncampbell123/dosbox-x.git
+git -C .native/dosbox-x fetch --depth 1 origin 029bd65c5dcc7cdc7f2e14e35278620d9707d969
+git -C .native/dosbox-x checkout --detach FETCH_HEAD
 python - <<'PY'
 import hashlib, json, os, subprocess
 from pathlib import Path
@@ -28,16 +30,23 @@ for item in manifest['source_files']:
 print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
 PY
 
-(
-  cd .native/dosbox-x
-  ./autogen.sh
-  ./configure --enable-sdl2 --enable-debug=heavy --enable-dosbox_agent \
-    --disable-avcodec --disable-libslirp --disable-libfluidsynth
-  make -j2
-)
-mkdir -p "$(dirname "$FDISBULL_DOSBOX")"
-cp .native/dosbox-x/src/dosbox-x "$FDISBULL_DOSBOX"
-cp .native/dosbox-x/config.log "$NATIVE_EVIDENCE/config.log"
+if [ "${FDISBULL_REUSE_STABLE:-}" = 1 ]; then
+  test "$FDISBULL_PROFILE" = stable
+  python scripts/ci/native_backend_reuse.py .native/reuse-stable \
+    experimental/dosbox-x/source-manifest.json "$FDISBULL_REUSE_IMAGE_DIGEST" \
+    "$NATIVE_EVIDENCE" "$FDISBULL_DOSBOX"
+else
+  (
+    cd .native/dosbox-x
+    ./autogen.sh
+    ./configure --enable-sdl2 --enable-debug=heavy --enable-dosbox_agent \
+      --disable-avcodec --disable-libslirp --disable-libfluidsynth
+    make -j2
+  )
+  mkdir -p "$(dirname "$FDISBULL_DOSBOX")"
+  cp .native/dosbox-x/src/dosbox-x "$FDISBULL_DOSBOX"
+  cp .native/dosbox-x/config.log "$NATIVE_EVIDENCE/config.log"
+fi
 python - <<'PY'
 import hashlib, json, os
 from pathlib import Path
@@ -49,6 +58,9 @@ receipt={'source_commit':os.environ['CI_COMMIT_SHA'],
          'patch_sha256':hashlib.sha256(patch.read_bytes()).hexdigest(),
          'profile':os.environ['FDISBULL_PATCH_DIRECTORY'],
          'python_version':os.sys.version, 'configure_flags':['--enable-sdl2','--enable-debug=heavy','--enable-dosbox_agent','--disable-avcodec','--disable-libslirp','--disable-libfluidsynth'], 'acceptance_tests':(Path('scripts/ci/native-'+os.environ['FDISBULL_PROFILE']+'-tests.txt').read_text()+' '+Path('scripts/ci/native-shared-tests.txt').read_text()).split()}
+reuse=Path(os.environ['NATIVE_EVIDENCE'])/'reuse-provenance.json'
+if reuse.exists():
+    receipt.update(json.loads(reuse.read_text()))
 (Path(os.environ['NATIVE_EVIDENCE'])/'backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
 PY
 

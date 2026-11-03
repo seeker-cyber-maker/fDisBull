@@ -8,6 +8,7 @@ from fdisbull.debug_script import validate_script
 from fdisbull.debugger import DebugWorkspace
 from fdisbull.project import Project
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 def test_rewind_routes_are_live_owned_and_script_arguments_are_checked():
@@ -38,6 +39,7 @@ def native(tmp_path,monkeypatch):
     monkeypatch.setenv('FDISBULL_TARGET_STORE',str(tmp_path/'objects'))
     with Project.create(tmp_path/'rewind.fdb',target) as project:
         with project.debugger(executable,game) as debug:
+            prepare_native_fixture(debug)
             yield project,debug,game
 
 

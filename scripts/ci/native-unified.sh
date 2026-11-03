@@ -2,7 +2,7 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libpng16-16 zlib1g libfreetype6
+apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6
 bash scripts/ci/install-node.sh
 mkdir -p .native/pe native-evidence/pe native-evidence/unified
 if [ "${FDISBULL_LOCAL_DOCKER:-}" = 1 ]; then
@@ -16,7 +16,8 @@ curl --fail --location --retry 3 \
 echo "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d  $FDISBULL_PE_KERNEL" | sha256sum --check
 chmod +x "$FDISBULL_DOSBOX"
 sha256sum "$FDISBULL_DOSBOX"
-ldd "$FDISBULL_DOSBOX"
+ldd "$FDISBULL_DOSBOX" | tee native-evidence/pe/dos-libraries.txt
+! grep -q 'not found' native-evidence/pe/dos-libraries.txt
 python - <<'PY'
 import hashlib, json, os
 from pathlib import Path
