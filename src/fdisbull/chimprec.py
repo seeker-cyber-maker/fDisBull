@@ -1,8 +1,10 @@
-"""CHimpREC-style import recovery over supplied, captured image bytes.
+"""CHimpREC-style recovery and PE reconstruction over captured image bytes.
 
-This adapts TiGa's candidate-slot/export-resolution methodology, with explicit
-bounds and retained aliases. It neither attaches to a process nor rebuilds an
-executable. Static import-directory parsing remains a separate operation.
+The recovery pass adapts TiGa's candidate-slot/export-resolution methodology,
+with explicit bounds, runtime-code-range evidence and retained aliases. The
+rebuild pass writes a bounded PE32/PE32+ analysis image with a qualified OEP,
+OriginalFirstThunk tables and original IAT slots. Process attachment and export
+enumeration remain backend responsibilities and are never fabricated here.
 
 Only export addresses supplied by the caller establish a match. Forwarder
 strings are retained as evidence; this API does not guess missing runtime
@@ -61,13 +63,15 @@ def _export_index(exports, bits):
 
 def recover_iat(regions: list[Region], bits: int, module_exports: list[dict],
                 candidate_slots: list[int] | None = None, max_slots: int = 4096,
-                gap_limit: int = 10) -> dict:
+                gap_limit: int = 10, code_ranges: list[dict] | None = None) -> dict:
     """Recover candidate IAT ranges from an offline snapshot and export map.
 
     ``candidate_slots`` are virtual addresses of pointer-sized cells, not their
-    contents. Without explicit candidates, scan executable bytes for x86
-    ``FF 15/25`` forms and corroborate each with the native decoder; in x64 the
-    memory address is signed RIP-relative. This is still heuristic discovery,
+    contents. Without explicit candidates, scan executable bytes for common x86
+    absolute/RIP-relative import references (indirect call/jump/push and selected
+    MOV loads), corroborating each with the native decoder. ``code_ranges`` can
+    explicitly qualify runtime-executable or independently established code spans
+    even when file section flags are stale. Discovery remains heuristic and is
     not proof that a byte pattern lies on an executed instruction boundary.
 
     Any cell matching a supplied export is an anchor. Expand in pointer-sized
@@ -92,7 +96,11 @@ def recover_iat(regions: list[Region], bits: int, module_exports: list[dict],
         "commit": CHIMPREC_COMMIT,
         "runtime_attachment": False,
         "executable_rebuilding": False,
-        "discovery": "explicit_slots" if candidate_slots is not None else "decoded_x86_ff15_ff25_patterns",
+        "rebuild_api": "fdisbull.chimprec.rebuild_captured_pe",
+        "discovery": "explicit_slots" if candidate_slots is not None else "decoded_x86_import_reference_patterns",
+        "bits": bits,
+        "pointer_width": bits // 8,
+        "code_range_override": code_ranges is not None,
     }
     result = {"source": source, "entries": [], "groups": [], "warnings": [],
               "candidates_examined": 0, "budget_exhausted": False}
@@ -136,21 +144,54 @@ def recover_iat(regions: list[Region], bits: int, module_exports: list[dict],
             if not add_candidate(address):
                 break
     else:
+        scan_regions = []
+        if code_ranges is None:
+            scan_regions = [region for region in ordered_regions if region.executable]
+        else:
+            if not isinstance(code_ranges, list) or len(code_ranges) > 4096:
+                raise ValueError("code_ranges must be a list of at most 4096 records")
+            previous_end = 0
+            total = 0
+            for item in sorted(code_ranges, key=lambda row: row.get("address", -1) if isinstance(row, dict) else -1):
+                if not isinstance(item, dict):
+                    raise ValueError("code_ranges entries must be dictionaries")
+                address = item.get("address")
+                length = item.get("length")
+                _unsigned(address, 64, "code range address")
+                _unsigned(length, 64, "code range length")
+                if not length or address < previous_end:
+                    raise ValueError("code_ranges must be nonempty and nonoverlapping")
+                source_region = next((region for region in ordered_regions
+                                      if region.start <= address and address + length <= region.start + len(region.data)), None)
+                if source_region is None:
+                    raise ValueError("code range is not wholly backed by a supplied region")
+                total += length
+                if total > _MAX_IMAGE:
+                    raise ValueError("code_ranges exceed the 64 MiB scan limit")
+                offset = address - source_region.start
+                evidence = item.get("evidence", "qualified code range")
+                if not isinstance(evidence, str) or not evidence or len(evidence) > 4096:
+                    raise ValueError("code range evidence must be a nonempty string of at most 4096 characters")
+                scan_regions.append(Region(evidence, address,
+                                           source_region.data[offset:offset + length], True,
+                                           source_region.writable))
+                previous_end = address + length
+            result["warnings"].append(
+                "Explicit code ranges are caller-qualified evidence; they override stale file flags but do not prove execution.")
         full = False
-        for region in ordered_regions:
-            if not region.executable:
-                continue
-            for match in re.finditer(b"\xff[\x15\x25]", region.data):
+        pattern = re.compile(b"(?:\xff[\x15\x25\x35]|\x8b[\x0d\x15\x1d\x25\x2d\x35\x3d]|\xa1)")
+        for region in scan_regions:
+            for match in pattern.finditer(region.data):
                 offset = match.start()
-                if offset + 6 > len(region.data):
-                    continue
-                instruction = decode(region.data[offset:offset + 6], region.start + offset, "x86", bits)
-                if (instruction and instruction["size"] == 6
-                        and instruction["flow"] in ("indirect_call", "indirect_jump")
-                        and len(instruction["data_refs"]) == 1):
-                    if not add_candidate(instruction["data_refs"][0]):
-                        full = True
-                        break
+                instruction = decode(region.data[offset:offset + 15], region.start + offset, "x86", bits)
+                if (instruction and instruction.get("data_refs")
+                        and instruction.get("flow") in ("indirect_call", "indirect_jump", "fallthrough")):
+                    for reference in instruction["data_refs"]:
+                        if not add_candidate(reference):
+                            full = True
+                            break
+                if full:
+                    break
             if full:
                 break
         if candidates:
@@ -176,6 +217,7 @@ def recover_iat(regions: list[Region], bits: int, module_exports: list[dict],
         record = {"address": address, "target": target, "resolved": bool(alternatives),
                   "alternatives": alternatives, "ambiguous": ambiguous,
                   "module": module, "group": module,
+                  "candidate": address in seen_candidates,
                   "status": ("ambiguous" if ambiguous else "resolved") if alternatives else ("padding" if target == 0 else "unresolved")}
         cache[address] = record
         return record
@@ -242,3 +284,109 @@ def recover_iat(regions: list[Region], bits: int, module_exports: list[dict],
     if result["budget_exhausted"]:
         result["warnings"].append(f"IAT recovery reached the {max_slots}-slot work budget; results are partial.")
     return result
+
+
+def _decision_map(decisions):
+    if decisions is None:
+        return {}
+    if not isinstance(decisions, dict) or len(decisions) > _MAX_SLOTS:
+        raise ValueError("thunk decisions must be a bounded dictionary")
+    normalized = {}
+    for raw_address, decision in decisions.items():
+        try:
+            address = int(raw_address, 0) if isinstance(raw_address, str) else raw_address
+        except ValueError as error:
+            raise ValueError("thunk decision address is invalid") from error
+        _unsigned(address, 64, "thunk decision address")
+        if decision in ("cut", "separator"):
+            normalized[address] = decision
+        elif isinstance(decision, dict):
+            alternative = decision.get("alternative")
+            if isinstance(alternative, bool) or not isinstance(alternative, int) or alternative < 0:
+                raise ValueError("thunk alternative selection must be a nonnegative integer")
+            normalized[address] = {"alternative": alternative}
+        else:
+            raise ValueError("thunk decision must be cut, separator or an alternative selection")
+    return normalized
+
+
+def build_import_plan(recovery: dict, bits: int, decisions: dict | None = None) -> list[dict]:
+    """Turn a recovery result and explicit invalid-thunk decisions into import groups.
+
+    Ambiguous entries require an alternative selection. Unresolved candidate
+    slots require ``cut`` or ``separator``; noncandidate expansion noise is
+    retained by recovery but omitted from the import plan. No symbol or
+    separator is invented.
+    """
+    if bits not in (32, 64):
+        raise ValueError("import plan requires 32 or 64 bits")
+    if not isinstance(recovery, dict) or not isinstance(recovery.get("entries"), list):
+        raise ValueError("recovery result is invalid")
+    choices = _decision_map(decisions)
+    width = bits // 8
+    groups, current, previous = [], None, None
+    for entry in sorted(recovery["entries"], key=lambda row: row.get("address", -1)):
+        if not isinstance(entry, dict):
+            raise ValueError("recovery entries must be dictionaries")
+        address = _unsigned(entry.get("address"), 64, "recovered thunk address")
+        decision = choices.pop(address, None)
+        status = entry.get("status")
+        if decision in ("cut", "separator") or status == "padding":
+            current, previous = None, None
+            continue
+        alternatives = entry.get("alternatives")
+        if not isinstance(alternatives, list):
+            raise ValueError("recovery alternatives must be a list")
+        selected = None
+        if entry.get("resolved"):
+            if decision is None:
+                if len(alternatives) != 1:
+                    raise ValueError(f"ambiguous import at {address:#x} needs an explicit alternative")
+                selected = alternatives[0]
+            elif isinstance(decision, dict):
+                if decision["alternative"] >= len(alternatives):
+                    raise ValueError("selected import alternative is out of range")
+                selected = alternatives[decision["alternative"]]
+        else:
+            # Expansion deliberately retains nearby nonzero junk as evidence.
+            # Only an unresolved candidate supplied or referenced by code needs
+            # an explicit repair decision; expansion noise never becomes an import.
+            if entry.get("candidate"):
+                raise ValueError(f"unresolved import at {address:#x} needs an explicit cut or separator decision")
+            current, previous = None, None
+            continue
+        if not isinstance(selected, dict):
+            raise ValueError("resolved import selection is invalid")
+        module = selected.get("module")
+        if not isinstance(module, str) or not module:
+            raise ValueError("selected import has no module")
+        item = {"address": address, "name": selected.get("name"),
+                "ordinal": selected.get("ordinal"), "forwarder": selected.get("forwarder")}
+        if (current is None or current["module"].casefold() != module.casefold()
+                or previous is None or address != previous + width):
+            current = {"module": module, "entries": []}
+            groups.append(current)
+        current["entries"].append(item)
+        previous = address
+    if choices:
+        raise ValueError("thunk decisions contain addresses absent from the recovery result")
+    return groups
+
+
+def rebuild_captured_pe(captured_image: bytes, recovery: dict, *, oep: int,
+                        decisions: dict | None = None, source_layout: str = "mapped",
+                        section_name: str = ".reimp", fixed_base: bool = True) -> dict:
+    """Rebuild imports and OEP for a captured PE32/PE32+ analysis image."""
+    from .chimprec_pe import parse_pe_layout, rebuild_pe_imports
+    layout = parse_pe_layout(captured_image)
+    plan = build_import_plan(recovery, layout["bits"], decisions)
+    result = rebuild_pe_imports(captured_image, plan, oep=oep,
+                                source_layout=source_layout, section_name=section_name,
+                                fixed_base=fixed_base)
+    result["receipt"]["recovery_source"] = recovery.get("source")
+    result["receipt"]["explicit_thunk_decisions"] = len(decisions or {})
+    return result
+
+
+# Public provenance helper retained beside the recovery API.
+from .chimprec_capture import validate_capture_manifest  # noqa: E402,F401

@@ -44,6 +44,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Check this copy's decoders, debuggers, diagnostics and UIL support without running a target | [Capabilities catalog](docs/CAPABILITIES.md) |
 | Understand an x86, ARM64 or Cortex-M executable without running it | [Disassemble, type and search](#disassemble-type-and-search) |
 | Unpack a local GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Rebuild a caller-captured packed Windows PE or GOG Galaxy UPX wrapper | [CHimpREC captured-image recovery](docs/CHIMPREC.md) · [GOG Galaxy workflow](docs/GOG_UNPACKING.md#galaxy-upx-wrappers) |
 | Inventory a game collection, compare editions or inspect MZ/AGI/AVI media | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
 | Identify NES, SNES or Sega cartridges, CUE/ISO discs, or disassemble Saturn SH-2 / SNES 65816 | [Console media](docs/CONSOLE_MEDIA_PARSING.md) · [Disc parsing](docs/CUE_ISO_PARSING.md) · [ROM-to-ASM](docs/ROM_ASM.md) |
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
@@ -112,6 +113,13 @@ profiles:
   `LC_FUNCTION_STARTS`/unwind seeds, exact file-offset `code-backings`, and
   optional source-bound Headless Ghidra (`ghidra-arm64`) C/instruction
   diagnostics.
+- **Captured packed Windows PEs:** source-bound CHimpREC recovery accepts caller-owned
+  PE32/PE32+ mapped-module captures and loaded-export maps, recovers named and
+  ordinal imports, requires explicit decisions for ambiguous or junk thunks,
+  and rebuilds analysis images with original IAT addresses, new
+  OriginalFirstThunk tables, a qualified OEP and verified checksum. A bounded
+  GOG Galaxy profile covers captured UPX0/UPX1 wrappers. It does not download,
+  launch, attach to or bypass protections in Galaxy.
 - **Embedded & console media:** static [Armv7-M Cortex-M](docs/CORTEX_M.md)
   flash images with Thumb/Thumb-2 vector-table traversal (exercised on 121GW
   2.05 meter firmware without hardware emulation), non-executing

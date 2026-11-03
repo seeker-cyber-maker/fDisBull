@@ -149,6 +149,12 @@ select the v2 variant from evidence rather than treat acceptance as detection.
   reader support, filesystem inventory checks and per-process timeout apply;
   this module does not provide a hard decompression byte quota. Use its existing
   listing/extraction contract; do not mistake it for a general disk reader.
+- `gog-galaxy-upx`: `fdisbull.gog_galaxy.rebuild_galaxy_capture/files`, or
+  `python -m fdisbull.gog_galaxy_cli`. Accepts an unchanged wrapper, caller-captured mapped PE,
+  source-free process/thread/OEP receipt and export map. CHimpREC preserves
+  original IAT slots and rebuilds PE32/PE32+ import structures. It never downloads,
+  attaches to, launches or authenticates Galaxy; reconstructed executables stay
+  private and still require separate Windows/Wine execution qualification.
 - `agi-picture`: `fdisbull.agi_picture.decode_picture(payload)` accepts prepared
   AGI 2.915/2.917 EGA streams, with 160x168 visual/priority planes, 2 MiB input
   and 20 million work-unit limits. Commands F0..FA control colors, planes, lines,
