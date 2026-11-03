@@ -574,7 +574,16 @@ static void b64(const BYTE *data,DWORD n) {
     if(!CryptBinaryToStringA(data,n,CRYPT_STRING_BASE64|CRYPT_STRING_NOCRLF,NULL,&size)) fatal("encode-size");
     char *encoded=malloc(size);if(!encoded) fatal("allocation");
     if(!CryptBinaryToStringA(data,n,CRYPT_STRING_BASE64|CRYPT_STRING_NOCRLF,encoded,&size)) fatal("encode");
-    printf("\"%s\"",encoded);free(encoded);
+    /* Keep small protocol replies unbuffered; transfer the already encoded
+     * ASCII body in bounded writes instead of formatted character output. */
+    DWORD length=(DWORD)strlen(encoded);
+    putchar('"');
+    for(DWORD offset=0;offset<length;) {
+        DWORD count=length-offset;if(count>4096) count=4096;
+        if(fwrite(encoded+offset,1,count,stdout)!=count) fatal("encode-output");
+        offset+=count;
+    }
+    putchar('"');free(encoded);
 }
 static HWND window;static LONG best_area;
 static int owned_foreground(void) {
