@@ -14,6 +14,7 @@ general compiler manual.
 - [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Qualified Zork scene rules](#qualified-zork-scene-rules)
+- [Multi-scale Z worlds and larger scenes](#multi-scale-z-worlds-and-larger-scenes)
 - [Native console UDC, replay and synthesis profiles](#native-console-udc-replay-and-synthesis-profiles)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
@@ -111,12 +112,47 @@ schemas, public examples, original-kernel evidence and explicit limits. This
 profile does not rename or widen the legacy formats below.
 Read [common-uil.md](common-uil.md) for a complete installed-package example.
 
-- **UDL** is the source-to-shared-IL mapping role.
-- **UIL** is the candidate shared-IL program.
-- **UDC** is a target compiler definition that reads UIL and binds its declared
-  behavior to an implementation. The original DOS profile can select retained
-  block backings. The selectable-layer prototype adds immutable contracts,
-  isolated CPU providers and separately admitted native output profiles.
+- **UDL (User-Defined Language):** the source-to-shared-IL mapping role.
+- **UIL (Universal Interaction Language):** the candidate shared-IL program.
+- **UDC (User-Defined Compiler):** a target compiler definition that reads UIL
+  and binds its declared behavior to an implementation. The original DOS profile
+  can select retained block backings. The selectable-layer prototype adds
+  immutable contracts, isolated CPU providers and separately admitted native
+  output profiles.
+- **Recovery harness:** an executable interface that observes and operates a
+  backing, manages experiment boundaries and checkpoints, and records evidence.
+  Its named observations, actions, guards and bindings form an architectural
+  precursor to explicit UIL contracts, continuing as a test platform as
+  backings are replaced.
+- **Z:** an optional scene, object, relation, action and observation interface
+  for an agent-facing world. The world owns authoritative state and behavior; a
+  scene is a bounded observer view at a declared execution boundary. Z can
+  operate a source-backed harness during recovery, expose recovered UIL through
+  a selected realization, or supply authored behavior that lowers into UIL.
+
+The recovery direction is supported by a feedback loop through the harness:
+native checkpoint receipts record qualified physical execution facts and
+restore coverage; the UIL presentation, catalog and orchestration documents use
+those facts to connect logical objects, typed values, dependencies and
+behavioral boundaries. Z names the observations and actions used to investigate
+and test those boundaries. A checkpoint supplies both the starting witness for
+an experiment and the state relation for comparing an original-backed operation
+with a candidate. In a source checkout,
+`docs/UDL_UIL_UDC_CONSOLIDATED.md` consolidates all schemas and profiles.
+
+A register name does not define a permanent logical variable. Bind physical
+definition/use occurrences or valid location intervals to logical values, slots
+or object views. Preserve widths, overlapping views, aliases, lifetime, control
+dependencies and relevant flags/faults. Internal value versions support
+analysis without changing the mutable UIL slot grammar. Unobserved temporaries
+may disappear from the portable contract; physical live-outs required by a
+retained continuation remain an adapter obligation.
+
+A qualified pass-through backing can retain opaque internal registers and
+storage. Values and effects that cross its boundary still require an explicit
+relation, which may initially be a coarse retained machine-context dependency.
+Pass-through postpones internal abstraction; it does not remove entry,
+continuation, runtime, state-ownership or effect obligations.
 
 For v1 `fdisbull-il-1`, UDL and UIL are role metadata over the same primitive
 nodes and evaluator; changing role does not perform a translation. The separate
@@ -369,6 +405,26 @@ IR. Source-checkout `docs/ZORK_SCENES.md` specifies the supported package and
 execution contract. Read [scene-recovery.md](scene-recovery.md) for the procedure
 that starts from required scene elements; its proposed analysis steps do not add
 a general slicing pass or change the installed exporter's prerequisites.
+
+### Multi-scale Z worlds and larger scenes
+
+A scene can expose a room, tactical district, settlement, continent, resource
+network or off-map destination. Overlapping views preserve entity identity and
+share authoritative state. Geometry, topology, containment, ownership,
+dependencies and view membership remain distinct. Changing observation scale
+does not authorize changing simulation scope. Current, remembered and unknown
+fields govern public query membership and counts. Continuations bind observer,
+view and execution epoch; restored values do not revive old tokens. UIL slot IDs
+remain scoped to operations and invocation bindings, while world entities bind
+through object/field identities and recovered lifetime relations.
+
+Rewind selects both a return boundary and an explicit restoration policy.
+Preserve the existing TAS option for gameplay rewind with continued random
+progression, used to retry room entries with random events or locations. Exact
+repetition requires matched RNG and other nondeterministic inputs; exploratory
+retries use a deliberately different random context. Record the selected policy
+and actual context in the branch evidence. Pointwise original/replacement
+comparisons must use matched or explicitly related random contexts.
 
 <a id="native-console-udc-profile"></a>
 ## Native console UDC, replay and synthesis profiles
