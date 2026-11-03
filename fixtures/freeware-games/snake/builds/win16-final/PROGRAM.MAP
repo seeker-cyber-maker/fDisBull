@@ -1,0 +1,598 @@
+Open Watcom Linker Version 1.9
+Portions Copyright (c) 1985-2002 Sybase, Inc. All Rights Reserved.
+Created on:       26/11/01 02:19:51
+Executable Image: PROGRAM.EXE
+creating a Windows 16-bit executable
+
+
+                        +------------+
+                        |   Groups   |
+                        +------------+
+
+Group                           Address              Size
+=====                           =======              ====
+
+DGROUP                          0003:0000            000051f0
+
+
+
+                        +--------------+
+                        |   Segments   |
+                        +--------------+
+
+Segment                Class          Group          Address         Size
+=======                =====          =====          =======         ====
+
+M16COMM_TEXT           CODE           AUTO           0001:0000       00002a48
+M16CORE_TEXT           CODE           AUTO           0001:2a48       00000000
+FDBCORE                CODE           AUTO           0001:2a48       00006dc9
+N000_TEXT              CODE           AUTO           0001:9811       00000000
+FDBN0                  CODE           AUTO           0001:9811       00001a58
+N001_TEXT              CODE           AUTO           0001:b269       00000000
+FDBN1                  CODE           AUTO           0001:b269       00000119
+N002_TEXT              CODE           AUTO           0001:b382       00000000
+FDBN2                  CODE           AUTO           0001:b382       00000119
+N003_TEXT              CODE           AUTO           0001:b49b       00000000
+FDBN3                  CODE           AUTO           0002:0000       0000662f
+N004_TEXT              CODE           AUTO           0002:662f       00000000
+FDBN4                  CODE           AUTO           0002:662f       00000449
+N005_TEXT              CODE           AUTO           0002:6a78       00000000
+FDBN5                  CODE           AUTO           0002:6a78       0000014e
+N006_TEXT              CODE           AUTO           0002:6bc6       00000000
+FDBN6                  CODE           AUTO           0002:6bc6       000000f2
+N007_TEXT              CODE           AUTO           0002:6cb8       00000000
+FDBN7                  CODE           AUTO           0002:6cb8       00000ab8
+N008_TEXT              CODE           AUTO           0002:7770       00000000
+FDBN8                  CODE           AUTO           0002:7770       0000044e
+M16GUI_TEXT            CODE           AUTO           0002:7bbe       00001c22
+_TEXT                  CODE           AUTO           0002:97e0       00005841
+FAR_DATA               FAR_DATA       AUTO           0003:0000       00000000
+_NULL                  BEGDATA        DGROUP         0003:0000       00000010
+AFX_NULL               BEGDATA        DGROUP         0003:0010       00000000
+CONST                  DATA           DGROUP         0003:0010       00000798
+CONST2                 DATA           DGROUP         0003:07a8       000004ea
+_DATA                  DATA           DGROUP         0003:0c92       000003ae
+XIB                    DATA           DGROUP         0003:1040       00000000
+XI                     DATA           DGROUP         0003:1040       0000002a
+XIE                    DATA           DGROUP         0003:106a       00000000
+YIB                    DATA           DGROUP         0003:106a       00000000
+YI                     DATA           DGROUP         0003:106a       00000012
+YIE                    DATA           DGROUP         0003:107c       00000000
+STRINGS                DATA           DGROUP         0003:107c       00000000
+DATA                   DATA           DGROUP         0003:107c       00000000
+BCSD                   DATA           DGROUP         0003:107c       00000000
+_BSS                   BSS            DGROUP         0003:107c       0000016b
+STACK                  STACK          DGROUP         0003:11f0       00004000
+
+
+                        +----------------+
+                        |   Memory Map   |
+                        +----------------+
+
+* = unreferenced symbol
++ = symbol only referenced locally
+
+Address        Symbol
+=======        ======
+
+Module: M16COMM.OBJ(/work/jobs/win16-build-04/M16COMM.C)
+0001:0000+     fdb16_file_open_
+0001:0153+     fdb16_file_read_
+0001:0226+     fdb16_file_eof_
+0001:0275+     fdb16_file_close_
+0001:0363      fdb16_create_
+0001:0467      fdb16_word_count_
+0001:048d      fdb16_read_
+0001:050f      fdb16_write_
+0001:0573      fdb16_release_
+0001:05b8+     fdb16_copy_
+0001:0680      fdb16_clone_
+0001:06e1*     fdb16_equal_
+0001:081b      fdb16_copy_ranges_
+0001:0984      fdb16_footprint_
+0001:0b3c+     fdb16_read32_
+0001:0bad+     fdb16_write32_
+0001:0bfc      fdb16_write_bytes_
+0001:0cce+     fdb16_dump_words_
+0001:0d47      fdb16_load_initial_
+0001:0fcd      fdb16_host_resize_
+0001:10ca+     fdb16_host_sync_
+0001:11f6      fdb16_host_finish_
+0001:1231      fdb16_host_destroy_
+0001:1302+     fdb16_host_initialize_
+0001:134d      fdb16_host_open_
+0001:159c      fdb16_host_key_
+0001:1662      fdb16_host_pointer_
+0001:18af      fdb16_host_tick_
+0001:18e8      fdb16_host_select_
+0001:1964      fdb16_host_focus_
+0001:1a1a+     fdb16_host_replace_
+0001:1c90      fdb16_host_bgr_
+0001:1dc3+     fdb16_host_frame_
+0001:2263      fdb16_host_study_
+0001:2925      fdb16_arguments_
+0001:29c9      fdb16_initial_path_
+Module: M16CORE.OBJ(/work/jobs/win16-build-04/M16CORE.C)
+0001:2a48      fdb16_config_
+0001:2c64*     fdb16_core_error_
+0001:2c74      fdb16_core_words_
+0001:2ca0      fdb16_core_revision_
+0001:8ebd      fdb16_core_open_
+0001:8f4d      fdb16_core_selected_
+0001:8f7d      fdb16_core_calls_
+0001:8fe5      fdb16_core_region_calls_
+0001:905e      fdb16_core_select_
+0001:90d0      fdb16_core_replace_
+0001:91c8      fdb16_core_call_
+0001:957e      fdb16_core_initialize_
+0001:9614      fdb16_core_dispatch_
+0001:97cf      fdb16_core_close_
+Module: N000.OBJ(/work/jobs/win16-build-04/N000.C)
+0001:9811      fdb16_n0_
+Module: N001.OBJ(/work/jobs/win16-build-04/N001.C)
+0001:b269      fdb16_n1_
+Module: N002.OBJ(/work/jobs/win16-build-04/N002.C)
+0001:b382      fdb16_n2_
+Module: N003.OBJ(/work/jobs/win16-build-04/N003.C)
+0002:0000      fdb16_n3_
+Module: N004.OBJ(/work/jobs/win16-build-04/N004.C)
+0002:662f      fdb16_n4_
+Module: N005.OBJ(/work/jobs/win16-build-04/N005.C)
+0002:6a78      fdb16_n5_
+Module: N006.OBJ(/work/jobs/win16-build-04/N006.C)
+0002:6bc6      fdb16_n6_
+Module: N007.OBJ(/work/jobs/win16-build-04/N007.C)
+0002:6cb8      fdb16_n7_
+Module: N008.OBJ(/work/jobs/win16-build-04/N008.C)
+0002:7770      fdb16_n8_
+Module: M16GUI.OBJ(/work/jobs/win16-build-04/M16GUI.C)
+0002:8296+     FDB16_WIN_VIEW_PROC
+0002:87c1+     FDB16_WIN_WINDOW_PROC
+0002:9636      WINMAIN
+Module: /opt/watcom/lib286/win/clibl.lib(stk)
+0002:97e5      __STK
+0002:97fc*     __STKOVERFLOW_
+Module: /opt/watcom/lib286/win/clibl.lib(open.c)
+0002:9a46      open_
+0002:9a81+     sopen_
+Module: /opt/watcom/lib286/win/clibl.lib(calloc.c)
+0002:9aaf      calloc_
+Module: /opt/watcom/lib286/win/clibl.lib(close.c)
+0002:9af4      close_
+Module: /opt/watcom/lib286/win/clibl.lib(memcpy.c)
+0002:9b00      memcpy_
+Module: /opt/watcom/lib286/win/clibl.lib(ffree.c)
+0002:9b27      free_
+0002:9b32      _ffree_
+Module: /opt/watcom/lib286/win/clibl.lib(memcmp.c)
+0002:9b70      memcmp_
+Module: /opt/watcom/lib286/win/clibl.lib(i4m)
+0002:9b9a      __I4M
+0002:9b9a      __U4M
+Module: /opt/watcom/lib286/win/clibl.lib(i4d)
+0002:9bb2      __I4D
+0002:9c01      __U4D
+Module: /opt/watcom/lib286/win/clibl.lib(memset.c)
+0002:9c85      memset_
+Module: /opt/watcom/lib286/win/clibl.lib(strcmp.c)
+0002:9ca2      strcmp_
+Module: /opt/watcom/lib286/win/clibl.lib(strcpy.c)
+0002:9cd3      strcpy_
+Module: /opt/watcom/lib286/win/clibl.lib(cmodel)
+0002:9d22      _big_code_
+0002:9d22*     CodeModelMismatch
+Module: /opt/watcom/lib286/win/clibl.lib(fmalloc.c)
+0002:9d22      malloc_
+0002:9d2d      _fmalloc_
+0003:0c9a+     ___fheap
+0003:0c9c      ___fheapRover
+0003:0c9e      ___LargestSizeB4Rover
+Module: /opt/watcom/lib286/win/clibl.lib(qsort.c)
+0002:9e9e      qsort_
+Module: /opt/watcom/lib286/win/emu87.lib(initemuw.asm)
+0000:8000*     FJSRQQ
+0000:0632*     FISRQQ
+0000:1632      FIERQQ
+0000:5c32      FIDRQQ
+0000:a23d      FIWRQQ
+0000:c000*     FJCRQQ
+0000:4000*     FJARQQ
+0000:0e32*     FICRQQ
+0000:fe32*     FIARQQ
+0002:a428      __init_87_emulator
+0002:a467*     __fini_87_emulator
+0002:a476*     _userfpe
+Module: /opt/watcom/lib286/win/math87l.lib(floor.c)
+0002:a485      floor_
+Module: /opt/watcom/lib286/win/math87l.lib(fmod87)
+0002:a4fa*     fmod_
+0002:a4d6      IF@DFMOD
+0002:a4d6*     IF@FMOD
+Module: /opt/watcom/lib286/win/math87l.lib(fchop87)
+0002:a50e      __CHP
+Module: /opt/watcom/lib286/win/clibl.lib(sprintf.c)
+0002:a535      sprintf_
+Module: /opt/watcom/lib286/win/clibl.lib(wstart)
+0000:0006*     pLocalHeap
+0000:0008*     pAtomTable
+0000:000a*     pStackTop
+0000:000c*     pStackMin
+0000:000e*     pStackBot
+0003:0000*     __nullarea
+0003:0ca2      __curbrk
+0003:0ca4*     __psp
+0003:0ca6      __osmajor
+0003:0ca7*     __osminor
+0003:0ca8      __osmode
+0003:000a      __STACKLOW
+0003:000c*     __STACKTOP
+0003:0caa*     __cbyte
+0003:0cac*     __child
+0003:0cae      __no87
+0003:0ca9*     __HShift
+0003:0cb0*     __get_ovl_stack
+0003:0cb4*     __restore_ovl_stack
+0003:0cb8*     ___FPE_handler
+0003:0cbc*     __LpCmdLine
+0003:0cc0*     __LpPgmName
+0002:a568      _wstart_
+0002:a568*     _cstart_
+0002:a649      __exit_
+0002:a65a      __GETDS
+Module: /opt/watcom/lib286/win/clibl.lib(fltused.c)
+0003:0d54      _fltused_
+Module: /opt/watcom/lib286/win/clibl.lib(_8087)
+0003:0d56      __8087
+0003:0d57      __real87
+Module: /opt/watcom/lib286/win/clibl.lib(xmsgwin.c)
+0002:a65c+     __exit_with_msg_
+0002:a6bd      __fatal_runtime_error_
+Module: /opt/watcom/lib286/win/clibl.lib(opendos.c)
+0002:a6da      _dos_open_
+Module: /opt/watcom/lib286/win/clibl.lib(iomode.c)
+0002:a702      __GetIOMode_
+0002:a71e      __SetIOMode_nogrow_
+0003:0d58      ___NFiles
+0003:0d5a      ___init_mode
+0003:0d82      ___io_mode
+Module: /opt/watcom/lib286/win/clibl.lib(isatt.c)
+0002:a738      isatty_
+Module: /opt/watcom/lib286/win/clibl.lib(seterrno.c)
+0002:a779      __set_errno_
+0002:a794*     __set_EDOM_
+0002:a7ab      __set_ERANGE_
+0002:a7c1*     __set_EINVAL_
+0002:a7da      __set_doserrno_
+Module: /opt/watcom/lib286/win/clibl.lib(dosret.c)
+0002:a7ea*     _dosretax_
+0002:a7fc*     _dosret0_
+0002:a810      __set_errno_dos_
+0002:a86a*     __set_errno_dos_reterr_
+Module: /opt/watcom/lib286/win/clibl.lib(errno.c)
+0002:a87b      __get_errno_ptr_
+0002:a881      __get_doserrno_ptr_
+0003:10d0+     _errno
+0003:10d2+     __doserrno
+Module: /opt/watcom/lib286/win/clibl.lib(umaskval.c)
+0003:0d9a      ___umaskval
+Module: /opt/watcom/lib286/win/clibl.lib(creatdos.c)
+0002:a887      _dos_creat_
+0002:a8ad*     _dos_creatnew_
+Module: /opt/watcom/lib286/win/clibl.lib(stiomode.c)
+0002:a8d0+     __grow_iomode_
+0002:a98b+     __shrink_iomode_
+0002:a9be      __SetIOMode_
+Module: /opt/watcom/lib286/win/clibl.lib(winrtns.c)
+0003:0d9c      __WindowsIsWindowedHandle
+0003:0da0      __WindowsRemoveWindowedHandle
+0003:0da4      __WindowsNewWindow
+0003:0da8      __WindowsCloseWindow
+0003:0dac*     __WindowsSetAbout
+0003:0db0*     __WindowsSetAppTitle
+0003:0db4*     __WindowsSetConTitle
+0003:0db8*     __WindowsDestroyOnClose
+0003:0dbc*     __WindowsYieldControl
+0003:0dc0*     __WindowsShutDown
+0003:0dc4*     __WindowsStdin
+0003:0dc8      __WindowsStdout
+0003:0dcc*     __WindowsKbhit
+0003:0dd0*     __WindowsGetch
+0003:0dd4*     __WindowsGetche
+0003:0dd8*     __WindowsPutch
+0003:0ddc      __WindowsExitRtn
+Module: /opt/watcom/lib286/win/clibl.lib(stricmp.c)
+0002:aa17      stricmp_
+Module: /opt/watcom/lib286/win/clibl.lib(iob.c)
+0003:0de0      ___iob
+0003:0f48      __fmode
+0003:10d6      ___OpenStreams
+0003:10da      ___ClosedStreams
+Module: /opt/watcom/lib286/win/clibl.lib(_clse.c)
+0002:aa55      __close_
+Module: /opt/watcom/lib286/win/clibl.lib(mem.c)
+0002:aac0      __MemAllocator
+0002:ab8e      __MemFree
+Module: /opt/watcom/lib286/win/clibl.lib(nfree.c)
+0002:aced      _nfree_
+0003:10de      ___MiniHeapFreeRover
+Module: /opt/watcom/lib286/win/clibl.lib(growseg.c)
+0002:adb8      __GrowSeg_
+Module: /opt/watcom/lib286/win/clibl.lib(allocseg.c)
+0002:aef2      __AllocSeg_
+Module: /opt/watcom/lib286/win/clibl.lib(fmemneed.c)
+0002:afcc      __fmemneed_
+Module: /opt/watcom/lib286/win/clibl.lib(nmalloc.c)
+0002:afcf      _nmalloc_
+0003:0f4a      ___nheapbeg
+0003:0f4c      ___MiniHeapRover
+0003:0f4e      ___LargestSizeB4MiniHeapRover
+Module: /opt/watcom/lib286/win/clibl.lib(init8087)
+0002:b094      __init_8087_emu
+0002:b09a      __x87id
+Module: /opt/watcom/lib286/win/clibl.lib(sigfpe.c)
+0002:b0d9      __raise_fpe_
+0002:b0e1+     __sigfpe_handler_
+Module: /opt/watcom/lib286/win/math87l.lib(modf87)
+0002:b16e      modf_
+Module: /opt/watcom/lib286/win/clibl.lib(chipvar)
+0003:0f50      ___chipbug
+0003:0f50      __chipbug
+Module: /opt/watcom/lib286/win/clibl.lib(chipr16.asm)
+0002:b373      __fprem_chk
+0002:b5ad*     __fprem1_chk
+Module: /opt/watcom/lib286/win/clibl.lib(vsprintf.c)
+0002:b66d      vsprintf_
+Module: /opt/watcom/lib286/win/clibl.lib(exit.c)
+0002:b69b+     __null_int23_exit_
+0002:b69c      exit_
+0002:b6d5      _exit_
+0003:0f54+     ___int23_exit
+0003:0f58+     ___FPE_handler_exit
+Module: /opt/watcom/lib286/win/clibl.lib(initrtns.c)
+0002:b725      __FInitRtns
+0002:b730+     __InitRtns
+0002:b78e      __FFiniRtns
+0002:b799      __FiniRtns
+Module: /opt/watcom/lib286/win/clibl.lib(dosseg)
+0002:b7fe      __DOSseg__
+Module: /opt/watcom/lib286/win/clibl.lib(setefg.c)
+0002:b7ff      __setEFGfmt_
+Module: /opt/watcom/lib286/win/clibl.lib(chk8087.c)
+0002:b840*     _fpreset_
+0002:b85a      __init_8087_
+0002:b895      __chk8087_
+Module: /opt/watcom/lib286/win/clibl.lib(enterdb.c)
+0002:b8d1      __EnterWVIDEO_
+0003:0f5c+     ___WD_Present
+Module: /opt/watcom/lib286/win/clibl.lib(doserror)
+0002:b8f6      __doserror_
+Module: /opt/watcom/lib286/win/clibl.lib(frealloc.c)
+0002:b904      realloc_
+0002:b90f+     _frealloc_
+Module: /opt/watcom/lib286/win/clibl.lib(iomodtty.c)
+0002:b9e4      __ChkTTYIOMode_
+0002:ba24*     __IOMode_
+Module: /opt/watcom/lib286/win/clibl.lib(initfile.c)
+0002:ba3a      __InitFiles_
+Module: /opt/watcom/lib286/win/clibl.lib(ioexit.c)
+0002:bb82*     fcloseall_
+0002:bb8f      __full_io_exit_
+Module: /opt/watcom/lib286/win/clibl.lib(heapen.c)
+0002:bba0*     _heapenable_
+0003:0f5e      ___heap_enabled
+Module: /opt/watcom/lib286/win/clibl.lib(amblksiz.c)
+0003:0f60      __amblksiz
+Module: /opt/watcom/lib286/win/clibl.lib(wallflgs.c)
+0003:0f62      ___win_alloc_flags
+0003:0f66      ___win_realloc_flags
+Module: /opt/watcom/lib286/win/clibl.lib(nmemneed.c)
+0002:bbac      __nmemneed_
+Module: /opt/watcom/lib286/win/clibl.lib(grownear.c)
+0002:bccc      __ExpandDGROUP_
+Module: /opt/watcom/lib286/win/clibl.lib(8087cw.c)
+0003:0f6a      __8087cw
+Module: /opt/watcom/lib286/win/clibl.lib(sigtab.c)
+0003:0f6c      __SignalTable
+Module: /opt/watcom/lib286/win/clibl.lib(chipbug.c)
+0002:bce1      __verify_pentium_fdiv_bug_
+Module: /opt/watcom/lib286/win/clibl.lib(prtf.c)
+0002:bd48      __prtf_
+Module: /opt/watcom/lib286/win/clibl.lib(sgdef086)
+0003:1040      __Start_XI
+0003:106a      __End_XI
+0003:106a      __Start_YI
+0003:107c      __End_YI
+Module: /opt/watcom/lib286/win/clibl.lib(noefgfmt.c)
+0003:0fa0      ___EFG_printf
+0003:0fa4      ___EFG_scanf
+Module: /opt/watcom/lib286/win/math87l.lib(efgfmt.c)
+0002:cc3e      _EFG_Format_
+Module: /opt/watcom/lib286/win/math87l.lib(cnvs2d.c)
+0002:cdf7      __cnvs2d_
+Module: /opt/watcom/lib286/win/clibl.lib(save8087.c)
+0003:0fa8      ___Save8087
+0003:0fac      ___Rest8087
+Module: /opt/watcom/lib286/win/clibl.lib(fmsize.c)
+0002:ce18*     _msize_
+0002:ce18      _fmsize_
+Module: /opt/watcom/lib286/win/clibl.lib(nexpand.c)
+0002:ce2a      __HeapManager_expand_
+0002:cfc7      _nexpand_
+Module: /opt/watcom/lib286/win/clibl.lib(fexpand.c)
+0002:cff3*     _expand_
+0002:cffe      _fexpand_
+Module: /opt/watcom/lib286/win/clibl.lib(fclose.c)
+0002:d03a+     __doclose_
+0002:d0f6      __shutdown_stream_
+0002:d113*     fclose_
+0003:10e0+     ___RmTmpFileFn
+Module: /opt/watcom/lib286/win/clibl.lib(freefp.c)
+0002:d163      __freefp_
+0002:d1df      __purgefp_
+Module: /opt/watcom/lib286/win/clibl.lib(nheapmin.c)
+0002:d218*     _nheapmin_
+0002:d2a0      _nheapshrink_
+Module: /opt/watcom/lib286/win/clibl.lib(wctomb.c)
+0002:d2d1      wctomb_
+Module: /opt/watcom/lib286/win/clibl.lib(itoa.c)
+0002:d2fd+     utoa_
+0002:d360      itoa_
+Module: /opt/watcom/lib286/win/clibl.lib(strupr.c)
+0002:d388      strupr_
+Module: /opt/watcom/lib286/win/clibl.lib(mbisdbcs.c)
+0003:10e4      ___IsDBCS
+Module: /opt/watcom/lib286/win/clibl.lib(mbislead.c)
+0002:d3ac*     _ismbblead_
+0003:10e6      ___MBCSIsTable
+Module: /opt/watcom/lib286/win/clibl.lib(lltoa.c)
+0002:d3ca      ulltoa_
+0002:d4b3*     lltoa_
+Module: /opt/watcom/lib286/win/clibl.lib(ltoa.c)
+0002:d517      ultoa_
+0002:d58a*     ltoa_
+Module: /opt/watcom/lib286/win/clibl.lib(rtcntrl.c)
+0002:d5bb*     _SetLD64bit_
+0002:d5c1*     _SetLD80bit_
+0002:d5c7      _LDisDouble_
+Module: /opt/watcom/lib286/win/math87l.lib(ldcvt.c)
+0002:d6f1      _LDScale10x_
+0002:dcdf      __LDcvt_
+Module: /opt/watcom/lib286/win/math87l.lib(strtod.c)
+0002:e7d9+     __Strtold_
+0002:e9a0      strtod_
+Module: /opt/watcom/lib286/win/clibl.lib(bfree.c)
+0002:eb2d      _bfree_
+Module: /opt/watcom/lib286/win/clibl.lib(bexpand.c)
+0002:eb57      _bexpand_
+Module: /opt/watcom/lib286/win/clibl.lib(__lseek.c)
+0002:ebb3      __lseek_
+Module: /opt/watcom/lib286/win/clibl.lib(flush.c)
+0002:ebf0      __flush_
+Module: /opt/watcom/lib286/win/clibl.lib(alphabet.c)
+0003:0782      ___Alphabet
+Module: /opt/watcom/lib286/win/clibl.lib(mbinit.c)
+0002:ed77      __mbinit_
+0003:103e+     ___MBCodePage
+Module: /opt/watcom/lib286/win/math87l.lib(ldclass.c)
+0002:ee15      __LDClass_
+0002:ee6d*     _FLClass_
+Module: /opt/watcom/lib286/win/clibl.lib(istable.c)
+0003:0b60      __IsTable
+Module: /opt/watcom/lib286/win/clibl.lib(tolower.c)
+0002:ee81      tolower_
+Module: /opt/watcom/lib286/win/math87l.lib(bufld086)
+0002:ee90      __ZBuf2LD
+Module: /opt/watcom/lib286/win/math87l.lib(inf_nan.c)
+0003:0c62*     ___f_infinity
+0003:0c66*     ___f_posqnan
+0003:0c6a      ___d_infinity
+0003:0c72      ___d_posqnan
+0003:0c7a*     ___ld_infinity
+0003:0c82*     ___ld_posqnan
+Module: /opt/watcom/lib286/win/clibl.lib(hugeval.c)
+0003:0c8a      __HugeValue
+Module: /opt/watcom/lib286/win/clibl.lib(fsync.c)
+0002:ef58      fsync_
+Module: /opt/watcom/lib286/win/clibl.lib(qwrit.c)
+0002:ef64      __qwrite_
+Module: /opt/watcom/lib286/win/clibl.lib(filedos.c)
+0002:eff9*     _dos_close_
+0002:f00d      _dos_commit_
+
+
+                        +----------------------+
+                        |   Imported Symbols   |
+                        +----------------------+
+
+Symbol                              Module
+======                              ======
+
+_LWRITE                             KERNEL
+_LREAD                              KERNEL
+GLOBALALLOC                         KERNEL
+GLOBALLOCK                          KERNEL
+GLOBALFREE                          KERNEL
+GLOBALUNLOCK                        KERNEL
+GETMODULEFILENAME                   KERNEL
+GETCURRENTTASK                      KERNEL
+GETTICKCOUNT                        USER
+GETKEYSTATE                         USER
+SELECTOBJECT                        GDI
+DELETEOBJECT                        GDI
+DELETEDC                            GDI
+GETDC                               USER
+CREATECOMPATIBLEDC                  GDI
+CREATECOMPATIBLEBITMAP              GDI
+RELEASEDC                           USER
+STRETCHDIBITS                       GDI
+BITBLT                              GDI
+INVALIDATERECT                      USER
+GETCAPTURE                          USER
+RELEASECAPTURE                      USER
+POSTMESSAGE                         USER
+GETWINDOWLONG                       USER
+SETWINDOWLONG                       USER
+BEGINPAINT                          USER
+ENDPAINT                            USER
+GETCLIENTRECT                       USER
+GETFOCUS                            USER
+DEFWINDOWPROC                       USER
+SETFOCUS                            USER
+SETCAPTURE                          USER
+MOVEWINDOW                          USER
+SENDMESSAGE                         USER
+DESTROYWINDOW                       USER
+POSTQUITMESSAGE                     USER
+GETMENU                             USER
+ADJUSTWINDOWRECT                    USER
+MAKEPROCINSTANCE                    KERNEL
+LOADCURSOR                          USER
+REGISTERCLASS                       USER
+GETSTOCKOBJECT                      GDI
+CREATEWINDOW                        USER
+SHOWWINDOW                          USER
+SETTIMER                            USER
+MAPVIRTUALKEY                       KEYBOARD
+SETWINDOWPOS                        USER
+GETDIBITS                           GDI
+ISWINDOW                            USER
+KILLTIMER                           USER
+UNREGISTERCLASS                     USER
+FREEPROCINSTANCE                    KERNEL
+GETMESSAGE                          USER
+TRANSLATEMESSAGE                    USER
+DISPATCHMESSAGE                     USER
+__FPMATH                            WIN87EM
+GETWINFLAGS                         KERNEL
+INITTASK                            KERNEL
+INITAPP                             USER
+WAITEVENT                           KERNEL
+__AHSHIFT                           KERNEL
+MESSAGEBOX                          USER
+GLOBALHANDLE                        KERNEL
+GLOBALREALLOC                       KERNEL
+LOCALALLOC                          KERNEL
+LOCALFREE                           KERNEL
+GETVERSION                          KERNEL
+ISDBCSLEADBYTE                      KERNEL
+GETKBCODEPAGE                       KEYBOARD
+
+
+                        +--------------------+
+                        |   Libraries Used   |
+                        +--------------------+
+
+/opt/watcom/lib286/win/windows.lib
+/opt/watcom/lib286/win/math87l.lib
+/opt/watcom/lib286/win/emu87.lib
+/opt/watcom/lib286/win/clibl.lib
+
+
+                        +-----------------------+
+                        |   Linker Statistics   |
+                        +-----------------------+
+
+Stack size:  4000 (16384.)
+Memory size:  0001f6ac (128684.)
+Entry point address: 0002:a568
+Link time: 00:00.04

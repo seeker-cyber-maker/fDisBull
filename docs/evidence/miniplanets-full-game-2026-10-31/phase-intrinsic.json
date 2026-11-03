@@ -1,0 +1,76 @@
+{
+  "format": "miniplanets-game-intrinsic-sim6502-2",
+  "status": "passed",
+  "native_cases": {
+    "phase": 1280,
+    "mace_coordinate_pairs": 36864,
+    "tile_read_class_write": 65792,
+    "collision": 103300
+  },
+  "typed_uil_cases": {
+    "phase": 1280,
+    "mace": 2304,
+    "tile": 256,
+    "collision": 3858
+  },
+  "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "typed_uil_program_sha256": "53ff6e461db3ad71c185bfa670f4fd696c26e9fdf3e7f0a323b9af0f134b303d",
+  "interpreter_sha256": "05dafe6347f890c221bfb897155919cd7e6e7d5c045e7d88190c7662b24d990b",
+  "inputs_unchanged": true,
+  "private_tables": {
+    "sine": {
+      "offset": 415992,
+      "length": 656,
+      "sha256": "b3062831b9a42a8e6115cdc9c4b162295f064be7cd282137c992d33adb09afdf"
+    },
+    "collision": {
+      "offset": 42260,
+      "length": 256,
+      "sha256": "47bfe5eae7ef35ff9e2d12d00f321bd22cd66dc4012ac279c4d057f02bd0fac2"
+    }
+  },
+  "game_state_writes": "Phase writes Subpixel only; SetTile writes the indexed world byte only. Mace/tile/collision queries preserve game state. Software-stack pointer and adjacent canaries checked.",
+  "asm_sha256": "dc67f2b32653abc55a2e98726d4a86fe726b3fb37f2ec29db10a015a609ee7e6",
+  "sources": {
+    "miniplanets_full.c": "5d0e171b074b784887df27e06ca122cb99147fc13d8fcae84724bd526017bc58",
+    "miniplanets_actors.c": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b"
+  },
+  "verifier_sha256": "3235f73632915a478f93a97183b50b850e0bb5f4d64563e51b5bd7ab9d2ca7fd",
+  "native_check_sha256": "e07360e4238e1619629a9fb1644ec6c38d282c66eb0b6f6846616b633c3f83f4",
+  "toolchain": {
+    "cl65": "00530a81fb76e3a9ce992fd2c678790957f2870a3f234db9324cd25a9c09766a",
+    "cc65": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559",
+    "ca65": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7",
+    "ld65": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68",
+    "sim65": "ecfc71e317607555b3ff9d6195fda50a7bb0b56689e8e779e6faee63405b2d43"
+  },
+  "phase": {
+    "asm_cycles_total": 123705,
+    "c_cycles_total": 736000,
+    "asm_cycles_mean": 96.64453125,
+    "c_cycles_mean": 575.0,
+    "asm_cycles_max": 97
+  },
+  "mace": {
+    "asm_cycles_total": 11323200,
+    "c_cycles_total": 82028352,
+    "asm_cycles_mean_per_coordinate": 153.58072916666666,
+    "c_cycles_mean_per_coordinate": 1112.5807291666667
+  },
+  "cycle_scope": "Includes identical sim65 counter-call measurement overhead; no mapper thunk. Not NES frame-rate evidence.",
+  "limit": "Finite actual sim6502/C/UIL arithmetic/ABI vectors, not exhaustive global-game proof. Final banked NES integration and timing are separate gates.",
+  "coverage": {
+    "phase": "All 256 low bytes at Anim high bytes 0,1,127,128,255; adjacent canaries and software stack preserved.",
+    "maces": "All 256 angles \u00d7 all 48 legal slots \u00d7 centers 0,127,255; both X/Y returned coordinates compared, entire object array preserved. Y negates signed word before arithmetic shift.",
+    "tiles": "All 65,536 byte-coordinate pairs: GetTile/GetCollision plus SetTile; all 256 collision-table indices also exercised. Private full 256-byte collision ROM window, no tile-ID clamping.",
+    "collision": "25,600 single-axis vectors (all wrapped deltas \u00d7 10 radii \u00d7 5 centers \u00d7 2 axes), 76,800 combined boundary vectors, 900 jump/death guard vectors. Radii include 0,127,128,255.",
+    "typed_uil": "Separate actual typed-UIL evaluator checks against independent byte/bit/signed-interval calculations and exact decoded ROM words. Counts are per state/vector, with two mace return checks and three tile operations each."
+  },
+  "previous_phase_only": {
+    "asm_sha256": "d96c78bd7f03ff1530257c73acbe26150faa0a5f5c29e4bcc4f790ada41b0193",
+    "cases": 1280,
+    "status": "passed",
+    "note": "Historical phase-only artifact; superseded by this seven-entry intrinsic artifact. Page placement changes counter-included cycle totals."
+  },
+  "previous_seven_entry_verifier_sha256": "387de8588c6dd411c103b0d79c9c1644135ad788bf3840cd2daca6bee66ce5bb"
+}

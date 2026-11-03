@@ -1,0 +1,64 @@
+{
+  "format": "fdisbull-full-suite-failure-audit-1",
+  "checked_at_utc": "2026-11-01T00:32:21.631941+00:00",
+  "baseline": "2ad1b07b0ff353abbb138d711909eda6e860a61f",
+  "baseline_tree": "25a5711776902b502e50f567aae59affc2230133",
+  "host": {
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "baseline_source_isolation": "Ephemeral git archive, removed after selected checks.",
+  "baseline_without_pythonpath": {
+    "exit_code": 1,
+    "summary": "4 failed, 3 passed, 23 errors in 2.36s"
+  },
+  "baseline_cli_with_pythonpath": {
+    "exit_code": 0,
+    "summary": "2 passed in 0.72s"
+  },
+  "current_cli_with_pythonpath": {
+    "exit_code": 0,
+    "summary": "2 passed in 1.56s"
+  },
+  "qualified_pythonpath": "src:.:player",
+  "logs": {
+    "full-tests-baseline-failing-selection.log": {
+      "sha256": "9e3a1a090e76f6485c4c23e079cf3c044dff2167daf49181a34621a4c72d00b3",
+      "summary": "4 failed, 3 passed, 23 errors in 2.36s"
+    },
+    "full-tests-baseline-cli-pythonpath.log": {
+      "sha256": "d6ae616cc22f19be3d01969fb37a383a6e3da3f641749d5b7dd889cde4e3fb2b",
+      "summary": "2 passed in 0.72s"
+    },
+    "full-tests-current-cli-pythonpath.log": {
+      "sha256": "e0b7eca228d15acdf8482428f5f26811f29a6401362ef4ab8aa3c4a14ffe5bf2",
+      "summary": "2 passed in 1.56s"
+    }
+  },
+  "unchanged_vs_baseline": {
+    "tests/test_debug_experiments.py": true,
+    "tests/test_pe_mz_workflow.py": true,
+    "tests/test_inspection.py": true,
+    "tests/test_loading.py": true,
+    "tests/test_elf_metadata.py": true,
+    "tests/test_platform_calls.py": true,
+    "src/fdisbull/inspection.py": true,
+    "src/fdisbull/loader.py": true,
+    "src/fdisbull/elf_metadata.py": true,
+    "src/fdisbull/debug_experiments.py": true,
+    "src/fdisbull/cli.py": true,
+    "src/fdisbull/project.py": true
+  },
+  "core_package_changes_since_baseline": [],
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "root_log_sha256": "e9235b682bc1b9a8dbcb8ddc296af54199124c5f2bcfbe6b5b2df0e94c7cfe20",
+  "root_log_summary": "4 failed, 2887 passed, 123 skipped, 23 errors in 48.82s",
+  "root_session_operated": false,
+  "native_guest_operated": false,
+  "repository_files_modified_by_this_audit": false,
+  "root_source_path_rerun": {
+    "summary": "2 failed, 2889 passed, 123 skipped, 23 errors in 47.45s",
+    "log_sha256": "a32d4a027fb75ac49c81f169a1beb4d277353da736abcb19673558f46e6358b5"
+  },
+  "scope": "Existing Linux/x86/GNU-toolchain checks fail on ARM64 Darwin; exact-head baseline failures reproduced. No Linux CI qualification."
+}

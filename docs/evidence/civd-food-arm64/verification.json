@@ -1,0 +1,173 @@
+{
+  "format": "fdisbull-civd-food-arm64-1",
+  "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+  "contract_id": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+  "vectors": 2018,
+  "vectors_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528",
+  "native_build": {
+    "format": "fdisbull-macos-block-probe-1",
+    "backend_profile": "macos-arm64-c-plan-libsystem-1",
+    "selection": "selection:3aa7d5d23fad0186604fba63c86c6da5076536d8f302a4dcf6784fd98cf12f63",
+    "selection_sha256": "3aa7d5d23fad0186604fba63c86c6da5076536d8f302a4dcf6784fd98cf12f63",
+    "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+    "layer": "layer:5f440c27e20a746071a3f420c25bbd7b20497498622699341760976641f7cb11",
+    "layer_sha256": "5f440c27e20a746071a3f420c25bbd7b20497498622699341760976641f7cb11",
+    "contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+    "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+    "qualification": {
+      "format": "fdisbull-uil-qualification-1",
+      "status": "equivalent_under_contract",
+      "timeout_ms": 2000,
+      "programs": {
+        "reference_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+        "implementation_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724"
+      },
+      "interfaces": {
+        "inputs": {
+          "population": "i8",
+          "produced": "i16",
+          "stock": "i16",
+          "support_cost": "i16",
+          "supported": "i16"
+        },
+        "outputs": {
+          "new_stock": "i16"
+        },
+        "reference": {
+          "inputs": {
+            "population": "$population",
+            "produced": "$produced",
+            "stock": "$stock",
+            "support_cost": "$support_cost",
+            "supported": "$supported"
+          },
+          "outputs": {
+            "new_stock": "$new_stock"
+          }
+        },
+        "implementation": {
+          "inputs": {
+            "population": "$population",
+            "produced": "$produced",
+            "stock": "$stock",
+            "support_cost": "$support_cost",
+            "supported": "$supported"
+          },
+          "outputs": {
+            "new_stock": "$new_stock"
+          }
+        }
+      },
+      "domain": {
+        "support_cost": {
+          "max": 2,
+          "min": 1
+        }
+      },
+      "reference_completion_possible": null,
+      "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+      "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+      "method": "shared-definition"
+    },
+    "block_source_sha256": "32fef033298f12bfc7287ff1bd5bd8a810f3145c47862f5f54a5218905de267a",
+    "block_object_sha256": "d62a0a4cda4e642fcf5c34b5e1cf51a41e7ad6531c833408acb6d9df03530ad5",
+    "shell_source_sha256": "d3b34d6f259f347bb95377894eb0c22cfc7395e57c66c3a1a8ac1e92f382e4f4",
+    "output_sha256": "54ba093f395f129d59d03a011425e963eccaef96675981ae6061c97b8428bc8a",
+    "compiler": {
+      "sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+      "version": "Homebrew clang version 23.1.4"
+    },
+    "inputs": [
+      "population",
+      "produced",
+      "stock",
+      "support_cost",
+      "supported"
+    ],
+    "outputs": [
+      "new_stock"
+    ],
+    "row_limit": 10000,
+    "wire": "little-endian uint16 words; signed inputs sign-extended; sorted ports",
+    "native_execution": false,
+    "source_to_uil": false,
+    "scope": "one pure fixed UIL invoke; guarded word ABI; stdin/stdout analysis scaffold"
+  },
+  "matrix": [
+    {
+      "edition": "474.01",
+      "cases": 2018,
+      "mismatches": 0,
+      "original_code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "dosbox_output_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "host_adapter_sha256": "99980d0ad6a713badb2a15721fcbf3df0cbc1b9b95f2551e3e6b153f0ccb2c80",
+      "original_cpu_execution": true,
+      "host_roundtrips": 2018
+    },
+    {
+      "edition": "474.03",
+      "cases": 2018,
+      "mismatches": 0,
+      "original_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "dosbox_output_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "host_adapter_sha256": "88be8856fffd1c0fc2e0a83cb9c4bf8359be999af543729212b6c1442fe41637",
+      "original_cpu_execution": true,
+      "host_roundtrips": 2018
+    },
+    {
+      "edition": "474.05",
+      "cases": 2018,
+      "mismatches": 0,
+      "original_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "dosbox_output_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "host_adapter_sha256": "88be8856fffd1c0fc2e0a83cb9c4bf8359be999af543729212b6c1442fe41637",
+      "original_cpu_execution": true,
+      "host_roundtrips": 2018
+    }
+  ],
+  "refusals": [
+    {
+      "stock": -32768,
+      "produced": -32768,
+      "population": -128,
+      "supported": -32768,
+      "support_cost": 0
+    },
+    {
+      "stock": -32768,
+      "produced": -32768,
+      "population": -128,
+      "supported": -32768,
+      "support_cost": 3
+    },
+    {
+      "stock": -32768,
+      "produced": -32768,
+      "population": -129,
+      "supported": -32768,
+      "support_cost": 1
+    },
+    {
+      "stock": -32768,
+      "produced": -32768,
+      "population": 128,
+      "supported": -32768,
+      "support_cost": 1
+    }
+  ],
+  "originals_unchanged": true,
+  "originals": {
+    "474.01": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+    "474.03": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+    "474.05": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a"
+  },
+  "native_output_sha256": "572cee5b1cf0510204ad4f103a85f4ee97032cd6b362147be6f357a02d94ecc9",
+  "native_execution": true,
+  "uil_interpreter_cases": 2018,
+  "scope": "finite original CPU/DOSBox/ARM64 kernel and host-adapter checks; no whole-game claim",
+  "backend_origin_commit": "fcff5549c18a54bf9fa4cbb3594ca67e46e0ef6b",
+  "result_digest_encoding": "canonical UTF-8 JSON array of signed i16 outputs; DOSBox payload digest hashes its little-endian word bytes"
+}

@@ -1,0 +1,19 @@
+{
+  "attempts": [
+    {
+      "name": "installed-player-final-01",
+      "complete": false,
+      "exit_code": 1,
+      "stage": "first separate-process observe; direct checks had returned",
+      "worker_path_exists": false,
+      "native_game_input": false,
+      "reason": "Root supplied a nonexistent content-worker path; separate-process output closed before any action."
+    },
+    {
+      "name": "installed-player-final-02",
+      "complete": true,
+      "scene_sha256": "c364ab45f91ce9275ea7660c706647b4967036a35d44cf933641ddbc256b7caa",
+      "scope": "Fresh direct/process model checks with correct worker path; no original-game input."
+    }
+  ]
+}

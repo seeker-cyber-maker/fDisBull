@@ -1,0 +1,10 @@
+{
+  "parser_tests": 21,
+  "result": "passed",
+  "python": "3.13.5",
+  "test_sha256": "e85b763ac69f81f99fdef2b95495611d38b97ca80d8cacccded81795bdd41a2b",
+  "parser_sha256": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe",
+  "actual_resource_census_repeat": "byte-identical to this turn initial census",
+  "model_checks": "two expected results in status-projection-model.json",
+  "scope": "Local authored tests and source data replay, not repository suite, player qualification or independent native execution."
+}

@@ -1,0 +1,51 @@
+{
+  "format": "fdisbull-shadowrun-ai-z-evidence-1",
+  "status": "passed bounded shared-model Z comparisons; package and CI checks are separate",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "wired_z_protocol": {
+    "shared_program_sha256": "bed27370cb4625331b9c2de870a48acfff8f4c91d5630d24d2d1c8874fcf7227",
+    "stationary": {
+      "source_capture_receipt_sha256": "b40dd5e704b7bba2c3c746a10473f120978f884e9528573da966c2245b4e8510",
+      "comparison_summary_sha256": "62ceeea1edeab95fbd586fa3c9c1372b926814c221cca789ac1eac7dba3ef3f6",
+      "frames_advanced": 80,
+      "snapshots_compared": 63,
+      "source_frames": [
+        6000,
+        6079
+      ],
+      "player_hp": [
+        10,
+        5,
+        3
+      ]
+    },
+    "moving": {
+      "source_capture_receipt_sha256": "731cb1ec2f51c207d3acaf3443a4de0c231bd4db9922a9b7f0c57a6333858ff6",
+      "comparison_summary_sha256": "266c285a7d587bc04e1d8937647e166450642b05c3777eccc0b90199c3605d52",
+      "frames_advanced": 50,
+      "snapshots_compared": 50,
+      "source_frames": [
+        6000,
+        6049
+      ],
+      "player_hp": [
+        10,
+        5
+      ]
+    },
+    "scope": "assisted scene-2 arena; stationary Z wait and moving Z go-west/wait actions run on the shared model; original actor/player coordinates and HP are expected outputs only"
+  },
+  "separate_component_checks": {
+    "projectile_cycle_summary_sha256": "997103491f01b1608ff6198e71fd5ac5b4d6802efdf6fd71ac2d4e81131204a1",
+    "projectile_cycle_transitions": 51,
+    "scope": "source actor positions and terrain supplied per loop to the projectile component; not a whole-runtime or dynamic-actor comparison"
+  },
+  "boundaries": [
+    "The constructed kind-8 actor is a distinct occupant from the historical frame-5999 actor in the same slot.",
+    "Other captured NPC slots are not simulated by this arena; their current presence, position and HP are unknown.",
+    "The source encounter is explicitly assisted and natural reachability is not established.",
+    "Visibility, complete city traversal, arbitrary actor behavior and whole-game parity remain unknown.",
+    "The terminal HP0 hit is qualified at a separate source-component boundary; post-defeat source animation and game-over flow are unknown."
+  ],
+  "privacy": "No original game bytes, assets, memory dumps, raw terrain grids or private filesystem paths are included."
+}

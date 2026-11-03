@@ -1,0 +1,706 @@
+{
+  "format": "fdisbull-miniplanets-moving-optimization-1",
+  "date": "2026-10-31",
+  "status": "bounded-native-qualification-passed-with-route-dnf",
+  "previous_commit": "b6fc1f17cbe1b1dfcf5705fd724ee0446ec7b872",
+  "previous_cartridge_sha256": "8da56a19cf65be2aae46a913584d72776df0da6819d9784ec577e3ca75c012e6",
+  "cartridge_sha256": "1cf6e29d02c991af6bc9a8ced6668adb2a91a81b6c2318770d27379afb751db0",
+  "source_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "uil_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "adapter_sources": {
+    "miniplanets_audio_nes.c": "36501b380fddd1049a109c10767ea8cd7ad9baf4e63c5f8faa45c1a6a20e7387",
+    "nes_globe_renderer.c": "bceba20d2d7a87967a9bdae2aacf6ebf86827210618ee89c676c02368f2c31d8",
+    "nes_game_platform.c": "37b3106a9b7bfc7687ab010873474bb96c70a7ffa2fa75555ba016efa709d94d",
+    "nes_game_start.s": "1ab92d87fcfe8523d2e5ff42469086a314b169280cedcd6e0eb81dd6481b2a92",
+    "miniplanets_audio_fast.s": "a1a7924dd574d9898c796449fb3972d1ff6be562f137c4e9b6a7a040b45da9e3",
+    "nes_globe_fast.s": "f7f376ecb4567e0b42dae9750f1a44c9111224b5c10e56d42590accaad1de918",
+    "nes_display_fast.s": "d7c635a608b4c4e6545e1037b20876d9c9e7f39ece6161d0b85e54eadd3c7dae",
+    "nes_game_fast.s": "db0d46010adb701c91bb91a59e72b2a0469c23fab6393bcb28678d940d426500",
+    "nes_audio_clock.c": "cecd691bc67a4e853a27c5da42e579be6c229936d620f996bdbb846ce25d20a8"
+  },
+  "toolchain": {
+    "cc65": {
+      "sha256": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559"
+    },
+    "ca65": {
+      "sha256": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7"
+    },
+    "ld65": {
+      "sha256": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+    },
+    "od65": {
+      "sha256": "08b7168660b527289fd72a647c5c8e8b4c15e69b102d8044a5dc4aabc474a816"
+    }
+  },
+  "runtime_resources": {
+    "nes.lib": {
+      "sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+      "length": 1533247,
+      "captured_path": "build/nes.lib"
+    }
+  },
+  "code_bank_bytes": [
+    7952,
+    5011,
+    7037,
+    7926
+  ],
+  "data_banks": 55,
+  "display_upload": {
+    "version": 3,
+    "chunking": "greedy-in-order",
+    "job_lengths": [
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      12,
+      12,
+      4,
+      4,
+      4,
+      4
+    ],
+    "terrain_spans": [
+      [
+        5,
+        7
+      ],
+      [
+        18,
+        12
+      ],
+      [
+        34,
+        12
+      ],
+      [
+        50,
+        13
+      ],
+      [
+        65,
+        14
+      ],
+      [
+        81,
+        14
+      ],
+      [
+        97,
+        14
+      ],
+      [
+        113,
+        14
+      ],
+      [
+        129,
+        14
+      ],
+      [
+        145,
+        14
+      ],
+      [
+        161,
+        14
+      ],
+      [
+        178,
+        12
+      ],
+      [
+        194,
+        12
+      ],
+      [
+        212,
+        8
+      ]
+    ],
+    "terrain_padding": "zero outside union; producer and target certificates required",
+    "job_fixed_cycles": 46,
+    "job_byte_cycles": 8,
+    "chunk_budget_cycles": 1218,
+    "maximum_jobs_per_chunk": 10,
+    "full_dirty_data_frames": 3
+  },
+  "movement_protocol": {
+    "physical_frames": 3000,
+    "warmup_frames": 100,
+    "measured_intervals": 2899,
+    "core_fps": 60.099826520671044,
+    "controller_intervals": 58,
+    "assistance": "Same source-initialized stage0 and invulnerability; ordinary varied controller inputs.",
+    "time_basis": "Emulated hardware time, not host throughput. Swaps count coherent buffers, not necessarily different pixels.",
+    "observer_neutrality_scope": "Final captured frame, audio.wav, complete state, SRAM, system RAM and watched trace; not a full-video byte comparison."
+  },
+  "movement": {
+    "previous_game_hz": 43.53557629989969,
+    "game_hz": 43.68069488756602,
+    "previous_swaps_hz": 15.424032746250175,
+    "swaps_hz": 18.264210819148392,
+    "swap_improvement_percent": 18.41397849462365,
+    "previous_ppu_data_writes": 104044,
+    "ppu_data_writes": 90212,
+    "data_write_reduction_percent": 13.294375456537622,
+    "previous_checked_flips": 744,
+    "checked_flips": 881,
+    "coherence": {
+      "checked_flips": 881,
+      "plane_mismatches": 0,
+      "hud_mismatches": 0,
+      "attribute_mismatches": 0,
+      "oam_mismatches": 0,
+      "control_mismatches": 0,
+      "active_nametable_data_writes": 0
+    },
+    "safe_display_failures": [],
+    "latest_frame_boundary_dot": 6477.0,
+    "exclusive_deadline_dot": 7161,
+    "minimum_stack_s": 161,
+    "inputs_unchanged": true,
+    "observer_neutrality": {
+      "audio.wav": true,
+      "state.bin": true,
+      "save_ram.bin": true,
+      "system_ram.bin": true,
+      "frame.png": true,
+      "ram_trace.json": true
+    }
+  },
+  "seeded_protocol": {
+    "physical_frames": 3100,
+    "warmup_frames": 100,
+    "measured_intervals": 2999,
+    "assistance": "Matched valid stage initialization and invulnerability; neutral controllers.",
+    "scope": "Deterministic bounded observations, no statistical/all-level rate claim."
+  },
+  "seeded_performance": [
+    {
+      "stage": 0,
+      "previous_game_hz": 49.05781104454909,
+      "game_hz": 50.260208374072356,
+      "previous_swaps_hz": 29.759333905700732,
+      "swaps_hz": 31.462730122525358,
+      "checked_flips": 1570,
+      "timing_violations": 0,
+      "coherence": {
+        "checked_flips": 1570,
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "minimum_stack_s": 177
+    },
+    {
+      "stage": 40,
+      "previous_game_hz": 29.017855552494723,
+      "game_hz": 30.100013149065656,
+      "previous_swaps_hz": 28.396616932241038,
+      "swaps_hz": 28.8976158195424,
+      "checked_flips": 1443,
+      "timing_violations": 0,
+      "coherence": {
+        "checked_flips": 1443,
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "minimum_stack_s": 174
+    },
+    {
+      "stage": 43,
+      "previous_game_hz": 41.0618688032194,
+      "game_hz": 42.2442261772506,
+      "previous_swaps_hz": 32.244288386715475,
+      "swaps_hz": 32.665127452048615,
+      "checked_flips": 1630,
+      "timing_violations": 0,
+      "coherence": {
+        "checked_flips": 1630,
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "minimum_stack_s": 175
+    },
+    {
+      "stage": 44,
+      "previous_game_hz": 28.09601759986022,
+      "game_hz": 29.27837497389143,
+      "previous_swaps_hz": 26.292421605575328,
+      "swaps_hz": 26.75334058189258,
+      "checked_flips": 1335,
+      "timing_violations": 0,
+      "coherence": {
+        "checked_flips": 1335,
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "minimum_stack_s": 172
+    }
+  ],
+  "geometry": {
+    "always_painted_intersection": 144,
+    "sparse_clear_cells": 112,
+    "possibly_painted_union": 174,
+    "zero_padding_cells": 82,
+    "projection_phases": 256,
+    "sparse_union_native_cases": 40960,
+    "cache_sequence_native_cases": 65536,
+    "sparse_hint_host_cases": 100000,
+    "rejected_hypothesis": "144-cell intersection cannot bound terrain upload extent; real stage0 paints outside it.",
+    "padding_ownership": "Producer ordinary-unpaused-terrain flag and independent initialized-target zero-padding certificate. Non-sparse plans clear target certificate; exact same-overlay terrain reuse may bypass scans.",
+    "clear_full_mean_cycles": 4290.0,
+    "clear_sparse_mean_cycles": {
+      "clear": 2398.0,
+      "copy": 3259.0,
+      "paint": 11655.1876953125
+    }
+  },
+  "upload_evidence": {
+    "planner_cases": 3768,
+    "cpu_instruction_charge": "46+8*payload_bytes per job; chunk<=1218, same seven-full-row worst-case instruction budget.",
+    "dmc_stall_limit": "Charge excludes DMC DMA stalls; actual overlap is measured separately, no universal timing proof.",
+    "full_fallback_partition_jobs": [
+      7,
+      7,
+      8
+    ],
+    "full_fallback_partition_bytes": [
+      112,
+      112,
+      72
+    ],
+    "full_fallback_bytes": 296,
+    "full_fallback_frames": 3,
+    "previous_full_fallback_frames": 4,
+    "compact_max_payload_bytes": 214,
+    "compact_max_total_jobs": 20,
+    "maximum_jobs_per_chunk": 10,
+    "compact_subset_enumeration": 1048576,
+    "compact_native_jobs": 6722,
+    "attribute_native_jobs": 1093,
+    "hud_native_jobs": 70,
+    "max_observed_charged_cycles": 1216,
+    "normal_dmc_fetch_signatures": 38064,
+    "forced_full_probe": "Invalidate two completed-target initialization bytes while prior immutable staging/plan remains intact; next ordinary refresh forced full.",
+    "forced_full_data_frames": [
+      539,
+      540,
+      541
+    ],
+    "dmc_full_overlap_frames": [
+      539,
+      540
+    ],
+    "dmc_full_overlap_deadline_margin_dots": [
+      720,
+      715
+    ],
+    "limits": "Observed pinned-core instruction-end timing, not exact bus-cycle or physical NES proof.",
+    "normal_dmc_fetch_signatures_scope": "Complete recognized fetch signatures; lower-bound observation, not a count of every possible DMA.",
+    "dmc_fetches_inside_upload_windows": 385,
+    "dmc_fetches_inside_compact_terrain_windows": 384
+  },
+  "bank62": {
+    "dmc_bytes": 6208,
+    "projection_metadata_bytes": 774,
+    "upload_code_bytes": 1158,
+    "free_bytes": 52,
+    "old_prefix_bytes_unchanged": 6982,
+    "sample_metadata_highest_extent": 6145,
+    "ranges": {
+      "dmc": "C000-D83F",
+      "projection": "D840-DB45",
+      "compact_upload": "DB46-DFCB"
+    }
+  },
+  "audio_optimization": {
+    "authored_original512_mean_before": 6254.46875,
+    "authored_original512_mean_after": 6124.609375,
+    "authored_expanded512_mean_before": 4871.021484375,
+    "authored_expanded512_mean_after": 4728.736328125,
+    "release_zero_case_cycles_before": 2523,
+    "release_zero_case_cycles_after": 1896,
+    "psg_cartesian_pairs": 32768,
+    "limits": "Authored bounded states, not original-Genesis audio captures. Corpora reported separately."
+  },
+  "native_profile_cycles_per_physical_frame": {
+    "baseline": {
+      "audio_irq": 12599,
+      "renderer_excluding_planner": 5311,
+      "planner": 1887,
+      "nmi_including_dma_upload": 1260
+    },
+    "candidate": {
+      "audio_irq": 12019,
+      "renderer_excluding_planner": 5859,
+      "planner": 1830,
+      "nmi_including_dma_upload": 1227
+    },
+    "scope": "Same movement schedule but different completed work counts; not equal per-call work. Hook attribution retains deferred-cycle caveat."
+  },
+  "accuracy": {
+    "original_genesis_common_cases": 2678,
+    "original_genesis_common_instructions": 146905,
+    "original_actor_unique_cases": 1262,
+    "original_actor_instructions": 292870,
+    "original_actor_hv_reads": 192,
+    "actor_bridge_procedure_calls": 2030,
+    "assisted_uil_full_flow_frames": 6044,
+    "native_complete_state_cases": 4822,
+    "native_state_fields": 79,
+    "normal_complete_state_and_controller_checks": 12499,
+    "normal_replayed_hv_words": 288,
+    "matched_render_complete_states": 603,
+    "native_projection_pairs": 33282,
+    "seeded_coherent_flips": 5978,
+    "movement_coherent_flips": 881,
+    "feedback_goal_epoch": 899,
+    "feedback_goal_host_frame": 1215,
+    "feedback_next_stage_epoch": 1149,
+    "feedback_next_stage_host_frame": 1574,
+    "feedback_neutral_tail_frames": 2200,
+    "normal_stage_host_frames": 3300,
+    "normal_count_comparison_limit": "New count includes longer neutral feedback observation; not evidence of more distinct logical coverage than the previous window.",
+    "fixed_host_timed_route": "DNF retained",
+    "empty_actor_selector_guard": "Initial2792-case selector run retained as diagnostic; final4822 uses19 fresh direct actor batches bound to exact original contracts. Explicit empty actor bundle now rejected."
+  },
+  "audio_runtime": {
+    "tracks": 32,
+    "mixed_workloads": 1,
+    "service_calls": 270752,
+    "commands": 1161,
+    "ordered_apu_writes": 2579855,
+    "ordered_apu_sha256": "ef55062422ed09ff010efc93b069350cf632653e9e12030ea13e438ea0de4a57",
+    "tempo_protocol": {
+      "format": "miniplanets-audio-tempo-protocol-2",
+      "observation": "Atomic low bytes, modulo256 deltas; retain all original16-bit words as diagnostics.",
+      "minimum_measured_host_intervals": 3000,
+      "warmup_host_frames": 100,
+      "service_increments_per_host_interval_max": 16,
+      "outstanding_slots_max_exclusive": 128,
+      "queue_lateness_increments_per_host_interval_max": 240,
+      "queue_bound_reason": "At most16 serviced slots per observation interval, each has at most15 queued-request iterations.",
+      "source_tick_endpoint_allowance": 2,
+      "service_endpoint_allowance": 1,
+      "scheduled_slot_endpoint_allowance": 1,
+      "rate_target": "Two scheduled services per hostframe; sourceTimerHz118.89963993409864.",
+      "raw_word_policy": "Inconsistent high words stay torn/unknown; only bounded atomic-byte deltas support the v2 rate claim.",
+      "latency_policy": "Show unadjusted rates, endpoint and maximum debt; credit accounting never erases a slow clock.",
+      "feedback_extension": "Ordinary input-only first-level route, then1500 neutral hostframes after Stage1-2 publication."
+    },
+    "tempo_protocol_sha256": "5ddae5180ae93f0dae490393812a2f74c5cf46e86d303064d5921a07f804c264",
+    "tempo_sessions": [
+      {
+        "name": "performance-stage-00",
+        "measured_source_tick_hz": 118.89749013339421,
+        "counter_deltas": {
+          "interrupt": 6000,
+          "tick": 5935,
+          "due": 6000,
+          "served": 6000,
+          "physical": 4977,
+          "catchup": 1023,
+          "late_calls": 24,
+          "late_requests": 0
+        },
+        "scheduler_debt": {
+          "before": 0,
+          "after": 0,
+          "maximum_observed": 3,
+          "minimum_observed": 0,
+          "max_owed_low_diagnostic": 3,
+          "late_calls_delta": 24,
+          "late_requests_delta": 0
+        }
+      },
+      {
+        "name": "performance-stage-40",
+        "measured_source_tick_hz": 118.89749013339421,
+        "counter_deltas": {
+          "interrupt": 6000,
+          "tick": 5935,
+          "due": 6000,
+          "served": 6000,
+          "physical": 5241,
+          "catchup": 759,
+          "late_calls": 19,
+          "late_requests": 0
+        },
+        "scheduler_debt": {
+          "before": 0,
+          "after": 0,
+          "maximum_observed": 5,
+          "minimum_observed": 0,
+          "max_owed_low_diagnostic": 5,
+          "late_calls_delta": 19,
+          "late_requests_delta": 0
+        }
+      },
+      {
+        "name": "performance-stage-43",
+        "measured_source_tick_hz": 118.89749013339421,
+        "counter_deltas": {
+          "interrupt": 6000,
+          "tick": 5935,
+          "due": 6000,
+          "served": 6000,
+          "physical": 5241,
+          "catchup": 759,
+          "late_calls": 18,
+          "late_requests": 0
+        },
+        "scheduler_debt": {
+          "before": 0,
+          "after": 0,
+          "maximum_observed": 5,
+          "minimum_observed": 0,
+          "max_owed_low_diagnostic": 5,
+          "late_calls_delta": 18,
+          "late_requests_delta": 0
+        }
+      },
+      {
+        "name": "performance-stage-44",
+        "measured_source_tick_hz": 118.89749013339421,
+        "counter_deltas": {
+          "interrupt": 6000,
+          "tick": 5935,
+          "due": 6000,
+          "served": 5999,
+          "physical": 4423,
+          "catchup": 1577,
+          "late_calls": 21,
+          "late_requests": 0
+        },
+        "scheduler_debt": {
+          "before": 0,
+          "after": 1,
+          "maximum_observed": 2,
+          "minimum_observed": 0,
+          "max_owed_low_diagnostic": 3,
+          "late_calls_delta": 21,
+          "late_requests_delta": 0
+        }
+      },
+      {
+        "name": "feedback-route",
+        "measured_source_tick_hz": 118.89749013339421,
+        "counter_deltas": {
+          "interrupt": 6000,
+          "tick": 5935,
+          "due": 6000,
+          "served": 6000,
+          "physical": 4878,
+          "catchup": 1122,
+          "late_calls": 21,
+          "late_requests": 0
+        },
+        "scheduler_debt": {
+          "before": 0,
+          "after": 0,
+          "maximum_observed": 3,
+          "minimum_observed": 0,
+          "max_owed_low_diagnostic": 3,
+          "late_calls_delta": 21,
+          "late_requests_delta": 0
+        }
+      }
+    ],
+    "source_timer_hz": 118.89963993409864,
+    "limits": "Exact ordered source-service writes and existing normal-cadence bounds; no Genesis waveform identity or zero-jitter claim."
+  },
+  "negative_controls": [
+    "Oversized1392-cycle partition fails independent1218 reference.",
+    "Ignoring sparse target validity fails cold/full path and first post-pause cleanup.",
+    "Smaller144-cell upload extent rejected by source/native counterexample.",
+    "Historical mapper-shadow race still detected;fixedselectorspass."
+  ],
+  "limits": [
+    "Moving gameplay remains18.26 coherent swaps/s, well below60.",
+    "Game update rate remainsnearlyunchanged at43.68Hz.",
+    "Finite source-bound logical comparisons, not whole-game formal equivalence, natural whole-game completion, arbitrary ROM translation or physical NES proof.",
+    "Correctness checks compare declared logical states and observed hardware buffers; physical-time trajectory and adapted graphics/sound are separate."
+  ],
+  "private_receipts": {
+    "stage0-candidate03-fixed-union/display-receipt.json": {
+      "sha256": "f88e0e25e238e49b8ddc7c7b646f7c8a253d01933b8329561b4630fb847f0c90"
+    },
+    "stage40-candidate03-fixed-union/display-receipt.json": {
+      "sha256": "eae0ba68eeb065bce7aded8ebb2edabcecd5f0a2257b4c0c08b6b8b61d2f6d6b"
+    },
+    "stage43-candidate03-fixed-union/display-receipt.json": {
+      "sha256": "5658d20c827969d98d4950bffeeab922a80e1cbed240987937f1ea41214ad627"
+    },
+    "stage44-candidate03-fixed-union/display-receipt.json": {
+      "sha256": "453822edc82b409e15c09b233c2255b9e16793ce8b2e6255e94f18dd2d6a06c5"
+    },
+    "candidate-03-fixed-union/manifest.json": {
+      "sha256": "651dbf0ddbf5af127c71aecd1117cf09151e57c9733e70408d54115f61277022"
+    },
+    "baseline-summary.json": {
+      "sha256": "8f3b5f808dab96492adab2c9f91a4a27ae647289565fc348b8dcbede1b4037f3"
+    },
+    "baseline-display/display-receipt.json": {
+      "sha256": "e88eff663edaf67456ced28d2b6c26df7c735624eea606508c12902c6ab736f8"
+    },
+    "baseline-profile/profile-receipt.json": {
+      "sha256": "9a4d66de0d87c27969dce6b105cbeee71a638c65d33ceb406192d84eff0d7b95"
+    },
+    "candidate01-weighted-movement/display-receipt.json": {
+      "sha256": "31809b0c0039c2c816b52262b47bcd44df7ae2894ca5692b60062222c712385d"
+    },
+    "candidate01-weighted-stress/stress-receipt.json": {
+      "sha256": "50526042572719d456551abd03315c141b47e2faa2a90375431b0930a31db981"
+    },
+    "candidate03-fixed-movement/display-receipt.json": {
+      "sha256": "3c7710f7a8fd93d2a21570a88f6f03d5f8d6b2d897e51e44b0b361e5e0b6c302"
+    },
+    "candidate03-fixed-stress/stress-receipt.json": {
+      "sha256": "441a3146d470f94c53bc5d45b1fb18db03a0f1c11e062677d02690a14db96258"
+    },
+    "candidate03-fixed-compact-observations.json": {
+      "sha256": "0e53dd5e7c04e23f27744f2c036e916b6da5ad9c0b205677aea777b0260cfe12"
+    },
+    "candidate03-dmc-movement/display-receipt.json": {
+      "sha256": "108e73f57048aa6dbee3c6fe86fa6a9de04aec07358713759fffe4b92b8cccca"
+    },
+    "candidate03-dmc-full-overlap.json": {
+      "sha256": "5c9241fa4b18bd0ce488fdb085bd44ee529e42c48bbdb95ed41ebc050c539785"
+    },
+    "candidate03-dmc-forced-full/display-receipt.json": {
+      "sha256": "e056ce1fa59b8b3ddb103dbb9bb26ac1c5322ec7a74a3abf707bc9f9d54b1fb0"
+    },
+    "candidate03-movement-profile/profile-receipt.json": {
+      "sha256": "517084ae615f1d64614b3c4e9e5865e2ddd91fe9ee9ddd1648ee8c4625758d19"
+    },
+    "fixed03-to-b6-render-match/receipt.json": {
+      "sha256": "cbc894b1edd862954d886a9039fefb1da3c3822c367452ea25966633d83442eb"
+    },
+    "genesis/common-native/summary.json": {
+      "sha256": "86c7721efde0785be28187f071790049b366ded9b1d00f319f44fa8c4dfc600d"
+    },
+    "genesis/actors/summary.json": {
+      "sha256": "1cf63b6a6e4ba80df0ab317603723d9ed20ed1d7a02ac1dc011224b4920fc0ff"
+    },
+    "genesis/full-flow/summary.json": {
+      "sha256": "ba2b468aff97a6f7f58272ba121ce1ef7e6bf6778a920e359801384be87c9c7c"
+    },
+    "genesis/input-hashes.json": {
+      "sha256": "be057f3e2b6c52e2a220660b203f91217d2d30cb34cdcc67cc8a2128efaf507b"
+    },
+    "genesis/actor-bundle-provenance.json": {
+      "sha256": "5adf6c616dbf5ed9efa3c3f6a6fa948581776d0b2a8495dda90c041995aae6a0"
+    },
+    "native-final-03/summary.json": {
+      "sha256": "2e7a65e60f7148f8933ee3a106d4f4d66344b4449908f1c462b29f5984ad1a70"
+    },
+    "native-final-04/summary.json": {
+      "sha256": "793412f743ff757622b17c414a0cac70d7e7d9f6b784e2b5ea0f8949dcffc176"
+    },
+    "audio-native-03/receipt.json": {
+      "sha256": "2a86f02ba6783e0bd11bb870d711c834d440c7302e6a431bd520fc74aa768ec7"
+    },
+    "timing-native-04/summary.json": {
+      "sha256": "0fa0d73f188fbefc748ab3f921f84951d639526292490329f384519cb2ceb408"
+    },
+    "mapper-final-03/receipt.json": {
+      "sha256": "141852323136d6d9b93970113df7758a0135d90c6f274f310da30f4920e45ca4"
+    },
+    "projection-native-03/receipt.json": {
+      "sha256": "311c3c6d5a927bf81ecfe40b452e732f79e401a30e3613498414aaf346aa893e"
+    },
+    "bank62-audit-03.json": {
+      "sha256": "a4b967aa028ab54ea5eaf669913333b60aa7aa54dacd642aedaec4ff1c9cee42"
+    },
+    "planner-weighted-01/receipt.json": {
+      "sha256": "570b3ec4c9ae887bafe8d36815eb1ab9385969102e84d655a4de1a3718c92d8b"
+    },
+    "planner-union-02/receipt.json": {
+      "sha256": "29422f5a43b6f9274696d77b474f50719f8cc53461f287001bd21943c4caeb06"
+    },
+    "compact-budget-enumeration.txt": {
+      "sha256": "8b51ce59d229d4e1eb3a8dcafa7d250f2a34719c272a9c75b19de41a6d07a266"
+    },
+    "renderer/sparse-clear-matched-01/receipt.json": {
+      "sha256": "5a9fa6b415f87ccd5aa9062ece5557e095978d4041520dfcab4e1f4f3d45a3c2"
+    },
+    "renderer/sparse-union-01/receipt.json": {
+      "sha256": "21df049c09b5de325ac16fe09eb222d495ef07327df3db494b6160a227d0a6a9"
+    },
+    "renderer/sparse-union-sequence-01/receipt.json": {
+      "sha256": "b8054f92c675af389bb999812efb6377da6e6eede6ed68ced0cea4d0a1484097"
+    },
+    "renderer/sparse-hint-02/receipt.json": {
+      "sha256": "def1c7a05fe7061ed090f4ff6515a169434243b9ffe06e200ad68c3547fe2db0"
+    },
+    "audio/baseline-original512/receipt.json": {
+      "sha256": "cd37b0dac47dbc017e2f04776f14defb360bccad450f706eb53cdbf9e51df158"
+    },
+    "audio/baseline-expanded512/receipt.json": {
+      "sha256": "a9d7a3da2a4bc29f853f4f3e8c2943e4f83bbcd3e7f470af01a9855950461235"
+    },
+    "audio/final-original512/receipt.json": {
+      "sha256": "55b412368aaa703714770be5442298756d98c1c926e09719264c50df23ed09c5"
+    },
+    "audio/final-expanded512/receipt.json": {
+      "sha256": "c937c3af3521dc433f40548d8ddd0199cee075fb33e875d7b66a9f0587d2998b"
+    },
+    "audio/final-exhaustive-psg/receipt.json": {
+      "sha256": "0872da7496582d59c407a7b0af42f2826cd48a3947f20c0e5c31e2ed5d4c0612"
+    },
+    "pytest-full-native-final.log": {
+      "sha256": "64e2f57c2c335574b19e51d3f33f18e81990d3bbbdf4ed2aab8c479decb263a9"
+    },
+    "pytest-affected-final.log": {
+      "sha256": "c3f9509ec42a415789f8f9c735de2220e0d82f10f032e2e858be6fe35a7407b2"
+    },
+    "dmc-env-default-regression/display-receipt.json": {
+      "sha256": "8a749b86f372ef166e5e93d657e67c8c7fc88f233b3e915fe8ad2b1bd4b766ed"
+    },
+    "dmc-env-explicit-regression/display-receipt.json": {
+      "sha256": "e6509d729f5d6a21cedcc8e785b88d4a7249748bcd523d2bfd0478ffbb5c7e4c"
+    }
+  },
+  "tests": {
+    "affected_passed": 349,
+    "full_mac_passed": 2780,
+    "full_mac_skipped": 142,
+    "full_mac_failed": 3,
+    "full_mac_setup_errors": 23,
+    "failure_error_case_names_match_previous": true,
+    "full_suite_green": false,
+    "environment": "Prepared native cc65 and private original-ROM checks enabled.",
+    "scope": "Native flag-inheritance regressions separately exercised after the full suite; package reproduction and publication are external receipts."
+  }
+}

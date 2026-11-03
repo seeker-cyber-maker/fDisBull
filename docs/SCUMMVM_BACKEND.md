@@ -4,7 +4,9 @@ The `scummvm-agi` backend runs a separately built ScummVM 2.8.1 AGI engine with
 an owned, inherited-socket debugger. It uses the real AGI interpreter and a
 headless framebuffer. The source patch and build recipe are under
 `experimental/scummvm`; the executable is outside the Python distribution.
-The shared 0.29.0 installation is not changed by this experiment.
+The November 1 experiment preserved its then-active shared 0.29.0 installation.
+Its dated receipts qualify that frozen implementation, preserved in commit
+`b028527`; later integration and handoff checks are reported separately.
 
 ## Launch
 

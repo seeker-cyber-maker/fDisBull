@@ -1,0 +1,108 @@
+{
+  "format": "fdisbull-agi-mushroom-research-summary-1",
+  "public_sources": {
+    "glitch_guide": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/2r57k",
+    "route": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/qnbmx",
+    "video": "https://www.youtube.com/watch?v=gD3Bvhqk98I",
+    "TAS": "https://tasvideos.org/7105S"
+  },
+  "selected_file_identity": {
+    "AGI": {
+      "bytes": 39424,
+      "md5": "4771062c7f64bf64c185178613fd665a",
+      "sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+      "matches_public_TAS_size_md5": true
+    },
+    "KQ1.COM": {
+      "bytes": 3121,
+      "md5": "f579e8fb39209a321d575ebdc5f79014",
+      "sha256": "1a5fef60e521d1e30498c6883c89e3cc6d72c5591117eafd8c94d9669f9bdf86",
+      "matches_public_TAS_size_md5": true
+    },
+    "LOGDIR": {
+      "bytes": 315,
+      "md5": "10ad66e2ecbd66951534a50aedcd0128",
+      "sha256": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+      "matches_public_TAS_size_md5": true
+    },
+    "OBJECT": {
+      "bytes": 331,
+      "md5": "6eca02fa540337308529ff13e9e764aa",
+      "sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+      "matches_public_TAS_size_md5": true
+    },
+    "PICDIR": {
+      "bytes": 255,
+      "md5": "d468936618bed024ea453a315aba1958",
+      "sha256": "7a2181429c473c5983547f115869c1a948249d986d0176f5fa30b605510cc3c9",
+      "matches_public_TAS_size_md5": true
+    },
+    "VIEWDIR": {
+      "bytes": 432,
+      "md5": "ac7048eceb628c07f452ecd1662d7b3d",
+      "sha256": "1b36ab1ccaa118870ee7d6d651359912e79f35f3acc71858e4b668e3b34e2a04",
+      "matches_public_TAS_size_md5": true
+    },
+    "VOL.0": {
+      "bytes": 48472,
+      "md5": "8ec91effac02ba476f823f065ca10172",
+      "sha256": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2",
+      "matches_public_TAS_size_md5": true
+    },
+    "VOL.1": {
+      "bytes": 200630,
+      "md5": "77c3be070fc9bf9c69952ed56821efe1",
+      "sha256": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0",
+      "matches_public_TAS_size_md5": true
+    },
+    "VOL.2": {
+      "bytes": 90891,
+      "md5": "b33d0a9938c095da1a69b5ee3c9209d4",
+      "sha256": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf",
+      "matches_public_TAS_size_md5": true
+    }
+  },
+  "private_research_sha256": "be81d2751dcedfd3384b7226ae3c0b69ff7baf1e238fb6371202a6bd4c7a071b",
+  "private_source_geometry_sha256": "65dc36818fa18f273e4b3088e8f3da69685c22e67d63ebee062cfefc0be29f63",
+  "route_resolution": "Public run depicts room33 right edge ->48, not the separate room33-left/34-right static pair.",
+  "geometry": {
+    "coordinate_space": "AGI game units; width6 baseline",
+    "row84": {
+      "x153": [
+        0,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "x154": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        15
+      ]
+    },
+    "row55": {
+      "x153": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "x154": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        15
+      ]
+    }
+  },
+  "scope": "Research and decoded geometry are separate from native observations; numeric coordinates are our adaptation, not a public input recipe."
+}

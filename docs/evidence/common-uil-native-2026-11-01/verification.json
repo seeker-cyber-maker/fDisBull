@@ -1,0 +1,582 @@
+{
+  "format": "fdisbull-common-uil-native-verification-1",
+  "status": "bounded-native-qualified",
+  "date": "2026-11-01",
+  "integration_parent": "121ce8274ebdb731349d0577f850959f8affb412",
+  "contains_original_target_payloads": false,
+  "source_fingerprint_sha256": "78ea51cd31ea5cf7c5deec3a1498ebb552abee1468ec1364b8a654e6ef8f1703",
+  "source_files": {
+    "src/fdisbull/common_uil.py": "c3fbff3cd1935a0613cc15e08c1fda109889c56ed3824c38b86ec0de134030a8",
+    "src/fdisbull/uil_runtime.py": "7a08a3e384617eba06e4a98a5a7c203bf2624503c4156bb26b548347dc9ff446",
+    "src/fdisbull/uil_catalog.py": "9e4752d9a96500f26a541d90a3c2ac4b22e005682f7e9e7335f2acdfdf21975d",
+    "src/fdisbull/uil_native.py": "d31ca39f5b003e44c8bdedcb5ef329a64e0ab29578bdc12d5bd927db5f48a15f",
+    "src/fdisbull/uil_native_codegen.py": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+    "src/fdisbull/uil_link.py": "4c3890a8f675df50a04f23a9146b0c20dd4ebc2a2e7e28a2f979d55d0adce423",
+    "src/fdisbull/uil_dataflow.py": "cd51ebfed99d3f77b2b0ac4ba7087359282b9a6ca78031a9daa83a298fece8ba",
+    "src/fdisbull/interaction_il.py": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee",
+    "src/fdisbull/udl_blocks.py": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d",
+    "src/fdisbull/proofs.py": "edd73a34f2fd67c6dba3295d9159ddeeeab69aedeeb307a5c20fb2f32ee68bed",
+    "tests/fixtures_common_uil.py": "54bc7c53e08f645e697ed4232c393923d8266232b85405e6c0ecf6abc5ad25f6",
+    "tests/fixtures_common_uil_native.py": "4dea571f22aa14e393457e94f18d0faa646d563cf19e47fd381326828521f0ec"
+  },
+  "source_unchanged_during_all_qualifications": true,
+  "common_uil_identical_across_all_six_profiles": true,
+  "common_programs": {
+    "food": "7cad45b6dc1dcfa303d31e61d9726f6c4dcd6782b31365590c1ac7841c5bd7ec",
+    "reset": "1f35f3afa9a71ffeab97fd764a5e5b83461819d52b5ba1625fd7900911257759",
+    "step": "d4ed74209f60f4bdbc8f0fa5ab6e5a7f58b8092f56493557b49d3a4e5892046b",
+    "render": "d36ecb414cc0283fdc873d17934f007cc633b72a15247e2e0573bb1df73a4197",
+    "action": "95078e0aa371cb0fc5ce7bc11ac9a927bd0347f9a726cf0fb9b4dc6e0365b9d0"
+  },
+  "runtime_environments": {
+    "macos-arm64": "ARM64 Mach-O processes on macOS ARM64; LLVM Clang23.1.4",
+    "linux-x64": "ELF64 x86-64 processes in Linuxamd64 Apple container with Rosetta on ARM64macOS; GCC14.2.0",
+    "windows-x64": "AMD64 PE32+ console processes under Wine10.0 in that Linux environment; MinGW GCC14-win32; MicrosoftWindows OS unqualified"
+  },
+  "profiles": [
+    {
+      "target": "macos-arm64",
+      "arithmetic": "portable-c",
+      "receipt_sha256": "64870ed12c6fde76de671dacd2f7271e0335c5d0980644a79a862bae677c592f",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "4cb647f14db50dca27b0cdb4878169f066e61e0a0742adf97d1ba49a1448b1e1",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "7966599f2715e95bbcef55c240fb913707b64b323b1c5e4979c3eb78a9ce87e8"
+        },
+        "reset": {
+          "realization_sha256": "87adbd14696b55e989b5749738bb0b9cefed7ecd1206b210846468b940b12f0b",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "29150b67d937eba55809611486b77f41c2ec3199c6b9b32d6ca00989f48c8f4b"
+        },
+        "step": {
+          "realization_sha256": "bd8d7d9ac25cfdeb537067398d36f588244a5cc92849e8c925f98bc1b556a472",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "ef14b18610b602ba2ddeaaa8734712c33550b521864f86a9c2ae230f5cecde6a"
+        },
+        "render": {
+          "realization_sha256": "b237f9d3a0375687f0ad92ff755e06323ca8c14c2a94813d0a569ec91124bcca",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "346aa90603b6a06a460ac9368bfb5c678778a7f72e8cc5616f4367262e72c856"
+        },
+        "action": {
+          "realization_sha256": "b478c5529d5b4694a1d6594684c53bf3f86ade67b5812c95944a10e94245f884",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "b3c3a81d6674fcf08636e4f02973a4f963b8e17df96cad7593032fdabbc6a99e"
+        }
+      }
+    },
+    {
+      "target": "macos-arm64",
+      "arithmetic": "native-asm",
+      "receipt_sha256": "b83d4d8960d213a7f2c986c492671ee943fdfa1191cdd552d5996bf1f3f6108d",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "a39f0033cab164db14fe25c91359c810e30102d76d4ce90a45c7d425861305a4",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "1a27c4b74ea3fda29d7edd4899209130f6b0a92f17a99d03ebaa5e34ec7d5f22"
+        },
+        "reset": {
+          "realization_sha256": "595d11ec86edb98a1c9f7c7d268ca0db95261e2fb8d61bea344186bce2b4f990",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "72aa521207d30cf9b99a26aa32a393008fa252c295ee111594ca21c42e103f64"
+        },
+        "step": {
+          "realization_sha256": "231e37fbf86434f348d99aa6e287c6674dcf7706625693ab505239542b2654be",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "2b1dec495d13cc62682d9be35a44d3cea17f04b082698a3687dffc005cf51ecf"
+        },
+        "render": {
+          "realization_sha256": "1ca9c9ffa15b383e487b6db9e08fdb72165b21749afe79abb4f4f303388ec345",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "82ba12ee1d96bdb664d20c88c98f7bb9ab94c90431d2434e616cc379ff860d75"
+        },
+        "action": {
+          "realization_sha256": "b38d93405591501f5a0402f5547ab063270cec3f886f9587ca8b857c2719faaa",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "fac7da721e8e1c59fd325f89686d0739ada18de0fa987bb0255dee11e4044bf3"
+        }
+      }
+    },
+    {
+      "target": "linux-x64",
+      "arithmetic": "portable-c",
+      "receipt_sha256": "682947f173a5ad476ead2d8bd0e961f15019e3514980700f8226f5556c344047",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "0d6a9b72ac6c1ac2feb8fbac796fcd6f43eb0a44de8e1580661ac0083d9fba30",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "f09b02e2c1abc942c0eac77eadff7517d4c91c1d6c791c057909cc93767b4a57"
+        },
+        "reset": {
+          "realization_sha256": "0ee00ca39f003b3ca43787bff003c4373ae186d094634afa83babe9102d75aa6",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "f3f448c7d02850c0b16bef4db046a788a51664bc718a7d2d936e8b56e56dff62"
+        },
+        "step": {
+          "realization_sha256": "e4d70b0ead3e96917561597722744722607ce9fa0ad0f5ef45cd5a43823e04ee",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "b681a4b68d022ad17a4e2d21e6da17d6e1d6a1c66a48543d92e4a6c5a5b326a5"
+        },
+        "render": {
+          "realization_sha256": "a592d9fb7ad2a9b8feb71dbb4660238e17999e38126a88fd006beebcf44f7e90",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "4f53d6ab4d6210705ade10499ca1549227c5bf348212cb6ce06776bd28955853"
+        },
+        "action": {
+          "realization_sha256": "4b09d1fb6d11aed8dd658b1d167c0335d777827f5a01063e8d56220ca9734d95",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "ff60d0ac0cc401cfaa66c48edbb0d4b5322ad6e338ca28230082a09d2cb8ccb1"
+        }
+      }
+    },
+    {
+      "target": "linux-x64",
+      "arithmetic": "native-asm",
+      "receipt_sha256": "351c79f60ad846aadbd13915335e5d1d15b7c88f0ca5e25fbf7f3debca7bb417",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "a7ddaa3249b6c831adb338f8a6da6b8cac397e99c88bef6f852a97b870a10c7e",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "5726cce5abe54db603a9ad9ba21e52bbe260f2c1f705ea5d9e48dd084549efe0"
+        },
+        "reset": {
+          "realization_sha256": "223eb43f046abb0ed68e7880563382ff3c187fd5611e268d9500c1c1815bf338",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "a87094f01f6d92b9e81228fe31688838ab23cef87147aba3173ec75fbba82449"
+        },
+        "step": {
+          "realization_sha256": "79b2b9b4abce7f1dbfa4133f849f05617c9613aeca2170efa92b715fad669dd0",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "96312269dcb00bd9a41840b23da1d7247315b6d0b9e4731f64a56db1ea3a0f16"
+        },
+        "render": {
+          "realization_sha256": "b2f51afa2325932f6d9db047cd58a8b75d5eb2c5d5237c2c8e549ddc153939e6",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "0fd319d4b764e19ad377b5a4e7e7c7accd2664335840f490e17cdb369c7adb68"
+        },
+        "action": {
+          "realization_sha256": "e4b79611a67e1855d45da48670dfef8be49effcd8d8f9c4948ef7cdfec1060bc",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "b1f05274310cf911cdfc808ee662eb301fed0beba29cf761721b3041dbeb9ddc"
+        }
+      }
+    },
+    {
+      "target": "windows-x64",
+      "arithmetic": "portable-c",
+      "receipt_sha256": "2b13128cb340d184399b27df9aa59de0eff6509043a7f0990f21346af09cbcde",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "5a9ef491d28d19b87cec3c80b8b25cc213ab98ee9013fb986ec0cc052c01ab57",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "7d9bf303127bcb5e0c7773f4ecfe07d7a7503e854b7a40b10e66bd2205c707de"
+        },
+        "reset": {
+          "realization_sha256": "56878fc7c86f022a9bd14ac866a1c16e113f5569d9f1e6ca0be9695c38878acb",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "34819b72c1b1e85bf4c2ab438f42880ed94624f97a41140aa6c6255979f367d3"
+        },
+        "step": {
+          "realization_sha256": "54569eac72e03ec0519e9fd6d267aff074a88cad0e46ab6b5eec80eab790efba",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "2872264856e5136b66ffb75d1c4d081d195c40d27f5a6a301ed5bd071b75bfae"
+        },
+        "render": {
+          "realization_sha256": "5e6c2c7d0427a8c93f50b1936d8212c983512a7a09990faf88cc752fe5b2c89a",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "fb2cc60438071980f016bd395ec49482abbd22ee9450455cd689e35c058518ff"
+        },
+        "action": {
+          "realization_sha256": "cc7e3b079cbc7ccadae4a3f7d187aa7842774f9399a894a4188fc1ede05d5048",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "0731164e4e422ae430b4252e54f1c4ecc46e8e831fdb744d0ebef0caa009bb43"
+        }
+      }
+    },
+    {
+      "target": "windows-x64",
+      "arithmetic": "native-asm",
+      "receipt_sha256": "72789a7d9a7308ca9a446da6b5b9f0d011121abbac974647aeebea8b8f80d0dc",
+      "native_processes": 124,
+      "records": 2420,
+      "results": {
+        "food": {
+          "vectors": 2018,
+          "original_editions": 3,
+          "source_comparisons": 6054,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 9086
+        },
+        "full_model": [
+          {
+            "function": "reset",
+            "words": 70000,
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+            "actual_arithmetic_calls": 615
+          },
+          {
+            "function": "step",
+            "words": 70000,
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+            "actual_arithmetic_calls": 23
+          },
+          {
+            "function": "render",
+            "words": 70000,
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+            "actual_arithmetic_calls": 702757
+          }
+        ],
+        "normalized_actions": {
+          "cases": 31,
+          "words_per_case": 70000,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 2085
+        },
+        "original_snake": {
+          "prepared_cases": 342,
+          "carried_route_calls": 26,
+          "compared_words": 614,
+          "mismatches": 0,
+          "actual_arithmetic_calls": 12396,
+          "tail_scope": "declared native model footprint check, not extra original CPU observations"
+        }
+      },
+      "builds": {
+        "food": {
+          "realization_sha256": "60140f7ea5dd44ec65cb23a5525546475b78c74cf3ee46397cb081b603185bc1",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "442885ef385c409627c5a0e5f3e9e4ba65416f5024550f07237cce505c2bfd73"
+        },
+        "reset": {
+          "realization_sha256": "a448212b6745972109daac0e01434e7b032af94f8111be5165016746a7030cfb",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "78ebaadf3e6c0aff30ea2713d8d91a72a0530cec7cf15925a7c2987f19836444"
+        },
+        "step": {
+          "realization_sha256": "590c2abaac6cefaf080588436de5a98af9da48c348e605e22873fa4e0603accb",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "1c2308deef4d9af9f336696c21d6fd1bd69298dd40edec341c43a3fdab9c9926"
+        },
+        "render": {
+          "realization_sha256": "23db7811aec98ee7aba744470cdfb8e0b644053e5bf73f0d0974bf014776a4fb",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "d45b76f07228f5c65e5ba001aa440ab2a8847b167d0ac8143a007d1ef40ae29e"
+        },
+        "action": {
+          "realization_sha256": "9c4f2f7cca84270cc78e8c6c3d899e5e21f7bce3ec17d3e0f5b9ac7518622cef",
+          "generator_sha256": "ac8a4618b16fcf4e4d68cb14a08ea7f0e8a31286930f16c1874905c1f8738e2e",
+          "executable_sha256": "8cab032fc224f19e9047650a9442305ad7e4c9c50425800144b2d974b66d0874"
+        }
+      }
+    }
+  ],
+  "totals": {
+    "native_processes": 744,
+    "native_records": 14520,
+    "food_source_comparisons": 36324,
+    "original_snake_projection_words": 614
+  },
+  "independent_original_oracle": {
+    "format": "fdisbull-common-uil-native-original-oracles-1",
+    "food_cases": 6054,
+    "snake_kernel_cases": 342,
+    "snake_route_calls": 26,
+    "snake_original_cpu_calls": 368,
+    "snake_projection_words": 614,
+    "mismatches": 0,
+    "originals_unchanged": true,
+    "unicorn_instruction_bound": 3000000,
+    "artifacts": {
+      "food-originals.json": "42300b41a914370fc510f489bf6f1f08a6cdc8770b69693eba141b9583768da8",
+      "snake-originals.json": "1dabd9a6f730085d9c1a0a251d3411203962c1854ef56d65672345e02610bb02"
+    },
+    "limits": [
+      "isolated original machine instructions with prepared data/register adapters, not original DOS processes",
+      "Snake oracle covers600cells+14scalars, not70000modelwords/frame/physicalinput",
+      "route starts from explicit prepared initial condition, not an original reset invocation",
+      "no common evaluator or generated output is an oracle input"
+    ]
+  },
+  "original_oracle_receipt_sha256": "a05f861fd1100f2e7f48ebda0f8e52911b812a1d9e7cbe9c47ec308cfb2ff78f",
+  "compiler_preflight": {
+    "large_programs": 20,
+    "targets": [
+      "linux-x64",
+      "windows-x64"
+    ],
+    "providers": [
+      "portable-c",
+      "native-asm"
+    ],
+    "kernels": [
+      "food",
+      "reset",
+      "step",
+      "render",
+      "action"
+    ],
+    "failed": [],
+    "execution": false,
+    "strict_warnings_retained": true,
+    "receipt_sha256": "4d705c78dad390745c7827296c1c49c20254790f68ed101279515579df862667"
+  },
+  "deterministic_contract": {
+    "standard_intrinsics": "exact version/types/ABI/ownership/numericprofile/effects/target",
+    "selection": "explicit exact pins or unique matching provider; no agent or heuristic fallback",
+    "component_choices": [
+      "add",
+      "sub",
+      "mul",
+      "and",
+      "or",
+      "xor"
+    ],
+    "unknown_generic_providers_authorize_native_code": false,
+    "show_image_decoder_tree": "metadata-only example, not a qualified codec",
+    "legacy_arena_abi": "effects-free single same-length u32-array entry; fdb_block with owned staging and atomic commit; cut0/localcaptureunsupported"
+  },
+  "copy_pruning": {
+    "profile": "fdisbull-uil-scalar-value-plan-1",
+    "source_uil_rewritten": false,
+    "scope": "straight-line scalar set/require/return and transparent groups",
+    "retained": "immutable snapshots, all final logical slots and flags, reached logical charges and source child paths",
+    "other_shapes": "ordinary lowering"
+  },
+  "observation_limits": [
+    "native import diagnostics retain identity/status/arity/counts, not full import arguments",
+    "foodoriginal execution covers three36-byte kernels with declared scalar adapters",
+    "original Snake execution covers614fields in342preparedcases and26carriedroutecalls",
+    "70000-word states, reset/step/render and31normalizedactions are separate model edges",
+    "no whole original DOS process or playthrough",
+    "no new native GUI/physical keyboard/mouse/window/audio execution",
+    "no general ISA translator or arbitrary foreign-language ABI hosting",
+    "ordinary repository, distribution and installed-package gates are recorded separately"
+  ]
+}

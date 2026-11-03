@@ -1,0 +1,498 @@
+{
+  "format": "fdisbull-agi-dos-host-verification-1",
+  "parent_ci": {
+    "repository": "seeker-cyber-maker/fDisBull",
+    "pull_request": 76,
+    "state": "open",
+    "mergeable": true,
+    "base_ref": "codex/agi-shared-continuations",
+    "base_sha": "bd8cded9113cd4cae554b56982d4a668c3eda09a",
+    "head_ref": "codex/agi-object-resource-effects",
+    "head_sha": "89a88aa39920a10b400bc07a2e0fa1a7b5ebbab2",
+    "canonical_checks": [
+      {
+        "name": "test-and-package",
+        "run_id": 41199457329,
+        "job_id": 124532185241,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native debugger (stable-backend)",
+        "run_id": 41199457216,
+        "job_id": 124532184548,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native debugger (layers-backend)",
+        "run_id": 41199457216,
+        "job_id": 124532184415,
+        "conclusion": "success"
+      },
+      {
+        "name": "Unified DOS, boot and PE64 (installed wheel)",
+        "run_id": 41199457216,
+        "job_id": 124535022565,
+        "conclusion": "success"
+      }
+    ],
+    "push_checks": [
+      {
+        "name": "Native debugger (stable-backend)",
+        "run_id": 41199380179,
+        "job_id": 124531961813,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native debugger (layers-backend)",
+        "run_id": 41199380179,
+        "job_id": 124531961597,
+        "conclusion": "success"
+      },
+      {
+        "name": "Unified DOS, boot and PE64 (installed wheel)",
+        "run_id": 41199380179,
+        "job_id": 124534789519,
+        "conclusion": "success"
+      },
+      {
+        "name": "test-and-package",
+        "run_id": 41199380181,
+        "job_id": 124531961760,
+        "conclusion": "success"
+      }
+    ],
+    "read_at_utc": "2026-10-31 12:54 UTC"
+  },
+  "platform": "macOS ARM64; genuine CPython 3.13.13",
+  "source_agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+  "source_logic_sha256": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+  "source_manifest_files": 24,
+  "source_manifest_sha256": "35174dac00ed12c66440c90ef82700e35a2a0e2388b391c1483e339e1987471a",
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "source_core_sha256": {
+    "src/fdisbull/agi_dos.py": "f0fe4e4525dfbf3c8db22968e7856e5c44eb844e1aa2bac15475e424ad7b4753",
+    "src/fdisbull/agi_host.py": "34eb52ecfb64ab26bdc73ab683f927304721d66fe26135f1b023ff1a9cc96b0e",
+    "src/fdisbull/agi_effects.py": "e0ab005dfa784f4d5a4af21059f9a87966b26d2f1f3af1f8e7119e44b312e946",
+    "src/fdisbull/agi_lift.py": "5373bf7a4a6a5365747635380917574979b1ec63b4f0812158700b72e2648064",
+    "src/fdisbull/interaction_il.py": "9810649a7b2ea4812f80646ab2e880bda68c7107d50f9e4b3675c023b2efa7cd",
+    "examples/agi/verify_host.py": "eff74d9e5c475f51d27b5c0670fee9fb356fc8be99bb9d792d66fece34785185",
+    "examples/agi/spatial_trial.py": "bdc335a7ac6acba8d1795147d588ec401113d478961d80dc539c095601ec8202"
+  },
+  "cases": [
+    {
+      "case": "baseline",
+      "status": "verified",
+      "complete": true,
+      "source_offsets": [
+        0,
+        179,
+        183,
+        190,
+        193,
+        196,
+        205,
+        212,
+        469
+      ],
+      "source_instructions_completed": 9,
+      "attempts": 9,
+      "comparison_performed": true,
+      "differences": [],
+      "excluded_fields": [
+        "objects.0.follow_step",
+        "objects.0.follow_flag",
+        "objects.0.follow_count",
+        "objects.0.view_replaced",
+        "objects.13.prev_width",
+        "objects.13.prev_height",
+        "objects.13.follow_step",
+        "objects.13.follow_flag",
+        "objects.13.follow_count",
+        "objects.13.view_replaced"
+      ],
+      "host_operations": [],
+      "recovery_required": false,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "ce26fd0a78da77808c267fbf7ac750393c542ff3a634b020ef9cf999318333ea",
+      "private_run_sha256": "3138433f559d8e26e8f941f11493c22825b77bfc43a738e42579cdf300ddeb40",
+      "setup_verified": null,
+      "readback_without_replay": true
+    },
+    {
+      "case": "initialize",
+      "status": "verified",
+      "complete": true,
+      "source_offsets": [
+        0,
+        6,
+        8,
+        10,
+        13,
+        17,
+        19,
+        51,
+        83,
+        115,
+        147,
+        160,
+        163,
+        167,
+        170,
+        173,
+        175,
+        179,
+        183,
+        199,
+        202,
+        205,
+        212,
+        469
+      ],
+      "source_instructions_completed": 24,
+      "attempts": 24,
+      "comparison_performed": true,
+      "differences": [],
+      "excluded_fields": [
+        "objects.0.follow_step",
+        "objects.0.follow_flag",
+        "objects.0.follow_count",
+        "objects.0.view_replaced",
+        "objects.13.view_replaced"
+      ],
+      "host_operations": [
+        {
+          "source_offset": 173,
+          "operation": "draw",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        }
+      ],
+      "recovery_required": false,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "98203ee692ab2c5928a7a99bbbca6b027e14524e87928bc28fe4c890f1665f52",
+      "private_run_sha256": "28585ec01366b0df17906318dd7515beef77ca5995fc393d43d20865ab1ca33d",
+      "setup_verified": null,
+      "readback_without_replay": true
+    },
+    {
+      "case": "horizon",
+      "status": "verified",
+      "complete": true,
+      "source_offsets": [
+        0,
+        6,
+        8,
+        10,
+        13,
+        17,
+        19,
+        51,
+        83,
+        115,
+        147,
+        160,
+        163,
+        167,
+        170,
+        173,
+        175,
+        179,
+        183,
+        199,
+        202,
+        205,
+        212,
+        469
+      ],
+      "source_instructions_completed": 24,
+      "attempts": 24,
+      "comparison_performed": true,
+      "differences": [],
+      "excluded_fields": [
+        "objects.0.follow_step",
+        "objects.0.follow_flag",
+        "objects.0.follow_count",
+        "objects.0.view_replaced",
+        "objects.13.view_replaced"
+      ],
+      "host_operations": [
+        {
+          "source_offset": 173,
+          "operation": "draw",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        }
+      ],
+      "recovery_required": false,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "01011ac676d6e98f3e811689941e6249d9759b4ff03d4a2d9ac9fccf6776938e",
+      "private_run_sha256": "9a95f92c1f81a76c0c3839972502dd8486f2cdc7316b8145fcb2a7152a57fcc4",
+      "setup_verified": null,
+      "readback_without_replay": true
+    },
+    {
+      "case": "print",
+      "status": "verified",
+      "complete": true,
+      "source_offsets": [
+        0,
+        6,
+        8,
+        10,
+        13,
+        17,
+        19,
+        51,
+        83,
+        115,
+        147,
+        160,
+        163,
+        167,
+        170,
+        173,
+        175,
+        179,
+        183,
+        199,
+        202,
+        205,
+        215,
+        230,
+        240,
+        432,
+        436,
+        448,
+        450,
+        452,
+        469
+      ],
+      "source_instructions_completed": 31,
+      "attempts": 31,
+      "comparison_performed": true,
+      "differences": [],
+      "excluded_fields": [
+        "objects.0.follow_step",
+        "objects.0.follow_flag",
+        "objects.0.follow_count",
+        "objects.0.view_replaced",
+        "objects.13.view_replaced"
+      ],
+      "host_operations": [
+        {
+          "source_offset": 173,
+          "operation": "draw",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        },
+        {
+          "source_offset": 450,
+          "operation": "print",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        }
+      ],
+      "recovery_required": false,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "d122491d276f317cfd0a0dae1d95942782fadead442458fb0d010bb5981fd04d",
+      "private_run_sha256": "9738b421ce72d100ff8bcb7e4b4fc18a4730c78c62d462e564f5129eab751137",
+      "setup_verified": null,
+      "readback_without_replay": true
+    },
+    {
+      "case": "blocking-print",
+      "status": "incomplete",
+      "complete": false,
+      "source_offsets": [
+        0,
+        6,
+        8,
+        10,
+        13,
+        17,
+        19,
+        51,
+        83,
+        115,
+        147,
+        160,
+        163,
+        167,
+        170,
+        173,
+        175,
+        179,
+        183,
+        199,
+        202,
+        205,
+        215,
+        230,
+        240,
+        432,
+        436,
+        448
+      ],
+      "source_instructions_completed": 28,
+      "attempts": 29,
+      "comparison_performed": false,
+      "differences": null,
+      "excluded_fields": [],
+      "host_operations": [
+        {
+          "source_offset": 173,
+          "operation": "draw",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        }
+      ],
+      "recovery_required": true,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "65a3ad151f7ec749b0d9e806e14fae3c7f6190ada96d890ef10f152e513c0524",
+      "private_run_sha256": "a684859408af586057e5f45f392160f415e6f885370dd3b9a0004dfd4ccc65b1",
+      "setup_verified": null,
+      "readback_without_replay": true
+    },
+    {
+      "case": "erase",
+      "status": "verified",
+      "complete": true,
+      "source_offsets": [
+        0,
+        179,
+        183,
+        199,
+        202,
+        205,
+        215,
+        230,
+        243,
+        257,
+        259,
+        261,
+        302,
+        319,
+        383,
+        396,
+        398,
+        402,
+        411,
+        413,
+        415,
+        417,
+        419,
+        427,
+        429,
+        469
+      ],
+      "source_instructions_completed": 26,
+      "attempts": 26,
+      "comparison_performed": true,
+      "differences": [],
+      "excluded_fields": [
+        "objects.0.follow_step",
+        "objects.0.follow_flag",
+        "objects.0.follow_count",
+        "objects.0.view_replaced",
+        "objects.13.follow_step",
+        "objects.13.follow_flag",
+        "objects.13.follow_count",
+        "objects.13.view_replaced"
+      ],
+      "host_operations": [
+        {
+          "source_offset": 413,
+          "operation": "print",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        },
+        {
+          "source_offset": 427,
+          "operation": "erase",
+          "frame_status": "captured",
+          "basis": "observed original handler return",
+          "visual_verified": false
+        }
+      ],
+      "recovery_required": false,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "ec7ab1d1ffacc533954bd3edef25c50d0a6a4974d743fb24d1be9b29a42286ad",
+      "private_run_sha256": "7f113e046020c4916042c44b3c6e4e8ef8cbbb27780b464d15010f8a5df9fc56",
+      "setup_verified": true,
+      "readback_without_replay": true
+    },
+    {
+      "case": "interrupt",
+      "status": "incomplete",
+      "complete": false,
+      "source_offsets": [
+        0,
+        6,
+        8,
+        10,
+        13,
+        17,
+        19,
+        51,
+        83,
+        115,
+        147,
+        160,
+        163,
+        167,
+        170
+      ],
+      "source_instructions_completed": 15,
+      "attempts": 16,
+      "comparison_performed": false,
+      "differences": null,
+      "excluded_fields": [],
+      "host_operations": [],
+      "recovery_required": true,
+      "source_unchanged": true,
+      "private_copy_unchanged": true,
+      "private_trial_sha256": "cd14d9d767b31afbbe8df1a93791e75df21879d6494769c951f1129e975d63a5",
+      "private_run_sha256": "4ab332257b2205aa4a4e93bf800e661348464fc561353e5ef975cea98722dd48",
+      "setup_verified": null,
+      "readback_without_replay": true
+    }
+  ],
+  "regression": {
+    "source_offset": 10,
+    "before_y": 50,
+    "horizon": 50,
+    "native_height": 24,
+    "native_after_y": 50,
+    "parent_model_y": 51,
+    "corrected_model_y": 50
+  },
+  "local_tests": {
+    "passed": 424,
+    "skipped": 1,
+    "scope": "Selected AGI/IL/module/UDC/Z-machine/skill/distribution suite; case-sensitive-filesystem skip",
+    "log_sha256": "a6d32a5d4af0feb94adaecd003a4380b30ce2e2efe18d413d643c11efe634195"
+  },
+  "artifact": {
+    "path": "draw-handler-frame.png",
+    "sha256": "2acba2a9355f3bacd35a7a3e7c4fe99cac6c47b5c3b2f9034b42efdadd7cb8c2",
+    "basis": "Unedited stored native screenshot from controlled initialization"
+  },
+  "scope": [
+    "Diagnostic caller/state interventions, including explicit second completed-frame invocation for erase",
+    "Selected final state projection and source path; not every transient value, pixel, naturally reachable save or whole game",
+    "Print receipts qualify original handler return; visual_verified remains false",
+    "Raw contexts, messages, states, project databases, bytecode and game files remain private"
+  ]
+}

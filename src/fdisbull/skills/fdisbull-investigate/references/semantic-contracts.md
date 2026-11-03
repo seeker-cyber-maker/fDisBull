@@ -4,6 +4,9 @@ Use this reference when recovering an operation's meaning, linking a user interf
 interpreted effects, or comparing a recovered model or projection. Apply the parts relevant to the
 requested claim; a static format question does not require a complete game reconstruction.
 
+For a procedure that starts with required UIL scene elements and follows their source dependencies,
+read [scene-recovery.md](scene-recovery.md). Use the contracts here to judge the recovered meaning.
+
 These are investigation records and comparison rules, not a new fDisBull command, schema, extension
 identifier or runtime. Keep them in project notes or supported evidence fields. Check the installed
 contract before adding fields to a scene, proof, shared-IL document or export.

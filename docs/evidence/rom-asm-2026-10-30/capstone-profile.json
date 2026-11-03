@@ -1,0 +1,32 @@
+{
+  "added": 0,
+  "changed": 0,
+  "guard_extra": 0,
+  "guard_missing": 0,
+  "original_decoded": 54204,
+  "original_library_sha256": "016084c6e70d929249a2abb22f1afda95095294e6cd70f509964ffc54006bf94",
+  "original_sh2a_control": [
+    "rtv/n",
+    "r2"
+  ],
+  "patched_decoded": 53752,
+  "patched_library_sha256": "06b50b66591bb6f9fc0c01466adb83015027e2b6110cffd16aaa3a68896d99ca",
+  "patched_sh2a_control": [
+    "rtv/n",
+    "r2"
+  ],
+  "removed": 452,
+  "removed_words_sha256": "ed7a74efd512fa2eccee47026690c42602cafffcd37b5c0a5c181a26aa940a4a",
+  "source_patch_sha256": "6f88d820337bcd18cb9bcee116b66ac41036f3e8a25f0af3e58d2adaa753f570",
+  "words_tested": 65536,
+  "schema": "fdisbull-capstone-sh-profile-1",
+  "upstream_tag": "5.0.9",
+  "upstream_source_url": "https://github.com/capstone-engine/capstone/archive/refs/tags/5.0.9.tar.gz",
+  "scope": "real original/patched native C libraries; SH-2 big endian at PC zero, no FPU/DSP; all 65536 16-bit words. Correspondence to the source fix is not a proof of all CPU semantics.",
+  "build_command": "CAPSTONE_ARCHS=sh make -j4",
+  "source_file_hashes": {
+    "scripts/check_capstone_sh_profile.py": "00c284d04b09474c7ad4b6d637f30d41827b114032a87bc598438d9e3aa50f1b",
+    "src/fdisbull/rom_asm_capstone.py": "a2872b16abcdc2cd3a76059eb78c3e128364f74a068ea196d42527bfc45d3708",
+    "patches/capstone-5.0.9-sh-profile-gating.patch": "6f88d820337bcd18cb9bcee116b66ac41036f3e8a25f0af3e58d2adaa753f570"
+  }
+}

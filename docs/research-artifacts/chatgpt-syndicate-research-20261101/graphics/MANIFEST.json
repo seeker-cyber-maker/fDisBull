@@ -1,0 +1,187 @@
+{
+  "format": "source-and-sanitized-evidence-manifest-1",
+  "contains_original_game_payloads": false,
+  "github_pr_created": false,
+  "files": [
+    {
+      "path": "Knowledge_Pack.md",
+      "bytes": 2920,
+      "sha256": "7a0b492c25dd789eb6c37e5898c0e35a707225de23e55aec9222614fcdbd08da"
+    },
+    {
+      "path": "LICENSE-GPL-2.0.txt",
+      "bytes": 17984,
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+    },
+    {
+      "path": "PUBLISH_PR.sh",
+      "bytes": 1457,
+      "sha256": "a7f2353ac334ee2031bd1730d4a62df200df669dc83f108ba1e83ba439703f9d"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5140,
+      "sha256": "8d87f180e298ae7cd375a59d12fbc7be58977c8df99c89c3ef09a90d0060c9ff"
+    },
+    {
+      "path": "REPORT.md",
+      "bytes": 20902,
+      "sha256": "1491cb47d1008bb5afec7cc8aef331378713c22b083500adf3353effb155f08c"
+    },
+    {
+      "path": "diagnostic-graphics-friction.patch",
+      "bytes": 25578,
+      "sha256": "e02f7579abf2e88ce09662e6e3df8f993b3ab5561cd3258cdb84c6d160a6f7c6"
+    },
+    {
+      "path": "evidence/annotations.json",
+      "bytes": 2113,
+      "sha256": "d43e4b9ded744b5be80e5cf1aeaabd75636a5473daac3a5df5e5c4b68cde853d"
+    },
+    {
+      "path": "evidence/asset-identities.json",
+      "bytes": 341516,
+      "sha256": "5c381945d69e2d37c9e300f7530674c272bdc9c5510fa76b72abeb0109e64d29"
+    },
+    {
+      "path": "evidence/asset-recovery.json",
+      "bytes": 162047,
+      "sha256": "c8f7fb3eb8392f9244c16f2e786456670990f099a0b5d3c08d8609d61fd52b4e"
+    },
+    {
+      "path": "evidence/continuation-audit.json",
+      "bytes": 663,
+      "sha256": "0d4357d636782de0e6b26c129547e036235b0cc6723fa13d0384b99068b9d52c"
+    },
+    {
+      "path": "evidence/delivery-source-check.json",
+      "bytes": 159,
+      "sha256": "d6943230eaba22acac893e497f61f7ee94dcb09b9f8c9cd1aaf005728c4a8078"
+    },
+    {
+      "path": "evidence/graphics-bound-proof.json",
+      "bytes": 11023,
+      "sha256": "e808077a6c395b1c87296e54c797d2d8dbab33372623696a0adfd224d90fa16f"
+    },
+    {
+      "path": "evidence/graphics-discovery.json",
+      "bytes": 5395,
+      "sha256": "8bc82c6779a1773afffe787e7492129de819bde536b03410dff4f6bd726c5068"
+    },
+    {
+      "path": "evidence/graphics-native-cases.json",
+      "bytes": 127253,
+      "sha256": "078cbb376207ef857c4b52a866562b92939b084ce734c01026b9ee88924050c4"
+    },
+    {
+      "path": "evidence/pr-readiness.json",
+      "bytes": 729,
+      "sha256": "ab3ad69a98be794a4166e2d5d9fe1c5796d104644ce8156507cacc3da2e0b840"
+    },
+    {
+      "path": "evidence/public-model-checks.json",
+      "bytes": 2019,
+      "sha256": "4b66c025dc3b2dcea00f08e8423a990ec34a2c703ee946c234b0ae7b5cdca262"
+    },
+    {
+      "path": "evidence/replay-validation.json",
+      "bytes": 257,
+      "sha256": "a38c4d03ec522e4d76da6ff9e048db79f8a94d1b1c2edd649cecd83e0f77f781"
+    },
+    {
+      "path": "evidence/resource-domains.json",
+      "bytes": 3741,
+      "sha256": "ce5f9fb30d79f0657f89755335a07fa6ff94bdd64df09c0c5acfb0b664430f59"
+    },
+    {
+      "path": "evidence/sprite-native-cases.json",
+      "bytes": 36245,
+      "sha256": "f314c0389accaac3443e00b556ea7bdf451c5d28125ece1c909db93fc94e0eb4"
+    },
+    {
+      "path": "pr/PR_BODY.md",
+      "bytes": 4490,
+      "sha256": "c9eee3ee5a8015f541c1b96263b7656f5ccafaf801ed21581aa0180d8442c538"
+    },
+    {
+      "path": "pr/PR_TITLE.txt",
+      "bytes": 68,
+      "sha256": "eedeb28de1e46ed29151960b2f79789fc452e587d9855b803201b49796a27720"
+    },
+    {
+      "path": "pr/docs/DIAGNOSTIC_GRAPHICS_FRICTION_2026-10-31.md",
+      "bytes": 16056,
+      "sha256": "ad3ed5afb62ff881cbcc07b51e93712220b79abf5dc7b6227c9a0e86189ca3b5"
+    },
+    {
+      "path": "pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py",
+      "bytes": 5473,
+      "sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd"
+    },
+    {
+      "path": "pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json",
+      "bytes": 2019,
+      "sha256": "4b66c025dc3b2dcea00f08e8423a990ec34a2c703ee946c234b0ae7b5cdca262"
+    },
+    {
+      "path": "replay-plan.json",
+      "bytes": 16491,
+      "sha256": "2e6af6843ba41fd782e81d026627c35e73a5efa064bda6a3af1dbb4486d63d78"
+    },
+    {
+      "path": "tools/check_contract_models.py",
+      "bytes": 5473,
+      "sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd"
+    },
+    {
+      "path": "tools/decode_resources.py",
+      "bytes": 2429,
+      "sha256": "e353dc39e0552dd3c8824da10f55b60e2d30ddcfd79edc1ba69104ca5cd9f356"
+    },
+    {
+      "path": "tools/graphics_matrix.py",
+      "bytes": 5093,
+      "sha256": "43e60528aaaeb3b3680ec2c0e64bb9ab28cd0b67c86b1cc19b0d289c6536cac7"
+    },
+    {
+      "path": "tools/prepare_private.py",
+      "bytes": 2061,
+      "sha256": "521d296e44d312ac34f4a4ca4cdab320ea5998b01327ef95c4709b511ae66343"
+    },
+    {
+      "path": "tools/probe_cpu64.py",
+      "bytes": 6536,
+      "sha256": "69c720dce2b1642cdfa52e8a476dac7f459b7d9897449acf3e840bedcc535b6d"
+    },
+    {
+      "path": "tools/qualify_graphics_bounds.py",
+      "bytes": 4693,
+      "sha256": "38f86e595c6cc0d8e9db3e951e344f22cc061ab0f207e7f1022bf9ebb9879112"
+    },
+    {
+      "path": "tools/recover_selected_assets.py",
+      "bytes": 2493,
+      "sha256": "50ca11ac40f129fddc1914e21f33f0197ad1af23ebf0ea8b68e1282fc447da55"
+    },
+    {
+      "path": "tools/replay_candidates.py",
+      "bytes": 3984,
+      "sha256": "027a94f98153187f84368857986203e58e1d96d32dc5fd6efbdb89bf1402ef6a"
+    },
+    {
+      "path": "tools/rnc1.py",
+      "bytes": 2663,
+      "sha256": "c5d94574b372c6b670e52eabefd14828bb709c7006477787fed621163e1173e3"
+    },
+    {
+      "path": "tools/slice_loader64.c",
+      "bytes": 726,
+      "sha256": "48909f636b74b8b27cd53bf48c2644feda37129feed1bc6efd59f20cc03358e8"
+    },
+    {
+      "path": "tools/sprite_matrix.py",
+      "bytes": 6158,
+      "sha256": "a469967d670cba182fd815b45f65e16b6f985b636639ae7787e9d9f0ffa30cf5"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "format": "conditional-seed-replay-verification-1",
+  "initial_invocation": "Host command time limit at 60 seconds; no surviving worker. Receipt stdout was incomplete. Database remained valid at 56567 instructions with 14 queued candidate entries.",
+  "resumed_from_saved_queue": true,
+  "new_seed_injection_on_resume": false,
+  "before_resume_instructions": 56567,
+  "resume_result": {
+    "version": 1,
+    "decoded": 6270,
+    "attempted": 6306,
+    "data_processed": 36,
+    "new_facts": 17350,
+    "pending": 0,
+    "pending_code": 0,
+    "pending_data": 0,
+    "entry_complete": true,
+    "pending_seed_phase": false,
+    "passes": 0,
+    "stable": true,
+    "budget_exhausted": false
+  },
+  "after": {
+    "instructions": 62837,
+    "functions": 609,
+    "xrefs": 75275
+  },
+  "all_instruction_rows_equal_to_research_checkpoint": true,
+  "instruction_row_columns": [
+    "address",
+    "context",
+    "bytes",
+    "size",
+    "mnemonic",
+    "operands",
+    "flow",
+    "target"
+  ],
+  "mapped_image_unchanged": true,
+  "sqlite_integrity": "ok",
+  "native_game_execution": false,
+  "complete_uninterrupted_replay_claimed": false,
+  "resume_seconds": 16.06434880500001
+}

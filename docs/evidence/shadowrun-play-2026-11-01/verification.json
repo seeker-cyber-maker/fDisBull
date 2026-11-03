@@ -1,0 +1,84 @@
+{
+  "format": "fdisbull-shadowrun-play-verification-1",
+  "status": "bounded_local_qualification",
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "nes_sha256": "7b4e14fb44352c51fb8fdd0558e77079d7cdb5334c7241f9ac69f1462c70265a",
+  "gameil_sha256": "f19f30dc6693542c80d5e89e8c7eda5856f073f9c2b28ceb560a553b1fdd1b1d",
+  "checks": {
+    "cli_fresh_build": {
+      "passed": true,
+      "output_sha256": "7b4e14fb44352c51fb8fdd0558e77079d7cdb5334c7241f9ac69f1462c70265a",
+      "gameil_sha256": "f19f30dc6693542c80d5e89e8c7eda5856f073f9c2b28ceb560a553b1fdd1b1d",
+      "receipt_sha256": "88dfcb016bb52eb9516dc4cb70c713d7293fbaa16177621813124c6bce183150",
+      "identical_to_frozen_nes": true
+    },
+    "cli_city_export": {
+      "passed": true,
+      "stdout_sha256": "597d9be381f6a77e1a8cdf72cd603739adbe407149d5ab1f94e4a782cbf5b12d",
+      "html_sha256": "01bfd539dec49d2a8712daaaf28f127c5629606972287546ef6249683bbc5d81",
+      "frontend_javascript_syntax": "passed node --check; no browser-render claim"
+    },
+    "z_model_inventory_combat": {
+      "passed": true,
+      "stdout_sha256": "7c6721e1719c92e57861b12b864c1235ecd0c00ee38074f1cea990bffdd9c120",
+      "target_hp": [
+        6,
+        5,
+        0
+      ],
+      "ammo": [
+        11,
+        10,
+        9
+      ]
+    },
+    "z_actual_cli_policy": {
+      "passed": true,
+      "checks": [
+        {
+          "policy": "physical",
+          "status": "rejected",
+          "receipt_sha256": "2771d687ecf090aee072c2cb7c106008ba5bc41c7357b5150c0a8e1b58fd3115",
+          "process_returncode": 0
+        },
+        {
+          "policy": "assisted",
+          "status": "success",
+          "receipt_sha256": "f433de4aedd8d5f258d8c7441c7138319f7ea7c2cde9ab7e5b89adea22c7b8d2",
+          "process_returncode": 0
+        }
+      ]
+    },
+    "root_nes_trace_recheck": {
+      "passed": true,
+      "logical_updates": 577,
+      "receipt_sha256": "9ff49ff9044c536414315b7c2be434988f26deedabce290ced99c3686bb779ae",
+      "scope": "fresh CLI build versus previously captured byte-identical NES22 trace; no new independent FCEUmm capture"
+    },
+    "focused_distribution": {
+      "passed": 441,
+      "failed": 0,
+      "scope": "required file selection and package guards; archive builds follow source freeze"
+    }
+  },
+  "evidence_sha256": {
+    "source-field.json": "b4363ed5b83368207747bc19d20127ee2963ffc6e50d6b2a25ff6fb15af42c6f",
+    "nes-play.json": "e798d83496f8d3999d6ec5787978589883e71ec95bae94c4224934bf5059d031",
+    "suite.json": "f120688788a1a6f66b108f35d778f212984ad168fc93f92a5d84c614ed0f4aa0",
+    "city-z.json": "8604917b99e56f5fd46b35741fedf871171904216076db23e7ebc5a91d41819e"
+  },
+  "package_validation": "separate post-commit gate recorded in local and GitLab review metadata",
+  "hosted_ci": "not established; no current GitLab head pipeline observed before publication",
+  "scope": [
+    "Prepared scene 2 and captured actor/equipment profiles only",
+    "NES and Z are separate instances of a shared model, not live-synchronized",
+    "Unpatched source encounter samples are distinct from controlled and assisted probes",
+    "NPC AI, original sprites/audio, transitions and full combat/projectile lifecycle are not implemented",
+    "No release, merge or global installation performed"
+  ],
+  "privacy": "No ROM, original assets, raw RAM, opcode traces, native core or generated cartridge included",
+  "storage": {
+    "new_bulk_output": "external CODEX after admission with external per-command temporary storage",
+    "github_volume_archive_copy": "admission denied; packages retained on CODEX; only small source/review metadata updates use existing Git hub"
+  }
+}

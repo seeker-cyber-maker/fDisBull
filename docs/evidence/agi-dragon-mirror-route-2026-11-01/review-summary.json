@@ -1,0 +1,38 @@
+{
+  "format": "fdisbull-mr22-review-summary-1",
+  "reviewed_head": "819814ac1738bba9f9b661da34284a3f52b5890b",
+  "base": "aeb0738d76795d705133f39ff278940fdef2cfce",
+  "verdict": "One material P2 retention defect in exact head; corrected and authored-tested as follow-up. No other material finding within bounded review.",
+  "finding": {
+    "priority": "P2",
+    "confidence": "high",
+    "path": "examples/agi/inventory_probe.py",
+    "head_lines": [
+      201,
+      202
+    ],
+    "mechanism": "Returned raw score/item observations disappear when the next read fails. Qualified known_effects and incomplete/latching semantics otherwise remain conservative.",
+    "followup_corrected": true
+  },
+  "exact_head_tests": {
+    "passed": 1902,
+    "skipped": 4,
+    "files": 40,
+    "guest_operations": 0,
+    "native_selectors_removed": true
+  },
+  "followup_tests": {
+    "before_new_regressions_failed": 4,
+    "affected_passed": 365
+  },
+  "followup_sha256": {
+    "examples/agi/inventory_probe.py": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+    "tests/test_agi_inventory_probe.py": "b8a23ab71230861d211048a74731346fbaa9e6dee5a71f0bfc1c0e00933173cb"
+  },
+  "positive_qualification_preserved": true,
+  "original_native_audits_rewritten": false,
+  "hosted_linux_ci_qualified": false,
+  "private_receipt_sha256": "6ff2c19df4a4ea59c794e3eec5bb96b5d075068d67ae647a5a851bc31ccc5d2b",
+  "private_review_sha256": "2a54f89b21d8aea3d55f927b5d8bd467c442720f5bd7c5b3b3d08d440a4f0bf1",
+  "scope": "Independent bounded exact-head review; raw-read retention correction is a follow-up. Earlier recorded native qualification remains at its original source/origin scope."
+}

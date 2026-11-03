@@ -49,3 +49,26 @@ def test_budget_and_evidence_refuse_without_effects():
     with pytest.raises(ILInvalid): validate_il(p)
     p = program(); p['body'] = [{'id': str(i), 'op': 'text', 'resource': 'msg'} for i in range(1025)]
     assert execute_il(p)['status'] == 'refused'
+
+
+def test_less_than_numeric_boundaries_and_typed_states():
+    from fdisbull.interaction_il import execute_il
+    doc={'format':'fdisbull-il-1','role':'uil',
+         'variables':{'$s':{'type':'i8','initial':-128}, '$u':{'type':'u8','initial':255},
+                      '$out':{'type':'bool','initial':False}},'resources':{},
+         'body':[{'id':'choose','op':'if','condition':{'op':'lt','left':{'var':'$s'},'right':{'var':'$u'}},
+                  'then':[{'id':'yes','op':'set','var':'$out','value':True}],
+                  'else':[{'id':'no','op':'set','var':'$out','value':False}]}]}
+    for left,right,expected in [(-128,0,True),(-1,255,True),(0,0,False),(127,127,False),(127,128,True)]:
+        result=execute_il(doc,state={'$s':left,'$u':right,'$out':False})
+        assert result['complete'] and result['state']['$out'] is expected
+    invalid=execute_il(doc,state={'$s':True,'$u':0,'$out':False})
+    assert not invalid['complete'] and invalid['status']=='refused'
+
+
+@pytest.mark.parametrize('left,right', [(True,1),(1,False),({'var':'$flag'},1),(1,{'var':'$flag'})])
+def test_less_than_rejects_boolean_operands(left,right):
+    from fdisbull.interaction_il import execute_il
+    doc={'format':'fdisbull-il-1','role':'uil','variables':{'$flag':{'type':'bool','initial':False}},
+         'resources':{},'body':[{'id':'r','op':'require','condition':{'op':'lt','left':left,'right':right}}]}
+    assert execute_il(doc)['status']=='refused'

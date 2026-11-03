@@ -9,6 +9,10 @@ The launch surface is limited to the Lost in Time family IDs `lit`, `lit1`
 and `lit2`; other Gob interpreter families are refused before process launch.
 English US v1.10 DOS CD resources are the actually qualified input here.
 
+The dated verification receipt records the November 1 implementation, preserved
+in commit `b028527`, and its private package. Subsequent integration with current
+main and handoff validation are separate from that frozen runtime experiment.
+
 ## Launch and identity
 
 Create a project from the original interpreter executable with automatic MZ

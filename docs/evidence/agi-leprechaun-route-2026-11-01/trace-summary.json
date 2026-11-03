@@ -1,0 +1,24 @@
+{
+  "format": "fdisbull-agi-leprechaun-trace-summary-1",
+  "run": "native-02",
+  "raw_sha256": "9f7c5b0d30db9e3e4a5e4691cfc74ee87f56a4ec73fe5d5d97df89fa8cf642a0",
+  "event_count": 32,
+  "maximum_count": 128,
+  "first_fetch": {
+    "offset": "0x00007486",
+    "segment": "0x0EFB",
+    "space": "segmented"
+  },
+  "last_fetch": {
+    "offset": "0x000072DE",
+    "segment": "0x0EFB",
+    "space": "segmented"
+  },
+  "handler_return": {
+    "offset": 762,
+    "observed": true,
+    "source_cursor_offset": 991,
+    "stack_verified": true
+  },
+  "scope": "Fetch observations; writes and original handler return were separately observed. Individual fetch completion not guaranteed."
+}

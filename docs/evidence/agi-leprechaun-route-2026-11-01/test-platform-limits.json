@@ -1,0 +1,29 @@
+{
+  "format": "fdisbull-local-test-limits-1",
+  "platform": "macOS ARM64",
+  "focused": {
+    "command": "PYTHONPATH=src:player:. python -m pytest -q tests/test_agi_leprechaun_route.py tests/test_agi_leprechaun_scene.py",
+    "passed": 181,
+    "skipped": 0,
+    "exit_code": 0,
+    "seconds": 3.59,
+    "log_sha256": "858cc817f709fac6cecdd9d586e0509f5eb237632b1907feaca856272c06759a"
+  },
+  "full_suite": {
+    "command": "PYTHONPATH=src:player:. python -m pytest -q",
+    "passed": 3213,
+    "skipped": 123,
+    "failed": 2,
+    "errors": 23,
+    "exit_code": 1,
+    "seconds": 78.29,
+    "log_sha256": "c677814e53c2adfca9450c44cfcd87f7b44b6a2e828f67eb37b622c12f29bd8b",
+    "source_manifest_sha256": "635bd8909f35b8b4054f570588e3cd565a71b5d2dfb9aefe6fc7ade5e79b14c7",
+    "source_files_unchanged": 438,
+    "limits": "Same inherited ELF/Linux/GNU toolchain cases as the parent on this Mac. Full suite remains red; no cave failure/error node. Bytecode-cache regeneration is excluded from source identity."
+  },
+  "linux_ci": {
+    "qualified": false,
+    "reason": "No hosted ordinary/native Linux acceptance in this follow-up."
+  }
+}

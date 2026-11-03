@@ -1,0 +1,130 @@
+{
+  "schema": "fdisbull-rom-asm-accuracy-1",
+  "source_sha256": "53d23f5e878ad86938aeca2e0701549870b1cbc4f080a6ddb8f49041ea382ebd",
+  "benchmark_sha256": "b9c73496fc7554b12da1140b8602afacd105f799f4dc23f1a7c1efd05954c108",
+  "vectors_sha256": "4aa77bd96b88ba9588ff88e2f84179cb0d79096b5b2c104c44a9acadfc0bb194",
+  "baseline_cases": 22,
+  "baseline_case_names": [
+    "mov_signed_imm",
+    "add_imm",
+    "bra_forward",
+    "bra_backward",
+    "mov_l_aligned_pc",
+    "mov_l_unaligned_pc",
+    "mov_w_pc",
+    "stc_sr",
+    "ldc_sr",
+    "mov_indirect",
+    "mov_store_indirect",
+    "mov_predecrement",
+    "mov_postincrement",
+    "sts_pr_predecrement",
+    "lds_pr_postincrement",
+    "mov_indexed",
+    "mov_displacement",
+    "rts",
+    "nop",
+    "invalid_sh2_fpu",
+    "invalid_word",
+    "truncated_word"
+  ],
+  "baseline_results": {
+    "capstone": {
+      "passed": 22,
+      "failed": 0
+    },
+    "ghidra": {
+      "passed": 22,
+      "failed": 0
+    },
+    "saturn-recomp": {
+      "passed": 22,
+      "failed": 0
+    }
+  },
+  "additional_cpu_profile_case": {
+    "name": "reject_sh2a_only_rtv_n",
+    "authored_word_hex": "027b",
+    "encoding_formula": "0000mmmm01111011, m=2; RTV/N R2 is new in SH-2A/SH2A-FPU, not SH7604",
+    "expected": "undecodable for requested SH-2 profile",
+    "observed": {
+      "capstone": "decoded RTV/N R2; known accuracy failure, retained as strict xfail",
+      "ghidra": "undecodable; pass",
+      "saturn-recomp": "undecodable; pass"
+    },
+    "source": "https://www.renesas.com/en/document/mah/sh-2a-sh2a-fpu-software-manual",
+    "source_section": "6.3.32, printed page 148 / PDF page 164"
+  },
+  "target_mapping": {
+    "basis": "IP header F0 first-read destination and byte-identical ISO first-read file CIV.BIN",
+    "file_size": 867988,
+    "base_address": 100728832,
+    "end_exclusive_if_whole_file_transferred": 101531156,
+    "entrypoint": null,
+    "entrypoint_status": "unknown",
+    "source": "https://forum.jo-engine.org/upload/files/SEGA/ST-TECH-1-41.pdf",
+    "scope": "transfer mapping; not an all-code range or application-entry assertion"
+  },
+  "real_sample_result": {
+    "distinct_word_positions": 4096,
+    "repetitions": 5,
+    "stable_facts_across_all_repetitions": true,
+    "three_engine_decoded_mnemonic_operand_agreement": 3871,
+    "three_engine_unknown": 224,
+    "capstone_only_decoded": 1,
+    "known_profile_failure_file_offset": 526074,
+    "ghidra_saturn_both_unknown": 225,
+    "other_validity_or_normalized_text_disagreements": 0
+  },
+  "scope": "Static decode evidence plus twenty-three hand-authored cases. No code/data oracle, emulator trace, whole-ISA proof or whole-game equivalence. Unexecuted data may decode as instructions.",
+  "verification": {
+    "optional_real_engines": "26 passed, 1 strict xfailed",
+    "focused_public_and_media": "96 passed, 6 optional-engine skips, 1 strict xfailed",
+    "known_failure": "Capstone SH-2 accepts SH-2A RTV/N; no semantic filtering applied",
+    "independent_source_review": "No additional material findings after cancellation, privacy and operand export fixes; runtime evidence supplied by recorded tests.",
+    "full_macos_suite": {
+      "passed": 2161,
+      "skipped": 127,
+      "strict_xfailed": 1,
+      "failed": 2,
+      "errors": 23,
+      "classification": "unchanged Linux ELF fixtures on macOS; emits Mach-O or rejects Linux-specific compiler/linker flags",
+      "full_suite_green": false
+    },
+    "packaged_cli": {
+      "schema": "fdisbull-rom-asm-packaged-cli-1",
+      "source_sha256": "53d23f5e878ad86938aeca2e0701549870b1cbc4f080a6ddb8f49041ea382ebd",
+      "installed_source_modules_and_java_match": true,
+      "records": [
+        {
+          "engine": "capstone",
+          "decoded_words": 26,
+          "attempted_words": 32,
+          "range_sha256": "a545851f6b949df69153420dcf578d6007463e9c5a46da133c3098146f3921d1",
+          "engine_version": "Capstone distribution 5.0.9; bindings 5.0.7; native (5, 0, 1280)"
+        },
+        {
+          "engine": "ghidra",
+          "decoded_words": 26,
+          "attempted_words": 32,
+          "range_sha256": "a545851f6b949df69153420dcf578d6007463e9c5a46da133c3098146f3921d1",
+          "engine_version": "12.2"
+        },
+        {
+          "engine": "saturn-recomp",
+          "decoded_words": 26,
+          "attempted_words": 32,
+          "range_sha256": "a545851f6b949df69153420dcf578d6007463e9c5a46da133c3098146f3921d1",
+          "engine_version": "saturn-recomp 0.1.0 (532fd6054ba3171339c972fab05ebd159f29260d)"
+        }
+      ]
+    },
+    "distribution_guard": "wheel, source distribution and tool source ZIP passed; Java and golden/evidence resources included",
+    "private_log_sha256": {
+      "full-suite.txt": "e2b01cf1775d3425442136b50b766255e7c5ed55e9b23c030ed00e1c1f3dc310",
+      "optional-engines.txt": "b3eefc11f324d527a6151edf49994d8f7b309c84db393a9ced8d7f6a7a0cc73f",
+      "focused-public.txt": "eb5b472ec7cfd43f6814246165c6bb210b99f65d16b08a1b3ef96d11025a041d",
+      "packaged-cli.json": "a27443def086105220e2cd4208c8d1709a136b6f244cfd0d0adf4b435c49bd45"
+    }
+  }
+}

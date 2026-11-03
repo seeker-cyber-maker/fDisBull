@@ -1,0 +1,349 @@
+{
+  "after_sha256": "0a4cf956d3bb542d31bb2a088fbf3b8f8a2aae18ad48c0ad8b1931bd42250bb0",
+  "before_sha256": "ae7e5530603bb2badd502b0f21a8d919c3bb083e43450c3b10e9bee0a45420b1",
+  "changed_offsets": [
+    6719,
+    6720,
+    6721,
+    6722,
+    6723,
+    6724,
+    6725,
+    6726,
+    6727,
+    6729,
+    6730,
+    6732,
+    6733,
+    6734,
+    6735,
+    6736,
+    6737
+  ],
+  "declared_written_offsets": [
+    6716,
+    6717,
+    6718,
+    6719,
+    6720,
+    6721,
+    6722,
+    6723,
+    6724,
+    6725,
+    6726,
+    6727,
+    6728,
+    6729,
+    6730,
+    6731,
+    6732,
+    6733,
+    6734,
+    6735,
+    6736,
+    6737,
+    6738,
+    6739,
+    6740
+  ],
+  "effect": "Comparison input changes from a class/object reference to the incremented counter saved on the VM stack.",
+  "id": "id_card_counter",
+  "offset": 6716,
+  "original_size": 10836,
+  "script": 58,
+  "selected_spans": [
+    {
+      "after_effects": {
+        "acc": [
+          "lt",
+          [
+            "add16",
+            [
+              "snapshot",
+              "read_0"
+            ],
+            [
+              "integer",
+              1
+            ]
+          ],
+          [
+            "integer",
+            3
+          ]
+        ],
+        "events": [
+          [
+            "read_selector",
+            [
+              "class_ref",
+              124
+            ],
+            582,
+            "read_0",
+            6722
+          ],
+          [
+            "write_selector",
+            [
+              "class_ref",
+              124
+            ],
+            582,
+            [
+              "add16",
+              [
+                "snapshot",
+                "read_0"
+              ],
+              [
+                "integer",
+                1
+              ]
+            ],
+            6736
+          ]
+        ],
+        "prev": [
+          "integer",
+          3
+        ],
+        "stack": []
+      },
+      "after_instruction_count": 15,
+      "asm_edits": [
+        [
+          "delete",
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          "insert",
+          10,
+          10,
+          8,
+          11
+        ],
+        [
+          "delete",
+          12,
+          13,
+          13,
+          13
+        ]
+      ],
+      "before_effects": {
+        "acc": [
+          "lt",
+          [
+            "class_ref",
+            124
+          ],
+          [
+            "integer",
+            3
+          ]
+        ],
+        "events": [
+          [
+            "read_selector",
+            [
+              "class_ref",
+              124
+            ],
+            582,
+            "read_0",
+            6726
+          ],
+          [
+            "write_selector",
+            [
+              "class_ref",
+              124
+            ],
+            582,
+            [
+              "add16",
+              [
+                "snapshot",
+                "read_0"
+              ],
+              [
+                "integer",
+                1
+              ]
+            ],
+            6735
+          ]
+        ],
+        "prev": [
+          "integer",
+          3
+        ],
+        "stack": []
+      },
+      "before_instruction_count": 15,
+      "byte_changes": [
+        [
+          3,
+          120,
+          118
+        ],
+        [
+          4,
+          56,
+          81
+        ],
+        [
+          5,
+          70,
+          124
+        ],
+        [
+          6,
+          2,
+          74
+        ],
+        [
+          7,
+          118,
+          4
+        ],
+        [
+          8,
+          81,
+          54
+        ],
+        [
+          9,
+          124,
+          53
+        ],
+        [
+          10,
+          74,
+          1
+        ],
+        [
+          11,
+          4,
+          2
+        ],
+        [
+          13,
+          53,
+          56
+        ],
+        [
+          14,
+          1,
+          70
+        ],
+        [
+          16,
+          54,
+          120
+        ],
+        [
+          17,
+          81,
+          54
+        ],
+        [
+          18,
+          124,
+          81
+        ],
+        [
+          19,
+          74,
+          124
+        ],
+        [
+          20,
+          6,
+          74
+        ],
+        [
+          21,
+          54,
+          6
+        ]
+      ],
+      "size": 25,
+      "start": 6716,
+      "unordered_instruction_bag_equal": true
+    }
+  ],
+  "signature": [
+    56,
+    70,
+    2,
+    120,
+    56,
+    70,
+    2,
+    118,
+    81,
+    124,
+    74,
+    4,
+    54,
+    53,
+    1,
+    2,
+    54,
+    81,
+    124,
+    74,
+    6,
+    54,
+    53,
+    3,
+    34
+  ],
+  "slices": [
+    [
+      0,
+      25
+    ]
+  ],
+  "source_profile": "v2.2.0",
+  "upstream_patch": "sq1vgaPatchEgoShowsCard",
+  "upstream_signature": "sq1vgaSignatureEgoShowsCard",
+  "writes": [
+    [
+      0,
+      [
+        56,
+        70,
+        2,
+        118,
+        81,
+        124,
+        74,
+        4,
+        54,
+        53,
+        1,
+        2,
+        54,
+        56,
+        70,
+        2,
+        120,
+        54,
+        81,
+        124,
+        74,
+        6,
+        53,
+        3,
+        34
+      ]
+    ]
+  ]
+}

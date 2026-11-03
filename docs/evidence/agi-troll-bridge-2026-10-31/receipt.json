@@ -1,0 +1,321 @@
+{
+  "format": "fdisbull-agi-natural-troll-verification-1",
+  "checked_at_utc": "2026-10-31T22:50:13.996765+00:00",
+  "reviewed_base": "9d2c5cff0a76dd7e3e732701c2fdd2e581d5fb82",
+  "review_fix_commit": "1eb7b09d8d058308647782df6b31df835a36dfb1",
+  "platform": "local macOS ARM64, genuine CPython 3.13.13 and pinned DOSBox-X; not Linux CI",
+  "review": {
+    "findings_fixed": [
+      "P2: retain and revalidate the admitted print occurrence state revision",
+      "P2: propagate remaining route guest and wall budgets through native observation",
+      "P2: journal natural entry-search dispatch before an unknown transport result"
+    ],
+    "additional_route_fix": "Retry stopping movement only after a newly completed observed dialogue explains the consumed key; four attempts maximum.",
+    "independent_reviews": "Parent findings independently closed; combined follow-up independently reviewed without material new findings.",
+    "trace_failure_tests": "Lost response, fewer than32fetches, and a foreign stop retain score11 as a known write but leave continuation incomplete."
+  },
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "24": "f56c760eef37bc539c6f421d685a9e6af98b4acbf2ff18cb3c8faf3e787f8e74",
+      "25": "81517460b01bd710d309f187bd608f78a0aea16cfa24935a871e027850ec6eeb"
+    }
+  },
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "implementation_sha256": {
+    "examples/agi/verify_goat.py": "66e33dee73ade828df894958adf7a535b39341d5dbfdc070a62e50231f1154f2",
+    "src/fdisbull/agi_print.py": "9edbbf5b217acea6b98d2b4adb285036ac4d0d4acf3238e016c64d55e62fa61f",
+    "src/fdisbull/agi_host.py": "a302e79f42e0ff8476b999d99850a4d900d29c8c1bce2091f0b5bc7042cfff91",
+    "src/fdisbull/agi_dos.py": "ef57ef690e17032b26240844cb12712ac7bc06210ce04eb0a766c6256837f414",
+    "src/fdisbull/agi_resources.py": "ef31df40324059e6858749c2a5513a1387cb973a0d1d717279a3bbc9b227d1bd",
+    "examples/agi/verify_troll.py": "3e22dde4048f5a26e7977b5536dedf9da5d11dacad0f45d4028170f3c4dabd93",
+    "examples/agi/build_goat_scene.py": "bc80b847c2e334884eca92044c43259f0b0d7790a0271214a4ca7a43d179a958"
+  },
+  "native_route": {
+    "status": "complete",
+    "policy": "physical",
+    "fresh_game": true,
+    "state_loads": 0,
+    "debugger_memory_register_code_writes": 0,
+    "source_file_count": 24,
+    "source_and_copy_unchanged_after_teardown": true,
+    "route_guest_elapsed_ms": 145755,
+    "guest_budget_ms": 420000,
+    "wall_budget_ms": 360000,
+    "capture_sha256": "ec0b801a8d14c4fe18c18d71790998bea38e78ae6ba5115807c6429c08d43a33",
+    "qualified_capture_sha256": "78648cec9d69031c4ece14f3356cb54b9d6f83432f8fa925cf4a83f73b0b8eb3",
+    "qualified_capture_canonical_sha256": "cb89f4a09cd1268a918693a6a5a74599a43f653a6959142f694dfcab322d4bd8",
+    "journal_sha256": "0ebd1beafb8776b71f2a48d0202b57a333e368520b6fa46d4b1d17dbbef12d8b",
+    "before_bridge": {
+      "room": 9,
+      "score": 7,
+      "carrot": true,
+      "following": true,
+      "gate_open": true,
+      "carrot_carried": true,
+      "troll_removed": false,
+      "troll_paid": false
+    },
+    "after_crossing": {
+      "room": 25,
+      "score": 11,
+      "carrot": true,
+      "following": false,
+      "gate_open": true,
+      "carrot_carried": true,
+      "troll_removed": true,
+      "troll_paid": false
+    },
+    "crossing_native_state": {
+      "room": 25,
+      "score": 11,
+      "carrot": true,
+      "following": false,
+      "gate_open": true,
+      "ego": {
+        "x": 34,
+        "y": 44,
+        "direction": 0,
+        "drawn": true
+      },
+      "goat": {
+        "x": 38,
+        "y": 165,
+        "direction": 0,
+        "drawn": false
+      },
+      "gate_actor": {
+        "x": 38,
+        "y": 74,
+        "direction": 0,
+        "drawn": false
+      },
+      "inside_pen": false,
+      "control_direction": 0,
+      "distance": 0,
+      "initializing": false,
+      "window": 0,
+      "carrot_carried": true,
+      "troll_removed": true,
+      "troll_paid": false,
+      "goat_retired": true,
+      "bridge_active": false,
+      "goat_scripted": true,
+      "on_water": false,
+      "edge": 0
+    },
+    "carrot_inventory_binding": {
+      "object_source_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+      "item": 3,
+      "stride": 3,
+      "record_count": 27,
+      "carried_location_value": 255,
+      "carried_after_crossing": true,
+      "basis": "Live bound record, independently of f77"
+    },
+    "bridge_messages": [
+      {
+        "logic": 25,
+        "source_offset": 332,
+        "message_id": 1,
+        "status": "completed",
+        "handler_return_observed": true,
+        "input_settled": true,
+        "window_closed": true,
+        "frame_sha256": "783ec2eec3c131993a3996788ac93548e111943aeab99412fb2f357c6b671b6d"
+      },
+      {
+        "logic": 25,
+        "source_offset": 362,
+        "message_id": 2,
+        "status": "completed",
+        "handler_return_observed": true,
+        "input_settled": true,
+        "window_closed": true,
+        "frame_sha256": "266ee9448d729a89693cf35f483538e02d1f41501f7bc5be17a85c3b0792397f"
+      },
+      {
+        "logic": 25,
+        "source_offset": 415,
+        "message_id": 30,
+        "status": "completed",
+        "handler_return_observed": true,
+        "input_settled": true,
+        "window_closed": true,
+        "frame_sha256": "d6b9d0d249e76d249ffe51884aacacb440487c25077340060ba36a078081f209"
+      }
+    ],
+    "frames": {
+      "before-carrot": {
+        "sha256": "275af1862b65cdd1c6781c1415ca84506c4869315aa17cea127d98942258f247",
+        "goat_visible": true
+      },
+      "bridge-crossed": {
+        "sha256": "fe43a905a3394d74e15d7f77e4833f1d8739d6cdd220a019ea4b7e30710aae1d",
+        "goat_visible": false,
+        "troll_visible": false
+      },
+      "following": {
+        "sha256": "b4b7b048fb77e957311d8535379ef4849078202b41a6e01b4a174fcfd9825e64",
+        "goat_visible": true
+      },
+      "outside-pen": {
+        "sha256": "e93263820c59cd4dea0b9e48d2773e4034cf2b52f0ec1c825c7205149aa917b3",
+        "goat_visible": true
+      }
+    },
+    "visibility_basis": "Codex separately inspected the selected stored PNGs; drawn flags were not used to assign visibility.",
+    "source_bound_score_write": {
+      "status": "verified",
+      "complete": true,
+      "source_logic_sha256": "81517460b01bd710d309f187bd608f78a0aea16cfa24935a871e027850ec6eeb",
+      "source_offset": 440,
+      "before_score": 7,
+      "after_score": 11,
+      "writer": {
+        "source_offset": 29402,
+        "resume_offset": 29406,
+        "bx": 3,
+        "al": 4
+      },
+      "raw_receipt_sha256": "4043371e652e0bf9e98e0d76a6e3c88372b66691bdb6c22286a5b345b032f621",
+      "normalized_stop": {
+        "format": "fdisbull-debug-stop-1",
+        "trigger": "watchpoint",
+        "native_kind": "breakpoint",
+        "causing_instruction": {
+          "offset": "0x000072DA",
+          "segment": "0x0EFB",
+          "space": "segmented"
+        },
+        "resume_pc": {
+          "space": "segmented",
+          "segment": "0x0EFB",
+          "offset": "0x000072DE"
+        },
+        "instruction_completed": null,
+        "registers_stage": "after-access",
+        "context": "dos-cpu"
+      },
+      "trace_count": 32,
+      "raw_trace_sha256": "b2533adc93d89ac580fc6a87e2c631ad81fee6cb48f1c75cd7f8595a78e8dd38",
+      "sanitized_trace_sha256": "a7e31062feec61053d72d8ac76392328fab4267e8072ab4272ee4d154f9def51"
+    },
+    "naturally_entered_logic103": {
+      "status": "verified",
+      "complete": true,
+      "native_execution": true,
+      "source_offsets": [
+        0,
+        179,
+        183,
+        199,
+        202,
+        205,
+        215,
+        230,
+        243,
+        257,
+        259,
+        261,
+        302,
+        319,
+        383,
+        402,
+        429,
+        469
+      ],
+      "differences": [],
+      "private_trial_sha256": "497e1d60dca3c7827c5e3fbd5226ac5f7696a976372ff604d3789215e7894fdd",
+      "scope": "One naturally entered invocation; declared projection only, not the complete logic25 routine."
+    }
+  },
+  "native_attempts": [
+    {
+      "id": "native-01",
+      "complete": false,
+      "error": "Original movement did not settle",
+      "guest_elapsed_ms": 131682,
+      "receipt_sha256": "0170255312686d52391d59d96cfb1d00134bdebcabf1fb2cc99ae7644d64b05e",
+      "capture_sha256": "1e8aee313e35625899d60775d89c58dd5bae4b1bccc3f67f3e9d93beef35423d",
+      "journal_sha256": "3072c21d93c2dc2209123fa9a7e36e25b64b20f820be4735f25c20ac98d10e50",
+      "source_and_copy_unchanged_after_teardown": true
+    },
+    {
+      "id": "native-02",
+      "complete": true,
+      "error": null,
+      "guest_elapsed_ms": 161770,
+      "receipt_sha256": "9d5b6a40220d4f05e92388f5d735f05936791e67992e36b33b156c4680b3d154",
+      "capture_sha256": "71e3630be3a704e671581056fd85d1336f42d0258eec8c54e65a646a24a4d942",
+      "journal_sha256": "a7e916b6a3463d6f08efa0308968a064cb0c0a5f718505dc500e94c0e377dc49",
+      "source_and_copy_unchanged_after_teardown": true
+    },
+    {
+      "id": "native-03",
+      "complete": true,
+      "error": null,
+      "guest_elapsed_ms": 145755,
+      "receipt_sha256": "a3e652356b15a8f3190b1861486b5d4071a518a3ab014d8f6c5dede3c020ad55",
+      "capture_sha256": "ec0b801a8d14c4fe18c18d71790998bea38e78ae6ba5115807c6429c08d43a33",
+      "journal_sha256": "0ebd1beafb8776b71f2a48d0202b57a333e368520b6fa46d4b1d17dbbef12d8b",
+      "source_and_copy_unchanged_after_teardown": true
+    }
+  ],
+  "z_scene": {
+    "scene_sha256": "3dc07e887ac406ab1d390f1099e5f2de05450de85f201bd96cb69a0bf8f66653",
+    "provenance_sha256": "951c67c47c8ae1c4fae3608e1414ea0cc19ed6721206a6f3657284a37ef7fc2e",
+    "installed_player_version": "0.27.0",
+    "installed_in_process_final_state": {
+      "$phase": 3,
+      "$room": 25,
+      "$score": 11,
+      "$carrot": true,
+      "$following": false,
+      "$gate_open": true,
+      "$carrot_carried": true,
+      "$troll_removed": true,
+      "$troll_paid": false
+    },
+    "separate_content_process_final_context": "phase-3",
+    "commands": [
+      "use carrot on goat",
+      "use route",
+      "use bridge"
+    ],
+    "stale_and_repeat_refused": true,
+    "checkpoint_restore_and_token_invalidation": true,
+    "checkpoint_scope": "In-memory only; a fresh backend has no checkpoint. Not durable persistence.",
+    "raw_player_receipt_sha256": "f53e1272c2366eaabcf684ebf386b31e725cf9f4a1cf55b55e0893415f41251d",
+    "scope": "Partial authored projection of the observed route. Original text and generated content stay private; no native execution or autonomous timing."
+  },
+  "tests": {
+    "command": "python -m pytest -q tests/test_agi*.py tests/test_il_scenes.py tests/test_text_player.py tests/test_player_checkpoints.py tests/test_player_live.py",
+    "passed": 384,
+    "skipped": 4,
+    "exit_code": 0,
+    "stdout_sha256": "35825ed9953e9660c2b91ec4c9d199f9429935f55963d5c7bbd9536db94c5259",
+    "scope": "Local macOS selected suite, not Linux CI or packaging acceptance."
+  },
+  "excluded_from_git": [
+    "original game/story/resource files",
+    "native saved states",
+    "project databases",
+    "raw captures and native VIEW bytes",
+    "generated original-text scene package",
+    "raw trace and register dumps"
+  ],
+  "limits": [
+    "Exact supplied AGI 2.917 KQ1 edition and selected route only.",
+    "The exporter checks supplied assertions and hashes; hashes do not authenticate execution.",
+    "Fetch traces do not certify completion of each instruction.",
+    "No GitLab Linux CI success, integration merge, tag, release or installation change is claimed."
+  ]
+}

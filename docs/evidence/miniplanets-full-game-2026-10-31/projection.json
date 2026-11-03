@@ -1,0 +1,99 @@
+{
+  "format": "fdisbull-miniplanets-globe-recovery-1",
+  "date": "2026-10-31",
+  "status": "passed",
+  "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "upstream_commit": "0ac9c395289cc5d0837c96d45e61a27300e8eebc",
+  "frontend_sha256": "6848abf19fb186adddfcdebb507b63ea98a906569436a89ca5e0c47ba71a84dd",
+  "tests_sha256": "d66aa08f3895a80551e6a5322f1a44196e0a5bdcac647dfa76cca235ae86ce44",
+  "source_unchanged_during_measurement": true,
+  "source_identity": {
+    "slz": [
+      {
+        "name": "globe",
+        "rom_offset": 24552,
+        "decoded_size": 17664,
+        "decoded_sha256": "736f1bfb1a2f4cc763d31f9a77269c745dbebe15d4280355ba95e5110e93f4db",
+        "exact_match_to_official_uncompressed_source": true
+      },
+      {
+        "name": "belt",
+        "rom_offset": 40288,
+        "decoded_size": 9216,
+        "decoded_sha256": "7318b9a873f7cb71abdb5c6c56b18f008b3c0c87006a096c9edefa173cfdf672",
+        "exact_match_to_official_uncompressed_source": true
+      }
+    ],
+    "projection_luts": [
+      {
+        "name": "table",
+        "offset": 42295,
+        "length": 65536,
+        "sha256": "2d99d84f8187bcf50035ea47ce65ea1976076a62fdfc6e2da042666db58f70eb",
+        "exact_match_to_official_lut": true
+      },
+      {
+        "name": "objects",
+        "offset": 107831,
+        "length": 65536,
+        "sha256": "e701d1f1372714183c8f4a9a839f09bfddf1f43717101a05935e37d9f3fb41f3",
+        "exact_match_to_official_lut": true
+      },
+      {
+        "name": "rafts",
+        "offset": 173367,
+        "length": 65536,
+        "sha256": "7ce8f792188570a011b2971533ed677a3a72dbae6ad91537fe7d4d4666260002",
+        "exact_match_to_official_lut": true
+      },
+      {
+        "name": "ending",
+        "offset": 238903,
+        "length": 12288,
+        "sha256": "775ada5183d476fb112c71258f8590d43b940621e03c0b6c1cc2e88e287a856b",
+        "exact_match_to_official_lut": true
+      }
+    ]
+  },
+  "measured": {
+    "views": 256,
+    "source_sprites_per_view": 64,
+    "coordinates_checked": 16384,
+    "x_axis_error_max": 4,
+    "y_axis_error_max": 4,
+    "x_axis_error_rms": 2.3505240647366814,
+    "y_axis_error_rms": 2.3505240647366814,
+    "quantized_overlapping_cells_per_view_min": 65,
+    "quantized_overlapping_cells_per_view_max": 81,
+    "quantized_duplicate_anchors_per_view_max": 2,
+    "adapted_pattern_instances": 40368,
+    "lossy_pattern_instances": 9816,
+    "opacity_pixel_flips": 32325,
+    "opacity_flip_fraction": 0.012511844158739596,
+    "maximum_opacity_flips_in_an_8x8_pattern": 18,
+    "plane_bit_flips": 218686,
+    "weighted_error_recomputed": 477286,
+    "terrain_atlas": {
+      "source_terrain_chr_count": 40368,
+      "unique_adapted_patterns": 643,
+      "resident_terrain_patterns": 214,
+      "approximated_pattern_instances": 9816,
+      "weighted_pattern_distance_total": 477286,
+      "projection_axis_error_max_pixels": 4,
+      "sprite_art": "authored NES icons; original actor identities and positions retained"
+    }
+  },
+  "method": [
+    "Compare bounded SLZ output byte for byte with the official decompressed globe and belt source files. Compare all four original projection LUTs byte for byte.",
+    "Independently interpret original globe coordinates, map offsets and sprite-shape offsets over all 256 camera views and 64 source sprites per view. Preserve source record order and measure the nearest-8-pixel coordinate error on each axis.",
+    "Independently reconstruct all 32 water/fire/conveyor animation phases from the original source buffer layout and phase formulas. Unpack original 4bpp pixels separately, apply the declared three-color reduction and compare each mapped pattern with the final resident NES CHR.",
+    "Count alpha-mask changes separately from bit-plane changes. These describe the visual approximation; they do not affect the shared logical collision map."
+  ],
+  "limits": [
+    "Static asset recovery and adapted-projection metrics, not native NES rendering or whole-game parity.",
+    "The shared 214-pattern terrain atlas is lossy. Original palette hues are reduced and some transparency pixels change.",
+    "Quantized sprite rectangles overlap; a background renderer must define depth and transparency composition. This receipt checks source record order and coordinates, not final occlusion correctness.",
+    "Original art, ROM, LUT bytes and converted CHR remain private and are absent from this artifact."
+  ],
+  "post_recovery_sprite_adapter": "Distinct authored icons plus nearest2x16pxplayer and16pxraftdeck. Player quad row-major/scaling checked against the original authored8pxglyph; native visibility is a separate cartridge gate."
+}

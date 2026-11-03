@@ -1,0 +1,98 @@
+{
+  "format": "fdisbull-agi-object-resource-verification-1",
+  "base_pr": 72,
+  "base_commit": "bd8cded9113cd4cae554b56982d4a668c3eda09a",
+  "qualification": "production model replay and coverage under synthetic snapshots and caller-supplied host results; not an independent state oracle or native parity",
+  "original_game_executed": false,
+  "native_parity": false,
+  "projection": {
+    "logic": 103,
+    "profile_assumed": "2.917",
+    "entry_runtime_observed": false,
+    "source_instructions": 111,
+    "shared_joins": 12,
+    "typed_effect_sites": 56,
+    "source_action_opcodes": 22,
+    "effect_ports": 21,
+    "opaque_actions": 0,
+    "il_json_bytes": 63778,
+    "document_byte_limit": 65536
+  },
+  "resources": {
+    "view_id": 14,
+    "view_resource_sha256": "665eec864221d42b018a050e44a8365d7b963f66c193963bc8107d5c9df465a4",
+    "loops": 4,
+    "cels": 20,
+    "bound_messages": 2,
+    "source_hashes": {
+      "LOGDIR": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+      "VIEWDIR": "1b36ab1ccaa118870ee7d6d651359912e79f35f3acc71858e4b668e3b34e2a04",
+      "VOL.0": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2",
+      "VOL.1": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0",
+      "VOL.2": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf"
+    }
+  },
+  "model_corpus": {
+    "case_count": 472,
+    "statuses": {
+      "complete": 472
+    },
+    "effect_sites_visited": 56,
+    "effect_sites_total": 56,
+    "branch_outcomes_observed": 44,
+    "branch_outcomes_total": 44,
+    "request_counts": {
+      "draw": 183,
+      "print": 26,
+      "erase": 1
+    },
+    "request_readbacks_stable": 210,
+    "completion_claims_preserved": 210,
+    "native_execution": false,
+    "source_inputs_unchanged": true,
+    "input_sha256": [
+      "7b6b77f126e0a36873bdd49ba12a273f67f7a48824ea83c76176457e5b52ad0f",
+      "8d79bff72c5a494b973e236bb944de2e0ce9e481464e253e3ec34a37fe404da6"
+    ],
+    "output_sha256": "b3b28e49e0137e50f1d70fa6a6fd607c9b8c3288683abbaea4385905171d55c4",
+    "projection_sha256": "b1677531145ff877c339522ee4ca3b4627250c993441b3968481dc1dd018904d"
+  },
+  "host_result_basis": "Synthetic geometric positions, shown/dismissed messages and erase acknowledgements; no collision/render/timing observation.",
+  "model_inputs": "Declared synthetic scalar/object snapshots, including guided completed-controller frames; no original reachability claim.",
+  "local_tests": {
+    "python": "3.13.13",
+    "platform": "macOS ARM64",
+    "passed": 397,
+    "skipped": 1,
+    "skip_reason": "case-sensitive filesystem required"
+  },
+  "controls": [
+    "typed source opcode lowerings",
+    "view/message structure and malformed data",
+    "variable coordinates and query aliasing",
+    "controller flags without tick advancement",
+    "pending-host order and cumulative budgets",
+    "wrong requests and checkpoint/program changes",
+    "completion claims preserved on later model failure",
+    "JSON restart through real Python -S CLI",
+    "suspended callee stacks and global component stops"
+  ],
+  "base_ci": {
+    "ordinary": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41195286745",
+    "native": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41195286747",
+    "status": "success on exact base SHA; stable/layers and installed-wheel PE64/DOS/boot passed"
+  },
+  "engine_source_sha256": {
+    "src/fdisbull/agi_effects.py": "720878e866ad4b08b0989728c12fd0955435d7534d517b2541b3d298b6f0b981",
+    "src/fdisbull/agi_resources.py": "92482aeca9e990e43353ab1731660c2fb07ba829ab7a147ec86e62ac6750c848",
+    "src/fdisbull/agi_effect_lift.py": "d09b08c2ca90d81cd450977f45e27584c464429c9d1e6fa3cd5b341884d1ba0d",
+    "src/fdisbull/interaction_effects.py": "6244f0100798e7433ca58509eef26501e9f7a220dbe25193dcf486beb965a624",
+    "src/fdisbull/interaction_il.py": "9810649a7b2ea4812f80646ab2e880bda68c7107d50f9e4b3675c023b2efa7cd",
+    "src/fdisbull/interaction_flow.py": "662e1002f326c2db93ee159985e2e01ea7117daa9600ee719c0f8ffc9a2f83d2",
+    "src/fdisbull/agi_compact.py": "3ba2125c6854bef61284563128e1801364a7e3f42e8d397d79a2ebb240a75141",
+    "src/fdisbull/agi_lift.py": "5373bf7a4a6a5365747635380917574979b1ec63b4f0812158700b72e2648064",
+    "src/fdisbull/decoder_modules.py": "edc63d645cd42d13368387321e1606390efc2b8031dcdf5e8453e1901f9e336e",
+    "src/fdisbull/cli.py": "a3bce3c63a63f076fdfac2e15182f0dfc7f38e2bd67ab370ed4be5986f7b0bd7"
+  },
+  "privacy": "No game bytes, original messages/pixels, generated target graph, model contexts/checkpoints, project databases or absolute target paths included."
+}

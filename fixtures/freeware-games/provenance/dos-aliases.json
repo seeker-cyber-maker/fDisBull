@@ -1,0 +1,37 @@
+{
+  "tic-tac-toe/original": {
+    "source_sha256": "b582a31d28d9a265c38d29ed09dffe0396f47e6bf4497569766c036f6674fc43",
+    "retained_alias_count": 4,
+    "persisted_selection_alias_count": 0
+  },
+  "five-dice/original": {
+    "source_sha256": "10aa501c3856565427b6a3e48a3488b279778a7a4cd249b10529bd05c9e9bfcb",
+    "retained_alias_count": 4,
+    "persisted_selection_alias_count": 0
+  },
+  "tic-tac-toe/text": {
+    "source_sha256": "1971586163d9eb14cb1b39f00b204c12855686e9d9a343b833d96eabb9a7d9d7",
+    "retained_alias_count": 2,
+    "persisted_selection_alias_count": 1
+  },
+  "tic-tac-toe/misere": {
+    "source_sha256": "7fe799a3a11bd4c8dfca01dc1da31ebe42c4253539df74c0d510ee4b87aacd54",
+    "retained_alias_count": 2,
+    "persisted_selection_alias_count": 1
+  },
+  "tic-tac-toe/misere-text": {
+    "source_sha256": "a93fd88e07012ef497eb44d2bead6ce202d941b936a4c6f90dee9b455afecc9a",
+    "retained_alias_count": 2,
+    "persisted_selection_alias_count": 1
+  },
+  "five-dice/lcg16": {
+    "source_sha256": "3be04eef86f0feec543b71560a217b2e8acaa80dcf92ac78d87016b1e307cef6",
+    "retained_alias_count": 2,
+    "persisted_selection_alias_count": 1
+  },
+  "five-dice/xorshift16": {
+    "source_sha256": "52cf0e8e7a07dd2a77a4ef451446c56dfdfd49892e9464a4050e056aaff28f5a",
+    "retained_alias_count": 2,
+    "persisted_selection_alias_count": 1
+  }
+}

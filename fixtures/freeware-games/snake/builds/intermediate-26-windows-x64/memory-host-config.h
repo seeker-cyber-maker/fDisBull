@@ -1,0 +1,8 @@
+/* Generated from the validated source plan. */
+static const FdbHostKey fdb_keys[] = {{"ArrowDown",0u,80u},{"ArrowLeft",0u,75u},{"ArrowRight",0u,77u},{"ArrowUp",0u,72u},{"Escape",27u,1u},{"KeyA",97u,30u},{"KeyD",100u,32u},{"KeyN",110u,49u},{"KeyP",112u,25u},{"KeyR",114u,19u},{"KeyS",115u,31u},{"KeyW",119u,17u},{"KeyX",120u,45u},{"Space",32u,57u}};
+static const FdbHostColor fdb_colors[] = {{0u,0,0,0},{1u,0,0,170},{2u,0,170,0},{8u,85,85,85},{10u,85,255,85},{12u,255,85,85},{15u,255,255,255}};
+static const char *const fdb_region_0_names[] = {"lfsr16","original"};
+static const char *const fdb_region_0_labels[] = {"LFSR16 \302\267 changes food placement","Original LCG"};
+static const FdbHostRegion fdb_regions[] = {{"rng","Random generator",2u,1u,fdb_region_0_names,fdb_region_0_labels}};
+static const char *const fdb_function_names[] = {"action","render","reset","rng","step"};
+static const FdbHostConfig fdb_config = {.words=70000u,.width=320u,.height=200u,.frame_offset=4096u,.tick_ms=54.92549323064085,.kind=630u,.ascii=631u,.scan=632u,.x=633u,.y=634u,.buttons=635u,.clock=636u,.quit_index=616u,.keyboard_kind=1u,.pointer_kind=2u,.clock_kind=0u,.key_count=14u,.color_count=7u,.region_count=1u,.function_count=5u,.keys=fdb_keys,.colors=fdb_colors,.regions=fdb_regions,.function_names=fdb_function_names,.title="Snake \302\267 recovered DOS fixture",.help="Click the game to focus. Arrows/WASD turn, Space/P pauses, N steps, R resets and Esc quits. You can also click the blue controls. Starts paused. The random-generator selector changes future food placements without restarting. Original matches the DOS generator; LFSR16 is experimental.",.config_sha256="de88dfc2e117068d60060f9105220b30794ef68957aa081abf2ebe6458f433ff"};

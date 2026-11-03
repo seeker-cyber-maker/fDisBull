@@ -1,0 +1,26 @@
+{
+  "format": "fdisbull-task-research-1",
+  "date": "2026-11-01",
+  "scope": "Task-scoped dragon/mirror preparation; secondary leads are not runtime evidence.",
+  "sources": [
+    {
+      "url": "https://sierrahelp.com/Walkthroughs/KQ1AGIWalkthrough.html",
+      "title": "King\u2019s Quest I AGI Walkthrough",
+      "checked": "2026-11-01",
+      "kind": "secondary walkthrough",
+      "lead": "Dagger and well bucket lead to a swimming/diving route. Water is a nonviolent dragon solution; the mirror can then be collected. Exact positions and timing need selected-edition source and native verification."
+    },
+    {
+      "url": "https://peterkelly.github.io/agi-re/docs/games/kq1_playthrough_analysis.html",
+      "title": "King\u2019s Quest 1 Playthrough Analysis",
+      "checked": "2026-11-01",
+      "kind": "external source-derived static candidate; explicitly not replayed",
+      "lead": "Suggests separate bucket, water, cave, dragon and mirror effects, with a water cost and later solution award. Warns of underwater and fire hazards; local edition mapping and runtime remain separate."
+    }
+  ],
+  "not_qualified": [
+    "External page edition matches selected game hashes",
+    "Any complete winning or maximum-score route",
+    "Autonomous native replay of the external proposal"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "scope": "Finite initial table values; not runtime immutability or observed initializer execution.",
+  "records": [
+    {
+      "kind": "initializer",
+      "address": "0x5c32c",
+      "state": 0,
+      "priority": 32,
+      "target": "0x3f974",
+      "call_site": "0x3f925",
+      "fixup_index": 10048
+    },
+    {
+      "kind": "initializer",
+      "address": "0x5c332",
+      "state": 0,
+      "priority": 32,
+      "target": "0x3f37c",
+      "call_site": "0x3f925",
+      "fixup_index": 10051
+    },
+    {
+      "kind": "initializer",
+      "address": "0x5c338",
+      "state": 0,
+      "priority": 32,
+      "target": "0x406f9",
+      "call_site": "0x3f925",
+      "fixup_index": 10052
+    },
+    {
+      "kind": "initializer",
+      "address": "0x5c33e",
+      "state": 0,
+      "priority": 32,
+      "target": "0x40e6c",
+      "call_site": "0x3f925",
+      "fixup_index": 10057
+    },
+    {
+      "kind": "finalizer",
+      "address": "0x5c344",
+      "state": 0,
+      "priority": 32,
+      "target": "0x4073e",
+      "call_site": "0x3f968",
+      "fixup_index": 10053
+    }
+  ]
+}

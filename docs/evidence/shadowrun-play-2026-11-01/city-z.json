@@ -1,0 +1,42 @@
+{
+  "format": "fdisbull-shadowrun-city-z-evidence-1",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "source_files_sha256": {
+    "src/fdisbull/shadowrun_city.py": "67eaa9a0a0a12e6fae3327b82130853f5899ffe31af0768e4caef3aa2454b469",
+    "src/fdisbull/shadowrun_city_view.py": "78da96102a1ca5fbe1c261ad29fc8e9c7f920c8e76e1d833e68c4d9043953536",
+    "src/fdisbull/shadowrun_z.py": "80fdab64c0037e6210afbf3b21822a1d3509f0797b767d9714ee8636750fdd65",
+    "src/fdisbull/shadowrun_play.py": "697d1f0b6fae73c716209b26ac6da099041638c49c3fd558011a9f74551d5400",
+    "src/fdisbull/cli.py": "f5ed456381661d980721d2201c9be35c6390577ea2d0011eb1d5632dda993a55",
+    "scripts/check_shadowrun_z_play.py": "8e52a2109976213d335b14b9ecd52f9fdc107d838684ae745925c81b2968d13c"
+  },
+  "capture_receipt_sha256": "b7252b76252a0ebda05d615d775c599859092302eff261cfcdad66b30a1ff42c",
+  "model_program_sha256": "f19f30dc6693542c80d5e89e8c7eda5856f073f9c2b28ceb560a553b1fdd1b1d",
+  "private_artifact_sha256": {
+    "model_check": "7c6721e1719c92e57861b12b864c1235ecd0c00ee38074f1cea990bffdd9c120",
+    "cli_check": "62a70c65020a3b39ffeedfbad41deab6c60570ffc67ea17e006b3da161662f1e",
+    "city_export_manifest": "ca4d8594a1a368cfff61b17d74a5174a5d6c9fe4f44db253dd8ab3b42a3952b2",
+    "city_html": "8dfe0a25390cbc24fcdcea3b0782e8096cd32ba8be74db328f9b32527fa9b985",
+    "city_json": "f3b5e10522bd665afca2699dfd7ccf41e1d5454440461af48ca2f05044ed257c",
+    "city_text": "984546cfafd8dec29572767a765547339ff106005a78ad0b6cdd31f773dfaeb8"
+  },
+  "checks": {
+    "model_inventory_and_equipment": true,
+    "actual_cli_assisted_target_and_held_fire": true,
+    "captured_hp_and_model_hp_separate": true,
+    "city_export": true,
+    "city_grid_cells": [
+      64,
+      44
+    ],
+    "captured_actor_records": 4
+  },
+  "boundaries": [
+    "Z combat check uses assisted placement and frozen captured NPC records",
+    "original NPC motion differs from the target model; NPC AI parity is not established",
+    "one separately checked ordinary-controller route reaches a captured NPC in original and NES runs",
+    "native NES debug comparison covers bounded shared player and camera state only",
+    "original-game teleport parity, whole-city recovery and graphics parity are not established",
+    "visibility, dynamic collision, and cross-scene connections remain unknown"
+  ],
+  "privacy": "No ROM, asset, memory dump, raw terrain grid or private filesystem path is included."
+}

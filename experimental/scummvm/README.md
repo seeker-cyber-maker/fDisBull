@@ -1,4 +1,14 @@
-# Experimental ScummVM AGI execution sidecar
+# Experimental ScummVM execution sidecars
+
+The separate [Gob Inter_v3 adapter](../../docs/SCUMMVM_GOB_BACKEND.md) supports
+the qualified Lost in Time slice. Its build helper is `gob-build-headless.sh`,
+with `gob-headless-bridge.patch` and `gob-source-manifest.json` pinned to ScummVM
+2026.4.0. The AGI procedure below retains its earlier independent source pin.
+
+The dated verification receipts and source manifests describe the frozen
+November 1 experiment, including its then-unpublished state. Current handoff
+validation is recorded separately; publication does not extend those runtime
+or benchmark claims to untested inputs or versions.
 
 This directory holds a patch against the exact ScummVM v2.8.1 commit recorded in [source-manifest.json](source-manifest.json). The patched executable runs ScummVM's real AGI engine with an inherited, bidirectional JSON-lines control socket. It is an optional research runtime for fDisBull; it does not replace fDisBull's analyzer, database, decoders, original executable evidence, or its own interpreter work.
 

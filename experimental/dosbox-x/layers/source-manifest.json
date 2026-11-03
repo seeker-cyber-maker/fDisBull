@@ -1,176 +1,196 @@
 {
-  "feature": "Selected DOS guest exit after process cleanup; prior headless/state/input/continuation features preserved",
+  "feature": "Bounded automatic frame stepping and physical frame input; complete native keyboard state and frame ownership restoration",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "9146ef4c61c28e1091955cfb5fa611b37633cc71df796fa4c1a603276b862c3b",
+  "patch_sha256": "bce55cffd0211ba58fca4629efa336a00face6e803eb916f1796d3c7884a6820",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
-      "size": 1610,
-      "sha256": "ced16106cbfad218488ce93bb131d08186118c18e038fe64e56ba955dd93e2b0"
+      "sha256": "ced16106cbfad218488ce93bb131d08186118c18e038fe64e56ba955dd93e2b0",
+      "size": 1610
     },
     {
       "path": "client/python/dosbox_agent/client.py",
-      "size": 37481,
-      "sha256": "500397af9e50180892ff5b7a62f1950104a81004861f51f10136088a4710297c"
+      "sha256": "500397af9e50180892ff5b7a62f1950104a81004861f51f10136088a4710297c",
+      "size": 37481
     },
     {
       "path": "client/python/tests/test_client.py",
-      "size": 11827,
-      "sha256": "fde518416c39b61053ee43085d28706407fd0e5d078c3dc5e52f8e0e6fb1ba0d"
+      "sha256": "fde518416c39b61053ee43085d28706407fd0e5d078c3dc5e52f8e0e6fb1ba0d",
+      "size": 11827
     },
     {
       "path": "client/python/tests/test_pipe_transport.py",
-      "size": 11116,
-      "sha256": "071711bf1c5db4fd034a96657d9ddace69ba341ac8edd916315a9f874205d490"
+      "sha256": "071711bf1c5db4fd034a96657d9ddace69ba341ac8edd916315a9f874205d490",
+      "size": 11116
     },
     {
       "path": "client/python/tests/test_unix_transport.py",
-      "size": 9847,
-      "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349"
+      "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
+      "size": 9847
     },
     {
       "path": "include/agent/agent_bridge.h",
-      "size": 1505,
-      "sha256": "bf07375fd187bcf89c9f95c2da4dbd1220e767c765a2c11916a5e5b6979ecc68"
+      "sha256": "bf07375fd187bcf89c9f95c2da4dbd1220e767c765a2c11916a5e5b6979ecc68",
+      "size": 1505
     },
     {
       "path": "include/agent/agent_protocol.h",
-      "size": 2508,
-      "sha256": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008"
+      "sha256": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008",
+      "size": 2508
     },
     {
       "path": "include/agent/agent_server.h",
-      "size": 2172,
-      "sha256": "c7819e93fca18ba30abb09f1acd4b1269e96cb4a5c24f9166fd592b6e0b7a1d6"
+      "sha256": "c7819e93fca18ba30abb09f1acd4b1269e96cb4a5c24f9166fd592b6e0b7a1d6",
+      "size": 2172
     },
     {
       "path": "include/agent/debugger_adapter.h",
-      "size": 3878,
-      "sha256": "f404140b22eb369cd22c3b5f33c2ebff196de602db0ef52f74fb93b32da4e2f7"
+      "sha256": "f404140b22eb369cd22c3b5f33c2ebff196de602db0ef52f74fb93b32da4e2f7",
+      "size": 3878
     },
     {
       "path": "include/agent/input_adapter.h",
-      "size": 2992,
-      "sha256": "3f9d88d4a82d69a446ef0ba0df522f7bd503251012dd92d68503077bfd49638c"
+      "sha256": "82499b2d7b06e14175a4776d8ea0ba7698901e3531fe2e9eaecbab40723d4a2b",
+      "size": 3464
     },
     {
       "path": "include/agent/video_adapter.h",
-      "size": 1091,
-      "sha256": "acf1e77ef8c4a3034b3300a0f6637b29fccbab7fe7ada012b1e51c3ac0f0ca8d"
+      "sha256": "f911a2a900a670a45d757c68443ea6df39973942cf41afa0c8596661e347c66d",
+      "size": 1306
     },
     {
       "path": "include/debug.h",
-      "size": 3604,
-      "sha256": "e70c49e9bcd7c7fb770acd6eb0ee8c738006d3e473b2803a29ee68627113549e"
+      "sha256": "e70c49e9bcd7c7fb770acd6eb0ee8c738006d3e473b2803a29ee68627113549e",
+      "size": 3604
     },
     {
       "path": "include/paging.h",
-      "size": 21891,
-      "sha256": "f86c2aa924b79f577f07745644d40a83c14bdbd8da22335686618eb812ea6cfe"
+      "sha256": "f86c2aa924b79f577f07745644d40a83c14bdbd8da22335686618eb812ea6cfe",
+      "size": 21891
     },
     {
       "path": "include/zipcppstdbuf.h",
-      "size": 1789,
-      "sha256": "7810704bdc1c7f2baddb1f25f19fc562d5e47f9dd1e8ea7da8db15b669d587d3"
+      "sha256": "7810704bdc1c7f2baddb1f25f19fc562d5e47f9dd1e8ea7da8db15b669d587d3",
+      "size": 1789
     },
     {
       "path": "src/agent/Makefile.am",
-      "size": 524,
-      "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6"
+      "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6",
+      "size": 524
     },
     {
       "path": "src/agent/bridge/agent_bridge.cpp",
-      "size": 8181,
-      "sha256": "abe903d347878b9eb38e518f26d82df68c5fee2b8d93d9f49ec56629e256c93a"
+      "sha256": "abe903d347878b9eb38e518f26d82df68c5fee2b8d93d9f49ec56629e256c93a",
+      "size": 8181
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "size": 24619,
-      "sha256": "3489f24551ec09384c3b1c20cdc45bd475bdb7c91112f7fe3b014d83aea91e44"
+      "sha256": "3489f24551ec09384c3b1c20cdc45bd475bdb7c91112f7fe3b014d83aea91e44",
+      "size": 24619
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
-      "size": 27474,
-      "sha256": "7951de84c35c4b90e215cb0e7add79175a92bc04801fda618e7bb919c4f2b26f"
+      "sha256": "7951de84c35c4b90e215cb0e7add79175a92bc04801fda618e7bb919c4f2b26f",
+      "size": 27474
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 208664,
-      "sha256": "227943b636390aafc9913ea5598d4b6bcd55a7556409ea97bddc6ae5849f5912"
+      "sha256": "2b7344fc2699b01f0090567fcbe47efcaedaf9e3e3a9228ad88fe814889931b5",
+      "size": 214373
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
-      "size": 29797,
-      "sha256": "5bae459c9f040cedc55a2f64fe8849c247173f846132a3f88f8a147c227df6e3"
+      "sha256": "5bae459c9f040cedc55a2f64fe8849c247173f846132a3f88f8a147c227df6e3",
+      "size": 29797
     },
     {
       "path": "src/agent/transport/unix_transport_probe.cpp",
-      "size": 906,
-      "sha256": "14d9d72b787d0c37167a11954f1ef311a2f33644e2760aaa77d9f403ac828f3b"
+      "sha256": "14d9d72b787d0c37167a11954f1ef311a2f33644e2760aaa77d9f403ac828f3b",
+      "size": 906
     },
     {
       "path": "src/cpu/core_normal.cpp",
-      "size": 8247,
-      "sha256": "b1daad9654a5b8bbdd971dfa489c49a24535373fa06efae5dfcfcad00717e8cf"
+      "sha256": "b1daad9654a5b8bbdd971dfa489c49a24535373fa06efae5dfcfcad00717e8cf",
+      "size": 8247
     },
     {
       "path": "src/debug/debug.cpp",
-      "size": 234267,
-      "sha256": "abc3be13458362929cef0a8d98adfc29b7afecb9c8e3233a7692c3361277f208"
+      "sha256": "f1c4c6b4b8ac1c61681e133b40efc783948244e1e8c5ce8e1aa9558b809c94b8",
+      "size": 234613
     },
     {
       "path": "src/debug/debug_gui.cpp",
-      "size": 30706,
-      "sha256": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19"
+      "sha256": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19",
+      "size": 30706
     },
     {
       "path": "src/dos/dos_execute.cpp",
-      "size": 38388,
-      "sha256": "626fdb065ba5837cce4168d89ad1ad28a9506cc8f1f7ba1b6338c3323707fbda"
+      "sha256": "626fdb065ba5837cce4168d89ad1ad28a9506cc8f1f7ba1b6338c3323707fbda",
+      "size": 38388
+    },
+    {
+      "path": "src/dosbox.cpp",
+      "sha256": "ebbf44f50db5e973420cc594f68b02a777d2d97e91dd68c7db68c10ccfb19d31",
+      "size": 343274
     },
     {
       "path": "src/gui/render.cpp",
-      "size": 69550,
-      "sha256": "4e1c7a47e3f78b67442bf7287d370c3a60eac5fb9d3e5ce411d4267413055a85"
+      "sha256": "8070eb27629ad1235a027fc3a2998b78ed3ab7c13da449ad9e3128cb393326cd",
+      "size": 70328
     },
     {
       "path": "src/gui/sdlmain.cpp",
-      "size": 429452,
-      "sha256": "489d0bffd31e0c194e756a7411c6313babbe6c50d2f236a78f4f94dbc8d6263b"
+      "sha256": "489d0bffd31e0c194e756a7411c6313babbe6c50d2f236a78f4f94dbc8d6263b",
+      "size": 429452
     },
     {
       "path": "src/hardware/keyboard.cpp",
-      "size": 120051,
-      "sha256": "d0af05a501e33bb709da18038e49f295f15db45c04b4ccdaa14cd03ed6acd4b4"
+      "sha256": "2593495a02694838cfd0a820ca2f845892e4c0d300a1db1bf0082e08f933ed67",
+      "size": 124093
+    },
+    {
+      "path": "src/hardware/pic.cpp",
+      "sha256": "ec610efd66d3458841e3044499088a8a78fa669b5389b4adce61220b1e4632ca",
+      "size": 50784
+    },
+    {
+      "path": "src/hardware/vga.cpp",
+      "sha256": "2be70b5ecb765eda59f93c45d39a352a140cafa0668c17f1d67308d20ebdac81",
+      "size": 81918
+    },
+    {
+      "path": "src/hardware/vga_draw.cpp",
+      "sha256": "6c1cbe3db39828bc5c9d634aba494951f390c3ee41b3d742a8458635ad0ccb1d",
+      "size": 364224
     },
     {
       "path": "src/ints/mouse.cpp",
-      "size": 112554,
-      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2"
+      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
+      "size": 112554
     },
     {
       "path": "src/misc/savestates.cpp",
-      "size": 32101,
-      "sha256": "29d7e0dde5dd603384ea1ae0ae845e56f039d6ba1ded2ddb8819e91e6aed5a91"
+      "sha256": "7828e82d90fe8998633d8f1f5a42846c3f606883510fcb17755d8452db082338",
+      "size": 32489
     },
     {
       "path": "tests/agent_headless/MOUSEVID.asm",
-      "size": 4953,
-      "sha256": "4b46ba4c63ecee0d10561fb3b688c0000f453df30e26d2e4db186f4dad1fa254"
+      "sha256": "4b46ba4c63ecee0d10561fb3b688c0000f453df30e26d2e4db186f4dad1fa254",
+      "size": 4953
     },
     {
       "path": "tests/agent_headless/verify_headless.py",
-      "size": 12371,
-      "sha256": "359a767b79343b7e3c8b75812446ac164d8ab74aa7e90eb066ec7f65b62dd20e"
+      "sha256": "359a767b79343b7e3c8b75812446ac164d8ab74aa7e90eb066ec7f65b62dd20e",
+      "size": 12371
     },
     {
       "path": "tools/headless_agent.py",
-      "size": 9883,
-      "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7"
+      "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
+      "size": 9883
     }
   ],
   "legacy_0_10_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
-  "source_replay_files_verified": 33,
+  "source_replay_files_verified": 37,
   "source_patch_scope": "complete patch against declared upstream baseline; not incremental over 0.10",
   "initial_macos_emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
   "initial_build_platform": "macOS ARM64; normal CPU core; heavy debugger",
@@ -231,5 +251,21 @@
     "scope": "Selected target PSP after built-in DOS_Terminate cleanup; explicit session.stop excluded",
     "state_identity": "Exact in-session state-save hash preserves selected PSP; unrecognized restores disable guest-exit tracking",
     "verification": "Candidate regression and cloud receipts are separate from publication or installed-system activation"
+  },
+  "frame_timeline": {
+    "capability": "frame_timeline",
+    "boundary": "completed renderer frame then safe pre-decoder boundary",
+    "frame_input": "physical make/break; no host-timer queue",
+    "frame_keys_sidecar": "state.save result; state.load input; ownership restored after native hardware state",
+    "keyboard_serialization": "FIFO/controller/modifier fields retained; reset-active capture refused",
+    "native_candidate_sha256": "a32b8285ea412413e9d60bf8b1c8735b9ee082b683a46dcba3fce65d47c47474",
+    "qualification": "Local ARM64 builds and exact source replays verified; native and benchmark receipts recorded separately",
+    "keyboard_frame_edge_capacity": "min(32, (96 - native_FIFO_used) / 3), conservative whole-batch preflight",
+    "save_refusals": [
+      "pending legacy input",
+      "keyboard reset",
+      "pending VGA resize"
+    ],
+    "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
   }
 }

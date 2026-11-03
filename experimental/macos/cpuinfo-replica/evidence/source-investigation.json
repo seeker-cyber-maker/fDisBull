@@ -1,0 +1,109 @@
+{
+  "kind": "bounded-source-assisted-replication-evidence",
+  "original": {
+    "sha256": "ebc5e15fe3b3867c8e72bab1956d584cc640ecce0196243c50757bc3ad1c53f7",
+    "entry": "0x100008f94",
+    "format": "Mach-O",
+    "architecture": "arm64",
+    "version": 1,
+    "slice": {
+      "offset": 147456,
+      "size": 141792,
+      "slice_sha256": "00167965dceeb4011bdc85aaeee5970c6e2ada5165b719a45b112e725fd76279"
+    }
+  },
+  "stored_analysis": {
+    "instructions": 1999,
+    "candidate_functions": 380,
+    "pending_code": 311,
+    "stable": false
+  },
+  "entry_capsule": {
+    "sha256": "dd409662f4c5fee4d7dfdfd5d5b9059a8c8490c0d603aed1faf40b7bb7cb1aa1",
+    "instructions": 13,
+    "complete": false,
+    "budget": {
+      "limit": 32,
+      "visits": 13
+    },
+    "all_encodings_revalidated": true,
+    "original_bytes_exported": false
+  },
+  "retained_import_evidence": [
+    {
+      "preferred_address": "000000010000b07c",
+      "kind": "import_stubs",
+      "symbol": "_host_processor_info",
+      "module": "/usr/lib/libSystem.B.dylib"
+    },
+    {
+      "preferred_address": "0000000100014278",
+      "kind": "imports",
+      "symbol": "_host_processor_info",
+      "module": "/usr/lib/libSystem.B.dylib"
+    },
+    {
+      "preferred_address": "000000010000b088",
+      "kind": "import_stubs",
+      "symbol": "_host_statistics",
+      "module": "/usr/lib/libSystem.B.dylib"
+    },
+    {
+      "preferred_address": "0000000100014280",
+      "kind": "imports",
+      "symbol": "_host_statistics",
+      "module": "/usr/lib/libSystem.B.dylib"
+    },
+    {
+      "preferred_address": "000000010000b094",
+      "kind": "import_stubs",
+      "symbol": "_mach_host_self",
+      "module": "/usr/lib/libSystem.B.dylib"
+    },
+    {
+      "preferred_address": "0000000100014288",
+      "kind": "imports",
+      "symbol": "_mach_host_self",
+      "module": "/usr/lib/libSystem.B.dylib"
+    }
+  ],
+  "native_semantic_recovery": "unresolved; imports and source identity do not recover sampling/view logic",
+  "published_source": {
+    "project": "https://github.com/yusukeshib/cpuinfo",
+    "tag": "v1.7.0",
+    "revision": "d7f9e846909f9775e1d6d03214796dbaff4d5492",
+    "correspondence_to_installed_binary": "unproven",
+    "files": [
+      {
+        "file": "src/Cpuinfo.swift",
+        "url": "https://raw.githubusercontent.com/yusukeshib/cpuinfo/d7f9e846909f9775e1d6d03214796dbaff4d5492/src/Cpuinfo.swift",
+        "bytes": 4836,
+        "sha256": "83f84c6d0e2576db00b15c02282dd521309c881787bb9fba231ec5f68069dcb3"
+      },
+      {
+        "file": "src/CpuinfoImage.swift",
+        "url": "https://raw.githubusercontent.com/yusukeshib/cpuinfo/d7f9e846909f9775e1d6d03214796dbaff4d5492/src/CpuinfoImage.swift",
+        "bytes": 7835,
+        "sha256": "aef57f386d664e392b5cfab683b5dbf28dfdbfb124ae19d03c3ea17fbb391a10"
+      },
+      {
+        "file": "src/CpuinfoDelegate.swift",
+        "url": "https://raw.githubusercontent.com/yusukeshib/cpuinfo/d7f9e846909f9775e1d6d03214796dbaff4d5492/src/CpuinfoDelegate.swift",
+        "bytes": 7196,
+        "sha256": "2ad1935434e5d08dbb1995edeadddfa5299f8eace8326c3e7fefea40f6a2238d"
+      },
+      {
+        "file": "res/en.lproj/MainMenu.xib",
+        "url": "https://raw.githubusercontent.com/yusukeshib/cpuinfo/d7f9e846909f9775e1d6d03214796dbaff4d5492/res/en.lproj/MainMenu.xib",
+        "bytes": 8871,
+        "sha256": "b54a81a198e9083bd0260513ab18bfbd0cedc259bf8cc274cff0b74f107d5a35"
+      },
+      {
+        "file": "README.md",
+        "url": "https://raw.githubusercontent.com/yusukeshib/cpuinfo/d7f9e846909f9775e1d6d03214796dbaff4d5492/README.md",
+        "bytes": 3796,
+        "sha256": "468c1a64c62645ae4d5e74a768a5fbd8be70af6a2a4bd2897a031980bd69d276"
+      }
+    ]
+  }
+}

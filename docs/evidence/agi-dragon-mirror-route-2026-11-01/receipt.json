@@ -1,0 +1,144 @@
+{
+  "format": "fdisbull-agi-dragon-mirror-verification-1",
+  "date": "2026-11-01",
+  "base_commit": "819814ac1738bba9f9b661da34284a3f52b5890b",
+  "native": {
+    "complete": true,
+    "qualification_run": "DragonNative07",
+    "fresh_game": true,
+    "state_load_count": 0,
+    "saved_state_artifacts": 3,
+    "exported_diagnostic_checkpoints": 2,
+    "actions": 8,
+    "main_observations": 9,
+    "launch_observations": 2,
+    "repeat_controls": 2,
+    "input_records": 227,
+    "completed_source_prints": 8,
+    "referenced_frames": 23,
+    "final_room": 22,
+    "final_score": 28,
+    "water_trace_fetches": 6,
+    "mirror_trace_fetches": 6,
+    "source_and_copy_files": 24,
+    "declared_dependencies": 21,
+    "process_exited_and_reaped": true
+  },
+  "player": {
+    "complete": true,
+    "versions": {
+      "fdisbull": "0.28.0",
+      "fdisbull-player": "0.28.0"
+    },
+    "native_fields": 44,
+    "variables_including_phase": 45,
+    "phases": 9,
+    "direct_and_separate_process": true,
+    "in_memory_checkpoints_only": true,
+    "generated_scene_and_provenance_private": true
+  },
+  "tests": {
+    "passed": 2051,
+    "skipped": 4,
+    "files": 43,
+    "platform": "macOS ARM64"
+  },
+  "tested_source_sha256": {
+    "examples/agi/verify_dragon_mirror.py": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+    "examples/agi/dragon_probes.py": "baacb0487fbf9c763ce43b0e463de5cf2852383f40d269c876ceae87cfe9ec34",
+    "examples/agi/inventory_probe.py": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+    "examples/agi/build_dragon_mirror_scene.py": "45c66014cff3260aaacc26b7b4d0fa2c0dc746b9ccdf03cc693b6da5e966c084",
+    "tests/test_agi_dragon_mirror_route.py": "ecdc149ce1311f26b5e537ace08e456c65bdd8ae4ca2fe31a979da591b6a3bfd",
+    "tests/test_agi_dragon_mirror_scene.py": "27bb39159d23034ece3ba7d13f42e8bb88de687b0495a9f09322286a24939baa",
+    "tests/test_agi_inventory_probe.py": "b8a23ab71230861d211048a74731346fbaa9e6dee5a71f0bfc1c0e00933173cb"
+  },
+  "artifacts": {
+    "raw_capture_file_sha256": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+    "canonical_json_capture_sha256": "8809438d48bea5138e7f3a83d6f9babb86d2601dc9acc4f3b528868d29d30f22",
+    "result_sha256": "9643db84d1b51a01408fa587910c215b18da8e9d2b050bad50f0547d740c9eda",
+    "process_receipt_sha256": "a34e5d9790fa359abfb961adbc62f4980a4f21f194750611be0ac0b19bd3cda5",
+    "scene_sha256": "18a45ccfe80c37999a0be6eb18e823aaf97e132e6dab31bc965743920950dd61",
+    "provenance_sha256": "92d949e8313bcb19e42e581070a8ad2c2d149bdac067c587ec1bbf64b379a78e",
+    "independent_native_review_sha256": "ddfbd4ff852f4151f9de17f4b6a835a5c59c5607839e1c3121336627b1461b3b",
+    "independent_player_review_sha256": "a4c06407521874a4b83ca807b1a93374fe35bc94417fb5443b6111fad7208d86",
+    "combined_private_review_receipt_sha256": "b992e6830f99c462262f909427cba198d6de292f2ccb111d0aa352d72cdd6206",
+    "private_17_file_review_manifest_sha256": "e4e0d0142a2f683c29c4f86bfda9c761bb627e203576092cbbd05c5f023ddf7e"
+  },
+  "frames": [
+    {
+      "file": "bucket-carried.png",
+      "sha256": "8ada8ce9691bb4150ca0f5e0297c6ef285bb892da95686b349d0cd90310a851b",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "water-ready.png",
+      "sha256": "a74b75be0f085811a1d578820db2574a889a79c6e20f371945106bcfc44666d6",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "water-before.png",
+      "sha256": "731d7c1d9a0f873f38f7b25eef515db70ef4a1a491a192d1f07f93e733c0d873",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "dragon-retreated.png",
+      "sha256": "27f32ee6e9ff406b090035b6bfd7fb831cf416666f7f5e867b8b60289220980d",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "mirror-taken.png",
+      "sha256": "e28017622ac9b73bf6f9ec1764a520105547a8730c989293d3e9428ba63a5ee4",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "surface-return.png",
+      "sha256": "bd04220faabec396986c0056f83b5361329f91c5f92afc7e9bdabd46d3d697c6",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    }
+  ],
+  "exclusions": [
+    "Original game/story files",
+    "Native state blobs",
+    "Project databases",
+    "Raw captures and instruction payloads",
+    "Generated scene/provenance",
+    "Third-party documents/media"
+  ],
+  "limits": [
+    "One bounded fresh native segment and an authored partial scene",
+    "No whole-game/native-interpreter equivalence or arbitrary timing/RNG guarantee",
+    "No durable-save or native-restore qualification",
+    "No hosted ordinary/native Linux CI qualification",
+    "No merge, tag, release or system installation update"
+  ]
+}

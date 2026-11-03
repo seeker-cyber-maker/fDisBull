@@ -1,0 +1,174 @@
+{
+  "format": "fdisbull-shadowrun-play-suite-1",
+  "status": "baseline_matched_with_failures",
+  "command": "python -m pytest -q",
+  "exit_code": 1,
+  "total_testcases": 3488,
+  "passed": 3320,
+  "skipped": 142,
+  "failed": 3,
+  "errors": 23,
+  "baseline": {
+    "non_green_cases": 26,
+    "matched_by": "classname, test name and failure/error type",
+    "unexpected": [],
+    "missing": [],
+    "baseline_receipt_sha256": "ef81232bfbace1dd30e27111c79c443fd45cbdcdac6bed42de2d1be2e23ff40f",
+    "cases": [
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_duplicate_versioned_export_names_remain_separate",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_conflicting_version_requirement_indices_do_not_prove_a_module",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_limits_cap_metadata_and_path_lists_with_warnings",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_bad_limits_are_rejected[0]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_bad_limits_are_rejected[True]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_bad_limits_are_rejected[100001]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_elf_metadata",
+        "name": "test_bad_limits_are_rejected[2]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_inspection",
+        "name": "test_actual_elf_exports_and_unresolved_imports_are_honest",
+        "kind": "failure"
+      },
+      {
+        "classname": "tests.test_loading",
+        "name": "test_real_elf_retains_entry_and_named_function",
+        "kind": "failure"
+      },
+      {
+        "classname": "tests.test_media_modules",
+        "name": "test_resource_ambiguity_and_directory_bounds",
+        "kind": "failure"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_import_name_patch_replaces_old_symbol_alias_and_contract",
+        "kind": "error"
+      },
+      {
+        "classname": "tests.test_platform_calls",
+        "name": "test_public_linkage_json_methods_and_refresh_return_structured_results",
+        "kind": "error"
+      }
+    ]
+  },
+  "native_test_configuration": {
+    "cc65_root": "enabled",
+    "m68k_root": "enabled",
+    "miniplanets_rom_and_upstream": "enabled",
+    "examples_passed": [
+      "real NES replay bundle",
+      "real Genesis replay bundle",
+      "15 6502 audio service-clock scenarios"
+    ]
+  },
+  "source_inventory": {
+    "files": 2189,
+    "unchanged": true,
+    "before_sha256": "226adf1f27ee216ca7e9f0c385cc7bff01e0f46ee53a6fe3c0b5b798b74b5f0a",
+    "after_sha256": "226adf1f27ee216ca7e9f0c385cc7bff01e0f46ee53a6fe3c0b5b798b74b5f0a",
+    "excluded_from_inventory": [
+      "docs/evidence/shadowrun-play-2026-11-01/suite.json",
+      "docs/evidence/shadowrun-play-2026-11-01/verification.json"
+    ]
+  },
+  "junit_sha256": "7db55c99d91a09f398951976a19c7e8abce32c92fc449f91e9ab3a522393c81f",
+  "log_sha256": "9c91d51f69b37af1d639c9f79c945142a475752c8ae46c322f641f1e79f228d5",
+  "comparison_receipt_sha256": "f212b12eca992efedecfd3db8198c3aaf86f842834b6e0c0f89b88cd1ea7c092",
+  "scope": "Full local repository test suite on macOS. The 26 failure/error cases match the recorded local baseline; the suite did not pass cleanly. Skips, hosted CI, required-native Linux CI, release and installation remain separate states."
+}

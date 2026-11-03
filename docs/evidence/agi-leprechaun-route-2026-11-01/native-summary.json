@@ -1,0 +1,2256 @@
+{
+  "format": "fdisbull-agi-leprechaun-native-summary-1",
+  "run": "native-02",
+  "scope": "Bounded physical route and supplied source-bound observations; not complete game coverage. Hashes bind supplied artifacts, not their authenticity.",
+  "collector_sha256": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628",
+  "implementation_sha256": {
+    "examples/agi/verify_goat.py": "82eac6afda4dbb26dceb385aa1bc032f24e8b84a8d5c524272efe5d5c7d3b736",
+    "src/fdisbull/agi_print.py": "9edbbf5b217acea6b98d2b4adb285036ac4d0d4acf3238e016c64d55e62fa61f",
+    "src/fdisbull/agi_host.py": "a302e79f42e0ff8476b999d99850a4d900d29c8c1bce2091f0b5bc7042cfff91",
+    "src/fdisbull/agi_dos.py": "ef57ef690e17032b26240844cb12712ac7bc06210ce04eb0a766c6256837f414",
+    "src/fdisbull/agi_resources.py": "ef31df40324059e6858749c2a5513a1387cb973a0d1d717279a3bbc9b227d1bd",
+    "examples/agi/verify_bridge_clip.py": "4a7702d253941c0b7db529a5af59fe0f60c52c2902518a225b697abc8ca46f45",
+    "examples/agi/verify_mushroom.py": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+    "examples/agi/scan_collision_candidates.py": "cd28cb26280032f81cabb9c12ec487ed02e8f4e30af62aed2374f45786adbc23",
+    "examples/agi/verify_leprechaun.py": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628"
+  },
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+      "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db",
+      "33": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+      "34": "a89cda3ef5bd15a577135c4378272a67dad21d5bae8a81d6fa69586b3e2e56ad",
+      "47": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+      "48": "967da543cab4708290f3e6d4c45b93522ed45bb394199d5206800bfa05300611",
+      "6": "4622b05dbd277739b2538aaf240637195b30e742fcd002cfdff6ff5b1281c817",
+      "7": "2c3adaebf8c05b343272c486286ff74600e343a1109f69025b9e8ec623cf2149",
+      "23": "fcfdd892ef197a23c8dc5536d1c8263871f013fbf3e72e72a5ae37412e5e33cc",
+      "24": "f56c760eef37bc539c6f421d685a9e6af98b4acbf2ff18cb3c8faf3e787f8e74",
+      "36": "7d23fc56b137bf5ac84c16b04557bdf5534b6dd946769c6236646122e891a340",
+      "73": "fd59d6cf54e6fa451fb41d519fc3f0de2c506f295f28c7192843875fe8917899",
+      "74": "ae1ef292d6bf0b313792c4d993661384b36b37abea204b2b1d4c550ea762d560",
+      "75": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+      "76": "a16dfce687a6459d0266a6f38dfbca9d5212bff1a2f5f48f687f2af7e2d8be48",
+      "77": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+      "78": "4649ac1307fcd2dc0e042cb9c46d03cb0f6023d892a4d30fa22ef91659931a97"
+    },
+    "object_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985"
+  },
+  "source_manifest": {
+    "AGI": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "AGIDATA.OVL": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383",
+    "CGA_GRAF.OVL": "59f0fa637f68cb5fecbd5d0d507a911a9ead32d083f785acba8d9b5a93bdf984",
+    "EGA_GRAF.OVL": "c0f6cf0352e66710ae04132a32cead417233dbccf2244c87f3021ba6e1ad2404",
+    "HGC_FONT": "d670b9ad81492f6894481553a0b71d4ffb16c60dfb8868a47ae8ab5207fb06fa",
+    "HGC_GRAF.OVL": "20d1f56b2ffe573570804c7ad5c27c909302677944a9c9ec69b6b01c406ab192",
+    "HGC_OBJS.OVL": "9e95f7772e04820ecd2cdddc6b5759008e1dc1b8b96a4119e894128cf7f545b8",
+    "IBM_OBJS.OVL": "4f6c7d5d67f6c86a784f7b9c55eb7992b598efd8ec625955c5efe759a0aa0525",
+    "JR_GRAF.OVL": "fb41e85e936ddef31a706f87a5097b65a676846e19c8a796b06296725ab7b05d",
+    "KQ1.COM": "1a5fef60e521d1e30498c6883c89e3cc6d72c5591117eafd8c94d9669f9bdf86",
+    "LOGDIR": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+    "Manual.pdf": "31829bcf0deec40533aca9cb45f58afba273407ba68708404868d8c75a229a13",
+    "OBJECT": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+    "PICDIR": "7a2181429c473c5983547f115869c1a948249d986d0176f5fa30b605510cc3c9",
+    "SNDDIR": "fd5d50fd0eac57168e3cd070b7cf0d7040a26d303415f5318142a0695959563d",
+    "VG_GRAF.OVL": "c93b02bc3dc3f19615232103ee818a9ba6c15fa47c6f2533be8938b729dfd9d3",
+    "VIEWDIR": "1b36ab1ccaa118870ee7d6d651359912e79f35f3acc71858e4b668e3b34e2a04",
+    "VOL.0": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2",
+    "VOL.1": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0",
+    "VOL.2": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf",
+    "WORDS.TOK": "41d863172326c712c0aebadf12fc63b049ff5d892743f4ee990004c344eb3780",
+    "goggame-1207661083.hashdb": "1ffd4f09dde75c79530ab81be82e56cb797d4535f5faef78ce5d9f5006818a13",
+    "goggame-1207661083.info": "7157ac0b88857c869799837eb8478b21060aec6b9a25fe9efac7f351736b535b",
+    "goggame-1207661083.script": "2de6edb6472230dc2d5d27e0e057eb710ac5ebda057b6035bca55bdb20746b59"
+  },
+  "runtime": {
+    "policy": "physical",
+    "fresh_game": true,
+    "interventions": [],
+    "session_id": "ses-1",
+    "guest_elapsed_ms": 384065
+  },
+  "observations": {
+    "hole-before": {
+      "state": {
+        "room": 48,
+        "score": 6,
+        "ego": {
+          "x": 81,
+          "y": 130,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": true,
+        "diamonds_carried": false,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": false,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "hole-before.png",
+        "sha256": "916861a863293b391b0940c7d101b2f08e2066a21e36ef88ecbf291a4df805c5",
+        "metadata": {
+          "frame_id": 17351,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 295166,
+          "state_revision": 3134
+        }
+      }
+    },
+    "hole-after": {
+      "state": {
+        "room": 73,
+        "score": 6,
+        "ego": {
+          "x": 90,
+          "y": 139,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": true,
+        "diamonds_carried": false,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": false,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "hole-after.png",
+        "sha256": "83e27d37690f85cd507ddbae85c5ed6f634bf32680557e0f33c4b77e81a7d8b1",
+        "metadata": {
+          "frame_id": 17778,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 302415,
+          "state_revision": 3323
+        }
+      }
+    },
+    "bag-opened": {
+      "state": {
+        "room": 73,
+        "score": 9,
+        "ego": {
+          "x": 90,
+          "y": 139,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": true,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": false,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "bag-opened.png",
+        "sha256": "1d37c662a952591b7d5c567b1fb7d55291a4a07f9fac4fe2c7bbfd160e22893e",
+        "metadata": {
+          "frame_id": 17809,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 302957,
+          "state_revision": 3354
+        }
+      }
+    },
+    "rat-before": {
+      "state": {
+        "room": 75,
+        "score": 9,
+        "ego": {
+          "x": 149,
+          "y": 115,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": true,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": false,
+        "ignore_blocks": true,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "rat-before.png",
+        "sha256": "d6f5f1f526c2659e7edf38606f29a1e8e29d72efe2c4bab4e567827cf25df05d",
+        "metadata": {
+          "frame_id": 19051,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 323802,
+          "state_revision": 3673
+        }
+      }
+    },
+    "rat-paid": {
+      "state": {
+        "room": 75,
+        "score": 3,
+        "ego": {
+          "x": 82,
+          "y": 115,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": false,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": true,
+        "ignore_blocks": true,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "rat-paid.png",
+        "sha256": "331d9a40b1cb2b0cf03367f1d8eea071791264fd14df5780dea811522b055ee6",
+        "metadata": {
+          "frame_id": 19469,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 331165,
+          "state_revision": 3820
+        }
+      }
+    },
+    "throne-before": {
+      "state": {
+        "room": 77,
+        "score": 3,
+        "ego": {
+          "x": 87,
+          "y": 70,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": false,
+        "mushroom_carried": true,
+        "shield_carried": false,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": true,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "throne-before.png",
+        "sha256": "694924f085745465474c8f3d46512ed2e667d0ccfaa67a2296f2ce9db368c7af",
+        "metadata": {
+          "frame_id": 20051,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 341309,
+          "state_revision": 3989
+        }
+      }
+    },
+    "shield-taken": {
+      "state": {
+        "room": 77,
+        "score": 11,
+        "ego": {
+          "x": 133,
+          "y": 135,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": false,
+        "mushroom_carried": true,
+        "shield_carried": true,
+        "clover_active": true,
+        "mushroom_available": true,
+        "mushroom_consumed": false,
+        "small": false,
+        "rat_removed": true,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "shield-taken.png",
+        "sha256": "93106b7f348fe31076cff7357f8f1199923f73c2249156ced3528d58a6ef1701",
+        "metadata": {
+          "frame_id": 20766,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 353580,
+          "state_revision": 4157
+        }
+      }
+    },
+    "cave-outside": {
+      "state": {
+        "room": 36,
+        "score": 14,
+        "ego": {
+          "x": 88,
+          "y": 131,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "clover_carried": true,
+        "bag_carried": false,
+        "diamonds_carried": false,
+        "mushroom_carried": false,
+        "shield_carried": true,
+        "clover_active": true,
+        "mushroom_available": false,
+        "mushroom_consumed": true,
+        "small": false,
+        "rat_removed": true,
+        "ignore_blocks": false,
+        "small_timer": 0
+      },
+      "frame": {
+        "artifact_name": "cave-outside.png",
+        "sha256": "88f75d7dcd9c024496563de32399dc910454353e5ef0b1664e7bbfee892074b9",
+        "metadata": {
+          "frame_id": 23471,
+          "mode_id": 5,
+          "width": 320,
+          "height": 200,
+          "source": "last_completed_guest_frame",
+          "captured_ticks": 399723,
+          "state_revision": 4742
+        }
+      }
+    }
+  },
+  "actions": [
+    {
+      "id": "enter-hole",
+      "before": "hole-before",
+      "after": "hole-after",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 73,
+          "source_offset": 153,
+          "message_id": 4,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "b938e4de913f44b1bc0a56f375dac369",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "fd59d6cf54e6fa451fb41d519fc3f0de2c506f295f28c7192843875fe8917899",
+            "state_revision": 3208
+          },
+          "message": {
+            "message_id": 4,
+            "resource_sha256": "fd59d6cf54e6fa451fb41d519fc3f0de2c506f295f28c7192843875fe8917899",
+            "text_sha256": "81af2bd6e2f1c27de06a886464175eb4c236a4daba7276da0662937cf07467ff",
+            "length": 5,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-4.png",
+            "sha256": "9078cbf05deddf3145e040de29b7ba8549988549d298a61974677220fceb9477",
+            "metadata": {
+              "frame_id": 17537,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 298419,
+              "state_revision": 3218
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3228
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-bag",
+      "before": "hole-after",
+      "after": "bag-opened",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "type:open bag",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:enter",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 0,
+          "source_offset": 3660,
+          "message_id": 79,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "271f25f7ee274b4b875f24b6cec34310",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 15763,
+            "resource_sha256": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+            "state_revision": 3328
+          },
+          "message": {
+            "message_id": 79,
+            "resource_sha256": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+            "text_sha256": "fcf8c5f4134f85e3ee411b9835a7520082beb75a5af591964b7cc1f80300e6a5",
+            "length": 128,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-5.png",
+            "sha256": "d0ad95eea6543a3b8123b67b4d06b3d5b4953f9301675dca04aa6c38423f2498",
+            "metadata": {
+              "frame_id": 17793,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 302686,
+              "state_revision": 3338
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3348
+          }
+        }
+      ]
+    },
+    {
+      "id": "follow-tunnel",
+      "before": "bag-opened",
+      "after": "rat-before",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": []
+    },
+    {
+      "id": "pay-rat",
+      "before": "rat-before",
+      "after": "rat-paid",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "type:give bag",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:enter",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 75,
+          "source_offset": 493,
+          "message_id": 21,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "070d793e90f94f8cbb04101ce05a6fd6",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "state_revision": 3767
+          },
+          "message": {
+            "message_id": 21,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "text_sha256": "143a23fadb28153c3d14db75c208aee035d4f99add68600d21e2d8d069ddbad0",
+            "length": 67,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-6.png",
+            "sha256": "1e905a8cf4c372bd8028d345b88ffc5d20a50e8ba1c5966766711270a54bad05",
+            "metadata": {
+              "frame_id": 19439,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 330565,
+              "state_revision": 3777
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3787
+          }
+        },
+        {
+          "logic": 75,
+          "source_offset": 840,
+          "message_id": 25,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "dc2a1241dd7540f4bf8a9d9d322aaeb8",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "state_revision": 3795
+          },
+          "message": {
+            "message_id": 25,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "text_sha256": "f0670d7a93c89e7f2eabb6f0f631149f679be2dd59aa0a2d5400473a6a8a82f3",
+            "length": 67,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-7.png",
+            "sha256": "ab174151e65242e1aade648ba5001a0513607eb06ab4bf134aca30a1b639dce2",
+            "metadata": {
+              "frame_id": 19461,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 331008,
+              "state_revision": 3805
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3815
+          }
+        }
+      ]
+    },
+    {
+      "id": "enter-throne",
+      "before": "rat-paid",
+      "after": "throne-before",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "type:open door",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:enter",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 75,
+          "source_offset": 903,
+          "message_id": 7,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "e6a9624e823741109133acea57201a2f",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "state_revision": 3864
+          },
+          "message": {
+            "message_id": 7,
+            "resource_sha256": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+            "text_sha256": "f2f9b580334d4904f1253dba1c553545af3b66f6184e99592da7868d5ab2b009",
+            "length": 22,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-8.png",
+            "sha256": "e7d36ee2c526fa7f64a93d7d2ca19b94dc0a830807b8a950df31fba3c3a6c30e",
+            "metadata": {
+              "frame_id": 19752,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 335845,
+              "state_revision": 3874
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3884
+          }
+        },
+        {
+          "logic": 76,
+          "source_offset": 155,
+          "message_id": 3,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "09f77860293b46b59c60477392a38288",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "a16dfce687a6459d0266a6f38dfbca9d5212bff1a2f5f48f687f2af7e2d8be48",
+            "state_revision": 3903
+          },
+          "message": {
+            "message_id": 3,
+            "resource_sha256": "a16dfce687a6459d0266a6f38dfbca9d5212bff1a2f5f48f687f2af7e2d8be48",
+            "text_sha256": "b846b31b72fae3d3632707195c4f53ec65f4c82b4bb29dc064a92a20ad562353",
+            "length": 121,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-9.png",
+            "sha256": "98b8465537ac70cd01fee804e1f3485ffc0e9fca3ec223700a3783ac0bd59bf5",
+            "metadata": {
+              "frame_id": 19808,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 336915,
+              "state_revision": 3913
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 3923
+          }
+        }
+      ]
+    },
+    {
+      "id": "take-shield",
+      "before": "throne-before",
+      "after": "shield-taken",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "press:right",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:right",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:down",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:right",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:right",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "type:get shield",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:enter",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 77,
+          "source_offset": 335,
+          "message_id": 18,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "45b32b90aa3d418f9ec9d91f29cf9458",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+            "state_revision": 4040
+          },
+          "message": {
+            "message_id": 18,
+            "resource_sha256": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+            "text_sha256": "01dc8be31f0932e74a25a6fb40bc737862ae172a26cd5f4f8f6e21bbc1d519c4",
+            "length": 68,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-10.png",
+            "sha256": "ed2cf2431e4da49f5dece9d3216d92fe8d13104c38879c2766455e826f60f281",
+            "metadata": {
+              "frame_id": 20393,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 347017,
+              "state_revision": 4050
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 4060
+          }
+        },
+        {
+          "logic": 77,
+          "source_offset": 983,
+          "message_id": 24,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "4713e62db75f48a1952e895d6412fcf0",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+            "state_revision": 4123
+          },
+          "message": {
+            "message_id": 24,
+            "resource_sha256": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+            "text_sha256": "b2f961b9e15e9aedc6d59a5f7357bc362ebe4e5ea4bafd18eb6e59f25c6a4d8e",
+            "length": 76,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-11.png",
+            "sha256": "4720c1bd97205f411070363abf5aba3c3cc284eaa4e7aff2d0d28671ffec752b",
+            "metadata": {
+              "frame_id": 20755,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 353366,
+              "state_revision": 4133
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 4143
+          }
+        }
+      ]
+    },
+    {
+      "id": "leave-cave",
+      "before": "shield-taken",
+      "after": "cave-outside",
+      "complete": true,
+      "messages_complete": true,
+      "inputs": [
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:up",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "type:eat mushroom",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:enter",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        },
+        {
+          "kind": "keyboard",
+          "key": "press:left",
+          "delivered": true,
+          "complete": true,
+          "accepted": true
+        }
+      ],
+      "messages": [
+        {
+          "logic": 0,
+          "source_offset": 2168,
+          "message_id": 11,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "f777f5520b8d4fa1adbeb63bc82953f3",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 15763,
+            "resource_sha256": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+            "state_revision": 4609
+          },
+          "message": {
+            "message_id": 11,
+            "resource_sha256": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+            "text_sha256": "46a1fd2766492f64fb2d9038c70aaf33b5555a0b2d6738540ed9148f5043062b",
+            "length": 130,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-12.png",
+            "sha256": "bc412dff40b322bba0cdb7d9cb8e81af3d4c94e698f269ee3d1aa8b7f9b4c58f",
+            "metadata": {
+              "frame_id": 23164,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 394572,
+              "state_revision": 4619
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 4629
+          }
+        },
+        {
+          "logic": 36,
+          "source_offset": 88,
+          "message_id": 13,
+          "mode": "blocking",
+          "status": "completed",
+          "native_execution": true,
+          "handler_return_observed": true,
+          "window_closed": true,
+          "input_settled": true,
+          "identity": {
+            "format": "fdisbull-agi-print-observer-1",
+            "session_id": "ses-1",
+            "epoch": "e7d7c0efbe564a74b416445f480d5f9a",
+            "cs": 3835,
+            "ds": 6384,
+            "record": 25346,
+            "resource_sha256": "7d23fc56b137bf5ac84c16b04557bdf5534b6dd946769c6236646122e891a340",
+            "state_revision": 4714
+          },
+          "message": {
+            "message_id": 13,
+            "resource_sha256": "7d23fc56b137bf5ac84c16b04557bdf5534b6dd946769c6236646122e891a340",
+            "text_sha256": "1a03339776d8c3af912e9d239b1671d528a0a52b698732bc6fe797d093ccb1ed",
+            "length": 73,
+            "basis": "original decoded RAM text before formatting"
+          },
+          "frame": {
+            "artifact_name": "message-13.png",
+            "sha256": "a552c97aff1ec80098310415df31dd077d5539c2e6c68f7109302312e85e9324",
+            "metadata": {
+              "frame_id": 23455,
+              "mode_id": 5,
+              "width": 320,
+              "height": 200,
+              "source": "last_completed_guest_frame",
+              "captured_ticks": 399466,
+              "state_revision": 4724
+            }
+          },
+          "keyboard_after": {
+            "keyboard": {
+              "owned_keys": 0,
+              "pending_events": 0,
+              "queued_guest_ms": 0
+            },
+            "session_id": "ses-1",
+            "state_revision": 4734
+          }
+        }
+      ]
+    }
+  ],
+  "small_at_opening": {
+    "state": {
+      "room": 78,
+      "score": 13,
+      "ego": {
+        "x": 20,
+        "y": 80,
+        "direction": 0,
+        "drawn": true
+      },
+      "in_water": false,
+      "swimming": 0,
+      "dead": false,
+      "ego_width": 4,
+      "ego_view": 60,
+      "step_size": 1,
+      "clover_carried": true,
+      "bag_carried": false,
+      "diamonds_carried": false,
+      "mushroom_carried": false,
+      "shield_carried": true,
+      "clover_active": true,
+      "mushroom_available": false,
+      "mushroom_consumed": true,
+      "small": true,
+      "rat_removed": true,
+      "ignore_blocks": true,
+      "small_timer": 197
+    },
+    "frame": {
+      "artifact_name": "small-at-opening.png",
+      "sha256": "6d2f1b751c0fa67dd51a4425ccd77df2c77b9ee150b1847ce5b22b6a0cdf7304",
+      "metadata": {
+        "frame_id": 23171,
+        "mode_id": 5,
+        "width": 320,
+        "height": 200,
+        "source": "last_completed_guest_frame",
+        "captured_ticks": 394729,
+        "state_revision": 4632
+      }
+    }
+  },
+  "final_state": {
+    "room": 36,
+    "score": 14,
+    "ego": {
+      "x": 88,
+      "y": 131,
+      "direction": 0,
+      "drawn": true
+    },
+    "in_water": false,
+    "swimming": 0,
+    "dead": false,
+    "ego_width": 6,
+    "ego_view": 0,
+    "step_size": 1,
+    "clover_carried": true,
+    "bag_carried": false,
+    "diamonds_carried": false,
+    "mushroom_carried": false,
+    "shield_carried": true,
+    "clover_active": true,
+    "mushroom_available": false,
+    "mushroom_consumed": true,
+    "small": false,
+    "rat_removed": true,
+    "ignore_blocks": false,
+    "small_timer": 0
+  },
+  "shield_pickup": {
+    "source_logic": 77,
+    "source_logic_sha256": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+    "item_source_offset": 989,
+    "score_source_offset": 991,
+    "before": {
+      "score": 3,
+      "item_location": 0
+    },
+    "after": {
+      "score": 11,
+      "item_location": 255
+    },
+    "item_writer": {
+      "cause_offset": 29826,
+      "resume_offset": 29830,
+      "di_offset": 14724
+    },
+    "score_writer": {
+      "cause_offset": 29402,
+      "resume_offset": 29406,
+      "bx": 3,
+      "al": 8
+    },
+    "handler_return": {
+      "offset": 762,
+      "observed": true,
+      "source_cursor_offset": 991,
+      "stack_verified": true
+    },
+    "sha256": "a8c3fad2db4915fdacec56e0e7a3abf87e4edfe315c2833a7760fbca3924053b",
+    "trace_sha256": "9f7c5b0d30db9e3e4a5e4691cfc74ee87f56a4ec73fe5d5d97df89fa8cf642a0"
+  },
+  "post_teardown_source_unchanged": true,
+  "post_teardown_copy_unchanged": true,
+  "raw_private_artifact_sha256": {
+    "result.json": "6bbfbbdda47d75539fd17393f9b932105e45c00a778d8e2bd0609f68a0c608b6",
+    "capture.private.json": "8e98ebee4e29a3f7752f86b7c222a8c2384bbb67c2ae6494a40b01d4126f54af",
+    "journal.private.json": "b5fd53888958df3d8f24725a52103064dce32f7088f18b1764a3a766020a0418",
+    "shield-pickup.private.json": "a8c3fad2db4915fdacec56e0e7a3abf87e4edfe315c2833a7760fbca3924053b",
+    "shield-trace.private.json": "9f7c5b0d30db9e3e4a5e4691cfc74ee87f56a4ec73fe5d5d97df89fa8cf642a0"
+  },
+  "prior_runs": [
+    {
+      "id": "explore-01",
+      "result_sha256": "bec9b56386e6a118482f2846fccd561ff38ec901c1b025bdd03530800cef5e40",
+      "collector_sha256": null,
+      "normal_leprechaun_complete": false,
+      "post_teardown_source_unchanged": null,
+      "post_teardown_copy_unchanged": null,
+      "independent_24_file_integrity_receipt_sha256": "f6639b663cc29aa1a769c92950590cfc556f5481ae1cc4fc2217f8752497abe4",
+      "source_and_copy_hashes_rechecked": true,
+      "operator_note": "Operator note: unprepared mushroom-only approach ended in original rat-room death; no clover, bag, or diamonds.",
+      "last_recorded_state": {
+        "room": 75,
+        "score": 1,
+        "ego": {
+          "x": 72,
+          "y": 115,
+          "direction": 0,
+          "drawn": true
+        },
+        "dead": true
+      },
+      "exploration_sha256": "b9c6d20989c91608ebd7f921ca8d9b0081b16d4cfb428eba266fbadd801ab06b"
+    },
+    {
+      "id": "explore-02",
+      "result_sha256": "9990f37249926b0be78a629baf6bcdd4a894ca80be92da4a58e0815a18a7dbde",
+      "collector_sha256": null,
+      "normal_leprechaun_complete": false,
+      "post_teardown_source_unchanged": null,
+      "post_teardown_copy_unchanged": null,
+      "independent_24_file_integrity_receipt_sha256": "f6639b663cc29aa1a769c92950590cfc556f5481ae1cc4fc2217f8752497abe4",
+      "source_and_copy_hashes_rechecked": true,
+      "operator_note": "Operator note: model refused the proposed room 8 east-to-7 path; this is not evidence of a native crossing or death.",
+      "last_recorded_state": {
+        "room": 8,
+        "score": 0,
+        "ego": {
+          "x": 3,
+          "y": 100,
+          "direction": 0,
+          "drawn": true
+        },
+        "dead": false
+      },
+      "exploration_sha256": "398d6c97be01d1c8387decd1dcc491e918ea673dc00a4cd80ea847260d7e6387"
+    },
+    {
+      "id": "explore-03",
+      "result_sha256": "5b151cefb18f50bee8ae1fbf50b89f1b60a1276f1c241ca16ca1ebe8d3841e2b",
+      "collector_sha256": null,
+      "normal_leprechaun_complete": false,
+      "post_teardown_source_unchanged": null,
+      "post_teardown_copy_unchanged": null,
+      "independent_24_file_integrity_receipt_sha256": "f6639b663cc29aa1a769c92950590cfc556f5481ae1cc4fc2217f8752497abe4",
+      "source_and_copy_hashes_rechecked": true,
+      "operator_note": "Operator note: clover and bag acquired; one additional bounded run observed clover commit without retyping. A proposed priority-1 route was blocked at the room 11 fence; cave route incomplete.",
+      "last_recorded_state": {
+        "room": 8,
+        "score": 5,
+        "ego": {
+          "x": 20,
+          "y": 47,
+          "direction": 0,
+          "drawn": true
+        },
+        "dead": false
+      },
+      "exploration_sha256": "1c188af65c111814484b8f3b70547e182f9500df1fa9e13e5ec0536a8178f04e"
+    },
+    {
+      "id": "explore-04",
+      "result_sha256": "f186bd5864b5626fa43cf6533ac21d322f0200ab1c1199d4ddcb7771be9627fa",
+      "collector_sha256": "312319485ae231871c85738c4d0f2c6af7494ffe4461ff87cb9f36cce9cba5bd",
+      "normal_leprechaun_complete": true,
+      "post_teardown_source_unchanged": true,
+      "post_teardown_copy_unchanged": true,
+      "operator_note": "Operator note: completed with controller revisions; two rat refusals preceded an accepted gift. This is not an exact final-script replay.",
+      "last_recorded_state": {
+        "room": 36,
+        "score": 14,
+        "ego": {
+          "x": 88,
+          "y": 131,
+          "direction": 0,
+          "drawn": true
+        },
+        "dead": false
+      },
+      "exploration_sha256": "809af2f2da061f823a9da104a81ec77e638e80e647d9c4e2a6f365cc598237aa",
+      "qualification": "exploratory physical gameplay with recorded host controller revisions",
+      "exact_collector_replay_complete": false
+    },
+    {
+      "id": "native-01",
+      "result_sha256": "970b007083f43adc78058c59e32740fd61722bf75384dea23a274e2fafbac9e7",
+      "collector_sha256": "48ff5eec6f6f763aa0db94e8c2a7db7388bfe838ab39cccf768376d6e919711a",
+      "normal_leprechaun_complete": true,
+      "post_teardown_source_unchanged": true,
+      "post_teardown_copy_unchanged": true,
+      "shield_trace_events": 32,
+      "final_collector": false,
+      "rat_refusal_print_75_0x201_msg22_count": 0,
+      "rat_action_prints": [
+        {
+          "logic": 75,
+          "source_offset": 493,
+          "message_id": 21
+        },
+        {
+          "logic": 75,
+          "source_offset": 840,
+          "message_id": 25
+        }
+      ],
+      "capture_sha256": "b8bfc288383061fada28f99f90fcdb5bc453d93da23d816ed2153f8cc3a520dc",
+      "rat_scope": "Count of recorded bound messages, not an inference of input attempt count."
+    }
+  ]
+}

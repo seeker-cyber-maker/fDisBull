@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-boundary-source-picture-binding-1",
+  "complete": true,
+  "source_files": 24,
+  "source_manifest_canonical_sha256": "35174dac00ed12c66440c90ef82700e35a2a0e2388b391c1483e339e1987471a",
+  "donor_capture_sha256": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+  "paired_summary_sha256": "4ff1eb638bdc9694da9b9d62844bc1d46569b8ac4724fed96412803bc5b7772f",
+  "source_picture": {
+    "number": 51,
+    "resource_sha256": "dc2b9e40b18f474bb8fb39b9fe2850470df51747717f95620678249f85567ded",
+    "matches_donor_capture": true
+  },
+  "checks": {
+    "current_original_files_match_donor_manifest": true,
+    "both_fork_source_manifests_match_donor": true
+  },
+  "scope": "Derived binding of PIC51 to the retained Native07 donor capture and common source manifest; supplements the unchanged paired native audit, without additional guest execution."
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "fdisbull-snake-runtime-font-provenance-v1",
+  "verified_utc": "2026-11-01T04:00:16.000313+00:00",
+  "live_font_identity_reported_by_runtime_agent": {
+    "bytes": 2048,
+    "address": "INT43 vector C000:01E9",
+    "sha256": "75c79a7e7fa423dda67ec6d6d76cec86b63f85677726368750c75b0920ddf319"
+  },
+  "exact_source_match": {
+    "source_companion": "${USER_HOME}/fDisBull/current/backend/source/dosbox-x/fdisbull-0.26.1-linux-x86_64-source-companion.tar",
+    "source_companion_sha256": "167f841c2bf8241bf08500e38d93aa9ac475e659a88bb2af1d1d29748c06153b",
+    "upstream_member": "source-companion/upstream.tar.xz",
+    "font": {
+      "member": "src/ints/int10_memory.cpp",
+      "source_sha256": "aefb117deafef68a4998db972ca9f44c8f7d2bc47fd1bc3d40938465879eff0e",
+      "font_sha256": "75c79a7e7fa423dda67ec6d6d76cec86b63f85677726368750c75b0920ddf319",
+      "font_bytes": 2048,
+      "array_line": 619,
+      "array_declaration": "int10_font_08[256 * 8]"
+    },
+    "copying_sha256": "93c59ba0fd92fef7746f0e0809cb49a0c27ab21376da0ac6a583688401afd441",
+    "recovery_copy_matches_upstream": true
+  },
+  "remote_primary_source_verification": {
+    "source": {
+      "url": "https://raw.githubusercontent.com/joncampbell123/dosbox-x/029bd65c5dcc7cdc7f2e14e35278620d9707d969/src/ints/int10_memory.cpp",
+      "bytes": 388725,
+      "sha256": "aefb117deafef68a4998db972ca9f44c8f7d2bc47fd1bc3d40938465879eff0e",
+      "byte_identical_to_installed_pinned_source_companion": true
+    },
+    "license": {
+      "url": "https://raw.githubusercontent.com/joncampbell123/dosbox-x/029bd65c5dcc7cdc7f2e14e35278620d9707d969/COPYING",
+      "bytes": 18334,
+      "sha256": "93c59ba0fd92fef7746f0e0809cb49a0c27ab21376da0ac6a583688401afd441",
+      "byte_identical_to_installed_pinned_source_companion": true
+    }
+  },
+  "source_license_evidence": {
+    "identifier": "GPL-2.0-or-later",
+    "copyright": "Copyright (C) 2002-2021 The DOSBox Team",
+    "notice_location": "int10_memory.cpp opening file header",
+    "copying": "COPYING-GPL-2.0.txt",
+    "font_specific_exception_found_in_source_file": false
+  },
+  "fixture_license_boundary": "The authored Snake game code/source is CC0; its BIOS INT10 teletype service uses a runtime font. The generated browser/native initial memory copies this font, whose matching DOSBox-X source carries GPL-2.0-or-later. The font must not be described as covered by fixture CC0.",
+  "reproducibility": {
+    "extracted_source_rebuilds_exact_2048_bytes": true,
+    "font_not_embedded_as_2048_byte_array_in_original_SNAKE_EXE": true,
+    "original_text_call": "oracle/SNAKE.ASM text_char: mov ah,0eh; ... int 10h"
+  },
+  "scope": "Exact font bytes, source and stated upstream license identified. No broad opinion about whole-product licensing or third-party ownership; no claim that the DOSBox application/source is part of the Snake game.",
+  "artifacts": [
+    {
+      "name": "COPYING-GPL-2.0.txt",
+      "bytes": 18334,
+      "sha256": "93c59ba0fd92fef7746f0e0809cb49a0c27ab21376da0ac6a583688401afd441"
+    },
+    {
+      "name": "int10_font_08-source.h",
+      "bytes": 13985,
+      "sha256": "bc725c593c3b8eb15db3064aea33a7e51f43995f61c93c4dde997b4eef85efd9"
+    },
+    {
+      "name": "int10_font_08.bin",
+      "bytes": 2048,
+      "sha256": "75c79a7e7fa423dda67ec6d6d76cec86b63f85677726368750c75b0920ddf319"
+    },
+    {
+      "name": "local-source-record.json",
+      "bytes": 750,
+      "sha256": "ad6f4a17b216c8277ce2f88a624a3b06a9bc119c0084cf7a4af660689bbc98fc"
+    },
+    {
+      "name": "upstream-int10_memory.cpp",
+      "bytes": 388725,
+      "sha256": "aefb117deafef68a4998db972ca9f44c8f7d2bc47fd1bc3d40938465879eff0e"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "format": "fdisbull-agi-bridge-clip-verification-1",
+  "date": "2026-10-31",
+  "reviewed_mr": {
+    "iid": 13,
+    "head": "2ad1b07b0ff353abbb138d711909eda6e860a61f",
+    "base": "08daea56e9754f38f56f028659e9fce8d0394f4e",
+    "pipeline": null,
+    "finding": "P2 output receipt could overwrite source/existing files; fresh disjoint exclusive output now required"
+  },
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+      "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db"
+    }
+  },
+  "picture": {
+    "room": 39,
+    "sha256": "3fe43fc43ad170ea502e034f0d7a6be1727f5e8ec83e2db0b343119de2b5f303"
+  },
+  "source_manifest_sha256": "35174dac00ed12c66440c90ef82700e35a2a0e2388b391c1483e339e1987471a",
+  "source_manifest_hash_encoding": "compact sorted UTF-8 JSON",
+  "python": "3.13.13",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "implementation_sha256": {
+    "examples/agi/verify_bridge_clip.py": "4a7702d253941c0b7db529a5af59fe0f60c52c2902518a225b697abc8ca46f45",
+    "examples/agi/verify_goat.py": "82eac6afda4dbb26dceb385aa1bc032f24e8b84a8d5c524272efe5d5c7d3b736",
+    "examples/agi/build_clip_scene.py": "344e822f4abc2a9d19f71ff1426caa07fbdc753d7cbbe090ff71258e445afb3c",
+    "examples/agi/scan_collision_candidates.py": "cd28cb26280032f81cabb9c12ec487ed02e8f4e30af62aed2374f45786adbc23",
+    "examples/agi/check_goat_invisibility.py": "f3f81c1581e8a390be3c5d642e30872b911eaa1753a95bba035d8ee74f73b92b",
+    "tests/test_agi_bridge_clip.py": "c4bf156e8865feefd0742ccb91191668bba98ce5b5257f9cefc25df983ced9d0",
+    "tests/test_agi_clip_scene.py": "b71e94c7ce116b787c55b3360ca9ea79df4368568b41f3ddfaf73a15e6ea61c1",
+    "tests/test_agi_collision_candidates.py": "76d515c84346ec78e2ce77366444f5218d3d0be91dba1640a6f8bf925c3f269e",
+    "tests/test_agi_goat_invisibility.py": "3699aeadfc91d867240b83acf65d6c97592e34bdf6ce02451cdef5d36117e2c6"
+  },
+  "native": {
+    "successful_fresh_runs": 2,
+    "adjacent_control_fresh_runs": 2,
+    "final_runs": [
+      "native-04",
+      "control-02"
+    ],
+    "final_collector_hash_matches_both": true,
+    "no_guest_edits_redirects_teleports_or_state_loads": true,
+    "physical_policy": true,
+    "source_and_copy_manifests_unchanged": true,
+    "exploratory_runs": [
+      {
+        "id": "native-01",
+        "outcome": "failed",
+        "reason": "Room42 approach used y43 above horizon50; entered room7; no clip claimed"
+      },
+      {
+        "id": "native-02",
+        "outcome": "failed",
+        "reason": "Fast-forward guest slices overshot one-unit neutral waypoint; no clip claimed"
+      },
+      {
+        "id": "native-03",
+        "outcome": "successful earlier collector",
+        "raw_receipt_sha256": "90813513f69053b3b10adbc11977ad222bba12e2e10b9fb8bfef15b325b6aa87"
+      },
+      {
+        "id": "control-01",
+        "outcome": "successful earlier collector",
+        "raw_receipt_sha256": "59c0fafa4ac58ba816d16513c3afb022f902096152c309ef81f7f225f6004885"
+      }
+    ]
+  },
+  "frames": [
+    {
+      "name": "clip-corner.png",
+      "sha256": "c088344b958ff4a562a85c9f70003a0b58da44f8ee2ae62c31ab99fd7ea4bbe3",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "name": "clip-bank.png",
+      "sha256": "d9ea3121dde95b2dd594b7cf377bd9deb47dc71de09c77ae926c728f499cc96a",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "name": "clip-complete.png",
+      "sha256": "dfd597533cce49ecc8dd0e93fc0cf5db826db6de6de541586b0f6a70ab61081e",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    }
+  ],
+  "scene": {
+    "scene_sha256": "169f16f489e11e4834e0dd2bd3abbf7524ae681d676559fd9e48261996692756",
+    "provenance_sha256": "7a81e82b7692c0981d81c55bc626ebda2c5ae1bd37c8e77fd7239107ab36e8ad",
+    "private": true,
+    "response_text": "authored; original game text excluded",
+    "installed_player_version": "0.28.0",
+    "direct_and_separate_process": true,
+    "checkpoints": "in memory only; fresh backend has no checkpoint"
+  },
+  "checks": {
+    "feature_tests": "807 passed, 4 skipped in 4.13s",
+    "full_suite_with_source_path": "2 failed, 2889 passed, 123 skipped, 23 errors in 47.45s",
+    "baseline_failure_reproduction": true,
+    "linux_ci": "not run",
+    "diff_check": "passed"
+  },
+  "publication": {
+    "release_tag_merge_or_installation": "not performed",
+    "game_files_states_databases": "excluded",
+    "raw_capture_trace_and_scene": "private"
+  },
+  "limits": [
+    "Qualified numeric staircase and one adjacent failure, not an exhaustive three-pixel success window.",
+    "Original posn return and source continuation observed; full collision routine and whole-game parity not proved.",
+    "Static candidates and destination-only paths do not prove reachability or native safety.",
+    "Partial Z scene is an authored projection with supplied hash-bound evidence, not an authenticated execution chain."
+  ]
+}

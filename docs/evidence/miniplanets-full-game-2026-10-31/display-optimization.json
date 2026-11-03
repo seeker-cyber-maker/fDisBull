@@ -1,0 +1,381 @@
+{
+  "format": "fdisbull-miniplanets-display-optimization-1",
+  "date": "2026-10-31",
+  "status": "bounded-native-qualification-passed-with-route-dnf",
+  "baseline_cartridge_sha256": "11ac422f96f13c5d168a55aeb747e0b73d153e67b0cc14d3ed0e0ce743673bfb",
+  "candidate_cartridge_sha256": "265f3f1ea51baf46cc5e49bfb647348370d13ca929ac6a7c6def19a79587da35",
+  "source_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "uil_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "toolchain": {
+    "cc65": {
+      "sha256": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559"
+    },
+    "ca65": {
+      "sha256": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7"
+    },
+    "ld65": {
+      "sha256": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+    },
+    "od65": {
+      "sha256": "08b7168660b527289fd72a647c5c8e8b4c15e69b102d8044a5dc4aabc474a816"
+    }
+  },
+  "adapter_sources": {
+    "miniplanets_audio_nes.c": "36501b380fddd1049a109c10767ea8cd7ad9baf4e63c5f8faa45c1a6a20e7387",
+    "nes_globe_renderer.c": "60a8f785493885ae35d9f77803cf4cfbf4ab2481c521325d6183403c8ee87bb1",
+    "nes_game_platform.c": "6910457a96756f98366af7d367a2ebbdd0712d650efdec6a986df4823eb9e2b4",
+    "nes_game_start.s": "8bc7358d67258e5346a1aaf8069d3a611be5bc74ebd3d5d56366ea1c16c482d3",
+    "miniplanets_audio_fast.s": "b1da06727cd1ab102d039516bcddeed7e4941aa9d73752d6c77efaf3617c07aa",
+    "nes_globe_fast.s": "86eeacf127c72fac327d89f8402d18eda9339bb4e1d17a802eb66af3b5ea4994",
+    "nes_display_fast.s": "5c92db63d7fbb9d3363529dae28558a2fa09b58abf1a68e146eac6a9b93078d2",
+    "nes_game_fast.s": "db0d46010adb701c91bb91a59e72b2a0469c23fab6393bcb28678d940d426500",
+    "nes_audio_clock.c": "cecd691bc67a4e853a27c5da42e579be6c229936d620f996bdbb846ce25d20a8"
+  },
+  "runtime_resources": {
+    "nes.lib": {
+      "sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+      "length": 1533247,
+      "captured_path": "build/nes.lib"
+    }
+  },
+  "code_bank_bytes": [
+    7952,
+    5011,
+    6162,
+    5309
+  ],
+  "data_banks": 55,
+  "implementation": {
+    "dirty_regions": 22,
+    "region_max_bytes": 16,
+    "max_jobs_per_nmi": 7,
+    "shadow_bytes_per_nametable": 296,
+    "render_minimum_logical_epoch_gap": 2,
+    "full_dirty_data_frames": 4,
+    "zero_data_oam_commit": true,
+    "publication": "Immutable staging/plan until final NMI job, matching OAM DMA and NT selection; game rules remain in unchanged UIL."
+  },
+  "measurement": {
+    "frames": 3100,
+    "warmup": 100,
+    "measured_intervals": 2999,
+    "hardware_fps": 60.099826520671044,
+    "assistance": "Identical source-initialized stage seeds, invulnerability, neutral input; hardware/adapter observations retained.",
+    "time_basis": "emulated console time; host wall throughput excluded",
+    "presentation": "Completed coherent nametable swaps, not guaranteed different pixels or physical refresh.",
+    "sampling": "One deterministic run per workload/build plus byte-neutral control replay. 2999 intervals from host-frame100 through3099; separate existing-game checker measures3200 intervals.",
+    "timing": "FCEUmm instruction-end timestamps with inspected frame batching; conservative vblank dots341..7160; no physical-hardware or exact-bus-cycle proof."
+  },
+  "performance": [
+    {
+      "stage": 0,
+      "previous_logic_hz": 40.92158911477502,
+      "asap_logic_hz": 34.208204024936805,
+      "balanced_logic_hz": 41.18210853617172,
+      "previous_view_swaps_hz": 13.90772911148573,
+      "asap_view_swaps_hz": 22.785429394465815,
+      "balanced_view_swaps_hz": 20.60107424583189,
+      "balanced_coherent_flips_checked": 1028,
+      "balanced_violations": 0,
+      "balanced_coherence_differences": {
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "stack_minimum_s": 177,
+      "neutral_observer": true
+    },
+    {
+      "stage": 40,
+      "previous_logic_hz": 22.404670240116783,
+      "asap_logic_hz": 18.5770387411344,
+      "balanced_logic_hz": 27.59501871255886,
+      "previous_view_swaps_hz": 12.184292939169055,
+      "asap_view_swaps_hz": 18.236359497769474,
+      "balanced_view_swaps_hz": 13.787489378533403,
+      "balanced_coherent_flips_checked": 689,
+      "balanced_violations": 0,
+      "balanced_coherence_differences": {
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "stack_minimum_s": 174,
+      "neutral_observer": true
+    },
+    {
+      "stage": 43,
+      "previous_logic_hz": 30.240292837510037,
+      "asap_logic_hz": 24.86958476563947,
+      "balanced_logic_hz": 33.32644598328641,
+      "previous_view_swaps_hz": 12.545012138026033,
+      "asap_view_swaps_hz": 19.99987558107026,
+      "balanced_view_swaps_hz": 16.673242969389232,
+      "balanced_coherent_flips_checked": 832,
+      "balanced_violations": 0,
+      "balanced_coherence_differences": {
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "stack_minimum_s": 171,
+      "neutral_observer": true
+    },
+    {
+      "stage": 44,
+      "previous_logic_hz": 19.99987558107026,
+      "asap_logic_hz": 17.49488114456346,
+      "balanced_logic_hz": 25.87158254024219,
+      "previous_view_swaps_hz": 10.761456099233195,
+      "asap_view_swaps_hz": 16.71332288037334,
+      "balanced_view_swaps_hz": 12.94581124786712,
+      "balanced_coherent_flips_checked": 646,
+      "balanced_violations": 0,
+      "balanced_coherence_differences": {
+        "plane_mismatches": 0,
+        "hud_mismatches": 0,
+        "attribute_mismatches": 0,
+        "oam_mismatches": 0,
+        "control_mismatches": 0,
+        "active_nametable_data_writes": 0
+      },
+      "stack_minimum_s": 171,
+      "neutral_observer": true
+    }
+  ],
+  "movement": {
+    "host_frames": 3000,
+    "ppu_data_writes": 95968,
+    "coherent_flips": 681,
+    "last_observed_write_dot": 6534.0,
+    "vblank_exclusive_deadline_dot": 7161,
+    "violations": 0,
+    "stack_minimum_s": 164,
+    "audio": "Normal active audio IRQ observed; cadence qualified separately by five frozen timing windows.",
+    "assistance": "Original stage state plus ordinary varied scheduled movement; no claim of natural all-game completion."
+  },
+  "accuracy": {
+    "fresh_genesis_common_cases": 2678,
+    "fresh_genesis_common_instructions": 146905,
+    "fresh_genesis_actor_cases": 1262,
+    "fresh_genesis_actor_instructions": 292870,
+    "original_hv_samples": 192,
+    "assisted_uil_flow_frames": 6044,
+    "native_complete_state_cases": 4822,
+    "native_complete_state_fields": 79,
+    "completed_state_and_independent_controller_checks": 10312,
+    "completed_projection_fields": 34,
+    "replayed_hv_words": 228,
+    "actual_nes_projection_pair_cases": 33282,
+    "native_actor_render_cases": 100000,
+    "additional_actor_edge_cases": 4096,
+    "hud_cases": 4096,
+    "sprite_cases": 16384,
+    "terrain_cases": 40960,
+    "upload_planner_calls": 2212,
+    "upload_planner_jobs": 11900,
+    "coherent_seeded_view_swaps": 3195,
+    "matched_exact_state_epoch_renders_vs_previous": 88,
+    "matched_exact_state_epoch_renders_vs_earlier_r14": 106,
+    "synthetic_upload_cases": 8,
+    "synthetic_full_dirty_jobs_per_case": 22,
+    "synthetic_full_dirty_bytes_per_case": 296,
+    "synthetic_full_dirty_frames_per_case": 4,
+    "synthetic_audio": "Paused; active audio is covered separately in movement and normal sessions.",
+    "feedback_goal": {
+      "completed": true,
+      "reason": "goal observed in completed projection",
+      "logical_steps_observed": 2180,
+      "goal_epoch": 897,
+      "goal_host_frame": 1214,
+      "final_phase": "route",
+      "final_segment": 11,
+      "post_transition_host_frames": 1500,
+      "assistance": "Read-only completed-state feedback; ordinary controller buttons only; no RAM writes."
+    },
+    "fixed_host_frame_route": "DNF remains visible",
+    "feedback_next_stage_epoch": 1147,
+    "feedback_next_stage_host_frame": 1643
+  },
+  "audio": {
+    "tracks": 32,
+    "mixed_case": 1,
+    "native_service_calls": 270752,
+    "completed_commands": 1161,
+    "ordered_apu_writes": 2579855,
+    "ordered_apu_digest": "ef55062422ed09ff010efc93b069350cf632653e9e12030ea13e438ea0de4a57",
+    "normal_timing_sessions": 5,
+    "target_hz": 118.89963993409864,
+    "measured_hz": [
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421,
+      118.89749013339421
+    ],
+    "no_waveform_equivalence_claim": true
+  },
+  "local_full_tests": {
+    "passed": 2770,
+    "skipped": 142,
+    "failed": 3,
+    "errors": 23,
+    "failure_ids_equal_previous_baseline": true,
+    "scope": "Same26 Mac platform/ELF/filesystem failure IDs; full suite not green."
+  },
+  "negative_controls": [
+    "Previous candidate06 fails the vblank gate.",
+    "Shifted HUD comparison fails coherence gate.",
+    "Output insideGit rejected.",
+    "Old mapper-shadow race retained and detected."
+  ],
+  "gitlab_intake": {
+    "local_refs": 334,
+    "gitlab_refs": 122,
+    "expected_published_refs": 120,
+    "missing_expected_refs": {},
+    "different_expected_refs": {
+      "refs/heads/pr-local/pr41-coelophysis-recovery-20261031": {
+        "local": "e4287029ad82e5011a684b0cd83c0da72c03ffa2",
+        "gitlab": "37e592700199e1c49151ddab1a01868f469204f0"
+      }
+    },
+    "matching_expected_refs": 119,
+    "local_only_preservation_ref_count": 214,
+    "main_matches_local_integration": true,
+    "own_before_head": "5fed546d99f577d4a793dc67d75449d6e7aa34e2",
+    "gitlab_merge_requests": "No Miniplanets MR visible. Later project-scoped all-MR read found two drafts for other work; those are unchanged.",
+    "transport": "Plugin supports metadata and single-file commits; normal Git required to preserve multi-file commit history.",
+    "scope": "Update own topic refs and MR; do not mirror/delete/rewrite unrelated refs."
+  },
+  "limits": [
+    "Still below60Hz; default rendering starts at most once per two game epochs.",
+    "ASAP display experiment improved swaps but regressed game rate; retained as a measured tradeoff, not selected as default.",
+    "Full-dirty views take four upload NMIs; typical unchanged/partly changed views can commit sooner.",
+    "No universal equivalence, every-state interrupt proof, natural whole-game completion, generic ROM conversion or physical NES qualification.",
+    "Local and GitLab publication readbacks are separate delivery receipts; this receipt describes tested executable bytes."
+  ],
+  "private_receipts": {
+    "candidate-05-final/manifest.json": {
+      "sha256": "323861abb90b5f011247d22883aa3b0d5d3f59291db6ce212cb0679fd3aeb4b0"
+    },
+    "candidate04-to05-byte-bridge/bridge.json": {
+      "sha256": "c7d3d8157abc4933cd9f486586d5a11961b3bb5cb7bd7d9562a5704ed4a8c526"
+    },
+    "native-match05-frozen/summary.json": {
+      "sha256": "37cd07cbfddbb265282e774a7191e76bdba37f867655d5fa0d1a39ae2b21a775"
+    },
+    "native-final-05/summary.json": {
+      "sha256": "8dfdf1671813774a3eb23f4c23cd608e6da66eb152c086503780f7183013bb10"
+    },
+    "audio-final-05/receipt.json": {
+      "sha256": "75bb1bd47ff1ab0e4224ccd05ff0152b1322817951805705297e0e6a6b0b6db4"
+    },
+    "timing-final-05/summary.json": {
+      "sha256": "d9099145c0ac69092ae87ed9505e219d0531130a9e1f7c18711007112ca3f5f3"
+    },
+    "pair-final-05/receipt.json": {
+      "sha256": "48e8ba0784b294f40bd59a6803d639ace4f7ef59f0d511fec4f0cba2f4891f35"
+    },
+    "genesis/common-native/summary.json": {
+      "sha256": "86c7721efde0785be28187f071790049b366ded9b1d00f319f44fa8c4dfc600d"
+    },
+    "genesis/actors/summary.json": {
+      "sha256": "2057bd2b337a70165d0084cd26804c9985b7f508083305f851760707244f3d14"
+    },
+    "genesis/full-flow/summary.json": {
+      "sha256": "ba2b468aff97a6f7f58272ba121ce1ef7e6bf6778a920e359801384be87c9c7c"
+    },
+    "objects-03/receipt.json": {
+      "sha256": "8452c2a6265515382ed7bc6a5e098c6a844cf313372c6c2e8c11f6fb33b1e626"
+    },
+    "objects-smoke-03/receipt.json": {
+      "sha256": "6d489fa2fe1683a7eae34550ca3e3f50fdb0a08d7e9d1fe312f8bef668259d9d"
+    },
+    "objects-host-01/receipt.json": {
+      "sha256": "e78f6352adef83f0e589cfde151d3a07298efa0bc0377792c7e7018431b9b213"
+    },
+    "hud-objects-01/receipt.json": {
+      "sha256": "9154e18527c09253bef0c4005cf389485106b4436179c2aae706a6daf22c5522"
+    },
+    "sprite-objects-01/receipt.json": {
+      "sha256": "ebf5ea6c4cab60cd68bb235a70d33d357a6be2449ba7df48ae8998b2272f973f"
+    },
+    "terrain-objects-01/receipt.json": {
+      "sha256": "c9668fc977b91732e81d0694a6bc0ab7ddd6fce7980e74d4f0aaa4242acaf52a"
+    },
+    "planner-01/receipt.json": {
+      "sha256": "da0dbd13195b437f5d50603b034c04dba052a8b6d80efe48c9bca52297daedc8"
+    },
+    "candidate04-paced2-stress/stress-receipt.json": {
+      "sha256": "c2ab69f2b5a22b7d7a85b0f4497a93164c495ae3a38bd664e0cf57f8ba8a838e"
+    },
+    "candidate04-paced2-movement/display-receipt.json": {
+      "sha256": "e4c8089a44ce5b1e38964acf3ba454c7713112ade79c3661604e6442f5956750"
+    },
+    "gate-negative-vblank/display-receipt.json": {
+      "sha256": "2267875946ec13ac81c031cc3bf5f60b11e3bb2dde60b6b8a341e82384ba4a0f"
+    },
+    "gate-negative-hud/display-receipt.json": {
+      "sha256": "be72d74921ec3697c02001ffe3e5d9556230bfc2a364f01ec1d2767676da8c4b"
+    },
+    "mapper-final-05/receipt.json": {
+      "sha256": "995507cbccf814efd045c55f1ba66f881618f79301573d16e515fb4c10ffe6b1"
+    },
+    "pytest-full-final-05.log": {
+      "sha256": "6bfc1c30e82d0d87927c79444932b11f8e7b8f89463ce6b243332dfb8c32c972"
+    },
+    "gitlab/comparison-before.json": {
+      "sha256": "c39003fb79e2b66f477a928576e44ba2b1a959461e902abc063cf4b71db60d6f"
+    },
+    "stage0-candidate06-long/display-receipt.json": {
+      "sha256": "8f6b715962bc59ab0234ae2542c5c51ff6930a15097f104bdf3873f58777b7b3"
+    },
+    "stage0-candidate03-long/display-receipt.json": {
+      "sha256": "88fd03bfc11b74eb3f68abf5cc4cfd970d08f2b1effc7115120245280878c170"
+    },
+    "stage0-candidate04-paced2-long/display-receipt.json": {
+      "sha256": "c78cd2e737e8e4d42b3540fef5c51500986c06fa537e99ff895ba12f9fbb83e4"
+    },
+    "stage40-candidate06-long/display-receipt.json": {
+      "sha256": "968d4f42a26e233ded0c4f1609861861e029d3099189cbe7c7390d57df9317a5"
+    },
+    "stage40-candidate03-long/display-receipt.json": {
+      "sha256": "3b3bd505a077fd53347b79871060a28ee19444d699ee19c94482debe01e7ba78"
+    },
+    "stage40-candidate04-paced2-long/display-receipt.json": {
+      "sha256": "9b96dbfbafe9b12e827254b1711f5aa6e40c5f2ff95a47504b2901c7e5c3b664"
+    },
+    "stage43-candidate06-long/display-receipt.json": {
+      "sha256": "f69a657726077b87b1067ef0b01bc3594898eeabf5b8bdb344a539281cb94539"
+    },
+    "stage43-candidate03-long/display-receipt.json": {
+      "sha256": "6ca45a35bf785909a63a3be9c6a0c59632862774718f437de1c017e376b2cde6"
+    },
+    "stage43-candidate04-paced2-long/display-receipt.json": {
+      "sha256": "1ce33a389642ab1d85376a87c884114811cfaa3f72365e2c7bc31cebd2163836"
+    },
+    "stage44-candidate06-long/display-receipt.json": {
+      "sha256": "510a51979c9046bc1e7787c6c9a045cd0d30a441beee770bbe0849efda2130f7"
+    },
+    "stage44-candidate03-long/display-receipt.json": {
+      "sha256": "d26566ca107eff099490cb17d4ffdb51aba1e2eebc72318a3bfd1cbd7a58a879"
+    },
+    "stage44-candidate04-paced2-long/display-receipt.json": {
+      "sha256": "d17f004825bbed28003283ccf400c571d18b9f5bfd28af917ad588437b72c278"
+    },
+    "gitlab/mr-readback-before.json": {
+      "sha256": "b5a9d40348e26659393d050e51f03fe25e4915d01c5246048fa94de09d4b003d"
+    }
+  }
+}

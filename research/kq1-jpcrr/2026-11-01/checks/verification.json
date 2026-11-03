@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "platform": "Darwin",
+  "python": "3.13.14",
+  "implementation_sha256": {
+    "tools/route_support.py": "823e3a8f64256ebfe9956da02a4f3252aafcb57ac1738d6234ec628daf4a7ed4",
+    "tools/scan_landmarks.py": "c22d123ca0cf5bdc5f0f298a49123b8ebb48d507ac5798767fbafecb97c7797f",
+    "tools/replay_batch.py": "1f6610c875f6109b3a9bfd155a17fe289d20867750f429a56556d1c053e48411",
+    "checks/verify_import.py": "c5acecab73b264f50799e7c12f81d1edf81c934d2d6148199f95aaff0b75d84a"
+  },
+  "witnesses": 43,
+  "mutated_witness_refusals": 43,
+  "memory_input_types": 3,
+  "truncated_and_negative_base_refused": true,
+  "movies": [
+    {
+      "movie": "KQ1-Robb-Route-63-complete.jrsr",
+      "ok": true,
+      "keyboard_edges": 1672,
+      "sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e"
+    },
+    {
+      "movie": "KQ1-Robb-Route-63-endpoint.jrsr",
+      "ok": true,
+      "keyboard_edges": 1660,
+      "sha256": "84fc96ea3207899ae03b661615b273ab7e7b4ebfbddab24adecbcf2459c0553d"
+    },
+    {
+      "movie": "KQ1-Robb-Route-BOW-66-complete.jrsr",
+      "ok": true,
+      "keyboard_edges": 1690,
+      "sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e"
+    },
+    {
+      "movie": "KQ1-Robb-Route-BOW-66-endpoint.jrsr",
+      "ok": true,
+      "keyboard_edges": 1678,
+      "sha256": "de6be181fdfba0fd6584004cd24fa6b0f61fefff98b07b8a70a67b1cc4365727"
+    }
+  ],
+  "cli_help_checks": 4,
+  "batch_dry_run_jobs": 4,
+  "guest_launches": 0,
+  "all_import_hashes_match_manifest": true
+}

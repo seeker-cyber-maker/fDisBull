@@ -1,0 +1,362 @@
+[
+  {
+    "path": "vga/433.V56",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1389,
+    "expanded_size": 2703,
+    "stored_md5": "386bf4e1d5064f138a5e503c474c0808",
+    "target_md5": "88014ca186f40b1a1cc7183adba3e234",
+    "sha256": "4b495b853cc0b80a36d31b79f6c09d3e9aa07f1c2f0ad6305d45a8444471a4bf",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/533.V56",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 985,
+    "expanded_size": 1960,
+    "stored_md5": "13087ad8c86a56f61abbee7701ca4571",
+    "target_md5": "ed7b94de8eb854807df715aeacef032d",
+    "sha256": "b5029b8c4858500592d8f27983f9f0a65b3aaf951148bcac449c1344ba25dd8a",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/ADL.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2331,
+    "expanded_size": 8070,
+    "stored_md5": "cc08bfc8fa419dd0d874032a7d31543d",
+    "target_md5": "a793e4a97e91e44db7b85c395698a75f",
+    "sha256": "e86554c1b746ab95bf7354dffc2ec557d9b91b1ed718f810022b8c14d44629fa",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/CMS.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1773,
+    "expanded_size": 3741,
+    "stored_md5": "81fab3d76e0fcb9a9918ae5d1c1fd37f",
+    "target_md5": "38a7f0d02e38aa427b11858a75657485",
+    "sha256": "1e9aa0853e7c0a355d17406bf2dcb5dea3c18132fbff1c91f2664ca9b430387a",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/IBMKBD.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 456,
+    "expanded_size": 537,
+    "stored_md5": "edc18dd83d16a023c175b873a1e90d92",
+    "target_md5": "ce095142a4b231a0e5d2e4662b6ea829",
+    "sha256": "da40f2f97d9a9cafa80d511da28264fdc1f6791e7752799f26eef381e16f3e61",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/IBMPS1.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2284,
+    "expanded_size": 4364,
+    "stored_md5": "0da4a1c4f7b35f8ad27e3824fda47508",
+    "target_md5": "d0ed61a57384da298b3996363c1b0fe1",
+    "sha256": "23ce1f956d2ca026d3989ae3f879fb03af3c07cf4d00c3cebf34352ada963140",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/INSTALL.EXE",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 38653,
+    "expanded_size": 39723,
+    "stored_md5": "ba1bf8ac8810c9fc97a2ee89087c9e12",
+    "target_md5": "29d566fab4a7c35569f561cfb5e3cf16",
+    "sha256": "e50d513675f5a307de4bd5cc84804d6f8acb44e821a2ee90afd81c861907f15c",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/INSTALL.HLP",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2917,
+    "expanded_size": 8565,
+    "stored_md5": "9ee95bd4737b35cab47298a074660acc",
+    "target_md5": "489b6b8652baf5840a27b18b2e890af5",
+    "sha256": "453f37bab2ce0de3b53cc568f2954e53aa16553d610f5345badcffcb05adf90b",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/INSTALL.SCR",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 876,
+    "expanded_size": 2844,
+    "stored_md5": "4253d201e8d8c83bf32481407b3c4cb5",
+    "target_md5": "c2f0af3b980eee01a869b1370239da5f",
+    "sha256": "76851243a1f8b4913306fbfa0d738282c2dfc60656a0f0ea57015ee6ac8080a9",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/INSTALL.TXT",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1684,
+    "expanded_size": 4189,
+    "stored_md5": "71b2d3b8ee603c93ff1ed89b40588625",
+    "target_md5": "a03a793cd8a1b95c3927d655dbe1f184",
+    "sha256": "c89301426641c613ad65103053a858e6ac54dee0708ff444b2573774925dacb8",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/INTERP.TXT",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 838,
+    "expanded_size": 1636,
+    "stored_md5": "98ac9d53fd970ec547ef00377209f823",
+    "target_md5": "67b6ae4bd3a8073fade253a43d89c685",
+    "sha256": "5ed368a38f20d7646b09266311a598f7275b4a4a4ddcaee2cb8adc5f6be908c7",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/JOYSTICK.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 503,
+    "expanded_size": 607,
+    "stored_md5": "0a16616e1ba28cfa07268c7c5652ed08",
+    "target_md5": "c75b73974160ff652a909a0d01f97214",
+    "sha256": "cbf2c98b7bdced90dac636db969a4f963e40eb8525ff18f4d7075b4e989113dc",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/MT32.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1225,
+    "expanded_size": 1976,
+    "stored_md5": "8622d2dd236f24468553063924ca45e5",
+    "target_md5": "ff31a3a4fe6aaf06866c47e2c64ceee5",
+    "sha256": "048a2e5a121968287b127eb8d78df42469cfe0ecdd2725c799277733efb25f17",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/MTBLAST.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2285,
+    "expanded_size": 3688,
+    "stored_md5": "f11b43b6f28c0fc29d927078f9c226bc",
+    "target_md5": "8e43459c89265c443fb7d496c7d2f902",
+    "sha256": "cbb814d775ae3d771d1642a2a6368d9d2854b3f39abf7823dd0a99d7c17a1362",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/PROAUDIO.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 4339,
+    "expanded_size": 11942,
+    "stored_md5": "891c5c051299fa25274c0077bde3a6f3",
+    "target_md5": "7dd01a70c0bc10194d72f7b3c2ddf7c2",
+    "sha256": "444fa992fed30d1f6c8ca3faa2afdea9e292e89df40203237e2541ea65f217a6",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/README",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 617,
+    "expanded_size": 1078,
+    "stored_md5": "75819d8a17c27e9b9a3323387cadd69a",
+    "target_md5": "e6cf981c63d0408187da29f16219a068",
+    "sha256": "7d5dc70a61014fb64f44ab8ef8875a2cbf878db72d1fdb5861fa69e3f3171bda",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.000",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 965250,
+    "expanded_size": 1016436,
+    "stored_md5": "dbd9bbd66186dff7f40e9afa18b9fd6d",
+    "target_md5": "8fa6f45280fb99abbef21b1cf996eee4",
+    "sha256": "84664c44d911f3da106f52490bf37490d30cfe906ef08a966f794670dc2b7bb9",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.001",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1005023,
+    "expanded_size": 1038757,
+    "stored_md5": "04e3bcf564f41ecb7a6546c2f4f30863",
+    "target_md5": "e88186e992fd2ac41e22c244f6d3c307",
+    "sha256": "4f14b988edb43ba73e710db7c8e76ad77f92266aa38c422dcea515b8d238e9ed",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.002",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1142396,
+    "expanded_size": 1169831,
+    "stored_md5": "74c05f98cd85a8449e9f4d0ced8881fe",
+    "target_md5": "b676e892b9bf6842a44808b8326e0dc7",
+    "sha256": "13b6212085699bdfd83c85c42e318c47a543cd4ca78e58ac449c38402bd2b6f5",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.003",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1186276,
+    "expanded_size": 1213262,
+    "stored_md5": "d26886be8e8c8aa78e84c7a4754d6906",
+    "target_md5": "5abfe7343a0a42f3546cfe8a4c17c3cf",
+    "sha256": "8645232ddc5bb1110637f1fd8f2e6d4d17a0c27a73946d00f4ca5ba0f3fd7c9f",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.004",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1174798,
+    "expanded_size": 1203051,
+    "stored_md5": "47f5f41d351fe8e5eeb6a5de1824f8a6",
+    "target_md5": "b14274a513b342c0245b3833771f5863",
+    "sha256": "ed02a7d4dada586994ed658acd96ce8fddfb1a9320232c15a7392ad570238b35",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.CFG",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 131,
+    "expanded_size": 173,
+    "stored_md5": "da937cf59ba98eec014694130277a091",
+    "target_md5": "d75f8f447f75d6895240a9e7678986c2",
+    "sha256": "5abe61c9ee390aea2fab36767439bf82c6202ab9fcbd2ccd524b7b77ff1a2779",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/RESOURCE.MAP",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 4855,
+    "expanded_size": 5913,
+    "stored_md5": "6292a0a7a7e3af0b281d9fd623b33ebf",
+    "target_md5": "1dd1b7c042f0c7345730a94633d283fe",
+    "sha256": "b39d7965bb3413c01286525077be3aedde47fcd17b891ba16baea772416261d5",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/SCIDHUV.EXE",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 60204,
+    "expanded_size": 62238,
+    "stored_md5": "9635e6fd7f5f89095936efa68e2b7bd1",
+    "target_md5": "a940e10baf86296a052d8c3e64e2e6e4",
+    "sha256": "3e85e5a23dce88cd457dddce7b85f42ecb16346e966fa4345fe635990af8ff9a",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/SNDBLAST.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 3390,
+    "expanded_size": 9768,
+    "stored_md5": "7d030fcf410be909e7c2f51dab49402a",
+    "target_md5": "6d68c102387c48c864eabb88f4133d5d",
+    "sha256": "623eeaece12e847599ec5d86f5dc61a686af29bd6b3a300000f0d6aa1810d0c6",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/SQ1GMPAT",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 504,
+    "expanded_size": 1301,
+    "stored_md5": "3e323a4717e929f6cc51323f17528e38",
+    "target_md5": "b0acce28027015c19f7bab51f5fb5349",
+    "sha256": "738d50abe1a2bc194b3f8daa816b1f97d180621d30e2d5753f9f7fc0385191c8",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/SQ1RS.BAT",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 35,
+    "expanded_size": 31,
+    "stored_md5": "73942f42bd28a72a1ca8108d6e818c00",
+    "target_md5": "f8681e027678d201e9a5f2d86f0518f3",
+    "sha256": "faa047f4a37ba6faf0fe63aed28bc948db1272587d9ab0c03eea3ccb92f510a0",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/STD.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1270,
+    "expanded_size": 1461,
+    "stored_md5": "f0cc1e99482fa59237b73eb074a0316a",
+    "target_md5": "440e21abb5e32bd34cfc37296d901075",
+    "sha256": "15a683cffb88c8aa0da2c70dbad5c121072a77ae24dba273f3da7510481d9361",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/TANDY3V.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2020,
+    "expanded_size": 3950,
+    "stored_md5": "6003c9ca3c21f61813e5b586e2ed6771",
+    "target_md5": "b74d9234485643bb9808782b2f1b6462",
+    "sha256": "b81b3ac929addd19354486258aca189b499bf50f91219a89e31bfc812024b5a8",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/TANDY3VD.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 2382,
+    "expanded_size": 4498,
+    "stored_md5": "e7db92c29613db5632f8abf061786266",
+    "target_md5": "a1e155b930651e6bab8304b7492736ab",
+    "sha256": "570a38ca566e8b2e0c81d5ccbd2f917ec007f640e9f7d145e7d5079f9e72affd",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/VERSION",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 15,
+    "expanded_size": 7,
+    "stored_md5": "d4c64d91107a1a4ed9cbbcf5ad2dfee1",
+    "target_md5": "01869a900e47bcf330c4c17d5b7e5a4d",
+    "sha256": "c348a507b0168157722a68d16161142f9e104c8f5e7b8deb8d703311c63597c1",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/VGA320.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1841,
+    "expanded_size": 4461,
+    "stored_md5": "964d30d28f28324bc5d4fa872ab12481",
+    "target_md5": "a20bc0b69ad2d3f04d9fab76f741b249",
+    "sha256": "e7d2bb1816a2b49f0f8c1ace91519060d0bf61239ff79fe1ad49499f4647461a",
+    "checks_passed": true
+  },
+  {
+    "path": "vga/VGA320BW.DRV",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1779,
+    "expanded_size": 4369,
+    "stored_md5": "6328a7616ea4edd2e81abd1bc6e323e4",
+    "target_md5": "ed4c40263f1314548f71a3714cb3610a",
+    "sha256": "9b58e7e66aed3502598e5f2079d058bf6149732ed3d51eb326c013a81ebb1fe3",
+    "checks_passed": true
+  },
+  {
+    "path": "goggame-1207661413.hashdb",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 1901,
+    "expanded_size": 1910,
+    "stored_md5": "b1dadf5ec456c3b1db6fedb1f0ba32f2",
+    "target_md5": "b2022dad087f4b3b2086df1ea0cb2ced",
+    "sha256": "4bf47875c18a280c1da2db059a32ff29c9a7e335ace3ed38f3f924c0a2abd9d7",
+    "checks_passed": true
+  },
+  {
+    "path": "goggame-1207661413.info",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 460,
+    "expanded_size": 1765,
+    "stored_md5": "edbb162754dfc9eb995197889e6c0b9b",
+    "target_md5": "3d2738de73a97fa00fb88e94573dd9b8",
+    "sha256": "98ca6569f6dc90e9886ff2e2cff1df82631305170465d02e29b7ff73e98cb1c9",
+    "checks_passed": true
+  },
+  {
+    "path": "goggame-1207661413.script",
+    "kind": "complete_zlib_replacement",
+    "stored_size": 434,
+    "expanded_size": 4598,
+    "stored_md5": "6364a322c67a7f9a4370267ca771b8f4",
+    "target_md5": "554d9296f3866f991c3624f9b2909b5b",
+    "sha256": "b999ed2a3ae59aac7bd68de87871d177cfc51d0d603e801e7a2620f1876e6a48",
+    "checks_passed": true
+  }
+]

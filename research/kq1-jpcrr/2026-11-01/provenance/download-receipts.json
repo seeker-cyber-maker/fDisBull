@@ -1,0 +1,29 @@
+[
+  {
+    "url": "https://files.tasvideos.org/emulatordownloads/tastools/jpcrr-r11.2-precompiled.zip",
+    "final_url": "https://files.tasvideos.org/emulatordownloads/tastools/jpcrr-r11.2-precompiled.zip",
+    "status": 200,
+    "content_type": "application/zip",
+    "bytes": 3641283,
+    "sha256": "e3a9ffdb384585d56496e43c4532827add859ad3893a63a28cfa096d5d4634d5",
+    "name": "jpcrr-r11.2-precompiled.zip"
+  },
+  {
+    "url": "https://files.tasvideos.org/common/Wiki/jpc-rr/FREEDOS.7z",
+    "final_url": "https://files.tasvideos.org/common/Wiki/jpc-rr/FREEDOS.7z",
+    "status": 200,
+    "content_type": "application/x-7z-compressed",
+    "bytes": 1068196,
+    "sha256": "bcf7baf267af29999d657f8a8d62a889f0779d07b6c05a97e28495b25d3ea804",
+    "name": "FREEDOS.7z"
+  },
+  {
+    "url": "https://tasvideos.org/8484S?handler=Download",
+    "final_url": "https://tasvideos.org/8484S?handler=Download",
+    "status": 200,
+    "content_type": "application/octet-stream",
+    "bytes": 13683,
+    "sha256": "bbaa639f288d7b53bce1db199991c8235b26efe90c651af6be19dc441608fdab",
+    "name": "8484S-movie.zip"
+  }
+]

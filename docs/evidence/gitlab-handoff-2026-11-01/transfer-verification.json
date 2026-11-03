@@ -1,0 +1,50 @@
+{
+  "recorded_date": "2026-11-01",
+  "scope": "Repository publication and file transfer, not a new runtime test",
+  "project": "brewster-jennings-group/fdisbull",
+  "main_inspected": "a6ac7ac7f60fc97bc1bf69db7368ff07ff27301e",
+  "research_base": "7dd9a5013bd33edb1d7baae7a1377a3b12f22155",
+  "browser": {
+    "attempted": true,
+    "connected": false,
+    "result": "Originating browser context required; no browser upload performed"
+  },
+  "ordinary_markdown_attachment": {
+    "performed": false,
+    "reason": "No upload-creation action is exposed by the available GitLab connector"
+  },
+  "first_combined_commit": {
+    "succeeded": false,
+    "error": "400: write created blob: unexpected EOF",
+    "followup_branch_lookup": "404 Branch Not Found",
+    "root_cause": "Not established by this test"
+  },
+  "repository_file_test": {
+    "performed": true,
+    "transport": "create_repository_file with base64 content, followed by get_repository_file",
+    "path": "docs/evidence/gitlab-handoff-2026-11-01/agent-file-handoff-probe.zip",
+    "size_bytes_local": 302,
+    "size_bytes_remote": 302,
+    "sha256_local": "2b9460b8452ff71f5b5bd4e60b0f090ac1ccf5d802190b84fb3f4cf3f695385d",
+    "sha256_remote": "2b9460b8452ff71f5b5bd4e60b0f090ac1ccf5d802190b84fb3f4cf3f695385d",
+    "git_blob_local": "abaa19a2deef967e8297e39b078fb59421d3f235",
+    "git_blob_remote": "abaa19a2deef967e8297e39b078fb59421d3f235",
+    "published_commit": "ba157c8ae0fdfbeba884014ef7185908dbe11f1c",
+    "readback_match": true,
+    "members": ["HANDOFF.md"],
+    "contains_game_data": false
+  },
+  "source_identity_check": {
+    "files": 6,
+    "matches": 6,
+    "path": "src/fdisbull/console_synthesis",
+    "reference": "Previously delivered First_Party_Console_Synthesis.zip source files",
+    "runtime_retested": false
+  },
+  "historical_route_audit_rerun": false,
+  "whole_project_tested": false,
+  "hosted_ci_requested": false,
+  "main_modified": false,
+  "merge_requested": false,
+  "permissions_modified": false
+}

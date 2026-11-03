@@ -1,0 +1,24 @@
+{
+  "instructions": 68186,
+  "unique_instruction_bytes": 228882,
+  "instruction_size_sum": 228883,
+  "object1_extent": 261620,
+  "object1_instruction_bytes": 228882,
+  "functions": 630,
+  "xrefs": 81351,
+  "original_baseline_rows_changed": [],
+  "encoding_mismatches": [],
+  "independent_length_mismatches": [],
+  "native_case_count": 262,
+  "native_reasons": {
+    "returned": 262
+  },
+  "owned_children_reaped": 262,
+  "distinct_native_instruction_starts": 2525,
+  "native_starts_missing_from_stored_analysis": [],
+  "asset_paths_verified": 897,
+  "asset_mismatches": [],
+  "database_integrity": "ok",
+  "indirect_jump_count": 88,
+  "indirect_call_count": 18
+}

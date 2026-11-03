@@ -1,9 +1,14 @@
 # RFC 0003: Cross-edition snippet relationships and selectable UDL backings
 
-- Status: **proposal; no correspondence tables or selection runtime shipped by this PR**
+- Status: **bounded prototype implemented; broader orchestration remains proposed**
 - Extends: [Executable Rosetta contracts](0002-executable-rosetta-contracts.md)
 - Case study: [Colonization food counterparts](../COLONIZATION_FOOD_EQUIVALENCIES.md)
 - Compatibility: existing UIL syntax and meaning remain unchanged
+
+The first implementation is documented in [selectable block layers](../UDL_BLOCK_LAYERS.md)
+and the [pilot report](../UDL_LAYER_PILOT.md). Those documents define the actual
+schemas, supported execution profiles and qualification limits. The conceptual
+requirements below also retain work beyond that first profile.
 
 ## Motivation and decision
 
@@ -43,8 +48,9 @@ kernel while its surrounding effects remain unresolved.
 
 ## Persist identities, relations and their qualification separately
 
-A future database extension should represent these concepts; the names below
-are illustrative, not an implemented schema or JSON interchange format.
+These concepts guide the implementation and its remaining extensions. The names
+below are illustrative; use the linked implementation contract for the actual
+schema and JSON interchange formats.
 
 | Concept | Minimum retained information |
 | --- | --- |

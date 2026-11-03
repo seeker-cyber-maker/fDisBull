@@ -1,0 +1,146 @@
+[
+  {
+    "path": "vga/433.V56",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/533.V56",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/ADL.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/CMS.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/IBMKBD.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/IBMPS1.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/INSTALL.EXE",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/INSTALL.HLP",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/INSTALL.SCR",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/INSTALL.TXT",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/INTERP.TXT",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/JOYSTICK.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/MT32.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/MTBLAST.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/PROAUDIO.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/README",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.000",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.001",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.002",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.003",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.004",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.CFG",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/RESOURCE.MAP",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/SCIDHUV.EXE",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/SNDBLAST.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/SQ1GMPAT",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/SQ1RS.BAT",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/STD.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/TANDY3V.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/TANDY3VD.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/VERSION",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/VGA320.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "vga/VGA320BW.DRV",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "goggame-1207661413.hashdb",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "goggame-1207661413.info",
+    "identical_to_full_installer": true
+  },
+  {
+    "path": "goggame-1207661413.script",
+    "identical_to_full_installer": true
+  }
+]

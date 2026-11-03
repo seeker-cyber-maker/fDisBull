@@ -1,0 +1,88 @@
+{
+  "scope": "Static source-derived structure and conditional effects, not a native trial or verified player activation recipe.",
+  "runtime_record": {
+    "base": "0x9be3a",
+    "stride": 14,
+    "count": 8,
+    "extent_bytes": 112,
+    "storage": "Declared virtual zero fill, not an established serialized file record.",
+    "fields": [
+      {
+        "offset": 0,
+        "width": 4,
+        "type": "u32",
+        "meaning": "Completion/state value; 1 satisfies the final scan."
+      },
+      {
+        "offset": 4,
+        "width": 2,
+        "type": "u16",
+        "meaning": "Dispatch selector, locally admitted 0..16."
+      },
+      {
+        "offset": 6,
+        "width": 2,
+        "type": "u16",
+        "meaning": "Offset-like object reference; selected consumers add 0x8810e."
+      },
+      {
+        "offset": 8,
+        "width": 2,
+        "type": "u16 storage",
+        "meaning": "Coordinate-like argument, exact meaning/units not yet qualified."
+      },
+      {
+        "offset": 10,
+        "width": 2,
+        "type": "u16 storage",
+        "meaning": "Coordinate-like argument, exact meaning/units not yet qualified."
+      },
+      {
+        "offset": 12,
+        "width": 2,
+        "type": "u16 storage",
+        "meaning": "Further component, semantics unresolved."
+      }
+    ]
+  },
+  "completion_condition": {
+    "routine": "0x105e0",
+    "scan": "0x10d58",
+    "completion_entry": "0x10510",
+    "condition": "All eight state dwords equal 1, OR both byte globals 0x5e2b2 and 0x60b48 are nonzero.",
+    "qualification": "At the reached final-scan path; earlier routine guards and the completion helper remain applicable. The setter/normal activation of 0x5e2b2 has not been established."
+  },
+  "name_comparison": {
+    "entry": "0x23f10",
+    "wrapper": "0x3d79e",
+    "helper": "0x3d7b1",
+    "comparison": "NUL-terminated byte comparison with ASCII A..Z folded to lowercase; zero means equal.",
+    "record_base": "0x5e49c",
+    "record_stride": 1047,
+    "index": "Signed 16-bit global at 0x60b16 widened to 32 bits.",
+    "text_field_offsets": [
+      "0x11",
+      "0x23"
+    ],
+    "field_UI_labels": "Not qualified in this pass.",
+    "stride_algebra_check": "unsat: source-derived address expression differs from 1047 * index modulo 2^32"
+  },
+  "candidate_features": [
+    {
+      "trigger_text": "DO IT AGAIN",
+      "matching_fields": "Either inspected text field",
+      "effect": "Set byte 0x60b48 to 1.",
+      "consumer": "Alternate completion condition and another post-mission-like path.",
+      "status": "Confirmed static trigger/effect link; player activation and additional gate unresolved."
+    },
+    {
+      "trigger_text": "ROB A BANK",
+      "matching_fields": "Either inspected text field",
+      "effect": "Set byte 0x60b43 to 1 and write 100000000 into the selected record first dword.",
+      "status": "Confirmed conditional store, not a native balance observation; cash interpretation remains unqualified here."
+    }
+  ],
+  "native_execution": false,
+  "UI_activation_qualified": false,
+  "external_cheat_guide_used": false
+}

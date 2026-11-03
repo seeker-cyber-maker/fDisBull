@@ -11,7 +11,7 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "c423a5ab648561a8b4cc68d7025ee667165235f738d9ff908a3452f5b746313d",
+  "adapted_text_scene_class_source_sha256": "19a5e58f1a98774c311397bf42ea6bc9429cbe3a7a2926d7ae2619b7a38d8028",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
@@ -34,7 +34,15 @@
     "Selected Coelophysis qualification keeps all 13 BUY anchors fixed and all 35 card anchors exact under one bounded horizontal translation; original species 4 and price 1250 remain required before BUY.",
     "The qualified original first-plot purchase occupies native pen record 10; commit and retained-order guards use that observed record, rather than the earlier authored pen1 assumption.",
     "First-selection qualification separately retains all 38 picked-card anchors and 10 fixed BUY-control anchors with a bounded eight-pixel card shift. Original price and BUY input points and post-price species/price guards are unchanged.",
-    "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states."
+    "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states.",
+    "Park exit shares one finite host deadline, permits instrumented loading up to 40 seconds, retains the original queued-input receipt on observation failure, and qualifies the street from read-only frame and selector reads.",
+    "Return to the park retains the original single queued press and continuous 8000ms guest interval under a shared 40-second host deadline. Read-only park reconciliation checks a uniquely recognized park, rejects recognized notices, and follows the committed park scene head.",
+    "After a native save load into a new project, Park qualification can create its first host scene or follow a first publication that committed before return readback failed. Existing Park roots retain same-root/version checks."
   ],
-  "bounded_purchase_helper_source_sha256": "1fde19aa4496dd4c19894886224858d9c4f71fe485ac9eeba399846000b63b3e"
+  "bounded_purchase_helper_source_sha256": "48e3c34aebc46bf47464596280b72151218016e6a485e28f8d095d62a2529162",
+  "bounded_land_helper_source_sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24",
+  "bounded_fence_helper_source_sha256": "a5af2ed46b469272389008517764862ef46288b619a4c41fd446b2e1da0b5ed3",
+  "bounded_preparation_change": "Shared host deadline; short settling quanta with existing readiness predicates; guide native commit retained before final witness.",
+  "park_exit_reconciliation_change": "Read-only reconciliation binds park.back to the original provider/run/scene/input and refreshes street controls; unknown input is never replayed.",
+  "park_return_reconciliation_change": "Bind street.park to original provider/run/street revision/before observation/queued input; qualify the existing park without execution, input or restore, and preserve recognized notice continuations."
 }

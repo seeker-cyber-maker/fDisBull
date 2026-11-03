@@ -16,6 +16,12 @@ _PACKAGE_ROOT = Path(__file__).resolve().parent
 _PYTHON = {'iced-x86': ('iced_x86', 'iced-x86'), 'capstone': ('capstone', 'capstone'),
            'lief': ('lief', 'lief'), 'Pillow': ('PIL', 'Pillow'),
            'z3': ('z3', 'z3-solver')}
+_COMMON_NATIVE_PROVIDERS = ('common_uil.py', 'uil_catalog.py', 'uil_api.py',
+    'uil_native.py', 'uil_native_codegen.py', 'uil_link.py', 'uil_dataflow.py', 'uil_runtime.py')
+_COMMON_DESKTOP_PROVIDERS = (*_COMMON_NATIVE_PROVIDERS, 'uil_desktop.py',
+    'native_runtime/memory-desktop.c', 'native_runtime/memory-desktop.h',
+    'native_runtime/memory-appkit.m', 'native_runtime/memory-x11.c',
+    'native_runtime/memory-win32.c')
 
 
 def _python_dependency(name, distribution):
@@ -91,6 +97,11 @@ def _catalog():
                ['macos_lldb.py', '_macos_lldb_driver.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'lldb'],
                'One explicit source-bound launch to one symbol; no attach, persistent session or UI recorder.',
                maturity='experimental', required_host={'system': 'Darwin', 'machine': 'arm64'}),
+        _entry('macos.reversible-capture', 'partial', ['arm64', 'x86-64'],
+               ['cli:macos-snapshot', 'cli:macos-session', 'cli:macos-session-recover'],
+               ['macos_capture.py', 'macos_session.py', 'data/FdisbullMacCapture.swift'], ['swiftc'],
+               'macOS 14+ display-bound native PNG/AX capture; explicit live action, owned-change restoration and recovery journal. Native permissions not checked here.',
+               maturity='experimental', required_host={'system': 'Darwin'}),
         _entry('debug.dos', 'partial', ['x86-16'], ['cli:debug', 'cli:doctor'],
                ['debugger.py', 'dosbox_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'dos-backend'],
                'Configured compatible DOSBox backend; backend identity and doctor acceptance are separate gates.'),
@@ -128,12 +139,24 @@ def _catalog():
         _entry('compile.dos', 'partial', ['x86-16'], ['cli:udc-capture', 'cli:udc-compile'],
                ['udc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow'],
                'Original-backed bounded DOS definitions with preserved unsupported residuals; not arbitrary UIL compilation.'),
+        _entry('compile.common-native', 'partial', ['arm64-le', 'x86-64'],
+               ['cli:uil-compile', 'cli:uil-link', 'cli:uil-components', 'cli:uil-build', 'cli:uil-seal'],
+               list(_COMMON_NATIVE_PROVIDERS), ['lief', 'iced-x86', 'capstone', 'Pillow', 'native-c-compiler'],
+               'Bounded numeric/bool/resource/fixed-array common UIL with C/assembly leaves and owned ABI. Effects stay planned; target compiler required. No general app recovery.',
+               targets=['macos-arm64', 'linux-x64', 'windows-x64']),
+        _entry('uil.common-desktop', 'partial', ['arm64-le', 'x86-64'],
+               ['cli:uil-desktop', 'cli:uil-desktop-build', 'cli:uil-desktop-seal'],
+               list(_COMMON_DESKTOP_PROVIDERS),
+               ['lief', 'iced-x86', 'capstone', 'Pillow', 'native-c-compiler', 'native-window-services'],
+               'Fixed-u32-arena AppKit/X11/Win64 shell with declared frame/input adapters and C/assembly/mixed choices. Build, original-code and native device/callback gates are separate.',
+               targets=['macos-arm64', 'linux-x64', 'windows-x64']),
         _entry('uil.native-app-export', 'unsupported', ['arm64-le'], [], [], [],
                'General macOS app or SwiftUI-to-UIL semantic recovery is not implemented.', maturity='proposed'),
         _entry('uil.macos-host-effects', 'unsupported', ['architecture-neutral'], [], [], [],
                'No UIL executor for UserDefaults, IOPM, notifications, network or asynchronous sensors.', maturity='proposed'),
         _entry('compile.macos-arm64', 'unsupported', ['arm64-le'], [], [], [],
-               'No general macOS ARM64 compiler for a UIL app model.', maturity='proposed'),
+               'General recovered macOS/SwiftUI app compilation remains unsupported; compile.common-native and uil.common-desktop are separate bounded profiles.',
+               maturity='proposed', bounded_alternatives=['compile.common-native', 'uil.common-desktop']),
     ]
 
 
@@ -160,16 +183,19 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
     dependencies.update({
         'ghidra-headless': _tool('analyzeHeadless', analyze_headless),
         'lldb': _tool('lldb', lldb), 'java': _tool('java', java),
+        'swiftc': _tool('swiftc', None),
         'dos-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'pe64-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'scummvm-backend': {'kind': 'configuration', 'status': 'not_selected'},
+        'native-c-compiler': {'kind': 'configuration', 'status': 'not_selected'},
+        'native-window-services': {'kind': 'configuration', 'status': 'not_selected'},
     })
     host = {'system': platform.system(), 'machine': platform.machine()}
     sources = _sources(entries)
     for item in entries:
         if item['implementation'] == 'unsupported':
             available = 'unsupported'
-        elif item.get('required_host') and item['required_host'] != host:
+        elif any(host.get(key) != value for key, value in item.get('required_host', {}).items()):
             available = 'host_unsupported'
         elif any(sources[name]['status'] != 'read' for name in item['providers']):
             available = 'component_missing'
@@ -200,6 +226,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
             'Requirements cover all listed interfaces, including CLI front-end imports; a direct Python call may need fewer.',
             'Module/executable presence does not prove importability, compatible versions, permission or successful execution.',
             'PATH discovery may select shims; Java/Ghidra/LLDB versions and configuration are not validated.',
+            'Common native/desktop entries require a separately selected target compiler and window services; this query does not run their qualification.',
             'A version string or experimental label does not certify release inclusion; compare source hashes and review receipts.',
         ],
     }

@@ -220,6 +220,12 @@ def _identify_header(data: bytes) -> dict:
             if not need(offset + size, "fat Mach-O slice exceeds file"):
                 return h
         h["valid"] = True
+    from .roms import probe_rom
+    rom = probe_rom(data) if h['format'] == 'unknown' else None
+    if rom is not None:
+        return {key: rom[key] for key in ('format', 'family', 'platform', 'valid',
+            'bits', 'arch', 'endian', 'header_offset', 'detection', 'warnings',
+            'loadable', 'validation_scope')} | {'source': 'console-media header bytes'}
     return h
 
 
@@ -324,6 +330,12 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     result['selected_image']=image or ('ail' if header['format']=='AIL' else 'pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'ne' if header['format']=='NE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['family'] in ('console ROM', 'console disc'):
+        from .roms import inspect_rom
+        result['rom'] = inspect_rom(data)
+        result['rom_regions'] = result['rom']['regions']
+        result['strings'] = _strings(data, [], warnings)
+        return result
     if header['format'] == 'NE':
         from .ne import inspect_ne
         # A recognized but malformed NE image cannot silently become the DOS

@@ -1,0 +1,173 @@
+{
+  "focused_tests_passed": 131,
+  "format": "fdisbull-shadowrun-snes-native-evidence-1",
+  "genesis_compatibility": {
+    "native_state_elements": 190320,
+    "program_sha256": "1f44ec1e34693ac5d4fcd14cffc615ef8a8c71ccd60eb37d3fecd96839181894",
+    "scope": "prepared arena, default entry, original sampled actor positions and HP",
+    "source_fields_per_frame": 6,
+    "ticks": 52
+  },
+  "limits": [
+    "six selected original actor fields; native/UIL full state compared separately",
+    "static captured geometry assumption; autonomous world not reproduced",
+    "coordinate-domain limits do not prove every possible path within that rectangle",
+    "unsupported chords and unqualified source state transitions refuse"
+  ],
+  "long_routes": [
+    {
+      "direction": "right",
+      "last_model_frame": 3199,
+      "matched_source_checkpoints": [
+        3030,
+        3050,
+        3070,
+        3100,
+        3150,
+        3199
+      ],
+      "original_receipt_sha256": "80304d7fa99ac9622e9d6323268e34c7bce7ab9afe77a08ca2ec3494d8e7b6e1"
+    },
+    {
+      "direction": "up",
+      "last_model_frame": 3199,
+      "matched_source_checkpoints": [
+        3030,
+        3050,
+        3070,
+        3100,
+        3150,
+        3199
+      ],
+      "original_receipt_sha256": "5f66ba244b763d53c6f80111a82193c037de8743d9ef92ed31bdaf5b3d0b4594"
+    },
+    {
+      "direction": "left",
+      "last_model_frame": 3050,
+      "matched_source_checkpoints": [
+        3030,
+        3050
+      ],
+      "original_receipt_sha256": "daad048d4ea01e1dc38158217252b80d23434bfe462789fb774ba29f5e6a1eb7"
+    },
+    {
+      "direction": "down",
+      "last_model_frame": 3070,
+      "matched_source_checkpoints": [
+        3030,
+        3050,
+        3070
+      ],
+      "original_receipt_sha256": "c6c7175d21d7c0cefb97f1838d363e3a9b4caaf1f012fbe5530345867a69a77d"
+    }
+  ],
+  "native_core_sha256": "9bdf73a4959d20521bd52a902c5ff9cf4ae3c10c006358415620983ec39035d7",
+  "private_field_receipt_sha256": "5b152424cbb29acc960c75dcb5d3028b7f085487d201c1dfe17b7d9470856c9e",
+  "private_genesis_receipt_sha256": "028d7197284799d68f22d4f35184c62f776dffc14ab2074e177628de3d6826fa",
+  "private_heldout_receipt_sha256": "d1b8f7a8e79a050ec7bdc2482e483b530aed1624500455ab510897935147c728",
+  "program_sha256": "0d4145ecdeb8fb33080605324a3e83bd685b75fe4e621e40e8ac65e6a43cdb46",
+  "short_routes": [
+    {
+      "checked_frames": [
+        3000,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        3007,
+        3008,
+        3009,
+        3010,
+        3020
+      ],
+      "direction": "neutral",
+      "original_receipt_sha256": "c3e39c9409c458c91e7db6795ed7825dfa3a16adbcd8c07633364169b29de37d"
+    },
+    {
+      "checked_frames": [
+        3000,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        3007,
+        3008,
+        3009,
+        3010,
+        3020
+      ],
+      "direction": "right",
+      "original_receipt_sha256": "fb5221413d6533a572e6ab4bce7f36778cbb2bdb7b19d0c7d4ce8101774fa496"
+    },
+    {
+      "checked_frames": [
+        3000,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        3007,
+        3008,
+        3009,
+        3010,
+        3020
+      ],
+      "direction": "left",
+      "original_receipt_sha256": "fc0043e0ab054513e4ef739d9e21818420548200f65b0f91c1f1b9defc92435f"
+    },
+    {
+      "checked_frames": [
+        3000,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        3007,
+        3008,
+        3009,
+        3010,
+        3020
+      ],
+      "direction": "up",
+      "original_receipt_sha256": "8f8f8d9ea70947628be34ec3131bb2715db6c0e2b8f0115466ffc57482127d75"
+    },
+    {
+      "checked_frames": [
+        3000,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        3007,
+        3008,
+        3009,
+        3010,
+        3020
+      ],
+      "direction": "down",
+      "original_receipt_sha256": "b184d36cb6b384b8989c68913dabdb683a14f8482ea04b785c296483dad2bf7a"
+    }
+  ],
+  "status": "bounded_pass_with_explicit_unsupported_domain",
+  "turn_and_release_frames": 22,
+  "turn_receipt_sha256": "528036d80affa56c871b83dd0a19cc6063d21fc4d00a760350854993580f484f",
+  "withheld": {
+    "first_divergence": null,
+    "logical_steps": 61,
+    "native_state_elements": 896,
+    "result": "completed",
+    "source_compared": 52,
+    "source_receipt_sha256": "81f80aa7d3277f40ebc06e1abe9ee74c1f4612bc01a8363aaa5c2672c2a82130",
+    "unsupported_chord_rollback": true
+  }
+}
