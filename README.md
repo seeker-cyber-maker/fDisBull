@@ -138,6 +138,20 @@ diagnostic C and runtime observations do not constitute a UIL translation.
 
 ## Debug the original program
 
+An experimental [ScummVM AGI backend](docs/SCUMMVM_BACKEND.md) provides a
+headless replacement-engine investigation path with script state, breakpoints,
+input and stored frames. Its evidence identifies ScummVM separately from the
+original DOS interpreter. See the [matched scene experiment](docs/SCUMMVM_DOS_SCENE_COMPARISON.md)
+for the tested scope and measured results.
+
+The separate experimental [Gob backend](docs/SCUMMVM_GOB_BACKEND.md) supports
+Lost in Time investigation through a patched ScummVM 2026.4.0 runtime. It adds
+typed script state, source-bound execution control, hotspot receipts and stored
+frames. Native game checkpoints and script patching remain unsupported; the
+stock ScummVM application alone does not provide this debugger protocol.
+The [Lost in Time comparison](docs/SCUMMVM_LOSTTIME_COMPARISON.md) records the
+original-DOS checks, nail visibility regression and fresh Z authoring results.
+
 The DOS debugger uses a separately built, compatible patched DOSBox backend.
 For example, after importing your own program:
 

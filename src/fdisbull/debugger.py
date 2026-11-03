@@ -73,7 +73,24 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
-                 spatial_mode=None, fair_play=False):
+                 spatial_mode=None, fair_play=False, game_id=None, language=None, platform=None):
+        if backend == 'scummvm-gob':
+            if any(x is not None for x in (kernel, initramfs, files, state, remote_server, spatial_mode)) or window or fair_play:
+                raise ValueError('ScummVM Gob uses an explicit variant and headless VM controls without native launch options')
+            from .scummvm_gob import ScummVMGobSession
+            return ScummVMGobSession(self, executable, game_dir, version=version,
+                                     game_id=game_id or 'lit', language=language, platform=platform,
+                                     boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
+        if language is not None or platform is not None:
+            raise ValueError('language and platform require backend=scummvm-gob')
+        if backend == 'scummvm-agi':
+            if any(x is not None for x in (kernel, initramfs, files, state, remote_server, spatial_mode)) or window or fair_play:
+                raise ValueError('ScummVM AGI uses an explicit game_id and headless VM controls without native launch options')
+            from .scummvm_debugger import ScummVMAGISession
+            return ScummVMAGISession(self, executable, game_dir, version=version, game_id=game_id,
+                                    boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
+        if game_id is not None:
+            raise ValueError('game_id requires a ScummVM backend')
         if self.meta['format'] == 'NE':
             raise ValueError('NE currently supports static analysis only; DOS and PE64 launch backends cannot execute Win16 NE projects')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
@@ -152,7 +169,11 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         data = bytes(row['data'])
         if hashlib.sha256(data).hexdigest()!=row['sha256']:
             raise ValueError('Stored state hash mismatch')
-        if json.loads(row['metadata']).get('format')=='fdisbull-qemu-native-1':
+        metadata=json.loads(row['metadata'])
+        if metadata.get('format')=='scummvm-agi-native-slot-v1':
+            return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
+                    'metadata':metadata,'exact_vm_checkpoint':False}
+        if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -163,6 +184,8 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
     def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None,
                          backend=None,kernel=None,initramfs=None,boot_timeout_ms=240000,window=False):
         info = self.debug_state_info(artifact)
+        if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
+            raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):
@@ -255,10 +278,11 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
 
 class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+    native_hooks_available = True
     @property
     def script_operations(self):
-        from .debug_script import OPERATIONS
-        return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
+        from .debug_script import OPERATIONS, ENGINE_OPERATIONS
+        return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}-set(ENGINE_OPERATIONS)
 
     """One explicitly owned emulator; closing the project also closes sessions."""
     def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None,
@@ -295,7 +319,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
                          'runtime_profile':'real-normal-com-v1' if project.meta['format']=='COM' else 'real-normal-v1','game_dir':str(self.game_dir),'target':target,
                          'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment'],
-                         'window_requested':window}
+                         'window_requested':window,'native_hooks_available':self.native_hooks_available}
         try:
             self._prepare_launch_target(target, source_data)
             self.rpc = self._open_rpc(executable,self.game_dir)
@@ -407,7 +431,8 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         from .debug_semantics import contract
         result = self.call('session.status')
         return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata,
-                'semantics':contract(self.metadata.get('backend','dosbox'))}
+                'semantics':contract(self.metadata.get('backend','dosbox')),
+                'native_hooks_available':self.native_hooks_available}
 
     def _timing(self, enabled=None):
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):
@@ -901,6 +926,64 @@ class DebugWorkspace:
     """Live session ownership for the existing foreground JSON-lines server."""
     def __init__(self):
         self.sessions = {}
+        self.async_runs = {}
+
+    def _async_result(self, run, operation, wait_ms=0):
+        bounded(wait_ms,'wait_ms',0,1000)
+        job=self.async_runs.get(operation)
+        if job is None or job['run']!=run:raise ValueError('Unknown asynchronous run for this session')
+        complete=job['done'].wait(wait_ms/1000)
+        if complete:job['collected']=True
+        return {'run':run,'operation':operation,'complete':complete,
+                **({'result':job.get('result'),'error':job.get('error')} if complete else {'state':'running'})}
+
+    def _start_async(self, session, params):
+        import inspect
+        import threading
+        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob'):
+            raise ValueError('Asynchronous foreground runs currently require a ScummVM engine backend')
+        if any(j['run']==session.run_id and not j['done'].is_set() for j in self.async_runs.values()):
+            raise ValueError('This session already has an asynchronous run')
+        if len(self.async_runs)>=64:
+            retired=next((key for key,value in self.async_runs.items()
+                          if value['done'].is_set() and value.get('collected')),None)
+            if retired is None:raise ValueError('Collect completed asynchronous runs before starting another operation')
+            del self.async_runs[retired]
+        inspect.signature(session.run).bind(**params)
+        operation=uuid.uuid4().hex
+        job={'run':session.run_id,'done':threading.Event()}
+        self.async_runs[operation]=job
+        def execute():
+            try:
+                job['result']=session.run(**params)
+                session._event('async-run-complete',{'operation':operation,'result':job['result']})
+            except Exception as error:
+                job['error']={'type':type(error).__name__,'message':str(error)}
+                try:session._event('async-run-failed',{'operation':operation,'error':job['error']})
+                except Exception as event_error:job['error']['receipt_error']=str(event_error)
+            finally:job['done'].set()
+        job['thread']=threading.Thread(target=execute,name='fdisbull-scummvm-run',daemon=True)
+        try:job['thread'].start()
+        except BaseException:
+            del self.async_runs[operation]
+            raise
+        # Wait only for dispatch, not the bounded native run. This lets the
+        # foreground server accept a subsequent pause request immediately.
+        deadline=time.monotonic()+1
+        with session._run_condition:
+            while not session._run_sent and not job['done'].is_set():
+                remaining=deadline-time.monotonic()
+                if remaining<=0:break
+                session._run_condition.wait(remaining)
+        return self._async_result(session.run_id,operation)
+
+    def _join_async(self, run):
+        for operation,job in list(self.async_runs.items()):
+            if job['run']==run:
+                job['thread'].join(timeout=5)
+                if job['thread'].is_alive():
+                    raise DebuggerError('Engine closed but its asynchronous operation has not finished')
+                del self.async_runs[operation]
 
     def invoke(self, method, project, params):
         from .project import Project
@@ -917,7 +1000,21 @@ class DebugWorkspace:
         session = self.sessions.get(run)
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
+        if method=='debug-run-result':
+            return self._async_result(run,**params)
+        pending=any(j['run']==run and not j['done'].is_set() for j in self.async_runs.values())
+        if pending and method not in ('debug-status','debug-pause','debug-stop'):
+            raise ValueError('Pause or collect the outstanding asynchronous run before another operation')
+        if method=='debug-run-async':
+            return self._start_async(session,params)
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
+                   'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
+                   'debug-hotspot-events':'hotspot_events',
+                   'debug-step':'step','debug-watchpoint':'watchpoint','debug-delete-watchpoint':'delete_watchpoint',
+                   'debug-resource':'resource_info',
+                   'debug-read-resource':'resource','debug-patch-resource':'patch_resource','debug-engine-cycle':'run_until_cycle',
+                   'debug-restore-resource':'restore_resource',
                    'debug-keyboard-press':'keyboard_press','debug-keyboard-type':'keyboard_type','debug-keyboard-state':'keyboard_state',
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-screenshot-hooks':'screenshot_hooks',
@@ -941,6 +1038,7 @@ class DebugWorkspace:
             if params:
                 raise ValueError('Unexpected stop options')
             session.close()
+            self._join_async(run)
             session.project.__exit__()
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
@@ -953,6 +1051,7 @@ class DebugWorkspace:
         for session in self.sessions.values():
             try:
                 session.close()
+                self._join_async(session.run_id)
             finally:
                 session.project.__exit__()
         self.sessions.clear()

@@ -1,0 +1,141 @@
+{
+  "component": "experimental ScummVM Gob Lost in Time headless sidecar",
+  "upstream_repository": "https://github.com/scummvm/scummvm",
+  "upstream_version": "v2026.4.0",
+  "upstream_commit": "7d2709da5136866589f7602f5f5a7b17de03420e",
+  "upstream_license": "GPL-3.0-or-later; see ScummVM COPYING and file notices; selected Gob files additionally dual-licensed LGPL-2.1",
+  "patch_file": "gob-headless-bridge.patch",
+  "patch_sha256": "32d24167f9307aa1d48121fa6eec82fd5704125fdf9c3ff1cb94865ab0927f0f",
+  "build_recipe": "gob-build-headless.sh",
+  "build_recipe_sha256": "6e98929557ef7bba2e18dfd715221b3a0141ff9eb47ae281aa985c5e8e71f44e",
+  "tested_binary_sha256": "b350172eec8e797cfe5c9ffec05c19b06cd84470210a83a0e443871bc43ccd98",
+  "tested_platform": "macOS arm64, clang 21.0.0, null backend, Gob engine only",
+  "tested_date": "2026-11-01",
+  "profile": "gob-inter-v3",
+  "profile_game": "Lost in Time",
+  "protocol": "fdisbull-scummvm-agent",
+  "protocol_version": 1,
+  "patch_replay": {
+    "apply_check": true,
+    "all_touched_files_retrieved_from_clean_declared_pin": true,
+    "patched_files_equal_built_source": true,
+    "second_full_build": false
+  },
+  "qualification": {
+    "native_build": true,
+    "engine_list_gob_only": true,
+    "exact_detected_variant": {
+      "game_id": "lit",
+      "extra": "v1.10",
+      "language": "us",
+      "platform": "pc",
+      "recognized_detection": true
+    },
+    "wrong_language_fallback": "en is generic English; safely reported as unrecognized and wrapper refuses it",
+    "current_before_opcode_break_stops_zero_completed": true,
+    "step_exactly_one_completed_dispatch": true,
+    "nested_caller_completion_distinguished": true,
+    "after_opcode_resume_hits_first_future_loop": true,
+    "range_watch_overlap": {
+      "watched_offset": 233,
+      "watched_length": 1,
+      "observed_read_offset": 232,
+      "observed_read_length": 4
+    },
+    "owner_eof_exit_zero": true,
+    "owner_eof_reap_seconds": 0.06971558401710354,
+    "frame_export_and_database_reopen": true,
+    "gameplay_scene_comparison": "separate coordinator evidence; not implied by these debugger checks",
+    "previous_build8_adapter_tests": {
+      "passed": 51,
+      "skipped": 7,
+      "native_gob_cases_active": 2,
+      "limit": "Did not cover repeated populated retained event reads; superseded by live invalid-free discovery and build9 repair"
+    },
+    "final_build9_adapter_suite": {
+      "earlier_focused": {
+        "passed": 102,
+        "skipped": 1
+      },
+      "post_LostTime_scope_gate": {
+        "passed": 42,
+        "skipped": 1
+      },
+      "post_review_candidate_real_DOS_Gob_AGI_gate": {
+        "passed": 100,
+        "skipped": 0
+      },
+      "expanded_queued_popup_real_DOS_Gob_gate": {
+        "passed": 18,
+        "skipped": 0
+      },
+      "final_source_whole_macos": {
+        "passed": 2702,
+        "skipped": 127,
+        "failed": 5,
+        "errors": 23,
+        "all_failure_and_error_nodes_reproduced_on_unchanged_029": true
+      }
+    },
+    "retained_event_ownership_regression": {
+      "initial_trace_repeated_read_events": 3,
+      "stale_breakpoint_removed_after_script_transition": {
+        "stored_script": "intro.tot",
+        "stored_generation": 1,
+        "current_script": "EMAM1017.TOT",
+        "current_generation": 4,
+        "removed": true,
+        "stale_add_refused": true
+      },
+      "populated_hotspot_repeated_reads": 3,
+      "first_hotspot_events": 112,
+      "run_after_populated_event_reads": true,
+      "hotspot_eviction_repeated_read_events": 256,
+      "trace_eviction_repeated_read_events": 2048,
+      "status": "passed",
+      "exit": 0,
+      "elapsed_seconds": 5.463122499990277
+    },
+    "stale_breakpoint_removal_after_script_transition": true
+  },
+  "source_identity": {
+    "script_scope": "loaded code prefix, including 128-byte TOT header, through native scriptEnd",
+    "source_scope": "actual successful DataIO archive/loose stream lookup, raw member FNV and decompressed loaded-script FNV",
+    "lookup_precedence": "last opened archive first, then loose file; embedded video fallback remains unknown",
+    "generation": "process-local monotonically increasing successful Script loads and native writeByte modifications"
+  },
+  "execution": {
+    "safe_points": [
+      "before raw opcode encoding read",
+      "after correlated dispatch returns",
+      "backend event polls and delays during waits/media/input"
+    ],
+    "instruction_unit": "completed dispatches including nested func/draw/gob; pending caller depth retained",
+    "trace_capacity_events": 2048,
+    "trace_span_scope": "raw opcode encoding only; operand extent and branch semantics remain uninterpreted",
+    "breakpoint_resume": "skip current boundary only when resuming from a breakpoint stop; after-opcode resume never skips the next loop hit",
+    "breakpoint_removal": "Stored breakpoint identity may be removed after script unload or generation transition; breakpoint creation remains strict against currently loaded identity and source bytes"
+  },
+  "watch_coverage": "scalar/string/copy variable accessors with byte-range alias overlap; excludes direct pointer dereferences, direct stream reads, and arbitrary arena replacement",
+  "unsupported": [
+    "arbitrary native Gob save/load checkpoints",
+    "script resource patch/restore",
+    "AGI room/flag/object state",
+    "AGI cycles"
+  ],
+  "original_inputs": "private Lost in Time resources, read-only; no original files edited",
+  "preserved_components": [
+    "prior ScummVM 2.8.1 AGI source and executable",
+    "stock application managed separately by coordinator"
+  ],
+  "distribution_scope": "source patch and build recipe only; no commit, push, release or system sidecar installation",
+  "license_file": "COPYING",
+  "license_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+  "known_limits": [
+    "A host deadline is serviced at interpreter and backend safe points; arbitrary blocking external library calls are outside the hook coverage",
+    "Raw trace span covers opcode encoding only; complete operand extent is not decoded",
+    "Watch coverage is limited to instrumented scalar/string/copy accessors, not all pointer-based I/O",
+    "No native Gob checkpoint or script patch operation is advertised"
+  ],
+  "retained_json_ownership": "Capped trace and hotspot event rings retain shared-owned JSONValue trees; each response deep-copies JSONValue contents; ring eviction and clear release owned trees"
+}

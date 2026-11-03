@@ -42,7 +42,26 @@ def encoded(value):
 
 
 def video_signature(metadata):
-    return {k:metadata[k] for k in ('width','height','source_bpp','double_width','double_height')}
+    result={k:metadata[k] for k in ('width','height','source_bpp','double_width','double_height')}
+    if metadata.get('backend') in ('scummvm-agi','scummvm-gob'):
+        digest=metadata.get('resource_manifest_sha256')
+        layers=metadata.get('resource_layers_sha256')
+        if not isinstance(digest,str) or not re.fullmatch(r'[0-9a-f]{64}',digest):
+            raise ValueError('ScummVM scene requires a resource manifest identity')
+        if not isinstance(layers,str) or not re.fullmatch(r'[0-9a-f]{64}',layers):
+            raise ValueError('ScummVM scene requires a resource layer identity')
+        result.update(backend=metadata['backend'],resource_manifest_sha256=digest,resource_layers_sha256=layers)
+        if metadata['backend']=='scummvm-gob':
+            for key in ('script_loaded_sha256','script_decompressed_sha256','scummvm_sha256'):
+                value=metadata.get(key)
+                if not isinstance(value,str) or not re.fullmatch(r'[0-9a-f]{64}',value):
+                    raise ValueError('Gob scene requires loaded script and runtime identities')
+                result[key]=value
+            script=metadata.get('script')
+            if not isinstance(script,str) or not script:
+                raise ValueError('Gob scene requires a loaded script name')
+            result['script']=script.casefold()
+    return result
 
 
 def name(value):
@@ -407,7 +426,7 @@ class SceneHandle:
                     status='unavailable',complete=False,availability={},evidence=[],conflicts=[],handlers=[],run=d.run_id)
         reads=ObservationReads(d)
         try:
-            if d.call('session.status')['state']!='stopped':raise ValueError('Scene checks require a paused guest')
+            if d.status()['state']!='stopped':raise ValueError('Scene checks require a paused guest')
             specs=list(_predicates(doc))+[s['definition']['match'] for s in others]+([extra] if extra else [])
             coordinates=sorted(set().union(*(points(v) for v in specs)))
             if len(coordinates)>4096:raise ValueError('Combined scene checks exceed 4096 points')
@@ -524,6 +543,13 @@ class SceneHandle:
         if result['status']!='matched':raise SceneError(result)
         return result
 
+    def _advance(self, *, guest_ms, timeout_ms):
+        hooks=getattr(self.session,'native_hooks_available',True)
+        if type(hooks) is not bool:
+            raise ValueError('Session must declare Boolean native hook support')
+        return self.session.run(guest_ms=guest_ms,timeout_ms=timeout_ms,
+                                fast_forward=True,stop_on_hook=hooks)
+
     def _wait(self, object, predicate, *, guest_ms, timeout_ms, slice_ms):
         integer(guest_ms,1,120000);integer(timeout_ms,1,60000);integer(slice_ms,1,1000)
         started=time.monotonic();elapsed=0;polls=[]
@@ -537,7 +563,7 @@ class SceneHandle:
             if result['status'] in ('ambiguous','unavailable','blocked') or elapsed>=guest_ms or remaining<=0 or len(polls)>=1000:
                 result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            stop=self.session.run(guest_ms=min(slice_ms,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
+            stop=self._advance(guest_ms=min(slice_ms,guest_ms-elapsed),timeout_ms=max(1,remaining))
             elapsed+=stop.get('guest_elapsed_ms',0)
             if stop['outcome']!='guest_time' or stop.get('hook_hits'):
                 result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
@@ -552,6 +578,14 @@ class SceneHandle:
         if spec['kind']=='click':
             return d.click(*point,button=spec.get('button','left'),hold_ms=spec.get('hold_ms',80),mode_id=frame['mode_id'],frame_id=frame['frame_id'])
         return getattr(d,'keyboard_'+spec['kind'])(**{k:v for k,v in spec.items() if k!='kind'})
+
+    def _input_failure(self, error, queued, handlers, **context):
+        failure=(error.result if isinstance(error,SceneError) else
+                 dict(status='unavailable',complete=False,run=self.session.run_id,
+                      error=str(error),error_type=type(error).__name__))
+        failed=dict(failure,scene_revision=self.revision,input=queued,handlers=handlers,
+                    outcome_observation=failure.get('observation'),**context)
+        return SceneError(self._store(failed,diagnostic=not isinstance(error,SceneError)))
 
     @reply_option
     def click(self, object, *, handle_popups=False, timeout_ms=None):
@@ -576,10 +610,18 @@ class SceneHandle:
             before=self._observe(object)
             if before['status']=='blocked' and handle_popups and len(before['handlers'])==1:
                 handler=next(h for h in self.info['definition']['handlers'] if h['name']==before['handlers'][0])
-                handlers.append(self._input(handler['action'],handler.get('point'),before['frame']))
+                checked_handler=self._store(before)
+                queued=self._input(handler['action'],handler.get('point'),before['frame'])
+                handlers.append(queued)
                 # Verify the popup's own postcondition without requiring its
                 # containing scene's main-match predicate during dismissal.
-                outcome=self._wait_outcome(handler['outcome'],baseline=before.get('baseline'),**budgets())
+                try:
+                    outcome=self._wait_outcome(handler['outcome'],baseline=before.get('baseline'),
+                                               dismissing_handler=handler['name'],**budgets())
+                except Exception as error:
+                    raise self._input_failure(error,queued,handlers,
+                        handler_name=handler['name'],action_object=obj['id'],action_name=obj['name'],
+                        before_observation=checked_handler['observation']) from error
                 elapsed+=outcome.get('guest_elapsed_ms',0)
                 handlers.append(outcome)
                 continue
@@ -600,35 +642,38 @@ class SceneHandle:
         # match the containing scene. Observe only that explicit predicate.
         try:
             outcome=self._wait_outcome(obj['outcome'],baseline=before.get('baseline'),**budgets())
-        except SceneError as error:
+        except Exception as error:
             # Preserve the single queued input even when its destination wait
             # fails. A later observation must never have to replay the action
             # to discover whether an input was submitted.
-            failed=dict(error.result,scene_revision=self.revision,action_object=obj['id'],
-                        action_name=obj['name'],before_observation=checked['observation'],
-                        input=queued,handlers=handlers,
-                        outcome_observation=error.result.get('observation'))
-            raise SceneError(self._store(failed)) from error
+            raise self._input_failure(error,queued,handlers,action_object=obj['id'],
+                        action_name=obj['name'],before_observation=checked['observation']) from error
         outcome['guest_elapsed_ms']+=elapsed
         outcome.update(action_object=obj['id'],outcome_phase=obj.get('outcome_phase','unspecified'),before_observation=checked['observation'],input=queued,handlers=handlers)
         return self._store(outcome)
 
-    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):
+    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None, dismissing_handler=None):
         started=time.monotonic();elapsed=0;polls=[]
         while True:
             result=self._observe(extra=predicate,baseline=baseline)
             # A destination match is independent of the old scene name; keep
             # conflicts, absent captures and blocking modals as explicit failures.
-            ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable')
+            ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable','blocked')
+            # The handler being dismissed remains visible until its queued
+            # input executes. It must disappear before success, but must not
+            # prevent that execution. A different blocking modal still stops.
+            own_handler=(result['status']=='blocked' and dismissing_handler is not None
+                         and result.get('handlers')==[dismissing_handler])
             polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),matched=ok))
             remaining=timeout_ms-int((time.monotonic()-started)*1000)
             if ok and remaining>0:
                 result.update(status='matched',complete=True,polls=polls,guest_elapsed_ms=elapsed)
                 return result
-            if remaining<=0 or elapsed>=guest_ms or result['status'] in ('ambiguous','unavailable') or len(polls)>=1000:
-                result.update(status='timeout' if result['status'] in ('mismatch','matched','blocked') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
+            if (remaining<=0 or elapsed>=guest_ms or result['status'] in ('ambiguous','unavailable')
+                    or result['status']=='blocked' and not own_handler or len(polls)>=1000):
+                result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            stop=self.session.run(guest_ms=min(100,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
+            stop=self._advance(guest_ms=min(100,guest_ms-elapsed),timeout_ms=max(1,remaining))
             elapsed+=stop.get('guest_elapsed_ms',0)
             if stop['outcome']!='guest_time' or stop.get('hook_hits'):
                 result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)

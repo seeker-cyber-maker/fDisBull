@@ -1,0 +1,1176 @@
+diff --git a/backends/platform/null/fdisbull_bridge.cpp b/backends/platform/null/fdisbull_bridge.cpp
+new file mode 100644
+index 00000000..33de9b61
+--- /dev/null
++++ b/backends/platform/null/fdisbull_bridge.cpp
+@@ -0,0 +1,620 @@
++/* Experimental fDisBull headless Gob bridge. GPL-3.0-or-later, as ScummVM. */
++#define FORBIDDEN_SYMBOL_ALLOW_ALL
++#include "backends/platform/null/fdisbull_bridge.h"
++#include "common/formats/json.h"
++#include "engines/gob/gob.h"
++#include "engines/gob/game.h"
++#include "engines/gob/inter.h"
++#include "engines/gob/script.h"
++#include "engines/gob/variables.h"
++#include "engines/gob/hotspots.h"
++#include "engines/gob/dataio.h"
++#include "engines/gob/video.h"
++#include "engines/gob/draw.h"
++#include "engines/gob/global.h"
++#include "common/language.h"
++#include "common/platform.h"
++#include <algorithm>
++#include <chrono>
++#include <cerrno>
++#include <cstdlib>
++#include <cstring>
++#include <poll.h>
++#include <memory>
++#include <set>
++#include <signal.h>
++#include <string>
++#include <utility>
++#include <vector>
++#include <unistd.h>
++
++FDisBullGraphicsManager::FDisBullGraphicsManager() : _width(0), _height(0), _revision(0) {
++	memset(_palette, 0, sizeof(_palette));
++	memset(_committedPalette, 0, sizeof(_committedPalette));
++}
++
++void FDisBullGraphicsManager::initSize(uint width, uint height, const Graphics::PixelFormat *format) {
++	NullGraphicsManager::initSize(width, height, format);
++	_width = width;
++	_height = height;
++	_working.resize(size_t(width) * height);
++	memset(_working.data(), 0, _working.size());
++	_committed = _working;
++	++_revision;
++}
++
++void FDisBullGraphicsManager::setPalette(const byte *colors, uint start, uint num) {
++	if (!colors || start >= 256 || num > 256 - start) return;
++	memcpy(_palette + 3 * start, colors, 3 * num);
++}
++
++void FDisBullGraphicsManager::grabPalette(byte *colors, uint start, uint num) const {
++	if (!colors || start >= 256 || num > 256 - start) return;
++	memcpy(colors, _palette + 3 * start, 3 * num);
++}
++
++void FDisBullGraphicsManager::copyRectToScreen(const void *buf, int pitch, int x, int y, int w, int h) {
++	if (!buf || pitch <= 0 || w <= 0 || h <= 0 || _working.empty()) return;
++	const byte *src = static_cast<const byte *>(buf);
++	for (int row = 0; row < h; ++row) {
++		const int dstY = y + row;
++		if (dstY < 0 || dstY >= int(_height)) continue;
++		for (int col = 0; col < w; ++col) {
++			const int dstX = x + col;
++			if (dstX >= 0 && dstX < int(_width))
++				_working[size_t(dstY) * _width + dstX] = src[size_t(row) * pitch + col];
++		}
++	}
++}
++
++void FDisBullGraphicsManager::fillScreen(uint32 color) {
++	std::fill(_working.begin(), _working.end(), byte(color));
++}
++
++void FDisBullGraphicsManager::fillScreen(const Common::Rect &rect, uint32 color) {
++	for (int y = std::max(0, int(rect.top)); y < std::min(int(_height), int(rect.bottom)); ++y)
++		for (int x = std::max(0, int(rect.left)); x < std::min(int(_width), int(rect.right)); ++x)
++			_working[size_t(y) * _width + x] = byte(color);
++}
++
++void FDisBullGraphicsManager::warpMouse(int x, int y) { FDisBullBridge::warpMouse(x, y); }
++
++void FDisBullGraphicsManager::updateScreen() {
++	_committed = _working;
++	memcpy(_committedPalette, _palette, sizeof(_palette));
++	++_revision;
++}
++
++void FDisBullGraphicsManager::rgb(Common::Array<byte> &out) const {
++	out.resize(_committed.size() * 3);
++	for (size_t i = 0; i < _committed.size(); ++i) {
++		const size_t p = size_t(_committed[i]) * 3;
++		out[3 * i] = _committedPalette[p];
++		out[3 * i + 1] = _committedPalette[p + 1];
++		out[3 * i + 2] = _committedPalette[p + 2];
++	}
++}
++
++bool FDisBullGraphicsManager::pixel(int x, int y, byte &r, byte &g, byte &b) const {
++	if (x < 0 || y < 0 || x >= int(_width) || y >= int(_height) || _committed.empty()) return false;
++	const size_t p = size_t(_committed[size_t(y) * _width + x]) * 3;
++	r = _committedPalette[p]; g = _committedPalette[p + 1]; b = _committedPalette[p + 2];
++	return true;
++}
++
++namespace {
++using Common::JSONValue;
++using Common::JSONObject;
++using Common::JSONArray;
++using Clock = std::chrono::steady_clock;
++
++static JSONValue *num(long long value) { return new JSONValue(value); }
++static JSONValue *str(const char *value) { return new JSONValue(value ? value : ""); }
++static JSONValue *boolean(bool value) { return new JSONValue(value); }
++static long long integer(const JSONValue *parent, const char *key, long long fallback = -1) {
++	if (!parent) return fallback;
++	JSONValue *child = const_cast<JSONValue *>(parent)->child(key);
++	return child && child->isIntegerNumber() ? child->asIntegerNumber() : fallback;
++}
++static std::string stringValue(const JSONValue *parent, const char *key) {
++	if (!parent) return "";
++	JSONValue *child = const_cast<JSONValue *>(parent)->child(key);
++	return child && child->isString() ? child->asString().c_str() : "";
++}
++static std::string base64(const byte *data, size_t size) {
++	static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
++	std::string output;
++	output.reserve((size + 2) / 3 * 4);
++	for (size_t i = 0; i < size; i += 3) {
++		const uint a = data[i], b = i + 1 < size ? data[i + 1] : 0, c = i + 2 < size ? data[i + 2] : 0;
++		output += alphabet[a >> 2]; output += alphabet[((a & 3) << 4) | (b >> 4)];
++		output += i + 1 < size ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
++		output += i + 2 < size ? alphabet[c & 63] : '=';
++	}
++	return output;
++}
++static std::string hex(const byte *data, size_t size) {
++	static const char digits[] = "0123456789abcdef";
++	std::string output; output.reserve(size * 2);
++	for (size_t i = 0; i < size; ++i) { output += digits[data[i] >> 4]; output += digits[data[i] & 15]; }
++	return output;
++}
++static bool unhex(const std::string &input, std::vector<byte> &output) {
++	if (input.empty() || input.size() % 2 || input.size() > 8192) return false;
++	output.clear(); output.reserve(input.size() / 2);
++	for (size_t i = 0; i < input.size(); i += 2) {
++		const size_t a = std::string("0123456789abcdef").find(input[i]);
++		const size_t b = std::string("0123456789abcdef").find(input[i + 1]);
++		if (a == std::string::npos || b == std::string::npos) return false;
++		output.push_back(byte((a << 4) | b));
++	}
++	return true;
++}
++static std::string fnv1a64(const byte *data, size_t size) {
++	uint64 hash = 14695981039346656037ULL;
++	for (size_t i = 0; i < size; ++i) { hash ^= data[i]; hash *= 1099511628211ULL; }
++	byte bytes[8]; for (int i = 7; i >= 0; --i) { bytes[i] = byte(hash & 255); hash >>= 8; }
++	return hex(bytes, 8);
++}
++
++
++struct ScheduledEvent { Common::Event event; uint64 dueMs; int lease; };
++struct KeyLease { int id; std::string key; Common::KeyCode code; uint16 ascii; bool delivered; bool releaseScheduled; };
++struct Breakpoint { std::string script, family; uint32 generation; int offset; };
++struct Watch { int offset, length; std::string access; };
++struct Dispatch { uint64 id; std::string script, family; uint32 generation; int offset, opcode, depth, encodingWidth; std::string rawHex; };
++
++class Bridge {
++public:
++ Bridge() : _fd(-1), _graphics(nullptr), _engine(nullptr), _guestMs(0), _executed(0),
++  _queueTailMs(0), _nextLeaseId(1), _running(false), _servicing(false), _backendYield(false),
++  _pauseRequested(false), _watchHit(false), _runId(-1), _runStart(0), _maxInstructions(0),
++  _virtualDeadline(0), _hasVirtualDeadline(false), _hasHostDeadline(false), _offset(-1),
++  _opcode(-1), _skipBreak(false), _traceEnabled(false), _traceTruncated(false), _nextDispatch(1) {
++  const char *value = getenv("FDISBULL_SCUMMVM_FD");
++  if (value && *value) { char *end = nullptr; long fd = strtol(value, &end, 10); if (end && !*end && fd >= 3 && fd < 1048576) _fd = int(fd); }
++  if (_fd >= 0) signal(SIGPIPE, SIG_IGN);
++ }
++ bool enabled() const { return _fd >= 0; }
++ void attach(FDisBullGraphicsManager *graphics) { _graphics = graphics; }
++ uint32 guestMillis() const { return uint32(_guestMs); }
++ void delay(uint32 ms) { _guestMs += ms; }
++ bool pollEvent(Common::Event &event) {
++  if (_events.empty() || _events.front().dueMs > _guestMs) return false;
++  const ScheduledEvent scheduled = _events.front(); _events.erase(_events.begin()); event = scheduled.event;
++  if (event.type == Common::EVENT_KEYDOWN) _heldKeycodes.insert(int(event.kbd.keycode));
++  if (event.type == Common::EVENT_KEYUP) _heldKeycodes.erase(int(event.kbd.keycode));
++  if (scheduled.lease) for (auto it = _leases.begin(); it != _leases.end(); ++it) if (it->id == scheduled.lease) {
++   if (event.type == Common::EVENT_KEYDOWN) it->delivered = true;
++   if (event.type == Common::EVENT_KEYUP) _leases.erase(it);
++   break;
++  }
++  ++_deliveredEvents;
++  return true;
++ }
++ void warp(int x, int y) {
++  Common::Event e; e.type = Common::EVENT_MOUSEMOVE; e.mouse = Common::Point(x, y);
++  auto it = std::find_if(_events.begin(), _events.end(), [&](const ScheduledEvent &s) { return s.dueMs >= _guestMs; });
++  _events.insert(it, {e, _guestMs, 0});
++ }
++ void before(Gob::GobEngine *engine, const char *family, int offset, int opcode, int encodingWidth) {
++  if (!enabled()) return;
++  _engine = engine; _family = family; _offset = offset; _opcode = opcode;
++  _backendYield = false; _atAfter = false; safePoint();
++  Gob::Script *s = script();
++  Dispatch d = {_nextDispatch++, s ? s->fdisbullName().c_str() : "", family,
++    s ? s->fdisbullGeneration() : 0, offset, opcode, int(_stack.size()), encodingWidth, ""};
++  if (s && offset >= 0 && offset + encodingWidth <= s->getSize()) d.rawHex = hex(s->getData() + offset, encodingWidth);
++  _stack.push_back(d); trace(d, "start");
++ }
++ void after() {
++  if (!enabled() || _stack.empty()) return;
++  Dispatch d = _stack.back(); _stack.pop_back(); ++_executed; trace(d, "complete");
++  _family = d.family; _offset = d.offset; _opcode = d.opcode; _backendYield = false; _atAfter = true; safePoint();
++ }
++ void service() {
++  if (!_engine || !_running || _servicing) return;
++  _servicing = true; _backendYield = true; _atAfter = false; safePoint(); _servicing = false;
++ }
++ void access(const Gob::Variables *arena, int offset, int length, const char *mode) {
++  if (!_running || !_engine || !_engine->_inter || arena != _engine->_inter->_variables || length < 1) return;
++  for (const Watch &w : _watches) if (offset < w.offset + w.length && w.offset < offset + length && (w.access == "rw" || w.access == mode)) {
++   _watchHit = true; _watchOffset = offset; _watchLength = length; _watchAccess = mode; break;
++  }
++ }
++ void hotspot(Gob::GobEngine *engine, const char *event, int id, int index, int target) {
++  if (!enabled()) return;
++  JSONObject e; e["event"] = str(event); e["id"] = num(id); e["index"] = num(index); e["target"] = num(target);
++  e["guest_ms"] = num(_guestMs); e["frame_revision"] = num(_graphics ? _graphics->revision() : 0);
++  e["script"] = new JSONValue(scriptMetadata());
++  if (_hotspotEvents.size() >= 256) { _hotspotEvents.erase(_hotspotEvents.begin()); _hotspotTruncated = true; }
++  _hotspotEvents.push_back(std::make_shared<JSONValue>(e)); ++_hotspotDispatches;
++ }
++private:
++ int _fd; FDisBullGraphicsManager *_graphics; Gob::GobEngine *_engine;
++ std::string _rx; uint64 _guestMs, _executed, _queueTailMs; int _nextLeaseId;
++ std::vector<ScheduledEvent> _events; std::set<int> _heldKeycodes; std::vector<KeyLease> _leases;
++ bool _running, _servicing, _backendYield, _pauseRequested, _watchHit;
++ bool _atAfter = false;
++ bool _stoppedOnBreakpoint = false;
++ long long _runId; uint64 _runStart, _maxInstructions, _virtualDeadline;
++ bool _hasVirtualDeadline, _hasHostDeadline; Clock::time_point _hostDeadline;
++ int _offset, _opcode; std::string _family; bool _skipBreak;
++ std::string _skipScript, _skipFamily; uint32 _skipGeneration = 0; int _skipOffset = -1;
++ std::vector<Breakpoint> _breakpoints; std::vector<Watch> _watches;
++ int _watchOffset = -1, _watchLength = 0; std::string _watchAccess;
++ bool _traceEnabled, _traceTruncated; uint64 _nextDispatch;
++ std::vector<Dispatch> _stack; // Each retained tree has one shared owner. Responses use JSONValue's deep-copy
++ // constructor; copying JSONObject would transfer shared raw pointers to send().
++ std::vector<std::shared_ptr<JSONValue>> _trace;
++ std::vector<std::shared_ptr<JSONValue>> _hotspotEvents; bool _hotspotTruncated = false;
++ uint64 _hotspotDispatches = 0, _deliveredEvents = 0;
++ Gob::Script *script() const { return _engine && _engine->_game ? _engine->_game->_script : nullptr; }
++ Gob::Variables *variables() const { return _engine && _engine->_inter ? _engine->_inter->_variables : nullptr; }
++ JSONObject scriptMetadata() {
++  JSONObject b; Gob::Script *s = script();
++  if (!s || !s->isLoaded()) { b["loaded"] = boolean(false); return b; }
++  b["loaded"] = boolean(true); b["name"] = str(s->fdisbullName().c_str()); b["generation"] = num(s->fdisbullGeneration());
++  b["size"] = num(s->getSize()); b["fnv1a64"] = str(fnv1a64(s->getData(), s->getSize()).c_str());
++  b["offset_origin"] = str("tot_file_start"); b["raw_header_included"] = boolean(true);
++  b["scope"] = str("loaded_script_memory");
++  const Gob::FDisBullSourceInfo &source = s->fdisbullSource();
++  JSONObject src; src["kind"] = str(source.kind.c_str()); src["container"] = str(source.container.c_str());
++  src["member"] = str(source.member.c_str()); src["offset"] = num(source.offset); src["size"] = num(source.size);
++  src["compression"] = num(source.compression); src["raw_fnv1a64"] = str(source.rawFNV.c_str());
++  src["lookup_precedence"] = str("last_opened_archive_first_then_loose");
++  b["source"] = new JSONValue(src); return b;
++ }
++ void trace(const Dispatch &d, const char *phase) {
++  if (!_traceEnabled) return;
++  JSONObject e; e["event"] = str(phase); e["phase"] = str(phase); e["event_id"] = num(d.id); e["dispatch_id"] = num(d.id); e["script"] = str(d.script.c_str());
++  e["generation"] = num(d.generation); e["family"] = str(d.family.c_str()); e["offset"] = num(d.offset);
++  e["raw_hex"] = str(d.rawHex.c_str()); e["span_start"] = num(d.offset); e["span_length"] = num(d.encodingWidth); e["span_scope"] = str("opcode_encoding_only"); e["opcode"] = num(d.opcode); e["depth"] = num(d.depth); e["encoding_width"] = num(d.encodingWidth);
++  e["guest_ms"] = num(_guestMs);
++  Gob::Script *s = script(); e["next_offset"] = num(s ? s->pos() : -1);
++  e["next_generation"] = num(s ? s->fdisbullGeneration() : 0);
++  if (_trace.size() >= 2048) { _trace.erase(_trace.begin()); _traceTruncated = true; }
++  _trace.push_back(std::make_shared<JSONValue>(e));
++ }
++	void send(const JSONObject &obj) {
++		JSONValue value(obj);
++		Common::String s = value.stringify();
++		std::string line = std::string(s.c_str()) + "\n";
++		const char *ptr = line.data(); size_t remaining = line.size();
++		while (remaining) {
++			ssize_t n = write(_fd, ptr, remaining);
++			if (n < 0 && errno == EINTR) continue;
++			if (n <= 0) std::exit(3); // Do not continue game execution after losing the owner.
++			ptr += n; remaining -= size_t(n);
++		}
++	}
++	void ok(long long id, JSONObject &body) { body["id"] = num(id); body["ok"] = boolean(true); send(body); }
++	void error(long long id, const char *code, const char *message) {
++		JSONObject body; body["id"] = num(id); body["ok"] = boolean(false);
++		body["error"] = str(code); body["message"] = str(message); send(body);
++	}
++	bool receiveLine(bool block, std::string &line) {
++		for (;;) {
++			size_t newline = _rx.find('\n');
++			if (newline != std::string::npos) {
++				line = _rx.substr(0, newline); _rx.erase(0, newline + 1); return true;
++			}
++			pollfd pfd = {_fd, POLLIN, 0};
++			int ready = poll(&pfd, 1, block ? -1 : 0);
++			if (ready < 0 && errno == EINTR) continue;
++			if (ready < 0) std::exit(3);
++			if (ready == 0) return false;
++			char buf[4096]; ssize_t n = read(_fd, buf, sizeof(buf));
++			if (n < 0 && errno == EINTR) continue;
++			if (n < 0) std::exit(3);
++			if (n == 0) std::exit(0); // The controlling agent closed the socket.
++			_rx.append(buf, size_t(n));
++			if (_rx.size() > 1048576) std::exit(3);
++		}
++	}
++
++ bool breakpointHere() {
++  Gob::Script *s = script(); if (_backendYield || _atAfter || !s || !s->isLoaded()) return false;
++  if (_skipBreak && _skipScript == s->fdisbullName().c_str() && _skipGeneration == s->fdisbullGeneration() && _skipOffset == _offset && _skipFamily == _family) { _skipBreak = false; return false; }
++  for (const auto &bp : _breakpoints) if (bp.script == s->fdisbullName().c_str() && bp.generation == s->fdisbullGeneration() && bp.offset == _offset && (bp.family.empty() || bp.family == _family)) return true;
++  return false;
++ }
++ JSONObject location() {
++  JSONObject b; b["script"] = new JSONValue(scriptMetadata()); b["offset"] = num(_offset); b["opcode"] = num(_opcode);
++  b["family"] = str(_family.c_str()); b["phase"] = str(_backendYield ? "backend_yield" : _atAfter ? "after_opcode" : "before_opcode");
++  b["at_backend_yield"] = boolean(_backendYield); b["guest_ms"] = num(_guestMs); b["instructions"] = num(_executed);
++  b["next_offset"] = num(script() ? script()->pos() : -1); b["pending_depth"] = num(_stack.size()); b["frame_revision"] = num(_graphics ? _graphics->revision() : 0);
++  return b;
++ }
++ void finishRun(const char *reason) {
++  _running = false; _stoppedOnBreakpoint = std::string(reason) == "breakpoint"; JSONObject stop = location(); stop["reason"] = str(reason);
++  stop["instructions"] = num(_executed - _runStart); stop["completed_dispatches"] = num(_executed - _runStart);
++  if (_watchHit) { JSONObject w; w["offset"] = num(_watchOffset); w["length"] = num(_watchLength); w["access"] = str(_watchAccess.c_str()); w["coverage"] = str("scalar_string_copy_accessors_only"); stop["watch"] = new JSONValue(w); }
++  JSONObject b; b["stop"] = new JSONValue(stop); ok(_runId, b); _runId = -1; _watchHit = false; _pauseRequested = false;
++ }
++ void safePoint() {
++  for (;;) {
++   std::string line; while (receiveLine(false, line)) handle(line);
++   if (_running) {
++    const char *reason = nullptr;
++    if (_pauseRequested) reason = "pause";
++    else if (_watchHit) reason = "watchpoint";
++    else if (_maxInstructions && _executed - _runStart >= _maxInstructions) reason = "budget";
++    else if (_hasVirtualDeadline && _guestMs >= _virtualDeadline) reason = "guest_budget";
++    else if (_hasHostDeadline && Clock::now() >= _hostDeadline) reason = "host_timeout";
++    else if (breakpointHere()) reason = "breakpoint";
++    if (!reason) return;
++    finishRun(reason);
++   }
++   if (receiveLine(true, line)) handle(line);
++  }
++ }
++ JSONObject displayMetadata() {
++  JSONObject d; d["width"] = num(_graphics ? _graphics->width() : 0); d["height"] = num(_graphics ? _graphics->height() : 0);
++  d["game_width"] = num(_engine ? _engine->_width : 0); d["game_height"] = num(_engine ? _engine->_height : 0);
++  d["input_space"] = str("committed_frame_pixels"); d["hotspot_space"] = str("engine_surface_pixels_relative_to_window");
++  if (_engine && _engine->_video) {
++   d["screen_delta_x"] = num(_engine->_video->_screenDeltaX); d["screen_delta_y"] = num(_engine->_video->_screenDeltaY);
++   d["scroll_offset_x"] = num(_engine->_video->_scrollOffsetX); d["scroll_offset_y"] = num(_engine->_video->_scrollOffsetY);
++   d["surface_width"] = num(_engine->_video->_surfWidth); d["surface_height"] = num(_engine->_video->_surfHeight);
++   d["frame_to_engine_mouse"] = str("x+scroll_offset_x-screen_delta_x,y+scroll_offset_y-screen_delta_y");
++  }
++  if (_engine && _engine->_draw) {
++   d["need_adjust"] = num(_engine->_draw->_needAdjust);
++   d["script_coordinate_scale"] = num((_engine->_draw->_needAdjust == 2 || _engine->_draw->_needAdjust == 10) ? 1 : 2);
++  }
++  if (_engine && _engine->_global) { d["engine_mouse_x"] = num(_engine->_global->_inter_mouseX); d["engine_mouse_y"] = num(_engine->_global->_inter_mouseY); }
++  return d;
++ }
++ JSONObject state() {
++  JSONObject b = location(); b["engine"] = str("gob"); b["display"] = new JSONValue(displayMetadata());
++  Gob::Variables *v = variables(); JSONObject arena; arena["arena"] = str("variables"); arena["size"] = num(v ? v->getSize() : 0);
++  arena["endian"] = str(_engine->getEndianness() == Gob::kEndiannessLE ? "little" : "big"); arena["variable_stride"] = num(4);
++  b["variables"] = new JSONValue(arena);
++  JSONArray hs; if (_engine->_game && _engine->_game->_hotspots) _engine->_game->_hotspots->fdisbullSnapshot(hs);
++  b["hotspots"] = new JSONValue(hs); b["hotspot_dispatches"] = num(_hotspotDispatches); b["delivered_events"] = num(_deliveredEvents);
++  return b;
++ }
++	void queueKeyEvent(Common::KeyCode keycode, uint16 ascii, Common::EventType type, uint64 due, int lease = 0) {
++		Common::Event event; event.type = type; event.kbd.keycode = keycode; event.kbd.ascii = ascii;
++		_events.push_back({event, due, lease});
++	}
++	void queueKeyPair(Common::KeyCode keycode, uint16 ascii, uint32 holdMs, uint32 gapMs) {
++		const uint64 start = std::max(_guestMs, _queueTailMs);
++		queueKeyEvent(keycode, ascii, Common::EVENT_KEYDOWN, start);
++		queueKeyEvent(keycode, ascii, Common::EVENT_KEYUP, start + holdMs);
++		_queueTailMs = start + holdMs + gapMs;
++	}
++	bool keyFromName(const std::string &name, Common::KeyCode &key, uint16 &ascii) {
++		if (name == "enter") { key = Common::KEYCODE_RETURN; ascii = 13; }
++		else if (name == "tab") { key = Common::KEYCODE_TAB; ascii = 9; }
++		else if (name == "left") { key = Common::KEYCODE_LEFT; ascii = 0; }
++		else if (name == "right") { key = Common::KEYCODE_RIGHT; ascii = 0; }
++		else if (name == "up") { key = Common::KEYCODE_UP; ascii = 0; }
++		else if (name == "down") { key = Common::KEYCODE_DOWN; ascii = 0; }
++		else if (name == "escape" || name == "esc") { key = Common::KEYCODE_ESCAPE; ascii = 27; }
++		else if (name == "backspace") { key = Common::KEYCODE_BACKSPACE; ascii = 8; }
++		else if (name == "space") { key = Common::KEYCODE_SPACE; ascii = 32; }
++		else if (name == "home") { key = Common::KEYCODE_HOME; ascii = 0; }
++		else if (name == "end") { key = Common::KEYCODE_END; ascii = 0; }
++		else if (name == "insert") { key = Common::KEYCODE_INSERT; ascii = 0; }
++		else if (name == "delete") { key = Common::KEYCODE_DELETE; ascii = 127; }
++		else if (name == "pageup") { key = Common::KEYCODE_PAGEUP; ascii = 0; }
++		else if (name == "pagedown") { key = Common::KEYCODE_PAGEDOWN; ascii = 0; }
++		else if (name == "shift") { key = Common::KEYCODE_LSHIFT; ascii = 0; }
++		else if (name == "ctrl") { key = Common::KEYCODE_LCTRL; ascii = 0; }
++		else if (name == "alt") { key = Common::KEYCODE_LALT; ascii = 0; }
++		else if (name.size() >= 2 && name[0] == 'f' && name.size() <= 3) {
++			int number = 0;
++			for (size_t i = 1; i < name.size(); ++i) {
++				if (name[i] < '0' || name[i] > '9') return false;
++				number = number * 10 + (name[i] - '0');
++			}
++			if (number < 1 || number > 12) return false;
++			key = Common::KeyCode(Common::KEYCODE_F1 + number - 1); ascii = 0;
++		}
++		else if (name.size() == 1 && name[0] >= 32 && name[0] <= 126) {
++			const char c = name[0]; ascii = uint16(c);
++			key = Common::KeyCode(c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c);
++		}
++		else return false;
++		return true;
++	}
++	void inputStatus(JSONObject &body) {
++		body["pending"] = num(_events.size()); body["guest_ms"] = num(_guestMs);
++		body["queue_tail_guest_ms"] = num(std::max(_guestMs, _queueTailMs));
++		body["next_due_guest_ms"] = _events.empty() ? new JSONValue() : num(_events.front().dueMs);
++		JSONArray held, leases;
++		for (int key : _heldKeycodes) held.push_back(num(key));
++		for (const KeyLease &lease : _leases) {
++			JSONObject item; item["lease"] = num(lease.id); item["key"] = str(lease.key.c_str());
++			item["down_delivered"] = boolean(lease.delivered); item["up_scheduled"] = boolean(lease.releaseScheduled);
++			leases.push_back(new JSONValue(item));
++		}
++		body["held_keycodes"] = new JSONValue(held); body["leases"] = new JSONValue(leases);
++	}
++
++ void handle(const std::string &line) {
++  JSONValue *request = Common::JSON::parse(line.c_str());
++  if (!request || !request->isObject()) { delete request; error(-1, "bad_json", "Expected a JSON object"); return; }
++  const long long id = integer(request, "id"); const std::string op = stringValue(request, "op");
++  if (id < 0 || op.empty()) { error(id, "bad_request", "Request requires id and op"); delete request; return; }
++  if ((_running || _backendYield) && op == "memory.write") { error(id, _running ? "busy" : "backend_yield", "Mutation requires a paused opcode boundary"); delete request; return; }
++  JSONObject body;
++  if (op == "hello" && _engine->getGameType() != Gob::kGameTypeLostInTime) { error(id, "unsupported_game_profile", "This experimental Gob bridge is qualified only for Lost in Time Inter_v3");
++  } else if (op == "hello") {
++   body["engine"] = str("gob"); body["scummvm_version"] = str("2026.4.0"); body["bridge_version"] = num(1);
++   body["protocol"] = str("fdisbull-scummvm-agent"); body["protocol_version"] = num(1); body["profile"] = str("gob-inter-v3");
++   body["paused"] = boolean(!_running); body["virtual_clock"] = boolean(true);
++   JSONObject variant; variant["recognized_detection"] = boolean(_engine->fdisbullDetectedLanguage != "unknown" && _engine->fdisbullDetectedExtra != "unknown"); variant["game_id"] = str(_engine->fdisbullDetectedGame.c_str()); variant["extra"] = str(_engine->fdisbullDetectedExtra.c_str()); variant["detected_language"] = str(_engine->fdisbullDetectedLanguage.c_str()); variant["detected_platform"] = str(_engine->fdisbullDetectedPlatform.c_str()); variant["game_type"] = num(_engine->getGameType()); variant["language"] = str(Common::getLanguageCode(_engine->_language)); variant["platform"] = str(Common::getPlatformCode(_engine->getPlatform()));
++   body["variant"] = new JSONValue(variant); body["script"] = new JSONValue(scriptMetadata());
++   JSONArray caps; const char *names[] = {"state","frame","state.get","run","step","pause","break.add","break.remove","watch.add","watch.remove","memory.read","memory.write","script.read","input","input.status","input.virtual_timing","input.key_leases","frame.get","pixel.get","trace.start","trace.stop","trace.get","trace.clear","hotspots.get","hotspots.events","quit"};
++   for (const char *name : names) caps.push_back(str(name)); body["capabilities"] = new JSONValue(caps);
++   body["watch_coverage"] = str("scalar_string_copy_accessors_only; excludes pointer dereferences and direct stream reads");
++   body["instruction_unit"] = str("completed_dispatches_including_nested_families"); body["native_save_load"] = str("unsupported"); ok(id, body);
++  } else if (op == "state.get") { body["state"] = new JSONValue(state()); ok(id, body);
++  } else if (op == "run" || op == "step") {
++   long long count = op == "step" ? 1 : integer(request, "max_instructions", 0);
++   long long ms = op == "step" ? 0 : integer(request, "virtual_ms", integer(request, "max_guest_ms", 0));
++   long long host = integer(request, "max_ms", 30000);
++   if (_running) error(id, "busy", "A run is already active");
++   else if (count < 0 || ms < 0 || host < 1 || host > 300000 || (!count && !ms)) error(id, "invalid_budget", "Finite instruction or guest budget and host deadline 1..300000 ms required");
++   else {
++    _runId = id; _runStart = _executed; _maxInstructions = count; _hasVirtualDeadline = ms > 0; _virtualDeadline = _guestMs + ms;
++    _hasHostDeadline = true; _hostDeadline = Clock::now() + std::chrono::milliseconds(host);
++    Gob::Script *s = script(); _skipBreak = _stoppedOnBreakpoint && !_backendYield && !_atAfter; _skipScript = s ? s->fdisbullName().c_str() : ""; _skipGeneration = s ? s->fdisbullGeneration() : 0; _skipOffset = _offset; _skipFamily = _family;
++    _running = true; _pauseRequested = false;
++   }
++  } else if (op == "pause") { _pauseRequested = true; ok(id, body);
++  } else if (op == "memory.read" || op == "memory.write") {
++   Gob::Variables *v = variables(); const long long offset = integer(request, "offset"), length = integer(request, "length");
++   Gob::Script *currentScript = script(); const std::string writeScript = stringValue(request, "script"); const long long writeGeneration = integer(request, "generation", 0);
++   if (op == "memory.write" && ((!writeScript.empty() && (!currentScript || writeScript != currentScript->fdisbullName().c_str())) || (writeGeneration && (!currentScript || writeGeneration != currentScript->fdisbullGeneration())))) error(id, "script_identity_mismatch", "Variable write script identity changed");
++   else if (!v) error(id, "no_memory", "Variable arena not allocated");
++   else if (op == "memory.read") {
++    const long long width = integer(request, "width", 1);
++    if (offset < 0 || length < 0 || length > 4096 || offset > v->getSize() || length > v->getSize() - offset || (width != 1 && width != 2 && width != 4) || length % width) error(id, "invalid_range", "Arena byte range at most 4096 bytes and aligned length to width 1,2,4 required");
++    else { body["offset"] = num(offset); body["length"] = num(length); body["size"] = num(v->getSize()); body["arena"] = str("variables"); body["width"] = num(width); body["endian"] = str(_engine->getEndianness() == Gob::kEndiannessLE ? "little" : "big"); body["hex"] = str(hex(v->getAddressOff8(offset), length).c_str()); ok(id, body); }
++   } else {
++    const std::string expectedHex = stringValue(request, "expected_hex"), dataHex = stringValue(request, "data_hex"); std::vector<byte> expected, data;
++    if (!unhex(expectedHex, expected) || !unhex(dataHex, data) || expected.size() != data.size()) error(id, "invalid_write", "Equal nonempty hex byte strings at most 4096 bytes required");
++    else if (offset < 0 || offset > v->getSize() || data.size() > size_t(v->getSize() - offset)) error(id, "invalid_range", "Write exceeds variable arena");
++    else if (memcmp(v->getAddressOff8(offset), expected.data(), data.size())) error(id, "expected_mismatch", "Variable bytes differ from expected_hex");
++    else { memcpy(v->getAddressOff8(offset), data.data(), data.size()); body["offset"] = num(offset); body["length"] = num(data.size()); body["before_hex"] = str(expectedHex.c_str()); body["after_hex"] = str(dataHex.c_str()); ok(id, body); }
++   }
++  } else if (op == "script.read") {
++   Gob::Script *s = script(); const long long offset = integer(request, "offset"), length = integer(request, "length");
++   const std::string requested = stringValue(request, "script"); const long long generation = integer(request, "generation", 0);
++   if (!s || !s->isLoaded()) error(id, "script_not_loaded", "No script loaded");
++   else if ((!requested.empty() && requested != s->fdisbullName().c_str()) || (generation && generation != s->fdisbullGeneration())) error(id, "script_identity_mismatch", "Script name or generation changed");
++   else if (offset < 0 || length < 0 || length > 4096 || offset > s->getSize() || length > s->getSize() - offset) error(id, "invalid_range", "Script byte range at most 4096 bytes required");
++   else { body = scriptMetadata(); body["offset"] = num(offset); body["length"] = num(length); body["current_hex"] = str(hex(s->getData() + offset, length).c_str()); ok(id, body); }
++  } else if (op == "break.remove") {
++   const std::string name = stringValue(request, "script"), family = stringValue(request, "family");
++   const long long gen = integer(request, "generation"), offset = integer(request, "offset");
++   if (name.empty() || gen < 1 || gen > 0xffffffffLL || offset < 128 || offset > 0x7fffffffLL || (!family.empty() && family != "func" && family != "draw" && family != "gob")) error(id, "invalid_breakpoint", "Removal requires the stored script, generation, offset, and family identity");
++   else {
++    auto it = std::find_if(_breakpoints.begin(), _breakpoints.end(), [&](const Breakpoint &b) { return b.script == name && b.generation == gen && b.offset == offset && b.family == family; });
++    const bool removed = it != _breakpoints.end(); if (removed) _breakpoints.erase(it);
++    body["removed"] = boolean(removed); body["count"] = num(_breakpoints.size()); ok(id, body);
++   }
++  } else if (op == "break.add") {
++   Gob::Script *s = script(); std::string name = stringValue(request, "script"), family = stringValue(request, "family");
++   long long gen = integer(request, "generation"), offset = integer(request, "offset");
++   std::vector<byte> expected; const std::string expectedHex = stringValue(request, "expected_hex");
++   if (!s || !s->isLoaded() || name != s->fdisbullName().c_str() || gen != s->fdisbullGeneration()) error(id, "script_identity_mismatch", "Breakpoint requires current loaded script name and generation");
++   else if (offset < 128 || offset >= s->getSize() || (!family.empty() && family != "func" && family != "draw" && family != "gob")) error(id, "invalid_breakpoint", "Expected script offset and optional func/draw/gob family");
++   else if (!expectedHex.empty() && (!unhex(expectedHex, expected) || expected.size() > size_t(s->getSize() - offset) || memcmp(s->getData() + offset, expected.data(), expected.size()))) error(id, "expected_mismatch", "Breakpoint source bytes differ from expected_hex");
++   else { auto it = std::find_if(_breakpoints.begin(), _breakpoints.end(), [&](const Breakpoint &b) { return b.script == name && b.generation == gen && b.offset == offset && b.family == family; });
++    if (it == _breakpoints.end()) _breakpoints.push_back({name, family, uint32(gen), int(offset)});
++    body["count"] = num(_breakpoints.size()); ok(id, body); }
++  } else if (op == "watch.add" || op == "watch.remove") {
++   Gob::Variables *v = variables(); long long offset = integer(request, "offset"), length = integer(request, "length", 1); std::string access = stringValue(request, "access"); if (access.empty()) access = "w";
++   if (!v || offset < 0 || length < 1 || offset > v->getSize() || length > v->getSize() - offset || (access != "r" && access != "w" && access != "rw")) error(id, "invalid_watchpoint", "Expected arena byte range and r/w/rw access");
++   else { auto it = std::find_if(_watches.begin(), _watches.end(), [&](const Watch &w) { return w.offset == offset && w.length == length && w.access == access; });
++    if (op == "watch.add" && it == _watches.end()) _watches.push_back({int(offset), int(length), access});
++    if (op == "watch.remove" && it != _watches.end()) _watches.erase(it); body["count"] = num(_watches.size()); body["coverage"] = str("scalar_string_copy_accessors_only"); ok(id, body); }
++		} else if (op == "input.status") {
++			inputStatus(body); ok(id, body);
++		} else if (op == "input") {
++			const size_t before = _events.size(); const std::string kind = stringValue(request, "kind");
++			const long long holdMs = integer(request, "hold_ms", 0), gapMs = integer(request, "gap_ms", 0);
++			JSONValue *modifiers = request->child("modifiers");
++			if (modifiers && (!modifiers->isArray() || modifiers->countChildren())) error(id, "unsupported_modifiers", "This Gob bridge does not implement modifier chords");
++			else if (holdMs < 0 || holdMs > 1000 || gapMs < 0 || gapMs > 1000) error(id, "invalid_timing", "hold_ms and gap_ms must be 0..1000");
++			else if (kind == "key") {
++				const std::string action = stringValue(request, "action").empty() ? "press" : stringValue(request, "action");
++				if (action == "up") {
++					const long long leaseId = integer(request, "lease");
++					auto it = std::find_if(_leases.begin(), _leases.end(), [&](const KeyLease &l) { return l.id == leaseId; });
++					if (it == _leases.end() || it->releaseScheduled) error(id, "invalid_lease", "Key lease does not exist or is already being released");
++					else {
++						const uint64 due = std::max(_guestMs, _queueTailMs);
++						queueKeyEvent(it->code, it->ascii, Common::EVENT_KEYUP, due, it->id);
++						it->releaseScheduled = true; _queueTailMs = due + gapMs;
++						body["lease"] = num(leaseId); body["queued"] = num(1); inputStatus(body); ok(id, body);
++					}
++				} else {
++					const std::string name = stringValue(request, "key"); Common::KeyCode key; uint16 ascii;
++					if (!keyFromName(name, key, ascii)) error(id, "invalid_key", "Unsupported key name");
++					else if (action == "press") { queueKeyPair(key, ascii, holdMs, gapMs); body["queued"] = num(2); inputStatus(body); ok(id, body); }
++					else if (action == "down") {
++						const auto duplicate = std::find_if(_leases.begin(), _leases.end(), [&](const KeyLease &l) { return l.code == key; });
++						if (duplicate != _leases.end()) error(id, "key_already_leased", "This key already has a live lease");
++						else {
++							const int lease = _nextLeaseId++; const uint64 due = std::max(_guestMs, _queueTailMs);
++							_leases.push_back({lease, name, key, ascii, false, false});
++							queueKeyEvent(key, ascii, Common::EVENT_KEYDOWN, due, lease);
++							_queueTailMs = due + gapMs; body["lease"] = num(lease); body["queued"] = num(1); inputStatus(body); ok(id, body);
++						}
++					} else error(id, "invalid_action", "Expected key action press, down, or up");
++				}
++			} else if (kind == "text") {
++				const std::string text = stringValue(request, "text");
++				bool valid = !text.empty() && text.size() <= 4096;
++				for (unsigned char c : text) if (!(c >= 32 && c <= 126) && c != '\n' && c != '\r' && c != '\t') valid = false;
++				if (!valid) error(id, "invalid_text", "Text must contain only printable ASCII, Enter, or Tab; 1..4096 bytes");
++				else {
++					for (unsigned char c : text) {
++						if (c == '\n' || c == '\r') queueKeyPair(Common::KEYCODE_RETURN, 13, holdMs, gapMs);
++						else if (c == '\t') queueKeyPair(Common::KEYCODE_TAB, 9, holdMs, gapMs);
++						else { Common::KeyCode key; uint16 ascii; keyFromName(std::string(1, char(c)), key, ascii); queueKeyPair(key, ascii, holdMs, gapMs); }
++					}
++					body["queued"] = num(_events.size() - before); inputStatus(body); ok(id, body);
++				}
++			} else if (kind == "mouse") {
++				const std::string action = stringValue(request, "action"), button = stringValue(request, "button");
++				const long long x = integer(request, "x"), y = integer(request, "y");
++				if (!_graphics || x < 0 || y < 0 || x >= _graphics->width() || y >= _graphics->height() || (action != "move" && action != "down" && action != "up" && action != "click") || (action != "move" && button != "left" && button != "right")) error(id, "invalid_mouse", "Expected display coordinates, action, and button");
++				else {
++					const uint64 due = std::max(_guestMs, _queueTailMs);
++					Common::Event event; event.mouse = Common::Point(x, y);
++					event.type = action == "move" ? Common::EVENT_MOUSEMOVE : action == "up" ? (button == "left" ? Common::EVENT_LBUTTONUP : Common::EVENT_RBUTTONUP) : (button == "left" ? Common::EVENT_LBUTTONDOWN : Common::EVENT_RBUTTONDOWN);
++					if (action != "move") { Common::Event move = event; move.type = Common::EVENT_MOUSEMOVE; _events.push_back({move, due, 0}); }
++					_events.push_back({event, due, 0});
++					if (action == "click") { event.type = button == "left" ? Common::EVENT_LBUTTONUP : Common::EVENT_RBUTTONUP; _events.push_back({event, due + holdMs, 0}); }
++					_queueTailMs = due + (action == "click" ? holdMs : 0) + gapMs;
++					body["queued"] = num(_events.size() - before); inputStatus(body); ok(id, body);
++				}
++			} else error(id, "invalid_input", "Expected key, text, or mouse input");
++		} else if (op == "frame.get") {
++			if (!_graphics || !_graphics->width() || !_graphics->height()) error(id, "no_frame", "Graphics not initialized");
++			else {
++				Common::Array<byte> pixels; _graphics->rgb(pixels);
++				const std::string encoded = base64(pixels.data(), pixels.size());
++				body["display"] = new JSONValue(displayMetadata()); body["width"] = num(_graphics->width()); body["height"] = num(_graphics->height());
++				body["format"] = str("rgb24"); body["data_base64"] = str(encoded.c_str());
++				body["revision"] = num(_graphics->revision()); body["guest_ms"] = num(_guestMs); ok(id, body);
++			}
++		} else if (op == "pixel.get") {
++			byte r, g, b; const long long x = integer(request, "x"), y = integer(request, "y");
++			if (!_graphics || !_graphics->pixel(x, y, r, g, b)) error(id, "invalid_pixel", "Pixel is outside display");
++			else { JSONArray rgb; rgb.push_back(num(r)); rgb.push_back(num(g)); rgb.push_back(num(b)); body["rgb"] = new JSONValue(rgb); body["revision"] = num(_graphics->revision()); ok(id, body); }
++
++  } else if (op == "trace.start") { _traceEnabled = true; ok(id, body);
++  } else if (op == "trace.stop") { _traceEnabled = false; ok(id, body);
++  } else if (op == "trace.clear") { _trace.clear(); _traceTruncated = false; ok(id, body);
++  } else if (op == "trace.get") { JSONArray entries; for (const auto &e : _trace) entries.push_back(new JSONValue(*e)); body["entries"] = new JSONValue(entries); body["truncated"] = boolean(_traceTruncated); body["capacity"] = num(2048); body["completion_semantics"] = str("complete emitted only after same dispatch returns; nested completion does not imply caller completion"); ok(id, body);
++  } else if (op == "hotspots.get") { JSONArray hs; if (_engine->_game && _engine->_game->_hotspots) _engine->_game->_hotspots->fdisbullSnapshot(hs); body["hotspots"] = new JSONValue(hs); ok(id, body);
++  } else if (op == "hotspots.events") { JSONArray entries; for (const auto &e : _hotspotEvents) entries.push_back(new JSONValue(*e)); body["entries"] = new JSONValue(entries); body["truncated"] = boolean(_hotspotTruncated); body["dispatches"] = num(_hotspotDispatches); ok(id, body);
++  } else if (op == "save" || op == "load" || op == "script.patch" || op == "script.restore" || op == "run_until_cycle" || op == "state.set") { error(id, "unsupported", "Gob native save/load, script patching, AGI cycles, and AGI state are not qualified");
++  } else if (op == "quit") { ok(id, body); _fd = -1; std::exit(0);
++  } else error(id, "unknown_op", "Unsupported bridge operation");
++  delete request;
++ }
++};
++Bridge &bridge() { static Bridge instance; return instance; }
++}
++namespace FDisBullBridge {
++bool enabled() { return bridge().enabled(); }
++void attachGraphics(FDisBullGraphicsManager *graphics) { bridge().attach(graphics); }
++bool pollEvent(Common::Event &event) { return bridge().pollEvent(event); }
++void warpMouse(int x, int y) { bridge().warp(x, y); }
++void beforeOpcode(Gob::GobEngine *engine, const char *family, int offset, int opcode, int width) { bridge().before(engine, family, offset, opcode, width); }
++void afterOpcode() { bridge().after(); }
++void serviceModal() { bridge().service(); }
++void memoryAccess(const Gob::Variables *arena, int offset, int length, const char *mode) { bridge().access(arena, offset, length, mode); }
++void hotspotDispatch(Gob::GobEngine *engine, const char *event, int id, int index, int target) { bridge().hotspot(engine, event, id, index, target); }
++uint32 guestMillis() { return bridge().guestMillis(); }
++void delayGuestMillis(uint32 millis) { bridge().delay(millis); }
++}
+diff --git a/backends/platform/null/fdisbull_bridge.h b/backends/platform/null/fdisbull_bridge.h
+new file mode 100644
+index 00000000..431bdd12
+--- /dev/null
++++ b/backends/platform/null/fdisbull_bridge.h
+@@ -0,0 +1,49 @@
++/* Experimental fDisBull headless Gob bridge. GPL-3.0-or-later, as ScummVM. */
++#ifndef BACKENDS_PLATFORM_NULL_FDISBULL_BRIDGE_H
++#define BACKENDS_PLATFORM_NULL_FDISBULL_BRIDGE_H
++
++#include "backends/graphics/null/null-graphics.h"
++#include "common/events.h"
++#include "common/array.h"
++
++namespace Gob { class GobEngine; class Variables; }
++
++class FDisBullGraphicsManager : public NullGraphicsManager {
++public:
++	FDisBullGraphicsManager();
++	void initSize(uint width, uint height, const Graphics::PixelFormat *format = nullptr) override;
++	void setPalette(const byte *colors, uint start, uint num) override;
++	void grabPalette(byte *colors, uint start, uint num) const override;
++	void copyRectToScreen(const void *buf, int pitch, int x, int y, int w, int h) override;
++	void fillScreen(uint32 color) override;
++	void fillScreen(const Common::Rect &rect, uint32 color) override;
++	void updateScreen() override;
++	void warpMouse(int x, int y) override;
++	uint64 revision() const { return _revision; }
++	uint width() const { return _width; }
++	uint height() const { return _height; }
++	void rgb(Common::Array<byte> &out) const;
++	bool pixel(int x, int y, byte &r, byte &g, byte &b) const;
++
++private:
++	uint _width, _height;
++	uint64 _revision;
++	Common::Array<byte> _working, _committed;
++	byte _palette[768], _committedPalette[768];
++};
++
++namespace FDisBullBridge {
++bool enabled();
++void attachGraphics(FDisBullGraphicsManager *graphics);
++bool pollEvent(Common::Event &event);
++void warpMouse(int x, int y);
++void beforeOpcode(Gob::GobEngine *engine, const char *family, int offset, int opcode, int width);
++void afterOpcode();
++void serviceModal();
++void memoryAccess(const Gob::Variables *arena, int offset, int length, const char *mode);
++void hotspotDispatch(Gob::GobEngine *engine, const char *event, int id, int index, int target);
++uint32 guestMillis();
++void delayGuestMillis(uint32 millis);
++}
++
++#endif
+diff --git a/backends/platform/null/module.mk b/backends/platform/null/module.mk
+index 30345d7a..98a01c58 100644
+--- a/backends/platform/null/module.mk
++++ b/backends/platform/null/module.mk
+@@ -1,7 +1,8 @@
+ MODULE := backends/platform/null
+ 
+ MODULE_OBJS := \
+-	null.o
++	null.o \
++	fdisbull_bridge.o
+ 
+ # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.
+ MODULE_OBJS := $(addprefix $(MODULE)/, $(MODULE_OBJS))
+diff --git a/backends/platform/null/null.cpp b/backends/platform/null/null.cpp
+index abc4a4d5..dce726b4 100644
+--- a/backends/platform/null/null.cpp
++++ b/backends/platform/null/null.cpp
+@@ -59,6 +59,7 @@ typedef void (*sighandler_t)(int);
+ #include "backends/events/default/default-events.h"
+ #include "backends/mixer/null/null-mixer.h"
+ #include "backends/graphics/null/null-graphics.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gui/debugger.h"
+ #endif
+ 
+@@ -152,7 +153,10 @@ void OSystem_NULL::initBackend() {
+ 	_timerManager = new DefaultTimerManager();
+ 	_eventManager = new DefaultEventManager(this);
+ 	_savefileManager = new DefaultSaveFileManager();
+-	_graphicsManager = new NullGraphicsManager();
++	if (FDisBullBridge::enabled()) {
++		FDisBullGraphicsManager *graphics = new FDisBullGraphicsManager();
++		_graphicsManager = graphics; FDisBullBridge::attachGraphics(graphics);
++	} else _graphicsManager = new NullGraphicsManager();
+ 	_mixerManager = new NullMixerManager();
+ 	// Setup and start mixer
+ 	_mixerManager->init();
+@@ -165,6 +169,8 @@ bool OSystem_NULL::pollEvent(Common::Event &event) {
+ #ifndef NULL_DRIVER_USE_FOR_TEST
+ 	((DefaultTimerManager *)getTimerManager())->checkTimers();
+ 	((NullMixerManager *)_mixerManager)->update(1);
++	if (FDisBullBridge::enabled()) FDisBullBridge::serviceModal();
++	if (FDisBullBridge::enabled() && FDisBullBridge::pollEvent(event)) return true;
+ 
+ #ifdef POSIX
+ 	if (intReceived) {
+@@ -194,6 +200,7 @@ Common::MutexInternal *OSystem_NULL::createMutex() {
+ 
+ uint32 OSystem_NULL::getMillis(bool skipRecord) {
+ #ifdef POSIX
++	if (FDisBullBridge::enabled()) return FDisBullBridge::guestMillis();
+ 	timeval curTime;
+ 
+ 	gettimeofday(&curTime, 0);
+@@ -209,6 +216,7 @@ uint32 OSystem_NULL::getMillis(bool skipRecord) {
+ 
+ void OSystem_NULL::delayMillis(uint msecs) {
+ #ifdef POSIX
++	if (FDisBullBridge::enabled()) { FDisBullBridge::delayGuestMillis(msecs); FDisBullBridge::serviceModal(); return; }
+ 	usleep(msecs * 1000);
+ #elif defined(WIN32)
+ 	Sleep(msecs);
+diff --git a/engines/gob/dataio.cpp b/engines/gob/dataio.cpp
+index 54681393..de7c45ab 100644
+--- a/engines/gob/dataio.cpp
++++ b/engines/gob/dataio.cpp
+@@ -375,20 +375,31 @@ int32 DataIO::fileSize(const Common::String &name) {
+ 	return f.size();
+ }
+ 
++static Common::String fdisbullRawFNV(Common::SeekableReadStream &stream, uint32 offset, uint32 size) {
++	const int64 old = stream.pos(); uint64 hash = 14695981039346656037ULL;
++	if (!stream.seek(offset)) return "";
++	byte buf[4096]; uint32 remain = size;
++	while (remain) { uint32 n = MIN<uint32>(remain, sizeof(buf)); if (stream.read(buf, n) != n) { stream.seek(old); return ""; }
++		for (uint32 i = 0; i < n; ++i) { hash ^= buf[i]; hash *= 1099511628211ULL; } remain -= n; }
++	stream.seek(old); return Common::String::format("%016llx", (unsigned long long)hash);
++}
+ Common::SeekableReadStream *DataIO::getFile(const Common::String &name) {
+-	// Try to open the file in the archives
++	fdisbullLastSource = FDisBullSourceInfo();
+ 	File *file = findFile(name);
+ 	if (file) {
+ 		Common::SeekableReadStream *data = getFile(*file);
+-		if (data)
++		if (data) {
++			fdisbullLastSource.kind = "archive"; fdisbullLastSource.container = file->archive->name;
++			fdisbullLastSource.member = file->name; fdisbullLastSource.offset = file->offset;
++			fdisbullLastSource.size = file->size; fdisbullLastSource.compression = file->compression;
++			fdisbullLastSource.rawFNV = fdisbullRawFNV(file->archive->file, file->offset, file->size);
+ 			return data;
++		}
+ 	}
+-
+-	// Else, try to open a matching plain file
+-	Common::File f;
+-	if (!f.open(Common::Path(name)))
+-		return nullptr;
+-
++	Common::File f; if (!f.open(Common::Path(name))) return nullptr;
++	fdisbullLastSource.kind = "loose"; fdisbullLastSource.container = name;
++	fdisbullLastSource.member = name; fdisbullLastSource.size = f.size();
++	fdisbullLastSource.rawFNV = fdisbullRawFNV(f, 0, f.size());
+ 	return f.readStream(f.size());
+ }
+ 
+diff --git a/engines/gob/dataio.h b/engines/gob/dataio.h
+index 18e9ef6f..6cb3d50c 100644
+--- a/engines/gob/dataio.h
++++ b/engines/gob/dataio.h
+@@ -40,6 +40,12 @@ class SeekableReadStream;
+ 
+ namespace Gob {
+ 
++struct FDisBullSourceInfo {
++	Common::String kind, container, member, rawFNV;
++	uint32 offset = 0, size = 0;
++	uint8 compression = 0;
++};
++
+ struct ArchiveInfo {
+ 	Common::String name;
+ 	bool base;
+@@ -48,6 +54,7 @@ struct ArchiveInfo {
+ 
+ class DataIO {
+ public:
++	FDisBullSourceInfo fdisbullLastSource;
+ 	DataIO();
+ 	~DataIO();
+ 
+diff --git a/engines/gob/gob.h b/engines/gob/gob.h
+index eabde573..52a96d2b 100644
+--- a/engines/gob/gob.h
++++ b/engines/gob/gob.h
+@@ -270,6 +270,7 @@ public:
+ 	GobEngine(OSystem *syst);
+ 	~GobEngine() override;
+ 
++	Common::String fdisbullDetectedGame, fdisbullDetectedExtra, fdisbullDetectedLanguage, fdisbullDetectedPlatform;
+ 	void initGame(const GOBGameDescription *gd);
+ 
+ 	GameType getGameType(const char *gameId) const;
+diff --git a/engines/gob/hotspots.cpp b/engines/gob/hotspots.cpp
+index b944ac74..b24ea132 100644
+--- a/engines/gob/hotspots.cpp
++++ b/engines/gob/hotspots.cpp
+@@ -28,6 +28,7 @@
+ #include "common/str.h"
+ 
+ #include "gob/hotspots.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gob/global.h"
+ #include "gob/draw.h"
+ #include "gob/game.h"
+@@ -517,6 +518,7 @@ bool Hotspots::isValid(uint16 key, uint16 id, uint16 index) const {
+ }
+ 
+ void Hotspots::call(uint16 offset) {
++	if (FDisBullBridge::enabled()) FDisBullBridge::hotspotDispatch(_vm, "handler_start", _currentId, _currentIndex, offset);
+ 	debugC(4, kDebugHotspots, "Calling hotspot function %d", offset);
+ 
+ 	_vm->_game->_script->call(offset);
+@@ -535,6 +537,7 @@ void Hotspots::call(uint16 offset) {
+ 	_vm->_game->_script->pop();
+ 
+ 	recalculate(false);
++	if (FDisBullBridge::enabled()) FDisBullBridge::hotspotDispatch(_vm, "handler_complete", _currentId, _currentIndex, offset);
+ }
+ 
+ void Hotspots::enter(uint16 index) {
+@@ -1760,6 +1763,7 @@ void Hotspots::evaluate() {
+ 
+ 		// Enter it
+ 		if (_hotspots[index].funcEnter != 0) {
++			if (FDisBullBridge::enabled()) FDisBullBridge::hotspotDispatch(_vm, "enter", id, index, _hotspots[index].funcEnter);
+ 			_vm->_game->pushOnGlobalCallStack(kHotspotEnter,
+ 											  _vm->_game->_curTotFile, _vm->_game->_script->_currentOpcodePos,
+ 											  _vm->_game->_curTotFile, _hotspots[index].funcEnter);
+@@ -1780,6 +1784,7 @@ void Hotspots::evaluate() {
+ 		_vm->_draw->blitCursor();
+ 
+ 	if (!_vm->_inter->_terminate && (!finishedDuration)) {
++		if (FDisBullBridge::enabled()) FDisBullBridge::hotspotDispatch(_vm, "leave_dispatch", id, index, _hotspots[index].funcLeave);
+ 		_vm->_game->_script->seek(_hotspots[index].funcLeave);
+ 
+ 		_vm->_inter->storeMouse();
+@@ -2529,4 +2534,19 @@ void Hotspots::removeHotspotTTSText(uint16 spotID) {
+ 
+ #endif
+ 
++void Hotspots::fdisbullSnapshot(Common::JSONArray &out) const {
++	for (int i = 0; i < kHotspotCount && !_hotspots[i].isEnd(); ++i) {
++		const Hotspot &h = _hotspots[i]; if (h.id == 0) continue;
++		Common::JSONObject o;
++		o["index"] = new Common::JSONValue((long long)i); o["id"] = new Common::JSONValue((long long)h.id);
++		o["left"] = new Common::JSONValue((long long)h.left); o["top"] = new Common::JSONValue((long long)h.top);
++		o["right"] = new Common::JSONValue((long long)h.right); o["bottom"] = new Common::JSONValue((long long)h.bottom);
++		o["flags"] = new Common::JSONValue((long long)h.flags); o["key"] = new Common::JSONValue((long long)h.key);
++		o["func_enter"] = new Common::JSONValue((long long)h.funcEnter); o["func_leave"] = new Common::JSONValue((long long)h.funcLeave);
++		o["func_pos"] = new Common::JSONValue((long long)h.funcPos); o["disabled"] = new Common::JSONValue(h.isDisabled());
++		o["current"] = new Common::JSONValue(i == _currentIndex);
++		out.push_back(new Common::JSONValue(o));
++	}
++}
++
+ } // End of namespace Gob
+diff --git a/engines/gob/hotspots.h b/engines/gob/hotspots.h
+index 3555d211..94f16182 100644
+--- a/engines/gob/hotspots.h
++++ b/engines/gob/hotspots.h
+@@ -27,6 +27,7 @@
+ 
+ #ifndef GOB_HOTSPOTS_H
+ #define GOB_HOTSPOTS_H
++#include "common/formats/json.h"
+ 
+ #include "common/stack.h"
+ 
+@@ -66,6 +67,7 @@ public:
+ 		kStateType1          = 0x1
+ 	};
+ 
++	void fdisbullSnapshot(Common::JSONArray &out) const;
+ 	Hotspots(GobEngine *vm);
+ 	~Hotspots();
+ 
+diff --git a/engines/gob/inter.cpp b/engines/gob/inter.cpp
+index b7498135..33b13ac3 100644
+--- a/engines/gob/inter.cpp
++++ b/engines/gob/inter.cpp
+@@ -28,6 +28,7 @@
+ #include "common/endian.h"
+ 
+ #include "gob/gob.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gob/inter.h"
+ #include "gob/global.h"
+ #include "gob/util.h"
+@@ -296,6 +297,7 @@ void Inter::funcBlock(int16 retFlag) {
+ 			}
+ 		} // End of workaround
+ 
++		if (FDisBullBridge::enabled()) FDisBullBridge::beforeOpcode(_vm, "func", _vm->_game->_script->pos(), _vm->_game->_script->peekByte(), 1);
+ 		cmd = _vm->_game->_script->readByte();
+ 
+ 		// WORKAROUND:
+@@ -325,6 +327,7 @@ void Inter::funcBlock(int16 retFlag) {
+ 
+ 		params.doReturn = false;
+ 		executeOpcodeFunc(cmd2, cmd, params);
++		if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode();
+ 
+ 		if (params.doReturn)
+ 			return;
+diff --git a/engines/gob/inter_v1.cpp b/engines/gob/inter_v1.cpp
+index dbd9a180..e4456af8 100644
+--- a/engines/gob/inter_v1.cpp
++++ b/engines/gob/inter_v1.cpp
+@@ -28,6 +28,7 @@
+ #include "common/str.h"
+ 
+ #include "gob/gob.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gob/inter.h"
+ #include "gob/global.h"
+ #include "gob/util.h"
+@@ -1455,9 +1456,10 @@ void Inter_v1::o1_animPalInit(OpFuncParams &params) {
+ void Inter_v1::o1_drawOperations(OpFuncParams &params) {
+ 	byte cmd;
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::beforeOpcode(_vm, "draw", _vm->_game->_script->pos(), _vm->_game->_script->peekByte(), 1);
+ 	cmd = _vm->_game->_script->readByte();
+-
+ 	executeOpcodeDraw(cmd);
++	if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode();
+ }
+ 
+ void Inter_v1::o1_setcmdCount(OpFuncParams &params) {
+@@ -1522,6 +1524,7 @@ void Inter_v1::o1_goblinFunc(OpFuncParams &params) {
+ 	gobParams.objDesc = nullptr;
+ 	gobParams.retVarPtr.set(*_variables, 236);
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::beforeOpcode(_vm, "gob", _vm->_game->_script->pos(), _vm->_game->_script->peekInt16(), 2);
+ 	cmd = _vm->_game->_script->readInt16();
+ 	gobParams.paramCount = _vm->_game->_script->readInt16();
+ 
+@@ -1560,10 +1563,10 @@ void Inter_v1::o1_goblinFunc(OpFuncParams &params) {
+ 	Bug #2246
+ */
+ 
+-	if ((cmd < 40) && objDescSet && !gobParams.objDesc)
+-		return;
++	if ((cmd < 40) && objDescSet && !gobParams.objDesc) { if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode(); return; }
+ 
+ 	executeOpcodeGob(cmd, gobParams);
++	if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode();
+ }
+ 
+ void Inter_v1::o1_createSprite(OpFuncParams &params) {
+diff --git a/engines/gob/inter_v2.cpp b/engines/gob/inter_v2.cpp
+index 43ea67d4..c2a24050 100644
+--- a/engines/gob/inter_v2.cpp
++++ b/engines/gob/inter_v2.cpp
+@@ -32,6 +32,7 @@
+ #include "gui/message.h"
+ 
+ #include "gob/gob.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gob/inter.h"
+ #include "gob/global.h"
+ #include "gob/util.h"
+@@ -1428,6 +1429,7 @@ void Inter_v2::o2_goblinFunc(OpFuncParams &params) {
+ 	OpGobParams gobParams;
+ 	int16 cmd;
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::beforeOpcode(_vm, "gob", _vm->_game->_script->pos(), _vm->_game->_script->peekInt16(), 2);
+ 	cmd = _vm->_game->_script->readInt16();
+ 	_vm->_vidPlayer->liveVideosLoop();
+ 
+@@ -1436,6 +1438,7 @@ void Inter_v2::o2_goblinFunc(OpFuncParams &params) {
+ 
+ 	if (cmd != 101)
+ 		executeOpcodeGob(cmd, gobParams);
++	if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode();
+ }
+ 
+ void Inter_v2::o2_stopSound(OpFuncParams &params) {
+diff --git a/engines/gob/metaengine.cpp b/engines/gob/metaengine.cpp
+index 2d6c8b58..bf86f1de 100644
+--- a/engines/gob/metaengine.cpp
++++ b/engines/gob/metaengine.cpp
+@@ -144,6 +144,11 @@ bool GobEngine::dirMustBeGameAddOn(const Common::FSDirectory &dir) const {
+ }
+ 
+ void GobEngine::initGame(const GOBGameDescription *gd) {
++	fdisbullDetectedGame = gd->desc.gameId; fdisbullDetectedExtra = gd->desc.extra ? gd->desc.extra : "";
++	const char *languageCode = Common::getLanguageCode(gd->desc.language);
++	fdisbullDetectedLanguage = languageCode ? languageCode : "unknown";
++	const char *platformCode = Common::getPlatformCode(gd->desc.platform);
++	fdisbullDetectedPlatform = platformCode ? platformCode : "unknown";
+ 	if (gd->startTotBase == nullptr)
+ 		_startTot = "intro.tot";
+ 	else
+diff --git a/engines/gob/script.cpp b/engines/gob/script.cpp
+index 8c6b214b..9effbbfa 100644
+--- a/engines/gob/script.cpp
++++ b/engines/gob/script.cpp
+@@ -35,6 +35,7 @@
+ #include "gob/videoplayer.h"
+ 
+ namespace Gob {
++static uint32 fdisbullNextScriptGeneration = 0;
+ 
+ Script::Script(GobEngine *vm) : _vm(vm) {
+ 	_expression = new Expression(vm);
+@@ -272,6 +273,7 @@ char *Script::peekString(int32 offset) {
+ 
+ void Script::writeByte(int32 offset, byte v) {
+ 	_totPtr[offset] = v;
++	_fdisbullGeneration = ++fdisbullNextScriptGeneration;
+ }
+ 
+ uint16 Script::readVarIndex(uint16 *size, uint16 *type) {
+@@ -372,6 +374,7 @@ bool Script::load(const Common::String &fileName) {
+ 		}
+ 	}
+ 
++	_fdisbullGeneration = ++fdisbullNextScriptGeneration;
+ 	return true;
+ }
+ 
+@@ -380,6 +383,7 @@ bool Script::loadTOT(const Common::String &fileName) {
+ 
+ 	if (!totFile.load(fileName))
+ 		return false;
++	_fdisbullSource = _vm->_dataIO->fdisbullLastSource;
+ 
+ 	Common::SeekableReadStream *stream = totFile.getStream();
+ 	if (!stream)
+diff --git a/engines/gob/script.h b/engines/gob/script.h
+index 7165dad8..f94a944f 100644
+--- a/engines/gob/script.h
++++ b/engines/gob/script.h
+@@ -32,6 +32,7 @@
+ #include "common/stack.h"
+ 
+ #include "gob/totfile.h"
++#include "gob/dataio.h"
+ 
+ namespace Gob {
+ 
+@@ -40,6 +41,11 @@ class Expression;
+ 
+ class Script {
+ public:
++	const Common::String &fdisbullName() const { return _totFile; }
++	uint32 fdisbullGeneration() const { return _fdisbullGeneration; }
++	const FDisBullSourceInfo &fdisbullSource() const { return _fdisbullSource; }
++	uint32 _fdisbullGeneration = 0;
++	FDisBullSourceInfo _fdisbullSource;
+ 	Script(GobEngine *vm);
+ 	~Script();
+ 
+diff --git a/engines/gob/variables.cpp b/engines/gob/variables.cpp
+index 9568ec12..f68ad234 100644
+--- a/engines/gob/variables.cpp
++++ b/engines/gob/variables.cpp
+@@ -29,6 +29,7 @@
+ #include "common/str.h"
+ 
+ #include "gob/gob.h"
++#include "backends/platform/null/fdisbull_bridge.h"
+ #include "gob/variables.h"
+ 
+ namespace Gob {
+@@ -73,18 +74,21 @@ void Variables::writeOff8(uint32 offset, uint8 value) {
+ 	assert(offset < _size);
+ 
+ 	write8(_vars + offset, value);
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 1, "w");
+ }
+ 
+ void Variables::writeOff16(uint32 offset, uint16 value) {
+ 	assert((offset + 1) < _size);
+ 
+ 	write16(_vars + offset, value);
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 2, "w");
+ }
+ 
+ void Variables::writeOff32(uint32 offset, uint32 value) {
+ 	assert((offset + 3) < _size);
+ 
+ 	write32(_vars + offset, value);
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 4, "w");
+ }
+ 
+ void Variables::writeOffString(uint32 offset, const char *value) {
+@@ -93,6 +97,7 @@ void Variables::writeOffString(uint32 offset, const char *value) {
+ 	(void)length;
+ 
+ 	Common::strcpy_s((char *)(_vars + offset), _size - offset, value);
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, length + 1, "w");
+ }
+ 
+ uint8 Variables::readVar8(uint32 var) const {
+@@ -114,18 +119,21 @@ void Variables::readVarString(uint32 var, char *value, uint32 length) {
+ uint8 Variables::readOff8(uint32 offset) const {
+ 	assert(offset < _size);
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 1, "r");
+ 	return read8(_vars + offset);
+ }
+ 
+ uint16 Variables::readOff16(uint32 offset) const {
+ 	assert((offset + 1) < _size);
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 2, "r");
+ 	return read16(_vars + offset);
+ }
+ 
+ uint32 Variables::readOff32(uint32 offset) const {
+ 	assert((offset + 3) < _size);
+ 
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, 4, "r");
+ 	return read32(_vars + offset);
+ }
+ 
+@@ -133,6 +141,7 @@ void Variables::readOffString(uint32 offset, char *value, uint32 length) {
+ 	assert(offset < _size);
+ 
+ 	Common::strlcpy(value, (const char *)(_vars + offset), MIN<int>(length, _size - offset));
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, MIN<uint32>(length, _size - offset), "r");
+ }
+ 
+ const uint8 *Variables::getAddressVar8(uint32 var) const {
+@@ -171,8 +180,7 @@ bool Variables::copyTo(uint32 offset, byte *variables, uint32 n) const {
+ 	if ((offset + n) > _size)
+ 		return false;
+ 
+-	if (variables)
+-		memcpy(variables, _vars + offset, n);
++	if (variables) { memcpy(variables, _vars + offset, n); if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, n, "r"); }
+ 
+ 	return true;
+ }
+@@ -182,6 +190,7 @@ bool Variables::copyFrom(uint32 offset, const byte *variables, uint32 n) {
+ 		return false;
+ 
+ 	memcpy(_vars + offset, variables, n);
++	if (FDisBullBridge::enabled()) FDisBullBridge::memoryAccess(this, offset, n, "w");
+ 
+ 	return true;
+ }

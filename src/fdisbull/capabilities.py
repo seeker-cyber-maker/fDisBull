@@ -97,6 +97,18 @@ def _catalog():
         _entry('debug.pe64', 'partial', ['x86-64'], ['cli:debug', 'cli:doctor'],
                ['wine_debugger.py', 'wine_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'pe64-backend'],
                'Configured Wine/QEMU guest or IDA backend; kernel, guest and backend identities required.'),
+        _entry('debug.scummvm-agi', 'partial', ['agi-vm'],
+               ['cli:debug --backend scummvm-agi', 'json:debug-engine-state', 'json:debug-step'],
+               ['scummvm_debugger.py', 'scummvm_rpc.py', 'debugger.py', 'scenes.py', 'scene_values.py'],
+               ['lief', 'iced-x86', 'capstone', 'Pillow', 'scummvm-backend'],
+               'Patched ScummVM AGI replacement engine: bounded script control, typed VM state, input, stored frames and cycle-level native saves; no original DOS execution or exact machine checkpoint.',
+               maturity='experimental'),
+        _entry('debug.scummvm-gob', 'partial', ['gob-vm'],
+               ['cli:debug --backend scummvm-gob','json:debug-engine-state','json:debug-read-variable','json:debug-step'],
+               ['scummvm_gob.py','scummvm_rpc.py','debugger.py','scenes.py','scene_values.py'],
+               ['lief','iced-x86','capstone','Pillow','scummvm-backend'],
+               'Patched ScummVM Gob Inter_v3 for Lost in Time (lit/lit1/lit2): source-bound TOT control, typed variable arena, scoped watches, input and stored frames. Native game saves and loaded-script patching are unsupported.',
+               maturity='experimental'),
         _entry('lift.asm-u16', 'partial', ['x86-16'], ['cli:udl-lift-asm'],
                ['udl_blocks.py'], ['capstone'],
                'Restricted straight-line uint16 register blocks; no general memory, control-flow or ABI recovery.'),
@@ -150,6 +162,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
         'lldb': _tool('lldb', lldb), 'java': _tool('java', java),
         'dos-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'pe64-backend': {'kind': 'configuration', 'status': 'not_selected'},
+        'scummvm-backend': {'kind': 'configuration', 'status': 'not_selected'},
     })
     host = {'system': platform.system(), 'machine': platform.machine()}
     sources = _sources(entries)

@@ -29,11 +29,16 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scummvm-2026-11-01/" + name for name in
+                           ("verification.json", "comparison.json")}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scummvm-gob-2026-11-01/" + name for name in
+                           ("verification.json", "comparison.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/verification/kq1-tas-2026-10-31.json")
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
 REQUIRED_KNOWLEDGE_RESOURCES = {"media.py", "capabilities.py", "capture_audit.py", "skills/fdisbull-investigate/references/media-modules.md"}
+REQUIRED_KNOWLEDGE_RESOURCES |= {"scummvm_rpc.py", "scummvm_debugger.py", "scummvm_gob.py"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
                             "data/FdisbullGhidraArm64.txt"}

@@ -63,6 +63,10 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/integration-0261", "verification.json"),
+    ("docs/evidence/scummvm-2026-11-01", "verification.json"),
+    ("docs/evidence/scummvm-2026-11-01", "comparison.json"),
+    ("docs/evidence/scummvm-gob-2026-11-01", "verification.json"),
+    ("docs/evidence/scummvm-gob-2026-11-01", "comparison.json"),
     ("scripts", "*.py"),
 )
 

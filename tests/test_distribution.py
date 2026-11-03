@@ -71,6 +71,15 @@ REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
+SCUMMVM_EVIDENCE_FILES = {
+    'docs/evidence/scummvm-2026-11-01/verification.json',
+    'docs/evidence/scummvm-2026-11-01/comparison.json',
+    'docs/evidence/scummvm-gob-2026-11-01/verification.json',
+    'docs/evidence/scummvm-gob-2026-11-01/comparison.json',
+}
+REQUIRED_SOURCE_FILES += tuple(sorted(SCUMMVM_EVIDENCE_FILES))
+REQUIRED_SOURCE_FILES += ('src/fdisbull/scummvm_rpc.py', 'src/fdisbull/scummvm_debugger.py',
+                          'src/fdisbull/scummvm_gob.py')
 REQUIRED_SOURCE_FILES += ('tests/fixtures/frame_capture.S',
                           'docs/verification/kq1-tas-2026-10-31.json')
 REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_audit.py')
@@ -79,6 +88,15 @@ REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_a
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:
         for required in files:output.writestr('fdisbull-test/'+required,'')
+
+
+@pytest.mark.parametrize('missing',sorted(SCUMMVM_EVIDENCE_FILES))
+def test_source_archive_retains_scummvm_verification_and_comparison(tmp_path,missing):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-test-tool.zip'
+    source_archive(archive,tuple(name for name in REQUIRED_SOURCE_FILES if name!=missing))
+    with pytest.raises(ValueError,match='missing required files'):
+        check(archive)
 
 
 @pytest.mark.parametrize('unwanted',[

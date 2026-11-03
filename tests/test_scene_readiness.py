@@ -14,7 +14,7 @@ class Project:
 class Session:
     version={'id':1};run_id='run'
     def __init__(self, doc): self.project=Project(doc);self.rgb=[0,0,0];self.fail=False
-    def call(self, name): return {'state':'stopped'}
+    def status(self): return {'state':'stopped'}
     def frame_probe(self, coordinates):
         if self.fail: raise ValueError('missing frame')
         return {'width':2,'height':2,'source_bpp':8,'double_width':False,'double_height':False,
@@ -54,6 +54,19 @@ def test_content_transitions_and_missing_frame():
 def test_legacy_scene_has_no_content_gate():
     doc=fixture();del doc['content'];session=Session(doc)
     assert SceneHandle(session,'scene')._observe('button')['status']=='matched'
+
+
+def test_matching_state_does_not_finish_an_action_while_a_known_popup_blocks():
+    import pytest
+    from fdisbull.scenes import SceneError
+    session=Session(fixture());handle=SceneHandle(session,'scene')
+    handle._observe=lambda **kwargs:{'status':'blocked','predicate_matched':True,'handlers':['message']}
+    handle._store=lambda result,diagnostic=False:result
+    session.run=lambda **kwargs:pytest.fail('A known blocked outcome must not replay input or advance')
+    with pytest.raises(SceneError) as error:
+        handle._wait_outcome({'constant':True},guest_ms=100,timeout_ms=1000)
+    assert error.value.result['status']=='blocked'
+    assert error.value.result['complete'] is False
 
 
 def test_unknown_content_and_frame_revision_never_authorize():

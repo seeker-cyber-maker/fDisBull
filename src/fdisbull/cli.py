@@ -121,9 +121,24 @@ METHODS = {
     'debug-restore-experiment': 'Restore native state, layers, breakpoints, watches and hook hit counts; run,experiment',
     'debug-compare-experiment': 'Run baseline and an explicit layer stack, save differences and restore baseline; run,experiment,layers,[timeout_ms]',
     'debug-contexts': 'List explicit DOS/process and outer-machine execution contexts; run',
-    'debug-pause': 'Pause all vCPUs in the selected machine context; run,context=machine',
-    'debug-resume': 'Resume the selected machine so guest services can run; run,context=machine',
-    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,spatial_mode,fair_play]',
+    'debug-pause': 'Request a pause in a supported execution context; run,[context,timeout_ms]',
+    'debug-resume': 'Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]',
+    'debug-launch': 'Launch a project-bound execution backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,spatial_mode,fair_play]',
+    'debug-engine-state': 'Read paused engine VM state with its own address context; run',
+    'debug-write-engine-state': 'Apply a checked engine state edit; run,kind,index,value,[expected,width,signed,endian]',
+    'debug-read-variable': 'Read a typed engine variable at a byte offset; run,offset,[width,signed,endian]',
+    'debug-write-variable': 'Write a typed engine variable with an optional expected value; run,offset,value,[width,signed,endian,expected]',
+    'debug-hotspot-events': 'Read retained engine hotspot dispatch receipts; run',
+    'debug-step': 'Step engine script instructions; run,[count,timeout_ms]',
+    'debug-watchpoint': 'Watch a typed engine state location; run,kind,index',
+    'debug-delete-watchpoint': 'Remove an engine watchpoint; run,watchpoint_id',
+    'debug-resource': 'Read an engine resource identity and original source extent; run,kind,number',
+    'debug-read-resource': 'Read source-bound loaded engine bytes; run,[logic,script,generation,offset,length] (parameters depend on backend)',
+    'debug-patch-resource': 'Apply a checked reversible loaded-logic edit; run,logic,offset,expected_hex,data_hex',
+    'debug-engine-cycle': 'Run to an explicit engine cycle boundary; run,[max_instructions,timeout_ms]',
+    'debug-restore-resource': 'Restore retained original loaded-logic bytes after checking current identity; run,logic,[expected_fnv1a64]',
+    'debug-run-async': 'Start one finite ScummVM run while keeping the foreground server responsive; run,[timeout_ms,guest_ms,max_instructions]',
+    'debug-run-result': 'Read the result of an explicitly started asynchronous run; run,operation,[wait_ms]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
     'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
@@ -742,7 +757,10 @@ def parser():
     c = sub.add_parser('debug',help='Launch a DOS or PE64 project and accept live debugger JSON commands on stdin')
     c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
     c.add_argument('--version',type=int)
-    c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu','ida-wine-qemu','qemu-machine'])
+    c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu','ida-wine-qemu','qemu-machine','scummvm-agi','scummvm-gob'])
+    c.add_argument('--game-id',help='Explicit ScummVM engine/game ID, for example agi:kq1 or gob:lit')
+    c.add_argument('--language',help='Explicit Gob language code, for example us (English US) or it')
+    c.add_argument('--platform',help='Explicit Gob game platform, for example dos')
     c.add_argument('--remote-server',help='User-supplied IDA 9.4 win64_remote.exe (IDA backend only)')
     c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
     c.add_argument('--boot-timeout-ms',type=int,default=240000)

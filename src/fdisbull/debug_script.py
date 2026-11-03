@@ -10,7 +10,18 @@ import time
 from .debugger import bounded
 from .operation_budget import rpc_budget
 
+ENGINE_OPERATIONS = {
+    'engine-state':'engine_state', 'engine-set':'write_engine_state',
+    'step':'step', 'watchpoint':'watchpoint', 'delete-watchpoint':'delete_watchpoint',
+    'engine-resource':'resource', 'engine-patch-resource':'patch_resource',
+    'engine-cycle':'run_until_cycle',
+    'engine-read-variable':'read_variable','engine-write-variable':'write_variable',
+    'engine-hotspot-events':'hotspot_events',
+    'engine-restore-resource':'restore_resource',
+}
+
 OPERATIONS = {
+    **ENGINE_OPERATIONS,
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
@@ -31,10 +42,18 @@ OPERATIONS = {
 }
 
 
-def validate_script(script):
+def validate_script(script, *, session=None):
     from .debugger import DebugSession
-    if not isinstance(script,dict) or set(script) != {'format','steps'} or script['format'] != 'fdisbull-script-1':
+    if not isinstance(script,dict) or not {'format','steps'}<=set(script)<= {'format','steps','backend'} or script['format'] != 'fdisbull-script-1':
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
+    backend=script.get('backend')
+    if backend is not None and backend not in ('scummvm-agi','scummvm-gob'):
+        raise ValueError('Unsupported explicit script backend')
+    if backend is not None and session is not None and getattr(session,'metadata',{}).get('backend')!=backend:
+        raise ValueError('Script backend differs from the live execution backend')
+    outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    if backend in ('scummvm-agi','scummvm-gob') or session is not None and getattr(session,'metadata',{}).get('backend') in ('scummvm-agi','scummvm-gob'):
+        outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')
     expanded = []
@@ -46,8 +65,8 @@ def validate_script(script):
             if not isinstance(step,dict) or not isinstance(step.get('op'),str):
                 raise ValueError('Every step requires an op')
             op = step['op']
-            if 'expect' in step and (op!='run' or step['expect'] not in ('breakpoint','watchpoint','guest_time','timeout','exited','pause')):
-                raise ValueError('expect is a run outcome: breakpoint, watchpoint, guest_time, timeout, exited, or pause')
+            if 'expect' in step and (op!='run' or step['expect'] not in outcomes):
+                raise ValueError('expect must be a supported run outcome for this backend')
             if op=='repeat':
                 if set(step) != {'op','count','steps'}:
                     raise ValueError('repeat requires count and steps')
@@ -63,7 +82,17 @@ def validate_script(script):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
+                    owner = type(session) if session is not None else DebugSession
+                    if session is None and (op in ENGINE_OPERATIONS or backend in ('scummvm-agi','scummvm-gob')):
+                        if backend=='scummvm-gob':
+                            from .scummvm_gob import ScummVMGobSession
+                            owner=ScummVMGobSession
+                        else:
+                            from .scummvm_debugger import ScummVMAGISession
+                            owner=ScummVMAGISession
+                    operation=getattr(owner,OPERATIONS[op],None)
+                    if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
+                    signature = inspect.signature(operation)
                     signature.bind(None,**params)
                     if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
@@ -99,7 +128,7 @@ def validate_script(script):
 @rpc_budget
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
-    steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    steps = validate_script(script, session=session) # Reject malformed later steps before any guest mutation.
     if getattr(session,'script_operations',None) is not None:
         unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
         if unsupported:
@@ -138,7 +167,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','step','engine-cycle','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -160,6 +189,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
+            if step['op']=='step' and not result.get('completed'):
+                raise ValueError('Engine step stopped before the requested instruction boundary count')
+            if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
+                raise ValueError('Engine did not reach the requested cycle boundary')
             if _after_step is not None:_after_step(step,result)
             if 'as' in step:
                 results[step['as']] = result

@@ -1,0 +1,1033 @@
+diff --git a/backends/platform/null/fdisbull_bridge.cpp b/backends/platform/null/fdisbull_bridge.cpp
+new file mode 100644
+index 00000000..57b30601
+--- /dev/null
++++ b/backends/platform/null/fdisbull_bridge.cpp
+@@ -0,0 +1,707 @@
++/* Experimental fDisBull headless AGI bridge. GPL-3.0-or-later, as ScummVM. */
++#define FORBIDDEN_SYMBOL_ALLOW_ALL
++#include "backends/platform/null/fdisbull_bridge.h"
++#include "common/formats/json.h"
++#include "engines/agi/agi.h"
++#include "engines/agi/view.h"
++#include <algorithm>
++#include <chrono>
++#include <cerrno>
++#include <cstdlib>
++#include <cstring>
++#include <poll.h>
++#include <set>
++#include <signal.h>
++#include <string>
++#include <utility>
++#include <vector>
++#include <unistd.h>
++
++FDisBullGraphicsManager::FDisBullGraphicsManager() : _width(0), _height(0), _revision(0) {
++	memset(_palette, 0, sizeof(_palette));
++	memset(_committedPalette, 0, sizeof(_committedPalette));
++}
++
++void FDisBullGraphicsManager::initSize(uint width, uint height, const Graphics::PixelFormat *format) {
++	NullGraphicsManager::initSize(width, height, format);
++	_width = width;
++	_height = height;
++	_working.resize(size_t(width) * height);
++	memset(_working.data(), 0, _working.size());
++	_committed = _working;
++	++_revision;
++}
++
++void FDisBullGraphicsManager::setPalette(const byte *colors, uint start, uint num) {
++	if (!colors || start >= 256 || num > 256 - start) return;
++	memcpy(_palette + 3 * start, colors, 3 * num);
++}
++
++void FDisBullGraphicsManager::grabPalette(byte *colors, uint start, uint num) const {
++	if (!colors || start >= 256 || num > 256 - start) return;
++	memcpy(colors, _palette + 3 * start, 3 * num);
++}
++
++void FDisBullGraphicsManager::copyRectToScreen(const void *buf, int pitch, int x, int y, int w, int h) {
++	if (!buf || pitch <= 0 || w <= 0 || h <= 0 || _working.empty()) return;
++	const byte *src = static_cast<const byte *>(buf);
++	for (int row = 0; row < h; ++row) {
++		const int dstY = y + row;
++		if (dstY < 0 || dstY >= int(_height)) continue;
++		for (int col = 0; col < w; ++col) {
++			const int dstX = x + col;
++			if (dstX >= 0 && dstX < int(_width))
++				_working[size_t(dstY) * _width + dstX] = src[size_t(row) * pitch + col];
++		}
++	}
++}
++
++void FDisBullGraphicsManager::fillScreen(uint32 color) {
++	std::fill(_working.begin(), _working.end(), byte(color));
++}
++
++void FDisBullGraphicsManager::fillScreen(const Common::Rect &rect, uint32 color) {
++	for (int y = std::max(0, int(rect.top)); y < std::min(int(_height), int(rect.bottom)); ++y)
++		for (int x = std::max(0, int(rect.left)); x < std::min(int(_width), int(rect.right)); ++x)
++			_working[size_t(y) * _width + x] = byte(color);
++}
++
++void FDisBullGraphicsManager::updateScreen() {
++	_committed = _working;
++	memcpy(_committedPalette, _palette, sizeof(_palette));
++	++_revision;
++}
++
++void FDisBullGraphicsManager::rgb(Common::Array<byte> &out) const {
++	out.resize(_committed.size() * 3);
++	for (size_t i = 0; i < _committed.size(); ++i) {
++		const size_t p = size_t(_committed[i]) * 3;
++		out[3 * i] = _committedPalette[p];
++		out[3 * i + 1] = _committedPalette[p + 1];
++		out[3 * i + 2] = _committedPalette[p + 2];
++	}
++}
++
++bool FDisBullGraphicsManager::pixel(int x, int y, byte &r, byte &g, byte &b) const {
++	if (x < 0 || y < 0 || x >= int(_width) || y >= int(_height) || _committed.empty()) return false;
++	const size_t p = size_t(_committed[size_t(y) * _width + x]) * 3;
++	r = _committedPalette[p]; g = _committedPalette[p + 1]; b = _committedPalette[p + 2];
++	return true;
++}
++
++namespace {
++using Common::JSONValue;
++using Common::JSONObject;
++using Common::JSONArray;
++using Clock = std::chrono::steady_clock;
++
++static JSONValue *num(long long value) { return new JSONValue(value); }
++static JSONValue *str(const char *value) { return new JSONValue(value ? value : ""); }
++static JSONValue *boolean(bool value) { return new JSONValue(value); }
++static long long integer(const JSONValue *parent, const char *key, long long fallback = -1) {
++	if (!parent) return fallback;
++	JSONValue *child = const_cast<JSONValue *>(parent)->child(key);
++	return child && child->isIntegerNumber() ? child->asIntegerNumber() : fallback;
++}
++static std::string stringValue(const JSONValue *parent, const char *key) {
++	if (!parent) return "";
++	JSONValue *child = const_cast<JSONValue *>(parent)->child(key);
++	return child && child->isString() ? child->asString().c_str() : "";
++}
++static std::string base64(const byte *data, size_t size) {
++	static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
++	std::string output;
++	output.reserve((size + 2) / 3 * 4);
++	for (size_t i = 0; i < size; i += 3) {
++		const uint a = data[i], b = i + 1 < size ? data[i + 1] : 0, c = i + 2 < size ? data[i + 2] : 0;
++		output += alphabet[a >> 2]; output += alphabet[((a & 3) << 4) | (b >> 4)];
++		output += i + 1 < size ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
++		output += i + 2 < size ? alphabet[c & 63] : '=';
++	}
++	return output;
++}
++static std::string hex(const byte *data, size_t size) {
++	static const char digits[] = "0123456789abcdef";
++	std::string output; output.reserve(size * 2);
++	for (size_t i = 0; i < size; ++i) { output += digits[data[i] >> 4]; output += digits[data[i] & 15]; }
++	return output;
++}
++static bool unhex(const std::string &input, std::vector<byte> &output) {
++	if (input.empty() || input.size() % 2 || input.size() > 8192) return false;
++	output.clear(); output.reserve(input.size() / 2);
++	for (size_t i = 0; i < input.size(); i += 2) {
++		const size_t a = std::string("0123456789abcdef").find(input[i]);
++		const size_t b = std::string("0123456789abcdef").find(input[i + 1]);
++		if (a == std::string::npos || b == std::string::npos) return false;
++		output.push_back(byte((a << 4) | b));
++	}
++	return true;
++}
++static std::string fnv1a64(const byte *data, size_t size) {
++	uint64 hash = 14695981039346656037ULL;
++	for (size_t i = 0; i < size; ++i) { hash ^= data[i]; hash *= 1099511628211ULL; }
++	byte bytes[8]; for (int i = 7; i >= 0; --i) { bytes[i] = byte(hash & 255); hash >>= 8; }
++	return hex(bytes, 8);
++}
++
++struct TraceEntry { int logic, offset, opcode; uint64 guestMs; };
++struct Watch { std::string kind; int index; std::string access; };
++struct ScheduledEvent { Common::Event event; uint64 dueMs; int lease; };
++struct KeyLease { int id; std::string key; Common::KeyCode code; uint16 ascii; bool delivered; bool releaseScheduled; };
++
++class Bridge {
++public:
++	Bridge() : _fd(-1), _graphics(nullptr), _engine(nullptr), _guestMs(0), _executed(0),
++		_seenOpcode(false), _running(false), _atCycle(false), _atModal(false), _atBackendYield(false), _servicing(false), _modalRevision(0), _runId(-1), _runStartInstructions(0),
++		_maxInstructions(0), _virtualDeadline(0), _hasVirtualDeadline(false), _hasHostDeadline(false),
++		_logic(-1), _offset(-1), _skipBreak(false), _watchHit(false), _suppressWatch(false),
++		_traceEnabled(false), _pauseRequested(false), _untilCycle(false), _skipCycle(false), _queueTailMs(0), _nextLeaseId(1) {
++		for (int i = 0; i < 256; ++i) { _logicPtr[i] = nullptr; _logicSize[i] = 0; _logicGeneration[i] = 0; _logicActive[i] = false; }
++		const char *value = getenv("FDISBULL_SCUMMVM_FD");
++		if (value && *value) {
++			char *end = nullptr;
++			long fd = strtol(value, &end, 10);
++			if (end && !*end && fd >= 3 && fd < 1048576) _fd = int(fd);
++		}
++		if (_fd >= 0) signal(SIGPIPE, SIG_IGN);
++	}
++	bool enabled() const { return _fd >= 0; }
++	void attach(FDisBullGraphicsManager *graphics) { _graphics = graphics; }
++	uint32 guestMillis() const { return uint32(_guestMs); }
++	void delay(uint32 ms) { _guestMs += ms; }
++	bool pollEvent(Common::Event &event) {
++		if (_events.empty() || _events.front().dueMs > _guestMs) return false;
++		const ScheduledEvent scheduled = _events.front(); _events.erase(_events.begin()); event = scheduled.event;
++		if (event.type == Common::EVENT_KEYDOWN) _heldKeycodes.insert(int(event.kbd.keycode));
++		if (event.type == Common::EVENT_KEYUP) _heldKeycodes.erase(int(event.kbd.keycode));
++		if (scheduled.lease) {
++			for (auto it = _leases.begin(); it != _leases.end(); ++it) if (it->id == scheduled.lease) {
++				if (event.type == Common::EVENT_KEYDOWN) it->delivered = true;
++				if (event.type == Common::EVENT_KEYUP) _leases.erase(it);
++				break;
++			}
++		}
++		return true;
++	}
++	void opcode(Agi::AgiEngine *engine, int logic, int offset, int opcode) {
++		_seenOpcode = true;
++		_safepoint(engine, false, logic, offset);
++		if (_traceEnabled) {
++			if (_trace.size() >= 2048) _trace.erase(_trace.begin());
++			_trace.push_back({logic, offset, opcode, _guestMs});
++		}
++	}
++	void afterOpcode(Agi::AgiEngine *) { ++_executed; }
++	void cycle(Agi::AgiEngine *engine) {
++		if (_seenOpcode) _safepoint(engine, true, -1, -1);
++	}
++	void serviceModal() {
++		if (!_engine || !_running || _servicing) return;
++		_servicing = true;
++		_safepoint(_engine, false, -1, -1, true);
++		_servicing = false;
++	}
++	void stateWrite(const char *kind, int index, int oldValue, int newValue) {
++		access(kind, index, "w", oldValue, newValue);
++	}
++	void stateRead(const char *kind, int index, int value) {
++		access(kind, index, "r", value, value);
++	}
++	void access(const char *kind, int index, const char *mode, int oldValue, int newValue) {
++		if (_suppressWatch || !_running) return;
++		for (const Watch &watch : _watches)
++			if (watch.index == index && watch.kind == kind && (watch.access == "rw" || watch.access == mode)) {
++				_watchHit = true; _watchKind = kind; _watchIndex = index; _watchOld = oldValue; _watchNew = newValue; _watchAccess = mode; break;
++			}
++	}
++
++private:
++	int _fd;
++	FDisBullGraphicsManager *_graphics;
++	Agi::AgiEngine *_engine;
++	std::string _rx;
++	std::vector<ScheduledEvent> _events;
++	std::set<int> _heldKeycodes;
++	std::vector<KeyLease> _leases;
++	uint64 _queueTailMs;
++	int _nextLeaseId;
++	uint64 _guestMs, _executed;
++	bool _seenOpcode, _running, _atCycle, _atModal, _atBackendYield, _servicing;
++	uint64 _modalRevision;
++	long long _runId;
++	uint64 _runStartInstructions, _maxInstructions, _virtualDeadline;
++	bool _hasVirtualDeadline, _hasHostDeadline;
++	Clock::time_point _hostDeadline;
++	int _logic, _offset;
++	bool _skipBreak;
++	int _skipLogic, _skipOffset;
++	std::vector<std::pair<int, int>> _breakpoints;
++	std::vector<Watch> _watches;
++	bool _watchHit;
++	std::string _watchKind, _watchAccess;
++	int _watchIndex, _watchOld, _watchNew;
++	bool _suppressWatch, _traceEnabled, _pauseRequested;
++	bool _untilCycle, _skipCycle;
++	std::vector<TraceEntry> _trace;
++	const byte *_logicPtr[256];
++	int _logicSize[256], _logicGeneration[256];
++	bool _logicActive[256];
++	std::vector<byte> _logicOriginal[256];
++	std::string _logicSeenHash[256];
++	bool _layerConflict = false;
++	int _layerLogic = -1;
++	std::string _layerStatus, _layerActualHash;
++	void checkLayers() {
++		if (_layerConflict || !_engine) return;
++		for (int i = 0; i < 256; ++i) {
++			if (!_logicActive[i]) continue;
++			if (!(_engine->_game.dirLogic[i].flags & Agi::RES_LOADED)) {
++				_layerConflict = true; _layerLogic = i; _layerStatus = "unloaded"; _layerActualHash.clear(); return;
++			}
++			const Agi::AgiLogic &logic = _engine->_game.logics[i];
++			if (!logic.data || logic.data != _logicPtr[i] || logic.size != _logicSize[i]) {
++				_layerConflict = true; _layerLogic = i; _layerStatus = "resource_replaced";
++				_layerActualHash = logic.data && logic.size >= 0 ? fnv1a64(logic.data, logic.size) : ""; return;
++			}
++			const std::string current = fnv1a64(logic.data, logic.size);
++			if (current != _logicSeenHash[i]) {
++				_layerConflict = true; _layerLogic = i; _layerStatus = "bytes_changed"; _layerActualHash = current; return;
++			}
++		}
++	}
++	JSONValue *layerConflictValue() {
++		JSONObject conflict; conflict["logic"] = num(_layerLogic);
++		conflict["status"] = str(_layerStatus.c_str());
++		conflict["expected_fnv1a64"] = str(_layerLogic >= 0 ? _logicSeenHash[_layerLogic].c_str() : "");
++		conflict["actual_fnv1a64"] = str(_layerActualHash.c_str());
++		return new JSONValue(conflict);
++	}
++	bool loadedLogic(int id, Agi::AgiLogic *&logic) {
++		checkLayers();
++		if (_layerConflict && _layerLogic == id) return false;
++		if (id < 0 || id > 255 || !_engine || !(_engine->_game.dirLogic[id].flags & Agi::RES_LOADED)) return false;
++		logic = &_engine->_game.logics[id];
++		if (!logic->data || logic->size < 0) return false;
++		const std::string current = fnv1a64(logic->data, logic->size);
++		if (_logicPtr[id] != logic->data || _logicSize[id] != logic->size || (!_logicSeenHash[id].empty() && _logicSeenHash[id] != current)) {
++			_logicPtr[id] = logic->data; _logicSize[id] = logic->size; _logicGeneration[id] = 0; _logicActive[id] = false;
++			_logicOriginal[id].clear();
++		}
++		_logicSeenHash[id] = current;
++		return true;
++	}
++	void logicMetadata(int id, Agi::AgiLogic *logic, JSONObject &body) {
++		body["logic"] = num(id); body["size"] = num(logic->size);
++		body["generation"] = num(_logicGeneration[id]); body["scope"] = str("loaded_logic_memory");
++		body["native_save_persists_patch"] = boolean(false);
++		const byte *original = _logicOriginal[id].empty() ? logic->data : _logicOriginal[id].data();
++		body["active"] = boolean(_logicActive[id]);
++		body["original_fnv1a64"] = str(fnv1a64(original, logic->size).c_str());
++		body["current_fnv1a64"] = str(fnv1a64(logic->data, logic->size).c_str());
++	}
++
++	void send(const JSONObject &obj) {
++		JSONValue value(obj);
++		Common::String s = value.stringify();
++		std::string line = std::string(s.c_str()) + "\n";
++		const char *ptr = line.data(); size_t remaining = line.size();
++		while (remaining) {
++			ssize_t n = write(_fd, ptr, remaining);
++			if (n < 0 && errno == EINTR) continue;
++			if (n <= 0) std::exit(3); // Do not continue game execution after losing the owner.
++			ptr += n; remaining -= size_t(n);
++		}
++	}
++	void ok(long long id, JSONObject &body) { body["id"] = num(id); body["ok"] = boolean(true); send(body); }
++	void error(long long id, const char *code, const char *message) {
++		JSONObject body; body["id"] = num(id); body["ok"] = boolean(false);
++		body["error"] = str(code); body["message"] = str(message); send(body);
++	}
++	bool receiveLine(bool block, std::string &line) {
++		for (;;) {
++			size_t newline = _rx.find('\n');
++			if (newline != std::string::npos) {
++				line = _rx.substr(0, newline); _rx.erase(0, newline + 1); return true;
++			}
++			pollfd pfd = {_fd, POLLIN, 0};
++			int ready = poll(&pfd, 1, block ? -1 : 0);
++			if (ready < 0 && errno == EINTR) continue;
++			if (ready < 0) std::exit(3);
++			if (ready == 0) return false;
++			char buf[4096]; ssize_t n = read(_fd, buf, sizeof(buf));
++			if (n < 0 && errno == EINTR) continue;
++			if (n < 0) std::exit(3);
++			if (n == 0) std::exit(0); // The controlling agent closed the socket.
++			_rx.append(buf, size_t(n));
++			if (_rx.size() > 1048576) std::exit(3);
++		}
++	}
++	bool breakpointHere() {
++		if (_logic < 0) return false;
++		if (_skipBreak && _skipLogic == _logic && _skipOffset == _offset) { _skipBreak = false; return false; }
++		for (const auto &bp : _breakpoints) if (bp.first == _logic && bp.second == _offset) return true;
++		return false;
++	}
++	void finishRun(const char *reason) {
++		_running = false;
++		JSONObject stop; stop["reason"] = str(reason); stop["logic"] = num(_logic); stop["offset"] = num(_offset);
++		stop["instructions"] = num(_executed - _runStartInstructions); stop["guest_ms"] = num(_guestMs);
++		stop["at_modal"] = boolean(_atModal); stop["at_backend_yield"] = boolean(_atBackendYield);
++		stop["modal_revision"] = num(_modalRevision);
++		if (_layerConflict) stop["layer_conflict"] = layerConflictValue();
++		if (_watchHit) {
++			JSONObject watch; watch["kind"] = str(_watchKind.c_str()); watch["index"] = num(_watchIndex);
++			watch["access"] = str(_watchAccess.c_str());
++			watch["old"] = num(_watchOld); watch["new"] = num(_watchNew);
++			stop["watch"] = new JSONValue(watch);
++		}
++		JSONObject body; body["stop"] = new JSONValue(stop); ok(_runId, body);
++		_watchHit = false; _pauseRequested = false; _runId = -1;
++		_untilCycle = false;
++	}
++	void _safepoint(Agi::AgiEngine *engine, bool atCycle, int logic, int offset, bool backendYield = false) {
++		if (!enabled()) return;
++		_engine = engine; _atCycle = atCycle; _atBackendYield = backendYield; _logic = logic; _offset = offset;
++		const bool modal = engine->_game.cycleInnerLoopActive && engine->_game.cycleInnerLoopType == Agi::CYCLE_INNERLOOP_MESSAGEBOX;
++		if (_atModal != modal) { _atModal = modal; ++_modalRevision; }
++		for (;;) {
++			std::string line;
++			while (receiveLine(false, line)) handle(line);
++			if (_running) {
++				const char *reason = nullptr;
++				checkLayers();
++				if (_layerConflict) reason = "layer_conflict";
++				else if (_pauseRequested) reason = "pause";
++				else if (_watchHit) reason = "watchpoint";
++				else if (_maxInstructions && _executed - _runStartInstructions >= _maxInstructions) reason = "budget";
++				else if (_hasVirtualDeadline && _guestMs >= _virtualDeadline) reason = "guest_budget";
++				else if (_hasHostDeadline && Clock::now() >= _hostDeadline) reason = "host_timeout";
++				else if (breakpointHere()) reason = "breakpoint";
++				else if (_untilCycle && _atCycle && !_skipCycle) reason = "cycle";
++				if (_skipCycle && _atCycle) _skipCycle = false;
++				if (!reason) return;
++				finishRun(reason);
++			}
++			if (!enabled()) return;
++			if (receiveLine(true, line)) handle(line);
++		}
++	}
++	JSONObject state() {
++		checkLayers();
++		JSONObject state;
++		state["room"] = num(_engine->_game.vars[Agi::VM_VAR_CURRENT_ROOM]);
++		state["logic"] = num(_logic); state["offset"] = num(_offset); state["at_cycle"] = boolean(_atCycle);
++		state["at_modal"] = boolean(_atModal); state["at_backend_yield"] = boolean(_atBackendYield);
++		state["inner_loop_active"] = boolean(_engine->_game.cycleInnerLoopActive);
++		state["inner_loop_type"] = num(_engine->_game.cycleInnerLoopActive ? _engine->_game.cycleInnerLoopType : -1);
++		state["modal_revision"] = num(_modalRevision);
++		state["guest_ms"] = num(_guestMs); state["instructions"] = num(_executed);
++		JSONArray vars, flags, objects, screen;
++		for (int i = 0; i < 256; ++i) {
++			vars.push_back(num(_engine->_game.vars[i]));
++			flags.push_back(boolean((_engine->_game.flags[i >> 3] & (1 << (i & 7))) != 0));
++		}
++		for (unsigned i = 0; i < _engine->_game.numObjects; ++i) {
++			JSONObject obj; obj["id"] = num(i); obj["name"] = str(_engine->objectName(i));
++			obj["location"] = num(_engine->objectGetLocation(i)); objects.push_back(new JSONValue(obj));
++		}
++		for (int i = 0; i < SCREENOBJECTS_MAX; ++i) {
++			const Agi::ScreenObjEntry &v = _engine->_game.screenObjTable[i];
++			if (!v.flags && !v.viewResource) continue;
++			JSONObject obj; obj["id"] = num(i); obj["x"] = num(v.xPos); obj["y"] = num(v.yPos);
++			obj["view"] = num(v.currentViewNr); obj["loop"] = num(v.currentLoopNr);
++			obj["cel"] = num(v.currentCelNr); obj["priority"] = num(v.priority);
++			obj["flags"] = num(v.flags); screen.push_back(new JSONValue(obj));
++		}
++		state["vars"] = new JSONValue(vars); state["flags"] = new JSONValue(flags);
++		state["objects"] = new JSONValue(objects); state["screen_objects"] = new JSONValue(screen);
++		state["frame_revision"] = num(_graphics ? _graphics->revision() : 0);
++		JSONArray patches;
++		for (int i = 0; i < 256; ++i) if (_logicGeneration[i]) {
++			JSONObject patch; patch["logic"] = num(i); patch["generation"] = num(_logicGeneration[i]); patch["active"] = boolean(_logicActive[i]);
++			patches.push_back(new JSONValue(patch));
++		}
++		state["logic_patches"] = new JSONValue(patches);
++		if (_layerConflict) state["layer_conflict"] = layerConflictValue();
++		return state;
++	}
++	void queueKeyEvent(Common::KeyCode keycode, uint16 ascii, Common::EventType type, uint64 due, int lease = 0) {
++		Common::Event event; event.type = type; event.kbd.keycode = keycode; event.kbd.ascii = ascii;
++		_events.push_back({event, due, lease});
++	}
++	void queueKeyPair(Common::KeyCode keycode, uint16 ascii, uint32 holdMs, uint32 gapMs) {
++		const uint64 start = std::max(_guestMs, _queueTailMs);
++		queueKeyEvent(keycode, ascii, Common::EVENT_KEYDOWN, start);
++		queueKeyEvent(keycode, ascii, Common::EVENT_KEYUP, start + holdMs);
++		_queueTailMs = start + holdMs + gapMs;
++	}
++	bool keyFromName(const std::string &name, Common::KeyCode &key, uint16 &ascii) {
++		if (name == "enter") { key = Common::KEYCODE_RETURN; ascii = 13; }
++		else if (name == "tab") { key = Common::KEYCODE_TAB; ascii = 9; }
++		else if (name == "left") { key = Common::KEYCODE_LEFT; ascii = 0; }
++		else if (name == "right") { key = Common::KEYCODE_RIGHT; ascii = 0; }
++		else if (name == "up") { key = Common::KEYCODE_UP; ascii = 0; }
++		else if (name == "down") { key = Common::KEYCODE_DOWN; ascii = 0; }
++		else if (name == "escape" || name == "esc") { key = Common::KEYCODE_ESCAPE; ascii = 27; }
++		else if (name == "backspace") { key = Common::KEYCODE_BACKSPACE; ascii = 8; }
++		else if (name == "space") { key = Common::KEYCODE_SPACE; ascii = 32; }
++		else if (name == "home") { key = Common::KEYCODE_HOME; ascii = 0; }
++		else if (name == "end") { key = Common::KEYCODE_END; ascii = 0; }
++		else if (name == "insert") { key = Common::KEYCODE_INSERT; ascii = 0; }
++		else if (name == "delete") { key = Common::KEYCODE_DELETE; ascii = 127; }
++		else if (name == "pageup") { key = Common::KEYCODE_PAGEUP; ascii = 0; }
++		else if (name == "pagedown") { key = Common::KEYCODE_PAGEDOWN; ascii = 0; }
++		else if (name == "shift") { key = Common::KEYCODE_LSHIFT; ascii = 0; }
++		else if (name == "ctrl") { key = Common::KEYCODE_LCTRL; ascii = 0; }
++		else if (name == "alt") { key = Common::KEYCODE_LALT; ascii = 0; }
++		else if (name.size() >= 2 && name[0] == 'f' && name.size() <= 3) {
++			int number = 0;
++			for (size_t i = 1; i < name.size(); ++i) {
++				if (name[i] < '0' || name[i] > '9') return false;
++				number = number * 10 + (name[i] - '0');
++			}
++			if (number < 1 || number > 12) return false;
++			key = Common::KeyCode(Common::KEYCODE_F1 + number - 1); ascii = 0;
++		}
++		else if (name.size() == 1 && name[0] >= 32 && name[0] <= 126) {
++			const char c = name[0]; ascii = uint16(c);
++			key = Common::KeyCode(c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c);
++		}
++		else return false;
++		return true;
++	}
++	void inputStatus(JSONObject &body) {
++		body["pending"] = num(_events.size()); body["guest_ms"] = num(_guestMs);
++		body["queue_tail_guest_ms"] = num(std::max(_guestMs, _queueTailMs));
++		body["next_due_guest_ms"] = _events.empty() ? new JSONValue() : num(_events.front().dueMs);
++		JSONArray held, leases;
++		for (int key : _heldKeycodes) held.push_back(num(key));
++		for (const KeyLease &lease : _leases) {
++			JSONObject item; item["lease"] = num(lease.id); item["key"] = str(lease.key.c_str());
++			item["down_delivered"] = boolean(lease.delivered); item["up_scheduled"] = boolean(lease.releaseScheduled);
++			leases.push_back(new JSONValue(item));
++		}
++		body["held_keycodes"] = new JSONValue(held); body["leases"] = new JSONValue(leases);
++	}
++	void handle(const std::string &line) {
++		JSONValue *request = Common::JSON::parse(line.c_str());
++		if (!request || !request->isObject()) { delete request; error(-1, "bad_json", "Expected a JSON object"); return; }
++		const long long id = integer(request, "id"); const std::string op = stringValue(request, "op");
++		if (id < 0 || op.empty()) { error(id, "bad_request", "Request requires id and op"); delete request; return; }
++		if ((_running || _atBackendYield) && (op == "state.set" || op == "logic.patch" || op == "logic.restore" || op == "save" || op == "load")) {
++			error(id, _running ? "busy" : "backend_yield", "Mutation requires a paused opcode or cycle safe point"); delete request; return;
++		}
++		JSONObject body;
++		if (op == "hello") {
++			body["engine"] = str("agi"); body["scummvm_version"] = str("2.8.1");
++			body["bridge_version"] = num(1); body["paused"] = boolean(!_running);
++			JSONArray caps; const char *names[] = {"state.get", "state.set", "run", "step", "run_until_cycle", "break.add", "break.remove", "watch.add", "watch.remove", "input", "input.status", "input.virtual_timing", "input.key_leases", "frame.get", "pixel.get", "trace.start", "trace.stop", "trace.get", "trace.clear", "logic.read", "logic.patch", "logic.restore", "save", "load", "quit"};
++			for (const char *name : names) caps.push_back(str(name)); body["capabilities"] = new JSONValue(caps);
++			body["virtual_clock"] = boolean(true); ok(id, body);
++		} else if (op == "state.get") {
++			body["state"] = new JSONValue(state()); ok(id, body);
++		} else if (op == "state.set") {
++			const std::string kind = stringValue(request, "kind");
++			const long long index = integer(request, "index");
++			JSONValue *valueNode = request->child("value");
++			const long long value = valueNode && valueNode->isBool() ? (valueNode->asBool() ? 1 : 0) : integer(request, "value");
++			if (kind == "var" && index >= 0 && index < 256 && value >= 0 && value < 256) {
++				_suppressWatch = true; _engine->setVar(index, byte(value)); _suppressWatch = false; ok(id, body);
++			} else if (kind == "flag" && index >= 0 && index < 256 && (value == 0 || value == 1)) {
++				_suppressWatch = true; _engine->setFlag(index, value != 0); _suppressWatch = false; ok(id, body);
++			} else if (kind == "object" && index >= 0 && index < (long long)_engine->_game.numObjects && value >= 0 && value < 256) {
++				_suppressWatch = true; _engine->objectSetLocation(index, value); _suppressWatch = false; ok(id, body);
++			} else error(id, "invalid_state", "Expected valid var, flag, or object index and value");
++		} else if (op == "run" || op == "step" || op == "run_until_cycle") {
++			long long maxInstructions = op == "step" ? 1 : integer(request, "max_instructions", op == "run_until_cycle" ? 1000000 : 0);
++			long long virtualMs = op == "step" ? 0 : integer(request, "virtual_ms", integer(request, "max_guest_ms", 0));
++			long long maxMs = integer(request, "max_ms", 30000);
++			if (_running) error(id, "busy", "A run is already active");
++			else if (maxInstructions < 0 || virtualMs < 0 || maxMs < 0 || (maxInstructions == 0 && virtualMs == 0)) error(id, "invalid_budget", "Provide a positive instruction or virtual_ms budget");
++			else {
++				_runId = id; _runStartInstructions = _executed; _maxInstructions = maxInstructions;
++				_hasVirtualDeadline = virtualMs > 0; _virtualDeadline = _guestMs + virtualMs;
++				_hasHostDeadline = maxMs > 0; _hostDeadline = Clock::now() + std::chrono::milliseconds(maxMs);
++				_skipBreak = true; _skipLogic = _logic; _skipOffset = _offset;
++				_untilCycle = op == "run_until_cycle"; _skipCycle = _untilCycle && _atCycle;
++				_running = true; _pauseRequested = false;
++			}
++		} else if (op == "pause") {
++			_pauseRequested = true; ok(id, body);
++		} else if (op == "break.add" || op == "break.remove") {
++			const long long logic = integer(request, "logic"), offset = integer(request, "offset");
++			if (logic < 0 || logic > 255 || offset < 0 || offset > 65535) error(id, "invalid_breakpoint", "Expected logic 0..255 and nonnegative offset");
++			else {
++				const auto value = std::make_pair(int(logic), int(offset));
++				auto it = std::find(_breakpoints.begin(), _breakpoints.end(), value);
++				if (op == "break.add" && it == _breakpoints.end()) _breakpoints.push_back(value);
++				if (op == "break.remove" && it != _breakpoints.end()) _breakpoints.erase(it);
++				body["count"] = num(_breakpoints.size()); ok(id, body);
++			}
++		} else if (op == "watch.add" || op == "watch.remove") {
++			const std::string kind = stringValue(request, "kind"), access = stringValue(request, "access").empty() ? "w" : stringValue(request, "access");
++			const long long index = integer(request, "index");
++			if ((kind != "var" && kind != "flag" && kind != "object") || index < 0 || index >= (kind == "object" ? (long long)_engine->_game.numObjects : 256)) error(id, "invalid_watchpoint", "Expected valid kind and index");
++			else if (access != "r" && access != "w" && access != "rw") error(id, "invalid_access", "Expected access r, w, or rw");
++			else {
++				auto it = std::find_if(_watches.begin(), _watches.end(), [&](const Watch &w) { return w.kind == kind && w.index == index && w.access == access; });
++				if (op == "watch.add" && it == _watches.end()) _watches.push_back({kind, int(index), access});
++				if (op == "watch.remove" && it != _watches.end()) _watches.erase(it);
++				body["count"] = num(_watches.size()); ok(id, body);
++			}
++		} else if (op == "logic.read" || op == "logic.patch" || op == "logic.restore") {
++			const long long logicId = integer(request, "logic"), offset = integer(request, "offset");
++			Agi::AgiLogic *logic = nullptr;
++			if (logicId < 0 || logicId > 255 || !loadedLogic(logicId, logic)) error(id, "logic_not_loaded", "Logic resource is not currently loaded");
++			else if (op == "logic.read") {
++				const long long length = integer(request, "length");
++				if (offset < 0 || length < 0 || length > 4096 || offset > logic->size || length > logic->size - offset) error(id, "invalid_range", "Expected range within loaded logic, at most 4096 bytes");
++				else {
++					logicMetadata(logicId, logic, body); body["offset"] = num(offset); body["length"] = num(length);
++					const byte *original = _logicOriginal[logicId].empty() ? logic->data : _logicOriginal[logicId].data();
++					body["original_hex"] = str(hex(original + offset, length).c_str());
++					body["current_hex"] = str(hex(logic->data + offset, length).c_str()); ok(id, body);
++				}
++			} else if (op == "logic.restore") {
++				const std::string expectedHash = stringValue(request, "expected_fnv1a64");
++				if (_logicOriginal[logicId].empty()) error(id, "no_patch", "No retained original bytes for this loaded logic");
++				else if (expectedHash.empty() || expectedHash != fnv1a64(logic->data, logic->size)) error(id, "expected_mismatch", "Current logic hash differs from expected_fnv1a64");
++				else {
++					memcpy(logic->data, _logicOriginal[logicId].data(), logic->size);
++					++_logicGeneration[logicId]; _logicSeenHash[logicId] = fnv1a64(logic->data, logic->size); _logicActive[logicId] = false;
++					logicMetadata(logicId, logic, body); body["restored"] = boolean(true); ok(id, body);
++				}
++			} else {
++				const std::string expectedHex = stringValue(request, "expected_hex"), dataHex = stringValue(request, "data_hex");
++				std::vector<byte> expected, data;
++				if (!unhex(expectedHex, expected) || !unhex(dataHex, data) || expected.size() != data.size()) error(id, "invalid_patch", "Expected equal nonempty hex byte strings, at most 4096 bytes");
++				else if (offset < 0 || offset > logic->size || data.size() > size_t(logic->size - offset)) error(id, "invalid_range", "Patch exceeds loaded logic script range");
++				else if (memcmp(logic->data + offset, expected.data(), data.size()) != 0) error(id, "expected_mismatch", "Current bytes differ from expected_hex");
++				else {
++					if (_logicOriginal[logicId].empty()) _logicOriginal[logicId].assign(logic->data, logic->data + logic->size);
++					memcpy(logic->data + offset, data.data(), data.size());
++					++_logicGeneration[logicId]; _logicSeenHash[logicId] = fnv1a64(logic->data, logic->size);
++					_logicActive[logicId] = memcmp(_logicOriginal[logicId].data(), logic->data, logic->size) != 0;
++					logicMetadata(logicId, logic, body); body["offset"] = num(offset); body["length"] = num(data.size());
++					body["before_hex"] = str(expectedHex.c_str()); body["after_hex"] = str(dataHex.c_str()); ok(id, body);
++				}
++			}
++		} else if (op == "input.status") {
++			inputStatus(body); ok(id, body);
++		} else if (op == "input") {
++			const size_t before = _events.size(); const std::string kind = stringValue(request, "kind");
++			const long long holdMs = integer(request, "hold_ms", 0), gapMs = integer(request, "gap_ms", 0);
++			JSONValue *modifiers = request->child("modifiers");
++			if (modifiers && (!modifiers->isArray() || modifiers->countChildren())) error(id, "unsupported_modifiers", "This AGI bridge does not implement modifier chords");
++			else if (holdMs < 0 || holdMs > 1000 || gapMs < 0 || gapMs > 1000) error(id, "invalid_timing", "hold_ms and gap_ms must be 0..1000");
++			else if (kind == "key") {
++				const std::string action = stringValue(request, "action").empty() ? "press" : stringValue(request, "action");
++				if (action == "up") {
++					const long long leaseId = integer(request, "lease");
++					auto it = std::find_if(_leases.begin(), _leases.end(), [&](const KeyLease &l) { return l.id == leaseId; });
++					if (it == _leases.end() || it->releaseScheduled) error(id, "invalid_lease", "Key lease does not exist or is already being released");
++					else {
++						const uint64 due = std::max(_guestMs, _queueTailMs);
++						queueKeyEvent(it->code, it->ascii, Common::EVENT_KEYUP, due, it->id);
++						it->releaseScheduled = true; _queueTailMs = due + gapMs;
++						body["lease"] = num(leaseId); body["queued"] = num(1); inputStatus(body); ok(id, body);
++					}
++				} else {
++					const std::string name = stringValue(request, "key"); Common::KeyCode key; uint16 ascii;
++					if (!keyFromName(name, key, ascii)) error(id, "invalid_key", "Unsupported key name");
++					else if (action == "press") { queueKeyPair(key, ascii, holdMs, gapMs); body["queued"] = num(2); inputStatus(body); ok(id, body); }
++					else if (action == "down") {
++						const auto duplicate = std::find_if(_leases.begin(), _leases.end(), [&](const KeyLease &l) { return l.code == key; });
++						if (duplicate != _leases.end()) error(id, "key_already_leased", "This key already has a live lease");
++						else {
++							const int lease = _nextLeaseId++; const uint64 due = std::max(_guestMs, _queueTailMs);
++							_leases.push_back({lease, name, key, ascii, false, false});
++							queueKeyEvent(key, ascii, Common::EVENT_KEYDOWN, due, lease);
++							_queueTailMs = due + gapMs; body["lease"] = num(lease); body["queued"] = num(1); inputStatus(body); ok(id, body);
++						}
++					} else error(id, "invalid_action", "Expected key action press, down, or up");
++				}
++			} else if (kind == "text") {
++				const std::string text = stringValue(request, "text");
++				bool valid = !text.empty() && text.size() <= 4096;
++				for (unsigned char c : text) if (!(c >= 32 && c <= 126) && c != '\n' && c != '\r' && c != '\t') valid = false;
++				if (!valid) error(id, "invalid_text", "Text must contain only printable ASCII, Enter, or Tab; 1..4096 bytes");
++				else {
++					for (unsigned char c : text) {
++						if (c == '\n' || c == '\r') queueKeyPair(Common::KEYCODE_RETURN, 13, holdMs, gapMs);
++						else if (c == '\t') queueKeyPair(Common::KEYCODE_TAB, 9, holdMs, gapMs);
++						else { Common::KeyCode key; uint16 ascii; keyFromName(std::string(1, char(c)), key, ascii); queueKeyPair(key, ascii, holdMs, gapMs); }
++					}
++					body["queued"] = num(_events.size() - before); inputStatus(body); ok(id, body);
++				}
++			} else if (kind == "mouse") {
++				const std::string action = stringValue(request, "action"), button = stringValue(request, "button");
++				const long long x = integer(request, "x"), y = integer(request, "y");
++				if (!_graphics || x < 0 || y < 0 || x >= _graphics->width() || y >= _graphics->height() || (action != "move" && action != "down" && action != "up" && action != "click") || (action != "move" && button != "left" && button != "right")) error(id, "invalid_mouse", "Expected display coordinates, action, and button");
++				else {
++					const uint64 due = std::max(_guestMs, _queueTailMs);
++					Common::Event event; event.mouse = Common::Point(x, y);
++					event.type = action == "move" ? Common::EVENT_MOUSEMOVE : action == "up" ? (button == "left" ? Common::EVENT_LBUTTONUP : Common::EVENT_RBUTTONUP) : (button == "left" ? Common::EVENT_LBUTTONDOWN : Common::EVENT_RBUTTONDOWN);
++					_events.push_back({event, due, 0});
++					if (action == "click") { event.type = button == "left" ? Common::EVENT_LBUTTONUP : Common::EVENT_RBUTTONUP; _events.push_back({event, due + holdMs, 0}); }
++					_queueTailMs = due + (action == "click" ? holdMs : 0) + gapMs;
++					body["queued"] = num(_events.size() - before); inputStatus(body); ok(id, body);
++				}
++			} else error(id, "invalid_input", "Expected key, text, or mouse input");
++		} else if (op == "frame.get") {
++			if (!_graphics || !_graphics->width() || !_graphics->height()) error(id, "no_frame", "Graphics not initialized");
++			else {
++				Common::Array<byte> pixels; _graphics->rgb(pixels);
++				const std::string encoded = base64(pixels.data(), pixels.size());
++				body["width"] = num(_graphics->width()); body["height"] = num(_graphics->height());
++				body["format"] = str("rgb24"); body["data_base64"] = str(encoded.c_str());
++				body["revision"] = num(_graphics->revision()); body["guest_ms"] = num(_guestMs); ok(id, body);
++			}
++		} else if (op == "pixel.get") {
++			byte r, g, b; const long long x = integer(request, "x"), y = integer(request, "y");
++			if (!_graphics || !_graphics->pixel(x, y, r, g, b)) error(id, "invalid_pixel", "Pixel is outside display");
++			else { JSONArray rgb; rgb.push_back(num(r)); rgb.push_back(num(g)); rgb.push_back(num(b)); body["rgb"] = new JSONValue(rgb); body["revision"] = num(_graphics->revision()); ok(id, body); }
++		} else if (op == "trace.start") {
++			_traceEnabled = true; ok(id, body);
++		} else if (op == "trace.stop") {
++			_traceEnabled = false; ok(id, body);
++		} else if (op == "trace.clear") {
++			_trace.clear(); ok(id, body);
++		} else if (op == "trace.get") {
++			JSONArray entries; for (const auto &entry : _trace) {
++				JSONObject e; e["logic"] = num(entry.logic); e["offset"] = num(entry.offset);
++				e["opcode"] = num(entry.opcode); e["guest_ms"] = num(entry.guestMs); entries.push_back(new JSONValue(e));
++			}
++			body["entries"] = new JSONValue(entries); body["truncated"] = boolean(_trace.size() >= 2048); ok(id, body);
++		} else if (op == "save" || op == "load") {
++			const long long slot = integer(request, "slot");
++			if (slot < 1 || slot > 999) error(id, "invalid_slot", "Native ScummVM save slot must be 1..999");
++			else if (!_atCycle) error(id, "cycle_required", "Native save/load is available only at a cycle boundary");
++			else {
++				Common::Error result = op == "save" ? _engine->saveGameState(slot, Common::String("fDisBull AGI experiment")) : _engine->loadGameState(slot);
++				if (result.getCode() != Common::kNoError) error(id, "native_save_error", "ScummVM native save/load failed");
++				else { body["slot"] = num(slot); body["state"] = new JSONValue(state()); ok(id, body); }
++			}
++		} else if (op == "quit") {
++			ok(id, body); _fd = -1; std::exit(0);
++		} else error(id, "unknown_op", "Unsupported bridge operation");
++		delete request;
++	}
++};
++
++Bridge &bridge() { static Bridge instance; return instance; }
++}
++
++namespace FDisBullBridge {
++bool enabled() { return bridge().enabled(); }
++void attachGraphics(FDisBullGraphicsManager *graphics) { bridge().attach(graphics); }
++bool pollEvent(Common::Event &event) { return bridge().pollEvent(event); }
++void beforeOpcode(Agi::AgiEngine *engine, int logic, int offset, int opcode) { bridge().opcode(engine, logic, offset, opcode); }
++void afterOpcode(Agi::AgiEngine *engine) { bridge().afterOpcode(engine); }
++void cycle(Agi::AgiEngine *engine) { bridge().cycle(engine); }
++void serviceModal() { bridge().serviceModal(); }
++void stateWrite(const char *kind, int index, int oldValue, int newValue) { bridge().stateWrite(kind, index, oldValue, newValue); }
++void stateRead(const char *kind, int index, int value) { bridge().stateRead(kind, index, value); }
++uint32 guestMillis() { return bridge().guestMillis(); }
++void delayGuestMillis(uint32 millis) { bridge().delay(millis); }
++}
+diff --git a/backends/platform/null/fdisbull_bridge.h b/backends/platform/null/fdisbull_bridge.h
+new file mode 100644
+index 00000000..94fdded2
+--- /dev/null
++++ b/backends/platform/null/fdisbull_bridge.h
+@@ -0,0 +1,48 @@
++/* Experimental fDisBull headless AGI bridge. GPL-3.0-or-later, as ScummVM. */
++#ifndef BACKENDS_PLATFORM_NULL_FDISBULL_BRIDGE_H
++#define BACKENDS_PLATFORM_NULL_FDISBULL_BRIDGE_H
++
++#include "backends/graphics/null/null-graphics.h"
++#include "common/events.h"
++#include "common/array.h"
++
++namespace Agi { class AgiEngine; }
++
++class FDisBullGraphicsManager : public NullGraphicsManager {
++public:
++	FDisBullGraphicsManager();
++	void initSize(uint width, uint height, const Graphics::PixelFormat *format = nullptr) override;
++	void setPalette(const byte *colors, uint start, uint num) override;
++	void grabPalette(byte *colors, uint start, uint num) const override;
++	void copyRectToScreen(const void *buf, int pitch, int x, int y, int w, int h) override;
++	void fillScreen(uint32 color) override;
++	void fillScreen(const Common::Rect &rect, uint32 color) override;
++	void updateScreen() override;
++	uint64 revision() const { return _revision; }
++	uint width() const { return _width; }
++	uint height() const { return _height; }
++	void rgb(Common::Array<byte> &out) const;
++	bool pixel(int x, int y, byte &r, byte &g, byte &b) const;
++
++private:
++	uint _width, _height;
++	uint64 _revision;
++	Common::Array<byte> _working, _committed;
++	byte _palette[768], _committedPalette[768];
++};
++
++namespace FDisBullBridge {
++bool enabled();
++void attachGraphics(FDisBullGraphicsManager *graphics);
++bool pollEvent(Common::Event &event);
++void beforeOpcode(Agi::AgiEngine *engine, int logic, int offset, int opcode);
++void afterOpcode(Agi::AgiEngine *engine);
++void cycle(Agi::AgiEngine *engine);
++void serviceModal();
++void stateWrite(const char *kind, int index, int oldValue, int newValue);
++void stateRead(const char *kind, int index, int value);
++uint32 guestMillis();
++void delayGuestMillis(uint32 millis);
++}
++
++#endif
+diff --git a/backends/platform/null/module.mk b/backends/platform/null/module.mk
+index 30345d7a..98a01c58 100644
+--- a/backends/platform/null/module.mk
++++ b/backends/platform/null/module.mk
+@@ -1,7 +1,8 @@
+ MODULE := backends/platform/null
+ 
+ MODULE_OBJS := \
+-	null.o
++	null.o \
++	fdisbull_bridge.o
+ 
+ # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.
+ MODULE_OBJS := $(addprefix $(MODULE)/, $(MODULE_OBJS))
+diff --git a/backends/platform/null/null.cpp b/backends/platform/null/null.cpp
+index 4a6c430a..e68d7f0c 100644
+--- a/backends/platform/null/null.cpp
++++ b/backends/platform/null/null.cpp
+@@ -57,6 +57,9 @@ typedef void (*sighandler_t)(int);
+ #include "backends/events/default/default-events.h"
+ #include "backends/mixer/null/null-mixer.h"
+ #include "backends/graphics/null/null-graphics.h"
++#ifdef POSIX
++#include "backends/platform/null/fdisbull_bridge.h"
++#endif
+ #include "gui/debugger.h"
+ #endif
+ 
+@@ -150,7 +153,14 @@ void OSystem_NULL::initBackend() {
+ 	_timerManager = new DefaultTimerManager();
+ 	_eventManager = new DefaultEventManager(this);
+ 	_savefileManager = new DefaultSaveFileManager();
+-	_graphicsManager = new NullGraphicsManager();
++#ifdef POSIX
++	if (FDisBullBridge::enabled()) {
++		FDisBullGraphicsManager *graphics = new FDisBullGraphicsManager();
++		_graphicsManager = graphics;
++		FDisBullBridge::attachGraphics(graphics);
++	} else
++#endif
++		_graphicsManager = new NullGraphicsManager();
+ 	_mixerManager = new NullMixerManager();
+ 	// Setup and start mixer
+ 	_mixerManager->init();
+@@ -163,6 +173,11 @@ bool OSystem_NULL::pollEvent(Common::Event &event) {
+ #ifndef NULL_DRIVER_USE_FOR_TEST
+ 	((DefaultTimerManager *)getTimerManager())->checkTimers();
+ 	((NullMixerManager *)_mixerManager)->update(1);
++#ifdef POSIX
++	if (FDisBullBridge::enabled()) FDisBullBridge::serviceModal();
++	if (FDisBullBridge::enabled() && FDisBullBridge::pollEvent(event))
++		return true;
++#endif
+ 
+ #ifdef POSIX
+ 	if (intReceived) {
+@@ -192,6 +207,8 @@ Common::MutexInternal *OSystem_NULL::createMutex() {
+ 
+ uint32 OSystem_NULL::getMillis(bool skipRecord) {
+ #ifdef POSIX
++	if (FDisBullBridge::enabled())
++		return FDisBullBridge::guestMillis();
+ 	timeval curTime;
+ 
+ 	gettimeofday(&curTime, 0);
+@@ -207,6 +224,11 @@ uint32 OSystem_NULL::getMillis(bool skipRecord) {
+ 
+ void OSystem_NULL::delayMillis(uint msecs) {
+ #ifdef POSIX
++	if (FDisBullBridge::enabled()) {
++		FDisBullBridge::delayGuestMillis(msecs);
++		FDisBullBridge::serviceModal();
++		return;
++	}
+ 	usleep(msecs * 1000);
+ #elif defined(WIN32)
+ 	Sleep(msecs);
+diff --git a/engines/agi/cycle.cpp b/engines/agi/cycle.cpp
+index 7f034dae..630975b0 100644
+--- a/engines/agi/cycle.cpp
++++ b/engines/agi/cycle.cpp
+@@ -22,6 +22,9 @@
+ #include "common/config-manager.h"
+ 
+ #include "agi/agi.h"
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++#include "backends/platform/null/fdisbull_bridge.h"
++#endif
+ #include "agi/sprite.h"
+ #include "agi/graphics.h"
+ #include "agi/inv.h"
+@@ -375,6 +378,9 @@ int AgiEngine::playGame() {
+ 	}
+ 
+ 	do {
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++		if (FDisBullBridge::enabled()) FDisBullBridge::cycle(this);
++#endif
+ 		processAGIEvents();
+ 
+ 		inGameTimerUpdate();
+diff --git a/engines/agi/global.cpp b/engines/agi/global.cpp
+index c678461f..fde83599 100644
+--- a/engines/agi/global.cpp
++++ b/engines/agi/global.cpp
+@@ -23,6 +23,9 @@
+ #include "audio/mixer.h"
+ 
+ #include "agi/agi.h"
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++#include "backends/platform/null/fdisbull_bridge.h"
++#endif
+ #include "agi/graphics.h"
+ 
+ namespace Agi {
+@@ -31,10 +34,17 @@ bool AgiBase::getFlag(int16 flagNr) {
+ 	uint8 *flagPtr = _game.flags;
+ 
+ 	flagPtr += flagNr >> 3;
+-	return (*flagPtr & (1 << (flagNr & 0x07))) != 0;
++	const bool value = (*flagPtr & (1 << (flagNr & 0x07))) != 0;
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateRead("flag", flagNr, value);
++	#endif
++	return value;
+ }
+ 
+ void AgiBase::setFlag(int16 flagNr, bool newState) {
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	const bool oldState = (_game.flags[flagNr >> 3] & (1 << (flagNr & 7))) != 0;
++	#endif
+ 	uint8 *flagPtr = _game.flags;
+ 
+ 	flagPtr += flagNr >> 3;
+@@ -42,17 +52,32 @@ void AgiBase::setFlag(int16 flagNr, bool newState) {
+ 		*flagPtr |= 1 << (flagNr & 0x07);    // set bit
+ 	else
+ 		*flagPtr &= ~(1 << (flagNr & 0x07)); // clear bit
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateWrite("flag", flagNr, oldState, newState);
++	#endif
+ }
+ 
+ void AgiBase::flipFlag(int16 flagNr) {
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	const bool oldState = (_game.flags[flagNr >> 3] & (1 << (flagNr & 7))) != 0;
++	#endif
+ 	uint8 *flagPtr = _game.flags;
+ 
+ 	flagPtr += flagNr >> 3;
+ 	*flagPtr ^= 1 << (flagNr & 0x07);        // flip bit
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateWrite("flag", flagNr, oldState, !oldState);
++	#endif
+ }
+ 
+ void AgiEngine::setVar(int16 varNr, byte newValue) {
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	const byte oldValue = _game.vars[varNr];
++	#endif
+ 	_game.vars[varNr] = newValue;
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateWrite("var", varNr, oldValue, newValue);
++	#endif
+ 
+ 	switch (varNr) {
+ 	case VM_VAR_SECONDS:
+@@ -81,7 +106,11 @@ byte AgiEngine::getVar(int16 varNr) {
+ 	default:
+ 		break;
+ 	}
+-	return _game.vars[varNr];
++	const byte value = _game.vars[varNr];
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateRead("var", varNr, value);
++	#endif
++	return value;
+ }
+ 
+ // sets volume to mixer using game variable for volume where 0 is maximum volume to 15 being mute
+diff --git a/engines/agi/objects.cpp b/engines/agi/objects.cpp
+index b014eaee..e00e4716 100644
+--- a/engines/agi/objects.cpp
++++ b/engines/agi/objects.cpp
+@@ -20,6 +20,9 @@
+  */
+ 
+ #include "agi/agi.h"
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++#include "backends/platform/null/fdisbull_bridge.h"
++#endif
+ 
+ #include "common/textconsole.h"
+ 
+@@ -126,7 +129,13 @@ void AgiEngine::objectSetLocation(uint16 objectNr, int location) {
+ 		warning("AgiEngine::objectSetLocation: Can't access object %d.\n", objectNr);
+ 		return;
+ 	}
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	const int oldLocation = _objects[objectNr].location;
++	#endif
+ 	_objects[objectNr].location = location;
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateWrite("object", objectNr, oldLocation, location);
++	#endif
+ }
+ 
+ int AgiEngine::objectGetLocation(uint16 objectNr) {
+@@ -134,7 +143,11 @@ int AgiEngine::objectGetLocation(uint16 objectNr) {
+ 		warning("AgiEngine::objectGetLocation: Can't access object %d.\n", objectNr);
+ 		return 0;
+ 	}
+-	return _objects[objectNr].location;
++	const int value = _objects[objectNr].location;
++	#if defined(USE_NULL_DRIVER) && defined(POSIX)
++	if (FDisBullBridge::enabled()) FDisBullBridge::stateRead("object", objectNr, value);
++	#endif
++	return value;
+ }
+ 
+ const char *AgiEngine::objectName(uint16 objectNr) {
+diff --git a/engines/agi/op_cmd.cpp b/engines/agi/op_cmd.cpp
+index 6291c821..68b8a761 100644
+--- a/engines/agi/op_cmd.cpp
++++ b/engines/agi/op_cmd.cpp
+@@ -22,6 +22,9 @@
+ #include "base/version.h"
+ 
+ #include "agi/agi.h"
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++#include "backends/platform/null/fdisbull_bridge.h"
++#endif
+ #include "agi/inv.h"
+ #include "agi/sprite.h"
+ #include "agi/text.h"
+@@ -2403,6 +2406,10 @@ int AgiEngine::runLogic(int16 logicNr) {
+ 	_game._curLogic->cIP = _game._curLogic->sIP;
+ 
+ 	while (state->_curLogic->cIP < _game.logics[logicNr].size && !(shouldQuit() || _restartGame)) {
++#if defined(USE_NULL_DRIVER) && defined(POSIX)
++		if (FDisBullBridge::enabled())
++			FDisBullBridge::beforeOpcode(this, logicNr, state->_curLogic->cIP, state->_curLogic->data[state->_curLogic->cIP]);
++#endif
+ 		// TODO: old code, needs to be adjusted
+ #if 0
+ 		if (_debug.enabled) {
+@@ -2456,6 +2463,9 @@ int AgiEngine::runLogic(int16 logicNr) {
+ //				_v[13]=0;
+ //			}
+ 
++			#if defined(USE_NULL_DRIVER) && defined(POSIX)
++			if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode(this);
++			#endif
+ 			_game.execStack.pop_back();
+ 			return 1;
+ 		default:
+@@ -2472,6 +2482,9 @@ int AgiEngine::runLogic(int16 logicNr) {
+ 			_opCodes[op].functionPtr(&_game, this, p);
+ 			state->_curLogic->cIP += curParameterSize;
+ 		}
++		#if defined(USE_NULL_DRIVER) && defined(POSIX)
++		if (FDisBullBridge::enabled()) FDisBullBridge::afterOpcode(this);
++		#endif
+ 
+ //		if ((op == 0x0B || op == 0x3F || op == 0x40) && logic_index < state->max_logics) {
+ //			n = state->logic_list[++logic_index];

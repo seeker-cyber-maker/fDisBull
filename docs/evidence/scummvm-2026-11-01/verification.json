@@ -1,0 +1,69 @@
+{
+  "format": "fdisbull-scummvm-experiment-verification-1",
+  "date": "2026-11-01",
+  "timezone": "America/New_York",
+  "source_base": "498c0887f8d15ca3b2fb3dc8994d2de24e144273",
+  "branch": "codex/scummvm-execution-backend",
+  "status": "local_experimental_AGI_backend_and_bounded_scene_comparison",
+  "platform": "macOS ARM64",
+  "native": {
+    "upstream": "ScummVM v2.8.1",
+    "upstream_commit": "750f2373fb100efe08c6444e36b68c01387fc307",
+    "binary_sha256": "f4f671cc3194cb290616644334a7dce5ba3233e9418d57e084438a76cc73659e",
+    "patch_sha256": "cfe0e44e58a3e1d90c185cc2ee28f15d7b18e6454e1c57b9184d9369b6915f42",
+    "fresh_pristine_file_replay_matches": 8
+  },
+  "verification": {
+    "focused_real_and_contract_tests": {
+      "passed": 79,
+      "failed": 0,
+      "skipped": 0
+    },
+    "whole_macos_suite": {
+      "passed": 2638,
+      "failed": 5,
+      "skipped": 134,
+      "errors": 23,
+      "baseline_reproduced_failures": 5,
+      "baseline_reproduced_errors": 23,
+      "baseline": "unchanged shared fDisBull 0.29.0; ELF/GCC fixtures, case-insensitive media fixture, and LLDB wall-time limits"
+    },
+    "experimental_distribution": {
+      "wheel_tool_entries": 199,
+      "sdist_tool_entries_before_final_evidence": 724,
+      "source_identical_wheel_modules": 10,
+      "isolated_wheel_real_KQ1_step_PNG_and_project_reopen": true,
+      "distribution_guard_tests_passed": 46,
+      "final_sdist_tool_entries": 726
+    },
+    "comparison": "comparison.json"
+  },
+  "log_sha256": {
+    "pytest-focused-frozen.log": "c8b2110181bd1e30653c776635983d47b528f5903ad440420940ec02365ab8ae",
+    "pytest-current-macos.log": "2d4378c556f08b631fadaf0dcb7397628feda997b1ba87643ea970d3ba300dd4",
+    "pytest-baseline-macos.log": "0be5941ecb1c7fbf621df1d051ab92aae4bf210d6cb02f0349da66a1199b431e",
+    "pytest-baseline-lldb.log": "4fc799974d30b1339b93eb41f8fcc5fb93e6345b77a6be6c476017b40cc73757"
+  },
+  "provider_sha256": {
+    "src/fdisbull/scummvm_rpc.py": "7bc36d2e00e9eaa341f30159e1b786218ac55cc92ca9bd9b3c92354e9bc65ae1",
+    "src/fdisbull/scummvm_debugger.py": "44d397ea8c790e8b57a74ad90f11281b2dd617c4f33fcdbd0f39254571721b38",
+    "src/fdisbull/debugger.py": "ddacd3bb62b276001e0325895d39d089afca6e36dcb1b0f051b4536cc2ae32e7",
+    "src/fdisbull/debug_script.py": "d24f084b0e8f70c01caa46745c9b5489809787e15c69981f4c12a17562f41194",
+    "src/fdisbull/scene_values.py": "1af6de0737aee8d2ce41eb404362a6e900da50fc7d5670ae580c22f48848fc7a",
+    "src/fdisbull/scenes.py": "ecaccdbc5e4bcb8040dde70babf34a3b54d7129f35ad01e8ca1a04c81398ffb3",
+    "src/fdisbull/cli.py": "0d725345ada9100e081d14e0d94f499ede99f110abd7ff11c24e4eb65cd8d622",
+    "src/fdisbull/capabilities.py": "f13bd891226104bca97e9d20bc4f06969fefd525d7956c9c817443c193f3f8c3",
+    "src/fdisbull/debug_semantics.py": "b58d7022f6bb4f7e96b20de181854088524b56a5e22fe88863c87a5c0f80d2b0",
+    "src/fdisbull/scene_backend_comparison.py": "86beb29879742656a41b0b64abd275c2b7b108dcbf48ab81ba10a17daf01f2f6"
+  },
+  "limits": [
+    "AGI enabled; KQ1 and PQ1 bounded runtime cases only",
+    "ScummVM replacement interpreter facts retain separate provenance from original DOS",
+    "Cycle-level native game saves, not full mid-opcode snapshots",
+    "Instrumented accessor watches omit direct raw field accesses",
+    "Unsafe control-flow edits can crash native engine before next safe point",
+    "Modifier chords and native CPU code caves/hooks/experiments are outside this backend",
+    "Z comparison is an authored partial scene, not automatic whole-game UIL extraction",
+    "No publication, shared release activation, or hosted/native Linux CI performed"
+  ]
+}
