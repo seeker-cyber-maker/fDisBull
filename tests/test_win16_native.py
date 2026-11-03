@@ -37,7 +37,7 @@ def _snake_frame_ready(image):
             and colors.get((0,0,0),0)>=1000 and colors.get((0,0,170),0)>=1000)
 
 
-def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
+def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probes=True):
     original=Path(fixture).resolve(strict=True);initial_source=Path(initial).resolve(strict=True)
     if hashlib.sha256(original.read_bytes()).hexdigest()!=SNAKE_EXE_SHA256 or hashlib.sha256(initial_source.read_bytes()).hexdigest()!=SNAKE_INITIAL_SHA256:
      raise ValueError('Native Win16 scene acceptance requires the declared generated Snake executable/initial-state profile')
@@ -45,8 +45,8 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
     shutil.copyfile(original,GAME/'PROGRAM.EXE');shutil.copyfile(initial_source,GAME/'INITIAL.BIN')
     assert hashlib.sha256(original.read_bytes()).digest()==hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).digest()
     assert hashlib.sha256(initial_source.read_bytes()).digest()==hashlib.sha256((GAME/'INITIAL.BIN').read_bytes()).digest()
-    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[]}
-    start=time.monotonic();session=None
+    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes}
+    start=time.monotonic();session=None;trace=None
 
     def mark(stage,**details):
      receipt['checks'].append(dict(stage=stage,elapsed_s=time.monotonic()-start,**details));(OUT/'qualification.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt['checks'][-1]),flush=True)
@@ -68,12 +68,14 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
        entry=session.registers();assert entry['project_address']=='ne:2:0xa568' and entry['cpu_mode']=='protected16';assert session.rpc.capabilities['save_states'] is False
        mark('actual-original-ne-entry',qemu_pid=session.rpc.process.pid,registers=entry,bindings=list(session.bindings.values()))
        memory=session.memory('ne:2:0xa568',length=2);assert memory['hex']=='eb53'
-       bp=session.breakpoint('ne:2:0xa5bd');assert bp['bytes_verified']
-       stepped=session.step(count=1);assert stepped['completed'] and stepped['events'][0]['cpu_mode']=='protected16'
-       arrival=session.run(timeout_ms=10000);assert arrival['outcome']=='breakpoint',arrival
-       assert session.registers()['project_address']=='ne:2:0xa5bd';session.delete_breakpoint(bp['breakpoint_id'])
-       trace=session.trace('original-entry-call.json',count=1,timeout_ms=20000);assert trace['metadata']['complete']
-       mark('actual-ne-memory-execution-breakpoint-step-trace',memory=memory,breakpoint=bp,step=stepped,trace=trace)
+       if debug_probes:
+        bp=session.breakpoint('ne:2:0xa5bd');assert bp['bytes_verified']
+        stepped=session.step(count=1);assert stepped['completed'] and stepped['events'][0]['cpu_mode']=='protected16'
+        arrival=session.run(timeout_ms=10000);assert arrival['outcome']=='breakpoint',arrival
+        assert session.registers()['project_address']=='ne:2:0xa5bd';session.delete_breakpoint(bp['breakpoint_id'])
+        trace=session.trace('original-entry-call.json',count=1,timeout_ms=20000);assert trace['metadata']['complete']
+        mark('actual-ne-memory-execution-breakpoint-step-trace',memory=memory,breakpoint=bp,step=stepped,trace=trace)
+       else:mark('controlled-gui-arm-without-optional-entry-step-or-far-call-trace',memory=memory)
        continue_to_slice(session)
        frame=None
        for poll in range(12):
@@ -136,8 +138,9 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
       receipt['owned_process_reaped']=True
      with Project(OUT/'native.fdb') as reopened:
       reopened.debug_export(final['artifact'],OUT/'final.png')
-      reopened.debug_export(trace['artifact'],OUT/'original-entry-call.json')
-      assert json.loads((OUT/'original-entry-call.json').read_text())['complete'] is True
+      if trace is not None:
+       reopened.debug_export(trace['artifact'],OUT/'original-entry-call.json')
+       assert json.loads((OUT/'original-entry-call.json').read_text())['complete'] is True
      assert hashlib.sha256(original.read_bytes()).hexdigest()==SNAKE_EXE_SHA256
      assert hashlib.sha256(initial_source.read_bytes()).hexdigest()==SNAKE_INITIAL_SHA256
      assert hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest()==receipt['source_sha256']
@@ -177,5 +180,6 @@ def test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode(tmp_path):
             pytest.fail('Missing real Win16 GUI acceptance inputs: '+', '.join(missing))
         pytest.skip('Requires explicit matching native runtime and declared generated Snake Win16 profile')
     qemu,kernel,runtime,fixture,initial=[os.environ[name] for name in names]
-    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial)
+    probes=os.environ.get('FDISBULL_NE_GUI_NO_PROBES')!='1'
+    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial,debug_probes=probes)
     assert receipt['status']=='passed'
