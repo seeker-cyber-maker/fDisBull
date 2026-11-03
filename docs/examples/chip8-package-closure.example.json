@@ -1,0 +1,81 @@
+{
+  "format": "proposal-fdisbull-analysis-package-closure-0",
+  "status": "illustrative-only-not-registered-not-executable",
+  "source_pilot": "https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/61",
+  "packages": [
+    {
+      "id": "env:chip8-classic-observation:v0",
+      "kind": "environment",
+      "profile": "chip8",
+      "provides": [
+        "guest-memory-policy",
+        "display-64x32",
+        "keypad-16",
+        "delay-and-sound-timers",
+        "explicit-host-clock",
+        "seeded-rng"
+      ],
+      "evidence_status": "authored-vm-pilot-not-historical-hardware-oracle",
+      "depends_on": []
+    },
+    {
+      "id": "isa:chip8-classic-word16:v0",
+      "kind": "architecture",
+      "profile": "chip8",
+      "provides": [
+        "16-bit-instruction-decode",
+        "registers-v0-vf",
+        "index-register-i",
+        "program-counter",
+        "stack-and-control-flow"
+      ],
+      "instruction_family_denominator_nonlegacy": 34,
+      "evidence_status": "two-independent-implementations-of-shared-spec-no-independent-hardware-proof",
+      "depends_on": []
+    },
+    {
+      "id": "target:chip8archive-snek:09f67a5e:v0",
+      "kind": "target",
+      "profile": "chip8",
+      "source": {
+        "archive_repo": "https://github.com/JohnEarnest/chip8Archive",
+        "archive_commit": "761e3ffc63f43e6a849e80714122feff2afca208",
+        "member_key": "snek",
+        "member_size_bytes": 65,
+        "member_sha256": "09f67a5ef6f3cd9a65edc1e73786bf31a524e279bc1607e1953c6eb80c33b6ee",
+        "rights": "archive-declared-CC0-1.0-not-independently-audited"
+      },
+      "evidence_status": "byte-pinned-observational-candidate-only-no-accepted-common-uil",
+      "related_versions": [],
+      "depends_on": [
+        "env:chip8-classic-observation:v0",
+        "isa:chip8-classic-word16:v0"
+      ]
+    }
+  ],
+  "session_example": {
+    "target_package_id": "target:chip8archive-snek:09f67a5e:v0",
+    "run_identity": "historical-pilot-not-new-execution",
+    "maximum_instruction_attempts": 1600,
+    "input_policy": "no-keys",
+    "clock_policy": "explicit-timer-ticks",
+    "transfer_policy": "session-evidence-is-not-a-reusable-knowledge-package"
+  },
+  "historical_corpus_observation": {
+    "scope": "six-selected-classic-ROMs-executed-in-authored-VM",
+    "natural_observed_family_count": 26,
+    "classic_nonlegacy_family_count": 34,
+    "natural_observed_pair_count": 132,
+    "natural_observed_triplet_count": 244,
+    "synthetic_authored_missing_family_probes": 8,
+    "original_runtime_semantics": "not-fully-qualified-independently"
+  },
+  "reuse_policy": {
+    "exact_source": "reuse-static-facts-only-with-matching-transitive-identities",
+    "relocation": "requires-qualified-address-map",
+    "cross_edition": "candidate-lead-until-independent-qualification",
+    "semantic_identity": "binds-admitted-domain-effects-and-proof-receipt",
+    "unverified_sweded_provider": "never-select-automatically",
+    "changed_environment_quirks": "invalidate-dependent-claims"
+  }
+}
