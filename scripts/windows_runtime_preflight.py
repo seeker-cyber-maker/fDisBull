@@ -54,10 +54,13 @@ def _tool(command: str | None, *, kind: str | None = None) -> dict:
 
 def inspect(mode: str, *, wine: str = "wine", qemu: str = "qemu-system-x86_64",
             xvfb: str = "Xvfb", kernel: str | None = None,
-            initramfs: str | None = None, env: dict | None = None) -> dict:
+            initramfs: str | None = None, env: dict | None = None,
+            target: str = "all") -> dict:
     """Inventory independently required tools, without running target processes."""
-    if mode not in {"wine-guest", "qemu-host", "compilers"}:
-        raise ValueError("mode must be wine-guest, qemu-host, or compilers")
+    if mode not in {"wine-guest", "qemu-host", "compilers", "macos-native"}:
+        raise ValueError("mode must be wine-guest, qemu-host, compilers, or macos-native")
+    if target not in {"all", "pe32", "pe64", "win16"} or mode != "compilers" and target != "all":
+        raise ValueError("target is all, pe32, pe64 or win16 and applies only to compilers")
     env = os.environ if env is None else env
     out = {
         "schema": "fdisbull-windows-runtime-preflight-1",
@@ -71,6 +74,7 @@ def inspect(mode: str, *, wine: str = "wine", qemu: str = "qemu-system-x86_64",
             "original Windows program execution", "debugger process/thread contexts",
             "Win16 runtime selectors", "PE32 WoW64 breakpoints and memory",
             "machine-state rewind", "original DOS/Win16/Win32 equivalence",
+            "macOS native LLDB entitlement and original target observation",
         ],
     }
     if mode == "wine-guest":
@@ -98,6 +102,23 @@ def inspect(mode: str, *, wine: str = "wine", qemu: str = "qemu-system-x86_64",
             out["checks"]["kernel_file_present"],
             out["checks"]["initramfs_file_present"],
         ))
+    elif mode == "macos-native":
+        # Native Mach-O investigation and local compiler readiness are independent
+        # of whether a Wine/QEMU PE32 guest or MinGW toolchain is installed.
+        out["tools"].update({
+            "clang": _tool("clang"),
+            "lldb": _tool("lldb"),
+            "xcrun": _tool("xcrun"),
+        })
+        out["checks"]["supported_macos_host"] = (
+            platform.system() == "Darwin" and
+            platform.machine().lower() in {"arm64", "aarch64", "x86_64"}
+        )
+        out["checks"]["debug_permission_verified"] = False
+        out["ready_to_attempt"] = bool(
+            out["checks"]["supported_macos_host"] and
+            all(t["found"] for t in out["tools"].values())
+        )
     else:
         out["tools"].update({
             "win16_c": _tool("wcc"),
@@ -110,13 +131,21 @@ def inspect(mode: str, *, wine: str = "wine", qemu: str = "qemu-system-x86_64",
             "win32_pe32": out["tools"]["win32_c"]["found"],
             "win64_pe32_plus": out["tools"]["win64_c"]["found"],
         }
-        out["ready_to_attempt"] = all(out["checks"]["target_toolchains_present"].values())
+        # Choosing PE32 must not require Open Watcom/Win16 or a PE64 compiler.
+        key = {"pe32": "win32_pe32", "pe64": "win64_pe32_plus", "win16": "win16_ne"}.get(target)
+        out["checks"]["selected_target"] = target
+        out["ready_to_attempt"] = (
+            all(out["checks"]["target_toolchains_present"].values())
+            if key is None else bool(out["checks"]["target_toolchains_present"][key])
+        )
     return out
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", required=True, choices=("wine-guest", "qemu-host", "compilers"))
+    parser.add_argument("--mode", required=True, choices=("wine-guest", "qemu-host", "compilers", "macos-native"))
+    parser.add_argument("--target", default="all", choices=("all", "pe32", "pe64", "win16"),
+                        help="Select an independent compiler gate; default all preserves older behavior")
     parser.add_argument("--wine", default="wine", help="Wine binary; only --version is invoked")
     parser.add_argument("--qemu", default="qemu-system-x86_64", help="QEMU binary; only --version is invoked")
     parser.add_argument("--xvfb", default="Xvfb", help="Xvfb binary; presence only")
@@ -125,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--strict", action="store_true", help="Exit 2 when prerequisites are absent")
     args = parser.parse_args(argv)
     result = inspect(args.mode, wine=args.wine, qemu=args.qemu, xvfb=args.xvfb,
-                     kernel=args.kernel, initramfs=args.initramfs)
+                     kernel=args.kernel, initramfs=args.initramfs, target=args.target)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ready_to_attempt"] or not args.strict else 2
 
