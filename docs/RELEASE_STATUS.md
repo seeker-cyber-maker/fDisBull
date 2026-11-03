@@ -1,5 +1,13 @@
 # Release status checked on 2026-11-03 (America/New_York)
 
+## 0.31.1 patch release candidate
+
+`release/0.31.1` is cut from the post-0.31.0 repair tip (`235a5b2`) and bumps
+core/player to `0.31.1`. It contains no new analysis features; it packages the
+native CI repair and the macOS Swift capture helper in the tool source ZIP.
+Qualification, artifact hashes and publication state are recorded in
+[0.31.1 evidence](evidence/0.31.1-release/README.md) once the gates complete.
+
 ## 0.31.0 published on GitLab; local shared-prefix active
 
 `v0.31.0` is an annotated GitLab tag at source

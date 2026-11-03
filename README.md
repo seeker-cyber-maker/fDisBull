@@ -9,16 +9,15 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.31.0 published):** `v0.31.0` is an annotated GitLab tag at
-`10d01062`, with a GitLab Release and generic packages. It carries the 0.30.0
-release plus lossless frame-timeline delta storage, the bounded typed-C to UIL
-frontend, read-only Windows original-runtime preflight, CHIP-8 ISA/corpus
-pilots, and UDC registry and fresh-agent swede examples. See the
+**Release status (0.31.1 patch):** `v0.31.1` packages the post-0.31.0 native
+CI and macOS Swift source-ZIP repairs; it adds no new analysis features. The
+published `v0.31.0` tag remains at `10d01062`. See the
+[0.31.1 release notes](docs/RELEASE-0.31.1.md),
 [0.31.0 release notes](docs/RELEASE-0.31.0.md),
 [release status](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates. Shared-prefix activation remains separate; the selector is still on the
-0.29.0 prefix.
+gates. The local shared selector is on `0.31.0-a12441b`; 0.31.1 installation is
+a separate gate.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
