@@ -146,6 +146,18 @@ def test_ne_checkpoint_capability_refuses_unqualified_restore():
         with pytest.raises(ValueError,match='selector restoration'):operation('arbitrary')
 
 
+@pytest.mark.parametrize('changes',[None,{}, {'eax':{'expected':0,'value':1}}])
+def test_ne_general_register_writes_refuse_before_any_observation_or_mutation(changes):
+    session=Win16DebugSession.__new__(Win16DebugSession);session.closed=False
+    assert session.register_edits_available is False
+    assert 'write-registers' not in session.script_operations
+    def unexpected(*args,**kwargs):pytest.fail('Unqualified register edit must refuse before any RPC or state change')
+    session.registers=session.call=session._event=session._windows_state_changed=unexpected
+    with pytest.raises(ValueError,match='native context preservation is unqualified'):
+        session.write_registers(changes)
+    assert session.closed is False
+
+
 def test_scalar_watch_translates_sixteen_bit_offset_through_live_ds_not_paragraph_math():
     session=source_session()
     descriptor=dict(selector='0x2f7',base='0xa40000',limit='0xffff',present=True,default_big=False)

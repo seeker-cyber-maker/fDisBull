@@ -20,6 +20,12 @@ reinterpret a segmented LDT context as a flat address. Unknown or stale Win16
 bindings refuse. Static analysis and generated Win16/Win32 UDC shells remain
 independent capabilities; they do not establish original-program compatibility.
 
+Win16 general-register writes refuse before native dispatch. An experimental
+edit/restore matched exposed register readback but the program later faulted;
+that path remains unqualified. Register observation, source-qualified memory,
+stepping and input are separate capabilities. PE32/PE64 retain their own edit
+paths. Win16 native checkpoints, layers and deltas also remain unavailable.
+
 For PE64's existing advanced operations, see [Wine debugging](WINE_DEBUGGER.md).
 The [read-only preflight](../scripts/windows_runtime_preflight.py) is still a
 useful tool inventory, with independent `compilers --target pe32`, `qemu-host`,
