@@ -182,7 +182,7 @@ METHODS = {
     "debug-keyboard-type": "Queue 1..64 US-layout ASCII characters; run,text,[hold_ms,gap_ms]",
     "debug-keyboard-state": "Inspect queued guest keyboard events and owned keys; run",
     "debug-click-frame": "Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]",
-    "debug-screenshot": "Store an actual guest PNG with optional native-pixel grid and persistent DOS hooks; run,[name,grid,grid_step,hooks]",
+    "debug-screenshot": "Store an actual guest PNG with optional grid, DOS hooks and negotiated native encoding; run,[name,grid,grid_step,hooks,encoding]",
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
     "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",

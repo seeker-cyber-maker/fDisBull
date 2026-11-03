@@ -927,28 +927,25 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 metadata = dict(metadata, **{key: experiment})
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
-    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):
+    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True, encoding='png'):
         from .screenshot_grid import validate_step
+        from .screenshot_codecs import validate_encoding
         _file_name(name)
         if type(grid) is not bool:
             raise ValueError('grid must be boolean')
         validate_step(grid_step)
-        return self._capture_with_hooks(lambda evidence:self._screenshot_capture(name,grid,grid_step,evidence),hooks=hooks)
+        capabilities = {} if encoding == 'png' else getattr(getattr(self, 'rpc', None), 'capabilities', {})
+        validate_encoding(encoding, capabilities)
+        return self._capture_with_hooks(lambda evidence:self._screenshot_capture(name,grid,grid_step,evidence,encoding),hooks=hooks)
 
-    def _screenshot_capture(self,name,grid,grid_step,hook_evidence):
-        result = self.call('video.screenshot')
+    def _screenshot_capture(self,name,grid,grid_step,hook_evidence,encoding='png'):
+        from .screenshot_codecs import decode_screenshot
+        result = self.call('video.screenshot', {'encoding': encoding}) if encoding != 'png' else self.call('video.screenshot')
         if hook_evidence and hook_evidence.get('require_fresh_frame'):
             before=hook_evidence['before_frame_id'];after=result.get('frame_id')
             if type(after) is not int or (before is not None and after<=before):
                 raise DebuggerError('Screenshot preparation did not produce a newly completed frame')
-        data = base64.b64decode(result.pop('png_base64'),validate=True)
-        if not data.startswith(b'\x89PNG\r\n\x1a\n') or hashlib.sha256(data).hexdigest()!=result['sha256']:
-            raise DebuggerError('Screenshot signature/hash mismatch')
-        from PIL import Image
-        with Image.open(io.BytesIO(data)) as image:
-            if image.size != (result['width'],result['height']):
-                raise DebuggerError('Screenshot dimensions differ from metadata')
-            image.verify()
+        data, result = decode_screenshot(result)
         if hook_evidence is not None:result['screenshot_hooks']=hook_evidence
         if not grid:
             return self._artifact(name,'screenshot',data,result)

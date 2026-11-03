@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "c08a6084a8a99f5dd86005e33c75a1410405b0127aad3a1d8264586cd1544d0c",
+  "patch_sha256": "e9f25b293d9c9368d2ad7d734fed1606b73a1d5e50eff3d86aa1545366a23691",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -26,6 +26,11 @@
       "path": "client/python/tests/test_unix_transport.py",
       "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
       "size": 9847
+    },
+    {
+      "path": "configure.ac",
+      "sha256": "86c58d9d4447eeaeb2981a7aa59fc289ffd4beb16291a2655f43436f74ffb637",
+      "size": 54858
     },
     {
       "path": "include/agent/agent_bridge.h",
@@ -89,8 +94,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "a76d28c2c7ef3faef6db36d49eac7d076c366e27696be29729738c697f2c3e97",
-      "size": 208090
+      "sha256": "1afdb0d9d3087a896331b9407141c8ef1031fceabaee3d6ade4a5fa65cf75376",
+      "size": 215022
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -225,5 +230,14 @@
       "pending VGA resize"
     ],
     "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
+  },
+  "screenshot_codecs": {
+    "default": "png",
+    "optional": [
+      "png-indexed",
+      "rgba-zstd"
+    ],
+    "zstd": "Auto-detected at configure; --enable-agent-zstd requires it; --disable-agent-zstd omits it",
+    "scope": "Source candidate; native qualification recorded separately. Exact indexed palette built from completed RGBA; non-indexable frames fall back to RGBA PNG."
   }
 }

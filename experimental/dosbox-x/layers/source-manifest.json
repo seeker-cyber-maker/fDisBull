@@ -1,7 +1,7 @@
 {
   "feature": "Bounded automatic frame stepping and physical frame input; complete native keyboard state and frame ownership restoration",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "bce55cffd0211ba58fca4629efa336a00face6e803eb916f1796d3c7884a6820",
+  "patch_sha256": "78c6dde366d10194135360ef7a1b54e5c56b24f723244b1cb511870948fcb754",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -27,6 +27,11 @@
       "path": "client/python/tests/test_unix_transport.py",
       "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
       "size": 9847
+    },
+    {
+      "path": "configure.ac",
+      "sha256": "86c58d9d4447eeaeb2981a7aa59fc289ffd4beb16291a2655f43436f74ffb637",
+      "size": 54858
     },
     {
       "path": "include/agent/agent_bridge.h",
@@ -95,8 +100,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "2b7344fc2699b01f0090567fcbe47efcaedaf9e3e3a9228ad88fe814889931b5",
-      "size": 214373
+      "sha256": "5a0032e13c584fdcde5f7aa025be642eb1ac947b662196b874ee551231737701",
+      "size": 221305
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -267,5 +272,14 @@
       "pending VGA resize"
     ],
     "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
+  },
+  "screenshot_codecs": {
+    "default": "png",
+    "optional": [
+      "png-indexed",
+      "rgba-zstd"
+    ],
+    "zstd": "Auto-detected at configure; --enable-agent-zstd requires it; --disable-agent-zstd omits it",
+    "scope": "Source candidate; native qualification recorded separately. Exact indexed palette built from completed RGBA; non-indexable frames fall back to RGBA PNG."
   }
 }
