@@ -1,5 +1,9 @@
 # ChatGPT fDisBull/Zork/KQ1 agent handoff — 2026-11-01
 
+> **Historical snapshot.** Project visibility and several MR states changed after
+> this audit. Read the [November 3 recovery handoff](2026-11-03-rewind-library-recovery.md)
+> for the freshly checked state. The November 1 evidence below is preserved.
+
 > **Documentation-only, evidence-scoped snapshot.** Do not confuse a GitLab draft MR with integrated `main`, or a Library-held movie with a GitLab release asset. No original game binaries, saves, raw captures, or private token material are included. This is a handoff, not merge authorization.
 
 ## GitLab source of truth

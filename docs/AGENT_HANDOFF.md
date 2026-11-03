@@ -1,5 +1,9 @@
 # Agent contributions and file handoff
 
+For the November 3 rewind, KQ1 and Library recovery state, read the
+[dated recovery handoff](agent-handoffs/2026-11-03-rewind-library-recovery.md).
+It supersedes the older snapshots only for the facts explicitly rechecked there.
+
 A completed contribution returns a verified draft GitLab MR URL to its originating
 chat, plus the exact source branch/head, target/base, tests, limitations and file
 links. Use one publisher per origin/ref. An origin is a stable chat/task ID, not a
