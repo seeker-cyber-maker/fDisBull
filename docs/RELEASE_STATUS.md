@@ -19,6 +19,12 @@ The shared selector remains on the 0.29.0 prefix. No shared-prefix activation is
 claimed; that remains a separate gate. See [0.31.0 release notes](RELEASE-0.31.0.md)
 and [candidate evidence](evidence/0.31.0-release/README.md).
 
+Post-tag CI repair on `release/0.31.0` (tip `7537454`): the native jobs now pass
+— stable 86/86 and layers 148/148 — after enabling `--enable-dosbox_agent`,
+accepting backend frame-key fields, and settling a pending VGA mode before the
+BIOS-callback checkpoint. Pipeline `3022926784` is green. The published
+`v0.31.0` tag remains at `10d0106` and was not moved.
+
 ## 0.30.0 release published on GitLab; local shared installation active
 
 `v0.30.0` is an annotated GitLab tag and release candidate at source

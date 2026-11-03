@@ -42,9 +42,13 @@ swede compiler is claimed.
 | Tag pipeline `3022469643` | success on `v0.31.0`; 8,958 passed, 402 skipped |
 | macOS native stable | 86 passed |
 | macOS native layers | 148 passed |
-| Linux native CI jobs | compiled, then failed at emulator startup in the SDL2/headless environment; not claimed |
+| Linux native CI (post-tag) | stable 86 passed; layers 148 passed on pipeline `3022926784` |
 
 The installed smoke used a throwaway venv; no system prefix was activated.
+
+The published tag remains at `10d0106`. Native CI was repaired in follow-up
+commits on `release/0.31.0`; pipeline `3022926784` passed stable 86/86 and
+layers 148/148. Those CI/test changes are not inside the immutable tag.
 
 ## Artifacts
 
@@ -72,4 +76,7 @@ hashes remain authoritative rather than self-referential.
 - `artifact-sha256.txt`
 - `native-macos-stable.log`
 - `native-macos-layers.log`
+- `native-linux-stable.log`
+- `native-linux-layers.log`
+- `native-pipeline-3022926784.log`
 - `tag-ci.log`

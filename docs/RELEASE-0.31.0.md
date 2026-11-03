@@ -85,3 +85,12 @@ shared-prefix activation remains separate.
   emulator qualification, or general swede compiler is claimed.
 - Shared-prefix activation is not performed. The `v0.31.0` tag and GitLab
   Release are publication records only; activation remains a separate gate.
+
+## Post-tag CI repair
+
+The published tag remains at `10d0106`. Follow-up commits on `release/0.31.0`
+enable `--enable-dosbox_agent` in the native build, accept backend frame-key
+fields in keyboard-state assertions, and settle a pending VGA mode before the
+BIOS-callback checkpoint. Native pipeline `3022926784` passed stable
+**86/86** and layers **148/148**. Those fixes are not inside the immutable
+`v0.31.0` tag.

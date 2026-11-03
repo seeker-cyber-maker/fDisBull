@@ -41,13 +41,21 @@
       "passed": 8958,
       "skipped": 402
     },
-    "native_jobs": "Linux jobs compiled then failed at emulator startup in the SDL2/headless environment; not claimed"
+    "post_tag_pipeline": {
+      "pipeline": 3022926784,
+      "sha": "7537454da19eed58bbef98127a1d869aaade2c12",
+      "status": "success",
+      "native_stable": 86,
+      "native_layers": 148
+    },
+    "native_jobs": "post-tag pipeline 3022926784: stable 86 passed; layers 148 passed"
   },
   "native": {
     "macos_stable": "86 passed",
     "macos_layers": "148 passed",
     "backend": "/Users/Shared/fDisBull/current/backend/native-macos-arm64/dosbox-x",
-    "linux_ci": "failed at emulator startup; not claimed"
+    "linux_native_post_tag": "pipeline 3022926784: stable 86 passed; layers 148 passed",
+    "tag_contains_ci_fix": false
   },
   "included_merges": {
     "frame_timeline_deltas": "2baaa1c",
@@ -129,6 +137,9 @@
     "artifact-sha256.txt",
     "native-macos-stable.log",
     "native-macos-layers.log",
+    "native-linux-stable.log",
+    "native-linux-layers.log",
+    "native-pipeline-3022926784.log",
     "tag-ci.log"
   ]
 }
