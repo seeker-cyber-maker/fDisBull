@@ -1,0 +1,93 @@
+{
+  "baseline_sha": "a7eb55cade66e462bcc01b67e16b8ba4494ac12e",
+  "date": "2026-11-03",
+  "format": "chip8-python-udc-pause-summary-1",
+  "limits": [
+    "generated modules depend on existing CHIP-8 pilot VM",
+    "same-VM exact-state differential comparisons only",
+    "no independent emulator",
+    "no common-UIL lowering",
+    "no full program equivalence",
+    "per-ROM generated outputs and receipts stored privately"
+  ],
+  "per_rom": [
+    {
+      "fallback": 3258,
+      "name": "1dcell",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 6342,
+      "status": "passed",
+      "steps": 9600
+    },
+    {
+      "fallback": 984,
+      "name": "br8kout",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 8616,
+      "status": "passed",
+      "steps": 9600
+    },
+    {
+      "fallback": 942,
+      "name": "flightrunner",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 8658,
+      "status": "passed",
+      "steps": 9600
+    },
+    {
+      "fallback": 774,
+      "name": "ghostEscape",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 8826,
+      "status": "passed",
+      "steps": 9600
+    },
+    {
+      "fallback": 2238,
+      "name": "octojam5title",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 7362,
+      "status": "passed",
+      "steps": 9600
+    },
+    {
+      "fallback": 418,
+      "name": "snek",
+      "private_receipt_integrity_checked": true,
+      "private_source_digest_match": true,
+      "specialized": 5780,
+      "status": "passed",
+      "steps": 6198
+    }
+  ],
+  "source_mr": 61,
+  "test_suite": {
+    "failed": 0,
+    "local_python": "3.13.5",
+    "passed": 28,
+    "skipped": 0
+  },
+  "totals": {
+    "actual_execution_host": "local container Python 3.13.5",
+    "all_verifications_passed": true,
+    "compared_steps": 54198,
+    "external_reference_emulator_tested": false,
+    "fallback_steps": 8614,
+    "generated_module_count": 6,
+    "gitlab_base_branch": "agent/chip8-sandsifter-pilot-20261102",
+    "gitlab_base_commit": "a7eb55cade66e462bcc01b67e16b8ba4494ac12e",
+    "local_test_suite": "28 passed in 1.81s",
+    "manual_swede_families": 20,
+    "production_cli_integration": false,
+    "public_release_included": false,
+    "real_common_uil_lifting": false,
+    "specialized_fraction": 0.841064,
+    "specialized_steps": 45584
+  }
+}
