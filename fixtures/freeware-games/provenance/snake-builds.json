@@ -1,0 +1,371 @@
+[
+  {
+    "id": "snake/win16-final",
+    "platform": "windows-x86-16",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-0",
+      "retained-build-role-10"
+    ],
+    "source_manifest_sha256": "690ad4d04d295886bb487ab4e04022b34e2a593fac6e134ef4697010a3278545",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/win32-final",
+    "platform": "windows-x86",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-1",
+      "retained-build-role-9"
+    ],
+    "source_manifest_sha256": "45092b65e0d5f0f45fe8f81d9d2baf064f3bbd20910846dc932e35839d38ff2c",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/linux-x86_64-final",
+    "platform": "linux-x64",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-2",
+      "retained-build-role-25"
+    ],
+    "source_manifest_sha256": "090ae1719b4f86035dd7b5a5be51b3058a1555a355a577d6bdf85eeb09e84195",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/win64-final",
+    "platform": "windows-x64",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-3",
+      "retained-build-role-27"
+    ],
+    "source_manifest_sha256": "39749fb8de2d31bf3a0cdd8ab503521228567b7836fa4ac016c3247ef623bb13",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/macos-arm64-final",
+    "platform": "arm64",
+    "stage": "emitted-and-built",
+    "retained_aliases": [
+      "retained-build-role-4",
+      "retained-build-role-18"
+    ],
+    "source_manifest_sha256": "47983f88b69791b3c638d3d037a54dc4c5760658e579c95ed151ea749bc0a124",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-05-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-5"
+    ],
+    "source_manifest_sha256": "217220c7f5add72a51ecb5cdc11484924c6723ec2475376ac6c2e8a258361e20",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": false,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/intermediate-06-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-6"
+    ],
+    "source_manifest_sha256": "f5bd4ed84910c6e214d7c64b3e99b333d9a146f1529e924963fbf3e00aec65be",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": false,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/intermediate-07-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-7"
+    ],
+    "source_manifest_sha256": "3da6d4fc727723e389b4d2fa412cf4945dedc0e8cc3f18de0fe11f5161330b09",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": false,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/intermediate-08-windows-x86",
+    "platform": "windows-x86",
+    "stage": "source-only",
+    "retained_aliases": [
+      "retained-build-role-8"
+    ],
+    "source_manifest_sha256": "c0196378ca5bc41d53b09d00abb890e123553c88694fab6b99f500ed3ff64cf3",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-11-windows-x86-16",
+    "platform": "windows-x86-16",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-11"
+    ],
+    "source_manifest_sha256": "7b8bc8d6c4dd6c40dc0efe29667c3ff2bc60b53ebff4a8f6a27d7015f35a6aeb",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-12-windows-x86-16",
+    "platform": "windows-x86-16",
+    "stage": "source-only",
+    "retained_aliases": [
+      "retained-build-role-12"
+    ],
+    "source_manifest_sha256": "a84f452edafe729d86d52f1be82eaf40ae1be2b111386a2d82825aa2b0e398c6",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-13-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-13"
+    ],
+    "source_manifest_sha256": "cb1750aba64264fb22920d09aa6cb3e7664e34a1fc50131c8122089369047808",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-14-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-14"
+    ],
+    "source_manifest_sha256": "00469dd32124d566213cb4ff2d0c003c34760a4770f92e210ce5e03e1692a65c",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-15-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-15"
+    ],
+    "source_manifest_sha256": "27721f3068943c3fc503c1896688c79844f66ff06e5936ff3df37256340cd641",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-16-arm64",
+    "platform": "arm64",
+    "stage": "emitted-and-built",
+    "retained_aliases": [
+      "retained-build-role-16"
+    ],
+    "source_manifest_sha256": "39b38ca11a88daaa1bf551844a1f9fcc5630ee7e9403df81aac9ae2fcb4ad305",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-17-arm64",
+    "platform": "arm64",
+    "stage": "emitted-and-built",
+    "retained_aliases": [
+      "retained-build-role-17"
+    ],
+    "source_manifest_sha256": "ac25a63d06dbdebb81ec28f28f249b2ee7fb35db36c3102e95bf48cf21e851e2",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-19-arm64",
+    "platform": "arm64",
+    "stage": "emitted-and-built",
+    "retained_aliases": [
+      "retained-build-role-19"
+    ],
+    "source_manifest_sha256": "6675255a726a70b40ff940d8a36a33aaaa555907af79bc92a4b2d9f07a09a55b",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-20-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-20"
+    ],
+    "source_manifest_sha256": "4b01db86763c81dca5dd9ccc4e0bc3f20a7f6926136d2298ab84a17af7428132",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/intermediate-21-browser-wasm-webgpu",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "browser-artifacts",
+    "retained_aliases": [
+      "retained-build-role-21"
+    ],
+    "source_manifest_sha256": "ac5ecb6211417071750074ce4c6baa7372eec09a5e53bd884ae26bf76b2025a3",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/intermediate-22-linux-x64",
+    "platform": "linux-x64",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-22"
+    ],
+    "source_manifest_sha256": "af6b7449f875e8b6eb49db7711237635a61d09da1fee4407fcb0f3309c2b521d",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-23-windows-x64",
+    "platform": "windows-x64",
+    "stage": "source-only",
+    "retained_aliases": [
+      "retained-build-role-23"
+    ],
+    "source_manifest_sha256": "7fbadc46f8d9500f5f57b461020b9ec2a0233c5c4980b83ea3efa91b37799580",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-24-linux-x64",
+    "platform": "linux-x64",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-24"
+    ],
+    "source_manifest_sha256": "4536e8439c5ca90c273360b8bdec225c3dacd03c7be76fae879828c45314e482",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest/application hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/intermediate-26-windows-x64",
+    "platform": "windows-x64",
+    "stage": "compiled",
+    "retained_aliases": [
+      "retained-build-role-26"
+    ],
+    "source_manifest_sha256": "f20faaf862e98e14d18ef3b3f4bd047abae88a05fe2fc09918dacf5d39f8e251",
+    "historical_status": "source/build evidence only; runtime status not inferred",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/browser-nested-final",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "packaged-browser",
+    "retained_aliases": [
+      "retained-build-role-28"
+    ],
+    "source_manifest_sha256": "4b01db86763c81dca5dd9ccc4e0bc3f20a7f6926136d2298ab84a17af7428132",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": false
+  },
+  {
+    "id": "snake/browser-selectable-rng-final",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "packaged-browser",
+    "retained_aliases": [
+      "retained-build-role-29"
+    ],
+    "source_manifest_sha256": "00469dd32124d566213cb4ff2d0c003c34760a4770f92e210ce5e03e1692a65c",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": true,
+    "rng_regions_present": true
+  },
+  {
+    "id": "snake/browser-baseline-final",
+    "platform": "browser Wasm/WebGPU",
+    "stage": "packaged-browser",
+    "retained_aliases": [
+      "retained-build-role-30"
+    ],
+    "source_manifest_sha256": "f5bd4ed84910c6e214d7c64b3e99b333d9a146f1529e924963fbf3e00aec65be",
+    "historical_status": "retained finite-qualification receipt bound to exact manifest hash",
+    "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "module_udl_sha256": null,
+    "cuts_present": false,
+    "rng_regions_present": false
+  }
+]

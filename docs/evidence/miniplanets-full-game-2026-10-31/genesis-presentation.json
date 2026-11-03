@@ -1,0 +1,152 @@
+{
+  "format": "fdisbull-genesis-presentation-evidence-1",
+  "assessment": "partial",
+  "source_commit_context": "reviewed Miniplanets game UIL, target adapter is an authored presentation",
+  "candidate_cartridge": {
+    "sha256": "7c6a55fb7f5b55449cd009b6824d4d010abe8a814b972b35fec59f999660464f",
+    "size": 2097152
+  },
+  "renderer_source": {
+    "sha256": "0dcbc367c979764f84f8234595894a122b83be75262c281868b66b7aa28f8a04",
+    "size": 10490
+  },
+  "genesis_plus_gx_core": {
+    "sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "size": 9040080
+  },
+  "manifest": {
+    "sha256": "3c935c6d39eebc4525196dd84b5609dc80ca7490accdbfecc08577fe6ebcfb00",
+    "size": 24032
+  },
+  "labels": {
+    "sha256": "8c25ac43dc342fcd6be9f0fcab066afca10b609d7b75c67d46bc42a30664b3ac",
+    "size": 4884
+  },
+  "button_schedule": {
+    "sha256": "0f3d861b3dde4b9fdfd4e3e2b1d38a70405c9c5d7287b822b63a7181b511dd38",
+    "size": 243
+  },
+  "check_script": {
+    "sha256": "19545a2fe1ec2ca80ae60ea0b93ae644493b544a7e7726fb9d1d5aca8c863c49",
+    "size": 11174
+  },
+  "base_host": {
+    "sha256": "6a67b1d5534348fd1acba4b94583dd8f74b4b8da71cd821c7b40e3a4e831f0e6",
+    "size": 31039
+  },
+  "execution": {
+    "physical_frames": 1200,
+    "measurement_frame_window_half_open": [
+      260,
+      1200
+    ],
+    "core_hz": 59.92274340431231,
+    "logic_epoch_delta": 469,
+    "logic_sample_intervals": 939,
+    "logic_updates_per_second": 29.9294639580644,
+    "fault_frames": [],
+    "vdp_data_write_batches": {
+      "frames": 940,
+      "exact_296_write_batches": 470,
+      "exact_296_batches_per_second": 29.961371702156153,
+      "counts_by_frame": {
+        "0": 470,
+        "296": 470
+      }
+    },
+    "linked_genesis_present_address_range_half_open": [
+      537970,
+      538298
+    ],
+    "observed_vdp_data_write_pc_counts": {
+      "0x835e2": 156160,
+      "0x8361a": 14640,
+      "0x8363c": 121,
+      "0x83644": 121,
+      "0x8364c": 121,
+      "0x83654": 121,
+      "0x83672": 1956,
+      "0x83684": 1956,
+      "0x836a4": 1956,
+      "0x836b2": 1956
+    },
+    "outside_presentation_pc": {},
+    "output_boundary": "296 writes are inferred as a full presentation from the linked routine and the observed four-sprite view; function return not hooked"
+  },
+  "last_frame_comparison": {
+    "frame": 1199,
+    "terrain_word_differences": 0,
+    "hud_word_differences": 0,
+    "sprite_word_differences": 0,
+    "sprite_count": 4,
+    "cram_word_differences": 0
+  },
+  "cross_frame_vdp_host_join": {
+    "batches": 470,
+    "matching_same_or_previous_frame": 470,
+    "frame_lags": {
+      "0": 361,
+      "1": 109
+    },
+    "unmatched": 0,
+    "ineligible": 0,
+    "scope": "read-only exported core VDP snapshots vs host C stage derived from captured same/prior up-to-four frame game state; synthetic mace helper excludes mace cases; unused SAT tail ignored"
+  },
+  "audio_capture": {
+    "sample_rate": 44100,
+    "sample_count": 1766274,
+    "nonzero_samples": 1696094,
+    "peak": 13618,
+    "rms": 1456.1659064566315,
+    "pcm_sha256": "67ab0e2b6f38e1d6ba1fd63b5534a831e4443540735b703b25df3e8f30599f80"
+  },
+  "observer_neutrality": {
+    "state.bin": false,
+    "system_ram.bin": true,
+    "audio.wav": true,
+    "frame.png": true,
+    "ram_trace.json": true
+  },
+  "serialized_state_differing_bytes_observer_vs_control": 165,
+  "independent_control_pair_serialized_state_differing_bytes": 110,
+  "serialized_state_difference_cause": "unknown; do not infer observer neutrality from control differences",
+  "captured_frame_hashes": {
+    "100": {
+      "png_sha256": "3dc02e291775dce1a9c9f772fe4dab3fc1030fa08b6889ea6cfc7810cfa7067b",
+      "width": 320,
+      "height": 224
+    },
+    "180": {
+      "png_sha256": "6a87648db88ee390ec6394d8fe88b3000276b91efda440c758944d13d67d2ae6",
+      "width": 320,
+      "height": 224
+    },
+    "260": {
+      "png_sha256": "7f10ecd0f9e1343b8d58571b779ea508358f0894146e1425a42f4610442fccf1",
+      "width": 320,
+      "height": 224
+    },
+    "600": {
+      "png_sha256": "58a63709ba23fc883137b23c9c479e4fca02d8ed606fef9f3fa85ea8a0d95ee9",
+      "width": 320,
+      "height": 224
+    },
+    "1199": {
+      "png_sha256": "246972214e9c246c61ae059d14d6efa5bfdb73e0badf8fd722174b8b4fa26dc7",
+      "width": 320,
+      "height": 224
+    }
+  },
+  "private_receipt_sha256": "8f4b32a50117564f045ee766420a641bc0cf44e5b8265a814f94c6b7656ddea6",
+  "private_join_sha256": "a014603f99b607cb247a57601a35d3a8e0be11b046c9bb929e619c529fe29ed2",
+  "limits": [
+    "Adapted globe and art, not original Genesis pixel parity.",
+    "Finite ordinary-input route; not a complete game run or all-stage qualification.",
+    "No physical Genesis timing, VBlank deadline or audio waveform parity proof.",
+    "The VDP observer preserves watched RAM trace, full system RAM, captured audio and final image but not full serialized state.",
+    "The matched host reference uses a synthetic mace helper; no mace actors occurred in the joined gameplay window.",
+    "Raw ROMs, captures, screenshots, audio and memory remain private."
+  ],
+  "source_genesis_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "procedural_game_uil_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b"
+}

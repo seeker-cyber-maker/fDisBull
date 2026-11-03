@@ -1,0 +1,234 @@
+{
+  "format": "fdisbull-sanitized-native-traces-1",
+  "scope": "Actual ordered fetch addresses only; instruction/RAM bytes and register dumps remain private. Writer effects, real return and later score/message stages have separate receipts. Fetch observations do not establish individual instruction completion.",
+  "traces": [
+    {
+      "name": "dragon-water",
+      "trace_sha256": "2078a6f98700de208d439401c581aef8bad8bf57dceff1da756f9153669eb8b9",
+      "event_count": 6,
+      "maximum_count": 128,
+      "complete": true,
+      "events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x000074BE",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x000074C1",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x000074C2",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x000074C3",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x000074C4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        }
+      ],
+      "transaction": {
+        "format": "fdisbull-agi-dragon-water-1",
+        "status": "verified",
+        "complete": true,
+        "native_execution": true,
+        "source_logic": 51,
+        "source_logic_sha256": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580",
+        "print_source_offset": 1118,
+        "item_source_offset": 1120,
+        "subtract_source_offset": 1122,
+        "add_source_offset": 1125,
+        "item": 26,
+        "order": [
+          "drop",
+          "return",
+          "subtract",
+          "add"
+        ],
+        "instruction_completed": null,
+        "writer_stop_stage": "after data access; instruction completion unknown",
+        "before": {
+          "score": 15,
+          "item_location": 255
+        },
+        "after": {
+          "score": 20,
+          "item_location": 0
+        },
+        "known_effects": {
+          "score": 20,
+          "item_location": 0
+        },
+        "proof_sha256": "aef9faa90e3972ea3cf7fcc8a1cffe64cf29a253f7638b40ed1f4cb78ddd1599",
+        "drop_writer": {
+          "cause_offset": 29882,
+          "resume_offset": 29886
+        },
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 1122,
+          "stack_verified": true
+        },
+        "subtract_writer": {
+          "cause_offset": 29434,
+          "resume_offset": 29438,
+          "bx": 3,
+          "al": 2
+        },
+        "add_writer": {
+          "cause_offset": 29402,
+          "resume_offset": 29406,
+          "bx": 3,
+          "al": 7
+        },
+        "trace": {
+          "sha256": "2078a6f98700de208d439401c581aef8bad8bf57dceff1da756f9153669eb8b9",
+          "event_count": 6,
+          "maximum_count": 128
+        }
+      }
+    },
+    {
+      "name": "mirror",
+      "trace_sha256": "49d8cb33455ad77daaddb0493c72b2e7b327f0a88e6df46bdc558da29b3cb54a",
+      "event_count": 6,
+      "maximum_count": 128,
+      "complete": true,
+      "events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x00007486",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x00007489",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x0000748A",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x0000748B",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x0000748C",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        }
+      ],
+      "transaction": {
+        "format": "fdisbull-agi-quest-pickup-1",
+        "status": "verified",
+        "complete": true,
+        "native_execution": true,
+        "source_logic": 51,
+        "source_logic_sha256": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580",
+        "item_source_offset": 895,
+        "score_source_offset": 901,
+        "item": 19,
+        "score_delta": 8,
+        "order": [
+          "item",
+          "return",
+          "score"
+        ],
+        "instruction_completed": null,
+        "writer_stop_stage": "after data access; instruction completion unknown",
+        "before": {
+          "score": 20,
+          "item_location": 0
+        },
+        "after": {
+          "score": 28,
+          "item_location": 255
+        },
+        "known_effects": {
+          "score": 28,
+          "item_location": 255
+        },
+        "proof_sha256": "a7630f01b1c62aaa14b8cd0f9dad9a8679c8f7323a7328d2f667863d7973b99c",
+        "item_writer": {
+          "cause_offset": 29826,
+          "resume_offset": 29830
+        },
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 897,
+          "stack_verified": true
+        },
+        "score_writer": {
+          "cause_offset": 29402,
+          "resume_offset": 29406,
+          "bx": 3,
+          "al": 8
+        },
+        "trace": {
+          "sha256": "49d8cb33455ad77daaddb0493c72b2e7b327f0a88e6df46bdc558da29b3cb54a",
+          "event_count": 6,
+          "maximum_count": 128
+        }
+      }
+    }
+  ]
+}

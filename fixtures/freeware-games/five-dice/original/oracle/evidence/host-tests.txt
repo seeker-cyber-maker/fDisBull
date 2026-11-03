@@ -1,0 +1,3 @@
+semantic-contract.txt 94e89d8f62e146df57fc45858f563202ab250e01768c39f679c29a22a3a06077
+demo.py 01f195ed4afd4b73bafe2c1800f78f76de814dff956b61e17cac09b7d1710855
+PASS: binding, bounds, repeatability, scripted transitions, hold, rerolls, scores, terminal, errors

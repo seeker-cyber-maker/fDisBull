@@ -1,0 +1,8 @@
+{
+  "instruction_rows": 68186,
+  "replay_rows": 68186,
+  "all_instruction_rows_equal": true,
+  "replayed_from": "22,910-instruction checkpoint",
+  "game_executed": false,
+  "plan_sha256": "2e6af6843ba41fd782e81d026627c35e73a5efa064bda6a3af1dbb4486d63d78"
+}

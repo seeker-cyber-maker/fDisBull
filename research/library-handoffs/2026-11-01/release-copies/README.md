@@ -1,5 +1,10 @@
 # Three Library release copies
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 These are the three standalone files described in the interrupted handoff.
 Their fresh Library URLs, observed sizes and full hashes are in
 [library-comparison.json](library-comparison.json) and the parent inventory.

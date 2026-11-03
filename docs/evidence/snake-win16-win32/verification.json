@@ -1,0 +1,446 @@
+{
+  "format": "fdisbull-snake-win16-win32-milestone-1",
+  "status": "passed-finite-qualification",
+  "original": {
+    "format": "fdisbull-snake-macos-original-oracle-1",
+    "status": "fresh_finite_original_match",
+    "original_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "map_sha256": "1a72757fc86cf64043d987fde0d01c60bdeaa33c1e8a2c7bdab12e7e7572ec28",
+    "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cases": 342,
+    "original_cpu_calls": 368,
+    "outcome_steps": 26,
+    "mismatches": 0,
+    "unchanged_original": true,
+    "scope": "Isolated original DOS x86-16 step code with declared normalized memory/register adapter; original keyboard/mouse and graphics evidence remain separate frozen native observations",
+    "case_file_sha256": "2671875c9929a02cfa5c56b86dd267394973fb8eda4be12f0f1eaeb0226e612e",
+    "outcome_file_sha256": "10581b4bc37bc9a5446eb8296ce77eee3ccc17a652d18ceb54e8d14004425a4e"
+  },
+  "original_execution_refresh_sha256": "8b339ca5d9780956ceb639a2748fc8e4ce3f84fd09e1eef85bbb06cdd2889727",
+  "platforms": {
+    "win32": {
+      "status": "passed-finite-qualification",
+      "format": "I386/PE32/Win32-GDI",
+      "architecture": "x86-32",
+      "profile": "windows-x86-memory-win32-1",
+      "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+      "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+      "native_manifest_sha256": "45092b65e0d5f0f45fe8f81d9d2baf064f3bbd20910846dc932e35839d38ff2c",
+      "application_sha256": "6beee4ce8fbfa1fb947db5fcde96c1f76d3d19bed13436635e6f64462298320f",
+      "probe_sha256": "4522f49cb09447d9f44135ee7047fec2e894cbdd7d8b1ff28963e6eab7e825bb",
+      "full_qualification_sha256": "b5f15c7b7db4557beaaf28174c27334fdd846edc3116360dea29dd77bd3df368",
+      "actual_native_execution_qualification_sha256": "41533f7e9cbd4f994f33bda677945ced405d3b99d1cb7b0ffde6fbf27feecdcd",
+      "native_packets": 21,
+      "final_re_evaluation": "exact completed native executable/input/output packets; no inferred or extra execution",
+      "cases": {
+        "original": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 0,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "lfsr16": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 84,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "8be09708c7ccfb1a3e26e5ea448eda8890e3ec101df7b36cb63d2f4587895ffa"
+        }
+      },
+      "carried_core_observations": {
+        "original": 69,
+        "lfsr16": 69
+      },
+      "native_ui_observations": {
+        "original": 69,
+        "lfsr16": 69
+      },
+      "routes": {
+        "original": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 35834,
+            "food_cell": 434,
+            "game_status": 1,
+            "head": 358
+          },
+          "region_invocations": {
+            "lfsr16": 0,
+            "original": 2
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": false
+        },
+        "lfsr16": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 4,
+            "score": 1,
+            "rng_seed": 2330,
+            "food_cell": 530,
+            "game_status": 0,
+            "head": 359
+          },
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 0
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": false
+        },
+        "hot_swap": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 41134,
+            "food_cell": 334,
+            "game_status": 1,
+            "head": 358
+          },
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 1
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": true
+        }
+      },
+      "seed_footprint_probes": 10,
+      "guard_refusals": [
+        "immutable-input-patch",
+        "invalid-active-body",
+        "unchanged-state-and-revision",
+        "closed-owner-mutation"
+      ],
+      "checks": [
+        "original-and-alternate-342-kernel-cases",
+        "original-and-alternate-69-core-and-native-ui-observations",
+        "complete621-word-and64000-pixel-comparisons",
+        "native-original-14-key-and-left-button-timer-paths",
+        "exact-intrinsic-wide-tall-and-integer2x-native-surfaces",
+        "native-original-alternate-and-natural-hot-swap-routes",
+        "one-word-seed-footprints",
+        "guarded-rollback-and-owned-terminal-snapshot"
+      ],
+      "selected_artifacts_unchanged": true,
+      "execution_environment": "Wine11 new WoW64, Linux x86-64 under owned offline QEMU; Microsoft Windows installations and physical hardware not qualified",
+      "delivered_zip_relocation": {
+        "status": "passed",
+        "zip_sha256": "dbcbc23ee03dd16ac965e764ea5eec71d51b909b9f3ea568c19b08d6054259f6",
+        "application_sha256": "6beee4ce8fbfa1fb947db5fcde96c1f76d3d19bed13436635e6f64462298320f",
+        "exact_native_rows": 8,
+        "native_gdi_views": 2,
+        "only_app_and_initial_asset_uploaded": true,
+        "source_or_configuration_files_uploaded": false,
+        "scope": "fresh execution from delivered ZIP in new guest directory; first8nativeUI commands exactly match full qualification"
+      }
+    },
+    "win16": {
+      "status": "passed-finite-qualification",
+      "format": "Windows NE/16-bit/GDI",
+      "architecture": "x86-16",
+      "profile": "windows-x86-16-memory-win16-1",
+      "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+      "module_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+      "native_manifest_sha256": "690ad4d04d295886bb487ab4e04022b34e2a593fac6e134ef4697010a3278545",
+      "application_sha256": "9efbfb2264508bd10f2b20d3614973bea36b8abb2074574f68002fe52aee4804",
+      "probe_sha256": "c49b8a50a0e34ac954460c8e4c923d4e528d78190cc0118f9bb211b6633ebfd7",
+      "full_qualification_sha256": "03a0c8bbe61d5585bac8f4df46c8aa7ffcf6c4ec8b2b9f763788f3703d1467bc",
+      "actual_native_execution_qualification_sha256": "1e7a5cd0e40626947b49910244de3deecaae1400c04afc5ca15d579c6761170e",
+      "native_packets": 21,
+      "final_re_evaluation": "exact completed native executable/input/output packets; no inferred or extra execution",
+      "cases": {
+        "original": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 0,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "lfsr16": {
+          "cases": 342,
+          "mismatches": 0,
+          "intentionally_changed_cases": 84,
+          "compared_state_words": 614,
+          "region_invocations": 84,
+          "projection_sha256": "8be09708c7ccfb1a3e26e5ea448eda8890e3ec101df7b36cb63d2f4587895ffa"
+        }
+      },
+      "carried_core_observations": {
+        "original": 69,
+        "lfsr16": 69
+      },
+      "native_ui_observations": {
+        "original": 69,
+        "lfsr16": 69
+      },
+      "routes": {
+        "original": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 35834,
+            "food_cell": 434,
+            "game_status": 1,
+            "head": 358
+          },
+          "region_invocations": {
+            "lfsr16": 0,
+            "original": 2
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": false
+        },
+        "lfsr16": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 4,
+            "score": 1,
+            "rng_seed": 2330,
+            "food_cell": 530,
+            "game_status": 0,
+            "head": 359
+          },
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 0
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": false
+        },
+        "hot_swap": {
+          "steps": 26,
+          "terminal": {
+            "snake_length": 5,
+            "score": 2,
+            "rng_seed": 41134,
+            "food_cell": 334,
+            "game_status": 1,
+            "head": 358
+          },
+          "region_invocations": {
+            "lfsr16": 1,
+            "original": 1
+          },
+          "board_or_seed_interventions": 0,
+          "selector_preserved_all_words": true
+        }
+      },
+      "seed_footprint_probes": 10,
+      "guard_refusals": [
+        "immutable-input-patch",
+        "invalid-active-body",
+        "unchanged-state-and-revision",
+        "closed-owner-mutation"
+      ],
+      "checks": [
+        "original-and-alternate-342-kernel-cases",
+        "original-and-alternate-69-core-and-native-ui-observations",
+        "complete621-word-and64000-pixel-comparisons",
+        "native-original-14-key-and-left-button-timer-paths",
+        "exact-intrinsic-wide-tall-and-integer2x-native-surfaces",
+        "native-original-alternate-and-natural-hot-swap-routes",
+        "one-word-seed-footprints",
+        "guarded-rollback-and-owned-terminal-snapshot"
+      ],
+      "selected_artifacts_unchanged": true,
+      "execution_environment": "Wine11 new WoW64, Linux x86-64 under owned offline QEMU; Microsoft Windows installations and physical hardware not qualified",
+      "delivered_zip_relocation": {
+        "status": "passed",
+        "zip_sha256": "bc0a23731f19387cecfb4c62a1a73b83039985f89df1e13ad366d6e6036e738f",
+        "application_sha256": "9efbfb2264508bd10f2b20d3614973bea36b8abb2074574f68002fe52aee4804",
+        "exact_native_rows": 8,
+        "native_gdi_views": 2,
+        "only_app_and_initial_asset_uploaded": true,
+        "source_or_configuration_files_uploaded": false,
+        "scope": "fresh execution from delivered ZIP in new guest directory; first8nativeUI commands exactly match full qualification"
+      },
+      "storage": {
+        "cross_segment_indexing": "u32 page/index adapters; no far-pointer linear arithmetic",
+        "format": "fdisbull-win16-segmented-arena-1",
+        "last_page_words": 4464,
+        "logical_bytes": 280000,
+        "logical_words": 70000,
+        "maximum_page_bytes": 32768,
+        "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+        "original_memory_shape_preserved": true,
+        "page_words": 8192,
+        "pages": 9,
+        "word_bits": 32
+      },
+      "native_images": {
+        "PROBE.EXE": {
+          "automatic_data_segment": 3,
+          "entry": {
+            "offset": 36072,
+            "segment": 2
+          },
+          "expected_windows_version": 768,
+          "flags": 514,
+          "format": "NE",
+          "heap_bytes": 8192,
+          "segments": [
+            {
+              "data": false,
+              "file_bytes": 46236,
+              "file_offset": 258,
+              "flags": 3392,
+              "index": 1,
+              "minimum_allocation": 46236
+            },
+            {
+              "data": false,
+              "file_bytes": 42272,
+              "file_offset": 47712,
+              "flags": 3392,
+              "index": 2,
+              "minimum_allocation": 42272
+            },
+            {
+              "data": true,
+              "file_bytes": 2588,
+              "file_offset": 91522,
+              "flags": 3393,
+              "index": 3,
+              "minimum_allocation": 2704
+            }
+          ],
+          "stack_bytes": 16384,
+          "stack_segment": 3,
+          "target_os": "Windows"
+        },
+        "PROGRAM.EXE": {
+          "automatic_data_segment": 3,
+          "entry": {
+            "offset": 42344,
+            "segment": 2
+          },
+          "expected_windows_version": 768,
+          "flags": 514,
+          "format": "NE",
+          "heap_bytes": 8192,
+          "segments": [
+            {
+              "data": false,
+              "file_bytes": 46236,
+              "file_offset": 342,
+              "flags": 3392,
+              "index": 1,
+              "minimum_allocation": 46236
+            },
+            {
+              "data": false,
+              "file_bytes": 61474,
+              "file_offset": 47796,
+              "flags": 3392,
+              "index": 2,
+              "minimum_allocation": 61474
+            },
+            {
+              "data": true,
+              "file_bytes": 4220,
+              "file_offset": 112864,
+              "flags": 3393,
+              "index": 3,
+              "minimum_allocation": 4592
+            }
+          ],
+          "stack_bytes": 16384,
+          "stack_segment": 3,
+          "target_os": "Windows"
+        }
+      }
+    }
+  },
+  "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "canonical_udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+  "shared_model": {
+    "unchanged_fields": [
+      "program",
+      "execution_program",
+      "plan",
+      "cuts",
+      "regions",
+      "source_selections",
+      "source_endpoints"
+    ],
+    "all_fields_equal": true,
+    "source_layer_targets_preserved": true,
+    "win16_lowering": "C89 paged u32 dialect; ABI/storage adapters differ from flat Win32; native machine-code byte identity not asserted",
+    "source_emission_equivalence_receipt_sha256": "9d5b0796735029932217f6b52a111ad80af09aa1790cfb8acb2e12af2a25f8cc"
+  },
+  "native_adapter_checks": {
+    "win32_authored_scenarios": 7,
+    "win16_authored_scenarios": 6,
+    "win16_common_arena_stream_check": true,
+    "win16_native_arithmetic": {
+      "cases": 118,
+      "unique_functions": 19,
+      "operations": 16,
+      "dynamic_operand_pairs": 81,
+      "logical_words_max": 70000,
+      "maximum_verified_steps": 140002,
+      "receipt_sha256": "6c27ecf7d94039ce61b4acdf5c54245079c79ab0d4fd8c3fd5b0d54442879c8b"
+    },
+    "win32_receipt_sha256": "42e2a012f61d612418aa8d326f2f4c210c95cb4f19943eed2f80dac073c94291",
+    "win16_gui_receipt_sha256": "fe96c666864f17d809bb86ed790a41adc9ee3dad3cb1845d72aaa3e5b5e128e1",
+    "win16_common_receipt_sha256": "66e6af425bece8f90b639f10b99cc6788505afd352b40594f762b4296102829b"
+  },
+  "local_source_suite": {
+    "passed": 2561,
+    "skipped": 161,
+    "deselected": 2,
+    "host": "macOS ARM64",
+    "selection": "macOS-compatible suite; Linux ELF metadata/platform-call modules and two GNU-specific ELF tests excluded",
+    "log_sha256": "67ff69dacb0967083eed2742a7ef9c4c5434869b22d83f9d7e58271ddeba7e24",
+    "sdk_native_routes": "qualified separately by explicit guest tests and full Snake executions",
+    "ci": "no hosted CI acceptance claimed"
+  },
+  "source_artifacts": {
+    "src/fdisbull/udc_memory_win16.py": "a4cff9d0ba9de23f68108c517aceee1cb853daedcaad436b8b16236a50f2b17d",
+    "src/fdisbull/udc_memory_win16_shell.py": "f254581673173efc7280c534d13c9b5ee8db7d004b9b8f79699f7a5c8251b119",
+    "src/fdisbull/udc_memory_desktop.py": "90760ebcfedafb5f9aecae40659bf52e98231bd42134a2377ffb425173cd946e",
+    "src/fdisbull/udc_api.py": "c9a4afd89cc9f241d84de7445f0e3c19091c8c9c537fc8f367e660e4517426d4",
+    "src/fdisbull/native_runtime/memory-win16.h": "fa053cc9d17c3e468c6885e6e7dca5e0026a32fb5e4e7d8f22465b465c8da6ee",
+    "src/fdisbull/native_runtime/memory-win16-common.c": "6dd25366f846885c55212c039e7a11de7ff36ebbdd77ce68ce2d29bcc72bdc0c",
+    "src/fdisbull/native_runtime/memory-win16.c": "e517a5d049df495f3f59d646c9f620ecd53ed6f103e9e566330ec5a9a5162c2a",
+    "examples/recovery/snake_desktop.py": "6178e5c9e18e5ae1445147448b5ddcfce0d01c10fb85fad0c65dba81ab5296e4",
+    "examples/recovery/verify_snake_desktop.py": "d7e1c30cd7b5b84bbfa10c3641c0f3b2dde40d7d28512b6807f6dc7e62ff74d6",
+    "scripts/build_release.py": "25e7403891a62b2b7bbc7f72ff823e45b90debdde6a8b9af801a539ba45afa67",
+    "scripts/check_dist.py": "0681a563b8784c52778079cfe3218fddbe5ac7acf7fe20772faf43b6915519b7",
+    "tests/test_distribution.py": "a92e99220c4ff346c39f82d57bf6505d2936eec0ef11a28f1c89d0422bf270fd",
+    "tests/test_memory_win16.py": "f80176eb48d1062003ece9e4cb5756fab0777a163a0d78a3b208e46406ca53bd",
+    "tests/test_memory_win16_common.py": "507efa98fac1fc98996da272b658085c4cd62db3b313fed3e93546024aacd706",
+    "tests/test_memory_win16_host.py": "d85bde7ace388dc705c002a5de2cead88c43807fb2223eb8feea042b54784501",
+    "tests/test_memory_win16_native.py": "838af88fe4b5539c804636da8bc12a2b55411a56b59c7e9432d501d18c0e3a45",
+    "tests/test_memory_win16_shell.py": "11e3d7a6f898bd2ee67f186fe05603640499ac84a32f1605d510a7d556dc2739",
+    "tests/test_memory_win32_i686.py": "1db3817cce0c0706701e757d4ead68d11c8e0813de7e16a872e29ddd67fcd16e",
+    "tests/test_memory_win32_target.py": "25ede4465a4dc69f6c791ad3aafc94cbcb602a837951d9ad3e82170208338cd7"
+  },
+  "qualified_boundaries": [
+    "finite original/UIL/native evidence, not universal whole-game equivalence",
+    "original DOS input/graphics witnesses are the frozen recorded corpus; fresh original CPU step oracle is separate",
+    "native event dispatch and owned GDI readback, not physical hardware or desktop screen capture",
+    "LFSR16 is intentionally different from original DOS RNG",
+    "one labelled full-board RAM-prefix intervention; carried routes do not edit board or seed",
+    "native builds/inputs/fonts/project databases/SDKs/raw observations stay private; code and sanitized evidence may be reviewed",
+    "Win16 ANSI chrome is CP1252; byte-original game glyphs remain in private initial data",
+    "system installation, releases and integration branches unchanged"
+  ],
+  "frictions_and_resolutions": [
+    "Win16 flat16-bit pointer/int limits: keep 70,000 u32 words in nine owned 32 KB pages, C89/u32 ABI and bounded code/stack admission",
+    "Far-buffer C-runtime I/O corrupted data in the tested SDK/runtime: native _lread/_lwrite with checked chunks and exclusive creation, exact far-buffer CRC/round-trip checks",
+    "Fractional DOS tick period: retain 54.92549323064085 ms clock and extend observed DWORD wrap; round only native timer wakeups",
+    "Native templates absent from custom tool-source ZIP: add .c/.h/.m and reviewed native recipe allowlists; installed-wheel/source-archive checks",
+    "Verifier scope description had an x86-64-only label: preserve executed verifier and re-evaluate exact completed native packets with architecture-specific metadata"
+  ]
+}

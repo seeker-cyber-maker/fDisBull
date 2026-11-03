@@ -1,0 +1,375 @@
+{
+  "format": "cpuinfo-fdisbull-capture-comparison-1",
+  "status": "matched_observed_subset",
+  "tool_source_commit": "ecbe4c577bcd57d7224a5594a8475dda4c412d10",
+  "capture_method": "fDisBull reversible native macOS session and ScreenCaptureKit",
+  "original": {
+    "packet_sha256": {
+      "before.json": "c60626986ca71d8c184fefde8000aa527e69d873603058637913c7b3c896bdb1",
+      "after-open.json": "4976918f03492aae1607ec972438f0e82abcd707b112b34f36b5598ecd86f0b5",
+      "capture.json": "9a96029e86543ba80705d2f5df740dbfd85481ca80a00091ffe6d6c2bc242522",
+      "receipt.json": "7fbf3b1f4de2756b2f41b4918ba4fa2f33ad2a6f7c63294906d67d94530433e5",
+      "capture.png": "dc68961b5038f4d2844b4df80e65f126d1e653692c8dd4122da457b3144293a9"
+    },
+    "capture": {
+      "pixel_size": [
+        500,
+        600
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "display_identity_matches_packet": true,
+      "global_local_conversion_valid": true,
+      "capture_within_display": true,
+      "negative_display_origin_observed": false
+    },
+    "menu": {
+      "size": [
+        218,
+        200
+      ],
+      "rows": [
+        {
+          "title": "Start at Login",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 5,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Update Interval",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 40,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "View Mode",
+          "enabled": false,
+          "frame": {
+            "x": 0,
+            "y": 64,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Theme",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 88,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Show cores individually",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 112,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Open Activity Monitor",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 147,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Quit",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 171,
+            "width": 218,
+            "height": 24
+          }
+        }
+      ],
+      "separator_count": 2,
+      "hidden_ax_label_inventory": [
+        "0.1sec",
+        "0.2sec",
+        "0.5sec",
+        "1.0sec",
+        "5sec",
+        "10sec",
+        "30sec",
+        "Image",
+        "Text",
+        "Default",
+        "B/W"
+      ]
+    },
+    "status": {
+      "size": [
+        54,
+        26
+      ],
+      "position_unchanged_after_open": true,
+      "bar_count": 10,
+      "bar_widths_pixels": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "gaps_pixels": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "bar_bottoms_relative_to_status_pixels": [
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19
+      ],
+      "bar_starts_relative_to_status_pixels": [
+        3,
+        8,
+        13,
+        18,
+        23,
+        28,
+        33,
+        38,
+        43,
+        48
+      ]
+    },
+    "cleanup_confirmed_by_tool_receipt": true
+  },
+  "replica": {
+    "packet_sha256": {
+      "before.json": "797dc59b7df33d3b15f5df57b95cd2905a24d4b31cbd07261e46617c37fdd5ce",
+      "after-open.json": "8956dfb3e8f68aa611bf730eff89896d65a2205f06c907b3e3894eb16c976753",
+      "capture.json": "954fb57bda9e6288cfdc550071a37511d706035b12db7dbc6228236ff86ccd1c",
+      "receipt.json": "45d46a5d303b0fef907750fb0482c42f5732c8cef7823c5ed32bde1e00fe907b",
+      "capture.png": "d3ab497aac7c8baf449e0bffb635d67a77cc0ff43b194b8fb6105845f3b90514"
+    },
+    "capture": {
+      "pixel_size": [
+        500,
+        600
+      ],
+      "scale": [
+        1,
+        1
+      ],
+      "display_identity_matches_packet": true,
+      "global_local_conversion_valid": true,
+      "capture_within_display": true,
+      "negative_display_origin_observed": true
+    },
+    "menu": {
+      "size": [
+        218,
+        200
+      ],
+      "rows": [
+        {
+          "title": "Start at Login",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 5,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Update Interval",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 40,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "View Mode",
+          "enabled": false,
+          "frame": {
+            "x": 0,
+            "y": 64,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Theme",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 88,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Show cores individually",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 112,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Open Activity Monitor",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 147,
+            "width": 218,
+            "height": 24
+          }
+        },
+        {
+          "title": "Quit",
+          "enabled": true,
+          "frame": {
+            "x": 0,
+            "y": 171,
+            "width": 218,
+            "height": 24
+          }
+        }
+      ],
+      "separator_count": 2,
+      "hidden_ax_label_inventory": [
+        "0.1sec",
+        "0.2sec",
+        "0.5sec",
+        "1.0sec",
+        "5sec",
+        "10sec",
+        "30sec",
+        "Image",
+        "Text",
+        "Default",
+        "B/W"
+      ]
+    },
+    "status": {
+      "size": [
+        54,
+        26
+      ],
+      "position_unchanged_after_open": true,
+      "bar_count": 10,
+      "bar_widths_pixels": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "gaps_pixels": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "bar_bottoms_relative_to_status_pixels": [
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19,
+        19
+      ],
+      "bar_starts_relative_to_status_pixels": [
+        3,
+        8,
+        13,
+        18,
+        23,
+        28,
+        33,
+        38,
+        43,
+        48
+      ]
+    },
+    "cleanup_confirmed_by_tool_receipt": true
+  },
+  "differences": [],
+  "falsifier": {
+    "wrong_visible_menu_label": "detected"
+  },
+  "coverage": {
+    "visible_english_root_rows": 7,
+    "expected_default_core_bars": 10,
+    "normalized_menu_geometry_and_enabled_states": true,
+    "separate_display_coordinate_validation": true,
+    "hidden_submenu_labels": "AX inventory only; not rendered or interacted with"
+  },
+  "claim_ceiling": "source-assisted candidate matched the observed default English menu and bar geometry only",
+  "unqualified": [
+    "font identity",
+    "full pixel equivalence",
+    "dynamic CPU-counter equivalence",
+    "login registration/checkmark parity",
+    "localization",
+    "restart persistence",
+    "hidden submenu rendering and action outcomes"
+  ],
+  "privacy": {
+    "input_paths_exported": false,
+    "pids_or_display_uuids_exported": false,
+    "screenshots_or_raw_ax_trees_exported": false,
+    "ui_or_preferences_changed_by_comparator": false
+  }
+}

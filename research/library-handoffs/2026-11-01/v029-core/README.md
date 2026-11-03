@@ -1,5 +1,10 @@
 # Historical Linux core/player installation receipt
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 The complete archive is retained privately; its identity and all member hashes
 are in [manifest.json](manifest.json). Its 40 internal checksum entries pass.
 [historical-report.md](historical-report.md) is a derived report copy whose old

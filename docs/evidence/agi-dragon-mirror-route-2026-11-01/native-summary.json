@@ -1,0 +1,470 @@
+{
+  "format": "fdisbull-agi-dragon-sanitized-native-summary-1",
+  "scope": "One fresh physical route in one native session; bounded observed behavior, not arbitrary RNG or whole-game qualification.",
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "object_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+    "resource_sha256": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "3": "6d5d863c6e40cd6cd6b8188b84e892a1e88a9e2d40e8a55c1b31caa55a57a8ea",
+      "5": "e6ddc0ba5bc1dd4c4a618fb54ac937e8888b2e3bdc1c34e807b69ebe96428f4c",
+      "12": "a775fb8f56bd56109d335a7ee97f62188ca14b708ee6bc0a089fbce98db2ffc6",
+      "22": "44e71ee446d6d38481846efe6314b7339f37c5c87ac5910fac94faae3f12c73a",
+      "49": "cb1e798c9af9bb9f05da7002a79d472af7879238ec0d66e50f21c6a207fb5e45",
+      "50": "0280311de845fa59c8a937f575d4de850767135aed4265193ae900af609e7530",
+      "51": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580",
+      "52": "7d48b9cf5caa539ef9d77c921fd52860a65eb3f5eec3de73067f6d2b318856d3",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db"
+    },
+    "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+    "recorded_resource_hash_count": 90
+  },
+  "runtime": {
+    "policy": "physical",
+    "fresh_game": true,
+    "interventions": [],
+    "session_id": "ses-1",
+    "guest_elapsed_ms": 194516
+  },
+  "actions": [
+    {
+      "id": "obtain-dagger",
+      "complete": true,
+      "input_records": 80,
+      "messages": [
+        {
+          "logic": 3,
+          "source_offset": 258,
+          "message_id": 13,
+          "status": "completed",
+          "guest_ms": 49637
+        },
+        {
+          "logic": 3,
+          "source_offset": 440,
+          "message_id": 8,
+          "status": "completed",
+          "guest_ms": 51085
+        }
+      ]
+    },
+    {
+      "id": "detach-bucket",
+      "complete": true,
+      "input_records": 106,
+      "messages": [
+        {
+          "logic": 12,
+          "source_offset": 1752,
+          "message_id": 3,
+          "status": "completed",
+          "guest_ms": 125267
+        }
+      ]
+    },
+    {
+      "id": "descend-well",
+      "complete": true,
+      "input_records": 6,
+      "messages": [
+        {
+          "logic": 12,
+          "source_offset": 1908,
+          "message_id": 25,
+          "status": "completed",
+          "guest_ms": 125716
+        }
+      ]
+    },
+    {
+      "id": "dive-to-cave",
+      "complete": true,
+      "input_records": 3,
+      "messages": []
+    },
+    {
+      "id": "enter-dragon",
+      "complete": true,
+      "input_records": 4,
+      "messages": []
+    },
+    {
+      "id": "douse-dragon",
+      "complete": true,
+      "input_records": 8,
+      "messages": [
+        {
+          "logic": 51,
+          "source_offset": 1118,
+          "message_id": 34,
+          "status": "completed",
+          "guest_ms": 155185
+        }
+      ]
+    },
+    {
+      "id": "take-mirror",
+      "complete": true,
+      "input_records": 6,
+      "messages": [
+        {
+          "logic": 51,
+          "source_offset": 897,
+          "message_id": 24,
+          "status": "completed",
+          "guest_ms": 169564
+        }
+      ]
+    },
+    {
+      "id": "leave-cave",
+      "complete": true,
+      "input_records": 10,
+      "messages": []
+    }
+  ],
+  "observations": [
+    {
+      "id": "fresh",
+      "room": 1,
+      "score": 0,
+      "ego": {
+        "x": 110,
+        "y": 100,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "bf9cd937269f0fa98ff96f1e8dd7bef4b3bfa6c6a16e67c5b32086b2956a2518",
+      "guest_ms": 120
+    },
+    {
+      "id": "dagger-carried",
+      "room": 3,
+      "score": 7,
+      "ego": {
+        "x": 120,
+        "y": 114,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "e8477b2ce01e863948fe4d7069fcce68e6ffdc6f264e446f4580175963b38c8d",
+      "guest_ms": 51326
+    },
+    {
+      "id": "bucket-carried",
+      "room": 12,
+      "score": 9,
+      "ego": {
+        "x": 65,
+        "y": 120,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "8ada8ce9691bb4150ca0f5e0297c6ef285bb892da95686b349d0cd90310a851b",
+      "guest_ms": 125446
+    },
+    {
+      "id": "well-ready",
+      "room": 49,
+      "score": 10,
+      "ego": {
+        "x": 81,
+        "y": 51,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "c36cc65d000cb326f1d148ee0606ae6f609c25afcfba47362082a1fd57e7155e",
+      "guest_ms": 128423
+    },
+    {
+      "id": "water-ready",
+      "room": 52,
+      "score": 14,
+      "ego": {
+        "x": 75,
+        "y": 26,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "a74b75be0f085811a1d578820db2574a889a79c6e20f371945106bcfc44666d6",
+      "guest_ms": 137340
+    },
+    {
+      "id": "dragon-before",
+      "room": 51,
+      "score": 15,
+      "ego": {
+        "x": 131,
+        "y": 136,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "783fe21f1c1685b2bdcad801483cd82caaada8885dea09706e174fed223f85bf",
+      "guest_ms": 152127
+    },
+    {
+      "id": "dragon-retreated",
+      "room": 51,
+      "score": 20,
+      "ego": {
+        "x": 146,
+        "y": 131,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "27f32ee6e9ff406b090035b6bfd7fb831cf416666f7f5e867b8b60289220980d",
+      "guest_ms": 157107
+    },
+    {
+      "id": "mirror-taken",
+      "room": 51,
+      "score": 28,
+      "ego": {
+        "x": 45,
+        "y": 115,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "e28017622ac9b73bf6f9ec1764a520105547a8730c989293d3e9428ba63a5ee4",
+      "guest_ms": 169860
+    },
+    {
+      "id": "surface-return",
+      "room": 22,
+      "score": 28,
+      "ego": {
+        "x": 140,
+        "y": 83,
+        "direction": 0,
+        "drawn": true
+      },
+      "frame_sha256": "bd04220faabec396986c0056f83b5361329f91c5f92afc7e9bdabd46d3d697c6",
+      "guest_ms": 194516
+    }
+  ],
+  "extra_observations": [
+    {
+      "id": "water_before",
+      "guest_ms": 154932,
+      "frame_sha256": "731d7c1d9a0f873f38f7b25eef515db70ef4a1a491a192d1f07f93e733c0d873"
+    },
+    {
+      "id": "mirror_before",
+      "guest_ms": 169321,
+      "frame_sha256": "ced91a02812a5b1763fbf87078d586be958fe1a881f2ca2050378f1da4c50e0b"
+    }
+  ],
+  "repeat_controls": [
+    {
+      "command": "get mirror",
+      "input_records": 2,
+      "messages": [
+        {
+          "logic": 0,
+          "source_offset": 3853,
+          "message_id": 10,
+          "status": "completed",
+          "guest_ms": 170209
+        }
+      ]
+    },
+    {
+      "command": "throw water",
+      "input_records": 2,
+      "messages": [
+        {
+          "logic": 51,
+          "source_offset": 989,
+          "message_id": 7,
+          "status": "completed",
+          "guest_ms": 170860
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "main_actions": 8,
+    "main_observations": 9,
+    "extra_observations": 2,
+    "main_input_records": 223,
+    "main_messages": 6,
+    "control_input_records": 4,
+    "control_messages": 2
+  },
+  "native_proofs": [
+    {
+      "format": "fdisbull-agi-dragon-water-1",
+      "status": "verified",
+      "complete": true,
+      "native_execution": true,
+      "source_logic": 51,
+      "source_logic_sha256": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580",
+      "print_source_offset": 1118,
+      "item_source_offset": 1120,
+      "subtract_source_offset": 1122,
+      "add_source_offset": 1125,
+      "item": 26,
+      "order": [
+        "drop",
+        "return",
+        "subtract",
+        "add"
+      ],
+      "instruction_completed": null,
+      "writer_stop_stage": "after data access; instruction completion unknown",
+      "before": {
+        "score": 15,
+        "item_location": 255
+      },
+      "after": {
+        "score": 20,
+        "item_location": 0
+      },
+      "known_effects": {
+        "score": 20,
+        "item_location": 0
+      },
+      "proof_sha256": "aef9faa90e3972ea3cf7fcc8a1cffe64cf29a253f7638b40ed1f4cb78ddd1599",
+      "drop_writer": {
+        "cause_offset": 29882,
+        "resume_offset": 29886
+      },
+      "handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 1122,
+        "stack_verified": true
+      },
+      "subtract_writer": {
+        "cause_offset": 29434,
+        "resume_offset": 29438,
+        "bx": 3,
+        "al": 2
+      },
+      "add_writer": {
+        "cause_offset": 29402,
+        "resume_offset": 29406,
+        "bx": 3,
+        "al": 7
+      },
+      "trace": {
+        "sha256": "2078a6f98700de208d439401c581aef8bad8bf57dceff1da756f9153669eb8b9",
+        "event_count": 6,
+        "maximum_count": 128
+      }
+    },
+    {
+      "format": "fdisbull-agi-quest-pickup-1",
+      "status": "verified",
+      "complete": true,
+      "native_execution": true,
+      "source_logic": 51,
+      "source_logic_sha256": "342d5e3e5818449162fcaed9e056fd997693e7f9429150a3ea85533a32288580",
+      "item_source_offset": 895,
+      "score_source_offset": 901,
+      "item": 19,
+      "score_delta": 8,
+      "order": [
+        "item",
+        "return",
+        "score"
+      ],
+      "instruction_completed": null,
+      "writer_stop_stage": "after data access; instruction completion unknown",
+      "before": {
+        "score": 20,
+        "item_location": 0
+      },
+      "after": {
+        "score": 28,
+        "item_location": 255
+      },
+      "known_effects": {
+        "score": 28,
+        "item_location": 255
+      },
+      "proof_sha256": "a7630f01b1c62aaa14b8cd0f9dad9a8679c8f7323a7328d2f667863d7973b99c",
+      "item_writer": {
+        "cause_offset": 29826,
+        "resume_offset": 29830
+      },
+      "handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 897,
+        "stack_verified": true
+      },
+      "score_writer": {
+        "cause_offset": 29402,
+        "resume_offset": 29406,
+        "bx": 3,
+        "al": 8
+      },
+      "trace": {
+        "sha256": "49d8cb33455ad77daaddb0493c72b2e7b327f0a88e6df46bdc558da29b3cb54a",
+        "event_count": 6,
+        "maximum_count": 128
+      }
+    }
+  ],
+  "integrity": {
+    "source_file_count": 24,
+    "source_unchanged": true,
+    "copy_unchanged": true,
+    "dependency_count": 21,
+    "dependencies_unchanged": true,
+    "backend_unchanged": true,
+    "supervisor_pre_post_match": true,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  "dependency_sha256": {
+    "examples/agi/verify_dragon_mirror.py": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+    "examples/agi/dragon_probes.py": "baacb0487fbf9c763ce43b0e463de5cf2852383f40d269c876ceae87cfe9ec34",
+    "examples/agi/inventory_probe.py": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+    "examples/agi/verify_leprechaun.py": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628",
+    "examples/agi/verify_mushroom.py": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+    "examples/agi/verify_bridge_clip.py": "4a7702d253941c0b7db529a5af59fe0f60c52c2902518a225b697abc8ca46f45",
+    "examples/agi/verify_goat.py": "82eac6afda4dbb26dceb385aa1bc032f24e8b84a8d5c524272efe5d5c7d3b736",
+    "examples/agi/verify_troll.py": "65b760cc47e71e1bc87771ca35d71f32faeaeea5364a76102b1bf9ae1dfefa3e",
+    "examples/agi/verify_host.py": "f06a1b1d0e9a374591dd1155570c78cb9344b8c8d23007454ddcbe49bd11ad19",
+    "examples/agi/spatial_trial.py": "bdc335a7ac6acba8d1795147d588ec401113d478961d80dc539c095601ec8202",
+    "examples/agi/scan_collision_candidates.py": "cd28cb26280032f81cabb9c12ec487ed02e8f4e30af62aed2374f45786adbc23",
+    "src/fdisbull/agi.py": "9b0815cfc861ceb0d157ab7a6744c39e414b5eead0a227b6c309a3144dc83fc7",
+    "src/fdisbull/agi_layout.py": "9c3c172715a6d60cfab0a882e6d2c35a1008ca4fa6e8ffc3f00076a9284fdff4",
+    "src/fdisbull/agi_picture.py": "0d1334fb7d4c94abaec4d2079efd386e1e9978f7b73c51b57ec83bb966e49b40",
+    "src/fdisbull/agi_lift.py": "5373bf7a4a6a5365747635380917574979b1ec63b4f0812158700b72e2648064",
+    "src/fdisbull/agi_resources.py": "ef31df40324059e6858749c2a5513a1387cb973a0d1d717279a3bbc9b227d1bd",
+    "src/fdisbull/agi_host.py": "a302e79f42e0ff8476b999d99850a4d900d29c8c1bce2091f0b5bc7042cfff91",
+    "src/fdisbull/agi_dos.py": "ef57ef690e17032b26240844cb12712ac7bc06210ce04eb0a766c6256837f414",
+    "src/fdisbull/agi_print.py": "9edbbf5b217acea6b98d2b4adb285036ac4d0d4acf3238e016c64d55e62fa61f",
+    "src/fdisbull/project.py": "c74ff0d1e741cab98d576480f331d6eead3e511018ae8f733f977790fd74f690",
+    "src/fdisbull/debugger.py": "cac84384fa0cbef3a002555bfb900ef99ac894f0318e61578db24bb2b3aa136c"
+  },
+  "checkpoints": [
+    {
+      "sha256": "53f24450c4ddfddcd32b6e32c79a238ec5be8161c04374e2cf32186d347b8723",
+      "guest_ms": 125446,
+      "loaded": false
+    },
+    {
+      "sha256": "5f336675f378d6c403c1bd32baa75ec1f06bc2b3e89fced92d2e7f34180d2edf",
+      "guest_ms": 152127,
+      "loaded": false
+    }
+  ],
+  "artifacts_sha256": {
+    "result.json": "9643db84d1b51a01408fa587910c215b18da8e9d2b050bad50f0547d740c9eda",
+    "capture.private.json": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+    "partial-capture.private.json": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+    "dragon-water-pickup.private.json": "aef9faa90e3972ea3cf7fcc8a1cffe64cf29a253f7638b40ed1f4cb78ddd1599",
+    "dragon-water-trace.private.json": "2078a6f98700de208d439401c581aef8bad8bf57dceff1da756f9153669eb8b9",
+    "mirror-pickup.private.json": "a7630f01b1c62aaa14b8cd0f9dad9a8679c8f7323a7328d2f667863d7973b99c",
+    "mirror-trace.private.json": "49d8cb33455ad77daaddb0493c72b2e7b327f0a88e6df46bdc558da29b3cb54a",
+    "bucket-carried.sav": "53f24450c4ddfddcd32b6e32c79a238ec5be8161c04374e2cf32186d347b8723",
+    "dragon-before.sav": "5f336675f378d6c403c1bd32baa75ec1f06bc2b3e89fced92d2e7f34180d2edf"
+  },
+  "supervisor_receipt_sha256": "a34e5d9790fa359abfb961adbc62f4980a4f21f194750611be0ac0b19bd3cda5",
+  "qualification_run": "DragonNative07"
+}

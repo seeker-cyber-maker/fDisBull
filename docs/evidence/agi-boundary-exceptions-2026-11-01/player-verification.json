@@ -1,0 +1,59 @@
+{
+  "scope": "Installed authored partial-scene backend/player checks; in-memory checkpoints only.",
+  "versions": {
+    "fdisbull": "0.28.0",
+    "fdisbull-player": "0.28.0"
+  },
+  "module_sha256": {
+    "fdisbull.il_scenes": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+    "fdisbull_player.player": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+  },
+  "isolated": true,
+  "pythonpath_absent": true,
+  "direct": {
+    "checked_phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "inventory_matches_capture": true,
+    "stale_and_repeat_preserve_state": true,
+    "before_mirror_in_memory_checkpoint_restore": true,
+    "restore_invalidates_old_token": true
+  },
+  "separate_content_process": {
+    "checked_phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "inventory_matches_capture": true,
+    "stale_and_repeat_preserve_state": true,
+    "before_mirror_in_memory_checkpoint_restore": true,
+    "restore_invalidates_old_token": true
+  },
+  "all_modeled_scalar_phases_match_capture": true,
+  "all_three_content_process_installation_identities_match": true,
+  "failed_precondition_preserved_direct_and_process": true,
+  "fresh_checkpoint_missing_direct_and_process": true,
+  "complete": true,
+  "scene_sha256": "c364ab45f91ce9275ea7660c706647b4967036a35d44cf933641ddbc256b7caa",
+  "private_receipt_sha256": "6c676da1059d4e40400ec85ea7104eb202aa4209cdf328c133042d3c761efca5",
+  "native_fields": 44,
+  "variables_including_phase": 45,
+  "final_room": 22,
+  "final_score": 28,
+  "input_scene_byte_identical_to_final_export": true
+}

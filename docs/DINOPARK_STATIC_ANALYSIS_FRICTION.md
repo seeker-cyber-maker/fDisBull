@@ -1,5 +1,68 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [return-to-park deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md)
+addresses the subsequent original return timeout. It retains the actual queued
+input before the continuous guest interval, shares the complete host deadline,
+and qualifies the existing Park destination without guest execution or input.
+Recognized notice continuations and committed-head readback retries remain
+separate from arrival confirmation. The original native-save case qualifies both
+normal return and repeated read-only recovery with all 97 probes armed. Older
+held providers remain preserved, including a new confirmed-purchase presentation
+blocker found during fresh setup.
+
+The [park-exit deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md)
+qualifies the normal original exit after month rollover and the final-source
+fault/reconciliation/retry path, with all 97 probes verified armed through the
+held states. It preserves committed scene heads and original queued inputs;
+the older held exit and a separate return-to-park failure remain retained.
+It also records the uploaded Library files missed by the Pages listing and the
+verified relocation of inactive test outputs that admitted the final native case.
+
+The [visitor-gate and month-rollover continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md)
+adds 32 ordinary time advances with the 97 probes armed and source-bound
+attendance/actor predicates. It records a new park-exit observer-budget failure,
+an authoritative queued input absent from the outer error trace, and retained
+read-only recovery. BUS.ACT/PEOPLE.ACT and all 97/13 cases remain open.
+[GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31)
+proposes durable selective probes and strengthens the bundled skill guidance.
+
+The [park preparation and standing-probe follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md)
+qualifies hiring, food, park entry and three advances after correcting legacy
+settling waits. All 97 unresolved probes are verified armed in the retained live
+park. The PC union remains 47/201; all 13 asset candidates remain open. It also
+records Borland object-module retention evidence, the failed Guide attempt,
+private inventory-reply/routing friction and the explicit CACHE reserve decision.
+
+The [fence deadline and recovery follow-up](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md)
+replaces fixed fence sleeps with retained phases and native commit evidence,
+adds pre-observation shared deadlines and a reusable deadline intersection,
+and corrects observer allowance renewal. Two original-game runs qualify the first
+fence slice; repeated read-only reconciliation preserves the first provider.
+The additional registered-observer scene policy passes the original Employment
+transition through 479 passive stops while retaining full evidence off-reply.
+It distinguishes the remaining caller,
+producer-domain, configuration and coverage gaps from unfinished body decoding.
+Raw inputs and live contexts remain private.
+
+The [land purchase recovery follow-up](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
+qualifies the original first plot and two read-only reconciliation attempts,
+separates draft from committed allocation, and excludes cursor regions from
+land predicates. Its same-guest tracing adds 14 caller snapshots and 440 matching
+read prefixes; a separate retained-code pass normalizes 54 filename origins
+using `PUSH CS; CALL rel16`. All 97 unresolved entries and 13 asset candidates
+remain open. A later instrumented fence timeout killed the worker through the
+transport failure path; the fence outcome remains unknown. The report records
+the observer deadline widening, process-lifetime limits and next changes.
+
+The [Employment recovery follow-up](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
+qualifies bounded business entry and original-action read-only reconciliation,
+including repeated witness failures. Its same-guest batch covers all eight
+locations and adds three indirect-call witnesses, bringing the inventory PC
+union to 47/201. All 97 unresolved entries and 13 asset candidates remain open;
+the separately guarded startup prefix is partial. The report also records the
+land setup failure, resource-fixture mismatch, request-schema/exit-code errors,
+long legacy actions and GitLab integration conflicts.
+
 The [Coelophysis purchase follow-up](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
 replaces fixed purchase sleeps in Z with bounded original-input phases, retains
 the paused provider and order receipts, and exposes a guarded continuation plus

@@ -1,0 +1,38 @@
+{
+  "format": "fdisbull-library-utility-derivation-1",
+  "review_date": "2026-11-03",
+  "source_commit": "2323b2b4715a98b4bad44b576685f0a9330d6eb0",
+  "integration_base": "3dc5c50d35f310a3ba39b1cf0cf82a20b8df69f7",
+  "original_imports_unchanged": true,
+  "original_files": [
+    {
+      "path": "full-f001/tools/handoff_bundle.py",
+      "sha256": "7ba9a70c0c40c3e69668c699b2d05ed47e1ca7e2b931937351500bbd4ddfe5a0"
+    },
+    {
+      "path": "full-f001/tools/test_handoff_bundle.py",
+      "sha256": "377a6d75d48f8c7232bb3eab77343215be1c042bd99abaa1462299790206a397"
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": "tools/handoff_bundle_checked.py",
+      "sha256": "cd70bd0b487b2450423b5dbcbf0311f61b5c613e1459ec7301980551c80d3513"
+    },
+    {
+      "path": "tools/test_handoff_bundle_checked.py",
+      "sha256": "4dfcee6cc8473b12a68b4efd2fd46ae06879eca99ce093ecbded0ce538d8d494"
+    }
+  ],
+  "fixes": [
+    "No automatic output unlink on exclusive-create/write failure; preserve competing/replaced/partial paths.",
+    "Reject parent-ID reuse during verification, matching generation lineage rules."
+  ],
+  "test_results": {
+    "original_tests": 16,
+    "reviewed_tests": 20,
+    "total_tests": 36,
+    "subtests": 16,
+    "native_or_network_execution": false
+  }
+}

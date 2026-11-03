@@ -1,5 +1,10 @@
 # Distinct Library tool source snapshot
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 This source ZIP contains 704 text files and no embedded wheel, executable,
 image, savestate or database payload. All paths exist in the exact v0.29.0 tag
 `09a820952ad3f54d0d0707db0515a8010f7eceb1`. Of those files, 698 match the tag

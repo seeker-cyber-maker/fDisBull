@@ -1,0 +1,23 @@
+{
+  "format": "fdisbull-agi-followup-review-1",
+  "reviewed_mr": {
+    "iid": 17,
+    "head": "1ed77bc0257eb1c4ed23d995155afd6bb3a6b14b",
+    "base": "4e8ab3a69a9ec6d8502548dbf69f36e2c5f0249e",
+    "material_findings": 0,
+    "selected_checks_passed": 736,
+    "native_only_checkpoint_check_excluded": 1,
+    "evidence_rebuilt_and_hashed": true,
+    "review_sha256": "30fd55d2634323c906d94040c39937412f292dba3333803b200f05d7cdeeda6b"
+  },
+  "new_collector_review": {
+    "saturated_trace_page_retention": {
+      "finding": "A returned 128-event page was rejected before being retained; a later read failure could lose known fetch evidence.",
+      "fixed": true,
+      "red_against_retained_old_collector": true,
+      "green_against_corrected_collector": true,
+      "closure_sha256": "a9eb1507399fec94f4db92bf3d387bc6ef5483e3a3f80cb85062d8ddc53f64a1"
+    },
+    "scope": "Independent authored protocol and static review; native evidence is recorded separately."
+  }
+}

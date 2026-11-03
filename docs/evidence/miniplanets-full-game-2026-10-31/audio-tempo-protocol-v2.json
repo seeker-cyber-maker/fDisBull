@@ -1,0 +1,17 @@
+{
+  "format": "miniplanets-audio-tempo-protocol-2",
+  "observation": "Atomic low bytes, modulo256 deltas; retain all original16-bit words as diagnostics.",
+  "minimum_measured_host_intervals": 3000,
+  "warmup_host_frames": 100,
+  "service_increments_per_host_interval_max": 16,
+  "outstanding_slots_max_exclusive": 128,
+  "queue_lateness_increments_per_host_interval_max": 240,
+  "queue_bound_reason": "At most16 serviced slots per observation interval, each has at most15 queued-request iterations.",
+  "source_tick_endpoint_allowance": 2,
+  "service_endpoint_allowance": 1,
+  "scheduled_slot_endpoint_allowance": 1,
+  "rate_target": "Two scheduled services per hostframe; sourceTimerHz118.89963993409864.",
+  "raw_word_policy": "Inconsistent high words stay torn/unknown; only bounded atomic-byte deltas support the v2 rate claim.",
+  "latency_policy": "Show unadjusted rates, endpoint and maximum debt; credit accounting never erases a slow clock.",
+  "feedback_extension": "Ordinary input-only first-level route, then1500 neutral hostframes after Stage1-2 publication."
+}

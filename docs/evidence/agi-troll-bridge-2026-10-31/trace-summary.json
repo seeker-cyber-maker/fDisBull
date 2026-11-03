@@ -1,0 +1,331 @@
+{
+  "format": "fdisbull-sanitized-native-fetch-trace-1",
+  "raw_private_sha256": "b2533adc93d89ac580fc6a87e2c631ad81fee6cb48f1c75cd7f8595a78e8dd38",
+  "scope": "32 original-interpreter fetch observations after the score access; no instruction completion certificate. Raw bytes and register dumps are private.",
+  "requested_count": 32,
+  "captured_count": 32,
+  "stop_outcome": "pause",
+  "measured_guest_ms": 0,
+  "events": [
+    {
+      "sequence": 1,
+      "address": {
+        "offset": "0x000072DE",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,si",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 2,
+      "address": {
+        "offset": "0x000072E0",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "ret",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 3,
+      "address": {
+        "offset": "0x000002FA",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "add  sp,0002",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 4,
+      "address": {
+        "offset": "0x000002FD",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "mov  si,ax",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 5,
+      "address": {
+        "offset": "0x000002FF",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "or   si,si",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 6,
+      "address": {
+        "offset": "0x00000301",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "je   00000306 ($+3)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 7,
+      "address": {
+        "offset": "0x00000303",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "lodsb",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 8,
+      "address": {
+        "offset": "0x00000304",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "jmp  short 000002C4 ($-42)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 9,
+      "address": {
+        "offset": "0x000002C4",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "cmp  al,FC",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 10,
+      "address": {
+        "offset": "0x000002C6",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "jnc  00000306 ($+3e)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 11,
+      "address": {
+        "offset": "0x00000306",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "ret",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 12,
+      "address": {
+        "offset": "0x0000295F",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "test si,si",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 13,
+      "address": {
+        "offset": "0x00002961",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "jne  0000294B ($-18)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 14,
+      "address": {
+        "offset": "0x0000294B",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "test al,al",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 15,
+      "address": {
+        "offset": "0x0000294D",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "je   00002963 ($+14)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 16,
+      "address": {
+        "offset": "0x0000294F",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "cmp  al,FF",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 17,
+      "address": {
+        "offset": "0x00002951",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "je   0000296C ($+19)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 18,
+      "address": {
+        "offset": "0x0000296C",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "xor  bx,bx",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 19,
+      "address": {
+        "offset": "0x0000296E",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "lodsb",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 20,
+      "address": {
+        "offset": "0x0000296F",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "cmp  al,FC",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 21,
+      "address": {
+        "offset": "0x00002971",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "jc   0000298F ($+1c)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 22,
+      "address": {
+        "offset": "0x0000298F",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "push bx",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 23,
+      "address": {
+        "offset": "0x00002990",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "call 000007E3 ($-21b0)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 24,
+      "address": {
+        "offset": "0x000007E3",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "mov  [0941],si",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 25,
+      "address": {
+        "offset": "0x000007E7",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "dec  word [0941]",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 26,
+      "address": {
+        "offset": "0x000007EB",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "cmp  al,26",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 27,
+      "address": {
+        "offset": "0x000007ED",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "jnc  00000812 ($+23)",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 28,
+      "address": {
+        "offset": "0x000007EF",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "xor  bh,bh",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 29,
+      "address": {
+        "offset": "0x000007F1",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "mov  bl,al",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 30,
+      "address": {
+        "offset": "0x000007F3",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 31,
+      "address": {
+        "offset": "0x000007F5",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "instruction_completed": null
+    },
+    {
+      "sequence": 32,
+      "address": {
+        "offset": "0x000007F7",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "instruction": "call near word [bx+08F5]",
+      "instruction_completed": null
+    }
+  ]
+}

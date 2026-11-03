@@ -1,3 +1,35 @@
+# Release status checked on 2026-11-03 (America/New_York)
+
+## 0.30.0 release published on GitLab; local shared installation active
+
+[`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.30.0)
+is published as an annotated GitLab tag and public GitLab Release. It unifies
+the post-GitHub migration consolidation with the common indexed UIL contracts
+(MR !24), [bounded typed C-to-UIL frontend](BOUNDED_TYPED_C_FRONTEND.md),
+[consolidated UDL/UIL/UDC architecture](UDL_UIL_UDC_CONSOLIDATED.md), console
+intake and synthesis (PR #56), AGI *King's Quest I* native alignment, debugger
+rewind, [lossless frame-state deltas](FRAME_STATE_DELTAS.md) and CPU/RAM deltas,
+standing probes, multi-target memory UDC shells, the
+[cold-agent skill & Elephant-Goldfish Method (EGM) benchmark](COLD_AGENT_EGM_BENCHMARK.md),
+and verified trial-safe GitLab CI.
+
+Package bytes (`fdisbull-0.30.0-py3-none-any.whl`,
+`fdisbull_player-0.30.0-py3-none-any.whl`, `fdisbull-0.30.0.tar.gz`,
+`fdisbull-0.30.0-tool.zip`, `SHA256SUMS`, and `BUILD.json`) are published under
+the public generic package `fdisbull-tool-packages` `0.30.0-20261103` and linked
+from the GitLab Release for unauthenticated download. The shared selector
+`/Users/Shared/fDisBull/current` activates the verified `0.30.0` release prefix
+(`INSTALLATION.json` status `active_verified`), while preserving the `0.29.0`
+prefix and guarded rollback helper.
+
+Hosted GitLab CI passed on the `integration` baseline (Pipeline `#3016197597`
+at commit `d39390ef`, completing 3 jobs across 2 stages).
+
+See [release notes](RELEASE-0.30.0.md), [system commands](SYSTEM_INSTALLATION.md),
+and the [common UIL specification](COMMON_UIL_CONTRACT.md).
+
+---
+
 # Release status checked on 2026-11-01 (America/New_York)
 
 ## 0.29.0 published on GitLab; local shared installation active

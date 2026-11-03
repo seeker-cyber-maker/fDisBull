@@ -1,0 +1,12 @@
+{
+  "additional_equal_branch_checks": 10,
+  "cases": 12,
+  "compile_ms": 182.554681000056,
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "execution_ms": 92.6198199999817,
+  "mixed_object_comparisons_preserved_as_unresolved": 65536,
+  "model_comparisons": 786432,
+  "passed": true,
+  "scope": "12 selected old/new blocks, each under 65536 typed model inputs; common property-call summaries; not full methods, independent native runtime, or original-DOS behavior",
+  "source_sha256": "f4c65a930461899bc2883275cae61195362fbb854635fb55877bf833e6479e87"
+}

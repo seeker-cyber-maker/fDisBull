@@ -1,0 +1,12 @@
+{
+  "source_file": "KQ1-No-Clover-DrD2k9 - BIOS update.jrsr",
+  "source_sha256": "5ab14093f3e688c9d68c79656e7fa0cf2ccfdd0dea76f083e432dc323d2c4686",
+  "variant_file": "reference-original-bios.jrsr",
+  "variant_sha256": "3e38a0ee4a4ee48c98f31f554bfb3f1895289d4488ce7521e252f3893b555827",
+  "declared_change": "Restore documented original published BIOS identity; all input event bytes unchanged. This is not the unchanged updated download.",
+  "bios_from": "21fa468b969329b6ac3571ead5b181e3",
+  "bios_to": "740f01be58103af0996220bdeb7c4d12",
+  "identity_occurrences_replaced": 3,
+  "events_sha256": "8fd058009446cb0ce29e91f82b1258a7d2a710076025803c42c42c4f056a8f71",
+  "primary_context": "https://tasvideos.org/Forum/Topics/24644?CurrentPage=1&Highlight=524537"
+}

@@ -1,0 +1,473 @@
+{
+  "build_receipt_sha256": "88dfcb016bb52eb9516dc4cb70c713d7293fbaa16177621813124c6bce183150",
+  "check_count": 14,
+  "checks": {
+    "assisted_combat": {
+      "hp_transitions": [
+        {
+          "frame": 100,
+          "hp": [
+            10,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 348,
+          "hp": [
+            10,
+            6,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 407,
+          "hp": [
+            10,
+            5,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 467,
+          "hp": [
+            10,
+            0,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "logical_updates": 578,
+      "nes_trace_sha256": "55eec5a9e7a9d9f4a33e206d555f31c7bd752e2d7e0dfda6a01f57ba433bd3c7",
+      "receipt_sha256": "07590bdeccdeb927bd4c761e4142bdee96353f2f77016c8dfa9a28acf1edf44b",
+      "scope": "assisted player placement and frozen captured NPCs; target-adapted single projectile; NES output versus shared GameIL, source leaf checks separate",
+      "shots": 3
+    },
+    "assisted_placement": {
+      "fail_receipt_sha256": "f0ca96113a65da3724cfdf02678d9a35fbddddb7df06096ab36d3bd5e9f97783",
+      "receipt_sha256": "f52af85de2cb811e522b932fc4e04a54a57f095266233e35ca50813c5cedefb7",
+      "refusal_unchanged": true,
+      "scope": "assisted target placement and subsequent four direction ticks; collision model and viewport only",
+      "state_comparisons": 6,
+      "step_receipt_sha256": "094032aa9ddab29e921fe9ad12bdd578f2c24977b40a7887ee8976eb0a90e7cf"
+    },
+    "down": {
+      "count": 60,
+      "fields": [
+        "player_x",
+        "player_y",
+        "heading",
+        "pad_sample",
+        "direction",
+        "camera_x",
+        "camera_y",
+        "scroll_ax",
+        "scroll_ay"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "460ed51a67915500d19a3a2e0281c6b55e4468867bc5c273a16dc9207b9681d0",
+      "receipt_sha256": "775416b557c8a2418df4bde7517411382a3998cd293b530d9012a34d8247f728",
+      "scope": "prepared target, ordinary source and target input, selected completed ticks; published fields only",
+      "source_capture_sha256": "1387cf4aa483a0b1b9afe6e6d8c9c6f63deae6afbbff710abed03ae3cfbf55af"
+    },
+    "held_a": {
+      "fields": [
+        "ammo",
+        "rng",
+        "cooldown",
+        "projectile_y_fixed",
+        "lifetime"
+      ],
+      "logical_interval": 52,
+      "nes_trace_sha256": "2c857c1715bd326133cdfb5235706e372b13316e252c0fef2b1874a0feba639a",
+      "physical_target_frames": [
+        139,
+        199,
+        259,
+        319,
+        379,
+        438
+      ],
+      "receipt_sha256": "466a885ae876650b888f73527451d6d20734b455aaa3ed7e69b9d54209846e94",
+      "scope": "six held-A shots from prepared state, observer-instrumented source; target one-projectile lifecycle and physical timing differ",
+      "shots": 6
+    },
+    "left": {
+      "count": 60,
+      "fields": [
+        "player_x",
+        "player_y",
+        "heading",
+        "pad_sample",
+        "direction",
+        "camera_x",
+        "camera_y",
+        "scroll_ax",
+        "scroll_ay"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "f1104c76159e72a5f18d621562eb97d165219ccd1313e40173789006d46c6dea",
+      "receipt_sha256": "e0e634f1e179194075de21cc82146003e59665763bf8fd29425aee03352c4cbd",
+      "scope": "prepared target, ordinary source and target input, selected completed ticks; published fields only",
+      "source_capture_sha256": "fc79e43ee2157d6c8a1dfbec337ba57cf875c816ef6d48dd2fa06d2b3c3943cc"
+    },
+    "long_left": {
+      "count": 64,
+      "fields": [
+        "player_x",
+        "player_y",
+        "heading",
+        "pad_sample",
+        "direction",
+        "camera_x",
+        "camera_y",
+        "scroll_ax",
+        "scroll_ay"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "6c0f41e7119b52520a2dd4fd07da074527336b2d4247700ea54e6d2c6b07bd00",
+      "receipt_sha256": "7274f0d7d27dfb1df39b632a35cc540255a85fa3eb797cf1fcc99ba055351db8",
+      "scope": "prepared target, ordinary source and target input, selected completed ticks; published fields only",
+      "source_capture_sha256": "1bc6d228f0d17dddfc65168ce3927b4aa192a36b7f7930befbde9340bde25cf6"
+    },
+    "ordinary_controller_combat": {
+      "hp_transitions": [
+        {
+          "frame": 100,
+          "hp": [
+            10,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 290,
+          "hp": [
+            6,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 349,
+          "hp": [
+            5,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "frame": 409,
+          "hp": [
+            0,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "logical_updates": 577,
+      "nes_trace_sha256": "8b49c2b580b43d7b8814aa7c006b644e9315c697fb9e709b0f732e83ce9dedd3",
+      "receipt_sha256": "9ff49ff9044c536414315b7c2be434988f26deedabce290ced99c3686bb779ae",
+      "scope": "ordinary D-pad selection and fire with frozen captured NPCs; target-adapted single projectile; NES output versus shared GameIL, source leaf checks separate",
+      "shots": 3
+    },
+    "ordinary_original_encounter": {
+      "control_capture_sha256": "6600812d8f2f96521ff212e2b141902ac9bf0db2110917d20399648c3c3405e0",
+      "matched_source_control_ram_frames": 16,
+      "nes_trace_sha256": "8b49c2b580b43d7b8814aa7c006b644e9315c697fb9e709b0f732e83ce9dedd3",
+      "receipt_sha256": "9ca7f4d17c470c0110e318f9736aabf40e5b940e9726179e70a83c8d0b681c85",
+      "sampled_comparisons": 4,
+      "samples": [
+        {
+          "source": {
+            "ammo": 12,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 10,
+            "target_slot": 0
+          },
+          "source_frame": 6120,
+          "source_npc_position": [
+            11410,
+            8664
+          ],
+          "target": {
+            "ammo": 12,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 10,
+            "target_slot": 0
+          },
+          "target_frame": 220
+        },
+        {
+          "source": {
+            "ammo": 12,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 10,
+            "target_slot": 0
+          },
+          "source_frame": 6140,
+          "source_npc_position": [
+            11210,
+            8664
+          ],
+          "target": {
+            "ammo": 12,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 10,
+            "target_slot": 0
+          },
+          "target_frame": 240
+        },
+        {
+          "source": {
+            "ammo": 11,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 6,
+            "target_slot": 0
+          },
+          "source_frame": 6175,
+          "source_npc_position": [
+            10625,
+            9084
+          ],
+          "target": {
+            "ammo": 11,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 6,
+            "target_slot": 0
+          },
+          "target_frame": 290
+        },
+        {
+          "source": {
+            "ammo": 10,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 5,
+            "target_slot": 0
+          },
+          "source_frame": 6250,
+          "source_npc_position": [
+            10625,
+            9084
+          ],
+          "target": {
+            "ammo": 10,
+            "player_x": 13664,
+            "player_y": 10880,
+            "target_hp": 5,
+            "target_slot": 0
+          },
+          "target_frame": 349
+        }
+      ],
+      "scope": "ordinary controller route on both systems; sampled player/selection/ammo/HP effects only; source NPC moves, NES NPC is frozen; observer neutrality applies only to checked RAM snapshots; timing parity unestablished",
+      "source_capture_sha256": "d9c8e708d3e7f16785747c0356b0b271dba6f1d942e05fd64f10cf878753e6fa"
+    },
+    "reequip": {
+      "fields": [
+        "weapon_slot",
+        "weapon_item",
+        "ammo",
+        "armor"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "389e1574fb39fd017d52f72fcd8b90bc6a6fa3b8dfd509577c2a052c98d24b46",
+      "receipt_sha256": "f9a123c67d16950c17c838cedf917298b2be943b9724f92c39350a3d6b2e0ef5",
+      "sample_count": 3,
+      "scope": "original two-confirm route vs target one-confirm adapter, captured items only",
+      "source_capture_sha256": "1d313b700c222e965bf700ecfe891e0a6a1fa662ae8a07f76e33b7bee3b081f1"
+    },
+    "right": {
+      "count": 60,
+      "fields": [
+        "player_x",
+        "player_y",
+        "heading",
+        "pad_sample",
+        "direction",
+        "camera_x",
+        "camera_y",
+        "scroll_ax",
+        "scroll_ay"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "f1104c76159e72a5f18d621562eb97d165219ccd1313e40173789006d46c6dea",
+      "receipt_sha256": "a7fdd9378d59ab96cae082d6ee12fe07746e68749b2960d044490d7727355a9f",
+      "scope": "prepared target, ordinary source and target input, selected completed ticks; published fields only",
+      "source_capture_sha256": "b7252b76252a0ebda05d615d775c599859092302eff261cfcdad66b30a1ff42c"
+    },
+    "single_shot": {
+      "cancellation_passed": true,
+      "nes_trace_sha256": "54dc553926051cc6d19b6c958bf2648776c47a2e93004006213e3b163ca851e7",
+      "projectile_states": 8,
+      "receipt_sha256": "b1d772ce2ed501f3439d431d71f080e0cd603a3d4c1283bb54f01dba0b98a6db",
+      "scheduler_samples": 5,
+      "scope": "one captured-profile adapted A shot; instrumented source observation, observer neutrality unestablished; no target hit or general firing",
+      "source_comparison_sha256": "3e778b4e20af27dc93a860081da8b9b0a47dabe698271551e49113b08152c460"
+    },
+    "target_selection": {
+      "fields": [
+        "selected_slot",
+        "contact",
+        "flags_low",
+        "marker",
+        "backlink_nonzero"
+      ],
+      "nes_trace_sha256": "55eec5a9e7a9d9f4a33e206d555f31c7bd752e2d7e0dfda6a01f57ba433bd3c7",
+      "original_comparison_sha256": "98af3c9c866adb2f4ed93fe28e4e45174b2907afc9792ce6b479ea76607d192f",
+      "receipt_sha256": "66edf82dda9e4ce3d0aee089223aa57ea90d08c1657eec1c1ba123b4674421ce",
+      "scope": "assisted placement and frozen captured actors; original prepared projection and selector leaves; no ordinary reachability claim",
+      "source": [
+        1,
+        253,
+        16,
+        32777,
+        1
+      ],
+      "target": [
+        1,
+        253,
+        16,
+        32777,
+        1
+      ]
+    },
+    "unequip": {
+      "fields": [
+        "weapon_slot",
+        "weapon_item",
+        "ammo",
+        "armor"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "ce5a8ad6bb4c65da386cec3c4571f82763e136f0ff4abc213a8957321b856a1c",
+      "receipt_sha256": "7051f09f10c24a9dcf51fb4372a1ca52897964174880b14c9e6e645123575e6b",
+      "sample_count": 3,
+      "scope": "original two-confirm equipment route versus target one-confirm adaptation, captured weapon and armor only",
+      "source_capture_sha256": "00991578b2ae9d4688d71be8368525beb42b4f1282a0e60092da247bf335eb7b"
+    },
+    "up": {
+      "count": 38,
+      "fields": [
+        "player_x",
+        "player_y",
+        "heading",
+        "pad_sample",
+        "direction",
+        "camera_x",
+        "camera_y",
+        "scroll_ax",
+        "scroll_ay"
+      ],
+      "mismatches": 0,
+      "nes_trace_sha256": "f1104c76159e72a5f18d621562eb97d165219ccd1313e40173789006d46c6dea",
+      "receipt_sha256": "d56fcf60c7d1efba55b1867a1b4076810b1a11f32a2fbd0d269d65ff0d83c418",
+      "scope": "prepared target, ordinary source and target input, selected completed ticks; published fields only",
+      "source_capture_sha256": "bbb7ba69ea16de86e42ce2212f90eb82ff2268fea5e07c0055e9cf6d3caeb666"
+    }
+  },
+  "format": "fdisbull-shadowrun-nes-play-evidence-1",
+  "gameil_sha256": "f19f30dc6693542c80d5e89e8c7eda5856f073f9c2b28ceb560a553b1fdd1b1d",
+  "limits": [
+    "prepared scene 2 only; no scene transitions or save/load",
+    "source observer neutrality only at the 16 compared full-RAM snapshots",
+    "frozen NPC positions and no NPC AI",
+    "no original pixel or general whole-game parity",
+    "original six-slot allocation lifecycle not integrated",
+    "limited item and captured actor types; unsupported paths refuse",
+    "one-shot and linked combat may miss physical deadlines; no realtime hardware claim",
+    "Z and NES run separate instances of the shared GameIL, not synchronized live state"
+  ],
+  "nes_core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "nes_sha256": "7b4e14fb44352c51fb8fdd0558e77079d7cdb5334c7241f9ac69f1462c70265a",
+  "nes_size": 40976,
+  "presentation": {
+    "kind": "target-authored symbolic 64 by 44 terrain categories",
+    "menu_exit_physical_frames_before_after": [
+      62,
+      21
+    ],
+    "menu_exit_receipt_sha256": "5dcc2e60ea64ec1b9cdd65b0b26b98079c510dfaec82b2105a664181bd372316",
+    "menu_refusal_receipt_sha256": "6b81ed848f83be4460490593ff6c51d9f565edd80044cf5fb4441b3fe4e11a8e",
+    "new_field_png_sha256": "17a04169f64821bf26b5b0697763b15839c2d2aa8df61fa3c31a037daba199cb",
+    "npc_ai": false,
+    "npc_positions": "frozen from prepared state",
+    "old_field_png_sha256": "17a04169f64821bf26b5b0697763b15839c2d2aa8df61fa3c31a037daba199cb",
+    "ordinary_demo_receipt_sha256": "57f616c0ef38b7220baa8e4f2a992433a78f86d606cb4bba8b0eb0cf917a8703",
+    "pixels_are_original": false,
+    "projectile_lifecycle": "target-adapted one active projectile",
+    "restored_field_pixels_equal": true,
+    "source_pool_equivalence": false
+  },
+  "profile": "shadowrun-scene2-play-v1",
+  "source_core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "source_leaf_receipts": {
+    "actor_6502": {
+      "receipt_sha256": "9bef77abe0c5e5f76a85ab342dea43800238d8548d9d66ce8f8ea9f1dcd18856"
+    },
+    "armor": {
+      "receipt_sha256": "730046e956f54da78abd8d361b641987aecb00732ebfbfd076b46e8b9df9238d"
+    },
+    "linked_flight": {
+      "receipt_sha256": "afbeb822922abdcb0d94e14a2b5ce38133fcc379c70c3f2b27765100aff648a6"
+    },
+    "ordered_actors": {
+      "receipt_sha256": "b80869a2fb2a1a110b9d6b322f96ec1d710dc2b95e4194a7d2c4872f75745332"
+    },
+    "prepared_hit_6502": {
+      "receipt_sha256": "4c039518894508268bd0e48a10bc7b0a9e0511fdef5abbd0974431db0f53654b"
+    },
+    "scheduler": {
+      "receipt_sha256": "114c6156368a2e969b22ecf338cb96fbcc8c688dfbc70b78a45cb8b9624a1ea9"
+    },
+    "source_observer_control": {
+      "receipt_sha256": "25668375220e50556788d004704c70c8deb9c2d9be62a133fe259a4a27cbdd70"
+    },
+    "targeting": {
+      "receipt_sha256": "d43909619eb1f5a45361c7569f3a6776111ea62d470ccf083319014dfaa7fd98"
+    },
+    "weapon": {
+      "receipt_sha256": "3011eb9771395e708e79d8dfc52c6dd04d6576fa4dba55775479ca33a873df26"
+    }
+  },
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e"
+}

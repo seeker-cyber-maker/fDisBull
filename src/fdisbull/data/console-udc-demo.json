@@ -1,0 +1,67 @@
+{
+  "format": "fdisbull-il-1",
+  "role": "uil",
+  "resources": {},
+  "variables": {
+    "$x": {
+      "type": "u8",
+      "initial": 8
+    },
+    "$ticks": {
+      "type": "u16",
+      "initial": 0
+    },
+    "$buttons": {
+      "type": "u8",
+      "initial": 0
+    }
+  },
+  "body": [
+    {
+      "id": "right",
+      "op": "if",
+      "condition": {
+        "op": "bit_test",
+        "value": {
+          "var": "$buttons"
+        },
+        "bit": 0
+      },
+      "then": [
+        {
+          "id": "inc",
+          "op": "add",
+          "var": "$x",
+          "value": 1
+        }
+      ],
+      "else": []
+    },
+    {
+      "id": "left",
+      "op": "if",
+      "condition": {
+        "op": "bit_test",
+        "value": {
+          "var": "$buttons"
+        },
+        "bit": 1
+      },
+      "then": [
+        {
+          "id": "dec",
+          "op": "subtract",
+          "var": "$x",
+          "value": 1
+        }
+      ],
+      "else": []
+    },
+    {
+      "id": "tick",
+      "op": "add",
+      "var": "$ticks",
+      "value": 1
+    }
+  ]
+}

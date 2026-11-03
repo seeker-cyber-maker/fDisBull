@@ -1,0 +1,25 @@
+{
+  "format": "fdisbull-shadowrun-combat-qualification-1",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "authoring_sha256": "adcb1b52befa86af0862b780889e04339ec4abee8a90c3bf8b07d8b74a267bb8",
+  "leaves": [
+    {
+      "source": "unarmed",
+      "cases": 1536,
+      "trace_sha256": "9f58135ba68a2b6033d8c9bc96daa7a24b94ff74eb9bfcd85530ec900967d344"
+    },
+    {
+      "source": "alternate",
+      "cases": 1536,
+      "trace_sha256": "976cad45e3421f509ba68498a7c98192ea2df9556a67883b1476889c19a75291"
+    },
+    {
+      "source": "posture",
+      "cases": 15,
+      "trace_sha256": "c2c449ce7d0db629c79941b0743ae92687971d033914b65c99ef51a5bb23a4a9"
+    }
+  ],
+  "scope": "controlled original 68000 attack-stat leaves, selected nonnegative baselines; prior helpers, targeting, damage and field action execution excluded",
+  "root_repeat_summary_sha256": "baab6163901bed5c78af39f6d24d4512c7682d7add1817159ed9f3a57b1f791d"
+}

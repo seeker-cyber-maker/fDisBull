@@ -1,0 +1,23 @@
+{
+  "intended_repository_files": 3,
+  "patch_applied_in_fresh_fixture": true,
+  "applied_payloads_match": true,
+  "whitespace_check": true,
+  "python_ast_and_json": true,
+  "checker_receipt_digest": true,
+  "relative_links": [
+    {
+      "link": "LE_WHOLE_BINARY_SCOPE_2026-10-30.md",
+      "status": "existing upstream document, read at main"
+    },
+    {
+      "link": "evidence/diagnostic-graphics-2026-10-31/model-checks.json",
+      "status": "local new file"
+    }
+  ],
+  "publication_script_bash_syntax": true,
+  "publication_script_executed": false,
+  "github_pr_created": false,
+  "github_write_action_available_in_session": false,
+  "patch_sha256": "e02f7579abf2e88ce09662e6e3df8f993b3ab5561cd3258cdb84c6d160a6f7c6"
+}

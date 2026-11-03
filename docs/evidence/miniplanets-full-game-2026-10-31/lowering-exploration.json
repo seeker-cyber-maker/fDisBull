@@ -1,0 +1,208 @@
+{
+  "format": "fdisbull-native-lowering-exploration-1",
+  "status": "frozen-exploration-not-integrated",
+  "final_production_image": "R14 retained unchanged",
+  "decision": "The clean single-stage gain was5.6485percent and depended on a new generator plus controlled bank placement. Preserve the simpler fully qualified R14 implementation rather than reopening qualification.",
+  "source_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "production_generator_sha256": "8ee0b32cb5a33d4ac1ceaf9b09f50aa195d575cb7f93fc72716d36a05bd7b429",
+  "private_generator_sha256": "7ead9ed315f37e88fdb12f82a4347b904eaf44a0e8bc39039e3985a0f1c511e6",
+  "forms": {
+    "original_native_emission": "a[(unsigned char)(p + K)]",
+    "trial1": "a[(unsigned char)p + K]",
+    "trial2": "(a + K)[(unsigned char)p]",
+    "notation": "p is a direct unsigned8 ID in the original AST; K is a compile-time integer literal0..255, not a runtime parameter."
+  },
+  "qualified_domain": [
+    "Only known flat global one-byte-element arrays already selected by the production small-array generator (totalbytes1..256).",
+    "Original subscript must be a direct BinaryOp addition with unsigned8 ID on the left and nonnegative integer literal0..255 on the right.",
+    "Existing original-index in-bounds assumption remains mandatory. With p0..255 and K0..255, valid p+K is at most255 and cannot overflow the cc65 16-bit promoted addition.",
+    "Preserve source casts, qualifiers and original AST. Decline local typedef cases and conflicting/shadowing declarations; pointer variables/array parameters/large arrays/signed or wider index IDs retain production emission.",
+    "The pointer-base form keeps element type and const/volatile qualification through ordinary array pointer arithmetic. Valid final index also implies the constant base displacement is within the same array."
+  ],
+  "semantic_evidence": {
+    "native_6502_canary_cases": 132279,
+    "existing_array_cases": 101704,
+    "additional_displacement_and_exclusion_cases": 30575,
+    "case_kinds": [
+      "all valid base indices for literals0,1,2,3,7,15,17,19,49,51,127,255",
+      "signed/unsigned8 elements with plain/volatile/const/constvolatile qualifications",
+      "explicit author wrap casts, signed negative bases, u16wrap, pointer and array-parameter exclusions",
+      "global/local/parameter/type shadowing and local typedef exclusions"
+    ],
+    "source_ast_unchanged": true,
+    "negative_controls": [
+      "dropping the eligible constant displacement is detected",
+      "existing wrong element-scale and illegal257-byte-array-wrap controls are detected"
+    ],
+    "claim_limit": "Finite actual6502 cases plus bounded C-semantics reasoning; no new whole-game or arbitrary-program equivalence claim."
+  },
+  "controlled_native_comparison": {
+    "baseline_rom_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e",
+    "candidate_rom_sha256": "b5d28601f010387b457dcc20b2d1c811b9458660a10d753e8310a056b3c6165e",
+    "baseline_rebuild_byte_identical_to_qualified_r14": true,
+    "adapter_source_bytes_unchanged_from_r14": true,
+    "candidate_only_changes": [
+      "trial2 native C address emission",
+      "link the resulting objects using the original R14 procedure-to-bank assignments"
+    ],
+    "code_bytes": {
+      "baseline": 21224,
+      "candidate": 20458
+    },
+    "bank_used_bytes": {
+      "baseline": [
+        8192,
+        6045,
+        4238,
+        3517
+      ],
+      "candidate": [
+        7819,
+        5759,
+        4238,
+        3410
+      ]
+    },
+    "workload": "Stage44 (16fireballs,28original actors), original initialized state, no input, declared Muteki255 no-death adapter; ordinary game/render/audio loop.",
+    "physical_host_intervals": 3000,
+    "warmup_host_frames": 100,
+    "baseline": {
+      "completed_updates": 478,
+      "logic_hz": 9.575905692293587,
+      "host_intervals": 3000,
+      "actual_fps": 60.099826520671044,
+      "physical_nmi_delta": 3000,
+      "jammed_frames": 0,
+      "observer_metrics": {
+        "checked_reads": 38437928,
+        "mismatched_reads": 0,
+        "jammed_instructions": 0,
+        "first_bad_address": 0,
+        "first_bad_bank": 0,
+        "first_bad_actual": 0,
+        "first_bad_expected": 0
+      },
+      "clock_accounting": {
+        "native_clock_delta": 89341501,
+        "mapper_hook_cycles": 89341501,
+        "pending_before": 0,
+        "pending_after": 0
+      },
+      "state_shadow": {
+        "completed_projection_ticks_checked": 489,
+        "independent_controller_checks": 489,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 489,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      },
+      "observer_neutrality": {
+        "audio.wav": true,
+        "state.bin": true,
+        "save_ram.bin": true,
+        "system_ram.bin": true,
+        "frame.png": true,
+        "profile.json": true,
+        "ram_trace.json": true
+      },
+      "faulted_frames": 0,
+      "mean_available_cpu_cycles_per_update": 186906.90585774058
+    },
+    "candidate": {
+      "completed_updates": 505,
+      "logic_hz": 10.116804130979625,
+      "host_intervals": 3000,
+      "actual_fps": 60.099826520671044,
+      "physical_nmi_delta": 3000,
+      "jammed_frames": 0,
+      "observer_metrics": {
+        "checked_reads": 38152970,
+        "mismatched_reads": 0,
+        "jammed_instructions": 0,
+        "first_bad_address": 0,
+        "first_bad_bank": 0,
+        "first_bad_actual": 0,
+        "first_bad_expected": 0
+      },
+      "clock_accounting": {
+        "native_clock_delta": 89341498,
+        "mapper_hook_cycles": 89341496,
+        "pending_before": 0,
+        "pending_after": 2
+      },
+      "state_shadow": {
+        "completed_projection_ticks_checked": 518,
+        "independent_controller_checks": 518,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 518,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      },
+      "observer_neutrality": {
+        "audio.wav": true,
+        "state.bin": true,
+        "save_ram.bin": true,
+        "system_ram.bin": true,
+        "frame.png": true,
+        "profile.json": true,
+        "ram_trace.json": true
+      },
+      "faulted_frames": 0,
+      "mean_available_cpu_cycles_per_update": 176913.85742574258
+    },
+    "gameplay_rate_gain_fraction": 0.05648535564853563,
+    "mean_available_cycles_per_completed_update_reduction_fraction": 0.05346537831835896,
+    "cycle_boundary_note": "Candidate mapper-hook sum89341496 plus two pending X.tcount cycles equals native timestamp delta89341498. A repeat with X.tcount capture matched all original outputs and explained the boundary difference exactly.",
+    "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+    "core_version": "(SVN) ac0d00a",
+    "cc65_tool_hashes": {
+      "cc65": {
+        "sha256": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559"
+      },
+      "ca65": {
+        "sha256": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7"
+      },
+      "ld65": {
+        "sha256": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+      },
+      "od65": {
+        "sha256": "08b7168660b527289fd72a647c5c8e8b4c15e69b102d8044a5dc4aabc474a816"
+      }
+    }
+  },
+  "earlier_trials": {
+    "ranking_eligible": false,
+    "reason": "All unprotected R13 timings are invalid for ranking because the confirmed non-atomic mapper bank-publication race could execute bytes from the wrong physical bank.",
+    "trial1_r13_rom_sha256": "9f9f1a87f66aab7fd1a6ab9743c29ece616971f3c09cc94b5ebb26b47bc27f6d",
+    "trial2_r13_ffd_rom_sha256": "d54ff6807a37db22395196735b0d3668caf8d5ad4618bbc1347e9f715fc9c4cd",
+    "trial2_r13_controlled_layout_rom_sha256": "bc79fc7dbea3d901d01477d842361ea2e9a304cffa5655d3cf068579ca874c88",
+    "controlled_layout_failure": {
+      "first_observed_jam_host_frame": 735,
+      "cpu_pc": "0x8FF3",
+      "software_code_bank": 2,
+      "actual_mapped_opcode": "0x02",
+      "expected_opcode_in_bank2": "0xEE",
+      "interpretation": "CPU KIL/JAM caused by physical/software bank disagreement; not ordinary slow execution."
+    }
+  },
+  "limits": [
+    "The clean R14 comparison is one deterministic50-second-class dense-stage cohort, not an all-stage performance claim.",
+    "Observer neutrality covers actualPCM, complete serialized state, every watched RAM frame, finalSYSTEM/SAVE RAM, finalimage and CPU/stack/bank snapshots.",
+    "Bank consistency checked every banked-window ROM read in the observed interval; it is finite runtime evidence, not a proof for every interrupt interleaving.",
+    "All raw assets, states, traces, histograms, generated C, private generator and experimental binaries remain outside Git.",
+    "No production source, intended cartridge or installed package was changed for the experiment."
+  ],
+  "private_receipt_sha256": "b12f0864d59c7cd0495d38ebddc3344135623f2fb3d88c87bf1027ed8f42bda8"
+}

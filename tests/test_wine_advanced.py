@@ -231,10 +231,11 @@ def test_real_pe_layers_crc_native_state_edit_and_restart(tmp_path):
                 apply_edits(debug,[{'address':hex(exports['counter']),'expected_hex':'11000000','data_hex':'63000000'}],
                             {'rax':{'expected':int(original['general']['rax'],16)^1,'value':0}})
             assert value('counter')==17 and debug.registers()['general']==original['general']
-            parent=debug.save_state('parent.sav');original_regs=debug.registers()
+            parent=debug.save_anchor_stone('parent.sav');original_regs=debug.registers()
+            assert project.debug_anchor_stone_info(parent['artifact'])==project.debug_state_info(parent['artifact'])
             witness['parent_artifact']=parent['artifact']
             debug.write_memory(exports['counter'],'29000000',expected_hex='11000000')
-            debug.load_state(parent['artifact'])
+            debug.load_anchor_stone(parent['artifact'])
             assert value('counter')==17 and debug.registers()['general']==original_regs['general']
             assert debug.layers()['active']==[execute['layer']]
             frame=debug.screenshot();debug.click(80,80,mode_id=frame['metadata']['mode_id'])

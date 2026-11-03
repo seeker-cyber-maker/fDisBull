@@ -1,0 +1,174 @@
+{
+  "format": "fdisbull-shadowrun-source-field-qualification-1",
+  "status": "bounded_pass",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "authoring_sha256": {
+    "shadowrun_field_action.c": "b034b0dc06c0d1b8149067b2a5621e3cf60e4dae7ce89a14eae441393bdf76d5",
+    "shadowrun_field_motion.c": "2d375e8e68fa80c01ff584a7420d5d3c36ac4ff02de1e2774a24e05ac9280e2b",
+    "shadowrun_linked_heading.c": "c345a295223336ad4581dc9b7a4b1f661c81688482b454c8766e30f99a5e8361",
+    "shadowrun_linked_spawn.c": "338bd6752f26fd66f04805cd6726be97d6dacff040cc9de2c30758a9a71b59dc",
+    "shadowrun_linked_motion.c": "76cebf34f06b5d69cde6977c7117dca06bde5653da6ef837721126416c85ed41",
+    "shadowrun_linked_actors.c": "81354cefd5b0a62011f0c2143e0057b99b8831d923281734add1de119de2b32e",
+    "shadowrun_projectile_lifecycle.c": "722161513c336b11d26ac14939aa71a58ade2066ea7ba0212976e0e20a3a9c84"
+  },
+  "program_sha256": {
+    "field_motion": "951ae41eac4efe731ecd3e9cd7ef0f70fdb691c6306af80c701568e1a9d7c441",
+    "linked_motion": "eb239668bd59bcb3e4b1de38230f389536f960f2b31a66e2c08fa5bb0322a365",
+    "ordered_actor_adapter": "bcd0e305ecf43ae1686193d401bc5394c8fc69096e39c8599fd5b0f93c9e298d"
+  },
+  "checks": [
+    {
+      "id": "original_controller_observer_control",
+      "status": "passed",
+      "count": 16,
+      "unit": "full RAM snapshots",
+      "receipt_sha256": "25668375220e50556788d004704c70c8deb9c2d9be62a133fe259a4a27cbdd70",
+      "scope": "unpatched original and unobserved control with the same controller schedule; intermediate write timings are instrumented"
+    },
+    {
+      "id": "field_hit_continuation",
+      "status": "passed",
+      "count": 63,
+      "unit": "controlled cases",
+      "receipt_sha256": "08614267e726dd770baf052e1aca4c3da296f3e9a11a785a81dfb2ace71a6734",
+      "scope": "prepared hit continuation; not full input-to-hit"
+    },
+    {
+      "id": "field_nonparty_spawn_gate",
+      "status": "passed",
+      "count": 15,
+      "unit": "controlled cases",
+      "receipt_sha256": "08614267e726dd770baf052e1aca4c3da296f3e9a11a785a81dfb2ace71a6734",
+      "scope": "actor-index-3 ammo and allocation gate"
+    },
+    {
+      "id": "field_party_ammunition",
+      "status": "passed",
+      "count": 30,
+      "unit": "controlled cases",
+      "receipt_sha256": "08614267e726dd770baf052e1aca4c3da296f3e9a11a785a81dfb2ace71a6734",
+      "scope": "party ammo helper before HUD presentation"
+    },
+    {
+      "id": "captured_player_shot_and_prepared_hit",
+      "status": "passed",
+      "count": 40,
+      "unit": "controlled seed cases",
+      "receipt_sha256": "ae973ed38063adcaa10707abd506d62cd6ac1b1e1418df856342705853575d77",
+      "scope": "two sequential controlled original entries; not continuous original gameplay"
+    },
+    {
+      "id": "captured_actor_continuous_hit",
+      "status": "passed",
+      "count": 36,
+      "unit": "controlled cases",
+      "receipt_sha256": "85f624baa9f7bfae036e8ac5904ec2537bc7b2d982c3863c239e8fa4e1ea08cb",
+      "scope": "captured actor relocated to projectile path; includes low HP, counters and zero-success contact"
+    },
+    {
+      "id": "unlinked_projectile_original_flight",
+      "status": "passed",
+      "count": 8,
+      "unit": "instrumented frames",
+      "receipt_sha256": "3e778b4e20af27dc93a860081da8b9b0a47dabe698271551e49113b08152c460",
+      "scope": "captured no-target shot with original source terrain, per-frame projectile comparisons"
+    },
+    {
+      "id": "linked_target_heading",
+      "status": "passed",
+      "count": 50,
+      "unit": "controlled cases",
+      "receipt_sha256": "bc15ccb965e72c370fcf56c7b395075246f0d8dc62fdcfe2116a81d4c930c76f",
+      "scope": "source heading and metric from given coordinates"
+    },
+    {
+      "id": "projectile_spawn_vectors",
+      "status": "passed",
+      "count": 259,
+      "unit": "controlled cases",
+      "receipt_sha256": "950d7cbdfa6f0f1569df53a1a7f1b1c2552797408e85572ce434619b3d816b2f",
+      "scope": "source spawn and velocity from a supplied heading"
+    },
+    {
+      "id": "linked_projectile_original_flight",
+      "status": "passed",
+      "count": 3,
+      "unit": "instrumented frames",
+      "receipt_sha256": "afbeb822922abdcb0d94e14a2b5ce38133fcc379c70c3f2b27765100aff648a6",
+      "scope": "assisted player placement and linked selection; actual pre-launch target snapshot and write order; original moving target missed"
+    },
+    {
+      "id": "linked_projectile_relocated_actor_hit",
+      "status": "passed",
+      "count": 1,
+      "unit": "controlled case",
+      "receipt_sha256": "10b33c81ea646afb00015db393c993c97c9098f21c2f60875aae2392e98955c5",
+      "scope": "assisted player placement and subsequent diagnostic actor relocation; not natural enemy reachability"
+    },
+    {
+      "id": "source_order_actor_scan",
+      "status": "passed",
+      "count": 8,
+      "unit": "controlled cases",
+      "receipt_sha256": "b80869a2fb2a1a110b9d6b322f96ec1d710dc2b95e4194a7d2c4872f75745332",
+      "scope": "three captured actor profiles relocated for source-order collision; AI excluded"
+    },
+    {
+      "id": "static_actor_linked_flight",
+      "status": "passed",
+      "count": 3,
+      "unit": "instrumented frames",
+      "receipt_sha256": "cc2c731fb328f43a5a8f9113a9eedbfe0f4313226f790bd4ec8ea6d04be1e29c",
+      "scope": "static captured-actor target adaptation against an assisted original moving-target shot that missed"
+    },
+    {
+      "id": "projectile_retirement_gate",
+      "status": "passed",
+      "count": 40,
+      "unit": "controlled cases",
+      "receipt_sha256": "0b5cf1ece3778d8df189743521160a577bfcf371bacb63ffe242616e049dec67",
+      "scope": "retirement given supplied animation word; positive-repeat rearm excluded"
+    },
+    {
+      "id": "captured_projectile_animation",
+      "status": "passed",
+      "count": 24,
+      "unit": "controlled cases",
+      "receipt_sha256": "fcb55556d04c2136049b4870fa73486346f0a268a533d4c06de489c7ac1c8fe1",
+      "scope": "source accumulator and descriptor boundaries; service scheduling excluded"
+    }
+  ],
+  "original_route": {
+    "policy": "ordinary controller input, no memory patches",
+    "input_schedule": "LEFT 6000-6059, UP 6080-6100, B 6120-6121, A held 6140-6249",
+    "observed_target": "source actor slot 0",
+    "observed_ammo_writes": [
+      [
+        6164,
+        11
+      ],
+      [
+        6216,
+        10
+      ]
+    ],
+    "observed_hp_writes": [
+      [
+        6172,
+        6
+      ],
+      [
+        6224,
+        5
+      ]
+    ],
+    "observer_control": "16 full-RAM snapshots matched an unobserved same-input run; no all-frame or whole-machine neutrality claim"
+  },
+  "exclusions": [
+    "No original binary, game assets, saved state, raw RAM, raw trace, opcode bytes, or private delivery paths included.",
+    "Original unpatched route and assisted/controlled probes have distinct scopes; controlled relocation does not establish natural target reachability.",
+    "Static captured NPC adaptation does not implement original NPC AI, full combat, or complete projectile/actor lifecycle.",
+    "Target-side 6502 behavior, timing, review, package, hosted CI, release and installation require separate evidence."
+  ]
+}

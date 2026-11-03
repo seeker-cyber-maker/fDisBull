@@ -1,0 +1,270 @@
+{
+  "format": "fdisbull-miniplanets-full-actor-evidence-1",
+  "date": "2026-10-31",
+  "status": "passed",
+  "claim": "controlled original Genesis CPU procedure outputs match the actual typed UIL reference executor for the listed cases",
+  "whole_game_equivalence": false,
+  "native_nes_parity_established_by_this_artifact": false,
+  "upstream": {
+    "repository": "https://github.com/sikthehedgehog/miniplanets",
+    "commit": "0ac9c395289cc5d0837c96d45e61a27300e8eebc",
+    "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "rom_size": 524288,
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268"
+  },
+  "authoring_and_interpreter_sha256": {
+    "src/fdisbull/game_sources/miniplanets_full.c": "5d0e171b074b784887df27e06ca122cb99147fc13d8fcae84724bd526017bc58",
+    "src/fdisbull/game_sources/miniplanets_actors.c": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b",
+    "src/fdisbull/game_il.py": "bffa76d822c3bff6947eda8631c672c215a50ee406575d416f86a9b13c7c07ac"
+  },
+  "code_unchanged_during_final_replay": true,
+  "uil_program_sha256": "c1fb862a41f613b2eaa3125b08244d3c0e8ef73473da5b5359cbfaf308b0dd6a",
+  "cases": 1262,
+  "native_instructions_executed": 292870,
+  "uil_steps_final_replay": 664134,
+  "state_differences": 0,
+  "captured_original_hv_reads_replayed": 192,
+  "full_pool_fault_flag_and_sentinel_observed": true,
+  "groups": [
+    {
+      "name": "All 27 active actor IDs with five interaction variants",
+      "cases": 135
+    },
+    {
+      "name": "Four orb AIs, 16 free-direction masks and three target positions",
+      "cases": 192
+    },
+    {
+      "name": "Child readiness and airborne collision",
+      "cases": 6
+    },
+    {
+      "name": "InitObjects preserves inactive XYZ/data",
+      "cases": 4
+    },
+    {
+      "name": "AddObject first-free slots 0, 1 and 47 for key, crystal and spring",
+      "cases": 9
+    },
+    {
+      "name": "All 256 mace angles at three wrapped centers, with exact D7/D6 outputs",
+      "cases": 768
+    },
+    {
+      "name": "Four raft directions at 25 wrapped XY pairs",
+      "cases": 100
+    },
+    {
+      "name": "4-by-4 bomb blast at 16 wrapped XY pairs and three fill types",
+      "cases": 48
+    }
+  ],
+  "compared_projection": [
+    "All 192 object bytes, including inactive XYZ/data",
+    "All 256 mutable terrain bytes",
+    "Player X/Y/angle/action/jump/spring/win/die",
+    "Key count, stage/stage name, in-game status and end-game flag",
+    "Shake and ending phase/fade/timer",
+    "SFX request/current priority and RNG seed",
+    "Mace coordinate outputs and first-free object pointer where applicable"
+  ],
+  "method": [
+    "Original retained ROM instructions execute in the pinned Genesis Plus GX 68000 core in a fresh process. Capstone supplies trace instruction lengths; the original CPU core executes instruction semantics.",
+    "Cases seed bounded work RAM and registers, mask interrupts in supervisor mode, and terminate on a controlled return. Native RAM changes are restricted to named watches and explicit stack scratch.",
+    "The reviewed source translation is parsed into typed, data-only UIL. GameMachine executes that UIL. The final replay checks that the authoring source and interpreter hashes remain unchanged before and after all 1,262 cases.",
+    "For the orange orb AI, an observer forwards the original hardware read16 callback unchanged and records 192 actual VDP HV returns. UIL replays the same finite environmental inputs in the same order.",
+    "Original render-only RaftList and NumRafts writes are watched but excluded from the logical-state equality predicate.",
+    "A full object pool is outside the native comparison domain: original AddObject scans beyond its 48 slots. The bounded profile sets actor_capacity_fault and returns 255; acceptance must reject that flag. Normal source populations start at no more than 28, and only a short-lived spring effect allocates extra slots.",
+    "After the two narrow cost changes, all 1,262 original CPU cases were re-executed in fresh workers with unchanged input contracts. Baseline and optimized typed UIL programs each replay the same fresh outputs and captured environmental samples."
+  ],
+  "limits": [
+    "Controlled procedure entry does not establish natural gameplay reachability.",
+    "Captured HV input equality does not establish cross-console hardware-clock parity.",
+    "These actor checks do not cover score, timer or menu procedures, or NES machine-code execution; those require separate artifacts.",
+    "Original ROM bytes, game maps, raw memory states, disassembly and CPU traces stay private and are absent from this file."
+  ],
+  "native_receipt_hashes": [
+    {
+      "id": "actors-optimized-r1/actors-native-r1/native-0",
+      "receipt_sha256": "bb1d5727fae103db375bc5a952be30d06064fdeae40e6beb6e9c1ef5a8a8071a",
+      "contract_sha256": "3ce1cb8ab0a19791206481fe81728204a64bf832d5dbcce14e82ec208357524a",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "9a936daeede28f8edd3a70586bb8551d177c36ce10b2bad5db577ab3758eab12",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r1/native-1",
+      "receipt_sha256": "55a16d9e6e4f74012ad05ed554376b6588f1397924ffe4a4d7ef08e78a6edff6",
+      "contract_sha256": "bc1a2a4454b8f8f57cc0c58b4c39a8169bd4de403f033471d49ab23513a06671",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "84de5a15a7be288a5d59059658cbf0838e29cc73926c0023f2dad1e19d06e9a9",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r1/native-2",
+      "receipt_sha256": "4848b2ec8cfe91c6ee361fe7d2c03bb45f16a71d2033c7b013e070dd37e28bea",
+      "contract_sha256": "183d0a6845da431c7c984789ad58c4b40aa07b53558184650348d49bcffd7538",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "5e987fa41fa30b2a46ea262676e19607f0acf98088bdcae12607b55b08a52f4f",
+      "cases": 39
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-0",
+      "receipt_sha256": "e2e4d027e77c1707cfa39710f462e37bc8a9adfb2157cb7743601ba5ec6952b0",
+      "contract_sha256": "68f2a43581b69e5930039b53d42442c7623032687638723d534437a896912832",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "0c55e6daaed2984b1e4746d99c63e189f7670fe0f20bcf95cd3aaf9d8d88db10",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-1",
+      "receipt_sha256": "7ebf421b54f9cea7201ea2f9f8293bc5b81e6354bdcc6657a14a5ac0872b2e92",
+      "contract_sha256": "3c5c260e786e140f764e4e20bf5e0df6211bef6aa9ecd96f7936146208b846ef",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "91cf9494349ffd6358ef3befdc7033e6e5b0afd8c39cb15d77340ff1ab058124",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-2",
+      "receipt_sha256": "dc891ca64f569a25c3d259811a127a695f677a1e175442160d7a1f1e5f0ebc20",
+      "contract_sha256": "e7ef4d64079a11617b64b79f397870637f6fea16e5e3d167909249daec0606aa",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "171b87d79d02233892d376ae4de561c01bfd64214e8df0afbc6c20afc3264a7f",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-3",
+      "receipt_sha256": "f22a9b5d5e3209295ee8284cb05edaad7dbe48bfa11274ca9eccb3a009cefb81",
+      "contract_sha256": "ee59f463baeaf2890b93950b0df8823eb945f6dcc79e466d37ab37ecd5f491f3",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "c3f1600ff0329fee326134ba2ba343f192a01fa6bfb39d98aa36e81fa137cb88",
+      "cases": 48
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-4",
+      "receipt_sha256": "998bc3b77155eeb0b28226deb705ae094991fa4280a0bfff34752b4322fa7851",
+      "contract_sha256": "859f3adb5601a2e3279e49b1f72982c64b8b6d70df1d4b46c01700a17a62283a",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "eb8d16441d84e336b88bc344cba56fe5354b353d013b8c93460a6417ac4953fa",
+      "cases": 6
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-5",
+      "receipt_sha256": "4e559ac7b351e2587a08b7db16d934824ae1bc8f285e777827df1e8137e2cc20",
+      "contract_sha256": "6e538c5878d627bbc5c61c063b7fa6a8e8641a04e1b3d0f6faf51a0e8f51203e",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "3701adfc844bd2db7faad7c7731f4ad205f67b5cc4b9e4bc7baec681dbd93203",
+      "cases": 4
+    },
+    {
+      "id": "actors-optimized-r1/actors-native-r2/native-6",
+      "receipt_sha256": "7e61babc79262cbd725f4f467a9cc0403bbc6a8575eb2742d25c56fd4e807579",
+      "contract_sha256": "4181b6ef5a52f375f0ddf075f85709c7abc5567d3155e9fd1e0ab41842e79283",
+      "probe_sha256": "b90bf7b0bbd975078afb334efafffef864e35cb8aeff857e0844ea08b56832c1",
+      "trace_sha256": "d5f7873feeea6be1966f9c5d459f3f6d5be9b13133a63fb014cead3df946d026",
+      "cases": 9
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-0",
+      "receipt_sha256": "0632677ef52a094d80cea42cd511d2ab312b7235423cf2f405bbb3873e432cf7",
+      "contract_sha256": "117b4eb5d67ce95e96cd7661dc50e5fce7f0fc3185c47065ef3f81261912fd43",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "524a9c73d394d4baeadaab654cdde3b90529d4869fcee869916ebffe9c0cc8a5",
+      "cases": 200
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-1",
+      "receipt_sha256": "9eec91f0d93614624ee290d71732d64acc917c2f24ea72371d965af9cb4cd997",
+      "contract_sha256": "611ee9c24f23092ee31987b561f97f37deac75be9e000ab89c2c55c6ad1ef9da",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "13f8160f5bec4a0e0756a594c1d425737434057cbad67de02e42131dcf481b94",
+      "cases": 200
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-2",
+      "receipt_sha256": "a5984b32eadc36865dc86c36fc7b93c5a438353ef9ff71a479c00a5db6534c30",
+      "contract_sha256": "c953d275f96fb5ff5f13d1f557918b7987226e09c1bb30c2a46e00d89ab389fd",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "f7b67354e2b919c3bb8bca9d6dbc18636a857db446f6363d64f6e8728439999b",
+      "cases": 200
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-3",
+      "receipt_sha256": "e5a3557c845238628c46b5562b40e5f326f908f40373f6e468a91ff7a0ba991a",
+      "contract_sha256": "d86132ed57699825b1a5460eb74db18998ef32dc46b1ded2d357e2b504431736",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "b01ca23785052ae2614c80b6141910a6cf2fddcb8f6b56560bb88e54aaaf8929",
+      "cases": 168
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-4",
+      "receipt_sha256": "c4a6d97e105db4e58c7ee2431cfe0ad7920d6ed8a1ba9d648a291a27f004079c",
+      "contract_sha256": "226fdb9dda3a6f3d62597b0bc28e9187c2ed4e9521e95d2499c349fca9812fca",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "67f087d300e6167a97709cc53231c3ee2334a896881072f2b594b9b9b3ec3079",
+      "cases": 25
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-5",
+      "receipt_sha256": "d8f5d5a14204f4ef705187f899d643a84910576fc31229f4ab6661bd0d8e0dde",
+      "contract_sha256": "d717a4edce589261df4f27158ca7d4def6e1e28a53405a08194979f842db309c",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "dab0a22d58c156897f4d65c8a4efed3eb536bd54091a7376c99cf4bf56f28cd5",
+      "cases": 25
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-6",
+      "receipt_sha256": "8bc2f0c802a446a22482612a0c0ea6f0fd6a2a877dd0592c16bd89b9ff8fb5a9",
+      "contract_sha256": "ef29b282b0b2e59d28dd7bd0a136d4a5e97d6c533f217a59202c7fe6920ca83f",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "8c0fbd545b869ab97032db4705b2c92a2fab6d157e988066ba9cf60733ec683c",
+      "cases": 25
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-7",
+      "receipt_sha256": "1fc937a05088daaa3db1f3e87d45a80966f1e64d25db7040699e9e09cc4bd54a",
+      "contract_sha256": "2f65b9bc5143834d14c80512e71f62e83872cb4af993c4405167a312432c7b20",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "a0382c02bcf0b917a592ff5dc17e00bcc95be3ccb83c7a36b096adb70d1d037a",
+      "cases": 25
+    },
+    {
+      "id": "actors-optimized-r1/actors-geometry-r1/native-8",
+      "receipt_sha256": "ecf5f6be41976987e04e8f39fa07eb5acc3f5be8a39d20bcb7427b7703763de7",
+      "contract_sha256": "7e01aa2a94eb1a7b82fcd6cb0f99ef133e525b17953dbaa82d26729038ed4e26",
+      "probe_sha256": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+      "trace_sha256": "952254948acd45c36e6f42e35349b11dae3dba24b8e0eb1b4d692beb970d7c74",
+      "cases": 48
+    }
+  ],
+  "optimization": {
+    "changes": [
+      "Use u8 rather than u16 for 17 legal object-slot base offsets (0..188).",
+      "Immediately continue the 48-slot scan when the current type is zero; all active actor order remains unchanged."
+    ],
+    "baseline_actor_sha256": "e81b74a65c34745c4ad180d6b89bb4172decae5344849c5594cf3e39da40fc6d",
+    "optimized_actor_sha256": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b",
+    "baseline_program_sha256": "64207605606a105b0b5161874a8ceac08e92268c92b3a11ff8ab6a15a360ffe2",
+    "optimized_program_sha256": "c1fb862a41f613b2eaa3125b08244d3c0e8ef73473da5b5359cbfaf308b0dd6a",
+    "native_input_contract_hashes_unchanged": true,
+    "fresh_original_cpu_batches": 19,
+    "baseline_reference_execution": {
+      "cases": 1262,
+      "steps": 1569630,
+      "hv_samples": 192,
+      "seconds": 5.899502833002771,
+      "differences": [],
+      "full_pool_fault_observed": true
+    },
+    "optimized_reference_execution": {
+      "cases": 1262,
+      "steps": 664134,
+      "hv_samples": 192,
+      "seconds": 4.882815917000698,
+      "differences": [],
+      "full_pool_fault_observed": true
+    },
+    "reference_step_reduction_fraction": 0.5768849983754133,
+    "timing_limit": "One in-memory reference-executor replay per variant in the same process. Diagnostic wall times are not a NES speed benchmark; native NES frame cost requires its own comparison."
+  }
+}

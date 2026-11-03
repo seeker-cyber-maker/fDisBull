@@ -1,0 +1,43 @@
+{
+  "format": "fdisbull-agi-bridge-clip-trace-summary-1",
+  "traces": [
+    {
+      "run": "native-04",
+      "raw_sha256": "dc45fca4021f9495880b9dfef170abab53a8f51379184ddccd9c87b531a5d1cc",
+      "event_count": 52,
+      "maximum_count": 128,
+      "first_fetch": {
+        "offset": "0x000008C6",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "last_fetch": {
+        "offset": "0x0000294A",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "source_predicate_result": false,
+      "source_continuation_offset": 1054,
+      "scope": "Original handler return/source successor observed separately; trace events are fetched instructions, completion not guaranteed."
+    },
+    {
+      "run": "control-02",
+      "raw_sha256": "0655c3cb40792f997df61563dfdb994f57c21834ce177d9615f6e8798aa81da8",
+      "event_count": 51,
+      "maximum_count": 128,
+      "first_fetch": {
+        "offset": "0x000008C6",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "last_fetch": {
+        "offset": "0x0000294A",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "source_predicate_result": true,
+      "source_continuation_offset": 1050,
+      "scope": "Original handler return/source successor observed separately; trace events are fetched instructions, completion not guaranteed."
+    }
+  ]
+}

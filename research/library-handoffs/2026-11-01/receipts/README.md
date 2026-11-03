@@ -1,5 +1,10 @@
 # Standalone Library receipts and report alias
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 The two exact F001 receipt files are preserved here, with their Library URLs,
 original/new hashes and independent archive binding in [manifest.json](manifest.json).
 Both identify the 2,656,225-byte F001 ZIP with SHA-256

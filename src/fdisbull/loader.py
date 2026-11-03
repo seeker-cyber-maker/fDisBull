@@ -76,8 +76,9 @@ def _macho_function_address(raw: int, text_base: int | None, sections, regions: 
 
 
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
-               base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
-               module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
+               base: int | None = None, entry: int | None = None, load_segment: int = 0x1000,
+               module: bool = False, slice_arch: str | None = None, image: str | None = None,
+               profile: str | None = None, vector_count: int | None = None) -> Image:
     """Load classic MZ, Win16 NE, DOS/4GW LE, ELF, PE, Mach-O, COM or raw code.
 
     Native flat mappings use preferred image addresses (PIE load bias is not
@@ -99,19 +100,33 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         data = stream.read(MAX_IMAGE_SIZE + 1)
     if not 0 < len(data) <= MAX_IMAGE_SIZE:
         raise ValueError("input file must be nonempty and at most 64 MiB")
-    base = _address(base, "base address")
+    explicit_base = base is not None
+    base = _address(0 if base is None else base, "base address")
     if entry is not None:
         entry = _address(entry, "entry address")
+    if profile is not None:
+        if profile != 'cortex-m':
+            raise ValueError('profile must be cortex-m')
+        if not explicit_base or vector_count is None:
+            raise ValueError('Cortex-M requires an explicit base and vector_count')
+        if arch not in (None, 'thumb') or bits not in (None, 32) or image is not None or slice_arch is not None or module or load_segment != 0x1000:
+            raise ValueError('Cortex-M profile cannot use other architecture/container/module options')
+        from .cortex_m import load
+        return load(data, path.name, base, vector_count, entry)
+    if vector_count is not None:
+        raise ValueError('vector_count requires profile=cortex-m')
     if arch is not None:
         if image is not None:raise ValueError('image selects a container view; arch selects raw mode')
         if slice_arch is not None:raise ValueError('slice_arch selects a Mach-O image; arch selects raw mode')
-        if arch not in ("x86", "arm64"):
-            raise ValueError("raw architecture must be x86 or arm64")
-        bits = 64 if bits is None else bits
+        if arch not in ("x86", "arm64", "thumb"):
+            raise ValueError("raw architecture must be x86, arm64 or thumb")
+        bits = (32 if arch == "thumb" else 64) if bits is None else bits
         if isinstance(bits,bool) or not isinstance(bits,int):
             raise ValueError("raw bitness must be an integer")
         if (arch == "x86" and bits not in (16, 32, 64)) or (arch == "arm64" and bits != 64):
             raise ValueError("raw x86 requires 16/32/64 bits; arm64 requires 64 bits")
+        if arch == 'thumb' and (bits != 32 or base & 1 or base + len(data) > 1 << 32):
+            raise ValueError('raw Thumb requires 32 bits, halfword base alignment and a 32-bit mapping')
         if arch == "arm64" and (base % 4 or len(data) % 4):
             raise ValueError("raw arm64 base and byte length must be 4-byte aligned")
         if arch == "x86" and bits in (16, 32) and base + len(data) > 1 << bits:
@@ -122,6 +137,8 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("entry address is outside the raw image")
         if arch == "arm64" and entry % 4:
             raise ValueError("arm64 entry point must be 4-byte aligned")
+        if arch == 'thumb' and entry & 1:
+            raise ValueError('Thumb entry must be a canonical halfword-aligned code address')
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
     from .ail import ail_signature, load_ail

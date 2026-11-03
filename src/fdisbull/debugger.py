@@ -16,6 +16,11 @@ from .dos_launch import LaunchAlias, guest_name
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
+from .debug_rewind import RewindSessionMixin
+from .debug_timeline import FrameTimelineSessionMixin, timeline_locked, _require_released_mouse
+from .operation_budget import RpcAdmissionTimeout, run_cleanup_scope
+from .debug_cpu_deltas import CpuDeltaSessionMixin
+from .anchor_stones import AnchorStoneSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
@@ -26,7 +31,6 @@ from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSe
 from .assisted_travel import AssistedTravelSessionMixin
 from .text_projection import TextProjectionProjectMixin, TextProjectionSessionMixin
 from .spatial import SpatialProjectMixin, SpatialSessionMixin, validate_mode
-from .operation_budget import RpcAdmissionTimeout, run_cleanup_scope
 
 
 DEBUG_DDL = '''
@@ -143,6 +147,10 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return {'version':v,'scripts':[dict(r) for r in self.db.execute(
             'SELECT id,version,name,created,sha256 FROM debug_scripts WHERE version=? ORDER BY rowid',(v,))]}
 
+    def debug_anchor_stone_info(self, artifact):
+        """Inspect an Anchor Stone without changing legacy artifact formats."""
+        return self.debug_state_info(artifact)
+
     def debug_state_info(self, artifact):
         import zipfile
         row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
@@ -254,7 +262,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -383,19 +391,31 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
     def write_registers(self,registers):
         raise ValueError('Direct guarded register editing is currently a PE64 operation; use a DOS state fork')
 
+    @timeline_locked
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
+        for hook in ('_cpu_delta_before_call', '_rewind_before_call', '_timeline_before_call'):
+            callback = getattr(self, hook, None)
+            if callback is not None:
+                callback(method, params) if hook == '_cpu_delta_before_call' else callback(method)
         deadline=getattr(self,'_rpc_deadline',None)
         options={}
         if deadline is not None:
             remaining=int((deadline-time.monotonic())*1000)
-            if remaining<=0 or remaining < (getattr(self,'_rpc_admission_ms',None) or 0):
+            admission=getattr(self,'_rpc_admission_ms',None) or 0
+            if remaining<=0 or remaining < admission:
                 raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
             options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
+        if not hasattr(self, 'project'):
+            return
+        for key in ('delta_experiment', 'timeline_experiment'):
+            experiment = getattr(self, 'metadata', {}).get(key)
+            if experiment is not None:
+                evidence = dict(evidence, **{key: experiment})
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
                                     (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
@@ -421,51 +441,63 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
                           timeout_ms=timeout_ms, fast_forward=fast_forward, max_polls=max_polls,
                           timeout_screenshot=timeout_screenshot)
 
-    def run(self, *, timeout_ms=10000, guest_ms=None, fast_forward=False, stop_on_hook=False):
-        bounded(timeout_ms,'timeout_ms',1,600000)
+    def run(
+        self, *, timeout_ms=10000, guest_ms=None, fast_forward=False, stop_on_hook=False
+    ):
+        bounded(timeout_ms, "timeout_ms", 1, 600000)
         if guest_ms is not None:
-            bounded(guest_ms,'guest_ms',1,3600000)
+            bounded(guest_ms, "guest_ms", 1, 3600000)
         if type(fast_forward) is not bool:
-            raise ValueError('fast_forward must be boolean')
+            raise ValueError("fast_forward must be boolean")
         if type(stop_on_hook) is not bool:
-            raise ValueError('stop_on_hook must be boolean')
+            raise ValueError("stop_on_hook must be boolean")
         before = self._timing()
         started = time.monotonic()
-        deadline = started + timeout_ms/1000
+        deadline = started + timeout_ms / 1000
         running = False
         result = None
-        outcome = 'timeout'
+        outcome = "timeout"
         hook_hits = []
         timing = before
         try:
             self._timing(fast_forward)
-            operation = self.call('execution.continue')
+            operation = self.call("execution.continue")
             running = True
             while True:
-                remaining = deadline-time.monotonic()
+                remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     break
-                result = self.call('execution.wait',{'operation_id':operation['operation_id'],
-                    'timeout_ms':max(1,min(10 if fast_forward else 50,int(remaining*1000)))})
-                running = result.get('running',False)
+                result = self.call(
+                    "execution.wait",
+                    {
+                        "operation_id": operation["operation_id"],
+                        "timeout_ms": max(
+                            1, min(10 if fast_forward else 50, int(remaining * 1000))
+                        ),
+                    },
+                )
+                running = result.get("running", False)
                 if not running:
                     hook_hit = self._dispatch_hook(result)
                     if hook_hit is not None:
                         hook_hits.append(hook_hit)
                         if stop_on_hook:
-                            outcome = 'hook'
+                            outcome = "hook"
                             break
                         if time.monotonic() >= deadline:
                             break
-                        operation = self.call('execution.continue')
+                        operation = self.call("execution.continue")
                         running = True
                         continue
-                    kind = result.get('stop_reason',{}).get('kind','stopped')
-                    outcome = 'breakpoint' if kind=='breakpoint' else kind
+                    kind = result.get("stop_reason", {}).get("kind", "stopped")
+                    outcome = "breakpoint" if kind == "breakpoint" else kind
                     break
                 timing = self._timing()
-                if guest_ms is not None and timing['guest_ticks']-before['guest_ticks'] >= guest_ms:
-                    outcome = 'guest_time'
+                if (
+                    guest_ms is not None
+                    and timing["guest_ticks"] - before["guest_ticks"] >= guest_ms
+                ):
+                    outcome = "guest_time"
                     break
         finally:
             if not self.closed:
@@ -473,45 +505,80 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
                     with run_cleanup_scope(self):
                         if running:
                             try:
-                                pause = self.call('execution.pause')
-                                terminal_operation=pause['operation_id']
+                                pause = self.call("execution.pause")
+                                terminal_operation = pause["operation_id"]
                             except DebuggerError as error:
-                                if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
+                                if not str(error).endswith("(TARGET_NOT_RUNNING)"):
+                                    raise
                                 # A real stop can win the race with our budget pause.
                                 # Observe the existing operation; never continue/replay.
-                                terminal_operation=operation['operation_id']
-                            result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
-                            if result.get('running'):
-                                raise DebuggerError('Target failed to pause after bounded run')
-                            kind=result.get('stop_reason',{}).get('kind')
-                            if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
-                            if kind!='pause':outcome=kind
-                        if result is None or result.get('state') != 'exited':
-                            timing = self._timing(before['fast_forward'])
+                                terminal_operation = operation["operation_id"]
+                            result = self.call(
+                                "execution.wait",
+                                {
+                                    "operation_id": terminal_operation,
+                                    "timeout_ms": 3000,
+                                },
+                            )
+                            if result.get("running"):
+                                raise DebuggerError(
+                                    "Target failed to pause after bounded run"
+                                )
+                            kind = result.get("stop_reason", {}).get("kind")
+                            if not kind:
+                                raise DebuggerError(
+                                    "Bounded run ended without a terminal stop reason"
+                                )
+                            if kind != "pause":
+                                outcome = kind
+                        if result is None or result.get("state") != "exited":
+                            timing = self._timing(before["fast_forward"])
                 except BaseException:
                     self.close()
                     raise
-        evidence = {'run':self.run_id,'outcome':outcome,'timed_out':outcome=='timeout',
-                    'requested_guest_ms':guest_ms,'guest_elapsed_ms':timing['guest_ticks']-before['guest_ticks'],
-                    'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
-                    'fast_forward':fast_forward,'timing_after':timing,'session':result}
-        evidence['hook_hits'] = hook_hits
-        if result and result.get('stop_reason',{}).get('address'):
-            result['stop_reason']['project_address'] = self.project_address(result['stop_reason']['address'])
-        if result and result.get('stop_reason',{}).get('data_access'):
-            access = result['stop_reason']['data_access']
-            access['project_instruction'] = self.project_address(access['instruction'])
+        evidence = {
+            "run": self.run_id,
+            "outcome": outcome,
+            "timed_out": outcome == "timeout",
+            "requested_guest_ms": guest_ms,
+            "guest_elapsed_ms": timing["guest_ticks"] - before["guest_ticks"],
+            "host_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+            "fast_forward": fast_forward,
+            "timing_after": timing,
+            "session": result,
+        }
+        evidence["hook_hits"] = hook_hits
+        if result and result.get("stop_reason", {}).get("address"):
+            result["stop_reason"]["project_address"] = self.project_address(
+                result["stop_reason"]["address"]
+            )
+        if result and result.get("stop_reason", {}).get("data_access"):
+            access = result["stop_reason"]["data_access"]
+            access["project_instruction"] = self.project_address(access["instruction"])
         from .debug_semantics import normalize_stop
+
         stopped_pc = None
-        if result and result.get('stop_reason',{}).get('data_access') and result.get('state') != 'exited':
+        if (
+            result
+            and result.get("stop_reason", {}).get("data_access")
+            and result.get("state") != "exited"
+        ):
             try:
                 registers = self.registers()
-                stopped_pc = {'space':'segmented','segment':registers['segments']['cs'],
-                              'offset':registers['instruction_pointer']}
+                stopped_pc = {
+                    "space": "segmented",
+                    "segment": registers["segments"]["cs"],
+                    "offset": registers["instruction_pointer"],
+                }
             except (DebuggerError, KeyError):
                 pass  # Preserve the stop evidence even if the post-stop PC is unavailable.
-        evidence['stop']=normalize_stop(self.metadata.get('backend','dosbox'),(result or {}).get('stop_reason',{}),outcome=outcome,stopped_pc=stopped_pc)
-        self._event('run',evidence)
+        evidence["stop"] = normalize_stop(
+            self.metadata.get("backend", "dosbox"),
+            (result or {}).get("stop_reason", {}),
+            outcome=outcome,
+            stopped_pc=stopped_pc,
+        )
+        self._event("run", evidence)
         return evidence
 
     def project_address(self, address):
@@ -629,14 +696,22 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
             entries.append({'path':str(path.relative_to(self.game_dir)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
         return entries
 
-    def save_state(self, name='checkpoint.sav'):
+    @timeline_locked
+    def save_state(self, name='checkpoint.sav', *, max_bytes=None):
+        _file_name(name)
+        checkpoint = DebugSession._capture_native_checkpoint(self, max_bytes=max_bytes)
+        return self._artifact(name, 'state', checkpoint['data'], checkpoint['metadata'])
+
+    @timeline_locked
+    def _capture_native_checkpoint(self, *, max_bytes=None):
+        """Capture a complete private payload, independent of durable artifacts."""
+        if max_bytes is not None:
+            bounded(max_bytes,'max_bytes',1,256*1024*1024)
         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
-        _file_name(name)
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
-        if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
-            raise ValueError('Run until queued mouse releases complete before saving a state')
+        _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
         if self.rpc.capabilities.get('input',{}).get('keyboard'):
             keyboard=self.keyboard_state()['keyboard']
             if keyboard['pending_events'] or keyboard['owned_keys']:
@@ -650,33 +725,71 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
             raise ValueError('Native project checkpoints currently require real mode')
         with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'
-            self.call('state.save',{'path':str(path)})
+            saved = self.call('state.save',{'path':str(path)})
+            if path.stat().st_size > (max_bytes or 256*1024*1024):
+                raise ValueError('Native state exceeds remaining rewind byte budget')
             data = path.read_bytes()
+        if max_bytes is not None and len(data)>max_bytes:
+            raise ValueError('Native state exceeds remaining rewind byte budget')
         if before != self._disk_manifest():
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
                     'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state}
+        if self.rpc.capabilities.get('frame_timeline'):
+            metadata['frame_keys'] = saved.get('frame_keys', [])
         if hasattr(self,'_state_provenance'):
             metadata['derivation'] = self._state_provenance
-        return self._artifact(name,'state',data,metadata)
+        return dict(data=data, sha256=hashlib.sha256(data).hexdigest(), metadata=metadata)
 
+    @timeline_locked
     def load_state(self, artifact):
+        if getattr(self,'_cpu_delta_history',None) is None:
+            return DebugSession._load_native_state(self,artifact)
+        with self._cpu_delta_full_load():
+            result = self._load_native_state(artifact)
+            self._cpu_delta_loaded(self.metadata.get('delta_experiment'))
+        return result
+
+    def _load_native_state(self, artifact):
         row = self.project.db.execute("""SELECT a.*,r.version FROM debug_artifacts a
             JOIN debug_runs r ON r.id=a.run WHERE a.id=?""",(artifact,)).fetchone()
         if row is None or row['kind'] != 'state' or row['version'] != self.version['id']:
             raise ValueError('State must belong to the selected project version')
         metadata = json.loads(row['metadata']); data = bytes(row['data'])
-        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+        result = DebugSession._restore_native_checkpoint(self,
+            dict(data=data, sha256=row['sha256'], metadata=metadata))
+        result['artifact'] = artifact
+        self._event('load-state',result)
+        return result
+
+    @timeline_locked
+    def _restore_native_checkpoint(self, checkpoint):
+        """Restore and verify a full native payload, including frame input ownership."""
+        metadata = checkpoint['metadata']; data = checkpoint['data']
+        if hashlib.sha256(data).hexdigest()!=checkpoint['sha256']:
             raise ValueError('Stored state hash mismatch')
         for field in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir'):
             if metadata.get(field) != self.metadata.get(field):
                 raise ValueError('State compatibility mismatch: '+field)
         if metadata['disk_manifest'] != self._disk_manifest():
             raise ValueError('Mounted game files differ from state; restore the matching files first')
-        with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
+        frame_keys = metadata.get('frame_keys', [])
+        from .keyboard_input import KEYS
+        if (not isinstance(frame_keys, list) or any(not isinstance(key, str) or key not in KEYS for key in frame_keys)
+                or len(set(frame_keys)) != len(frame_keys)):
+            raise ValueError('Invalid saved frame input ownership')
+        if frame_keys and not self.rpc.capabilities.get('frame_timeline'):
+            raise ValueError('Backend cannot restore saved frame input ownership')
+        with FrameTimelineSessionMixin._timeline_full_load(self), tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'; path.write_bytes(data)
             try:
-                result = self.call('state.load',{'path':str(path)})
+                params = {'path':str(path)}
+                if self.rpc.capabilities.get('frame_timeline'):
+                    params['frame_keys'] = frame_keys
+                result = self.call('state.load',params)
+                if self.rpc.capabilities.get('frame_timeline') and result.get('frame_keys') != frame_keys:
+                    raise DebuggerError('Restored frame input ownership differs from saved state')
+                _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
                 registers = self.registers()
                 for field in ('general','segments','instruction_pointer','flags'):
                     if registers.get(field) != metadata['registers'].get(field):
@@ -685,13 +798,18 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
             except BaseException:
                 self.close() # A partially failed native restore must never be resumed.
                 raise
-        result.update(artifact=artifact,sha256=row['sha256'],registers=registers,
+        result.update(sha256=checkpoint['sha256'],registers=registers,
                       framebuffer='invalidated_until_next_completed_frame')
         self._keyboard_leases={}
         self._invalidate_runtime_bindings()
-        self._event('load-state',result)
+        for key in ('delta_experiment', 'timeline_experiment'):
+            self.metadata.pop(key, None)
+            if metadata.get(key) is not None:
+                self.metadata[key] = metadata[key]
+        FrameTimelineSessionMixin._timeline_loaded(self)
         return result
 
+    @timeline_locked
     def script(self, script=None, *, script_id=None, timeout_ms=60000):
         from .debug_script import execute_script
         if (script is None)==(script_id is None):
@@ -803,6 +921,10 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         return result
 
     def _artifact(self, name, kind, data, metadata):
+        for key in ('delta_experiment', 'timeline_experiment'):
+            experiment = getattr(self, 'metadata', {}).get(key)
+            if experiment is not None:
+                metadata = dict(metadata, **{key: experiment})
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
     def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):
@@ -869,10 +991,23 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(events),'complete':result['complete'],'run':run})
 
+    @timeline_locked
     def close(self):
         if self.closed:
             return
         result = {'state':'interrupted'}
+        cleanup_error = interrupted = None
+        def failed(phase, error):
+            nonlocal cleanup_error
+            result.setdefault('cleanup_errors', []).append(
+                {'phase':phase,'type':type(error).__name__,'message':str(error)})
+            if cleanup_error is None:
+                cleanup_error = error
+        def cleanup(phase, function):
+            try:
+                return function()
+            except BaseException as error:
+                failed(phase, error)
         try:
             operation = self.call('session.stop')
             result = self.call('execution.wait',{'operation_id':operation['operation_id'],'timeout_ms':3000})
@@ -880,21 +1015,43 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
                 result = {'state':'interrupted','reason':'stop deadline expired'}
         except Exception as error:
             result = {'state':'interrupted','error':str(error)}
+        except BaseException as error:
+            interrupted = error
+            result = {'state':'interrupted','error':str(error)}
         finally:
-            self.rpc.close()
-            self.closed = True
-            self._keyboard_leases={}
-            self._invalidate_runtime_bindings()
-            if self._launch_alias is not None:
-                result['launch_alias_cleanup'] = self._launch_alias.close()
-            result['process_reaped'] = self.rpc.process.poll() is not None
             try:
-                self._event('close',result)
-                with self.project.transaction(True):
-                    self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+                cleanup('rpc.close', lambda: self.rpc.close())
             finally:
-                if self in self.project._live_debuggers:
-                    self.project._live_debuggers.remove(self)
+                # The live cache and ownership must not outlive even a failed
+                # transport/process cleanup. Further calls are terminal.
+                self.closed = True
+                self._frame_timeline = None
+                self._keyboard_leases={}
+            cleanup('runtime-bindings', lambda: self._invalidate_runtime_bindings())
+            if getattr(self, '_launch_alias', None) is not None:
+                result['launch_alias_cleanup'] = cleanup('launch-alias', self._launch_alias.close)
+            process = getattr(self.rpc, 'process', None)
+            result['process_reaped'] = None
+            if process is not None:
+                try:
+                    result['process_reaped'] = process.poll() is not None
+                except BaseException as error:
+                    failed('process-status', error)
+            try:
+                cleanup('close-receipt', lambda: self._event('close',result))
+                def record_ended():
+                    with self.project.transaction(True):
+                        self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+                cleanup('run-ended', record_ended)
+            finally:
+                def remove_owner():
+                    if self in self.project._live_debuggers:
+                        self.project._live_debuggers.remove(self)
+                cleanup('live-registry', remove_owner)
+        if interrupted is not None:
+            raise interrupted
+        if cleanup_error is not None:
+            raise cleanup_error
 
 
 class DebugWorkspace:
@@ -923,11 +1080,22 @@ class DebugWorkspace:
                    'debug-screenshot-hooks':'screenshot_hooks',
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
+        methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
         methods.update({'debug-controls':'controls','debug-save-experiment':'save_experiment',
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
+        methods.update({'debug-rewind-start':'rewind_start','debug-rewind-status':'rewind_status',
+                        'debug-rewind-record':'rewind_record','debug-rewind':'rewind'})
+        methods.update({'debug-delta-start':'cpu_delta_start','debug-delta-status':'cpu_delta_status',
+                        'debug-delta-record':'cpu_delta_record','debug-delta-rewind':'cpu_delta_rewind',
+                        'debug-delta-recover':'cpu_delta_recover'})
+        methods.update({'debug-frame-advance':'advance_frames','debug-frame-inputs':'frame_inputs',
+                        'debug-timeline-start':'timeline_start','debug-timeline-status':'timeline_status',
+                        'debug-timeline-advance':'timeline_advance','debug-timeline-rewind':'timeline_rewind',
+                        'debug-timeline-stop':'timeline_stop','debug-timeline-pin':'timeline_pin',
+                        'debug-timeline-image':'timeline_image'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',

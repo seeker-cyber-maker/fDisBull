@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Block shell</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #20252b; background: #f4f6f8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 920px; margin: 2rem auto; padding: 0 1rem 2rem; }
+    h1 { margin: 0 0 .35rem; font-size: 1.65rem; }
+    h2 { margin: 0 0 1rem; font-size: 1.05rem; }
+    p { margin: .4rem 0 1rem; }
+    .muted { color: #58636f; }
+    .panel { padding: 1.2rem; margin-top: 1rem; border: 1px solid #d5dce3; border-radius: .65rem; background: white; }
+    .toolbar, .actions { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
+    .toolbar label { min-width: 11rem; flex: 1; }
+    label { display: grid; gap: .3rem; }
+    input, select, button { min-height: 2.5rem; border: 1px solid #aeb9c4; border-radius: .35rem; padding: .45rem .6rem; font: inherit; color: inherit; background: white; }
+    input:focus, select:focus, button:focus-visible { outline: 3px solid #c4ddfa; outline-offset: 1px; }
+    button { cursor: pointer; padding-inline: 1rem; }
+    button.primary { background: #185ba8; border-color: #185ba8; color: white; }
+    button:disabled { cursor: default; opacity: .5; }
+    .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem 1rem; }
+    .fields label.checkbox { display: flex; flex-direction: row; align-items: center; gap: .6rem; }
+    input[type="checkbox"] { width: 1.2rem; min-height: 1.2rem; }
+    .columns { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1rem; }
+    .columns .panel { min-width: 0; }
+    #stored-values { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem 1rem; }
+    #stored-values dt { overflow-wrap: anywhere; }
+    #stored-values dd { margin: 0; font-variant-numeric: tabular-nums; }
+    #status { margin-top: 1rem; padding: .8rem 1rem; border-radius: .4rem; background: #eaf0f7; overflow-wrap: anywhere; }
+    #status[data-kind="error"] { background: #fbe9e9; color: #7b2222; }
+    #status[data-kind="success"] { background: #e7f4eb; color: #1f5b36; }
+    #outputs { margin: .7rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
+    @media (max-width: 620px) { main { margin-top: 1rem; } .columns { grid-template-columns: 1fr; gap: 0; } }
+  </style>
+</head>
+<body data-shell-state="loading">
+  <main>
+    <header>
+      <h1 id="title">Block shell</h1>
+      <p class="muted">Choose a record and an implementation, then run one step.</p>
+    </header>
+    <section class="panel" aria-label="Record and implementation">
+      <div class="toolbar">
+        <label>Record
+          <select id="record" aria-label="Record" disabled></select>
+        </label>
+        <label>Implementation
+          <select id="backend" aria-label="Implementation" disabled>
+            <option value="wasm">CPU · WebAssembly</option>
+            <option value="webgpu">GPU · WebGPU</option>
+          </select>
+        </label>
+      </div>
+      <div class="toolbar" style="margin-top: .9rem">
+        <label>New record name
+          <input id="new-record-name" value="city-c" maxlength="128" autocomplete="off" disabled>
+        </label>
+        <button id="add-record" type="button" disabled>Add record</button>
+      </div>
+    </section>
+    <div class="columns">
+      <section class="panel" aria-labelledby="inputs-heading">
+        <h2 id="inputs-heading">Inputs</h2>
+        <div id="inputs" class="fields"></div>
+      </section>
+      <section class="panel" aria-labelledby="values-heading">
+        <h2 id="values-heading">Stored values</h2>
+        <p id="record-revision" class="muted"></p>
+        <dl id="stored-values"></dl>
+      </section>
+    </div>
+    <section class="panel" aria-label="Step controls">
+      <div class="actions">
+        <button id="run-step" class="primary" type="button" disabled>Run step</button>
+        <button id="cancel-step" type="button" disabled>Cancel step</button>
+      </div>
+      <div id="status" role="status" aria-live="polite">Loading the shell…</div>
+      <pre id="outputs" aria-label="Last step outputs"></pre>
+    </section>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

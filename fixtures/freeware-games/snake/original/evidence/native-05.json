@@ -1,0 +1,1136 @@
+{
+  "format": "fdisbull-snake-native-validation-1",
+  "executable_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+  "fdisbull_version": "0.27.0",
+  "backend": "${USER_HOME}/fDisBull/current/backend/native-macos-arm64/dosbox-x",
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "process_pid": 15019,
+  "process_reaped": true,
+  "analysis": {
+    "version": 1,
+    "decoded": 784,
+    "attempted": 862,
+    "data_processed": 0,
+    "new_facts": 1923,
+    "pending": 0,
+    "pending_code": 0,
+    "pending_data": 0,
+    "pending_seeds": 0,
+    "pending_segment_scans": 0,
+    "entry_complete": true,
+    "stable": true,
+    "budget_exhausted": false,
+    "assumptions": [
+      "Static minimum allocation; no PSP memory fabricated.",
+      "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+      "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+      "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+    ]
+  },
+  "analysis_status": {
+    "version": 1,
+    "stable": true,
+    "scope": "native code/data discovery queues",
+    "advanced": {
+      "version": 1,
+      "states": {},
+      "unregistered_entries": 18,
+      "pending": 18,
+      "stable": false,
+      "scope": "implemented derived-analysis jobs",
+      "note": "A fixed point is not complete binary coverage. Unknown transfers and semantic operations remain explicit.",
+      "facts_stale": false
+    },
+    "overall_stable": null,
+    "pending": 0,
+    "pending_code": 0,
+    "pending_data": 0,
+    "pending_seeds": 0,
+    "pending_segment_scans": 0,
+    "pending_seed_phase": false,
+    "seed_states": {},
+    "issues": 257,
+    "mode": "static",
+    "note": "Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.",
+    "facts_stale": false,
+    "dos_pointer_revision": 2,
+    "required_dos_pointer_revision": 2
+  },
+  "checks": [
+    {
+      "name": "startup-paused",
+      "passed": true,
+      "expected": {
+        "cells": [
+          308,
+          307,
+          306
+        ],
+        "paused": 1,
+        "tick_count": 0,
+        "score": 0,
+        "snake_length": 3,
+        "food_cell": 312,
+        "rng_seed": 4660,
+        "game_status": 0,
+        "frame_count": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 0,
+        "mouse_events": 0,
+        "frame_count": 1,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "real-vga-framebuffer",
+      "passed": true,
+      "witnesses": 6
+    },
+    {
+      "name": "paused-clock-does-not-advance",
+      "passed": true
+    },
+    {
+      "name": "keyboard-reverse-rejected",
+      "passed": true,
+      "expected": {
+        "pending_direction": 1,
+        "turn_queued": 0,
+        "tick_count": 0
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 1,
+        "mouse_events": 0,
+        "frame_count": 1,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "keyboard-up-queued",
+      "passed": true,
+      "expected": {
+        "pending_direction": 0,
+        "turn_queued": 1,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 2,
+        "mouse_events": 0,
+        "frame_count": 2,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "second-turn-before-step-rejected",
+      "passed": true,
+      "expected": {
+        "pending_direction": 0,
+        "turn_queued": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 3,
+        "mouse_events": 0,
+        "frame_count": 2,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "keyboard-single-step",
+      "passed": true,
+      "expected": {
+        "cells": [
+          278,
+          308,
+          307
+        ],
+        "direction": 0,
+        "pending_direction": 0,
+        "tick_count": 1,
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 0,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 4,
+        "mouse_events": 0,
+        "frame_count": 3,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          278,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "arrow-left",
+      "passed": true,
+      "expected": {
+        "direction": 3,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 3,
+        "pending_direction": 3,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 2,
+        "key_events": 6,
+        "mouse_events": 0,
+        "frame_count": 5,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      }
+    },
+    {
+      "name": "arrow-down",
+      "passed": true,
+      "expected": {
+        "direction": 2,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 2,
+        "pending_direction": 2,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 3,
+        "key_events": 8,
+        "mouse_events": 0,
+        "frame_count": 7,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      }
+    },
+    {
+      "name": "arrow-right",
+      "passed": true,
+      "expected": {
+        "direction": 1,
+        "cells": [
+          308,
+          307,
+          277
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 4,
+        "key_events": 10,
+        "mouse_events": 0,
+        "frame_count": 9,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          277
+        ]
+      }
+    },
+    {
+      "name": "wasd-w",
+      "passed": true,
+      "expected": {
+        "direction": 0,
+        "cells": [
+          278,
+          308,
+          307
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 0,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 2,
+        "mouse_events": 0,
+        "frame_count": 3,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          278,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "wasd-a",
+      "passed": true,
+      "expected": {
+        "direction": 3,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 3,
+        "pending_direction": 3,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 2,
+        "key_events": 4,
+        "mouse_events": 0,
+        "frame_count": 5,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      }
+    },
+    {
+      "name": "wasd-s",
+      "passed": true,
+      "expected": {
+        "direction": 2,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 2,
+        "pending_direction": 2,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 3,
+        "key_events": 6,
+        "mouse_events": 0,
+        "frame_count": 7,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      }
+    },
+    {
+      "name": "wasd-d",
+      "passed": true,
+      "expected": {
+        "direction": 1,
+        "cells": [
+          308,
+          307,
+          277
+        ]
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 4,
+        "key_events": 8,
+        "mouse_events": 0,
+        "frame_count": 9,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          277
+        ]
+      }
+    },
+    {
+      "name": "keyboard-reset-repeats-state",
+      "passed": true,
+      "expected": {
+        "cells": [
+          308,
+          307,
+          306
+        ],
+        "paused": 1,
+        "score": 0,
+        "tick_count": 0,
+        "rng_seed": 4660,
+        "frame_count": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 0,
+        "mouse_events": 0,
+        "frame_count": 1,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "ordinary-play-eating",
+      "passed": true,
+      "expected": {
+        "cells": [
+          312,
+          311,
+          310,
+          309
+        ],
+        "snake_length": 4,
+        "score": 1,
+        "food_cell": 389,
+        "rng_seed": 10589,
+        "tick_count": 4
+      },
+      "observed": {
+        "snake_length": 4,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 1,
+        "rng_seed": 10589,
+        "tick_count": 4,
+        "key_events": 4,
+        "mouse_events": 0,
+        "frame_count": 5,
+        "mouse_present": 1,
+        "food_cell": 389,
+        "turn_queued": 0,
+        "cells": [
+          312,
+          311,
+          310,
+          309
+        ]
+      }
+    },
+    {
+      "name": "mouse-reset",
+      "passed": true,
+      "expected": {
+        "cells": [
+          308,
+          307,
+          306
+        ],
+        "tick_count": 0,
+        "paused": 1,
+        "score": 0,
+        "rng_seed": 4660
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 0,
+        "mouse_events": 0,
+        "frame_count": 1,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "mouse-direction-0",
+      "passed": true,
+      "expected": {
+        "pending_direction": 0,
+        "mouse_events": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 0,
+        "mouse_events": 1,
+        "frame_count": 2,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "mouse-step-0",
+      "passed": true,
+      "expected": {
+        "cells": [
+          278,
+          308,
+          307
+        ],
+        "direction": 0,
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 0,
+        "pending_direction": 0,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 0,
+        "mouse_events": 2,
+        "frame_count": 3,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          278,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "mouse-direction-3",
+      "passed": true,
+      "expected": {
+        "pending_direction": 3,
+        "mouse_events": 3
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 0,
+        "pending_direction": 3,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 0,
+        "mouse_events": 3,
+        "frame_count": 4,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          278,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "mouse-step-3",
+      "passed": true,
+      "expected": {
+        "cells": [
+          277,
+          278,
+          308
+        ],
+        "direction": 3,
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 3,
+        "pending_direction": 3,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 2,
+        "key_events": 0,
+        "mouse_events": 4,
+        "frame_count": 5,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      }
+    },
+    {
+      "name": "mouse-direction-2",
+      "passed": true,
+      "expected": {
+        "pending_direction": 2,
+        "mouse_events": 5
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 3,
+        "pending_direction": 2,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 2,
+        "key_events": 0,
+        "mouse_events": 5,
+        "frame_count": 6,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          277,
+          278,
+          308
+        ]
+      }
+    },
+    {
+      "name": "mouse-step-2",
+      "passed": true,
+      "expected": {
+        "cells": [
+          307,
+          277,
+          278
+        ],
+        "direction": 2,
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 2,
+        "pending_direction": 2,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 3,
+        "key_events": 0,
+        "mouse_events": 6,
+        "frame_count": 7,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      }
+    },
+    {
+      "name": "mouse-direction-1",
+      "passed": true,
+      "expected": {
+        "pending_direction": 1,
+        "mouse_events": 7
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 2,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 3,
+        "key_events": 0,
+        "mouse_events": 7,
+        "frame_count": 8,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 1,
+        "cells": [
+          307,
+          277,
+          278
+        ]
+      }
+    },
+    {
+      "name": "mouse-step-1",
+      "passed": true,
+      "expected": {
+        "cells": [
+          308,
+          307,
+          277
+        ],
+        "direction": 1,
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 4,
+        "key_events": 0,
+        "mouse_events": 8,
+        "frame_count": 9,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          277
+        ]
+      }
+    },
+    {
+      "name": "mouse-unpause",
+      "passed": true,
+      "expected": {
+        "paused": 0
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 0,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 5,
+        "key_events": 0,
+        "mouse_events": 9,
+        "frame_count": 11,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          309,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "clock-advances-running-game",
+      "passed": true
+    },
+    {
+      "name": "keyboard-pause",
+      "passed": true,
+      "expected": {
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 7,
+        "key_events": 1,
+        "mouse_events": 9,
+        "frame_count": 14,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          311,
+          310,
+          309
+        ]
+      }
+    },
+    {
+      "name": "ordinary-wall-collision",
+      "passed": true,
+      "expected": {
+        "game_status": 1,
+        "paused": 1,
+        "snake_length": 4,
+        "cells": [
+          329,
+          328,
+          327,
+          326
+        ],
+        "tick_count": 22,
+        "score": 1
+      },
+      "observed": {
+        "snake_length": 4,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 1,
+        "score": 1,
+        "rng_seed": 10589,
+        "tick_count": 22,
+        "key_events": 22,
+        "mouse_events": 0,
+        "frame_count": 23,
+        "mouse_present": 1,
+        "food_cell": 389,
+        "turn_queued": 0,
+        "cells": [
+          329,
+          328,
+          327,
+          326
+        ]
+      }
+    },
+    {
+      "name": "terminal-input-does-not-step",
+      "passed": true
+    },
+    {
+      "name": "restart-after-death",
+      "passed": true,
+      "expected": {
+        "game_status": 0,
+        "paused": 1,
+        "cells": [
+          308,
+          307,
+          306
+        ],
+        "score": 0
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 0,
+        "key_events": 0,
+        "mouse_events": 0,
+        "frame_count": 1,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          308,
+          307,
+          306
+        ]
+      }
+    },
+    {
+      "name": "space-unpause",
+      "passed": true,
+      "expected": {
+        "paused": 0
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 0,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 1,
+        "mouse_events": 0,
+        "frame_count": 3,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          309,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "space-pause",
+      "passed": true,
+      "expected": {
+        "paused": 1
+      },
+      "observed": {
+        "snake_length": 3,
+        "direction": 1,
+        "pending_direction": 1,
+        "paused": 1,
+        "game_status": 0,
+        "score": 0,
+        "rng_seed": 4660,
+        "tick_count": 1,
+        "key_events": 2,
+        "mouse_events": 0,
+        "frame_count": 4,
+        "mouse_present": 1,
+        "food_cell": 312,
+        "turn_queued": 0,
+        "cells": [
+          309,
+          308,
+          307
+        ]
+      }
+    },
+    {
+      "name": "escape-restores-text-and-exits",
+      "passed": true
+    },
+    {
+      "name": "database-reopen-and-stored-frame-export",
+      "passed": true
+    }
+  ],
+  "frames": [
+    {
+      "artifact": "105bbc593bff41c68fbbdd62e3bac49f",
+      "run": "5b8a9bd1d9ae42cb85f53c2c4f6a6d40",
+      "version": 1,
+      "name": "initial.png",
+      "kind": "screenshot",
+      "sha256": "9ce7c6c1fb6d35dffcc6ecfd15ff93b983ce4e9eadcb731a8b4d4422b7e764fb",
+      "size": 6057,
+      "metadata": {
+        "captured_ticks": 417,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 23,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "9ce7c6c1fb6d35dffcc6ecfd15ff93b983ce4e9eadcb731a8b4d4422b7e764fb",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 4,
+        "width": 320
+      }
+    },
+    {
+      "artifact": "7834575b24194aa19f9d1b4990d33806",
+      "run": "5b8a9bd1d9ae42cb85f53c2c4f6a6d40",
+      "version": 1,
+      "name": "eaten.png",
+      "kind": "screenshot",
+      "sha256": "f3ae7c5e0c6da68dcca70eb4bc50f3f7f00b0500471710b343646ed3df18a51e",
+      "size": 6020,
+      "metadata": {
+        "captured_ticks": 8278,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 464,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "f3ae7c5e0c6da68dcca70eb4bc50f3f7f00b0500471710b343646ed3df18a51e",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 103,
+        "width": 320
+      }
+    },
+    {
+      "artifact": "b8b8d906a62d48d3b6574f1d6967fba3",
+      "run": "5b8a9bd1d9ae42cb85f53c2c4f6a6d40",
+      "version": 1,
+      "name": "mouse-controls.png",
+      "kind": "screenshot",
+      "sha256": "3075f6d8762abd1aab33a9dfe90640cf18f7a50f810342ca89762c0446e7c51f",
+      "size": 6072,
+      "metadata": {
+        "captured_ticks": 10947,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 602,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "3075f6d8762abd1aab33a9dfe90640cf18f7a50f810342ca89762c0446e7c51f",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 139,
+        "width": 320
+      }
+    },
+    {
+      "artifact": "bc27423cfcc84fb0a6780e7f3b6fb065",
+      "run": "5b8a9bd1d9ae42cb85f53c2c4f6a6d40",
+      "version": 1,
+      "name": "dead.png",
+      "kind": "screenshot",
+      "sha256": "a89d56763ab4c0125669f48a0f5843c6d4c8ba96bc0e974dc5307321331b0538",
+      "size": 5989,
+      "metadata": {
+        "captured_ticks": 19322,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 1037,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "a89d56763ab4c0125669f48a0f5843c6d4c8ba96bc0e974dc5307321331b0538",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 246,
+        "width": 320
+      }
+    }
+  ],
+  "source_and_state_maps": "oracle-assisted",
+  "scope": "Actual VGA/keyboard/mouse/timer paths of the authored DOS original; no conversion qualification"
+}

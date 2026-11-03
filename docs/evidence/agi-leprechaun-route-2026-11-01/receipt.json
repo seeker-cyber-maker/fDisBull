@@ -1,0 +1,193 @@
+{
+  "format": "fdisbull-agi-leprechaun-verification-1",
+  "date": "2026-11-01",
+  "base_commit": "1ed77bc0257eb1c4ed23d995155afd6bb3a6b14b",
+  "python": "3.13.13",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "implementation_sha256": {
+    "examples/agi/verify_leprechaun.py": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628",
+    "examples/agi/build_leprechaun_scene.py": "40c395701638a694e0c46cdf66607d88a212f9a74cd1c824256dc7932b8ac593",
+    "tests/test_agi_leprechaun_route.py": "e71ea9ebd69ad80e953701de97cf5339f8861a60af0086783c98133382a5d71d",
+    "tests/test_agi_leprechaun_scene.py": "ab573726945b48a9c9059d483cead8279fd1b1eb8ad2687783ae2ee3b6bb0475"
+  },
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+      "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db",
+      "33": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+      "34": "a89cda3ef5bd15a577135c4378272a67dad21d5bae8a81d6fa69586b3e2e56ad",
+      "47": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+      "48": "967da543cab4708290f3e6d4c45b93522ed45bb394199d5206800bfa05300611",
+      "6": "4622b05dbd277739b2538aaf240637195b30e742fcd002cfdff6ff5b1281c817",
+      "7": "2c3adaebf8c05b343272c486286ff74600e343a1109f69025b9e8ec623cf2149",
+      "23": "fcfdd892ef197a23c8dc5536d1c8263871f013fbf3e72e72a5ae37412e5e33cc",
+      "24": "f56c760eef37bc539c6f421d685a9e6af98b4acbf2ff18cb3c8faf3e787f8e74",
+      "36": "7d23fc56b137bf5ac84c16b04557bdf5534b6dd946769c6236646122e891a340",
+      "73": "fd59d6cf54e6fa451fb41d519fc3f0de2c506f295f28c7192843875fe8917899",
+      "74": "ae1ef292d6bf0b313792c4d993661384b36b37abea204b2b1d4c550ea762d560",
+      "75": "369899bc02c94c11f8e3e7b0ff3024bab21387784603febe3918e2d7496a55d8",
+      "76": "a16dfce687a6459d0266a6f38dfbca9d5212bff1a2f5f48f687f2af7e2d8be48",
+      "77": "e125cc9720653778e1480621969f20450e656f189ee0ef5269968ccb9ea928b4",
+      "78": "4649ac1307fcd2dc0e042cb9c46d03cb0f6023d892a4d30fa22ef91659931a97"
+    },
+    "object_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985"
+  },
+  "native": {
+    "final_run": "native-02",
+    "complete": true,
+    "collector_sha256": "e277a72b7b5a2ff8a59e581037649d8fb5aeb1fcb9d6ecb9dc62d217293a6628",
+    "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+    "guest_elapsed_ms": 384065,
+    "limits": {
+      "guest_ms": 900000,
+      "wall_ms": 1800000
+    },
+    "runtime": {
+      "policy": "physical",
+      "fresh_game": true,
+      "interventions": [],
+      "session_id": "ses-1",
+      "guest_elapsed_ms": 384065
+    },
+    "source_and_copy_unchanged": true,
+    "source_files_rehashed": 24,
+    "persistence_errors": [],
+    "final_state": {
+      "room": 36,
+      "score": 14,
+      "ego": {
+        "x": 88,
+        "y": 131,
+        "direction": 0,
+        "drawn": true
+      },
+      "ego_view": 0,
+      "ego_width": 6,
+      "small": false,
+      "small_timer": 0,
+      "mushroom_consumed": true,
+      "inventory_locations": {
+        "8": 255,
+        "15": 0,
+        "16": 0,
+        "21": 255,
+        "24": 0
+      }
+    },
+    "typed_give_bag_submissions": 1,
+    "recorded_rat_refusals": 0,
+    "shield_trace_events": 32,
+    "shield_trace_maximum": 128,
+    "preceding_fresh_version": {
+      "run": "native-01",
+      "collector_sha256": "48ff5eec6f6f763aa0db94e8c2a7db7388bfe838ab39cccf768376d6e919711a",
+      "complete": true,
+      "scope": "Separate earlier source version; final failure handling qualified by native-02 and authored regressions."
+    }
+  },
+  "frames": [
+    {
+      "file": "hole-after.png",
+      "sha256": "83e27d37690f85cd507ddbae85c5ed6f634bf32680557e0f33c4b77e81a7d8b1",
+      "size": [
+        320,
+        200
+      ]
+    },
+    {
+      "file": "rat-paid.png",
+      "sha256": "331d9a40b1cb2b0cf03367f1d8eea071791264fd14df5780dea811522b055ee6",
+      "size": [
+        320,
+        200
+      ]
+    },
+    {
+      "file": "throne-before.png",
+      "sha256": "694924f085745465474c8f3d46512ed2e667d0ccfaa67a2296f2ce9db368c7af",
+      "size": [
+        320,
+        200
+      ]
+    },
+    {
+      "file": "shield-taken.png",
+      "sha256": "93106b7f348fe31076cff7357f8f1199923f73c2249156ced3528d58a6ef1701",
+      "size": [
+        320,
+        200
+      ]
+    },
+    {
+      "file": "small-at-opening.png",
+      "sha256": "6d2f1b751c0fa67dd51a4425ccd77df2c77b9ee150b1847ce5b22b6a0cdf7304",
+      "size": [
+        320,
+        200
+      ]
+    },
+    {
+      "file": "cave-outside.png",
+      "sha256": "88f75d7dcd9c024496563de32399dc910454353e5ef0b1664e7bbfee892074b9",
+      "size": [
+        320,
+        200
+      ]
+    }
+  ],
+  "scene": {
+    "scene_sha256": "a9e3dfdff35230552dde86e8aab05dc2ea98eb361e08bf74def21ca559340668",
+    "provenance_sha256": "bca9cf198eb9f17c4c8acbdd86a360b60654068e442976d7595d950eb91a4832",
+    "independent_rebuild_identical": true,
+    "generated_output_private": true,
+    "original_message_text_excluded": true,
+    "installed_core_and_player_version": "0.28.0",
+    "direct_and_separate_process_verified": true,
+    "checkpoints": "In-memory state restoration and token invalidation only; fresh process has no checkpoint.",
+    "player_verification_sha256": "8c464daa8eb535df6ccfc8b3267353aa1be84571acc943f0f13fdbd9bf9531ed"
+  },
+  "checks": {
+    "focused": "181 passed in 3.59s",
+    "full_suite": "3213 passed, 123 skipped, 2 failed, 23 errors in 78.29s",
+    "full_suite_exit_code": 1,
+    "platform_limits": "Same inherited ELF/Linux/GNU fixture cases on macOS ARM64; full suite remains red.",
+    "linux_ci": "Unqualified; no hosted ordinary/native Linux acceptance."
+  },
+  "evidence_sha256": {
+    "native-summary.json": "f9535a0a9a78bcad0ad7a70e9a35ed60beaac2fee2a0c7e8fdbef8d10e7a0488",
+    "trace-summary.json": "9dffe6597801b0cb808761e18e472895909fd7941c07f0b3490bc0eb38a8d50d",
+    "player-verification.json": "8c464daa8eb535df6ccfc8b3267353aa1be84571acc943f0f13fdbd9bf9531ed",
+    "review-summary.json": "20197d4bc5063de3844f50ce96ec53ad16a6077db6b1bafffbe9e95809a4bba7",
+    "research-summary.json": "065d4dec7feadb3c89154788bd2ff5998822c3e3c3dee59d455d894a7a230ae0",
+    "test-platform-limits.json": "f232d9d7be29304b08d63754809f69eca791623b5d50a8887f9570877bbeb123",
+    "tests.log": "858cc817f709fac6cecdd9d586e0509f5eb237632b1907feaca856272c06759a"
+  },
+  "exclusions": [
+    "game/story/resource/manual files",
+    "saved games and emulator states",
+    "project databases",
+    "raw memory/capture/trace corpus",
+    "generated scenes",
+    "third-party video and frame corpus",
+    "private absolute paths"
+  ],
+  "limits": [
+    "Selected original edition and connected ordinary-input branch only; no full-game recovery or deterministic replay claim.",
+    "Approach explicitly uses previously qualified room41 and room33 boundary glitches through original input.",
+    "No fiddle, scepter, clover-free route or full TAS recreation was qualified.",
+    "Hashes bind supplied artifacts and assertions; they do not authenticate arbitrary submitted execution.",
+    "No integration merge, tag, release, package or installation change."
+  ]
+}

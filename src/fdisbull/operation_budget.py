@@ -9,6 +9,19 @@ class RpcAdmissionTimeout(TimeoutError):
     """The shared deadline refused a request before transport dispatch."""
 
 
+def request_deadline(session, timeout_ms):
+    """Intersect a composed request's incoming allowance with its outer deadline.
+
+    Observer wrappers must retain this value across their resumed native slices;
+    calculating a fresh allowance on each hook widens the original request.
+    """
+    if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
+        raise ValueError('timeout_ms must be in 1..600000')
+    deadline = time.monotonic() + timeout_ms / 1000
+    previous = getattr(session, '_rpc_deadline', None)
+    return min(previous, deadline) if previous is not None else deadline
+
+
 @contextmanager
 def deadline_scope(session, deadline, *, rpc_ms=5000, admission_ms=5000, cleanup_ms=5000):
     """Bound nested RPCs, refusing a fresh request that lacks its full allowance."""
@@ -51,11 +64,8 @@ def rpc_budget(function):
     def bounded(session,*args,**kwargs):
         bound=signature.bind(session,*args,**kwargs);bound.apply_defaults()
         milliseconds=bound.arguments['timeout_ms']
-        if type(milliseconds) is not int or not 1<=milliseconds<=600000:
-            raise ValueError('timeout_ms must be in 1..600000')
         previous=getattr(session,'_rpc_deadline',None)
-        deadline=time.monotonic()+milliseconds/1000
-        session._rpc_deadline=min(previous,deadline) if previous is not None else deadline
+        session._rpc_deadline=request_deadline(session,milliseconds)
         try:return function(session,*args,**kwargs)
         finally:session._rpc_deadline=previous
     return bounded

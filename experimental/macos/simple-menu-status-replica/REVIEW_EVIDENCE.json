@@ -1,0 +1,24 @@
+{
+  "format": "fdisbull-combined-replica-update-1",
+  "source_commit": "7fdfbb94d2e509dd30b0805b694c0e2f9fe5c454",
+  "verification_basis": "fresh source/install hash and read-only runtime inspection; historical app checks retained separately",
+  "installed_source_hashes_match": true,
+  "combined_replica_running": true,
+  "combined_representation_visible": true,
+  "current_system_keep_awake": true,
+  "current_display_keep_awake": true,
+  "other_app_targets_stopped": {
+    "com.aeogae.simple-status": true,
+    "io.fata.shibata.cpuinfo": true,
+    "local.codex.cpuinfo-replica": true
+  },
+  "login": {
+    "run_at_load": true,
+    "uses_user_applications": true,
+    "one_argument_only": true,
+    "actual_relogin_tested": false
+  },
+  "private_originals_or_screenshots_included": false,
+  "native_equivalence": "unresolved; authored extension and bounded checks only",
+  "historical_uil_scope": "earlier source/model slice; no graph-control or native recovery qualification"
+}

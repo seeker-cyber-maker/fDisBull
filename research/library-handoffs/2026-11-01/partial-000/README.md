@@ -1,5 +1,10 @@
 # Historical partial handoff 000
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 This four-file delivery is an earlier GitLab/access checkpoint, not a verified
 file delta or a new implementation. Its exact archive/member identities are in
 [manifest.json](manifest.json). The raw snapshot and CSV remain in the private

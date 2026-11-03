@@ -1,0 +1,474 @@
+{
+  "format": "miniplanets-full-source-bound-contract-1",
+  "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "upstream_commit": "0ac9c395289cc5d0837c96d45e61a27300e8eebc",
+  "representation": "reviewed source-bound rewrite into procedural UIL, not automatic binary lifting",
+  "contexts": {
+    "common": {
+      "joy_hold": {
+        "address": 16711754,
+        "length": 1
+      },
+      "joy_press": {
+        "address": 16711755,
+        "length": 1
+      },
+      "rng_seed": {
+        "address": 16711758,
+        "length": 2
+      },
+      "anim": {
+        "address": 16713560,
+        "length": 2
+      },
+      "subpixel": {
+        "address": 16713562,
+        "length": 2
+      },
+      "bgm_to_play": {
+        "address": 16713565,
+        "length": 1
+      },
+      "sfx_to_play": {
+        "address": 16713566,
+        "length": 1
+      },
+      "current_sfx": {
+        "address": 16713567,
+        "length": 1
+      },
+      "current_bgm": {
+        "address": 16713568,
+        "length": 1
+      },
+      "score": {
+        "address": 16713574,
+        "length": 4
+      },
+      "next_life": {
+        "address": 16713578,
+        "length": 4
+      },
+      "lives": {
+        "address": 16713582,
+        "length": 1
+      },
+      "stage": {
+        "address": 16713583,
+        "length": 1
+      },
+      "stage_name": {
+        "address": 16713584,
+        "length": 1
+      },
+      "debug_ok": {
+        "address": 16713585,
+        "length": 1
+      },
+      "muteki": {
+        "address": 16713586,
+        "length": 1
+      },
+      "timer_ok": {
+        "address": 16713587,
+        "length": 1
+      },
+      "belt_ok": {
+        "address": 16713588,
+        "length": 1
+      },
+      "time_setting": {
+        "address": 16713589,
+        "length": 1
+      },
+      "life_setting": {
+        "address": 16713590,
+        "length": 1
+      },
+      "sound_test": {
+        "address": 16713591,
+        "length": 1
+      },
+      "invict": {
+        "address": 16713592,
+        "length": 1
+      },
+      "attract_mode": {
+        "address": 16713594,
+        "length": 1
+      },
+      "attract_seq": {
+        "address": 16713595,
+        "length": 1
+      },
+      "attract_ptr": {
+        "address": 16713596,
+        "length": 4
+      },
+      "attract_timer": {
+        "address": 16713600,
+        "length": 1
+      },
+      "attract_input": {
+        "address": 16713601,
+        "length": 1
+      }
+    },
+    "level": {
+      "ingame_status": {
+        "address": 16713602,
+        "length": 1
+      },
+      "keys_left": {
+        "address": 16713603,
+        "length": 1
+      },
+      "end_game": {
+        "address": 16713604,
+        "length": 1
+      },
+      "world": {
+        "address": 16713606,
+        "length": 256
+      },
+      "time_secs": {
+        "address": 16713862,
+        "length": 1
+      },
+      "time_frames": {
+        "address": 16713863,
+        "length": 1
+      },
+      "shake_timer": {
+        "address": 16713864,
+        "length": 1
+      },
+      "ending_phase": {
+        "address": 16713865,
+        "length": 1
+      },
+      "ending_fade": {
+        "address": 16713866,
+        "length": 1
+      },
+      "ending_timer": {
+        "address": 16713867,
+        "length": 1
+      },
+      "player_x": {
+        "address": 16713868,
+        "length": 1
+      },
+      "player_y": {
+        "address": 16713869,
+        "length": 1
+      },
+      "player_angle": {
+        "address": 16713870,
+        "length": 1
+      },
+      "player_action": {
+        "address": 16713871,
+        "length": 1
+      },
+      "player_jump": {
+        "address": 16713872,
+        "length": 1
+      },
+      "player_spring": {
+        "address": 16713873,
+        "length": 1
+      },
+      "player_win": {
+        "address": 16713874,
+        "length": 1
+      },
+      "player_die": {
+        "address": 16713875,
+        "length": 1
+      },
+      "objects": {
+        "address": 16713876,
+        "length": 192
+      }
+    },
+    "password": {
+      "password_timer": {
+        "address": 16713818,
+        "length": 2
+      },
+      "entered_password": {
+        "address": 16713820,
+        "length": 4
+      },
+      "password_dial_anim": {
+        "address": 16713824,
+        "length": 10
+      },
+      "password_dial": {
+        "address": 16713834,
+        "length": 1
+      },
+      "password_delay": {
+        "address": 16713835,
+        "length": 1
+      },
+      "password_quit": {
+        "address": 16713836,
+        "length": 1
+      }
+    },
+    "clear": {
+      "clear_qisha_pos": {
+        "address": 16714362,
+        "length": 2,
+        "signed": true
+      },
+      "clear_phase": {
+        "address": 16714364,
+        "length": 1
+      },
+      "clear_timer": {
+        "address": 16714365,
+        "length": 1
+      },
+      "stage_bonus": {
+        "address": 16714366,
+        "length": 4
+      }
+    },
+    "credits": {
+      "credits_source": {
+        "address": 16713602,
+        "length": 4
+      },
+      "credits_column": {
+        "address": 16713606,
+        "length": 4,
+        "pointer_base": 16713612
+      },
+      "credits_line": {
+        "address": 16713610,
+        "length": 1
+      },
+      "credits_delay": {
+        "address": 16713611,
+        "length": 1
+      },
+      "credits_text": {
+        "address": 16713612,
+        "length": 48
+      },
+      "credits_scroll": {
+        "address": 16714092,
+        "length": 2,
+        "signed": true
+      },
+      "credits_spin": {
+        "address": 16714094,
+        "length": 2
+      },
+      "credits_reset_timer": {
+        "address": 16714096,
+        "length": 2
+      }
+    }
+  },
+  "procedures": {
+    "update_subpixel": {
+      "entry": 766,
+      "ranges": [
+        [
+          766,
+          814
+        ]
+      ],
+      "context": "level"
+    },
+    "run_player": {
+      "entry": 17372,
+      "ranges": [
+        [
+          17372,
+          18058
+        ],
+        [
+          15500,
+          15534
+        ],
+        [
+          18918,
+          18982
+        ],
+        [
+          14084,
+          14432
+        ],
+        [
+          1992,
+          2014
+        ],
+        [
+          19004,
+          19058
+        ]
+      ],
+      "context": "level"
+    },
+    "add_score": {
+      "entry": 14084,
+      "ranges": [
+        [
+          14084,
+          14226
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "level",
+      "arguments": [
+        "D7"
+      ]
+    },
+    "run_tally": {
+      "entry": 14260,
+      "ranges": [
+        [
+          14084,
+          14334
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "level"
+    },
+    "run_ending": {
+      "entry": 14334,
+      "ranges": [
+        [
+          14334,
+          14432
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "level"
+    },
+    "update_password_dial": {
+      "entry": 7370,
+      "ranges": [
+        [
+          7370,
+          7644
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "password"
+    },
+    "update_clear_all": {
+      "entry": 9280,
+      "ranges": [
+        [
+          9280,
+          9534
+        ],
+        [
+          14084,
+          14226
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "clear"
+    },
+    "update_credits_text": {
+      "entry": 11330,
+      "ranges": [
+        [
+          11330,
+          11496
+        ]
+      ],
+      "context": "credits"
+    },
+    "update_level_timer": {
+      "entry": 13550,
+      "ranges": [
+        [
+          13550,
+          13634
+        ],
+        [
+          18914,
+          18982
+        ],
+        [
+          1992,
+          2014
+        ]
+      ],
+      "context": "level",
+      "stop_pcs": [
+        13634
+      ]
+    }
+  },
+  "immutable_ranges": {
+    "collision": [
+      42260,
+      42295
+    ],
+    "joy_angle": [
+      18058,
+      18074
+    ],
+    "settings": [
+      267034,
+      267098
+    ],
+    "passwords": [
+      298972,
+      299006
+    ],
+    "staff_roll": [
+      299308,
+      299481
+    ],
+    "stages": [
+      399072,
+      415618
+    ],
+    "attract": [
+      415618,
+      415992
+    ],
+    "angle_distance": [
+      416648,
+      416668
+    ],
+    "sines": [
+      415992,
+      416648
+    ]
+  },
+  "adapters": [
+    "target menus, fonts, graphics, decompression, video fades and publisher logo",
+    "one logical NTSC update per requested tick; no PAL catch-up",
+    "declared boot seed and sampled HV inputs in place of cross-hardware RAM noise and clocks",
+    "input map NES R/L/U/D/A/B/Start/Select to Genesis R/L/U/D/A/B/Start/C",
+    "target audio voices; original request/priority/stream state retained separately",
+    "full object pool raises a capacity fault instead of unbounded original RAM traversal"
+  ],
+  "qualification_ceiling": "component entry comparisons do not prove natural reachability, whole-game completion, audiovisual parity or formal equivalence"
+}

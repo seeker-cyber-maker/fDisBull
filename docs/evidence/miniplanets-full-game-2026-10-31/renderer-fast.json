@@ -1,0 +1,86 @@
+{
+  "format": "fdisbull-globe-6502-check-1",
+  "passed": true,
+  "cases": 40960,
+  "camera_views": 256,
+  "animation_phases": 32,
+  "maps": [
+    {
+      "name": "original-stage-0",
+      "sha256": "fa767737abf35837999c3fe79e23d12ca34602a2fe481d7e694832014e8fdf00"
+    },
+    {
+      "name": "original-stage-19",
+      "sha256": "2b707edb6737ef10be79c878b9f38f2850014494fe75c6f77533d5e905b35b0e"
+    },
+    {
+      "name": "original-stage-46",
+      "sha256": "89278f918484930be5bcf6c14de91322924dec6b8ab85ca2cdb3137804cf495c"
+    },
+    {
+      "name": "authored-all35-classes",
+      "sha256": "f10d14898f246c99ebfdaa2561c95fa50d101959b0b19c2d3540892ee2d682c0"
+    },
+    {
+      "name": "authored-invalid-class-clamp",
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+    }
+  ],
+  "source_hashes": {
+    "nes_globe_fast.s": "aaf765ba6b3865687c778688b5384ec32749a030186e8bd497aea18434920924",
+    "nes_globe_renderer.c": "576b1d3577bccc616fa795fb18e60e246ec1041eba82e43b4b7eb8a993279247"
+  },
+  "harness_sha256": "6dcfe145c34d074bb4fb41353ea1499eca21e260fb4acb9a3fc9b3c04d258bfb",
+  "private_fixture_sha256": "1f06e80810e48361e903bfdf4e7797c27989c5d803a8d12b67865e1dde18a662",
+  "compiled_program_sha256": "036d91b1c2e01f444ba398ac59aedf862e0d1ee31a7e21f95d9226b2ca562e3d",
+  "reference_mean_cycles": {
+    "clear": 30319.0,
+    "copy": 21615.0,
+    "paint": 58915.26376953125
+  },
+  "fast_mean_cycles": {
+    "clear": 4974.0,
+    "copy": 3259.0,
+    "paint": 11834.98671875
+  },
+  "fast_max_cycles": {
+    "clear": 4974,
+    "copy": 3259,
+    "paint": 12137
+  },
+  "claim": "actual assembled 6502 instructions match the preceding C hot-loop outputs and preserve immutable inputs",
+  "limits": [
+    "sim65 CPU procedure boundary; NES mapper, IRQ, full-frame scheduling and visible output require separate checks",
+    "cycle readings include the small C call/counter-read overhead and this harness memory layout",
+    "source data fixtures, maps, atlas bytes and built programs remain private",
+    "The final player and raft quad art adaptation followed the byte-parity gate; complete final renderer output intentionally differs by that art policy."
+  ],
+  "date": "2026-10-31",
+  "original_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "preceding_complete_c_renderer_sha256": "27c2fea80bd56f34dfb093aa6d2cefdae06a55b123afb026a05ec9804546c86c",
+  "verification_script_sha256": "d3fa84e8bc3918834cd1b14434df4c70fdff9e2b6ba2879c52459fd8a85bfe98",
+  "actor_order_arithmetic_cases": 12288,
+  "final_renderer_c_sha256": "9f571c5ebdf950e0a014b8d011749be835133e77afc747c31fe99e934df203e7",
+  "toolchain_observed_sha256": {
+    "cc65": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559",
+    "ca65": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7",
+    "cl65": "00530a81fb76e3a9ce992fd2c678790957f2870a3f234db9324cd25a9c09766a",
+    "ld65": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68",
+    "sim65": "ecfc71e317607555b3ff9d6195fda50a7bb0b56689e8e779e6faee63405b2d43"
+  },
+  "post_parity_art_change": {
+    "kind": "deliberate NES presentation adaptation, separate from byte-identical hot-loop optimization",
+    "player": "Four CHR32..35 sprites form a16px player at120,144-jump/4, drawn first for scanline priority.",
+    "rafts": "Four CHR36..39 sprites form a16px deck centered at the preceding projected position.",
+    "game_state_modified": false,
+    "other_actor_icons_or_cull_modified": false,
+    "native_visible_output_validation": "requires separate full cartridge evidence"
+  },
+  "reference_total_mean_cycles": 110849.26376953124,
+  "fast_total_mean_cycles": 20067.98671875,
+  "cycle_reduction_fraction": 0.8189614794332444,
+  "interrupt_visibility_qualifiers": "NMI/IRQ shared staging payload, publication flags, controller byte and audio request FIFO are volatile; main-owned palette/projection caches remain plain.",
+  "final_frontend_fixture_identity_rechecked": true,
+  "final_frontend_sha256": "6848abf19fb186adddfcdebb507b63ea98a906569436a89ca5e0c47ba71a84dd",
+  "irq_independent_review": "Audio adapter owner found no material scratch/data-bank issue: IRQ saves cc65 ZP02..1B, trampoline A/X and code/data/mapper selectors; private audio BSS does not overlap globe tables."
+}

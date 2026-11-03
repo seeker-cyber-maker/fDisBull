@@ -1,5 +1,10 @@
 # Historical Linux dependency receipt
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 The 11 delivery checksum entries pass. The complete source ZIP and exact member
 identities are recorded in [manifest.json](manifest.json); raw logs and receipts
 remain private. [historical-report.md](historical-report.md) replaces the old

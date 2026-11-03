@@ -1,0 +1,3 @@
+write_local(7, acc_in);
+acc_out = acc_in;
+prev_out = prev_in;

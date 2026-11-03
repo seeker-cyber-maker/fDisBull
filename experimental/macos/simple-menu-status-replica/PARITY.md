@@ -1,0 +1,60 @@
+# Simple Menu STATUS parity ledger
+
+This ledger separates what was observed in the installed 1.8 app, what was found in its shipped strings, and what this independent local implementation actually verifies. It is a working checklist, not a claim of full parity. The installed app was left at its original settings after a reversible settings audit; its cache review was canceled without moving files.
+
+## Directly observed interface
+
+The user supplied screenshots of the installed app beside an early replica build. They show a narrow dark popover with a hardware-model header, layout menu, share and settings controls, a measured-indicators banner, CPU/GPU/memory history cards, storage used/total and percentage, local and global IP rows, and a Prevent Sleep footer. The layout menu contains four presets (Simple, Developer, Battery, Custom) and switches for GPU, Storage, Battery, Network, and Processes. Settings shows Uptime, Icon Display, Language, Launch at Login, Enable Alerts, and Cache Cleanup. Later screenshots show attached detail panels for CPU (eight P-core and two E-core bars on this Mac), GPU (device/renderer/tiler usage, core count and device name), memory (physical/used/cached/swap/app/wired/compressed), and storage (total/used/available, with System/Applications/Documents unavailable). The Network Info section has copy actions and no attached panel. The Prevent Sleep Details panel shows active state, idle-sleep explanation, System + Display, and an Additional options disclosure.
+
+The latest typography comparison showed that the replica's fully monospaced metric and network text looked denser than the original. The installed app contains no standalone font files and imports system font APIs, including proportional, monospaced and monospaced-digit variants; that does not identify the exact font of each view. The replica now uses proportional system text with monospaced digits for changing values, 12-point section labels, one-decimal CPU/GPU and used-memory/storage headline values, and a separate storage percentage. The visual result still needs an open-panel comparison.
+
+| Area | Local implementation | Remaining parity evidence/work |
+| --- | --- | --- |
+| Popover shell | 280-point dark-capable SwiftUI popover, hardware model, layout/share/settings actions; standard layout height adjusts to enabled sections with a 720-point cap, while Local AI can grow to the available screen height up to 820 points. The outer scroll view hides its visual indicator while preserving scrolling. | Recheck short and full layouts for clipping or empty tail; gradients and attached settings panel still need comparison. |
+| Dashboard cards | Live aggregate CPU, GPU when exposed by driver, active+wired+compressed memory estimate, selectable mounted-volume storage, active IPv4 interfaces; attached CPU/GPU/memory/storage detail panels based on supplied screenshots | Memory Details now has colored per-row icons and compact two-decimal values. Latest main-panel screenshots show close metric placement but different graphics and spacing. Precise graph scaling/history and alert-banner logic still need inspection. |
+| Dashboard layout | Nested preset menu with edge-aware placement, section switches, selected preset checkmark, persistent replica layout state, and a separate Local AI preset with oMLX-style host CPU/GPU/unified-memory panels | Preset semantics are approximate; original save/restore behavior is unknown. Local AI is a new replica layout, not an original-app feature. |
+| Memory icon | Normal/warning/critical system pressure event tiers, with a free+inactive initial estimate | Original thresholds/artwork are unknown; observe real pressure transitions on the replica and original. |
+| Network | Local IP copy, one-interface rates, first-visible ipify public IPv4 lookup with manual refresh, SystemConfiguration VPN list/action; row spacing and radio icons adjusted against the original screenshots | Original screenshots show a populated global IP, and its binary names the same ipify endpoint; exact refresh timing remains unknown. Network details, speed test, DNS controls and app-managed VPN coverage remain unknown. |
+| Prevent Sleep | Explicit system or system+display assertion, timed or process-based; attached 340-point Details panel has a collapsible Additional options section and retains height when collapsed | The replica follows one selected process lifetime. Original child-process semantics and live assertion/wake behavior remain unverified. |
+| Storage selection | Startup volume selected initially, visible mounted-volume picker, persistent selection, mount point and format/location/write-status detail rows, and manual bounded estimates for named System/Applications/Documents folders | The earlier category rows were placeholders. Folder estimates are not macOS Storage Settings category totals and may be partial; APFS capacity can be shared across volumes in a container. External-volume behavior needs interactive confirmation. |
+| Settings and preferences | Uptime, icon choices, configurable alerts, cache review, local launch-at-login control, and a Japanese resource for visible labels; app-specific UserDefaults plist verified on disk, including the selected storage volume | The original uses disclosure rows for Icon Display and Language, plus a cache review confirmation sheet. It is sandboxed while the unsigned replica is not. Key names overlap where observed, but values and exact behavior are not proven equivalent. Exact icon rendering, full Japanese localization, original alert options and cache scope remain unmatched. Login behavior across an actual logout/login has not been tested. |
+| Alerts | Replica-only CPU, memory-usage and selected-volume storage thresholds, sustained duration, five-minute cooldown and optional recovery notices | The original resources name these three metrics and related settings, but its defaults and expanded panel were not observed. The replica's notification delivery has not been exercised in a live alert. |
+| Sharing | Numeric-only in-memory PNG card, local preview, Copy image, and native picker anchored to its Share… button | The installed app’s English resources name “Share system status,” “Copy image,” “Share…,” and “Close,” and explicitly exclude IP addresses, user names, file paths, processes, and disk space. Exact card artwork, original image fields, and live picker behavior remain unverified. |
+
+## Shipped-string evidence, not observed behavior
+
+The original binary contains localized strings for per-core CPU and history, GPU details, memory detail, storage, network/public IP, speed test, DNS flush, battery detail, processes, caffeine time/process modes, VPN, alerts and cleanup. These strings identify likely reachable features but do not prove their current behavior or exact interface. The local implementation contains only the scoped features described above. A deeper screen capture or direct GUI inspection is needed to compare those flows.
+
+The new Local AI layout is informed by [oMLX's menu-bar System Stats panels](https://github.com/jundot/omlx/blob/96361a5883fcf50f9eb7f22a9f2cecfe76bb62fb/apps/omlx-mac/Sources/Menubar/SystemStatsPanels.swift) and [sampler](https://github.com/jundot/omlx/blob/96361a5883fcf50f9eb7f22a9f2cecfe76bb62fb/apps/omlx-mac/Sources/Menubar/SystemStatsSampler.swift). Its GPU-memory value comes from the host IOAccelerator “In use system memory” counter. It is shared Apple Silicon RAM. oMLX's admin-screen model-memory value is server-reported and is not equivalent to that host counter.
+
+## fDisBull comparison path
+
+The isolated macOS ARM64 fDisBull branch imports the installed Simple Menu STATUS executable and the neighboring `cpuinfo` bars app as separate, hash-bound Mach-O projects. Fresh imports record 3,423 and 335 candidate seeds respectively from the entry point, unwind metadata and `LC_FUNCTION_STARTS`. A bounded 2,000-instruction pass on each retains pending work rather than claiming an app-wide fixed point. The new source-backed instruction query and optional Ghidra probe agree on the selected original entry bytes; Ghidra's bounded C diagnostic shows the Simple Menu entry proceeding through SwiftUI App.main and the cpuinfo entry through AppKit NSApplicationMain. These observations help map where to investigate next; they do not identify view state, settings semantics or visual parity. The LLDB one-stop backend was verified on an authored ARM64 fixture, not on either installed app. The installed originals and their bytes remain outside both repositories.
+
+The adjacent bars app is `cpuinfo` 1.7.0. Its published [drawing code](https://github.com/yusukeshib/cpuinfo/blob/v1.7.0/src/CpuinfoImage.swift#L160-L188) shows per-core bars, while the [sampler](https://github.com/yusukeshib/cpuinfo/blob/v1.7.0/src/Cpuinfo.swift#L75-L131) uses processor tick deltas. The fDisBull analysis anchors those source-level observations to the installed binary's architecture and entry path; a live visual comparison and reconstruction wait until this replica is closer to parity.
+
+## Verified locally
+
+The Swift project compiles with the command-line toolchain on this Mac. Focused check programs cover metric parsers and pressure tiers, and the replica was launched as a separate menu-bar process alongside the installed app. This Mac's `AppleSmartBattery` registry node says `BatteryInstalled=No`; the battery sampler now reports absent and the dashboard hides the battery card, as in the original screenshot. The original app's root cause for a scared-looking emoji remains undetermined; the installed app's dashboard showed moderate memory usage while the icon looked scared, and a system-wide free-memory reading did not indicate critical pressure at the time of inspection. The original binary imports `NSURLVolumeAvailableCapacityForImportantUsageKey` and Swift's matching `URLResourceValues` getter. Together with the numerical match in the screenshots, this supports the replica's choice of storage-capacity source, though it does not prove the exact original calculation.
+
+The new Japanese text was observed in the replica during a reversible live check. The installed original was not changed. The replica's `language` preference was restored to its prior absent state and the replica was stopped after the check. Unlike the original resource's restart instruction, this replica applies the visible language choice immediately. The Settings sheet, nested layout menu and right-click Quit still lack reliable live interaction checks.
+
+User screenshots show the replica's dashboard and detail panels beside the installed app, but automated GUI interaction with the latest build has not been captured. No VPN connection change, public-IP request, login registration, notification permission request, cache move, or sleep assertion was made during automated verification. Those controls require explicit user interaction in the local app.
+
+## User-requested CPU Graph representation
+
+CPU Graph is an additional selectable menu-bar representation in Settings →
+Icon Display, alongside the emoji choices. It uses existing per-core samples
+while the dashboard is closed, at the app's two-second refresh interval. The
+layout and calibrated color palette follow the separately verified cpuinfo bars.
+It preserves the selected preference, supports light/dark and 1x/2x/3x rendering,
+shows neutral tracks for missing values, and retains the active coffee indicator.
+This is a requested extension rather than an observed original-app option.
+The build and all check programs passed, including 93 new renderer checks and
+preference round-trip checks. The app was not launched during this change.
+
+The requested CPU Graph + Memory Emoji option combines those per-core bars
+with the existing memory-pressure emoji in the same status item, followed by
+the coffee indicator when active. It is independently selectable and uses the
+existing preference key and pressure event/estimate behavior. It is a replica
+extension rather than an observed original option.

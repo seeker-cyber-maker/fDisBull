@@ -1,0 +1,433 @@
+{
+  "format": "fdisbull-snake-native-arm64-milestone-1",
+  "status": "passed-finite-qualification",
+  "platform": {
+    "native": "macOS ARM64",
+    "computation_host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "target": "macos-arm64-memory-1",
+    "profile": "macos-arm64-memory-appkit-1"
+  },
+  "identities": {
+    "original_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "original_bytes_unchanged": true,
+    "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "source_package_sha256": "e58b61dff57093de3084071b3e079e6d6212be54a4e76baee226788890b5381a",
+    "source_database_sha256": "ae70b7eda521ece9cd1f1674425c30f803b7ffe344ef1c406ab084d3e5634e80",
+    "prior_delivery_unchanged": true,
+    "native_manifest_sha256": "47983f88b69791b3c638d3d037a54dc4c5760658e579c95ed151ea749bc0a124",
+    "native_library_sha256": "e499d7269e32e85ef4d92da53f81a81f1e9478f42f8d561b719cd99038fd4b4d",
+    "native_application_sha256": "5f769cc25405e37d6f2c56981703566b568e3a1aed57a0537274512e2aad7e61",
+    "native_config_sha256": "de88dfc2e117068d60060f9105220b30794ef68957aa081abf2ebe6458f433ff",
+    "native_adapter_source_sha256": "1ad55ac3891ee4cddcf314128172efcf58e18e4e7da19b7002afd64a1ecb13de"
+  },
+  "implementation": {
+    "same_source_udl_uil": true,
+    "native_generated_arm64": true,
+    "runtime_uil_interpretation": false,
+    "shell": "AppKit",
+    "rng_choices": [
+      "original",
+      "lfsr16"
+    ],
+    "selection_changes_future_draws_without_reseeding": true,
+    "ownership": "synchronous main-thread owner; private staging; atomic validated commit; owned display snapshots; terminal close",
+    "stored_source_layers_relabelled_as_native": false
+  },
+  "original_to_uil": {
+    "format": "fdisbull-snake-macos-original-oracle-1",
+    "status": "fresh_finite_original_match",
+    "original_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "map_sha256": "1a72757fc86cf64043d987fde0d01c60bdeaa33c1e8a2c7bdab12e7e7572ec28",
+    "canonical_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+    "cases": 342,
+    "original_cpu_calls": 368,
+    "outcome_steps": 26,
+    "mismatches": 0,
+    "unchanged_original": true,
+    "palette": {
+      "0": [
+        0,
+        0,
+        0
+      ],
+      "1": [
+        0,
+        0,
+        170
+      ],
+      "2": [
+        0,
+        170,
+        0
+      ],
+      "8": [
+        85,
+        85,
+        85
+      ],
+      "10": [
+        85,
+        255,
+        85
+      ],
+      "12": [
+        255,
+        85,
+        85
+      ],
+      "15": [
+        255,
+        255,
+        255
+      ]
+    },
+    "scope": "Isolated original DOS x86-16 step code with declared normalized memory/register adapter; original keyboard/mouse and graphics evidence remain separate frozen native observations",
+    "case_file_sha256": "2671875c9929a02cfa5c56b86dd267394973fb8eda4be12f0f1eaeb0226e612e",
+    "outcome_file_sha256": "10581b4bc37bc9a5446eb8296ce77eee3ccc17a652d18ceb54e8d14004425a4e"
+  },
+  "uil_to_native": {
+    "cases": {
+      "original": {
+        "cases": 342,
+        "mismatches": 0,
+        "intentionally_changed_cases": 0,
+        "region_invocations": 84,
+        "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+      },
+      "lfsr16": {
+        "cases": 342,
+        "mismatches": 0,
+        "intentionally_changed_cases": 84,
+        "region_invocations": 84,
+        "projection_sha256": "8be09708c7ccfb1a3e26e5ea448eda8890e3ec101df7b36cb63d2f4587895ffa"
+      }
+    },
+    "carried_observations_per_rng": 69,
+    "complete_state_words": 621,
+    "complete_raster_indices": 64000,
+    "outcome_route_steps_per_arm": 26,
+    "route_arms": [
+      "original",
+      "lfsr16",
+      "hot_swap"
+    ],
+    "seed_probes": 10,
+    "natural_switch": {
+      "selection": {
+        "after_step": 4,
+        "seed": 10589,
+        "food": 389,
+        "all_words_preserved": true
+      },
+      "status": "passed",
+      "steps": 26,
+      "after_second_meal": {
+        "id": "outcome-step-23",
+        "state_sha256": "3b5057e2b1024742337bea47fe5a35253179d8fef23877bf5e8beb744a540ad3",
+        "frame_sha256": "fb369c059be8636e43295832b73f95ec12e530d28989bbdd485951569923e61d",
+        "snake_length": 5,
+        "score": 2,
+        "rng_seed": 41134,
+        "food_cell": 334,
+        "game_status": 0,
+        "head": 389
+      },
+      "region_invocations": {
+        "original": 1,
+        "lfsr16": 1
+      }
+    },
+    "guard_refusals": [
+      "immutable-input-patch",
+      "invalid-active-body",
+      "unchanged-state-and-revision"
+    ],
+    "closed": true,
+    "scope": "Native C ABI logical events and complete state/indexed rasters; AppKit input/view qualification is separate"
+  },
+  "native_core_receipt_binding": {
+    "receipt_manifest_sha256": "39b38ca11a88daaa1bf551844a1f9fcc5630ee7e9403df81aac9ae2fcb4ad305",
+    "final_manifest_sha256": "47983f88b69791b3c638d3d037a54dc4c5760658e579c95ed151ea749bc0a124",
+    "same_source_program_cuts_regions_endpoints": true,
+    "byte_identical_files": [
+      "memory-runtime.c",
+      "memory-runtime.h",
+      "memory-runtime.o",
+      "memory-runtime.dylib",
+      "config.json",
+      "initial.json"
+    ],
+    "explanation": "Core comparison ran on build02; final build04 changes only the AppKit presentation adapter. Core source/object/library, config, initial arena and source identities remain byte-identical."
+  },
+  "native_adapters": {
+    "arms": {
+      "original": {
+        "status": "passed",
+        "normalized_events": 79,
+        "native_event_commands": 75,
+        "declared_ram_interventions": 1,
+        "ordinary_answer_resets": 0,
+        "view_checks": [
+          {
+            "name": "two-times",
+            "size": [
+              640,
+              400
+            ],
+            "game_rect": [
+              0.0,
+              0.0,
+              640.0,
+              400.0
+            ],
+            "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 0,
+              "tie_pixels_different_from_floor_choice": 0,
+              "outer_edge_tie_pixels": 0,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 0,
+                "source_and_background_indistinguishable": 0
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 0,
+              "non_tie_or_letterbox_pixels": 256000,
+              "non_tie_or_letterbox_differences": 0
+            }
+          },
+          {
+            "name": "wide",
+            "size": [
+              800,
+              600
+            ],
+            "game_rect": [
+              0.0,
+              50.0,
+              800.0,
+              500.0
+            ],
+            "rgba_sha256": "5b8c25e0e19553ac50fcc3ccee66d7fe640bcb9307d576f2b2fc29924c93130c",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 144000,
+              "tie_pixels_different_from_floor_choice": 3679,
+              "outer_edge_tie_pixels": 0,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 0,
+                "source_and_background_indistinguishable": 0
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 0,
+              "non_tie_or_letterbox_pixels": 336000,
+              "non_tie_or_letterbox_differences": 0
+            }
+          },
+          {
+            "name": "tall",
+            "size": [
+              600,
+              800
+            ],
+            "game_rect": [
+              0.0,
+              212.5,
+              600.0,
+              375.0
+            ],
+            "rgba_sha256": "4e38b083a5af88905839797b996ddfb5a3bf980d7ad3dc6189453cb08d5339d2",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 28400,
+              "tie_pixels_different_from_floor_choice": 2198,
+              "outer_edge_tie_pixels": 1200,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 114,
+                "source_and_background_indistinguishable": 1086
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 18,
+              "non_tie_or_letterbox_pixels": 450400,
+              "non_tie_or_letterbox_differences": 0
+            }
+          }
+        ],
+        "closed": true,
+        "script_sha256": "b54c9e614c2067ed168f0b4e238605e986fb5e7146c29e1d8aeecd8cd21f8801",
+        "raw_receipt_sha256": "87d108d0a6bf273884d923cfa4644b3d2f41e1b36bf09ae08c3c443cfb3fa2bc",
+        "process_exit": 0,
+        "process_reaped": true,
+        "observations": 69,
+        "all_state_words": 621,
+        "all_indexed_pixels": 64000,
+        "intrinsic_actual_drawrect_rgba_exact": true
+      },
+      "lfsr16": {
+        "status": "passed",
+        "normalized_events": 79,
+        "native_event_commands": 75,
+        "declared_ram_interventions": 1,
+        "ordinary_answer_resets": 0,
+        "view_checks": [
+          {
+            "name": "two-times",
+            "size": [
+              640,
+              400
+            ],
+            "game_rect": [
+              0.0,
+              0.0,
+              640.0,
+              400.0
+            ],
+            "rgba_sha256": "0ed7f20dd5d57c52564ce68f2325962bf82fcfe8d5be512a8842ad6d4375d719",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 0,
+              "tie_pixels_different_from_floor_choice": 0,
+              "outer_edge_tie_pixels": 0,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 0,
+                "source_and_background_indistinguishable": 0
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 0,
+              "non_tie_or_letterbox_pixels": 256000,
+              "non_tie_or_letterbox_differences": 0
+            }
+          },
+          {
+            "name": "wide",
+            "size": [
+              800,
+              600
+            ],
+            "game_rect": [
+              0.0,
+              50.0,
+              800.0,
+              500.0
+            ],
+            "rgba_sha256": "5b8c25e0e19553ac50fcc3ccee66d7fe640bcb9307d576f2b2fc29924c93130c",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 144000,
+              "tie_pixels_different_from_floor_choice": 3679,
+              "outer_edge_tie_pixels": 0,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 0,
+                "source_and_background_indistinguishable": 0
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 0,
+              "non_tie_or_letterbox_pixels": 336000,
+              "non_tie_or_letterbox_differences": 0
+            }
+          },
+          {
+            "name": "tall",
+            "size": [
+              600,
+              800
+            ],
+            "game_rect": [
+              0.0,
+              212.5,
+              600.0,
+              375.0
+            ],
+            "rgba_sha256": "4e38b083a5af88905839797b996ddfb5a3bf980d7ad3dc6189453cb08d5339d2",
+            "sampling": {
+              "policy": "Exact nearest source pixel; either neighbor only at an exact equidistant source-center tie; background black or nearest in-bounds source edge pixel only at an exact geometric pixel-center/image-edge tie; no interpolated colors or edge coverage blending; input hit tests remain half-open",
+              "source_center_tie_pixels": 28400,
+              "tie_pixels_different_from_floor_choice": 2198,
+              "outer_edge_tie_pixels": 1200,
+              "outer_edge_choices": {
+                "background_only": 0,
+                "source_only": 114,
+                "source_and_background_indistinguishable": 1086
+              },
+              "outer_edge_pixels_different_from_half_open_reference": 18,
+              "non_tie_or_letterbox_pixels": 450400,
+              "non_tie_or_letterbox_differences": 0
+            }
+          }
+        ],
+        "closed": true,
+        "script_sha256": "53d590e854c7002ca0f3589dae733525753dc394306c343503d09f8aaf7904e1",
+        "raw_receipt_sha256": "14459a611d4677d3489b4ebb3372e98a556bedae0ff5024028e894ad1bbe192f",
+        "process_exit": 0,
+        "process_reaped": true,
+        "observations": 69,
+        "all_state_words": 621,
+        "all_indexed_pixels": 64000,
+        "intrinsic_actual_drawrect_rgba_exact": true
+      }
+    },
+    "scope": "Programmatic NSEvents through the native window-key and production-view pointer responders, production timer path and controlled stored-state drawRect; no physical hardware or window hit-testing claim",
+    "source_coverage_per_arm": {
+      "keyboard_commands": 53,
+      "all_declared_key_codes": 14,
+      "left_button_down_up_commands": 22,
+      "timer_commands": 4
+    },
+    "generic_regressions": [
+      "shortcut-modifiers",
+      "focus",
+      "unknown-key-refusal",
+      "all-three-mouse-buttons",
+      "captured-drag-and-release-clipping",
+      "focus-loss-release",
+      "letterbox-ignore",
+      "selector-preserves-state",
+      "config-byte-identity",
+      "owned-preclose-frame",
+      "prefix-replacement-preserves-frame-font",
+      "fractional-edge-no-blending"
+    ]
+  },
+  "default_bundle_launch": {
+    "format": "fdisbull-native-app-default-launch-smoke-1",
+    "status": "passed",
+    "default_bundle_config_found": true,
+    "stored_state_export_size": [
+      320,
+      200
+    ],
+    "stored_state_rgba_sha256": "f70701f5b8ae3682f4dd4a5a3d4b57094cff23b67de12103c3c8229b603c2f16",
+    "normal_no_argument_process_alive_after_seconds": 3,
+    "owned_test_process_terminated": true,
+    "physical_input_tested": false,
+    "desktop_screenshot_taken": false,
+    "executable_sha256": "5f769cc25405e37d6f2c56981703566b568e3a1aed57a0537274512e2aad7e61"
+  },
+  "test_suite": {
+    "command": "python -m pytest -q --ignore=tests/test_elf_metadata.py --ignore=tests/test_platform_calls.py -k \"not test_actual_elf_exports_and_unresolved_imports_are_honest and not test_real_elf_retains_entry_and_named_function\"",
+    "passed": 2463,
+    "skipped": 132,
+    "deselected": 2,
+    "seconds": 72.19,
+    "exit_code": 0,
+    "production_source_files": 156,
+    "unchanged_source_map_sha256": "1b5e774fb85244e263192cae10b8304cf01c5506be929e647c78035052c6b925",
+    "log_sha256": "c3dc69d51d84de57f582660199a66de5d20adf2f9565f0f719bd4bbd4cd5eb3b",
+    "exclusion_reason": "GNU/Linux ELF fixtures require a Linux compiler/linker; these tests and runtime skips remain unqualified"
+  },
+  "privacy": {
+    "original_files_font_full_observations_database_generated_code_and_app": "private outside Git",
+    "tracked_evidence": "authored recipes and sanitized counts/hashes only",
+    "github_network_or_publication": false,
+    "system_installation_changed": false
+  },
+  "limits": [
+    "Finite original-code kernel and recorded native observations, not a proof for all inputs or whole-binary recovery.",
+    "Alternative RNG is intentionally different from DOS and verified against its explicit variant reference.",
+    "Programmatic native window-key and view-pointer responders; physical hardware and global window hit-testing not qualified.",
+    "Intrinsic and integer2x RGBA exact; noninteger resizing accepts only mathematically exact nearest/outer-edge tie sets, without blended colors.",
+    "Original native observation corpus includes one declared diagnostic full-board RAM-prefix intervention; ordinary events carry state without answer resets."
+  ]
+}

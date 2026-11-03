@@ -1,0 +1,132 @@
+{
+  "format": "fdisbull-installed-mushroom-player-check-1",
+  "version": "0.28.0",
+  "python": "3.13.18",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "scene_sha256": "1a59f49df18f537ef01069a85d6c7d24ed324831ecd7c79c5082077cfbc90dbe",
+  "installed_il_scenes_sha256": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+  "scope": "Partial authored scene, no native execution or durable IL-scene checkpoint storage.",
+  "direct": {
+    "complete": true,
+    "states": [
+      {
+        "$phase": 0,
+        "$room": 33,
+        "$score": 0,
+        "$x": 154,
+        "$y": 87,
+        "$direction": 0,
+        "$ego_width": 6,
+        "$ego_view": 0,
+        "$step_size": 1,
+        "$swimming": 0,
+        "$drawn": true,
+        "$in_water": false,
+        "$dead": false,
+        "$bridge_active": false,
+        "$troll_removed": false,
+        "$troll_paid": false,
+        "$mushroom_carried": false,
+        "$mushroom_taken": false,
+        "$mushroom_scored": false
+      },
+      {
+        "$phase": 1,
+        "$room": 48,
+        "$score": 0,
+        "$x": 129,
+        "$y": 140,
+        "$direction": 0,
+        "$ego_width": 6,
+        "$ego_view": 0,
+        "$step_size": 1,
+        "$swimming": 0,
+        "$drawn": true,
+        "$in_water": false,
+        "$dead": false,
+        "$bridge_active": false,
+        "$troll_removed": false,
+        "$troll_paid": false,
+        "$mushroom_carried": false,
+        "$mushroom_taken": false,
+        "$mushroom_scored": false
+      },
+      {
+        "$phase": 2,
+        "$room": 47,
+        "$score": 0,
+        "$x": 94,
+        "$y": 90,
+        "$direction": 0,
+        "$ego_width": 6,
+        "$ego_view": 0,
+        "$step_size": 1,
+        "$swimming": 0,
+        "$drawn": true,
+        "$in_water": false,
+        "$dead": false,
+        "$bridge_active": false,
+        "$troll_removed": false,
+        "$troll_paid": false,
+        "$mushroom_carried": false,
+        "$mushroom_taken": false,
+        "$mushroom_scored": false
+      },
+      {
+        "$phase": 3,
+        "$room": 47,
+        "$score": 1,
+        "$x": 94,
+        "$y": 90,
+        "$direction": 0,
+        "$ego_width": 6,
+        "$ego_view": 0,
+        "$step_size": 1,
+        "$swimming": 0,
+        "$drawn": true,
+        "$in_water": false,
+        "$dead": false,
+        "$bridge_active": false,
+        "$troll_removed": false,
+        "$troll_paid": false,
+        "$mushroom_carried": true,
+        "$mushroom_taken": true,
+        "$mushroom_scored": true
+      }
+    ],
+    "stale_repeat_rejected": true,
+    "checkpoint_restore": true,
+    "restore_invalidates_token": true,
+    "fresh_checkpoint_missing": true,
+    "inventory_observed": true
+  },
+  "process": {
+    "complete": true,
+    "turns": [
+      {
+        "command": "use crossing",
+        "context": "phase-1",
+        "response": "Success: The recorded crossing reaches the island."
+      },
+      {
+        "command": "use trail",
+        "context": "phase-2",
+        "response": "Success: The recorded trail reaches the mushroom."
+      },
+      {
+        "command": "take mushroom",
+        "context": "phase-3",
+        "response": "Success: The recorded pickup adds the mushroom and one point."
+      }
+    ],
+    "stale_repeat_rejected": true,
+    "checkpoint_restore": true,
+    "restore_invalidates_token": true,
+    "inventory_observed": true,
+    "final_context": "phase-3",
+    "fresh_checkpoint_missing": true
+  },
+  "complete": true,
+  "final_export_scene_matches_tested_scene": true,
+  "final_export_provenance_sha256": "6fd9d60a14f98d83d5825ee9ba9c4c73d82156a72ba2463720dd4f1f75484104"
+}

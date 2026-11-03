@@ -1,0 +1,555 @@
+{
+  "format": "fdisbull-real-genesis-route-1",
+  "status": "passed",
+  "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "source_size": 524288,
+  "source_sha256_before": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "core_sha256": {
+    "nes": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+    "genesis": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268"
+  },
+  "source_hashes": {
+    "src/fdisbull/udl_genesis.py": "b5bd4442a7ee15a2623787368bc03fc6a3c6d299ee333803afcd9ff49bcfa908",
+    "src/fdisbull/console_udc.py": "03acfe52cdda33b962bf379d499be50918254e2d4057d290da38ecd55dc859b8",
+    "src/fdisbull/udc_nes.py": "12145fc14e0ac6e38b508cb8230ec843cccb5b9a63dad7a7e09b076b726fd9f1",
+    "src/fdisbull/interaction_il.py": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee",
+    "scripts/check_console_udc.py": "1d14efd1d35d3f0be44bb65d2e1ee04f1d3a0acff2124173dced54f9b9d87aa3",
+    "scripts/probe_genesis_function.py": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+    "scripts/verify_console_udc.py": "72b32161ffa87f11bff1871748d27eb8948fb4e1f4cdbbb13197759a9aa7d338",
+    "scripts/verify_genesis_rom_route.py": "733566c614fae7a7ff205b178fc988706c29f9f47199bb18c56afc0b7dbc26f7"
+  },
+  "scope": "controlled original-ROM function state projection to UIL and native NES; not a whole-game port",
+  "cases": [
+    {
+      "name": "type27_timer0_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "6ab8170a4e2b1b46f09c1521335c1889392cf62864114fa14ac4b731b04e7dac",
+      "rom_sha256": "07a3ce866a013ceca91f43358307e9f3b7994e13fc6e475f47c00cf47d2592c6",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "a622644df44fa77649467530a6baa8f572b24737dfc6dad9466155dc1b9f4733",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0016273749999982101,
+      "native_subprocess_seconds": 0.19736541700012822,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 27,
+        "$timer": 80
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 0
+        }
+      }
+    },
+    {
+      "name": "type27_timer1_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "e78df2c302f18833e6e65123518c3c76398d1d39956305e9ff1398675434054d",
+      "rom_sha256": "9a7d6ac7dfead8a53efaaad942deff81e776bc48c0d80c541893686bbbaf9884",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "e5ef84fc1b8db45b87c1db625b83fce556d843e21ad81d11e8021565c7615466",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0012247080001088761,
+      "native_subprocess_seconds": 0.1825618329999088,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 81
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 1
+        }
+      }
+    },
+    {
+      "name": "type27_timer2_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "7d17ea66c59dec7e36f15980c5e16703237f6bd42f2f29ae8f680141f0df8bdd",
+      "rom_sha256": "86883823babae7836a23c71178ac500c6900e925b40c10386a7776f0a895ae29",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "48f7c4aa6b2d4db1dce632ebd91a44e170e9b001eab9259fb57305c5f74f6eef",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0009309170000051381,
+      "native_subprocess_seconds": 0.17745966699999371,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 82
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 2
+        }
+      }
+    },
+    {
+      "name": "type27_timer60_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "ddc55d6ab6b204d016072c449b53f9892e07015d7290cffb14251004e0b6e3a4",
+      "rom_sha256": "fa920028d221492e70a4745d19f1982a2b90c17a141e5774403ec2882c27f397",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "76802108ab05cf90d342f863d03aca7c953f377c848ebc752557a70c99d1b0e2",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0011053749999518914,
+      "native_subprocess_seconds": 0.18720237499996983,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 140
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 60
+        }
+      }
+    },
+    {
+      "name": "type27_timer255_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "e6c75d78db960cff76f807b35be7a05ae48aedfe926c04ffdd33cce69f21e7e2",
+      "rom_sha256": "ad4c6bdfff27f993cd86fd0b0ac97a0bb86b65fc04b23a3ef99aeeb4ae2f734b",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "f20e854f1e6d26f660d501c1f01dff5c4ff0d41988bc939b7d739e30f51e0f1d",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0009287090001635079,
+      "native_subprocess_seconds": 0.18236237499991148,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 27,
+        "$timer": 79
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 255
+        }
+      }
+    },
+    {
+      "name": "type0_timer1_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "d881c24ce4c2e6dd7b78f14d9e914840ef85c428b5dd8ed2b655f2d39b7b9a63",
+      "rom_sha256": "3b86ea513e2ae82e8288d39d48f6b1b70ce8a7685321911b0b19ed8f51bf0e80",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "cc99c03fcbffc39f662f090decf7689a0a749696726b48150b9149f08aaa7a09",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0009290839998357114,
+      "native_subprocess_seconds": 0.18348391699987587,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 81
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 0
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 1
+        }
+      }
+    },
+    {
+      "name": "type255_timer1_bare_function",
+      "authored_dispatch_and_display": false,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "2362f69d678cfa708c9e4a126e2474432c8812d557ad49cc1e8d657073315a7b",
+      "rom_sha256": "597026ec63ad48162286912d8e5ae854f7daaa32c879d1c2aae93e5f9e4933ab",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "45be7802d76dfdc9d0272571470c25caff69894b347a49f433a367d07cb24c21",
+      "frame_sha256": "c2d6b90ad424053fa95d0530bb6a2cf37141d8e3aafe35367d06543a5ab79502",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0009688340001048346,
+      "native_subprocess_seconds": 0.17969375000006949,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": null,
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 43,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 81
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 255
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 1
+        }
+      }
+    },
+    {
+      "name": "type27_timer60_guarded_demo",
+      "authored_dispatch_and_display": true,
+      "original_cpu_transitions_checked": 176,
+      "target": "nes",
+      "program_sha256": "e1753bfb5c864bf88af50334e4a9bb7803377d9a564f91df9014a07c5a0bcc9f",
+      "rom_sha256": "2ae9e50fee69e1e390ae18435c73c30349f25737600314cf3ee8d0a878e7094e",
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a",
+      "trace_sha256": "2c7b308cb078fb54f924b6d7cb562e00c9d2991b0f397f65385bec13b13324c2",
+      "frame_sha256": "c05225eb40912a9c2a2919643f4e850da3896ea2dd090fb8c313fe9d5b27b5c6",
+      "ready_frame": 3,
+      "initial_ready_count": 0,
+      "checked_ticks": 176,
+      "compile_write_seconds": 0.0010157500000786968,
+      "native_subprocess_seconds": 0.2849687919999724,
+      "emulator_fps": 60.099826520671044,
+      "emulator_frames": 180,
+      "compiler_profile": {
+        "mapper": 0,
+        "prg_bytes": 32768,
+        "chr_bytes": 8192,
+        "variable_endian": "little",
+        "display_variable": "$x",
+        "frame_counter_endian": "little",
+        "screen": [
+          256,
+          240
+        ],
+        "logic_cycles_upper_bound": 70,
+        "max_logic_cycles": 1000
+      },
+      "final_state": {
+        "$object_type": 0,
+        "$timer": 0,
+        "$x": 0
+      },
+      "inputs": [],
+      "variables": {
+        "$object_type": {
+          "address": 768,
+          "width": 8,
+          "initial": 27
+        },
+        "$timer": {
+          "address": 769,
+          "width": 8,
+          "initial": 60
+        },
+        "$x": {
+          "address": 770,
+          "width": 8,
+          "initial": 60
+        }
+      }
+    }
+  ],
+  "native_probe_seconds": 7.265346165999972,
+  "lift": {
+    "profile": "m68000-native-memory-1",
+    "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "logic_sha256": "6ff53fee70281052c3f863f6226abf96c29b79ef651ce5dd67b782232d6fa713",
+    "logic_offset": 21716,
+    "logic_length": 12,
+    "cartridge_base": 0,
+    "bindings": {
+      "$object_type": {
+        "address": 16713876,
+        "width": 8,
+        "initial": 27
+      },
+      "$timer": {
+        "address": 16713879,
+        "width": 8,
+        "initial": 1
+      }
+    },
+    "address_registers": {
+      "A0": 16713876
+    },
+    "instruction_count": 4,
+    "scope": "declared RAM effects of bounded native function",
+    "excluded": [
+      "CCR output",
+      "RTS stack/control mechanics",
+      "natural game reachability",
+      "peripherals",
+      "timing",
+      "unbound CPU state"
+    ]
+  },
+  "lifted_uil_sha256": "e78df2c302f18833e6e65123518c3c76398d1d39956305e9ff1398675434054d",
+  "native_cases_checked": 768,
+  "mutant_mismatches": 768,
+  "native_instruction_count": 2307,
+  "native_master_cycle_total": 229670,
+  "native_trace_sha256": "ee2b062c2ddf643d17efc5a9ad2cde1c2b9570c5ca932a96ea2c10fb074d8b6c",
+  "native_to_nes_transitions_checked": 1408,
+  "inputs_unchanged": true,
+  "intake": {
+    "source": "https://github.com/sikthehedgehog/miniplanets",
+    "commit": "0ac9c395289cc5d0837c96d45e61a27300e8eebc",
+    "rom_name": "Miniplanets REMIX Ver (REV04).bin",
+    "rom_size": 524288,
+    "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "license_sha256": "1587f53da5e65656685332fbc1146fa31566d286f5ec6f976fc4674a4b1e3fe5",
+    "note": "Official upstream prebuilt game ROM; separate newly acquired private intake. Not a pre-existing local user cartridge.",
+    "pre_existing_local_rom": false
+  },
+  "host": {
+    "system": "Darwin",
+    "version": "27.2",
+    "machine": "arm64",
+    "python": "3.13.13"
+  },
+  "date": "2026-10-30",
+  "native_case_domain": {
+    "object_type": [
+      0,
+      27,
+      255
+    ],
+    "timer": {
+      "min": 0,
+      "max": 255,
+      "every_integer": true
+    },
+    "cases": 768
+  },
+  "native_probe_assumptions": [
+    "work RAM cleared to zero before declared seeds",
+    "all data/address registers cleared before declared inputs",
+    "supervisor mode, interrupt level masked to 7, IRQ pins clear",
+    "core hardware initialization at load; no ordinary game frames executed",
+    "raw Genesis RAM bytes are pair swapped for this exact core"
+  ],
+  "native_register_projection": {
+    "D0_D7_A0_A6_observed_unchanged": true,
+    "excluded": [
+      "SR/CCR",
+      "A7 and RTS return mechanics",
+      "hardware timing",
+      "natural gameplay reachability"
+    ]
+  },
+  "original_dispatch": {
+    "handler_table": 19068,
+    "type_index": 27,
+    "entry_address": 19176,
+    "handler_address": 21716,
+    "scan_objects_address": 19302,
+    "object_list_address": 16713876,
+    "slot_bytes": 4,
+    "slot_count": 48,
+    "source_attribution": "src-68k/objects.68k and variables.68k at intake commit",
+    "qualification": "static original-ROM dispatch corroboration; not a naturally reached gameplay trace"
+  },
+  "upstream_source_hashes": {
+    "LICENSE.txt": "1587f53da5e65656685332fbc1146fa31566d286f5ec6f976fc4674a4b1e3fe5",
+    "src-68k/springs.68k": "276739fedf54b34ec7eea380104f35f712b09c4d8685e056547faaf4c9e4a805",
+    "src-68k/objects.68k": "8f9e662e4a0daf0d5ee97b80cd297f3d8642dd4c64f885bf84b6cdd55851c7dc",
+    "src-68k/variables.68k": "f80f50361a991f0a32bf8f57d22cb9a68128ff7f64140673062c0d9d3c3baa3e"
+  },
+  "unmodified_boot": {
+    "rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "frames": 600,
+    "frame_rgb_sha256": "4d7c25ceac98ed3a2f9863f2463b9e97fdbb8132ca714e9c827ef7a51724a8ce",
+    "frame_png_sha256": "5c747570e93beb4f2a7a767994e1b74a9af51b1c66eac474186cdb08b6709261",
+    "width": 320,
+    "height": 224,
+    "observation": "Saved final frame inspected: Miniplanets REMIX title screen. This does not prove spring routine natural reachability."
+  },
+  "privacy": "No original ROM bytes, upstream assets, instruction bytes, recovered UIL, raw CPU/RAM traces, states or screenshots included. These remain in the separate private intake/experiment."
+}

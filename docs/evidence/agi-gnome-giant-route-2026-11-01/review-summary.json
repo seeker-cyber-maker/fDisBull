@@ -1,0 +1,39 @@
+{
+  "format": "fdisbull-agi-gnome-giant-review-1",
+  "parent": {
+    "mr": 21,
+    "head": "aeb0738d76795d705133f39ff278940fdef2cfce",
+    "archive_tests": "1114 passed, 3 skipped",
+    "scope": "No material finding in the inspected bounded recorded qualification; not a guarantee of arbitrary future route success.",
+    "review_sha256": "8bcf2a79a282e1255bc2bcd113fec3ad1fc3903a67e4ffa3ce3296455af7e876",
+    "later_operational_counterexample": "Native04 rat-prefix failure retained in attempts.json. Original recorded cave qualification remains separately verified."
+  },
+  "native02_audit_sha256": "95bb593348f3f191328af6e6c3d064ba93ae1634c88b57bedfaa42e558a9a9dc",
+  "native03_audit_sha256": "8928660e8096fc515c596d265d1a226e7996e2e551ff606add964231db9e5dfe",
+  "restored_component_audit_sha256": "a17f3beb2e175ef58f8ce2f6762c2eba7f671a916395b7fe1b043e2ccf0895ec",
+  "native05_final_audit": {
+    "verdict": "pass-restored-eight-action-scope",
+    "audit_sha256": "3fc572746df7302ba743bbae5eddb8ba40f1d78b2d6046e571449c3827919507",
+    "receipt_sha256": "771b1eca23c04e07b6d21e603145bc5e6f4e7d21f1709e914ab0d14dcd9c2275",
+    "source": "Closed-run independent checker; no guest or repository mutation.",
+    "eight_contiguous_actions": true,
+    "typed_completed_inputs": 1883,
+    "source_bound_completed_messages": 12,
+    "new_run_frame_artifacts": 25,
+    "motion_endpoints": 631,
+    "motion_after_access_stops": 865,
+    "scope": "One restored checkpoint and subsequent single-session eight-action segment; no cold-boot qualification."
+  },
+  "linux_ci": "No hosted ordinary/native pipeline attached; no CI success claimed.",
+  "independent_export_player": {
+    "passed": true,
+    "scene_byte_identical": true,
+    "provenance_byte_identical": true,
+    "raw_expected_states_match": true,
+    "player_receipt_sha256": "88f2dfefb29f7d4f40172a5569d40f4e0ec4d62b7fd48fa2e46caf9c37768282",
+    "installed_core_and_player": "0.28.0",
+    "native_fields": 40,
+    "phases": 9,
+    "scope": "Genuine isolated installed direct plus three content processes; in-memory checkpoints only."
+  }
+}

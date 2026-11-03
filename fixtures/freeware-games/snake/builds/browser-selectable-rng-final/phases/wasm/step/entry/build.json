@@ -1,0 +1,26 @@
+{
+  "format": "fdisbull-web-memory-block-1",
+  "target": "wasm32-memory-1",
+  "function": "step",
+  "module_uil_sha256": "03775611069728e4dd9749991805e554ceae5ef6a53d7e2a7750f038bac2cad2",
+  "execution": false,
+  "source_to_uil": false,
+  "abi": {
+    "format": "fdisbull-web-memory-abi-1",
+    "memory_words": 70000,
+    "word": "u32-le",
+    "max_steps": 4000000,
+    "status": {
+      "complete": 0,
+      "refused": 1
+    },
+    "report_steps": true,
+    "capture_locals": [
+      "$__fdisbull_cut_token"
+    ]
+  },
+  "artifacts": {
+    "block.wasm": "0069c846e461882b79095233b6ae4542274097a5a489ae1539569f0ee55d6cd2"
+  },
+  "scope": "one bounded-memory function; no services; atomic public arena result; original fidelity checked separately"
+}

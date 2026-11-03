@@ -1,0 +1,600 @@
+{
+  "format": "fdisbull-sanitized-goat-branch-traces-1",
+  "scope": "No raw bytes, register dumps or native-memory payloads; no completed-instruction claim.",
+  "traces": {
+    "water-refusal": {
+      "raw_trace_sha256": "1d6a4a1455c4f1168226dd46318549e4dc47081ee8e055c6d18b881b948dc1a6",
+      "count": 32,
+      "run_outcome": "pause",
+      "measured_guest_ms": 0,
+      "instruction_completion": "unknown; native fetch observations only",
+      "events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x00006DCF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "or   word [di+25],0010"
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x00006DD4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  ax,si"
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x00006DD6",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "pop  bp"
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x00006DD7",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "pop  di"
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x00006DD8",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "pop  si"
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x00006DD9",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "ret"
+        },
+        {
+          "sequence": 7,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "add  sp,0002"
+        },
+        {
+          "sequence": 8,
+          "address": {
+            "offset": "0x000002FD",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  si,ax"
+        },
+        {
+          "sequence": 9,
+          "address": {
+            "offset": "0x000002FF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "or   si,si"
+        },
+        {
+          "sequence": 10,
+          "address": {
+            "offset": "0x00000301",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "je   00000306 ($+3)"
+        },
+        {
+          "sequence": 11,
+          "address": {
+            "offset": "0x00000303",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "lodsb"
+        },
+        {
+          "sequence": 12,
+          "address": {
+            "offset": "0x00000304",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jmp  short 000002C4 ($-42)"
+        },
+        {
+          "sequence": 13,
+          "address": {
+            "offset": "0x000002C4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,FC"
+        },
+        {
+          "sequence": 14,
+          "address": {
+            "offset": "0x000002C6",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jnc  00000306 ($+3e)"
+        },
+        {
+          "sequence": 15,
+          "address": {
+            "offset": "0x00000306",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "ret"
+        },
+        {
+          "sequence": 16,
+          "address": {
+            "offset": "0x0000295F",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "test si,si"
+        },
+        {
+          "sequence": 17,
+          "address": {
+            "offset": "0x00002961",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jne  0000294B ($-18)"
+        },
+        {
+          "sequence": 18,
+          "address": {
+            "offset": "0x0000294B",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "test al,al"
+        },
+        {
+          "sequence": 19,
+          "address": {
+            "offset": "0x0000294D",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "je   00002963 ($+14)"
+        },
+        {
+          "sequence": 20,
+          "address": {
+            "offset": "0x0000294F",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,FF"
+        },
+        {
+          "sequence": 21,
+          "address": {
+            "offset": "0x00002951",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "je   0000296C ($+19)"
+        },
+        {
+          "sequence": 22,
+          "address": {
+            "offset": "0x0000296C",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "xor  bx,bx"
+        },
+        {
+          "sequence": 23,
+          "address": {
+            "offset": "0x0000296E",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "lodsb"
+        },
+        {
+          "sequence": 24,
+          "address": {
+            "offset": "0x0000296F",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,FC"
+        },
+        {
+          "sequence": 25,
+          "address": {
+            "offset": "0x00002971",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jc   0000298F ($+1c)"
+        },
+        {
+          "sequence": 26,
+          "address": {
+            "offset": "0x0000298F",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "push bx"
+        },
+        {
+          "sequence": 27,
+          "address": {
+            "offset": "0x00002990",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "call 000007E3 ($-21b0)"
+        },
+        {
+          "sequence": 28,
+          "address": {
+            "offset": "0x000007E3",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  [0941],si"
+        },
+        {
+          "sequence": 29,
+          "address": {
+            "offset": "0x000007E7",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "dec  word [0941]"
+        },
+        {
+          "sequence": 30,
+          "address": {
+            "offset": "0x000007EB",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,26"
+        },
+        {
+          "sequence": 31,
+          "address": {
+            "offset": "0x000007ED",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jnc  00000812 ($+23)"
+        },
+        {
+          "sequence": 32,
+          "address": {
+            "offset": "0x000007EF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "xor  bh,bh"
+        }
+      ]
+    },
+    "water-departure": {
+      "raw_trace_sha256": "4becb02096d59a21efde7cee06917558b11a05d3f8156bbf60e5acf2c3e6d7d4",
+      "count": 32,
+      "run_outcome": "pause",
+      "measured_guest_ms": 0,
+      "instruction_completion": "unknown; native fetch observations only",
+      "events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x00007434",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "ret"
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x000073C8",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  ax,si"
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x000073CA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "ret"
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "add  sp,0002"
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x000002FD",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  si,ax"
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x000002FF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "or   si,si"
+        },
+        {
+          "sequence": 7,
+          "address": {
+            "offset": "0x00000301",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "je   00000306 ($+3)"
+        },
+        {
+          "sequence": 8,
+          "address": {
+            "offset": "0x00000303",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "lodsb"
+        },
+        {
+          "sequence": 9,
+          "address": {
+            "offset": "0x00000304",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jmp  short 000002C4 ($-42)"
+        },
+        {
+          "sequence": 10,
+          "address": {
+            "offset": "0x000002C4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,FC"
+        },
+        {
+          "sequence": 11,
+          "address": {
+            "offset": "0x000002C6",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jnc  00000306 ($+3e)"
+        },
+        {
+          "sequence": 12,
+          "address": {
+            "offset": "0x000002C8",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,00"
+        },
+        {
+          "sequence": 13,
+          "address": {
+            "offset": "0x000002CA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "je   00000306 ($+3a)"
+        },
+        {
+          "sequence": 14,
+          "address": {
+            "offset": "0x000002CC",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  al,AD"
+        },
+        {
+          "sequence": 15,
+          "address": {
+            "offset": "0x000002CE",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jbe  000002DA ($+a)"
+        },
+        {
+          "sequence": 16,
+          "address": {
+            "offset": "0x000002DA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "cmp  word [1D06],0001"
+        },
+        {
+          "sequence": 17,
+          "address": {
+            "offset": "0x000002DF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "jne  000002ED ($+c)"
+        },
+        {
+          "sequence": 18,
+          "address": {
+            "offset": "0x000002ED",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "xor  bh,bh"
+        },
+        {
+          "sequence": 19,
+          "address": {
+            "offset": "0x000002EF",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  bl,al"
+        },
+        {
+          "sequence": 20,
+          "address": {
+            "offset": "0x000002F1",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "shl  bx,1"
+        },
+        {
+          "sequence": 21,
+          "address": {
+            "offset": "0x000002F3",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "shl  bx,1"
+        },
+        {
+          "sequence": 22,
+          "address": {
+            "offset": "0x000002F5",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "push si"
+        },
+        {
+          "sequence": 23,
+          "address": {
+            "offset": "0x000002F6",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "call near word [bx+061D]"
+        },
+        {
+          "sequence": 24,
+          "address": {
+            "offset": "0x000073BD",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "lodsb"
+        },
+        {
+          "sequence": 25,
+          "address": {
+            "offset": "0x000073BE",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "call 00007427 ($+66)"
+        },
+        {
+          "sequence": 26,
+          "address": {
+            "offset": "0x00007427",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "call 0000744A ($+20)"
+        },
+        {
+          "sequence": 27,
+          "address": {
+            "offset": "0x0000744A",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "xor  ah,ah"
+        },
+        {
+          "sequence": 28,
+          "address": {
+            "offset": "0x0000744C",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "mov  bx,ax"
+        },
+        {
+          "sequence": 29,
+          "address": {
+            "offset": "0x0000744E",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "shr  bx,1"
+        },
+        {
+          "sequence": 30,
+          "address": {
+            "offset": "0x00007450",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "shr  bx,1"
+        },
+        {
+          "sequence": 31,
+          "address": {
+            "offset": "0x00007452",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "shr  bx,1"
+        },
+        {
+          "sequence": 32,
+          "address": {
+            "offset": "0x00007454",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "instruction": "add  bx,0109"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,377 @@
+{
+  "kind": "frozen-authored-replica-source-snapshot",
+  "canonical_project": "SimpleMenuStatusReplica",
+  "canonical_commit": "7fdfbb94d2e509dd30b0805b694c0e2f9fe5c454",
+  "canonical_tree": "13e37d545b8d8dfb1b8b7ebf08bd377600763251",
+  "source_files": [
+    {
+      "file": ".gitignore",
+      "mode": "644",
+      "bytes": 35,
+      "sha256": "0e6e427154d24a17ce75b2af3e297d8c607eebac445b845151a8a49c3a280739"
+    },
+    {
+      "file": "PARITY.md",
+      "mode": "644",
+      "bytes": 12077,
+      "sha256": "38225599837db930f7a23e5c3567e50fe2b56874646c6502fea578a3882ebd97"
+    },
+    {
+      "file": "Package.swift",
+      "mode": "644",
+      "bytes": 351,
+      "sha256": "77d11ce0bdccc5df39c9aeac24c7f37783826cefbdb1fb65257c6021c9c832f4"
+    },
+    {
+      "file": "README.md",
+      "mode": "644",
+      "bytes": 13619,
+      "sha256": "e94431173792b09ffb915e1a392804b10331fc988f44d1630ce9446771438763"
+    },
+    {
+      "file": "REFERENCE-OMLX.md",
+      "mode": "644",
+      "bytes": 2435,
+      "sha256": "83c38201afc9f779f0260ced93f90c90965101b83e90ad76639cc2f4005ebf3e"
+    },
+    {
+      "file": "Sources/StatusCore/AlertPolicy.swift",
+      "mode": "644",
+      "bytes": 3016,
+      "sha256": "6b66c945a9ef488a012cdd3157a620c4ddb3606e9dc7cc6577da7d581b63fe65"
+    },
+    {
+      "file": "Sources/StatusCore/AlertReadings.swift",
+      "mode": "644",
+      "bytes": 1142,
+      "sha256": "d9702577df762081ec54c17b84a971dd9fc652387ed64da4e0d46a73d60b411a"
+    },
+    {
+      "file": "Sources/StatusCore/AppCacheCleanup.swift",
+      "mode": "644",
+      "bytes": 4891,
+      "sha256": "0488b9f6b4a3ac2dea9e87d97ade210b58037dd8c5d13544403a590b7358dabd"
+    },
+    {
+      "file": "Sources/StatusCore/GPUMetrics.swift",
+      "mode": "644",
+      "bytes": 4677,
+      "sha256": "b9ec9158be5fac1fa28768405f54c87036019598a2127aeb00a683cdad87f059"
+    },
+    {
+      "file": "Sources/StatusCore/IndicatorHealth.swift",
+      "mode": "644",
+      "bytes": 2274,
+      "sha256": "d70ab7ea94bb591dd3c9a0679c676a323c2085e26fae60883e66a662cd498ae1"
+    },
+    {
+      "file": "Sources/StatusCore/LoginItem.swift",
+      "mode": "644",
+      "bytes": 7563,
+      "sha256": "a4783fdb58c1e5f497025a87a13a1766c314bc2f0174de6e7aa76422b9723f5a"
+    },
+    {
+      "file": "Sources/StatusCore/MemoryMood.swift",
+      "mode": "644",
+      "bytes": 1234,
+      "sha256": "3e30b41bb3f523d71d07abfd4b1907a15366972eaf3c7cf250c68bbf611b9c1e"
+    },
+    {
+      "file": "Sources/StatusCore/NetworkMetrics.swift",
+      "mode": "644",
+      "bytes": 4827,
+      "sha256": "603ee6f2eb8ca86abd4bd77f83e0525d25b1f80489b9d39f760a88bb262c80f6"
+    },
+    {
+      "file": "Sources/StatusCore/ProcessCaffeine.swift",
+      "mode": "644",
+      "bytes": 9864,
+      "sha256": "bf8483f283a08bd3be38fda57c408e4c30026439986dc5e80f2a09f4b9f4daa0"
+    },
+    {
+      "file": "Sources/StatusCore/ProcessWatch.swift",
+      "mode": "644",
+      "bytes": 3824,
+      "sha256": "f8be04b5cef5162feae83f879a2bc2e4f5ee897177b251c2aee6eda2c500055b"
+    },
+    {
+      "file": "Sources/StatusCore/PublicIP.swift",
+      "mode": "644",
+      "bytes": 2600,
+      "sha256": "69f703e39f05fb69615fff72aae7d029f8afac7a7b6b2aaf3ec80a29c8fc2f00"
+    },
+    {
+      "file": "Sources/StatusCore/ReplicaPreferences.swift",
+      "mode": "644",
+      "bytes": 2451,
+      "sha256": "9e3ac4bac7f9ddbdb74a13ec4ee2557cda87fe0a0008df825b52b386962ea459"
+    },
+    {
+      "file": "Sources/StatusCore/StorageCategoryScan.swift",
+      "mode": "644",
+      "bytes": 9832,
+      "sha256": "b311558968736e4fa25b6501e8ba68cc1dd1dc50cb37d70ffb5a225dabe8ad8d"
+    },
+    {
+      "file": "Sources/StatusCore/StorageMetrics.swift",
+      "mode": "644",
+      "bytes": 3104,
+      "sha256": "fc68844f62a42f5a9ca1952b864a9677d850650e1c00bc43f05d4c73313de119"
+    },
+    {
+      "file": "Sources/StatusCore/SystemDetails.swift",
+      "mode": "644",
+      "bytes": 11011,
+      "sha256": "22095cd97b54e04dc9a5b20ca215ca3f2d581e18c3527caf79871bd6472f0d67"
+    },
+    {
+      "file": "Sources/StatusCore/VPNStatus.swift",
+      "mode": "644",
+      "bytes": 4402,
+      "sha256": "d80680ee2f5a5c7148ceb13ec9c722380eff621f0c7a38298bbfce1ff1842d43"
+    },
+    {
+      "file": "Sources/StatusReplica/CPUBarGraph.swift",
+      "mode": "644",
+      "bytes": 2738,
+      "sha256": "7decb9c2a87970d411b83402275a1f12cd25197a5afc9a1b0d6cefb6f1189a09"
+    },
+    {
+      "file": "Sources/StatusReplica/LocalAIView.swift",
+      "mode": "644",
+      "bytes": 10290,
+      "sha256": "37ef6f5777a3c73a369859af4974fa241d7b52cb3e4d15d3d2712c9421c2bc3a"
+    },
+    {
+      "file": "Sources/StatusReplica/ReplicaLocalization.swift",
+      "mode": "644",
+      "bytes": 985,
+      "sha256": "994366a0c0e6146af1ff934e4cef31293d28f7c7f222d14ed6acb7517a114ac0"
+    },
+    {
+      "file": "Sources/StatusReplica/Resources/ja.lproj/Localizable.strings",
+      "mode": "644",
+      "bytes": 9602,
+      "sha256": "64c4c0acfd7304090836555bf1aa62de691a85b475824dbea98fb7d9f77325c9"
+    },
+    {
+      "file": "Sources/StatusReplica/ShareImage.swift",
+      "mode": "644",
+      "bytes": 6563,
+      "sha256": "ea77be5fda313c8df8fa33e7d60cb35df35df0d7f29ae6ffc5bfd219440ff87d"
+    },
+    {
+      "file": "Sources/StatusReplica/main.swift",
+      "mode": "644",
+      "bytes": 79019,
+      "sha256": "fc2a2bd8c13417dc7d1bc6684c6f0e27d6f16774fb4266380e0160a3dfce66d1"
+    },
+    {
+      "file": "Tests/AlertChecks/main.swift",
+      "mode": "644",
+      "bytes": 2289,
+      "sha256": "c997ca404f5c7ef01874ce562a7ebf9804caa17953ae5ec11cc6f5f623526bad"
+    },
+    {
+      "file": "Tests/CPUBarGraphChecks/main.swift",
+      "mode": "644",
+      "bytes": 4333,
+      "sha256": "4ac36d7dfedc81f981fd6cec516240eb9b79f550b5f81edc4e2c40d317dbcc44"
+    },
+    {
+      "file": "Tests/CacheChecks/main.swift",
+      "mode": "644",
+      "bytes": 2060,
+      "sha256": "569a7d7f4a40b5cfceb9850e2f629945ff33febae968f0b91897928399aa8eef"
+    },
+    {
+      "file": "Tests/CombinedIconChecks/main.swift",
+      "mode": "644",
+      "bytes": 3274,
+      "sha256": "c35c32a2f8b8adec1798a3ce069cf94616d3cc3d233effd6bc98b1107efaa805"
+    },
+    {
+      "file": "Tests/GPUChecks/main.swift",
+      "mode": "644",
+      "bytes": 1427,
+      "sha256": "bc741ad46bcb8890198e3b3c428827ac92487a19f34e151b0c457cfde4835253"
+    },
+    {
+      "file": "Tests/IndicatorHealthChecks/main.swift",
+      "mode": "644",
+      "bytes": 1221,
+      "sha256": "dc71341ac3ab3cf5e3b7cffb37d25346fb0ad2fbdb83129332b5ddb329c2b218"
+    },
+    {
+      "file": "Tests/LoginItemChecks/main.swift",
+      "mode": "644",
+      "bytes": 2664,
+      "sha256": "7d07914a3a7e0e907af73a9476e3cc3beaf62e959da2c368aa8f15a36445a129"
+    },
+    {
+      "file": "Tests/NetworkChecks/main.swift",
+      "mode": "644",
+      "bytes": 518,
+      "sha256": "196b35981e0d95319894190f6bcbd911fc1f2a82b82684c9bb15dfcab6562f53"
+    },
+    {
+      "file": "Tests/PreferencesChecks/main.swift",
+      "mode": "644",
+      "bytes": 2273,
+      "sha256": "ce6b4cf4fcf96bec07b53da395c3e2e43ae0c53bc2c6f9d0bd7cb740b44431f8"
+    },
+    {
+      "file": "Tests/PressureChecks/main.swift",
+      "mode": "644",
+      "bytes": 748,
+      "sha256": "8313a7f4948bf2fbb88065d794093b043b22fa5f5251a1d40087bbd9d4a36fad"
+    },
+    {
+      "file": "Tests/ProcessCaffeineChecks/main.swift",
+      "mode": "644",
+      "bytes": 2683,
+      "sha256": "ae537353f20c5583abea5c9a6ec7b7838bd6da9e72bd8b301024142da7281081"
+    },
+    {
+      "file": "Tests/ProcessWatchChecks/main.swift",
+      "mode": "644",
+      "bytes": 2116,
+      "sha256": "7daac17990d6c4b8e513085be02698b94fe4cd7c84324b962e4c1bdcc91f4da5"
+    },
+    {
+      "file": "Tests/PublicIPChecks/main.swift",
+      "mode": "644",
+      "bytes": 661,
+      "sha256": "682dcbc2b890e211dbd8bfd08c8429efba36d52199ee5690403b581d5e3bda5c"
+    },
+    {
+      "file": "Tests/ShareChecks/main.swift",
+      "mode": "644",
+      "bytes": 1867,
+      "sha256": "ac28a20b111c37160d9d9479cedd229208768f1f20690028b8f4af825478f83d"
+    },
+    {
+      "file": "Tests/StorageCategoryChecks/main.swift",
+      "mode": "644",
+      "bytes": 4435,
+      "sha256": "222370fb163e925892b4e25a7d582646f5a728fee831bbbc6b21825e2a8e50c5"
+    },
+    {
+      "file": "Tests/StorageChecks/main.swift",
+      "mode": "644",
+      "bytes": 1411,
+      "sha256": "eeef9b73edbcf2bdec8f36dce2647d3702e3f160980736588e798da78bb35b45"
+    },
+    {
+      "file": "Tests/SystemDetailsChecks/main.swift",
+      "mode": "644",
+      "bytes": 3534,
+      "sha256": "c5860efd8d2690e2750a65591ba329eefd7a483594820cb8442f0756d37695f2"
+    },
+    {
+      "file": "Tests/VPNChecks/main.swift",
+      "mode": "644",
+      "bytes": 885,
+      "sha256": "a18e9624b906d87d73498a52504e8c41341427e74f5ec22b61e9fd4db18e77dc"
+    },
+    {
+      "file": "build-app.sh",
+      "mode": "755",
+      "bytes": 1223,
+      "sha256": "9f5f527310ec68cf405222c8df5b969c18c4abe8e824eadb5dd389a363ab8dfd"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/.gitignore",
+      "mode": "644",
+      "bytes": 13,
+      "sha256": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/FEATURE_RECOMMENDATIONS.md",
+      "mode": "644",
+      "bytes": 4185,
+      "sha256": "1bce46d24d2bf6c982cc88e687a69a4cf3dfa2e6f9bf9df48d1a1fd7a0ef3b56"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/README.md",
+      "mode": "644",
+      "bytes": 5676,
+      "sha256": "8af1c7f6879153b9586b57d204d7b03ed46dd707e824ca937931f33c5f01a538"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/build_candidate.py",
+      "mode": "644",
+      "bytes": 16344,
+      "sha256": "0200a165afb7f3ebb5f36391cb225cfa1aef063234beb92792c5da7a1d21e4f3"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/candidate.uil.json",
+      "mode": "644",
+      "bytes": 32114,
+      "sha256": "6420a368faa46ebc35ab45d8b6899d6279ec5a7061c0a8e58e00d1e84b98dcb3"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/contract.json",
+      "mode": "644",
+      "bytes": 6127,
+      "sha256": "834aba0aaf7eb0aacf996fc6e434e0da65cf0aae0331980993cfce4e3e6ff12a"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/manifest.json",
+      "mode": "644",
+      "bytes": 2294,
+      "sha256": "ff997f7b3c43d954e15b793b823726a5a2b8ee97d54bf16b8bf67f953ec047a1"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/observations.json",
+      "mode": "644",
+      "bytes": 1845,
+      "sha256": "8e8905a1eecbcbd2b7582ceab240d7dd648236efc43ad223c178f21d2de9d27e"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/original-identity.json",
+      "mode": "644",
+      "bytes": 988,
+      "sha256": "f09007ac1abae7017df79a0265ff0c4790da9c626c605429f6e70c172d0a38c6"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/sample.run.json",
+      "mode": "644",
+      "bytes": 7139,
+      "sha256": "985e46b32aa6d2d7f16b0a00d5ee642e35165fd8745f8fb77729418c2e9effb1"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/sample.state.json",
+      "mode": "644",
+      "bytes": 651,
+      "sha256": "b7f7108cc4293a9bea779adb895f3f4f3a77c8f680d5c7fffa0f3445118d3e0f"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/verification.json",
+      "mode": "644",
+      "bytes": 9431,
+      "sha256": "c8d38fa838fc62f6be0c7c9bc7ea6b2cd909ee045c99489045b6f079cd681cab"
+    },
+    {
+      "file": "experiments/uil/simple-menu-status/verify.py",
+      "mode": "644",
+      "bytes": 12360,
+      "sha256": "ba4204be9635954765e3239a6cba392f466e25788c511e6fba20c67a37bf7a71"
+    },
+    {
+      "file": "test.sh",
+      "mode": "755",
+      "bytes": 2994,
+      "sha256": "edb4b8c500d348b7e29196ce457a6dfdf4643aa167de3624726e40d1b8e3f0ca"
+    }
+  ],
+  "source_copy_transformed": false,
+  "original_binary_or_resources": false,
+  "compiled_app_or_fdb_or_raw_capture": false,
+  "scope": "Authored native app source and checks; no whole-app equivalence or automatic native-to-UIL claim",
+  "historical_uil": {
+    "subtree": "experiments/uil/simple-menu-status",
+    "basis_commit": "d427292",
+    "scope": "Retained earlier authored model/receipts; graph controls and native equivalence not qualified by that model"
+  }
+}

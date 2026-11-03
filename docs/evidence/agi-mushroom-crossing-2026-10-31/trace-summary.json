@@ -1,0 +1,41 @@
+{
+  "format": "fdisbull-agi-mushroom-trace-summary-1",
+  "traces": [
+    {
+      "run": "native-01",
+      "raw_sha256": "10d37c4133afcce5c236ce16dd95e944b92ad6e8bed03c2d02f846e906a0344e",
+      "event_count": 68,
+      "maximum_count": 128,
+      "first_fetch": {
+        "offset": "0x000072DE",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "last_fetch": {
+        "offset": "0x000002FA",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "handler_return_observed": true,
+      "scope": "Fetch observations; writes and original handler return were separately observed. Individual fetch completion not guaranteed."
+    },
+    {
+      "run": "native-02",
+      "raw_sha256": "5cd13aeeaea1367215e0474dd69410ac6e36d01b5270cc458745bfc0d11e1fa5",
+      "event_count": 68,
+      "maximum_count": 128,
+      "first_fetch": {
+        "offset": "0x000072DE",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "last_fetch": {
+        "offset": "0x000002FA",
+        "segment": "0x0EFB",
+        "space": "segmented"
+      },
+      "handler_return_observed": true,
+      "scope": "Fetch observations; writes and original handler return were separately observed. Individual fetch completion not guaranteed."
+    }
+  ]
+}

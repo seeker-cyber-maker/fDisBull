@@ -1,0 +1,35 @@
+{
+  "format": "miniplanets-common-uil-original-cpu-1",
+  "status": "passed",
+  "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "program_sha256": "c1fb862a41f613b2eaa3125b08244d3c0e8ef73473da5b5359cbfaf308b0dd6a",
+  "source_hashes": {
+    "src/fdisbull/game_sources/miniplanets_full.c": "5d0e171b074b784887df27e06ca122cb99147fc13d8fcae84724bd526017bc58",
+    "src/fdisbull/game_sources/miniplanets_actors.c": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b",
+    "src/fdisbull/game_il.py": "bffa76d822c3bff6947eda8631c672c215a50ee406575d416f86a9b13c7c07ac",
+    "src/fdisbull/data/miniplanets_full_contract.json": "ddc536edc889d58252a1c24e217b55be3caa21d60901b2975b16cfa235513040",
+    "scripts/check_miniplanets_common_native.py": "88dd49159a67527dc87ce26299c289773abaeab3fb526b4376e144ea9365f369",
+    "scripts/probe_genesis_function.py": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1"
+  },
+  "tree_sha256": "4dedfae8da10f4cb137572e9c65e971c1b84a0fee8f25d12386a4a6480cb023c",
+  "native_instructions": 146905,
+  "native_master_cycles": 11665122,
+  "counts": {
+    "update_subpixel": 256,
+    "run_player": 1252,
+    "add_score": 250,
+    "run_tally": 120,
+    "run_ending": 108,
+    "update_password_dial": 197,
+    "update_clear_all": 135,
+    "update_credits_text": 180,
+    "update_level_timer": 180
+  },
+  "first_divergence": null,
+  "qualification": "controlled component entries; not natural whole-game completion",
+  "uil_steps": 590049,
+  "inputs_unchanged": true,
+  "raw_artifacts": "Original-byte-retaining inputs, contracts and CPU traces retained privately outside Git.",
+  "total_cases": 2678
+}

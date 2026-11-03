@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-dragon-source-review-summary-1",
+  "material_finding": {
+    "priority": "P2",
+    "component": "examples/agi/build_dragon_mirror_scene.py",
+    "mechanism": "A later state variable shadowed computed underwater PIC provenance in the emitted evidence.",
+    "fixed": true,
+    "before_candidate_sha256": "f0015b2fcaf5d62494ab9dc8481e277836dce6723b235ce99354c62767715e7b",
+    "before_candidate_reconstructed_and_hash_verified": true,
+    "regression": "Full-schema PIC52 hash/origin/footprint/priority checks failed before the narrow naming fix and passed after it."
+  },
+  "initial_source_review_receipt_sha256": "62d7e8b41e9419e010f142efe1142889c2fb9a0b4bbb9d7dff873f944dc9b273",
+  "provenance_regression_receipt_sha256": "b910d2b79258e294e014d1a893a9662310e32e9782760ac15d4a130deb9ba161",
+  "final_native_and_export_review_receipt_sha256": "b992e6830f99c462262f909427cba198d6de292f2ccb111d0aa352d72cdd6206",
+  "final_current_collector_sha256": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+  "final_builder_sha256": "45c66014cff3260aaacc26b7b4d0fa2c0dc746b9ccdf03cc693b6da5e966c084",
+  "final_tests_sha256": "27bb39159d23034ece3ba7d13f42e8bb88de687b0495a9f09322286a24939baa",
+  "no_unresolved_material_findings_in_declared_final_scope": true
+}

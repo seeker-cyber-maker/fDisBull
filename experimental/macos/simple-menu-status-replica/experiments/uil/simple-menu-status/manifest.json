@@ -1,0 +1,71 @@
+{
+  "kind": "experimental-artifact-inventory-not-a-new-uil-contract",
+  "status": "authored_candidate",
+  "uil_format": "fdisbull-il-1",
+  "uil_sha256": "648336648e498f8950d7e4b1c75f46d7503ad4450ab023298e20d243445a9fa3",
+  "files": [
+    {
+      "file": ".gitignore",
+      "bytes": 13,
+      "sha256": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b"
+    },
+    {
+      "file": "FEATURE_RECOMMENDATIONS.md",
+      "bytes": 4185,
+      "sha256": "1bce46d24d2bf6c982cc88e687a69a4cf3dfa2e6f9bf9df48d1a1fd7a0ef3b56"
+    },
+    {
+      "file": "README.md",
+      "bytes": 5676,
+      "sha256": "8af1c7f6879153b9586b57d204d7b03ed46dd707e824ca937931f33c5f01a538"
+    },
+    {
+      "file": "build_candidate.py",
+      "bytes": 16344,
+      "sha256": "0200a165afb7f3ebb5f36391cb225cfa1aef063234beb92792c5da7a1d21e4f3"
+    },
+    {
+      "file": "candidate.uil.json",
+      "bytes": 32114,
+      "sha256": "6420a368faa46ebc35ab45d8b6899d6279ec5a7061c0a8e58e00d1e84b98dcb3"
+    },
+    {
+      "file": "contract.json",
+      "bytes": 6127,
+      "sha256": "834aba0aaf7eb0aacf996fc6e434e0da65cf0aae0331980993cfce4e3e6ff12a"
+    },
+    {
+      "file": "observations.json",
+      "bytes": 1845,
+      "sha256": "8e8905a1eecbcbd2b7582ceab240d7dd648236efc43ad223c178f21d2de9d27e"
+    },
+    {
+      "file": "original-identity.json",
+      "bytes": 988,
+      "sha256": "f09007ac1abae7017df79a0265ff0c4790da9c626c605429f6e70c172d0a38c6"
+    },
+    {
+      "file": "sample.run.json",
+      "bytes": 7139,
+      "sha256": "985e46b32aa6d2d7f16b0a00d5ee642e35165fd8745f8fb77729418c2e9effb1"
+    },
+    {
+      "file": "sample.state.json",
+      "bytes": 651,
+      "sha256": "b7f7108cc4293a9bea779adb895f3f4f3a77c8f680d5c7fffa0f3445118d3e0f"
+    },
+    {
+      "file": "verification.json",
+      "bytes": 9431,
+      "sha256": "c8d38fa838fc62f6be0c7c9bc7ea6b2cd909ee045c99489045b6f079cd681cab"
+    },
+    {
+      "file": "verify.py",
+      "bytes": 12360,
+      "sha256": "ba4204be9635954765e3239a6cba392f466e25788c511e6fba20c67a37bf7a71"
+    }
+  ],
+  "inventory_sha256": "a795105bedfc4f2eb59aded24cacedfaf2c3d16dafc2c8e04609cf0700791205",
+  "original_binary_bytes_included": false,
+  "claim_ceiling": "model execution and nine replica-source projections; original native equivalence unproved"
+}

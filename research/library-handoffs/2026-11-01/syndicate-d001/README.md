@@ -1,5 +1,10 @@
 # Syndicate D001: manifest-bound status additions
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 The 19,490-byte D001 archive has SHA-256
 `fe6a782f1d060f035a93c0738b06ea3449c43fbacab7addb86a23336629a84e5`.
 Its exact parent is `SYNDICATE-F001-20261101`, manifest SHA-256

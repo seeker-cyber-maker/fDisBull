@@ -1,0 +1,55 @@
+{
+  "final_passed": 10,
+  "details": [
+    {
+      "bytes": "6683f910777f31c06689c8ff248500200000",
+      "guard_index": 0,
+      "expected": "unsat",
+      "actual": "unsat"
+    },
+    {
+      "bytes": "6683f910777f6689c8ff248500200000",
+      "guard_index": 0,
+      "expected": "sat",
+      "actual": "sat"
+    },
+    {
+      "bytes": "8a530380fa0c777f31c08a4303ff248500200000",
+      "guard_index": 1,
+      "expected": "unsat",
+      "actual": "unsat"
+    },
+    {
+      "bytes": "8a530380fa0c777f31c0438a4303ff248500200000",
+      "guard_index": 1,
+      "expected": "sat",
+      "actual": "sat"
+    },
+    {
+      "bytes": "80fe03777f88f281e2ff000000ff249500200000",
+      "guard_index": 0,
+      "expected": "unsat",
+      "actual": "unsat"
+    },
+    {
+      "bytes": "8a660d8954240880fc3a777f31c08a460dff248500200000",
+      "guard_index": 2,
+      "expected": "sat",
+      "actual": "sat"
+    },
+    {
+      "bytes": "6683fa05777f31c06689d0890c24ff248500200000",
+      "guard_index": 0,
+      "expected": "unsat",
+      "actual": "unsat"
+    },
+    {
+      "bytes": "80fa10777f88d025ff0000008d148500000000ffa200200000",
+      "guard_index": 0,
+      "expected": "unsat",
+      "actual": "unsat"
+    }
+  ],
+  "vacuity_refused": true,
+  "address_override_refused": true
+}

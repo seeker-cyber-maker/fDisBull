@@ -160,22 +160,45 @@ class DOSBoxRPC:
                 continue
 
     def _close_pipes(self):
+        failure = None
         for name in ('reader','writer'):
             fd = getattr(self,name,None)
             if fd is not None:
-                os.close(fd)
                 setattr(self,name,None)
+                try:
+                    os.close(fd)
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
+        if failure is not None:
+            raise failure
 
     def close(self):
-        self._close_pipes()
-        if self.process is not None:
-            if self.process.poll() is None:
-                self.process.terminate()
+        failure = None
+        try:
+            self._close_pipes()
+        except BaseException as error:
+            failure = error
+        try:
+            if self.process is not None:
+                if self.process.poll() is None:
+                    self.process.terminate()
+                    try:
+                        self.process.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        self.process.kill()
+                self.process.wait(timeout=2)
+        except BaseException as error:
+            if failure is None:
+                failure = error
+        finally:
+            if self.temporary is not None:
                 try:
-                    self.process.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    self.process.kill()
-            self.process.wait(timeout=2)
-        if self.temporary is not None:
-            self.temporary.cleanup()
-            self.temporary = None
+                    self.temporary.cleanup()
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
+                else:
+                    self.temporary = None
+        if failure is not None:
+            raise failure

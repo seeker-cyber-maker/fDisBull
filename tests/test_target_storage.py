@@ -6,7 +6,7 @@ import sqlite3
 
 import pytest
 
-from fdisbull.cli import invoke
+from fdisbull.cli import invoke, respond
 from fdisbull.project import Project
 from fdisbull.target_storage import PREFIX, TargetStore, identity, reference, storage_report
 
@@ -222,6 +222,16 @@ def test_missing_candidate_does_not_attach_or_implicitly_create_analysis(target,
             db.bind_source(tmp_path / 'missing.bin')
         assert len(db.versions()) == 1
         assert db.source_info()['identity'] == identity(CODE)
+
+
+def test_source_info_inherits_serve_project_without_catalog(target):
+    project, source = target
+    response = respond(
+        {'method': 'source-info', 'params': {'version': 1}},
+        default_project=str(project),
+    )
+    assert response['ok'], response
+    assert response['result']['identity'] == identity(CODE)
 
 
 def test_cli_fresh_process_reopen_and_exact_source_binding(target):

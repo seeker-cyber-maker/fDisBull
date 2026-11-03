@@ -1,4 +1,4 @@
-# Reusable debugger routes and native checkpoints
+# Reusable debugger routes and Anchor Stones
 
 Version 0.16.0 adds [guest keyboard input](GUEST_KEYBOARD.md) through
 `keyboard.press`, `keyboard.type` and `keyboard.state`, plus explicit bounded
@@ -13,7 +13,11 @@ This page's segmented addresses, DOS register names and inline serializer descri
 
 The 0.11.0 [code-layer API](CODE_LAYERS.md) adds ordered RAM patches, execution-only overlays, temporal code captures, and bounded breakpoint actions. Those operations require the separate layers backend; the published 0.10.0 backend remains available for the original state/script/watchpoint API.
 
-A native checkpoint is an editable machine-state artifact, like a restorable crash dump. It can be inspected, forked with explicit RAM/register changes, and reinjected into a compatible debugger session.
+A full native saved state is called an **Anchor Stone**, a reference to TiGa's
+Blob to General game. It is an editable machine-state artifact, like a restorable
+crash dump, that can be inspected, forked with explicit RAM/register changes and
+restored in a compatible debugger session. [Anchor Stones](ANCHOR_STONES.md)
+provide a direct return point; delta rewind follows recorded changes.
 
 A route is a bounded JSON script executed by the foreground debugger owner. It can navigate menus, load an in-game save with mouse clicks, set breakpoints, run until a hit, capture evidence, and restore an emulator checkpoint within the same run. No Python, shell commands, expressions, or arbitrary RPC calls execute from a route.
 
@@ -38,25 +42,29 @@ The existing `fdisbull serve --project PROJECT` and `fdisbull debug PROJECT --ex
 | `debug-save-script` | `name`, `script`, optional `version` | Immutable script ID and SHA-256, stored with the project version |
 | `debug-scripts` | Optional `version` | Saved script identities |
 | `debug-script` | `run`, exactly one of `script` or `script_id`, optional `timeout_ms` | Step results and saved execution-report artifact |
-| `debug-save-state` | `run`, optional `name` | Native state artifact ID |
-| `debug-load-state` | `run`, `artifact` | Restored CPU identity and restore-history event |
-| `debug-state-info` | `artifact` | Offline native-component sizes, saved registers, identity, and derivation |
+| `debug-save-anchor-stone` | `run`, optional `name`, `max_bytes` | Full native Anchor Stone artifact; payload budget where supported |
+| `debug-load-anchor-stone` | `run`, `artifact` | Direct restore with CPU identity and restore-history event |
+| `debug-anchor-stone-info` | `artifact` | Offline native-component sizes, saved registers, identity, and derivation |
 | `debug-fork-state` | `artifact`, `executable`, `game_dir`, optional `name`, `memory`, `registers` | Derived native checkpoint captured in an isolated paused emulator |
 | `debug-memory` | `run`, `address`, optional `cs`, `length` | Runtime bytes at a mapped project address |
 | `debug-breakpoint` | `run`, `address`, optional `cs`, `access`, `length` | Execution breakpoint or a group of byte-address data watches |
 
 Saved scripts can also be listed with `fdisbull debug-scripts PROJECT`. `fdisbull debug-save-script PROJECT NAME 'JSON'` stores one without launching the emulator. Python callers use `project.debug_save_script`, `project.debug_scripts`, `debug.script`, `debug.save_state`, `debug.load_state`, and `debug.memory`.
 
-A script uses `format: "fdisbull-script-1"` and a `steps` array. Supported `op` values are `run`, `click`, `screenshot`, `trace`, `breakpoint`, `delete-breakpoint`, `save-state`, `load-state`, `registers`, `memory`, `status`, `assert`, and `repeat`. Other fields are the corresponding Python method's keyword arguments. `as` names a result; a string such as `$checkpoint.artifact` substitutes that result field in a later step. List indices also work, for example `$watch.breakpoints.0.breakpoint_id`. References are values, with no expression evaluation or string interpolation.
+Canonical Python save/load names are `debug.save_anchor_stone()` and
+`debug.load_anchor_stone()`. Older `debug-save-state`, `debug-load-state`,
+`debug-state-info` and Python state names remain compatible; formats are unchanged.
+
+A script uses `format: "fdisbull-script-1"` and a `steps` array. Supported `op` values include `run`, `click`, `screenshot`, `trace`, `breakpoint`, `delete-breakpoint`, `save-anchor-stone`, `load-anchor-stone`, `registers`, `memory`, `status`, `assert`, and `repeat`; legacy `save-state` and `load-state` remain supported. Other fields are the corresponding Python method's keyword arguments. `as` names a result; a string such as `$stone.artifact` substitutes that result field in a later step. List indices also work, for example `$watch.breakpoints.0.breakpoint_id`. References are values, with no expression evaluation or string interpolation.
 
 ```json
 {
   "format": "fdisbull-script-1",
   "steps": [
-    {"op": "save-state", "as": "checkpoint"},
+    {"op": "save-anchor-stone", "as": "stone"},
     {"op": "repeat", "count": 3, "steps": [
       {"op": "run", "guest_ms": 1000, "timeout_ms": 5000, "fast_forward": true},
-      {"op": "load-state", "artifact": "$checkpoint.artifact"}
+      {"op": "load-anchor-stone", "artifact": "$stone.artifact"}
     ]},
     {"op": "registers", "as": "cpu"}
   ]

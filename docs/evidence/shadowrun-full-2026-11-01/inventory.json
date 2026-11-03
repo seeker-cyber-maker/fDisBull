@@ -1,0 +1,12 @@
+{
+  "format": "fdisbull-shadowrun-inventory-qualification-1",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "authoring_sha256": "8b3356ef4e48446565208d1345348d0bcddd1fd8409e7e8ff83ad94af969abae",
+  "selection_cases": 8,
+  "selection_trace_sha256": "70db77868af5a14e3aff70f0e42bb65c67d8e498b449833e4080b92e76396c4f",
+  "armor_cases": 768,
+  "armor_trace_sha256": "b4ee026c7a6a8c927030effc910721a783ca6b04466369af9e20194c4b6ae4fa",
+  "scope": "controlled original 68000 entry versus GameIL; valid cursor selection and isolated armor branch only; no dispatch, presentation, or reachability",
+  "root_repeat_summary_sha256": "f9a343f49ec5832059b1c26a70610bc221af2e7d1d16e2aeec13b029326ed6e2"
+}

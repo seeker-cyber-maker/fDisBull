@@ -1,5 +1,10 @@
 # Historical release-intake status
 
+> **Review status, November 3:** source identities and earlier tests, MR states,
+> uploads and installation statements below are November 1 intake records.
+> Read the [current review](../REVIEW_2026-11-03.md) for superseding findings and checks.
+> Historical upload receipts do not verify present remote availability or privacy.
+
 The four-file archive is 4,825 bytes, SHA-256
 `36cbc643dcc6224123a4a0ef257c168077c36082e7e11897954e4bc45778db4e`.
 [manifest.json](manifest.json) preserves its exact member identities; the full

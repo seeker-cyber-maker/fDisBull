@@ -1,0 +1,41 @@
+{
+  "schema": "fdisbull-freeware-source-rebuild-check-v1",
+  "scope": [
+    "TicTacToe",
+    "Five Dice"
+  ],
+  "reconstruction": {
+    "status": "exact-two-method-source-match",
+    "hunks": 20,
+    "recovered_path": "${USER_HOME}/.codex/tmp/freeware-game-versions-2026-11-01/source-rebuild-check/recovered/attt-nasm.asm",
+    "bytes": 15889,
+    "sha256": "89cdea4e7bf3acfdc53e8f1653141747da7c049e3e095fc7b17c3810299e651d",
+    "independent_reviewed_converter_match": true
+  },
+  "converter_review": "Read complete supplied convert.py before execution. Only pathlib/re; reads ../source/attt.asm; writes ./attt-nasm.asm. Ran against owned copies in task root, no source targets modified.",
+  "source_hashes": {
+    "attt.asm": "7641c9370d21d3b92da340dd569bbc018ebe778c226f3a2c1f54c1f3b3d83a0e",
+    "adaptation.patch": "9aba49cef0322a51556a7c860e2d13332dc02d3ea553266a9e8f718b642dd0da",
+    "convert.py": "544dc8e9cc3abc8bcbf53e60d95075e78ed2d16d4c7ad29cfd811b3b2cc2feca",
+    "dice.asm": "1731963e9ac067f448ffec6118be7a694b2b1ae773011b3eb1cf44f9745a13b2"
+  },
+  "original_expected_outputs": [
+    {
+      "path": "${USER_HOME}/.codex/tmp/freeware-game-versions-2026-11-01/source-rebuild-check/originals/ATTT.COM",
+      "bytes": 1755,
+      "sha256": "b582a31d28d9a265c38d29ed09dffe0396f47e6bf4497569766c036f6674fc43"
+    },
+    {
+      "path": "${USER_HOME}/.codex/tmp/freeware-game-versions-2026-11-01/source-rebuild-check/originals/DICE.COM",
+      "bytes": 731,
+      "sha256": "10aa501c3856565427b6a3e48a3488b279778a7a4cd249b10529bd05c9e9bfcb"
+    }
+  ],
+  "assembly": {
+    "status": "not-run",
+    "reason": "NASM not available in PATH, standard Homebrew/Xcode/CLI paths, scoped caches/downloads/tmp. Previous Wine guest socket absent. No SDK downloaded and no guest started.",
+    "binary_identity_rebuilt": false
+  },
+  "original_executables_run": false,
+  "original_files_written": false
+}

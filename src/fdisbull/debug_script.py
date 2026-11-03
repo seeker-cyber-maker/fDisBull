@@ -24,6 +24,16 @@ OPERATIONS = {
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
+    'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
+    'rewind-start':'rewind_start', 'rewind-status':'rewind_status',
+    'rewind-record':'rewind_record', 'rewind':'rewind',
+    'delta-start':'cpu_delta_start', 'delta-status':'cpu_delta_status',
+    'delta-record':'cpu_delta_record', 'delta-rewind':'cpu_delta_rewind',
+    'delta-recover':'cpu_delta_recover',
+    'frame-advance':'advance_frames', 'frame-inputs':'frame_inputs',
+    'timeline-start':'timeline_start', 'timeline-status':'timeline_status',
+    'timeline-advance':'timeline_advance', 'timeline-rewind':'timeline_rewind',
+    'timeline-stop':'timeline_stop', 'timeline-pin':'timeline_pin', 'timeline-image':'timeline_image',
     'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
@@ -65,6 +75,46 @@ def validate_script(script):
                 elif op in OPERATIONS:
                     signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
                     signature.bind(None,**params)
+                    if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
+                        limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
+                                'count':(1,128),'timeout_ms':(1,600000)}
+                        if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
+                        for key,value in params.items():
+                            if key in limits and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits[key])
+                    if op=='delta-start':
+                        from .debug_cpu_deltas import validate_ranges
+                        validate_ranges(params['ranges'],allow_references=True)
+                    if op=='delta-rewind' and 'policy' in params:
+                        from .debug_cpu_deltas import validate_policy
+                        validate_policy(params['policy'],allow_references=True)
+                    if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
+                        from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
+                        limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
+                                'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
+                                'max_bytes':(1,256*1024*1024),
+                                'max_state_bytes':(1,256*1024*1024),
+                                'max_image_bytes':(1,16*1024*1024),
+                                'timeout_ms':(1,600000)}
+                        for key,value in params.items():
+                            if key in limits and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits[key])
+                        if op=='frame-inputs':validate_edges(params['edges'],allow_references=True)
+                        if op=='timeline-advance' and params.get('inputs') is not None:
+                            validate_schedule(params['inputs'],params.get('frames',1),allow_references=True)
+                        if op=='timeline-rewind' and params.get('policy') is not None:
+                            validate_timeline_policy(params['policy'],allow_references=True)
+                        if op in ('timeline-pin','timeline-image') and 'name' in params:
+                            if not (isinstance(params['name'],str) and params['name'].startswith('$')):
+                                from .external_files import _file_name
+                                _file_name(params['name'])
+                        if op=='timeline-start':
+                            validate_storage(params.get('storage_mode','full'), params.get('keyframe_interval',8), allow_references=True)
+                            sizes=[params.get('max_state_bytes',8*1024**2),
+                                   params.get('max_image_bytes',2*1024**2),
+                                   params.get('max_bytes',64*1024**2)]
+                            if all(type(value) is int for value in sizes) and sum(sizes[:2])>sizes[2]:
+                                raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
@@ -100,10 +150,25 @@ def validate_script(script):
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    for step in steps:
+        if step['op']=='delta-rewind' and 'policy' in step:
+            from .debug_cpu_deltas import validate_policy
+            validate_policy(step['policy'],registers=getattr(session,'_delta_registers',None),
+                            allow_references=True)
+        if step['op']=='delta-start' and 'max_bytes' in step:
+            value=step['max_bytes']
+            if not (isinstance(value,str) and value.startswith('$')):
+                bounded(value,'max_bytes',1,getattr(session,'_delta_max_bytes',256*1024**2))
     if getattr(session,'script_operations',None) is not None:
         unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
         if unsupported:
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
+    frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
+                        'timeline-rewind','timeline-pin','timeline-image'}
+    capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
+    if any(step['op'] in frame_operations for step in steps):
+        if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
+            raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
         if step['op']=='macro':
             params={k:v for k,v in step.items() if k not in ('op','as','expect','timeout_ms')}
@@ -112,6 +177,33 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             for key in ('start','stop'):
                 call=step[key]
                 session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
+    restore_operations = {'load-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
+    def frame_owned_keys():
+        from .keyboard_input import KEYS
+        result = session.call('input.keyboard.state')
+        keyboard = result.get('keyboard') if isinstance(result,dict) else None
+        keys = keyboard.get('frame_keys') if isinstance(keyboard,dict) else None
+        if not isinstance(keys,list) or any(not isinstance(key,str) or key not in KEYS for key in keys):
+            raise ValueError('Native frame input ownership is unavailable')
+        normalized = {'escape' if key=='esc' else key for key in keys}
+        if len(normalized) != len(keys):
+            raise ValueError('Native frame input ownership contains duplicate keys')
+        return normalized
+    frame_owned_before = None
+    track_restored_input = (isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+                           and any(step['op'] in restore_operations for step in steps))
+    if track_restored_input:
+        # A full-state restore can introduce held input without dispatching
+        # an edge. Existing entry ownership remains the caller's responsibility.
+        try:
+            frame_owned_before = frame_owned_keys()
+        except ValueError as error:
+            frozen = (getattr(session,'_cpu_delta_history',None) or {}).get('frozen')
+            if not frozen or 'CPU delta partial state is frozen' not in str(error):
+                raise
+            # The delta guard deliberately refuses this query. Keep ownership
+            # unknown while allowing the script's full recovery operation.
+    frame_restore_attempted = False
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
     started = time.monotonic(); deadline = started+timeout_ms/1000
@@ -138,7 +230,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -147,7 +239,14 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")
                 result = {'matched':True}
             else:
-                if step['op'].startswith('keyboard.') and step['op']!='keyboard.state':keyboard_touched=True
+                # Record intended input before dispatch so an uncertain failure
+                # follows the same terminal cleanup as legacy keyboard input.
+                if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
+                        or (step['op']=='frame-inputs' and params['edges'])
+                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):
+                    keyboard_touched=True
+                if track_restored_input and step['op'] in restore_operations:
+                    frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
             record['result'] = result
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
@@ -172,9 +271,24 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         if failure:
             break
     cleanup=None
-    if failure and (keyboard_touched or set(getattr(session,'_keyboard_leases',{}))-owned_before):
+    restored_input_held = restore_ownership_unknown = False
+    if failure and frame_restore_attempted and not keyboard_touched:
+        try:
+            current = frame_owned_keys()
+            if frame_owned_before is None:
+                restore_ownership_unknown = bool(current)
+            else:
+                restored_input_held = bool(current - frame_owned_before)
+        except Exception:
+            # An attempted restore with no verifiable ownership readback must
+            # not leave a failed route free to resume an unknown held key.
+            restore_ownership_unknown = True
+    if failure and (keyboard_touched or restored_input_held or restore_ownership_unknown
+                    or set(getattr(session,'_keyboard_leases',{}))-owned_before):
         # A failed route must not leave input depressed or execute through a stop.
-        session.close();cleanup={'closed':True,'reason':'Failed script owned unreleased input'}
+        reason = ('Failed script frame input ownership is unknown after restore' if restore_ownership_unknown
+                  else 'Failed script owned unreleased input')
+        session.close();cleanup={'closed':True,'reason':reason}
     report = {'format':'fdisbull-script-result-1','script_artifact':source['artifact'],
               'script_sha256':hashlib.sha256(encoded).hexdigest(),'run':session.run_id,
               'ok':failure is None,'error':failure,'completed_steps':sum(r['ok'] for r in records),

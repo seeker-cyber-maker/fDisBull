@@ -1,0 +1,887 @@
+--- attt.asm
++++ attt-nasm.asm
+@@ -1,15 +1,13 @@
++; Mechanical TASM-to-NASM COM adaptation. See README.
++bits 16
++org 100h
++jmp start
+ ; Ancient TicTacToe
+ ; TASM @ DOS
+ ; Sai Kurogetsu
+ ; 2015-01-01
+ 
+-assume cs: program, ss: dstack
+-program segment
+-.386
+-
+-dstack segment stack
+-db	4	dup ('STACK')
+-dstack ends
++
+ 
+ board00	db	32
+ board01	db	32
+@@ -30,75 +28,68 @@
+ player2WonCount	db	0
+ turnCount	db	0
+ 
+-procDrawChar proc
+-	mov	cx, drawCount
++procDrawChar:
++	mov	cx, [drawCount]
+ 	procDrawChar_loop:
+-		mov	dl, drawChar
++		mov	dl, [drawChar]
+ 		mov	ah, 02h
+ 		int	21h
+ 		dec	cx
+ 		cmp	cx, 0
+ 		jnz	procDrawChar_loop
+ 	ret
+-procDrawChar endp
+ 
+-procDrawMarginLeft proc
+-	mov	drawCount, 27
+-	mov	drawChar, 32
++procDrawMarginLeft:
++	mov	word [drawCount], 27
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procDrawMarginLeft endp
+ 
+-procDrawMarginRight proc
+-	mov	drawCount, 28
+-	mov	drawChar, 32
++procDrawMarginRight:
++	mov	word [drawCount], 28
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procDrawMarginRight endp
+ 
+-procDrawCellEmpty proc
+-	mov	drawCount, 7
+-	mov	drawChar, 32
++procDrawCellEmpty:
++	mov	word [drawCount], 7
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procDrawCellEmpty endp
+ 
+-procDrawCell proc
+-	mov	drawCount, 3
+-	mov	drawChar, 32
++procDrawCell:
++	mov	word [drawCount], 3
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+-	mov	drawCount, 1
+-	mov	cl, curBoardCell
+-	mov	drawChar, cl
++	mov	word [drawCount], 1
++	mov	cl, [curBoardCell]
++	mov	[drawChar], cl
+ 	call	procDrawChar
+ 
+-	mov	drawCount, 3
+-	mov	drawChar, 32
++	mov	word [drawCount], 3
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procDrawCell endp
+ 
+-procDrawCellVerticalBorder proc
+-	mov	drawCount, 2
+-	mov	drawChar, 219
++procDrawCellVerticalBorder:
++	mov	word [drawCount], 2
++	mov	byte [drawChar], 219
+ 	call	procDrawChar
+ 	ret
+-procDrawCellVerticalBorder endp
+ 
+-procDrawCellHorizontalBorder proc
+-	mov	drawCount, 25
+-	mov	drawChar, 219
++procDrawCellHorizontalBorder:
++	mov	word [drawCount], 25
++	mov	byte [drawChar], 219
+ 	call	procDrawChar
+ 	ret
+-procDrawCellHorizontalBorder endp
+ 
+-procPrintStringPlayerTurn proc
+-	mov	drawCount, 15
+-	mov	drawChar, 32
++procPrintStringPlayerTurn:
++	mov	word [drawCount], 15
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+-	cmp	player1WonCount, 100
++	cmp	byte [player1WonCount], 100
+ 	jl	procPrintStringPlayerTurn_p1_2digits
+ 	jmp	procPrintStringPlayerTurn_p1_3digits
+ 
+@@ -106,7 +97,7 @@
+ 		mov	ah, 02h
+ 		mov	dl, 32
+ 		int	21h
+-		cmp	player1WonCount, 10
++		cmp	byte [player1WonCount], 10
+ 		jl	procPrintStringPlayerTurn_p1_1digit
+ 		jmp	procPrintStringPlayerTurn_p1_3digits
+ 
+@@ -114,12 +105,12 @@
+ 		int	21h
+ 
+ 	procPrintStringPlayerTurn_p1_3digits:
+-	mov	dl, player1WonCount
++	mov	dl, [player1WonCount]
+ 	add	dl, 48
+ 	int	21h
+ 
+-	mov	drawCount, 17
+-	mov	drawChar, 32
++	mov	word [drawCount], 17
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	mov	ah, 02h
+@@ -139,15 +130,15 @@
+ 	int	21h
+ 	mov	dl, ' '
+ 	int	21h
+-	mov	dl, playerNum
++	mov	dl, [playerNum]
+ 	add	dl, 48
+ 	int	21h
+ 
+-	mov	drawCount, 17
+-	mov	drawChar, 32
++	mov	word [drawCount], 17
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+-	cmp	player2WonCount, 100
++	cmp	byte [player2WonCount], 100
+ 	jl	procPrintStringPlayerTurn_p2_2digits
+ 	jmp	procPrintStringPlayerTurn_p2_3digits
+ 
+@@ -155,7 +146,7 @@
+ 		mov	ah, 02h
+ 		mov	dl, 32
+ 		int	21h
+-		cmp	player2WonCount, 10
++		cmp	byte [player2WonCount], 10
+ 		jl	procPrintStringPlayerTurn_p2_1digit
+ 		jmp	procPrintStringPlayerTurn_p2_3digits
+ 
+@@ -163,20 +154,19 @@
+ 		int	21h
+ 
+ 	procPrintStringPlayerTurn_p2_3digits:
+-	mov	dl, player2WonCount
++	mov	dl, [player2WonCount]
+ 	add	dl, 48
+ 	int	21h
+ 
+-	mov	drawCount, 16
+-	mov	drawChar, 32
++	mov	word [drawCount], 16
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	ret
+-procPrintStringPlayerTurn endp
+ 
+-procPrintStringWon proc
+-	mov	drawCount, 38
+-	mov	drawChar, 32
++procPrintStringWon:
++	mov	word [drawCount], 38
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	mov	ah, 02h
+ 	mov	dl, 'W'
+@@ -187,15 +177,14 @@
+ 	int	21h
+ 	mov	dl, 'S'
+ 	int	21h
+-	mov	drawCount, 38
+-	mov	drawChar, 32
++	mov	word [drawCount], 38
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procPrintStringWon endp
+ 
+-procPrintStringDraw proc
+-	mov	drawCount, 118
+-	mov	drawChar, 32
++procPrintStringDraw:
++	mov	word [drawCount], 118
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	mov	ah, 02h
+ 	mov	dl, 'D'
+@@ -206,17 +195,16 @@
+ 	int	21h
+ 	mov	dl, 'W'
+ 	int	21h
+-	mov	drawCount, 38
+-	mov	drawChar, 32
++	mov	word [drawCount], 38
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	ret
+-procPrintStringDraw endp
+ 
+-procParseInput proc
++procParseInput:
+ 	cmp	al, 1bh
+ 	jz	procParseInput_exit
+ 
+-	cmp	playerNum, 2
++	cmp	byte [playerNum], 2
+ 	jz	procParseInput_player2
+ 
+ 	procParseInput_player1:
+@@ -241,49 +229,49 @@
+ 		ret
+ 
+ 	procParseInput_player1_00:
+-		cmp	board00, 32
++		cmp	byte [board00], 32
+ 		jnz	procParseInput_end
+-		mov	board00, 'x'
++		mov	byte [board00], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_01:
+-		cmp	board01, 32
++		cmp	byte [board01], 32
+ 		jnz	procParseInput_end
+-		mov	board01, 'x'
++		mov	byte [board01], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_02:
+-		cmp	board02, 32
++		cmp	byte [board02], 32
+ 		jnz	procParseInput_end
+-		mov	board02, 'x'
++		mov	byte [board02], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_10:
+-		cmp	board10, 32
++		cmp	byte [board10], 32
+ 		jnz	procParseInput_end
+-		mov	board10, 'x'
++		mov	byte [board10], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_11:
+-		cmp	board11, 32
++		cmp	byte [board11], 32
+ 		jnz	procParseInput_end
+-		mov	board11, 'x'
++		mov	byte [board11], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_12:
+-		cmp	board12, 32
++		cmp	byte [board12], 32
+ 		jnz	procParseInput_end
+-		mov	board12, 'x'
++		mov	byte [board12], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_20:
+-		cmp	board20, 32
++		cmp	byte [board20], 32
+ 		jnz	procParseInput_end
+-		mov	board20, 'x'
++		mov	byte [board20], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_21:
+-		cmp	board21, 32
++		cmp	byte [board21], 32
+ 		jnz	procParseInput_end
+-		mov	board21, 'x'
++		mov	byte [board21], 'x'
+ 		jmp	procParseInput_player1End
+ 	procParseInput_player1_22:
+-		cmp	board22, 32
++		cmp	byte [board22], 32
+ 		jnz	procParseInput_end
+-		mov	board22, 'x'
++		mov	byte [board22], 'x'
+ 		jmp	procParseInput_player1End
+ 
+ 	procParseInput_player2:
+@@ -308,59 +296,59 @@
+ 		ret
+ 
+ 	procParseInput_player2_00:
+-		cmp	board00, 32
++		cmp	byte [board00], 32
+ 		jnz	procParseInput_end
+-		mov	board00, 'o'
++		mov	byte [board00], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_01:
+-		cmp	board01, 32
++		cmp	byte [board01], 32
+ 		jnz	procParseInput_end
+-		mov	board01, 'o'
++		mov	byte [board01], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_02:
+-		cmp	board02, 32
++		cmp	byte [board02], 32
+ 		jnz	procParseInput_end
+-		mov	board02, 'o'
++		mov	byte [board02], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_10:
+-		cmp	board10, 32
++		cmp	byte [board10], 32
+ 		jnz	procParseInput_end
+-		mov	board10, 'o'
++		mov	byte [board10], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_11:
+-		cmp	board11, 32
++		cmp	byte [board11], 32
+ 		jnz	procParseInput_end
+-		mov	board11, 'o'
++		mov	byte [board11], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_12:
+-		cmp	board12, 32
++		cmp	byte [board12], 32
+ 		jnz	procParseInput_end
+-		mov	board12, 'o'
++		mov	byte [board12], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_20:
+-		cmp	board20, 32
++		cmp	byte [board20], 32
+ 		jnz	procParseInput_end
+-		mov	board20, 'o'
++		mov	byte [board20], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_21:
+-		cmp	board21, 32
++		cmp	byte [board21], 32
+ 		jnz	procParseInput_end
+-		mov	board21, 'o'
++		mov	byte [board21], 'o'
+ 		jmp	procParseInput_player2End
+ 	procParseInput_player2_22:
+-		cmp	board22, 32
++		cmp	byte [board22], 32
+ 		jnz	procParseInput_end
+-		mov	board22, 'o'
++		mov	byte [board22], 'o'
+ 		jmp	procParseInput_player2End
+ 
+ 	procParseInput_player1End:
+-		mov	playerNum, 2
+-		inc	turnCount
++		mov	byte [playerNum], 2
++		inc	byte [turnCount]
+ 		ret
+ 
+ 	procParseInput_player2End:
+-		mov	playerNum, 1
+-		inc	turnCount
++		mov	byte [playerNum], 1
++		inc	byte [turnCount]
+ 		ret
+ 
+ 	procParseInput_end:
+@@ -369,111 +357,110 @@
+ 	procParseInput_exit:
+ 		mov	ax, 4c00h
+ 		int	21h
+-procParseInput endp
+ 
+-procCheckBoard proc
++procCheckBoard:
+ 
+ 	; check if player 1 wins
+ 
+-	cmp	board00, 'x'
++	cmp	byte [board00], 'x'
+ 	jz	procCheckBoard_x_00
+ 	jmp	procCheckBoard_x_00_fail
+ 
+ 	procCheckBoard_x_00:
+-		cmp	board01, 'x'
++		cmp	byte [board01], 'x'
+ 		jz	procCheckBoard_x_00_01
+ 		procCheckBoard_x_00_01_fallback:
+-		cmp	board10, 'x'
++		cmp	byte [board10], 'x'
+ 		jz	procCheckBoard_x_00_10
+ 		procCheckBoard_x_00_10_fallback:
+-		cmp	board11, 'x'
++		cmp	byte [board11], 'x'
+ 		jz	procCheckBoard_x_00_11
+ 		jmp	procCheckBoard_x_00_fail
+ 
+ 	procCheckBoard_x_00_01:
+-		cmp	board02, 'x'
++		cmp	byte [board02], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_00_01_fallback
+ 
+ 	procCheckBoard_x_00_10:
+-		cmp	board20, 'x'
++		cmp	byte [board20], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_00_10_fallback
+ 
+ 	procCheckBoard_x_00_11:
+-		cmp	board22, 'x'
++		cmp	byte [board22], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_00_fail
+ 
+ 	procCheckBoard_x_00_fail:
+ 
+-	cmp	board01, 'x'
++	cmp	byte [board01], 'x'
+ 	jz	procCheckBoard_x_01
+ 	jmp	procCheckBoard_x_01_fail
+ 
+ 	procCheckBoard_x_01:
+-		cmp	board11, 'x'
++		cmp	byte [board11], 'x'
+ 		jz	procCheckBoard_x_01_11
+ 		jmp	procCheckBoard_x_01_fail
+ 
+ 	procCheckBoard_x_01_11:
+-		cmp	board21, 'x'
++		cmp	byte [board21], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_01_fail
+ 
+ 	procCheckBoard_x_01_fail:
+ 
+-	cmp	board02, 'x'
++	cmp	byte [board02], 'x'
+ 	jz	procCheckBoard_x_02
+ 	jmp	procCheckBoard_x_02_fail
+ 
+ 	procCheckBoard_x_02:
+-		cmp	board12, 'x'
++		cmp	byte [board12], 'x'
+ 		jz	procCheckBoard_x_02_12
+ 		procCheckBoard_x_02_12_fallback:
+-		cmp	board11, 'x'
++		cmp	byte [board11], 'x'
+ 		jz	procCheckBoard_x_02_11
+ 		jmp	procCheckBoard_x_02_fail
+ 
+ 	procCheckBoard_x_02_12:
+-		cmp	board22, 'x'
++		cmp	byte [board22], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_02_12_fallback
+ 
+ 	procCheckBoard_x_02_11:
+-		cmp	board20, 'x'
++		cmp	byte [board20], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_02_fail
+ 
+ 	procCheckBoard_x_02_fail:
+ 
+-	cmp	board10, 'x'
++	cmp	byte [board10], 'x'
+ 	jz	procCheckBoard_x_10
+ 	jmp	procCheckBoard_x_10_fail
+ 
+ 	procCheckBoard_x_10:
+-		cmp	board11, 'x'
++		cmp	byte [board11], 'x'
+ 		jz	procCheckBoard_x_10_11
+ 		jmp	procCheckBoard_x_10_fail
+ 
+ 	procCheckBoard_x_10_11:
+-		cmp	board12, 'x'
++		cmp	byte [board12], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_10_fail
+ 
+ 	procCheckBoard_x_10_fail:
+ 
+-	cmp	board20, 'x'
++	cmp	byte [board20], 'x'
+ 	jz	procCheckBoard_x_20
+ 	jmp	procCheckBoard_x_20_fail
+ 
+ 	procCheckBoard_x_20:
+-		cmp	board21, 'x'
++		cmp	byte [board21], 'x'
+ 		jz	procCheckBoard_x_20_21
+ 		jmp	procCheckBoard_x_20_fail
+ 
+ 	procCheckBoard_x_20_21:
+-		cmp	board22, 'x'
++		cmp	byte [board22], 'x'
+ 		jz	procCheckBoard_x_won
+ 		jmp	procCheckBoard_x_20_fail
+ 
+@@ -481,138 +468,137 @@
+ 
+ 	; check if player 2 wins
+ 
+-	cmp	board00, 'o'
++	cmp	byte [board00], 'o'
+ 	jz	procCheckBoard_o_00
+ 	jmp	procCheckBoard_o_00_fail
+ 
+ 	procCheckBoard_o_00:
+-		cmp	board01, 'o'
++		cmp	byte [board01], 'o'
+ 		jz	procCheckBoard_o_00_01
+ 		procCheckBoard_o_00_01_fallback:
+-		cmp	board10, 'o'
++		cmp	byte [board10], 'o'
+ 		jz	procCheckBoard_o_00_10
+ 		procCheckBoard_o_00_10_fallback:
+-		cmp	board11, 'o'
++		cmp	byte [board11], 'o'
+ 		jz	procCheckBoard_o_00_11
+ 		jmp	procCheckBoard_o_00_fail
+ 
+ 	procCheckBoard_o_00_01:
+-		cmp	board02, 'o'
++		cmp	byte [board02], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_00_01_fallback
+ 
+ 	procCheckBoard_o_00_10:
+-		cmp	board20, 'o'
++		cmp	byte [board20], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_00_10_fallback
+ 
+ 	procCheckBoard_o_00_11:
+-		cmp	board22, 'o'
++		cmp	byte [board22], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_00_fail
+ 
+ 	procCheckBoard_o_00_fail:
+ 
+-	cmp	board01, 'o'
++	cmp	byte [board01], 'o'
+ 	jz	procCheckBoard_o_01
+ 	jmp	procCheckBoard_o_01_fail
+ 
+ 	procCheckBoard_o_01:
+-		cmp	board11, 'o'
++		cmp	byte [board11], 'o'
+ 		jz	procCheckBoard_o_01_11
+ 		jmp	procCheckBoard_o_01_fail
+ 
+ 	procCheckBoard_o_01_11:
+-		cmp	board21, 'o'
++		cmp	byte [board21], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_01_fail
+ 
+ 	procCheckBoard_o_01_fail:
+ 
+-	cmp	board02, 'o'
++	cmp	byte [board02], 'o'
+ 	jz	procCheckBoard_o_02
+ 	jmp	procCheckBoard_o_02_fail
+ 
+ 	procCheckBoard_o_02:
+-		cmp	board12, 'o'
++		cmp	byte [board12], 'o'
+ 		jz	procCheckBoard_o_02_12
+ 		procCheckBoard_o_02_12_fallback:
+-		cmp	board11, 'o'
++		cmp	byte [board11], 'o'
+ 		jz	procCheckBoard_o_02_11
+ 		jmp	procCheckBoard_o_02_fail
+ 
+ 	procCheckBoard_o_02_12:
+-		cmp	board22, 'o'
++		cmp	byte [board22], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_02_12_fallback
+ 
+ 	procCheckBoard_o_02_11:
+-		cmp	board20, 'o'
++		cmp	byte [board20], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_02_fail
+ 
+ 	procCheckBoard_o_02_fail:
+ 
+-	cmp	board10, 'o'
++	cmp	byte [board10], 'o'
+ 	jz	procCheckBoard_o_10
+ 	jmp	procCheckBoard_o_10_fail
+ 
+ 	procCheckBoard_o_10:
+-		cmp	board11, 'o'
++		cmp	byte [board11], 'o'
+ 		jz	procCheckBoard_o_10_11
+ 		jmp	procCheckBoard_o_10_fail
+ 
+ 	procCheckBoard_o_10_11:
+-		cmp	board12, 'o'
++		cmp	byte [board12], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_10_fail
+ 
+ 	procCheckBoard_o_10_fail:
+ 
+-	cmp	board20, 'o'
++	cmp	byte [board20], 'o'
+ 	jz	procCheckBoard_o_20
+ 	jmp	procCheckBoard_o_20_fail
+ 
+ 	procCheckBoard_o_20:
+-		cmp	board21, 'o'
++		cmp	byte [board21], 'o'
+ 		jz	procCheckBoard_o_20_21
+ 		jmp	procCheckBoard_o_20_fail
+ 
+ 	procCheckBoard_o_20_21:
+-		cmp	board22, 'o'
++		cmp	byte [board22], 'o'
+ 		jz	procCheckBoard_o_won
+ 		jmp	procCheckBoard_o_20_fail
+ 
+ 	procCheckBoard_o_20_fail:
+-	cmp	turnCount, 9
++	cmp	byte [turnCount], 9
+ 	jz	procCheckBoard_draw
+ 	ret
+ 
+ 	procCheckBoard_x_won:
+-	mov	playerWon, 1
++	mov	byte [playerWon], 1
+ 	ret
+ 
+ 	procCheckBoard_o_won:
+-	mov	playerWon, 2
++	mov	byte [playerWon], 2
+ 	ret
+ 
+ 	procCheckBoard_draw:
+-	mov	playerWon, 3
++	mov	byte [playerWon], 3
+ 	ret
+-procCheckBoard endp
+ 
+ start:
+ 	; did anyone win?
+-	cmp	playerWon, 0
++	cmp	byte [playerWon], 0
+ 	jnz	won
+ 
+ 	; draw header and top margin
+-	mov	drawCount, 80*4
+-	mov	drawChar, 32
++	mov	word [drawCount], 80*4
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 	call	procPrintStringPlayerTurn
+-	mov	drawCount, 80*4
+-	mov	drawChar, 32
++	mov	word [drawCount], 80*4
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	; draw 1st line
+@@ -626,16 +612,16 @@
+ 
+ 	; draw 2nd line
+ 	call	procDrawMarginLeft
+-	mov	cl, board00
+-	mov	curBoardCell, cl
++	mov	cl, [board00]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board01
+-	mov	curBoardCell, cl
++	mov	cl, [board01]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board02
+-	mov	curBoardCell, cl
++	mov	cl, [board02]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawMarginRight
+ 
+@@ -664,16 +650,16 @@
+ 
+ 	; draw 6th line
+ 	call	procDrawMarginLeft
+-	mov	cl, board10
+-	mov	curBoardCell, cl
++	mov	cl, [board10]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board11
+-	mov	curBoardCell, cl
++	mov	cl, [board11]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board12
+-	mov	curBoardCell, cl
++	mov	cl, [board12]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawMarginRight
+ 
+@@ -702,16 +688,16 @@
+ 
+ 	; draw 10th line
+ 	call	procDrawMarginLeft
+-	mov	cl, board20
+-	mov	curBoardCell, cl
++	mov	cl, [board20]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board21
+-	mov	curBoardCell, cl
++	mov	cl, [board21]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawCellVerticalBorder
+-	mov	cl, board22
+-	mov	curBoardCell, cl
++	mov	cl, [board22]
++	mov	[curBoardCell], cl
+ 	call	procDrawCell
+ 	call	procDrawMarginRight
+ 
+@@ -725,8 +711,8 @@
+ 	call	procDrawMarginRight
+ 
+ 	; draw bottom margin
+-	mov	drawCount, 80*4
+-	mov	drawChar, 32
++	mov	word [drawCount], 80*4
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	; wait for input
+@@ -740,28 +726,28 @@
+ 
+ won:
+ 	; draw header and top margin
+-	mov	drawCount, 80*11
+-	mov	drawChar, 32
++	mov	word [drawCount], 80*11
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	; inc player's stats
+-	cmp	playerWon, 3
++	cmp	byte [playerWon], 3
+ 	jz	won_after_players
+-	cmp	playerWon, 2
++	cmp	byte [playerWon], 2
+ 	jz	won_player2
+ 
+ 	won_player1:
+-		inc	player1WonCount
+-		mov	playerNum, 1
++		inc	byte [player1WonCount]
++		mov	byte [playerNum], 1
+ 		jmp	won_after_players
+ 
+ 	won_player2:
+-		inc	player2WonCount
+-		mov	playerNum, 2
++		inc	byte [player2WonCount]
++		mov	byte [playerNum], 2
+ 
+ 	won_after_players:
+ 
+-	cmp	playerWon, 3
++	cmp	byte [playerWon], 3
+ 	jz	won_draw
+ 	call	procPrintStringPlayerTurn
+ 	call	procPrintStringWon
+@@ -771,8 +757,8 @@
+ 		call	procPrintStringDraw
+ 	won_after_draw:
+ 
+-	mov	drawCount, 80*11
+-	mov	drawChar, 32
++	mov	word [drawCount], 80*11
++	mov	byte [drawChar], 32
+ 	call	procDrawChar
+ 
+ 	; wait for input
+@@ -780,35 +766,33 @@
+ 	int	21h
+ 
+ 	; reset game
+-	mov	turnCount, 0
+-	mov	playerWon, 0
+-	mov	board00, 32
+-	mov	board01, 32
+-	mov	board02, 32
+-	mov	board10, 32
+-	mov	board11, 32
+-	mov	board12, 32
+-	mov	board20, 32
+-	mov	board21, 32
+-	mov	board22, 32
++	mov	byte [turnCount], 0
++	mov	byte [playerWon], 0
++	mov	byte [board00], 32
++	mov	byte [board01], 32
++	mov	byte [board02], 32
++	mov	byte [board10], 32
++	mov	byte [board11], 32
++	mov	byte [board12], 32
++	mov	byte [board20], 32
++	mov	byte [board21], 32
++	mov	byte [board22], 32
+ 
+ 	; change player
+-	cmp	playerStarts, 2
++	cmp	byte [playerStarts], 2
+ 	jz	changePlayerDec
+ 	jnz	changePlayerInc
+ 
+ 	changePlayerDec:
+-		dec	playerStarts
++		dec	byte [playerStarts]
+ 		jmp	afterPlayerChanges
+ 	changePlayerInc:
+-		inc	playerStarts
++		inc	byte [playerStarts]
+ 	afterPlayerChanges:
+ 
+-	mov	cl, playerStarts
+-	mov	playerNum, cl
++	mov	cl, [playerStarts]
++	mov	[playerNum], cl
+ 
+ 	; restart
+ 	jmp	start
+ 
+-program ends
+-end start

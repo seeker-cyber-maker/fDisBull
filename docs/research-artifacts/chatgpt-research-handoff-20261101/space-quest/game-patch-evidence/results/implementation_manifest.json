@@ -1,0 +1,12 @@
+{
+  "verify_generated_c.py": "ee5d54f58fdbcca559521677271ac00a0a8883b0106c921ba3bab6f5ead74616",
+  "prepare_sq_intake.py": "09855a6f41dfcc1737b0011670d9b47c098afd50eb4590e8eaec92d299d118c0",
+  "verify_patch_oracles.py": "2402e998d291ebc47aceb0333a5d4ffb8de92bea4aff6bb8aa8d3130f2ae1de7",
+  "inno_probe.py": "9bb956cbc6a55c4f7e3df2f833a007a61ccf5b910809aad5da10af4eec60e246",
+  "make_report.py": "94b3e5d8ca77127c6a7a53d209022d8b865c360f6e510aa039d7a2b1da3eea16",
+  "sci_extract.py": "119880b05c3baa55276354e1968fcba9af191f44dd94b7e1009a42c37323df4a",
+  "extract_verified_payloads.py": "4c395ca885453957fd7aeb3a2dab85a9e0883e6a2fde206c829759a57978ec2a",
+  "compare_game_patches.py": "4420ca11e397740c87abd91bcfbdb66cf841e11f7c29bb473223907a406d8abc",
+  "bootstrap_intake.py": "04288afaf44b80f7ec06fd70bdbf87c60711fc2ea4f91f861d961b340d3996ed",
+  "report": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d"
+}
