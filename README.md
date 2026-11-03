@@ -9,18 +9,18 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.30.0):** [`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/tags/v0.30.0)
-is tagged on GitLab (`dc6d7e77`), unifying the common indexed UIL contract and
-native desktop shells, console intake and synthesis (*Miniplanets* and
+**Release status (0.30.0):** [`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.30.0)
+is published on GitLab with public source archives, verified tool packages
+(`fdisbull-tool-packages`) and an active local shared installation, unifying the
+common indexed UIL contract, [bounded typed C-to-UIL frontend](docs/BOUNDED_TYPED_C_FRONTEND.md)
+and native desktop shells, console intake and synthesis (*Miniplanets* and
 *Shadowrun* across Genesis, SNES, NES and macOS ARM64), Sierra AGI / *King's
-Quest I* native alignment, debugger rewind and CPU/RAM deltas, standing-probe
-workflows, multi-target memory UDC shells and trial-safe GitLab CI. See the
-[0.30.0 release notes](docs/RELEASE-0.30.0.md),
+Quest I* native alignment, debugger rewind, [lossless frame-state deltas](docs/FRAME_STATE_DELTAS.md)
+and CPU/RAM deltas, standing-probe workflows, multi-target memory UDC shells and
+trial-safe GitLab CI. See the [0.30.0 release notes](docs/RELEASE-0.30.0.md),
 [release status](docs/RELEASE_STATUS.md) and
-[feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates; `v0.29.0` remains the latest published GitLab Release package bundle
-until `0.30.0` release assets and local system activation are separately
-promoted.
+[feature history](docs/FEATURE_HISTORY.md) for qualification scope, package
+hashes and remaining platform gates.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
@@ -53,13 +53,15 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Give an agent named controls, game-unit room maps and explicit spatial policies | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play shared Z scenes, original-backed *DinoPark Tycoon*, or inspect *Civilization I* / *Zork I* worlds | [Text play and world projections](#text-play-and-world-projections) |
 | Lift Sierra AGI v2 (*King's Quest I*) or Z-machine v3 (*Zork I*) directly in their guest languages | [Direct guest interpreters: AGI and Z-machine](#direct-guest-interpreters-agi-and-z-machine) |
-| Compose typed indexed UIL and emit standalone Python/JS, linked native binaries or desktop windows | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Native linking](docs/COMMON_UIL_NATIVE.md) · [Desktop shells](docs/COMMON_UIL_DESKTOP.md) |
-| Verify source blocks with Z3 or retarget bounded-memory UIL across browser, macOS, Windows, Linux and Win16 | [Common UIL and the bounded UDC pipeline](#common-uil-and-the-bounded-udc-pipeline) |
+| Compose typed indexed UIL or lower bounded typed C, and emit Python/JS, linked native binaries or desktop windows | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Typed C frontend](docs/BOUNDED_TYPED_C_FRONTEND.md) · [Native linking](docs/COMMON_UIL_NATIVE.md) · [Desktop shells](docs/COMMON_UIL_DESKTOP.md) |
+| Verify source blocks with Z3 or retarget bounded-memory UIL across browser, macOS, Windows, Linux and Win16 | [Common UIL and the bounded UDC pipeline](#common-uil-and-the-bounded-udc-pipeline) · [Consolidated UDL/UIL/UDC reference](docs/UDL_UIL_UDC_CONSOLIDATED.md) |
 | Compile shared UIL or source-bound *Miniplanets* / *Shadowrun* profiles to NES, Genesis or macOS ARM64 | [Console intake and synthesis](#console-intake-and-synthesis) |
 
-Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
-[agent quickstart](docs/AGENT_QUICKSTART.md). Two bundled skills ship inside the
-installed package and work without opening a project:
+Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the
+[agent quickstart](docs/AGENT_QUICKSTART.md) and the
+[cold-agent skill & Elephant-Goldfish Method (EGM) benchmark](docs/COLD_AGENT_EGM_BENCHMARK.md).
+Two bundled skills ship inside the installed package and work without opening a
+project:
 
 - `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, probe selection, scene/UIL recovery and verification gates.
 - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md` (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused code and format specs into an attributed, human-readable guide.
@@ -194,9 +196,9 @@ Explore runtime hypotheses without losing your baseline:
   across recorded next-fetch intervals.
 - **Automatic frame/input timeline:** on frame-capable DOS backends,
   [frame timelines](docs/FRAME_INPUT_TIMELINE.md) (`debug-timeline-*`) cache
-  completed frames and full states with frame-scheduled physical keyboard
-  make/break edges, supporting instant rewind, input branching and durable
-  Anchor Stone pins.
+  completed frames with full-state or [lossless delta storage](docs/FRAME_STATE_DELTAS.md)
+  and frame-scheduled physical keyboard make/break edges, supporting instant
+  rewind, input branching and durable Anchor Stone pins.
 - **CPU and RAM delta rewind:** [delta histories](docs/CPU_RAM_DELTAS.md)
   (`debug-delta-*`) record exposed register and declared RAM diffs anchored by a
   recovery stone on both DOSBox and [Wine/QEMU x86-64](docs/WINE_CPU_RAM_DELTAS.md).
@@ -286,15 +288,18 @@ behavioral representation) and **UDC** (target realization and adapters),
 qualifying `original → UIL` and `UIL → target` edges independently and checking
 modeled register boundaries with [bounded Z3 proofs](docs/BOUNDED_PROOFS.md):
 
-- **Common indexed UIL (`uil-*`):** the four-document
+- **Common indexed UIL (`uil-*`) & typed C frontend:** the four-document
   [common UIL contract](docs/COMMON_UIL_CONTRACT.md) (`fdisbull-common-uil-1`,
   presentation, UDL-grouped semantic catalog and copy-in/copy-out orchestration)
-  supports acyclic typed functions, lossless `uil-fold`/`uil-expand` grouping,
-  immutable project storage, standalone Python and JavaScript code generation,
-  deterministic [native linking and C/ASM component selection](docs/COMMON_UIL_NATIVE.md)
+  and [bounded typed C-to-UIL frontend](docs/BOUNDED_TYPED_C_FRONTEND.md)
+  support acyclic typed functions, fixed-buffer pointer contracts, lossless
+  `uil-fold`/`uil-expand` grouping, immutable project storage, standalone Python
+  and JavaScript code generation, deterministic
+  [native linking and C/ASM component selection](docs/COMMON_UIL_NATIVE.md)
   (`macos-arm64`, `linux-x64`, `windows-x64`), and fixed-arena
   [native desktop window shells](docs/COMMON_UIL_DESKTOP.md) (`uil-desktop*` for
-  AppKit, X11 and Win32/Win64). See [conformance examples](docs/COMMON_UIL_CONFORMANCE.md).
+  AppKit, X11 and Win32/Win64). See [conformance examples](docs/COMMON_UIL_CONFORMANCE.md)
+  and the [consolidated UDL/UIL/UDC architecture](docs/UDL_UIL_UDC_CONSOLIDATED.md).
 - **Original-backed DOS & selectable block layers:** reconstructs exact version-1
   MZ/COM binaries from immutable project backings ([DOS UDC](docs/UDC_DOS.md),
   [UDC testing](docs/UDC_TESTING.md)), captures overlapping multi-entry x86
