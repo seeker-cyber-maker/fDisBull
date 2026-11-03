@@ -110,7 +110,7 @@ def test_cli_option_is_opt_in_and_forwarded(monkeypatch):
     assert observed['options']['window'] is True
 
 
-@pytest.mark.parametrize('backend', ['qemu-machine', 'dosbox-qemu', 'wine-qemu', 'ida-wine-qemu'])
+@pytest.mark.parametrize('backend', ['qemu-machine', 'dosbox-qemu','ida-wine-qemu'])
 def test_unsupported_backends_reject_window_before_spawn(tmp_path, backend):
     binary = tmp_path / 'GAME.EXE'
     binary.write_bytes(mz_file())

@@ -46,7 +46,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Inventory one game or a collection, compare editions or inspect resource/media formats | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
 | Identify NES, SNES or Sega cartridges, CUE/ISO discs, or disassemble Saturn SH-2 / SNES 65816 | [Console media](docs/CONSOLE_MEDIA_PARSING.md) · [Disc parsing](docs/CUE_ISO_PARSING.md) · [ROM-to-ASM](docs/ROM_ASM.md) |
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
-| Debug an original DOS game or a Windows x86-64 program headlessly | [Debug the original program](#debug-the-original-program) |
+| Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
 | Give an agent named controls, game-unit room maps and explicit spatial policies | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -161,9 +161,11 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   `guest_tsr` termination tracking. Headless operation is the default;
   `--dot-mode` opens a watch-only window on compatible builds. A separate
   Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
-- **Windows x86-64 targets:** the [PE64 debugger](docs/WINE_DEBUGGER.md) drives
-  analyzed Windows binaries through a prepared Linux/Wine/QEMU guest with
-  address stops, watchpoints, guarded memory edits, traces and window input.
+- **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
+  adds experimental Win32 and Win16 support alongside the existing PE64 path.
+  A prepared offline Wine/QEMU guest provides actual program stops, scoped
+  watches, memory, traces and shared keyboard/frame/scene actions. Windows
+  `--dot-mode` supplies a read-only spectator without capturing host input.
 - **macOS observation & reversible UI capture:** `macos-observe` runs a
   source-bound ARM64 binary to one LLDB breakpoint, while
   [reversible native sessions](docs/MACOS_REVERSIBLE_CAPTURE.md)

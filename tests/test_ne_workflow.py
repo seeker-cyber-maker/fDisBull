@@ -179,11 +179,12 @@ def test_unsupported_native_advanced_and_launch_paths_refuse_ne(tmp_path):
         for call in (lambda: project.auto_analyze(), lambda: project.function_analysis('ne:1:0'),
                      lambda: project.capture_signature('ne:1:0', 'authored'),
                      lambda: project.set_summary('ne:1:0', 'memcpy'),
-                     lambda: project.debugger('missing', tmp_path),
-                     lambda: project.debugger('missing', tmp_path, backend='wine-qemu'),
                      lambda: project.machine('missing', boot_image='missing')):
             with pytest.raises(ValueError, match='NE'):
                 call()
+        for backend in (None,'wine-qemu','wine-ne'):
+            with pytest.raises(ValueError,match='Win16 launch requires kernel'):
+                project.debugger('missing',tmp_path,backend=backend)
 
 
 def test_export_identity_index_is_complete_beyond_standalone_preview(tmp_path, monkeypatch):

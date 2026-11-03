@@ -27,12 +27,12 @@ class QemuMachine:
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.lock=threading.RLock()
-        self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-',dir='/tmp')
+        self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
         root=Path(self.temporary.name);self.log_path=root/'boot.log';self.gdb_path=root/'gdb.sock';self.rpc_path=root/'rpc.sock'
         try:
             if on_spawn is not None and not callable(on_spawn):raise ValueError('Expected an internal process ownership callback')
-            if type(memory_mib) is not int or not 16<=memory_mib<=4096 or type(cpus) is not int or not 1<=cpus<=8:
-                raise ValueError('Machine memory must be 16..4096 MiB and CPUs 1..8')
+            if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
+                raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             if (boot_image is None)==(kernel is None) or (kernel is None)!=(initramfs is None):
                 raise ValueError('Choose a boot image or a kernel/initramfs pair')
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}

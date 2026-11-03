@@ -77,17 +77,33 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
-                 spatial_mode=None, fair_play=False):
-        if self.meta['format'] == 'NE':
-            raise ValueError('NE currently supports static analysis only; DOS and PE64 launch backends cannot execute Win16 NE projects')
+                 spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None):
+        if dot_mode is not None:
+            if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
+            if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
+            window=dot_mode
+        if type(window) is not bool:raise ValueError('window must be boolean')
+        if memory_mib is not None:bounded(memory_mib,'memory_mib',16,8192)
+        if memory_mib is not None and (self.meta['format'] not in ('PE','NE')
+                or backend not in (None,'wine-qemu','wine-ne','ida-wine-qemu')):
+            raise ValueError('memory_mib is a Windows guest option')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
-        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] == 'PE'):
+        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE')):
             raise ValueError('Spatial game policy currently requires native DOSBox')
+        if self.meta['format']=='NE':
+            if backend not in (None,'wine-qemu','wine-ne'):
+                raise ValueError('NE original programs require the Win16 Wine backend')
+            if kernel is None or initramfs is None:
+                raise ValueError('Win16 launch requires kernel and prepared Wine runtime')
+            if remote_server is not None:raise ValueError('Win16 does not use an IDA remote server')
+            from .win16_debugger import Win16DebugSession
+            return Win16DebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
         if type(window) is not bool:
             raise ValueError('window must be boolean')
-        if window and (backend not in (None, 'dosbox') or (backend is None and self.meta['format']=='PE')):
-            raise ValueError('window is supported only by the native DOSBox backend')
+        if window and backend not in (None,'dosbox','wine-qemu'):
+            raise ValueError('dot-mode requires native DOSBox or a Windows spectator backend')
         if backend=='qemu-machine':
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')
@@ -103,15 +119,15 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
                 raise ValueError('IDA launch requires kernel, prepared IDA initramfs and remote_server')
             from .ida_debugger import IDAPEDebugSession
             return IDAPEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,remote_server=remote_server)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,remote_server=remote_server,window=window,memory_mib=memory_mib)
         if remote_server is not None:
             raise ValueError('remote_server requires backend=ida-wine-qemu')
         if backend == 'wine-qemu' or (backend is None and self.meta['format']=='PE'):
             if kernel is None or initramfs is None:
-                raise ValueError('PE64 Wine/QEMU launch requires kernel and prepared initramfs')
+                raise ValueError('PE32/PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
@@ -1074,7 +1090,8 @@ class DebugWorkspace:
         session = self.sessions.get(run)
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
-        methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+        methods = {'debug-step':'step','debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
+                   'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-keyboard-press':'keyboard_press','debug-keyboard-type':'keyboard_type','debug-keyboard-state':'keyboard_state',
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-screenshot-hooks':'screenshot_hooks',

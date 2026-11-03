@@ -1,114 +1,207 @@
-# PE32-first original Windows runtime bridge (macOS host, Win16 later)
+# Original Win32 and Win16 debugging with shared Windows scenes
 
-**Status:** phase-zero **read-only preflight implemented**; subsequent native-runtime/debugger work is proposed. This MR does not claim a new Windows debugger, a built Wine 11 guest, or execution of an original program. Existing output/back-end qualification is not equivalent to original-image debugging.
+This development branch extends the existing Wine/QEMU debugger to original
+I386/PE32 programs and Windows NE programs. The local Mac owns the controller
+and an offline x86-64 Linux/Wine guest. The code is experimental and requires a
+new runtime prepared from the same package. Source implementation, native
+program qualification, hosted CI, release packaging and local activation are
+separate gates. The MR handoff records the exact tested revision and results.
 
-## Why this is needed
+## Choose the actual program profile
 
-fDisBull v0.30.0 already has:
-
-| Windows era | Existing static and output capabilities | Original program debugging gap |
+| Input | Native context and addresses | Scope |
 | --- | --- | --- |
-| Win16 NE / x86-16 | NE loader and fixup-preserving static traversal; native Win16 UDC memory shell, tested in Wine 11 | No live selector/task-aware original NE debugger |
-| Win32 PE32 / x86-32 | PE32 static loader; i686 MinGW Win32/GDI UDC shell with native tests | The Wine debugger only admits x86-64 PE; no original PE32 WoW64 debugger |
-| Win64 PE32+ / x86-64 | PE64 static analysis, common UIL Win64 lowering, native desktop shell | Existing Wine/QEMU debugger, qualified only within its documented scope |
+| Win32 I386/PE32 | Actual WOW64 EIP, EFLAGS, eight 32-bit GPRs and segment registers; observed image base plus project RVA | Original main-image breakpoints, memory/register edits, completed steps/traces and bounded scalar data watches |
+| Win64 AMD64/PE32+ | Native RIP, RFLAGS and sixteen 64-bit GPRs; observed image base plus project RVA | Existing PE64 debugger, with the shared Windows input/frame/scene interface |
+| Win16 Windows NE | Actual carrier WOW64 context, live 16-bit CS:IP and LDT descriptors; source-bound `ne:segment:offset` mappings | Original entry, observed code/data selectors, breakpoints, memory/register observations, completed steps/traces and restricted scalar watches |
 
-See [NE loading](NE_LOADING.md), [Win16 output](UDC_MEMORY_WIN16.md), [Win32/Win64 output](UDC_MEMORY_DESKTOP.md), [common UIL native](COMMON_UIL_NATIVE.md), [PE64 debugger](WINE_DEBUGGER.md), and [Snake cross-target qualification](evidence/snake-win16-win32/verification.json).
+The runtime detects the mapped process architecture. A PE32 session cannot
+reinterpret a segmented LDT context as a flat address. Unknown or stale Win16
+bindings refuse. Static analysis and generated Win16/Win32 UDC shells remain
+independent capabilities; they do not establish original-program compatibility.
 
-**Goal:** a shared, provenance-preserving observation interface for original PE32 first, and subsequently NE, without regressing the existing PE32+ debugger. Feed the original behavior into RE -> UDL -> UIL -> UDC and verify block-fusion optimizations. Preserve each original source identity, ABI, register width and runtime mapping. The **first original-program target is an authored PE32 fixture, then user-owned Win32 crackmes**. Original Win16 Colonization remains a separate later milestone; it must not gate PE32 progress.
+For PE64's existing advanced operations, see [Wine debugging](WINE_DEBUGGER.md).
+The [read-only preflight](../scripts/windows_runtime_preflight.py) is still a
+useful tool inventory, with independent `compilers --target pe32`, `qemu-host`,
+`wine-guest` and `macos-native` modes. Its result is explicitly `preflight-only`.
 
-## Binding execution priorities (updated November 3, 2026)
+## Prepare and launch
 
-| Priority | Deliverable | Must pass before calling it implemented |
-| --- | --- | --- |
-| **P0: PE32** | Compile a genuine I386/PE32 fixture and run it in an isolated Wine 11 WoW64 guest | Actual 32-bit entry, input, state change and exit, not a PE64 process or successful compilation alone |
-| **P1: PE32 debugging** | Extend guest and host protocol to x86-32 registers, breakpoints and guarded memory | Independent EIP/ESP/EFLAGS context proof, RVA rebasing, breakpoint rearm and failure/refusal tests |
-| **P1 in parallel: local macOS** | Run the controlling fDisBull process and macOS-native investigation on the local Mac; host the PE32 guest through QEMU where required | Fresh Mac-specific toolchain, native Mach-O/LLDB observation and guest communication receipts; remote Linux not silently required |
-| **P2: crackme/UDC qualification** | Original PE32 A->B vs optimized AB at matched stopped states | Explicit live flags, memory, branch, SEH/API and continuation comparisons; no proprietary crackmes in Git |
-| **P3: Win16 original debugger** | Original NE selector/task/CS:IP observation and Colonization parity | Compatible Win16 runtime and source/selector/offset binding proof |
-| **P4: general UIL targets** | Expand common indexed-UIL native implementations beyond current Win64 | Separately qualified generic PE32/NE backends, not just bounded-memory UDC shells |
+Supply QEMU 9.1 or newer, an x86-64 Linux kernel and a private trusted initramfs
+with Wine, Xvfb, Python and the guest MinGW compiler. PE32 and NE require a
+qualified Wine 11 new-WoW64 runtime; Win16 compiler tools are needed only to
+build Win16 fixtures, not to analyze an existing original NE executable.
+Existing prefix contents are never migrated. The guest creates its own prefix.
 
-This is **priority ordering, not a claim that these native implementation stages have landed**. The existing Win64 debugger must remain functional and receive non-regression testing. Win16 research can continue independently without blocking the PE32 gate.
+Prepare a new matching runtime without overwriting the base:
 
-## macOS is the local host, not an afterthought
+```sh
+python -m fdisbull.wine_runtime \
+  --base-initramfs /private/trusted-wine11.cpio.gz \
+  --output /private/matching-fdisbull-wine11.cpio.gz
+```
 
-**The primary workflow is local-first on the user's Mac Studio.** fDisBull's macOS-native Python process, Mach-O/ARM64 analysis, `macos-observe`, LLDB-based original-code observations and macOS ARM64 UDC build path should stay usable independently of Wine or a Linux VM. See [macOS ARM64 analysis](MACOS_ARM64_ANALYSIS.md), [macOS memory UDC](UDC_MEMORY_MACOS.md) and [macOS reversible capture](MACOS_REVERSIBLE_CAPTURE.md). Their existing bounded original/runtime scopes must not be silently enlarged into arbitrary native-process debugging.
+The protocol checks all packaged guest resource hashes, the compiled agent,
+Wine version and kernel identity. A changed source or installed package needs
+a new matching runtime. Keep the base, prepared runtime and receipts outside
+Git. Run the repository storage admission check before a material build or
+capture. The retained test image used here needs 8 GiB of guest RAM; smaller
+prepared runtimes may use the 4 GiB default. Memory allocation is explicit and
+recorded, and native state restoration must retain the saved configuration.
 
-For an **original PE32 process**, macOS itself cannot execute 32-bit Windows code. The local Mac therefore runs the fDisBull controller and an **isolated QEMU x86-64 Linux guest with Wine 11 WoW64**, using the same persistent project/evidence API. Neither Apple Silicon Rosetta nor an ARM64 native compiler is a substitute for a PE32 CPU/Win32 runtime. Retain the guest image and checksums outside Git, and reuse the current Wine/QEMU transport rather than adding a mandatory remote service.
+```sh
+# Original Win32; PE64 uses the same backend with an actual PE64 input.
+fdisbull debug /private/win32.fdb --backend wine-qemu \
+  --executable /opt/homebrew/bin/qemu-system-x86_64 \
+  --game-dir /private/program --version 1 \
+  --kernel /private/linux-amd64 --initramfs /private/matching-fdisbull-wine11.cpio.gz \
+  --memory-mib 8192 --boot-timeout-ms 600000 --dot-mode
 
-A Linux x86-64 runner may compile, reproduce, or run the *same* offline guest as an **optional CI/remote route**. Native Windows or compatible-Wine runs provide their own scoped OS evidence; no Mac-specific result is inferred from Linux CI, or vice versa. Mac-local build checks use the host toolchain where applicable. Avoid requiring Open Watcom or Win16 setup before PE32 work can begin.
+# Original Windows NE; logical segment addresses are preserved.
+fdisbull debug /private/win16.fdb --backend wine-ne \
+  --executable /opt/homebrew/bin/qemu-system-x86_64 \
+  --game-dir /private/program --version 1 \
+  --kernel /private/linux-amd64 --initramfs /private/matching-fdisbull-wine11.cpio.gz \
+  --memory-mib 8192 --boot-timeout-ms 600000 --dot-mode
+```
 
-**macOS acceptance is its own gate**: native `fdisbull` CLI and Mach-O/ARM64 observation, local compiler/probe, QEMU guest launch and data transfer when requested, and an exact backend/host identity receipt. Missing tools or privileges must yield a specific refusal, not silently route the whole workflow to Linux. The read-only `qemu-host` preflight runs on macOS. The new `macos-native` preflight checks a Darwin host and presence of Clang, LLDB and xcrun *without Wine*, but does not certify debugger entitlement or live original-code execution. Neither gate certifies Wine-guest functionality.
+Supply an explicit `files` allowlist for required assets, including the target
+EXE. Only the selected files cross the private serial channel, within the
+1,024-file/64 MiB limit. Symlinks, databases and state files are rejected. The
+VM has no network adapter, host filesystem share, clipboard or host display.
+Target writes stay in disposable guest RAM.
 
-The planned common runtime is **Wine 11 new WoW64** in a contained x86-64 Linux environment (using QEMU full emulation on ARM64 hosts). Wine 11 supports 16-bit programs in new WoW64 but **does not thereby guarantee Win16 debugger events or selector contexts**. The default 64-bit prefix or an explicitly new WoW64-compatible prefix must be used; do not automatically migrate or replace a user's existing prefix. See [official Wine 11.0 announcement](https://list.winehq.org/hyperkitty/list/wine-releases%40list.winehq.org/message/UL6L2GJ55VYUJ5KUMBZ3TZSXRFJ52QG6/).
+The Python factory accepts `window=True` or `dot_mode=True`; the foreground
+JSON `debug-launch` accepts the same options and `memory_mib`. A retained
+`serve` or `debug` session owns the live process. Saved history cannot reconnect
+a closed emulator. Closing the session closes the spectator and reaps its VM.
+No shared system installation is changed by launching a source worktree.
 
-A **second, historical oracle** is Windows 3.1/3.11 under DOSBox-X, using user-supplied appropriately licensed Windows media and original target files. It must remain private and is only for original-game comparison. See [DOSBox-X Windows 3.1 installation guide](https://dosbox-x.com/wiki/Guide%3AInstalling-Windows-3.1x).
+## Debugging the original NE rather than its carrier
 
-### What is implemented by this MR: read-only readiness inventory
+Wine starts a 32-bit carrier before entering the original NE program. The
+adapter first stops that carrier, reads the actual loaded module export table,
+and breaks at Wine's register callback before the original entry executes.
+The callback's prepared CS:IP and DS provide candidate selectors. The adapter
+then checks live LDT descriptors and compares original code/data segments
+against the retained source before stopping at the original NE entry.
 
-A small Python script reports only tool presence and versions. Its four modes are independent; `qemu-host` supports macOS and Linux, and `macos-native` checks the local Apple toolchain without assuming a Windows guest:
+Only declared NE fixup spans and the documented initial instance-data words
+are masked. Recognized exported-entry prologs have exact, recorded Wine ABI
+transforms rather than blanket ignored code. Unexpected unrelocated bytes
+refuse the binding. Each binding retains source/segment hashes, selector,
+descriptor base/limit/type, task thread and generation. Every memory/control
+operation rechecks the descriptor; an unobserved segment is never computed
+using DOS paragraph arithmetic. Current code selectors can be bound by unique
+source matching; ambiguous matches refuse.
 
-~~~sh
-# PE32 is the first target: do not require Open Watcom/Win16 or PE64 GCC.
-python scripts/windows_runtime_preflight.py --mode compilers --target pe32 --strict
-# On the actual Mac, check native Clang/LLDB/xcrun independently.
-python scripts/windows_runtime_preflight.py --mode macos-native --strict
-# Optional backwards-compatible whole toolchain gate:
-python scripts/windows_runtime_preflight.py --mode compilers --target all
-python scripts/windows_runtime_preflight.py --mode qemu-host \
-  --qemu /private/qemu-system-x86_64 --kernel /private/bzImage \
-  --initramfs /private/wine11.cpio.gz --strict
-# Run wine-guest INSIDE the prepared Linux guest, not on the Apple Silicon host:
-WINEARCH=wow64 python scripts/windows_runtime_preflight.py --mode wine-guest --strict
-~~~
+Use `ne:2:0xa568` style addresses obtained from the actual project, not selector
+values copied from another run. Raw carrier context, selector/IP, linear
+runtime address and logical project address are reported separately. A carrier
+entry stop alone is never reported as an original NE entry.
 
-The script invokes **only** Wine and QEMU version commands where available, checks tool/file presence, permits an **independent PE32-only compiler gate**, and produces machine-readable JSON with qualification explicitly equal to "preflight-only." It installs nothing, does not start QEMU/Wine on a target executable, does not initialize a Wine prefix, does not execute private game files, and does not build anything. A successful tool check is **readiness to attempt further tests**, not a native acceptance. Kernel/initramfs presence is not integrity/boot verification. The tool does not inspect or qualify a Wine prefix's on-disk architecture, a live X display, Apple debugging permissions or original native execution. The macOS gate is **host tool presence only**. Four new test cases have been authored for PE32 isolation, Mac tool presence and argument validation; fresh test execution is still required on the revised commit. See tests/test_windows_runtime_preflight.py.
+## Shared Windows keyboard, frames and scene actions
 
-### Milestone 1 (P0): original PE32 executable probe before Win16
+The Windows adapter supplies the same public named scene operations used for
+DOS: `scene-check`, `scene-assert`, `scene-act`, `scene-click` and `scene-wait`,
+plus sparse `frame-probe`, screenshots, grids and stored exports. Scene memory
+predicates use flat project addresses for PE and observed logical bindings for
+NE. Frame signatures bind source, resources, runtime and display identity.
+A click tied to an outdated frame/mode refuses before input.
 
-Reuse `src/fdisbull/wine_runtime.py`, `src/fdisbull/wine_rpc.py`, `src/fdisbull/wine_guest/agent.c`, `src/fdisbull/qemu_machine.py` and the existing authored Windows fixture mechanisms. First compile and admit a **genuine I386/PE32 x86-32 fixture** using i686 MinGW. Run it in an offline Wine 11 WoW64 guest under full x86 QEMU, driven by fDisBull on macOS or Linux. Verify format, entry, controlled state transition, process exit, resource cleanup, observed image base, and exact runtime/guest identities.
+Keyboard methods queue physical US scan codes in the guest. They include
+`keyboard_press`, bounded ASCII `keyboard_type`, `keyboard_state` and explicit
+key-down/key-up leases. Timed edges use execution-clock offsets: controller
+think time while paused does not consume a key hold. Duplicate/conflicting,
+consumed or stale leases refuse. Mouse holds also use the guest execution
+clock. An acknowledgment proves queue admission/OS delivery; only subsequent
+program memory/frame observations establish application consumption.
 
-Do not substitute a Win64 PE32+ fixture for this test, and do not require a Win16 toolchain. Explicitly test new-prefix startup, process-bitness detection and refusal on mismatched PE32/PE64 context. Keep the existing PE64 native acceptance unchanged as a regression. Hosted heavy native jobs remain manual under CI anti-abuse rules.
+```python
+with project.debugger(qemu, game_dir, backend="wine-qemu", kernel=kernel,
+                      initramfs=runtime, version=1, dot_mode=True,
+                      memory_mib=8192) as debug:
+    print(debug.dot_mode())  # Includes the owned spectator URL.
+    debug.keyboard_press("right", hold_ms=40, gap_ms=40)
+    result = debug.scene(scene_id).wait(object="counter")
+    print(result)  # Inspect matched/complete, observed memory/pixels and stops.
+```
 
-### Milestone 2 (P1): original Win32 PE32 stopped-process debugging
+Use addresses, scene IDs and object names authored for the selected program.
+For a generic observation wait use `active_ms`, `slice_ms`, `timeout_ms` and
+explicit memory/register predicates. Windows scene budgets use host execution
+slices and report `time_basis: host`; a legacy scene `guest_ms` field is an
+active host budget here. It does not become DOS guest time or frame accuracy.
 
-Extend the guest/host protocol to **architecture-dependent x86-32 state**, not reinterpretation of 32-bit EIP/ESP/EFLAGS as x86-64 RIP/RSP. Validate the actual Wine 11 WoW64 debug events before choosing thread-context APIs. Require 32-bit breakpoint hit, restored displaced byte, single-step/rearm, guarded memory read/write, exception/SEH and thread reporting, close/restart isolation, and reliable RVA to observed module-base translation. Unrecognized context or stack/frame shape must refuse.
+Breakpoints, watches, exceptions, exit and incomplete observations interrupt a
+scene. They are retained with any already-queued input. Do not replay a click
+or key batch after such a stop. Inspect the first-chance exception and explicitly
+continue the stopped program or use an input-free scene wait when appropriate.
+The debugger forwards an unhandled first-chance exception on continuation;
+it does not silently swallow application or Wine exceptions for a scene.
 
-Win32 watchpoints, native code layers, machine snapshots/rewind, multiple windows, DLL/child-process following and broad anti-debug compatibility each require separately tested capability flags. No PE64 feature parity is inherited by metadata alone.
+Declarative saved scripts may declare `backend: wine-qemu` or `backend: wine-ne`
+with `format: fdisbull-script-1`. This selects the actual backend signatures
+for offline validation, including `step` and host-time `wait`. Live execution
+also checks the declaration against the owned session and rejects malformed
+later operations before an earlier mutation. Omitting `backend` preserves the
+legacy DOS storage grammar; live sessions still validate their own methods.
 
-**Mac-host lane in parallel:** run exactly the same authenticated guest protocol under QEMU on macOS/Apple Silicon; compare relevant PE32 observations with the Linux host route and record host-specific timing/translation separately. Also smoke the already-existing native macOS ARM64 target analysis and generated UDC path *without launching Wine*. This confirms that adding Windows support does not break the local platform.
+## Dot-mode is a read-only spectator
 
-### Milestone 3 (P2): original PE32 crackme and UDC fusion acceptance
+`--dot-mode` / `dot_mode=True` starts an owned loopback HTTP viewer and returns
+its capability URL through launch/status metadata and `debug-spectator`.
+Open that URL in Dot's little computer or an ordinary browser able to reach the
+controller's loopback listener. `debug-spectator` can enable/disable or inspect
+it later. `debug-spectator-frame` captures one paused frame explicitly.
 
-Use an **authored PE32 key-check fixture first**, then a privately supplied, unpacked user-owned crackme. Compare original connected blocks A->B and candidate fused AB under matching stopped original-program state, including live general registers/EFLAGS, touched memory, caller-visible exceptions, imports/last-error, ordered effects and continuation. Keep source hashes, compiler profile, solver/model proof and original runtime witness separate. Preserve original child blocks and offer qualified optimized backings as opt-in UIL/UDC realizations. See the separate [reversible feedback MR !63](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/63).
+The viewer serves only retained in-memory PNGs and metadata. Browser refreshes
+do not issue debugger commands. There is no keyboard/mouse forwarding,
+pointer lock, global input hook or host capture; control POST requests refuse.
+The underlying QEMU runs with `-display none`. The browser remains an ordinary
+browser window and does not own the host keyboard or mouse.
 
-On the Mac, the authoring/solver/LLVM pure-model loop can run **natively**; only original PE32 execution needs the Windows-compatible guest. This removes an unnecessary dependency on a remote Linux development machine. A completed native guest experiment is still required before claiming original PE32 equivalence.
+Frames refresh at debugger stops and completed scene slices. For watching a
+long gameplay, drive bounded scene slices rather than one uninterrupted long
+`run`; the viewer does not promise continuous video during that call. Capturing
+before a client window exists returns recoverable `WindowsCaptureUnavailable`
+and clears a stale spectator image while preserving the live debugger. Raw
+captures remain private; explicit screenshots are stored for offline export.
 
-### Milestone 4 (P3): Win16 original NE selector/task debugging
+## Verification and limits
 
-After the PE32 path passes, test whether Wine's NE loader and native debug events actually expose stable **16-bit CS:IP, DS, tasks/modules and selectors**. Otherwise investigate bounded loader/selector tracing in the guest or use the independent original Windows 3.1/DOSBox-X observation route. **Do not fake Win16 runtime support** by reinterpreting NE segment identities as DOS paragraphs.
+Real native checks use the supplied authored `wine_guest/selftest32.c` Win32
+program, an original generated NE Snake program and a private original
+Colonization executable. Their binaries, FDBs, assets, raw logs, images and
+states stay outside Git and packages. Only authored source/tests and sanitized
+handoff reports are published. Consult the MR's exact-head receipts for actual
+passes, interrupted attempts and claim boundaries.
 
-Only an observed binding may map static `ne:segment-index:offset` to runtime `selector:offset`. Record module/task identity, descriptor base/limit, live epoch and exact source hash; stale bindings or moved segments must refuse. Then qualify original COLONIZE.EXE with user-owned files using the existing DOS/Win16 food/shortage evidence. No whole-game equivalence claim is justified by isolated fragments.
+The reusable PE32 native test is `tests/test_windows_native.py`; set
+`FDISBULL_PE_QEMU`, `FDISBULL_PE_KERNEL`, `FDISBULL_PE_INITRAMFS`,
+`FDISBULL_PE32_FIXTURE` and `FDISBULL_REQUIRE_WINDOWS=1`. The opt-in original NE
+entry test in `tests/test_win16_debugger.py` uses `FDISBULL_NE_QEMU`,
+`FDISBULL_NE_KERNEL`, `FDISBULL_NE_INITRAMFS`, `FDISBULL_NE_FIXTURE` and
+`FDISBULL_REQUIRE_NE=1`. Missing explicit inputs skip ordinary unit runs and
+fail required native runs. An entry-only pass cannot certify GUI/gameplay.
 
-### Milestone 5 (P4): generic UIL target completeness
+PE32 advanced layers, CPU/RAM deltas and whole-VM state code use the actual
+32-bit context; each positive native feature still needs its own qualification.
+Snapshots refuse queued or held input, and a restore invalidates host key
+leases. Win16 whole-VM checkpoints, execution layers and CPU/RAM deltas are
+explicitly unavailable pending selector recovery qualification. Ambiguous
+scalar watches and changed selectors refuse; an unsafe guard classification
+closes the owned session before any continuation.
 
-Common indexed UIL's native code generator currently has macOS ARM64, Linux x64 and Win64 targets. A bounded-memory UDC shell already exists for NE and PE32; that is not proof of a general typed indexed UIL compiler for those platforms. Extend the **generic PE32** path before additional Win16 lowering, preserving exact 32-bit ABI, carrier widths and proof domains; keep native macOS ARM64 as a required regression target.
+Multiple-window selection, child-process following, arbitrary DLL/JIT code,
+managed source debugging, DirectX/fullscreen capture, exact Windows hardware
+behavior, DOS frame timelines and general Win16 compatibility remain outside
+this qualified scope. Runs are finite synchronous operations; a slice is a
+bounded yield, not an asynchronous interrupt API. The Mac-hosted Wine route
+does not qualify native Microsoft Windows, whole-game recovery, DOSBox parity,
+or the separate original-to-UIL and UIL-to-generated-code edges.
 
-## Required proof and refusals
-
-| Gate | Required evidence | Must not be inferred |
-| --- | --- | --- |
-| P0 tools and artifact identity | Toolchain, Wine/QEMU versions, exact I386 PE32 machine identity and original source hash | A functioning guest from version numbers |
-| P0 PE32 native execution | Actual 32-bit entry/input/state/exit in Wine 11 WoW64 under QEMU | PE64 execution or compile-only success |
-| P1 PE32 debugger | EIP/ESP/EFLAGS, breakpoint/rearm, original memory, context/exception and lifecycle evidence | PE64 layer/watch/state parity |
-| P1 macOS-local host | Host-owned QEMU guest and CLI protocol, independently native Mach-O/ARM64 observation and compiler probe | macOS verified by Linux CI, or PE32 runs as macOS-native code |
-| P2 original PE32 fusion | Original A->B vs F under same stopped state and complete declared observations | Algebraic model agreement alone or dropped flags/API effects |
-| P3 NE original debugging | Runtime CS:IP with observed selector/task bindings and stale-context refusal | DOS segment arithmetic or guessed selector values |
-| P4 target-wide semantics | Qualified Win32/Win16 generic indexed UIL backends with unchanged macOS ARM64 baseline | Passing bounded-memory shells proves arbitrary UIL conversion |
-
-Do not store original games, Windows installation media, guest images, private FDB projects or resumable VM states in GitLab. Only authored fixtures, sanitized receipts, scripts and tests belong in the repository. Preserve unresolved/rejected paths explicitly.
-
-## Build/ownership status
-
-The original phase-zero script and unit tests previously passed in an isolated Linux x86-64 Python 3.13.5 sandbox. This revision adds a PE32-only compiler selector and a local Mac-native tool presence gate, plus four new tests. **Those new tests and the Mac gate have not been run on a real Mac by this contribution; no expanded native debugger capability is claimed.** The tested sandbox did not contain Wine, QEMU, Open Watcom or MinGW. The first real native build should be executed in a prepared guest, preferably driven **locally by macOS on the Mac Studio**, with Linux CI as a complementary route. Mac-local LLDB and original PE32 Wine debugging have **not** been freshly tested by this MR. The local-hub Git mirror remains pending in this tool environment.
-
-Release alignment: v0.31.0 was tagged from a dedicated release line containing the earlier preflight, but MR !60 remains **open and not integrated into GitLab `main`** at this update. The release tag and the default branch are different histories; neither proves this revised priority matrix is shipped.
+No original-versus-optimized crackme/UDC equivalence or generic Win16/Win32 UIL
+compiler is added by this debugger contribution. Mac-native LLDB/ARM64 routes
+remain separate and are not enlarged by Windows results. Hosted heavy CI is
+manual; Draft MR updates use `ci.skip` on GitLab and keep local-hub in sync.

@@ -804,6 +804,11 @@ REQUIRED_PE_RESOURCES = {
     "wine_guest/broker.py",
     "wine_guest/selftest.c",
 }
+
+REQUIRED_PE_RESOURCES |= {"wine_guest/selftest32.c", "wine_arch.py", "windows_ui.py", "win16_debugger.py"}
+REQUIRED_TEST_HELPERS |= {"tests/test_wine_pe32.py", "tests/test_wine_pe32_state.py",
+    "tests/test_wine_guest_bridge.py", "tests/test_windows_interfaces.py", "tests/test_windows_scenes.py",
+    "tests/test_windows_dot_mode.py", "tests/test_windows_native.py", "tests/test_win16_debugger.py", "tests/test_win16_native.py"}
 REQUIRED_PE_RESOURCES |= {
     "ida_guest/ui.c",
     "ida_guest/init.sh",

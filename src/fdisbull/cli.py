@@ -58,6 +58,9 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    "debug-step": "Step completed native instructions in a supported backend; run,[count,timeout_ms]",
+    "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
+    "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
     "uil-check": "Validate indexed common UIL or a complete package; program,[presentation,catalog,orchestration] or package; no execution",
     "uil-catalog": "Compile a list of UDL descriptors into exact semantic groups; blocks; unsupported languages remain explicit",
     "uil-run": "Execute bounded indexed UIL with typed copies and planned effects; program,presentation,[catalog,orchestration,inputs,max_steps]",
@@ -162,7 +165,7 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Pause all vCPUs in the selected machine context; run,context=machine",
     "debug-resume": "Resume the selected machine so guest services can run; run,context=machine",
-    "debug-launch": "Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,spatial_mode,fair_play]",
+    "debug-launch": "Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
@@ -1851,10 +1854,11 @@ def parser():
     c.add_argument("project")
     c.add_argument("--executable", required=True)
     c.add_argument("--game-dir", required=True)
+    c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine"],
+        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne"],
     )
     c.add_argument(
         "--remote-server",
@@ -1872,7 +1876,7 @@ def parser():
         "--window",
         dest="window",
         action="store_true",
-        help="Request dot-mode: a watch-only native DOSBox window (requires compatible backend and display)",
+        help="Request dot-mode: a watch-only DOSBox window or Windows spectator viewer; host input stays outside the guest",
     )
     c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"])
     c.add_argument(
