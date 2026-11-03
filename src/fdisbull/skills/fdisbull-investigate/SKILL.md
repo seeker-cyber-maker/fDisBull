@@ -38,7 +38,8 @@ fdisbull methods
 Use the same explicit executable or Python environment for subsequent calls. A
 source checkout, an installed wheel and an agent-cached skill can be different
 revisions; treat the installed `methods` and `capabilities` output as the local
-authority. `capabilities` inspects code scope, provider hashes and detected
+authority. Do not combine unrelated branch copies into an unversioned "latest"
+skill. `capabilities` inspects code scope, provider hashes and detected
 dependencies without launching external tools or targets; `runtime_validation:
 not_run` is never an acceptance verdict (`doctor` and authorized native probes
 run separately). Retrieve only the reference needed for the current decision
@@ -182,7 +183,9 @@ Choose the runtime observation surface that matches the question:
   reachability. Declare `physical`, `assisted` or `story` policy (`--fair-play`
   locks physical play on `text-host`), label diagnostic state edits or actor
   placement honestly, and reconcile `recovery_required` or retained Z replies
-  from certified checkpoints rather than replaying uncertain actions.
+  from certified checkpoints rather than replaying uncertain actions. Unknown or
+  occluded views are unknown, not absent. Fair-play is a voluntary physical
+  policy, not a restriction on the analysis API.
 - **Bounded 64 KiB replies:** when a command returns `fdisbull-output-ref-1`
   (`status: artifact_required`), inspect the execution summary and read only
   the needed slice via `output-info`, `output-select`, `output-read` or
@@ -195,8 +198,9 @@ State what the evidence establishes, how it was collected, source/version and
 backend context, and what remains unproven. Distinguish static-only,
 model-evaluated, Z3-checked (`equivalent_under_assumptions` applies only to the
 supplied model), runtime-observed, assisted and restart-verified results.
-Preserve concise disproved hypotheses with their counterexamples and reopening
-conditions. Close the coverage ledger explicitly—supported claims,
-counterexamples, remaining unknowns and next discriminating probes—and report
-any budget or capability stop plainly rather than silently narrowing the user's
-goal.
+A partial or artifact-backed response is not evidence that an action was rolled
+back or a proof succeeded. Preserve concise disproved hypotheses with their
+counterexamples and reopening conditions. Close the coverage ledger
+explicitly—supported claims, counterexamples, remaining unknowns and next
+discriminating probes—and report any budget or capability stop plainly rather
+than silently narrowing the user's goal.

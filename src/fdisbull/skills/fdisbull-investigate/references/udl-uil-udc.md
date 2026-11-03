@@ -370,6 +370,7 @@ execution contract. Read [scene-recovery.md](scene-recovery.md) for the procedur
 that starts from required scene elements; its proposed analysis steps do not add
 a general slicing pass or change the installed exporter's prerequisites.
 
+<a id="native-console-udc-profile"></a>
 ## Native console UDC, replay and synthesis profiles
 
 `console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
