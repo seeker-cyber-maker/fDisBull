@@ -21,11 +21,17 @@ def _added_block(lines, start, end):
 
 
 @pytest.mark.parametrize('directory', ['experimental/dosbox-x', 'experimental/dosbox-x/layers'])
-def test_builtin_mouse_queues_in_protected_mode_without_real_mode_memory_access(tmp_path, directory):
+def test_builtin_mouse_queues_in_protected_mode_without_real_mode_memory_access(tmp_path, directory, request):
+    patch = ROOT / directory / 'headless-agent.patch'
+    if not patch.is_file():
+        message = 'Native source patches are separate from tool-only source archives'
+        if request.config.getoption('--require-native', default=False):
+            pytest.fail(message + '; run required acceptance from the repository')
+        pytest.skip(message)
     compiler = shutil.which('c++')
     if compiler is None:
         pytest.skip('C++ compiler required for the isolated native adapter contract')
-    lines = (ROOT / directory / 'headless-agent.patch').read_text().splitlines()
+    lines = patch.read_text().splitlines()
     state = _added_block(lines, '+struct AgentMouseState {', '+};')
     mouse = lines[lines.index('+++ b/src/ints/mouse.cpp'):]
     adapter = _added_block(mouse, '+namespace dosbox_agent {', '+} // namespace dosbox_agent')
