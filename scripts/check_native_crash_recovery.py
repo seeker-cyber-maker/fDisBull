@@ -81,7 +81,7 @@ def observe(debug, directory, label):
     registers = debug.registers()
     cpu = {key: registers[key] for key in CPU_FIELDS}
     address = int(registers['segments']['ds'], 16) * 16
-    result = debug.call('memory.read', {'address': {'space': 'linear', 'offset': hex(address)},
+    result = debug.call('memory.read', {'address': {'space': 'linear', 'offset': f'0x{address:08X}'},
                                        'length': 65536})
     raw = base64.b64decode(result['data_base64'], validate=True)
     require(len(raw) == 65536 and sha(raw) == result['sha256'], 'DS read identity mismatch')
@@ -116,7 +116,7 @@ def run_case(project_type, backend, root, mode, fixture, ledger, budget_check, t
     target = game / 'FRAMES.COM'
     target.write_bytes(fixture)
     record = {'mode': mode, 'target_sha256': sha(fixture), 'target_bytes': len(fixture),
-              'failure_class': 'injected-owned-backend-SIGKILL',
+              'planned_failure_class': 'injected-owned-backend-SIGKILL',
               'guest_fault_address': None, 'guest_progress_during_failure': 'unknown',
               'started_at_utc': stamp()}
     ledger.append(record)
@@ -203,6 +203,7 @@ def run_case(project_type, backend, root, mode, fixture, ledger, budget_check, t
                 record['failed_backend_returncode'] = process.poll()
             require(injection['fired'] and process.poll() == -signal.SIGKILL,
                     'Owned backend was not injected/reaped')
+            record['failure_class'] = 'injected-owned-backend-SIGKILL'
             require(debug.closed and debug._frame_timeline is None,
                     'Failure close did not clear unpinned frame history')
             record['failure_closed_session'] = debug.closed
