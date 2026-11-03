@@ -10,12 +10,15 @@ shipped APIs and reusable format contracts, read [media-modules.md](media-module
 ## Contents
 
 - [Keep each layer's identity](#keep-each-layers-identity)
-- [Intake a batch or a later addition](#intake-a-batch-or-a-later-addition)
 - [Establish a bounded format contract](#establish-a-bounded-format-contract)
 - [Investigate Mach-O ARM64](#investigate-mach-o-arm64)
+- [Intake a batch or a later addition](#intake-a-batch-or-a-later-addition)
 - [Reversible macOS UI observations](#reversible-macos-ui-observations)
-- [Compare releases](#compare-releases-at-the-right-boundary)
-- [Reduce media](#reduce-media-through-a-valid-consumer-contract)
+- [Win16 NE, DOS/4GW LE, DOS audio drivers and Cortex-M flash](#win16-ne-dos4gw-le-dos-audio-drivers-and-cortex-m-flash)
+- [Console ROMs, optical discs and mode-explicit decoders](#console-roms-optical-discs-and-mode-explicit-decoders)
+- [Compare releases at the right boundary](#compare-releases-at-the-right-boundary)
+- [Finalized AVI capture audits](#finalized-avi-capture-audits)
+- [Reduce media through a valid consumer contract](#reduce-media-through-a-valid-consumer-contract)
 
 ## Keep each layer's identity
 
@@ -167,7 +170,7 @@ declared metric drift, preserving binary facts versus source assistance and
 observations. In source, see `docs/MACOS_REVERSIBLE_CAPTURE.md` and the bounded
 `docs/CPUINFO_REPLICATION_COMPARISON.md` experiment.
 
-## Win16 NE static view
+## Win16 NE, DOS/4GW LE, DOS audio drivers and Cortex-M flash
 
 Supported Windows16 NE images can be imported directly with automatic selection
 or `--image ne`. Use explicit logical addresses such as `ne:4:0x547c`; a segment
@@ -182,6 +185,39 @@ links and selectable UDL backings have a bounded prototype described in
 [udl-uil-udc.md](udl-uil-udc.md); storing a candidate relationship does not qualify
 a backing or expand the native acceptance profile.
 
+For 32-bit DOS/4GW linear executables (`--image le` or automatic selection),
+keep the outer DOS stub distinct from mapped LE objects, page tables, entry
+context and validated 16/32-bit fixup records (`docs/dos4gw-le.md`). Do not
+flatten uninitialized BSS pages into file offsets or equate static object bases
+with live DOS extender selectors until runtime placement is observed.
+
+Miles AIL 2 `.ADV` audio drivers dispatch by function number rather than standard
+MZ/LE entry headers; import them with `--image ail` so handler seeds and driver
+descriptor metadata remain explicit. Use `dos-services` to inventory INT 21h,
+10h, 16h and 33h calls alongside INT 66h DIGPAK/MIDPAK vectors, keeping
+unresolved register selectors unknown (`docs/DOS_AUDIO_DRIVERS.md`).
+
+Static Armv7-M Cortex-M flash images decode Thumb/Thumb-2 code from an explicit
+flash base and vector table (initial SP plus odd Thumb handler entries and
+literal pools). Keep memory-mapped peripheral reads/writes, NVIC priorities and
+interrupt timing unresolved without hardware or trace evidence (`docs/CORTEX_M.md`).
+
+## Console ROMs, optical discs and mode-explicit decoders
+
+Use projectless `rom-inspect` for NES (iNES/NES 2.0), Genesis/Mega Drive, SNES
+(LoROM/HiROM scoring), Game Boy, GBA and N64 headers, and `disc-inspect` for
+CUE/BIN or ISO 9660 images (including Sega Saturn system IDs and directory
+extents). Container headers, checksums and mapper IDs describe packaging only;
+an advertised multicart title count does not establish distinct playable games
+(`docs/NES_MULTICART.md`).
+
+For Sega Saturn Hitachi SH-2 binaries, `rom-disasm` compares independent
+disassemblers at an explicit mapped base so decoder disagreements remain visible
+(`docs/ROM_ASM.md`). For SNES 65C816 code, `fdisbull.snes_decode` requires
+explicit `m` and `x` processor-status flag widths because immediate operand byte
+lengths change with accumulator/index mode; keep LoROM bank-`80` mirrors and
+WRAM (`7E`/`7F`) boundaries explicit (`docs/SHADOWRUN_SNES_MACOS.md`).
+
 ## Compare releases at the right boundary
 
 Match the actual editions and resources before treating files as counterparts.
@@ -194,6 +230,16 @@ If a supplied patch is part of the question, inspect its source/target identity
 checks and operations as evidence. Verify reconstructed outputs against its
 declared destinations when possible. A patcher's intent is not by itself proof
 of the affected game's behavior; unsupported operations remain unresolved.
+
+## Finalized AVI capture audits
+
+Before inspecting individual pixels or citing a recorded run, run projectless
+`capture-audit` (`ffprobe`/`ffmpeg`) against finalized AVI segments into a new
+private output directory (`docs/TAS_CAPTURE_AUDIT.md`). It hashes input files
+and decoded RGBA frames, flags stream parameter drift, duplicate/dropped frames
+and segment joins, and optionally samples PNG frames or an HTML contact sheet
+(`--every`, `--html`). Keep video frame indices and container timestamps separate
+from guest CPU ticks, deterministic input logs and unverified RAM state.
 
 ## Reduce media through a valid consumer contract
 

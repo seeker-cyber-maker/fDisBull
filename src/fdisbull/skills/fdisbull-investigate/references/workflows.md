@@ -147,6 +147,13 @@ resident. Record target registers before exit because DOS has restored the
 parent context at this boundary. A legacy `program_exit` on debugger closure,
 a pause outside the image, or an exit interrupt alone is not this evidence.
 
+For macOS ARM64, `macos-observe` runs a source-bound executable to one LLDB
+breakpoint. On macOS 14+, `macos-snapshot` inspects displays and target
+accessibility without input, while `macos-session` journals bounded captures
+using CoreGraphics global logical coordinates; `--live` is limited to declared
+status-menu or `CFPreferences` trials, and `macos-session-recover` restores owned
+pending changes. See `docs/MACOS_REVERSIBLE_CAPTURE.md`.
+
 ## Scenes, maps and movement
 
 Use scenes for versioned screen context, recognition masks, readiness and

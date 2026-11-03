@@ -22,13 +22,15 @@ valuable when their evidence and limits are explicit.
 ## Keep game files out of publication
 
 Do not upload original or modified game binaries, game assets, story images,
-saves, emulator states, or raw game-containing FDBs/archives to GitHub or tool
-packages. Semantic UIL/game representations are allowed pending sanitation;
-complete originals embedded in memory arrays, hex caches or nested archives
-are excluded. Review contents, not names. New FDBs retain exact size/SHA-256
-identities and loader provenance with payloads in a private external store;
-that store must never be uploaded. Hash equality verifies recorded byte identity,
-not publisher authenticity, safety, ownership or permission to distribute.
+saves, emulator states, or raw game-containing FDBs/archives to GitLab, GitHub,
+local hubs or tool packages (outside any narrow repository-authorized freeware
+fixture directory). Semantic UIL/game representations are allowed pending
+sanitation; complete originals embedded in memory arrays, hex caches or nested
+archives are excluded. Review contents, not names. New FDBs retain exact
+size/SHA-256 identities and loader provenance with payloads in a private
+external store; that store must never be uploaded. Hash equality verifies
+recorded byte identity, not publisher authenticity, safety, ownership or
+permission to distribute.
 
 Use `source-candidate` for a changed binary. Obtain the user's explicit approval
 for that exact project/base/candidate receipt before calling `bind-source` with
@@ -118,6 +120,17 @@ conditionally reachable code/assets; optional and missable content; recovered
 file/media layouts; engine/interpreter structure and transferable knowledge.
 Record present, understood, reachable and observed separately. Do not silently
 discard a recovered branch because it cannot yet support player instructions.
+
+Consume structured `fdisbull-investigate` artifacts without inflating their
+scope: keep binary-claim verdicts split across stored value, width/signedness,
+writer, trigger and reader on the pinned decoded edition; retain two-stage world
+and resource censuses (`agi-scenes` `outline`/`resolve`, Zork `zork-scenes` or
+`(z-world ...)` projections, and read-only save/map snapshots) with explicit
+residual IR; report standing-probe hit counts separately from bounded no-hit
+runs (zero hits in examined play never prove dead code); keep finalized AVI
+`capture-audit` frame hashes and video timestamps distinct from guest ticks; and
+distinguish console ROM/disc/multicart header metadata from verified unique
+playable games.
 
 ## 3. Write from gameplay meaning
 
