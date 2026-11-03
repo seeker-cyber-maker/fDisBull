@@ -4,6 +4,8 @@ This reference consolidates the definitions, schemas, data profiles, and
 verification boundaries of the **UDL → UIL → UDC** semantic pipeline across
 fDisBull's supported environments, incorporating the recovery harness,
 multi-scale Z-worlds, selectable block layers, and TAS rewind state policies.
+It is a source-checkout reference: it adds no runtime parser field, status enum,
+or profile version.
 
 ---
 
@@ -25,24 +27,25 @@ distinct architectural roles:
                (Feedback, Checkpoints, Rewind, and Differential Qualification)
 ```
 
-1. **UDL (Universal Decompilation Language / Source Mapping):**
+1. **UDL (User-Defined Language):**
    The mapping role between concrete source operations and shared semantics. It
    binds specific original addresses (e.g., segmented DOS `CS:IP`, logical Win16
    `ne:seg:offset`, 32-bit LE offsets, or 64-bit virtual addresses), registers,
    and file extents to logical variables, operations, and contracts. UDL
    preserves provenance, byte identity, and source evidence.
-2. **UIL (Universal Intermediate Language / Behavioral IR):**
+2. **UIL (Universal Interaction Language):**
    The candidate shared behavioral representation. It declares typed variables,
    pure expressions, acyclic local control flow, guards, and planned effect
    requests. UIL contains no native instruction opcodes, concrete host memory
    addresses, target register allocations, or target calling conventions.
-3. **UDC (Universal Decompilation Compiler / Realization):**
+3. **UDC (User-Defined Compiler):**
    Target compiler and realization definitions. A UDC reads UIL and binds its
    declared behavior to a target implementation—emitting standalone portable
    code (Python, JavaScript), linking native machine components (macOS ARM64,
    Linux x86-64, Windows x64), compiling segmented 16-bit binaries (Win16 NE),
    synthesizing console cartridges (NES, Genesis), or orchestrating
-   desktop/browser window shells.
+   desktop/browser window shells. An original-backed UDC may retain existing
+   code and dependencies rather than regenerate them.
 
 ### The Recovery Harness and Feedback Loop
 
@@ -50,10 +53,10 @@ Recovery is rarely a one-shot forward translation. The **recovery harness** is a
 executable interface that observes and operates a backing, manages experiment
 boundaries and checkpoints, and records evidence:
 
-- `waexecution` records qualified physical execution facts, access events, and
-  restore coverage.
-- `waorchestration` connects logical objects, typed values, dependencies, and
-  behavioral boundaries.
+- Native checkpoint receipts record qualified physical execution facts, access
+  events, and restore coverage.
+- The UIL presentation, catalog, and orchestration documents connect logical
+  objects, typed values, dependencies, and behavioral boundaries.
 - **Z** names the observations, objects, relations, and actions used to
   investigate and test those boundaries.
 - A checkpoint supplies both the starting witness for an experiment and the
@@ -62,10 +65,11 @@ boundaries and checkpoints, and records evidence:
 
 ---
 
-## 2. The Seven Concrete Profiles and Data Formats
+## 2. Concrete Profiles and Data Formats
 
-fDisBull defines seven concrete, content-addressed formats for representing and
-evaluating programs at different abstraction layers:
+fDisBull defines six concrete, content-addressed formats for representing and
+evaluating programs at different abstraction layers, plus one multi-scale
+observer study that does not yet have a registered `fdisbull-*` schema:
 
 | Profile / Format | Primary Schema / Identifier | Scope and Responsibilities |
 | --- | --- | --- |
@@ -75,7 +79,7 @@ evaluating programs at different abstraction layers:
 | **Direct AGI v2** | `fdisbull-il-2` / `agi-2.917` | Sierra AGI v2 logic trees and compact continuations, typed effect ports, and live DOS host qualification. |
 | **Direct Z-machine v3** | `zork-uil` / `zork-intents` | Word16 executable IR, source-linked mailbox game-intent rules, and 110-room / 352-exit address-free scene rules. |
 | **Console Synthesis** | `console-udc` / `genesis-replay` | Shared unsigned 8/16-bit UIL for NES/Genesis; full-game procedural replay (*Miniplanets*); prepared-state slices (*Shadowrun*). |
-| **Multi-Scale Z-Worlds** | `z-world-view-study-1` | Authoritative world state vs. bounded observer scene views; overlapping views, current/remembered/unknown knowledge. |
+| **Multi-Scale Z-World Study** | `z-world` + observer/view study (no registered profile) | Authoritative world state vs. bounded observer scene views; overlapping views, current/remembered/unknown knowledge. |
 
 ---
 
@@ -275,9 +279,12 @@ restoring a checkpoint invalidates old cursors even if visible field values repe
 Rewind connects observed outcomes back to producing code and state. In fDisBull,
 rewind selects both a **return boundary** and an explicit **restoration policy**:
 
-1. **Deterministic Machine Parity (Default):**
-   Restores both CPU registers and full writable RAM to the recorded historical
-   checkpoint. Subsequent execution reproduces identical behavior.
+1. **Native checkpoint restore (default for supported sessions):**
+   Restores the recorded CPU and guest-memory state and verifies the readback.
+   It does not restore mounted host files, devices, timers, or external state;
+   a failed restore closes the session rather than resuming a partial machine.
+   A successful restore is a checkpoint operation, not a claim that every later
+   execution is bit-identical.
 2. **Selective State / RNG Continuation Policy:**
    Restores native machine execution context while preserving declared current
    memory ranges (such as live RNG state or frame counters):
@@ -290,22 +297,17 @@ rewind selects both a **return boundary** and an explicit **restoration policy**
 
 ---
 
-## 10. Rich Text Formatting and Dynamic Display
+## 10. Text and Display Boundaries
 
-For dynamic text and string templates, the study profile introduces two core
-operations:
-
-1. **`text.format`:**
-   Evaluates ordered typed parts (literal text strings, variables, constants,
-   and formatted decimals with minimum width and padding) into a bounded UTF-8
-   text value (at most 4,096 bytes).
-2. **`text.display`:**
-   Stages an output event containing a text value into the invocation's event
-   plan, returning `pending_host` without claiming physical window rendering.
+Text values and static text resources exist in the current UIL profiles, but
+there are no built-in `text.format` or `text.display` operations. Formatting
+rules and display events remain explicit UDC, host-adapter, or presentation
+obligations. Do not invent a parser field or operation to make a formatting
+claim executable.
 
 Formatting policies remain distinct across engines (e.g., DinoPark `%02d`
 zero-padded width vs. Ultima unsigned decimal width vs. AGI trailing-two-digit
-modulo-100 formatting).
+modulo-100 formatting); record the selected policy with the host implementation.
 
 ---
 

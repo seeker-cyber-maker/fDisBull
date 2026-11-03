@@ -112,12 +112,13 @@ schemas, public examples, original-kernel evidence and explicit limits. This
 profile does not rename or widen the legacy formats below.
 Read [common-uil.md](common-uil.md) for a complete installed-package example.
 
-- **UDL** is the source-to-shared-IL mapping role.
-- **UIL** is the candidate shared-IL program.
-- **UDC** is a target compiler definition that reads UIL and binds its declared
-  behavior to an implementation. The original DOS profile can select retained
-  block backings. The selectable-layer prototype adds immutable contracts,
-  isolated CPU providers and separately admitted native output profiles.
+- **UDL (User-Defined Language):** the source-to-shared-IL mapping role.
+- **UIL (Universal Interaction Language):** the candidate shared-IL program.
+- **UDC (User-Defined Compiler):** a target compiler definition that reads UIL
+  and binds its declared behavior to an implementation. The original DOS profile
+  can select retained block backings. The selectable-layer prototype adds
+  immutable contracts, isolated CPU providers and separately admitted native
+  output profiles.
 - **Recovery harness:** an executable interface that observes and operates a
   backing, manages experiment boundaries and checkpoints, and records evidence.
   Its named observations, actions, guards and bindings form an architectural
@@ -130,12 +131,13 @@ Read [common-uil.md](common-uil.md) for a complete installed-package example.
   a selected realization, or supply authored behavior that lowers into UIL.
 
 The recovery direction is supported by a feedback loop through the harness:
-`waexecution` records qualified physical execution facts and restore coverage;
-`waorchestration` uses those facts to connect logical objects, typed values,
-dependencies and behavioral boundaries. Z names the observations and actions
-used to investigate and test those boundaries. A checkpoint supplies both the
-starting witness for an experiment and the state relation for comparing an
-original-backed operation with a candidate. In a source checkout,
+native checkpoint receipts record qualified physical execution facts and
+restore coverage; the UIL presentation, catalog and orchestration documents use
+those facts to connect logical objects, typed values, dependencies and
+behavioral boundaries. Z names the observations and actions used to investigate
+and test those boundaries. A checkpoint supplies both the starting witness for
+an experiment and the state relation for comparing an original-backed operation
+with a candidate. In a source checkout,
 `docs/UDL_UIL_UDC_CONSOLIDATED.md` consolidates all schemas and profiles.
 
 A register name does not define a permanent logical variable. Bind physical
@@ -424,6 +426,7 @@ retries use a deliberately different random context. Record the selected policy
 and actual context in the branch evidence. Pointwise original/replacement
 comparisons must use matched or explicitly related random contexts.
 
+<a id="native-console-udc-profile"></a>
 ## Native console UDC, replay and synthesis profiles
 
 `console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
