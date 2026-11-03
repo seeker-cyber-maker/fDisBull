@@ -116,7 +116,7 @@ def _catalog():
         _entry('debug.win16', 'partial', ['x86-16'], ['cli:debug --backend wine-ne'],
                ['win16_debugger.py','ne.py','wine_rpc.py','wine_guest/agent.c','windows_ui.py'],
                ['lief','iced-x86','capstone','Pillow','win16-backend'],
-               'Original NE through a Wine16 carrier with observed source/selector/descriptor bindings. Unobserved segments and stale bindings refuse. No general Windows 3.x or whole-game compatibility claim.',
+               'Original NE through a Wine16 carrier with observed source/selector/descriptor bindings. Unobserved segments and stale bindings refuse. Register writes, checkpoints, layers and deltas are unavailable; no general Windows 3.x or whole-game compatibility claim.',
                maturity='experimental'),
         _entry('debug.windows-scenes', 'partial', ['x86-16','x86-32','x86-64'],
                ['json:debug-scene-act','json:debug-scene-wait','json:debug-keyboard-press','json:debug-frame-probe','cli:debug --dot-mode'],

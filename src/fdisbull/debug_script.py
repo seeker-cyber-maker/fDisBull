@@ -91,6 +91,8 @@ def validate_script(script, *, session=None):
                 elif op in OPERATIONS:
                     operation=getattr(owner,OPERATIONS[op],None)
                     if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
+                    if op=='write-registers' and getattr(owner,'register_edits_available',True) is False:
+                        raise ValueError('Win16 register writes are not qualified for this runtime')
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
                     else:signature.bind(**params)

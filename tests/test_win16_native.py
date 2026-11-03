@@ -54,7 +54,7 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
     shutil.copyfile(original,GAME/'PROGRAM.EXE');shutil.copyfile(initial_source,GAME/'INITIAL.BIN')
     assert hashlib.sha256(original.read_bytes()).digest()==hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).digest()
     assert hashlib.sha256(initial_source.read_bytes()).digest()==hashlib.sha256((GAME/'INITIAL.BIN').read_bytes()).digest()
-    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes,'trace_farcall':trace_farcall and debug_probes,'gpr_probe':gpr_probe}
+    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes,'trace_farcall':trace_farcall and debug_probes,'gpr_probe':gpr_probe,'gpr_probe_kind':'refusal-before-rpc' if gpr_probe else None}
     start=time.monotonic();session=None;trace=None
 
     def mark(stage,**details):
@@ -75,15 +75,17 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
       with project.debugger(qemu,GAME,backend='wine-qemu',kernel=kernel,initramfs=runtime,files=['PROGRAM.EXE','INITIAL.BIN'],window=True,boot_timeout_ms=600000,memory_mib=8192) as session:
        receipt['adapter_sha256']=hashlib.sha256(Path(adapter_source_file).read_bytes()).hexdigest();receipt['runtime_inputs']=session.metadata['runtime_inputs'];receipt['guest_runtime']=session.metadata['guest_runtime'];receipt['qemu_command']=session.rpc.command
        entry=session.registers();assert entry['project_address']=='ne:2:0xa568' and entry['cpu_mode']=='protected16';assert session.rpc.capabilities['save_states'] is False
+       assert session.rpc.capabilities['register_edit'] is False and session.metadata['general_register_writes'] is False
        mark('actual-original-ne-entry',qemu_pid=session.rpc.process.pid,registers=entry,bindings=list(session.bindings.values()))
        if gpr_probe:
-        original_eax=int(entry['general']['eax'],16);alternate=original_eax^1
-        session.write_registers({'eax':{'expected':original_eax,'value':alternate}})
-        assert int(session.registers()['general']['eax'],16)==alternate
-        restored=session.write_registers({'eax':{'expected':alternate,'value':original_eax}})
-        assert int(session.registers()['general']['eax'],16)==original_eax
-        receipt['assistance'].append('Declared guarded EAX edit and exact restoration before any original instruction executed')
-        mark('guarded-eax-edit-and-restoration-before-original-execution',original_eax=hex(original_eax),alternate_eax=hex(alternate),readback=restored)
+        original_eax=int(entry['general']['eax'],16);sequence=session.rpc.sequence
+        with pytest.raises(ValueError,match='native context preservation is unqualified'):
+         session.write_registers({'eax':{'expected':original_eax,'value':original_eax^1}})
+        assert session.rpc.sequence==sequence
+        observed=session.registers()
+        for field in ('general','eip','eflags','cs','ds','ss','es','fs','gs','project_address'):
+         assert observed[field]==entry[field]
+        mark('unqualified-register-write-refused-before-rpc-with-unchanged-context',native_rpc_sequence_unchanged=True,readback=observed)
        memory=session.memory('ne:2:0xa568',length=2);assert memory['hex']=='eb53'
        if debug_probes:
         bp=session.breakpoint('ne:2:0xa5bd');assert bp['bytes_verified']
