@@ -36,10 +36,12 @@ swede compiler is claimed.
 | Frame timeline / typed-C targeted | 148 + 26 tests passed |
 | `check_dist.py` | core wheel 564 entries; player 19; tool ZIP 1,820; sdist 1,842 |
 | Installed-wheel smoke | `fdisbull 0.31.0`; methods `0.31.0`; capabilities runtime/distribution `0.31.0` |
+| Hosted GitLab `test-and-package` | success, pipeline `3020223207` at `bda8107`; 8,958 passed, 402 skipped; skill gates and package checks passed |
+| Native debugger jobs | manual, not run |
 
-Hosted CI, native backend rebuilds, shared-prefix qualification and publication
-remain separate gates. The installed smoke used a throwaway venv with
-`--system-site-packages`; no system prefix was activated.
+The ordinary hosted CI gate passed. Native backend rebuilds, shared-prefix
+qualification and publication remain separate gates. The installed smoke used a
+throwaway venv with `--system-site-packages`; no system prefix was activated.
 
 ## Artifacts
 

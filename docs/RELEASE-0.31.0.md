@@ -62,6 +62,10 @@ separate gates.
   passed, with the known macOS-only baseline of 3 failures and 23 errors
   (Linux ELF/GCC fixtures and one case-sensitive media fixture). No new failure
   is in the added feature suites.
+- Hosted GitLab `test-and-package` on the candidate code commit (`bda8107`):
+  **success** (pipeline `3020223207`), 8,958 passed, 402 skipped, both skill
+  gates and all package checks passed. Native debugger jobs remain manual and
+  unplayed.
 - Candidate identities, artifact hashes and raw logs are in
   [`docs/evidence/0.31.0-release/`](evidence/0.31.0-release/README.md).
 

@@ -5,7 +5,9 @@
 The local `release/0.31.0` line carries 0.30.0 plus frame-timeline delta
 storage, the bounded typed-C frontend, Windows runtime preflight, CHIP-8 and
 UDC/swede examples, and the cold-agent benchmark/skill refresh. It is not
-tagged, published or activated. See [0.31.0 release notes](RELEASE-0.31.0.md).
+tagged, published or activated. Hosted GitLab `test-and-package` passed on the
+code commit (`bda8107`, pipeline `3020223207`); native debugger jobs remain
+manual. See [0.31.0 release notes](RELEASE-0.31.0.md).
 
 ## 0.30.0 release published on GitLab; local shared installation active
 

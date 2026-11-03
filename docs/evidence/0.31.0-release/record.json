@@ -10,7 +10,22 @@
     "code_tree": "dba4fa1c5dde5eaf363d71b614b2ef9f3c409515",
     "candidate_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
     "candidate_tree": "e6f79878671ee57bc5610f85159edb59193fbc0f",
-    "artifact_source_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2"
+    "artifact_source_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
+    "branch_tip": "30d9b84"
+  },
+  "ci": {
+    "host": "gitlab.com",
+    "pipeline": 3020223207,
+    "sha": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
+    "status": "success",
+    "duration_seconds": 574,
+    "test_and_package": {
+      "passed": 8958,
+      "skipped": 402,
+      "skill_gates": "passed",
+      "packages": "core 564; player 19; tool zip 1820; sdist 1842"
+    },
+    "native_jobs": "manual, not run"
   },
   "included_merges": {
     "frame_timeline_deltas": "2baaa1c",
