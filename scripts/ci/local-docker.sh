@@ -4,10 +4,12 @@
 test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
 test "${FDISBULL_LOCAL_DOCKER:-}" = 1
 test "$(uname -s)" = Linux
-mkdir -p /run-data/docker native-evidence/pe
-export DOCKER_HOST=unix:///run-data/docker/docker.sock
-dockerd --host "$DOCKER_HOST" --data-root /run-data/docker/data \
-  --exec-root /run-data/docker/exec --pidfile /run-data/docker/dockerd.pid \
+# Guest-native ext4 provides Linux socket, link, device and ownership semantics.
+# Its backing disk is the admitted external Apple container store on CACHE.
+mkdir -p /run/fdisbull-local-docker /var/lib/fdisbull-local-docker native-evidence/pe
+export DOCKER_HOST=unix:///run/fdisbull-local-docker/docker.sock
+dockerd --host "$DOCKER_HOST" --data-root /var/lib/fdisbull-local-docker \
+  --exec-root /run/fdisbull-local-docker/exec --pidfile /run/fdisbull-local-docker/dockerd.pid \
   --storage-driver vfs --iptables=false --bridge=none --ip-forward=false \
   > native-evidence/pe/local-docker-daemon.log 2>&1 &
 local_docker_pid=$!

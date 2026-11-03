@@ -9,7 +9,10 @@ mkdir -p .native/toolchains
 curl --fail --location --retry 2 "https://nodejs.org/dist/$node_version/$node_archive" \
   --output ".native/toolchains/$node_archive"
 echo "$node_sha256  .native/toolchains/$node_archive" | sha256sum --check
-tar -xJf ".native/toolchains/$node_archive" -C .native/toolchains
+# Only the actual runtime is required. Avoid unpacking unrelated npm/corepack
+# links, especially on host-shared filesystems with restricted symlink support.
+tar -xJf ".native/toolchains/$node_archive" -C .native/toolchains \
+  "node-$node_version-linux-x64/bin/node"
 install -m 755 ".native/toolchains/node-$node_version-linux-x64/bin/node" /usr/local/bin/node
 test "$(node --version)" = "$node_version"
 # The previous distro Node 18 failed these real browser-runtime prerequisites.

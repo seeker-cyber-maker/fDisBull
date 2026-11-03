@@ -31,6 +31,12 @@ a clean candidate into separate shallow Git clones, pins the pulled amd64 image
 by digest, and retains logs, stopped containers and failed attempts. It admits
 both the result filesystem and the CACHE container store before growth. It
 never mounts the original checkout's Git credentials or private game directory.
+The snapshot mount is read-only. Source, build, temporary and package-install
+work uses the Linux guest filesystem, whose backing disk is in that admitted
+external container store. Only selected regular evidence files cross back to
+the writable host result directory; a guest postcheck must confirm the exact
+commit and unchanged tracked source before a leg is completed. This avoids
+depending on host-shared filesystem support for Linux links and sockets.
 
 ```sh
 # Choose a new output directory beneath an existing authorized external parent.
@@ -51,10 +57,15 @@ Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
 Before native compiler work, establish the actual local Docker route with a
-bounded daemon/build/create/start/copy/export preflight. Unified acceptance uses
-a dedicated guest VM with Linux capabilities for its nested Docker daemon,
-VFS storage and host networking *inside that VM* for dependency downloads. It
-does not connect to a macOS Docker socket or register a persistent runner. Missing
+bounded daemon/build/create/start/copy/export preflight. On Apple Silicon,
+unified acceptance uses a native ARM64 guest VM for Docker and a pinned AMD64
+child container for the actual Python/acceptance job. It records both image
+digests and requires the child's Linux x86-64 runtime proof. The native daemon
+avoids Docker re-execution failures observed under Rosetta; the AMD64 job and
+Windows runtime remain translated or emulated as declared. The outer VM has
+Linux capabilities for Docker, VFS storage and VM-local host networking for
+dependency downloads. The child connects through a VM-local Unix socket; it
+has no macOS Docker socket or credentials. No persistent runner is registered. Missing
 kernel, namespace, Docker or Rosetta support leaves that leg incomplete; do not
 substitute another platform and claim the declared gate passed.
 

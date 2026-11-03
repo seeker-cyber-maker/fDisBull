@@ -16,6 +16,7 @@ from pathlib import Path
 import platform
 import re
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -75,16 +76,16 @@ def clone_source(source, destination, sha, branch):
         raise ValueError('Source moved during snapshot; preserve this attempt and start a new run')
 
 
-def image_identity(value):
+def image_identity(value, architecture="amd64"):
     if not isinstance(value, list) or len(value) != 1:
         raise ValueError('Expected exactly one local image inspection')
     config = value[0]['configuration']
     index_digest = config['descriptor']['digest']
     variants = [v for v in value[0]['variants']
-                if v['platform'].get('architecture') == 'amd64'
+                if v['platform'].get('architecture') == architecture
                 and v['platform'].get('os') == 'linux']
     if len(variants) != 1:
-        raise ValueError('The pulled image must contain exactly one Linux amd64 variant')
+        raise ValueError(f'The pulled image must contain exactly one Linux {architecture} variant')
     digest = variants[0]['digest']
     if not all(re.fullmatch(r'sha256:[0-9a-f]{64}', d) for d in (index_digest, digest)):
         raise ValueError('Invalid immutable image identity')
@@ -95,11 +96,11 @@ def image_identity(value):
 
 
 def job_environment(profile, sha, run_id, job_id):
-    env = {'CI_PROJECT_DIR': '/work', 'CI_BUILDS_DIR': '/run-data/builds',
+    env = {'CI_PROJECT_DIR': '/work', 'CI_BUILDS_DIR': '/ci-builds',
            'CI_COMMIT_SHA': sha, 'CI_JOB_NAME': JOBS[profile],
            'FDISBULL_EXECUTION_ORIGIN': 'local-linux',
            'FDISBULL_LOCAL_RUN_ID': run_id, 'FDISBULL_LOCAL_JOB_ID': job_id,
-           'TMPDIR': '/run-data/tmp', 'PIP_CACHE_DIR': '/run-data/pip-cache',
+           'TMPDIR': '/ci-tmp', 'PIP_CACHE_DIR': '/ci-cache/pip',
            'PYTHONDONTWRITEBYTECODE': '1', 'DEBIAN_FRONTEND': 'noninteractive'}
     if profile in ('stable', 'layers'):
         env.update(FDISBULL_PROFILE=profile,
@@ -107,7 +108,9 @@ def job_environment(profile, sha, run_id, job_id):
                    FDISBULL_DOSBOX=f'/work/.native/backends/{profile}/dosbox-x',
                    FDISBULL_DOSBOX_SOURCE='/work/.native/dosbox-x')
     elif profile == 'unified':
-        env.update(FDISBULL_LOCAL_DOCKER='1',
+        env.update(FDISBULL_LOCAL_DOCKER='0',
+                   FDISBULL_LOCAL_DOCKER_BUILD_NETWORK='host',
+                   DOCKER_HOST='unix:///var/run/docker.sock',
                    FDISBULL_PE_QEMU='/work/.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                    FDISBULL_PE_KERNEL='/work/.native/pe/linux-amd64',
                    FDISBULL_PE_INITRAMFS='/work/.native/pe/runtime.cpio.gz',
@@ -124,7 +127,16 @@ def job_environment(profile, sha, run_id, job_id):
 
 
 def job_command(profile):
-    setup = 'mkdir -p /run-data/tmp /run-data/builds; git config --global --add safe.directory /work; '
+    setup = (
+        'set -Eeuo pipefail; mkdir -p /work /ci-builds /ci-tmp /ci-cache/pip; '
+        'cp -a /source/. /work/; cd /work; '
+        'git config --global --add safe.directory /work; '
+        "trap 'job_rc=$?; trap - EXIT; set +e; "
+        'python scripts/ci/export-local-artifacts.py --work /work '
+        '--output /run-data/exported --source-commit "$CI_COMMIT_SHA"; '
+        'export_rc=$?; if [ "$export_rc" -ne 0 ]; then exit "$export_rc"; fi; '
+        "exit \"$job_rc\"' EXIT; "
+    )
     # Check the real guest before installations or compiler work. Rosetta is
     # recorded as a host implementation detail, not called hardware parity.
     runtime = ('import json,platform,sys; '
@@ -132,7 +144,6 @@ def job_command(profile):
                + ('assert platform.python_version() == "3.13.5"; ' if profile == 'layers'
                   else 'assert sys.version_info[:2] == (3,12); ')
                + 'print(json.dumps({"python":platform.python_version(),"machine":platform.machine(),"system":sys.platform}))')
-    import shlex
     setup += 'python -c ' + shlex.quote(runtime) + ' > /run-data/runtime.json; '
     if profile == 'ordinary':
         return setup + ('apt-get update && apt-get install -y --no-install-recommends '
@@ -140,6 +151,26 @@ def job_command(profile):
                         'bash scripts/ci/test-and-package.sh')
     script = 'native-unified' if profile == 'unified' else 'native-debugger'
     return setup + f'bash scripts/ci/{script}.sh && python scripts/ci/native-receipt.py {profile}'
+
+
+def unified_command(image, environment):
+    """Run the AMD64 job inside a native ARM64 VM's isolated Docker daemon."""
+    pinned = image['image_reference'].split('@', 1)[0] + '@' + image['image_digest']
+    args = ['docker', 'run', '--name', 'fdisbull-unified-' + environment['FDISBULL_LOCAL_JOB_ID'][:8],
+            '--platform', 'linux/amd64', '--network', 'host',
+            '--mount', 'type=bind,src=/source,dst=/source,readonly',
+            '--mount', 'type=bind,src=/run-data,dst=/run-data',
+            '--mount', 'type=bind,src=/run/fdisbull-local-docker/docker.sock,dst=/var/run/docker.sock']
+    for key, value in environment.items():
+        args.extend(['--env', key + '=' + value])
+    args.extend([pinned, 'bash', '-ec', job_command('unified')])
+    return ('set -Eeuo pipefail; export DEBIAN_FRONTEND=noninteractive; '
+            'apt-get update; apt-get install -y --no-install-recommends docker.io; '
+            'mkdir -p /run-data/orchestrator; cd /run-data/orchestrator; '
+            'export FDISBULL_EXECUTION_ORIGIN=local-linux FDISBULL_LOCAL_DOCKER=1; '
+            'source /source/scripts/ci/local-docker.sh; '
+            + shlex.join(['docker', 'pull', '--platform', 'linux/amd64', pinned]) + '; '
+            + shlex.join(args))
 
 
 def admit(parent, expected, reserve):
@@ -208,6 +239,24 @@ def collect(work, output):
                 shutil.copy2(path, target)
 
 
+def verify_guest_postcheck(guest_data, sha):
+    path = guest_data / 'source-postcheck.json'
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('Guest source postcheck missing or invalid')
+    try:
+        postcheck = json.loads(path.read_text())
+    except (OSError, ValueError) as exc:
+        raise ValueError('Guest source postcheck missing or invalid') from exc
+    if (not isinstance(postcheck, dict) or postcheck.get('source_commit') != sha
+            or postcheck.get('expected_source_commit') != sha
+            or postcheck.get('tracked_worktree_dirty') is not False
+            or postcheck.get('export_success') is not True
+            or not (guest_data / 'exported').is_dir()
+            or (guest_data / 'exported').is_symlink()):
+        raise ValueError('Guest source postcheck or evidence export failed')
+    return postcheck
+
+
 def execute(args):
     source = args.source.resolve()
     sha, branch = source_identity(source)
@@ -263,21 +312,35 @@ def execute(args):
             subprocess.run([str(CLI), 'image', 'pull', '--arch', 'amd64', IMAGES[profile]],
                            stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
         image = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])))
-        save(phase / 'image.json', image)
-        (phase / 'tmp').mkdir()
-        command = [str(CLI), 'run', '--name', name, '--arch', 'amd64', '--rosetta',
-                   '--cpus', '4', '--memory', '8G', '--workdir', '/work',
-                   '--mount', f'type=bind,source={work},target=/work',
-                   '--mount', f'type=bind,source={phase},target=/run-data']
+        orchestrator = None
         if profile == 'unified':
-            command += ['--cap-add', 'ALL']
-        for key, value in job_environment(profile, sha, manifest['local_run_id'], job_id).items():
-            command += ['--env', key + '=' + value]
-        command += [image['image_reference'], 'bash', '-ec', job_command(profile)]
+            with (phase / 'orchestrator-image-pull.log').open('x') as log:
+                subprocess.run([str(CLI), 'image', 'pull', '--arch', 'arm64', IMAGES[profile]],
+                               stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
+            orchestrator = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])), 'arm64')
+            if orchestrator['image_index_digest'] != image['image_index_digest']:
+                raise ValueError('AMD64 and ARM64 images do not share one pinned index')
+        save(phase / 'image.json', image)
+        if orchestrator is not None:
+            save(phase / 'orchestrator-image.json', orchestrator)
+        guest_data = phase / 'guest-data'
+        guest_data.mkdir()
+        command = [str(CLI), 'run', '--name', name, '--arch', 'arm64' if orchestrator else 'amd64', '--rosetta',
+                   '--cpus', '4', '--memory', '8G', '--workdir', '/',
+                   '--mount', f'type=bind,source={work},target=/source,readonly',
+                   '--mount', f'type=bind,source={guest_data},target=/run-data']
+        environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
+        if orchestrator is not None:
+            command += ['--cap-add', 'ALL', orchestrator['image_reference'],
+                        'bash', '-ec', unified_command(image, environment)]
+        else:
+            for key, value in environment.items():
+                command += ['--env', key + '=' + value]
+            command += [image['image_reference'], 'bash', '-ec', job_command(profile)]
         started = now()
         code, termination, pid, stop_code, state = run_container(command, phase / 'container.log', args.timeout, name)
         try:
-            data = json.loads((phase / 'runtime.json').read_text())
+            data = json.loads((guest_data / 'runtime.json').read_text())
             runtime = {k: data[k] for k in ('python', 'machine', 'system')}
         except (OSError, ValueError, KeyError):
             runtime = None
@@ -287,12 +350,17 @@ def execute(args):
                    **image, 'container_name': name, 'host_process_id': pid,
                    'started_at': started, 'finished_at': now(), 'stop_cli_exit_code': stop_code,
                    'container_state_after_stop': state, 'runtime': runtime}
+        if orchestrator is not None:
+            process['orchestrator_image_digest'] = orchestrator['image_digest']
         save(phase / 'process.json', process)
+        # Preserve even partial selected evidence from a failed job; never turn
+        # such artifacts into a completed leg without the host and guest gates.
+        exported = guest_data / 'exported'
+        if exported.is_dir():
+            collect(exported, output)
         if code or termination != 'exited' or state != 'stopped' or runtime is None:
             raise ValueError(f'{profile} did not pass; preserved log: {phase / "container.log"}')
-        if source_identity(work, generated_outputs=True)[0] != sha:
-            raise ValueError('Tracked source changed during execution')
-        collect(work, output)
+        verify_guest_postcheck(guest_data, sha)
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
         save(receipt_path, process)
         save(phase / 'completed.json', {'local_job_id': job_id, 'source_commit': sha, 'completed_at': now()})
