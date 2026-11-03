@@ -185,7 +185,44 @@ def test_named_scene_action_uses_host_slice_and_keeps_native_stop_receipt(progra
     assert result['input']['dispatch_outcome']=='queued'
     assert len([c for c in program.calls if c[0]=='click'])==1
     assert len([c for c in program.calls if c[0]=='slice'])==1
+    assert next(params for method,params in program.calls if method=='slice')['timeout_ms']==100
     assert not any(c[0]=='run' for c in program.calls)
+
+
+@pytest.mark.parametrize('api',['scene_act','scene_click','handle_act','handle_click'])
+def test_caller_selected_scene_slice_reaches_each_public_action_surface(program,api):
+    doc=definition(program.screenshot());doc['objects'][0].update(guest_ms=5000,timeout_ms=5000)
+    scene=program.project.debug_save_scene('larger-slices',doc)
+    if api.startswith('handle_'):
+        result=getattr(program.scene(scene['id']),api.removeprefix('handle_'))('button',slice_ms=1000)
+    else:result=getattr(program,api)(scene['id'],'button',slice_ms=1000)
+    assert result['complete'] and program.counter==1
+    assert [params['timeout_ms'] for method,params in program.calls if method=='slice']==[1000]
+
+
+def test_selected_scene_slice_is_shared_by_popup_and_main_outcome_waits(program):
+    frame=program.screenshot();program.modal=True
+    handler={'name':'caption','when':pixel([0,0,255]),'action':{'kind':'press','key':'escape'},
+             'outcome':pixel([0,0,0])}
+    doc=definition(frame,handlers=[handler]);doc['objects'][0].update(guest_ms=5000,timeout_ms=5000)
+    scene=program.project.debug_save_scene('popup-slices',doc)
+    result=program.scene_act(scene['id'],'button',handle_popups=True,slice_ms=700)
+    assert result['complete'] and not program.modal and program.counter==1
+    assert [params['timeout_ms'] for method,params in program.calls if method=='slice']==[700,700]
+    assert len([method for method,params in program.calls if method=='keyboard'])==1
+    assert len([method for method,params in program.calls if method=='click'])==1
+
+
+@pytest.mark.parametrize('slice_ms',[0,1001,True,1.5,None,'1000'])
+def test_bad_scene_slice_refuses_before_popup_or_main_input(program,slice_ms):
+    frame=program.screenshot();program.modal=True
+    handler={'name':'caption','when':pixel([0,0,255]),'action':{'kind':'press','key':'escape'},
+             'outcome':pixel([0,0,0])}
+    scene=program.project.debug_save_scene('invalid-slices',definition(frame,handlers=[handler]))
+    before=list(program.calls)
+    with pytest.raises(ValueError):program.scene_act(scene['id'],'button',handle_popups=True,slice_ms=slice_ms)
+    with pytest.raises(ValueError):program.scene(scene['id']).click('button',handle_popups=True,slice_ms=slice_ms)
+    assert program.calls==before and not program.pending
 
 
 @pytest.mark.parametrize('backend,profile,cpu_mode,address',[

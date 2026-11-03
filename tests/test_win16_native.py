@@ -46,7 +46,7 @@ def _body_changes(before,after):
     return changes
 
 
-def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probes=True,trace_farcall=True):
+def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probes=True,trace_farcall=True,gpr_probe=False):
     original=Path(fixture).resolve(strict=True);initial_source=Path(initial).resolve(strict=True)
     if hashlib.sha256(original.read_bytes()).hexdigest()!=SNAKE_EXE_SHA256 or hashlib.sha256(initial_source.read_bytes()).hexdigest()!=SNAKE_INITIAL_SHA256:
      raise ValueError('Native Win16 scene acceptance requires the declared generated Snake executable/initial-state profile')
@@ -54,7 +54,7 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
     shutil.copyfile(original,GAME/'PROGRAM.EXE');shutil.copyfile(initial_source,GAME/'INITIAL.BIN')
     assert hashlib.sha256(original.read_bytes()).digest()==hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).digest()
     assert hashlib.sha256(initial_source.read_bytes()).digest()==hashlib.sha256((GAME/'INITIAL.BIN').read_bytes()).digest()
-    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes,'trace_farcall':trace_farcall and debug_probes}
+    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes,'trace_farcall':trace_farcall and debug_probes,'gpr_probe':gpr_probe}
     start=time.monotonic();session=None;trace=None
 
     def mark(stage,**details):
@@ -76,6 +76,14 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
        receipt['adapter_sha256']=hashlib.sha256(Path(adapter_source_file).read_bytes()).hexdigest();receipt['runtime_inputs']=session.metadata['runtime_inputs'];receipt['guest_runtime']=session.metadata['guest_runtime'];receipt['qemu_command']=session.rpc.command
        entry=session.registers();assert entry['project_address']=='ne:2:0xa568' and entry['cpu_mode']=='protected16';assert session.rpc.capabilities['save_states'] is False
        mark('actual-original-ne-entry',qemu_pid=session.rpc.process.pid,registers=entry,bindings=list(session.bindings.values()))
+       if gpr_probe:
+        original_eax=int(entry['general']['eax'],16);alternate=original_eax^1
+        session.write_registers({'eax':{'expected':original_eax,'value':alternate}})
+        assert int(session.registers()['general']['eax'],16)==alternate
+        restored=session.write_registers({'eax':{'expected':alternate,'value':original_eax}})
+        assert int(session.registers()['general']['eax'],16)==original_eax
+        receipt['assistance'].append('Declared guarded EAX edit and exact restoration before any original instruction executed')
+        mark('guarded-eax-edit-and-restoration-before-original-execution',original_eax=hex(original_eax),alternate_eax=hex(alternate),readback=restored)
        memory=session.memory('ne:2:0xa568',length=2);assert memory['hex']=='eb53'
        if debug_probes:
         bp=session.breakpoint('ne:2:0xa5bd');assert bp['bytes_verified']
@@ -141,7 +149,7 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
        before=session.screenshot('gui-reset-before-scene.png',hooks=False)
        predicate=lambda rgb:{'pixels':{'samples':[{'x':x,'y':y,'rgb':list(rgb)}]}}
        scene=project.debug_save_scene('win16-snake-step',{'format':'fdisbull-scene-1','width':initial.width,'height':initial.height,'mode_id':before['metadata']['mode_id'],'reference':before['artifact'],'context':{'state':'native Win16 Snake paused after ordinary R reset','triggers':['normal program startup and reset key']},'match':predicate(before_rgb),'objects':[{'name':'snake.step','context':{'state':'paused board','triggers':['ordinary N key']},'area':{'rect':[x,y,x+1,y+1]},'point':[x,y],'visible':{'constant':True},'enabled':{'constant':True},'ready':predicate(before_rgb),'action':{'kind':'press','key':'n','hold_ms':40,'gap_ms':40},'outcome':predicate(after_rgb),'outcome_phase':'state','guest_ms':15000,'timeout_ms':30000}]})
-       action=session.scene(scene['id']).act('snake.step');assert action['complete'] and action['status']=='matched',action
+       action=session.scene(scene['id']).act('snake.step',slice_ms=1000);assert action['complete'] and action['status']=='matched',action
        assert session.frame_probe([[x,y]])['samples'][0]['rgb']==list(after_rgb)
        mark('actual-ne-named-scene-replayed-physical-transition',scene_revision=scene['id'],action=action)
        dot=session.dot_mode();assert dot['enabled'] and dot['view_only'] and not dot['host_input_capture'];sequence=session.rpc.sequence
@@ -204,5 +212,6 @@ def test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode(tmp_path):
     qemu,kernel,runtime,fixture,initial=[os.environ[name] for name in names]
     probes=os.environ.get('FDISBULL_NE_GUI_NO_PROBES')!='1'
     farcall=os.environ.get('FDISBULL_NE_GUI_NO_FARCALL_TRACE')!='1'
-    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial,debug_probes=probes,trace_farcall=farcall)
+    gpr=os.environ.get('FDISBULL_NE_GUI_GPR_PROBE')=='1'
+    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial,debug_probes=probes,trace_farcall=farcall,gpr_probe=gpr)
     assert receipt['status']=='passed'
