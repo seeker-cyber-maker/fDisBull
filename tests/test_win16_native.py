@@ -37,7 +37,16 @@ def _snake_frame_ready(image):
             and colors.get((0,0,0),0)>=1000 and colors.get((0,0,170),0)>=1000)
 
 
-def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probes=True):
+def _body_changes(before,after):
+    colors=((0,170,0),(85,255,85),(0,0,0));changes=[]
+    for y in range(115,before.height):
+        for x in range(20,before.width-20):
+            a,b=before.getpixel((x,y)),after.getpixel((x,y))
+            if a!=b and a in colors and b in colors:changes.append((x,y,a,b))
+    return changes
+
+
+def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probes=True,trace_farcall=True):
     original=Path(fixture).resolve(strict=True);initial_source=Path(initial).resolve(strict=True)
     if hashlib.sha256(original.read_bytes()).hexdigest()!=SNAKE_EXE_SHA256 or hashlib.sha256(initial_source.read_bytes()).hexdigest()!=SNAKE_INITIAL_SHA256:
      raise ValueError('Native Win16 scene acceptance requires the declared generated Snake executable/initial-state profile')
@@ -45,7 +54,7 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
     shutil.copyfile(original,GAME/'PROGRAM.EXE');shutil.copyfile(initial_source,GAME/'INITIAL.BIN')
     assert hashlib.sha256(original.read_bytes()).digest()==hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).digest()
     assert hashlib.sha256(initial_source.read_bytes()).digest()==hashlib.sha256((GAME/'INITIAL.BIN').read_bytes()).digest()
-    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes}
+    receipt={'format':'fdisbull-original-ne-public-1','status':'running','checks':[],'host_input_injected':False,'source_sha256':hashlib.sha256((GAME/'PROGRAM.EXE').read_bytes()).hexdigest(),'assistance':[],'debug_probes':debug_probes,'trace_farcall':trace_farcall and debug_probes}
     start=time.monotonic();session=None;trace=None
 
     def mark(stage,**details):
@@ -73,8 +82,10 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
         stepped=session.step(count=1);assert stepped['completed'] and stepped['events'][0]['cpu_mode']=='protected16'
         arrival=session.run(timeout_ms=10000);assert arrival['outcome']=='breakpoint',arrival
         assert session.registers()['project_address']=='ne:2:0xa5bd';session.delete_breakpoint(bp['breakpoint_id'])
-        trace=session.trace('original-entry-call.json',count=1,timeout_ms=20000);assert trace['metadata']['complete']
-        mark('actual-ne-memory-execution-breakpoint-step-trace',memory=memory,breakpoint=bp,step=stepped,trace=trace)
+        if trace_farcall:
+         trace=session.trace('original-entry-call.json',count=1,timeout_ms=20000);assert trace['metadata']['complete']
+         mark('actual-ne-memory-execution-breakpoint-step-trace',memory=memory,breakpoint=bp,step=stepped,trace=trace)
+        else:mark('controlled-entry-jmp-step-and-breakpoint-without-far-call-trace',memory=memory,breakpoint=bp,step=stepped)
        else:mark('controlled-gui-arm-without-optional-entry-step-or-far-call-trace',memory=memory)
        continue_to_slice(session)
        frame=None
@@ -102,20 +113,31 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
        mark('physical-game-view-focus-click-before-keyboard-baseline',input=focus)
        # Learn one physical N-step outcome, reset with the ordinary R key, then
        # independently replay that observed transition through a named scene.
-       queued=session.keyboard_press('n',hold_ms=40,gap_ms=40);continue_to_slice(session)
-       after=session.screenshot('gui-after-physical-n.png',hooks=False);project.debug_export(after['artifact'],OUT/'after-n.png')
-       changed=Image.open(OUT/'after-n.png').convert('RGB');changed.load()
-       candidates=[]
-       for y in range(115,initial.height):
-        for x in range(20,initial.width-20):
-         a,b=initial.getpixel((x,y)),changed.getpixel((x,y))
-         if a!=b and a in ((0,170,0),(85,255,85),(0,0,0)) and b in ((0,170,0),(85,255,85),(0,0,0)):
-          candidates.append((x,y,a,b))
-       if not candidates:raise RuntimeError('Physical N key produced no qualified snake-body pixel transition')
+       queued=session.keyboard_press('n',hold_ms=40,gap_ms=40)
+       # OS delivery, game commitment and completed drawing are separate. One
+       # N is queued; further polls only resume execution and observe its result.
+       key_deadline=time.monotonic()+30;candidates=[]
+       for poll in range(12):
+        if time.monotonic()>=key_deadline:break
+        continue_to_slice(session)
+        after=session.screenshot('gui-after-physical-n-'+str(poll)+'.png',hooks=False)
+        path=OUT/('after-n-'+str(poll)+'.png');project.debug_export(after['artifact'],path)
+        changed=Image.open(path).convert('RGB');changed.load();candidates=_body_changes(initial,changed)
+        if time.monotonic()>=key_deadline:candidates=[];break
+        if candidates:shutil.copyfile(path,OUT/'after-n.png');break
+        mark('single-n-awaiting-game-commit-or-paint',poll=poll,input_id=queued['input_id'],keyboard=session.keyboard_state())
+       if not candidates:raise RuntimeError('One physical N produced no body transition within12 input-free polls /30 host seconds')
        x,y,before_rgb,after_rgb=candidates[len(candidates)//2]
        mark('physical-ne-key-produced-observed-body-pixel',queued=queued,pixel=[x,y],before_rgb=before_rgb,after_rgb=after_rgb,changed_body_pixels=len(candidates))
-       session.keyboard_press('r',hold_ms=40,gap_ms=40);continue_to_slice(session)
-       assert session.frame_probe([[x,y]])['samples'][0]['rgb']==list(before_rgb)
+       reset=session.keyboard_press('r',hold_ms=40,gap_ms=40);reset_deadline=time.monotonic()+30;reset_observed=False
+       for poll in range(12):
+        if time.monotonic()>=reset_deadline:break
+        continue_to_slice(session)
+        pixel=session.frame_probe([[x,y]])['samples'][0]['rgb']
+        if time.monotonic()>=reset_deadline:break
+        if pixel==list(before_rgb):reset_observed=True;break
+        mark('single-r-awaiting-reset-paint',poll=poll,input_id=reset['input_id'])
+       assert reset_observed,'One physical R did not restore the observed body pixel within its bounded presentation wait'
        before=session.screenshot('gui-reset-before-scene.png',hooks=False)
        predicate=lambda rgb:{'pixels':{'samples':[{'x':x,'y':y,'rgb':list(rgb)}]}}
        scene=project.debug_save_scene('win16-snake-step',{'format':'fdisbull-scene-1','width':initial.width,'height':initial.height,'mode_id':before['metadata']['mode_id'],'reference':before['artifact'],'context':{'state':'native Win16 Snake paused after ordinary R reset','triggers':['normal program startup and reset key']},'match':predicate(before_rgb),'objects':[{'name':'snake.step','context':{'state':'paused board','triggers':['ordinary N key']},'area':{'rect':[x,y,x+1,y+1]},'point':[x,y],'visible':{'constant':True},'enabled':{'constant':True},'ready':predicate(before_rgb),'action':{'kind':'press','key':'n','hold_ms':40,'gap_ms':40},'outcome':predicate(after_rgb),'outcome_phase':'state','guest_ms':15000,'timeout_ms':30000}]})
@@ -181,5 +203,6 @@ def test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode(tmp_path):
         pytest.skip('Requires explicit matching native runtime and declared generated Snake Win16 profile')
     qemu,kernel,runtime,fixture,initial=[os.environ[name] for name in names]
     probes=os.environ.get('FDISBULL_NE_GUI_NO_PROBES')!='1'
-    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial,debug_probes=probes)
+    farcall=os.environ.get('FDISBULL_NE_GUI_NO_FARCALL_TRACE')!='1'
+    receipt=qualify_win16_snake(tmp_path,qemu=qemu,kernel=kernel,runtime=runtime,fixture=fixture,initial=initial,debug_probes=probes,trace_farcall=farcall)
     assert receipt['status']=='passed'

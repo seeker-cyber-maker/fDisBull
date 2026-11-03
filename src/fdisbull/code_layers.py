@@ -117,9 +117,11 @@ class LayerSessionMixin:
         return linear,runtime,selector
 
     def _view(self,address,*,cs=None,length=16,view='ram'):
-        self._layer_setup()
         limit(length,'length',1,65536)
         if view not in ('ram','execute'):raise ValueError('view must be ram or execute')
+        if self.call('state.get_registers').get('cpu_mode')!='real':
+            raise ValueError('DOS layer source mapping is unavailable outside observed real mode; use an explicit runtime RAM binding')
+        self._layer_setup()
         linear,runtime,selector=self._layer_address(address,cs,length)
         result=self.call('memory.read',{'address':{'space':'linear','offset':f'0x{runtime:08X}'},'length':length,'view':view})
         data=base64.b64decode(result['data_base64'],validate=True)
@@ -381,11 +383,20 @@ class LayerSessionMixin:
 
     def _layer_trace(self,events):
         from iced_x86 import Decoder,Formatter,FormatterSyntax
+        from .debug_semantics import trace_decode_bits
         self._layer_setup();formatter=Formatter(FormatterSyntax.NASM)
         for event in events:
             if event.get('execution_bytes'):
-                instruction=Decoder(16,bytes.fromhex(event['execution_bytes']),ip=int(event['address']['offset'],16)).decode()
                 event['native_instruction']=event['instruction']
-                event['instruction']=formatter.format(instruction)
                 event['instruction_view']='execute'
                 event['active_layers']=self._layer_generations.get(event.get('layer_generation'),[])
+                bits=trace_decode_bits(event)
+                if bits is None:
+                    event['instruction_decoding']='unqualified historical CPU mode or width; native text retained'
+                    continue
+                instruction=Decoder(bits,bytes.fromhex(event['execution_bytes']),ip=int(event['address']['offset'],16)).decode()
+                if instruction.is_invalid:
+                    event['instruction_decoding']='invalid fetch bytes; native text retained'
+                    continue
+                event['instruction']=formatter.format(instruction)
+                event['instruction_bits']=bits

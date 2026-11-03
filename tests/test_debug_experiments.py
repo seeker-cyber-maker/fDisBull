@@ -67,7 +67,7 @@ def test_experiment_listing_is_available_through_the_offline_cli(tmp_path):
 
 def test_dos_trace_lookahead_is_not_mistaken_for_executed_bytes():
     from fdisbull.debug_experiments import _trace_event
-    first={'address':{'offset':'0x0','segment':'0x1000'},'execution_bytes':'90b81111','ram_bytes':'90b81111'}
+    first={'address':{'offset':'0x0','segment':'0x1000'},'execution_bytes':'90b81111','ram_bytes':'90b81111','cpu_mode':'real'}
     second={**first,'execution_bytes':'90b82222'}
     assert _trace_event(first)==_trace_event(second)
 

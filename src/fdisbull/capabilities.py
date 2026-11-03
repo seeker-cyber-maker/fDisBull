@@ -104,7 +104,7 @@ def _catalog():
                maturity='experimental', required_host={'system': 'Darwin'}),
         _entry('debug.dos', 'partial', ['x86-16'], ['cli:debug', 'cli:doctor'],
                ['debugger.py', 'dosbox_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'dos-backend'],
-               'Configured compatible DOSBox backend; backend identity and doctor acceptance are separate gates.'),
+               'Configured compatible DOSBox backend; real/v86/protected built-in mouse queueing, explicit physical or qualified unpaged linear RAM and full native checkpoints require a matching backend. DOS source mappings/layers retain real-mode limits. Backend identity and target acceptance are separate gates.'),
         _entry('debug.pe64', 'partial', ['x86-64'], ['cli:debug', 'cli:doctor'],
                ['wine_debugger.py', 'wine_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'pe64-backend'],
                'Configured Wine/QEMU guest or IDA backend; kernel, guest and backend identities required.'),

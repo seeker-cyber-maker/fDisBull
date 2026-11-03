@@ -605,7 +605,7 @@ REQUIRED_TEST_HELPERS |= {
     "tests/test_uil_desktop.py", "tests/test_uil_desktop_admission.py",
     "tests/test_uil_desktop_cli.py", "tests/test_uil_native_arena_functions.py",
     "tests/test_capture_audit.py", "tests/test_media_modules.py",
-    "tests/fixtures/frame_capture.S", "tests/test_macos_capture.py",
+    "tests/fixtures/frame_capture.S", "tests/fixtures/protected_mode_mouse.S", "tests/test_macos_capture.py",
     "tests/test_macos_session.py", "tests/macos_capture_fixture.swift",
     "scripts/check_macos_capture_native.py",
 }

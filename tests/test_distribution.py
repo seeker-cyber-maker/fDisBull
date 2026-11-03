@@ -41,6 +41,7 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
     'references/engine-source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+REQUIRED_SOURCE_FILES += ('tests/fixtures/protected_mode_mouse.S',)
 REQUIRED_SOURCE_FILES += ('src/fdisbull/data/dinopark-e55-terminal.json',)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',

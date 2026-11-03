@@ -188,6 +188,68 @@ def test_named_scene_action_uses_host_slice_and_keeps_native_stop_receipt(progra
     assert not any(c[0]=='run' for c in program.calls)
 
 
+@pytest.mark.parametrize('backend,profile,cpu_mode,address',[
+    ('wine-ne-qemu','win16-ne-original-1','protected16','ne:1:0x0000'),
+    ('wine-qemu','pe32-win32-debug-1','protected32','0x401020'),
+    ('wine-qemu','pe64-win32-debug-2','long64','0x140001020'),
+])
+def test_shared_windows_input_frame_and_memory_scene_never_require_dos_real_mode(
+        program,monkeypatch,backend,profile,cpu_mode,address):
+    # This is a host protocol peer, not native architecture acceptance. Each
+    # adapter owns its canonical address and mode checks; shared UI must not
+    # re-enter DOS paragraph parsing or demand a real-mode register context.
+    program.backend_name=backend;program.metadata['runtime_profile']=profile
+    monkeypatch.setattr(program,'status',lambda:{'state':'stopped','cpu_mode':cpu_mode})
+    def forbidden(*args,**kwargs):raise AssertionError('Windows UI entered a DOS real-mode path')
+    monkeypatch.setattr(program.project,'_dos_parse_address',forbidden)
+    monkeypatch.setattr(program,'registers',forbidden,raising=False)
+    keyed=[]
+    def canonical(address_value,length,cs=None):
+        assert address_value==address and cs is None
+        keyed.append((address_value,length))
+        return f'{profile}/{address_value}/{length}'
+    monkeypatch.setattr(program,'scene_memory_key',canonical)
+    frame=program.screenshot();doc=definition(frame)
+    obj=doc['objects'][0]
+    obj['ready']={'memory':{'address':address,'length':4,'hex':'00000000'}}
+    obj['outcome']={'memory':{'address':address,'length':4,'hex':'01000000'}}
+    obj['action']={'kind':'press','key':'right'}
+    scene=program.project.debug_save_scene('profile-independent',doc)
+    result=program.scene(scene['id']).act('button')
+    assert result['complete'] and program.counter==1 and keyed
+    assert result['frame']['backend']==backend and result['time_basis']=='host'
+    assert len([c for c in program.calls if c[0]=='keyboard'])==1
+    assert len([c for c in program.calls if c[0]=='slice'])==1
+
+
+@pytest.mark.parametrize('backend,cpu_mode',[
+    ('wine-ne-qemu','protected16'),
+    ('wine-ne-qemu','protected32-carrier'),
+    ('wine-qemu','protected32'),
+    ('wine-qemu','long64'),
+    ('ida-wine-qemu','protected32'),
+    ('ida-wine-qemu','long64'),
+])
+def test_generic_windows_observations_preserve_adapter_context_without_dos_rpc(
+        program,monkeypatch,backend,cpu_mode):
+    from fdisbull.runtime_observations import RuntimeObservationMixin,capture_observations
+    program.backend_name=backend
+    monkeypatch.setattr(program,'registers',lambda:{'cpu_mode':cpu_mode},raising=False)
+    result=capture_observations(program,{
+        'mode':{'register':'cpu_mode'},'frame':{'frame':'frame_id'},
+        'counter':{'memory':{'address':'0x140001020','type':'u32'}},
+    })
+    assert result['complete'],result
+    assert result['values']['mode']==cpu_mode and result['values']['counter']==0
+    assert result['context']['status']['observation_cpu_mode']==cpu_mode
+    before=list(program.calls)
+    with pytest.raises(ValueError,match='DOS runtime RAM bindings'):
+        RuntimeObservationMixin._runtime_state(program)
+    assert program.calls==before
+    assert not any(method in ('session.status','state.get_registers','memory.read')
+                   for method,params in program.calls)
+
+
 def test_scene_advance_uses_backend_guarded_slice_and_preserves_watch_stop(program,monkeypatch):
     guarded=[]
     def slice_native(budget,timeout):

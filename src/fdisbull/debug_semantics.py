@@ -10,7 +10,7 @@ def contract(backend):
             'trace_registers_stage':'before-instruction',
             'trace_completion':'fetch-observed; completion unknown' if dos else 'confirmed completed steps',
             'timing':'guest ticks supported' if dos else 'host bounded; stepping has no elapsed-time fidelity',
-            'address_context':'real-mode CS plus linear address' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space',
+            'address_context':'explicit CPU address space; DOS paragraph projection requires observed real mode' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space',
             'guest_exit_reporting':('Requires lifecycle.dos_guest_exit; selected DOS PSP after process cleanup; '
                                     'distinct from debugger/session shutdown') if dos else 'inspect native exit evidence'}
 
@@ -35,6 +35,8 @@ def normalize_stop(backend,native,*,outcome,stopped_pc=None):
             'causing_instruction':cause,'resume_pc':resume_pc,
             'instruction_completed':completed,'registers_stage':stage,
             'context':'dos-cpu' if dos else 'process' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'}
+    if dos:
+        result['cpu_mode']=native.get('cpu_mode')
     if dos and native.get('kind') in ('guest_exit','guest_tsr') and isinstance(native.get('guest_exit'),dict):
         # DOS has restored the parent context. It is not a final instruction or
         # register snapshot of the terminated target, and TSR is not normal exit.
@@ -44,14 +46,30 @@ def normalize_stop(backend,native,*,outcome,stopped_pc=None):
     return result
 
 
+def trace_decode_bits(event):
+    """Decode a DOS fetch only from that record's observed CPU mode/width."""
+    mode=event.get('cpu_mode')
+    if mode=='real':return 16
+    bits=event.get('code_bits')
+    if mode in ('protected','v86') and type(bits) is int and bits in (16,32):return bits
+    return None
+
+
 def normalize_trace(backend,events,*,version,delta=0,budget_reached=False):
     dos=backend in ('dosbox','dosbox-qemu')
     for index,event in enumerate(events):
         context='flat' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'
         address=event.get('address')
-        if dos and isinstance(address,dict) and address.get('space')=='segmented':
-            cs=int(address['segment'],16)-delta//16
-            context=f'real:{cs:04x}' if 0<=cs<=0xffff else None
+        if dos:
+            context=None
+            if event.get('cpu_mode')=='real' and isinstance(address,dict) and address.get('space')=='segmented':
+                cs=int(address['segment'],16)-delta//16
+                context=f'real:{cs:04x}' if 0<=cs<=0xffff else None
+            else:
+                # A protected selector, virtual-8086 context, or legacy record
+                # without mode does not establish a DOS source paragraph.
+                event['project_address']=None
+                if 'project_segmented_address' in event:event['project_segmented_address']=None
         event['identity']={'source_version':version,'context':context,'runtime_address':address,
                            'project_address':event.get('project_address')}
         event['observation']={'registers_stage':'before-instruction',
