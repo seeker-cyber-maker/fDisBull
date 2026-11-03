@@ -1,4 +1,4 @@
-03bf5142aab0a9448c73b38c986ddeef92f68eab2630f6f1ef4842bb2364bf33  /tmp/fdisbull-0.31.1-dist/fdisbull-0.31.1-py3-none-any.whl
-81db8e19349b6fb26ea2f91b7de79ed8ba1f3691c3d7f9eaec7ed04c7f5eb5c3  /tmp/fdisbull-0.31.1-dist/fdisbull-0.31.1-tool.zip
-bd37507e6d91f0e3279f780b5238279a2b86fd02adc649ea1fe394cdde26b72c  /tmp/fdisbull-0.31.1-dist/fdisbull-0.31.1.tar.gz
-6b5098b8ad425579bb50bfd5d12fb4a6cfd362b45a863b3fd4937cbeedfa20a3  /tmp/fdisbull-0.31.1-dist/fdisbull_player-0.31.1-py3-none-any.whl
+03bf5142aab0a9448c73b38c986ddeef92f68eab2630f6f1ef4842bb2364bf33  fdisbull-0.31.1-py3-none-any.whl
+81db8e19349b6fb26ea2f91b7de79ed8ba1f3691c3d7f9eaec7ed04c7f5eb5c3  fdisbull-0.31.1-tool.zip
+bd37507e6d91f0e3279f780b5238279a2b86fd02adc649ea1fe394cdde26b72c  fdisbull-0.31.1.tar.gz
+6b5098b8ad425579bb50bfd5d12fb4a6cfd362b45a863b3fd4937cbeedfa20a3  fdisbull_player-0.31.1-py3-none-any.whl
