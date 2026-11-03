@@ -63,18 +63,24 @@
     "native-linux-layers.log",
     "pipeline-3023448913.log"
   ],
-  "published": false,
+  "published": true,
   "release": {
     "base_sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
     "base_tag": "v0.31.0",
-    "tag": "v0.31.1"
+    "gitlab_release": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.1",
+    "package": "fdisbull-tool-packages",
+    "package_id": 75166749,
+    "package_version": "0.31.1-20261103",
+    "tag": "v0.31.1",
+    "tag_commit": "e94bae0fca9d6ffc090991e8daad04772a5ff32c",
+    "tag_object": "8e4ea4215c463074f231f752188eb2b5af49ea3a"
   },
   "source": {
     "branch": "release/0.31.1",
     "commit": "27b388d38cc14f04842a81b8ec1a113460900f53",
     "tree": "6d7f5f1f5e2a5164c8e89f913d67f42ad078f91d"
   },
-  "status": "candidate",
+  "status": "published",
   "swift_packaging": {
     "helper": "fdisbull/data/FdisbullMacCapture.swift",
     "prepare_helper": true,

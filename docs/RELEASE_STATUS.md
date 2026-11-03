@@ -1,12 +1,16 @@
 # Release status checked on 2026-11-03 (America/New_York)
 
-## 0.31.1 patch release candidate
+## 0.31.1 patch release published
 
-`release/0.31.1` is cut from the post-0.31.0 repair tip (`235a5b2`) and bumps
-core/player to `0.31.1`. It contains no new analysis features; it packages the
-native CI repair and the macOS Swift capture helper in the tool source ZIP.
-Qualification, artifact hashes and publication state are recorded in
-[0.31.1 evidence](evidence/0.31.1-release/README.md) once the gates complete.
+`v0.31.1` is an annotated tag at `e94bae0`, with GitLab Release
+<https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.1> and
+generic package `fdisbull-tool-packages` `0.31.1-20261103` (package ID
+`75166749`). It contains no new analysis features; it packages the native CI
+repair and the macOS Swift capture helper in the tool source ZIP, wheel and
+sdist. Pipeline `3023448913` passed `test-and-package`, native stable (86) and
+native layers (148). The local prefix `0.31.1-27b388d` passed 97 installed
+tests, three doctors and a two-process player smoke. See
+[0.31.1 evidence](evidence/0.31.1-release/README.md).
 
 ## 0.31.0 published on GitLab; local shared-prefix active
 

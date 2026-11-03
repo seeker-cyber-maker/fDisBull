@@ -1,7 +1,6 @@
 # 0.31.1 release evidence
 
-Status: **verified release candidate**; the tag and GitLab Release follow this
-commit.
+Status: **tagged and published** as `v0.31.1`; the tag commit is `e94bae0`.
 
 - Source branch: `release/0.31.1`
 - Source commit: `27b388d38cc14f04842a81b8ec1a113460900f53`

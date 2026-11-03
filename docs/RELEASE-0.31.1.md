@@ -1,7 +1,7 @@
 # 0.31.1 release
 
-Status: **release candidate** built from `release/0.31.1`, based on the
-published `v0.31.0` tag (`10d0106`) plus post-tag repair commits.
+Status: **tagged and published** as `v0.31.1` at `e94bae0`, with generic package
+`fdisbull-tool-packages` `0.31.1-20261103`.
 
 ## Scope
 

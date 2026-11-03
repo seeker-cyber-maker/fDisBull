@@ -9,7 +9,7 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.31.1 patch):** `v0.31.1` packages the post-0.31.0 native
+**Release status (0.31.1 published):** `v0.31.1` packages the post-0.31.0 native
 CI and macOS Swift source-ZIP repairs; it adds no new analysis features. The
 published `v0.31.0` tag remains at `10d01062`. See the
 [0.31.1 release notes](docs/RELEASE-0.31.1.md),
