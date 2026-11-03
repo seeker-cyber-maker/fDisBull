@@ -3,7 +3,7 @@
 **Status:** Proposed architecture, not a production implementation.  
 **Date:** 2026-11-03. Baseline: `main` `2866c414bff33510ab58e3186f96960eddd0cb94` / v0.30.0.  
 **Pilot:** [CHIP-8 study MR !61](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/61) (draft, not merged).  
-**Companions:** [CHIP-8 end-to-end and blind-gap acceptance](milestones/2026-11-03-chip8-package-end-to-end-acceptance.md) · [illustrative package closure](examples/chip8-package-closure.example.json) · [deterministic coordinator analysis](DETERMINISTIC_PIPELINE_ORCHESTRATION_AUDIT_2026-11-03.md).
+**Companions:** [CHIP-8 end-to-end and blind-gap acceptance](milestones/2026-11-03-chip8-package-end-to-end-acceptance.md) · [illustrative package closure](examples/chip8-package-closure.example.json) · [deterministic coordinator analysis](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/docs/maturity-generalization-20261103/docs/DETERMINISTIC_PIPELINE_ORCHESTRATION_AUDIT_2026-11-03.md).
 
 ## Decision proposed
 
