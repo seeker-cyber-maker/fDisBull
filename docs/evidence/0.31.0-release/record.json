@@ -10,8 +10,7 @@
     "code_tree": "dba4fa1c5dde5eaf363d71b614b2ef9f3c409515",
     "candidate_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
     "candidate_tree": "e6f79878671ee57bc5610f85159edb59193fbc0f",
-    "artifact_source_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
-    "branch_tip": "30d9b84"
+    "artifact_source_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2"
   },
   "ci": {
     "host": "gitlab.com",
