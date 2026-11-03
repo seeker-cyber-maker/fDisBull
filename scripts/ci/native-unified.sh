@@ -5,6 +5,12 @@ apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libpng16-16 zlib1g libfreetype6
 bash scripts/ci/install-node.sh
 mkdir -p .native/pe native-evidence/pe native-evidence/unified
+# Admit runtime inputs before spending time compiling QEMU or building Wine.
+timeout 30s docker info > native-evidence/pe/docker-info.txt
+curl --fail --location --retry 3 \
+  https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux \
+  --output "$FDISBULL_PE_KERNEL"
+echo "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d  $FDISBULL_PE_KERNEL" | sha256sum --check
 chmod +x "$FDISBULL_DOSBOX"
 sha256sum "$FDISBULL_DOSBOX"
 ldd "$FDISBULL_DOSBOX"
@@ -58,10 +64,6 @@ docker export --output .native/pe/rootfs.tar fdisbull-pe-export
 docker rm fdisbull-pe-export
 docker image inspect --format '{{.Id}}' fdisbull-pe-ci > native-evidence/pe/rootfs-image.txt
 
-curl --fail --location --retry 3 \
-  https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux \
-  --output "$FDISBULL_PE_KERNEL"
-echo "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d  $FDISBULL_PE_KERNEL" | sha256sum --check
 python experimental/wine/ci/build_runtime.py \
   --rootfs-tar .native/pe/rootfs.tar --base .native/pe/base.cpio.gz \
   --output "$FDISBULL_PE_INITRAMFS" > native-evidence/pe/runtime-preparation.json

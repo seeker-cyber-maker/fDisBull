@@ -2,11 +2,50 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = ROOT / 'scripts/ci/native-receipt.py'
+
+
+def ci_section(name):
+    """Read one canonical top-level block; GitLab itself validates YAML syntax."""
+    text = (ROOT / '.gitlab-ci.yml').read_text()
+    match = re.search(r'^' + re.escape(name) + r':\n(.*?)(?=^[^\s#]|\Z)', text, re.M | re.S)
+    assert match, f'Required CI section absent: {name}'
+    return match.group(1)
+
+
+def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
+    gate = ci_section('native-qualification')
+    assert 'when: manual' in gate and 'allow_failure: false' in gate
+    for name in ('native-qualification', '.native_qualification_rules'):
+        conditions = [line.strip() for line in ci_section(name).splitlines() if line.strip().startswith('- if:')]
+        assert conditions == ['- if: \'$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"\'']
+        assert 'when: never' in ci_section(name)
+    assert 'extends: .native_qualification_rules' in ci_section('.native_debugger_template')
+    for name in ('native-debugger-stable', 'native-debugger-layers'):
+        assert 'extends: .native_debugger_template' in ci_section(name)
+    assert 'extends: .native_qualification_rules' in ci_section('native-unified')
+    summary = ci_section('qualify-candidate')
+    assert 'extends: .native_qualification_rules' in summary
+    for name in ('test-and-package', 'native-debugger-stable', 'native-debugger-layers', 'native-unified'):
+        assert f'    - {name}\n' in summary
+    assert 'python scripts/check_ci_qualification.py --output' in summary
+    assert 'bash scripts/ci/test-and-package.sh' in ci_section('test-and-package')
+    for name in ('native-qualification', '.native_qualification_rules', '.native_debugger_template', 'native-unified', 'qualify-candidate'):
+        assert 'allow_failure: true' not in ci_section(name)
+
+
+def test_ordinary_job_requires_inventory_and_isolated_install_receipts():
+    script = (ROOT / 'scripts/ci/test-and-package.sh').read_text()
+    for operation in ('check_dist.py', 'check_package_payloads.py', 'check_agent_skill.py', '-I -m fdisbull_player', '--write-ordinary'):
+        assert operation in script
+    assert script.index('check_package_payloads.py') < script.index('--write-ordinary')
+    assert script.index('check_agent_skill.py') < script.index('--write-ordinary')
+    assert 'mktemp -d "$CI_BUILDS_DIR/' in script
 
 
 def run_receipt(tmp_path, monkeypatch, source='candidate'):
