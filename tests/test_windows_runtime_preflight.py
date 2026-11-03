@@ -87,3 +87,54 @@ def test_strict_cli_and_no_guest_launch(tmp_path):
     assert record["ready_to_attempt"] is False
     assert "original Windows program execution" in record["not_verified"]
     assert not missing.exists()
+
+
+def test_pe32_only_compiler_gate_does_not_require_win16_or_pe64(monkeypatch, tmp_path):
+    fake_tool(tmp_path / "i686-w64-mingw32-gcc", "fixture")
+    monkeypatch.setenv("PATH", str(tmp_path))
+    selected = preflight.inspect("compilers", target="pe32")
+    assert selected["ready_to_attempt"] is True
+    assert selected["checks"]["selected_target"] == "pe32"
+    assert selected["checks"]["target_toolchains_present"] == {
+        "win16_ne": False, "win32_pe32": True, "win64_pe32_plus": False,
+    }
+    assert preflight.inspect("compilers", target="all")["ready_to_attempt"] is False
+    assert preflight.inspect("compilers", target="win16")["ready_to_attempt"] is False
+
+
+def test_macos_native_preflight_is_local_and_independent_of_wine(monkeypatch, tmp_path):
+    for tool in ("clang", "lldb", "xcrun"):
+        fake_tool(tmp_path / tool, "fixture")
+    monkeypatch.setenv("PATH", str(tmp_path))
+    monkeypatch.setattr(preflight.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(preflight.platform, "machine", lambda: "arm64")
+    result = preflight.inspect("macos-native")
+    assert result["ready_to_attempt"] is True
+    assert result["checks"]["supported_macos_host"] is True
+    assert result["checks"]["debug_permission_verified"] is False
+    assert "wine" not in result["tools"] and "qemu" not in result["tools"]
+    assert "macOS native LLDB entitlement and original target observation" in result["not_verified"]
+    monkeypatch.setattr(preflight.platform, "system", lambda: "Linux")
+    assert preflight.inspect("macos-native")["ready_to_attempt"] is False
+    monkeypatch.setattr(preflight.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(preflight.platform, "machine", lambda: "unknown")
+    assert preflight.inspect("macos-native")["ready_to_attempt"] is False
+
+
+def test_target_selector_is_rejected_outside_compiler_mode():
+    with pytest.raises(ValueError, match="applies only"):
+        preflight.inspect("macos-native", target="pe32")
+    with pytest.raises(ValueError, match="applies only"):
+        preflight.inspect("qemu-host", target="win16")
+
+
+def test_pe32_cli_strict_succeeds_without_win16_toolchain(tmp_path):
+    fake_tool(tmp_path / "i686-w64-mingw32-gcc", "fixture")
+    env = {**os.environ, "PATH": str(tmp_path)}
+    run = subprocess.run([sys.executable, str(FILE), "--mode", "compilers",
+                          "--target", "pe32", "--strict"], capture_output=True,
+                         text=True, env=env)
+    assert run.returncode == 0, run.stderr
+    record = json.loads(run.stdout)
+    assert record["checks"]["selected_target"] == "pe32"
+    assert record["ready_to_attempt"] is True
