@@ -14,6 +14,12 @@ def test_native_snes_output_stays_outside_git(tmp_path):
     assert not (root/'app').exists()
 
 
+def test_unknown_profile_is_rejected_before_input_or_output(tmp_path):
+    with pytest.raises(ValueError,match='profile'):
+        build(rom_path='missing',ram='missing',save_ram='missing',output=tmp_path/'app',profile='unknown')
+    assert not (tmp_path/'app').exists()
+
+
 def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     output=tmp_path/'app'
     with pytest.raises(ValueError,match='regular file'):

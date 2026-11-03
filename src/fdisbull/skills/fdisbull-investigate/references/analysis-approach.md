@@ -191,16 +191,35 @@ target code that depends on unresolved instruction lengths.
   and byte ordering from that backend and target; do not assume the old
   platform's conventions or claim coverage of
   events the observer cannot see.
+  Record the observer's actual event coverage, filters and dropped events;
+  a trace of direct stores alone does not exclude DMA or other writers. When
+  dependency version strings disagree, check distribution metadata, runtime
+  API version and library identity instead of selecting one string by guess.
 - **Follow the actual read set into the model.** When a source operation reads
   geometry, saved data or other state, make each dependency an explicit,
   identity-bound input. Check the entry point and every memory region the
   native backend can access. A captured static region supports only that
   context; preserve mutable or unobserved updates as unknown or unsupported.
+  Equal frame-end snapshots do not prove that scratch data stayed constant
+  within a frame. When a consumer depends on it, watch the producer/consumer
+  stages and derive the intermediate from modeled state; feeding a later
+  observed intermediate into replay qualifies only a component comparison.
 - **Test a complete control sequence.** A held direction alone may conceal
   release, reversal or turn behavior. Compare ordinary press, release and turn
   cases and an independent held-out sequence from a known start; examine the
   first mismatch. If later actor fields leave the qualified domain, keep the
   supported coordinate observations while refusing dependent claims.
+  Compare each claimed actor or world field against source observations at the
+  same input and frame phase. Full model/native agreement qualifies that
+  compiler edge separately; it cannot establish source behavior for fields
+  that were never compared. A component fed observed source state is not an
+  autonomous frame simulation; document its inputs and phase. When a sparse
+  checkpoint fails, collect consecutive samples around the first transition
+  before assigning a cause. Record a refusal or missing sample as incomplete.
+- **Resume from the right state.** A saved run history is evidence, not a live
+  emulator connection. After interruption, identify the current backend and
+  resource owner and verify any restored capture and its phase before issuing
+  more input; do not treat an old session identifier as a reconnected guest.
 
 ## Branch, stop and refuse explicitly
 

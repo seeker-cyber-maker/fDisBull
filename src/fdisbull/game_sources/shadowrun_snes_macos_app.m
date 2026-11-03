@@ -1,10 +1,15 @@
 #import <Cocoa/Cocoa.h>
 #include "fdisbull_native.h"
 
-static int64_t state(fdisbull_context *c,const char *name) {
+static int64_t indexed(fdisbull_context *c,const char *name,uint32_t index) {
     int64_t result=0;
-    if(fdisbull_state_get(c,name,0,&result)) {fprintf(stderr,"missing source state: %s\n",name);exit(2);}
+    if(fdisbull_state_get(c,name,index,&result)) {fprintf(stderr,"missing source state: %s\n",name);exit(2);}
     return result;
+}
+static int64_t state(fdisbull_context *c,const char *name) {return indexed(c,name,0);}
+static int profile(fdisbull_context *c) {
+    int64_t v=0;if(!fdisbull_state_get(c,"shadowrun_snes_view",0,&v))return (int)v;
+    return fdisbull_state_get(c,"live_elapsed",0,&v)?0:1;
 }
 static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
     [s drawAtPoint:NSMakePoint(x,y) withAttributes:@{NSFontAttributeName:[NSFont monospacedSystemFontOfSize:size weight:NSFontWeightRegular],NSForegroundColorAttributeName:color}];
@@ -28,17 +33,37 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
         [grid moveToPoint:NSMakePoint(25,cy+i*32)];[grid lineToPoint:NSMakePoint(r.size.width-25,cy+i*32)];
     }
     [[NSColor colorWithCalibratedWhite:.18 alpha:1] setStroke];grid.lineWidth=1;[grid stroke];
+    if(profile(self.context)==1) {
+        uint32_t count=0,actors=(uint32_t)state(self.context,"live_order_count");
+        for(uint32_t i=0;i<actors && i<44;i++) {
+            uint32_t slot=(uint32_t)indexed(self.context,"live_order",i)/2;
+            if(slot<44 && (indexed(self.context,"live_flags",slot)&256) && indexed(self.context,"live_height",slot))count++;
+        }
+        [[NSColor colorWithCalibratedRed:.30 green:.50 blue:.75 alpha:.65] setStroke];
+        for(uint32_t i=0;i<count && i<44;i++) {
+            CGFloat l=indexed(self.context,"live_records",i*6),t=indexed(self.context,"live_records",i*6+1);
+            CGFloat right=indexed(self.context,"live_records",i*6+3),bottom=indexed(self.context,"live_records",i*6+4);
+            if(right>=l && bottom>=t && right-l<2048 && bottom-t<2048)
+                [[NSBezierPath bezierPathWithRect:NSMakeRect(cx+l*4-self.originX,cy-bottom*4+self.originY,(right-l)*4,(bottom-t)*4)] stroke];
+        }
+    }
     int64_t x=state(self.context,"shadowrun_snes_player_x"),y=state(self.context,"shadowrun_snes_player_y");
     CGFloat px=cx+(x-self.originX),py=cy-(y-self.originY);
     [[NSColor colorWithCalibratedRed:.25 green:.85 blue:.72 alpha:1] setFill];
     [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(px-7,py-7,14,14)] fill];
+    if(profile(self.context)==2) {
+        CGFloat nx=cx+indexed(self.context,"demo_x",1)-self.originX;
+        CGFloat ny=cy-indexed(self.context,"demo_y",1)+self.originY;
+        [[NSColor orangeColor] setFill];
+        [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(nx-7,ny-7,14,14)] fill];
+    }
     [NSGraphicsContext restoreGraphicsState];
     NSColor *white=[NSColor colorWithCalibratedWhite:.88 alpha:1];
-    text(@"Shadowrun SNES · Opening movement study",25,r.size.height-37,20,white);
+    text(profile(self.context)==2?@"Shadowrun SNES · NPC walking study":(profile(self.context)==1?@"Shadowrun SNES · Live collision study":@"Shadowrun SNES · Opening movement study"),25,r.size.height-37,20,white);
     text(@"World-coordinate view · source camera and artwork not reproduced",25,r.size.height-62,12,white);
-    text([NSString stringWithFormat:@"Player: x=%lld  y=%lld  z=%lld   updates=%lu",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
+    text([NSString stringWithFormat:@"%@: x=%lld  y=%lld  z=%lld   updates=%lu",profile(self.context)==2?@"NPC 44":@"Player",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
     text(self.stopped?@"Unqualified action or state · R resets":(self.paused?@"Paused · Space starts movement":@"Running · Space pauses"),25,43,14,white);
-    text(@"Arrows move · R resets · Esc closes · captured static scene",25,21,12,white);
+    text(profile(self.context)==2?@"NPCs walk autonomously · R resets · Esc closes · bounded projection":(profile(self.context)==1?@"Arrows move · R resets · Esc closes · bounded scene experiment":@"Arrows move · R resets · Esc closes · captured static scene"),25,21,12,white);
 }
 @end
 @interface StudyController : NSObject <NSApplicationDelegate,NSWindowDelegate>
@@ -55,6 +80,7 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
 - (BOOL)canBecomeKeyWindow {return YES;}
 - (void)keyDown:(NSEvent *)event {
     StudyController *c=self.controller;
+    if(profile(c.context)==2 && event.keyCode>=123 && event.keyCode<=126)return;
     switch(event.keyCode) {
         case 126:c.pad|=1;break;case 125:c.pad|=2;break;case 123:c.pad|=4;break;case 124:c.pad|=8;break;
         case 49:if(!event.isARepeat && !c.view.stopped)c.view.paused=!c.view.paused;break;
@@ -70,7 +96,7 @@ static void text(NSString *s,CGFloat x,CGFloat y,CGFloat size,NSColor *color) {
 @implementation StudyController
 - (void)applicationDidFinishLaunching:(NSNotification *)note {
     (void)note;StudyWindow *window=[[StudyWindow alloc] initWithContentRect:NSMakeRect(0,0,900,680) styleMask:(NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:NO];
-    self.window=window;window.controller=self;window.delegate=self;window.title=@"Shadowrun SNES · Movement Study";
+    self.window=window;window.controller=self;window.delegate=self;window.title=profile(self.context)==2?@"Shadowrun SNES · NPC Walking":(profile(self.context)==1?@"Shadowrun SNES · Live Collision":@"Shadowrun SNES · Movement Study");
     self.view=[[StudyView alloc] initWithFrame:window.contentView.bounds];self.view.context=self.context;self.view.paused=YES;
     self.view.originX=state(self.context,"shadowrun_snes_player_x");self.view.originY=state(self.context,"shadowrun_snes_player_y");
     self.view.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;window.contentView=self.view;

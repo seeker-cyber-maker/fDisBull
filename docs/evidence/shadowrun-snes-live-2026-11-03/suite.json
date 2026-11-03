@@ -1,0 +1,44 @@
+{
+  "focused_followup": {
+    "all_were_skipped_in_main": true,
+    "cases": 52,
+    "junit_sha256": "89af82cc83a7f025cebce6ceb68fecfbd3a46dee584f6dbb6b503dd6fbcb4f43",
+    "passed": 52,
+    "reason": "restored prepared private cc65/m68k/Miniplanets input selections"
+  },
+  "format": "fdisbull-snes-live-suite-evidence-1",
+  "main": {
+    "baseline_junit_sha256": "f81d298aa5faf1168c069d4d891185e441f212d126d6252cf5e70fe8f38fa8ca",
+    "baseline_non_green": 26,
+    "changed_paths": [],
+    "counts": {
+      "error": 23,
+      "failure": 3,
+      "passed": 3852,
+      "skipped": 194
+    },
+    "inventory_after_sha256": "14c96d670cd729f99e5a0d7548922053182f61173f711833ab7c68c568e4621d",
+    "inventory_before_sha256": "14c96d670cd729f99e5a0d7548922053182f61173f711833ab7c68c568e4621d",
+    "junit_sha256": "3d66be577d9e0d7406e245bbdd81ddc5385f8bb87868d42fea505d18624b6db9",
+    "log_sha256": "cc35be1ebd1059e64306682bae73e8b973606def38b33a916620aba346e6154c",
+    "missing": [],
+    "newly_skipped_prior_pass": 52,
+    "non_green": 26,
+    "same": true,
+    "skip_reasons": {
+      "FDISBULL_CC65_ROOT must select the prepared sim65 toolchain": 19,
+      "prepared private cc65/sim65 toolchain required": 2,
+      "requires explicit private REV04 ROM and trusted cc65 root": 19,
+      "requires explicit private REV04 ROM and trusted m68k root": 1,
+      "requires explicitly prepared cc65 and private Miniplanets ROM": 1,
+      "requires the private original Miniplanets ROM": 9,
+      "set FDISBULL_MINIPLANETS_ROM to the external official ROM": 1
+    },
+    "source_count": 1692,
+    "source_unchanged": true,
+    "total": 4072,
+    "unexpected": []
+  },
+  "private_comparison_sha256": "e6923f281c8d1f1b822cc56c8d27d8d0f0f1925c24499544d83784c2b75db4a3",
+  "result_note": "Main invocation: 3,852 passed, 194 skipped, 3 failed, 23 errors. Separate 52-case prepared-input follow-up: all passed. All 26 non-green cases/types exactly match baseline."
+}

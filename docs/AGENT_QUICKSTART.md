@@ -76,6 +76,9 @@ For the separately recovered SNES opening-scene movement study, see
 [SNES native transfer](SHADOWRUN_SNES_MACOS.md). Its `shadowrun-snes-build`
 command uses the exact caller-owned SNES ROM, WRAM and save-RAM capture; it is
 a prepared source-specific profile, not a whole-ROM conversion command.
+The [live SNES handoff](SHADOWRUN_SNES_LIVE_HANDOFF.md) adds explicit
+`--profile live-morgue` and `--profile npc-intro` research lanes, source
+comparisons and the remaining scene/script boundaries.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 
