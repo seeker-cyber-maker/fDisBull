@@ -15,6 +15,10 @@ import subprocess
 import tempfile
 
 MASK = 0xFFFFFFFF
+# "host" emits LLVM IR with the local Clang target (including macOS ARM64).
+# Cross-target IR emission is not linking or executing a PE32/Mach-O program.
+LLVM_TARGETS = ("host", "x86_64-unknown-linux-gnu",
+                "i686-w64-windows-gnu", "arm64-apple-darwin")
 OPS = {"xor": "^", "add": "+", "sub": "-", "and": "&", "or": "|", "mul": "*", "shl": "<<", "lshr": ">>"}
 SSA = re.compile(r"%([A-Za-z_.0-9]+)")
 ARG = r"(?:%[A-Za-z_.0-9]+|-?[0-9]+)"
@@ -135,15 +139,19 @@ def parse_llvm(ir):
     return result
 
 
-def compile_roundtrip(expr, clang):
+def compile_roundtrip(expr, clang, *, llvm_target="host"):
+    if llvm_target not in LLVM_TARGETS:
+        raise Refused("unsupported LLVM IR target profile")
     compiler = shutil.which(clang) if not Path(clang).is_absolute() else str(Path(clang))
     if not compiler or not Path(compiler).is_file(): raise Refused("explicit Clang executable unavailable")
     source = render_c(expr)
     with tempfile.TemporaryDirectory(prefix="fdb-fusion-") as directory:
         file = Path(directory) / "candidate.c"
         file.write_text(source)
-        args = [compiler, "-std=c11", "-O2", "-S", "-emit-llvm", "-target", "x86_64-unknown-linux-gnu",
-                "-fno-discard-value-names", "-x", "c", str(file), "-o", "-"]
+        args = [compiler, "-std=c11", "-O2", "-S", "-emit-llvm"]
+        if llvm_target != "host":
+            args += ["-target", llvm_target]
+        args += ["-fno-discard-value-names", "-x", "c", str(file), "-o", "-"]
         try:
             p = subprocess.run(args, capture_output=True, text=True, timeout=10, check=False)
         except (OSError, subprocess.TimeoutExpired) as error:
@@ -182,11 +190,14 @@ def prove(expr_a, expr_b, timeout_ms=3000):
     return {"status": "proved_u32_model", "domain": "all 2^32 input words; no effects or intermediate observation"}
 
 
-def discover(blocks, *, clang="clang", rounds=8, intermediate_observable=False):
+def discover(blocks, *, clang="clang", rounds=8, intermediate_observable=False,
+             llvm_target="host"):
     """Accept strictly improving, fully modeled transformations; keep original forever."""
     validate(blocks)
     if intermediate_observable: raise Refused("a child boundary is observable: do not fuse")
     if type(rounds) is not int or not 1 <= rounds <= 16: raise Refused("iteration budget must be 1..16")
+    if llvm_target not in LLVM_TARGETS:
+        raise Refused("unsupported LLVM IR target profile")
     original = original_expr(blocks)
     original_sha = digest(blocks)
     best = original
@@ -194,11 +205,12 @@ def discover(blocks, *, clang="clang", rounds=8, intermediate_observable=False):
     history = []
     status = "budget_exhausted"
     for iteration in range(1, rounds + 1):
-        candidate, c_sha, ir_sha, compiler_version = compile_roundtrip(best, clang)
+        candidate, c_sha, ir_sha, compiler_version = compile_roundtrip(best, clang, llvm_target=llvm_target)
         sig = digest(candidate)
         record = {"round": iteration, "c_sha256": c_sha, "optimized_ir_sha256": ir_sha,
                   "before_nodes": cost(best), "candidate_nodes": cost(candidate), "candidate_hash": sig,
-                  "compiler_version": compiler_version, "source_abi": "x86_64-unknown-linux-gnu; unsigned-int u32; C11 -O2"}
+                  "compiler_version": compiler_version, "requested_llvm_target": llvm_target,
+                  "source_abi": "Clang target-specific C11 unsigned-int u32; -O2; generated i32 semantics only"}
         if sig == digest(best):
             record["outcome"] = "fixed_point"
             history.append(record); status = "fixed_point"; break
@@ -219,7 +231,8 @@ def discover(blocks, *, clang="clang", rounds=8, intermediate_observable=False):
         best = candidate
     changed = digest(best) != digest(original)
     return {"format": "fdisbull-feedback-fusion-experiment-1",
-            "scope": "authored u32 pure-model; optimized LLVM subset; no original Win32 or production UIL registration",
+            "scope": "authored u32 pure-model; optimized LLVM subset; host or explicit IR target; no original Win32 or production UIL registration",
+            "requested_llvm_target": llvm_target,
             "parent": "candidate:two-children:" + original_sha,
             "original_children": blocks, "original_semantics": original,
             "implementations": {"original": original, **({"candidate_optimized": best} if changed else {})},
@@ -233,9 +246,12 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--clang", default="clang")
     p.add_argument("--rounds", type=int, default=8)
+    p.add_argument("--llvm-target", choices=LLVM_TARGETS, default="host",
+                   help="LLVM IR target only; host (including macOS) is default, not a native PE32 build")
     args = p.parse_args()
     blocks = [[{"op": "xor", "constant": 0x5A}], [{"op": "xor", "constant": 0xA5}]]
-    print(json.dumps(discover(blocks, clang=args.clang, rounds=args.rounds), indent=2))
+    print(json.dumps(discover(blocks, clang=args.clang, rounds=args.rounds,
+                              llvm_target=args.llvm_target), indent=2))
 
 
 if __name__ == "__main__": main()
