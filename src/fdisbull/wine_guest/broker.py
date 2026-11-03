@@ -11,6 +11,7 @@ import subprocess
 import termios
 import time
 import tty
+import zlib
 
 LIMIT = 96 * 1024 * 1024
 AGENT_HASH = hashlib.sha256(Path('/opt/fdisbull/agent.c').read_bytes()).hexdigest()
@@ -74,6 +75,30 @@ def number(value, low, high):
     if type(value) is not int or not low <= value <= high:
         raise ValueError('Invalid integer parameter')
     return value
+
+
+def screenshot_payload(result):
+    """Bound and losslessly compress one fresh native BGRA observation."""
+    if not isinstance(result,dict):raise ValueError('Invalid Windows capture response')
+    if result.get('available') is False:
+        if 'bgra_base64' in result or 'bgra_zlib_base64' in result:
+            raise ValueError('Unavailable Windows capture contains pixels')
+        return result
+    width=number(result.get('width'),1,1920);height=number(result.get('height'),1,1080)
+    size=width*height*4
+    encoded=result.get('bgra_base64')
+    if ('bgra_zlib_base64' in result or not isinstance(encoded,str)
+            or len(encoded)!=4*((size+2)//3)):
+        raise ValueError('Invalid Windows capture BGRA encoding or size')
+    try:raw=base64.b64decode(encoded,validate=True)
+    except (ValueError,UnicodeError):raise ValueError('Invalid Windows capture BGRA encoding') from None
+    if len(raw)!=size:raise ValueError('Incomplete Windows client capture')
+    compressed=zlib.compress(raw,1)
+    if len(compressed)>=size:return result
+    compact=dict(result)
+    del compact['bgra_base64']
+    compact['bgra_zlib_base64']=base64.b64encode(compressed).decode('ascii')
+    return compact
 
 
 def stage_files(params):
@@ -191,7 +216,8 @@ def invoke(method, params):
     else:
         raise ValueError('Unsupported PE operation')
     process.stdin.write(command.encode()+b'\n');process.stdin.flush()
-    return response(params.get('timeout_ms', 15000)/1000+10, unavailable_capture=method=='screenshot')
+    result=response(params.get('timeout_ms', 15000)/1000+10, unavailable_capture=method=='screenshot')
+    return screenshot_payload(result) if method=='screenshot' else result
 
 
 def identity():

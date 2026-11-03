@@ -15,6 +15,7 @@ import secrets
 import threading
 import time
 import uuid
+import zlib
 
 from .scenes import SceneSessionMixin
 
@@ -82,6 +83,30 @@ class WindowsCaptureUnavailable(ValueError):
     def __init__(self,result):
         self.capture_receipt=dict(result)
         super().__init__('Windows client capture unavailable: '+str(result.get('reason','not presented')))
+
+
+def _decode_bgra(result,expected):
+    """Decode one exact, bounded stopped-frame payload without caching it."""
+    fields=[name for name in ('bgra_base64','bgra_zlib_base64') if name in result]
+    if len(fields)!=1:raise ValueError('Windows capture requires exactly one pixel payload')
+    field=fields[0];encoded=result.pop(field)
+    maximum=expected-1 if field=='bgra_zlib_base64' else expected
+    if not isinstance(encoded,str) or len(encoded)>4*((maximum+2)//3):
+        raise ValueError('Windows pixel payload exceeds its encoded byte budget')
+    try:data=base64.b64decode(encoded,validate=True)
+    except (ValueError,TypeError) as error:raise ValueError('Invalid Windows pixel payload base64') from error
+    if field=='bgra_zlib_base64':
+        # The broker uses compression only when strictly smaller. This bounds
+        # both the compressed input allocation and the decompressor's output.
+        if not 0<len(data)<expected:raise ValueError('Invalid Windows compressed pixel length')
+        decoder=zlib.decompressobj()
+        try:pixels=decoder.decompress(data,expected+1)
+        except zlib.error as error:raise ValueError('Invalid Windows compressed pixel stream') from error
+        if len(pixels)!=expected or not decoder.eof or decoder.unconsumed_tail or decoder.unused_data:
+            raise ValueError('Incomplete or oversized Windows compressed pixel capture')
+    else:pixels=data
+    if len(pixels)!=expected:raise ValueError('Incomplete Windows client capture')
+    return pixels
 
 
 class _Spectator:
@@ -244,8 +269,7 @@ class WindowsUIMixin(SceneSessionMixin):
                 self._windows_spectator.unavailable(str(result.get('reason','not presented')))
             raise WindowsCaptureUnavailable(result)
         width=bounded(result.get('width'),'width',1,1920);height=bounded(result.get('height'),'height',1,1080)
-        pixels=base64.b64decode(result.pop('bgra_base64'),validate=True)
-        if len(pixels)!=width*height*4:raise ValueError('Incomplete Windows client capture')
+        pixels=_decode_bgra(result,width*height*4)
         native=result.get('state_revision',result.get('frame_revision'))
         if type(native) is not int or native<0:raise ValueError('Windows frame lacks a native state revision; prepare the current runtime')
         if 'window' not in result:raise ValueError('Windows capture lacks its owned window identity')
