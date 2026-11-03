@@ -8,6 +8,14 @@ Given two source-backed, ordered native/UDL blocks A and B, find a shorter candi
 
 The user's proposed method is to alternate compiler and semantic-import passes **until the normalized representation stops changing**. Returning to two operations is a valid no-improvement result; it must not be reported as a successful optimization.
 
+### Priority and local execution policy (November 3, 2026)
+
+**PE32 original-program fidelity is the first native acceptance target. Win16 is deferred.** The first source-backed trial uses an authored I386/PE32 two-block key checker with observable EFLAGS and an unsafe-fusion counterexample; subsequent user-owned crackmes stay private. The PE32 debugger dependency is [MR !60](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/60), which now puts PE32 ahead of historical Win16. A presentable CRC32 algorithm alone is not enough evidence for an arbitrary native crackme.
+
+**The Mac Studio is a first-class LOCAL development and analysis host**, not an incidental machine that must connect to a remote Linux development service. Run the pure-model C/LLVM/SMT optimizer on the local native macOS Python/Clang/Z3 toolchain, retain macOS ARM64 native UDC as its own regression target, and use a **local offline x86-64 QEMU + Wine 11 WoW64 guest** only to execute Windows PE32 originals. Linux x86-64 CI is an alternative host, not the default requirement. A Mac clang pass does not establish native PE32 equivalence or native Mach-O behavior by itself.
+
+**Three independent evidence lanes must remain separate:** (1) Mac-hosted pure semantic model and Clang IR, (2) original PE32 stopped-process runtime with full 32-bit machine effects, and (3) separately qualified native macOS ARM64 realization. Record CPU/ABI, target triple, compiler/runtime hashes and selected observation boundaries with every reusable implementation. Win16/NE selector support is a later adapter and must never block PE32 progress.
+
 ~~~
 original A + original B
    -> source-qualified UDL A;B
@@ -77,18 +85,21 @@ The caller-visible contract, not the optimizer's own last return value, defines 
 - Source: examples/uil_common/feedback_fusion.py
 - Tests: tests/test_feedback_fusion.py
 - Input: exactly two **authored**, nonempty, constant-operand u32 operation lists (xor, add, sub, and, or, mul, bounded shifts). No globals, pointers, stack, memory, flags, calls, exceptions or observation of intermediate states.
-- Toolchain: real Clang C11 -O2, targeting x86_64-unknown-linux-gnu, emitting **optimized LLVM IR**, *not a Windows EXE*. A deliberately narrow, fail-closed i32 SSA parser returns an explicitly **toy UIL-shaped expression**. This prototype does **not** use the production common UIL parser or prove original PE32 correspondence.
+- Toolchain: real Clang C11 -O2, emitting **optimized LLVM IR**, *not an executable*. The default `--llvm-target host` uses the local Clang target (including Apple Silicon macOS). Explicit LLVM-only triples `x86_64-unknown-linux-gnu`, `i686-w64-windows-gnu` (PE32-shaped IR) and `arm64-apple-darwin` are admitted, but neither an LLVM triple nor an IR file proves PE32/Win16/Mach-O execution. A deliberately narrow, fail-closed i32 SSA parser returns a **toy UIL-shaped expression**, not the production common UIL schema or an original binary decompilation.
 - Admission: actual Z3 32-bit bit-vector proof of unchanged whole-function output for all 2^32 inputs. A shortened candidate is only eligible after a subsequent fixed-point round and is **never selected by default**. Rejected, unfinished and unknown cases leave the original available.
-- Evidence: hashes for emitted C and LLVM, Clang version, normalized candidate hashes, per-round operation counts and proof/refusal status. The original child blocks are always retained.
+- Evidence: hashes for emitted C and LLVM, Clang version, requested host/explicit target mode, normalized candidate hashes, per-round operation counts and proof/refusal status. The original child blocks are always retained. The output does not establish compiler-toolchain or native-execution qualification.
 - Checks: two XOR blocks collapse to one, add followed by sub becomes identity, unchanged two-operation pair stays original, improper shift/effect/memory/branch refuses, wrong compiler output yields SMT counterexample, and one-round budget does not promote an unstable candidate.
 
 ~~~
 # Requires real Clang, Python, pytest and z3-solver. Installs nothing.
-python examples/uil_common/feedback_fusion.py
+# Local Mac or Linux host: no Wine or QEMU required for these pure-model checks.
+python examples/uil_common/feedback_fusion.py --llvm-target host
 python -m pytest -q tests/test_feedback_fusion.py
+# Optional PE32-targeted LLVM IR only. It does NOT build or execute a PE32 EXE.
+python examples/uil_common/feedback_fusion.py --llvm-target i686-w64-windows-gnu
 ~~~
 
-The locally authored test run on an isolated Linux x86-64 Python 3.13.5/Clang/Z3 environment passed **10/10** in the source preparation workspace. This is not an installed fDisBull release/native Win32 acceptance, and hosted GitLab CI remains separate.
+The initial authored test run on an isolated Linux x86-64 Python 3.13.5/Clang/Z3 environment passed **10/10** for the *earlier Linux-triple implementation*. The updated host-target compiler support and its two new tests **have not yet been freshly executed on a Mac or in hosted CI**. This is not an installed fDisBull release/native Win32 or macOS original-execution acceptance. Do not transfer the old passing test count to this revised commit.
 
 ## CRC32 as a subsequent synthesis target
 
@@ -102,9 +113,9 @@ A good first live PE32 benchmark is a self-authored key-checking fixture with A:
 
 **M2: richer discovery:** connect source-backed block grouping, inlining/SSA/canonicalization and a bounded rewrite/proof engine; add CRC32 table synthesis and semantic intent recognition only when code evidence supports them.
 
-**M3: original Windows oracle:** once the PE32 WoW64 runtime debugger is qualified, observe original A+B and candidate F at matching machine states, including EFLAGS, memory, exceptional/partial effects and API ordering. Separate native source proof from model self-consistency.
+**M3: PE32 original-program oracle first (macOS-local guest default):** qualify the authored PE32 key-check fixture and then user-owned Win32 crackmes through the PE32 WoW64 runtime debugger in MR !60, driven locally by macOS/QEMU (Linux guest CI optional). Observe original A+B and candidate F at matching stopped states, including EFLAGS, memory, exceptional/partial effects, API ordering and continuation. Keep the Mac ARM64 native realization under independent regression. Preserve original-child stepping and never claim that a fused native block has a physical midpoint. Win16 original execution is not on this milestone's critical path.
 
-**M4: agent-facing cascading menu:** display the parent and every preserved original child, alternative backings, proof domain, expected runtime support, costs and truthful rewind granularity; user/agent opt-in selection remains explicit.
+**M4: agent-facing cascading menu and host-aware selections:** display the parent and every preserved original child, alternative backings, proof domain, target OS/ABI, **Mac-native versus PE32 guest runtime availability**, costs and truthful rewind granularity. User/agent opt-in selection remains explicit; a missing Windows guest must not prevent using a pure portable or native macOS implementation where already qualified.
 
 ## Historical reference and attribution
 
