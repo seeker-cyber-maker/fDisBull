@@ -30,6 +30,13 @@ SNAKE_EXE_SHA256='9efbfb2264508bd10f2b20d3614973bea36b8abb2074574f68002fe52aee48
 SNAKE_INITIAL_SHA256='fb3d1d818f01776cd05e7daa7d851b6c948d398250afdfa5ac44894e9cf0b7fa'
 
 
+def _snake_frame_ready(image):
+    """A visible HWND may precede the child view's first asynchronous paint."""
+    colors={color:count for count,color in image.getcolors(image.width*image.height)}
+    return (colors.get((0,170,0),0)>=16 and colors.get((85,255,85),0)>=16
+            and colors.get((0,0,0),0)>=1000 and colors.get((0,0,170),0)>=1000)
+
+
 def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
     original=Path(fixture).resolve(strict=True);initial_source=Path(initial).resolve(strict=True)
     if hashlib.sha256(original.read_bytes()).hexdigest()!=SNAKE_EXE_SHA256 or hashlib.sha256(initial_source.read_bytes()).hexdigest()!=SNAKE_INITIAL_SHA256:
@@ -69,13 +76,28 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial):
        mark('actual-ne-memory-execution-breakpoint-step-trace',memory=memory,breakpoint=bp,step=stepped,trace=trace)
        continue_to_slice(session)
        frame=None
-       for _ in range(12):
-        try:frame=session.screenshot('gui-initial.png',hooks=False);break
-        except WindowsCaptureUnavailable as error:
-         mark('window-not-yet-available',error=str(error));continue_to_slice(session)
-       if frame is None:raise RuntimeError('No native window within bounded progression')
+       for poll in range(12):
+        try:
+         candidate=session.screenshot('gui-readiness-'+str(poll)+'.png',hooks=False)
+         path=OUT/('readiness-'+str(poll)+'.png');project.debug_export(candidate['artifact'],path)
+         painted=Image.open(path).convert('RGB');painted.load()
+         if _snake_frame_ready(painted):frame=candidate;break
+         mark('visible-window-child-view-not-yet-painted',frame=candidate)
+        except WindowsCaptureUnavailable as error:mark('window-not-yet-available',error=str(error))
+        continue_to_slice(session)
+       if frame is None:raise RuntimeError('No painted Snake child view within bounded progression')
        project.debug_export(frame['artifact'],OUT/'initial.png');initial=Image.open(OUT/'initial.png').convert('RGB');initial.load()
        mark('actual-ne-client-frame',frame=frame,dimensions=initial.size)
+       # The supplied window explicitly asks for a game-view focus click. This
+       # black board point lies outside its blue controls and initial snake.
+       assert initial.getpixel((80,190))==(0,0,0)
+       focus=session.click(80,190,hold_ms=40,mode_id=frame['metadata']['mode_id'])
+       continue_to_slice(session)
+       focused=session.screenshot('gui-focused-before-n.png',hooks=False)
+       project.debug_export(focused['artifact'],OUT/'initial-focused.png')
+       initial=Image.open(OUT/'initial-focused.png').convert('RGB');initial.load()
+       assert _snake_frame_ready(initial)
+       mark('physical-game-view-focus-click-before-keyboard-baseline',input=focus)
        # Learn one physical N-step outcome, reset with the ordinary R key, then
        # independently replay that observed transition through a named scene.
        queued=session.keyboard_press('n',hold_ms=40,gap_ms=40);continue_to_slice(session)
@@ -134,6 +156,16 @@ def test_win16_scene_profile_rejects_changed_inputs_before_boot(tmp_path):
     with pytest.raises(ValueError,match='declared generated Snake'):
         qualify_win16_snake(tmp_path/'output',qemu='unused',kernel='unused',runtime='unused',fixture=fixture,initial=initial)
     assert not (tmp_path/'output').exists()
+
+
+def test_snake_readiness_requires_painted_game_content_not_just_a_window():
+    first_window=Image.new('RGB',(80,80),'white')
+    first_window.paste((0,0,0),(0,0,80,20))
+    assert _snake_frame_ready(first_window) is False
+    painted=first_window.copy();painted.paste((0,0,170),(0,20,80,40))
+    assert _snake_frame_ready(painted) is False
+    painted.paste((0,170,0),(10,50,15,55));painted.paste((85,255,85),(15,50,20,55))
+    assert _snake_frame_ready(painted) is True
 
 
 def test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode(tmp_path):
