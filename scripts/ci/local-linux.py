@@ -257,33 +257,36 @@ def verify_guest_postcheck(guest_data, sha):
     return postcheck
 
 
-def stage_stable_reuse(source, export_root, work, image_digest):
+def stage_backend_reuse(source, export_root, work, image_digest, profile):
     """Stage explicitly selected evidence; never change the retained build."""
     import native_backend_reuse
+    if profile not in native_backend_reuse.PROFILES:
+        raise ValueError('Unsupported original backend profile')
+    directory = native_backend_reuse.PROFILES[profile]
     export_root = Path(export_root).resolve(strict=True)
     phase = export_root.parent.parent
     paths = {
-        'dosbox-x': export_root / '.native/backends/stable/dosbox-x',
-        'build-identity.json': export_root / 'native-evidence/stable/backend-identity.json',
-        'config.log': export_root / 'native-evidence/stable/config.log',
+        'dosbox-x': export_root / f'.native/backends/{profile}/dosbox-x',
+        'build-identity.json': export_root / f'native-evidence/{profile}/backend-identity.json',
+        'config.log': export_root / f'native-evidence/{profile}/config.log',
         'build-process.json': phase / 'process.json',
     }
     for path in paths.values():
         if path.is_symlink() or not path.is_file():
-            raise ValueError('Missing or unsafe original stable build evidence')
+            raise ValueError('Missing or unsafe original backend build evidence')
     build = json.loads(paths['build-identity.json'].read_text())
     build_sha = build.get('source_commit')
     if not isinstance(build_sha, str) or not re.fullmatch(r'[0-9a-f]{40}', build_sha):
-        raise ValueError('Invalid original stable build source')
+        raise ValueError('Invalid original backend build source')
     old_manifest = subprocess.check_output(
-        ['git', 'show', f'{build_sha}:experimental/dosbox-x/source-manifest.json'],
+        ['git', 'show', f'{build_sha}:{directory}/source-manifest.json'],
         cwd=source, env=safe_env(), timeout=60)
-    stage = work / '.native/reuse-stable'
+    stage = work / f'.native/reuse-{profile}'
     stage.mkdir(parents=True, exist_ok=False)
     for name, path in paths.items():
         shutil.copy2(path, stage / name)
     (stage / 'build-manifest.json').write_bytes(old_manifest)
-    native_backend_reuse.verify(stage, work / 'experimental/dosbox-x/source-manifest.json', image_digest)
+    native_backend_reuse.verify(stage, work / directory / 'source-manifest.json', image_digest, profile)
 
 
 def execute(args):
@@ -311,6 +314,7 @@ def execute(args):
     output.mkdir(exist_ok=True)
     profiles = list(JOBS) if args.profile == 'all' else ([] if args.profile == 'qualify' else [args.profile])
     for profile in profiles:
+        reuse_backend = getattr(args, f'reuse_{profile}_backend', None) if profile in ('stable', 'layers') else None
         receipt_path = output / f'artifacts/receipts/local-process-{profile}.json'
         if receipt_path.exists():
             marker = run_root / profile / 'completed.json'
@@ -349,8 +353,8 @@ def execute(args):
             orchestrator = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])), 'arm64')
             if orchestrator['image_index_digest'] != image['image_index_digest']:
                 raise ValueError('AMD64 and ARM64 images do not share one pinned index')
-        if profile == 'stable' and args.reuse_stable_backend is not None:
-            stage_stable_reuse(source, args.reuse_stable_backend, work, image['image_digest'])
+        if reuse_backend is not None:
+            stage_backend_reuse(source, reuse_backend, work, image['image_digest'], profile)
         save(phase / 'image.json', image)
         if orchestrator is not None:
             save(phase / 'orchestrator-image.json', orchestrator)
@@ -361,8 +365,8 @@ def execute(args):
                    '--mount', f'type=bind,source={work},target=/source,readonly',
                    '--mount', f'type=bind,source={guest_data},target=/run-data']
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
-        if profile == 'stable' and args.reuse_stable_backend is not None:
-            environment.update(FDISBULL_REUSE_STABLE='1', FDISBULL_REUSE_IMAGE_DIGEST=image['image_digest'])
+        if reuse_backend is not None:
+            environment.update(FDISBULL_REUSE_BACKEND='1', FDISBULL_REUSE_IMAGE_DIGEST=image['image_digest'])
         if orchestrator is not None:
             command += ['--cap-add', 'ALL', orchestrator['image_reference'],
                         'bash', '-ec', unified_command(image, environment)]
@@ -417,6 +421,7 @@ def main():
     parser.add_argument('--source', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--reuse-stable-backend', type=Path, help='Explicit prior stable exported evidence root; reruns all tests')
+    parser.add_argument('--reuse-layers-backend', type=Path, help='Explicit prior layers exported evidence root; reruns all tests and offline-kit checks')
     parser.add_argument('--profile', choices=['all', *JOBS, 'qualify'], default='all')
     parser.add_argument('--expected-bytes', type=int, default=12_000_000_000)
     parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)

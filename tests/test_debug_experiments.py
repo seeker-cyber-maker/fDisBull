@@ -159,6 +159,7 @@ def test_real_failed_trial_restores_nonzero_hook_count_and_deleted_breakpoint(tm
     binary.write_bytes(mz_file(bytes.fromhex('0e1fb81111a3200040ebfa')+bytes(501),ss=0,sp=0x200))
     with Project.create(tmp_path/'fail.fdb',binary) as p, p.debugger(experiment_backend,binary.parent) as d:
         p.analyze(max_instructions=32)
+        prepare_native_fixture(d)
         bp=d.breakpoint('1000:0008')
         cx=d.registers()['general']['ecx']
         hook=d.hook('1000:0002',once=False,max_hits=3,

@@ -60,6 +60,68 @@ def verify_artifact(root, item):
         raise ValueError(f"Artifact identity mismatch: {item.get('path') if isinstance(item, dict) else item}")
 
 
+REUSE_FILES = {
+    'build_identity_sha256': 'build-identity.json',
+    'build_process_sha256': 'build-process.json',
+    'build_manifest_sha256': 'build-manifest.json',
+    'build_config_sha256': 'config.log',
+}
+REUSE_FIELDS = frozenset((*REUSE_FILES, 'build_source_commit', 'build_image_digest'))
+
+
+def verify_reused_backend(root, profile, backend, artifacts, process):
+    """Re-read retained build provenance; never infer a build from test success."""
+    base = f'native-evidence/{profile}/'
+    indicators = ('reuse-provenance.json', 'build-identity.json', 'build-process.json', 'build-manifest.json')
+    present = lambda path: path.exists() or path.is_symlink()
+    if not REUSE_FIELDS.intersection(backend) and not any(present(root / base / name) for name in indicators):
+        return None
+    if profile not in ('stable', 'layers') or not isinstance(process, dict):
+        raise ValueError('Reused backend requires a local native process')
+    if not REUSE_FIELDS.issubset(backend):
+        raise ValueError('Reused backend provenance is incomplete')
+    proofs = {}
+    marker_path = root / base / 'reuse-provenance.json'
+    if present(marker_path):
+        marker = read(local_path(root, base + 'reuse-provenance.json'))
+        if any(marker.get(field) != backend[field] for field in REUSE_FIELDS):
+            raise ValueError('Reused backend provenance marker mismatch')
+        proofs['reuse-provenance.json'] = identity(root, base + 'reuse-provenance.json')
+    for field, filename in REUSE_FILES.items():
+        item = identity(root, base + filename)
+        if item['sha256'] != backend[field]:
+            raise ValueError(f'Reused backend provenance hash mismatch: {filename}')
+        proofs[filename] = item
+    original = read(local_path(root, base + 'build-identity.json'))
+    build_process = read(local_path(root, base + 'build-process.json'))
+    manifest = read(local_path(root, base + 'build-manifest.json'))
+    build_sha = backend['build_source_commit']
+    image = backend['build_image_digest']
+    if (not isinstance(build_sha, str) or not re.fullmatch(r'[0-9a-f]{40}', build_sha)
+        or original.get('source_commit') != build_sha
+        or build_process.get('source_commit') != build_sha
+        or build_process.get('execution_origin') != 'local-linux'
+        or build_process.get('job_name') != JOBS[profile]
+        or not isinstance(image, str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', image)
+        or build_process.get('image_digest') != image or process.get('image_digest') != image):
+        raise ValueError('Reused backend build source, process or image mismatch')
+    expected_profile = 'experimental/dosbox-x' + ('/layers' if profile == 'layers' else '')
+    if (original.get('profile') != expected_profile or backend.get('profile') != expected_profile
+        or original.get('upstream_commit') != manifest.get('baseline_commit')
+        or backend.get('upstream_commit') != original.get('upstream_commit')
+        or original.get('patch_sha256') != manifest.get('patch_sha256')
+        or backend.get('patch_sha256') != original.get('patch_sha256')
+        or not isinstance(original.get('configure_flags'), list)
+        or backend.get('configure_flags') != original.get('configure_flags')):
+        raise ValueError('Reused backend original build metadata mismatch')
+    binary_path = f'.native/backends/{profile}/dosbox-x'
+    binary = next((item for item in artifacts if item.get('path') == binary_path), None)
+    if (binary is None or original.get('backend_sha256') != binary.get('sha256')
+        or backend.get('backend_sha256') != binary.get('sha256')):
+        raise ValueError('Reused backend binary identity mismatch')
+    return proofs
+
+
 def passing_junit(path, *, native=False):
     tree = ET.parse(path).getroot()
     suites = [tree] if tree.tag == 'testsuite' else list(tree.findall('testsuite'))
@@ -89,6 +151,7 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
         if (receipt.get('status') != 'passed' or receipt.get('source_commit') != source_commit
             or receipt.get('job_name') != job or receipt.get('profile') != profile):
             raise ValueError(f"Job status, source or profile mismatch: {job}")
+        process = None
         if local_run_id is None:
             if (receipt.get('execution_origin', 'gitlab') != 'gitlab'
                 or str(receipt.get('pipeline_id')) != str(pipeline_id)
@@ -139,9 +202,14 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
             verify_artifact(root, item)
         if profile != 'ordinary' and receipt.get('backend_identity', {}).get('source_commit') != source_commit:
             raise ValueError(f"Wrong native backend source: {job}")
+        reuse = None
+        if profile in ('stable', 'layers'):
+            reuse = verify_reused_backend(root, profile, receipt.get('backend_identity', {}), artifacts, process)
         results[job] = {"local_job_id" if local_run_id else "job_id": job_id,
                         "receipt": identity(root, str(path.relative_to(root))),
                         "test_counts": counts, "artifacts": artifacts}
+        if reuse is not None:
+            results[job]['build_provenance'] = reuse
         if local_run_id is not None:
             results[job]['process_receipt'] = identity(root, str(process_path.relative_to(root)))
     payload = read(root / 'artifacts/receipts/package-payloads.json')

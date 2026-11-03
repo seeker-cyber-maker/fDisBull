@@ -219,3 +219,126 @@ def test_local_guest_runtime_and_stopped_state_required(local_qualified, field, 
     p.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='local process evidence'):
         gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def add_reused_backend(root, profile):
+    receipt_path = root / f'artifacts/receipts/native-{profile}.json'
+    receipt = json.loads(receipt_path.read_text())
+    binary = root / f'.native/backends/{profile}/dosbox-x'
+    binary.parent.mkdir(parents=True)
+    binary.write_bytes(b'authored backend bytes')
+    binary_item = gate.identity(root, str(binary.relative_to(root)))
+    receipt['artifacts'].append(binary_item)
+    build_sha = 'd' * 40
+    image = 'sha256:' + 'b' * 64
+    selected = 'experimental/dosbox-x' + ('/layers' if profile == 'layers' else '')
+    original = {'source_commit': build_sha, 'profile': selected, 'upstream_commit': 'e' * 40,
+                'patch_sha256': 'f' * 64, 'configure_flags': ['authored build flags'],
+                'backend_sha256': binary_item['sha256']}
+    prior = {'source_commit': build_sha, 'execution_origin': 'local-linux',
+             'job_name': gate.JOBS[profile], 'image_digest': image}
+    manifest = {'baseline_commit': original['upstream_commit'], 'patch_sha256': original['patch_sha256']}
+    base = f'native-evidence/{profile}/'
+    write(root, base + 'build-identity.json', original)
+    write(root, base + 'build-process.json', prior)
+    write(root, base + 'build-manifest.json', manifest)
+    (root / base / 'config.log').write_text('authored compiler configuration')
+    backend = dict(original, source_commit=SHA, build_source_commit=build_sha, build_image_digest=image)
+    for field, name in gate.REUSE_FILES.items():
+        backend[field] = gate.identity(root, base + name)['sha256']
+    receipt['backend_identity'] = backend
+    receipt_path.write_text(json.dumps(receipt))
+    return receipt_path
+
+
+@pytest.mark.parametrize('profile', ['stable', 'layers'])
+def test_local_reuse_retains_independently_checked_build_evidence(local_qualified, profile):
+    add_reused_backend(local_qualified, profile)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    proof = result['required_jobs'][gate.JOBS[profile]]['build_provenance']
+    assert set(proof) == set(gate.REUSE_FILES.values())
+    assert proof['build-identity.json'] == gate.identity(local_qualified, f'native-evidence/{profile}/build-identity.json')
+
+
+@pytest.mark.parametrize('filename', list(gate.REUSE_FILES.values()))
+@pytest.mark.parametrize('missing', [False, True])
+def test_local_reuse_rejects_missing_or_tampered_raw_build_provenance(local_qualified, filename, missing):
+    add_reused_backend(local_qualified, 'stable')
+    path = local_qualified / 'native-evidence/stable' / filename
+    if missing:
+        path.unlink()
+    else:
+        path.write_bytes(path.read_bytes() + b' ')
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_local_reuse_rejects_mismatched_current_job_image(local_qualified):
+    add_reused_backend(local_qualified, 'layers')
+    path = local_qualified / 'artifacts/receipts/local-process-layers.json'
+    process = json.loads(path.read_text())
+    process['image_digest'] = 'sha256:' + 'c' * 64
+    path.write_text(json.dumps(process))
+    with pytest.raises(ValueError, match='image mismatch'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_local_reuse_rejects_binary_or_source_relabel(local_qualified):
+    path = add_reused_backend(local_qualified, 'stable')
+    receipt = json.loads(path.read_text())
+    receipt['backend_identity']['build_source_commit'] = 'c' * 40
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='build source'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    receipt['backend_identity']['build_source_commit'] = 'd' * 40
+    receipt['backend_identity']['backend_sha256'] = '1' * 64
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='binary identity'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('profile', ['stable', 'layers'])
+@pytest.mark.parametrize('indicator', ['reuse-provenance.json', 'build-identity.json',
+                                       'build-process.json', 'build-manifest.json'])
+def test_reuse_cannot_be_relabelled_fresh_by_dropping_all_build_fields(local_qualified, profile, indicator):
+    path = add_reused_backend(local_qualified, profile)
+    receipt = json.loads(path.read_text())
+    backend = receipt['backend_identity']
+    marker = {field: backend[field] for field in gate.REUSE_FIELDS}
+    for field in gate.REUSE_FIELDS:
+        backend.pop(field)
+    path.write_text(json.dumps(receipt))
+    base = local_qualified / f'native-evidence/{profile}'
+    # Keep exactly one reuse indicator to show each independently triggers the gate.
+    for name in ('build-identity.json', 'build-process.json', 'build-manifest.json'):
+        if name != indicator:
+            (base / name).unlink()
+    if indicator == 'reuse-provenance.json':
+        (base / indicator).write_text(json.dumps(marker))
+    with pytest.raises(ValueError, match='provenance is incomplete'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('profile', ['stable', 'layers'])
+def test_reuse_provenance_marker_is_validated_when_present(local_qualified, profile):
+    path = add_reused_backend(local_qualified, profile)
+    backend = json.loads(path.read_text())['backend_identity']
+    marker = local_qualified / f'native-evidence/{profile}/reuse-provenance.json'
+    marker.write_text(json.dumps({field: backend[field] for field in gate.REUSE_FIELDS}))
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    assert 'reuse-provenance.json' in result['required_jobs'][gate.JOBS[profile]]['build_provenance']
+    data = json.loads(marker.read_text())
+    data['build_source_commit'] = '9' * 40
+    marker.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='marker mismatch'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    marker.unlink()
+    marker.symlink_to(local_qualified / 'missing-target')
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_fresh_build_config_log_does_not_imply_reuse(local_qualified):
+    path = local_qualified / 'native-evidence/stable/config.log'
+    path.write_text('fresh compiler configuration')
+    assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)['status'] == 'qualified'

@@ -1,4 +1,4 @@
-"""Explicit stable backend reuse must preserve provenance and fail closed."""
+"""Explicit backend reuse must preserve original profile and build provenance."""
 import hashlib
 import importlib.util
 import json
@@ -12,8 +12,9 @@ reuse = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(reuse)
 
 
-@pytest.fixture
-def candidate(tmp_path):
+@pytest.fixture(params=['stable', 'layers'])
+def candidate(tmp_path, request):
+    profile = request.param
     stage = tmp_path / 'stage'
     stage.mkdir()
     binary = b'\x7fELF\x02\x01' + b'\0' * 12 + b'\x3e\x00' + b'authored-test-payload'
@@ -24,33 +25,40 @@ def candidate(tmp_path):
     current = tmp_path / 'source-manifest.json'
     current.write_bytes(old)
     identity = {'source_commit': 'b' * 40, 'upstream_commit': reuse.UPSTREAM,
-                'profile': 'experimental/dosbox-x', 'configure_flags': reuse.FLAGS[:],
+                'profile': reuse.PROFILES[profile], 'configure_flags': reuse.FLAGS[:],
                 'patch_sha256': 'a' * 64, 'backend_sha256': hashlib.sha256(binary).hexdigest()}
     (stage / 'build-identity.json').write_text(json.dumps(identity))
     image = 'sha256:' + 'c' * 64
     (stage / 'build-process.json').write_text(json.dumps({'source_commit': 'b' * 40,
-        'job_name': 'native-debugger-stable', 'execution_origin': 'local-linux', 'image_digest': image}))
+        'job_name': f'native-debugger-{profile}', 'execution_origin': 'local-linux', 'image_digest': image}))
     (stage / 'config.log').write_text('authored build log')
-    return stage, current, image
+    return stage, current, image, profile
 
 
 def test_verification_preserves_actual_build_provenance(candidate):
-    stage, current, image = candidate
-    result = reuse.verify(stage, current, image)
+    stage, current, image, profile = candidate
+    result = reuse.verify(stage, current, image, profile)
+    if profile == 'stable':
+        assert reuse.verify(stage, current, image) == result
     assert result['build_source_commit'] == 'b' * 40
     assert result['build_image_digest'] == image
     assert result['build_identity_sha256'] == hashlib.sha256((stage / 'build-identity.json').read_bytes()).hexdigest()
 
 
-@pytest.mark.parametrize('defect', ['binary', 'profile', 'manifest', 'image', 'flags', 'architecture'])
+@pytest.mark.parametrize('defect', ['binary', 'profile', 'job', 'manifest', 'image', 'flags', 'architecture'])
 def test_reuse_rejects_changed_or_mismatched_build(candidate, defect):
-    stage, current, image = candidate
+    stage, current, image, profile = candidate
     identity_path = stage / 'build-identity.json'
     identity = json.loads(identity_path.read_text())
     if defect == 'binary':
         (stage / 'dosbox-x').write_bytes(b'wrong')
     elif defect == 'profile':
-        identity['profile'] = 'experimental/dosbox-x/layers'
+        identity['profile'] = reuse.PROFILES['layers' if profile == 'stable' else 'stable']
+    elif defect == 'job':
+        path = stage / 'build-process.json'
+        process = json.loads(path.read_text())
+        process['job_name'] = f"native-debugger-{'layers' if profile == 'stable' else 'stable'}"
+        path.write_text(json.dumps(process))
     elif defect == 'manifest':
         current.write_bytes(current.read_bytes() + b' ')
     elif defect == 'image':
@@ -64,14 +72,14 @@ def test_reuse_rejects_changed_or_mismatched_build(candidate, defect):
         identity['backend_sha256'] = hashlib.sha256(binary).hexdigest()
     identity_path.write_text(json.dumps(identity))
     with pytest.raises(ValueError):
-        reuse.verify(stage, current, image)
+        reuse.verify(stage, current, image, profile)
 
 
 def test_guest_export_retains_raw_build_receipt(candidate, tmp_path, monkeypatch):
-    stage, current, image = candidate
+    stage, current, image, profile = candidate
     evidence, binary = tmp_path / 'evidence', tmp_path / 'result' / 'dosbox-x'
     raw = (stage / 'build-identity.json').read_bytes()
-    monkeypatch.setattr(reuse.sys, 'argv', ['reuse', str(stage), str(current), image, str(evidence), str(binary)])
+    monkeypatch.setattr(reuse.sys, 'argv', ['reuse', str(stage), str(current), image, str(evidence), str(binary), '--profile', profile])
     reuse.main()
     assert (evidence / 'build-identity.json').read_bytes() == raw
     assert (evidence / 'build-process.json').read_bytes() == (stage / 'build-process.json').read_bytes()
@@ -81,7 +89,7 @@ def test_guest_export_retains_raw_build_receipt(candidate, tmp_path, monkeypatch
 
 
 def test_reused_identity_cannot_relabel_original_build(candidate):
-    stage, current, image = candidate
+    stage, current, image, profile = candidate
     identity_path = stage / 'build-identity.json'
     identity = json.loads(identity_path.read_text())
     # A previous reuse labels its testing commit as source_commit, while the
@@ -94,4 +102,10 @@ def test_reused_identity_cannot_relabel_original_build(candidate):
     process['source_commit'] = 'd' * 40
     process_path.write_text(json.dumps(process))
     with pytest.raises(ValueError, match='Original compiled build evidence required'):
-        reuse.verify(stage, current, image)
+        reuse.verify(stage, current, image, profile)
+
+
+def test_reuse_refuses_an_unsupported_profile(candidate):
+    stage, current, image, _ = candidate
+    with pytest.raises(ValueError, match='Unsupported original backend profile'):
+        reuse.verify(stage, current, image, 'unified')

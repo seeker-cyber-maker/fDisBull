@@ -56,14 +56,15 @@ user-authorized 20 GB minimum. Storage is admission-only, not a running quota.
 Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
-For a fixture/client-only correction, `--reuse-stable-backend` can explicitly
-select a prior stable leg's `guest-data/exported` directory. It verifies the
+For a fixture/client-only correction, `--reuse-stable-backend` or
+`--reuse-layers-backend` can explicitly select the matching profile's original
+compiled leg's `guest-data/exported` directory. Each verifies the
 binary hash and ELF architecture, original local build process/image, upstream,
 patch, configure flags, and byte-identical current/source-commit manifests.
 The original build identity/configuration records are retained unchanged and
 `build_source_commit` stays distinct from the current qualification source.
-Only C++ recompilation is reused: the complete current stable test selection,
-strict native checks and evidence export still run. A failed original test run
+Only C++ recompilation is reused: the complete current profile's test selection,
+strict native checks, layers offline-kit checks and evidence export still run. A failed original test run
 does not become a passing run through reuse. The pinned upstream fetch is
 shallow; checked-out commit and patched-file hashes remain mandatory. Select the original compiled-leg export; an export from a previously reused leg is rejected so its later test commit cannot replace the original build provenance.
 

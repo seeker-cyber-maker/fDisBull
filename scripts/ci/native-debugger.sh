@@ -30,11 +30,10 @@ for item in manifest['source_files']:
 print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
 PY
 
-if [ "${FDISBULL_REUSE_STABLE:-}" = 1 ]; then
-  test "$FDISBULL_PROFILE" = stable
-  python scripts/ci/native_backend_reuse.py .native/reuse-stable \
-    experimental/dosbox-x/source-manifest.json "$FDISBULL_REUSE_IMAGE_DIGEST" \
-    "$NATIVE_EVIDENCE" "$FDISBULL_DOSBOX"
+if [ "${FDISBULL_REUSE_BACKEND:-${FDISBULL_REUSE_STABLE:-}}" = 1 ]; then
+  python scripts/ci/native_backend_reuse.py ".native/reuse-$FDISBULL_PROFILE" \
+    "$FDISBULL_PATCH_DIRECTORY/source-manifest.json" "$FDISBULL_REUSE_IMAGE_DIGEST" \
+    "$NATIVE_EVIDENCE" "$FDISBULL_DOSBOX" --profile "$FDISBULL_PROFILE"
 else
   (
     cd .native/dosbox-x

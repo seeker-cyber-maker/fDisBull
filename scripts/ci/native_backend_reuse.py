@@ -1,4 +1,5 @@
-"""Fail-closed validation for an explicitly selected stable backend build."""
+"""Fail-closed validation for an explicitly selected original backend build."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -9,6 +10,7 @@ import sys
 UPSTREAM = '029bd65c5dcc7cdc7f2e14e35278620d9707d969'
 FLAGS = ['--enable-sdl2', '--enable-debug=heavy', '--enable-dosbox_agent',
          '--disable-avcodec', '--disable-libslirp', '--disable-libfluidsynth']
+PROFILES = {'stable': 'experimental/dosbox-x', 'layers': 'experimental/dosbox-x/layers'}
 
 
 def digest(path):
@@ -16,7 +18,9 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def verify(directory, manifest_path, image_digest):
+def verify(directory, manifest_path, image_digest, profile='stable'):
+    if profile not in PROFILES:
+        raise ValueError('Unsupported original backend profile')
     directory = Path(directory)
     files = [directory / name for name in ('dosbox-x', 'build-identity.json', 'config.log',
                                             'build-manifest.json', 'build-process.json')]
@@ -34,22 +38,22 @@ def verify(directory, manifest_path, image_digest):
     if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-f]{40}', sha):
         raise ValueError('Invalid build source commit')
     if (prior.get('source_commit') != sha or prior.get('execution_origin') != 'local-linux'
-            or prior.get('job_name') != 'native-debugger-stable'
+            or prior.get('job_name') != f'native-debugger-{profile}'
             or prior.get('image_digest') != image_digest
             or not re.fullmatch(r'sha256:[0-9a-f]{64}', str(image_digest))):
         raise ValueError('Build process identity or image mismatch')
     if (old_manifest.read_bytes() != Path(manifest_path).read_bytes()
             or manifest.get('baseline_commit') != UPSTREAM
             or identity.get('upstream_commit') != UPSTREAM
-            or identity.get('profile') != 'experimental/dosbox-x'
+            or identity.get('profile') != PROFILES[profile]
             or identity.get('configure_flags') != FLAGS
             or identity.get('patch_sha256') != manifest.get('patch_sha256')
             or identity.get('backend_sha256') != digest(binary)):
-        raise ValueError('Stable backend build identity or source manifest mismatch')
+        raise ValueError('Backend build identity or source manifest mismatch')
     with binary.open('rb') as stream:
         header = stream.read(20)
     if len(header) != 20 or header[:6] != b'\x7fELF\x02\x01' or header[18:20] != b'\x3e\x00':
-        raise ValueError('Stable backend must be little-endian ELF64 x86-64')
+        raise ValueError('Backend must be little-endian ELF64 x86-64')
     if not config.stat().st_size:
         raise ValueError('Build config log is empty')
     return {'build_source_commit': sha, 'build_identity_sha256': digest(raw),
@@ -58,8 +62,14 @@ def verify(directory, manifest_path, image_digest):
 
 
 def main():
-    directory, manifest, image, evidence, binary_output = map(Path, sys.argv[1:])
-    provenance = verify(directory, manifest, str(image))
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ('directory', 'manifest', 'evidence_image', 'evidence', 'binary_output'):
+        parser.add_argument(name)
+    parser.add_argument('--profile', choices=PROFILES, default='stable')
+    args = parser.parse_args()
+    directory, manifest, evidence, binary_output = map(Path, (
+        args.directory, args.manifest, args.evidence, args.binary_output))
+    provenance = verify(directory, manifest, args.evidence_image, args.profile)
     evidence.mkdir(parents=True, exist_ok=True)
     for name in ('build-identity.json', 'config.log', 'build-manifest.json', 'build-process.json'):
         shutil.copy2(directory / name, evidence / name)
