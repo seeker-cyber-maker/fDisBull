@@ -123,7 +123,7 @@ test-and-package:
           assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256'], item['path']
       print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
       PY
-    - (cd .native/dosbox-x && ./autogen.sh && ./configure --enable-debug=heavy --disable-sdl2test --disable-alsatest && make -j"$(nproc)")
+    - (cd .native/dosbox-x && ./autogen.sh && ./configure --enable-sdl2 --enable-debug=heavy --disable-sdl2test --disable-alsatest && make -j"$(nproc)")
     - python3 -m venv .native-venv
     - .native-venv/bin/pip install ".[test]" build
     - FDISBULL_DOSBOX="$CI_PROJECT_DIR/.native/dosbox-x/src/dosbox-x" FDISBULL_DOSBOX_SOURCE="$CI_PROJECT_DIR/.native/dosbox-x" .native-venv/bin/pytest -q $FDISBULL_NATIVE_TESTS
