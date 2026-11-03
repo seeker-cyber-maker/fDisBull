@@ -48,9 +48,16 @@ For Windows x86/Win64 and Linux x86-64/X11 shells over that same memory UIL, see
 compilation, immutable artifact admission and native input/view qualification
 are separate gates; Wine execution does not qualify Microsoft Windows itself.
 
-### Original PE32 is the first Windows debugger priority
+### Original Windows debugging and dot-mode
 
-For **original I386/PE32 Win32 binaries**, follow the [PE32-first runtime and macOS-host plan](WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md). The existing Win32 memory-UIL *output shell* is **not** an original-program PE32 debugger. First qualify a stopped 32-bit Windows process in an offline Wine 11 WoW64 guest, then test the original-vs-optimized UDC block-fusion route on privately owned crackmes. Do not block PE32 investigation because an Open Watcom/Win16 compiler is missing.
+For original **Win32 PE32**, **Win64 PE32+** and **Win16 NE**, read the
+[Windows runtime and scene guide](WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md).
+`wine-qemu` selects the actual PE process width; `wine-ne` binds original NE
+segments to observed live selectors. Both share Windows keyboard, native frame
+probes and named scenes. They require a matching prepared offline guest.
+`--dot-mode` returns an owned read-only spectator URL, without host input hooks
+or forwarding. Frames refresh at stops/slices. Generated UDC shells and original
+debugger qualification remain separate.
 
 The **local Mac is a first-class host**: native Mach-O/ARM64 analysis, `macos-observe`, LLDB and native UDC do not depend on a Windows guest or a remote Linux runner. For original PE32 execution, the Mac can drive an isolated x86-64 QEMU/Linux/Wine guest; Linux CI is optional. Read-only setup probes (never execution proof):
 
@@ -60,7 +67,10 @@ python scripts/windows_runtime_preflight.py --mode compilers --target pe32 --str
 python scripts/windows_runtime_preflight.py --mode qemu-host --kernel /private/kernel --initramfs /private/wine.cpio.gz --strict
 ```
 
-The `macos-native` check reports local Clang/LLDB/xcrun tool presence only. A successful `qemu-host` check establishes guest prerequisites but not Wine startup, 32-bit debugging or original-game compatibility. The original Win16 NE/Colonization debugger remains a later independent milestone.
+The `macos-native` check reports local Clang/LLDB/xcrun tool presence only. A
+successful `qemu-host` check establishes guest prerequisites; it does not qualify
+Wine startup, debugging or a particular game. Inspect the Windows guide and
+exact-head MR receipts for native results and unsupported advanced operations.
 
 For a genuine Win16 NE shell, see [segmented memory reconstruction](UDC_MEMORY_WIN16.md).
 It retains the same logical u32 arena, cuts and selectable RNG regions through

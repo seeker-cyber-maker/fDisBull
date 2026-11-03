@@ -1,4 +1,4 @@
-"""Project-address PE64 debugging through Wine inside an offline QEMU guest."""
+"""Project-address PE32/PE64 debugging through Wine inside an offline QEMU guest."""
 from __future__ import annotations
 import base64
 import hashlib
@@ -11,6 +11,9 @@ import time
 import uuid
 
 from .debugger import DebugSession, bounded, stamp
+from .scenes import SceneSessionMixin
+from .windows_ui import WindowsUIMixin
+from .wine_arch import ip_name, flags_name, instruction_pointer
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
 from .wine_rpc import WineQemuRPC
@@ -21,13 +24,15 @@ from .wine_deltas import WineCpuDeltaSessionMixin, pe_delta_locked
 from .debug_experiments import ExperimentSessionMixin
 
 
-class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
+class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
     rpc_type=WineQemuRPC
     backend_name='wine-qemu'
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
         'delete-breakpoint','registers','memory','write-memory','status','assert',
         'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','save-anchor-stone','load-anchor-stone','write-registers',
-        'delta-start','delta-record','delta-status','delta-rewind','delta-recover'}
+        'delta-start','delta-record','delta-status','delta-rewind','delta-recover',
+        'keyboard.press','keyboard.type','keyboard.state','frame-probe','scene-check','scene-assert',
+        'scene-click','scene-act','scene-wait','wait','step','keyboard.key-down','keyboard.key-up'}
     # Share artifact persistence, offline grids, and declarative script execution.
     _artifact=DebugSession._artifact
     _event=DebugSession._event
@@ -40,11 +45,12 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
     machine=DebugSession.machine
 
     def __init__(self, project, executable, game_dir, *, kernel, initramfs,
-                 version=None, files=None, boot_timeout_ms=240000,state=None):
+                 version=None, files=None, boot_timeout_ms=240000,state=None,window=False,memory_mib=None):
         self.project=project;self.rpc=None;self.closed=False;self.run_id=uuid.uuid4().hex
         self.version=project.version(version)
-        if project.meta['format']!='PE' or project.bits!=64 or project.meta['arch']!='x86' or self.version['parent'] is not None:
-            raise ValueError('Wine launch requires the original unpatched x86-64 PE version; select version=1 explicitly')
+        if project.meta['format']!='PE' or project.bits not in (32,64) or project.meta['arch']!='x86' or self.version['parent'] is not None:
+            raise ValueError('Wine launch requires the original unpatched x86 PE32/PE32+ version; select version=1 explicitly')
+        self.bits=project.bits
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
         directory=Path(game_dir).expanduser().resolve(strict=True)
         self.game_dir=directory
@@ -67,17 +73,26 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
                         raise ValueError('Native state backend identity mismatch: '+name)
                 if [{'path':f['path'],'sha256':f['sha256']} for f in uploads]!=saved['metadata']['files']:
                     raise ValueError('Native state program inputs mismatch')
-            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native)
+            selected_memory=(saved['metadata'].get('memory_mib',4096) if saved is not None else 4096) if memory_mib is None else memory_mib
+            if saved is not None and selected_memory!=saved['metadata'].get('memory_mib',4096):
+                raise ValueError('Native state machine-memory configuration mismatch')
+            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native,memory_mib=selected_memory)
             self._cpu_delta_bind_rpc(self.rpc)
             if saved is None:
                 launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,
-                    'files':uploads,**getattr(self,'engine_start',{})},timeout_ms=300000)
+                    'files':uploads,'bits':self.bits,**getattr(self,'engine_start',{})},timeout_ms=300000)
             else:
                 launched={'image_base':saved['metadata']['runtime_image_base'],'pid':saved['metadata']['target_pid'],
                           'session':self.rpc.call('status'),'restored_from':state}
+                launched.update(bits=launched['session'].get('bits',64),architecture=launched['session'].get('architecture','x86-64'))
+            actual_bits=launched.get('bits',64)
+            actual_arch=launched.get('architecture','x86-64')
+            if actual_bits!=self.bits or actual_arch!=('x86-32' if self.bits==32 else 'x86-64'):
+                raise DebuggerError('Observed Windows process architecture differs from project')
+            self.rpc.capabilities.update(architecture=actual_arch,bits=self.bits)
             self.runtime_base=int(launched['image_base'],16);self.delta=self.runtime_base-self.static_base
             self._relocate_expected()
-            self.metadata={'backend':self.backend_name,'runtime_profile':'pe64-win32-debug-2',
+            self.metadata={'backend':self.backend_name,'runtime_profile':('pe32-win32-debug-1' if self.bits==32 else 'pe64-win32-debug-2'),'bits':self.bits,'memory_mib':selected_memory,
                 'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                 'static_image_base':hex(self.static_base),'runtime_image_base':hex(self.runtime_base),
                 'address_mapping':'observed main-module base + project RVA','capabilities':self.rpc.capabilities,
@@ -92,13 +107,16 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
             regs=self.registers()
             if saved is None and regs['project_address']!=hex(project.meta['entry']):raise DebuggerError('Observed PE entry differs from project entry')
             if saved is not None:
-                for field in ('rip','rflags','general','thread'):
+                for field in (ip_name(regs),flags_name(regs),'general','thread'):
                     if regs[field]!=saved['metadata']['registers'][field]:raise DebuggerError('Native restored registers differ: '+field)
+            self._windows_ui_initialize(window=window)
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',(self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
             self._event('launch',launched);project._live_debuggers.append(self)
         except BaseException:
+            self._windows_ui_close()
             if self.rpc:self.rpc.close()
+            self.closed=True
             raise
 
     def _relocate_expected(self):
@@ -110,12 +128,14 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
             for item in block.entries:
                 kind=int(item.type)
                 if kind==0:continue
-                if kind!=10:raise DebuggerError('Unsupported PE relocation type for code verification')
+                bits=getattr(self,'bits',self.project.bits)
+                width=bits//8;fmt='<I' if bits==32 else '<Q'
+                if kind!=(3 if bits==32 else 10):raise DebuggerError('Unsupported PE relocation type for code verification')
                 address=self.static_base+block.virtual_address+item.position
                 for start,data in self._expected.items():
-                    if start<=address and address+8<=start+len(data):
-                        offset=address-start;value=struct.unpack_from('<Q',data,offset)[0]
-                        struct.pack_into('<Q',data,offset,(value+self.delta)&((1<<64)-1));break
+                    if start<=address and address+width<=start+len(data):
+                        offset=address-start;value=struct.unpack_from(fmt,data,offset)[0]
+                        struct.pack_into(fmt,data,offset,(value+self.delta)&((1<<bits)-1));break
                 else:raise DebuggerError('PE relocation lies outside mapped bytes')
 
     @pe_delta_locked
@@ -157,12 +177,16 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
                 **self.call('status'),'mapping':self.metadata,'semantics':contract(self.backend_name)}
 
     def registers(self):
-        result=self.call('registers');result['project_address']=self.project_address(result['rip'])
+        result=self._native_registers()
+        bits=getattr(self,'bits',64)
+        ip=ip_name(result)
+        result['project_address']=self.project_address(result[ip])
         self._layer_setup()
         if self._pending_exec:
-            result['native_rip']=result['rip'];result['rip']=self._pending_exec['before']['rip']
-            result['project_address']=self.project_address(result['rip']);result['execution_location']='relocated-layer-instruction'
-        result['cpu_mode']='long64';return result
+            result['native_'+ip]=result[ip];result[ip]=self._pending_exec['before'][ip]
+            result['project_address']=self.project_address(result[ip]);result['execution_location']='relocated-layer-instruction'
+        result['cpu_mode']='protected32' if bits==32 else 'long64'
+        return result
 
     def memory(self,address,*,cs=None,length=16):
         if cs is not None:raise ValueError('PE64 addresses are flat virtual addresses')
@@ -224,6 +248,14 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         self._forget_breakpoint(breakpoint_id)
         self._event('delete-breakpoint',result);return result
 
+    def _refresh_spectator_after_stop(self,evidence):
+        try:
+            result=self._windows_refresh_spectator()
+            if result is not None:evidence['spectator']=result
+        except Exception as error:
+            evidence['spectator_capture_error']={'type':type(error).__name__,'message':str(error)}
+        return evidence
+
     def run(self,*,timeout_ms=10000,guest_ms=None,fast_forward=False):
         bounded(timeout_ms,'timeout_ms',1,600000)
         if guest_ms is not None or fast_forward is not False:raise ValueError('PE uses host timeout_ms; DOS guest time and fast-forward are unsupported')
@@ -234,7 +266,24 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
                   'host_elapsed_ms':round((time.monotonic()-start)*1000,3)}
         from .debug_semantics import normalize_stop
         evidence['stop']=normalize_stop(self.backend_name,stop,outcome=evidence['outcome'])
+        self._windows_state_changed()
+        self._refresh_spectator_after_stop(evidence)
         self._event('run',evidence);return evidence
+
+    def _scene_slice(self,slice_ms,timeout_ms):
+        # Use the same guard classification, layer execution and raw-context
+        # checks as an ordinary run, while retaining the native slice stop.
+        return self._continue_native(time.monotonic()+min(slice_ms,timeout_ms)/1000,native_method='slice')
+
+    def step(self,*,count=1,timeout_ms=10000):
+        bounded(count,'count',1,10000);bounded(timeout_ms,'timeout_ms',1,600000)
+        result=self._trace_native(count,time.monotonic()+timeout_ms/1000)
+        self._windows_state_changed()
+        evidence=dict(run=self.run_id,completed=result['complete'],count=len(result['events']),
+                      requested_count=count,session=result['session'],events=result['events'])
+        self._refresh_spectator_after_stop(evidence)
+        self._event('step',evidence)
+        return evidence
 
     def trace(self,name='trace.json',*,count=512,timeout_ms=10000,fast_forward=False):
         from .decoder import decode
@@ -243,7 +292,7 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         result=self._trace_native(count,time.monotonic()+timeout_ms/1000)
         for event in result['events']:
             event['project_address']=self.project_address(event['address'])
-            decoded=decode(bytes.fromhex(event['bytes']),int(event['address'],16),'x86',64)
+            decoded=decode(bytes.fromhex(event['bytes']),int(event['address'],16),'x86',getattr(self,'bits',64))
             if decoded:event['instruction']=decoded
         result.update(run=self.run_id,version=self.version['id'],mapping=self.metadata,requested_count=count,
                       semantics='instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step')
@@ -254,7 +303,7 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(result['events']),'complete':result['complete']})
 
-    def screenshot(self,name='screenshot.png',*,grid=False,grid_step=32):
+    def _legacy_screenshot(self,name='screenshot.png',*,grid=False,grid_step=32):
         from PIL import Image
         from .screenshot_grid import validate_step
         _file_name(name);validate_step(grid_step)
@@ -271,7 +320,7 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         raw=self._artifact(name if not grid else name[:248]+'.raw.png','screenshot',data,result)
         return self.project.debug_grid(raw['artifact'],name=name,step=grid_step) if grid else raw
 
-    def click(self,x,y,*,button='left',hold_ms=80,mode_id=None):
+    def _legacy_click(self,x,y,*,button='left',hold_ms=80,mode_id=None):
         bounded(x,'x',0,1919);bounded(y,'y',0,1079);bounded(hold_ms,'hold_ms',1,1000)
         if button not in ('left','right','middle'):raise ValueError('Invalid mouse button')
         if mode_id is not None and (type(mode_id) is not int or mode_id!=self.mode_id):raise ValueError('Stale PE frame mode')
@@ -289,6 +338,7 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         try:result=self.call('close')
         except Exception as error:result['error']=str(error)
         finally:
+            self._windows_ui_close()
             self.rpc.close();self.closed=True;result['process_reaped']=self.rpc.process.poll() is not None
             self._event('close',result)
             with self.project.transaction(True):self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))

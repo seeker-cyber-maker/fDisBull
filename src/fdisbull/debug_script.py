@@ -21,7 +21,7 @@ OPERATIONS = {
     'workflow-observe':'workflow_observe','workflow-act':'workflow_act','text-observe':'text_observe','text-act':'text_act',
     'wait':'wait',
     'screenshot-hooks':'screenshot_hooks',
-    'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
+    'step':'step', 'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
     'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
@@ -41,10 +41,26 @@ OPERATIONS = {
 }
 
 
-def validate_script(script):
+def validate_script(script, *, session=None):
     from .debugger import DebugSession
-    if not isinstance(script,dict) or set(script) != {'format','steps'} or script['format'] != 'fdisbull-script-1':
+    if (not isinstance(script,dict) or not {'format','steps'}<=set(script)
+            or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
+    backend=script.get('backend')
+    if backend is not None and backend not in ('wine-qemu','wine-ne'):
+        raise ValueError('Script backend must be wine-qemu or wine-ne; omit it for the legacy DOS grammar')
+    owner=session if session is not None else DebugSession
+    if backend is not None:
+        if session is not None:
+            actual=getattr(session,'backend_name',None)
+            if actual=='wine-ne-qemu':actual='wine-ne'
+            if backend!=actual:raise ValueError('Script backend differs from the live debugger')
+        elif backend=='wine-qemu':
+            from .wine_debugger import PEDebugSession
+            owner=PEDebugSession
+        elif backend=='wine-ne':
+            from .win16_debugger import Win16DebugSession
+            owner=Win16DebugSession
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')
     expanded = []
@@ -73,8 +89,11 @@ def validate_script(script):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
-                    signature.bind(None,**params)
+                    operation=getattr(owner,OPERATIONS[op],None)
+                    if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
+                    signature = inspect.signature(operation)
+                    if session is None:signature.bind(None,**params)
+                    else:signature.bind(**params)
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
@@ -124,7 +143,20 @@ def validate_script(script):
                         validate_keyboard(**checked)
                     if op=='wait':
                         from .debug_wait import validate_wait
-                        validate_wait(**params)
+                        if getattr(owner,'scene_time_basis',None)=='host':
+                            checked=dict(params)
+                            active=checked.pop('active_ms',None);legacy=checked.pop('guest_ms',None)
+                            if (active is None)==(legacy is None):
+                                raise ValueError('Windows wait requires exactly one active_ms or legacy guest_ms budget')
+                            if checked.get('fast_forward',False) is not False:
+                                raise ValueError('Windows waits do not support DOS fast-forward')
+                            validate_wait(**checked,guest_ms=active if active is not None else legacy)
+                        else:validate_wait(**params)
+                    if op=='step':
+                        for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
+                            value=params.get(key)
+                            if value is not None and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
@@ -149,7 +181,7 @@ def validate_script(script):
 @rpc_budget
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
-    steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    steps = validate_script(script,session=session) # Reject malformed later steps before any guest mutation.
     for step in steps:
         if step['op']=='delta-rewind' and 'policy' in step:
             from .debug_cpu_deltas import validate_policy
@@ -230,7 +262,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','step','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)

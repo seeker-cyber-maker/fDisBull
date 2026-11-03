@@ -67,6 +67,8 @@ class ObservationReads:
         self.session=session;self.captures={};self.evaluations=0;self.hits=0
 
     def key(self,address,length,cs=None):
+        keyer=getattr(self.session,'scene_memory_key',None)
+        if callable(keyer):return keyer(address,length,cs)
         linear,_=self.session.project._dos_parse_address(address,cs)
         return f'{linear:x}/{length}'
 
@@ -75,7 +77,7 @@ class ObservationReads:
         key=self.key(address,length,cs)
         if key in self.captures:self.hits+=1
         else:
-            capture=dict(id='m'+str(len(self.captures)+1),project_address='0x'+key.split('/')[0],length=length)
+            capture=dict(id='m'+str(len(self.captures)+1),project_address=(str(address) if callable(getattr(self.session,'scene_memory_key',None)) else '0x'+key.split('/')[0]),length=length)
             try:
                 result=self.session.memory(address,length=length,**({'cs':cs} if cs is not None else {}))
                 data=bytes.fromhex(result['hex'])

@@ -4,6 +4,7 @@ from functools import wraps
 import hashlib
 import json
 
+from .wine_arch import register_names
 from .debug_cpu_deltas import CpuDeltaSessionMixin, _sha, validate_ranges
 from .wine_state import REGISTERS, checked_runtime_rip, get_state, integer, validate_edits
 
@@ -18,15 +19,18 @@ def pe_delta_locked(function):
 
 
 class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
-    _delta_registers = REGISTERS
+    @property
+    def _delta_registers(self):return register_names(getattr(self,'bits',64))
     _delta_read_only = frozenset({'identity', 'status', 'registers', 'read', 'code',
-                                 'screenshot', 'state.save', 'machine.status'})
+                                 'screenshot', 'keyboard-state', 'state.save', 'machine.status'})
     _delta_frozen_read_only = frozenset({'identity', 'status', 'registers', 'read',
                                         'close', 'machine.status'})
     _delta_max_bytes = 2 * 1024**3
     _delta_unit = 'completed selected-thread instruction'
     _delta_instruction_completion = 'completed'
-    _delta_scope = 'selected writable main-image RAM and exposed selected-thread x86-64 registers'
+    @property
+    def _delta_scope(self):
+        return 'selected writable main-image RAM and exposed selected-thread x86-'+str(getattr(self,'bits',64))+' registers'
 
     def _cpu_delta_bind_rpc(self, rpc):
         # One stable lock survives VM replacement; cached machine handles share it.
@@ -67,23 +71,24 @@ class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
         return result
 
     def _cpu_delta_cpu(self, snapshot):
-        if not isinstance(snapshot, dict) or snapshot.get('cpu_mode', 'long64') != 'long64':
-            raise ValueError('PE CPU deltas require long64 registers')
+        expected='protected32' if getattr(self,'bits',64)==32 else 'long64'
+        if not isinstance(snapshot,dict) or snapshot.get('cpu_mode',expected)!=expected:
+            raise ValueError('PE CPU deltas require the selected process-width register context')
         thread = snapshot.get('thread')
         if type(thread) is not int or not 0 < thread <= 0xffffffff:
             raise ValueError('PE CPU deltas require a selected Windows thread')
-        cpu = {name: self._cpu_delta_value(name, snapshot.get(name) if name in ('rip', 'rflags')
-                    else snapshot.get('general', {}).get(name)) for name in sorted(REGISTERS)}
+        cpu = {name: self._cpu_delta_value(name, snapshot.get(name) if name in ('rip','rflags','eip','eflags')
+                    else snapshot.get('general', {}).get(name)) for name in sorted(self._delta_registers)}
         return dict(cpu, thread=thread)
 
     def _cpu_delta_value(self, name, value):
-        value = integer(value)
-        if name == 'rflags' and value > 0xffffffff:
+        value = integer(value,getattr(self,'bits',64))
+        if name in ('rflags','eflags') and value > 0xffffffff:
             raise ValueError('PE delta RFLAGS must fit 32 bits')
         return value
 
     def _cpu_delta_pc(self, cpu):
-        return dict(space='virtual', offset=hex(cpu['rip']), thread=cpu['thread'])
+        return dict(space='virtual', offset=hex(cpu['eip' if getattr(self,'bits',64)==32 else 'rip']), thread=cpu['thread'])
 
     def _cpu_delta_admit(self):
         state = self.call('status')
@@ -96,7 +101,7 @@ class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
         cpu = self._cpu_delta_cpu(self.registers())
         if state.get('stop_reason', {}).get('thread') != cpu['thread']:
             raise ValueError('PE CPU delta stop/register thread mismatch')
-        checked_runtime_rip(self, cpu['rip'])
+        checked_runtime_rip(self, cpu['eip' if getattr(self,'bits',64)==32 else 'rip'])
 
     def _cpu_delta_ranges(self, ranges):
         validate_ranges(ranges)
@@ -118,7 +123,7 @@ class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
         cpu = self._cpu_delta_cpu(self.registers())
         if 'initial_cpu' in history and cpu['thread'] != history['initial_cpu']['thread']:
             raise ValueError('PE CPU delta selected thread changed')
-        checked_runtime_rip(self, cpu['rip'])
+        checked_runtime_rip(self, cpu['eip' if getattr(self,'bits',64)==32 else 'rip'])
         state = self.call('status')
         if state.get('state') != 'stopped' or state.get('stop_reason', {}).get('thread') != cpu['thread']:
             raise ValueError('PE CPU delta selected thread is not stopped')
@@ -161,7 +166,7 @@ class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
                 or state.get('stop_reason', {}).get('kind') != 'step'
                 or state.get('stop_reason', {}).get('thread') != before_cpu['thread']
                 or self._cpu_delta_cpu(events[0].get('registers')) != before_cpu
-                or integer(events[0].get('address')) != before_cpu['rip']):
+                or integer(events[0].get('address')) != before_cpu['eip' if getattr(self,'bits',64)==32 else 'rip']):
             raise ValueError('PE CPU delta trace must certify one completed selected-thread instruction')
         return trace, self._cpu_delta_pc(self._cpu_delta_cpu(self.registers()))
 
@@ -169,9 +174,9 @@ class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
         if current['thread'] != target['thread']:
             raise ValueError('PE CPU delta selected thread changed')
         edits = {name: dict(expected=current[name], value=target[name])
-                 for name in REGISTERS if current[name] != target[name]}
-        validate_edits([], edits)
-        checked_runtime_rip(self, target['rip'])
+                 for name in self._delta_registers if current[name] != target[name]}
+        validate_edits([], edits,bits=getattr(self,'bits',64))
+        checked_runtime_rip(self, target['eip' if getattr(self,'bits',64)==32 else 'rip'])
 
     def _cpu_delta_write_memory(self, history, change):
         address = int(history['ranges'][change['range']]['address'], 16) + change['offset']

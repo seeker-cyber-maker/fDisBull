@@ -28,7 +28,7 @@ emulator, target executable, game files, saved states or project databases.
 | Prove or falsify a stored-value, writer or trigger claim in a binary | Decoded image offsets, xrefs and positive/negative writer controls | Scoped to pinned decoded editions and static scan windows; see [binary-claim-verification.md](binary-claim-verification.md). |
 | Inspect console cartridges, CUE/ISO discs or Saturn SH-2 / SNES 65816 | `rom-inspect`, `disc-inspect`, `rom-disasm`, `fdisbull.snes_decode` | Header/track facts and mode-explicit instruction decoding; decoding never proves a region is reachable code. |
 | Index edition-pinned source or verify period build-to-byte maps | `source-create`, `source-import`, `source-search`, `source-concept`, `source-build`, `source-map-native` | Separate from `.fdb` projects; lexical/vector ranks and symbol names require independent native qualification. See [source-and-concepts.md](source-and-concepts.md). |
-| Observe actual DOS, Windows PE64 or macOS ARM64 behavior | `debug PROJECT ...`, `Project.debugger()`, `macos-observe`, `macos-snapshot`/`macos-session` | Requires a compatible external backend and authorized target; verify live source/version binding and real guest or UI effects. |
+| Observe actual DOS, Windows PE32/PE64/NE or macOS ARM64 behavior | `debug PROJECT ...`, `Project.debugger()`, `macos-observe`, `macos-snapshot`/`macos-session` | Requires a compatible external backend and authorized target; verify live source/version binding and real guest or UI effects. |
 | Reuse visible controls, audit coordinate domains or map a route | Versioned scenes, `debug-scene-domain-audit`, spatial maps, `debug-spatial-domain-audit`, `session.move()` | Authored geometry or observed segments; unknown cells, scrolling overhangs and engine movement remain separate. |
 | Run an authored slice, `text-host` projection or shared-IL Z service | `fdisbull-player` (`--package`, `--connect`, `--backend-command`), `fdisbull text-host` | Projections are bounded interfaces, not full game parsers; action freshness, batch journals and checkpoints have distinct contracts. |
 | Inspect or lift Sierra AGI v2 or Z-machine v3 guest scripts directly | `decoder-modules`, `module-analyze`, `module-lift`, `agi-logic`, `agi-scenes`, `kq1-bow-*`, `story-info`, `zmachine-*`, `zork-uil`/`zork-intents`/`zork-scenes` | Guest-language front ends work without an x86 `.fdb`; unmodeled engine effects and residual IR remain explicit. |
@@ -69,13 +69,22 @@ bytecode VM or cross-file loader edge, read [methodology.md](methodology.md).
 ## Native investigation, rewind and macOS capture
 
 Launch only with the user's actual executable, game directory, byte version and
-compatible backend. DOS (`dosbox` or QEMU), PE64 (`wine`/QEMU) and macOS probes
+compatible backend. DOS (`dosbox` or QEMU), PE32/PE64 (`wine-qemu`), NE (`wine-ne`) and macOS probes
 have distinct capabilities; live JSON debugging requires a retained session
 (`serve` or `debug`), never a one-shot `request`. Prefer ordinary guest input
 with explicit guest-time and wall-time ceilings, and verify input consumption
 before interpreting display or memory changes. Checkpoint restore never rolls
 back mounted host files or external services.
 
+- **Windows scenes and spectator:** original PE32 and NE use actual process
+  widths and observed address bindings. Shared keyboard, native `frame-probe`
+  and named scenes use host-time slices, not DOS guest ticks. `--dot-mode` or
+  `dot_mode=True` exposes an owned read-only loopback viewer, refreshed at stops;
+  it never hooks or forwards host input. Query `debug-spectator` for its URL.
+  No-client-window capture is recoverable; an exception interrupts a scene and
+  retains queued input rather than replaying it. NE logical segments require
+  live source/selector verification, and native NE states/deltas/layers remain
+  unavailable. See `docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md`.
 - **Anchor Stones:** full native saved states use `debug-save-anchor-stone`,
   `debug-load-anchor-stone` and offline `debug-anchor-stone-info` (legacy state
   method names remain compatible; see `docs/ANCHOR_STONES.md`).

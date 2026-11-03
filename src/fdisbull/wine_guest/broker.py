@@ -45,7 +45,7 @@ def send(value):
     channel.flush()
 
 
-def response(timeout=30):
+def response(timeout=30, *, unavailable_capture=False):
     data = bytearray()
     deadline = time.monotonic() + timeout
     while b'\n' not in data:
@@ -62,6 +62,10 @@ def response(timeout=30):
         raise ValueError('Unsolicited Windows agent output')
     result = json.loads(data)
     if 'error' in result:
+        # These two screenshot outcomes are complete, read-only observations.
+        # No HWND exists at a normal entry stop; retaining that session is safe.
+        if unavailable_capture and result['error'] in ('no-visible-client-window','capture-failed'):
+            return {'available':False,'reason':result['error']}
         raise RuntimeError(str(result))
     return result
 
@@ -101,37 +105,45 @@ def invoke(method, params):
     global process
     if method=='identity':return identity()
     if method=='selftest.image':
-        if process is not None or params:raise ValueError('Self-test image requires an idle VM and no parameters')
-        data=Path('/opt/fdisbull/selftest.exe').read_bytes()
+        if process is not None or set(params)-{'bits'}:raise ValueError('Self-test image requires an idle VM and optional bits')
+        bits=params.get('bits',64)
+        if type(bits) is not int or bits not in (32,64):raise ValueError('Self-test bits must be 32 or 64')
+        stem='selftest32' if bits==32 else 'selftest'
+        data=Path('/opt/fdisbull/'+stem+'.exe').read_bytes()
         return {'data_base64':base64.b64encode(data).decode(),'sha256':hashlib.sha256(data).hexdigest(),
-                'source_sha256':hashlib.sha256(Path('/opt/fdisbull/selftest.c').read_bytes()).hexdigest()}
+                'source_sha256':hashlib.sha256(Path('/opt/fdisbull/'+stem+'.c').read_bytes()).hexdigest()}
     if method == 'session.start':
         if process is not None:
             raise ValueError('This VM already owns a target')
         directory, target = stage_files(params)
-        entry = number(params['entry_rva'], 1, 0xffffffff)
+        profile=params.get('profile','pe')
+        if profile not in ('pe','ne'):raise ValueError('Unsupported Windows launch profile')
+        entry='ne' if profile=='ne' else hex(number(params['entry_rva'],1,0xffffffff))
         for name in ('prefix', 'runtime', 'cache'):
             Path('/work', name).mkdir(mode=0o700, exist_ok=True)
         with open('/work/wine.log', 'ab', buffering=0) as log:
             subprocess.run(['wineboot', '-u'], stdin=subprocess.DEVNULL, stdout=log, stderr=log, timeout=180, check=True)
-            process = subprocess.Popen(['wine', '/opt/fdisbull/agent.exe', 'Z:\\work\\game\\'+target, hex(entry)],
+            process = subprocess.Popen(['wine', '/opt/fdisbull/agent.exe', 'Z:\\work\\game\\'+target, entry],
                 cwd=directory, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log)
         return response(90)
     if process is None:
         raise ValueError('No live target')
-    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm'):
+    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm','keyboard-state','modules'):
         command = method
+    elif method=='selector':
+        command=f"selector {number(params['selector'],0,65535):x}"
     elif method=='setregs':
         values=params['values']
-        names={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags'}
+        names={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags',
+               'eax','ebx','ecx','edx','esi','edi','ebp','esp','eip','eflags'}
         if not isinstance(values,dict) or not values or set(values)-names:raise ValueError('Invalid register map')
         command='setregs '+' '.join(f'{name} {number(value,0,2**64-1):x}' for name,value in values.items())
     elif method=='overlay':
         ranges=params['ranges']
         if not isinstance(ranges,list) or len(ranges)>64:raise ValueError('Invalid execution ranges')
         command='overlay '+str(len(ranges))+' '+' '.join(f"{number(r['address'],0,2**64-1):x} {number(r['length'],1,65536)}" for r in ranges)
-    elif method == 'run':
-        command = f"run {number(params['timeout_ms'],1,600000)}"
+    elif method in ('run','slice'):
+        command = f"{method} {number(params['timeout_ms'],1,600000)}"
     elif method == 'step':
         command = f"step {number(params['timeout_ms'],1,600000)}"
     elif method == 'watch':
@@ -153,14 +165,33 @@ def invoke(method, params):
         command = f"bp {number(params['address'],0,2**64-1):x}"
     elif method == 'del':
         command = f"del {number(params['id'],1,255)}"
+    elif method=='keyboard':
+        events=params['events']
+        if not isinstance(events,list) or not 1<=len(events)<=1024:raise ValueError('Invalid keyboard event batch')
+        parts=[];elapsed=0
+        for event in events:
+            if not isinstance(event,dict) or set(event)!={'scan_code','down','extended','delay_ms'}:
+                raise ValueError('Keyboard events require physical scan, down, extended and delay')
+            if type(event['down']) is not bool or type(event['extended']) is not bool:
+                raise ValueError('Keyboard edges require Boolean state')
+            scan=number(event['scan_code'],1,0x7f);delay=number(event['delay_ms'],0,60000)
+            # Offsets are absolute within this batch, as in the native queue.
+            # Equal offsets preserve modifier/make/break ordering.
+            if delay<elapsed:raise ValueError('Keyboard event offsets must be nondecreasing')
+            elapsed=delay
+            flags=(0 if event['down'] else 1)|(2 if event['extended'] else 0)
+            parts.extend((f'{scan:x}',str(flags),str(delay)))
+        duration=number(params.get('duration_ms',elapsed),elapsed,60000)
+        command='keyboard '+str(len(events))+' '+str(duration)+' '+' '.join(parts)
     elif method == 'click':
         button = params['button']
         if button not in ('left','right','middle'):raise ValueError('Invalid mouse button')
         command = f"click {number(params['x'],0,1919):x} {number(params['y'],0,1079)} {button}"
+        if 'hold_ms' in params:command+=' '+str(number(params['hold_ms'],1,5000))
     else:
         raise ValueError('Unsupported PE operation')
     process.stdin.write(command.encode()+b'\n');process.stdin.flush()
-    return response(params.get('timeout_ms', 15000)/1000+10)
+    return response(params.get('timeout_ms', 15000)/1000+10, unavailable_capture=method=='screenshot')
 
 
 def identity():
@@ -168,9 +199,11 @@ def identity():
       'resources':{name:hashlib.sha256(Path(path).read_bytes()).hexdigest()
                    for name,path in {'init':'/init','opt/fdisbull/agent.c':'/opt/fdisbull/agent.c',
                                      'opt/fdisbull/selftest.c':'/opt/fdisbull/selftest.c',
+                                     'opt/fdisbull/selftest32.c':'/opt/fdisbull/selftest32.c',
                                      'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
+      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'process_profiles':['pe32','pe64']},
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 
 def main():

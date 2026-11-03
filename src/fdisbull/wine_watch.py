@@ -4,6 +4,9 @@ from __future__ import annotations
 from iced_x86 import Decoder, InstructionInfoFactory, MemorySizeExt, OpAccess, Register, RegisterExt, CodeSize
 
 
+from .wine_arch import context_bits, instruction_pointer
+
+
 NAMES={value:name.lower() for name,value in vars(Register).items() if name.isupper() and isinstance(value,int)}
 READS={OpAccess.READ,OpAccess.COND_READ,OpAccess.READ_WRITE,OpAccess.READ_COND_WRITE}
 WRITES={OpAccess.WRITE,OpAccess.COND_WRITE,OpAccess.READ_WRITE,OpAccess.READ_COND_WRITE}
@@ -11,7 +14,8 @@ WRITES={OpAccess.WRITE,OpAccess.COND_WRITE,OpAccess.READ_WRITE,OpAccess.READ_CON
 
 def access_facts(raw, registers, fault_address, access_code):
     """Preserve the native fault address; infer scalar operand width/access explicitly."""
-    instruction=Decoder(64,raw,ip=int(registers['rip'],16)).decode()
+    bits=context_bits(registers)
+    instruction=Decoder(bits,raw,ip=int(instruction_pointer(registers),16)).decode()
     if instruction.is_invalid:
         raise ValueError('Cannot classify the guard exception: invalid instruction')
     if access_code==8:return {'instruction':str(instruction),'fetch':True,'ranges':[]}
@@ -27,12 +31,14 @@ def access_facts(raw, registers, fault_address, access_code):
         for reg,scale in ((memory.base,1),(memory.index,memory.scale)):
             if reg==Register.NONE:continue
             full=NAMES.get(RegisterExt.full_register(reg))
+            if bits==32 and full and full.startswith('r') and full not in registers['general']:
+                full='e'+full[1:]
             if full not in registers['general']:break
             value=int(registers['general'][full],16)
             if RegisterExt.is_gpr32(reg):value&=0xffffffff
             address+=value*scale
         else:
-            address&=0xffffffff if memory.address_size==CodeSize.CODE32 else 0xffffffffffffffff
+            address&=(0xffff if memory.address_size==CodeSize.CODE16 else 0xffffffff if memory.address_size==CodeSize.CODE32 else 0xffffffffffffffff)
             if address<=fault_address<address+size:
                 # The native write bit is authoritative for conditional writes.
                 read=memory.access in READS
@@ -49,7 +55,8 @@ def check_fetch_watch_alias(raw, registers, fault_address, watches):
     """Do not silently lose a data watch when fetching clears the same guard page."""
     page=fault_address&~0xfff
     if not any(low<page+4096 and page<high for low,high in watches):return
-    instruction=Decoder(64,raw,ip=int(registers['rip'],16)).decode()
+    bits=context_bits(registers)
+    instruction=Decoder(bits,raw,ip=int(instruction_pointer(registers),16)).decode()
     if instruction.is_invalid:raise ValueError('Cannot classify instruction on a watched code page')
     operands=list(InstructionInfoFactory().info(instruction).used_memory())
     if not operands:return
@@ -64,10 +71,12 @@ def check_fetch_watch_alias(raw, registers, fault_address, watches):
         for reg,scale in ((memory.base,1),(memory.index,memory.scale)):
             if reg==Register.NONE:continue
             full=NAMES.get(RegisterExt.full_register(reg))
+            if bits==32 and full and full.startswith('r') and full not in registers['general']:
+                full='e'+full[1:]
             if full not in registers['general']:raise ValueError('Unresolved watched code-page operand')
             value=int(registers['general'][full],16)
             if RegisterExt.is_gpr32(reg):value&=0xffffffff
             address+=value*scale
-        address&=0xffffffff if memory.address_size==CodeSize.CODE32 else 0xffffffffffffffff
+        address&=(0xffff if memory.address_size==CodeSize.CODE16 else 0xffffffff if memory.address_size==CodeSize.CODE32 else 0xffffffffffffffff)
         if address<page+4096 and page<address+size:
             raise ValueError('Data operand shares the fetched guard page; stop and remove this watch before continuing')

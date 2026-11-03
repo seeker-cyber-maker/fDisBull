@@ -24,17 +24,17 @@ class WineQemuRPC:
         from .wine_runtime import resources
         return resources()
 
-    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None,on_spawn=None):
+    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None,on_spawn=None,memory_mib=4096):
         self.process = None;self.socket = None;self.sequence = 0
         self.qmp=None;self.vm=None
-        self.lock = threading.Lock();self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-pe-',dir='/tmp')
+        self.lock = threading.Lock();self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-pe-')
         root=Path(self.temporary.name)
         self.log_path=root/'boot.log'
         try:
             from .qemu_machine import QemuMachine
             self.temporary.cleanup()
             self.vm=QemuMachine(executable,kernel=kernel,initramfs=initramfs,
-                                restore=restore is not None,timeout_ms=boot_timeout_ms,on_spawn=on_spawn)
+                                restore=restore is not None,timeout_ms=boot_timeout_ms,on_spawn=on_spawn,memory_mib=memory_mib)
             self.process=self.vm.process;self.qmp=self.vm.qmp;self.temporary=self.vm.temporary
             self.inputs=self.vm.inputs;self.command=self.vm.command;self.log_path=self.vm.log_path
             self.lock=self.vm.lock
@@ -56,6 +56,7 @@ class WineQemuRPC:
             self.capabilities.update(watchpoint_access=['r','w','rw'],watchpoint_mechanism='Win32 guard pages with single-step rearming',
                 execution_layer_mechanism='guarded relocated instructions; 4 KiB target buffer; host overhead',
                 native_state_format='QEMU whole-VM migration; private project sidecar')
+            self.capabilities.update(hello.get('capabilities',{}))
         except BaseException as error:
             diagnostics=self._diagnostics()
             self.close()
