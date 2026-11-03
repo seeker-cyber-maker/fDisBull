@@ -1,5 +1,12 @@
 # Release status checked on 2026-11-02 (America/New_York)
 
+## 0.31.0 release candidate under packaging
+
+The local `release/0.31.0` line carries 0.30.0 plus frame-timeline delta
+storage, the bounded typed-C frontend, Windows runtime preflight, CHIP-8 and
+UDC/swede examples, and the cold-agent benchmark/skill refresh. It is not
+tagged, published or activated. See [0.31.0 release notes](RELEASE-0.31.0.md).
+
 ## 0.30.0 release published on GitLab; local shared installation active
 
 `v0.30.0` is an annotated GitLab tag and release candidate at source

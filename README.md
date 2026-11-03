@@ -9,18 +9,17 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.30.0):** [`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/tags/v0.30.0)
-is tagged on GitLab (`dc6d7e77`), unifying the common indexed UIL contract and
-native desktop shells, console intake and synthesis (*Miniplanets* and
-*Shadowrun* across Genesis, SNES, NES and macOS ARM64), Sierra AGI / *King's
-Quest I* native alignment, debugger rewind and CPU/RAM deltas, standing-probe
-workflows, multi-target memory UDC shells and trial-safe GitLab CI. See the
-[0.30.0 release notes](docs/RELEASE-0.30.0.md),
+**Release status (0.31.0 candidate):** the local `release/0.31.0` line is a
+packaging candidate, not a published tag. It carries the 0.30.0 release plus
+lossless frame-timeline delta storage, the bounded typed-C to UIL frontend,
+read-only Windows original-runtime preflight, CHIP-8 ISA/corpus pilots, and
+UDC registry and fresh-agent swede examples. See the
+[0.31.0 release notes](docs/RELEASE-0.31.0.md),
 [release status](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates; `v0.29.0` remains the latest published GitLab Release package bundle
-until `0.30.0` release assets and local system activation are separately
-promoted.
+gates. [`v0.30.0`](https://gitlab.com/brewster-jennings-group/fdisbull/-/tags/v0.30.0)
+remains the latest published GitLab tag (`dc6d7e77`); the 0.31.0 candidate has
+no tag or Release package yet.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
@@ -345,7 +344,8 @@ Repository state is maintained in equal parity across local Git and GitLab
 (`brewster-jennings-group/fdisbull`); GitHub is retired. Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
-[0.30.0 notes](docs/RELEASE-0.30.0.md), [0.29.0 notes](docs/RELEASE-0.29.0.md),
+[0.31.0 notes](docs/RELEASE-0.31.0.md), [0.30.0 notes](docs/RELEASE-0.30.0.md),
+[0.29.0 notes](docs/RELEASE-0.29.0.md),
 [PR backlog](docs/PR_BACKLOG.md), [offline dependencies](docs/OFFLINE_DEPENDENCIES.md)
 and [system installation](docs/SYSTEM_INSTALLATION.md) for current qualification
 receipts and platform limits.

@@ -64,7 +64,8 @@ fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 
 `capabilities` reports the imported copy's bounded analysis, debugger, C and
 UIL support, provider hashes and dependency detection without launching tools
-or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+or targets. It is included in this source; check the selected executable's
+version and capability report. Read [capabilities](CAPABILITIES.md)
 before treating dependency presence as working support. `doctor` is a separate
 explicit runtime acceptance test. `methods` prints the JSON method names and
 their parameter summaries; some language operations are CLI-only and appear

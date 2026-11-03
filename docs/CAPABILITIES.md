@@ -2,8 +2,8 @@
 
 `fdisbull capabilities` is a projectless, read-only catalog of this imported
 copy's native decoding, debugging, C diagnostics and UDL/UIL/UDC boundaries.
-This addition is unreleased and stacked on the macOS ARM64 investigation
-change. A matching `0.27.0` version string does not establish release inclusion.
+It is included in this source line. A matching version string does not by itself
+establish release inclusion; use the selected executable's report.
 
 ```sh
 fdisbull capabilities
