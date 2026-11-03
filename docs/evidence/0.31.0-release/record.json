@@ -54,7 +54,8 @@
       "frame_timeline": 148,
       "typed_c": 26
     },
-    "check_dist": "core 564 entries; player 19; tool zip 1820; sdist 1842",
+    "check_dist": "core 564 entries; player 19; tool zip 1819; sdist 1841",
+    "packaging_note": "the evidence packet is excluded from packages; artifact hashes are authoritative outside the packages",
     "installed_wheel": {
       "command_version": "0.31.0",
       "methods_version": "0.31.0",
@@ -68,22 +69,22 @@
     {
       "file": "fdisbull-0.31.0-py3-none-any.whl",
       "bytes": 1895363,
-      "sha256": "064988963c40b70a980b0d4f3b9fbfed391ede5f40b056e2e2ac2f2c39c0e9f6"
+      "sha256": "835e956eb38b22575020d76931997233e425315084a76c56fcb22e7de10a501c"
     },
     {
       "file": "fdisbull_player-0.31.0-py3-none-any.whl",
       "bytes": 86673,
-      "sha256": "c540209552468b654a5061f41991abf931d2ef543a33b0c669df87a4fdf0ad06"
+      "sha256": "7bf80e2af986c8470cbe7571ab8f2bcdc00df4c0496ef2838c489ad00b0f52c1"
     },
     {
       "file": "fdisbull-0.31.0-tool.zip",
-      "bytes": 6377846,
-      "sha256": "1e0e79f22387ee2b3fd67c2301acd1b3023f00091e867174c0d9027840c95148"
+      "bytes": 6376596,
+      "sha256": "0f7371880eca1a462182fc90bcc181d80951c2db505e3573256df383f121dada"
     },
     {
       "file": "fdisbull-0.31.0.tar.gz",
-      "bytes": 5246053,
-      "sha256": "a43fb79fcb314621feb106239edbaddcd81e8d0aac20cf716868b4affb1d3d31"
+      "bytes": 5245304,
+      "sha256": "3892dbd7ff56a7cb2260764635f8ceb3c26b5879e92a24bd5bf6e835a4ba819e"
     }
   ],
   "exclusions": [
