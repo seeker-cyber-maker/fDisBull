@@ -1,0 +1,89 @@
+{
+  "source_repo": "https://github.com/JohnEarnest/chip8Archive",
+  "source_commit": "761e3ffc63f43e6a849e80714122feff2afca208",
+  "source_license": "CC0-1.0 per repository Readme.md; author provenance per programs.json",
+  "source_metadata_blob_sha": "ca0fd615fb7f8616e1b7fe1299dd3c97a0c2ba08",
+  "programs": [
+    {
+      "key": "snek",
+      "title": "Snek",
+      "author": "JohnEarnest",
+      "platform": "chip8",
+      "git_blob_sha": "ad5b7f19fd762c8f027783764978fe71cd9ece39",
+      "size": 65,
+      "sha256": "09f67a5ef6f3cd9a65edc1e73786bf31a524e279bc1607e1953c6eb80c33b6ee"
+    },
+    {
+      "key": "ghostEscape",
+      "title": "Ghost Escape",
+      "author": "TomRintjema",
+      "platform": "chip8",
+      "git_blob_sha": "fef783558d99791e5e0a83f2a32b1a1ba72d31b3",
+      "size": 135,
+      "sha256": "3d214461666880fd60adb7b1563f769de714e891eed0b54b83794fcb7e30e47c"
+    },
+    {
+      "key": "1dcell",
+      "title": "1D Cellular Automata",
+      "author": "SharpenedSpoon",
+      "platform": "chip8",
+      "git_blob_sha": "2fd5ba683387ab2a1b24c51889a527eaed218ce3",
+      "size": 150,
+      "sha256": "b06031615d80d3ade882a1fa89a8d603a911d2ff17ab22097708c26caa3f56ad"
+    },
+    {
+      "key": "octojam5title",
+      "title": "Octojam 5 Title",
+      "author": "JohnEarnest",
+      "platform": "chip8",
+      "git_blob_sha": "cb65447a9257ba35afc610f895e52856bbdd1bac",
+      "size": 192,
+      "sha256": "7483031102fc78dce230ed38bcaeddd64cef29d9c3743866652acb70443607d1"
+    },
+    {
+      "key": "br8kout",
+      "title": "Br8kout",
+      "author": "SharpenedSpoon",
+      "platform": "chip8",
+      "git_blob_sha": "7e675f02405c4d5b99068f0e84de304cf53135d7",
+      "size": 199,
+      "sha256": "a1589caa2cd48904a5f77bae12c6887b7ba196d130daecfc2f4d230d20cb1f6b"
+    },
+    {
+      "key": "flightrunner",
+      "title": "Flight Runner",
+      "author": "TodPunk",
+      "platform": "chip8",
+      "git_blob_sha": "b379353df5f48e63828b7676faa6ac4125b15cb6",
+      "size": 295,
+      "sha256": "982b4799ec822369ea26f0884669fd23caeec805d10e5e9caff434e0851b2e5e"
+    },
+    {
+      "key": "dodge",
+      "title": "Dodge",
+      "author": "JohnEarnest",
+      "platform": "schip",
+      "git_blob_sha": "11cfff7cb59b6a6747f4926459b638489848a97f",
+      "size": 56,
+      "sha256": "3609d0a0827009799b4d5a02e1013523406559a16129229f634d66b099943933"
+    },
+    {
+      "key": "mondrian",
+      "title": "Mondri8",
+      "author": "JohnEarnest",
+      "platform": "schip",
+      "git_blob_sha": "14ec599d7dc79753a3c7aeee662aa056a94a5a99",
+      "size": 117,
+      "sha256": "af8be5d5e5cd5603447dcf71ee3d4e9ef3a9e98e3bfe13f629d0400ad84e29b7"
+    },
+    {
+      "key": "octopaint",
+      "title": "Octo paint",
+      "author": "your name here",
+      "platform": "xo",
+      "git_blob_sha": "310e3787ae7fca9162215a1a5254a930b47c2567",
+      "size": 236,
+      "sha256": "b6a71b67679649f37cb6de2fed732a878f4e1bf71bb2d5b5db1388eb6fa59f27"
+    }
+  ]
+}
