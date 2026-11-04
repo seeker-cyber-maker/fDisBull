@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import select
+import subprocess
 from types import SimpleNamespace
 import time
 
@@ -24,6 +25,32 @@ def broker_functions():
     scope={'os':os,'json':json,'select':select,'time':time}
     exec(compile(functions,str(source),'exec'),scope)
     return scope
+
+
+@pytest.mark.parametrize('boot_times_out',[False,True])
+def test_session_start_bounds_cold_wine_setup_and_never_launches_after_timeout(tmp_path,boot_times_out):
+    scope=broker_functions();calls=[]
+    scope.update(process=None,Path=lambda *parts:tmp_path.joinpath(*parts[1:]),
+                 open=lambda *args,**kwargs:open(tmp_path/'wine.log',*args[1:],**kwargs),
+                 stage_files=lambda params:(tmp_path,'oracle.exe'))
+    def run(command,**options):
+        calls.append(('wineboot',options['timeout']))
+        assert command==['wineboot','-u'] and options['check'] is True
+        assert options['timeout']==300
+        if boot_times_out:raise subprocess.TimeoutExpired(command,options['timeout'])
+    def launch(command,**options):
+        calls.append(('launch',command))
+        return SimpleNamespace()
+    scope['subprocess']=SimpleNamespace(run=run,Popen=launch,DEVNULL=subprocess.DEVNULL,PIPE=subprocess.PIPE)
+    scope['response']=lambda seconds:calls.append(('response',seconds)) or {'started':True}
+    params={'target':'oracle.exe','entry_rva':0x1000}
+    if boot_times_out:
+        with pytest.raises(subprocess.TimeoutExpired):scope['invoke']('session.start',params)
+        assert calls==[('wineboot',300)] and scope['process'] is None
+    else:
+        assert scope['invoke']('session.start',params)=={'started':True}
+        assert [item[0] for item in calls]==['wineboot','launch','response']
+        assert calls[-1]==('response',90)
 
 
 @pytest.mark.parametrize('params',[

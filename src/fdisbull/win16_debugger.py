@@ -166,7 +166,8 @@ class Win16DebugSession(WindowsUIMixin):
             'register_context_contract':self.register_context_contract}
         try:
             self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,memory_mib=memory_mib)
-            launched=self.call('session.start',{'target':self.target,'profile':'ne','files':staged},timeout_ms=300000)
+            # Shared broker: 300s Wine setup, 90s agent response and transport.
+            launched=self.call('session.start',{'target':self.target,'profile':'ne','files':staged},timeout_ms=420000)
             if launched.get('bits')!=32 or launched.get('launch_profile')!='win16-ne-carrier':
                 raise DebuggerError('Runtime did not expose the actual Win16 carrier bootstrap')
             self.register_edits_available=self.rpc.capabilities.get('win16_integer_pair') is True

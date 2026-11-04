@@ -8,8 +8,29 @@ import pytest
 
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.ne import load_ne
+from fdisbull.project import Project
 from fdisbull.win16_debugger import RemotePEExports, Win16DebugSession
 from test_ne_loader import ne_file
+
+
+def test_win16_cold_start_budget_covers_shared_wine_setup_and_closes_failed_rpc(tmp_path,monkeypatch):
+    calls=[]
+    class StartFailure(RuntimeError):pass
+    class RPC:
+        def __init__(self,*args,**kwargs):pass
+        def call(self,method,params,**options):
+            calls.append((method,options['timeout_ms']))
+            raise StartFailure('authored startup failure')
+        def close(self):calls.append(('closed',))
+    monkeypatch.setattr(Win16DebugSession,'rpc_type',RPC)
+    source=tmp_path/'test.exe';source.write_bytes(ne_file())
+    with Project.create(tmp_path/'test.fdb',source) as project:
+        with pytest.raises(StartFailure,match='authored startup failure'):
+            Win16DebugSession(project,'authored-qemu',tmp_path,kernel='authored-kernel',initramfs='authored-runtime')
+        assert calls==[('session.start',420000),('closed',)]
+        assert calls[0][1]>1000*(300+90)
+        assert project._live_debuggers==[]
+        assert project.db.execute('SELECT count(*) FROM debug_runs').fetchone()[0]==0
 
 
 def mapped_exports(name='K32WOWCallback16Ex',forward=None):

@@ -91,6 +91,13 @@ execution paths. Ordered semantic-event comparisons ignore transport or
 provenance decoration without discarding the original event lists. These are
 bounded correctness fixes, not a new claim of whole-program equivalence.
 
+Wine cold-prefix setup has a five-minute limit inside a seven-minute launch
+request, allowing the native agent response and transport to finish within
+the outer deadline. Startup errors still propagate and close the owned VM;
+launch does not retry or continue after failed prefix setup. QEMU identity
+probing remains bounded at 30 seconds, and installed runtime firmware is
+verified at the executable-relative lookup location.
+
 Package validation checks the complete intended inventory across core/player
 packages and tool source delivery, including native support sources, Swift
 capture resources, ScummVM resources and sanitized evidence. Original games,

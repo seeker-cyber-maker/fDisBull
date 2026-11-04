@@ -54,6 +54,27 @@ def test_qemu_rejects_affected_iret_emulators_before_boot():
     WineQemuRPC._check_version('QEMU emulator version 11.1.2')
 
 
+def test_pe_cold_start_budget_covers_guest_setup_and_failure_closes_rpc(tmp_path,monkeypatch):
+    import threading
+    calls=[]
+    class StartFailure(RuntimeError):pass
+    class RPC:
+        def __init__(self,*args,**kwargs):self.lock=threading.RLock()
+        def call(self,method,params,**options):
+            calls.append((method,options['timeout_ms']))
+            raise StartFailure('authored startup failure')
+        def close(self):calls.append(('closed',))
+    monkeypatch.setattr(PEDebugSession,'rpc_type',RPC)
+    source=tmp_path/'test.exe';source.write_bytes(pe64())
+    with Project.create(tmp_path/'test.fdb',source) as project:
+        with pytest.raises(StartFailure,match='authored startup failure'):
+            project.debugger('authored-qemu',tmp_path,kernel='authored-kernel',initramfs='authored-runtime')
+        assert calls==[('session.start',420000),('closed',)]
+        assert calls[0][1]>1000*(300+90)
+        assert project._live_debuggers==[]
+        assert project.db.execute('SELECT count(*) FROM debug_runs').fetchone()[0]==0
+
+
 def test_pe_launch_rejects_invalid_inputs_before_starting_vm(tmp_path):
     source=tmp_path/'test.exe';source.write_bytes(pe64())
     with Project.create(tmp_path/'test.fdb',source) as project:

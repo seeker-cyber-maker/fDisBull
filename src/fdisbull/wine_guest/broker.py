@@ -147,7 +147,9 @@ def invoke(method, params):
         for name in ('prefix', 'runtime', 'cache'):
             Path('/work', name).mkdir(mode=0o700, exist_ok=True)
         with open('/work/wine.log', 'ab', buffering=0) as log:
-            subprocess.run(['wineboot', '-u'], stdin=subprocess.DEVNULL, stdout=log, stderr=log, timeout=180, check=True)
+            # Cold prefixes under translated QEMU can exceed three minutes.
+            # Keep setup bounded and fail before launching any target on error.
+            subprocess.run(['wineboot', '-u'], stdin=subprocess.DEVNULL, stdout=log, stderr=log, timeout=300, check=True)
             process = subprocess.Popen(['wine', '/opt/fdisbull/agent.exe', 'Z:\\work\\game\\'+target, entry],
                 cwd=directory, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log)
         return response(90)

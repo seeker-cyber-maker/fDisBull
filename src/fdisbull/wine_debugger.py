@@ -80,7 +80,8 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             self._cpu_delta_bind_rpc(self.rpc)
             if saved is None:
                 launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,
-                    'files':uploads,'bits':self.bits,**getattr(self,'engine_start',{})},timeout_ms=300000)
+                    # Covers 300s Wine setup, 90s agent response and transport.
+                    'files':uploads,'bits':self.bits,**getattr(self,'engine_start',{})},timeout_ms=420000)
             else:
                 launched={'image_base':saved['metadata']['runtime_image_base'],'pid':saved['metadata']['target_pid'],
                           'session':self.rpc.call('status'),'restored_from':state}
