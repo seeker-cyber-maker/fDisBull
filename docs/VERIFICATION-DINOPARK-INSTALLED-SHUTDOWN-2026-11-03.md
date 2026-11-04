@@ -28,9 +28,10 @@ remains byte-identical to its recorded payload, SHA-256
 The test must pin both the actual host and native binary rather than relying
 on the package version alone.
 
-The source branch for !72 does not contain this installed host addition.
-This document records verification of the installed combination; it does not
-silently import a production fix or qualify a future package without it.
+At this verification's source head, `1a1a116`, !72 did not contain the installed
+host addition. The subsequent [source and running-park follow-up](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md)
+integrates that exact change and separately qualifies the source client.
+This dated record continues to describe the installed combination tested here.
 
 ## Diagnostic scope and storage boundary
 

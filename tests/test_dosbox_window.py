@@ -47,6 +47,8 @@ def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkey
         assert '-agent-window' not in result['args'] and '--agent-window' not in result['args']
         assert result['env']['SDL_VIDEODRIVER'] == 'dummy'
         assert result['env']['SDL_AUDIODRIVER'] == 'dummy'
+        assert result['args'].count('dosbox quit warning=false') == 1
+        assert result['args'][result['args'].index('dosbox quit warning=false') - 1] == '-set'
         assert 'mixer nosound=true' in result['args']
         assert 'midi mididevice=none' in result['args']
         assert 'DOSBOX_SECRET' not in result['env']
@@ -65,6 +67,7 @@ def test_window_option_reaches_the_same_agent_and_keeps_display_env(transport, t
         result = json.loads(report.read_text())
         assert any(arg in ('-agent-window', '--agent-window') for arg in result['args'])
         assert '--agent-config' in result['args']
+        assert 'dosbox quit warning=false' not in result['args']
         assert result['env']['DISPLAY'] == ':77'
         assert 'SDL_VIDEODRIVER' not in result['env']
         assert rpc.capabilities['video']['headless'] is False

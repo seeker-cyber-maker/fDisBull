@@ -28,6 +28,14 @@ report matching those PIDs. A delayed crash from a pre-existing unowned process
 is recorded separately. This result does not promote the installed local patch
 to tracked !72 runtime source or qualify visible-window/running-park shutdowns.
 
+The subsequent [source integration and running-park verification](../VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md)
+does include the exact installed headless popup override in !72. Luna's four
+source-client operating-park cycles pass, with native day/food progression and
+clean shutdown. PID 63534 is now identified as the TFTD `cold_new` experiment;
+binary unwind evidence narrows its SIGABRT to shell memory/file cleanup, with
+the underlying throw/corruption still unresolved. Earlier acceptance boundaries
+remain dated rather than being replaced by this new result.
+
 Between the historical PR head and this main, the selected Park scene/purchase
 implementation and Park-return tests are unchanged. The DinoPark Z bridge adds
 a witness to successful checkpoint saves as well as restores. The old native
