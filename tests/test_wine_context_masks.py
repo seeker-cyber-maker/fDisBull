@@ -24,7 +24,7 @@ def test_native_control_setter_preserves_input_and_limits_both_architecture_mask
 enum { WOW64_CONTEXT_CONTROL=0x10001, CONTEXT_CONTROL=0x100001,
        WOW64_CONTEXT_INTEGER=0x10002, CONTEXT_INTEGER=0x100002 };
 typedef struct { uint32_t ContextFlags; unsigned char registers[128]; } Context;
-typedef struct { Context native, wow; int native_ldt; } TargetContext;
+typedef struct { Context native, wow; int native_ldt,ldt_control; } TargetContext;
 static int target_bits, calls, native_api, internal;
 static TargetContext delivered, first_ldt, first_integer;
 static void fatal(const char *reason) {(void)reason;abort();}
@@ -40,6 +40,7 @@ int main(void) {
     original.wow.ContextFlags=0x10007;
     original.native.ContextFlags=0x10000b;
     original.native_ldt=0;
+    original.ldt_control=0;
     before=original;
     target_bits=32;
     setcontrolcontext(&original);
@@ -53,7 +54,7 @@ int main(void) {
     assert(calls==2 && memcmp(&delivered,&expected,sizeof(expected))==0);
     assert(native_api && internal);
     assert(memcmp(&original,&before,sizeof(original))==0);
-    target_bits=32; original.native_ldt=1; before=original;
+    target_bits=32; original.native_ldt=1; original.ldt_control=1; before=original;
     setcontrolcontext(&original);
     expected=before; expected.native.ContextFlags=CONTEXT_CONTROL;
     assert(calls==4 && !native_api && internal);
@@ -66,6 +67,13 @@ int main(void) {
     assert(calls==6 && !native_api && !internal);
     assert(memcmp(&first_integer,&expected,sizeof(expected))==0);
     expected.wow.ContextFlags=WOW64_CONTEXT_INTEGER;
+    assert(memcmp(&delivered,&expected,sizeof(expected))==0);
+    assert(memcmp(&original,&before,sizeof(original))==0);
+    original.native_ldt=0;before=original;
+    setcontrolcontext(&original);
+    expected=before;expected.native.ContextFlags=CONTEXT_CONTROL;
+    expected.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
+    assert(calls==8 && !native_api && internal);
     assert(memcmp(&delivered,&expected,sizeof(expected))==0);
     assert(memcmp(&original,&before,sizeof(original))==0);
 }

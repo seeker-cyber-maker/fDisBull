@@ -39,7 +39,7 @@ typedef struct {
     DWORD ContextFlags,EFlags,SegCs,SegDs,SegSs,SegEs,SegFs,SegGs;
     DWORD Eip,Eax,Ebx,Ecx,Edx,Esi,Edi,Ebp,Esp;
 } WOW64_CONTEXT;
-typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt; } TargetContext;
+typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt,ldt_control; } TargetContext;
 typedef struct { struct { struct { unsigned Pres,Type,Default_Big; } Bits; } HighWord; } WOW64_LDT_ENTRY;
 enum { CONTEXT_CONTROL=0x100001,CONTEXT_INTEGER=0x100002,CONTEXT_SEGMENTS=0x100004,
        CONTEXT_FULL=0x10000b,CONTEXT_ALL=0x10001f,
@@ -96,7 +96,7 @@ int main(void) {
     stale_wow.SegCs=0x2ef;stale_wow.Eip=0x999;stale_wow.EFlags=0x202;stale_wow.Esp=0x777;
     CONTEXT initial_native=actual_native;
     TargetContext observed=context();
-    assert(native_reads==1 && wow_reads==1 && observed.native_ldt && !setters);
+    assert(native_reads==1 && wow_reads==1 && observed.native_ldt && observed.ldt_control && !setters);
     assert(!memcmp(&actual_native,&initial_native,sizeof(actual_native)));
     assert(observed.wow.Eip==0x121 && observed.wow.EFlags==0x212);
     assert(observed.wow.Esp==0x10451bc && observed.wow.Ebp==0x87654321);
@@ -129,9 +129,12 @@ int main(void) {
     if(!setjmp(failure)) {context();abort();}
     assert(!strcmp(last_failure,"ldt-native-context-groups") && setters==2);
     expect_failure=0;missing_groups=0;descriptor_big=1;
-    observed=context();assert(!observed.native_ldt && observed.wow.Eip==0x120);
+    observed=context();assert(!observed.native_ldt && observed.ldt_control && observed.wow.Eip==0x120);
+    setcontrolcontext(&observed);assert(setters==4 && !delivered_native && delivered_internal);
+    assert(delivered.native.ContextFlags==CONTEXT_CONTROL);
+    assert(delivered.wow.ContextFlags==WOW64_CONTEXT_CONTROL);
     descriptor_big=0;stale_wow.SegCs=0x23;int prior_native_reads=native_reads;
-    observed=context();assert(!observed.native_ldt && !observed.native.ContextFlags);
+    observed=context();assert(!observed.native_ldt && !observed.ldt_control && !observed.native.ContextFlags);
     assert(native_reads==prior_native_reads && observed.wow.Eip==stale_wow.Eip);
     setcontrolcontext(&observed);assert(!delivered_native && delivered_internal);
     assert(delivered.wow.ContextFlags==WOW64_CONTEXT_CONTROL);

@@ -38,7 +38,7 @@ static RemoteExport pause_entry32,pause_break32;
 static DWORD pause_thread;
 static ULONGLONG pause_sequence;
 static int pause_pending,pause_verified;
-typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt; } TargetContext;
+typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt,ldt_control; } TargetContext;
 #define MAX_CONTEXT_CHANGES 4
 #define DIAGNOSTIC_STACK_BYTES 128
 typedef struct {
@@ -64,7 +64,7 @@ static void context_set_ip(TargetContext *c,DWORD64 value);
 static int query_selector(DWORD selector,WOW64_LDT_ENTRY *entry);
 static DWORD context_flags(const TargetContext *c) { return target_bits==32?c->wow.EFlags:c->native.EFlags; }
 static void context_set_flags(TargetContext *c,DWORD value) {
-    if(target_bits==32) {c->wow.EFlags=value;if(c->native_ldt) c->native.EFlags=value;}
+    if(target_bits==32) {c->wow.EFlags=value;if(c->ldt_control) c->native.EFlags=value;}
     else c->native.EFlags=value;
 }
 #define MAX_INPUT 1024
@@ -328,6 +328,8 @@ static TargetContext context(void) {
             if(!GetThreadContext(thread(ev.dwThreadId),&c.native)) fatal("get-ldt-native-context");
             if(c.native.SegCs!=c.wow.SegCs || !query_selector(c.wow.SegCs,&descriptor) ||
                !descriptor.HighWord.Bits.Pres || !(descriptor.HighWord.Bits.Type&8)) fatal("ldt-native-context-mismatch");
+            if((c.native.ContextFlags&CONTEXT_CONTROL)!=CONTEXT_CONTROL) fatal("ldt-native-control-group");
+            c.ldt_control=1;
             if(!descriptor.HighWord.Bits.Default_Big) {
                 DWORD required=CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS;
                 if((c.native.ContextFlags&required)!=required) fatal("ldt-native-context-groups");
@@ -389,16 +391,16 @@ static void setcontext(TargetContext *c) {
 /* Internal IP/TF edits must not rewrite unrelated integer/segment state. */
 static void setcontrolcontext(const TargetContext *c) {
     TargetContext control=*c;
-    if(target_bits==32 && c->native_ldt) {
-        /* A stopped Win16 event exposes a native signal context and a WOW
-         * projection. Both control views must agree before continuation. */
+    if(target_bits==32 && c->ldt_control) {
+        /* A stopped LDT event exposes native and converted WOW control views.
+         * Pair them for 16-bit and 32-bit code descriptors alike. */
         control.native.ContextFlags=CONTEXT_CONTROL;
         setcontext_api(&control,1,1);
         control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
         setcontext_api(&control,0,1);
         return;
     }
-    int native_api=target_bits!=32 || c->native_ldt;
+    int native_api=target_bits!=32;
     if(!native_api) control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
     else control.native.ContextFlags=CONTEXT_CONTROL;
     setcontext_api(&control,native_api,1);
@@ -475,7 +477,7 @@ static void context_set_ip(TargetContext *c,DWORD64 value) {
     }
     if(value>0xffffffffULL) fatal("instruction-address-width");
     c->wow.Eip=(DWORD)value;
-    if(c->native_ldt) c->native.Rip=value;
+    if(c->ldt_control) c->native.Rip=value;
 }
 static unsigned process_bits(void) {
     IMAGE_DOS_HEADER dos;DWORD signature;IMAGE_FILE_HEADER file;WORD magic;SIZE_T got;BOOL wow;
@@ -681,6 +683,7 @@ static void registers(TargetContext c) {
 static int change_register(TargetContext *c,const char *name,unsigned long long value) {
     if(target_bits==32) {
         if(value>0xffffffffULL) return 0;
+        if(c->ldt_control && !c->native_ldt) return 0;
         if(c->native_ldt) {
 #define LDT_REG32(n,wfield,nfield) if(!strcmp(name,n)) { \
             c->wow.wfield=(DWORD)value; \
