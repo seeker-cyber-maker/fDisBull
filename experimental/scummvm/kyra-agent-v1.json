@@ -1,0 +1,39 @@
+{
+  "format": "fdisbull-scummvm-kyra-agent-contract-1",
+  "status": "proposed-native-wire-contract; controller-mock-tested-only",
+  "upstream_repository": "https://github.com/scummvm/scummvm",
+  "upstream_version": "2026.4.0",
+  "upstream_commit": "7d2709da5136866589f7602f5f5a7b17de03420e",
+  "upstream_license": "GPL-3.0-or-later; corresponding-source duties apply to a modified distributed binary",
+  "game_ids": ["kyra1", "lol"],
+  "launch": "kyra:<game-id> with inherited FDISBULL_SCUMMVM_FD",
+  "hello": {
+    "engine": "kyra", "protocol": "fdisbull-scummvm-agent",
+    "protocol_version": 1, "bridge_version": 1, "profile": "kyra-emc2-v1",
+    "variant": {"recognized_detection": true, "game_id": "kyra1"},
+    "capabilities": ["state.get", "step", "run", "break.add", "break.remove", "frame.get", "input", "trace.start", "trace.stop", "trace.get"]
+  },
+  "optional_capabilities": ["watch.add", "watch.remove", "input.status", "input.virtual_timing", "virtual_clock"],
+  "position": {
+    "space": "kyra-emc2", "offset_origin": "decoded_DATA_chunk",
+    "offset_unit": "bytes; even alignment, word_offset = offset / 2",
+    "generation": "monotonic for each loaded script revision",
+    "loaded_data_sha256": "full SHA-256 of ScummVM loaded DATA words, not an original DOS byte match"
+  },
+  "state_get_example": {
+    "game_id": "kyra1", "phase": "before_opcode", "guest_ms": 100,
+    "frame_revision": 2, "ip_word": 3,
+    "script": {"name": "GEMCUT.EMC", "generation": 1, "data_words": 50,
+               "loaded_data_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    "game": {"room": 7}, "registers": [0, 1, 2]
+  },
+  "run_request": {"op": "run", "params": {"max_instructions": 1000, "max_ms": 5000}},
+  "run_response": {"stop": {"reason": "budget", "instructions": 1000}},
+  "step_request": {"op": "step", "params": {"count": 1, "max_ms": 5000}},
+  "breakpoint_request": {"op": "break.add", "params": {"script": "GEMCUT.EMC", "generation": 1,
+    "offset": 6, "loaded_data_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+  "trace_entry": {"script": "GEMCUT.EMC", "generation": 1, "word_offset": 3, "opcode": 3},
+  "frame_get_response_fields": ["width", "height", "revision", "mode_id", "pixel_format", "rgb24_base64"],
+  "warnings": ["This is NOT an implementation of a native ScummVM sidecar",
+               "No executable, game data, original bytes, or native states are stored in this contract"]
+}
