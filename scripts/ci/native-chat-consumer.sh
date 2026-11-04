@@ -3,6 +3,11 @@
 set -Eeuo pipefail
 archive=$1
 results=$2
+if [[ $# -gt 3 || ( $# -eq 3 && $3 != --mounted-kit ) ]]; then
+  echo 'Usage: native-chat-consumer.sh ARCHIVE RESULTS [--mounted-kit]' >&2
+  exit 2
+fi
+mode=${3:-extract}
 kit=/fdisbull-chat-offline
 mkdir -p "$results/exported/native-evidence/chat" /consumer /consumer-results
 python -I - "$results/runtime.json" <<'PY'
@@ -35,15 +40,20 @@ PY
 }
 trap finish EXIT
 
-python -I - "$archive" "$kit" <<'PY'
+python -I - "$archive" "$kit" "$mode" <<'PY'
 import hashlib, os, stat, sys, zipfile
 from pathlib import Path, PurePosixPath
-archive, root = map(Path,sys.argv[1:])
+archive, root = map(Path,sys.argv[1:3])
+mode = sys.argv[3]
 with archive.open('rb') as stream:
     if hashlib.file_digest(stream,'sha256').hexdigest() != os.environ['FDISBULL_CHAT_ARCHIVE_SHA256']:
         raise RuntimeError('Consumer ZIP differs from producer')
 if archive.stat().st_size > 500_000_000:
     raise RuntimeError('Consumer archive exceeds attachment budget')
+if mode == '--mounted-kit':
+    if not root.is_dir() or root.is_symlink():
+        raise RuntimeError('Mounted kit missing or unsafe')
+    sys.exit(0)
 root.mkdir()
 seen=set(); total=0
 with zipfile.ZipFile(archive) as zipped:
@@ -68,11 +78,16 @@ with zipfile.ZipFile(archive) as zipped:
         target.chmod(mode & 0o777 if mode else 0o644)
 PY
 
-# A self-bind leaves no writable extraction alias. The new network namespace
-# has only loopback; the verifier independently observes that condition.
-mount --bind "$kit" "$kit"
-mount -o remount,bind,ro "$kit"
+# The legacy path creates isolation here; mounted-kit callers provide a
+# read-only bind and isolated network. The verifier checks both conditions.
 chmod 0777 /consumer /consumer-results
-unshare --net -- "$kit/bin/python" "$kit/tools/verify.py" \
+if [[ "$mode" = --mounted-kit ]]; then
+  launch=()
+else
+  mount --bind "$kit" "$kit"
+  mount -o remount,bind,ro "$kit"
+  launch=(unshare --net --)
+fi
+"${launch[@]}" "$kit/bin/python" "$kit/tools/verify.py" \
   --kit "$kit" --workspace /consumer --archive "$archive" \
   --output /consumer-results/acceptance.json --junitxml /consumer-results/tests.xml

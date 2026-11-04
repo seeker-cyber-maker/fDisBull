@@ -122,13 +122,16 @@ def image_identity(value, architecture="amd64"):
             'image_reference': config['name'].split('@')[0].rsplit(':', 1)[0] + '@' + index_digest}
 
 
-def job_environment(profile, sha, run_id, job_id):
+def job_environment(profile, sha, run_id, job_id, *, origin='local-linux', boat_sandbox_id=None, boat_worker_receipt=None):
     env = {'CI_PROJECT_DIR': '/work', 'CI_BUILDS_DIR': '/ci-builds',
            'CI_COMMIT_SHA': sha, 'CI_JOB_NAME': PREPARE_JOB if profile == 'unified-prepare' else JOBS[profile],
-           'FDISBULL_EXECUTION_ORIGIN': 'local-linux',
+           'FDISBULL_EXECUTION_ORIGIN': origin,
            'FDISBULL_LOCAL_RUN_ID': run_id, 'FDISBULL_LOCAL_JOB_ID': job_id,
            'TMPDIR': '/ci-tmp', 'PIP_CACHE_DIR': '/ci-cache/pip',
            'PYTHONDONTWRITEBYTECODE': '1', 'DEBIAN_FRONTEND': 'noninteractive'}
+    if origin == 'boat-linux':
+        env.update(FDISBULL_BOAT_SANDBOX_ID=boat_sandbox_id,
+                   FDISBULL_BOAT_WORKER_RECEIPT=json.dumps(boat_worker_receipt, sort_keys=True))
     if profile in ('stable', 'layers'):
         env.update(FDISBULL_PROFILE=profile,
                    FDISBULL_PATCH_DIRECTORY='experimental/dosbox-x' + ('/layers' if profile == 'layers' else ''),
@@ -351,7 +354,7 @@ def read_regular_json(path):
     return value
 
 
-def prepared_unified_stage(source, run_root, output, sha, run_id):
+def prepared_unified_stage(source, run_root, output, sha, run_id, *, origin='local-linux', boat_sandbox_id=None, boat_worker_receipt=None):
     """Require the completed real build, not merely a manifest with valid hashes."""
     phase = run_root / 'unified-prepare'
     process = read_regular_json(phase / 'process.json')
@@ -362,7 +365,8 @@ def prepared_unified_stage(source, run_root, output, sha, run_id):
             raise ValueError
     except (ValueError, TypeError, AttributeError):
         raise ValueError('Invalid local preparation job identity') from None
-    if (process.get('execution_origin') != 'local-linux'
+    if (process.get('execution_origin') != origin
+            or (origin == 'boat-linux' and (process.get('boat_sandbox_id') != boat_sandbox_id or process.get('boat_worker_receipt') != boat_worker_receipt))
             or process.get('source_commit') != sha or process.get('local_run_id') != run_id
             or process.get('job_name') != PREPARE_JOB or process.get('exit_code') != 0
             or type(process.get('exit_code')) is not int
@@ -385,8 +389,8 @@ def prepared_unified_stage(source, run_root, output, sha, run_id):
     return process
 
 
-def stage_prepared_unified(source, run_root, output, work, sha, run_id):
-    process = prepared_unified_stage(source, run_root, output, sha, run_id)
+def stage_prepared_unified(source, run_root, output, work, sha, run_id, *, origin='local-linux', boat_sandbox_id=None, boat_worker_receipt=None):
+    process = prepared_unified_stage(source, run_root, output, sha, run_id, origin=origin, boat_sandbox_id=boat_sandbox_id, boat_worker_receipt=boat_worker_receipt)
     selections = (*UNIFIED_INPUTS, 'native-evidence/pe/**/*', '.native/pe/packages/*.whl')
     for pattern in selections:
         for path in output.glob(pattern):
@@ -421,9 +425,10 @@ def artifact_identity(root, name):
 
 
 
-def write_chat_prepare_receipt(output, guest_data, process, sha, run_id):
+def write_chat_prepare_receipt(output, guest_data, process, sha, run_id, *, origin='local-linux', boat_sandbox_id=None, boat_worker_receipt=None):
     """Issue producer evidence only after the real process and guest export pass."""
-    if (process.get('execution_origin') != 'local-linux'
+    if (process.get('execution_origin') != origin
+        or (origin == 'boat-linux' and (process.get('boat_sandbox_id') != boat_sandbox_id or process.get('boat_worker_receipt') != boat_worker_receipt))
         or process.get('source_commit') != sha or process.get('local_run_id') != run_id
         or process.get('job_name') != JOBS['chat-prepare']
         or type(process.get('exit_code')) is not int or process['exit_code'] != 0
@@ -435,16 +440,18 @@ def write_chat_prepare_receipt(output, guest_data, process, sha, run_id):
     if identity['size'] > 500_000_000 or process.get('archive') != identity:
         raise ValueError('Chat producer archive did not pass')
     receipt = {'schema': 'fdisbull-chat-prepare-job-v1', 'status': 'passed',
-               'execution_origin': 'local-linux', 'source_commit': sha, 'test_source_commit': sha,
+               'execution_origin': origin, 'source_commit': sha, 'test_source_commit': sha,
                'local_run_id': run_id, 'local_job_id': process['local_job_id'],
                'tracked_worktree_dirty': False, 'export_success': True, 'archive': identity}
+    if origin == 'boat-linux':
+        receipt.update(boat_sandbox_id=boat_sandbox_id, boat_worker_receipt=boat_worker_receipt)
     target = output / 'artifacts/receipts/chat-prepare.json'
     target.parent.mkdir(parents=True, exist_ok=True)
     save(target, receipt)
     return receipt
 
 
-def stage_chat_archive(run_root, output, stage, sha, run_id):
+def stage_chat_archive(run_root, output, stage, sha, run_id, *, origin='local-linux', boat_sandbox_id=None, boat_worker_receipt=None):
     process = read_regular_json(run_root / 'chat-prepare/process.json')
     marker = read_regular_json(run_root / 'chat-prepare/completed.json')
     receipt = read_regular_json(output / 'artifacts/receipts/chat-prepare.json')
@@ -455,9 +462,10 @@ def stage_chat_archive(run_root, output, stage, sha, run_id):
     except (ValueError, TypeError, AttributeError):
         raise ValueError('Invalid chat producer identity') from None
     identity = artifact_identity(output, CHAT_ARCHIVE)
-    if (identity['size'] > 500_000_000 or process.get('execution_origin') != 'local-linux'
+    if (identity['size'] > 500_000_000 or process.get('execution_origin') != origin
+        or (origin == 'boat-linux' and (process.get('boat_sandbox_id') != boat_sandbox_id or process.get('boat_worker_receipt') != boat_worker_receipt or receipt.get('boat_sandbox_id') != boat_sandbox_id or receipt.get('boat_worker_receipt') != boat_worker_receipt))
         or receipt.get('schema') != 'fdisbull-chat-prepare-job-v1'
-        or receipt.get('execution_origin') != 'local-linux'
+        or receipt.get('execution_origin') != origin
         or receipt.get('test_source_commit') != sha
         or receipt.get('tracked_worktree_dirty') is not False
         or receipt.get('export_success') is not True

@@ -120,6 +120,7 @@ SOURCE_PATTERNS = (
     ("docs/verification", "kq1-tas-2026-10-31.json"),
     ("docs/verification", "ci-qemu-firmware-20261104.json"),
     ("docs/verification", "ci-window-readiness-20261104.json"),
+    ("docs/verification", "boat-trial-compatibility-20261104.json"),
     ("examples/recovery", "civd_food_swap.py"),
     ("examples/recovery", "civd_food_arm64.py"),
     ("examples/recovery", "civd_food_web.py"),

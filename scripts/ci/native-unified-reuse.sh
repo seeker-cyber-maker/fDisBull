@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+[[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
 test "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1
 export DEBIAN_FRONTEND=noninteractive
 apt-get update

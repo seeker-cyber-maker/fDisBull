@@ -707,6 +707,7 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
 ) if path not in REQUIRED_SOURCE_FILES)
 DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
 CHAT_OFFLINE_FILES = (
+    'scripts/ci/boat-linux.py', 'tests/test_boat_linux_ci.py', 'docs/BOAT_CI.md',
     'scripts/build_chat_offline_kit.py', 'scripts/verify_chat_offline_kit.py',
     'scripts/prepare_chat_runtimes.py', 'docs/CHAT_OFFLINE_KIT.md',
     'scripts/prepare_chat_offline_inventory.py', 'tests/test_chat_offline_inventory.py',
@@ -718,6 +719,7 @@ CHAT_OFFLINE_FILES = (
     'tests/test_chat_runtime_preparation.py',
     'docs/verification/ci-qemu-firmware-20261104.json',
     'docs/verification/ci-window-readiness-20261104.json',
+    'docs/verification/boat-trial-compatibility-20261104.json',
 )
 REQUIRED_SOURCE_FILES += CHAT_OFFLINE_FILES
 

@@ -592,3 +592,59 @@ def test_chat_rejects_missing_wine_and_wrong_archive_bytes(chat_qualified):
     archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.write_bytes(b'changed')
     with pytest.raises(ValueError, match='identity mismatch'):
         gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+
+@pytest.fixture
+def boat_qualified(chat_qualified):
+    root = chat_qualified
+    sandbox = 'bx_fixture'
+    write(root, 'artifacts/receipts/boat-worker.json', {
+        'schema':'fdisbull-boat-worker-v1', 'execution_origin':'boat-linux',
+        'boat_sandbox_id':sandbox, 'type':'default', 'architecture':'x86_64',
+        'host_boot_id':'00000000-0000-4000-8000-000000000020', 'observed_at':'2026-11-04T12:00:00Z'})
+    proof = gate.identity(root, 'artifacts/receipts/boat-worker.json')
+    binding = {'execution_origin':'boat-linux', 'boat_sandbox_id':sandbox, 'boat_worker_receipt':proof}
+    write(root, 'artifacts/receipts/boat-run.json', dict(binding, source_commit=SHA, local_run_id=LOCAL_RUN))
+    paths = ['artifacts/receipts/ordinary.json', 'artifacts/receipts/native-stable.json',
+             'artifacts/receipts/native-layers.json', 'artifacts/receipts/native-unified.json',
+             'artifacts/receipts/chat-prepare.json', 'artifacts/receipts/chat-consumer.json',
+             'native-evidence/pe/preparation-process.json', 'native-evidence/pe/preparation-completed.json']
+    paths += [f'artifacts/receipts/local-process-{name}.json' for name in
+              ('ordinary', 'stable', 'layers', 'unified', 'chat-prepare', 'chat-consumer')]
+    for name in paths:
+        p = root / name
+        value = json.loads(p.read_text()); value.update(binding); p.write_text(json.dumps(value))
+    return root
+
+
+def test_boat_same_worker_qualifies_without_relabeling(boat_qualified):
+    result = gate.validate(boat_qualified, SHA, local_run_id=LOCAL_RUN)
+    assert result['execution_origin'] == 'boat-linux'
+    assert result['boat_sandbox_id'] == 'bx_fixture'
+
+
+@pytest.mark.parametrize('path,field,value', [
+    ('artifacts/receipts/local-process-stable.json', 'boat_sandbox_id', 'bx_other'),
+    ('artifacts/receipts/native-layers.json', 'boat_worker_receipt', None),
+    ('native-evidence/pe/preparation-process.json', 'execution_origin', 'local-linux'),
+    ('artifacts/receipts/chat-consumer.json', 'boat_sandbox_id', 'bx_other'),
+    ('artifacts/receipts/boat-run.json', 'source_commit', 'b' * 40),
+    ('artifacts/receipts/boat-worker.json', 'architecture', 'arm64'),
+])
+def test_boat_worker_or_source_mismatch_fails(boat_qualified, path, field, value):
+    p = boat_qualified / path; record = json.loads(p.read_text()); record[field] = value
+    p.write_text(json.dumps(record))
+    with pytest.raises(ValueError):
+        gate.validate(boat_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_boat_guest_identity_requires_typed_artifact(monkeypatch):
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'boat-linux')
+    monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', LOCAL_RUN)
+    monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', '00000000-0000-4000-8000-000000000021')
+    monkeypatch.setenv('CI_JOB_NAME', 'test-and-package')
+    monkeypatch.setenv('FDISBULL_BOAT_SANDBOX_ID', 'bx_fixture')
+    proof = {'path':'artifacts/receipts/boat-worker.json', 'sha256':'a'*64, 'size':1}
+    monkeypatch.setenv('FDISBULL_BOAT_WORKER_RECEIPT', json.dumps(proof))
+    assert gate.execution_identity()['boat_worker_receipt'] == proof
+    monkeypatch.setenv('FDISBULL_BOAT_WORKER_RECEIPT', '{}')
+    with pytest.raises(ValueError): gate.execution_identity()

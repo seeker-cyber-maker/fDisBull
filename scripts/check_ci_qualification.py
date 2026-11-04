@@ -8,6 +8,7 @@ the dependency graph. A routine fast-only pipeline cannot produce this receipt.
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import importlib.util
 import json
@@ -19,7 +20,7 @@ import subprocess
 import sys
 import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent / "ci"))
-from execution_identity import canonical_uuid, execution_identity
+from execution_identity import canonical_uuid, execution_identity, validate_boat_receipt_identity
 import xml.etree.ElementTree as ET
 
 JOBS = {"ordinary": "test-and-package", "stable": "native-debugger-stable",
@@ -60,6 +61,39 @@ def identity(root, name):
 def verify_artifact(root, item):
     if not isinstance(item, dict) or identity(root, item.get('path')) != item:
         raise ValueError(f"Artifact identity mismatch: {item.get('path') if isinstance(item, dict) else item}")
+
+
+def boat_identity(root, source_commit, run_id):
+    run = read(local_path(root, 'artifacts/receipts/boat-run.json'))
+    proof = validate_boat_receipt_identity(run.get('boat_worker_receipt'))
+    verify_artifact(root, proof)
+    worker = read(local_path(root, proof['path']))
+    sandbox = run.get('boat_sandbox_id')
+    if (run.get('execution_origin') != 'boat-linux' or run.get('source_commit') != source_commit
+        or run.get('local_run_id') != run_id or not isinstance(sandbox, str)
+        or not re.fullmatch(r'bx_[A-Za-z0-9_-]+', sandbox)
+        or worker.get('schema') != 'fdisbull-boat-worker-v1'
+        or worker.get('execution_origin') != 'boat-linux' or worker.get('boat_sandbox_id') != sandbox
+        or worker.get('type') != 'default' or worker.get('architecture') != 'x86_64'):
+        raise ValueError('Boat run or worker identity mismatch')
+    canonical_uuid(worker.get('host_boot_id'))
+    try:
+        observed = datetime.datetime.fromisoformat(worker['observed_at'].replace('Z', '+00:00'))
+        if observed.tzinfo is None:
+            raise ValueError('Missing timezone')
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        raise ValueError('Invalid Boat worker observation time') from exc
+    return {'boat_sandbox_id': sandbox, 'boat_worker_receipt': proof}
+
+
+def check_execution_binding(record, origin, boat):
+    if record.get('execution_origin') != origin:
+        raise ValueError('Execution origin mismatch')
+    if origin == 'boat-linux':
+        if any(record.get(key) != value for key, value in boat.items()):
+            raise ValueError('Boat worker identity mismatch')
+    elif 'boat_sandbox_id' in record or 'boat_worker_receipt' in record:
+        raise ValueError('Local execution cannot claim a Boat worker')
 
 
 REUSE_FILES = {
@@ -124,7 +158,7 @@ def verify_reused_backend(root, profile, backend, artifacts, process):
     return proofs
 
 
-def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_ids, receipt, process):
+def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_ids, receipt, process, origin, boat):
     """Bind independently prepared runtime inputs to the tested local job."""
     base = 'native-evidence/pe/'
     manifest_ref = receipt.get('prepared_manifest')
@@ -141,7 +175,10 @@ def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_
     build = read(local_path(root, paths['process']))
     postcheck = read(local_path(root, paths['source-postcheck']))
     completed = read(local_path(root, paths['completed']))
-    if (build.get('execution_origin') != 'local-linux' or build.get('source_commit') != source_commit
+    if origin == 'boat-linux':
+        check_execution_binding(completed, origin, boat)
+    check_execution_binding(build, origin, boat)
+    if (build.get('source_commit') != source_commit
         or build.get('local_run_id') != run_id or build.get('local_job_id') != build_job
         or build.get('job_name') != 'native-unified-prepare' or build.get('termination') != 'exited'
         or type(build.get('exit_code')) is not int or build.get('exit_code') != 0
@@ -222,7 +259,7 @@ CHAT_CHECKS = frozenset({'dos_screenshot','dos_keyboard','dos_restore','pe_break
     'player_save','player_resume','skill_fdisbull','skill_gamefaqs'})
 
 
-def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_artifacts):
+def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_artifacts, origin, boat):
     """Require a separately executed, artifact-bound offline consumer run."""
     if local_run_id is None:
         raise ValueError('Complete chat qualification requires local consumer process evidence')
@@ -234,17 +271,19 @@ def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_
     receipt = read(local_path(root, receipt_path))
     process = read(local_path(root, process_path))
     producer = read(local_path(root, producer_path))
+    for record in (receipt, preparation, process, producer):
+        check_execution_binding(record, origin, boat)
     job_id = canonical_uuid(receipt.get('local_job_id'))
     producer_id = canonical_uuid(receipt.get('producer_job_id'))
     if job_id == producer_id or job_id in other_jobs or producer_id in other_jobs:
         raise ValueError('Chat producer and consumer job identities must be distinct')
     if (receipt.get('schema') != 'fdisbull-chat-consumer-job-v1' or receipt.get('status') != 'passed'
         or receipt.get('source_commit') != source_commit or receipt.get('test_source_commit') != source_commit
-        or receipt.get('execution_origin') != 'local-linux' or receipt.get('local_run_id') != local_run_id
+        or receipt.get('execution_origin') != origin or receipt.get('local_run_id') != local_run_id
         or receipt.get('source_access') != 'absent' or receipt.get('source_check') != 'artifact-and-host-clone'):
         raise ValueError('Chat consumer receipt source or run mismatch')
     for observed, expected_id, name in ((process,job_id,'chat-native-consumer'),(producer,producer_id,'chat-native-prepare')):
-        if (observed.get('execution_origin') != 'local-linux' or observed.get('local_run_id') != local_run_id
+        if (observed.get('execution_origin') != origin or observed.get('local_run_id') != local_run_id
             or observed.get('local_job_id') != expected_id or observed.get('job_name') != name
             or observed.get('source_commit') != source_commit or observed.get('termination') != 'exited'
             or type(observed.get('exit_code')) is not int or observed.get('exit_code') != 0
@@ -254,7 +293,7 @@ def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_
             or observed['runtime'].get('machine') != 'x86_64' or observed['runtime'].get('python') != '3.13.5'):
             raise ValueError('Chat producer or consumer process evidence failed')
     if (preparation.get('schema') != 'fdisbull-chat-prepare-job-v1' or preparation.get('status') != 'passed'
-        or preparation.get('execution_origin') != 'local-linux' or preparation.get('source_commit') != source_commit
+        or preparation.get('execution_origin') != origin or preparation.get('source_commit') != source_commit
         or preparation.get('test_source_commit') != source_commit or preparation.get('local_run_id') != local_run_id
         or preparation.get('local_job_id') != producer_id or preparation.get('tracked_worktree_dirty') is not False
         or preparation.get('export_success') is not True):
@@ -325,6 +364,10 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy
         canonical_uuid(local_run_id)
         if pipeline_id is not None:
             raise ValueError("Local qualification cannot claim a GitLab pipeline")
+    origin = 'gitlab' if local_run_id is None else read(local_path(root, 'artifacts/receipts/ordinary.json')).get('execution_origin')
+    if origin not in ('gitlab', 'local-linux', 'boat-linux') or (local_run_id is not None and origin == 'gitlab'):
+        raise ValueError('Invalid qualification execution origin')
+    boat = boat_identity(root, source_commit, local_run_id) if origin == 'boat-linux' else None
     results, job_ids = {}, set()
     unified_receipt = unified_process = None
     for profile, job in JOBS.items():
@@ -344,14 +387,16 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy
             if not re.fullmatch('[0-9]+', job_id):
                 raise ValueError(f"Missing job identity: {job}")
         else:
-            if (receipt.get('execution_origin') != 'local-linux'
+            check_execution_binding(receipt, origin, boat)
+            if (receipt.get('execution_origin') != origin
                 or receipt.get('local_run_id') != local_run_id
                 or 'pipeline_id' in receipt or 'job_id' in receipt):
                 raise ValueError(f"Job origin or local run mismatch: {job}")
             job_id = canonical_uuid(receipt.get('local_job_id'))
             process_path = root / f'artifacts/receipts/local-process-{profile}.json'
             process = read(process_path)
-            if (process.get('execution_origin') != 'local-linux'
+            check_execution_binding(process, origin, boat)
+            if (process.get('execution_origin') != origin
                 or process.get('local_run_id') != local_run_id
                 or process.get('local_job_id') != job_id
                 or process.get('job_name') != job or process.get('source_commit') != source_commit
@@ -415,8 +460,8 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy
         raise ValueError("The installed-wheel native acceptance did not test the ordinary core wheel")
     if local_run_id is not None:
         results['native-unified']['preparation'] = verify_local_unified_preparation(
-            root, source_commit, local_run_id, job_ids, unified_receipt, unified_process)
-    chat = None if legacy_dos_only else verify_chat_consumer(root, source_commit, local_run_id, job_ids, package_artifacts)
+            root, source_commit, local_run_id, job_ids, unified_receipt, unified_process, origin, boat)
+    chat = None if legacy_dos_only else verify_chat_consumer(root, source_commit, local_run_id, job_ids, package_artifacts, origin, boat)
     result = {"schema": "fdisbull-ci-qualification-1", "status": "legacy-dos-only" if legacy_dos_only else "qualified", "source_commit": source_commit,
               "required_jobs": results,
               "package_inventory": identity(root, 'artifacts/receipts/package-payloads.json'),
@@ -424,7 +469,9 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy
     if chat is not None:
         result['chat_consumer'] = chat
     if local_run_id is not None:
-        result.update(execution_origin='local-linux', local_run_id=local_run_id)
+        result.update(execution_origin=origin, local_run_id=local_run_id)
+        if boat is not None:
+            result.update(boat)
     else:
         result['pipeline_id'] = str(pipeline_id)
     return result

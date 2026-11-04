@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARED:-}" = 1 ]; then
-  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  [[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
   qemu_firmware_dir="$(dirname "$(dirname "$FDISBULL_PE_QEMU")")/share/qemu"
   python scripts/ci/unified-runtime-inputs.py verify --install-firmware "$qemu_firmware_dir"
   export DEBIAN_FRONTEND=noninteractive

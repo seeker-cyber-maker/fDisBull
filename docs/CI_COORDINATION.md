@@ -4,12 +4,15 @@ fDisBull maintains **equal repository state** across local Git (`/Volumes/CODEX/
 
 Agents are required to update **both** local Git and GitLab when landing or syncing branches and tags, while strictly preventing duplicate or unthrottled CI pipeline runs that could trigger provider abuse filters.
 
-## Local-first workflow and provider routing
+## Controlled execution and provider routing
 
 Routine pushes, all merge requests and tags do not admit GitLab pipelines.
-Run ordinary and native qualification locally against the exact candidate SHA
-using the finite local Linux runner, `scripts/ci/local-linux.py`. Inspect its
-help and runtime preflight before starting; a missing prerequisite is incomplete,
+Use macOS for rapid prototyping and focused checks of affected behavior. Run
+full Linux CI and release builds on explicitly started Boat workers against the
+exact candidate SHA, using `scripts/ci/boat-linux.py`. See the
+[Boat workflow](BOAT_CI.md). The retained Apple-container driver,
+`scripts/ci/local-linux.py`, is a separately selected fallback. Inspect the
+chosen driver's help and runtime preflight before starting; a missing prerequisite is incomplete,
 not a passed gate. Use separate local execution identities and receipts. Local
 results do not establish a GitLab pipeline or hosted CI success.
 
@@ -20,7 +23,7 @@ separate user authorization and setup before that route can run. No runner or
 credentials are created by this policy. Native qualification remains behind a
 blocking manual start. The provider summary is a legacy diagnostic for ordinary,
 stable, layers and unified evidence; its status is `legacy-dos-only`, not full
-qualification. The local driver alone runs the complete chat consumer gate.
+qualification. The explicit Boat and Apple-container drivers run the complete chat consumer gate.
 Source configuration does not prove runner registration or provider settings.
 
 Apply the storage admission rules before image pulls, builds and each material
@@ -28,7 +31,9 @@ growth phase. Use bounded external workspaces and finite commands; a rejected
 admission stops new bulk work. A local Linux run, including any emulation,
 records its actual platform and must not be presented as hosted CI.
 
-The direct runner uses the guarded `container` command on this Mac. It snapshots
+## Retained Apple-container fallback
+
+The Apple-container driver uses the guarded `container` command on this Mac. It snapshots
 a clean candidate into separate shallow Git clones, pins the pulled amd64 image
 by digest, and retains logs, stopped containers and failed attempts. It admits
 both the result filesystem and the CACHE container store before growth. It

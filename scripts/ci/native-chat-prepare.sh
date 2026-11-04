@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux ]
+[[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
 python -c 'import platform,sys; assert sys.version_info[:3] == (3,13,5) and platform.machine() == "x86_64" and sys.platform == "linux"'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update

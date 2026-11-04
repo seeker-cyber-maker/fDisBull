@@ -69,7 +69,7 @@ def regular_files(directory):
 
 
 def context():
-    if os.environ.get('FDISBULL_EXECUTION_ORIGIN') != 'local-linux':
+    if os.environ.get('FDISBULL_EXECUTION_ORIGIN') not in ('local-linux', 'boat-linux'):
         raise ValueError('prepared runtime is local Linux only')
     sha = os.environ['CI_COMMIT_SHA']
     if len(sha) != 40 or any(c not in '0123456789abcdef' for c in sha):

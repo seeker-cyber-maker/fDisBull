@@ -338,16 +338,18 @@ def verify(root, workspace, archive):
     exports={entry.name:base+entry.address for entry in binary.get_export().entries}; checkpoint=exports['checkpoint'];counter=exports['counter']
     # Copy the authored fixture so the kit remains read-only and game directory is private.
     pe=workspace/'oracle.exe';pe.write_bytes(fixture.read_bytes())
-    with Project.create(workspace/'pe.fdb',pe) as project, project.debugger(root/'bin/qemu',workspace,kernel=required(roles,'kernel'),initramfs=runtime['wine']) as debug:
-        bp=debug.breakpoint(checkpoint)
-        if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
-        if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
-        frame=wait_for_pe_frame(debug); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
-        if not trace['metadata']['complete']: raise ValueError('PE trace incomplete')
-        state=debug.save_state('pe.sav'); debug.click(80,80,mode_id=frame['metadata']['mode_id'])
-        if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')
-        debug.load_state(state['artifact'])
-        if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE native restore failed')
+    with Project.create(workspace/'pe.fdb',pe) as project:
+        project.analyze(start=checkpoint,max_instructions=64)
+        with project.debugger(root/'bin/qemu',workspace,kernel=required(roles,'kernel'),initramfs=runtime['wine']) as debug:
+            bp=debug.breakpoint(checkpoint)
+            if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
+            if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
+            frame=wait_for_pe_frame(debug); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
+            if not trace['metadata']['complete']: raise ValueError('PE trace incomplete')
+            state=debug.save_state('pe.sav'); debug.click(80,80,mode_id=frame['metadata']['mode_id'])
+            if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')
+            debug.load_state(state['artifact'])
+            if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE native restore failed')
     return {'schema':'fdisbull-chat-consumer-verification-v1','status':'passed',
             'archive_sha256':digest(archive),'manifest_sha256':digest(root/'MANIFEST.json'),
             'source_commit':manifest.get('identities',{}).get('source_commit'),

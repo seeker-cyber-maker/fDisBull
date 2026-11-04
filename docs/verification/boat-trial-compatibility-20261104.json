@@ -1,0 +1,73 @@
+{
+  "schema": "fdisbull-boat-trial-compatibility-v1",
+  "date": "2026-11-04",
+  "source_commit": "ce9fd0da476910187747a5d602c3ec0241f8886a",
+  "scope": "bounded authored DOS/PE compatibility across recorded probes; not full CI, kit acceptance, performance benchmark or release",
+  "worker": {
+    "type": "default",
+    "plan": "seven-day trial unchanged",
+    "system": "Linux",
+    "architecture": "x86_64",
+    "vcpus": 4,
+    "RAM_GB": 8,
+    "python": "3.13.5"
+  },
+  "image": {
+    "index_sha256": "6c6b3c2deae72b980c4323738be824884c9a2e17588c93db82612f8a3072be88",
+    "Linux_amd64_manifest_sha256": "0a0704ac83aa7b896a68b710c24f9502bbae87d32e6c7ef6148ce6a60ce05260"
+  },
+  "DOS": {
+    "verified_checks": [
+      "keyboard_input_and_memory",
+      "320x200_screenshot",
+      "native_save_restore"
+    ],
+    "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+    "probe_status": "three checks passed in probe02; that combined probe later stopped on the PE static-analysis prerequisite"
+  },
+  "PE": {
+    "probe_status": "probe03 PE-only passed, process exit0",
+    "verified_checks": [
+      "byte_verified_disassembly_breakpoint",
+      "memory_counter7",
+      "nonuniform_320x200_screenshot",
+      "bounded_instruction_trace",
+      "mouse_click_counter8",
+      "native_save_restore_counter7"
+    ],
+    "screenshot_sha256": "8f28de072af49e0b2ec6b3e051827008f6dd645ff95e5dba8f62ca9806ee6948",
+    "trace_sha256": "466f3558220d75f15e394d62da8c3f1441cbcf4a9b125ded6e92e0a5bef1fdf1"
+  },
+  "retained_failures": [
+    {
+      "probe": 1,
+      "error": "Mounted game files differ from state",
+      "cause": "probe exported a screenshot into its mounted DOS input directory after saving",
+      "correction": "keep mounted DOS inputs separate from project and screenshot outputs; existing file-integrity guard unchanged"
+    },
+    {
+      "probe": 2,
+      "error": "Analyze this PE address before setting a disassembly breakpoint",
+      "cause": "probe and new offline verifier omitted checkpoint analysis",
+      "correction": "seed bounded checkpoint analysis before opening debugger; retry only PE"
+    }
+  ],
+  "isolation": {
+    "host_readonly_bind_and_network_namespace": "passed",
+    "Docker_internal_mount_under_default_security": "permission denied",
+    "adaptation": "extract safely on controller, bind kit read-only into fresh network-none Docker consumer, without SYS_ADMIN",
+    "full_consumer": "not run yet",
+    "external_readonly_kit_bind_under_default_Docker_security": "passed with loopback-only network and no added capabilities"
+  },
+  "full_exact_commit_CI": "pending integrated Boat adapter commit",
+  "complete_offline_archive": "not yet assembled or qualified",
+  "performance": "not assessed",
+  "release": false,
+  "private_game_files_states_databases_in_source_or_delivery": false,
+  "focused_host_checks": {
+    "Boat_and_qualification_contracts": 116,
+    "targeted_consumer_capture_package_checks": 38,
+    "new_Boat_source_archive_presence_cases": 4,
+    "note": "overlapping focused selections; not whole local suite or complete Linux CI"
+  }
+}

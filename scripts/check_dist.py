@@ -637,6 +637,7 @@ REQUIRED_SOURCE_EVIDENCE |= {
 }
 REQUIRED_TEST_HELPERS |= {"tests/web_shell_checks.mjs", "tests/memory_shell_checks.mjs"}
 REQUIRED_TEST_HELPERS |= {
+    "scripts/ci/boat-linux.py", "tests/test_boat_linux_ci.py", "docs/BOAT_CI.md",
     "scripts/build_chat_offline_kit.py", "scripts/verify_chat_offline_kit.py",
     "scripts/prepare_chat_runtimes.py", "docs/CHAT_OFFLINE_KIT.md",
     "scripts/prepare_chat_offline_inventory.py", "tests/test_chat_offline_inventory.py",
@@ -650,6 +651,7 @@ REQUIRED_TEST_HELPERS |= {
 REQUIRED_SOURCE_EVIDENCE |= {
     "docs/verification/ci-qemu-firmware-20261104.json",
     "docs/verification/ci-window-readiness-20261104.json",
+    "docs/verification/boat-trial-compatibility-20261104.json",
 }
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/civd-z-screen-families.json", "web_runtime/block.mjs",
                                  "web_runtime/shell.mjs", "web_runtime/app.mjs",

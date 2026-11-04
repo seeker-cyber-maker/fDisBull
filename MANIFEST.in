@@ -30,8 +30,10 @@ include docs/CLOUD-0.27.0-MANIFEST.json
 include docs/verification/kq1-tas-2026-10-31.json
 include docs/verification/ci-qemu-firmware-20261104.json
 include docs/verification/ci-window-readiness-20261104.json
+include docs/verification/boat-trial-compatibility-20261104.json
 include scripts/build_chat_offline_kit.py scripts/verify_chat_offline_kit.py scripts/prepare_chat_runtimes.py
-include docs/CHAT_OFFLINE_KIT.md
+include docs/CHAT_OFFLINE_KIT.md docs/BOAT_CI.md
+include scripts/ci/boat-linux.py tests/test_boat_linux_ci.py
 prune docs/uil-rfcs/0001
 include docs/uil-rfcs/0001/README.md
 include docs/uil-rfcs/0001/check_examples.py

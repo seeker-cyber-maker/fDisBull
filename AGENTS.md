@@ -42,9 +42,16 @@ observations as unknown. Distinguish visible, ready, enabled and committed.
 
 ## Working in this repository
 
-CI is local-first: branch, merge-request and tag events must not automatically
-start provider pipelines. Use the finite local Linux qualification route and
-keep its receipts explicitly local. GitLab web/API pipelines require an explicit
+Use macOS for rapid prototyping: integrate the change, run focused checks of the
+affected behavior, and adjust it before starting CI. Do not rerun the complete
+test suite after every local edit. Once the candidate is ready, freeze its SHA
+and run full Linux CI and release builds on explicitly started Boat workers.
+Start a new host with bounded compatibility probes before comparing performance.
+See [the Boat workflow](docs/BOAT_CI.md).
+
+Branch, merge-request and tag events must not automatically start provider
+pipelines. Boat and the retained local Linux route record their actual execution
+origin; neither is a GitLab hosted pipeline. GitLab web/API pipelines require an explicit
 user action and a dedicated `fdisbull-local-linux` runner; do not register a
 runner, create credentials, or use hosted instance runners as a fallback. Heavy
 native work requires a deliberate start. Apply the storage admission rules

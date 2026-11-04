@@ -1,5 +1,9 @@
 # fDisBull agent quickstart
 
+For repository development, use macOS for rapid prototypes and focused checks.
+Run full Linux CI and release builds on Boat after integration; see the
+[execution workflow](BOAT_CI.md). These checks do not authorize publication.
+
 Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
