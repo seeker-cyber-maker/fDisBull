@@ -1,3 +1,43 @@
+# Release records and qualification
+
+## 0.32.0 source scope and publication record
+
+The [0.32.0 notes](RELEASE-0.32.0.md) describe the reviewed feature line based on
+0.31.1: captured-PE recovery, format/media intake, bounded Windows and
+protected-mode DOS debugging, lossless frame consumers, experimental AGI/Gob
+backends, the headless quit-dialog fix and signed-return correction. The version
+label describes source scope; it is not evidence that a tag, package or system
+installation already exists.
+
+Use the [GitLab release inventory](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
+and, when published, the
+[v0.32.0 record](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.32.0)
+for the exact tagged commit, dated qualification receipts, artifact inventory,
+checksums and download verification. Publication results belong with that
+immutable source identity, allowing the source to remain frozen throughout
+qualification and manual upload. Shared installation is a separate operation
+and needs its own receipt.
+
+The release gate requires ordinary local Linux CI and required-native Linux
+acceptance on the exact release commit, including stable and layers DOSBox
+profiles and the installed-wheel PE/DOS/boot path. Required native tests must
+execute rather than skip. Local macOS checks, source/package completeness,
+private-input exclusion, isolated package installation and both bundled skills
+are separate evidence. A historical feature receipt or a passing subset does
+not replace a missing release gate. See [CI coordination](CI_COORDINATION.md)
+and the [release scope](RELEASE-0.32.0.md#qualification-and-publication).
+
+GitLab !42 and !74 remain unmerged. The candidate takes reviewed, bounded fixes
+from the development work without merging those broader branches. The broken
+alternative !67 and unfinished research/RFC work are outside the 0.32 scope.
+
+## Historical status snapshots
+
+The entries below preserve earlier release and installation receipts. Their
+dates, source identities, test counts, selectors and words such as "current" or
+"now" apply to the recorded snapshot, not to today's source or installation.
+Retired-provider links are historical evidence, not current CI instructions.
+
 # Release status checked on 2026-11-03 (America/New_York)
 
 ## 0.31.1 patch release published

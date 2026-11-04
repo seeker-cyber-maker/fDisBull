@@ -9,15 +9,18 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**Release status (0.31.1 published):** `v0.31.1` packages the post-0.31.0 native
-CI and macOS Swift source-ZIP repairs; it adds no new analysis features. The
-published `v0.31.0` tag remains at `10d01062`. See the
-[0.31.1 release notes](docs/RELEASE-0.31.1.md),
-[0.31.0 release notes](docs/RELEASE-0.31.0.md),
-[release status](docs/RELEASE_STATUS.md) and
-[feature history](docs/FEATURE_HISTORY.md) for qualification scope and open
-gates. The local shared selector is on `0.31.1-27b388d`; the 0.31.1 prefix,
-doctors and player smoke are qualified.
+**0.32.0 feature line:** recover captured Windows imports, identify more media
+formats, investigate Win32 and protected-mode DOS programs, and inspect AGI or
+Gob scenes through experimental ScummVM backends. Exact lossless frame options
+and a direct pixel-buffer API support repeated visual probes; headless DOSBox-X
+shutdown suppresses the recurring quit dialog. This line carries the 0.31.1
+features and packaging repairs forward. See the
+[0.32.0 scope and limits](docs/RELEASE-0.32.0.md),
+[release records](docs/RELEASE_STATUS.md) and
+[feature history](docs/FEATURE_HISTORY.md). The
+[GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
+hold the exact published source, qualification receipts and package hashes;
+the version text here does not establish publication or installation.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
@@ -114,8 +117,10 @@ profiles:
   ordinal imports, requires explicit decisions for ambiguous or junk thunks,
   and rebuilds analysis images with original IAT addresses, new
   OriginalFirstThunk tables, a qualified OEP and verified checksum. A bounded
-  GOG Galaxy profile covers captured UPX0/UPX1 wrappers. It does not download,
-  launch, attach to or bypass protections in Galaxy.
+  GOG Galaxy profile covers captured UPX0/UPX1 wrappers. This is structural,
+  fixed-base analysis reconstruction; Windows loader execution needs separate
+  qualification. It does not download, launch, attach to or bypass protections
+  in Galaxy.
 - **Embedded & console media:** static [Armv7-M Cortex-M](docs/CORTEX_M.md)
   flash images with Thumb/Thumb-2 vector-table traversal (exercised on 121GW
   2.05 meter firmware without hardware emulation), non-executing
@@ -125,6 +130,15 @@ profiles:
   Ghidra and `saturn-recomp`), mode-explicit SNES 65C816 decoding, and
   reusable [media adapters](docs/AGENT_QUICKSTART.md#reuse-media-readers)
   (`media-modules`, `media-inspect`, `media-extract`).
+
+The [format catalog](docs/FILE_FORMAT_REGISTRY.md) distinguishes a recognized
+header from an implemented decoder. Collection intake retains edition and
+consumer context instead of guessing from a suffix. Restricted `smk-frame`
+variants retain opening/ending images and complete embedded audio with native
+hold frames between; independent decoding and original-game playback remain
+separate checks. See [media coverage](docs/INTAKE_MEDIA_COVERAGE.md). The audited
+cinematic experiment changes media in a separate variant while preserving the
+original executable.
 
 Native decoders supply instruction facts (with two-engine Iced/Capstone checks
 via `decoder-check` on x86); fDisBull owns bounded traversal and stores
@@ -175,11 +189,19 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   `guest_tsr` termination tracking. Headless operation is the default;
   `--dot-mode` opens a watch-only window on compatible builds. A separate
   Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
+  [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
+  bindings, guarded live edits and native whole-machine checkpoints, while
+  retaining explicit CPU-mode and address-space limits. Agent headless launches
+  disable the quit confirmation and mute audio; visible launch preferences
+  remain separate.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
-  adds experimental Win32 and Win16 support alongside the existing PE64 path.
+  adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
   watches, memory, traces and shared keyboard/frame/scene actions. Windows
   `--dot-mode` supplies a read-only spectator without capturing host input.
+  PE32 uses its actual 32-bit CPU context. Win16 requires observed selector
+  mappings and restricts register edits; its native checkpoints, code layers
+  and delta rewind remain unavailable.
 - **macOS observation & reversible UI capture:** `macos-observe` runs a
   source-bound ARM64 binary to one LLDB breakpoint, while
   [reversible native sessions](docs/MACOS_REVERSIBLE_CAPTURE.md)
@@ -200,6 +222,15 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
 Headless execution is not a security sandbox, and restoring an emulator state
 never rolls back writes to mounted host directories.
 
+For repeated frame inspection, optional exact indexed PNG and raw RGBA8 with
+Zstandard retain frame identity and pixel hashes. Indexed PNG falls back to
+RGBA PNG when an exact palette is unavailable. `frame_rgba()` gives Python
+callers a checked in-memory buffer without writing an artifact; `screenshot()`
+continues to save PNG evidence. Raw Zstandard requires a matching backend and
+the `screenshot` extra. The [DinoPark codec study](docs/VERIFICATION-DINOPARK-SCREENSHOT-CODECS-2026-11-03.md)
+and [direct-consumer study](docs/VERIFICATION-DINOPARK-DIRECT-RGBA-2026-11-03.md)
+measure specific paused scenes, rather than promising a universal speedup.
+
 ## Layers, states, rewind and experiments
 
 Explore runtime hypotheses without losing your baseline:
@@ -218,7 +249,9 @@ Explore runtime hypotheses without losing your baseline:
   [frame timelines](docs/FRAME_INPUT_TIMELINE.md) (`debug-timeline-*`) cache
   completed frames and full states with frame-scheduled physical keyboard
   make/break edges, supporting instant rewind, input branching and durable
-  Anchor Stone pins.
+  Anchor Stone pins. Optional [frame-state delta storage](docs/FRAME_STATE_DELTAS.md)
+  reduces retained payloads through verified keyframes and XOR chains; it still
+  captures a full state at every point and does not promise faster recording.
 - **CPU and RAM delta rewind:** [delta histories](docs/CPU_RAM_DELTAS.md)
   (`debug-delta-*`) record exposed register and declared RAM diffs anchored by a
   recovery stone on both DOSBox and [Wine/QEMU x86-64](docs/WINE_CPU_RAM_DELTAS.md).
@@ -363,10 +396,11 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-Repository state is maintained in equal parity across local Git and GitLab
-(`brewster-jennings-group/fdisbull`); GitHub is retired. Read
+GitLab (`brewster-jennings-group/fdisbull`) is the remote project authority;
+GitHub is retired. Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
+[0.32.0 notes](docs/RELEASE-0.32.0.md), [0.31.1 notes](docs/RELEASE-0.31.1.md),
 [0.31.0 notes](docs/RELEASE-0.31.0.md), [0.30.0 notes](docs/RELEASE-0.30.0.md),
 [0.29.0 notes](docs/RELEASE-0.29.0.md),
 [PR backlog](docs/PR_BACKLOG.md), [offline dependencies](docs/OFFLINE_DEPENDENCIES.md)

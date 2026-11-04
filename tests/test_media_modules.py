@@ -20,7 +20,7 @@ def test_catalog_and_public_cli_need_no_project(capsys):
     report = respond({'method': 'media-modules'}, default_project='/missing.fdb')
     assert report['ok']
     modules = {item['name']: item for item in report['result']['modules']}
-    assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'agi-picture', 'avi-capture', 'smacker', 'flic'}
+    assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic'}
     assert media_modules() == report['result']
     assert main(['media-modules']) == 0
     assert json.loads(capsys.readouterr().out)['ok']
@@ -161,14 +161,21 @@ def test_input_and_output_path_limits(tmp_path, monkeypatch):
         extract_media(source, public / 'out', adapter='mz-envelope', member='module')
 
 
-def test_resource_ambiguity_and_directory_bounds(tmp_path):
+def test_resource_ambiguity_and_directory_bounds(tmp_path, monkeypatch):
     directory = tmp_path / 'PICDIR'
     directory.write_bytes(bytes(769))
     with pytest.raises(ValueError):
         inspect_media(directory, adapter='agi-v2', volume_root=tmp_path, number=0)
     directory.write_bytes(b'\x20\x00\x00')
     (tmp_path / 'VOL.2').write_bytes(b'\x12\x34\x02\x00\x00')
-    (tmp_path / 'vol.2').write_bytes(b'\x12\x34\x02\x00\x00')
+    # Model a case-sensitive directory listing even on case-insensitive APFS.
+    # Writing both spellings there would overwrite one file and miss this guard.
+    original_iterdir = Path.iterdir
+    def ambiguous_listing(path):
+        if path == tmp_path:
+            return iter((tmp_path / 'VOL.2', tmp_path / 'vol.2'))
+        return original_iterdir(path)
+    monkeypatch.setattr(Path, 'iterdir', ambiguous_listing)
     with pytest.raises(ValueError, match='ambiguous'):
         inspect_media(directory, adapter='agi-v2', volume_root=tmp_path, number=0)
 

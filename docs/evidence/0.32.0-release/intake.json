@@ -1,0 +1,27 @@
+{
+  "schema": "fdisbull-0.32.0-source-intake-v1",
+  "base_release_line": "b2159367f3d4c2587c75acd077f30b39223da8dc",
+  "fixes": [
+    "19c298edcae016e042a5e04f2267d61375d86831",
+    "eb8905b3214dae82d39e882a24011f81b79f421e"
+  ],
+  "features": {
+    "68": "4d74c93ea0c2243bf3b172d3cce9d466d0635e98",
+    "77": "045d94f3afa30ddbccd49f01f34ebca4d829f6ac",
+    "60": "096d45e9826c76bea317f7ff3e27eb78a0d4de80",
+    "72": "92a4db3a54f1403a6438767930fd44edc8e06031",
+    "73": "72d535be6c3c8889a3362fb53f82c7e051e429c1"
+  },
+  "ci_package_source": "6c32a261c53f4c747bdc368284d4b4acd1bce11c",
+  "held_unmerged_mrs": [
+    42,
+    74
+  ],
+  "excluded_alternative_mr": 67,
+  "scope": "Authored source and sanitized evidence only; no games, saves, machine states, capture databases or private runtime inputs.",
+  "deduplication": [
+    "The requested headless fix is applied once; equivalent60/72copies do not duplicate launcher settings.",
+    "Three Windows preflight commits already patch-equivalent to0.31.1 remain from released lineage."
+  ],
+  "qualification": "See exact-source local qualification and artifact receipts attached to the manual GitLab release; this intake document does not certify an untested SHA."
+}
