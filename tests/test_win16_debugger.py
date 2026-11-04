@@ -147,15 +147,73 @@ def test_ne_checkpoint_capability_refuses_unqualified_restore():
 
 
 @pytest.mark.parametrize('changes',[None,{}, {'eax':{'expected':0,'value':1}}])
-def test_ne_general_register_writes_refuse_before_any_observation_or_mutation(changes):
+def test_ne_general_register_writes_refuse_without_paired_runtime_before_rpc(changes):
     session=Win16DebugSession.__new__(Win16DebugSession);session.closed=False
     assert session.register_edits_available is False
-    assert 'write-registers' not in session.script_operations
-    def unexpected(*args,**kwargs):pytest.fail('Unqualified register edit must refuse before any RPC or state change')
+    def unexpected(*args,**kwargs):pytest.fail('Unavailable paired runtime must refuse before any RPC or state change')
     session.registers=session.call=session._event=session._windows_state_changed=unexpected
-    with pytest.raises(ValueError,match='native context preservation is unqualified'):
+    with pytest.raises(ValueError,match='paired native/WOW integer runtime'):
         session.write_registers(changes)
     assert session.closed is False
+
+
+def test_ne_checked_six_register_edit_validates_before_mutation_and_reads_back():
+    session=Win16DebugSession.__new__(Win16DebugSession);session.register_edits_available=True
+    before={'context_source':'native-ldt-low32','cpu_mode':'protected16','eip':'0xa568',
+            'eflags':'0x202','cs':'0x2ef','ds':'0x2ff','ss':'0x2ff','es':'0x2ff',
+            'fs':'0x23','gs':'0x23','project_address':'ne:2:0xa568',
+            'general':{k:'0x10' for k in ('eax','ebx','ecx','edx','esi','edi','ebp','esp')}}
+    after={**before,'general':{**before['general'],'eax':'0x11'}}
+    reads=iter([before,after]);calls=[];events=[]
+    session.registers=lambda:next(reads)
+    session.call=lambda method,params:calls.append((method,params))
+    session._windows_state_changed=lambda:events.append('changed')
+    session._event=lambda name,result:events.append(name)
+    session.close=lambda:events.append('closed')
+    with pytest.raises(ValueError,match='only six checked'):
+        session.write_registers({'esp':{'expected':16,'value':17}})
+    with pytest.raises(ValueError,match='expected and value'):
+        session.write_registers({'eax':{'value':17}})
+    assert not calls and not events
+    result=session.write_registers({'eax':{'expected':16,'value':17}})
+    assert calls==[('setregs',{'values':{'eax':17}})]
+    assert events==['changed','write-registers']
+    assert result['before']==before and result['after']==after
+
+
+def test_ne_register_edit_closes_on_control_readback_mismatch():
+    session=Win16DebugSession.__new__(Win16DebugSession);session.register_edits_available=True
+    before={'context_source':'native-ldt-low32','cpu_mode':'protected16','eip':'0xa568',
+            'eflags':'0x202','cs':'0x2ef','ds':'0x2ff','ss':'0x2ff','es':'0x2ff',
+            'fs':'0x23','gs':'0x23','project_address':'ne:2:0xa568',
+            'general':{k:'0x10' for k in ('eax','ebx','ecx','edx','esi','edi','ebp','esp')}}
+    after={**before,'eip':'0xa569','general':{**before['general'],'eax':'0x11'}}
+    reads=iter([before,after]);events=[]
+    session.registers=lambda:next(reads)
+    session.call=lambda method,params:events.append(method)
+    session.close=lambda:events.append('closed')
+    session._windows_state_changed=lambda:pytest.fail('Changed context must not commit')
+    with pytest.raises(DebuggerError,match='control or selector context'):
+        session.write_registers({'eax':{'expected':16,'value':17}})
+    assert events==['setregs','closed']
+
+
+@pytest.mark.parametrize('context_source',['native-ldt-low32','wow64',None])
+def test_win16_ldt_registers_require_native_api_provenance(context_source):
+    session=source_session()
+    native={'architecture':'x86-32','bits':32,'context_source':context_source,
+            'cs':'0x2ef','eip':'0x4','eflags':'0x212','general':{'esp':'0x1045100'}}
+    session.call=lambda method:dict(native)
+    session._selector=lambda selector:{'base':0xa30000,'limit':0xffff,'present':True,'default_big':False}
+    session._bind_observed_code=lambda *args:None
+    session.project_address=lambda *args,**kwargs:'ne:1:0x0004'
+    if context_source!='native-ldt-low32':
+        with pytest.raises(DebuggerError,match='native-qualified context reader'):session.registers()
+    else:
+        result=session.registers()
+        assert result['context_source']=='native-ldt-low32' and result['cpu_mode']=='protected16'
+        assert result['linear_ip']=='0xa30004' and result['project_address']=='ne:1:0x0004'
+        assert 'GetThreadContext low32 projection' in session.register_context_contract
 
 
 def test_scalar_watch_translates_sixteen_bit_offset_through_live_ds_not_paragraph_math():

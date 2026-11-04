@@ -13,18 +13,32 @@ separate gates. The MR handoff records the exact tested revision and results.
 | --- | --- | --- |
 | Win32 I386/PE32 | Actual WOW64 EIP, EFLAGS, eight 32-bit GPRs and segment registers; observed image base plus project RVA | Original main-image breakpoints, memory/register edits, completed steps/traces and bounded scalar data watches |
 | Win64 AMD64/PE32+ | Native RIP, RFLAGS and sixteen 64-bit GPRs; observed image base plus project RVA | Existing PE64 debugger, with the shared Windows input/frame/scene interface |
-| Win16 Windows NE | Actual carrier WOW64 context, live 16-bit CS:IP and LDT descriptors; source-bound `ne:segment:offset` mappings | Original entry, observed code/data selectors, breakpoints, memory/register observations, completed steps/traces and restricted scalar watches |
+| Win16 Windows NE | At a live 16-bit LDT stop, low 32-bit register values projected from the observed native context, checked against the WOW64 selector view; source-bound `ne:segment:offset` mappings | Original entry, observed code/data selectors, six checked non-stack register edits, breakpoints, completed steps/traces and restricted scalar watches |
 
 The runtime detects the mapped process architecture. A PE32 session cannot
 reinterpret a segmented LDT context as a flat address. Unknown or stale Win16
 bindings refuse. Static analysis and generated Win16/Win32 UDC shells remain
 independent capabilities; they do not establish original-program compatibility.
 
-Win16 general-register writes refuse before native dispatch. An experimental
-edit/restore matched exposed register readback but the program later faulted;
-that path remains unqualified. Register observation, source-qualified memory,
-stepping and input are separate capabilities. PE32/PE64 retain their own edit
-paths. Win16 native checkpoints, layers and deltas also remain unavailable.
+On a stopped live 16-bit LDT selector, the guest reads both native and WOW64
+contexts, verifies their observed code selector and the live descriptor, and
+reports a low 32-bit projection of the native registers. Ordinary 32-bit stops
+continue to use the WOW64 view. Internal Win16 instruction-pointer and trap-flag
+changes update the native and WOW64 control views together before resuming.
+This is a Wine 11 specific control path; a matching stopped readback alone does
+not prove that every native field survives continuation.
+
+Win16 permits checked EAX/EBX/ECX/EDX/ESI/EDI edits at a live 16-bit LDT stop.
+The caller supplies an expected old value; the guest submits integer-only
+native and WOW64 updates, checks that the observed control, selectors, stack
+and unedited registers are unchanged, and refuses continuation on a mismatch.
+EBP, ESP, instruction pointer, flags and selectors are excluded from this
+public edit path. The generated Snake Win16 trial changed and restored EAX,
+observed both context views, then continued through physical input, ordinary
+reset, named scene and spectator checks. This supports that tested Wine 11
+path, not arbitrary NE programs or every register value. PE32/PE64 retain
+their own edit paths. Win16 native checkpoints, layers and deltas remain
+unavailable.
 
 For PE64's existing advanced operations, see [Wine debugging](WINE_DEBUGGER.md).
 The [read-only preflight](../scripts/windows_runtime_preflight.py) is still a
@@ -198,8 +212,23 @@ The reusable PE32 native test is `tests/test_windows_native.py`; set
 `FDISBULL_PE32_FIXTURE` and `FDISBULL_REQUIRE_WINDOWS=1`. The opt-in original NE
 entry test in `tests/test_win16_debugger.py` uses `FDISBULL_NE_QEMU`,
 `FDISBULL_NE_KERNEL`, `FDISBULL_NE_INITRAMFS`, `FDISBULL_NE_FIXTURE` and
-`FDISBULL_REQUIRE_NE=1`. Missing explicit inputs skip ordinary unit runs and
-fail required native runs. An entry-only pass cannot certify GUI/gameplay.
+`FDISBULL_REQUIRE_NE=1`. The original generated Snake GUI, reset, named-scene
+and spectator test is `tests/test_win16_native.py`. It uses the same QEMU,
+kernel and initramfs variables plus `FDISBULL_NE_SNAKE_EXE`,
+`FDISBULL_NE_SNAKE_INITIAL` and `FDISBULL_REQUIRE_NE_GUI=1` for a required run.
+`FDISBULL_NE_GUI_GPR_PROBE=1` changes and restores EAX, refuses an ESP edit
+and a stale expected value, and requires later gameplay to continue. The `FDISBULL_NE_GUI_NO_PROBES=1`
+and `FDISBULL_NE_GUI_NO_FARCALL_TRACE=1` switches isolate narrower execution
+sequences. Missing explicit inputs skip ordinary unit runs and fail required
+native runs. An entry-only pass or a GUI run without optional debugger probes
+does not qualify the full Win16 debugger route.
+
+`tests/test_windows_sequence_campaign.py` can run at most three fresh Win16
+operation cases when the same native inputs and a fresh external
+`FDISBULL_NE_CAMPAIGN_OUTPUT` directory are provided. It reuses the GUI harness,
+retains stage and fault-family feedback, records declared versus completed
+operations, and stops after uncertain guest cleanup. It is a bounded diagnostic
+campaign, not a coverage-guided whole-program fuzzer.
 
 PE32 advanced layers, CPU/RAM deltas and whole-VM state code use the actual
 32-bit context; each positive native feature still needs its own qualification.

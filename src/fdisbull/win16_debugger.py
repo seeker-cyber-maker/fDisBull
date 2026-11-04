@@ -119,8 +119,10 @@ class Win16DebugSession(WindowsUIMixin):
     rpc_type=WineQemuRPC
     backend_name='wine-ne-qemu'
     register_edits_available=False
+    register_context_contract=('verified live 16-bit LDT: GetThreadContext low32 projection; '
+        'ordinary 32-bit stops: Wow64GetThreadContext; context_source identifies the observed API view')
     native_hooks_available=False
-    script_operations={'run','step','trace','breakpoint','delete-breakpoint','registers','memory',
+    script_operations={'run','step','trace','breakpoint','delete-breakpoint','registers','write-registers','memory',
         'write-memory','status','assert','click','click-frame','screenshot',
         'keyboard.press','keyboard.type','keyboard.state','keyboard.key-down','keyboard.key-up','frame-probe','scene-check','scene-assert',
         'scene-click','scene-act','scene-wait','wait'}
@@ -160,15 +162,19 @@ class Win16DebugSession(WindowsUIMixin):
             'watch_coverage':'qualified single scalar operands; unresolved selectors or widths refuse',
             'native_hooks_available':False,'native_checkpoints':False,'execution_layers':False,
             'general_register_writes':False,
-            'general_register_write_limit':'unavailable until native Win16 context preservation is qualified'}
+            'general_register_write_limit':'six checked non-stack GPRs only when the paired native/WOW integer setter is available',
+            'register_context_contract':self.register_context_contract}
         try:
             self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,memory_mib=memory_mib)
             launched=self.call('session.start',{'target':self.target,'profile':'ne','files':staged},timeout_ms=300000)
             if launched.get('bits')!=32 or launched.get('launch_profile')!='win16-ne-carrier':
                 raise DebuggerError('Runtime did not expose the actual Win16 carrier bootstrap')
+            self.register_edits_available=self.rpc.capabilities.get('win16_integer_pair') is True
             self.rpc.capabilities.update(backend=self.backend_name,architecture='x86',bits=16,carrier_bits=32,
-                source_bound_ne_selectors=True,save_states=False,code_layers=False,native_hooks=False,register_edit=False,
-                register_context='actual WOW64_CONTEXT, 16-bit mode selected by observed CS descriptor')
+                source_bound_ne_selectors=True,save_states=False,code_layers=False,native_hooks=False,
+                register_edit=self.register_edits_available,
+                register_context=self.register_context_contract)
+            self.metadata['general_register_writes']=self.register_edits_available
             self.metadata.update(runtime_inputs=self.rpc.inputs,guest_runtime=self.rpc.hello,
                 target_pid=launched['pid'],carrier_image_base=launched['image_base'],qemu_pid=self.rpc.process.pid)
             self._bootstrap_ne(min(boot_timeout_ms,180000))
@@ -434,6 +440,8 @@ class Win16DebugSession(WindowsUIMixin):
         result=dict(self.call('registers'));selector=_integer(result['cs']);ip=_integer(result['eip'])
         if selector&4:
             descriptor=self._selector(selector)
+            if result.get('context_source')!='native-ldt-low32':
+                raise DebuggerError('Win16 LDT register observations require the native-qualified context reader; prepare the current runtime')
             result.update(cpu_mode='protected16',ip=hex(ip&65535),flags=hex(_integer(result['eflags'])&65535),
                 linear_ip=hex(descriptor['base']+(ip&65535)),selector_descriptor=descriptor)
             mapped=[b for b in self.bindings.values() if b['selector']==selector]
@@ -662,9 +670,41 @@ class Win16DebugSession(WindowsUIMixin):
             {'event_count':len(result['events']),'complete':result['completed']})
 
     def write_registers(self,registers):
-        # A matching WOW64 readback does not establish preservation of Wine's
-        # hidden Win16/native context. Refuse before even a register read RPC.
-        raise ValueError('Win16 general-register writes are unavailable: native context preservation is unqualified')
+        if not self.register_edits_available:
+            raise ValueError('Win16 general-register writes require the paired native/WOW integer runtime')
+        allowed={'eax','ebx','ecx','edx','esi','edi'}
+        if not isinstance(registers,dict) or not registers or set(registers)-allowed:
+            raise ValueError('Win16 register edits accept only six checked non-stack general registers')
+        for change in registers.values():
+            if not isinstance(change,dict) or set(change)!={'expected','value'}:
+                raise ValueError('Win16 register edits require expected and value for every register')
+        before=self.registers()
+        if before.get('context_source')!='native-ldt-low32' or before.get('cpu_mode')!='protected16':
+            raise ValueError('Win16 register edits require a stopped native 16-bit LDT context')
+        values={}
+        for name,change in registers.items():
+            expected=_integer(change['expected']);value=_integer(change['value'])
+            if expected!=_integer(before['general'][name]):
+                raise ValueError('Win16 register expected value differs: '+name)
+            if value<0 or value>0xffffffff:
+                raise ValueError('Win16 register value exceeds the observed 32-bit carrier width')
+            values[name]=value
+        try:
+            self.call('setregs',{'values':values})
+            after=self.registers()
+            for field in ('context_source','cpu_mode','eip','eflags','cs','ds','ss','es','fs','gs','project_address'):
+                if after.get(field)!=before.get(field):
+                    raise DebuggerError('Win16 register edit changed control or selector context: '+field)
+            for name,original in before['general'].items():
+                if _integer(after['general'][name])!=values.get(name,_integer(original)):
+                    raise DebuggerError('Win16 register edit readback mismatch: '+name)
+        except BaseException:
+            try:self.close()
+            finally:raise
+        self._windows_state_changed()
+        result={'before':before,'after':after,'assistance':'checked native Win16 integer edit'}
+        self._event('write-registers',result)
+        return result
 
     def save_state(self,*args,**kwargs):
         raise ValueError('Win16 native checkpoints require separately qualified source/selector restoration')

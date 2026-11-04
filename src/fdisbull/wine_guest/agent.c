@@ -38,12 +38,34 @@ static RemoteExport pause_entry32,pause_break32;
 static DWORD pause_thread;
 static ULONGLONG pause_sequence;
 static int pause_pending,pause_verified;
-typedef struct { CONTEXT native; WOW64_CONTEXT wow; } TargetContext;
+typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt; } TargetContext;
+#define MAX_CONTEXT_CHANGES 4
+#define DIAGNOSTIC_STACK_BYTES 128
+typedef struct {
+    CONTEXT native;
+    WOW64_CONTEXT wow;
+    DWORD native_error,wow_error;
+    int native_ok,wow_ok,wow_attempted;
+    ULONGLONG observed_ms;
+} ContextObservation;
+typedef struct {
+    ULONGLONG sequence,state_revision,module_revision;
+    DWORD thread,event,bits,submitted_flags,set_error;
+    int internal_control,set_ok,native_api;
+    TargetContext submitted;
+    ContextObservation before,after;
+} ContextChange;
+static ContextChange context_changes[MAX_CONTEXT_CHANGES];
+static unsigned context_change_count,context_change_next;
+static ULONGLONG context_change_sequence;
+static int context_recording;
 static DWORD64 context_ip(const TargetContext *c);
 static void context_set_ip(TargetContext *c,DWORD64 value);
+static int query_selector(DWORD selector,WOW64_LDT_ENTRY *entry);
 static DWORD context_flags(const TargetContext *c) { return target_bits==32?c->wow.EFlags:c->native.EFlags; }
 static void context_set_flags(TargetContext *c,DWORD value) {
-    if(target_bits==32) c->wow.EFlags=value; else c->native.EFlags=value;
+    if(target_bits==32) {c->wow.EFlags=value;if(c->native_ldt) c->native.EFlags=value;}
+    else c->native.EFlags=value;
 }
 #define MAX_INPUT 1024
 static struct { INPUT value; ULONGLONG due; } input_queue[MAX_INPUT];
@@ -301,23 +323,121 @@ static TargetContext context(void) {
     if(target_bits==32) {
         c.wow.ContextFlags=WOW64_CONTEXT_FULL;
         if(!Wow64GetThreadContext(thread(ev.dwThreadId),&c.wow)) fatal("get-wow64-context");
+        if(c.wow.SegCs&4) {
+            WOW64_LDT_ENTRY descriptor;c.native.ContextFlags=CONTEXT_ALL;
+            if(!GetThreadContext(thread(ev.dwThreadId),&c.native)) fatal("get-ldt-native-context");
+            if(c.native.SegCs!=c.wow.SegCs || !query_selector(c.wow.SegCs,&descriptor) ||
+               !descriptor.HighWord.Bits.Pres || !(descriptor.HighWord.Bits.Type&8)) fatal("ldt-native-context-mismatch");
+            if(!descriptor.HighWord.Bits.Default_Big) {
+                DWORD required=CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS;
+                if((c.native.ContextFlags&required)!=required) fatal("ldt-native-context-groups");
+                /* Wine's stopped16-bit signal context is native. A deferred
+                 * WOW CONTROL overlay would truncate its full native RSP. */
+                c.native_ldt=1;
+                c.wow.Eip=(DWORD)c.native.Rip;c.wow.EFlags=c.native.EFlags;
+                c.wow.SegCs=c.native.SegCs;c.wow.SegSs=c.native.SegSs;
+                c.wow.SegDs=c.native.SegDs;c.wow.SegEs=c.native.SegEs;
+                c.wow.SegFs=c.native.SegFs;c.wow.SegGs=c.native.SegGs;
+                c.wow.Eax=(DWORD)c.native.Rax;c.wow.Ebx=(DWORD)c.native.Rbx;
+                c.wow.Ecx=(DWORD)c.native.Rcx;c.wow.Edx=(DWORD)c.native.Rdx;
+                c.wow.Esi=(DWORD)c.native.Rsi;c.wow.Edi=(DWORD)c.native.Rdi;
+                c.wow.Ebp=(DWORD)c.native.Rbp;c.wow.Esp=(DWORD)c.native.Rsp;
+            }
+        }
     } else {
         c.native.ContextFlags=CONTEXT_FULL;
         if(!GetThreadContext(thread(ev.dwThreadId),&c.native)) fatal("get-context");
     }
     return c;
 }
-static void setcontext(TargetContext *c) {
+/* Diagnostic reads never choose one architecture as a substitute for another. */
+static void observe_context(HANDLE handle,ContextObservation *observed) {
+    memset(observed,0,sizeof(*observed));observed->observed_ms=GetTickCount64();
+    observed->native.ContextFlags=CONTEXT_ALL;
+    SetLastError(0);observed->native_ok=GetThreadContext(handle,&observed->native);
+    observed->native_error=observed->native_ok?0:GetLastError();
     if(target_bits==32) {
-        if(!Wow64SetThreadContext(thread(ev.dwThreadId),&c->wow)) fatal("set-wow64-context");
-    } else if(!SetThreadContext(thread(ev.dwThreadId),&c->native)) fatal("set-context");
+        observed->wow_attempted=1;observed->wow.ContextFlags=WOW64_CONTEXT_ALL;
+        SetLastError(0);observed->wow_ok=Wow64GetThreadContext(handle,&observed->wow);
+        observed->wow_error=observed->wow_ok?0:GetLastError();
+    }
+}
+static void setcontext_api(TargetContext *c,int native_api,int internal_control) {
+    ContextChange *change=NULL;HANDLE handle=thread(ev.dwThreadId);
+    DWORD submitted_flags=native_api?c->native.ContextFlags:c->wow.ContextFlags;
+    if(context_recording) {
+        change=&context_changes[context_change_next];memset(change,0,sizeof(*change));
+        change->sequence=++context_change_sequence;change->state_revision=state_revision;
+        change->module_revision=module_revision;change->thread=ev.dwThreadId;
+        change->event=ev.dwDebugEventCode;change->bits=target_bits;
+        change->submitted_flags=submitted_flags;change->submitted=*c;
+        change->internal_control=internal_control;change->native_api=native_api;
+        observe_context(handle,&change->before);
+        context_change_next=(context_change_next+1)%MAX_CONTEXT_CHANGES;
+        if(context_change_count<MAX_CONTEXT_CHANGES) context_change_count++;
+    }
+    SetLastError(0);int ok;
+    if(native_api) ok=SetThreadContext(handle,&c->native);
+    else ok=Wow64SetThreadContext(handle,&c->wow);
+    DWORD error=ok?0:GetLastError();
+    if(change) {change->set_ok=ok;change->set_error=error;observe_context(handle,&change->after);}
+    if(!ok) {SetLastError(error);fatal(native_api?"set-context":"set-wow64-context");}
+}
+static void setcontext(TargetContext *c) {
+    setcontext_api(c,target_bits!=32,0);
 }
 /* Internal IP/TF edits must not rewrite unrelated integer/segment state. */
 static void setcontrolcontext(const TargetContext *c) {
     TargetContext control=*c;
-    if(target_bits==32) control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
+    if(target_bits==32 && c->native_ldt) {
+        /* A stopped Win16 event exposes a native signal context and a WOW
+         * projection. Both control views must agree before continuation. */
+        control.native.ContextFlags=CONTEXT_CONTROL;
+        setcontext_api(&control,1,1);
+        control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
+        setcontext_api(&control,0,1);
+        return;
+    }
+    int native_api=target_bits!=32 || c->native_ldt;
+    if(!native_api) control.wow.ContextFlags=WOW64_CONTEXT_CONTROL;
     else control.native.ContextFlags=CONTEXT_CONTROL;
-    setcontext(&control);
+    setcontext_api(&control,native_api,1);
+}
+/* A Win16 integer edit must update both server views without submitting the
+ * WOW control group, which would replace the native 16-bit resume stack. */
+static void setintegercontext(const TargetContext *c) {
+    TargetContext integer=*c;
+    if(!c->native_ldt || target_bits!=32) fatal("integer-context-requires-native-ldt");
+    integer.native.ContextFlags=CONTEXT_INTEGER;
+    setcontext_api(&integer,1,0);
+    integer.wow.ContextFlags=WOW64_CONTEXT_INTEGER;
+    setcontext_api(&integer,0,0);
+}
+static void verify_ldt_integer_context(const TargetContext *before,const TargetContext *requested) {
+    ContextObservation observed;observe_context(thread(ev.dwThreadId),&observed);
+    const CONTEXT *n=&observed.native;const WOW64_CONTEXT *w=&observed.wow;
+    if(!observed.native_ok || !observed.wow_ok ||
+       n->Rip!=before->native.Rip || n->Rsp!=before->native.Rsp ||
+       n->Rbp!=before->native.Rbp || n->EFlags!=before->native.EFlags ||
+       n->SegCs!=before->native.SegCs || n->SegSs!=before->native.SegSs ||
+       n->SegDs!=before->native.SegDs || n->SegEs!=before->native.SegEs ||
+       n->SegFs!=before->native.SegFs || n->SegGs!=before->native.SegGs ||
+       n->R8!=before->native.R8 || n->R9!=before->native.R9 ||
+       n->R10!=before->native.R10 || n->R11!=before->native.R11 ||
+       n->R12!=before->native.R12 || n->R13!=before->native.R13 ||
+       n->R14!=before->native.R14 || n->R15!=before->native.R15 ||
+       n->Rax!=requested->native.Rax || n->Rbx!=requested->native.Rbx ||
+       n->Rcx!=requested->native.Rcx || n->Rdx!=requested->native.Rdx ||
+       n->Rsi!=requested->native.Rsi || n->Rdi!=requested->native.Rdi ||
+       w->Eip!=before->wow.Eip || w->Esp!=before->wow.Esp ||
+       w->Ebp!=before->wow.Ebp || w->EFlags!=before->wow.EFlags ||
+       w->SegCs!=before->wow.SegCs || w->SegSs!=before->wow.SegSs ||
+       w->SegDs!=before->wow.SegDs || w->SegEs!=before->wow.SegEs ||
+       w->SegFs!=before->wow.SegFs || w->SegGs!=before->wow.SegGs ||
+       w->Eax!=requested->wow.Eax || w->Ebx!=requested->wow.Ebx ||
+       w->Ecx!=requested->wow.Ecx || w->Edx!=requested->wow.Edx ||
+       w->Esi!=requested->wow.Esi || w->Edi!=requested->wow.Edi)
+        fatal("ldt-integer-context-mismatch");
 }
 static int query_selector(DWORD selector,WOW64_LDT_ENTRY *entry) {
     typedef LONG (WINAPI *SelectorQuery)(HANDLE,PVOID,ULONG,PULONG);
@@ -355,6 +475,7 @@ static void context_set_ip(TargetContext *c,DWORD64 value) {
     }
     if(value>0xffffffffULL) fatal("instruction-address-width");
     c->wow.Eip=(DWORD)value;
+    if(c->native_ldt) c->native.Rip=value;
 }
 static unsigned process_bits(void) {
     IMAGE_DOS_HEADER dos;DWORD signature;IMAGE_FILE_HEADER file;WORD magic;SIZE_T got;BOOL wow;
@@ -545,12 +666,12 @@ static void state(void) {
 }
 static void registers(TargetContext c) {
     if(target_bits==32) {
-        printf("{\"architecture\":\"x86-32\",\"bits\":32,\"eip\":\"0x%lx\",\"eflags\":\"0x%lx\",\"cs\":\"0x%lx\",\"ds\":\"0x%lx\",\"ss\":\"0x%lx\",\"es\":\"0x%lx\",\"fs\":\"0x%lx\",\"gs\":\"0x%lx\",\"thread\":%lu,\"general\":{",c.wow.Eip,c.wow.EFlags,c.wow.SegCs,c.wow.SegDs,c.wow.SegSs,c.wow.SegEs,c.wow.SegFs,c.wow.SegGs,ev.dwThreadId);
+        printf("{\"architecture\":\"x86-32\",\"bits\":32,\"context_source\":\"%s\",\"eip\":\"0x%lx\",\"eflags\":\"0x%lx\",\"cs\":\"0x%lx\",\"ds\":\"0x%lx\",\"ss\":\"0x%lx\",\"es\":\"0x%lx\",\"fs\":\"0x%lx\",\"gs\":\"0x%lx\",\"thread\":%lu,\"general\":{",c.native_ldt?"native-ldt-low32":"wow64",c.wow.Eip,c.wow.EFlags,c.wow.SegCs,c.wow.SegDs,c.wow.SegSs,c.wow.SegEs,c.wow.SegFs,c.wow.SegGs,ev.dwThreadId);
         const char *names[]={"eax","ebx","ecx","edx","esi","edi","ebp","esp"};
         DWORD vals[]={c.wow.Eax,c.wow.Ebx,c.wow.Ecx,c.wow.Edx,c.wow.Esi,c.wow.Edi,c.wow.Ebp,c.wow.Esp};
         for(int i=0;i<8;i++) printf("%s\"%s\":\"0x%lx\"",i?",":"",names[i],vals[i]);
     } else {
-        printf("{\"architecture\":\"x86-64\",\"bits\":64,\"rip\":\"0x%llx\",\"rflags\":\"0x%lx\",\"thread\":%lu,\"general\":{",c.native.Rip,c.native.EFlags,ev.dwThreadId);
+        printf("{\"architecture\":\"x86-64\",\"bits\":64,\"context_source\":\"native64\",\"rip\":\"0x%llx\",\"rflags\":\"0x%lx\",\"thread\":%lu,\"general\":{",c.native.Rip,c.native.EFlags,ev.dwThreadId);
         const char *names[]={"rax","rbx","rcx","rdx","rsi","rdi","rbp","rsp","r8","r9","r10","r11","r12","r13","r14","r15"};
         DWORD64 vals[]={c.native.Rax,c.native.Rbx,c.native.Rcx,c.native.Rdx,c.native.Rsi,c.native.Rdi,c.native.Rbp,c.native.Rsp,c.native.R8,c.native.R9,c.native.R10,c.native.R11,c.native.R12,c.native.R13,c.native.R14,c.native.R15};
         for(int i=0;i<16;i++) printf("%s\"%s\":\"0x%llx\"",i?",":"",names[i],vals[i]);
@@ -560,6 +681,16 @@ static void registers(TargetContext c) {
 static int change_register(TargetContext *c,const char *name,unsigned long long value) {
     if(target_bits==32) {
         if(value>0xffffffffULL) return 0;
+        if(c->native_ldt) {
+#define LDT_REG32(n,wfield,nfield) if(!strcmp(name,n)) { \
+            c->wow.wfield=(DWORD)value; \
+            c->native.nfield=(c->native.nfield&~0xffffffffULL)|(DWORD)value;return 1;}
+            LDT_REG32("eax",Eax,Rax) LDT_REG32("ebx",Ebx,Rbx)
+            LDT_REG32("ecx",Ecx,Rcx) LDT_REG32("edx",Edx,Rdx)
+            LDT_REG32("esi",Esi,Rsi) LDT_REG32("edi",Edi,Rdi)
+#undef LDT_REG32
+            return 0;
+        }
 #define REG32(n,field) if(!strcmp(name,n)) {c->wow.field=(DWORD)value;return 1;}
         REG32("eax",Eax) REG32("ebx",Ebx) REG32("ecx",Ecx) REG32("edx",Edx)
         REG32("esi",Esi) REG32("edi",Edi) REG32("ebp",Ebp) REG32("esp",Esp)
@@ -591,6 +722,141 @@ static void b64(const BYTE *data,DWORD n) {
         offset+=count;
     }
     putchar('"');free(encoded);
+}
+static void diagnostic_native(const ContextObservation *observed) {
+    printf("{\"api\":\"GetThreadContext\",\"attempted\":true,\"available\":%s,\"requested_flags\":%lu,\"win32_error\":%lu",
+        observed->native_ok?"true":"false",(DWORD)CONTEXT_ALL,observed->native_error);
+    if(observed->native_ok) {
+        const CONTEXT *c=&observed->native;
+        printf(",\"returned_flags\":%lu,\"rip\":\"0x%llx\",\"rflags\":\"0x%lx\",\"cs\":%u,\"ds\":%u,\"ss\":%u,\"es\":%u,\"fs\":%u,\"gs\":%u,\"general\":{",
+            c->ContextFlags,c->Rip,c->EFlags,c->SegCs,c->SegDs,c->SegSs,c->SegEs,c->SegFs,c->SegGs);
+        const char *names[]={"rax","rbx","rcx","rdx","rsi","rdi","rbp","rsp","r8","r9","r10","r11","r12","r13","r14","r15"};
+        DWORD64 values[]={c->Rax,c->Rbx,c->Rcx,c->Rdx,c->Rsi,c->Rdi,c->Rbp,c->Rsp,c->R8,c->R9,c->R10,c->R11,c->R12,c->R13,c->R14,c->R15};
+        for(unsigned i=0;i<16;i++) printf("%s\"%s\":\"0x%llx\"",i?",":"",names[i],values[i]);
+        printf("},\"raw_layout\":\"win64-CONTEXT\",\"raw_bytes\":%zu,\"raw_base64\":",sizeof(*c));
+        b64((const BYTE*)c,(DWORD)sizeof(*c));
+    }
+    putchar('}');
+}
+static void diagnostic_wow(const ContextObservation *observed) {
+    printf("{\"api\":\"Wow64GetThreadContext\",\"attempted\":%s,\"available\":%s,\"requested_flags\":%lu,\"win32_error\":%lu",
+        observed->wow_attempted?"true":"false",observed->wow_ok?"true":"false",(DWORD)WOW64_CONTEXT_ALL,observed->wow_error);
+    if(observed->wow_ok) {
+        const WOW64_CONTEXT *c=&observed->wow;
+        printf(",\"returned_flags\":%lu,\"eip\":\"0x%lx\",\"eflags\":\"0x%lx\",\"cs\":%lu,\"ds\":%lu,\"ss\":%lu,\"es\":%lu,\"fs\":%lu,\"gs\":%lu,\"general\":{",
+            c->ContextFlags,c->Eip,c->EFlags,c->SegCs,c->SegDs,c->SegSs,c->SegEs,c->SegFs,c->SegGs);
+        const char *names[]={"eax","ebx","ecx","edx","esi","edi","ebp","esp"};
+        DWORD values[]={c->Eax,c->Ebx,c->Ecx,c->Edx,c->Esi,c->Edi,c->Ebp,c->Esp};
+        for(unsigned i=0;i<8;i++) printf("%s\"%s\":\"0x%lx\"",i?",":"",names[i],values[i]);
+        printf("},\"raw_layout\":\"WOW64_CONTEXT\",\"raw_bytes\":%zu,\"raw_base64\":",sizeof(*c));
+        b64((const BYTE*)c,(DWORD)sizeof(*c));
+    } else if(!observed->wow_attempted) printf(",\"reason\":\"target-is-not-wow64\"");
+    putchar('}');
+}
+static void diagnostic_observation(const ContextObservation *observed) {
+    printf("{\"observed_tick_ms\":%llu,\"native64\":",observed->observed_ms);
+    diagnostic_native(observed);printf(",\"wow32\":");diagnostic_wow(observed);putchar('}');
+}
+/* Do not call readmem(): an observation must not disarm or rearm guard pages. */
+static int diagnostic_read(uintptr_t address,BYTE *data,SIZE_T length,DWORD *error) {
+    *error=0;
+    if(!length || length>DIAGNOSTIC_STACK_BYTES || address+length<address) {*error=ERROR_INVALID_PARAMETER;return 0;}
+    for(SIZE_T copied=0;copied<length;) {
+        MEMORY_BASIC_INFORMATION region;uintptr_t current=address+copied;
+        SetLastError(0);
+        if(!VirtualQueryEx(pi.hProcess,(void*)current,&region,sizeof(region))) {*error=GetLastError();return 0;}
+        uintptr_t end=(uintptr_t)region.BaseAddress+region.RegionSize;
+        DWORD readable=PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY;
+        if(region.State!=MEM_COMMIT || region.Protect&(PAGE_NOACCESS|PAGE_GUARD) ||
+           !(region.Protect&readable) || end<=current) {*error=ERROR_NOACCESS;return 0;}
+        SIZE_T count=length-copied;if(count>end-current) count=end-current;
+        SIZE_T got=0;SetLastError(0);
+        if(!ReadProcessMemory(pi.hProcess,(void*)current,data+copied,count,&got) || got!=count) {
+            *error=GetLastError();if(!*error) *error=ERROR_PARTIAL_COPY;return 0;
+        }
+        copied+=count;
+    }
+    return 1;
+}
+static void diagnostic_flat_stack(const ContextObservation *observed) {
+    if(!observed->native_ok ||
+       (observed->native.ContextFlags&CONTEXT_CONTROL)!=CONTEXT_CONTROL) {
+        printf("{\"available\":false,\"reason\":\"native-control-context-unavailable\"}");return;
+    }
+    uintptr_t address=(uintptr_t)observed->native.Rsp;BYTE bytes[DIAGNOSTIC_STACK_BYTES];DWORD error;
+    int ok=diagnostic_read(address,bytes,sizeof(bytes),&error);
+    printf("{\"address_space\":\"raw-native-rsp\",\"address\":\"0x%llx\",\"requested_bytes\":%u,\"available\":%s,\"win32_error\":%lu",
+        (unsigned long long)address,DIAGNOSTIC_STACK_BYTES,ok?"true":"false",error);
+    if(ok) {printf(",\"bytes\":%zu,\"data_base64\":",sizeof(bytes));b64(bytes,sizeof(bytes));}
+    putchar('}');
+}
+static void diagnostic_wow_stack(const ContextObservation *observed) {
+    if(!observed->wow_ok || (observed->wow.ContextFlags&WOW64_CONTEXT_CONTROL)!=WOW64_CONTEXT_CONTROL ||
+       !observed->wow.SegSs || observed->wow.SegSs>65535) {
+        printf("{\"available\":false,\"reason\":\"wow64-stack-context-unavailable\"}");return;
+    }
+    WOW64_LDT_ENTRY descriptor,after;DWORD selector=observed->wow.SegSs;
+    if(!query_selector(selector,&descriptor) || !descriptor.HighWord.Bits.Pres ||
+       !(descriptor.HighWord.Bits.Type&16) || descriptor.HighWord.Bits.Type&8 || !(descriptor.HighWord.Bits.Type&2)) {
+        printf("{\"available\":false,\"reason\":\"stack-descriptor-unavailable-or-invalid\",\"selector\":%lu}",selector);return;
+    }
+    DWORD base=descriptor_base(&descriptor),limit=descriptor_limit(&descriptor);
+    DWORD maximum=descriptor.HighWord.Bits.Default_Big?0xffffffff:0xffff;
+    DWORD offset=observed->wow.Esp&maximum;int expand_down=(descriptor.HighWord.Bits.Type&4)!=0;
+    printf("{\"address_space\":\"observed-ss-descriptor\",\"selector\":%lu,\"base\":\"0x%lx\",\"limit\":\"0x%lx\",\"default_big\":%s,\"type\":%lu,\"offset\":\"0x%lx\"",
+        selector,base,limit,descriptor.HighWord.Bits.Default_Big?"true":"false",(DWORD)descriptor.HighWord.Bits.Type,offset);
+    if((expand_down && offset<=limit) || (!expand_down && offset>limit)) {
+        printf(",\"available\":false,\"reason\":\"stack-offset-outside-descriptor\"}");return;
+    }
+    DWORD bound=expand_down || limit>maximum?maximum:limit;
+    DWORD64 available=(DWORD64)bound-offset+1;
+    DWORD length=available<DIAGNOSTIC_STACK_BYTES?(DWORD)available:DIAGNOSTIC_STACK_BYTES;
+    DWORD64 address=(DWORD64)base+offset;
+    if(address+length>0x100000000ULL) {
+        printf(",\"available\":false,\"reason\":\"stack-linear-address-overflow\"}");return;
+    }
+    BYTE bytes[DIAGNOSTIC_STACK_BYTES];DWORD error;
+    int ok=diagnostic_read((uintptr_t)address,bytes,length,&error);
+    int stable=query_selector(selector,&after) && !memcmp(&descriptor,&after,sizeof(descriptor));
+    printf(",\"address\":\"0x%llx\",\"requested_bytes\":%lu,\"descriptor_stable\":%s,\"available\":%s,\"win32_error\":%lu",
+        address,length,stable?"true":"false",ok&&stable?"true":"false",error);
+    if(ok && stable) {printf(",\"bytes\":%lu,\"data_base64\":",length);b64(bytes,length);}
+    else if(!stable) printf(",\"reason\":\"stack-descriptor-changed\"");
+    putchar('}');
+}
+static void context_diagnostics(void) {
+    if(!pending || exited) {puts("{\"error\":\"context-diagnostics-requires-pending-event\"}");return;}
+    ContextObservation observed;observe_context(thread(ev.dwThreadId),&observed);
+    printf("{\"format\":\"fdisbull-context-diagnostics-1\",\"observation_contract\":\"API observations; runtime conversion and returned context flags remain authoritative\",\"recording_setters\":%s,\"ring_limit\":%u,\"pending_event\":{\"pending\":true,\"event\":%lu,\"process\":%lu,\"thread\":%lu,\"target_bits\":%u,\"state_revision\":%llu,\"module_revision\":%llu,\"continuation\":%lu,\"stepping_thread\":%lu,\"breakpoint_hit\":%d,\"guard_pending\":%s",
+        context_recording?"true":"false",MAX_CONTEXT_CHANGES,ev.dwDebugEventCode,ev.dwProcessId,ev.dwThreadId,target_bits,state_revision,module_revision,continuation,stepping_tid,hit,guard_pending?"true":"false");
+    unsigned tracked=0,suspended=0;
+    for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle) {tracked++;if(threads[i].suspended) suspended++;}
+    printf(",\"tracked_threads\":%u,\"owned_suspended_threads\":%u",tracked,suspended);
+    if(ev.dwDebugEventCode==EXCEPTION_DEBUG_EVENT) {
+        const EXCEPTION_RECORD *record=&ev.u.Exception.ExceptionRecord;
+        printf(",\"exception\":{\"code\":%lu,\"flags\":%lu,\"first_chance\":%lu,\"raw_address\":\"0x%llx\",\"nested_record\":\"0x%llx\",\"parameter_count\":%lu,\"parameters\":[",
+            record->ExceptionCode,record->ExceptionFlags,ev.u.Exception.dwFirstChance,
+            (unsigned long long)(uintptr_t)record->ExceptionAddress,(unsigned long long)(uintptr_t)record->ExceptionRecord,record->NumberParameters);
+        for(DWORD i=0;i<record->NumberParameters && i<EXCEPTION_MAXIMUM_PARAMETERS;i++)
+            printf("%s\"0x%llx\"",i?",":"",(unsigned long long)record->ExceptionInformation[i]);
+        printf("],\"parameters_truncated\":%s}",record->NumberParameters>EXCEPTION_MAXIMUM_PARAMETERS?"true":"false");
+    }
+    printf("},\"session\":");state();printf(",\"observed_tick_ms\":%llu,\"native64\":",observed.observed_ms);
+    diagnostic_native(&observed);printf(",\"wow32\":");diagnostic_wow(&observed);
+    printf(",\"stack\":{\"native64\":");diagnostic_flat_stack(&observed);printf(",\"wow32\":");diagnostic_wow_stack(&observed);
+    printf("},\"setters\":[");
+    unsigned first=(context_change_next+MAX_CONTEXT_CHANGES-context_change_count)%MAX_CONTEXT_CHANGES;
+    for(unsigned n=0;n<context_change_count;n++) {
+        const ContextChange *change=&context_changes[(first+n)%MAX_CONTEXT_CHANGES];
+        printf("%s{\"sequence\":%llu,\"thread\":%lu,\"event\":%lu,\"bits\":%lu,\"state_revision\":%llu,\"module_revision\":%llu,\"kind\":\"%s\",\"setter_api\":\"%s\",\"submitted_flags\":%lu,\"set_succeeded\":%s,\"set_win32_error\":%lu,\"submitted\":{\"raw_layout\":\"%s\",\"raw_bytes\":%zu,\"raw_base64\":",
+            n?",":"",change->sequence,change->thread,change->event,change->bits,change->state_revision,change->module_revision,
+            change->internal_control?"internal-control":"explicit-registers",change->native_api?"SetThreadContext":"Wow64SetThreadContext",change->submitted_flags,change->set_ok?"true":"false",change->set_error,
+            change->native_api?"win64-CONTEXT":"WOW64_CONTEXT",change->native_api?sizeof(change->submitted.native):sizeof(change->submitted.wow));
+        if(change->native_api) b64((const BYTE*)&change->submitted.native,sizeof(change->submitted.native));
+        else b64((const BYTE*)&change->submitted.wow,sizeof(change->submitted.wow));
+        printf("},\"before\":");diagnostic_observation(&change->before);printf(",\"after\":");diagnostic_observation(&change->after);putchar('}');
+    }
+    puts("]}");
 }
 static HWND window;static LONG best_area;
 static int owned_foreground(void) {
@@ -638,7 +904,18 @@ int main(int argc,char **argv) {
         if(!strcmp(op,"status")) {state();puts("");continue;}
         if(!strcmp(op,"keyboard-state")) {input_state();puts("");continue;}
         if(exited) {puts("{\"error\":\"process-exited\"}");continue;}
-        if(!strcmp(op,"registers")) {registers(context());puts("");}
+        if(!strcmp(op,"context-diagnostics")) {
+            char action[16];unsigned enabled;int consumed=0;
+            if(sscanf(line,"%*s %15s %u%n",action,&enabled,&consumed)==2 && !strcmp(action,"record") && enabled<=1 &&
+               strspn(line+consumed," \r\n\t")==strlen(line+consumed)) {
+                context_recording=(int)enabled;
+                if(enabled) {memset(context_changes,0,sizeof(context_changes));context_change_count=context_change_next=0;context_change_sequence=0;}
+            } else if(strspn(line+strlen(op)," \r\n\t")!=strlen(line+strlen(op))) {
+                puts("{\"error\":\"invalid-context-diagnostics-command\"}");continue;
+            }
+            context_diagnostics();
+        }
+        else if(!strcmp(op,"registers")) {registers(context());puts("");}
         else if(!strcmp(op,"modules")) {module_state();}
         else if(!strcmp(op,"selector") && sscanf(line,"%*s %llx",&addr)==1 && addr && addr<=65535 && target_bits==32) {
             WOW64_LDT_ENTRY entry;
@@ -680,13 +957,17 @@ int main(int argc,char **argv) {
             state();puts("");
         }
         else if(!strcmp(op,"setregs")) {
-            TargetContext c=context();char *cursor=line+strlen(op),name[16];int consumed,ok=1,count=0;
+            TargetContext c=context(),before=c;char *cursor=line+strlen(op),name[16];int consumed,ok=1,count=0;
             while(sscanf(cursor," %15s %llx%n",name,&addr,&consumed)==2) {
                 if(++count>18 || !change_register(&c,name,addr)) {ok=0;break;}
                 cursor+=consumed;
             }
             if(!ok || !count || strspn(cursor," \r\n\t")!=strlen(cursor)) puts("{\"error\":\"invalid-register-edit\"}");
-            else {setcontext(&c);state_revision++;stop_address=context_ip(&c);registers(context());puts("");}
+            else {
+                if(c.native_ldt) {setintegercontext(&c);verify_ldt_integer_context(&before,&c);}
+                else setcontext(&c);
+                state_revision++;stop_address=context_ip(&c);registers(context());puts("");
+            }
         } else if(!strcmp(op,"scratch")) {
             if(!scratch) for(unsigned i=0;i<1024 && !scratch;i++) {
                 uintptr_t requested=(image_base+0x10000000ULL+i*65536ULL)&~(uintptr_t)65535;
