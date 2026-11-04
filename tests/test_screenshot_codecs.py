@@ -14,7 +14,7 @@ import pytest
 
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.project import Project
-from fdisbull.screenshot_codecs import decode_screenshot, validate_encoding
+from fdisbull.screenshot_codecs import decode_frame_rgba, decode_screenshot, validate_encoding
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +69,64 @@ def test_raw_zstd_pixel_identity_and_distinct_artifact_hash():
     assert 'data_base64' not in metadata
 
 
+def test_direct_rgba_consumer_has_no_png_or_artifact_conversion(monkeypatch):
+    from fdisbull.debugger import DebugSession
+
+    reply = raw_wire()
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Direct RGBA consumer must not encode/decode PNG or store an artifact')
+
+    class DirectAdapter:
+        frame_rgba = DebugSession.frame_rgba
+        rpc = type('RPC', (), {'capabilities': {'video': {'screenshot_encodings': ['rgba-zstd']}}})()
+        _artifact = _event = _capture_with_hooks = forbidden
+
+        def call(self, method, params=None):
+            assert method == 'video.screenshot' and params == {'encoding': 'rgba-zstd'}
+            self.calls += 1
+            return reply
+
+        calls = 0
+
+    monkeypatch.setattr(Image, 'open', forbidden)
+    monkeypatch.setattr(Image.Image, 'save', forbidden)
+    adapter = DirectAdapter()
+    frame = adapter.frame_rgba()
+    assert adapter.calls == 1
+    assert frame.pixels == bytes([12, 34, 56, 255]) * 4
+    assert (frame.width, frame.height, frame.stride) == (2, 2, 8)
+    assert frame.sha256 == reply['raw_sha256']
+    assert frame.metadata['format'] == 'rgba' and frame.metadata['sha256'] == frame.sha256
+    assert frame.metadata['transport']['sha256'] == reply['sha256']
+    assert frame.metadata['frame_id'] == reply['frame_id']
+    assert frame.pixel(1, 1) == (12, 34, 56, 255)
+    assert memoryview(frame.pixels).readonly
+    for x, y in [(-1, 0), (2, 0), (0, 2), (True, 0), (0, 0.5)]:
+        with pytest.raises(ValueError, match='coordinates'):
+            frame.pixel(x, y)
+    assert 'data_base64' in reply and 'data_base64' not in frame.metadata
+
+
+@pytest.mark.parametrize('mode', ['RGB', 'RGBA', 'P'])
+def test_direct_png_consumer_decodes_rgba_without_reencoding(mode, monkeypatch):
+    image = Image.new(mode, (2, 2))
+    if mode == 'P':
+        image.putpalette([12, 34, 56] + [0] * 765)
+    expected = image.convert('RGBA').tobytes()
+    reply = wire(png(image), frame_id=18, encoding='png-indexed' if mode == 'P' else 'png')
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Direct PNG consumer must not re-encode an image')
+
+    monkeypatch.setattr(Image.Image, 'save', forbidden)
+    frame = decode_frame_rgba(reply)
+    assert frame.pixels == expected and frame.sha256 == hashlib.sha256(expected).hexdigest()
+    assert frame.metadata['transport']['sha256'] == reply['sha256']
+    assert frame.metadata['frame_id'] == 18
+
+
+@pytest.mark.parametrize('decoder', [decode_screenshot, decode_frame_rgba])
 @pytest.mark.parametrize('changes,message', [
     ({'width': True}, 'dimensions'), ({'width': 0}, 'dimensions'),
     ({'width': 4096, 'height': 4096}, 'dimensions'),
@@ -77,15 +135,16 @@ def test_raw_zstd_pixel_identity_and_distinct_artifact_hash():
     ({'raw_sha256': '0' * 64}, 'pixel identity'), ({'sha256': '0' * 64}, 'hash'),
     ({'data_base64': 'not base64!'}, 'payload'),
 ])
-def test_raw_wire_rejects_bad_dimensions_layout_and_hash(changes, message):
+def test_raw_wire_rejects_bad_dimensions_layout_and_hash(changes, message, decoder):
     reply = raw_wire()
     reply.update(changes)
     with pytest.raises(DebuggerError, match=message):
-        decode_screenshot(reply)
+        decoder(reply)
 
 
+@pytest.mark.parametrize('decoder', [decode_screenshot, decode_frame_rgba])
 @pytest.mark.parametrize('kind', ['trailing', 'wrong_size', 'unknown_size'])
-def test_raw_wire_rejects_trailing_and_unbounded_frames(kind):
+def test_raw_wire_rejects_trailing_and_unbounded_frames(kind, decoder):
     zstd = pytest.importorskip('zstandard')
     reply = raw_wire()
     data = base64.b64decode(reply['data_base64'])
@@ -96,7 +155,7 @@ def test_raw_wire_rejects_trailing_and_unbounded_frames(kind):
             bytes(1024) if kind == 'wrong_size' else bytes(16))
     reply.update(data_base64=base64.b64encode(data).decode(), sha256=hashlib.sha256(data).hexdigest())
     with pytest.raises(DebuggerError, match='Zstandard'):
-        decode_screenshot(reply)
+        decoder(reply)
 
 
 def test_png_signature_hash_and_dimensions():
@@ -133,12 +192,17 @@ def test_public_capture_validates_encoding_without_a_live_rpc():
 
     class CaptureAdapter:
         screenshot = DebugSession.screenshot
+        frame_rgba = DebugSession.frame_rgba
 
     adapter = CaptureAdapter()
     with pytest.raises(ValueError, match='encoding'):
         adapter.screenshot(encoding='jpeg')
     with pytest.raises(DebuggerError, match='advertise'):
         adapter.screenshot(encoding='png-indexed')
+    with pytest.raises(ValueError, match='encoding'):
+        adapter.frame_rgba(encoding='jpeg')
+    with pytest.raises(DebuggerError, match='advertise'):
+        adapter.frame_rgba()
 
 
 @pytest.fixture(params=['experimental/dosbox-x/headless-agent.patch',
@@ -240,7 +304,7 @@ def test_compiled_palette_boundaries_alpha_fallback_and_palette_refresh(compiled
         assert image.convert('RGBA').getpixel((0, 0)) == (3, 2, 1, 255)
 
 
-def test_real_codec_rpc_and_persisted_screenshot_artifacts(tmp_path):
+def test_real_codec_rpc_and_persisted_screenshot_artifacts(tmp_path, monkeypatch):
     executable = os.environ.get('FDISBULL_DOSBOX')
     if not executable:
         pytest.skip('Set FDISBULL_DOSBOX for real native codec path')
@@ -272,6 +336,22 @@ def test_real_codec_rpc_and_persisted_screenshot_artifacts(tmp_path):
                 project.debug_export(frame['artifact'], path)
                 with Image.open(path) as image:
                     assert image.convert('RGBA').tobytes() == pixels
+            before_rows = tuple(project.db.execute('SELECT count(*) FROM ' + table).fetchone()[0]
+                                for table in ('debug_events', 'debug_artifacts'))
+            with monkeypatch.context() as guard:
+                def no_png(*args, **kwargs):
+                    raise AssertionError('Direct native frame must not encode PNG')
+                guard.setattr(Image.Image, 'save', no_png)
+                for encoding in encodings:
+                    with guard.context() as raw_guard:
+                        if encoding == 'rgba-zstd':
+                            raw_guard.setattr(Image, 'open', no_png)
+                        frame = debug.frame_rgba(encoding=encoding)
+                    assert frame.pixels == pixels and frame.sha256 == hashlib.sha256(pixels).hexdigest()
+                    assert all(frame.metadata[key] == baseline[key] for key in ('frame_id', 'mode_id', 'captured_ticks'))
+            after_rows = tuple(project.db.execute('SELECT count(*) FROM ' + table).fetchone()[0]
+                               for table in ('debug_events', 'debug_artifacts'))
+            assert before_rows == after_rows
             with pytest.raises(DebuggerError):
                 debug.call('video.screenshot', {'encoding': 'jpeg'})
             with pytest.raises(DebuggerError):
