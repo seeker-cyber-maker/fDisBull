@@ -53,8 +53,8 @@ def qualified(tmp_path):
 
 
 def test_complete_same_pipeline_and_source_qualifies_without_authorizing_release(qualified):
-    result = gate.validate(qualified, SHA, '123')
-    assert result['status'] == 'qualified'
+    result = gate.validate(qualified, SHA, '123', legacy_dos_only=True)
+    assert result['status'] == 'legacy-dos-only'
     assert set(result['required_jobs']) == set(gate.JOBS.values())
     assert result['release_authorized'] is False
 
@@ -198,7 +198,8 @@ def local_qualified(qualified, monkeypatch):
 
 
 def test_local_run_qualifies_without_claiming_gitlab(local_qualified):
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
+    assert result['status'] == 'legacy-dos-only'
     assert result['execution_origin'] == 'local-linux'
     assert result['local_run_id'] == LOCAL_RUN
     assert 'pipeline_id' not in result
@@ -315,7 +316,7 @@ def add_reused_backend(root, profile):
 @pytest.mark.parametrize('profile', ['stable', 'layers'])
 def test_local_reuse_retains_independently_checked_build_evidence(local_qualified, profile):
     add_reused_backend(local_qualified, profile)
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
     proof = result['required_jobs'][gate.JOBS[profile]]['build_provenance']
     assert set(proof) == set(gate.REUSE_FILES.values())
     assert proof['build-identity.json'] == gate.identity(local_qualified, f'native-evidence/{profile}/build-identity.json')
@@ -386,7 +387,7 @@ def test_reuse_provenance_marker_is_validated_when_present(local_qualified, prof
     backend = json.loads(path.read_text())['backend_identity']
     marker = local_qualified / f'native-evidence/{profile}/reuse-provenance.json'
     marker.write_text(json.dumps({field: backend[field] for field in gate.REUSE_FIELDS}))
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
     assert 'reuse-provenance.json' in result['required_jobs'][gate.JOBS[profile]]['build_provenance']
     data = json.loads(marker.read_text())
     data['build_source_commit'] = '9' * 40
@@ -402,7 +403,7 @@ def test_reuse_provenance_marker_is_validated_when_present(local_qualified, prof
 def test_fresh_build_config_log_does_not_imply_reuse(local_qualified):
     path = local_qualified / 'native-evidence/stable/config.log'
     path.write_text('fresh compiler configuration')
-    assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)['status'] == 'qualified'
+    assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)['status'] == 'legacy-dos-only'
 
 
 @pytest.mark.parametrize('field', ['prepared_manifest', 'runtime_inputs', 'resource_receipts', 'firmware'])
@@ -485,3 +486,159 @@ def test_local_unified_cannot_replace_input_list_in_acceptance_receipt(local_qua
     path.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match='does not match prepared'):
         gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.fixture
+def chat_qualified(local_qualified):
+    import hashlib
+    import zipfile
+    root = local_qualified
+    packages = json.loads((root / 'artifacts/receipts/package-payloads.json').read_text())['artifacts']
+    manifest = {'identities':{'source_commit':SHA,'test_source_commit':SHA},
+                'wheel_artifacts':[{'name':packages[k]['name'],'sha256':packages[k]['sha256'],'size':packages[k]['size_bytes']} for k in ('core','player')]}
+    data=json.dumps(manifest).encode()
+    archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.parent.mkdir(parents=True)
+    with zipfile.ZipFile(archive,'w') as z:z.writestr('fdisbull-chat-offline/MANIFEST.json',data)
+    archive_ref=gate.identity(root,str(archive.relative_to(root)))
+    verifier={'schema':'fdisbull-chat-consumer-verification-v1','status':'passed','source_commit':SHA,'test_source_commit':SHA,
+              'archive_sha256':archive_ref['sha256'],'manifest_sha256':hashlib.sha256(data).hexdigest(),
+              'python':'3.13.5','network_interfaces':['lo'],'python_origin':'kit','python_mappings':'kit',
+              'loader_closure':'kit-lib','elf_objects_checked':2,'skipped':0,'native_failures':0,
+              'profiles':['dos','wine','player','z3'],'checks':{name:True for name in gate.CHAT_CHECKS},
+              'runtime_sha256':{'dos':'a'*64,'wine':'b'*64},'dos_screenshot_sha256':'c'*64,'pe_screenshot_sha256':'d'*64}
+    write(root,'native-evidence/chat/acceptance.json',verifier)
+    verifier_ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    producer='00000000-0000-4000-8000-000000000010';consumer='00000000-0000-4000-8000-000000000011'
+    common={'execution_origin':'local-linux','source_commit':SHA,'local_run_id':LOCAL_RUN,'status':'passed',
+            'test_source_commit':SHA,'archive':archive_ref,'tracked_worktree_dirty':False,'export_success':True}
+    write(root,'artifacts/receipts/chat-prepare.json',dict(common,schema='fdisbull-chat-prepare-job-v1',local_job_id=producer,tracked_worktree_dirty=False,export_success=True))
+    write(root,'native-evidence/chat/host-source-postcheck.json',{'schema':'fdisbull-chat-host-source-postcheck-v1','source_commit':SHA,'expected_source_commit':SHA,'tracked_worktree_dirty':False,'export_success':True,'archive_sha256':archive_ref['sha256']})
+    postcheck_ref=gate.identity(root,'native-evidence/chat/host-source-postcheck.json')
+    junit=root/'native-evidence/chat/tests.xml';junit.write_text('<testsuite tests="1" failures="0" errors="0" skipped="0"/>')
+    junit_ref=gate.identity(root,'native-evidence/chat/tests.xml')
+    write(root,'artifacts/receipts/chat-consumer.json',dict(common,schema='fdisbull-chat-consumer-job-v1',local_job_id=consumer,producer_job_id=producer,verifier=verifier_ref,source_access='absent',source_check='artifact-and-host-clone',host_source_postcheck=postcheck_ref,junit=junit_ref))
+    for name, jobid, jobname in [('prepare',producer,'chat-native-prepare'),('consumer',consumer,'chat-native-consumer')]:
+        process={'execution_origin':'local-linux','source_commit':SHA,'local_run_id':LOCAL_RUN,'local_job_id':jobid,
+                 'job_name':jobname,'termination':'exited','exit_code':0,'container_state_after_stop':'stopped',
+                 'image_digest':'sha256:'+'b'*64,'runtime':{'system':'linux','machine':'x86_64','python':'3.13.5'},'archive':archive_ref}
+        if name == 'consumer':process.update(verifier=verifier_ref,host_source_postcheck=postcheck_ref,junit=junit_ref)
+        write(root,'artifacts/receipts/local-process-chat-'+name+'.json',process)
+    return root
+
+
+def test_chat_consumer_required_for_final_qualification(local_qualified):
+    with pytest.raises(ValueError, match='chat-prepare'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_chat_consumer_qualifies_when_all_receipts_match(chat_qualified):
+    result=gate.validate(chat_qualified,SHA,local_run_id=LOCAL_RUN)
+    assert result['status']=='qualified' and result['chat_consumer']['archive']['size'] > 0
+
+
+@pytest.mark.parametrize('field,value', [('network_interfaces',['lo','eth0']),('loader_closure','host'),
+    ('python_mappings','host'),('source_commit','b'*40),('archive_sha256','f'*64),('skipped',1),('native_failures',1)])
+def test_chat_rejects_bad_isolation_identity_or_failures(chat_qualified,field,value):
+    root=chat_qualified; p=root/'native-evidence/chat/acceptance.json';data=json.loads(p.read_text());data[field]=value;p.write_text(json.dumps(data))
+    ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    for name in ('chat-consumer','local-process-chat-consumer'):
+        p=root/f'artifacts/receipts/{name}.json';obj=json.loads(p.read_text());obj['verifier']=ref;p.write_text(json.dumps(obj))
+    with pytest.raises(ValueError, match='verifier isolation'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+
+
+def test_chat_rejects_missing_wine_and_wrong_archive_bytes(chat_qualified):
+    root=chat_qualified;p=root/'native-evidence/chat/acceptance.json';data=json.loads(p.read_text());data['checks']['pe_restore']=False;p.write_text(json.dumps(data))
+    ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    for name in ('chat-consumer','local-process-chat-consumer'):
+        q=root/f'artifacts/receipts/{name}.json';obj=json.loads(q.read_text());obj['verifier']=ref;q.write_text(json.dumps(obj))
+    with pytest.raises(ValueError, match='capability'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+    archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.write_bytes(b'changed')
+    with pytest.raises(ValueError, match='identity mismatch'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+
+@pytest.fixture
+def boat_qualified(chat_qualified):
+    root = chat_qualified
+    sandbox = 'bx_fixture'
+    write(root, 'artifacts/receipts/boat-worker.json', {
+        'schema':'fdisbull-boat-worker-v1', 'execution_origin':'boat-linux',
+        'boat_sandbox_id':sandbox, 'type':'default', 'architecture':'x86_64',
+        'host_boot_id':'00000000-0000-4000-8000-000000000020', 'observed_at':'2026-11-04T12:00:00Z'})
+    proof = gate.identity(root, 'artifacts/receipts/boat-worker.json')
+    binding = {'execution_origin':'boat-linux', 'boat_sandbox_id':sandbox, 'boat_worker_receipt':proof}
+    write(root, 'artifacts/receipts/boat-run.json', dict(binding, source_commit=SHA, local_run_id=LOCAL_RUN))
+    paths = ['artifacts/receipts/ordinary.json', 'artifacts/receipts/native-stable.json',
+             'artifacts/receipts/native-layers.json', 'artifacts/receipts/native-unified.json',
+             'artifacts/receipts/chat-prepare.json', 'artifacts/receipts/chat-consumer.json',
+             'native-evidence/pe/preparation-process.json', 'native-evidence/pe/preparation-completed.json']
+    paths += [f'artifacts/receipts/local-process-{name}.json' for name in
+              ('ordinary', 'stable', 'layers', 'unified', 'chat-prepare', 'chat-consumer')]
+    for name in paths:
+        p = root / name
+        value = json.loads(p.read_text()); value.update(binding); p.write_text(json.dumps(value))
+    return root
+
+
+def test_boat_same_worker_qualifies_without_relabeling(boat_qualified):
+    result = gate.validate(boat_qualified, SHA, local_run_id=LOCAL_RUN)
+    assert result['execution_origin'] == 'boat-linux'
+    assert result['boat_sandbox_id'] == 'bx_fixture'
+
+
+@pytest.mark.parametrize('path,field,value', [
+    ('artifacts/receipts/local-process-stable.json', 'boat_sandbox_id', 'bx_other'),
+    ('artifacts/receipts/native-layers.json', 'boat_worker_receipt', None),
+    ('native-evidence/pe/preparation-process.json', 'execution_origin', 'local-linux'),
+    ('artifacts/receipts/chat-consumer.json', 'boat_sandbox_id', 'bx_other'),
+    ('artifacts/receipts/boat-run.json', 'source_commit', 'b' * 40),
+    ('artifacts/receipts/boat-worker.json', 'architecture', 'arm64'),
+])
+def test_boat_worker_or_source_mismatch_fails(boat_qualified, path, field, value):
+    p = boat_qualified / path; record = json.loads(p.read_text()); record[field] = value
+    p.write_text(json.dumps(record))
+    with pytest.raises(ValueError):
+        gate.validate(boat_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_boat_guest_identity_requires_typed_artifact(monkeypatch):
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'boat-linux')
+    monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', LOCAL_RUN)
+    monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', '00000000-0000-4000-8000-000000000021')
+    monkeypatch.setenv('CI_JOB_NAME', 'test-and-package')
+    monkeypatch.setenv('FDISBULL_BOAT_SANDBOX_ID', 'bx_fixture')
+    proof = {'path':'artifacts/receipts/boat-worker.json', 'sha256':'a'*64, 'size':1}
+    monkeypatch.setenv('FDISBULL_BOAT_WORKER_RECEIPT', json.dumps(proof))
+    assert gate.execution_identity()['boat_worker_receipt'] == proof
+    monkeypatch.setenv('FDISBULL_BOAT_WORKER_RECEIPT', '{}')
+    with pytest.raises(ValueError): gate.execution_identity()
+
+
+def test_backend_reuse_accepts_only_bound_original_boat_proofs(local_qualified):
+    from test_native_backend_reuse import attach_boat_original
+    root = local_qualified
+    receipt_path = add_reused_backend(root, 'stable')
+    receipt = json.loads(receipt_path.read_text())
+    base = root / 'native-evidence/stable'
+    attach_boat_original(base, 'stable')
+    backend = receipt['backend_identity']
+    backend['build_process_sha256'] = gate.identity(root, 'native-evidence/stable/build-process.json')['sha256']
+    backend['build_execution_origin'] = 'boat-linux'
+    for field, name in gate.BOAT_REUSE_FILES.items():
+        backend[field] = gate.identity(root, 'native-evidence/stable/' + name)['sha256']
+    current = {'image_digest': backend['build_image_digest']}
+    proofs = gate.verify_reused_backend(root, 'stable', backend, receipt['artifacts'], current)
+    assert 'build-boat-worker.json' in proofs and 'build-boat-run.json' in proofs
+    (base/'build-boat-worker.json').write_text('{}')
+    with pytest.raises(ValueError, match='proof hash mismatch'):
+        gate.verify_reused_backend(root, 'stable', backend, receipt['artifacts'], current)
+
+
+def test_current_large_boat_worker_identity_is_accepted(boat_qualified):
+    worker = boat_qualified/'artifacts/receipts/boat-worker.json'
+    data = json.loads(worker.read_text()); data['type'] = 'large'; worker.write_text(json.dumps(data))
+    ref = gate.identity(boat_qualified, 'artifacts/receipts/boat-worker.json')
+    run = boat_qualified/'artifacts/receipts/boat-run.json'
+    data = json.loads(run.read_text()); data['boat_worker_receipt'] = ref; run.write_text(json.dumps(data))
+    assert gate.boat_identity(boat_qualified, SHA, LOCAL_RUN)['boat_worker_receipt'] == ref

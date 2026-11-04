@@ -109,3 +109,66 @@ def test_reuse_refuses_an_unsupported_profile(candidate):
     stage, current, image, _ = candidate
     with pytest.raises(ValueError, match='Unsupported original backend profile'):
         reuse.verify(stage, current, image, 'unified')
+
+
+def attach_boat_original(stage, profile):
+    source_sha = json.loads((stage / 'build-process.json').read_text())['source_commit']
+    worker = {'schema': 'fdisbull-boat-worker-v1', 'execution_origin': 'boat-linux',
+              'boat_sandbox_id': 'bx_5asjcc78', 'type': 'default', 'architecture': 'x86_64',
+              'host_boot_id': 'a0ae3230-94b0-46fd-9b4b-8c40ed8f0e2f', 'observed_at': '2026-11-04T00:00:00Z'}
+    worker_path = stage / 'build-boat-worker.json'
+    worker_path.write_text(json.dumps(worker))
+    ref = {'path': 'artifacts/receipts/boat-worker.json', 'sha256': reuse.digest(worker_path), 'size': worker_path.stat().st_size}
+    run = '27680f97-aaad-4846-a2fd-4a48b7bad36b'
+    (stage / 'build-boat-run.json').write_text(json.dumps({'execution_origin':'boat-linux',
+        'source_commit':source_sha, 'local_run_id':run, 'boat_sandbox_id':'bx_5asjcc78', 'boat_worker_receipt':ref}))
+    (stage / 'build-source-postcheck.json').write_text(json.dumps({'source_commit':source_sha,
+        'expected_source_commit':source_sha, 'tracked_worktree_dirty':False, 'export_success':True}))
+    path = stage / 'build-process.json'
+    process = json.loads(path.read_text())
+    process.update(execution_origin='boat-linux', local_run_id=run,
+        local_job_id='d0c36dcb-43d6-457c-889e-c97a0e82d6dd', boat_sandbox_id='bx_5asjcc78',
+        boat_worker_receipt=ref, termination='exited', container_state_after_stop='stopped', exit_code=1)
+    path.write_text(json.dumps(process))
+
+
+def test_boat_compiler_evidence_remains_original_and_exports_all_proofs(candidate, tmp_path, monkeypatch):
+    stage, current, image, profile = candidate
+    attach_boat_original(stage, profile)
+    result = reuse.verify(stage, current, image, profile)
+    assert result['build_execution_origin'] == 'boat-linux'
+    assert result['build_boat_worker_sha256'] == reuse.digest(stage / 'build-boat-worker.json')
+    evidence, binary = tmp_path / 'evidence', tmp_path / 'binary'
+    monkeypatch.setattr(reuse.sys, 'argv', ['reuse', str(stage), str(current), image, str(evidence), str(binary), '--profile', profile])
+    reuse.main()
+    for name in ('build-boat-worker.json', 'build-boat-run.json', 'build-source-postcheck.json'):
+        assert (evidence / name).read_bytes() == (stage / name).read_bytes()
+
+
+@pytest.mark.parametrize('defect', ['missing-worker', 'foreign-run', 'dirty-source', 'running', 'changed-worker'])
+def test_boat_original_rejects_missing_or_mismatched_proof(candidate, defect):
+    stage, current, image, profile = candidate
+    attach_boat_original(stage, profile)
+    if defect == 'missing-worker':
+        (stage/'build-boat-worker.json').unlink()
+    elif defect == 'foreign-run':
+        path = stage/'build-boat-run.json'; data = json.loads(path.read_text()); data['source_commit'] = 'c'*40; path.write_text(json.dumps(data))
+    elif defect == 'dirty-source':
+        path = stage/'build-source-postcheck.json'; data = json.loads(path.read_text()); data['tracked_worktree_dirty'] = True; path.write_text(json.dumps(data))
+    elif defect == 'running':
+        path = stage/'build-process.json'; data = json.loads(path.read_text()); data['container_state_after_stop'] = 'running'; path.write_text(json.dumps(data))
+    else:
+        path = stage/'build-boat-worker.json'; data = json.loads(path.read_text()); data['boat_sandbox_id'] = 'bx_other'; path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='Boat'):
+        reuse.verify(stage, current, image, profile)
+
+
+def test_large_boat_donor_is_valid_with_its_real_worker_identity(candidate):
+    stage, current, image, profile = candidate
+    attach_boat_original(stage, profile)
+    worker = stage/'build-boat-worker.json'
+    data = json.loads(worker.read_text()); data['type'] = 'large'; worker.write_text(json.dumps(data))
+    ref = {'path': 'artifacts/receipts/boat-worker.json', 'sha256': reuse.digest(worker), 'size': worker.stat().st_size}
+    for name in ('build-boat-run.json', 'build-process.json'):
+        path = stage/name; record = json.loads(path.read_text()); record['boat_worker_receipt'] = ref; path.write_text(json.dumps(record))
+    assert reuse.verify(stage, current, image, profile)['build_execution_origin'] == 'boat-linux'
