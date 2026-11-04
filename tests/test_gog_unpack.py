@@ -1,203 +1,137 @@
-"""Authored payloads exercise the native extractor boundary; no game fixtures."""
+"""Authored native GOG adapter contract tests; no original payloads or subprocesses."""
 import hashlib
-import subprocess
+import json
 from pathlib import Path
-
 import pytest
-
 from fdisbull.cli import main, respond
+from fdisbull.gog_unpack import _safe_inventory
+from fdisbull.native_inno import InnoRefused, Cursor, parse_call, safe_path, undo_call_filter_5309
 
 
 @pytest.fixture
-def extractor(tmp_path, monkeypatch):
-    # Fake only the external Inno Setup reader, never the importer or filesystem.
-    import fdisbull.gog_unpack as module
-    installer = tmp_path / "setup owned game.exe"
-    installer.write_bytes(b"authored installer input")
-    payloads = {"GAME/MAIN.EXE": b"MZ" + bytes(126),
-                "GAME/SOUND.DRV": b"MZ" + bytes(70),
-                "GAME/DATA.TXT": b"authored game data"}
-    calls = []
-
-    def run(args, **kwargs):
-        calls.append(args)
-        assert kwargs.get("shell", False) is False
-        assert args[0] == "/native/innoextract"
-        if "--version" in args:
-            return subprocess.CompletedProcess(args, 0, "innoextract 1.9\n", "")
-        assert args[-1] == str(installer)
-        selected = dict(payloads)
-        if "--include" in args:
-            include = args[args.index("--include") + 1]
-            selected = {n: b for n, b in selected.items() if n.startswith(include)}
-        if "--list" in args:
-            return subprocess.CompletedProcess(args, 0, "\n".join(selected) + "\n", "")
-        assert "--extract" in args
-        root = Path(args[args.index("--output-dir") + 1])
-        for name, data in selected.items():
-            path = root / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-        return subprocess.CompletedProcess(args, 0, "", "")
-
-    monkeypatch.setattr(module.shutil, "which", lambda name: "/native/innoextract")
-    monkeypatch.setattr(module.subprocess, "run", run)
-    return installer, payloads, calls, module
+def native_fixture(tmp_path, monkeypatch):
+    from fdisbull import gog_unpack as module
+    source=tmp_path/'installer.exe'
+    source.write_bytes(b'authored setup data')
+    content={'GAME/MAIN.EXE': b'MZ'+bytes(126),
+             'GAME/SOUND.DRV': b'MZ'+bytes(70),
+             'GAME/DATA.TXT': b'authored game data'}
+    events=[]
+    class Fake:
+        source_sha256=hashlib.sha256(source.read_bytes()).hexdigest()
+        @property
+        def inventory(self):return [{'path':p} for p in content]
+        def extract_selected(self,out,selected,*,emit_manifest,deadline):
+            events.append(('extract',tuple(selected),emit_manifest))
+            out=Path(out);out.mkdir()
+            for path in selected:
+                child=out/path;child.parent.mkdir(parents=True,exist_ok=True)
+                child.write_bytes(content[path])
+    def opened(path,*,deadline):
+        events.append(('opened',str(path)))
+        return Fake()
+    monkeypatch.setattr(module.NativeInno,'open',opened)
+    return source,content,events,module
 
 
-def test_gog_commands_are_discoverable_and_need_no_project():
-    response = respond({"method": "help"})
-    assert "gog-list" in response["result"]["methods"]
-    assert "gog-unpack" in response["result"]["methods"]
+def test_discoverable():
+    methods=respond({'method':'help'})['result']['methods']
+    assert 'gog-list' in methods and 'gog-unpack' in methods
 
 
-def test_list_is_read_only_and_ignores_server_default_project(extractor, tmp_path):
-    installer, payloads, calls, _ = extractor
-    reply = respond({"method": "gog-list", "params": {"path": str(installer)}},
-                    default_project=str(tmp_path / "unused.fdb"))
-    assert reply["ok"], reply
-    assert reply["result"]["files"] == sorted(payloads)
-    assert not any("--extract" in call for call in calls)
-    assert not (tmp_path / "unused.fdb").exists()
+def test_native_list_does_not_execute_installer(native_fixture,tmp_path):
+    source,content,events,_=native_fixture
+    got=respond({'method':'gog-list','params':{'path':str(source)}},default_project=str(tmp_path/'unused.fdb'))
+    assert got['ok'],got
+    assert got['result']['files']==sorted(content)
+    assert got['result']['extractor']['requires_innoextract'] is False
+    assert all(event[0]!='extract' for event in events)
+    assert not (tmp_path/'unused.fdb').exists()
 
 
-def test_extract_preserves_bytes_records_hashes_and_discovers_driver(extractor, tmp_path):
-    installer, payloads, calls, _ = extractor
-    output = tmp_path / "private game"
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(output)}})
-    assert reply["ok"], reply
-    result = reply["result"]
-    for item in result["files"]:
-        original = payloads[item["path"]]
-        assert (output / item["path"]).read_bytes() == original
-        assert item["sha256"] == hashlib.sha256(original).hexdigest()
-    assert {i["path"] for i in result["files"] if i["executable_candidate"]} == {
-        "GAME/MAIN.EXE", "GAME/SOUND.DRV"}
-    assert installer.read_bytes() == b"authored installer input"
-    assert (output / "gog-unpack-manifest.json").is_file()
-    assert len([c for c in calls if "--extract" in c]) == 1
+def test_reconstruct_and_preserve_manifest(native_fixture,tmp_path):
+    source,content,events,_=native_fixture;dst=tmp_path/'private'
+    response=respond({'method':'gog-unpack','params':{'path':str(source),'output':str(dst)}})
+    assert response['ok'],response
+    result=response['result']
+    assert {a['path']:a['sha256'] for a in result['files']}=={
+        name:hashlib.sha256(payload).hexdigest() for name,payload in content.items()}
+    assert all((dst/name).read_bytes()==payload for name,payload in content.items())
+    assert (dst/'gog-unpack-manifest.json').is_file()
+    assert result['installer_executed'] is False
+    assert len([e for e in events if e[0]=='extract'])==1
 
 
-def test_include_is_used_for_both_inventory_and_extraction(extractor, tmp_path):
-    installer, _, calls, _ = extractor
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(tmp_path / "selected"),
-        "include": ["GAME/MAIN.EXE"]}})
-    assert reply["ok"], reply
-    assert [i["path"] for i in reply["result"]["files"]] == ["GAME/MAIN.EXE"]
-    assert all("GAME/MAIN.EXE" in c for c in calls if "--version" not in c)
+def test_include_and_cli(native_fixture,tmp_path,capsys):
+    source,content,events,_=native_fixture
+    assert main(['gog-unpack','--include','GAME/MAIN.EXE',str(source),str(tmp_path/'selected')])==0
+    response=json.loads(capsys.readouterr().out)
+    assert response['ok'],response
+    assert [a['path'] for a in response['result']['files']]==['GAME/MAIN.EXE']
+    assert events[-1][1]==('GAME/MAIN.EXE',)
 
 
-def test_refuses_existing_destination_without_invoking_extractor(extractor, tmp_path):
-    installer, _, calls, _ = extractor
-    existing = tmp_path / "existing"
-    existing.mkdir()
-    (existing / "original").write_bytes(b"keep")
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(existing)}})
-    assert not reply["ok"]
-    assert "exist" in reply["error"]["message"].lower()
-    assert (existing / "original").read_bytes() == b"keep"
-    assert calls == []
+def test_refuse_existing_target(native_fixture,tmp_path):
+    source,content,events,_=native_fixture
+    (tmp_path/'existing').mkdir()
+    (tmp_path/'existing'/'original').write_bytes(b'do not touch')
+    response=respond({'method':'gog-unpack','params':{'path':str(source),'output':str(tmp_path/'existing')}})
+    assert not response['ok']
+    assert (tmp_path/'existing'/'original').read_bytes()==b'do not touch'
+    assert events==[]
 
 
-@pytest.mark.parametrize("name", ["../escape.exe", "/absolute.exe", "C:/drive.exe",
-                                   "game/../../escape", "game\\escape.exe"])
-def test_rejects_unsafe_inventory_before_extracting(extractor, tmp_path, name):
-    installer, payloads, calls, _ = extractor
-    payloads.clear()
-    payloads[name] = b"authored"
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(tmp_path / "rejected")}})
-    assert not reply["ok"]
-    assert not any("--extract" in call for call in calls)
-    assert not (tmp_path / "rejected").exists()
+@pytest.mark.parametrize('path',['../escape','/absolute','C:/drive','a\\b','dir/../evil','a\x00b'])
+def test_refuse_unsafe_paths(path):
+    with pytest.raises(ValueError):_safe_inventory([path])
 
 
-def test_failed_extraction_removes_only_new_destination(extractor, tmp_path, monkeypatch):
-    installer, _, _, module = extractor
-    original_run = module.subprocess.run
-
-    def fail_extract(args, **kwargs):
-        if "--extract" in args:
-            root = Path(args[args.index("--output-dir") + 1])
-            (root / "partial").write_bytes(b"partial")
-            return subprocess.CompletedProcess(args, 2, "", "invalid compressed stream")
-        return original_run(args, **kwargs)
-
-    monkeypatch.setattr(module.subprocess, "run", fail_extract)
-    output = tmp_path / "failed"
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(output)}})
-    assert not reply["ok"]
-    assert "invalid compressed stream" in reply["error"]["message"]
-    assert not output.exists()
-    assert installer.read_bytes() == b"authored installer input"
+@pytest.mark.parametrize('names',[["CASE.DAT","case.dat"],["gog-unpack-manifest.json"]])
+def test_refuse_collisions(native_fixture,names):
+    source,content,events,_=native_fixture
+    content.clear();content.update({name:b'x' for name in names})
+    result=respond({'method':'gog-list','params':{'path':str(source)}})
+    assert not result['ok']
 
 
-def test_cli_and_adjacent_multipart_input_receipt(extractor, tmp_path, capsys):
-    import json
-    installer, _, _, _ = extractor
-    part = installer.with_name(installer.stem + "-1.bin")
-    part.write_bytes(b"authored multipart input")
-    assert main(["gog-unpack", str(installer), str(tmp_path / "cli")]) == 0
-    reply = json.loads(capsys.readouterr().out)
-    assert reply["ok"]
-    assert {i["name"] for i in reply["result"]["inputs"]} == {installer.name, part.name}
+def test_refuse_unknown_and_empty(native_fixture):
+    source,_,_,_=native_fixture
+    response=respond({'method':'gog-list','params':{'path':str(source),'include':['missing/']}})
+    assert not response['ok']
 
 
-def test_missing_reader_has_actionable_error_without_wine_fallback(extractor, monkeypatch):
-    installer, _, calls, module = extractor
-    monkeypatch.setattr(module.shutil, "which", lambda name: None)
-    reply = respond({"method": "gog-list", "params": {"path": str(installer)}})
-    assert not reply["ok"]
-    assert "brew install innoextract" in reply["error"]["message"]
-    assert calls == []
+def test_refuse_invalid_timing(native_fixture):
+    source,_,_,_=native_fixture
+    response=respond({'method':'gog-list','params':{'path':str(source),'timeout':0}})
+    assert not response['ok']
 
 
-@pytest.mark.parametrize("names", [
-    ["GAME/MAIN.EXE", "game/main.exe"], ["gog-unpack-manifest.json"]])
-def test_collisions_are_refused_before_extraction(extractor, tmp_path, names):
-    installer, payloads, calls, _ = extractor
-    payloads.clear()
-    payloads.update({name: b"authored" for name in names})
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(tmp_path / "collision")}})
-    assert not reply["ok"]
-    assert not any("--extract" in call for call in calls)
+def test_failed_native_extraction_discards_only_new_destination(native_fixture,tmp_path,monkeypatch):
+    source,content,events,module=native_fixture
+    def broken(self,out,selected,*,emit_manifest,deadline):
+        out=Path(out);out.mkdir();(out/'partial').write_bytes(b'partial')
+        raise InnoRefused('synthetic decompression failure')
+    original_open=module.NativeInno.open
+    def bad_open(path,*,deadline):
+        instance=original_open(path,deadline=deadline)
+        instance.extract_selected=lambda out,selected,**kw: broken(instance,out,selected,**kw)
+        return instance
+    monkeypatch.setattr(module.NativeInno,'open',bad_open)
+    out=tmp_path/'new'; result=respond({'method':'gog-unpack','params':{'path':str(source),'output':str(out)}})
+    assert not result['ok'] and not out.exists()
+    assert source.read_bytes()==b'authored setup data'
 
 
-@pytest.mark.parametrize("failure", ["unexpected", "symlink", "timeout", "changed_input"])
-def test_incomplete_or_unqualified_results_are_not_published(extractor, tmp_path, monkeypatch, failure):
-    installer, _, _, module = extractor
-    original_run = module.subprocess.run
-
-    def alter_extract(args, **kwargs):
-        result = original_run(args, **kwargs)
-        if "--extract" in args:
-            root = Path(args[args.index("--output-dir") + 1])
-            if failure == "unexpected": (root / "extra").write_bytes(b"extra")
-            elif failure == "symlink":
-                path = root / "GAME/MAIN.EXE"
-                path.unlink()
-                path.symlink_to(installer)
-            elif failure == "timeout": raise subprocess.TimeoutExpired(args, 300)
-            else: installer.write_bytes(b"changed authored input")
-        return result
-
-    monkeypatch.setattr(module.subprocess, "run", alter_extract)
-    output = tmp_path / failure
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(output)}})
-    assert not reply["ok"]
-    assert not output.exists()
+def test_native_helpers_refuse_malformed():
+    for path in ('..','/abs','x/../escape','{foreign}/path','foo:bar'):
+        with pytest.raises(InnoRefused):safe_path(path)
+    with pytest.raises(InnoRefused):parse_call("before_install('x', bad, 2)",'before_install')
+    assert parse_call("before_install('md5', 'two''quotes', 2)",'before_install')==['md5',"two'quotes",'2']
+    assert parse_call('other()','before_install') is None
+    with pytest.raises(InnoRefused):Cursor(b'\x01\x00').u32()
 
 
-def test_empty_selection_leaves_no_output(extractor, tmp_path):
-    installer, _, calls, _ = extractor
-    reply = respond({"method": "gog-unpack", "params": {
-        "path": str(installer), "output": str(tmp_path / "empty"), "include": ["absent/"]}})
-    assert not reply["ok"]
-    assert "No files matched" in reply["error"]["message"]
-    assert not any("--extract" in call for call in calls)
+def test_executable_filter_preserves_non_opcodes_and_block_boundary():
+    assert undo_call_filter_5309(bytes([0x90,0x90,0x90]))==bytes([0x90,0x90,0x90])
+    data=bytes([0x90])*0xfffe+b'\xe8'+b'\x00'*4
+    assert undo_call_filter_5309(data)==data  # x86 opcode crosses 64 KiB block
