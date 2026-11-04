@@ -648,3 +648,32 @@ def test_boat_guest_identity_requires_typed_artifact(monkeypatch):
     assert gate.execution_identity()['boat_worker_receipt'] == proof
     monkeypatch.setenv('FDISBULL_BOAT_WORKER_RECEIPT', '{}')
     with pytest.raises(ValueError): gate.execution_identity()
+
+
+def test_backend_reuse_accepts_only_bound_original_boat_proofs(local_qualified):
+    from test_native_backend_reuse import attach_boat_original
+    root = local_qualified
+    receipt_path = add_reused_backend(root, 'stable')
+    receipt = json.loads(receipt_path.read_text())
+    base = root / 'native-evidence/stable'
+    attach_boat_original(base, 'stable')
+    backend = receipt['backend_identity']
+    backend['build_process_sha256'] = gate.identity(root, 'native-evidence/stable/build-process.json')['sha256']
+    backend['build_execution_origin'] = 'boat-linux'
+    for field, name in gate.BOAT_REUSE_FILES.items():
+        backend[field] = gate.identity(root, 'native-evidence/stable/' + name)['sha256']
+    current = {'image_digest': backend['build_image_digest']}
+    proofs = gate.verify_reused_backend(root, 'stable', backend, receipt['artifacts'], current)
+    assert 'build-boat-worker.json' in proofs and 'build-boat-run.json' in proofs
+    (base/'build-boat-worker.json').write_text('{}')
+    with pytest.raises(ValueError, match='proof hash mismatch'):
+        gate.verify_reused_backend(root, 'stable', backend, receipt['artifacts'], current)
+
+
+def test_current_large_boat_worker_identity_is_accepted(boat_qualified):
+    worker = boat_qualified/'artifacts/receipts/boat-worker.json'
+    data = json.loads(worker.read_text()); data['type'] = 'large'; worker.write_text(json.dumps(data))
+    ref = gate.identity(boat_qualified, 'artifacts/receipts/boat-worker.json')
+    run = boat_qualified/'artifacts/receipts/boat-run.json'
+    data = json.loads(run.read_text()); data['boat_worker_receipt'] = ref; run.write_text(json.dumps(data))
+    assert gate.boat_identity(boat_qualified, SHA, LOCAL_RUN)['boat_worker_receipt'] == ref

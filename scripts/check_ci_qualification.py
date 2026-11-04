@@ -74,7 +74,7 @@ def boat_identity(root, source_commit, run_id):
         or not re.fullmatch(r'bx_[A-Za-z0-9_-]+', sandbox)
         or worker.get('schema') != 'fdisbull-boat-worker-v1'
         or worker.get('execution_origin') != 'boat-linux' or worker.get('boat_sandbox_id') != sandbox
-        or worker.get('type') != 'default' or worker.get('architecture') != 'x86_64'):
+        or worker.get('type') not in ('small', 'default', 'large', 'xlarge') or worker.get('architecture') != 'x86_64'):
         raise ValueError('Boat run or worker identity mismatch')
     canonical_uuid(worker.get('host_boot_id'))
     try:
@@ -103,14 +103,18 @@ REUSE_FILES = {
     'build_config_sha256': 'config.log',
 }
 REUSE_FIELDS = frozenset((*REUSE_FILES, 'build_source_commit', 'build_image_digest'))
+BOAT_REUSE_FILES = {'build_boat_worker_sha256': 'build-boat-worker.json',
+                    'build_boat_run_sha256': 'build-boat-run.json',
+                    'build_source_postcheck_sha256': 'build-source-postcheck.json'}
+BOAT_REUSE_FIELDS = frozenset((*BOAT_REUSE_FILES, 'build_execution_origin'))
 
 
 def verify_reused_backend(root, profile, backend, artifacts, process):
     """Re-read retained build provenance; never infer a build from test success."""
     base = f'native-evidence/{profile}/'
-    indicators = ('reuse-provenance.json', 'build-identity.json', 'build-process.json', 'build-manifest.json')
+    indicators = ('reuse-provenance.json', 'build-identity.json', 'build-process.json', 'build-manifest.json', *BOAT_REUSE_FILES.values())
     present = lambda path: path.exists() or path.is_symlink()
-    if not REUSE_FIELDS.intersection(backend) and not any(present(root / base / name) for name in indicators):
+    if not (REUSE_FIELDS | BOAT_REUSE_FIELDS).intersection(backend) and not any(present(root / base / name) for name in indicators):
         return None
     if profile not in ('stable', 'layers') or not isinstance(process, dict):
         raise ValueError('Reused backend requires a local native process')
@@ -136,11 +140,30 @@ def verify_reused_backend(root, profile, backend, artifacts, process):
     if (not isinstance(build_sha, str) or not re.fullmatch(r'[0-9a-f]{40}', build_sha)
         or original.get('source_commit') != build_sha
         or build_process.get('source_commit') != build_sha
-        or build_process.get('execution_origin') != 'local-linux'
+        or build_process.get('execution_origin') not in ('local-linux', 'boat-linux')
         or build_process.get('job_name') != JOBS[profile]
         or not isinstance(image, str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', image)
         or build_process.get('image_digest') != image or process.get('image_digest') != image):
         raise ValueError('Reused backend build source, process or image mismatch')
+    if build_process.get('execution_origin') == 'boat-linux':
+        if not BOAT_REUSE_FIELDS.issubset(backend) or backend.get('build_execution_origin') != 'boat-linux':
+            raise ValueError('Original Boat reuse provenance is incomplete')
+        for field, name in BOAT_REUSE_FILES.items():
+            item = identity(root, base + name)
+            if item['sha256'] != backend[field]:
+                raise ValueError('Original Boat reuse proof hash mismatch: ' + name)
+            proofs[name] = item
+        spec = importlib.util.spec_from_file_location('fdisbull_native_boat_reuse',
+                       Path(__file__).resolve().parent / 'ci/native_backend_reuse.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        checked = module.boat_provenance(root / base, build_process, build_sha)
+        if any(backend.get(key) != value for key, value in checked.items()):
+            raise ValueError('Original Boat reuse provenance mismatch')
+        if present(marker_path) and any(marker.get(key) != backend[key] for key in BOAT_REUSE_FIELDS):
+            raise ValueError('Original Boat reuse marker mismatch')
+    elif BOAT_REUSE_FIELDS.intersection(backend) or any(present(root / base / name) for name in BOAT_REUSE_FILES.values()):
+        raise ValueError('Local reuse cannot claim Boat build provenance')
     expected_profile = 'experimental/dosbox-x' + ('/layers' if profile == 'layers' else '')
     if (original.get('profile') != expected_profile or backend.get('profile') != expected_profile
         or original.get('upstream_commit') != manifest.get('baseline_commit')

@@ -69,5 +69,29 @@
     "targeted_consumer_capture_package_checks": 38,
     "new_Boat_source_archive_presence_cases": 4,
     "note": "overlapping focused selections; not whole local suite or complete Linux CI"
+  },
+  "private_loader_firmware_follow_up": {
+    "observed": "QEMU invoked through ELF loader searches firmware beside loader rather than QEMU",
+    "negative_probe": "without explicit -L, QEMU exits1 missing bios-256k.bin and QMP socket does not open",
+    "positive_probe": "with explicit bundled -L, genuine QemuControl reports prelaunch/runningFalse while QEMU is alive; process terminated normally after probe",
+    "fix": "generated bin/qemu passes -L \"$ROOT/native/qemu/share/qemu\" before caller arguments",
+    "regression": "executed shell wrapper preserves paths/arguments with spaces; other wrappers do not get QEMU options",
+    "scope": "default BIOS/QMP prelaunch through loader; not full archive or Wine guest acceptance",
+    "integrated_focused_checks": {
+      "passed": 90,
+      "deselected": 83,
+      "scope": "wrapper, provenance/reuse and Boat contracts; not whole local suite or full Linux CI"
+    }
+  },
+  "Boat_compilation_reuse": {
+    "support": "original raw Boat process/worker/run/source-export proofs hash-bound to original frozen source and binary",
+    "worker_types": [
+      "small",
+      "default",
+      "large",
+      "xlarge"
+    ],
+    "current_native_tests": "still required on candidate SHA",
+    "Large_machine_tested": false
   }
 }

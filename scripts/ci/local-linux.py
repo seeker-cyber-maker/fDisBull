@@ -320,9 +320,27 @@ def stage_backend_reuse(source, export_root, work, image_digest, profile):
     build_sha = build.get('source_commit')
     if not isinstance(build_sha, str) or not re.fullmatch(r'[0-9a-f]{40}', build_sha):
         raise ValueError('Invalid original backend build source')
-    old_manifest = subprocess.check_output(
-        ['git', 'show', f'{build_sha}:{directory}/source-manifest.json'],
-        cwd=source, env=safe_env(), timeout=60)
+    process = read_regular_json(paths['build-process.json'])
+    if process.get('execution_origin') == 'boat-linux':
+        old_source = phase / 'work'
+        if old_source.is_symlink() or source_identity(old_source, generated_outputs=True)[0] != build_sha:
+            raise ValueError('Original Boat source snapshot is not clean at build SHA')
+        old_manifest_path = old_source / directory / 'source-manifest.json'
+        old_manifest = subprocess.check_output(
+            ['git', 'show', f'HEAD:{directory}/source-manifest.json'],
+            cwd=old_source, env=safe_env(), timeout=60)
+        if old_manifest_path.is_symlink() or old_manifest_path.read_bytes() != old_manifest:
+            raise ValueError('Original Boat source manifest changed')
+        verify_guest_postcheck(phase / 'guest-data', build_sha)
+        paths.update({'build-boat-worker.json': phase.parent / 'qualification/artifacts/receipts/boat-worker.json',
+                      'build-boat-run.json': phase.parent / 'qualification/artifacts/receipts/boat-run.json',
+                      'build-source-postcheck.json': phase / 'guest-data/source-postcheck.json'})
+        if any(path.is_symlink() or not path.is_file() for path in paths.values()):
+            raise ValueError('Missing or unsafe original Boat build proof')
+    else:
+        old_manifest = subprocess.check_output(
+            ['git', 'show', f'{build_sha}:{directory}/source-manifest.json'],
+            cwd=source, env=safe_env(), timeout=60)
     stage = work / f'.native/reuse-{profile}'
     stage.mkdir(parents=True, exist_ok=False)
     for name, path in paths.items():

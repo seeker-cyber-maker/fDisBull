@@ -54,6 +54,10 @@ Continue the same SHA/run with `stable`, `layers`, `unified-prepare`,
 those phases in order. The ordinary job tests and checks the actual packages;
 required native phases have zero allowed skips. Original compiled input reuse
 retains its original build identity and does not replace current acceptance.
+Boat-built DOSBox inputs also retain the original worker/run/process and clean
+source-export proofs; a new shallow checkout cannot stand in for that build.
+The kit QEMU wrapper passes its firmware path explicitly because the private
+ELF loader changes executable-relative directory discovery.
 
 The driver admits each material phase against actual output/Docker filesystems,
 without adding figures from the same device. Estimates are conservative;

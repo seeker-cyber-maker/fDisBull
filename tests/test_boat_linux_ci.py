@@ -141,3 +141,18 @@ def test_extract_preserves_content_and_rejects_wrong_archive_hash(tmp_path):
     with pytest.raises(ValueError, match='identity mismatch'):
         boat.extract_consumer_kit(archive, tmp_path/'other', '0'*64)
     assert not (tmp_path/'other').exists()
+
+
+def test_large_worker_class_accepted_and_unknown_rejected(tmp_path, monkeypatch):
+    receipt = {'schema':'fdisbull-boat-worker-v1','execution_origin':'boat-linux','boat_sandbox_id':'bx_5asjcc78',
+               'type':'large','architecture':'x86_64','host_boot_id':'a0ae3230-94b0-46fd-9b4b-8c40ed8f0e2f',
+               'observed_at':'2026-11-04T00:00:00Z'}
+    path = tmp_path/'worker.json'; path.write_text(json.dumps(receipt))
+    monkeypatch.setattr(boat.platform, 'system', lambda:'Linux')
+    monkeypatch.setattr(boat.platform, 'machine', lambda:'x86_64')
+    original = Path.read_text
+    monkeypatch.setattr(Path, 'read_text', lambda self,*a,**k: receipt['host_boot_id'] if str(self) == '/proc/sys/kernel/random/boot_id' else original(self,*a,**k))
+    assert boat.read_worker(path)['type'] == 'large'
+    receipt['type'] = 'unknown'; path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='Invalid Boat worker receipt'):
+        boat.read_worker(path)

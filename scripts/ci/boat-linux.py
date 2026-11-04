@@ -37,7 +37,7 @@ def read_worker(path):
     if (set(data) != {'schema', 'execution_origin', 'boat_sandbox_id', 'type', 'architecture', 'host_boot_id', 'observed_at'}
         or data.get('schema') != 'fdisbull-boat-worker-v1' or data.get('execution_origin') != 'boat-linux'
         or not re.fullmatch(r'bx_[a-z0-9]+', str(data.get('boat_sandbox_id', '')))
-        or data.get('architecture') != 'x86_64' or not isinstance(data.get('type'), str)
+        or data.get('architecture') != 'x86_64' or data.get('type') not in ('small', 'default', 'large', 'xlarge')
         or not isinstance(data.get('observed_at'), str) or not data['observed_at']):
         raise ValueError('Invalid Boat worker receipt')
     try:

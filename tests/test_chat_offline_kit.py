@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 import tarfile
 import zipfile
@@ -157,3 +158,21 @@ def test_closure_accepts_vendored_host_elf_and_rejects_host_path(tmp_path):
     inv.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='unresolved library'):
         kit.load_inventory(inv)
+
+
+def test_qemu_wrapper_passes_private_firmware_and_preserves_arguments(tmp_path):
+    root = tmp_path / 'kit with spaces'
+    (root / 'bin').mkdir(parents=True)
+    (root / 'lib').mkdir()
+    loader = root / 'lib/loader'
+    loader.write_text('#!/bin/sh\nprintf "%s\\0" "$@"\n')
+    loader.chmod(0o755)
+    script = root / 'bin/qemu'
+    script.write_text(kit.wrapper('lib/loader', 'native/qemu/bin/qemu-system-x86_64', qemu=True))
+    script.chmod(0o755)
+    result = subprocess.run([str(script), '-machine', 'pc with spaces', '-S'], check=True, capture_output=True)
+    assert result.stdout.split(b'\0')[:-1] == [
+        b'--inhibit-cache', b'--library-path', str(root / 'lib').encode(),
+        str(root / 'native/qemu/bin/qemu-system-x86_64').encode(), b'-L',
+        str(root / 'native/qemu/share/qemu').encode(), b'-machine', b'pc with spaces', b'-S']
+    assert ' -L ' not in kit.wrapper('lib/loader', 'native/dosbox')

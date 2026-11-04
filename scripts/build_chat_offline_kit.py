@@ -214,12 +214,14 @@ def load_inventory(path):
     return inventory, roles
 
 
-def wrapper(loader, target, python=False, module=None):
+def wrapper(loader, target, python=False, module=None, qemu=False):
     command = '"$ROOT/' + loader + '" --inhibit-cache --library-path "$ROOT/lib" "$ROOT/' + target + '"'
     if python:
         command += ' -s -P'
     if module:
         command += ' -m ' + module
+    if qemu:
+        command += ' -L "$ROOT/native/qemu/share/qemu"'
     return ('#!/bin/sh\nset -eu\nROOT=$(CDPATH= cd -- "${0%/*}/.." && pwd)\n'
             'unset PYTHONPATH PYTHONHOME LD_LIBRARY_PATH LD_PRELOAD\nexport PYTHONNOUSERSITE=1\n' +
             ('export PYTHONHOME="$ROOT/python"\n' if python else '') +
@@ -249,7 +251,7 @@ def build(inventory_path, output, compression='zip', max_bytes=500_000_000):
         loader = roles['loader'][0]
         for name, role, module in [('python', 'python', None), ('fdisbull', 'python', 'fdisbull'), ('player', 'python', 'fdisbull_player'), ('dosbox', 'dosbox', None), ('qemu', 'qemu', None)]:
             p = root / 'bin' / name
-            p.write_text(wrapper(loader, roles[role][0], role == 'python', module))
+            p.write_text(wrapper(loader, roles[role][0], role == 'python', module, qemu=role == 'qemu'))
             p.chmod(0o755)
         names = ['python', 'fdisbull', 'player', 'dosbox', 'qemu']
         if profile == 'shared':
