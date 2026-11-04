@@ -20,7 +20,8 @@ def test_catalog_and_public_cli_need_no_project(capsys):
     report = respond({'method': 'media-modules'}, default_project='/missing.fdb')
     assert report['ok']
     modules = {item['name']: item for item in report['result']['modules']}
-    assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic'}
+    assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic',
+                            'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2'}
     assert modules['gog-inno']['dependencies'] == []
     assert media_modules() == report['result']
     assert main(['media-modules']) == 0
