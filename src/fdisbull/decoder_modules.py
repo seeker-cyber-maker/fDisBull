@@ -187,10 +187,33 @@ class ZMachineV3Module:
                              provenance)
 
 
+
+class WestwoodEMC2Module:
+    info = DecoderModuleInfo('fdisbull.westwood.emc2', '1', 'westwood-form-emc2',
+                             ('decode', 'static_successors'))
+
+    def open(self, source, *, profile, function_index=0) -> DecoderInput:
+        from .media import _snapshot
+        from .westwood_emc2 import EMC2Processor
+        script = _snapshot(source, 8 * 1024 * 1024)
+        processor = EMC2Processor(script, profile=profile, function_index=function_index)
+        metadata = processor.metadata
+        provenance = dict(kind='westwood-form-emc2', profile=profile,
+                          function_index=function_index, entry_offset=processor.entry_address,
+                          data_offset=processor.data_offset, data_length=processor.data_length,
+                          entry_slots=len(metadata['entry_slots']),
+                          program_sha256=sha256(script).hexdigest(),
+                          qualification='static_instruction_facts_only')
+        return capture_input(self.info, processor, script,
+                             Location(processor.info.address_space,processor.entry_address),
+                             provenance)
+
+
 def builtin_registry() -> DecoderRegistry:
     registry = DecoderRegistry()
     registry.register(AGI2917Module())
     registry.register(ZMachineV3Module())
+    registry.register(WestwoodEMC2Module())
     return registry
 
 

@@ -556,6 +556,8 @@ def invoke(method, params, debugger=None):
         limit = p.pop("max_instructions", 40 if method == "module-analyze" else 128)
         if method == "module-analyze":
             address = p.pop("address", None)
+            if p.get("function_index") is None:
+                p.pop("function_index", None)
             return analyze_input(registry.open(identity, path, **p),
                                  address=address, max_instructions=limit)
         state_file = p.pop("state_file", None)
@@ -1961,7 +1963,7 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "westwood-pak", "westwood-cps", "westwood-wsa", "westwood-emc2"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-extract":
@@ -2142,10 +2144,11 @@ def parser():
         c.add_argument("path")
         c.add_argument("--volume-dir")
         c.add_argument("--logic", type=int)
-        c.add_argument("--profile", choices=["2.917"])
+        c.add_argument("--profile", choices=["2.917", "kyrandia1-dos", "lol1-dos"])
         c.add_argument("--max-instructions", type=int, default=40 if name == "module-analyze" else 128)
         if name == "module-analyze":
             c.add_argument("--address", type=lambda s: int(s, 0))
+            c.add_argument("--function-index", type=int)
         else:
             c.add_argument("--state-file", required=True)
             c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
