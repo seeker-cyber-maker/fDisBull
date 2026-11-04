@@ -58,7 +58,7 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra')
     if backend is not None and backend not in supported_backends:
         raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
@@ -75,6 +75,9 @@ def validate_script(script, *, session=None):
         elif backend=='wine-ne':
             from .win16_debugger import Win16DebugSession
             owner=Win16DebugSession
+        elif backend=='scummvm-kyra':
+            from .scummvm_kyra import ScummVMKyraSession
+            owner=ScummVMKyraSession
         elif backend=='scummvm-gob':
             from .scummvm_gob import ScummVMGobSession
             owner=ScummVMGobSession
@@ -82,7 +85,7 @@ def validate_script(script, *, session=None):
             from .scummvm_debugger import ScummVMAGISession
             owner=ScummVMAGISession
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
-    if (backend or actual) in ('scummvm-agi','scummvm-gob'):
+    if (backend or actual) in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')

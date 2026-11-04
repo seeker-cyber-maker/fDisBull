@@ -1877,9 +1877,9 @@ def parser():
     c.add_argument(
         "--backend",
         choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
-                 "scummvm-agi", "scummvm-gob"],
+                 "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
-    c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1 or gob:lit")
+    c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")
     c.add_argument("--language", help="Explicit Gob language code, for example us (English US) or it")
     c.add_argument("--platform", help="Explicit Gob game platform, for example dos")
     c.add_argument(

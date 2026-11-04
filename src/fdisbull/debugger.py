@@ -87,6 +87,13 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         if memory_mib is not None and (self.meta['format'] not in ('PE','NE')
                 or backend not in (None,'wine-qemu','wine-ne','ida-wine-qemu')):
             raise ValueError('memory_mib is a Windows guest option')
+        if backend == 'scummvm-kyra':
+            if (any(x is not None for x in (kernel, initramfs, files, state, remote_server,
+                                           spatial_mode, language, platform)) or window or fair_play):
+                raise ValueError('ScummVM Kyra currently supports only headless EMC2 VM controls')
+            from .scummvm_kyra import ScummVMKyraSession
+            return ScummVMKyraSession(self, executable, game_dir, version=version, game_id=game_id,
+                                      boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
         if backend == 'scummvm-gob':
             if any(x is not None for x in (kernel, initramfs, files, state, remote_server, spatial_mode)) or window or fair_play:
                 raise ValueError('ScummVM Gob uses an explicit variant and headless VM controls without native launch options')
@@ -1153,7 +1160,7 @@ class DebugWorkspace:
     def _start_async(self, session, params):
         import inspect
         import threading
-        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob'):
+        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
             raise ValueError('Asynchronous foreground runs currently require a ScummVM engine backend')
         if any(j['run']==session.run_id and not j['done'].is_set() for j in self.async_runs.values()):
             raise ValueError('This session already has an asynchronous run')
