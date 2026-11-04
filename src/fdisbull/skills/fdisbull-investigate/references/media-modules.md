@@ -146,12 +146,14 @@ select the v2 variant from evidence rather than treat acceptance as detection.
 ## Existing readers and decoders
 
 - `gog-inno`: `fdisbull.gog_unpack.list_gog/unpack_gog`, or `gog-list/gog-unpack`.
-  Requires native `innoextract`; versions/filters/part hashes and output hashes
-  are retained by its existing manifest. Multipart parts are provenance candidates,
-  not per-part consumption proof. Installer code is never launched. Native
-  reader support, filesystem inventory checks and per-process timeout apply;
-  this module does not provide a hard decompression byte quota. Use its existing
-  listing/extraction contract; do not mistake it for a general disk reader.
+  Uses fDisBull's built-in Inno Setup 5.6.2 Unicode reader; no external
+  `innoextract`, Wine or subprocess is required. Versions/filters/part hashes
+  and output hashes are retained by its manifest. Multipart parts are provenance
+  candidates, not per-part consumption proof. Installer code is never launched.
+  The bounded native decoder checks header, chunk and payload checksums and
+  refuses unsupported versions, external slices, encryption and malformed data;
+  its timeout covers parsing, hashing and extraction. Use its listing/extraction
+  contract; do not mistake it for a general disk reader or runtime qualification.
 - `agi-picture`: `fdisbull.agi_picture.decode_picture(payload)` accepts prepared
   AGI 2.915/2.917 EGA streams, with 160x168 visual/priority planes, 2 MiB input
   and 20 million work-unit limits. Commands F0..FA control colors, planes, lines,

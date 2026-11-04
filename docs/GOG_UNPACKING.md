@@ -1,24 +1,17 @@
 # Unpack a GOG DOS installer without Wine
 
-`gog-list` and `gog-unpack` read a local GOG offline installer using the host's
-native [innoextract](https://constexpr.org/innoextract/). They do not execute
-the Windows installer or its extracted programs. Listing and static analysis
-need neither Wine nor the optional Windows debugger backend.
+`gog-list` and `gog-unpack` read a local GOG offline installer using fDisBull's
+**built-in** Inno Setup reader. No external `innoextract`, Wine, subprocess or
+optional Windows debugger backend is needed. They do not execute the Windows
+installer or its extracted programs.
 
-Install the external reader separately:
-
-```bash
-# macOS
-brew install innoextract
-# Debian / Ubuntu
-sudo apt install innoextract
-```
-
-These commands cover Inno Setup installers supported by the installed reader.
-They are not a universal GOG archive reader: an unsupported installer, encrypted
-payload, missing multipart file or newer Inno Setup revision produces an error.
-There is no fallback that runs the installer. The native reader's version and
-diagnostics are retained or reported.
+The supported profile is **Inno Setup 5.6.2 Unicode**, including GOG Galaxy
+multipart payloads. The reader validates the loader table, LZMA1 metadata
+blocks, file-location table, stored/LZMA2 data chunks, Inno 5.3.9+ x86 CALL/JMP
+filter, per-chunk SHA-1, GOG zlib part sizes and final MD5. Other Inno versions,
+external source slices, encrypted payloads, unknown compression and malformed
+checksums are refused rather than guessed. This is not a universal GOG archive
+reader or an installer runner.
 
 ## List before extracting
 
@@ -31,12 +24,14 @@ fdisbull gog-list "/private/downloads/setup_owned_game.exe" --include "GAME/"
 fdisbull gog-unpack "/private/downloads/setup_owned_game.exe" "/private/targets/new-game" --include "GAME/"
 ```
 
-`--include` is repeatable and uses **innoextract's path-filter rules**, on both
-the inventory and extraction. It is not a shell glob. A bare filename can match
-several directories; inspect the filtered list first. Include the game's data,
-launch scripts and configuration when preparing a playable target. Extracting
-only an executable is useful for static analysis but may not produce a runnable
-game. Omit `--include` to extract the whole installer payload.
+`--include` is repeatable and applies to both the inventory and extraction.
+Matching is case-insensitive: an exact member path, a directory prefix such as
+`GAME/`, or an `fnmatch` pattern such as `*.EXE`. It is not a shell glob and a
+bare filename does not match a member in another directory. Inspect the filtered
+list first. Include the game's data, launch scripts and configuration when
+preparing a playable target. Extracting only an executable is useful for static
+analysis but may not produce a runnable game. Omit `--include` to extract the
+whole installer payload.
 
 An existing output path is refused, including an empty directory or symlink.
 The command reserves a new directory, stages extraction inside it, checks that
@@ -46,12 +41,13 @@ attempt removes only its newly created directory; it never replaces an earlier
 target. Installer member paths with traversal, absolute paths or ambiguous
 case collisions are refused.
 
-The output contains `gog-unpack-manifest.json` with the extractor version,
-selected paths, file sizes and SHA-256 hashes. The installer and adjacent files
-matching its basename plus `-*.bin` are hashed before and after the operation.
-The adjacent-part list records provenance candidates, not individually traced
-file consumption. Input changes, unexpected output files, links and incomplete
-extractions are errors. Source installers remain unchanged.
+The output contains `gog-unpack-manifest.json` with the native reader profile,
+source SHA-256, selected paths, file sizes and SHA-256 hashes. The installer and
+adjacent files matching its basename plus `-*.bin` are hashed before and after
+the operation. The adjacent-part list records provenance candidates, not
+individually traced file consumption; the supported profile requires embedded
+slices. Input changes, unexpected output files, links and incomplete extractions
+are errors. Source installers remain unchanged.
 
 ## Find the program to analyze
 
@@ -86,5 +82,6 @@ project. Responses use the ordinary bounded-output policy:
 ```
 
 Python callers can use `fdisbull.gog_unpack.list_gog` and `unpack_gog` with the
-same keyword arguments. `timeout` is an integer from 1 to 3600 seconds for
-each extractor process, defaulting to 300.
+same keyword arguments. `timeout` is an integer from 1 to 3600 seconds for the
+whole native parsing, hashing and extraction deadline, defaulting to 300. Native
+format details and qualification evidence are in `docs/NATIVE_INNO_562.md`.
