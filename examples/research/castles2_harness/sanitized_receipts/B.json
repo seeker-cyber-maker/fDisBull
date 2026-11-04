@@ -1,0 +1,167 @@
+{
+  "bat_working_copy_sha256": "8d232f9cf22545b2ad3f28f2decc5725d0376e608c710e192a7eb8eb1ad6b91f",
+  "claims": [
+    "Original guest was launched and observed through DOSBox video",
+    "Source game was controlled by XTest mouse and keyboard",
+    "Full game-state equivalence not established",
+    "GUI route is a test harness, not a recovered UIL or UDC program"
+  ],
+  "cue_sha256": "e1cba1ead3c0b8d537563eb664af868aa52ebeb40bdaaacb71b76dbb76d1dc9e",
+  "events": [
+    {
+      "display": ":102",
+      "elapsed_s": 0.704,
+      "event": "xvfb_started"
+    },
+    {
+      "elapsed_s": 0.705,
+      "event": "original_program_launched"
+    },
+    {
+      "elapsed_s": 4.096,
+      "event": "main_menu_ready",
+      "green_fraction": 0.01,
+      "menu_gold_pixels": 848
+    },
+    {
+      "action_name": "main.game",
+      "elapsed_s": 4.569,
+      "event": "action"
+    },
+    {
+      "action_name": "game.play",
+      "elapsed_s": 5.156,
+      "event": "action"
+    },
+    {
+      "elapsed_s": 5.736,
+      "event": "scene_observed",
+      "green_fraction": 0.871,
+      "label": "new-game-map"
+    },
+    {
+      "action_name": "map.opts",
+      "elapsed_s": 6.207,
+      "event": "action"
+    },
+    {
+      "action_name": "opts.save",
+      "elapsed_s": 6.771,
+      "event": "action"
+    },
+    {
+      "action_name": "save.ok",
+      "elapsed_s": 8.552,
+      "event": "action"
+    },
+    {
+      "basename": "BENCH1.GAM",
+      "bytes": 11733,
+      "elapsed_s": 8.552,
+      "event": "save_materialized",
+      "sha256": "9c522c669d3ba5528aabfbaf3b6a63e8e309dab81c5170885c42ed75f23595e0"
+    },
+    {
+      "elapsed_s": 8.639,
+      "event": "scene_observed",
+      "green_fraction": 0.871,
+      "label": "after-save-map"
+    },
+    {
+      "action_name": "map.opts",
+      "elapsed_s": 9.11,
+      "event": "action"
+    },
+    {
+      "action_name": "opts.load",
+      "elapsed_s": 9.669,
+      "event": "action"
+    },
+    {
+      "action_name": "load.first",
+      "elapsed_s": 10.217,
+      "event": "action"
+    },
+    {
+      "action_name": "load.ok",
+      "elapsed_s": 10.688,
+      "event": "action"
+    },
+    {
+      "elapsed_s": 10.782,
+      "event": "scene_observed",
+      "green_fraction": 0.871,
+      "label": "restored-map-in-session"
+    },
+    {
+      "basename": "BENCH1.GAM",
+      "elapsed_s": 10.782,
+      "event": "load_accepted",
+      "fresh_process": false,
+      "sha256": "9c522c669d3ba5528aabfbaf3b6a63e8e309dab81c5170885c42ed75f23595e0"
+    },
+    {
+      "elapsed_s": 10.79,
+      "event": "owned_emulator_reaped",
+      "shutdown": "host-forced-no-guest-exit-claim"
+    },
+    {
+      "elapsed_s": 10.791,
+      "event": "original_program_launched"
+    },
+    {
+      "elapsed_s": 14.072,
+      "event": "main_menu_ready",
+      "green_fraction": 0.01,
+      "menu_gold_pixels": 848
+    },
+    {
+      "action_name": "main.game",
+      "elapsed_s": 14.543,
+      "event": "action"
+    },
+    {
+      "action_name": "game.load",
+      "elapsed_s": 15.103,
+      "event": "action"
+    },
+    {
+      "action_name": "load.first",
+      "elapsed_s": 15.624,
+      "event": "action"
+    },
+    {
+      "action_name": "load.ok",
+      "elapsed_s": 16.095,
+      "event": "action"
+    },
+    {
+      "elapsed_s": 16.18,
+      "event": "scene_observed",
+      "green_fraction": 0.871,
+      "label": "restored-map-fresh"
+    },
+    {
+      "basename": "BENCH1.GAM",
+      "elapsed_s": 16.18,
+      "event": "load_accepted",
+      "fresh_process": true,
+      "sha256": "9c522c669d3ba5528aabfbaf3b6a63e8e309dab81c5170885c42ed75f23595e0"
+    },
+    {
+      "elapsed_s": 16.188,
+      "event": "owned_emulator_reaped",
+      "shutdown": "host-forced-no-guest-exit-claim"
+    },
+    {
+      "elapsed_s": 16.191,
+      "elapsed_seconds": 16.191,
+      "event": "complete",
+      "status": "passed"
+    }
+  ],
+  "format": "castles2-original-menu-save-load-1",
+  "plan": "save_load",
+  "status": "passed",
+  "target_exe_sha256": "512efad4a4d771f6c975702cad9a688aeef10f8d81798b8c7260e37c74e87d43"
+}

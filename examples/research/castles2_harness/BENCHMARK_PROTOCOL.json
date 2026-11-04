@@ -1,0 +1,17 @@
+{
+  "format": "fdisbull-castles2-skill-comparison-protocol-1",
+  "status": "planned-not-executed-cold-agent-ab",
+  "date": "2026-11-04",
+  "goal": "Recover and retain real mouse/keyboard menu, save, and load actions from original DOS Castles II",
+  "shared_runtime": "fdisbull v0.31.1 offline with exact original DOSBox-X backend",
+  "shared_source_sha256": "512efad4a4d771f6c975702cad9a688aeef10f8d81798b8c7260e37c74e87d43",
+  "skills": {
+    "A": "fdisbull-investigate on GitLab main, frozen at dispatch",
+    "B": "fdisbull-investigate on draft !82 @ 04ce7880f779177b3a6096a70b482532cb3f047b"
+  },
+  "required_evidence": ["visible main menu and identified icons", "mouse-controlled Game/Play path", "empty-load negative branch", "original Save produces nonempty .GAM", "load in same run", "fresh-process original Load", "screen state and file integrity compared", "named actions replay without manual user clicks"],
+  "isolation": ["separate cold model contexts", "separate private game copies", "no access to finished solution harness", "identical installed methods and prior-research references", "single live guest controller per arm"],
+  "metrics": ["wall-clock-to-first-verified-claim", "wall-clock-to-end-to-end-harness", "tool_calls", "measured_tokens_only", "verification_failures", "incorrect_claims", "repair_time", "cold-replay-success"],
+  "actual_measured_replays_seconds": [16.191, 16.751, 16.208],
+  "claim_boundary": "The three timings measure one author's finished scripted replay, not independent agent build time or a skill A/B result"
+}
