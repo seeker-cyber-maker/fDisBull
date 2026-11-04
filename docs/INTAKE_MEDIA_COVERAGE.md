@@ -16,7 +16,7 @@ selections and hidden members remain recovery obligations.
 
 | Family | Recognized structure / context candidate | Qualification boundary |
 |---|---|---|
-| DinoPark | `UNC2`/`UNCS` actors, `UNCP` picture directories, IFF XMIDI; context ABT delta audio | Header/directory facts; private recovered sprite/picture/ABT readers are not shipped codec support. Preserve external palettes, six-bit palette scaling, even row stride, raw versus compressed rows and sequence control semantics. |
+| DinoPark | `UNC2`/`UNCS` actors, `UNCP` picture directories, IFF XMIDI; context ABT delta audio | Shipped bounded ACT/PIC pixel and ABT sample decoders, linked separately from header recognition. Preserve external palettes, six-bit palette data, even row stride and opaque sequence semantics; exports do not imply game playback. |
 | Civilization DOS | PIC/PAL chunk families, CV/CVL fonts/graphics | Consumer/edition context; short E0/M0/X0/X1 tags alone are not global signatures. Recover complete chunk/LZW/RLE and palette obligations. |
 | Civilization Amiga / Atari | IFF ILBM/PBM, platform PIX/PAL/fonts | IFF top-level extents/subtype recognized. Packed PIX and raster/font semantics remain separate; palette-only IFF need not contain a bitmap. |
 | Civilization Mac / Windows; Colonization Windows | Resource forks, NE/PE resources, bitmap/icon/font/sound payloads | Native executable/header mapping is not a resource or media decode. Traverse resource maps and member extents before codec selection. |
@@ -55,6 +55,8 @@ DinoPark is the useful counterexample: none of its 183 original intake files is
 FLI/FLC. It has 57 UNC2/UNCS actors, 25 UNCP picture containers, 44 headerless ABT
 sounds and seven XMIDI files. Its `.PIC` suffix also differs from Civilization's
 picture family. The private census rechecked all 183 original file hashes.
+[Proper ACT/PIC/ABT decoder modules](DINOPARK_MEDIA_DECODERS.md) now implement
+complete bounded resource decoding with separate native comparison receipts.
 
 ## Recovery rather than guessed support
 

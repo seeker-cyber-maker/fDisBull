@@ -86,6 +86,7 @@ METHODS = {
     "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number,index_path]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
+    "media-decode": "Decode selected DinoPark ACT/PIC/ABT into new private PNG/WAV outputs; path,output,adapter,[index,palette_path,palette_index,palette_policy,sample_rate,channels,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
     "output-info": "Inspect an immutable private output artifact; artifact",
@@ -512,6 +513,10 @@ def invoke(method, params, debugger=None):
         from .media import inspect_media, extract_media
 
         return (inspect_media if method == "media-inspect" else extract_media)(**p)
+    if method == "media-decode":
+        from .dinopark_media import decode_media
+
+        return decode_media(**p)
     if method in ("gog-list", "gog-unpack"):
         from .gog_unpack import list_gog, unpack_gog
 
@@ -1210,6 +1215,7 @@ def respond(request, default_project=None, debugger=None):
                 "smk-frame",
                 "media-inspect",
                 "media-extract",
+                "media-decode",
                 "agent-skill",
                 "identify",
                 "inspect",
@@ -2003,7 +2009,7 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker", "flic") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker", "flic", "dinopark-act", "dinopark-pic", "dinopark-abt") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-inspect":
@@ -2018,6 +2024,17 @@ def parser():
                 default=64 * 1024 * 1024,
                 help="Extracted member byte limit (1..67108864); separate from global JSON reply budget",
             )
+    c = sub.add_parser("media-decode", help=METHODS["media-decode"])
+    c.add_argument("path")
+    c.add_argument("output")
+    c.add_argument("--adapter", required=True, choices=("dinopark-act", "dinopark-pic", "dinopark-abt"))
+    c.add_argument("--index", type=int)
+    c.add_argument("--palette-path")
+    c.add_argument("--palette-index", type=int, default=0)
+    c.add_argument("--palette-policy", choices=("shift2", "replicate6"), default="shift2")
+    c.add_argument("--sample-rate", type=int)
+    c.add_argument("--channels", type=int, choices=(1, 2))
+    c.add_argument("--max-decoded-output-bytes", dest="decode_max_output_bytes", type=int, default=64 * 1024 * 1024)
     for name in ("gog-list", "gog-unpack"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path", help="local GOG Inno Setup offline installer")
@@ -3035,6 +3052,8 @@ def _dispatch(args):
             return 1
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
+    if command == "media-decode":
+        args["max_output_bytes"] = args.pop("decode_max_output_bytes")
     if command == "smk-frame":
         args["max_output_bytes"] = args.pop("smk_max_output_bytes")
     if command == "capture-audit":

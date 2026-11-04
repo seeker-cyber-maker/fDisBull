@@ -74,7 +74,8 @@ def test_context_candidates_never_turn_suffix_into_recognition(tmp_path):
     assert identify_file(p)['identification']['status']=='unknown'
     hints=resource_profile_hints(p,format_catalog())
     assert hints and all(h['qualification']=='context-candidate-only' for h in hints)
-    assert not resource_profile_hints(tmp_path/'other'/'noise.ABT',format_catalog())
+    # Keep the negative context independent of caller-selected test workspace names.
+    assert not resource_profile_hints(Path('/unrelated/inputs/noise.ABT'),format_catalog())
     assert identify_file(folder/'noise.ABT')['identification']['full_decode'] is False
 
 

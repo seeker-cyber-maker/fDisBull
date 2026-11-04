@@ -126,3 +126,17 @@ suffix-based guess. A recovered private script or historical result is evidence
 to inspect, not automatic production support or permission to mutate media.
 Inspect a recovered script's top-level side effects before reusing a pure reader;
 an inventory script can create output even when one of its functions is pure.
+
+
+## Shipped DinoPark decoder modules
+
+Use `media-inspect --adapter dinopark-act`, `dinopark-pic` or `dinopark-abt` for
+complete bounded decoding and metadata/hash reports. Use `media-decode` for a
+selected private PNG/WAV export. ACT index and opacity planes are separate;
+colored previews require an explicit external PIC palette. Preserve padded PIC
+rows and raw six-bit palette bytes; choose host expansion explicitly. ABT WAV
+exports require caller-supplied `--sample-rate` and `--channels` and do not imply
+original playback timing. ABT context remains explicit even with a shipped
+decoder. ACT sequences, animation control, clipping, consumer palette binding
+and audible output remain separate from byte-decoder admission. Never rewrite
+original resources or programs to compensate for a decoder mismatch.

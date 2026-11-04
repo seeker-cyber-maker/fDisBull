@@ -18,6 +18,24 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='dinopark-act', layer='asset-decoding',
+                 api='fdisbull.dinopark_images.decode_act / describe_act',
+                 methods=['media-inspect', 'media-decode'], dependencies=['Pillow for PNG export'],
+                 capabilities=['sprite-index-decode', 'opacity-mask', 'opaque-sequence-inventory'],
+                 variants='DinoPark UNC2 and legacy UNCS actor profiles',
+                 limits='8 MiB source; bounded total pixels/work; exact indices and opacity; sequences opaque, external palette, no clipping or actor-playback semantics'),
+            dict(name='dinopark-pic', layer='asset-decoding',
+                 api='fdisbull.dinopark_images.decode_pic / describe_pic',
+                 methods=['media-inspect', 'media-decode'], dependencies=['Pillow for PNG export'],
+                 capabilities=['indexed-frame-decode', 'six-bit-palette', 'padded-row-decode'],
+                 variants='DinoPark UNCP picture directory with raw narrow and compressed wider rows',
+                 limits='8 MiB source; bounded frame/pixel/work budgets; preserve padded stride and raw six-bit palette; host RGB expansion and presentation remain explicit'),
+            dict(name='dinopark-abt', layer='asset-decoding',
+                 api='fdisbull.dinopark_audio.decode_abt / inspect_abt',
+                 methods=['media-inspect', 'media-decode'], dependencies=[],
+                 capabilities=['unsigned-sample-expansion', 'opaque-header-inventory'],
+                 variants='Explicit consumer-qualified DinoPark ABT; no global magic',
+                 limits='1 MiB source; 65535 output samples; 2 million work units; raw rate/opaque header preserved; WAV timing/channels require caller adapters'),
             dict(name='flic', layer='container-inspection',
                  api='fdisbull.flic.inspect_flic', methods=['media-inspect'], dependencies=[],
                  variants='Standard FLI/FLC, Bullfrog compact12 and bounded TFTD VID/IDX',
@@ -145,6 +163,11 @@ def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=No
         return inspect_flic(path, index_path=index_path)
     if index_path is not None:
         raise ValueError('index_path is only supported by the FLIC inspector')
+    if adapter in ('dinopark-act', 'dinopark-pic', 'dinopark-abt'):
+        if volume_root is not None or number is not None:
+            raise ValueError('DinoPark decoding does not accept AGI parameters')
+        from .dinopark_media import inspect_dinopark
+        return inspect_dinopark(path, adapter=adapter)
     if adapter == 'smacker':
         if volume_root is not None or number is not None:
             raise ValueError('Smacker does not accept AGI resource parameters')

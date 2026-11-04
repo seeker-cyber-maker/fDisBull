@@ -81,9 +81,13 @@ Structural correspondence does not qualify pixels, audio, seeking or shortening;
 the SMK framing writer cannot edit FLIC. Unknown chunks stay recovery obligations.
 
 DinoPark's original intake has no FLI. It uses UNC2/UNCS actors, UNCP pictures,
-headerless ABT sounds and IFF XMIDI. Actor opacity/sequence behavior, external
-palettes, six-bit palette scaling, even picture stride and compressed rows need
-consumer-qualified readers. Civilization PIC is a different family. Other
+headerless ABT sounds and IFF XMIDI. Shipped `dinopark-act`, `dinopark-pic` and
+`dinopark-abt` adapters now decode bounded sprites/opacity, padded image rows/raw
+palettes and sample bytes. `media-inspect` returns hashes/scalars; `media-decode`
+exports a selected image or explicitly timed WAV into a new private directory.
+ACT sequences remain opaque, palettes are external, and ABT rate/channels are not
+guessed. Use explicit palette and WAV adapters; preserve original-game evidence
+separately from a pure decoder result. Civilization PIC is a different family. Other
 observed resource cohorts (Coktel ITK/LTK/IMD, MADSPACK, Eternam, AGI/SCI, Bullfrog,
 X-COM, platform fonts/resource forks and embedded assets) have separate catalog
 context profiles and explicit recovery gaps. Private recovered code is evidence;

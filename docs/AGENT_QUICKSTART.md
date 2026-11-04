@@ -203,6 +203,12 @@ frames between. Full independent decoding is required; original-game playback
 and seeking remain separate checks. Fetch
 `agent-skill --reference references/file-formats.md` for limits and examples.
 
+For DinoPark resources, `media-inspect --adapter dinopark-act|dinopark-pic|dinopark-abt`
+uses the shipped bounded decoders. `media-decode` exports selected private PNG/WAV
+results with explicit palette/timing adapters. See
+[DinoPark media modules](DINOPARK_MEDIA_DECODERS.md) for native comparison scope
+and the distinction between pixels, opaque sequences and playback.
+
 ### Intake a collection or a single addition
 
 Use [collection intake](TARGET_COLLECTION_INTAKE.md) for the common per-artifact
