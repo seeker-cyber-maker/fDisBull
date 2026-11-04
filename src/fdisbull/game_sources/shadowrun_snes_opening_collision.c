@@ -1,7 +1,7 @@
 /* Mutable source banks are owned by scene_init/task VM. The containing frame
  * must restore its whole transaction when any supported flag is zero. */
 u8 opening_rebuild_supported,opening_sort_supported,opening_collision_supported;
-u16 opening_col_player,opening_col_z,opening_col_flags;
+u16 opening_col_actor,opening_col_player,opening_col_z,opening_col_flags;
 u16 opening_col_left,opening_col_right,opening_col_top,opening_col_bottom,opening_col_height;
 
 u16 opening_bank_read16(u8 region,u32 at) {
@@ -61,8 +61,8 @@ void opening_sort(void) {
  opening_sort_supported=1U;
 }
 u16 opening_collision_at(u16 actor,u16 x,u16 y,u8 axis) {
- opening_collision_supported=0U;opening_col_player=scene_read(0x0cdeU);
- if((actor&1U) || actor>=88U || actor!=opening_col_player || axis>3U)return 0U;
+ opening_collision_supported=0U;opening_col_actor=actor;opening_col_player=scene_read(0x0cdeU);
+ if((actor&1U) || actor>=88U || axis>3U)return 0U;
  opening_col_z=scene_read(0x0ef4U+actor);opening_col_flags=scene_read(0x1474U+actor);
  opening_col_left=scene_read(0x421cU+actor);opening_col_right=scene_read(0x4274U+actor);
  opening_col_top=scene_read(0x42ccU+actor);opening_col_bottom=scene_read(0x4324U+actor);

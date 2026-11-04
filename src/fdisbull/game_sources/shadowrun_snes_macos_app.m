@@ -183,7 +183,10 @@ static NSPoint openingPoint(fdisbull_context *c,uint32_t slot,NSRect bounds) {
         }
     }
     text(profile(self.context)==4?@"Shadowrun SNES · Opening scene":(profile(self.context)==3?@"Shadowrun SNES · Scripted NPC study":(profile(self.context)>=2?@"Shadowrun SNES · NPC walking study":(profile(self.context)==1?@"Shadowrun SNES · Live collision study":@"Shadowrun SNES · Opening movement study"))),25,r.size.height-37,20,white);
-    text(profile(self.context)==4?@"Movement, rooms and conversations · adapted display · original artwork and audio excluded":(profile(self.context)>=3?@"Logical game-loop passes · source video pacing and audio excluded":@"World-coordinate view · source camera and artwork not reproduced"),25,r.size.height-62,12,white);
+    NSString *subtitle=profile(self.context)==4?@"Movement, rooms and conversations · adapted display · original artwork and audio excluded":(profile(self.context)>=3?@"Logical game-loop passes · source video pacing and audio excluded":@"World-coordinate view · source camera and artwork not reproduced");
+    if(profile(self.context)==4 && state(self.context,"hardware_mode")==2)
+        subtitle=@"Repeatable local randomness · adapted display · original timing, artwork and audio excluded";
+    text(subtitle,25,r.size.height-62,12,white);
     text([NSString stringWithFormat:@"%@: x=%lld  y=%lld  z=%lld   updates=%lu",(profile(self.context)==2 || profile(self.context)==3)?@"NPC 44":@"Player",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
     text(self.stopped?(profile(self.context)==3 && self.ticks>=60?@"60-pass study complete · R resets":@"Unsupported input or state · R resets"):(self.paused?@"Paused · Space starts movement":@"Running · Space pauses"),25,43,14,white);
     text(profile(self.context)==4?@"Arrows move/target · B opens/actions/confirms · Up/Down chooses · Tab cancels · R resets · Esc closes":(profile(self.context)>=2?@"NPCs walk autonomously · R resets · Esc closes · bounded projection":(profile(self.context)==1?@"Arrows move · R resets · Esc closes · bounded scene experiment":@"Arrows move · R resets · Esc closes · captured static scene")),25,21,12,white);

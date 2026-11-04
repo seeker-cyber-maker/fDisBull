@@ -25,13 +25,15 @@ from .shadowrun_snes_dialogue import SOURCE as DIALOGUE_SOURCE
 from .shadowrun_snes_dialogue_select import SOURCE as DIALOGUE_SELECT_SOURCE
 from .shadowrun_snes_conversation import SOURCE as CONVERSATION_SOURCE
 from .shadowrun_snes_vertical import SOURCE as VERTICAL_SOURCE
+from .shadowrun_snes_rng import SOURCE as RNG_SOURCE
+from .shadowrun_snes_hardware import SOURCE as HARDWARE_SOURCE, configuration
 
 SOURCE = Path(__file__).parent / 'game_sources/shadowrun_snes_opening.c'
 CONVERSATION_BRIDGE_SOURCE = Path(__file__).parent / 'game_sources/shadowrun_snes_conversation_bridge.c'
 TITLE_SHA256 = '15caaf78faed99408c783119ac5e1703da066b904e5570dd895b7bcb49db9d93'
 
 
-def machine_from_title(rom, title, save_ram):
+def machine_from_title(rom, title, save_ram, *, hardware_mode='disabled', hardware_seed=1):
     """Seed once at the qualified title state; derive subsequent state from ROM.
 
     The initial projection explicitly refuses unsupported callbacks/physics.
@@ -43,14 +45,16 @@ def machine_from_title(rom, title, save_ram):
         raise ValueError('wrong source title checkpoint')
     if len(save_ram) != 8192 or hashlib.sha256(save_ram).hexdigest() != SAVE_SHA256:
         raise ValueError('wrong captured save RAM')
+    hardware_configuration = configuration(hardware_mode, hardware_seed)
     prefix = ('typedef unsigned char u8;\ntypedef unsigned int u16;\n'
               'typedef unsigned long u32;\nu8 rom8(u8 region,u32 offset);\n')
     inputs = {p: p.read_text() for p in (VM_SOURCE, TASK_SOURCE, SCENE_SOURCE, COLLISION_SOURCE,
-              NPC_SOURCE, MENU_SOURCE, MOTION_SOURCE, LIVE_SOURCE, FIELD_SOURCE, TEXT_SOURCE, WINDOW_SOURCE, ANIM_SOURCE, TARGET_SOURCE, CHOICE_SOURCE, INTERACTION_SOURCE, CAMERA_SOURCE, ACTION_COLLISION_SOURCE, TRANSITION_SOURCE, DIALOGUE_SOURCE, DIALOGUE_SELECT_SOURCE, CONVERSATION_SOURCE, CONVERSATION_BRIDGE_SOURCE, VERTICAL_SOURCE, SOURCE)}
+              NPC_SOURCE, MENU_SOURCE, MOTION_SOURCE, LIVE_SOURCE, FIELD_SOURCE, TEXT_SOURCE, WINDOW_SOURCE, ANIM_SOURCE, TARGET_SOURCE, CHOICE_SOURCE, INTERACTION_SOURCE, CAMERA_SOURCE, ACTION_COLLISION_SOURCE, TRANSITION_SOURCE, DIALOGUE_SOURCE, DIALOGUE_SELECT_SOURCE, CONVERSATION_SOURCE, CONVERSATION_BRIDGE_SOURCE, VERTICAL_SOURCE, RNG_SOURCE, HARDWARE_SOURCE, SOURCE)}
     scene = inputs[SCENE_SOURCE].replace(prefix + 'u8 task_shared[65536];\n', '')
     npc = inputs[NPC_SOURCE].replace(prefix, '')
     menu = inputs[MENU_SOURCE].replace('typedef unsigned char u8;\ntypedef unsigned int u16;\n', '')
     text_source = inputs[TEXT_SOURCE].replace(prefix, '')
+    rng_source = inputs[RNG_SOURCE].replace(prefix, '')
     load = 'void opening_load(u16 slot){u16 i;npc_actor_id=slot;' + ''.join(
         f'{name}=scene_read({at}U+slot);' for name, at in FIELDS.items()) + '''
         npc_low_table_known=0U;
@@ -66,7 +70,7 @@ def machine_from_title(rom, title, save_ram):
     save = 'void opening_save(u16 slot){' + ''.join(
         f'scene_write({at}U+slot,{name});' for name, at in FIELDS.items()) + '}'
     text = '\n'.join((inputs[VM_SOURCE], inputs[TASK_SOURCE], scene, inputs[COLLISION_SOURCE], npc, menu,
-                       SCENE_TASK_WRAPPER, SCENE_PARTY_WRAPPER, source_fragment(), text_source,
+                       SCENE_TASK_WRAPPER, SCENE_PARTY_WRAPPER, source_fragment(), text_source, rng_source, inputs[HARDWARE_SOURCE],
                        inputs[WINDOW_SOURCE], inputs[ANIM_SOURCE], inputs[TARGET_SOURCE],
                        inputs[CHOICE_SOURCE], inputs[INTERACTION_SOURCE], inputs[CAMERA_SOURCE],
                        inputs[ACTION_COLLISION_SOURCE], inputs[TRANSITION_SOURCE], inputs[DIALOGUE_SOURCE],
@@ -76,9 +80,12 @@ def machine_from_title(rom, title, save_ram):
         'kind': 'source-title-room-task-conversation', 'source_sha256': ROM_SHA256,
         'title_sha256': TITLE_SHA256, 'authoring_sha256': hashlib.sha256(text.encode()).hexdigest(),
         'clock': 'title input, logical source main-loop passes and typed suspended interaction/conversation polls; display waits adapted',
+        'hardware_policy': hardware_mode,
+        'hardware_seed': hardware_seed if hardware_mode == 'seeded' else None,
         'scope': 'source-derived scenes 3, 1F and 1, guarded movement/targeting/pickups, scripted responses and bounded keyword conversation; unobserved continuations, original raster and APU delivery excluded'})
     m = GameMachine(program, {0: rom})
     m.set_state(tasks_from_capture(rom, title).snapshot())
+    m.set_state(hardware_configuration | {'task_counter_tainted': int(hardware_mode != 'disabled')})
     word = lambda at: int.from_bytes(title[at:at + 2], 'little')
     m.set_state({'scene_7f': list(title[65536:]), 'menu_selection': word(0xe),
                  'menu_disabled': [word(0x11c0 + i * 2) for i in range(3)],

@@ -1,0 +1,33 @@
+{
+  "gameplay_outputs_from_source_used": false,
+  "keyword_audit": "bounded static teaching-producer catalogues; not exhaustive native reachability",
+  "limits": [
+    "Prepared title seed; boot-to-title not recovered.",
+    "Original graphics,portraits,APU delivery and raster pacing excluded.",
+    "Arbitrary NPCs,child conversations,large keyword lists,combat and whole-game equivalence unqualified.",
+    "Full exposed native/UIL state is checked on declared samples, not every interpreted trajectory step.",
+    "Offscreen app verified; live keyboard/onscreen operation unqualified.",
+    "Local verification and exact-commit packages are separate from hosted CI, merge, release and global installation."
+  ],
+  "modal_snapshots": [
+    407,
+    466
+  ],
+  "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+  "recorded_draws": [
+    320,
+    313
+  ],
+  "runtime_hardware_observations_used": true,
+  "scope": "Prepared-title rooms3 to1F to1; firststreetNPC Talk/Ask/Exit/SELECTcancel; rawhardware-conditioned original comparisons and separately seeded localplay.",
+  "source_checkpoints": [
+    4045,
+    3993
+  ],
+  "status": "bounded_conversations_qualified",
+  "transient_dynamic_exclusions": [
+    1,
+    3478,
+    3763
+  ]
+}

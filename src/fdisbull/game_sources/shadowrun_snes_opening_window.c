@@ -10,6 +10,8 @@ u8 opening_window_text_complete,opening_window_present_complete;
 u8 opening_window_rng_tainted,opening_window_audio_tainted;
 u8 opening_window_scratch_tainted,opening_window_display_tainted;
 u16 opening_window_ambient_attempts,opening_window_close_events;
+u16 opening_window_ambient_audio_events,opening_window_ambient_sound;
+u8 opening_window_rng_provided,opening_window_rng_pending;
 /* Source 81:AB7D-ABC3 and its 81:AA58/A99D display setup, observed on the
  * selected new-game route. Graphics buffers remain an adapted projection. */
 void opening_window_reset(void) {
@@ -100,7 +102,7 @@ void opening_window_close(u16 slot) {
 }
 void opening_window_tick(void) {
  u16 i,j,value,slot,head,cursor;
- opening_window_status=0U;
+ opening_window_status=0U;opening_window_rng_pending=0U;
  /* Validate every expiry before touching any of the priority records. */
  for(i=0U;i<8U;i+=2U) {
   if(!(scene_read(0x0232U+i)&32768U)) {
@@ -131,13 +133,17 @@ void opening_window_tick(void) {
    }
   }
  }
- /* C530's beam-derived result and the conditional sound request are unknown;
-  * keep their latches untouched and require the owner to guard later reads. */
+ /* Publish the FEDE RNG request after expiry processing. A containing
+  * hardware-input owner may execute C530/C4EF in this same transaction; the
+  * standalone window adapter retains its prior explicit unknown RNG state.
+  * SPC delivery latches remain outside this logical window producer. */
  value=scene_read(0x021eU);
  if(value) {
   scene_write(0x021eU,value-1U);
   opening_window_ambient_attempts+=1U;
-  opening_window_rng_tainted=1U;opening_window_audio_tainted=1U;
+  opening_window_rng_pending=1U;
+  if(!opening_window_rng_provided)opening_window_rng_tainted=1U;
+  opening_window_audio_tainted=1U;
   opening_window_scratch_tainted=1U;
  }
  opening_window_status=1U;

@@ -32,14 +32,20 @@ def source_fragment():
     }
     for old, new in replacement.items():
         collision = collision.replace(old, new)
+    collision = collision.replace('n>=128U || node>0x0860U',
+                                  'n>=128U || node>0x085eU || (node&1U)')
+    collision = collision.replace('record>0x0c84U ||',
+                                  'record>0x0c84U || (record%12U) ||')
     old = '''} else if(owner!=0x42U) {
       /* The source's other live-actor special branch has not been qualified. */
       if(owner==opening_bank_read16(1,0x0cdeUL) && (opening_col_flags&3U)==3U) { }
       else hit=zhi-z;
      }'''
-    new = '''} else if(owner!=opening_col_player) {
-      /* $81:86C4–86DC: player query skips self and retains other height. */
-      hit=zhi-z;
+    new = '''} else if(owner!=opening_col_actor) {
+      /* $81:86C4-86DC skips self; a player obstacle is intangible to query
+       * actors with both low flag bits. Other owners retain their height. */
+      if(owner==opening_col_player && (opening_col_flags&3U)==3U) { }
+      else hit=zhi-z;
      }'''
     if collision.count(old) != 1:
         raise ValueError('unexpected player collision source')

@@ -1,0 +1,90 @@
+{
+  "adapter_sha256": "15e83fa9b5ea1266c3a550ce6a5f4efe39dfdb821ce2094261065658acf035b2",
+  "core_sha256": "7a06f2d790a3ce8ba3766e580f3e86f79c379a11a93f6f5a7d044ad4551fd248",
+  "format": "shadowrun-snes-hardware-observer-qualification-1",
+  "host_sha256": "145a427c2c377a890344e0f108bc4f56393799190995c13f0e651b0866484587",
+  "input_read_order": [
+    "2137@C536",
+    "7E1C92@C53C",
+    "213C@C542",
+    "7E1C93@C549",
+    "213D@C54F"
+  ],
+  "instrumented_source_sha256": {
+    "cpuexec.cpp": "268e9b744aab65e74836975b4a9f2c8ecfe3c91a57b24e352c91c32cea8e609f",
+    "getset.h": "13eba242e4c2b094c4bd0eab26c77f4a03bd449db51840acc9b97f8451b81581"
+  },
+  "private_receipt_sha256": "fc21b6bea6e2535bfd522ad14e742ac60fe8812c2f9921425c8b6ea30f7ea556",
+  "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+  "routes": [
+    {
+      "caller_counts": {
+        "1": 230,
+        "2": 71,
+        "3": 19
+      },
+      "capture_receipt_sha256": "4537722bba45934a31926ac712084d6963a7133b7ba9c6536dc35f64640244ce",
+      "checkpoint_digests_compared": 4045,
+      "checkpoint_frame_metadata_compared": 4961,
+      "controller_journal_sha256": "629f39e113e1da979aacb36a64c0ca6b5212b77c1f24552e454807f53e7c6827",
+      "dropped": 0,
+      "final_hashes_compared": 5,
+      "hardware_journal_sha256": "8eb163bd0d10cce45d56fd1b8f0be34382b8413dc45837207b72d27ba44d585c",
+      "incomplete_at_end": 0,
+      "max_rng_rows_per_controller_boundary": 10,
+      "modal_dropped": 0,
+      "modal_ram_snapshots": 407,
+      "old_observer_receipt_sha256": "4c680f466f47e5213b93ceafe49e3b538b909602aee5f2bc7c15cc0af61b78e1",
+      "rng_rows": 320,
+      "rng_rows_independent_transform_matches": 320,
+      "route": "conversation-continuous",
+      "seed_chain_from_title": true,
+      "seed_initial": 85,
+      "selected_images_compared": 15,
+      "selected_wram_compared": 15,
+      "status": "passed",
+      "unmodified_receipt_sha256": "82d4a5e31387fd8c64ca08e55eb875d7a53064061ba8516e80d3609a44948cf5"
+    },
+    {
+      "caller_counts": {
+        "1": 230,
+        "2": 71,
+        "3": 12
+      },
+      "capture_receipt_sha256": "969c47f0a6a9adbdac5ca7a8d5c51ccfacd421d01bf5820868228b5564a989e7",
+      "checkpoint_digests_compared": 3993,
+      "checkpoint_frame_metadata_compared": 5011,
+      "controller_journal_sha256": "2096065185e2fd39812828e90f43d26280dbca779975a27ee2d02640a6e97a75",
+      "dropped": 0,
+      "final_hashes_compared": 5,
+      "hardware_journal_sha256": "e04ce9d21be43a111b7ce130b3c85016d5f8e94d133196fb6095dc1048e7114f",
+      "incomplete_at_end": 0,
+      "max_rng_rows_per_controller_boundary": 10,
+      "modal_dropped": 0,
+      "modal_ram_snapshots": 466,
+      "old_observer_receipt_sha256": "7316d478a0e431c85d6cec28cb57d98e20f6b7682d64b7ef8a87dfde2a9f4da7",
+      "rng_rows": 313,
+      "rng_rows_independent_transform_matches": 313,
+      "route": "talk-cancel-continuous",
+      "seed_chain_from_title": true,
+      "seed_initial": 85,
+      "selected_images_compared": 16,
+      "selected_wram_compared": 16,
+      "status": "passed",
+      "unmodified_receipt_sha256": "1afb8b84a95327bbcf023014f1299a0a568de32ad98dbd0a277eb615fc54c30e"
+    }
+  ],
+  "scope": "observation-only source RNG reads from continuous unmodified ordinary-input boots; exact hardware-conditioned replay is separate from autonomous hardware timing",
+  "source_revision": "fae2fea08f74180759ef540ee94259213f503480",
+  "status": "passed",
+  "verification_fields_never_runtime_inputs": [
+    "seed_before",
+    "seed_after",
+    "result",
+    "latch",
+    "task",
+    "return_pc",
+    "parent_return",
+    "seen"
+  ]
+}

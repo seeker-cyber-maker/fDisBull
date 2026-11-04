@@ -20,6 +20,20 @@ def test_unknown_profile_is_rejected_before_input_or_output(tmp_path):
     assert not (tmp_path/'app').exists()
 
 
+@pytest.mark.parametrize('options,reason',[
+    ({'hardware_mode':'recorded'},'comparison driver'),
+    ({'hardware_mode':'seeded'},'opening profile'),
+    ({'hardware_seed':0},'Hardware seed'),
+    ({'hardware_seed':True},'Hardware seed'),
+    ({'hardware_seed':0x100000000},'Hardware seed'),
+])
+def test_hardware_build_contract_rejects_invalid_options_before_io(tmp_path,options,reason):
+    output=tmp_path/'app'
+    with pytest.raises(ValueError,match=reason):
+        build(rom_path='missing',ram='missing',save_ram='missing',output=output,**options)
+    assert not output.exists()
+
+
 def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     output=tmp_path/'app'
     with pytest.raises(ValueError,match='regular file'):

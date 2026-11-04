@@ -7,7 +7,7 @@ typedef unsigned int u16;
 typedef unsigned long u32;
 u8 rom8(u8 region,u32 offset);
 u8 task_shared[65536],task_rng_tainted,task_audio_tainted,task_visual_tainted,task_dialogue_tainted;
-u8 task_dynamic_stale,task_tile_cache_tainted;
+u8 task_dynamic_stale,task_tile_cache_tainted,task_counter_tainted;
 /* Unknown source timing-dependent state cannot feed script or native logic. */
 u8 task_readable(u16 at,u16 length) {
  u32 end;
@@ -17,6 +17,7 @@ u8 task_readable(u16 at,u16 length) {
  if(task_dynamic_stale && end>=0xde88UL)return 0U;
  if(task_tile_cache_tainted && end>=0xde88UL)return 0U;
  if(task_rng_tainted && at<=7428U && end>=7428UL)return 0U;
+ if(task_counter_tainted && at<=0x1c93U && end>=0x1c92UL)return 0U;
  if(task_audio_tainted && at<=7424U && end>=7418UL)return 0U;
  if(task_dialogue_tainted) {
   if(at<=0x00efU && end>=0x00dbUL)return 0U;
@@ -254,6 +255,12 @@ void shadowrun_snes_task_vm(u8 unused) {
    a=task_heap_read16(sp+1U);b=task_heap_read16(sp+3U);v=0U;
    if(a==b)v=65535U;
    task_heap_write16(sp+3U,v);sp+=2U;
+  } else if(op==134U || op==136U) {
+   /* $F3AE/$F3B4: increment/decrement the top 16-bit stack word. */
+   if(sp>3003U)return;
+   v=task_heap_read16(sp+1U);
+   if(op==134U)v+=1U;else v-=1U;
+   task_heap_write16(sp+1U,v);
   } else if(op==132U) {
    /* $F6F7: invert the top 16-bit stack word. */
    if(sp>3003U)return;

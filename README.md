@@ -332,8 +332,12 @@ playback, general conversations and unrestricted progression remain outside
 this bounded experiment.
 The [room and keyword follow-up](docs/SHADOWRUN_SNES_TRANSITIONS.md) recovers
 the route through the hallway to the street and the conversation components.
-The native street continuation currently stops at a hardware-dependent random
-timer; live keyword play remains unqualified while that input boundary is resolved.
+The [hardware-input study](docs/SHADOWRUN_SNES_HARDWARE.md) enables the first
+street NPC's Talk, Ask about, Exit and cancellation paths. It compares two
+title-seeded routes with the original under recorded external readings and
+offers repeatable seeded local play in the adapted native view. Original
+hardware timing and whole-game equivalence remain unqualified. A separate
+[keyword audit](docs/SHADOWRUN_SNES_KEYWORDS.md) checks Arena, Norbert and Scalper.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

@@ -1,0 +1,300 @@
+{
+  "frontend_sha256": "f5e6fb4276e3f0d5b2ae4fc781766e23c348b0ef58bc9315fbdef75bbaaeae30",
+  "frontend_source_sha256": "c5b1eb2bac6ba901fd807e6951b798b087032231607977f53f84297a40b79e33",
+  "images": {
+    "completed": {
+      "png_sha256": "35699584a302a4dc872a8b4b4196d823c0b75e437a7c0cac0d96f074b582bf91",
+      "render": {
+        "completed_updates": 4102,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      }
+    },
+    "firearms-response": {
+      "png_sha256": "08a65631c996f1bc5db0b1718a1c4dcc6f02a490cedbd8128007fd4aa7e65271",
+      "render": {
+        "completed_updates": 4083,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      }
+    },
+    "hitmen-response": {
+      "png_sha256": "c2016cff42ad7dcbcde6ddd35ef9a74d6be1b096288d269f22180e103201b5db",
+      "render": {
+        "completed_updates": 4095,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      }
+    },
+    "keyword-menu": {
+      "png_sha256": "e50d2be1d1a453f3388c4b33dad5be10b75c2602ece48d8c768b0c63c6a9d61a",
+      "render": {
+        "completed_updates": 4080,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      }
+    }
+  },
+  "limits": [
+    "Offscreen adapted view; live keyboard and original pixels/audio/timing unqualified."
+  ],
+  "native_core": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "790051f537d207addebf0e8e255420b73d05cd1558f70598f2f98ff5185ddb24",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "29d8e13c41b409bba1f983a591a6c56b41e31e8600fbaea0fc690ff6877f7034",
+    "seed_sha256": "5125c6ab4641503f8a8747c1be205ab09290b18410eb2dc952607b44da0ea12b",
+    "source_sha256": "6582b56dfa122baec2d1e993bb7cb01916cd8cde4983acd358aaa78cbf18de76",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "program_sha256": "29d8e13c41b409bba1f983a591a6c56b41e31e8600fbaea0fc690ff6877f7034",
+  "result": "passed",
+  "seeded_component": {
+    "cases": [
+      {
+        "calls": 10,
+        "final_prng": 2037229063,
+        "final_rng_seed": 93,
+        "result": "passed",
+        "seed": 1,
+        "updates": 5
+      },
+      {
+        "calls": 10,
+        "final_prng": 2053165326,
+        "final_rng_seed": 252,
+        "result": "passed",
+        "seed": 305419896,
+        "updates": 5
+      }
+    ],
+    "result": "passed",
+    "scope": "synthetic immutable identity table; native/UIL seeded-input arithmetic and whole exposed state, not original SNES hardware timing",
+    "state_elements": 795900
+  },
+  "seeded_play": [
+    {
+      "expected_render": {
+        "completed_updates": 4102,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      },
+      "full_reset_replay_elements": 150436,
+      "observations": [
+        {
+          "cursor": 1,
+          "hardware_draws": 249,
+          "keywords": [],
+          "label": "street",
+          "mode": 0,
+          "phase": 0,
+          "updates": 3903
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            23
+          ],
+          "label": "introduction",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4068
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "talk-learn-firearms",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4073
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "keyword-menu",
+          "mode": 1,
+          "phase": 4,
+          "updates": 4080
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "firearms-response",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4083
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "hitmen-response",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4095
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 298,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "returned",
+          "mode": 0,
+          "phase": 0,
+          "updates": 4099
+        }
+      ],
+      "private_receipt_sha256": "ca7b6b3c5d85df10daebf7d2b5039a3227683deb134d8b8ad7ef4e8d541bd55a",
+      "program_sha256": "29d8e13c41b409bba1f983a591a6c56b41e31e8600fbaea0fc690ff6877f7034",
+      "result": "passed",
+      "seed": 1,
+      "source_unchanged": true,
+      "state_sha256": "22dc470c6d079801aa6615331902fbde40f58c4655fe00623f495019dc7dd299"
+    },
+    {
+      "expected_render": {
+        "completed_updates": 4109,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      },
+      "full_reset_replay_elements": 150436,
+      "observations": [
+        {
+          "cursor": 1,
+          "hardware_draws": 260,
+          "keywords": [],
+          "label": "street",
+          "mode": 0,
+          "phase": 0,
+          "updates": 3903
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            23
+          ],
+          "label": "introduction",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4068
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "talk-learn-firearms",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4073
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "keyword-menu",
+          "mode": 1,
+          "phase": 4,
+          "updates": 4080
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "firearms-response",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4083
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "hitmen-response",
+          "mode": 0,
+          "phase": 4,
+          "updates": 4095
+        },
+        {
+          "cursor": 0,
+          "hardware_draws": 309,
+          "keywords": [
+            16,
+            23
+          ],
+          "label": "returned",
+          "mode": 1,
+          "phase": 0,
+          "updates": 4106
+        }
+      ],
+      "private_receipt_sha256": "84835c304ad13d6933cffbd39bf13d09b83cf6381abe2f38c0e8e52699b849d8",
+      "program_sha256": "f7eb13bdbd85fe66adf74afce5db342b0642f424def368159bc14b2d6fa3ff83",
+      "result": "passed",
+      "seed": 2,
+      "source_unchanged": true,
+      "state_sha256": "780951302d5462805da787a9466d95cdbb7d1d31a9c4edd6172cf83a50ec4e24"
+    }
+  ],
+  "source_build_receipt_sha256": "27d358a8eaefad18ab09dab33173d4d269e503c2783a70331c036593ac04e0ce"
+}

@@ -1,0 +1,1620 @@
+{
+  "follow_field_audit": {
+    "cases": [
+      {
+        "actor_checks": 61331,
+        "dormant_actor_checks": 59812,
+        "dormant_mismatch_count": 0,
+        "field_checks": 183993,
+        "mismatch_count": 0,
+        "route": "conversation-continuous",
+        "source_checkpoints": 4045
+      },
+      {
+        "actor_checks": 60603,
+        "dormant_actor_checks": 59298,
+        "dormant_mismatch_count": 0,
+        "field_checks": 181809,
+        "mismatch_count": 0,
+        "route": "talk-cancel-continuous",
+        "source_checkpoints": 3993
+      }
+    ],
+    "private_receipt_sha256": "0f084386adc7641a6e817257b31fc89d0a2c2a58d4951d47d392a38b7c29d977",
+    "result": "passed",
+    "source_unchanged": true
+  },
+  "limits": [
+    "Original-conditioned external readings, not autonomous hardware timing.",
+    "Native/UIL equality covers a continuous short prefix plus declared one-step samples, not the full interpreted trajectory.",
+    "Modal21A0 readset covers selector scratch; retained body text has separate original FB03 component checks."
+  ],
+  "result": "passed_input_conditioned_bounded",
+  "retained_body_ui": {
+    "body_bytes_compared": 55601,
+    "component_receipt_sha256": "d094a8a97b870c7d97f7e655219951ddcea0a0e8b4570f8924db5e45fe6c1fe1",
+    "original_cases": [
+      {
+        "encoded_pointer": "5fad",
+        "entry_pc": 8452867,
+        "observer_core_sha256": "90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8",
+        "original_input_prefix_matches": "talk-cancel-continuous",
+        "post_pc": 8453769,
+        "processed_body_bytes_including_terminator": 69,
+        "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+        "source_entry_frame": 5490,
+        "source_entry_receipt_sha256": "e89d9689b862a542376ff3eb494be62f845261624c2d9913242a7ce2bca1fb69",
+        "source_entry_snapshot_sha256": "c6214b7ab69ae9c8ea0d4acf8b8421d2916375d32d9474e7a8b6c5ee3390a7ec",
+        "source_post_frame": 5494,
+        "source_post_receipt_sha256": "cb3f2f20fc558a6f6dc60b65958172e9d14acc555f11d9ab0b3446f9a0cf2b4d",
+        "source_post_snapshot_sha256": "638c89da125e3200b61487525facc1f7177c9744b8c668dcebfd2170dae2473e"
+      },
+      {
+        "encoded_pointer": "603f",
+        "entry_pc": 8452867,
+        "observer_core_sha256": "90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8",
+        "original_input_prefix_matches": "conversation-continuous",
+        "post_pc": 8453769,
+        "processed_body_bytes_including_terminator": 53,
+        "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+        "source_entry_frame": 5715,
+        "source_entry_receipt_sha256": "10726c7ba27aaf6031c07d458617a2ecb3b63601d82217ba0c67d1788d3fccf3",
+        "source_entry_snapshot_sha256": "09aad01ab91174859ab6813bc50295b48126895a4fcb1b1444e861192cbe4ac9",
+        "source_post_frame": 5719,
+        "source_post_receipt_sha256": "24764732b0fa35303832d0be03a4c59d31b2421af599f72a08697ce02e491917",
+        "source_post_snapshot_sha256": "61a65de1c2a045d56a6f5b374db78741562aac7246b124321c314798d2b8f6cc"
+      },
+      {
+        "encoded_pointer": "600e",
+        "entry_pc": 8452867,
+        "observer_core_sha256": "90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8",
+        "original_input_prefix_matches": "talk-cancel-continuous",
+        "post_pc": 8453769,
+        "processed_body_bytes_including_terminator": 98,
+        "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+        "source_entry_frame": 5826,
+        "source_entry_receipt_sha256": "bd5d84817c932f2032285242cb64bd6a7a55d2b54e67c9158ce1436b89de14a5",
+        "source_entry_snapshot_sha256": "3fafe6d960eea5de8c85846a2482606c03f444d5ec1b7302630aa155bf61934c",
+        "source_post_frame": 5831,
+        "source_post_receipt_sha256": "6b4b59c21924648cc504653ac02b94293c114058820a185b4dfd9e6218b7e0fd",
+        "source_post_snapshot_sha256": "b4cd566f15d982bcc6a2c4fdee574539b8b9128cee0369a1441a2bc0a2533375"
+      },
+      {
+        "component_qualification_sha256": "8dfa5ea825757ef39ec6f6218c247059badeb2a11882f8aa6df754a186fbafb2",
+        "encoded_pointer": "5fd2",
+        "observer_core_sha256": "7a06f2d790a3ce8ba3766e580f3e86f79c379a11a93f6f5a7d044ad4551fd248",
+        "original_input_prefix_matches": "talk-cancel-continuous",
+        "processed_body_bytes_including_terminator": 114,
+        "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+        "source_entry_frame": 5623,
+        "source_entry_snapshot_sha256": "f19db8986dda14d38ae350a9bcc3366ff8eff8192812556fabdf7fca26cb59a7",
+        "source_post_frame": 5629,
+        "source_post_snapshot_sha256": "205917a1f830961ca92f0d7f1339b55c64fcdd1fcda7f89e7ceb0de0b7cc63b3"
+      }
+    ],
+    "result": "passed",
+    "retained_body_boundaries_checked": 664,
+    "routes": [
+      {
+        "accepted_updates": 4452,
+        "body_observations": [
+          {
+            "accepted_update": 4068,
+            "actor": 64,
+            "before": {
+              "active": 0,
+              "mode": 0,
+              "phase": 0,
+              "selected_row": 0,
+              "selector": 0
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fad",
+            "input_context": {
+              "boundary": 4067,
+              "context": null,
+              "kind": "main",
+              "pc": null,
+              "serial": 3928
+            },
+            "length": 68,
+            "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65535,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4128,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65535
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fad",
+            "input_context": {
+              "boundary": 4127,
+              "context": "primary",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 68,
+            "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65535,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4201,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 65535
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "boundary": 4200,
+              "context": "keyword",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4335,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 23
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "boundary": 4334,
+              "context": "primary",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          }
+        ],
+        "conversation_completed": 1,
+        "encoded_pointers_observed": [
+          "5fad",
+          "603f"
+        ],
+        "mode": "recorded",
+        "native_build_receipt_sha256": "7d6b7fa974c116fbc3caeee00c5d58803d6f510c887b908a10de54b044e635d7",
+        "native_dylib_sha256": "d0ff93b464ef5c0e09a38d368e24a54acb52f9ccc5fb493d42394a6873d3ea5a",
+        "processed_body_bytes_including_terminators_compared": 16332,
+        "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+        "result": "passed",
+        "retained_body_boundaries_checked": 268,
+        "route": "recorded-ask-exit",
+        "seed": null,
+        "uil_native_full_state_elements_at_possible_draws": 601744
+      },
+      {
+        "accepted_updates": 4459,
+        "body_observations": [
+          {
+            "accepted_update": 4068,
+            "actor": 64,
+            "before": {
+              "active": 0,
+              "mode": 0,
+              "phase": 0,
+              "selected_row": 0,
+              "selector": 0
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fad",
+            "input_context": {
+              "boundary": 4067,
+              "context": null,
+              "kind": "main",
+              "pc": null,
+              "serial": 3928
+            },
+            "length": 68,
+            "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65535,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4122,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 1,
+              "selector": 65535
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "boundary": 4121,
+              "context": "primary",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4258,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "boundary": 4257,
+              "context": "primary",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4289,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "boundary": 4288,
+              "context": "keyword",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4363,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "boundary": 4362,
+              "context": "primary",
+              "kind": "conversation",
+              "pc": 8431538,
+              "serial": 3928
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4394,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 65535,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "boundary": 4393,
+              "context": "keyword",
+              "kind": "conversation",
+              "pc": 8431553,
+              "serial": 3928
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          }
+        ],
+        "conversation_completed": 1,
+        "encoded_pointers_observed": [
+          "5fad",
+          "5fd2",
+          "600e"
+        ],
+        "mode": "recorded",
+        "native_build_receipt_sha256": "7d6b7fa974c116fbc3caeee00c5d58803d6f510c887b908a10de54b044e635d7",
+        "native_dylib_sha256": "d0ff93b464ef5c0e09a38d368e24a54acb52f9ccc5fb493d42394a6873d3ea5a",
+        "processed_body_bytes_including_terminators_compared": 33152,
+        "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+        "result": "passed",
+        "retained_body_boundaries_checked": 327,
+        "route": "recorded-talk-ask-cancel",
+        "seed": null,
+        "uil_native_full_state_elements_at_possible_draws": 902616
+      },
+      {
+        "accepted_updates": 4102,
+        "body_observations": [
+          {
+            "accepted_update": 4068,
+            "actor": 64,
+            "before": {
+              "active": 0,
+              "mode": 0,
+              "phase": 0,
+              "selected_row": 0,
+              "selector": 0
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fad",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4068
+            },
+            "length": 68,
+            "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65535,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4073,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 1,
+              "selector": 65535
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4073
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4080,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4080
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4083,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4083
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4090,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4090
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4095,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 1,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4095
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4098,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 23
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4098
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          }
+        ],
+        "conversation_completed": 1,
+        "encoded_pointers_observed": [
+          "5fad",
+          "5fd2",
+          "600e",
+          "603f"
+        ],
+        "mode": "seeded",
+        "native_build_receipt_sha256": "c98f51869be2e41014363611f04462f39e70ad9625725a615d9d65c5ae9a6a33",
+        "native_dylib_sha256": "790051f537d207addebf0e8e255420b73d05cd1558f70598f2f98ff5185ddb24",
+        "processed_body_bytes_including_terminators_compared": 2873,
+        "program_sha256": "29d8e13c41b409bba1f983a591a6c56b41e31e8600fbaea0fc690ff6877f7034",
+        "result": "passed",
+        "retained_body_boundaries_checked": 31,
+        "route": "seeded-1-talk-both-exit",
+        "seed": 1,
+        "uil_native_full_state_elements_at_possible_draws": 1053052
+      },
+      {
+        "accepted_updates": 4109,
+        "body_observations": [
+          {
+            "accepted_update": 4068,
+            "actor": 64,
+            "before": {
+              "active": 0,
+              "mode": 0,
+              "phase": 0,
+              "selected_row": 0,
+              "selector": 0
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fad",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4068
+            },
+            "length": 68,
+            "processed_body_sha256": "804cd0718e55bc43527c64e8b393b8d67c2f0695789ce4e9b326c6fb55dfa552",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65535,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4073,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 1,
+              "selector": 65535
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4073
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4080,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "5fd2",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4080
+            },
+            "length": 113,
+            "processed_body_sha256": "a7acac5f9c6a13052d918eef87c345b69147b53106f2ee19c04ed86942d34f52",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65534,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4083,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 0,
+              "selector": 65534
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4083
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4090,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "600e",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4090
+            },
+            "length": 97,
+            "processed_body_sha256": "4ce781abf2f6f37c773c988b0937abc8acae73c96dfaa473a9ad5f43e43c3c73",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 65533,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4095,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 1,
+              "selector": 65533
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4095
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4102,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 0,
+              "phase": 5,
+              "selected_row": 2,
+              "selector": 23
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4102
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          },
+          {
+            "accepted_update": 4105,
+            "actor": 64,
+            "before": {
+              "active": 1,
+              "mode": 1,
+              "phase": 5,
+              "selected_row": 65535,
+              "selector": 23
+            },
+            "compiler_sampled": true,
+            "encoded_pointer": "603f",
+            "input_context": {
+              "accepted_seeded_input_ordinal": 4105
+            },
+            "length": 52,
+            "processed_body_sha256": "66b9c4e34a85959af6361bbcf803198ec3d15ecea1648e83fc62d0c685719460",
+            "record": 36385,
+            "scope": "retained UI body at accepted public boundary; original component bytes are comparison only",
+            "selector": 23,
+            "tag": 124
+          }
+        ],
+        "conversation_completed": 1,
+        "encoded_pointers_observed": [
+          "5fad",
+          "5fd2",
+          "600e",
+          "603f"
+        ],
+        "mode": "seeded",
+        "native_build_receipt_sha256": "8412515c6ffb2cfb87f364034094dd3b9e74a712a0b53f559018f7751058055c",
+        "native_dylib_sha256": "d7c369534bbb1d07a8ec1ee6ab21dfc5c0edcb727e01d34ad47dce5ac2bbd0f0",
+        "processed_body_bytes_including_terminators_compared": 3244,
+        "program_sha256": "f7eb13bdbd85fe66adf74afce5db342b0642f424def368159bc14b2d6fa3ff83",
+        "result": "passed",
+        "retained_body_boundaries_checked": 38,
+        "route": "seeded-2-talk-both-cancel",
+        "seed": 2,
+        "uil_native_full_state_elements_at_possible_draws": 1203488
+      }
+    ],
+    "scope": "original post-FB03 processed bytes compared to retained native UI body during title-derived recorded/seeded live conversations, with sampled whole UIL/native state on possible draw boundaries; original body RAM is never a runtime input; no pixel or hardware-clock parity claim",
+    "source_unchanged": true,
+    "text_helper_sha256": "f3cf75a779514b21088fd8c51d3ed769fee5268f51a204707ed94c4ec5f0eb68",
+    "uil_native_full_state_elements_at_possible_draws": 3760900
+  },
+  "retained_body_ui_receipt_sha256": "0e3143b0d5937584bcfd9521c775bf1298f516a99d84074f3956f5084a4c95eb",
+  "routes": [
+    {
+      "compiler": {
+        "continuous_prefix": [
+          "title START",
+          [
+            1,
+            "main"
+          ],
+          [
+            2,
+            "main"
+          ]
+        ],
+        "native_elements": 7521800,
+        "sampled_one_step": [
+          [
+            63,
+            "main",
+            null,
+            null
+          ],
+          [
+            183,
+            "main",
+            null,
+            null
+          ],
+          [
+            300,
+            "main",
+            null,
+            null
+          ],
+          [
+            500,
+            "main",
+            null,
+            null
+          ],
+          [
+            800,
+            "main",
+            null,
+            null
+          ],
+          [
+            1200,
+            "main",
+            null,
+            null
+          ],
+          [
+            1600,
+            "main",
+            null,
+            null
+          ],
+          [
+            1887,
+            "main",
+            null,
+            null
+          ],
+          [
+            1896,
+            "main",
+            null,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431538,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8437818,
+            null
+          ],
+          [
+            1900,
+            "main",
+            null,
+            null
+          ],
+          [
+            1950,
+            "main",
+            null,
+            null
+          ],
+          [
+            2009,
+            "main",
+            null,
+            null
+          ],
+          [
+            2010,
+            "main",
+            null,
+            null
+          ],
+          [
+            2233,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2233,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2243,
+            "main",
+            null,
+            null
+          ],
+          [
+            2244,
+            "main",
+            null,
+            null
+          ],
+          [
+            2255,
+            "main",
+            null,
+            null
+          ],
+          [
+            2310,
+            "main",
+            null,
+            null
+          ],
+          [
+            2362,
+            "main",
+            null,
+            null
+          ],
+          [
+            2438,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2438,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3105,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3105,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3477,
+            "main",
+            null,
+            null
+          ],
+          [
+            3478,
+            "main",
+            null,
+            null
+          ],
+          [
+            3762,
+            "main",
+            null,
+            null
+          ],
+          [
+            3763,
+            "main",
+            null,
+            null
+          ],
+          [
+            3928,
+            "main",
+            null,
+            null
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431538,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431538,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8426169,
+            "exit"
+          ],
+          [
+            3929,
+            "main",
+            null,
+            null
+          ]
+        ]
+      },
+      "conversation_cancel_observation": {
+        "final_poll": false,
+        "returned": false,
+        "selected": false
+      },
+      "first_divergence": null,
+      "hardware_input": {
+        "caller_counts": {
+          "1": 230,
+          "2": 71,
+          "3": 19
+        },
+        "captured_modal_snapshots": 407,
+        "compared_modal_snapshots": 407,
+        "consumed_draws": 320,
+        "journal_sha256": "8eb163bd0d10cce45d56fd1b8f0be34382b8413dc45837207b72d27ba44d585c",
+        "last_input_boundary": 4451,
+        "pre_title_draws": 0,
+        "scope": "exact comparisons conditioned on ordered raw external observations; no autonomous SNES clock claim",
+        "validated_source_draws": 320
+      },
+      "keyword_observation": {
+        "confirmed": true,
+        "returned": true,
+        "saw_change": true
+      },
+      "modal_source_checkpoints": 407,
+      "modal_steps": 407,
+      "native_build": {
+        "architecture": "arm64",
+        "artifact": "libfdisbull_native.dylib",
+        "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+        "compiler_version": "Homebrew clang version 23.1.4",
+        "dylib_sha256": "d0ff93b464ef5c0e09a38d368e24a54acb52f9ccc5fb493d42394a6873d3ea5a",
+        "entry": "shadowrun_snes_frame",
+        "format": "fdisbull-macos-native-1",
+        "header": "fdisbull_native.h",
+        "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+        "immutable_regions": [
+          {
+            "id": 0,
+            "length": 1048576,
+            "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+            "storage": "caller-ROM"
+          }
+        ],
+        "integer_model": "cc65-int16-long32",
+        "logical_input_bits": 8,
+        "macho_cputype": "arm64",
+        "macho_filetype": "dylib",
+        "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+        "seed_sha256": "6fd6d40e03fbfcf37d0c9408cd8de270cdf749717d25f36bd931da8bd896ec02",
+        "source_sha256": "026793ebe32edf506367c0f32d429d0bb1d52360865d664400ad935052b0b13f",
+        "unsupported_status": "shadowrun_snes_frame_status"
+      },
+      "neutrality": {
+        "checkpoint_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+        "checkpoint_receipt_sha256": "a2b9a835d184491fe430775412cf2a9b492dcf7c2a09afb9c750cb1ed7ed95ea",
+        "hardware_observer": {
+          "checkpoint_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+          "checkpoint_receipt_sha256": "a2b9a835d184491fe430775412cf2a9b492dcf7c2a09afb9c750cb1ed7ed95ea",
+          "image_frames": 15,
+          "matching_checkpoint_digests": 4045,
+          "ram_frames": 15,
+          "scope": "unpatched baseline compares selected post-frame and final hashes; no instruction checkpoints",
+          "unpatched_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+          "unpatched_receipt_sha256": "82d4a5e31387fd8c64ca08e55eb875d7a53064061ba8516e80d3609a44948cf5"
+        },
+        "image_frames": 15,
+        "matching_checkpoint_digests": 4045,
+        "ram_frames": 15,
+        "scope": "unpatched baseline compares selected post-frame and final hashes; no instruction checkpoints",
+        "unpatched_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+        "unpatched_receipt_sha256": "82d4a5e31387fd8c64ca08e55eb875d7a53064061ba8516e80d3609a44948cf5"
+      },
+      "private_receipt_sha256": "5e495eacbe1b5ca9f93f8daff45b98917819af8ac7516744e756ad11c27a7b4d",
+      "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+      "public_steps": 4451,
+      "result": "passed",
+      "route": "final-conversation-01",
+      "source_checkpoints": 4045,
+      "source_elements": {
+        "actor_entity_bytes": 385997,
+        "actor_fields": 1436195,
+        "camera_words": 16180,
+        "collision_elements": 5179865,
+        "cursor_words": 44495,
+        "hardware_seed_bytes": 4045,
+        "item_bytes": 40450,
+        "keyword_bytes": 4162,
+        "modal_keyword_bytes": 675,
+        "modal_persistent_world_bytes": 1530727,
+        "modal_progression_words": 3256,
+        "modal_text_bytes": 814,
+        "modal_window_words": 16376,
+        "persistent_world_bytes": 15213245,
+        "progression_words": 32360,
+        "sprite_fields": 738814,
+        "task_fields": 853806,
+        "text_bytes": 54335,
+        "window_fields": 76317
+      },
+      "transient_dynamic_exclusions": [
+        1,
+        3478,
+        3763
+      ]
+    },
+    {
+      "compiler": {
+        "continuous_prefix": [
+          "title START",
+          [
+            1,
+            "main"
+          ],
+          [
+            2,
+            "main"
+          ]
+        ],
+        "native_elements": 8424416,
+        "sampled_one_step": [
+          [
+            63,
+            "main",
+            null,
+            null
+          ],
+          [
+            183,
+            "main",
+            null,
+            null
+          ],
+          [
+            300,
+            "main",
+            null,
+            null
+          ],
+          [
+            500,
+            "main",
+            null,
+            null
+          ],
+          [
+            800,
+            "main",
+            null,
+            null
+          ],
+          [
+            1200,
+            "main",
+            null,
+            null
+          ],
+          [
+            1600,
+            "main",
+            null,
+            null
+          ],
+          [
+            1887,
+            "main",
+            null,
+            null
+          ],
+          [
+            1896,
+            "main",
+            null,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8431538,
+            null
+          ],
+          [
+            1896,
+            "modal",
+            8437818,
+            null
+          ],
+          [
+            1900,
+            "main",
+            null,
+            null
+          ],
+          [
+            1950,
+            "main",
+            null,
+            null
+          ],
+          [
+            2009,
+            "main",
+            null,
+            null
+          ],
+          [
+            2010,
+            "main",
+            null,
+            null
+          ],
+          [
+            2233,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2233,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2243,
+            "main",
+            null,
+            null
+          ],
+          [
+            2244,
+            "main",
+            null,
+            null
+          ],
+          [
+            2255,
+            "main",
+            null,
+            null
+          ],
+          [
+            2310,
+            "main",
+            null,
+            null
+          ],
+          [
+            2362,
+            "main",
+            null,
+            null
+          ],
+          [
+            2438,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            2438,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3105,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3105,
+            "modal",
+            8431229,
+            null
+          ],
+          [
+            3477,
+            "main",
+            null,
+            null
+          ],
+          [
+            3478,
+            "main",
+            null,
+            null
+          ],
+          [
+            3762,
+            "main",
+            null,
+            null
+          ],
+          [
+            3763,
+            "main",
+            null,
+            null
+          ],
+          [
+            3928,
+            "main",
+            null,
+            null
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431538,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431538,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "primary"
+          ],
+          [
+            3928,
+            "conversation",
+            8431229,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8431553,
+            "keyword"
+          ],
+          [
+            3928,
+            "conversation",
+            8426169,
+            "exit"
+          ],
+          [
+            3929,
+            "main",
+            null,
+            null
+          ]
+        ]
+      },
+      "conversation_cancel_observation": {
+        "final_poll": true,
+        "returned": true,
+        "selected": true
+      },
+      "first_divergence": null,
+      "hardware_input": {
+        "caller_counts": {
+          "1": 230,
+          "2": 71,
+          "3": 12
+        },
+        "captured_modal_snapshots": 466,
+        "compared_modal_snapshots": 466,
+        "consumed_draws": 313,
+        "journal_sha256": "e04ce9d21be43a111b7ce130b3c85016d5f8e94d133196fb6095dc1048e7114f",
+        "last_input_boundary": 4458,
+        "pre_title_draws": 0,
+        "scope": "exact comparisons conditioned on ordered raw external observations; no autonomous SNES clock claim",
+        "validated_source_draws": 313
+      },
+      "keyword_observation": {
+        "confirmed": true,
+        "returned": true,
+        "saw_change": true
+      },
+      "modal_source_checkpoints": 466,
+      "modal_steps": 466,
+      "native_build": {
+        "architecture": "arm64",
+        "artifact": "libfdisbull_native.dylib",
+        "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+        "compiler_version": "Homebrew clang version 23.1.4",
+        "dylib_sha256": "d0ff93b464ef5c0e09a38d368e24a54acb52f9ccc5fb493d42394a6873d3ea5a",
+        "entry": "shadowrun_snes_frame",
+        "format": "fdisbull-macos-native-1",
+        "header": "fdisbull_native.h",
+        "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+        "immutable_regions": [
+          {
+            "id": 0,
+            "length": 1048576,
+            "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+            "storage": "caller-ROM"
+          }
+        ],
+        "integer_model": "cc65-int16-long32",
+        "logical_input_bits": 8,
+        "macho_cputype": "arm64",
+        "macho_filetype": "dylib",
+        "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+        "seed_sha256": "6fd6d40e03fbfcf37d0c9408cd8de270cdf749717d25f36bd931da8bd896ec02",
+        "source_sha256": "026793ebe32edf506367c0f32d429d0bb1d52360865d664400ad935052b0b13f",
+        "unsupported_status": "shadowrun_snes_frame_status"
+      },
+      "neutrality": {
+        "checkpoint_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+        "checkpoint_receipt_sha256": "06926320ba5684a3afd43e74a52712e813e17e014ba0a2c80e36b2f7252860a6",
+        "hardware_observer": {
+          "checkpoint_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+          "checkpoint_receipt_sha256": "06926320ba5684a3afd43e74a52712e813e17e014ba0a2c80e36b2f7252860a6",
+          "image_frames": 16,
+          "matching_checkpoint_digests": 3993,
+          "ram_frames": 16,
+          "scope": "unpatched baseline compares selected post-frame and final hashes; no instruction checkpoints",
+          "unpatched_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+          "unpatched_receipt_sha256": "1afb8b84a95327bbcf023014f1299a0a568de32ad98dbd0a277eb615fc54c30e"
+        },
+        "image_frames": 16,
+        "matching_checkpoint_digests": 3993,
+        "ram_frames": 16,
+        "scope": "unpatched baseline compares selected post-frame and final hashes; no instruction checkpoints",
+        "unpatched_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+        "unpatched_receipt_sha256": "1afb8b84a95327bbcf023014f1299a0a568de32ad98dbd0a277eb615fc54c30e"
+      },
+      "private_receipt_sha256": "8f252b2c066b2d2e1e2ce94528640584743a76b8e7a88b5f26efdb3394e9dbef",
+      "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+      "public_steps": 4458,
+      "result": "passed",
+      "route": "final-talk-cancel-01",
+      "source_checkpoints": 3993,
+      "source_elements": {
+        "actor_entity_bytes": 381941,
+        "actor_fields": 1418600,
+        "camera_words": 15972,
+        "collision_elements": 5072277,
+        "cursor_words": 43923,
+        "hardware_seed_bytes": 3993,
+        "item_bytes": 39930,
+        "keyword_bytes": 4123,
+        "modal_keyword_bytes": 1066,
+        "modal_persistent_world_bytes": 1752626,
+        "modal_progression_words": 3728,
+        "modal_text_bytes": 932,
+        "modal_window_words": 18464,
+        "persistent_world_bytes": 15017673,
+        "progression_words": 31944,
+        "sprite_fields": 729558,
+        "task_fields": 843354,
+        "text_bytes": 54231,
+        "window_fields": 75745
+      },
+      "transient_dynamic_exclusions": [
+        1,
+        3478,
+        3763
+      ]
+    }
+  ]
+}

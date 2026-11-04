@@ -188,10 +188,54 @@ void opening_publish(void) {
  shadowrun_snes_player_z=scene_read(0x0ef4U+slot);
 }
 
+/* $D1AB-$D21C classifies the live player delta into eight directions. The
+ * signed differences and half-axis comparisons retain source 16-bit wrap. */
+void opening_face_player(u16 actor) {
+ u16 player,dx,dy,ax,ay,sx,sy,dir;
+ player=scene_read(0x0cdeU);
+ if((actor&1U) || actor>=88U || (player&1U) || player>=88U) {
+  opening_failure=12U;return;
+ }
+ dx=scene_read(0x0e44U+player)-scene_read(0x0e44U+actor);
+ dy=scene_read(0x0e9cU+player)-scene_read(0x0e9cU+actor);
+ sx=dx&32768U;sy=dy&32768U;ax=dx;ay=dy;
+ scene_write(0x00a8U,0U);scene_write(0x00abU,0U);
+ if(sx) {scene_write(0x00a8U,dx);ax=0U-dx;}
+ if(sy) {scene_write(0x00abU,dy);ay=0U-dy;}
+ scene_write(0x00a2U,ax);scene_write(0x00a5U,ay);
+ if((ay>>1)>=ax) {dir=0U;if(sy)dir=4U;}
+ else if((ax>>1)>=ay) {dir=2U;if(sx)dir=6U;}
+ else if(sx) {dir=7U;if(sy)dir=5U;}
+ else {dir=1U;if(sy)dir=3U;}
+ scene_write(0U,actor);scene_write(2U,dir);
+ opening_load(actor);npc_requested_direction=dir;shadowrun_snes_npc_direction(0U);
+ if(!npc_supported) {opening_failure=14U;return;}
+ opening_save(actor);
+}
+
+/* Source $A9D9 resets visual/collision metadata, retaining actor membership. */
+void opening_actor_metadata_clear(u16 actor) {
+ opening_animation_metadata_cleanup(actor);
+ if(!opening_anim_supported) {opening_failure=35U;return;}
+ scene_write(0x421cU+actor,0U);scene_write(0x4274U+actor,0U);
+ scene_write(0x42ccU+actor,0U);scene_write(0x4324U+actor,0U);
+ scene_write(0x437cU+actor,0U);scene_write(0x40bcU+actor,0U);
+ scene_write(0x115cU+actor,0U);scene_write(0x3f5cU+actor,0U);
+ scene_write(0x10acU+actor,0U);scene_write(0x1054U+actor,65535U);
+ scene_write(0x400cU+actor,128U);scene_write(0x3fb4U+actor,1U);
+ scene_write(0x12bcU+actor,0U);
+}
+
 void opening_callback(void) {
  u16 actor,i,count,found,slot;
  opening_fault_native=task_vm_callback;
- if(task_vm_callback==199U) {
+ if(task_vm_callback==99U && hardware_mode) {
+  if(task_vm_argc || !task_vm_return) {opening_failure=47U;return;}
+  opening_hardware_rng(3U,task_index);
+  if(!hardware_status) {opening_failure=47U;return;}
+  task_callback_result=hardware_result;task_callback_success=1U;
+  shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==199U) {
   opening_window_arg0=task_vm_arg0;opening_window_arg1=task_vm_arg1;
   opening_window_arg2=task_vm_arg2;opening_window_arg3=task_vm_arg3;
   opening_window_arg4=task_vm_arg4;opening_window_arg5=task_vm_arg5;
@@ -249,6 +293,37 @@ void opening_callback(void) {
   task_audio_volume[i]=task_vm_arg2;task_audio_mode[i]=task_vm_arg3;
   task_audio_count+=1U;opening_audio_projection_events+=1U;
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==108U) {
+  /* $D19A: face the selected live player via D1AB, then source AA3C. */
+  if(task_vm_argc!=1U || task_vm_return) {opening_failure=12U;return;}
+  opening_face_player(task_vm_arg0);if(opening_failure)return;
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==77U) {
+  /* $D10E clears all three source velocity words for the selected actor. */
+  actor=task_vm_arg0;
+  if(task_vm_argc!=1U || task_vm_return || (actor&1U) || actor>=88U) {
+   opening_failure=12U;return;
+  }
+  scene_write(0x0d3cU+actor,0U);scene_write(0x0d94U+actor,0U);
+  scene_write(0x0decU+actor,0U);
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==33U) {
+  /* $C6E6 -> $C6C3: arm the actor's live player-follow target. */
+  actor=task_vm_arg0;slot=scene_read(0x0cdeU);
+  if(task_vm_argc!=1U || task_vm_return || (actor&1U) || actor>=88U ||
+     (slot&1U) || slot>=88U) {opening_failure=12U;return;}
+  scene_write(2U,slot);scene_write(0x4114U+actor,0U);
+  scene_write(0x416cU+actor,0U);scene_write(0x41c4U+actor,slot);
+  scene_write(0x40bcU+actor,1U);
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==91U) {
+  /* $A8AA: release the actor's movement target without moving it. */
+  actor=task_vm_arg0;
+  if(task_vm_argc!=1U || task_vm_return || (actor&1U) || actor>=88U) {
+   opening_failure=12U;return;
+  }
+  scene_write(0x136cU+actor,65535U);
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
  } else if(task_vm_callback==209U || task_vm_callback==208U || task_vm_callback==106U) {
   actor=task_vm_arg0;
   if((actor&1U) || actor>=88U) {opening_failure=12U;return;}
@@ -274,6 +349,13 @@ void opening_callback(void) {
   scene_party_extra=task_vm_arg6;shadowrun_snes_party_construct(0U);
   if(scene_party_status!=1U) {opening_failure=27U;return;}
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==174U) {
+  actor=task_vm_arg0;
+  if(task_vm_argc!=1U || task_vm_return || (actor&1U) || actor>=88U) {
+   opening_failure=12U;return;
+  }
+  opening_actor_metadata_clear(actor);if(opening_failure)return;
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
  } else if(task_vm_callback==184U) {
   /* A882/A9D9 logical actor teardown and shared sprite-node release. */
   actor=task_vm_arg0;
@@ -282,15 +364,8 @@ void opening_callback(void) {
   if((count&1U) || count>=88U) {opening_failure=30U;return;}
   for(i=0U;i<=count;i+=2U)if(scene_read(0x14ceU+i)==actor)found=i;
   if(found==65535U) {opening_failure=30U;return;}
-  opening_animation_metadata_cleanup(actor);
-  if(!opening_anim_supported) {opening_failure=35U;return;}
-  scene_write(0x421cU+actor,0U);scene_write(0x4274U+actor,0U);
-  scene_write(0x42ccU+actor,0U);scene_write(0x4324U+actor,0U);
-  scene_write(0x437cU+actor,0U);scene_write(0x40bcU+actor,0U);
-  scene_write(0x115cU+actor,0U);scene_write(0x3f5cU+actor,0U);
-  scene_write(0x10acU+actor,0U);scene_write(0x1054U+actor,65535U);
-  scene_write(0x400cU+actor,128U);scene_write(0x3fb4U+actor,1U);
-  scene_write(0x12bcU+actor,0U);scene_write(0x3f04U+actor,65535U);
+  opening_actor_metadata_clear(actor);if(opening_failure)return;
+  scene_write(0x3f04U+actor,65535U);
   for(i=found;i<count;i+=2U)scene_write(0x14ceU+i,scene_read(0x14d0U+i));
   scene_write(0x14ccU,count-2U);
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
@@ -345,6 +420,22 @@ void opening_scheduler(void) {
   if(dispatch==64U) {opening_failure=16U;return;}
  }
  opening_failure=19U;
+}
+
+/* $FF0F supplies C530, followed by C4EF(3) only below the source threshold.
+ * SPC delivery stays adapted, while every RNG call and seed change executes. */
+void opening_hardware_ambient(void) {
+ opening_hardware_rng(1U,65535U);
+ if(!hardware_status) {opening_failure=47U;return;}
+ if(hardware_result<0x3333U) {
+  scene_write(0U,3U);hardware_bound=3U;
+  opening_hardware_bounded(65535U);
+  if(!hardware_status) {opening_failure=47U;return;}
+  opening_window_ambient_sound=scene_rom16(0x7f3dUL+((u32)hardware_result<<1));
+  scene_write(2U,opening_window_ambient_sound);scene_write(0U,65535U);
+  scene_write(4U,32U);scene_write(6U,3U);
+  opening_window_ambient_audio_events+=1U;
+ }
 }
 
 void opening_actor(u16 slot) {
@@ -419,7 +510,7 @@ void opening_animation(u16 slot) {
  }
 }
 
-void shadowrun_snes_frame(u8 pad) {
+void opening_frame_step(u8 pad) {
  u16 raw,previous,i,count,slot,resuming;
  shadowrun_snes_frame_status=2U;opening_failure=0U;opening_pad=pad;
  if(task_dynamic_stale) {
@@ -517,11 +608,26 @@ void shadowrun_snes_frame(u8 pad) {
  if(!camera_status) {opening_failure=42U;return;}
  opening_sort();if(!opening_sort_supported) {opening_failure=29U;return;}
  opening_animation_metadata_pass_finish();
+ opening_window_rng_provided=0U;if(hardware_mode)opening_window_rng_provided=1U;
  opening_window_tick();if(opening_window_status!=1U) {opening_failure=31U;return;}
+ if(opening_window_rng_pending && hardware_mode) {
+  opening_hardware_ambient();if(opening_failure)return;
+ }
  if(opening_window_rng_tainted)task_rng_tainted=1U;
  if(opening_window_audio_tainted)task_audio_tainted=1U;
  /* $E23A returns directly through $E2D8 while this HUD request is negative. */
  if(!(scene_read(0x1da5U)&32768U)) {opening_failure=38U;return;}
  opening_passes+=1U;opening_publish();if(opening_failure)return;
  shadowrun_snes_frame_status=1U;
+}
+
+/* The hardware batch belongs to the same atomic update as tasks and WRAM. */
+void shadowrun_snes_frame(u8 pad) {
+ shadowrun_snes_frame_status=2U;opening_failure=0U;
+ opening_hardware_begin();
+ if(!hardware_status) {opening_failure=47U;return;}
+ opening_frame_step(pad);
+ if(shadowrun_snes_frame_status!=1U)return;
+ opening_hardware_finish();
+ if(!hardware_status) {opening_failure=47U;shadowrun_snes_frame_status=2U;}
 }

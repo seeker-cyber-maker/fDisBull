@@ -414,6 +414,10 @@ context and compare it with the model's active menu. A learned keyword alone
 does not prove that Ask about opened, a keyword was confirmed or its response
 returned. Inspect modal window/text state separately when that stronger claim
 is needed; main-loop comparisons can skip the entire suspended conversation.
+If a selector overwrites the shared decode buffer, compare the separately
+retained dialogue body against qualified original decoder/layout boundaries.
+Marker scratch equality cannot validate that earlier body. Collect a new source
+case when a live response pointer is absent from the existing component set.
 
 Before replacing an unknown random draw, trace its consumers. A discarded sound
 choice and a draw that sets an NPC timer require different recovery depth.
@@ -428,6 +432,41 @@ when its sampling phase, order, completeness, continuity and observer neutrality
 are qualified. Label that conditional result separately from an independently
 modeled clock or autonomous hardware-timing parity; an observed RNG return or
 later gameplay record is not a substitute for external observations.
+
+When implementing that boundary, record every invocation of the producer from
+the declared seed, including ambient/UI callers and rejection retries. A trace
+filtered to the first failing task can hide earlier seed updates. Match each
+raw-reading batch to a named input boundary, caller/task and monotonic ordinal;
+refuse missing, reordered or unused rows transactionally. Keep seed/result
+metadata comparison-only. Check the derived seed at source boundaries as well
+as the eventual consumer, and preserve the queue cursor and any local PRNG in
+the complete rollback state. An MMIO read may matter for its side effect, such
+as latching counters, even when its returned byte does not enter arithmetic.
+Qualify the subsequent reads at their actual phases. Use a separately labeled
+seeded source for repeatable local play; changing its seed can change NPC timing,
+so drive menus by observed readiness rather than source video-frame numbers.
+Read the actual menu labels/order before scripting a selection; a driver that
+chooses Exit while intending Talk can make a working conversation look stalled.
+When a logical update spans video frames, include the frame containing its next
+instruction checkpoint in a bounded trace. A post-frame sample just before that
+frame can precede the relevant write; an empty shorter trace is not evidence
+that the logical update omitted it.
+Choose bus-write filters using the actual CPU bank/address, including memory
+mirrors, rather than only the canonical WRAM alias. When a script wait yields
+without a normal native return, qualify its per-task continuation instead of
+pairing later returns with a single global call stack.
+
+For a claim that a keyword or item is unobtainable, inventory its display name,
+identifier, teaching/creation sites and consumers separately. Trace all known
+producers, including conversation records and script-native calls, and retain
+unknown indirect paths as a frontier. A response record proves that a keyword
+is recognized if supplied; it does not prove an ordinary learning path. State
+whether the result is a catalogued static producer audit, an observed route or
+an exhaustive reachability argument. Do not silently add a cheat or unlock to
+make an unused conversation pass.
+Use actual source directory extents and instruction traversal: an 8-bit tag
+interface does not prove 256 records exist, and a whole-image opcode-byte search
+also finds data and instructions beyond unconditional returns.
 
 For an expensive source-state comparison, first use a compiled candidate with
 the same title seed and input journal to locate unsupported operations cheaply.

@@ -81,8 +81,13 @@ The [live SNES handoff](SHADOWRUN_SNES_LIVE_HANDOFF.md) adds explicit
 comparisons and the remaining scene/script boundaries.
 The [room and keyword follow-up](SHADOWRUN_SNES_TRANSITIONS.md) covers the
 source-derived hallway/street loads, transient collision guard and conversation
-components. Its native route currently stops at an unmodeled hardware RNG call;
-component text qualification does not establish live keyword play.
+components. The [hardware-input follow-up](SHADOWRUN_SNES_HARDWARE.md) qualifies
+two complete bounded street conversations under recorded raw external readings.
+Use `--profile opening --hardware-mode seeded --hardware-seed 1` for repeatable
+adapted local play; recorded comparisons use the separate verifier input ports.
+Keep both claims distinct from autonomous hardware timing. The
+[keyword audit](SHADOWRUN_SNES_KEYWORDS.md) traces teaching producers separately
+from retained keyword names and responses.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 

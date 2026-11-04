@@ -116,3 +116,32 @@ def test_direct_room_volume_dispatches_entry_with_source_coordinate_scaling():
     state=m.snapshot()
     assert state['opening_scene_changed']==1 and state['requested_entry']==31
     assert state['opening_failure']==0 and state['task_shared']==shared
+
+
+FACING_PREFIX = '''typedef unsigned char u8;typedef unsigned int u16;typedef unsigned long u32;
+u8 task_shared[65536],opening_failure,npc_supported;
+u16 npc_requested_direction,seen_direction;
+u16 scene_read(u16 at){return (u16)task_shared[at]|((u16)task_shared[at+1U]<<8);}
+void scene_write(u16 at,u16 value){task_shared[at]=(u8)value;task_shared[at+1U]=(u8)(value>>8);}
+void opening_load(u16 actor){}
+void opening_save(u16 actor){}
+void shadowrun_snes_npc_direction(u8 unused){seen_direction=npc_requested_direction;npc_supported=1U;}
+'''
+
+
+@pytest.mark.parametrize('dx,dy,expected',[(0,0,0),(1,3,0),(3,1,2),(-3,1,6),
+    (1,-3,4),(3,3,1),(3,-3,3),(-3,-3,5),(-3,3,7),
+    (2,4,0),(4,2,2),(3,4,1),(0x8000,0,6)])
+def test_face_player_uses_source_half_axis_thresholds(dx,dy,expected):
+    source=opening.SOURCE.read_text()
+    start=source.index('void opening_face_player(u16 actor) {')
+    face=source[start:source.index('\n}\n',start)+2]
+    m=GameMachine(author_program(FACING_PREFIX+face),{})
+    shared=bytearray(65536)
+    for at,value in ((0x0cde,0x42),(0xe44+0x40,1000),(0xe9c+0x40,1000),
+                     (0xe44+0x42,(1000+dx)&0xffff),(0xe9c+0x42,(1000+dy)&0xffff)):
+        shared[at:at+2]=value.to_bytes(2,'little')
+    m.set_state({'task_shared':list(shared)})
+    m.call('opening_face_player',0x40);s=m.snapshot()
+    assert (s['opening_failure'],s['seen_direction'])==(0,expected)
+    assert s['task_shared'][:4]==[0x40,0,expected,0]

@@ -1,0 +1,184 @@
+{
+  "controller_journal_sha256": "629f39e113e1da979aacb36a64c0ca6b5212b77c1f24552e454807f53e7c6827",
+  "elapsed_seconds": 22.806,
+  "exposed_state_elements": 150436,
+  "format": "shadowrun-snes-integrated-hardware-contract-1",
+  "hardware_journal_sha256": "8eb163bd0d10cce45d56fd1b8f0be34382b8413dc45837207b72d27ba44d585c",
+  "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+  "limits": [
+    "All exposed gameplay/queue/PRNG variables are read through the public ABI; host error strings and profiling step counters are diagnostics outside the rollback state.",
+    "Recorded inputs condition the comparison on observed hardware reads; seeded input is an adapted local policy."
+  ],
+  "native_build_receipt_sha256": "7d6b7fa974c116fbc3caeee00c5d58803d6f510c887b908a10de54b044e635d7",
+  "native_sha256": "d0ff93b464ef5c0e09a38d368e24a54acb52f9ccc5fb493d42394a6873d3ea5a",
+  "positive": {
+    "accepted_correct_batch": 10,
+    "all_state_elements_compared": 150436,
+    "derived_state_sha256": "ed3c87e04061da3c57fe5416743cbdf8f6afded6898caf10e28aeb35a4e623a4",
+    "hardware_ordinal_after": 270,
+    "opening_passes_after": 3764,
+    "result": "passed",
+    "seed_derived_from_raw_readings": true
+  },
+  "prestate_derivation": {
+    "accepted_public_updates_including_title_start": 3903,
+    "draws_derived_before_transaction": 260,
+    "future_original_RAM_supplied": false,
+    "initial_state": "only qualified title capture",
+    "input_boundary_before_transaction": 3903,
+    "queued_rows_before_transaction": 10,
+    "source_main_serial": 3764
+  },
+  "private_receipt_sha256": "336fef68a0e9ad3a379119456d7c4df28c2e7ae1a250825f0ce00c15641c98dd",
+  "program_sha256": "bc8261014ea85a6aa5fc8dd5619ef9b70fa682e08353e229b00aeffb7d40c990",
+  "refusal_cases": [
+    {
+      "attempts": 2,
+      "case": "wrong-caller",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic environmental-input corruption; not original reachability",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "f4f3768942503413154b9d90af4a194b4b79f2067d57d758113e0f3a6d98b072",
+        "f4f3768942503413154b9d90af4a194b4b79f2067d57d758113e0f3a6d98b072"
+      ],
+      "state_sha256_before": "f4f3768942503413154b9d90af4a194b4b79f2067d57d758113e0f3a6d98b072",
+      "uil_draws_before_refusal": 0,
+      "uil_failure": 47,
+      "uil_fault_native": 99,
+      "uil_fault_task": 34,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": false,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "wrong-task-context",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic environmental-input corruption; not original reachability",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "96e6a96e5fb56978e60a52cb95d85f5d1315bc77bf8b05f5d2447d1204478586",
+        "96e6a96e5fb56978e60a52cb95d85f5d1315bc77bf8b05f5d2447d1204478586"
+      ],
+      "state_sha256_before": "96e6a96e5fb56978e60a52cb95d85f5d1315bc77bf8b05f5d2447d1204478586",
+      "uil_draws_before_refusal": 0,
+      "uil_failure": 47,
+      "uil_fault_native": 99,
+      "uil_fault_task": 34,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": false,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "missing-last-row-after-nine-draws",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic environmental-input corruption; not original reachability",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "ab5676a74d77f67b15c865adbd67b94421e43c68d907d0f83a6ebcf494e22fe4",
+        "ab5676a74d77f67b15c865adbd67b94421e43c68d907d0f83a6ebcf494e22fe4"
+      ],
+      "state_sha256_before": "ab5676a74d77f67b15c865adbd67b94421e43c68d907d0f83a6ebcf494e22fe4",
+      "uil_draws_before_refusal": 9,
+      "uil_failure": 47,
+      "uil_fault_native": 99,
+      "uil_fault_task": 42,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": true,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "unused-extra-row-after-ten-draws",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic environmental-input corruption; not original reachability",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "b64780f349c11118edda0724b82ee801e5e6a7a2ec19b4bb8a9759bd172519c5",
+        "b64780f349c11118edda0724b82ee801e5e6a7a2ec19b4bb8a9759bd172519c5"
+      ],
+      "state_sha256_before": "b64780f349c11118edda0724b82ee801e5e6a7a2ec19b4bb8a9759bd172519c5",
+      "uil_draws_before_refusal": 10,
+      "uil_failure": 47,
+      "uil_fault_native": 207,
+      "uil_fault_task": 0,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": true,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "wrong-ordinal",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic environmental-input corruption; not original reachability",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "af8ca97e8aa96124a6e2fbfa25f64c4f203f73727f056bfa3903d46b07cd0180",
+        "af8ca97e8aa96124a6e2fbfa25f64c4f203f73727f056bfa3903d46b07cd0180"
+      ],
+      "state_sha256_before": "af8ca97e8aa96124a6e2fbfa25f64c4f203f73727f056bfa3903d46b07cd0180",
+      "uil_draws_before_refusal": 0,
+      "uil_failure": 47,
+      "uil_fault_native": 207,
+      "uil_fault_task": 0,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": false,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "reserved-pad",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic reserved input bit; no original reachability claim",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "4639853d2799f7f2e23ee2de0c40addee1da737a2e6249d4539dbe911af72c9b",
+        "4639853d2799f7f2e23ee2de0c40addee1da737a2e6249d4539dbe911af72c9b"
+      ],
+      "state_sha256_before": "4639853d2799f7f2e23ee2de0c40addee1da737a2e6249d4539dbe911af72c9b",
+      "uil_draws_before_refusal": 0,
+      "uil_failure": 1,
+      "uil_fault_native": 207,
+      "uil_fault_task": 0,
+      "uil_prng_changed_before_refusal": false,
+      "uil_seed_changed_before_refusal": false,
+      "unchanged_elements_compared": 300872
+    },
+    {
+      "attempts": 2,
+      "case": "seeded-late-invalid-task-frame",
+      "input_prefill": "queue/state setters applied before the public update; rollback baseline includes the complete prefilled batch",
+      "intervention": "diagnostic clone of continuously derived prestate: seeded policy=2, PRNGseed1, empty queue, task_frame[0]=0; not an ordinary reachable game state",
+      "result": "passed",
+      "return_code": 1,
+      "state_sha256_after_attempts": [
+        "dae57183bc73a6a6ef3d32f9a806ac9567a953e5f1a8fbdff293ef70517a01d1",
+        "dae57183bc73a6a6ef3d32f9a806ac9567a953e5f1a8fbdff293ef70517a01d1"
+      ],
+      "state_sha256_before": "dae57183bc73a6a6ef3d32f9a806ac9567a953e5f1a8fbdff293ef70517a01d1",
+      "uil_draws_before_refusal": 10,
+      "uil_failure": 11,
+      "uil_fault_native": 99,
+      "uil_fault_task": 0,
+      "uil_prng_changed_before_refusal": true,
+      "uil_seed_changed_before_refusal": true,
+      "unchanged_elements_compared": 300872
+    }
+  ],
+  "result": "passed",
+  "scope": "whole exposed state rollback at a continuously title-derived street update; diagnostic corrupt inputs and forged late task state test admission/atomicity, not original reachability or autonomous timing",
+  "seed_state_sha256": "6fd6d40e03fbfcf37d0c9408cd8de270cdf749717d25f36bd931da8bd896ec02",
+  "source_sha256": "026793ebe32edf506367c0f32d429d0bb1d52360865d664400ad935052b0b13f",
+  "source_unchanged": true,
+  "title_seed_sha256": "15caaf78faed99408c783119ac5e1703da066b904e5570dd895b7bcb49db9d93",
+  "unchanged_elements_compared": 2106104,
+  "whole_state_refusal_readbacks": 14
+}

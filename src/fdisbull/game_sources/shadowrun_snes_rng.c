@@ -2,7 +2,8 @@
  * counter bytes at their separate reads and the actual latched $213C/$213D
  * read bytes after a $2137 latch. An NMI can occur between counter reads.
  * This fragment never obtains, guesses or publishes hardware inputs and is
- * deliberately not connected to the opening VM. ROM region 0 is caller-owned. */
+ * connected to the opening VM only through the explicit hardware-input
+ * owner. ROM region 0 is caller-owned. */
 typedef unsigned char u8;
 typedef unsigned int u16;
 typedef unsigned long u32;

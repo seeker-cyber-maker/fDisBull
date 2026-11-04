@@ -28,7 +28,8 @@ def _input(path, size):
     return selected.resolve(),selected.read_bytes()
 
 
-def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
+def build(*, rom_path, ram, save_ram, output, profile='static-morgue',
+          hardware_mode='disabled', hardware_seed=1):
     """Compile the exact captured SNES scene to a private native ARM64 app.
 
     The caller owns the ROM, profile-specific WRAM and qualified save-RAM capture.
@@ -38,6 +39,12 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     """
     if profile not in ('static-morgue','live-morgue','npc-intro','scripted-intro','opening'):
         raise ValueError('Unknown SNES study profile')
+    if hardware_mode not in ('disabled','seeded'):
+        raise ValueError('App hardware mode must be disabled or seeded; recorded inputs use the comparison driver')
+    if type(hardware_seed) is not int or not 1<=hardware_seed<=0xffffffff:
+        raise ValueError('Hardware seed must be an integer from 1 to 4294967295')
+    if profile!='opening' and hardware_mode!='disabled':
+        raise ValueError('Hardware inputs are supported only by the opening profile')
     destination=_private_directory(output)
     if destination.exists():
         raise ValueError('Native SNES output must be a new private directory')
@@ -56,7 +63,9 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
         factory=machine_from_scripted_capture
     elif profile=='opening':
         from .shadowrun_snes_opening import machine_from_title
-        factory=machine_from_title
+        def factory(rom,snapshot,save):
+            return machine_from_title(rom,snapshot,save,hardware_mode=hardware_mode,
+                                      hardware_seed=hardware_seed)
     else:factory=None
     if factory:machine,regions=factory(rom,snapshot,save)
     else:machine=machine_from_capture(rom,snapshot,save);regions={0:rom,1:snapshot}
@@ -116,5 +125,8 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
         receipt['display']='adapted isometric actors and source cursor driven by recovered camera; source menus/conversation text and guarded item ownership; no original artwork or portrait pixels'
         receipt['limits'][1]='unobserved room, player-action and conversation continuations remain unqualified'
         receipt['limits']+=['one input update can be a suspended modal poll with no actor/physics pass; original video pacing and APU delivery excluded']
+        receipt['hardware_input']={'mode':hardware_mode,
+            'seed':hardware_seed if hardware_mode=='seeded' else None,
+            'scope':'repeatable local hardware-input substitute; not original display timing' if hardware_mode=='seeded' else 'unmodeled hardware reads refuse'}
     (destination/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt

@@ -159,6 +159,8 @@ CONSOLE_GAME_EVIDENCE += (
     'docs/evidence/miniplanets-full-game-2026-10-31/genesis-presentation.json',
 )
 CONSOLE_GAME_RESOURCES += (
+    'src/fdisbull/game_sources/shadowrun_snes_hardware.c',
+    'src/fdisbull/shadowrun_snes_hardware.py',
     'src/fdisbull/nes_multicart.py', 'src/fdisbull/game_sources/genesis_game_copy.s',
 )
 CONSOLE_GAME_HELPERS += (
@@ -168,6 +170,19 @@ CONSOLE_GAME_HELPERS += (
     'tests/test_nes_multicart_cli.py', 'tests/test_nes_multicart_review.py',
 )
 CONSOLE_GAME_EVIDENCE += (
+    'docs/SHADOWRUN_SNES_HARDWARE.md',
+    'docs/SHADOWRUN_SNES_KEYWORDS.md',
+    'scripts/check_shadowrun_snes_keywords.py',
+    'scripts/shadowrun_snes_hardware_replay.py',
+    'scripts/snes9x_hardware_adapter.py',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/hardware-input.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/conversation-comparison.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/keyword-analysis.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/native-app.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/native-contract.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/regression.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/broad-regression.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/coverage.json',
     'docs/GENESIS_PERFORMANCE.md', 'docs/NES_MULTICART.md',
     'docs/CONSOLE_INTAKE_2026_10_31.md',
     'docs/evidence/miniplanets-full-game-2026-10-31/genesis-performance.json',

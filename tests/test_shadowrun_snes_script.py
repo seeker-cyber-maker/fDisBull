@@ -807,3 +807,29 @@ def test_control_query_reads_two_original_words_without_assuming_zero():
     m.call('shadowrun_snes_task_native', 0)
     s = m.snapshot()
     assert (s['task_native_supported'], s['task_callback_result']) == (1, 0xffff)
+
+
+def test_external_counter_readings_do_not_make_the_counter_state_known():
+    m=machine();m.set_state({'task_counter_tainted':1})
+    for address,length in ((0x1c92,1),(0x1c93,1),(0x1c91,2),(0x1c93,2)):
+        assert m.call('task_readable',address,length)['result']==0
+    for address,length in ((0x1c91,1),(0x1c94,1),(0x1d04,1)):
+        assert m.call('task_readable',address,length)['result']==1
+    m.set_state({'task_counter_tainted':0})
+    assert m.call('task_readable',0x1c92,2)['result']==1
+
+
+def test_source_increment_and_decrement_wrap_one_word_without_popping_it():
+    import hashlib
+    for op,value,expected in ((0x86,0xffff,0),(0x86,0x7fff,0x8000),(0x88,0,0xffff),(0x88,1,0)):
+        rom=bytes([0x14,value&255,value>>8,op,0x56])
+        program=author_program(SOURCE.read_text(),[{'id':0,'length':len(rom),'sha256':hashlib.sha256(rom).hexdigest()}])
+        m=GameMachine(program,{0:rom})
+        heap,frames=[0]*1996,[0]*48
+        frame,sp=0x400,0x500
+        heap[frame-0x3f2:frame-0x3f2+3]=[0,0x80,0x80]
+        heap[frame-0x3f2+7:frame-0x3f2+9]=[sp&255,sp>>8]
+        frames[0]=frame
+        m.set_state({'task_heap':heap,'task_frame':frames,'task_index':0})
+        m.call('shadowrun_snes_task_vm',0);s=m.snapshot()
+        assert (s['task_vm_status'],s['task_return_value'],s['task_vm_sp'])==(4,expected,sp)

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Compare a title-seeded interaction route at original main-loop boundaries.
 
-Only ordinary controller samples are supplied after the title seed. Modal
-polls are separate inputs to the public transactional model entry; they do
-not themselves imply a completed source main-loop pass.
+Ordinary controller samples are supplied after the title seed. An explicitly
+selected hardware journal additionally supplies raw external readings, never
+observed RNG returns or later game state. Modal polls are separate inputs to
+the transactional model entry; they do not imply a completed main-loop pass.
 """
 import argparse
 import ctypes
@@ -19,10 +20,12 @@ from fdisbull.shadowrun_snes_field import ROM_SHA256,SAVE_SHA256
 from fdisbull.shadowrun_snes_opening import TITLE_SHA256,machine_from_title
 from fdisbull.udc_macos import build_macos,_Compiler
 from check_shadowrun_macos import Native
-from check_shadowrun_snes_opening import Reader,Mismatch,check,journal_pad,sha,word,order,UNPATCHED_CORE
+from check_shadowrun_snes_opening import Reader,Mismatch,check,journal_pad,sha,word,order,UNPATCHED_CORE,WINDOW
+from shadowrun_snes_hardware_replay import HardwareReplay
 
 CORE='34f40027761df3cdbcfa9efad1ad68540cc069105757168e8b81f19864d0b022'
 CONVERSATION_CORE='90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8'
+HARDWARE_CORE='7a06f2d790a3ce8ba3766e580f3e86f79c379a11a93f6f5a7d044ad4551fd248'
 MODAL={0x80a67d:1,0x80a7b2:2,0x80a7c1:2,0x80c03a:3}
 CONVERSATION_MODAL={0x80a67d:4,0x80a7b2:5,0x80a7c1:5,0x8092b9:6}
 CURSOR=(0x1ec,0x1ee,0x1f0,0x1f2,0x1f4,0x1f6,0x1fa,0x1fc,0x1fe,0x200,0x202)
@@ -175,6 +178,34 @@ def poll_phase(reader,sample):
     return phase
 
 
+def compare_modal(reader,source):
+    """Compare logical menus, body text and persistent effects during suspension.
+
+    Controller words are sampled on opposite sides of the source input poll;
+    raster, portrait pixels and unmodeled display scratch remain excluded.
+    """
+    counts={'modal_window_words':0,'modal_text_bytes':0}
+    for at in (0x220,0x22e,0x232,0x234,0x236,0x238,0x23a,0x23c,0x23e,0x240):
+        if reader.word(at)!=word(source,at):raise Mismatch(f'modal.window.{at:04x}',reader.word(at),word(source,at))
+        counts['modal_window_words']+=1
+    head=word(source,0x220)
+    if not head&32768:
+        if head&1 or head>=32:raise ValueError('invalid source modal window head')
+        for slot in range(0,head+2,2):
+            for at in (0x242+slot,*(base+slot for base in WINDOW)):
+                if at!=0x242+slot and not word(source,0x242+slot):continue
+                counts['modal_window_words']+=1
+                if reader.word(at)!=word(source,at):raise Mismatch(f'modal.window.{at:04x}',reader.word(at),word(source,at))
+    for off in range(256):
+        counts['modal_text_bytes']+=1
+        if reader.byte(0x21a0+off)!=source[0x21a0+off]:
+            raise Mismatch(f'modal.text.{off:03x}','redacted','redacted')
+        if not source[0x21a0+off]:break
+    else:raise ValueError('source modal text is unterminated')
+    for key,value in compare_progression(reader,source).items():counts['modal_'+key]=value
+    return counts
+
+
 def dynamic_grid_ready(reader,source,serial,previous_entry):
     """Qualify the source primer boundary before omitting stale dynamic data.
 
@@ -203,6 +234,7 @@ def main():
         p.add_argument('--'+key,required=True,type=Path)
     p.add_argument('--until-serial',required=True,type=int)
     p.add_argument('--native-build',type=Path)
+    p.add_argument('--hardware-reference',type=Path,help='qualified observation-only core run containing a complete private raw hardware journal and modal RAM; conditions the comparison on those external readings')
     p.add_argument('--require-pickup',action='store_true',help='require the observed patch count transition and actor removal')
     p.add_argument('--require-item',choices=('patch','scalpel'),help='require the named source item ownership and actor-removal transition')
     p.add_argument('--require-repeat',action='store_true',help='require the observed empty-target repeat attempt after patch pickup')
@@ -227,6 +259,15 @@ def main():
     checkpoint_bytes=(a.checkpoint_baseline.resolve()/'receipt.json').read_bytes()
     unpatched_bytes=(a.unpatched_baseline.resolve()/'receipt.json').read_bytes()
     neutrality=validate_neutrality(r,checkpoint_bytes,unpatched_bytes)
+    hardware_ref=a.hardware_reference.resolve() if a.hardware_reference else None
+    hardware_receipt_bytes=None;hardware_controller_bytes=None
+    if hardware_ref:
+        hardware_receipt_bytes=(hardware_ref/'receipt.json').read_bytes();hr=json.loads(hardware_receipt_bytes)
+        hardware_controller_bytes=(hardware_ref/'controller_journal.json').read_bytes()
+        if (not HARDWARE_CORE or hr.get('core_sha256')!=HARDWARE_CORE or hardware_controller_bytes!=journal_bytes or
+            hr.get('snes_controller_journal_sha256')!=sha(journal_bytes)):
+            raise ValueError('unqualified hardware observer or changed controller observations')
+        neutrality['hardware_observer']=validate_neutrality(hr,checkpoint_bytes,unpatched_bytes)
     entries=[]
     for frame in c['frames']:
         if frame['dropped']:raise ValueError('checkpoint observer drops')
@@ -244,11 +285,14 @@ def main():
     title=(ref/title_items[0]['file']).read_bytes();rom=a.rom.read_bytes();save=(ref/'save_ram.bin').read_bytes()
     if sha(title)!=TITLE_SHA256 or sha(rom)!=ROM_SHA256 or sha(save)!=SAVE_SHA256:
         raise ValueError('incorrect ROM, title seed or save')
-    watched=[Path(__file__).resolve(),ROOT/'scripts/check_shadowrun_snes_opening.py']
+    watched=[Path(__file__).resolve(),ROOT/'scripts/check_shadowrun_snes_opening.py',ROOT/'scripts/shadowrun_snes_hardware_replay.py']
     watched+=sorted((ROOT/'src/fdisbull/game_sources').glob('shadowrun_snes_*.c'))
     watched+=sorted((ROOT/'src/fdisbull').glob('shadowrun_snes_*.py'))
     hashes={str(x):sha(x.read_bytes()) for x in watched}
-    m,_=machine_from_title(rom,title,save);template=m.snapshot();out.mkdir(mode=0o700,parents=True)
+    m,_=machine_from_title(rom,title,save,hardware_mode='recorded' if hardware_ref else 'disabled')
+    hardware=HardwareReplay(hardware_ref,hr,journal_bytes,rom,title) if hardware_ref else None
+    template=m.snapshot();out.mkdir(mode=0o700,parents=True)
+    for boundary,sample in enumerate((s for s in j['samples'] if s['kind']!='player'),1):sample['_hardware_boundary']=boundary
     if a.native_build:
         native_dir=a.native_build.resolve();build=json.loads((native_dir/'receipt.json').read_bytes())
         seed=sha(json.dumps(template,sort_keys=True,separators=(',',':')).encode())
@@ -280,6 +324,7 @@ def main():
       'conversation_cancel_required':a.require_conversation_cancel,
       'conversation_cancel_observation':{'selected':False,'final_poll':False,'returned':False},
       'public_steps':0,'modal_steps':0,'compiler':{'native_elements':0,'continuous_prefix':[],'sampled_one_step':[]},
+      'hardware_input':None,'modal_source_checkpoints':0,
       'first_divergence':None}
     def add_counts(delta):
         for key,value in delta.items():report['source_elements'][key]=report['source_elements'].get(key,0)+value
@@ -287,6 +332,7 @@ def main():
     def step(pad,serial,sample):
         sample_kind=sample['kind'];modal_pc=sample.get('pc')
         modal_key=(modal_pc,sample.get('context'))
+        records=hardware.prepare(sample['_hardware_boundary'],m,native) if hardware else []
         sampled=(serial<=2 or (sample_kind=='main' and serial in (63,183,300,500,800,1200,1600,1887,1896,1900,1950,2009,2010,2243,2244,2255,2310,2362,3477,3478,3762,3763,3928,3929)) or
                  (sample_kind in ('modal','conversation') and (modal_key not in modal_sampled or sample['edge']!=0)))
         if sampled:
@@ -314,6 +360,7 @@ def main():
               'vm_opcode':ms['task_vm_fault_op'],'vm_pc':ms['task_vm_fault_pc'],
               'rollback_verified':rollback}
             return False
+        if hardware:hardware.complete(Reader(native),records)
         if sampled:
             report['compiler']['native_elements']+=native.compare(ms,('sample',serial,sample_kind))
             if serial<=2:report['compiler']['continuous_prefix'].append([serial,sample_kind])
@@ -324,8 +371,10 @@ def main():
     repeat_pending=None;initial_keywords=None;conversation_exit_serial=None;previous_entry=None
     try:
         report['compiler']['native_elements']+=native.compare(template,'title seed')
+        title_records=hardware.prepare(0,m,native) if hardware else []
         m.call('shadowrun_snes_frame',16);state=m.snapshot();rc=native.step(16)
         if rc:raise ValueError('title start refused')
+        if hardware:hardware.complete(Reader(native),title_records)
         report['compiler']['native_elements']+=native.compare(state,'title START')
         report['compiler']['continuous_prefix'].append('title START')
         for index,(frame,item) in enumerate(entries):
@@ -339,6 +388,9 @@ def main():
                 if not ready:report['transient_dynamic_exclusions'].append(serial)
                 add_counts(check(reader,original,dynamic_ready=ready));add_counts(compare_interaction(reader,original))
                 if a.require_room is not None or a.require_keyword or a.require_conversation_cancel:add_counts(compare_progression(reader,original))
+                if hardware:
+                    if reader.byte(0x1d04)!=original[0x1d04]:raise Mismatch('hardware.source_seed',reader.byte(0x1d04),original[0x1d04])
+                    add_counts({'hardware_seed_bytes':1})
             except Mismatch as exc:
                 report['first_divergence']={'kind':'source mismatch','serial':serial,**exc.detail};break
             report['source_checkpoints']+=1
@@ -407,6 +459,11 @@ def main():
                 if kind in ('modal','conversation') and (sample['previous']!=sample['held'] or
                     sample['edge']!=((sample['held']^previous)&sample['held'])):
                     report['first_divergence']={'kind':'modal controller edge mismatch','serial':serial};break
+                if hardware and kind in ('modal','conversation'):
+                    try:add_counts(compare_modal(reader,hardware.modal_source(sample['_hardware_boundary'])))
+                    except Mismatch as exc:
+                        report['first_divergence']={'kind':'source modal mismatch','serial':serial,'sample':kind,'pc':sample['pc'],**exc.detail};break
+                    report['modal_source_checkpoints']+=1
                 if not step(journal_pad(sample['held']),serial,sample):break
                 if kind in ('modal','conversation'):report['modal_steps']+=1
                 if kind=='conversation':
@@ -434,7 +491,9 @@ def main():
         report['result']='passed' if not report['first_divergence'] and report['source_checkpoints']==len(entries) else 'bounded'
     except (AssertionError,ValueError,RuntimeError) as exc:
         report['result']='bounded';report['first_divergence']={'kind':'checker or compiler error','exception':type(exc).__name__}
-    finally:native.close()
+    finally:
+        if hardware:report['hardware_input']=hardware.summary()
+        native.close()
     changed=[k for k,v in hashes.items() if not Path(k).exists() or sha(Path(k).read_bytes())!=v]
     if changed:
         report['underlying_divergence']=report['first_divergence'];report['result']='source_changed'
@@ -447,6 +506,12 @@ def main():
                     (native_dir/'fdisbull_native.h',build['header_sha256']),
                     (native_dir/'libfdisbull_native.dylib',build['dylib_sha256']))
     changed_inputs=[str(path) for path,digest in watched_inputs if not path.exists() or sha(path.read_bytes())!=digest]
+    if hardware:
+        changed_inputs+=hardware.changed_modal_files()
+        for path,digest in ((hardware_ref/'receipt.json',sha(hardware_receipt_bytes)),
+                            (hardware_ref/'controller_journal.json',sha(hardware_controller_bytes)),
+                            (hardware_ref/'hardware_journal.json',hardware.journal_sha256)):
+            if not path.exists() or sha(path.read_bytes())!=digest:changed_inputs.append(str(path))
     if changed_inputs:
         report['underlying_divergence']=report['first_divergence'];report['result']='input_changed'
         report['first_divergence']={'kind':'input changed during check','files':changed_inputs}

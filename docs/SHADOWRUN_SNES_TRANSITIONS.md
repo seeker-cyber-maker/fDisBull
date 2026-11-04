@@ -1,5 +1,11 @@
 # SNES Shadowrun room and keyword-conversation recovery
 
+This page preserves the **preceding milestone's** results and RNG handoff.
+The [hardware-input and conversation follow-up](SHADOWRUN_SNES_HARDWARE.md)
+now qualifies the two complete bounded conversation routes under recorded
+external inputs and provides separately labeled seeded local play. Statements
+below about the unsupported RNG boundary describe the earlier snapshot.
+
 The supported native route matches **3,764 original checkpoints**, through the
 morgue, hallway and first street update. The next update refuses an unmodeled
 hardware-dependent random draw. **Live keyword play is not yet qualified.** The

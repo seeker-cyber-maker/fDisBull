@@ -1,4 +1,4 @@
-"""Opening collision adapter uses mutable banks and refuses unknown actors."""
+"""Opening collision adapter uses mutable banks and source actor identity."""
 from fdisbull.game_il import GameMachine, author_program
 from fdisbull.shadowrun_snes_opening_collision import source_fragment
 
@@ -10,7 +10,7 @@ void scene_write(u16 at,u16 value) {task_shared[at]=(u8)value;task_shared[at+1U]
 '''
 
 
-def test_player_collision_uses_other_actor_height_and_refuses_other_queries():
+def test_collision_skips_self_and_retains_other_actor_height():
     shared, upper = bytearray(65536), bytearray(65536)
     shared[0xde88:0xe088] = b'\xff' * 512
     def word(at, value):
@@ -36,8 +36,16 @@ def test_player_collision_uses_other_actor_height_and_refuses_other_queries():
     result = machine.call('opening_collision_at', 0x42, 400, 400, 0)
     assert machine.snapshot()['opening_collision_supported'] == 1
     assert result['result'] == 4
-    machine.call('opening_collision_at', 0x40, 400, 400, 0)
-    assert machine.snapshot()['opening_collision_supported'] == 0
+    result=machine.call('opening_collision_at', 0x40, 400, 400, 0)
+    assert machine.snapshot()['opening_collision_supported'] == 1 and result['result']==4
+    # Source $86C8-$86DA permits a query with both low bits through the player.
+    changed=machine.snapshot()['task_shared']
+    changed[0x1474+0x40:0x1476+0x40]=[3,1]
+    machine.set_state({'task_shared':changed})
+    result=machine.call('opening_collision_at',0x40,400,400,0)
+    assert machine.snapshot()['opening_collision_supported']==1 and result['result']==0
+    machine.call('opening_collision_at',0x41,400,400,0)
+    assert machine.snapshot()['opening_collision_supported']==0
     before = machine.snapshot()
     malformed = before['task_shared'][:]
     malformed[0x14cc:0x14ce] = [0xff, 0xff]

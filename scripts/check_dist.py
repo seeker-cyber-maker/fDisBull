@@ -86,6 +86,8 @@ REQUIRED_CONSOLE_RESOURCES |= {"game_sources/" + name for name in
                                "miniplanets_audio_fast.s", "nes_globe_fast.s", "nes_game_fast.s", "LICENSE.txt")}
 REQUIRED_CONSOLE_RESOURCES.add("game_sources/nes_display_fast.s")
 REQUIRED_CONSOLE_RESOURCES |= {
+    'game_sources/shadowrun_snes_hardware.c',
+    'shadowrun_snes_hardware.py',
     "genesis_replay.py", "udc_genesis_game.py", "presentation_il.py", "psg_il.py",
     "data/miniplanets_presentation.uil.json", "data/miniplanets_psg.uil.json",
     "game_sources/miniplanets_presentation_uil.c", "game_sources/miniplanets_psg_uil.c",
@@ -94,6 +96,19 @@ REQUIRED_CONSOLE_RESOURCES |= {
     "game_sources/genesis_game_audio.S",
 }
 REQUIRED_SOURCE_EVIDENCE |= {
+    'docs/SHADOWRUN_SNES_HARDWARE.md',
+    'docs/SHADOWRUN_SNES_KEYWORDS.md',
+    'scripts/check_shadowrun_snes_keywords.py',
+    'scripts/shadowrun_snes_hardware_replay.py',
+    'scripts/snes9x_hardware_adapter.py',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/hardware-input.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/conversation-comparison.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/keyword-analysis.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/native-app.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/native-contract.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/regression.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/broad-regression.json',
+    'docs/evidence/shadowrun-snes-hardware-2026-11-04/coverage.json',
     "docs/GENESIS_UIL_REPLAY.md",
     "docs/evidence/miniplanets-full-game-2026-10-31/genesis-replay.json",
     "docs/evidence/miniplanets-full-game-2026-10-31/genesis-presentation.json",
