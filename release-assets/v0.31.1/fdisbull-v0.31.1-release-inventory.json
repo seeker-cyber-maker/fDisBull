@@ -15,6 +15,11 @@
       "sha256": "98151f440a678778babe872051a5d47a824a060904e7f249df2bf6f614f0fd5f",
       "url": "https://gitlab.com/api/v4/projects/88349936/packages/generic/fdisbull-release-packages/0.31.1-20261104/PACKAGE-SHA256SUMS"
     },
+    "SHA256SUMS": {
+      "bytes": 1931,
+      "sha256": "4b8ff23b24afa41da976718759786a35ce72b8487cffa93a09a2f559eb835566",
+      "url": "https://gitlab.com/api/v4/projects/88349936/packages/generic/fdisbull-release-packages/0.31.1-20261104/SHA256SUMS"
+    },
     "fdisbull-0.31.1-linux-x86_64-dependencies.tar.gz": {
       "bytes": 50475916,
       "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",

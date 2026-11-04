@@ -38,6 +38,7 @@ or from the direct generic URLs recorded in
 - `fdisbull_player-0.31.1-py3-none-any.whl`
 - `fdisbull-0.31.1.tar.gz`
 - `fdisbull-0.31.1-tool.zip`
+- [`SHA256SUMS`](https://gitlab.com/api/v4/projects/88349936/packages/generic/fdisbull-release-packages/0.31.1-20261104/SHA256SUMS)
 - [`PACKAGE-SHA256SUMS`](https://gitlab.com/api/v4/projects/88349936/packages/generic/fdisbull-release-packages/0.31.1-20261104/PACKAGE-SHA256SUMS)
 - `BUILD.json`
 
