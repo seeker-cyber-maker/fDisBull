@@ -145,6 +145,35 @@ static NSPoint openingPoint(fdisbull_context *c,uint32_t slot,NSRect bounds) {
                 text([NSString stringWithFormat:@"%@ %@",selected?@"▶":@" ",label],bx+8,by-34-row*18,14,selected?[NSColor cyanColor]:white);
             }
         }
+        if(state(self.context,"conversation_ui_active")) {
+            NSRect dialog=NSMakeRect(cx-290,r.size.height-370,580,220);
+            [[NSColor colorWithCalibratedWhite:.08 alpha:.98] setFill];NSRectFill(dialog);
+            [[NSColor lightGrayColor] setStroke];NSFrameRect(dialog);
+            NSMutableParagraphStyle *style=[NSMutableParagraphStyle new];style.lineBreakMode=NSLineBreakByWordWrapping;
+            NSMutableAttributedString *message=[[NSMutableAttributedString alloc] initWithString:@""];
+            BOOL emphasis=NO;
+            for(NSUInteger j=0;j<MIN((NSUInteger)state(self.context,"conversation_ui_length"),255);j++) {
+                int64_t glyph=indexed(self.context,"conversation_ui_text",(uint32_t)j);
+                if(glyph==26) {emphasis=YES;continue;}
+                if(glyph>=32 && glyph<127) {
+                    NSString *character=[NSString stringWithFormat:@"%c",(char)glyph];
+                    [message appendAttributedString:[[NSAttributedString alloc] initWithString:character attributes:@{NSFontAttributeName:[NSFont monospacedSystemFontOfSize:16 weight:emphasis?NSFontWeightBold:NSFontWeightRegular],NSForegroundColorAttributeName:white,NSParagraphStyleAttributeName:style}]];
+                    if(glyph==32)emphasis=NO;
+                }
+            }
+            [message drawInRect:NSInsetRect(dialog,16,14)];
+            if(state(self.context,"opening_phase")==4 || state(self.context,"opening_phase")==5) {
+                NSUInteger count=(NSUInteger)state(self.context,"conversation_ui_count");
+                CGFloat top=dialog.origin.y-12;
+                [[NSColor colorWithCalibratedWhite:.08 alpha:.98] setFill];
+                NSRectFill(NSMakeRect(cx-230,top-(count+1)*21,460,(count+1)*21));
+                for(NSUInteger row=0;row<count && row<9;row++) {
+                    NSString *label=sourceText(self.context,"conversation_ui_labels",(uint32_t)row*256,(NSUInteger)indexed(self.context,"conversation_ui_lengths",(uint32_t)row));
+                    BOOL selected=row==((NSUInteger)sourceword(self.context,0x1db3)/2);
+                    text([NSString stringWithFormat:@"%@ %@",selected?@"▶":@" ",label],cx-214,top-25-row*21,15,selected?[NSColor cyanColor]:white);
+                }
+            }
+        }
         uint32_t pointer=(uint32_t)state(self.context,"interaction_item_pointer");
         if(pointer && pointer<65531 && sourceword(self.context,pointer+3)==0x08b2) {
             NSString *name=sourceText(self.context,"interaction_item_name",0,(NSUInteger)state(self.context,"interaction_item_name_length"));
@@ -154,7 +183,7 @@ static NSPoint openingPoint(fdisbull_context *c,uint32_t slot,NSRect bounds) {
         }
     }
     text(profile(self.context)==4?@"Shadowrun SNES · Opening scene":(profile(self.context)==3?@"Shadowrun SNES · Scripted NPC study":(profile(self.context)>=2?@"Shadowrun SNES · NPC walking study":(profile(self.context)==1?@"Shadowrun SNES · Live collision study":@"Shadowrun SNES · Opening movement study"))),25,r.size.height-37,20,white);
-    text(profile(self.context)==4?@"Movement, targeting and menus · adapted display · original artwork and audio excluded":(profile(self.context)>=3?@"Logical game-loop passes · source video pacing and audio excluded":@"World-coordinate view · source camera and artwork not reproduced"),25,r.size.height-62,12,white);
+    text(profile(self.context)==4?@"Movement, rooms and conversations · adapted display · original artwork and audio excluded":(profile(self.context)>=3?@"Logical game-loop passes · source video pacing and audio excluded":@"World-coordinate view · source camera and artwork not reproduced"),25,r.size.height-62,12,white);
     text([NSString stringWithFormat:@"%@: x=%lld  y=%lld  z=%lld   updates=%lu",(profile(self.context)==2 || profile(self.context)==3)?@"NPC 44":@"Player",(long long)x,(long long)y,(long long)state(self.context,"shadowrun_snes_player_z"),(unsigned long)self.ticks],25,r.size.height-86,13,white);
     text(self.stopped?(profile(self.context)==3 && self.ticks>=60?@"60-pass study complete · R resets":@"Unsupported input or state · R resets"):(self.paused?@"Paused · Space starts movement":@"Running · Space pauses"),25,43,14,white);
     text(profile(self.context)==4?@"Arrows move/target · B opens/actions/confirms · Up/Down chooses · Tab cancels · R resets · Esc closes":(profile(self.context)>=2?@"NPCs walk autonomously · R resets · Esc closes · bounded projection":(profile(self.context)==1?@"Arrows move · R resets · Esc closes · bounded scene experiment":@"Arrows move · R resets · Esc closes · captured static scene")),25,21,12,white);

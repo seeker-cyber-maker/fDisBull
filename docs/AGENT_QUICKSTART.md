@@ -79,6 +79,10 @@ a prepared source-specific profile, not a whole-ROM conversion command.
 The [live SNES handoff](SHADOWRUN_SNES_LIVE_HANDOFF.md) adds explicit
 `--profile live-morgue` and `--profile npc-intro` research lanes, source
 comparisons and the remaining scene/script boundaries.
+The [room and keyword follow-up](SHADOWRUN_SNES_TRANSITIONS.md) covers the
+source-derived hallway/street loads, transient collision guard and conversation
+components. Its native route currently stops at an unmodeled hardware RNG call;
+component text qualification does not establish live keyword play.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 

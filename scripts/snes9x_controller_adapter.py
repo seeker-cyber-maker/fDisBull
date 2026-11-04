@@ -41,7 +41,12 @@ static void fdb_controller_capture(uint32 pc) {
   kind=2U;
  } else if(pc==0x80a67dU || pc==0x80a7b2U || pc==0x80a7c1U || pc==0x80c03aU) {
   /* Modal selector polls after its own 9D9D call, inside one main pass. */
-  kind=3U;actor=pc;
+  uint32 sp=Registers.S.W,ret=0;
+  if(sp<=0x1ffdU)ret=(uint32)Memory.RAM[sp+1U]|((uint32)Memory.RAM[sp+2U]<<8);
+  kind=ret==0x91acU?4U:(ret==0x922fU?5U:3U);actor=pc;
+ } else if(pc==0x8092b9U) {
+  /* $92B6's final 9D9D poll, before $B8AF restores conversation state. */
+  kind=6U;actor=pc;
  } else return;
  if(fdb_controller_count>=32U) {if(fdb_controller_dropped!=0xffffffffU)fdb_controller_dropped++;return;}
  FdbControllerSample sample={kind,fdb_checkpoint_serial,

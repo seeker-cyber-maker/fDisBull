@@ -9,6 +9,7 @@ def camera_machine():
     rom=bytearray(1<<20);at=0xc855e
     for i,value in enumerate((0,1000,0,1000,65535)):
         rom[at+i*2:at+i*2+2]=value.to_bytes(2,'little')
+    rom[0xd20da:0xd20dc]=b'\xff\xff'
     source=PRELUDE+source_fragment()+'''\n u16 camera_test_delta,camera_test_result;
         void camera_test(u8 unused) {camera_test_result=camera_velocity(camera_test_delta);}'''
     return GameMachine(author_program(source,[{'id':0,'length':len(rom),
@@ -31,3 +32,9 @@ def test_camera_updates_source_position_and_fails_on_unknown_bounds():
     assert [word(r['task_shared'],i) for i in (0xce0,0xce2,0xce4,0xce6)]==[0x3d0,0x220,0x10,0x20]
     s[0xcf8]=0x98;m.set_state({'task_shared':s});m.call('shadowrun_snes_live_camera',0)
     assert m.snapshot()['camera_status']==0
+
+
+def test_camera_accepts_source_empty_next_room_clamp_table():
+    m=camera_machine();s=[0]*65536;put(s,0xcf6,0xa0d9);s[0xcf8]=0x9a
+    m.set_state({'task_shared':s});m.call('shadowrun_snes_live_camera',0)
+    assert m.snapshot()['camera_status']==1

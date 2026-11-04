@@ -91,6 +91,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/shadowrun-extended-2026-11-01", "*.json"),
     ("docs/evidence/shadowrun-snes-opening-2026-11-03", "*.json"),
     ("docs/evidence/shadowrun-snes-interactions-2026-11-03", "*.json"),
+    ("docs/evidence/shadowrun-snes-transitions-2026-11-03", "*.json"),
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),

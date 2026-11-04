@@ -188,6 +188,9 @@ and reconstructs carried party members. Reusing the new-game constructor there
 would reset unrelated state. Room transitions and a real keyword-conversation
 route need their own producer/consumer recovery and qualification. They remain
 outside this first-morgue interaction result.
+The subsequent [room and keyword study](SHADOWRUN_SNES_TRANSITIONS.md) records
+the recovered loaders and conversation components, together with the remaining
+hardware-RNG boundary. Its results are separate from this preserved milestone.
 
 Original ROMs, RAM, saves, states, screenshots, decoded text, generated apps and
 byte-containing UIL seeds remain private. Only authored code, hashes, counts and

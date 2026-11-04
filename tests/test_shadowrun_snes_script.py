@@ -206,6 +206,107 @@ def test_task_termination_unlinks_and_releases_validated_heap_block():
     assert s['task_shared'][:2] == [0x34, 0x12]
 
 
+def test_conversation_tag_callback_updates_only_selected_actor():
+    m = machine();shared = [0] * 65536
+    m.set_state({'task_shared': shared, 'task_index': 0, 'task_vm_pending_task': 0,
+                 'task_vm_pending': 1, 'task_vm_callback': 0xb4, 'task_vm_argc': 2,
+                 'task_vm_arg0': 0x42, 'task_vm_arg1': 0x51})
+    m.call('shadowrun_snes_task_native', 0);s=m.snapshot()
+    assert s['task_native_supported'] == 1
+    assert s['task_shared'][0x446e:0x4470] == [0x51, 0]
+    assert s['task_shared'][0x446c:0x446e] == [0, 0]
+    m.set_state({'task_vm_pending': 1, 'task_vm_arg0': 0x43})
+    before=m.snapshot()['task_shared'];m.call('shadowrun_snes_task_native',0);s=m.snapshot()
+    assert s['task_native_supported'] == 0 and s['task_shared'] == before
+
+
+def test_actor_position_callback_stores_raw_coordinates_without_depth_update():
+    m = machine()
+    shared = [0] * 65536
+    shared[0x0f4c + 0x42:0x0f4e + 0x42] = [0x34, 0x12]
+    m.set_state({'task_shared': shared, 'task_index': 0, 'task_vm_pending_task': 0,
+                 'task_vm_pending': 1, 'task_vm_callback': 0x82, 'task_vm_argc': 4,
+                 'task_vm_arg0': 0x42, 'task_vm_arg1': 0x658,
+                 'task_vm_arg2': 0x454, 'task_vm_arg3': 0x108})
+    m.call('shadowrun_snes_task_native', 0);s=m.snapshot()
+    assert s['task_native_supported'] == 1
+    assert s['task_shared'][0x0e86:0x0e88] == [0x58, 6]
+    assert s['task_shared'][0x0ede:0x0ee0] == [0x54, 4]
+    assert s['task_shared'][0x0f36:0x0f38] == [8, 1]
+    assert s['task_shared'][0x0f8e:0x0f90] == [0x34, 0x12]
+    m.set_state({'task_vm_pending': 1, 'task_vm_arg0': 0x43})
+    before=m.snapshot()['task_shared'];m.call('shadowrun_snes_task_native',0);s=m.snapshot()
+    assert s['task_native_supported'] == 0 and s['task_shared'] == before
+
+
+def test_source_addition_wraps_16_bit_stack_words():
+    import hashlib
+    for left, right, expected in ((5, 3, 8), (0xffff, 1, 0), (0x8000, 0x8000, 0)):
+        rom = bytes([0x14, left & 255, left >> 8, 0x14, right & 255, right >> 8, 0x5c, 0x56])
+        program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                       'sha256': hashlib.sha256(rom).hexdigest()}])
+        m = GameMachine(program, {0: rom})
+        heap, frames = [0] * 1996, [0] * 48
+        frame, sp = 0x400, 0x500
+        heap[frame - 0x3f2:frame - 0x3f2 + 3] = [0, 0x80, 0x80]
+        heap[frame - 0x3f2 + 7:frame - 0x3f2 + 9] = [sp & 255, sp >> 8]
+        frames[0] = frame
+        m.set_state({'task_heap': heap, 'task_frame': frames, 'task_index': 0})
+        m.call('shadowrun_snes_task_vm', 0);s=m.snapshot()
+        assert (s['task_vm_status'], s['task_return_value']) == (4, expected)
+
+
+def test_source_subtract_uses_next_minus_top_with_word_wrap():
+    import hashlib
+    for left, right, expected in ((5, 3, 2), (3, 5, 0xfffe), (0, 1, 0xffff)):
+        rom = bytes([0x14, left, 0, 0x14, right, 0, 0x5e, 0x56])
+        program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                       'sha256': hashlib.sha256(rom).hexdigest()}])
+        m = GameMachine(program, {0: rom})
+        heap, frames = [0] * 1996, [0] * 48
+        frame, sp = 0x400, 0x500
+        heap[frame - 0x3f2:frame - 0x3f2 + 3] = [0, 0x80, 0x80]
+        heap[frame - 0x3f2 + 7:frame - 0x3f2 + 9] = [sp & 255, sp >> 8]
+        frames[0] = frame
+        m.set_state({'task_heap': heap, 'task_frame': frames, 'task_index': 0})
+        m.call('shadowrun_snes_task_vm', 0);s=m.snapshot()
+        assert (s['task_vm_status'], s['task_return_value']) == (4, expected)
+
+
+def test_source_left_shift_pops_count_and_wraps_the_word():
+    import hashlib
+    for count, expected in ((0, 0x8001), (1, 2), (15, 0x8000), (16, 0), (0xffff, 0)):
+        rom = bytes([0x14, 1, 0x80, 0x14, count & 255, count >> 8, 0x7a, 0x56])
+        program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                       'sha256': hashlib.sha256(rom).hexdigest()}])
+        m = GameMachine(program, {0: rom})
+        heap, frames = [0] * 1996, [0] * 48
+        frame, sp = 0x400, 0x500
+        heap[frame - 0x3f2:frame - 0x3f2 + 3] = [0, 0x80, 0x80]
+        heap[frame - 0x3f2 + 7:frame - 0x3f2 + 9] = [sp & 255, sp >> 8]
+        frames[0] = frame
+        m.set_state({'task_heap': heap, 'task_frame': frames, 'task_index': 0})
+        m.call('shadowrun_snes_task_vm', 0);s=m.snapshot()
+        assert (s['task_vm_status'], s['task_return_value']) == (4, expected)
+
+
+def test_source_left_shift_refuses_missing_value_without_heap_write():
+    import hashlib
+    rom = bytes([0x7a])
+    program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                   'sha256': hashlib.sha256(rom).hexdigest()}])
+    m = GameMachine(program, {0: rom})
+    heap, frames = [0] * 1996, [0] * 48
+    frame, sp = 0x400, 3003
+    heap[frame - 0x3f2:frame - 0x3f2 + 3] = [0, 0x80, 0x80]
+    heap[frame - 0x3f2 + 7:frame - 0x3f2 + 9] = [sp & 255, sp >> 8]
+    heap[3004 - 0x3f2] = 1
+    frames[0] = frame
+    m.set_state({'task_heap': heap, 'task_frame': frames, 'task_index': 0})
+    m.call('shadowrun_snes_task_vm', 0);s=m.snapshot()
+    assert s['task_vm_status'] == 0 and s['task_heap'] == heap
+
+
 def test_unsigned_less_than_compares_top_against_next_stack_word():
     import hashlib
     for lower, upper, expected in [(20, 10, 0xffff), (10, 20, 0), (10, 10, 0)]:
@@ -282,6 +383,8 @@ def test_player_and_actor_x_callbacks_use_live_shared_state():
     heap[0x400 - 0x3f2 + 7:0x400 - 0x3f2 + 9] = [0, 5]
     shared[0x0cde:0x0ce0] = [0x42, 0]
     shared[0x0e86:0x0e88] = [0x73, 5]
+    shared[0x0ede:0x0ee0] = [0x37, 6]
+    shared[0x0f36:0x0f38] = [0x5b, 1]
     m.set_state({'task_heap': heap, 'task_frame': frames, 'task_shared': shared,
                  'task_index': 0, 'task_vm_pending_task': 0, 'task_vm_pending': 1,
                  'task_vm_return': 1, 'task_vm_callback': 0x28, 'task_vm_argc': 0})
@@ -293,6 +396,11 @@ def test_player_and_actor_x_callbacks_use_live_shared_state():
     m.call('shadowrun_snes_task_native', 0)
     s = m.snapshot()
     assert s['task_native_supported'] == 1 and s['task_callback_result'] == 0x15c
+    for callback, expected in ((0x50, 0x18d), (0x51, 0x56)):
+        m.set_state({'task_vm_pending': 1, 'task_vm_return': 1, 'task_vm_callback': callback})
+        m.call('shadowrun_snes_task_native', 0)
+        s = m.snapshot()
+        assert s['task_native_supported'] == 1 and s['task_callback_result'] == expected
     m.set_state({'task_vm_pending': 1, 'task_vm_return': 1, 'task_vm_arg0': 0x43})
     m.call('shadowrun_snes_task_native', 0)
     assert m.snapshot()['task_native_supported'] == 0
@@ -617,11 +725,37 @@ def test_visual_taint_blocks_overlapping_reads_but_not_known_windows():
     m.set_state({'task_visual_tainted': 1})
     for address, length in ((0x0203, 2), (0x0205, 1), (0x0225, 2), (0x0ce7, 2),
                             (0x0cf3, 1), (0x1473, 2), (0x157e, 1),
+                            (0x17ef,2),(0x1801,2),(0x198d,1),(0x1a8d,2),
+                            (0x1b8d,1),(0x1c8d,2),(0x3ce3,2),(0x3f03,1),
                             (0x22ff, 2), (0x2adf, 1)):
         assert m.call('task_readable', address, length)['result'] == 0
     for address, length in ((0x0202, 2), (0x0206, 1), (0x0224, 2), (0x0ce6, 2),
-                            (0x0cf4, 1), (0x146e, 2), (0x21a0, 2), (0x2ae0, 1)):
+                            (0x0cf4, 1), (0x146e, 2), (0x198e,1),(0x1b8e,1),
+                            (0x1c92,1),(0x3ce3,1),(0x3f04,1),(0x21a0, 2), (0x2ae0, 1)):
         assert m.call('task_readable', address, length)['result'] == 1
+
+
+def test_stale_dynamic_collision_words_refuse_until_rebuild():
+    m = machine()
+    m.set_state({'task_dynamic_stale': 1})
+    for address, length in ((0xde87, 2), (0xde88, 1), (0xffff, 1)):
+        assert m.call('task_readable', address, length)['result'] == 0
+    assert m.call('task_readable', 0xde86, 2)['result'] == 1
+    m.set_state({'task_dynamic_stale': 0})
+    assert m.call('task_readable', 0xde88, 2)['result'] == 1
+    m.set_state({'task_tile_cache_tainted': 1})
+    assert m.call('task_readable', 0xde87, 2)['result'] == 0
+    assert m.call('task_readable', 0xde86, 2)['result'] == 1
+    m.set_state({'task_tile_cache_tainted': 0})
+    assert m.call('task_readable', 0xde88, 2)['result'] == 1
+
+
+def test_dialogue_and_music_taint_refuse_dependent_script_reads():
+    m=machine();m.set_state({'task_dialogue_tainted':1,'task_audio_tainted':1})
+    for address,length in ((0xda,2),(0xef,1),(0x13f,2),(0x141,1),(0x1cf9,2),(0x1cfa,1)):
+        assert m.call('task_readable',address,length)['result']==0
+    for address,length in ((0xda,1),(0xf0,1),(0x142,1),(0x1cf9,1),(0x1d01,1)):
+        assert m.call('task_readable',address,length)['result']==1
 
 
 def test_native_entity_byte_two_returns_source_record():

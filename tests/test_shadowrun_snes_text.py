@@ -90,6 +90,37 @@ def test_plain_layout_uses_font_widths_and_wraps_exact_fit():
     assert m.snapshot()['shadowrun_snes_text_layout_status']==0
 
 
+def test_opt_in_pipe_rewrites_source_control_and_tracks_styled_width():
+    rom=bytearray(1<<20)
+    rom[0xabc8+65]=4;rom[0xabc8+26]=3;rom[0xabc8+66]=5
+    m=_machine(rom);data=[65,124,66]+[0]*253
+    m.set_state({'shadowrun_snes_text_status':1,'shadowrun_snes_text_length':3,
+                 'shadowrun_snes_text_output':data,'shadowrun_snes_text_layout_base':100,
+                 'shadowrun_snes_text_layout_cursor_in':100,'shadowrun_snes_text_layout_width':5,
+                 'shadowrun_snes_text_layout_height':3})
+    m.call('shadowrun_snes_text_layout',0)
+    assert m.snapshot()['shadowrun_snes_text_layout_status']==0
+    m.set_state({'shadowrun_snes_text_layout_controls':1})
+    m.call('shadowrun_snes_text_layout',0);s=m.snapshot()
+    assert (s['shadowrun_snes_text_layout_status'],s['shadowrun_snes_text_layout_cursor'],
+            s['shadowrun_snes_text_layout_subpixel'],s['shadowrun_snes_text_layout_style_out'])==(1,102,7,8)
+    assert s['shadowrun_snes_text_output'][:4]==[65,26,66,0]
+
+
+def test_opt_in_margin_and_separator_wrap_match_source_order():
+    rom=bytearray(1<<20)
+    rom[0xabc8+65]=5;rom[0xabc8+66]=4;rom[0xabc8+32]=6
+    m=_machine(rom);data=[65,65,65,32,66]+[0]*251
+    m.set_state({'shadowrun_snes_text_status':1,'shadowrun_snes_text_length':5,
+                 'shadowrun_snes_text_output':data,'shadowrun_snes_text_layout_base':100,
+                 'shadowrun_snes_text_layout_cursor_in':100,'shadowrun_snes_text_layout_width':5,
+                 'shadowrun_snes_text_layout_height':4,'shadowrun_snes_text_layout_left_margin':8,
+                 'shadowrun_snes_text_layout_controls':1})
+    m.call('shadowrun_snes_text_layout',0);s=m.snapshot()
+    assert (s['shadowrun_snes_text_layout_status'],s['shadowrun_snes_text_layout_cursor'],
+            s['shadowrun_snes_text_layout_subpixel'],s['shadowrun_snes_text_layout_line'])==(1,105,4,1)
+
+
 def test_three_row_window_accepts_one_line_and_refuses_a_wrap():
     rom=bytearray(1<<20)
     for code in (32,65,66):rom[0xabc8+code]=4

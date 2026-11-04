@@ -23,6 +23,29 @@ def test_scene_reset_initializes_source_camera_motion():
     assert machine.snapshot()['task_shared'][0x0ce4:0x0ce8]==[0,0,0,0]
 
 
+def test_newgame_extension_initializes_exact_ranges_and_preserves_gaps():
+    rom=bytearray(1<<20)
+    rom[0x172c:0x1794]=bytes(range(104));rom[0x171f:0x172c]=bytes(range(13))
+    machine=_machine(rom);shared=[0x55]*65536
+    machine.set_state({'task_shared':shared});machine.call('shadowrun_snes_scene_newgame_extension',0)
+    result=machine.snapshot()['task_shared']
+    assert result[0x3bbb:0x3bfb]==[0]*64
+    assert result[0x3c2e:0x3c96]==list(range(104))
+    assert result[0x3c96:0x3ca3]==list(range(13))
+    assert result[0x3bfb:0x3c02]==[3,0,3,0x55,3,30,1]
+    assert result[0x3c15:0x3c1e]==[0x6c,0x71,0,0,0,0x55,0x55,0,0]
+
+
+def test_source_scene_one_actor_kind_98_is_bounded_to_that_scene():
+    machine=_machine(bytearray(1<<20));shared=[0]*65536
+    for slot in range(0,88,2):shared[0x3f04+slot:0x3f06+slot]=[255,255]
+    shared[0x14cc:0x14ce]=[254,255]
+    machine.set_state({'task_shared':shared,'scene_spawn_kind':152,'scene_task_id':65535,'scene_room_id':3})
+    machine.call('shadowrun_snes_actor_allocate',0);assert machine.snapshot()['scene_status']==0
+    machine.set_state({'scene_room_id':1});machine.call('shadowrun_snes_actor_allocate',0)
+    assert machine.snapshot()['scene_status']==1
+
+
 def test_world_decoder_handles_source_style_overlapping_backreferences():
     rom=bytearray(1<<20);base=0x5fc42
     rom[base:base+2]=(3515).to_bytes(2,'little')

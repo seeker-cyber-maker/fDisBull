@@ -23,6 +23,7 @@ include docs/evidence/shadowrun-macos-2026-11-01/verification.json
 recursive-include docs/evidence/shadowrun-extended-2026-11-01 *.json
 recursive-include docs/evidence/shadowrun-snes-opening-2026-11-03 *.json
 recursive-include docs/evidence/shadowrun-snes-interactions-2026-11-03 *.json
+recursive-include docs/evidence/shadowrun-snes-transitions-2026-11-03 *.json
 include docs/CLOUD-0.27.0-MANIFEST.json
 prune docs/uil-rfcs/0001
 include docs/uil-rfcs/0001/README.md

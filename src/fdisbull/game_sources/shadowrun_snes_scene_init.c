@@ -97,6 +97,23 @@ void shadowrun_snes_scene_world(u8 unused) {
  scene_stream=0x5fc42UL;scene_decode_target=0x2e00U;
  scene_decode_length=3515U;scene_decode_bank=0U;scene_decode();
 }
+/* $986C/$9878-$9918: New Game's persistent tail, after world decode.
+ * Untouched gaps retain their incoming bytes; room changes never call this. */
+void shadowrun_snes_scene_newgame_extension(u8 unused) {
+ u16 i;
+ for(i=0U;i<64U;i+=1U)task_shared[0x3bbbU+i]=0U;
+ for(i=0U;i<104U;i+=1U)task_shared[0x3c2eU+i]=rom8(0U,0x172cUL+(u32)i);
+ for(i=0U;i<13U;i+=1U)task_shared[0x3c96U+i]=rom8(0U,0x171fUL+(u32)i);
+ task_shared[0x3bfbU]=3U;task_shared[0x3bfdU]=3U;task_shared[0x3bffU]=3U;
+ task_shared[0x3c00U]=30U;task_shared[0x3c01U]=1U;task_shared[0x3c04U]=1U;
+ task_shared[0x3bfcU]=0U;task_shared[0x3c02U]=0U;task_shared[0x3c03U]=0U;
+ task_shared[0x3c05U]=0U;task_shared[0x3c06U]=0U;task_shared[0x3c07U]=0U;
+ task_shared[0x3c08U]=0U;task_shared[0x3c09U]=0U;task_shared[0x3c0aU]=0U;
+ task_shared[0x3c0bU]=0U;task_shared[0x3c0cU]=0U;task_shared[0x3c17U]=0U;
+ task_shared[0x3c18U]=0U;task_shared[0x3c19U]=0U;
+ scene_write(0x3c0dU,0U);scene_write(0x3c0fU,0U);scene_write(0x3c11U,0U);
+ scene_write(0x3c13U,0U);scene_write(0x3c1cU,0U);scene_write(0x3c15U,0x716cU);
+}
 /* $81:A117 chooses zone 100's compressed stream from $8B:FA53 and expands
  * it into $7F:DA14; the later tile/collision interpretation is separate. */
 void shadowrun_snes_scene_room_data(u8 unused) {
@@ -116,6 +133,7 @@ void shadowrun_snes_scene_begin(u8 unused) {
  u16 i,ptr;
  scene_status=0U;scene_pending=0U;
  shadowrun_snes_scene_world(0U);if(!scene_status)return;
+ shadowrun_snes_scene_newgame_extension(0U);
  shadowrun_snes_scene_reset_camera_motion(0U);
  /* $9590 selects scene 3; no carried-over party actor is present. */
  scene_write(0x3ca3U,65535U);scene_write(0x2de4U,1U);
@@ -177,7 +195,8 @@ void scene_finish_actor(void) {
 void shadowrun_snes_actor_allocate(u8 unused) {
  u16 slot,depth,count,i;
  scene_status=0U;
- if(scene_pending || scene_spawn_kind>=128U)return;
+ /* Scene $01 includes source actor kind $98; other high kinds remain unqualified. */
+ if(scene_pending || (scene_spawn_kind>=128U && !(scene_room_id==1U && scene_spawn_kind==152U)))return;
  slot=88U;
  for(i=0U;i<44U;i+=1U) {
   slot-=2U;

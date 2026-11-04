@@ -373,6 +373,67 @@ Likewise distinguish a text ID, an encoded compressed-text pointer and a CPU
 address. Low-valued font glyphs can be controller icons; classify their source
 handling before treating them as formatting controls or discarding their width.
 
+For room progression, distinguish a door's visual action, a trigger volume and
+the room loader. Trace both direct trigger calls and queued scene requests;
+watching only the request word can miss a direct load. Record coordinate units
+at the comparison instruction: an actor position may be shifted before testing
+a ROM volume. Plan a route in one declared coordinate system, then validate its
+controller replay in the original. A blocked approach is evidence about that
+approach, not proof that the exit cannot be reached.
+
+Recover the reload boundary before reusing an initializer. A new-game routine
+can clear world flags, inventory and learned keywords that an ordinary room
+transition preserves. Follow the source's carried-party reconstruction, actor
+and task reset, destination data expansion, camera and collision setup. Compare
+both the new room's live state and retained persistent records; a changed room
+number or plausible player placement alone does not qualify the transition.
+Read past a decompressor call when recovering initialization: its caller can
+clear counters, copy adjacent tables and initialize selected statistics while
+preserving gaps. A later mismatch in those records is a missing-producer
+question, not a reason to shrink the comparison to the decoded block.
+
+At a room boundary, old dynamic-list heads can still point into memory reused
+by display-resource decompression. Trace a changed link's actual writer and the
+next consumer before classifying it as live geometry or stale scratch. Keep a
+raw-byte mismatch visible until the producer is modeled or a guarded liveness
+contract explicitly excludes it; equal negative terminator tests alone do not
+establish byte identity.
+Name the admitted execution paths and guard their consumers; one filtered trace
+of the next read does not prove liveness safety on every alternate path.
+
+For keyword dialogue, separate the conversation record decoder from the live
+conversation coroutine. Trace how a target obtains its conversation tag, which
+selector values request an introduction, a keyword or a fallback, when keywords
+are inserted, and whether a response creates a child script. Verify menu input,
+response text, learned-keyword changes, script effects and cancellation through
+the same source execution. A synthetic record test cannot establish NPC access.
+Keep non-input display waits separate from input polls: coalescing an adapted
+display delay must not consume another edge or advance suspended world tasks.
+When selector instructions are shared by several menus, qualify their caller
+context and compare it with the model's active menu. A learned keyword alone
+does not prove that Ask about opened, a keyword was confirmed or its response
+returned. Inspect modal window/text state separately when that stronger claim
+is needed; main-loop comparisons can skip the entire suspended conversation.
+
+Before replacing an unknown random draw, trace its consumers. A discarded sound
+choice and a draw that sets an NPC timer require different recovery depth.
+Recover the generator's state update and its external observations separately;
+counter bytes can be read across an interrupt, so do not assume an atomic word
+without evidence. A pure generator check using observed hardware values does not
+authorize feeding its return value or later game state into the live model.
+Choose and disclose the platform-input boundary before claiming an exact replay;
+keep unsupported timing-dependent gameplay refused while that boundary is open.
+A declared journal of hardware observations can support an input-driven replay
+when its sampling phase, order, completeness, continuity and observer neutrality
+are qualified. Label that conditional result separately from an independently
+modeled clock or autonomous hardware-timing parity; an observed RNG return or
+later gameplay record is not a substitute for external observations.
+
+For an expensive source-state comparison, first use a compiled candidate with
+the same title seed and input journal to locate unsupported operations cheaply.
+Recover and test those operations, then rerun the full source comparison on the
+frozen candidate. This frontier run is a capability check, not accuracy evidence.
+
 **When the first actors cannot exercise the claim:** In a locally inspected
 Shadowrun source run, the three captured moving actor records had item/weapon
 byte `+$57 = 0` in each of 15 sampled states from frame 5999 through 7399.

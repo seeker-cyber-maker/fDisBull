@@ -24,7 +24,8 @@ def test_instruction_checkpoint_plan_requires_explicit_phase_and_bounded_storage
     selected=','.join(map(str,range(129)))
     assert len(HOST.checkpoint_plan(0x80962e,selected,130,1)) == 129
     with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,selected,130,2)
-    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(4097))),4097)
+    assert len(HOST.checkpoint_plan(0x80962e,','.join(map(str,range(4097))),4097,1)) == 4097
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(6001))),6001)
 
 
 def test_controller_journal_reports_duplicate_conflicts_and_consumer_disagreement():
@@ -49,6 +50,8 @@ def test_modal_polls_may_repeat_with_different_input_within_a_single_main_pass()
     assert result['samples'] == [modal,second]
     assert result['duplicate_serials'] == []
     assert result['conflicting_serials'] == []
+    conversation = {**modal,'kind':'conversation','context':'primary','source_return':0x91ac}
+    assert not HOST.controller_journal_summary([conversation,conversation], 0)['duplicate_serials']
 
 
 def test_watch_defaults_preserve_system_ram_and_allow_save_ram():

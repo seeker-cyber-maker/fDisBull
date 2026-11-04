@@ -113,8 +113,8 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     if profile=='npc-intro':receipt['limits']+=['two noncolliding NPC controllers/kinematics only; rendering flags and animation excluded; direction/task changes refuse']
     if profile=='scripted-intro':receipt['limits']+=['source-seeded NPC/task projection on logical main-loop passes; source video pacing and APU audio delivery excluded']
     if profile=='opening':
-        receipt['display']='adapted isometric actors and source cursor driven by recovered camera; decoded text and guarded item ownership; no original artwork'
-        receipt['limits'][1]='unobserved player actions, general conversations and room transitions remain unqualified'
+        receipt['display']='adapted isometric actors and source cursor driven by recovered camera; source menus/conversation text and guarded item ownership; no original artwork or portrait pixels'
+        receipt['limits'][1]='unobserved room, player-action and conversation continuations remain unqualified'
         receipt['limits']+=['one input update can be a suspended modal poll with no actor/physics pass; original video pacing and APU delivery excluded']
     (destination/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt

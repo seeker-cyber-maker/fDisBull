@@ -6,22 +6,34 @@ typedef unsigned char u8;
 typedef unsigned int u16;
 typedef unsigned long u32;
 u8 rom8(u8 region,u32 offset);
-u8 task_shared[65536],task_rng_tainted,task_audio_tainted,task_visual_tainted;
+u8 task_shared[65536],task_rng_tainted,task_audio_tainted,task_visual_tainted,task_dialogue_tainted;
+u8 task_dynamic_stale,task_tile_cache_tainted;
 /* Unknown source timing-dependent state cannot feed script or native logic. */
 u8 task_readable(u16 at,u16 length) {
  u32 end;
  if(!length)return 0U;
  end=(u32)at+(u32)length-1UL;
  if(end>65535UL)return 0U;
+ if(task_dynamic_stale && end>=0xde88UL)return 0U;
+ if(task_tile_cache_tainted && end>=0xde88UL)return 0U;
  if(task_rng_tainted && at<=7428U && end>=7428UL)return 0U;
- if(task_audio_tainted && at<=7424U && end>=7420UL)return 0U;
+ if(task_audio_tainted && at<=7424U && end>=7418UL)return 0U;
+ if(task_dialogue_tainted) {
+  if(at<=0x00efU && end>=0x00dbUL)return 0U;
+  if(at<=0x0141U && end>=0x0140UL)return 0U;
+ }
  if(task_visual_tainted) {
   if(at<=0x0205U && end>=0x0204UL)return 0U;
   if(at<=0x0cf3U && end>=0x0ce8UL)return 0U;
   if(at<=0x022dU && end>=0x0226UL)return 0U;
   if(at<=0x14cbU && end>=0x1474UL)return 0U;
   if(at<=0x157fU && end>=0x157eUL)return 0U;
+  if(at<=0x17f1U && end>=0x17f0UL)return 0U;
+  if(at<=0x198dU && end>=0x1802UL)return 0U;
+  if(at<=0x1b8dU && end>=0x1a8eUL)return 0U;
+  if(at<=0x1c91U && end>=0x1c8eUL)return 0U;
   if(at<=0x2adfU && end>=0x2300UL)return 0U;
+  if(at<=0x3f03U && end>=0x3ce4UL)return 0U;
  }
  return 1U;
 }
@@ -252,6 +264,22 @@ void shadowrun_snes_task_vm(u8 unused) {
    a=task_heap_read16(sp+1U);b=task_heap_read16(sp+3U);a-=1U;
    v=0U;if(a>=b)v=65535U;
    task_heap_write16(sp+3U,v);sp+=2U;
+  } else if(op==92U || op==94U) {
+   /* $F4FC/$F505: add, or subtract top from next, modulo 65536. */
+   if(sp>3001U)return;
+   a=task_heap_read16(sp+1U);b=task_heap_read16(sp+3U);
+   if(op==92U)b=(u16)(b+a);else b=(u16)(b-a);
+   task_heap_write16(sp+3U,b);sp+=2U;
+  } else if(op==122U) {
+   /* $F6C7: pop shift count; for nonzero, shift the following word left. */
+   if(sp>3003U)return;
+   a=task_heap_read16(sp+1U);sp+=2U;
+   if(a) {
+    if(sp>3003U)return;
+    b=task_heap_read16(sp+1U);
+    if(a>=16U)b=0U;else b=(u16)(b<<a);
+    task_heap_write16(sp+1U,b);
+   }
   } else if(op==128U || op==126U) {
    if(sp>3001U)return;
    a=task_heap_read16(sp+1U);b=task_heap_read16(sp+3U);
@@ -344,7 +372,7 @@ void shadowrun_snes_task_native(u8 unused) {
  task_native_supported=0U;
  if(!task_vm_pending || task_vm_pending_task!=task_index ||
     (task_index&1U) || task_index>=96U)return;
- if(task_vm_callback==2U || task_vm_callback==8U || task_vm_callback==10U || task_vm_callback==40U || task_vm_callback==79U || task_vm_callback==87U || task_vm_callback==186U || task_vm_callback==195U || task_vm_callback==197U) {
+ if(task_vm_callback==2U || task_vm_callback==8U || task_vm_callback==10U || task_vm_callback==40U || task_vm_callback==79U || task_vm_callback==80U || task_vm_callback==81U || task_vm_callback==87U || task_vm_callback==186U || task_vm_callback==195U || task_vm_callback==197U) {
   if(task_vm_return!=1U)return;
  } else if(task_vm_return)return;
  task_callback_result=0U;
@@ -375,12 +403,27 @@ void shadowrun_snes_task_native(u8 unused) {
   /* $D15A: return the currently selected player actor slot. */
   if(task_vm_argc || !task_readable(0x0cdeU,2U))return;
   task_callback_result=(u16)((u16)task_shared[0x0cdeU]|((u16)task_shared[0x0cdfU]<<8));
- } else if(task_vm_callback==79U) {
-  /* $A8E6: return the actor X coordinate in source game units. */
+ } else if(task_vm_callback==79U || task_vm_callback==80U || task_vm_callback==81U) {
+  /* $A8E6/$A8F0/$A8FA: return X/Y/Z in source game units. */
   actor=task_vm_arg0;
   if(task_vm_argc!=1U || (actor&1U) || actor>=88U)return;
-  at=0x0e44U+actor;if(!task_readable(at,2U))return;
+  at=0x0e44U+actor;
+  if(task_vm_callback==80U)at=0x0e9cU+actor;
+  if(task_vm_callback==81U)at=0x0ef4U+actor;
+  if(!task_readable(at,2U))return;
   task_callback_result=((u16)task_shared[at]|((u16)task_shared[at+1U]<<8))>>2;
+ } else if(task_vm_callback==180U) {
+  /* $9471: assign the actor's source conversation tag word. */
+  actor=task_vm_arg0;
+  if(task_vm_argc!=2U || (actor&1U) || actor>=88U)return;
+  at=0x442cU+actor;task_shared[at]=(u8)task_vm_arg1;task_shared[at+1U]=(u8)(task_vm_arg1>>8);
+ } else if(task_vm_callback==130U) {
+  /* $D11A: store raw fixed-point actor X/Y/Z; depth updates later. */
+  actor=task_vm_arg0;
+  if(task_vm_argc!=4U || (actor&1U) || actor>=88U)return;
+  at=0x0e44U+actor;task_shared[at]=(u8)task_vm_arg1;task_shared[at+1U]=(u8)(task_vm_arg1>>8);
+  at=0x0e9cU+actor;task_shared[at]=(u8)task_vm_arg2;task_shared[at+1U]=(u8)(task_vm_arg2>>8);
+  at=0x0ef4U+actor;task_shared[at]=(u8)task_vm_arg3;task_shared[at+1U]=(u8)(task_vm_arg3>>8);
  } else if(task_vm_callback==59U) {
   actor=task_vm_arg0;
   if((actor&1U) || actor>=88U)return;

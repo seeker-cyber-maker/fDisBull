@@ -12,15 +12,56 @@ u8 opening_text_buffers[4096];
 u16 opening_text_lengths[16],opening_text_ids[16],opening_message_count;
 u16 opening_audio_projection_events;
 u16 opening_refresh_events;
+u8 opening_scene_changed;
+u16 opening_room_loads;
 
 void opening_load(u16 slot);
 void opening_save(u16 slot);
 
-/* $8000-$80B1 checks two ROM volume lists before actor physics. Executing
- * a new trigger script or loading another room is outside this profile. */
+/* A44C's staged room load preserves world records. Presentation services
+ * have typed taint; no later snapshot supplies actors, tasks or collision. */
+void opening_room_load(u16 entry) {
+ u16 n,i;
+ transition_scene=entry;shadowrun_snes_transition_begin(0U);
+ task_dynamic_stale=1U;task_tile_cache_tainted=1U;
+ for(n=0U;n<192U;n+=1U) {
+  if(transition_status==1U) {
+   target_globals_known=1U;
+   for(i=0U;i<44U;i+=1U)target_geometry_known[i]=1U;
+   opening_room_loads+=1U;opening_scene_changed=1U;return;
+  }
+  if(transition_status==3U) {shadowrun_snes_transition_next(0U);continue;}
+  if(transition_status!=2U) {opening_failure=44U;return;}
+  if(transition_request==1U) {
+   interaction_status=1U;interaction_target_close();
+   if(!interaction_status) {opening_failure=40U;return;}
+   shadowrun_snes_target_end(0U);if(!target_status) {opening_failure=40U;return;}
+  } else if(transition_request==2U) {
+   shadowrun_snes_task_reset(0U);if(!task_init_supported) {opening_failure=18U;return;}
+  } else if(transition_request==3U) {
+   opening_animation_metadata_reset();if(!opening_anim_supported) {opening_failure=35U;return;}
+   task_visual_tainted=1U;opening_window_display_tainted=1U;opening_window_scratch_tainted=1U;
+  } else if(transition_request==4U) {
+   if(rom8(0U,92176UL+(u32)scene_task_id)!=2U) {opening_failure=44U;return;}
+   task_init_script=scene_task_id;task_init_args[0]=(u8)scene_actor;
+   task_init_args[1]=(u8)(scene_actor>>8);shadowrun_snes_task_create(0U);
+   if(!task_init_supported) {opening_failure=18U;return;}
+   transition_task=task_init_result;
+  } else if(transition_request==5U) {
+   task_visual_tainted=1U;task_audio_tainted=1U;
+   opening_window_display_tainted=1U;opening_window_scratch_tainted=1U;
+  } else {opening_failure=44U;return;}
+  shadowrun_snes_transition_resume(0U);
+ }
+ opening_failure=44U;
+}
+
+/* $8000-$80B1 checks two ROM volume lists before actor physics. The second
+ * group calls A44C directly; it does not enqueue a CC1B request. */
 void opening_scene_gate(void) {
  u16 actor,x,y,z,group,count,i,ptr,bank;
  u32 at;
+ opening_scene_changed=0U;
  if(scene_read(0x1d05U)!=65535U) {opening_failure=37U;return;}
  actor=scene_read(0x0cdeU);if(actor&32768U)return;
  if((actor&1U) || actor>=88U) {opening_failure=12U;return;}
@@ -36,7 +77,9 @@ void opening_scene_gate(void) {
    if(at+13UL>=1048576UL) {opening_failure=37U;return;}
    if(x>=scene_rom16(at) && y>=scene_rom16(at+2UL) && z>=scene_rom16(at+4UL) &&
       x<=scene_rom16(at+6UL) && y<=scene_rom16(at+8UL) && z<=scene_rom16(at+10UL)) {
-    opening_failure=37U;return;
+    if(group)opening_room_load(scene_rom16(at+12UL));
+    else opening_failure=37U;
+    return;
    }
    at+=14UL;
   }
@@ -167,6 +210,7 @@ void opening_callback(void) {
   shadowrun_snes_text_layout_subpixel_in=scene_read(0x20e0U+slot);
   shadowrun_snes_text_layout(0U);
   if(shadowrun_snes_text_layout_status!=1U) {opening_failure=33U;return;}
+  scene_write(0x00aeU,shadowrun_snes_text_layout_style_out);
   opening_window_layout_cursor=shadowrun_snes_text_layout_cursor;
   opening_window_layout_subpixel=shadowrun_snes_text_layout_subpixel;
   opening_window_text_complete=1U;opening_window_present_complete=1U;
@@ -181,13 +225,15 @@ void opening_callback(void) {
   /* CD78 returns the selected target, then AD4E redraws and waits for its
    * display handshake. Only the observed no-cursor branch is recovered.
    * The native view redraw is adapted; original raster/scratch stay tainted. */
-  if(scene_read(0x1d7dU)!=65535U || !(scene_read(0x01f0U)&32768U) ||
-     !(scene_read(0x01f2U)&32768U)) {opening_failure=36U;return;}
+  if(scene_read(0x1d7dU)!=65535U ||
+     (scene_read(0x01f4U) && (!(scene_read(0x01f0U)&32768U) ||
+                            !(scene_read(0x01f2U)&32768U)))) {opening_failure=36U;return;}
   opening_refresh_events+=1U;opening_window_display_tainted=1U;
   opening_window_scratch_tainted=1U;
   task_callback_result=scene_read(0x1d7dU);scene_write(0U,task_callback_result);
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
  } else if(task_vm_callback==177U) {
+  if(task_dynamic_stale) {opening_failure=43U;return;}
   if((task_vm_arg0&1U) || task_vm_arg0>=88U) {opening_failure=43U;return;}
   action_collision_actor=task_vm_arg0;action_collision_action=task_vm_arg1;
   action_collision_flags_known=target_geometry_known[task_vm_arg0>>1];
@@ -259,7 +305,7 @@ void opening_callback(void) {
  * current pointer; a child may run immediately and resume its parent. */
 void opening_scheduler(void) {
  u16 current,n,dispatch,bypass;
- current=task_list_current;bypass=0U;
+ current=task_list_current;bypass=opening_scheduler_resume;opening_scheduler_resume=0U;
  for(n=0U;n<256U;n+=1U) {
   if(current&32768U) {task_list_current=task_list_head;return;}
   if((current&1U) || current>=96U) {opening_failure=19U;return;}
@@ -273,7 +319,13 @@ void opening_scheduler(void) {
   for(dispatch=0U;dispatch<64U;dispatch+=1U) {
    shadowrun_snes_task_vm(0U);
    if(task_vm_status==1U) {current=task_next[current>>1];break;}
-   if(task_vm_status==2U) {opening_callback();if(opening_failure)return;continue;}
+   if(task_vm_status==2U) {
+    if(task_vm_callback==148U) {
+     if(task_vm_argc!=2U || task_vm_return) {opening_failure=45U;return;}
+     opening_conversation_begin(task_vm_arg0,task_vm_arg1,1U);
+    } else opening_callback();
+    if(opening_failure || opening_phase>=4U)return;continue;
+   }
    if(task_vm_status==5U) {
     shadowrun_snes_task_create_child(0U);
     if(!task_init_supported) {opening_failure=18U;return;}
@@ -338,8 +390,15 @@ void opening_actor(u16 slot) {
  next=z+npc_velocity_z;
  if(next<256U)npc_velocity_z=0U;
  else if(next!=z) {
-  if(npc_flags&64U) {opening_failure=25U;return;}
-  npc_z=next;
+  if(npc_flags&64U) {
+   vertical_actor=slot;vertical_x=npc_x;vertical_y=npc_y;vertical_z=next;
+   vertical_flags=npc_flags;vertical_geometry_known=target_geometry_known[slot>>1];
+   vertical_flags_known=target_geometry_known[slot>>1];
+   shadowrun_snes_vertical_collision(0U);
+   if(!vertical_supported) {opening_failure=25U;return;}
+   if(vertical_blocked)npc_velocity_z=0U;
+   else npc_z=next;
+  } else npc_z=next;
  }
  npc_depth=(u16)(npc_x+npc_y)>>1;
  opening_save(slot);
@@ -363,6 +422,14 @@ void opening_animation(u16 slot) {
 void shadowrun_snes_frame(u8 pad) {
  u16 raw,previous,i,count,slot,resuming;
  shadowrun_snes_frame_status=2U;opening_failure=0U;opening_pad=pad;
+ if(task_dynamic_stale) {
+  if(opening_phase || task_vm_pending || task_list_current!=65535U ||
+     scene_read(0x01f4U) || !(scene_read(0x01f6U)&32768U) ||
+     scene_read(0x1d05U)!=65535U ||
+     (!(scene_read(0x0cdeU)&32768U) && scene_read(0x1d81U))) {
+   opening_failure=46U;return;
+  }
+ }
  if(pad&128U) {opening_failure=1U;return;}
  raw=0U;previous=0U;
  if(pad&1U)raw|=2048U;if(pad&2U)raw|=1024U;
@@ -370,7 +437,15 @@ void shadowrun_snes_frame(u8 pad) {
  if(pad&16U)raw|=4096U;if(pad&32U)raw|=32768U;if(pad&64U)raw|=8192U;
  resuming=0U;
  if(opening_phase) {
-  interaction_poll(raw);
+  if(opening_phase>=4U)opening_conversation_poll(raw);
+  else {
+   interaction_poll(raw);
+   if(interaction_conversation_pending) {
+    interaction_conversation_pending=0U;
+    opening_conversation_begin(interaction_conversation_actor,interaction_conversation_tag,0U);
+   }
+  }
+  if(opening_failure)return;
   if(!interaction_status) {opening_failure=40U;return;}
   if(opening_phase) {shadowrun_snes_frame_status=1U;return;}
   resuming=1U;
@@ -393,6 +468,7 @@ void shadowrun_snes_frame(u8 pad) {
    if(!opening_anim_supported) {opening_failure=35U;return;}
    shadowrun_snes_scene_construct(0U);
    if(scene_construct_status!=1U) {opening_failure=5U;return;}
+   task_dynamic_stale=1U;task_tile_cache_tainted=1U;
    target_globals_known=1U;
    for(i=0U;i<44U;i+=1U)target_geometry_known[i]=1U;
    opening_window_reset();if(opening_window_status!=1U) {opening_failure=31U;return;}
@@ -408,10 +484,19 @@ void shadowrun_snes_frame(u8 pad) {
   if(opening_phase) {shadowrun_snes_frame_status=1U;return;}
  }
  }
+ /* C176 leaves no current task. A stale dynamic grid is permitted only
+  * through that source primer; no task/native may consume it before rebuild. */
+ if(task_dynamic_stale && task_list_current!=65535U) {opening_failure=46U;return;}
  opening_scheduler();if(opening_failure)return;
+ if(opening_phase>=4U) {shadowrun_snes_frame_status=1U;return;}
  opening_scene_gate();if(opening_failure)return;
+ if(opening_scene_changed) {
+  opening_passes+=1U;opening_publish();if(opening_failure)return;
+  shadowrun_snes_frame_status=1U;return;
+ }
  opening_forced_motion();if(opening_failure)return;
  opening_rebuild();if(!opening_rebuild_supported) {opening_failure=28U;return;}
+ task_dynamic_stale=0U;
  count=scene_read(0x14ccU);
  if(count&32768U) {opening_failure=30U;return;}
  if((count&1U) || count>=88U) {opening_failure=30U;return;}

@@ -330,6 +330,10 @@ item pickup and a scripted response from a Mortician-associated task. It uses
 an adapted isometric actor view and source text; original artwork, audio
 playback, general conversations and unrestricted progression remain outside
 this bounded experiment.
+The [room and keyword follow-up](docs/SHADOWRUN_SNES_TRANSITIONS.md) recovers
+the route through the hallway to the street and the conversation components.
+The native street continuation currently stops at a hardware-dependent random
+timer; live keyword play remains unqualified while that input boundary is resolved.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

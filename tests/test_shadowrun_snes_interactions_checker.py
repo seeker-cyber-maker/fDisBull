@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 import pytest
-from test_shadowrun_snes_opening_checker import Reader,empty_source
+from test_shadowrun_snes_opening_checker import Reader,empty_source,put
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
@@ -37,6 +37,50 @@ def test_journal_rejects_missing_main_and_duplicate_consumer():
         checker.prepare_journal(journal,[(1,{}),(2,{})])
 
 
+def test_conversation_context_uses_stack_return_and_its_own_exit_poll():
+    primary=sample('conversation',11,0,pc=0x80a67d)|{'context':'primary','source_return':0x91ac}
+    exit_poll=sample('conversation',12,0,pc=0x8092b9)|{'context':'exit'}
+    journal={'format':'snes-main-loop-controller-journal-1','dropped':0,
+             'samples':[sample('main',10,0x8000),primary,exit_poll,sample('player',12,0,actor=2)],
+             'duplicate_serials':[],'conflicting_serials':[],'consumer_disagreements':[1]}
+    assert len(checker.prepare_journal(journal,[(10,{}),(13,{})])[1])==4
+    primary['source_return']=0x922f
+    with pytest.raises(ValueError,match='selector context'):
+        checker.prepare_journal(journal,[(10,{}),(13,{})])
+
+
+def test_shared_poll_pc_cannot_substitute_primary_for_keyword_menu():
+    class Model:
+        def get(self,name):
+            assert name=='conversation_ui_mode'
+            return 0
+    source={'kind':'conversation','pc':0x80a67d,'context':'keyword'}
+    with pytest.raises(checker.Mismatch) as exc:checker.poll_phase(Model(),source)
+    assert exc.value.detail['field']=='conversation.selector_context'
+    source['context']='primary'
+    assert checker.poll_phase(Model(),source)==4
+
+
+def test_stale_dynamic_exclusion_requires_source_primer_and_model_guard():
+    source=empty_source()
+    for at,value in ((0x26c,65535),(0xcde,65535),(0x1f6,65535),(0x1d05,65535),(0x2de2,3)):
+        put(source,at,value)
+    class Model(Reader):
+        state={'task_dynamic_stale':1,'opening_phase':0,'task_vm_pending':0}
+        def get(self,name,index=0):
+            if name in self.state:return self.state[name]
+            return super().get(name,index)
+    model=Model(source)
+    assert checker.dynamic_grid_ready(model,source,1,None) is False
+    put(source,0x1f4,1)
+    with pytest.raises(ValueError,match='guarded source primer'):
+        checker.dynamic_grid_ready(model,source,1,None)
+    put(source,0x1f4,0)
+    with pytest.raises(checker.Mismatch):checker.dynamic_grid_ready(model,source,2,3)
+    model.state['task_dynamic_stale']=0
+    assert checker.dynamic_grid_ready(model,source,2,3) is True
+
+
 def test_neutrality_checks_distinct_checkpoint_and_unmodified_evidence(monkeypatch):
     monkeypatch.setattr(checker,'CHECKPOINT_CORE','checkpoint')
     monkeypatch.setattr(checker,'UNPATCHED_CORE','unpatched')
@@ -63,3 +107,18 @@ def test_both_item_records_and_camera_are_compared_but_display_handshake_is_excl
     model[0x2e80]=1
     with pytest.raises(checker.Mismatch) as exc:checker.compare_interaction(Reader(model),source)
     assert exc.value.detail['field']=='item.2e80'
+
+
+def test_progression_compares_persistent_world_and_sorted_keyword_termination():
+    source=bytearray(empty_source());source[0x3ca3:0x3ca6]=bytes((2,9,255))
+    model=bytearray(source)
+    counts=checker.compare_progression(Reader(model),source)
+    assert counts['keyword_bytes']==3 and counts['persistent_world_bytes']==3761
+    model[0x2e00]=1
+    with pytest.raises(checker.Mismatch) as exc:checker.compare_progression(Reader(model),source)
+    assert exc.value.detail['field']=='world.2e00'
+    model=bytearray(source);model[0x3ca4]=8
+    with pytest.raises(checker.Mismatch) as exc:checker.compare_progression(Reader(model),source)
+    assert exc.value.detail['field']=='keyword.001'
+    source[0x3ca4]=2
+    with pytest.raises(ValueError,match='sorted and unique'):checker.compare_progression(Reader(source),source)

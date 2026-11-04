@@ -598,6 +598,17 @@ CONSOLE_GAME_EVIDENCE += (
 )
 
 CONSOLE_GAME_RESOURCES += (
+    'src/fdisbull/game_sources/shadowrun_snes_rng.c',
+    'src/fdisbull/shadowrun_snes_rng.py',
+    'src/fdisbull/game_sources/shadowrun_snes_vertical.c',
+    'src/fdisbull/shadowrun_snes_vertical.py',
+    'src/fdisbull/game_sources/shadowrun_snes_conversation.c',
+    'src/fdisbull/game_sources/shadowrun_snes_conversation_bridge.c',
+    'src/fdisbull/game_sources/shadowrun_snes_dialogue_select.c',
+    'src/fdisbull/game_sources/shadowrun_snes_transition.c',
+    'src/fdisbull/shadowrun_snes_conversation.py',
+    'src/fdisbull/shadowrun_snes_dialogue_select.py',
+    'src/fdisbull/shadowrun_snes_transition.py',
     'src/fdisbull/game_sources/shadowrun_snes_action_collision.c',
     'src/fdisbull/game_sources/shadowrun_snes_camera.c',
     'src/fdisbull/game_sources/shadowrun_snes_choice.c',
@@ -642,6 +653,15 @@ CONSOLE_GAME_RESOURCES += (
 )
 
 CONSOLE_GAME_EVIDENCE += (
+    'docs/SHADOWRUN_SNES_TRANSITIONS.md',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/broad-regression.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/components.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/coverage.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/native-app.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/native-contract.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/original-routes.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/prefix-comparison.json',
+    'docs/evidence/shadowrun-snes-transitions-2026-11-03/regression.json',
     'docs/SHADOWRUN_SNES_OPENING.md',
     'docs/SHADOWRUN_SNES_INTERACTIONS.md',
     'docs/evidence/shadowrun-snes-interactions-2026-11-03/broad-regression.json',

@@ -307,7 +307,7 @@ class SnesControllerSample(C.Structure):
 def controller_journal_summary(samples, dropped):
     grouped={}
     for sample in samples:
-        if sample['kind']=='modal':
+        if sample['kind'] in ('modal','conversation'):
             continue  # Multiple selector polls in one main-loop pass are expected.
         grouped.setdefault((sample['kind'],sample['serial']),[]).append(
             (sample['held'],sample['previous'],sample['edge'],sample['actor']))
@@ -317,7 +317,7 @@ def controller_journal_summary(samples, dropped):
                    if ('main',serial) in grouped and ('player',serial) in grouped
                    and {v[0] for v in grouped['main',serial]}!={v[0] for v in grouped['player',serial]}]
     return {'format':'snes-main-loop-controller-journal-1',
-            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; modal after 9D9D calls at 80:A67D/A7B2/A7C1/C03A; serial is latest 80:962E checkpoint',
+            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; modal or typed conversation after its 9D9D calls; serial is latest 80:962E checkpoint',
             'dropped':dropped,'samples':samples,
             'duplicate_serials':keys([key for key,items in grouped.items() if len(items)>1]),
             'conflicting_serials':keys([key for key,items in grouped.items() if len(set(items))>1]),
@@ -342,7 +342,7 @@ def checkpoint_plan(pc, selected, frames, limit=4):
             or type(limit) is not int or not 1<=limit<=8):
         raise ValueError('SNES checkpoint requires a 24-bit PC, selected frames and limit1..8')
     result=frame_numbers(selected,frames)
-    if len(result)>4096:raise ValueError('at most 4096 checkpoint video frames')
+    if len(result)>6000:raise ValueError('at most 6000 checkpoint video frames')
     if len(result)>128 and limit!=1:raise ValueError('more than 128 checkpoint frames requires limit 1')
     return result
 
@@ -583,11 +583,13 @@ def worker(args):
             samples=lib.fdisbull_snes_controller_samples()
             for j in range(count):
                 sample=samples[j]
-                if sample.kind not in (1,2,3):raise ValueError('unknown controller consumer')
-                controller_samples.append({'video_frame':i,'kind':{1:'main',2:'player',3:'modal'}[sample.kind],
+                if sample.kind not in (1,2,3,4,5,6):raise ValueError('unknown controller consumer')
+                controller_samples.append({'video_frame':i,'kind':{1:'main',2:'player',3:'modal',4:'conversation',5:'conversation',6:'conversation'}[sample.kind],
                                            'serial':sample.serial,'held':sample.held,'previous':sample.previous,
                                            'edge':sample.edge,'actor':sample.actor if sample.kind==2 else None,
-                                           **({'pc':sample.actor} if sample.kind==3 else {})})
+                                           **({'pc':sample.actor} if sample.kind>=3 else {}),
+                                           **({'context':{4:'primary',5:'keyword',6:'exit'}[sample.kind]} if sample.kind>=4 else {}),
+                                           **({'source_return':{4:0x91ac,5:0x922f}[sample.kind]} if sample.kind in (4,5) else {})})
         if args.snes_trace_frames and start<=i<end:
             count=lib.fdisbull_snes_trace_count();dropped=lib.fdisbull_snes_trace_dropped()
             events=lib.fdisbull_snes_trace_events()
@@ -720,7 +722,7 @@ def main():
     parser.add_argument('--snes-trace-pc', help='24-bit opcode address start:exclusive-end')
     parser.add_argument('--snes-trace-write', help='24-bit direct bus write address start:exclusive-end')
     parser.add_argument('--snes-checkpoint-pc',type=lambda x:int(x,0),help='Instruction-entry PC for private WRAM checkpoints; requires matching instrumented core')
-    parser.add_argument('--snes-checkpoint-frames',help='At most 4096 checkpoint video frames; more than 128 requires limit 1; each capture uses 128 KiB')
+    parser.add_argument('--snes-checkpoint-frames',help='At most 6000 checkpoint video frames; more than 128 requires limit 1; each capture uses 128 KiB')
     parser.add_argument('--snes-checkpoint-limit',type=int,default=4,help='At most1..8 checkpoints per video frame; dropped count retained')
     parser.add_argument('--snes-checkpoint-digests',action='store_true',help='Keep checkpoint hashes and metadata without writing private WRAM snapshots')
     parser.add_argument('--snes-controller-journal',action='store_true',help='Observe main-loop held/previous controller words with a compatible core')

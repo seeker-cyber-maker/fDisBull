@@ -32,19 +32,26 @@ def test_opening_rejects_same_size_wrong_title_and_save(monkeypatch):
 
 
 PREFIX = '''typedef unsigned char u8; typedef unsigned int u16; typedef unsigned long u32;
-u8 rom8(u8 region,u32 offset); u8 task_shared[65536]; u8 opening_failure;
+u8 rom8(u8 region,u32 offset); u8 task_shared[65536]; u8 opening_failure,opening_scene_changed;
+u16 requested_entry;
+void opening_room_load(u16 entry) {requested_entry=entry;opening_scene_changed=1U;}
 u16 scene_read(u16 at) {return (u16)task_shared[at]|((u16)task_shared[at+1U]<<8);}
 u16 scene_rom16(u32 at) {return (u16)rom8(0U,at)|((u16)rom8(0U,at+1UL)<<8);}
 '''
 
 
-def gate_machine():
+def gate_machine(*,room=False):
     # One volume in group zero, no entries in group one. Bounds are inclusive.
     rom = bytearray(1 << 20)
     rom[0x100] = 1
     for i, value in enumerate((10, 10, 1, 20, 20, 4)):
         rom[0x101 + 2*i:0x103 + 2*i] = value.to_bytes(2, 'little')
     rom[0x10f] = 0
+    if room:
+        rom[0x100:0x110]=bytes(16)
+        rom[0x101]=1
+        for i,value in enumerate((10,10,1,20,20,4,31)):
+            rom[0x102+2*i:0x104+2*i]=value.to_bytes(2,'little')
     data = bytes(rom)
     region = {'id': 0, 'length': len(data), 'sha256': digest(data)}
     source = opening.SOURCE.read_text()
@@ -99,3 +106,13 @@ def test_scene_gate_handles_absent_actor_and_rejects_invalid_mapping():
     m.set_state({'task_shared': shared, 'opening_failure': 0})
     m.call('opening_scene_gate')
     assert m.snapshot()['opening_failure'] == 37
+
+
+def test_direct_room_volume_dispatches_entry_with_source_coordinate_scaling():
+    m=gate_machine(room=True);shared=m.snapshot()['task_shared']
+    shared[0x0e44+0x42:0x0e46+0x42]=[40,0]
+    m.set_state({'task_shared':shared})
+    m.call('opening_scene_gate')
+    state=m.snapshot()
+    assert state['opening_scene_changed']==1 and state['requested_entry']==31
+    assert state['opening_failure']==0 and state['task_shared']==shared

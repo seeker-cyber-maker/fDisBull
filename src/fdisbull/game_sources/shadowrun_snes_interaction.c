@@ -1,7 +1,8 @@
 /* Source cursor, directly owned windows and suspended verb-menu integration.
  * Each modal step is a source controller poll, not an actor/physics pass. */
 u8 interaction_status,opening_phase,interaction_fault;
-u8 interaction_cursor_display_tainted;
+u8 interaction_cursor_display_tainted,interaction_conversation_pending;
+u16 interaction_conversation_actor,interaction_conversation_tag;
 u16 interaction_choice_window,interaction_choice_selected;
 u16 interaction_target_length,interaction_target_text[256];
 u16 interaction_choice_lengths[8],interaction_choice_text[2048];
@@ -44,6 +45,7 @@ void interaction_text(u16 slot,u16 row,u16 column) {
  shadowrun_snes_text_layout_icon_glyphs=1U;shadowrun_snes_text_layout(0U);
  shadowrun_snes_text_layout_icon_glyphs=0U;
  if(shadowrun_snes_text_layout_status!=1U) {interaction_status=0U;interaction_fault=2U;return;}
+ scene_write(0x00aeU,shadowrun_snes_text_layout_style_out);
  scene_write(0x20c0U+slot,shadowrun_snes_text_layout_cursor);
  scene_write(0x20e0U+slot,shadowrun_snes_text_layout_subpixel);
  scene_write(0U,slot);scene_write(2U,shadowrun_snes_text_encoded_pointer);
@@ -125,6 +127,35 @@ void interaction_dispatch_begin(void) {
  /* Out-of-range warning needs its own source window and input continuation. */
  interaction_status=0U;interaction_fault=11U;
 }
+/* $C01C follows the actor task again after a synchronous conversation. */
+void interaction_dispatch_finish(u16 event) {
+ u16 slot,i;
+ slot=scene_read(0x136cU+target_dispatch_actor);
+ for(i=0U;i<48U;i+=1U) {
+  if((slot&1U) || slot>=96U) {interaction_status=0U;interaction_fault=15U;return;}
+  if(!(task_wait[slot>>1]&32768U))break;
+  slot=task_link[slot>>1];
+ }
+ if(i==48U) {interaction_status=0U;interaction_fault=15U;return;}
+ target_dispatch_task=slot;
+  slot=target_dispatch_task;
+  if((slot&1U) || slot>=96U) {interaction_status=0U;interaction_fault=15U;return;}
+  task_flags[slot>>1]|=event;
+  if(event) {
+   interaction_last_actor=target_dispatch_actor;interaction_last_event=event;interaction_action_count+=1U;
+  }
+  if(event==16U) {
+   interaction_item_task=target_dispatch_task;
+   interaction_item_pointer=scene_read(0x13c4U+target_dispatch_actor);
+   interaction_item_name_length=interaction_target_length;
+   for(i=0U;i<=interaction_target_length;i+=1U)interaction_item_name[i]=interaction_target_text[i];
+  }
+  interaction_target_close();if(!interaction_status)return;
+  shadowrun_snes_target_end(0U);
+  if(!target_status) {interaction_status=0U;interaction_fault=16U;return;}
+  opening_phase=3U;return;
+}
+
 void interaction_poll(u16 held) {
  u16 old,slot,i;
  interaction_status=1U;interaction_fault=0U;
@@ -153,23 +184,12 @@ void interaction_poll(u16 held) {
   scene_write(0U,interaction_choice_window);opening_window_close(interaction_choice_window);
   if(opening_window_status!=1U) {interaction_status=0U;interaction_fault=13U;return;}
   scene_write(0x1fc2U,0U);
-  if(choice_event==2U && scene_read(0x442cU+target_dispatch_actor)) {interaction_status=0U;interaction_fault=14U;return;}
-  slot=target_dispatch_task;
-  if((slot&1U) || slot>=96U) {interaction_status=0U;interaction_fault=15U;return;}
-  task_flags[slot>>1]|=choice_event;
-  if(choice_event) {
-   interaction_last_actor=target_dispatch_actor;interaction_last_event=choice_event;interaction_action_count+=1U;
+  if(choice_event==2U && scene_read(0x442cU+target_dispatch_actor)) {
+   interaction_conversation_actor=target_dispatch_actor;
+   interaction_conversation_tag=scene_read(0x442cU+target_dispatch_actor);
+   interaction_conversation_pending=1U;opening_phase=4U;return;
   }
-  if(choice_event==16U) {
-   interaction_item_task=target_dispatch_task;
-   interaction_item_pointer=scene_read(0x13c4U+target_dispatch_actor);
-   interaction_item_name_length=interaction_target_length;
-   for(i=0U;i<=interaction_target_length;i+=1U)interaction_item_name[i]=interaction_target_text[i];
-  }
-  interaction_target_close();if(!interaction_status)return;
-  shadowrun_snes_target_end(0U);
-  if(!target_status) {interaction_status=0U;interaction_fault=16U;return;}
-  opening_phase=3U;return;
+  interaction_dispatch_finish(choice_event);return;
  }
  if(opening_phase==3U) {interaction_input(held);opening_phase=0U;return;}
  interaction_status=0U;interaction_fault=17U;

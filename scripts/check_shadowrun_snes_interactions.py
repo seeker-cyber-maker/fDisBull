@@ -22,7 +22,9 @@ from check_shadowrun_macos import Native
 from check_shadowrun_snes_opening import Reader,Mismatch,check,journal_pad,sha,word,order,UNPATCHED_CORE
 
 CORE='34f40027761df3cdbcfa9efad1ad68540cc069105757168e8b81f19864d0b022'
+CONVERSATION_CORE='90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8'
 MODAL={0x80a67d:1,0x80a7b2:2,0x80a7c1:2,0x80c03a:3}
+CONVERSATION_MODAL={0x80a67d:4,0x80a7b2:5,0x80a7c1:5,0x8092b9:6}
 CURSOR=(0x1ec,0x1ee,0x1f0,0x1f2,0x1f4,0x1f6,0x1fa,0x1fc,0x1fe,0x200,0x202)
 CHECKPOINT_CORE='6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283'
 
@@ -74,10 +76,17 @@ def prepare_journal(data,entries):
     for sample in data['samples']:
         serial=sample.get('serial');frame=sample.get('video_frame');kind=sample.get('kind')
         if (type(serial) is not int or type(frame) is not int or serial<last_serial or
-            frame<last_frame or kind not in ('main','modal','player') or
+            frame<last_frame or kind not in ('main','modal','player','conversation') or
             any(type(sample.get(k)) is not int or not 0<=sample[k]<=65535 for k in ('held','previous','edge'))):
             raise ValueError('invalid controller observation order or words')
         if kind=='modal' and sample.get('pc') not in MODAL:raise ValueError('unknown modal poll')
+        if kind=='conversation':
+            context=sample.get('context');pc=sample.get('pc')
+            if pc not in CONVERSATION_MODAL:raise ValueError('unknown conversation poll')
+            if pc==0x8092b9:
+                if context!='exit' or 'source_return' in sample:raise ValueError('invalid conversation exit context')
+            elif context not in ('primary','keyword') or sample.get('source_return')!={'primary':0x91ac,'keyword':0x922f}[context]:
+                raise ValueError('invalid conversation selector context')
         if kind=='player' and (type(sample.get('actor')) is not int or sample['actor']&1 or not 0<=sample['actor']<88):
             raise ValueError('invalid player consumer actor')
         if kind!='player' and sample.get('actor') is not None:raise ValueError('unexpected consumer actor')
@@ -96,8 +105,8 @@ def prepare_journal(data,entries):
         if len(main)>1 or len(player)>1:raise ValueError('duplicate controller consumer')
         if main and player and main[0]['held']!=player[0]['held']:
             player_index=group.index(player[0]);prior=group[:player_index]
-            modal=[s for s in prior if s['kind']=='modal']
-            if not modal or modal[-1]['pc']!=0x80c03a or modal[-1]['held']!=player[0]['held']:
+            modal=[s for s in prior if s['kind'] in ('modal','conversation')]
+            if not modal or modal[-1]['pc'] not in (0x80c03a,0x8092b9) or modal[-1]['held']!=player[0]['held']:
                 raise ValueError('unexplained main/player disagreement')
             disagreements.append(serial)
     if sorted(disagreements)!=sorted(data.get('consumer_disagreements',[])):
@@ -129,6 +138,65 @@ def compare_interaction(reader,source):
     return counts
 
 
+def compare_progression(reader,source):
+    """Compare persistent world state and the authoritative learned-keyword list.
+
+    Room loading must retain the same world records as the original. This
+    readset deliberately omits transient raster, tile and audio workspaces.
+    Text and record bytes stay in the caller's private checkpoint files.
+    """
+    counts={'progression_words':0,'persistent_world_bytes':0,'keyword_bytes':0}
+    for at in (0x0cde,0x0cf6,0x0cf8,0x2de2,0x2de4,0x2de6,0x2de8,0x2df0):
+        a=reader.word(at);b=word(source,at);counts['progression_words']+=1
+        if a!=b:raise Mismatch(f'progression.{at:04x}',a,b)
+    # $986C expands 3,515 world-record bytes, then initializes the adjacent
+    # counters/player statistics. A room load preserves both sets of records.
+    for at in range(0x2df2,0x3ca3):
+        counts['persistent_world_bytes']+=1
+        if reader.byte(at)!=source[at]:raise Mismatch(f'world.{at:04x}','redacted','redacted')
+    previous=-1
+    for off in range(256):
+        at=0x3ca3+off;expected=source[at];counts['keyword_bytes']+=1
+        if reader.byte(at)!=expected:raise Mismatch(f'keyword.{off:03x}','redacted','redacted')
+        if expected==255:return counts
+        if expected<=previous:raise ValueError('source keyword list is not sorted and unique')
+        previous=expected
+    raise ValueError('source keyword list is unterminated')
+
+
+def poll_phase(reader,sample):
+    if sample['kind']=='main':return 0
+    if sample['kind']=='modal':return MODAL[sample['pc']]
+    phase=CONVERSATION_MODAL[sample['pc']]
+    if sample['context']!='exit':
+        expected=1 if sample['context']=='keyword' else 0
+        actual=reader.get('conversation_ui_mode')
+        if actual!=expected:raise Mismatch('conversation.selector_context',actual,expected)
+    return phase
+
+
+def dynamic_grid_ready(reader,source,serial,previous_entry):
+    """Qualify the source primer boundary before omitting stale dynamic data.
+
+    Display decompression can corrupt the former room's dynamic lists. The
+    guarded C176 primer executes no tasks; AF51 rebuilds the grid before any
+    actor collision. Static collision remains compared at this boundary.
+    """
+    stale=serial==1 or word(source,0x2de2)!=previous_entry
+    if reader.get('task_dynamic_stale')!=int(stale):
+        raise Mismatch('dynamic_grid.readiness',reader.get('task_dynamic_stale'),int(stale))
+    if not stale:return True
+    for at in (0x0cde,0x01f4,0x01f6,0x1d05,0x1d81):
+        if reader.word(at)!=word(source,at):raise Mismatch(f'dynamic_grid.guard.{at:04x}',reader.word(at),word(source,at))
+    if (reader.get('opening_phase') or reader.get('task_vm_pending') or
+        reader.get('task_list_current')!=65535 or word(source,0x26c)!=65535 or
+        word(source,0x1f4) or not word(source,0x1f6)&32768 or
+        word(source,0x1d05)!=65535 or
+        (not word(source,0x0cde)&32768 and word(source,0x1d81))):
+        raise ValueError('stale dynamic grid is outside the guarded source primer')
+    return False
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for key in ('rom','reference','output','checkpoint-baseline','unpatched-baseline'):
@@ -138,17 +206,24 @@ def main():
     p.add_argument('--require-pickup',action='store_true',help='require the observed patch count transition and actor removal')
     p.add_argument('--require-item',choices=('patch','scalpel'),help='require the named source item ownership and actor-removal transition')
     p.add_argument('--require-repeat',action='store_true',help='require the observed empty-target repeat attempt after patch pickup')
+    p.add_argument('--require-room',type=lambda value:int(value,0),help='require a source entry-ID change to this room descriptor and a live party actor')
+    p.add_argument('--require-keyword',action='store_true',help='require learned-keyword change, a typed keyword confirmation and source conversation return')
+    p.add_argument('--require-conversation-cancel',action='store_true',help='require keyword-selector SELECT cancellation followed by source conversation return')
     a=p.parse_args();ref=a.reference.resolve();out=a.output.resolve()
+    if a.require_room is not None and not 0<=a.require_room<=65535:
+        raise ValueError('room entry ID must fit a word')
     if out.exists() or any((x/'.git').exists() for x in (out,*out.parents)):
         raise ValueError('output must be a fresh private directory outside Git')
     receipt_bytes=(ref/'receipt.json').read_bytes();r=json.loads(receipt_bytes)
     journal_bytes=(ref/'controller_journal.json').read_bytes();j=json.loads(journal_bytes)
     c=r['snes_checkpoints']
-    if (r['system']!='snes' or r['core_sha256']!=CORE or r['rom_sha256']!=ROM_SHA256 or
+    if (r['system']!='snes' or r['core_sha256'] not in (CORE,CONVERSATION_CORE) or r['rom_sha256']!=ROM_SHA256 or
         r['patches'] or r['memory_injection_mode']!='no memory patches' or
         r['snes_controller_journal_sha256']!=sha(journal_bytes) or c['pc']!=0x80962e or
         c['phase']!='before selected opcode at instruction entry; video frame identifies containing retro_run'):
         raise ValueError('unexpected observer identity or phase')
+    if any(s.get('kind')=='conversation' for s in j.get('samples',[])) and r['core_sha256']!=CONVERSATION_CORE:
+        raise ValueError('conversation journal requires its qualified typed observer')
     checkpoint_bytes=(a.checkpoint_baseline.resolve()/'receipt.json').read_bytes()
     unpatched_bytes=(a.unpatched_baseline.resolve()/'receipt.json').read_bytes()
     neutrality=validate_neutrality(r,checkpoint_bytes,unpatched_bytes)
@@ -191,14 +266,19 @@ def main():
     report={'format':'shadowrun-snes-interactions-checkpoint-1','result':'running',
       'scope':'title-seeded ordinary-input interaction; selected actor, task, collision, sprite, window, text, cursor and item fields',
       'limitations':'source main-loop checkpoints; cursor display $0204, rendering and audio excluded; modal polls are input observations',
-      'core_sha256':CORE,'receipt_sha256':sha(receipt_bytes),'controller_journal_sha256':sha(journal_bytes),
+      'core_sha256':r['core_sha256'],'receipt_sha256':sha(receipt_bytes),'controller_journal_sha256':sha(journal_bytes),
       'neutrality':neutrality,
       'program_sha256':sha(canonical(m.program)),'source_hashes':hashes,'native_build':build,'native_build_origin':origin,
       'requested_until_serial':a.until_serial,'source_checkpoints':0,'source_elements':{},
+      'transient_dynamic_exclusions':[],
       'pickup_required':a.require_pickup or a.require_item=='patch' or a.require_repeat,
       'pickup_observation':{'saw_before':False,'saw_after':False},
       'scalpel_required':a.require_item=='scalpel','scalpel_observation':{'saw_before':False,'saw_after':False},
       'repeat_required':a.require_repeat,'repeat_observation':{'attempt_serial':None,'verified':False},
+      'room_required':a.require_room,'room_observation':{'before':None,'saw_changed_entry':False,'saw_live_party':False},
+      'keyword_required':a.require_keyword,'keyword_observation':{'saw_change':False,'confirmed':False,'returned':False},
+      'conversation_cancel_required':a.require_conversation_cancel,
+      'conversation_cancel_observation':{'selected':False,'final_poll':False,'returned':False},
       'public_steps':0,'modal_steps':0,'compiler':{'native_elements':0,'continuous_prefix':[],'sampled_one_step':[]},
       'first_divergence':None}
     def add_counts(delta):
@@ -206,8 +286,9 @@ def main():
     modal_sampled=set()
     def step(pad,serial,sample):
         sample_kind=sample['kind'];modal_pc=sample.get('pc')
-        sampled=(serial<=2 or (sample_kind=='main' and serial in (63,183,300,500,800,1200,1600,1887,1896,1900,1950,2009,2010,2243,2244,2255,2310,2362)) or
-                 (sample_kind=='modal' and (modal_pc not in modal_sampled or sample['edge']!=0)))
+        modal_key=(modal_pc,sample.get('context'))
+        sampled=(serial<=2 or (sample_kind=='main' and serial in (63,183,300,500,800,1200,1600,1887,1896,1900,1950,2009,2010,2243,2244,2255,2310,2362,3477,3478,3762,3763,3928,3929)) or
+                 (sample_kind in ('modal','conversation') and (modal_key not in modal_sampled or sample['edge']!=0)))
         if sampled:
             prior=Reader(native).snapshot(template)
             if serial>2:m.set_state(prior)
@@ -226,6 +307,9 @@ def main():
             report['first_divergence']={'kind':'unsupported' if rc==1 else 'native fault','serial':serial,
               'sample':sample_kind,'native_return':rc,'retry_return':retry,'failure':ms['opening_failure'],
               'interaction_fault':ms['interaction_fault'],'opening_phase':ms['opening_phase'],
+              'transition_stage':ms['transition_stage'],'transition_status':ms['transition_status'],
+              'conversation_phase':ms['conversation_phase'],'conversation_request':ms['conversation_request'],
+              'conversation_bridge_fault':ms['conversation_bridge_fault'],
               'task':ms['opening_fault_task'],'native_callback':ms['opening_fault_native'],
               'vm_opcode':ms['task_vm_fault_op'],'vm_pc':ms['task_vm_fault_pc'],
               'rollback_verified':rollback}
@@ -234,10 +318,10 @@ def main():
             report['compiler']['native_elements']+=native.compare(ms,('sample',serial,sample_kind))
             if serial<=2:report['compiler']['continuous_prefix'].append([serial,sample_kind])
             else:
-                report['compiler']['sampled_one_step'].append([serial,sample_kind,modal_pc])
-                if sample_kind=='modal':modal_sampled.add(modal_pc)
+                report['compiler']['sampled_one_step'].append([serial,sample_kind,modal_pc,sample.get('context')])
+                if sample_kind in ('modal','conversation'):modal_sampled.add(modal_key)
         return True
-    repeat_pending=None
+    repeat_pending=None;initial_keywords=None;conversation_exit_serial=None;previous_entry=None
     try:
         report['compiler']['native_elements']+=native.compare(template,'title seed')
         m.call('shadowrun_snes_frame',16);state=m.snapshot();rc=native.step(16)
@@ -251,11 +335,31 @@ def main():
             original=(ref/item['file']).read_bytes()
             if len(original)!=131072 or sha(original)!=item['sha256']:raise ValueError('checkpoint hash mismatch')
             try:
-                add_counts(check(reader,original,dynamic_ready=serial>1));add_counts(compare_interaction(reader,original))
+                ready=dynamic_grid_ready(reader,original,serial,previous_entry)
+                if not ready:report['transient_dynamic_exclusions'].append(serial)
+                add_counts(check(reader,original,dynamic_ready=ready));add_counts(compare_interaction(reader,original))
+                if a.require_room is not None or a.require_keyword or a.require_conversation_cancel:add_counts(compare_progression(reader,original))
             except Mismatch as exc:
                 report['first_divergence']={'kind':'source mismatch','serial':serial,**exc.detail};break
             report['source_checkpoints']+=1
+            previous_entry=word(original,0x2de2)
+            if conversation_exit_serial is not None and serial>conversation_exit_serial:
+                if reader.get('conversation_completed')<1:raise ValueError('model conversation did not return')
+                report['keyword_observation']['returned']=True
+                if all(report['conversation_cancel_observation'][k] for k in ('selected','final_poll')):
+                    report['conversation_cancel_observation']['returned']=True
             actor_slots=order(original,0x14cc,0x14ce)
+            room=report['room_observation']
+            if room['before'] is None:room['before']=word(original,0x2de2)
+            if a.require_room is not None and word(original,0x2de2)==a.require_room and room['before']!=a.require_room:
+                room['saw_changed_entry']=True
+                player=word(original,0x0cde)
+                if player in actor_slots and word(original,0x136c+player)<96:
+                    room['saw_live_party']=True
+            if a.require_keyword:
+                stop=original.index(255,0x3ca3,0x3da3);keywords=original[0x3ca3:stop]
+                if initial_keywords is None:initial_keywords=keywords
+                elif keywords!=initial_keywords:report['keyword_observation']['saw_change']=True
             if original[0x2ea2]==0 and word(original,0x2ea3)==65535 and 0x38 in actor_slots:
                 report['pickup_observation']['saw_before']=True
             if original[0x2ea2]==1 and word(original,0x2ea3)==0x08b2 and 0x38 not in actor_slots:
@@ -291,18 +395,27 @@ def main():
                         report['first_divergence']={'kind':'player consumer mismatch','serial':serial};break
                     continue
                 phase=reader.get('opening_phase')
-                expected_phase=0 if kind=='main' else MODAL[sample['pc']]
+                try:expected_phase=poll_phase(reader,sample)
+                except Mismatch as exc:
+                    report['first_divergence']={'kind':'source conversation context mismatch','serial':serial,**exc.detail};break
                 if phase!=expected_phase:
                     report['first_divergence']={'kind':'input phase mismatch','serial':serial,'sample':kind,
                                                 'model_phase':phase,'expected_phase':expected_phase};break
                 previous=reader.word(0x1e8)
                 if kind=='main' and previous!=sample['previous']:
                     report['first_divergence']={'kind':'controller previous mismatch','serial':serial};break
-                if kind=='modal' and (sample['previous']!=sample['held'] or
+                if kind in ('modal','conversation') and (sample['previous']!=sample['held'] or
                     sample['edge']!=((sample['held']^previous)&sample['held'])):
                     report['first_divergence']={'kind':'modal controller edge mismatch','serial':serial};break
                 if not step(journal_pad(sample['held']),serial,sample):break
-                if kind=='modal':report['modal_steps']+=1
+                if kind in ('modal','conversation'):report['modal_steps']+=1
+                if kind=='conversation':
+                    if sample['context']=='keyword' and sample['pc']==0x80a67d:
+                        if sample['edge']&0x2000:report['conversation_cancel_observation']['selected']=True
+                        elif sample['edge']&0xd0c0:report['keyword_observation']['confirmed']=True
+                    if sample['context']=='keyword' and sample['pc']==0x80a7c1 and report['conversation_cancel_observation']['selected']:
+                        report['conversation_cancel_observation']['final_poll']=True
+                    if sample['context']=='exit':conversation_exit_serial=serial
                 latest_held=sample['held']
             if report['first_divergence']:break
         if (not report['first_divergence'] and report['pickup_required'] and
@@ -312,6 +425,12 @@ def main():
             report['first_divergence']={'kind':'required scalpel transition not covered'}
         if not report['first_divergence'] and report['repeat_required'] and not report['repeat_observation']['verified']:
             report['first_divergence']={'kind':'required repeat attempt not covered'}
+        if not report['first_divergence'] and a.require_room is not None and not (report['room_observation']['saw_changed_entry'] and report['room_observation']['saw_live_party']):
+            report['first_divergence']={'kind':'required room transition and live party not covered'}
+        if not report['first_divergence'] and a.require_keyword and not all(report['keyword_observation'].values()):
+            report['first_divergence']={'kind':'required learned-keyword selection and return not covered'}
+        if not report['first_divergence'] and a.require_conversation_cancel and not all(report['conversation_cancel_observation'].values()):
+            report['first_divergence']={'kind':'required keyword cancellation and return not covered'}
         report['result']='passed' if not report['first_divergence'] and report['source_checkpoints']==len(entries) else 'bounded'
     except (AssertionError,ValueError,RuntimeError) as exc:
         report['result']='bounded';report['first_divergence']={'kind':'checker or compiler error','exception':type(exc).__name__}

@@ -3,12 +3,14 @@
  * Status 0 refuses, 1 selects an entry, 2 finds no entry or fallback. */
 u16 dialogue_record,dialogue_selector,dialogue_text,dialogue_script;
 u8 dialogue_status,dialogue_has_script,dialogue_keyword_count;
+u8 dialogue_added_count,dialogue_last_keyword,dialogue_skip_known,dialogue_skip_length,dialogue_fallback;
+u8 dialogue_no_fallback;
 u8 dialogue_keywords[256];
 void shadowrun_snes_dialogue_entry(u8 unused) {
  u16 i,j,n,pos,first,limit,selector,control,count,key,at,script,text,needed;
  u8 found;
  u32 base;
- dialogue_status=0U;dialogue_has_script=0U;
+ dialogue_status=0U;dialogue_has_script=0U;dialogue_added_count=0U;dialogue_skip_known=0U;dialogue_fallback=0U;
  if(dialogue_record<0x8000U || dialogue_record>0xfffbU)return;
  base=(13UL<<15)+(u32)(dialogue_record&0x7fffU);
  /* The source keyword list is ascending, unique and $FF terminated. */
@@ -31,12 +33,13 @@ void shadowrun_snes_dialogue_entry(u8 unused) {
    limit=(u16)rom8(0U,base+pos+1U);
    if(!limit || (u32)dialogue_record+(u32)pos+1UL+(u32)limit>65535UL)return;
    if(key==selector) {found=1U;break;}
-   pos+=1U+limit;
+   dialogue_skip_known=1U;dialogue_skip_length=(u8)limit;pos+=1U+limit;
   }
   if(i==256U)return;
   if(found)break;
+  if(dialogue_no_fallback)break;
   if(selector==0xfdU)break;
-  selector=0xfdU;
+  selector=0xfdU;dialogue_fallback=1U;
  }
  if(!found) {dialogue_status=2U;return;}
  first=pos+2U;limit=pos+1U+limit;
@@ -46,6 +49,7 @@ void shadowrun_snes_dialogue_entry(u8 unused) {
  if((u32)at+(u32)count+(u32)needed>(u32)limit)return;
  for(i=0U;i<count;i+=1U) {
   key=rom8(0U,base+at+i);
+  dialogue_last_keyword=(u8)key;
   if(key==255U)return;
   for(j=0U;j<n;j+=1U) {if(dialogue_keywords[j]>=key)break;}
   if(j<n && dialogue_keywords[j]==key)continue;
@@ -60,6 +64,7 @@ void shadowrun_snes_dialogue_entry(u8 unused) {
  text=(u16)((u16)rom8(0U,base+at)|((u16)rom8(0U,base+at+1U)<<8));
  for(i=0U;i<n;i+=1U)task_shared[0x3ca3U+i]=dialogue_keywords[i];
  task_shared[0x3ca3U+n]=255U;
- dialogue_keyword_count=(u8)n;dialogue_script=script;dialogue_text=text;
+ dialogue_keyword_count=(u8)n;dialogue_added_count=(u8)count;
+ dialogue_script=script;dialogue_text=text;
  dialogue_has_script=(u8)((control&128U)!=0U);dialogue_status=1U;
 }

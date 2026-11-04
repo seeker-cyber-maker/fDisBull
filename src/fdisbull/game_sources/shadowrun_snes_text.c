@@ -91,29 +91,32 @@ void shadowrun_snes_text_measure(u8 unused) {
 }
 
 /* Bounded logical cursor projection of $80:FB03-$FD41 and $81:AD76-AE5B.
- * This is the source plain-ASCII, zero text-style, fresh-window branch.
- * Rasterization, DMA, style controls and scrolling/eviction are not modeled. */
+ * Source pipe/style handling is opt-in; other style controls, rasterization,
+ * DMA and scrolling/eviction remain outside this projection. */
 u16 shadowrun_snes_text_layout_base,shadowrun_snes_text_layout_width;
 u16 shadowrun_snes_text_layout_height,shadowrun_snes_text_layout_style;
 u16 shadowrun_snes_text_layout_cursor_in,shadowrun_snes_text_layout_subpixel_in;
 u16 shadowrun_snes_text_layout_cursor,shadowrun_snes_text_layout_subpixel;
 u16 shadowrun_snes_text_layout_line,shadowrun_snes_text_layout_pixels;
+u16 shadowrun_snes_text_layout_style_out,shadowrun_snes_text_layout_left_margin;
 u8 shadowrun_snes_text_layout_status;
-u8 shadowrun_snes_text_layout_icon_glyphs;
+u8 shadowrun_snes_text_layout_icon_glyphs,shadowrun_snes_text_layout_controls;
 void shadowrun_snes_text_layout(u8 unused) {
- u16 width,height,row_pixels,line,column,pos,end,word_width,glyph,i,result;
- shadowrun_snes_text_layout_status=0U;
+ u16 width,height,row_pixels,line,column,pos,end,word_width,render_width,glyph,i,result;
+ u8 pipe,scan_bold;
+ shadowrun_snes_text_layout_status=0U;shadowrun_snes_text_layout_style_out=0U;
  width=shadowrun_snes_text_layout_width;height=shadowrun_snes_text_layout_height;
  if(shadowrun_snes_text_status!=1U || shadowrun_snes_text_layout_style ||
     shadowrun_snes_text_layout_cursor_in!=shadowrun_snes_text_layout_base ||
     shadowrun_snes_text_layout_subpixel_in ||
     width<3U || width>30U || height<3U || height>26U ||
     !shadowrun_snes_text_length || shadowrun_snes_text_length>=256U)return;
- width-=2U;row_pixels=width<<3;line=0U;column=0U;pos=0U;
+ width-=2U;row_pixels=width<<3;line=0U;column=shadowrun_snes_text_layout_left_margin;pos=0U;
+ if(column>=row_pixels)return;
  /* The selector erases its marker using one source space glyph. */
  if(shadowrun_snes_text_layout_icon_glyphs && shadowrun_snes_text_length==1U &&
     shadowrun_snes_text_output[0]==32U) {
-  column=(u16)rom8(0U,0xabe8UL);
+  column+=(u16)rom8(0U,0xabe8UL);
   if(column>=row_pixels)return;
   shadowrun_snes_text_layout_cursor=shadowrun_snes_text_layout_base+((column+7U)>>3);
   shadowrun_snes_text_layout_subpixel=column&7U;shadowrun_snes_text_layout_line=0U;
@@ -122,28 +125,45 @@ void shadowrun_snes_text_layout(u8 unused) {
  for(i=0U;i<256U;i+=1U) {
   if(pos==shadowrun_snes_text_length)break;
   glyph=shadowrun_snes_text_output[pos];
-  if(!glyph || glyph==32U || glyph>127U || glyph==124U ||
+  if(!glyph || glyph==32U || glyph>127U || (glyph==124U && !shadowrun_snes_text_layout_controls) ||
      (!shadowrun_snes_text_layout_icon_glyphs && (glyph<32U || glyph==127U)))return;
-  end=pos;word_width=0U;
+  end=pos;word_width=0U;render_width=0U;pipe=0U;scan_bold=0U;
   for(;end<shadowrun_snes_text_length;end+=1U) {
    glyph=shadowrun_snes_text_output[end];
    if(glyph==32U)break;
-   if(!glyph || glyph>127U || glyph==124U ||
+   if(glyph==124U) {
+    if(!shadowrun_snes_text_layout_controls)return;
+    glyph=26U;shadowrun_snes_text_output[end]=26U;pipe=1U;scan_bold=1U;
+   } else if(!glyph || glyph>127U ||
       (!shadowrun_snes_text_layout_icon_glyphs && (glyph<32U || glyph==127U)))return;
-   word_width+=(u16)rom8(0U,0xabc8UL+(u32)glyph);
+   result=(u16)rom8(0U,0xabc8UL+(u32)glyph);
+   render_width+=result;word_width+=result;
+   if(scan_bold)word_width+=1U;
   }
+  if(pipe)render_width+=end-pos;
   if(!word_width || word_width>=row_pixels)return;
   if(word_width>=row_pixels-column) {
-   line+=1U;column=0U;
+   line+=1U;column=shadowrun_snes_text_layout_left_margin;
    /* $AE09 scrolls/reuses a row beyond this range; keep that edge explicit. */
    if(line>height-3U)return;
   }
-  column+=word_width;pos=end;
+  if(column+render_width>row_pixels)return;
+  column+=render_width;pos=end;
+  shadowrun_snes_text_layout_style_out=0U;
+  if(pipe && pos==shadowrun_snes_text_length)shadowrun_snes_text_layout_style_out=8U;
   if(pos<shadowrun_snes_text_length) {
    if(pos+1U>=shadowrun_snes_text_length || shadowrun_snes_text_output[pos+1U]==32U)return;
    glyph=(u16)rom8(0U,0xabe8UL); /* font advance for ASCII space */
-   if(column+glyph>row_pixels)return;
-   column+=glyph;pos+=1U;
+   /* $FB90 uses a five-pixel empty-word probe at a separator. If it does
+    * not fit, $FBAD/$FBF5 advance the line and consume the separator. */
+   if(shadowrun_snes_text_layout_controls && column+5U>=row_pixels) {
+    line+=1U;column=shadowrun_snes_text_layout_left_margin;
+    if(line>height-3U)return;
+   } else {
+    if(column+glyph>row_pixels)return;
+    column+=glyph;
+   }
+   pos+=1U;
   }
  }
  if(pos!=shadowrun_snes_text_length)return;

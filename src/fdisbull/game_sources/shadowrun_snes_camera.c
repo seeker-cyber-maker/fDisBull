@@ -37,15 +37,18 @@ void shadowrun_snes_live_camera(u8 unused) {
  x=(u16)(0x0400U+scene_read(0x0e9cU+actor)-scene_read(0x0e44U+actor));
  /* $8A05's long room-bounds pointer; qualify the observed LoROM table. */
  pointer=scene_read(0x0cf6U);bank=scene_read(0x0cf8U)&255U;
- if(pointer<32768U || pointer>65524U || bank!=153U)return;
+ if(pointer<32768U || pointer>65524U || (bank!=153U && bank!=154U))return;
  bounds=((u32)(bank&127U)<<15)+(u32)(pointer&32767U)+1UL;
- if(bounds+9UL>=1048576UL || camera_rom16(bounds+8UL)!=65535U)return;
+ if(bounds+9UL>=1048576UL)return;
  a=(u16)(x-1024U);b=(u16)((u16)(2368U-y)<<1);
  u=(u16)(b-a)>>3;v=(u16)(b+a)>>3;changed=0U;
- lo=camera_rom16(bounds);hi=camera_rom16(bounds+2UL);
- if(u<lo) {u=lo;changed=1U;}if(u>=hi) {u=hi;changed=1U;}
- lo=camera_rom16(bounds+4UL);hi=camera_rom16(bounds+6UL);
- if(v<lo) {v=lo;changed=1U;}if(v>=hi) {v=hi;changed=1U;}
+ if(camera_rom16(bounds)!=65535U) {
+  if(camera_rom16(bounds+8UL)!=65535U)return;
+  lo=camera_rom16(bounds);hi=camera_rom16(bounds+2UL);
+  if(u<lo) {u=lo;changed=1U;}if(u>=hi) {u=hi;changed=1U;}
+  lo=camera_rom16(bounds+4UL);hi=camera_rom16(bounds+6UL);
+  if(v<lo) {v=lo;changed=1U;}if(v>=hi) {v=hi;changed=1U;}
+ }
  if(changed) {x=(u16)(((u16)(v-u)<<2)+1024U);y=(u16)(2368U-((u16)(v+u)<<1));}
  cx=scene_read(0x0ce0U);cy=scene_read(0x0ce2U);
  vy=camera_velocity((u16)(y+256U-scene_read(0x0ef4U+actor)-cy));

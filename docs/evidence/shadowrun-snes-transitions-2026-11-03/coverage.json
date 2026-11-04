@@ -1,0 +1,20 @@
+{
+  "hardware_observations_in_runtime": false,
+  "limitations": [
+    "Title capture required; boot-to-title not recovered.",
+    "Original pixels, portrait assets, audio playback and video pacing excluded.",
+    "Live keyword path awaits a platform-input choice; full clock behavior is not recovered."
+  ],
+  "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+  "release": false,
+  "rng_callback_63": "unsupported with transactional refusal; timing result changes 200..263 task tick wait",
+  "rng_inputs": "NMI counter bytes and latched display beam reads; not audio",
+  "scope": "Rooms 3 to 1F to 1 from prepared title; source-derived keyword components; native live conversation not reached.",
+  "source_checkpoints": 3764,
+  "status": "bounded_pending_hardware_design",
+  "transient_dynamic_exclusions": [
+    1,
+    3478,
+    3763
+  ]
+}
