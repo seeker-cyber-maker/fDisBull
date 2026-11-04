@@ -1995,13 +1995,13 @@ def parser():
         c.add_argument(
             "--include",
             action="append",
-            help="repeatable native innoextract path filter; list first",
+            help="repeatable native Inno 5.6.2 member filter; list first",
         )
         c.add_argument(
             "--timeout",
             type=int,
             default=300,
-            help="per-extractor-process timeout in seconds (1..3600)",
+            help="bounded native decoding deadline in seconds (1..3600)",
         )
     for name in ("identify", "inspect"):
         c = sub.add_parser(name, help=METHODS[name])
