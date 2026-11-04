@@ -29,7 +29,13 @@ A prepared local project can retain analyzed routines, actual-game sessions, scr
 
 ## Dot-mode
 
-Headless is the default. To request a **view-only** native window for the same
+Headless is the default. Its launch profile disables host quit-warning dialogs
+with `dosbox quit warning=false` and disables SDL/mixer/MIDI sound output. This
+keeps an owned shutdown from waiting for a host confirmation dialog. It does
+not turn native cleanup failures into successful shutdowns. See the
+[source running-park verification and native crash investigation](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md).
+
+To request a **view-only** native window for the same
 agent-owned DOSBox session, use a backend rebuilt from the current compatible
 patch and launch with:
 
