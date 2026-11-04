@@ -160,6 +160,15 @@ def test_common_native_and_desktop_are_bounded_unqualified_discovery_entries():
     assert items['compile.macos-arm64']['bounded_alternatives'] == ['compile.common-native', 'uil.common-desktop']
 
 
+def test_windows_route_fuzzer_is_discoverable_without_native_validation():
+    from fdisbull.capabilities import capabilities
+    report = capabilities(); item = catalog(report)['debug.windows-route-fuzz']
+    assert 'cli:fuzz' in item['interfaces']
+    assert {'debug_fuzz.py', 'debug_fuzz_native.py'} <= set(item['providers'])
+    assert item['implementation'] == 'partial'
+    assert item['runtime_validation'] == 'not_run'
+
+
 def test_desktop_template_changes_and_missing_files_affect_discovery(tmp_path, monkeypatch):
     import fdisbull.capabilities as module
     original = module._PACKAGE_ROOT

@@ -59,6 +59,13 @@ probes and named scenes. They require a matching prepared offline guest.
 or forwarding. Frames refresh at stops/slices. Generated UDC shells and original
 debugger qualification remain separate.
 
+For a finite Windows input-route fuzz campaign, use `fdisbull fuzz` with a
+private `fdisbull-native-fuzz-1` configuration. It plans explicit keyboard,
+click, or named scene-action mutations and runs each case in a fresh owned
+Win16/Win32/Win64 Wine guest with no host input window. See the
+[bounded route fuzzing contract](WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md#bounded-route-fuzzing-core)
+and its one-shot command, private-output rules, and native qualification limit.
+
 The **local Mac is a first-class host**: native Mach-O/ARM64 analysis, `macos-observe`, LLDB and native UDC do not depend on a Windows guest or a remote Linux runner. For original PE32 execution, the Mac can drive an isolated x86-64 QEMU/Linux/Wine guest; Linux CI is optional. Read-only setup probes (never execution proof):
 
 ```sh

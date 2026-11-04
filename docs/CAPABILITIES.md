@@ -49,6 +49,10 @@ Each capability has three separate dimensions:
 
 `interfaces` uses `cli:` and `python:` prefixes. CLI-only operations such as
 `udl-lift-c` are included even though `methods` only lists JSON methods.
+The `debug.windows-route-fuzz` entry advertises the bounded `fuzz` command and
+its planning/feedback API; `runtime_validation: not_run` does not certify a
+Win16, Win32 or Win64 guest campaign. See the
+[Windows runtime and scene guide](WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md#bounded-route-fuzzing-core).
 The catalog is deliberately scoped; it does not inventory every format parser
 or debugger operation. DOS and PE64 backends remain `not_checked` until an
 explicitly configured runtime acceptance test is performed elsewhere.

@@ -238,6 +238,108 @@ declared failure case is a candidate for another fresh run; operations after
 a stopped fault are not claimed as a reproducer. It is a bounded diagnostic
 campaign, not a coverage-guided whole-program fuzzer.
 
+### Bounded route fuzzing core
+
+This source implementation adapts the [wrfuzz design notes](https://gitlab.com/mscupcakegkill/wrfuzz/-/raw/main/README.md)
+at the level of deterministic mutation, retaining novel feedback and grouping
+fault candidates. It imports no wrfuzz code. Its feedback is made from
+debugger route stages and explicit exception stops; it has no instruction-edge
+coverage, comparison tracing, AddressSanitizer or Dr. Memory integration.
+
+The packaged `fdisbull.debug_fuzz` module plans deterministic, bounded
+variants of an existing `fdisbull-script-1` route. A `fdisbull-fuzz-1`
+document supplies `base_script`, explicit `mutation_sites` with zero-based
+step `index`, input or scene-action `field`, finite literal `choices`, and
+optional `seed`, `max_cases` and `timeout_ms`. Only physical keyboard/click
+and named scene-action fields can change. The flat route may also contain
+bounded `wait`, `run`, `status`, `frame-probe`, `scene-check` and `scene-wait`
+operations; state writes, restores, arbitrary code hooks, repeats and result
+references are refused. The planner validates every candidate before the
+runner sees the first case.
+
+`plan_campaign(document)` returns an immutable sequence of cases, each with a
+fresh `case.script` copy, script SHA-256, and mutation location. A caller can
+pass a fresh-owned-guest callback to `run_campaign(document, run_case)`; the
+callback must return terminal status, completed step count, bounded stage IDs,
+an optional classified fault-family ID, exact source/runtime/adapter hashes,
+the executed script SHA-256, a unique live run ID, and whether its guest was
+reaped. A mismatched script or reused run ID is refused. The core stops on
+unknown outcome or unverified cleanup and returns only sanitized feedback in
+memory. The callback's cleanup claim still needs native qualification; the
+module alone does not launch or validate an original program. Stage edges are semantic
+feedback, not instruction coverage, and a selected case is not a proven
+minimal crash reproducer.
+
+### One-shot native fuzz command
+
+`fdisbull fuzz <private-config.json>` connects the finite plan to fresh,
+sequential `wine-ne` or `wine-qemu` debugger sessions. Each case runs its
+validated route through `session.script()`, closes its owned guest, verifies
+process reaping, and rechecks the original input and runtime hashes before
+another case. Named scenes, including declared mutation choices, resolve to
+immutable revision IDs before planning and are rechecked before each launch;
+the reported campaign hash identifies that pinned plan. Full route results
+remain in the private FDB. The returned feedback contains script/run
+identities, bounded stage IDs and candidate
+exception-stop families; it does not contain screenshots, memory or guest
+output. An exception stop is not by itself a confirmed crash. DOSBox native
+campaigns refuse for now because the DOS drive mounts an entire directory;
+pinning only named uploads would miss other mounted dependencies.
+
+The configuration has format `fdisbull-native-fuzz-1` and contains `project`,
+`executable`, `game_dir`, `backend`, `kernel`, `initramfs`, `output_dir`,
+`scratch_dir`, `expected_bytes`, `min_free_bytes`, and a `campaign` in the
+`fdisbull-fuzz-1` format above. Optional `files`, `memory_mib`, and
+`boot_timeout_ms` remain bounded by the debugger's launch contract. For
+example, a private Win16 input experiment can use:
+
+```json
+{
+  "format": "fdisbull-native-fuzz-1",
+  "project": "/private/analysis.fdb",
+  "executable": "/private/qemu-system-x86_64",
+  "game_dir": "/private/game",
+  "backend": "wine-ne",
+  "kernel": "/private/linux-kernel",
+  "initramfs": "/private/wine-runtime.cpio.gz",
+  "output_dir": "/private/fuzz-output",
+  "scratch_dir": "/private/fuzz-scratch",
+  "expected_bytes": 6000000000,
+  "min_free_bytes": 20000000000,
+  "campaign": {
+    "format": "fdisbull-fuzz-1",
+    "base_script": {
+      "format": "fdisbull-script-1",
+      "backend": "wine-ne",
+      "steps": [
+        {"op": "keyboard.press", "key": "n"},
+        {"op": "run", "timeout_ms": 15000, "expect": "timeout"}
+      ]
+    },
+    "mutation_sites": [
+      {"index": 0, "field": "key", "choices": ["r", "space"]}
+    ],
+    "seed": 17,
+    "max_cases": 3,
+    "timeout_ms": 120000
+  }
+}
+```
+
+Create the configuration, output, and scratch paths privately outside Git.
+The configuration JSON and project FDB must be owner-only regular files (mode
+`0600`) beneath private directories (mode `0700`).
+Set `TMPDIR` to the declared scratch path **for this command**, before Python
+starts; the command checks the resolved temporary directory and never changes
+the process-wide setting itself. Run the repository's storage admission before
+a native campaign with a conservative total estimate and keep both physical
+pools above their authorized reserves. The command also checks the declared
+destination reserve before each case; that check does not replace admission
+or cap a running guest. If a case fails before a script receipt can be bound
+to the live session, the command refuses without a summary artifact. This
+native route has source tests only until an original-backed campaign and exact
+package are qualified.
+
 PE32 advanced layers, CPU/RAM deltas and whole-VM state code use the actual
 32-bit context; each positive native feature still needs its own qualification.
 Snapshots refuse queued or held input, and a restore invalidates host key

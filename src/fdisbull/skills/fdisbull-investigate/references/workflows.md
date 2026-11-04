@@ -85,6 +85,12 @@ back mounted host files or external services.
   retains queued input rather than replaying it. NE logical segments require
   live source/selector verification, and native NE states/deltas/layers remain
   unavailable. See `docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md`.
+- **Finite Windows route fuzzing:** `fdisbull fuzz` accepts a private bounded
+  campaign of explicit keyboard, click or named scene-action choices. It runs
+  each candidate in a fresh owned Wine NE/PE guest and records sanitized
+  stage/fault feedback. Review the private-input, storage and qualification
+  contract in `docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md` before a native run;
+  an exception stop is only a crash candidate.
 - **Anchor Stones:** full native saved states use `debug-save-anchor-stone`,
   `debug-load-anchor-stone` and offline `debug-anchor-stone-info` (legacy state
   method names remain compatible; see `docs/ANCHOR_STONES.md`).

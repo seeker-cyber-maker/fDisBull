@@ -566,10 +566,12 @@ REQUIRED_SOURCE_EVIDENCE |= {
     'docs/evidence/shadowrun-assisted-original-b-target.json',
 }
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
-REQUIRED_PE_RESOURCES |= {"wine_guest/selftest32.c","wine_arch.py","windows_ui.py","win16_debugger.py"}
+REQUIRED_PE_RESOURCES |= {"wine_guest/selftest32.c","wine_arch.py","windows_ui.py","win16_debugger.py",
+    "debug_fuzz.py","debug_fuzz_native.py"}
 REQUIRED_TEST_HELPERS |= {"tests/test_wine_pe32.py","tests/test_wine_pe32_state.py",
     "tests/test_wine_guest_bridge.py","tests/test_windows_interfaces.py","tests/test_windows_scenes.py",
-    "tests/test_windows_dot_mode.py","tests/test_windows_native.py","tests/test_win16_debugger.py","tests/test_win16_native.py"}
+    "tests/test_windows_dot_mode.py","tests/test_windows_native.py","tests/test_win16_debugger.py","tests/test_win16_native.py",
+    "tests/test_debug_fuzz.py","tests/test_debug_fuzz_native.py"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py", "wine_deltas.py"}
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsm.java")

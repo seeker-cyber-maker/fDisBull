@@ -1394,6 +1394,10 @@ def parser():
         help="Choose ordinary movement, qualified placement or source-identified proximity waivers",
     )
     c = sub.add_parser(
+        "fuzz", help="Run one bounded source-bound native route campaign from a private configuration"
+    )
+    c.add_argument("configuration", help="Private fdisbull-native-fuzz-1 JSON configuration")
+    c = sub.add_parser(
         "zork",
         help="Bounded original-story JSON-lines harness with an explicitly selected Jericho Python",
     )
@@ -3036,6 +3040,19 @@ def _dispatch(args):
             return 0
         except (ValueError, OSError) as error:
             emit({"ok": False, "error": str(error)})
+            return 1
+    if command == "fuzz":
+        from .debug_fuzz_native import run_native_fuzz
+
+        try:
+            result = run_native_fuzz(args["configuration"])
+            emit(result)
+            return 0 if result["report"]["stop_reason"] == "completed" else 1
+        except (ValueError, OSError, RuntimeError, sqlite3.Error) as error:
+            # Configuration and storage errors are intentionally short codes;
+            # native/script exception messages never reach this command.
+            reason = str(error)
+            emit({"ok": False, "error": reason if reason.startswith("native_fuzz_") else "native_fuzz_refused"})
             return 1
     if command == "serve":
         return serve(args["project"])

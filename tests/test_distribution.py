@@ -705,10 +705,12 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     'src/fdisbull/native_runtime/memory-win32.c',
 ) if path not in REQUIRED_SOURCE_FILES)
 DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
-WINDOWS_RUNTIME_MODULES=('wine_guest/selftest32.c','wine_arch.py','windows_ui.py','win16_debugger.py')
+WINDOWS_RUNTIME_MODULES=('wine_guest/selftest32.c','wine_arch.py','windows_ui.py','win16_debugger.py',
+                         'debug_fuzz.py','debug_fuzz_native.py')
 WINDOWS_RUNTIME_FILES=tuple('src/fdisbull/'+name for name in WINDOWS_RUNTIME_MODULES)+tuple('tests/'+name for name in (
     'test_wine_pe32.py','test_wine_pe32_state.py','test_wine_guest_bridge.py','test_windows_interfaces.py',
-    'test_windows_scenes.py','test_windows_dot_mode.py','test_windows_native.py','test_win16_debugger.py','test_win16_native.py'))
+    'test_windows_scenes.py','test_windows_dot_mode.py','test_windows_native.py','test_win16_debugger.py','test_win16_native.py',
+    'test_debug_fuzz.py','test_debug_fuzz_native.py'))
 REQUIRED_SOURCE_FILES+=WINDOWS_RUNTIME_FILES
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
