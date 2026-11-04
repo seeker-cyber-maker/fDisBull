@@ -33,6 +33,16 @@ without changing the tested commit.
   observed GOG packaging conventions; it is not a general Inno reader or an
   installer runner. See [GOG unpacking](GOG_UNPACKING.md) and
   [native format details](NATIVE_INNO_562.md).
+- **Experimental ScummVM Kyra and Westwood intake:** the reviewed ScummVM
+  AGI/Gob substrate gains a source-bound Kyra/EMC2 controller scaffold and a
+  bounded AGI-to-UIL native component pilot. Westwood PAK/CPS/WSA readers and
+  the EMC2 guest processor are available as separate bounded media modules.
+  Native instrumentation, full AGI compilation, original-game execution and
+  whole-game equivalence remain separate qualification gates; no replacement
+  engine is promoted by these source modules. See
+  [ScummVM Kyra](SCUMMVM_KYRA_BACKEND.md),
+  [AGI pilot](AGI_TO_UIL_NATIVE_PILOT.md) and
+  [Westwood media](WESTWOOD_MEDIA_DECODERS.md).
 - **Context-aware file and media intake:** the
   [format catalog](FILE_FORMAT_REGISTRY.md) connects bounded header facts to
   actual reader capabilities, and [collection intake](TARGET_COLLECTION_INTAKE.md)
