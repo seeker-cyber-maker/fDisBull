@@ -167,7 +167,8 @@ def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_
         or receipt.get('artifacts') != [checked['tested_wheel'], *checked['inputs'].values()]
         or receipt.get('backend_identity') != read(local_path(root, checked['backend_identity']['path']))):
         raise ValueError('Unified acceptance receipt does not match prepared runtime')
-    return {'build_job_id': build_job, 'prepared_manifest': manifest_ref, **proof}
+    windows = module.required_windows_cases(root, checked)
+    return {'build_job_id': build_job, 'prepared_manifest': manifest_ref, 'windows_native_cases': windows, **proof}
 
 
 def passing_junit(path, *, native=False):
