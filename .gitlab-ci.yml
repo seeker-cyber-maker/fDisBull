@@ -127,6 +127,12 @@ test-and-package:
     - python3 -m venv .native-venv
     - .native-venv/bin/pip install ".[test]" build
     - FDISBULL_DOSBOX="$CI_PROJECT_DIR/.native/dosbox-x/src/dosbox-x" FDISBULL_DOSBOX_SOURCE="$CI_PROJECT_DIR/.native/dosbox-x" .native-venv/bin/pytest -q $FDISBULL_NATIVE_TESTS
+    - mkdir -p artifacts/native
+    - cp -L .native/dosbox-x/src/dosbox-x artifacts/native/dosbox-x
+    - cp -L /usr/lib/x86_64-linux-gnu/libSDL2_net-2.0.so.0 artifacts/native/libSDL2_net-2.0.so.0
+    - cp .native/dosbox-x/COPYING artifacts/native/DOSBox-X-COPYING.txt
+    - cp /usr/share/doc/libsdl2-net-2.0-0/copyright artifacts/native/SDL2_net-copyright.txt
+    - ldd .native/dosbox-x/src/dosbox-x > artifacts/native/ldd.txt
 
 native-debugger-stable:
   extends: .native_debugger_template
@@ -139,3 +145,8 @@ native-debugger-layers:
   variables:
     FDISBULL_PATCH_DIRECTORY: "experimental/dosbox-x/layers"
     FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py"
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - artifacts/native/
