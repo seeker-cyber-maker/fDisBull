@@ -195,3 +195,13 @@ their existing contracts. `media-inspect --adapter smacker` and `smk-frame` add
 bounded native SMK2 inspection/framing, with complete independent video/audio
 decoding and a separate original-game integration gate. See
 [format modules](file-formats.md) for commands and claim limits.
+
+
+For a single game or a batch, run `intake-inventory` through the common format
+catalog before selecting adapters. Read the bounded recovery queue and preserve
+partial enumeration, I/O errors, unexpanded containers and embedded media as
+separate observations. `media-inspect --adapter flic` inventories standard,
+Bullfrog and TFTD VID packet structures; an explicit `--index-path` checks a
+selected TFTD companion. It does not decode or frame FLIC. DinoPark UNC2/UNCS,
+UNCP and ABT formats require their own consumers, despite familiar suffixes.
+The format-modules reference above records the full routing contract.

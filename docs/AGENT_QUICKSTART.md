@@ -187,6 +187,15 @@ for later sessions. Unknown formats, header recognition, supported image views
 and decoder limitations are separate results; a filename extension is not proof.
 The older `identify` command retains its binary-header response contract.
 
+For one game or a collection, use `intake-inventory /private/game-a
+/private/game-b --catalog /private/formats.sqlite`, with a private
+`--output-artifact-dir` for larger reports. The same per-file kernel returns a
+bounded filesystem inventory and grouped recovery queue. Containers and embedded
+media remain unexpanded. Catalog persistence requires complete alias-safe
+enumeration; incomplete walks report in-memory-only catalog use. See
+[media coverage and recovery](INTAKE_MEDIA_COVERAGE.md) for observed families,
+DinoPark's proprietary formats and FLI/FLC/VID/IDX distinctions.
+
 For a bounded native SMK2 framing variant, use `fdisbull media-inspect INPUT
 --adapter smacker`, then `fdisbull smk-frame INPUT /private/new-output`.
 This retains opening/ending images and complete embedded audio, with native hold

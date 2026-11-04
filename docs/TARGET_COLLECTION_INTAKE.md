@@ -5,11 +5,52 @@ and a later single-game addition use the same per-artifact procedure. The batch
 adds a manifest and a completeness check; it does not weaken the checks for an
 individual file.
 
-This document describes a workflow using the existing identification, inspection,
-project, snippet and UDL APIs. A universal collection importer, receipt schema and
-automatic semantic version classifier are not implemented by this document.
+The `intake-inventory` command now implements the shared filesystem/header
+inventory phase for one game or a batch. Extraction, program import, analysis,
+roster acceptance and semantic version classification remain separate operations.
+The workflow below connects that inventory with the existing project/snippet/UDL APIs.
 Original programs, source/oracle packages, media and byte-retaining databases
 stay in a private workspace outside the source checkout.
+
+## Run the shared inventory first
+
+```text
+fdisbull --output-artifact-dir /private/reports intake-inventory /private/game --catalog /private/formats.sqlite
+fdisbull --output-artifact-dir /private/reports intake-inventory /private/game-a /private/game-b --catalog /private/formats.sqlite
+```
+
+The same per-file kernel handles both calls. The persistent catalog contains
+versioned format descriptions and links to statically shipped readers; source
+payloads are not written into it. It must be outside every inventoried input
+root and must not alias an input member. Enumeration and alias checks precede
+persistent catalog initialization. If enumeration stops early, the report uses
+an in-memory catalog and explicitly records `not-written-incomplete-enumeration`
+for the requested persistent path. It never silently writes into the source tree.
+
+`files`, `roots`, `skipped`, `errors`, budgets and `recovery_queue` account for
+observed inputs. `complete` covers only the stated filesystem inventory. File,
+read, entry and depth limits, I/O errors and untraversed directory links remain
+explicit partial results. Regular-file links retain requested/resolved paths and
+opened-descriptor identity. Archive members, embedded resources, decoding and
+native execution remain unqualified even after complete directory enumeration.
+A one-byte read budget cannot be exceeded by admitting a larger probe first.
+
+The recovery queue groups unknown signatures/context candidates, invalid or
+unsupported profiles, unexpanded containers, unqualified embedded media and
+missing decoders separately from available readers awaiting validation. Module
+`decoder_role` is a static shipped capability, not a database API execution rule.
+Unknown `.DAT` or `.TXT` does not mean corrupt media. Use its consumer/context
+and the requested analysis to select the next recovery question.
+
+Large replies use the existing output-artifact protocol. Redirecting stdout alone
+may save only an artifact reference. Retain that reference, inspect it through
+`output-info`/`output-read`/`output-select`, and preserve the external artifact;
+do not repeat intake just because its full report did not fit inline.
+
+See [observed media profiles and gaps](INTAKE_MEDIA_COVERAGE.md) and
+[format catalog contracts](FILE_FORMAT_REGISTRY.md). Filename/consumer profiles
+are candidates and never turn a suffix into header proof. Explicit FLI inspection
+uses `media-inspect --adapter flic`, with `--index-path` for a selected TFTD IDX.
 
 ## Preserve identity before choosing a decoder
 
@@ -117,7 +158,8 @@ records. This document does not add a general collection registry to the DB.
 
 Separate the archive/filesystem, compression/packer, executable image, ISA and
 mode, runtime ABI, interpreted guest language, and resource/media format. Support
-for one does not imply support for the others. Use `fdisbull identify`,
+for one does not imply support for the others. Start with `intake-inventory`,
+`file-identify` and `format-modules`, then use `fdisbull identify`,
 `fdisbull inspect`, the installed method catalogue and the selected loader's
 documented restrictions before planning analysis or execution.
 
@@ -310,3 +352,14 @@ followed by decoder and actual consumer checks. A program-only delivery can
 exclude media while preserving its single original carrier; it need not create
 a second reduced image just to list executable targets. Native runs must consume
 changed media before they qualify the integration.
+
+
+## Local ripping skill
+
+The versioned [dos-target-media-rip skill](../skills/dos-target-media-rip/SKILL.md)
+contains the catalog-first intake, recovery and bounded media transformation
+procedure plus its disc helper. It is a local host skill, separate from the two
+bundled `agent-skill` selections. Keep the host copy at
+`~/.codex/skills/dos-target-media-rip` aligned with this reviewed directory when
+installing updates. The skill follows caller storage rules and authorization;
+it does not introduce another approval flow or modify the shared tool installation.

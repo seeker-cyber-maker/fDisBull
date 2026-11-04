@@ -7,7 +7,7 @@ from fdisbull.cli import main, respond
 
 def test_format_discovery_and_file_identification_need_no_project(tmp_path, capsys):
     catalog = tmp_path / 'formats.sqlite'
-    assert main(['format-modules', '--catalog', str(catalog)]) == 0
+    assert main(['--max-output-bytes', '1048576', 'format-modules', '--catalog', str(catalog)]) == 0
     discovered = json.loads(capsys.readouterr().out)
     assert discovered['ok']
     result = discovered['result']
@@ -27,7 +27,7 @@ def test_format_discovery_and_file_identification_need_no_project(tmp_path, caps
     response = respond({'method': 'format-modules'}, default_project='/nonexistent.fdb')
     assert response['ok']
     methods = respond({'method': 'help'})['result']['methods']
-    assert {'format-modules', 'file-identify', 'smk-frame'} <= set(methods)
+    assert {'format-modules', 'file-identify', 'smk-frame', 'intake-inventory'} <= set(methods)
 
 
 def test_media_inspector_rejects_malformed_smk_without_creating_project(tmp_path, capsys):
@@ -53,3 +53,19 @@ def test_movie_budget_is_distinct_from_global_json_budget(monkeypatch, capsys):
     assert observed['max_output_bytes'] == 12345
     assert observed['keep_frames'] == 8
     assert observed['path'] == 'source' and observed['output'] == 'new-output'
+
+
+def test_single_and_batch_intake_cli_use_the_same_projectless_kernel(tmp_path,capsys):
+    game=tmp_path/'game';game.mkdir();(game/'song.mid').write_bytes(b'MThd'+bytes([0,0,0,6,0,0,0,1,0,96]))
+    catalog=tmp_path/'formats.sqlite'
+    assert main(['intake-inventory',str(game),'--catalog',str(catalog)])==0
+    one=json.loads(capsys.readouterr().out)['result']
+    other=tmp_path/'other';other.mkdir();(other/'opaque.xyz').write_bytes(b'unknown')
+    assert main(['intake-inventory',str(game),str(other),'--catalog',str(catalog)])==0
+    batch=json.loads(capsys.readouterr().out)['result']
+    assert one['format']==batch['format']=='fdisbull-intake-inventory-1'
+    assert one['files'][0]['source']==batch['files'][0]['source']
+    assert one['files'][0]['identification']==batch['files'][0]['identification']
+    assert batch['complete'] and batch['summary']['files_reported']==2
+    assert any(r['reason']=='unknown-format' for r in batch['recovery_queue'])
+    assert not batch['executables_modified'] and not batch['full_media_decode']

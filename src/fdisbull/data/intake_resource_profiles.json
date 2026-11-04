@@ -1,0 +1,2438 @@
+[
+  {
+    "format_id": "context-civilization-amiga-bbm",
+    "revision": 1,
+    "name": "IFF ILBM image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-amiga"
+      ],
+      "filename_patterns": [
+        "*.BBM"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF ILBM image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-amiga-font",
+    "revision": 1,
+    "name": "Amiga font metadata (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-amiga"
+      ],
+      "filename_patterns": [
+        "*.FONT"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Amiga font metadata"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-amiga-pal",
+    "revision": 1,
+    "name": "IFF ILBM palette/image container (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-amiga"
+      ],
+      "filename_patterns": [
+        "*.PAL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF ILBM palette/image container"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-amiga-pix",
+    "revision": 1,
+    "name": "platform-specific packed image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-amiga"
+      ],
+      "filename_patterns": [
+        "*.PIX"
+      ],
+      "companions": [
+        "edition-specific palette/chunk/geometry consumer, not DinoPark UNCP"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. platform-specific packed image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-atari-st-bbm",
+    "revision": 1,
+    "name": "IFF ILBM image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-atari-st"
+      ],
+      "filename_patterns": [
+        "*.BBM"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF ILBM image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-atari-st-lbm",
+    "revision": 1,
+    "name": "IFF ILBM image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-atari-st"
+      ],
+      "filename_patterns": [
+        "*.LBM"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF ILBM image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-dos-cv",
+    "revision": 1,
+    "name": "packed font tables (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-dos"
+      ],
+      "filename_patterns": [
+        "*.CV"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. packed font tables"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-dos-pal",
+    "revision": 1,
+    "name": "MicroProse palette chunks (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-dos"
+      ],
+      "filename_patterns": [
+        "*.PAL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. MicroProse palette chunks"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-dos-pic",
+    "revision": 1,
+    "name": "MicroProse E0/M0/X0/X1 image chunks (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-dos"
+      ],
+      "filename_patterns": [
+        "*.PIC"
+      ],
+      "companions": [
+        "edition-specific palette/chunk/geometry consumer, not DinoPark UNCP"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. MicroProse E0/M0/X0/X1 image chunks"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-mac-rsrc",
+    "revision": 1,
+    "name": "Macintosh resource fork; embedded PICT/snd/fonts require resource traversal (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-mac"
+      ],
+      "filename_patterns": [
+        "*.RSRC"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Macintosh resource fork; embedded PICT/snd/fonts require resource traversal"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-win16-exe",
+    "revision": 1,
+    "name": "NE executable/resource container (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-win16"
+      ],
+      "filename_patterns": [
+        "*.EXE"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. NE executable/resource container"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-civilization-win16-fon",
+    "revision": 1,
+    "name": "NE bitmap-font resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "civilization-win16"
+      ],
+      "filename_patterns": [
+        "*.FON"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. NE bitmap-font resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-ff",
+    "revision": 1,
+    "name": "MADSPACK font resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.FF"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. MADSPACK font resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-gif",
+    "revision": 1,
+    "name": "GIF image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.GIF"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. GIF image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-mov",
+    "revision": 1,
+    "name": "small script/control data; not QuickTime (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.MOV"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. small script/control data; not QuickTime"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-pal",
+    "revision": 1,
+    "name": "palette data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.PAL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. palette data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-pik",
+    "revision": 1,
+    "name": "MADSPACK image resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.PIK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. MADSPACK image resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-dos-ss",
+    "revision": 1,
+    "name": "MADSPACK sprite sets (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-dos"
+      ],
+      "filename_patterns": [
+        "*.SS"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. MADSPACK sprite sets"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-win16-dll",
+    "revision": 1,
+    "name": "NE resource module; embedded graphics/font data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-win16"
+      ],
+      "filename_patterns": [
+        "*.DLL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. NE resource module; embedded graphics/font data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-colonization-win16-wav",
+    "revision": 1,
+    "name": "RIFF WAVE audio (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "colonization-win16"
+      ],
+      "filename_patterns": [
+        "*.WAV"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. RIFF WAVE audio"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-abt",
+    "revision": 1,
+    "name": "headerless custom delta unsigned8 PCM (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.ABT"
+      ],
+      "companions": [
+        "original sample expander and rate/block interpretation; no self-identifying global magic"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. headerless custom delta unsigned8 PCM"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-act",
+    "revision": 1,
+    "name": "UNC2/UNCS sprites and animation bytecode (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.ACT"
+      ],
+      "companions": [
+        "consumer-selected external palette; sprite and sequence semantics are separate"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. UNC2/UNCS sprites and animation bytecode"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-ad",
+    "revision": 1,
+    "name": "FM timbre bank (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.AD"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. FM timbre bank"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-dmo",
+    "revision": 1,
+    "name": "demo input recording with park snapshot (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.DMO"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. demo input recording with park snapshot"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-ico",
+    "revision": 1,
+    "name": "Windows icon (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.ICO"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Windows icon"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-pic",
+    "revision": 1,
+    "name": "UNCP indexed multi-picture container (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.PIC"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. UNCP indexed multi-picture container"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-dinopark-xmi",
+    "revision": 1,
+    "name": "IFF XMIDI music (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "dinopark"
+      ],
+      "filename_patterns": [
+        "*.XMI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF XMIDI music"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-ave",
+    "revision": 1,
+    "name": "fixed-size game/state/script data; not video by suffix (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.AVE"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. fixed-size game/state/script data; not video by suffix"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-cc",
+    "revision": 1,
+    "name": "Eternam packed resource (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.CC!"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Eternam packed resource"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-cc1",
+    "revision": 1,
+    "name": "Eternam packed resource (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.CC1"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Eternam packed resource"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-cc4",
+    "revision": 1,
+    "name": "Eternam packed resource table (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.CC4"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Eternam packed resource table"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-iso",
+    "revision": 1,
+    "name": "ISO data carrier; member traversal separate (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.ISO"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. ISO data carrier; member traversal separate"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-mp3",
+    "revision": 1,
+    "name": "shared CD-audio working derivative (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.MP3"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. shared CD-audio working derivative"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-nar",
+    "revision": 1,
+    "name": "Eternam indexed narration/audio data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.NAR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Eternam indexed narration/audio data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-eternam-pak",
+    "revision": 1,
+    "name": "Eternam offset-table asset container (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "eternam"
+      ],
+      "filename_patterns": [
+        "*.PAK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Eternam offset-table asset container"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-kq1-agi-0",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "kq1-agi"
+      ],
+      "filename_patterns": [
+        "*.0"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-kq1-agi-1",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "kq1-agi"
+      ],
+      "filename_patterns": [
+        "*.1"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-kq1-agi-2",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "kq1-agi"
+      ],
+      "filename_patterns": [
+        "*.2"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-kq1-agi-none",
+    "revision": 1,
+    "name": "includes AGI resource directories/interpreter/OBJECT (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "kq1-agi"
+      ],
+      "filename_patterns": [
+        "AGI",
+        "HGC_FONT",
+        "LOGDIR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. includes AGI resource directories/interpreter/OBJECT"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-en-ico",
+    "revision": 1,
+    "name": "Windows icon (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-en"
+      ],
+      "filename_patterns": [
+        "*.ICO"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Windows icon"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-en-itk",
+    "revision": 1,
+    "name": "Coktel named IMD archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-en"
+      ],
+      "filename_patterns": [
+        "*.ITK"
+      ],
+      "companions": [
+        "same-stem .LTK cache (Italian CD profile; qualify other editions separately)"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel named IMD archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-en-ltk",
+    "revision": 1,
+    "name": "Coktel companion cached IMD/index metadata (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-en"
+      ],
+      "filename_patterns": [
+        "*.LTK"
+      ],
+      "companions": [
+        "same-stem .ITK movie archive; do not rebuild one without the other"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel companion cached IMD/index metadata"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-en-stk",
+    "revision": 1,
+    "name": "Coktel script/resource archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-en"
+      ],
+      "filename_patterns": [
+        "*.STK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel script/resource archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-it-ico",
+    "revision": 1,
+    "name": "Windows icon (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-it"
+      ],
+      "filename_patterns": [
+        "*.ICO"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Windows icon"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-it-itk",
+    "revision": 1,
+    "name": "Coktel named IMD archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-it"
+      ],
+      "filename_patterns": [
+        "*.ITK"
+      ],
+      "companions": [
+        "same-stem .LTK cache (Italian CD profile; qualify other editions separately)"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel named IMD archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-it-ltk",
+    "revision": 1,
+    "name": "Coktel companion cached IMD/index metadata (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-it"
+      ],
+      "filename_patterns": [
+        "*.LTK"
+      ],
+      "companions": [
+        "same-stem .ITK movie archive; do not rebuild one without the other"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel companion cached IMD/index metadata"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-it-mp3",
+    "revision": 1,
+    "name": "shared full CD-audio working derivative (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-it"
+      ],
+      "filename_patterns": [
+        "*.MP3"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. shared full CD-audio working derivative"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-lost-in-time-it-stk",
+    "revision": 1,
+    "name": "Coktel script/resource archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "lost-in-time-it"
+      ],
+      "filename_patterns": [
+        "*.STK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Coktel script/resource archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-agi-0",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-agi"
+      ],
+      "filename_patterns": [
+        "*.0"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-agi-1",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-agi"
+      ],
+      "filename_patterns": [
+        "*.1"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-agi-2",
+    "revision": 1,
+    "name": "AGI volume resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-agi"
+      ],
+      "filename_patterns": [
+        "*.2"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. AGI volume resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-agi-none",
+    "revision": 1,
+    "name": "includes AGI resource directories/interpreter/OBJECT (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-agi"
+      ],
+      "filename_patterns": [
+        "AGI",
+        "HGC_FONT",
+        "LOGDIR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. includes AGI resource directories/interpreter/OBJECT"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-000",
+    "revision": 1,
+    "name": "SCI resource archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.000"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI resource archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-gif",
+    "revision": 1,
+    "name": "GIF image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.GIF"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. GIF image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-hep",
+    "revision": 1,
+    "name": "SCI heap resource (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.HEP"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI heap resource"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-map",
+    "revision": 1,
+    "name": "SCI resource directory (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.MAP"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI resource directory"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-msg",
+    "revision": 1,
+    "name": "SCI message resources (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.MSG"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI message resources"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-scr",
+    "revision": 1,
+    "name": "SCI script resource (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.SCR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI script resource"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-pq1-sci-tex",
+    "revision": 1,
+    "name": "SCI text resource (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "pq1-sci"
+      ],
+      "filename_patterns": [
+        "*.TEX"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. SCI text resource"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-ad",
+    "revision": 1,
+    "name": "timbre bank (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.AD"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. timbre bank"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-ani",
+    "revision": 1,
+    "name": "Bullfrog animation table (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.ANI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog animation table"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-dat",
+    "revision": 1,
+    "name": "Bullfrog asset/indexed graphics/audio containers (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.DAT"
+      ],
+      "companions": [
+        "consumer-selected .TAB or .IDX directory; pairing is a recovery question"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog asset/indexed graphics/audio containers"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-opl",
+    "revision": 1,
+    "name": "timbre bank (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.OPL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. timbre bank"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-pal",
+    "revision": 1,
+    "name": "palette data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.PAL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. palette data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-tab",
+    "revision": 1,
+    "name": "Bullfrog companion directory (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.TAB"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog companion directory"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-plus-xmi",
+    "revision": 1,
+    "name": "IFF XMIDI music (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-plus"
+      ],
+      "filename_patterns": [
+        "*.XMI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF XMIDI music"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-ad",
+    "revision": 1,
+    "name": "timbre bank (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.AD"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. timbre bank"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-ani",
+    "revision": 1,
+    "name": "Bullfrog animation table (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.ANI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog animation table"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-dat",
+    "revision": 1,
+    "name": "Bullfrog graphics/audio/resource container (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.DAT"
+      ],
+      "companions": [
+        "consumer-selected .TAB or .IDX directory; pairing is a recovery question"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog graphics/audio/resource container"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-dig",
+    "revision": 1,
+    "name": "Miles/DIGPAK audio driver (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.DIG"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Miles/DIGPAK audio driver"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-fli",
+    "revision": 1,
+    "name": "Bullfrog compact FLIC variant (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.FLI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog compact FLIC variant"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-idx",
+    "revision": 1,
+    "name": "Bullfrog companion index (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.IDX"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog companion index"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-mdi",
+    "revision": 1,
+    "name": "Miles audio driver (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.MDI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Miles audio driver"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-opl",
+    "revision": 1,
+    "name": "timbre bank (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.OPL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. timbre bank"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-pal",
+    "revision": 1,
+    "name": "palette data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.PAL"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. palette data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-raw",
+    "revision": 1,
+    "name": "raw image payload (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.RAW"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. raw image payload"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-smk",
+    "revision": 1,
+    "name": "Smacker movie (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.SMK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Smacker movie"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-tab",
+    "revision": 1,
+    "name": "Bullfrog companion directory (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.TAB"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog companion directory"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-syndicate-wars-gog-2-1-0-23-wad",
+    "revision": 1,
+    "name": "Bullfrog text/resource archive (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "syndicate-wars-gog-2.1.0.23"
+      ],
+      "filename_patterns": [
+        "*.WAD"
+      ],
+      "companions": [
+        "consumer-selected .TAB or .IDX directory; pairing is a recovery question"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Bullfrog text/resource archive"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-cat",
+    "revision": 1,
+    "name": "XCOM offset/size catalog; music or samples (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.CAT"
+      ],
+      "companions": [
+        "offset/size directory and actual audio or music member codec"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM offset/size catalog; music or samples"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-idx",
+    "revision": 1,
+    "name": "TFTD movie/installer index; role context required (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.IDX"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. TFTD movie/installer index; role context required"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-lbm",
+    "revision": 1,
+    "name": "IFF PBM image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.LBM"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF PBM image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-pck",
+    "revision": 1,
+    "name": "XCOM sprite stream (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.PCK"
+      ],
+      "companions": [
+        "same-stem .TAB offsets plus consumer palette/geometry context"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM sprite stream"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-scr",
+    "revision": 1,
+    "name": "XCOM raw full-screen image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.SCR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM raw full-screen image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-spk",
+    "revision": 1,
+    "name": "XCOM sparse image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.SPK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM sparse image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-tab",
+    "revision": 1,
+    "name": "XCOM PCK companion offsets (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.TAB"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM PCK companion offsets"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-terror-from-the-deep-gog-28046-vid",
+    "revision": 1,
+    "name": "FLC-signature movie variant with IDX companion (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-terror-from-the-deep-gog-28046"
+      ],
+      "filename_patterns": [
+        "*.VID"
+      ],
+      "companions": [
+        "same-stem .IDX for explicit TFTD structural cross-check; no seeking proof"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. FLC-signature movie variant with IDX companion"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-cat",
+    "revision": 1,
+    "name": "XCOM offset/size catalog; music or samples (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.CAT"
+      ],
+      "companions": [
+        "offset/size directory and actual audio or music member codec"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM offset/size catalog; music or samples"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-fli",
+    "revision": 1,
+    "name": "Autodesk FLI movie (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.FLI"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. Autodesk FLI movie"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-lbm",
+    "revision": 1,
+    "name": "IFF PBM image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.LBM"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. IFF PBM image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-mid",
+    "revision": 1,
+    "name": "standard MIDI music (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.MID"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. standard MIDI music"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-pat",
+    "revision": 1,
+    "name": "audio patch data (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.PAT"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. audio patch data"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-pck",
+    "revision": 1,
+    "name": "XCOM sprite stream (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.PCK"
+      ],
+      "companions": [
+        "same-stem .TAB offsets plus consumer palette/geometry context"
+      ]
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM sprite stream"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-scr",
+    "revision": 1,
+    "name": "XCOM raw full-screen image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.SCR"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM raw full-screen image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-spk",
+    "revision": 1,
+    "name": "XCOM sparse full-screen image (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.SPK"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM sparse full-screen image"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  },
+  {
+    "format_id": "context-xcom-ufo-defense-gog-77865-tab",
+    "revision": 1,
+    "name": "XCOM PCK companion offsets (context candidate)",
+    "category": "resource-profile",
+    "endianness": null,
+    "signatures": [],
+    "header_fields": [],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "xcom-ufo-defense-gog-77865"
+      ],
+      "filename_patterns": [
+        "*.TAB"
+      ],
+      "companions": []
+    },
+    "limitations": [
+      "Filename and game context are routing hints, not header proof. Recover or qualify the consumer-specific schema and companion dependencies before decoding or rewriting. XCOM PCK companion offsets"
+    ],
+    "provenance": [
+      "docs/INTAKE_MEDIA_COVERAGE.md"
+    ]
+  }
+]

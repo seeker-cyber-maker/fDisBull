@@ -81,9 +81,10 @@ METHODS = {
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
     "format-modules": "Discover format signatures, header fields and linked reader capabilities; [catalog_path]; no project required",
+    "intake-inventory": "Inventory one or many private input roots through the format catalog; paths,[catalog_path,max_files,max_read_bytes,max_binary_bytes]; no extraction or input execution",
     "file-identify": "Identify executable/media headers and nested views with a bounded format registry; path,[catalog_path,max_binary_bytes]; no input execution",
     "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
-    "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
+    "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number,index_path]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
@@ -491,6 +492,10 @@ def invoke(method, params, debugger=None):
         if p:
             raise ValueError("media-modules takes no parameters")
         return media_modules()
+    if method == "intake-inventory":
+        from .intake import intake_inventory
+
+        return intake_inventory(**p)
     if method in ("format-modules", "file-identify"):
         from .format_registry import format_catalog, identify_file
 
@@ -1200,6 +1205,7 @@ def respond(request, default_project=None, debugger=None):
                 "capabilities",
                 "media-modules",
                 "format-modules",
+                "intake-inventory",
                 "file-identify",
                 "smk-frame",
                 "media-inspect",
@@ -1939,10 +1945,17 @@ def parser():
     sub.add_parser("media-modules", help=METHODS["media-modules"])
     c = sub.add_parser("format-modules", help=METHODS["format-modules"])
     c.add_argument("--catalog", dest="catalog_path", help="Persist/reopen metadata-only SQLite format catalog")
+    c = sub.add_parser("intake-inventory", help=METHODS["intake-inventory"])
+    c.add_argument("paths", nargs="+", help="Explicit game/collection file or directory roots")
+    c.add_argument("--catalog", dest="catalog_path")
+    c.add_argument("--max-files", type=int, default=10000)
+    c.add_argument("--max-read-bytes", type=int, default=256 * 1024 * 1024)
+    c.add_argument("--max-binary-bytes", type=int, default=64 * 1024 * 1024)
     c = sub.add_parser("file-identify", help=METHODS["file-identify"])
     c.add_argument("path")
     c.add_argument("--catalog", dest="catalog_path")
     c.add_argument("--max-binary-bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument("--max-read-bytes", type=int)
     c = sub.add_parser("smk-frame", help=METHODS["smk-frame"])
     c.add_argument("path")
     c.add_argument("output", help="New directory beneath an existing private parent outside Git")
@@ -1990,9 +2003,11 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker", "flic") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
+        if name == "media-inspect":
+            c.add_argument("--index-path", help="Explicit TFTD VID companion IDX for structural cross-check")
         if name == "media-extract":
             c.add_argument("output")
             c.add_argument("--member", required=True)

@@ -67,7 +67,7 @@ def _entry(identifier, implementation, architectures, methods, providers, requir
 def _catalog():
     return [
         _entry('inspect.file-formats', 'partial', ['container-dependent'],
-               ['cli:format-modules', 'cli:file-identify'], ['format_registry.py', 'inspection.py', 'image_views.py'], [],
+               ['cli:format-modules', 'cli:file-identify', 'cli:intake-inventory'], ['format_registry.py', 'format_media.py', 'intake.py', 'inspection.py', 'image_views.py'], [],
                'Versioned SQLite header facts and bounded signature/architecture/media probes. Recognition, structural validation, decoder availability and native execution are separate.'),
         _entry('media.smk2-framing', 'partial', ['architecture-neutral'],
                ['cli:media-inspect', 'cli:smk-frame'], ['smacker.py', 'media.py'], ['ffmpeg', 'ffprobe'],
