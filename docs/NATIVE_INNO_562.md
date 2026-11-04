@@ -1,19 +1,29 @@
 # fDisBull Native GOG/Inno 5.6.2 Extractor
 
-**Status:** Experimental, source-only, independently qualified subset. GitLab review required. Compatible with the `gog-list` / `gog-unpack` response contracts from fDisBull 0.31.1. It **replaces the external `innoextract` dependency for the supported profile**, without executing installers, Wine, or spawning a subprocess.
+**Status:** Integrated native adapter for the supported profile. It is compatible
+with the `gog-list` / `gog-unpack` response contracts from fDisBull 0.31.1 and
+**replaces the external `innoextract` dependency** without executing installers,
+Wine, or spawning a subprocess. Authored contract tests pass; distribution and
+full native qualification remain separate gates.
 
 ## Supported / refused
 
 - **Supported:** Inno Setup 5.6.2 Unicode bootstrap table (`rDlPtS`, CRC32); LZMA1 metadata blocks with 4096-byte CRC-framed chunks; header file-location tables; stored and LZMA2 data chunks; Inno 5.3.9+ x86 CALL/JMP address filter; GOG Galaxy zlib-compressed part reconstruction; file-size, per-location SHA1, per-output MD5, input/manifest SHA256; directories and collision safety; new-output-only extraction.
 - **Refused:** Other Inno versions, external multipart source slices, encrypted/password-protected files, unknown compression or bytecode layouts, unsupported filename namespaces, unknown GOG Galaxy scripts, malformed headers, bad checksums and unsafe paths. No auto-upgrade from a merely listed source to proved executable game equivalence.
-- **Not yet verified:** generic Inno variants, upstream fDisBull's full Linux CI, native DOS game execution, complete runtime-equivalence with original installers, save/registration behavior, target-specific compatibility and plugin integration into a published release. The `timeout` is a bounded cooperative stage deadline.
+- **Not yet verified:** generic Inno variants, this branch's full Linux/CI and
+  distribution gates, native DOS game execution, complete runtime-equivalence
+  with original installers, save/registration behavior and target-specific
+  compatibility. The `timeout` is a bounded cooperative stage deadline.
 
 ## Components
 
-- `native_inno.py`: standalone native format reader, data-stream validator and reassembler.
-- `gog_unpack.py`: replacement for `src/fdisbull/gog_unpack.py`, preserving the existing `gog-unpack-manifest.json` and response names, `include` filtering and existing-output refusal.
-- `test_gog_unpack_repo.py`: replaces obsolete mock-subprocess test cases and checks 18 authored no-original contracts.
-- `test_gog_original_562.py`: optional original-backed oracle suite; read-only source location provided by `FDISBULL_PRIVATE_GOG_INSTALLERS`. Skips without the user's private installers.
+- `native_inno.py`: native format reader, data-stream validator and reassembler.
+- `gog_unpack.py`: keeps the existing `gog-unpack-manifest.json` and response
+  names, `include` filtering and existing-output refusal.
+- `tests/test_gog_unpack.py`: authored no-original contract suite; 21 cases.
+- `tests/test_gog_original_562.py`: optional original-backed oracle suite;
+  read-only source location provided by `FDISBULL_PRIVATE_GOG_INSTALLERS`.
+  It skips without the user's private installers.
 
 ## Qualification on November 4, 2026
 
@@ -27,7 +37,11 @@ Seven representative targets (including the 38 MB Game Configurator, AITD FITD.e
 
 ## Integration
 
-Place `native_inno.py` alongside `gog_unpack.py` in `src/fdisbull/`. Preserve normal CLI `gog-list`/`gog-unpack` dispatch; their import remains from `fdisbull.gog_unpack`. Replace tests `tests/test_gog_unpack.py` with the authored mock-NativeInno suite, and add the opt-in original-backed file. Update CLI help strings mentioning `innoextract` before public release, then run ordinary and native qualification on an exact-source commit.
+`native_inno.py` ships beside `gog_unpack.py` in `src/fdisbull/`. Normal CLI
+`gog-list`/`gog-unpack` dispatch is unchanged and imports through
+`fdisbull.gog_unpack`. The authored contract suite replaces the former
+mock-subprocess cases; the original-backed suite remains opt-in. Distribution
+and native qualification must still run on an exact source commit.
 
 Example with the user-owned installer:
 

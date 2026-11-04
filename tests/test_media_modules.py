@@ -21,6 +21,7 @@ def test_catalog_and_public_cli_need_no_project(capsys):
     assert report['ok']
     modules = {item['name']: item for item in report['result']['modules']}
     assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic'}
+    assert modules['gog-inno']['dependencies'] == []
     assert media_modules() == report['result']
     assert main(['media-modules']) == 0
     assert json.loads(capsys.readouterr().out)['ok']
