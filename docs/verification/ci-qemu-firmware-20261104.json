@@ -1,0 +1,65 @@
+{
+  "format": "fdisbull-ci-firmware-regression-1",
+  "date": "2026-11-04",
+  "original_source_commit": "6c32a261c53f4c747bdc368284d4b4acd1bce11c",
+  "original_acceptance": {
+    "passed": 85,
+    "failed": 19,
+    "skipped": 0,
+    "failure": "qemu: could not load PC BIOS 'bios-256k.bin'",
+    "dos_and_boot_suite_ran": false,
+    "qualified": false
+  },
+  "cause": "Relocatable QEMU resolves its configured data directory relative to its executable; the prepared worker installed firmware under /usr/local/share/qemu while running QEMU from its build-tree path.",
+  "qemu_sha256": "989efcfb0cf3de16ffaf6bd3417ccc97d07d320271738bfe54f3e2f0e941d739",
+  "firmware_file_count": 171,
+  "diagnostic": {
+    "same_binary_and_manifest_verified_firmware": true,
+    "wrong_absolute_layout_exit_code": 1,
+    "observed_data_search": [
+      "$QEMU_BUILD/../share/qemu-firmware",
+      "$QEMU_BUILD/../share/qemu"
+    ],
+    "corrected_directory": "$QEMU_BUILD/../share/qemu",
+    "qmp_status": {
+      "status": "prelaunch",
+      "running": false
+    },
+    "process_exit_code": 0,
+    "container_stopped": true
+  },
+  "proposed_preflight_script_sha256": "1b62c275c1e4aac35a7f3412d5db68fadc413bb97c979a61dcfeb4cb4bed5036",
+  "raw_receipt_identities": {
+    "diagnostic-result.json": {
+      "sha256": "fa76982673f44166aa77a13200776cb48bb8a7b96618db2937cf62bcb6eb4c7b",
+      "size_bytes": 529
+    },
+    "process.json": {
+      "sha256": "8908b2a69931e553f89d893913258307da2c60306895ac770c2d2fd53e02df21",
+      "size_bytes": 323
+    },
+    "data-search-before.txt": {
+      "sha256": "4cc351800550eb2b861e6872c7cc80b9f9b2460cf32ae8dcb3a3f1a222b098d9",
+      "size_bytes": 105
+    },
+    "wrong-layout-stderr.log": {
+      "sha256": "135b91f0a1277aabf0a6a0786aa8aaf0dd260682ce716357367a27fc84aa621a",
+      "size_bytes": 45
+    },
+    "native-evidence/pe/qemu-bios-preflight.json": {
+      "sha256": "afa183a171ffa4066425131364cb6f9200e8c3fe5720ef27034a836145fb56b1",
+      "size_bytes": 214
+    },
+    "native-evidence/pe/qemu-bios-preflight.log": {
+      "sha256": "37ef22752be5eee8da069f7cf1c70d8366190eb8eac00bd9d2ce290a44a40026",
+      "size_bytes": 80
+    }
+  },
+  "scope_limit": "Negative/positive default-BIOS loading and paused QMP only; no guest OS or game acceptance, and no qualification of the failed source. Follow-up source requires its own complete ordinary and native qualification.",
+  "privacy": "Authored CI inputs and tool firmware only; no game files, saved states or project databases included.",
+  "focused_host_checks": {
+    "passed": 138,
+    "command": "python -m pytest -q tests/test_ci_qualification.py tests/test_local_linux_ci.py tests/test_local_linux_export.py tests/test_unified_runtime_inputs.py tests/test_native_ci_contract.py",
+    "native_gate": false
+  }
+}
