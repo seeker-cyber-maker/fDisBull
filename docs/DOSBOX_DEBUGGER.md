@@ -183,6 +183,40 @@ palette construction; it excludes snapshot acquisition, hashing, base64,
 JSON, IPC, host decoding and persistence. Older backends keep the default PNG
 path and do not gain codecs without rebuilding.
 
+### Direct RGBA consumer without PNG conversion
+
+For an in-process pixel consumer, use the Python API:
+
+```python
+frame = debug.frame_rgba()  # Requests rgba-zstd explicitly.
+rgba = frame.pixel(160, 100)
+buffer = memoryview(frame.pixels)  # Immutable RGBA8 bytes, no image encoding.
+width, height, stride = frame.width, frame.height, frame.stride
+frame_id = frame.metadata["frame_id"]
+```
+
+`frame_rgba` returns an `RGBAFrame` with validated pixels and native frame/mode/
+tick metadata. `frame.sha256` and `frame.metadata["sha256"]` identify the decoded
+RGBA bytes. `frame.metadata["transport"]` separately identifies the compressed
+native payload, its encoding and size. The Zstandard path performs neither PNG
+loading nor PNG saving. It preserves all existing layout, size, decompression
+and hash checks.
+
+This direct call does not run screenshot preparation hooks, create a database
+event or artifact, write an image, pause the guest, or advance execution. The
+normal guarded RPC path still applies. Own a paused session when comparing
+several encodings of one completed frame. Returned bytes are an in-memory
+observation; use the existing `screenshot()` API when a persistent PNG artifact
+is required. A raw frame object is a Python buffer consumer API, not a JSON tool
+reply containing all pixels.
+
+For a comparable direct PNG consumer, select
+`debug.frame_rgba(encoding="png")` or `encoding="png-indexed"`; those paths
+decode their native PNG into RGBA without re-encoding it or storing an artifact.
+The original PNG option also works with older native backends. The default
+Zstandard option requires the advertised native codec and optional Python
+`fdisbull[screenshot]` decoder; it does not silently substitute another encoding.
+
 ### Optional screenshot coordinate grid (0.11.0)
 
 `debug.screenshot("menu-grid.png", grid=True, grid_step=32)` saves a clean native frame and a separate annotated `screenshot-grid` artifact. The JSON equivalent is:

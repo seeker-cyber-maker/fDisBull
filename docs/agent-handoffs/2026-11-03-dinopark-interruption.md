@@ -161,6 +161,18 @@ Zstandard's faster compression does not produce an end-to-end speedup in that
 same compatibility path. These trials do not resume historical recovery
 sessions or advance the unresolved 97-entry / 13-asset investigation.
 
+## Direct RGBA consumer follow-up
+
+The subsequent [direct-consumer verification](../VERIFICATION-DINOPARK-DIRECT-RGBA-2026-11-03.md)
+adds `debug.frame_rgba()` for validated in-memory pixels without PNG conversion,
+screenshot hooks or artifact writes. Luna verified the unchanged client source
+against a fresh original DinoPark guest: 360 timed direct calls, exact RGBA,
+native probes, unchanged paused-state metadata, zero direct-phase database
+writes, sound off and clean shutdown. The direct Zstandard path was about
+35–36% faster than the Zstandard-to-stored-PNG path on the sampled title frames;
+direct indexed PNG remained faster. The final affected/native suite passes 426
+tests. No native rebuild, package or installation was performed for this step.
+
 ## Next owner: evidence and acceptance
 
 1. Start from current source and pin the chosen backend, original files and a

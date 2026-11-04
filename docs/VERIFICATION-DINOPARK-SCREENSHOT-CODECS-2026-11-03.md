@@ -1,5 +1,9 @@
 # Native lossless screenshot encodings — DinoPark, November 3, 2026
 
+The subsequent [direct RGBA consumer experiment](VERIFICATION-DINOPARK-DIRECT-RGBA-2026-11-03.md)
+adds a Python pixel-buffer path without PNG conversion or artifact writes. The
+measurements below remain the earlier wire and stored-PNG results.
+
 The native screenshot path now offers exact indexed PNG and optional raw RGBA8
 with Zstandard level 1. Both are explicit selections; the original PNG remains
 the default. Luna (`gpt-6-luna`) authored and ran the independent original-game

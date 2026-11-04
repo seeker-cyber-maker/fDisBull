@@ -927,6 +927,18 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 metadata = dict(metadata, **{key: experiment})
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
+    def frame_rgba(self, *, encoding='rgba-zstd'):
+        """Consume a completed frame in memory, without hooks or artifact writes.
+
+        This observes the current completed frame. It does not pause or advance
+        the guest; callers comparing observations should own a paused session.
+        """
+        from .screenshot_codecs import decode_frame_rgba, validate_encoding
+        capabilities = {} if encoding == 'png' else getattr(getattr(self, 'rpc', None), 'capabilities', {})
+        validate_encoding(encoding, capabilities)
+        result = self.call('video.screenshot', {'encoding': encoding}) if encoding != 'png' else self.call('video.screenshot')
+        return decode_frame_rgba(result)
+
     def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True, encoding='png'):
         from .screenshot_grid import validate_step
         from .screenshot_codecs import validate_encoding

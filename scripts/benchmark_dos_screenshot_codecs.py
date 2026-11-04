@@ -18,6 +18,7 @@ import os
 import platform
 import random
 import re
+import sqlite3
 import statistics
 import subprocess
 import sys
@@ -145,6 +146,144 @@ def sampled_rgb_match(rgba: bytes, width: int, points: list[list[int]], result: 
     return {"frame_id": result.get("frame_id"), "samples": checks}
 
 
+def database_counts(project: object) -> dict[str, int]:
+    return {"total_changes": project.db.total_changes,
+            "events": project.db.execute("SELECT count(*) FROM debug_events").fetchone()[0],
+            "artifacts": project.db.execute("SELECT count(*) FROM debug_artifacts").fetchone()[0]}
+
+
+@contextmanager
+def direct_consumer_guards(debug: object, project: object, receipt: dict[str, object]):
+    """Count forbidden side paths during direct calls; restore all guards on exit."""
+    from PIL import Image
+
+    original_open, original_save = Image.open, Image.Image.save
+    active = {"encoding": None}
+    counters = {encoding: {"image_open": 0, "image_save": 0, "event_calls": 0,
+                           "artifact_calls": 0, "hook_calls": 0, "sqlite_write_attempts": 0}
+                for encoding in ENCODINGS}
+    receipt.update(counters=counters, database_before=database_counts(project))
+    patches = []
+    missing = object()
+
+    def count(name: str) -> None:
+        require(active["encoding"] in counters, "Direct guard observed a call outside a declared encoding")
+        counters[active["encoding"]][name] += 1
+
+    def guarded_open(*args, **kwargs):
+        count("image_open")
+        require(active["encoding"] != "rgba-zstd", "Direct RGBA-zstd consumer invoked Image.open")
+        return original_open(*args, **kwargs)
+
+    def guarded_save(*args, **kwargs):
+        count("image_save")
+        raise BenchmarkError("Direct consumer invoked Image.save")
+
+    def forbid(obj: object, method: str, counter: str) -> None:
+        old_value = vars(obj).get(method, missing)
+
+        def blocked(*args, **kwargs):
+            count(counter)
+            raise BenchmarkError(f"Direct consumer invoked {method}")
+
+        patches.append((obj, method, old_value))
+        setattr(obj, method, blocked)
+
+    allowed_sql = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION,
+                   sqlite3.SQLITE_RECURSIVE}
+
+    def authorize(action, arg1, arg2, database, trigger):
+        if action in allowed_sql:
+            return sqlite3.SQLITE_OK
+        count("sqlite_write_attempts")
+        return sqlite3.SQLITE_DENY
+
+    try:
+        Image.open, Image.Image.save = guarded_open, guarded_save
+        forbid(debug, "_event", "event_calls")
+        forbid(debug, "_artifact", "artifact_calls")
+        forbid(debug, "_capture_with_hooks", "hook_calls")
+        forbid(project, "_debug_artifact", "artifact_calls")
+        project.db.set_authorizer(authorize)
+        yield active, counters
+    finally:
+        project.db.set_authorizer(None)
+        for obj, method, old_value in reversed(patches):
+            if old_value is missing:
+                delattr(obj, method)
+            else:
+                setattr(obj, method, old_value)
+        Image.open, Image.Image.save = original_open, original_save
+        receipt["database_after"] = database_counts(project)
+
+
+def run_direct_phase(debug: object, project: object, frame_record: dict[str, object],
+                     reference_rgba: bytes, reference_meta: dict[str, object],
+                     wire_examples: dict[str, dict[str, object]], iterations: int,
+                     all_samples: dict[str, dict[str, list[float]]]) -> None:
+    """Time the complete public API call, including transport and pixel decode."""
+    require(callable(getattr(debug, "frame_rgba", None)), "Source client lacks the direct frame_rgba API")
+    record = {"samples": [], "guards": {}, "warmups_per_encoding": WARMUPS,
+              "timing_scope": "whole debug.frame_rgba call; includes RPC, integrity checks and decode"}
+    frame_record["direct_consumer"] = record
+    before_registers = debug.registers()
+    order_rng = random.Random(0xF12A + int(frame_record["index"]))
+    with direct_consumer_guards(debug, project, record["guards"]) as (active, counters):
+        for round_index in range(WARMUPS + iterations):
+            order = list(ENCODINGS)
+            order_rng.shuffle(order)
+            results = {}
+            for encoding in order:
+                active["encoding"] = encoding
+                started_ns = time.perf_counter_ns()
+                frame = debug.frame_rgba(encoding=encoding)
+                direct_ms = (time.perf_counter_ns() - started_ns) / 1_000_000
+                require(type(frame.pixels) is bytes and frame.pixels == reference_rgba,
+                        f"Direct {encoding} pixels differ from the paused PNG reference")
+                require((frame.width, frame.height, frame.stride) ==
+                        (reference_meta["width"], reference_meta["height"], reference_meta["width"] * 4),
+                        f"Direct {encoding} frame layout differs from the reference")
+                require(frame.sha256 == sha256(reference_rgba), "Direct consumer raw pixel SHA-256 mismatch")
+                require(isinstance(frame.metadata, dict), "Direct consumer metadata is not an object")
+                require(frame.metadata.get("sha256") == frame.sha256 and
+                        frame.metadata.get("raw_sha256") == frame.sha256,
+                        "Direct consumer metadata does not identify the raw RGBA digest")
+                for key in ("width", "height", "frame_id", "mode_id", "captured_ticks"):
+                    require(frame.metadata.get(key) == reference_meta[key],
+                            f"Direct consumer changed same-frame {key}")
+                transport = frame.metadata.get("transport")
+                require(isinstance(transport, dict), "Direct consumer omitted transport metadata")
+                require(transport.get("sha256") == wire_examples[encoding]["encoded_sha256"],
+                        "Direct consumer encoded transport SHA differs from the same-frame wire response")
+                if encoding == "rgba-zstd":
+                    require(transport.get("raw_sha256") == frame.sha256,
+                            "Direct RGBA-zstd transport raw digest differs from the pixel digest")
+                results[encoding] = {"direct_ms": direct_ms, "raw_sha256": frame.sha256,
+                    "stride": frame.stride, "rgba_bytes": len(frame.pixels), "full_rgba_equal": True,
+                    "frame_metadata_equal": True, "transport": {key: value for key, value in transport.items()
+                        if key not in ("data_base64", "png_base64")}}
+                if round_index >= WARMUPS:
+                    all_samples[encoding]["direct_consumer_ms"].append(direct_ms)
+            if round_index >= WARMUPS:
+                record["samples"].append({"round": round_index - WARMUPS + 1,
+                                           "order": order, "results": results})
+    guard_receipt = record["guards"]
+    require(guard_receipt["database_before"] == guard_receipt["database_after"],
+            "Direct consumer modified event/artifact counts or SQLite total_changes")
+    for encoding, values in counters.items():
+        for key in ("image_save", "event_calls", "artifact_calls", "hook_calls", "sqlite_write_attempts"):
+            require(values[key] == 0, f"Direct {encoding} guard detected {key}")
+        if encoding == "rgba-zstd":
+            require(values["image_open"] == 0, "Direct RGBA-zstd consumer opened a PIL image")
+    after_registers = debug.registers()
+    require(after_registers == before_registers, "Direct consumer changed paused register state")
+    record.update(registers_before=before_registers, registers_after=after_registers,
+                  registers_identical=True, no_artifact_event_or_hook_calls=True,
+                  zstd_no_image_open_or_save=True,
+                  per_encoding={encoding: median_p95([sample["results"][encoding]["direct_ms"]
+                      for sample in record["samples"]]) for encoding in ENCODINGS})
+
+
 def selected_spawn_environment(pid: int) -> dict[str, str]:
     """Read only the two expected nonsecret launch variables, never dump env."""
     allow = {"SDL_AUDIODRIVER", "XDG_CONFIG_HOME"}
@@ -253,7 +392,9 @@ def main(argv: list[str] | None = None) -> int:
                          "target_sha256": original_target_hash},
         "configuration": {"iterations": args.iterations, "warmups_per_encoding_per_frame": WARMUPS,
                            "total_guest_budget_ms": args.guest_ms, "frames_requested": args.frames,
-                           "encodings": list(ENCODINGS), "measure": True},
+                           "encodings": list(ENCODINGS), "measure": True,
+                           "direct_consumer": "whole frame_rgba call; randomized codec order",
+                           "artifact_calls_per_encoding_per_frame": 5},
         "claim_boundary": "Bounded idle progression and read-only screenshot comparisons on this exact private DinoPark copy/backend. "
                           "No input or game action is sent. Results describe only sampled frames and this host/backend.",
         "frames": [], "timings": {},
@@ -267,7 +408,8 @@ def main(argv: list[str] | None = None) -> int:
     old_store = os.environ.get("FDISBULL_TARGET_STORE")
     os.environ["FDISBULL_TARGET_STORE"] = str(output / "target-objects")
     all_samples: dict[str, dict[str, list[float]]] = {
-        enc: {"native_encode_us": [], "rpc_ms": [], "decode_ms": [], "artifact_ms": []}
+        enc: {"native_encode_us": [], "rpc_ms": [], "decode_ms": [],
+              "direct_consumer_ms": [], "artifact_ms": []}
         for enc in ENCODINGS
     }
     spawned: list[object] = []
@@ -290,14 +432,15 @@ def main(argv: list[str] | None = None) -> int:
     try:
         import zstandard
         from fdisbull.project import Project
-        source_paths = [Path(__file__).resolve(), repo / "src/fdisbull/screenshot_codecs.py",
-                        repo / "src/fdisbull/debugger.py", repo / "src/fdisbull/dosbox_rpc.py",
-                        repo / "src/fdisbull/scenes.py", repo / "src/fdisbull/project.py"]
-        source_hashes = {str(path.relative_to(repo) if path != Path(__file__).resolve() else Path("scripts") / path.name):
+        source_paths = [Path(__file__).resolve()] + sorted((repo / "src/fdisbull").rglob("*.py"))
+        if (repo / "player").is_dir():
+            source_paths += sorted((repo / "player").rglob("*.py"))
+        source_hashes = {str(path.relative_to(repo)):
                          sha256(path.read_bytes()) for path in source_paths}
         identity_material = "\n".join(f"{name}:{digest}" for name, digest in sorted(source_hashes.items())).encode()
         report["tested_identity"] = {"benchmark_script_sha256": source_hashes["scripts/benchmark_dos_screenshot_codecs.py"],
-            "client_sources": source_hashes, "client_bundle_sha256": sha256(identity_material),
+            "client_sources": source_hashes, "client_source_count": len(source_hashes),
+            "client_bundle_sha256": sha256(identity_material),
             "native_patch_path": str(args.native_patch.expanduser().resolve()) if args.native_patch else None,
             "native_patch_sha256": sha256(args.native_patch.expanduser().resolve(strict=True).read_bytes()) if args.native_patch else None,
             "native_executable_sha256": sha256(backend.read_bytes()),
@@ -404,6 +547,15 @@ def main(argv: list[str] | None = None) -> int:
                             frame_record["samples"].append({"round": round_index - WARMUPS + 1,
                                                              "order": order, "results": round_results})
 
+                    run_direct_phase(debug, project, frame_record, reference_rgba, reference_meta,
+                                     first_response, args.iterations, all_samples)
+                    direct_probe = debug.frame_probe(points)
+                    direct_probe_receipt = sampled_rgb_match(reference_rgba, int(reference_meta["width"]),
+                                                             points, direct_probe)
+                    require(direct_probe_receipt == probe_receipt,
+                            "Native RGB probes changed during the direct consumer phase")
+                    frame_record["direct_consumer"]["native_rgb_probe_equal"] = True
+
                     # Exercise the public source-to-canonical-artifact path in a
                     # separate phase. Keep its storage/transcode latency distinct.
                     artifact_samples: dict[str, list[dict[str, object]]] = {enc: [] for enc in ENCODINGS}
@@ -478,8 +630,16 @@ def main(argv: list[str] | None = None) -> int:
             exit_receipt = report.get("native_exit", {})
             require(exit_receipt.get("close_receipt_found") is True and exit_receipt.get("process_reaped") is True,
                     "Native backend close/process-reaped receipt was not verified")
-            require(exit_receipt.get("backend_exit_code") is not None,
-                    "Native backend exit code was not observed through the retained process handle")
+            require(exit_receipt.get("backend_exit_code") == 0,
+                    "Native backend did not exit cleanly with exit code zero")
+        hashes_after = {str(path.relative_to(repo)): sha256(path.read_bytes()) for path in source_paths}
+        report["tested_identity"]["source_hashes_unchanged"] = hashes_after == source_hashes
+        require(hashes_after == source_hashes, "Measured Python source changed during the benchmark")
+        require(sha256(backend.read_bytes()) == report["tested_identity"]["native_executable_sha256"],
+                "Native executable changed during the benchmark")
+        if args.native_patch:
+            require(sha256(args.native_patch.expanduser().resolve(strict=True).read_bytes()) ==
+                    report["tested_identity"]["native_patch_sha256"], "Native patch source changed during the benchmark")
         report["timings"] = {encoding: {measure: median_p95(values) for measure, values in measures.items()}
                              for encoding, measures in all_samples.items()}
         report["status"] = "passed"
