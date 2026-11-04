@@ -38,7 +38,8 @@ class QemuMachine:
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}
             paths.update({name:Path(path).expanduser().resolve(strict=True) for name,path in [('kernel',kernel),('initramfs',initramfs),('boot_image',boot_image)] if path is not None})
             if any(not p.is_file() for p in paths.values()) or not os.access(paths['qemu'],os.X_OK):raise ValueError('Expected regular QEMU and machine input files')
-            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=5).splitlines()[0]
+            # Cold executable startup can be slow under native/translated CI.
+            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=30).splitlines()[0]
             match=re.search(r'QEMU emulator version (\d+)\.(\d+)',version)
             if not match or tuple(map(int,match.groups()))<(9,1):raise DebuggerError('Machine debugging requires QEMU >= 9.1')
             self.inputs={name:dict(path=str(path),sha256=file_hash(path)) for name,path in paths.items()}

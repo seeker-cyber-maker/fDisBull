@@ -3,6 +3,8 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import shlex
+import subprocess
 import sys
 
 import pytest
@@ -113,6 +115,29 @@ def test_verified_firmware_install_rejects_dangling_symlink(prepared, tmp_path):
     target.symlink_to(tmp_path / 'absent')
     with pytest.raises(ValueError, match='already exists'):
         module.verify(root, SHA, RUN, JOB, source_root=root, install_firmware=target)
+
+
+def test_prepared_acceptance_installs_firmware_where_relocated_qemu_reads_it(prepared):
+    module,root=prepared
+    script=(ROOT/'scripts/ci/unified-acceptance.sh').read_text()
+    commands=[shlex.split(line.strip()) for line in script.splitlines()
+              if line.strip().startswith('python scripts/ci/unified-runtime-inputs.py verify ')]
+    assert len(commands)==1
+    command=commands[0]
+    destination=Path(command[command.index('--install-firmware')+1])
+    # A failed regression must never write to a host's global QEMU prefix.
+    assert not destination.is_absolute()
+    subprocess.run([sys.executable,str(ROOT/command[1]),*command[2:]],cwd=root,check=True,
+                   capture_output=True,text=True,timeout=10)
+    executable=root/module.INPUT_PATHS['FDISBULL_PE_QEMU']
+    consumed=executable.parent.parent/'share/qemu'
+    manifest=json.loads((root/module.MANIFEST).read_text())
+    expected={Path(i['path']).relative_to(module.FIRMWARE).as_posix():(i['sha256'],i['size'])
+              for i in manifest['firmware']}
+    actual={p.relative_to(consumed).as_posix():(hashlib.sha256(p.read_bytes()).hexdigest(),p.stat().st_size)
+            for p in module.regular_files(consumed)}
+    assert len(actual)==171 and actual==expected
+    assert (consumed/'bios-256k.bin').read_bytes()==b'bios-256k.bin'
 
 
 def test_prepare_and_acceptance_library_evidence_paths_are_distinct():

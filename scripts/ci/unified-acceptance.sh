@@ -2,7 +2,8 @@
 set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARED:-}" = 1 ]; then
   test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
-  python scripts/ci/unified-runtime-inputs.py verify --install-firmware /usr/local/share/qemu
+  # The stripped retained executable resolves firmware relative to build/.
+  python scripts/ci/unified-runtime-inputs.py verify --install-firmware .native/pe/qemu-9.2.4/share/qemu
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
   apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev libglib2.0-0 libpixman-1-0 libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6 libzstd1

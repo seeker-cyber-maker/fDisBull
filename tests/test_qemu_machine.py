@@ -3,13 +3,75 @@ import json
 import os
 from pathlib import Path
 import socket
+import subprocess
+import sys
 import threading
 import time
+from types import SimpleNamespace
 
 import pytest
 
 from fdisbull.gdb_rpc import GDBRemote
 from fdisbull.project import Project
+
+
+def authored_qemu_identity(tmp_path, *, version='QEMU emulator version 9.2.4', delay=0):
+    executable=tmp_path/'identity-qemu'
+    executable.write_text(f'#!{sys.executable}\n'
+                          'import sys,time\n'
+                          'if sys.argv[1:] == ["--version"]:\n'
+                          f'    time.sleep({delay!r});print({version!r})\n'
+                          'else:\n'
+                          '    time.sleep(60)\n')
+    executable.chmod(0o700)
+    image=tmp_path/'authored-boot.img';image.write_bytes(b'authored boot input')
+    return executable,image
+
+
+@pytest.mark.skipif(os.name!='posix',reason='Authored executable identity fixture requires a POSIX host')
+def test_moderately_slow_qemu_identity_allows_machine_start(tmp_path,monkeypatch):
+    from fdisbull import qemu_machine
+    executable,image=authored_qemu_identity(tmp_path,delay=6)
+    # The subprocess identity probe is real; no emulator or QMP is needed to
+    # check whether successful identity dispatch reaches machine startup.
+    monkeypatch.setattr(qemu_machine,'QemuControl',lambda *args:SimpleNamespace(close=lambda:None))
+    spawned=[]
+    machine=qemu_machine.QemuMachine(executable,boot_image=image,on_spawn=spawned.append)
+    try:
+        assert machine.inputs['qemu']['version']=='QEMU emulator version 9.2.4'
+        assert spawned==[machine.process] and machine.process.poll() is None
+    finally:machine.close()
+    assert spawned[0].poll() is not None
+
+
+@pytest.mark.skipif(os.name!='posix',reason='Authored executable identity fixture requires a POSIX host')
+@pytest.mark.parametrize('version',['QEMU emulator version 8.2.0','unrecognized identity'])
+def test_rejected_qemu_identity_never_spawns_machine(tmp_path,version):
+    from fdisbull.qemu_machine import QemuMachine
+    from fdisbull.dosbox_rpc import DebuggerError
+    executable,image=authored_qemu_identity(tmp_path,version=version)
+    spawned=[]
+    with pytest.raises(DebuggerError,match='requires QEMU >= 9.1'):
+        QemuMachine(executable,boot_image=image,on_spawn=spawned.append)
+    assert spawned==[]
+
+
+def test_qemu_identity_timeout_remains_bounded_and_never_spawns_machine(tmp_path,monkeypatch):
+    from fdisbull import qemu_machine
+    from fdisbull.dosbox_rpc import DebuggerError
+    executable,image=authored_qemu_identity(tmp_path)
+    probes=[]
+    def timeout(command,**kwargs):
+        probes.append(kwargs['timeout'])
+        raise subprocess.TimeoutExpired(command,kwargs['timeout'])
+    monkeypatch.setattr(qemu_machine.subprocess,'check_output',timeout)
+    monkeypatch.setattr(qemu_machine.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('VM spawned after identity failure'))
+    spawned=[]
+    machine=qemu_machine.QemuMachine.__new__(qemu_machine.QemuMachine)
+    with pytest.raises(DebuggerError,match='timed out'):
+        machine.__init__(executable,boot_image=image,on_spawn=spawned.append)
+    assert len(probes)==1 and 6<probes[0]<=30 and spawned==[]
+    assert machine.process is None and machine.temporary is None
 
 
 def boot_sector():
