@@ -335,7 +335,8 @@ def test_real_original_ne_entry_registers_memory_and_completed_instructions(tmp_
     digest=hashlib.sha256(source.read_bytes()).hexdigest()
     with Project.create(tmp_path/'native.fdb',source,image='ne') as project:
         project.analyze(max_instructions=32)
-        with project.debugger(qemu,source.parent,kernel=kernel,initramfs=runtime,files=[source.name],window=True) as session:
+        with project.debugger(qemu,source.parent,kernel=kernel,initramfs=runtime,files=[source.name],
+                              window=True,memory_mib=8192,boot_timeout_ms=600000) as session:
             assert session.metadata['original_entry_verified'] is True
             assert session.registers()['cpu_mode']=='protected16'
             assert session.registers()['project_address']==session.ne['logical_entry']['address']

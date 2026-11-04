@@ -91,3 +91,23 @@ def test_separate_ida_guest_keeps_legacy_frame_protocol_and_refuses_new_controls
                       lambda:session.dot_mode(True),lambda:session.scene_act('scene','button')):
         with pytest.raises(ValueError,match='not qualified'):operation()
     assert calls==['screenshot']
+
+
+def test_win16_register_route_saves_offline_and_checks_runtime_before_execution(tmp_path):
+    from fdisbull.win16_debugger import Win16DebugSession
+    script={'format':'fdisbull-script-1','backend':'wine-ne','steps':[
+        {'op':'write-registers','registers':{'eax':{'expected':'0x1','value':'0x2'}}}]}
+    source=tmp_path/'authored.exe';source.write_bytes(ne_file())
+    database=tmp_path/'route.fdb'
+    with Project.create(database,source,image='ne') as project:
+        saved=project.debug_save_script('checked-registers.json',script)
+    with Project(database) as project:
+        assert project.debug_scripts()['scripts'][0]['sha256']==saved['sha256']
+    session=Win16DebugSession.__new__(Win16DebugSession)
+    def forbidden(*args,**kwargs):
+        pytest.fail('Unqualified runtime reached mutation or artifact storage')
+    session.call=session._artifact=session._event=forbidden
+    with pytest.raises(ValueError,match='not qualified'):
+        execute_script(session,script)
+    session.register_edits_available=True
+    assert validate_script(script,session=session)==script['steps']

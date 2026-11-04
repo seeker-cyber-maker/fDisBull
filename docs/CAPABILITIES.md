@@ -87,3 +87,8 @@ projectless dispatch, a fresh `python -S` process, absence of native imports and
 subprocess calls, missing or fake tools, host restrictions, source drift and
 invalid arguments. Distribution gates require the module, guides and tests.
 Use `doctor` only when an explicit runtime acceptance test is intended.
+
+The default catalog has a tested 32 KiB regression budget, leaving headroom
+within the ordinary 64 KiB inline-response limit. This is a default-size check,
+not a protocol ceiling or a guarantee for arbitrary caller-supplied paths; the
+ordinary output-size policy still applies.

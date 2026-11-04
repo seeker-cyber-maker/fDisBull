@@ -120,7 +120,8 @@ def validate_script(script, *, session=None):
                         operation_owner=ScummVMAGISession
                     operation=getattr(operation_owner,OPERATIONS[op],None)
                     if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
-                    if op=='write-registers' and getattr(operation_owner,'register_edits_available',True) is False:
+                    if (session is not None and op=='write-registers'
+                            and getattr(operation_owner,'register_edits_available',True) is False):
                         raise ValueError('Win16 register writes are not qualified for this runtime')
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
