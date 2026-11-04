@@ -173,6 +173,18 @@ writes, sound off and clean shutdown. The direct Zstandard path was about
 direct indexed PNG remained faster. The final affected/native suite passes 426
 tests. No native rebuild, package or installation was performed for this step.
 
+## Indexed PNG in scene observations
+
+The [scene-check follow-up](../VERIFICATION-DINOPARK-INDEXED-SCENE-CHECKS-2026-11-03.md)
+wires direct indexed PNG into six pixel-only observation sites, including Z
+modal reads. Durable scene publication/recovery/save/action captures and native
+sparse probes remain explicit. Luna's single fresh muted Office → Bank → Office
+→ Street guest verified exact RGB, native predicates and unchanged paused-state
+identity across 180 timed complete checks. Complete-check medians fell 12–21%;
+capture medians fell 39–42%. The affected/native suite passes 437 tests. This
+route does not newly qualify modal/status/inventory/shop gameplay branches or
+advance the 97/13 investigation. No package or installation was made.
+
 ## Next owner: evidence and acceptance
 
 1. Start from current source and pin the chosen backend, original files and a
