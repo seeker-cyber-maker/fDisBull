@@ -57,12 +57,12 @@ def validate_script(script, *, session=None):
     if not isinstance(script,dict) or not {'format','steps'}<=set(script)<= {'format','steps','backend'} or script['format'] != 'fdisbull-script-1':
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    if backend is not None and backend not in ('scummvm-agi','scummvm-gob'):
+    if backend is not None and backend not in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         raise ValueError('Unsupported explicit script backend')
     if backend is not None and session is not None and getattr(session,'metadata',{}).get('backend')!=backend:
         raise ValueError('Script backend differs from the live execution backend')
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
-    if backend in ('scummvm-agi','scummvm-gob') or session is not None and getattr(session,'metadata',{}).get('backend') in ('scummvm-agi','scummvm-gob'):
+    if backend in ('scummvm-agi','scummvm-gob','scummvm-kyra') or session is not None and getattr(session,'metadata',{}).get('backend') in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')
@@ -93,10 +93,13 @@ def validate_script(script, *, session=None):
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
                     owner = type(session) if session is not None else DebugSession
-                    if session is None and (op in ENGINE_OPERATIONS or backend in ('scummvm-agi','scummvm-gob')):
+                    if session is None and (op in ENGINE_OPERATIONS or backend in ('scummvm-agi','scummvm-gob','scummvm-kyra')):
                         if backend=='scummvm-gob':
                             from .scummvm_gob import ScummVMGobSession
                             owner=ScummVMGobSession
+                        elif backend=='scummvm-kyra':
+                            from .scummvm_kyra import ScummVMKyraSession
+                            owner=ScummVMKyraSession
                         else:
                             from .scummvm_debugger import ScummVMAGISession
                             owner=ScummVMAGISession

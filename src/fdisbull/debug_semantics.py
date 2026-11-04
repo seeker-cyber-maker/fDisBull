@@ -2,6 +2,16 @@
 
 
 def contract(backend):
+    if backend=='scummvm-kyra':
+        return {'format':'fdisbull-debug-semantics-1','backend':backend,
+                'native_hooks_available':False,
+                'execution_breakpoint_stage':'before EMC2 opcode; script generation + decoded DATA word',
+                'watchpoint_stage':'optional instrumented VM register/game flag accessors; direct writes unobserved',
+                'trace_registers_stage':'EMC2 VM state, not original x86 CPU',
+                'trace_completion':'bounded VM dispatch; nested callbacks need separate completion',
+                'timing':'ScummVM virtual time only when advertised; original DOS equivalence unverified',
+                'address_context':'loaded EMC2 DATA words and generation, not original DOS/file offsets',
+                'guest_exit_reporting':'ScummVM engine lifecycle, not original DOS process exit'}
     if backend=='scummvm-gob':
         return {'format':'fdisbull-debug-semantics-1','backend':backend,
                 'native_hooks_available':False,

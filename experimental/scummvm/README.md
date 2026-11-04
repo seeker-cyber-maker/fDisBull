@@ -47,3 +47,12 @@ The upstream license is retained verbatim in [COPYING](COPYING).
 Only the AGI engine is configured. SCI, SCUMM, DOS executable behavior, script decompilation, general resource overlays, and exact VM snapshots are not provided. ScummVM may differ from the original DOS interpreter on timing, compatibility fixes, and rendering; retain original-runtime evidence separately when comparing scenes.
 
 ScummVM v2.8.1 and this derivative patch are GPL-3.0-or-later. The sidecar boundary keeps this experiment operationally separate, but it does not remove the obligation to provide corresponding ScummVM source, patch, and notices if the modified executable is distributed. See the pinned [upstream source](https://github.com/scummvm/scummvm/tree/v2.8.1), especially the [AGI interpreter](https://github.com/scummvm/scummvm/blob/v2.8.1/engines/agi/op_cmd.cpp), [AGI state accessors](https://github.com/scummvm/scummvm/blob/v2.8.1/engines/agi/global.cpp), and [null backend](https://github.com/scummvm/scummvm/blob/v2.8.1/backends/platform/null/null.cpp).
+
+## Experimental Kyra/EMC2 scaffold
+
+The [Kyra controller](../../docs/SCUMMVM_KYRA_BACKEND.md) and
+[`kyra-agent-v1.json`](kyra-agent-v1.json) adapt the existing ScummVM transport
+contract for Kyrandia I and Lands of Lore I. **No native Kyra bridge has been
+built or qualified yet.** The synthetic controller tests do not constitute a
+ScummVM runtime test. Modified ScummVM binary distribution requires separate
+corresponding GPL source and notices.
