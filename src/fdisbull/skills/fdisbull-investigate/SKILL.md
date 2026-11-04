@@ -152,6 +152,31 @@ report a budget stop as convergence or whole-binary coverage.
   and residual IR explicit, and qualify live interpreter correspondence
   separately (for example via `AGIDOSHostAdapter` on unpacked DOS KQ1).
 
+## Delegate work and choose context
+
+Choose the task role and conversational context separately. Keep useful history
+with persistent specialist leads; delegate a bounded question with inherited
+history, a selected briefing or a fresh context according to its purpose.
+Collaborators can reuse accepted findings. An independent interpreter needs the
+evidence without an unnecessary preferred answer; a fresh comprehension reader
+gets the deliverable and declared reading list; a cold tool-use worker gets the
+task and advertised interface without a private walkthrough.
+
+State the question, role, context policy, pinned evidence and discovery scope,
+write/live-state ownership, bounds, return contract and completion condition.
+The methodology reference's parallel-investigation section gives the dispatch
+and integration procedure. Use actual host-supported context separation for a
+fresh review, and report when it is unavailable. Fresh conversation and isolated
+guest state are separate properties.
+
+Use fresh review where a consequential handoff or missing assumption warrants
+it; do not fill worker slots or repeat review as a routine gate. Resolve returned
+claims against evidence, preserve their shared ancestry and distinguish reading
+an earlier result from reproducing its check. An unavailable, failed or
+unfinished review remains incomplete. The host manages workers; fDisBull
+supplies capabilities and evidence; deterministic tools and existing verifiers
+retain their jobs.
+
 ## 5. Choose probes, history modes and standing watches
 
 At every genuine fork, record one active question, target/context, hypothesis,
