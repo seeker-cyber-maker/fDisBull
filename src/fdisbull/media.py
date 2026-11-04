@@ -18,6 +18,12 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='smacker', layer='asset-framing',
+                 api='fdisbull.smacker.inspect_smk / frame_smk',
+                 methods=['media-inspect', 'smk-frame'],
+                 dependencies=['ffmpeg on PATH and ffprobe on PATH for framing'],
+                 variants='Bounded non-ring, unscaled SMK2 with block-aligned dimensions',
+                 limits='64 MiB source/output; native FULL/SKIP framing with exact retained images/palettes and complete original audio; independent decode is separate from original-game playback'),
             dict(name='avi-capture', layer='recorded-observation',
                  api='fdisbull.capture_audit.audit_capture', methods=['capture-audit'],
                  dependencies=['ffmpeg on PATH', 'ffprobe on PATH'],
@@ -133,6 +139,11 @@ def _prepare(path, adapter, volume_root, number):
 
 def inspect_media(path, *, adapter, volume_root=None, number=None):
     """Inventory immutable member ranges with source and member digests."""
+    if adapter == 'smacker':
+        if volume_root is not None or number is not None:
+            raise ValueError('Smacker does not accept AGI resource parameters')
+        from .smacker import inspect_smk
+        return inspect_smk(path)
     result, _ = _prepare(path, adapter, volume_root, number)
     return result
 

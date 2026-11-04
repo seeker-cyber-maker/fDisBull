@@ -356,6 +356,7 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/sweding.md",
         "references/formats-and-media.md",
         "references/media-modules.md",
+        "references/file-formats.md",
         "references/binary-claim-verification.md",
     }
     local_links = {
