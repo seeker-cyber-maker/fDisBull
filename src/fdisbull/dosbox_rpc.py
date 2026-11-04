@@ -62,6 +62,8 @@ class DOSBoxRPC:
             if window:
                 arguments.append('-agent-window')
             else:
+                # Owned headless sessions must never wait for a host quit dialog.
+                arguments.extend(['-set', 'dosbox quit warning=false'])
                 # MIDI can bypass SDL's audio driver on macOS. Disable both
                 # host output paths while retaining the emulated sound devices.
                 environment['SDL_AUDIODRIVER'] = 'dummy'
