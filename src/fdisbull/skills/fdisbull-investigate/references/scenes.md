@@ -17,6 +17,7 @@ Target-specific coordinates and labels are data, not a separate recognition poli
 - [Investigate spatial predicate boundaries](#investigate-spatial-predicate-boundaries)
 - [Keep world, viewport and collision domains separate](#keep-world-viewport-and-collision-domains-separate)
 - [Retain references and refine fingerprints](#retain-references-and-refine-fingerprints)
+- [Guard clicks and absorb routine interruptions](#guard-clicks-and-absorb-routine-interruptions)
 - [Generalize discoveries into shared rules](#generalize-discoveries-into-shared-rules)
 - [Adaptation provenance](#adaptation-provenance)
 
@@ -418,6 +419,115 @@ Also check that known-state polling does not export images or call a model,
 and that reopen/transfer retains references and revisions without declaring
 historical observations currently ready. These are acceptance requirements,
 not test results or new implemented runtime methods.
+
+## Guard clicks and absorb routine interruptions
+
+The agent-coder qualifies recognition, ordinary input recipes and their effects;
+the agent-player requests named operations. The shared harness executes the
+qualified mechanics and reports meaningful results or unresolved decisions.
+This is an interaction policy over existing scenes, handlers, scripts and timing
+controls, not a separate game-playing model or a new scene schema.
+
+### Scanlines are structured fingerprints
+
+A bounded horizontal pixel row or short band through the relevant text is a
+useful alternative to scattered points. Record its native coordinates and full
+reference frame. Prefer the text/control span over unrelated full-screen pixels.
+A scanline cuts through glyphs; it is not an entire line of text or general OCR.
+Different letters can share the chosen cross-section. Add another discriminating
+row, band or span when the admitted examples collide. Contiguous comparison can
+simplify authoring but does not establish a speed advantage without measurement.
+
+Keep family, identity and readiness checks distinct. In an authored "You found
+the ..." notification, a row through the prefix identifies only the family;
+required rows through the object name distinguish the message. If the object
+name spans that same text line, use its own horizontal span. Add a readiness or
+completed-text condition when needed before acknowledgement. Combine required
+parts with `all`; matching a long common prefix must not outvote a mismatch in
+the short identity field. Exclude changing fields only when they are irrelevant
+to the operation; retain needed object names, quantities or choices separately.
+
+These rows can already be expressed as the existing `pixels.samples` point
+lists. Do not invent a `scanlines` key in the strict scene manifest. Batch the
+union in a coherent native `frame_probe`; respect its limits. The inspected
+0.31.1 implementation admits at most 4,096 points for the combined observation
+and collects its configured predicates together; demand-driven reserve sampling
+or a packed scanline transport is not automatically implemented by this rule.
+Stay with small spans/bands, avoid redundant coordinates and retain masks or
+normalizations as explicit derivatives. Never silently widen tolerances when
+new content collides. Apply the bidirectional reference tests above.
+
+### A fresh check authorizes each UI action
+
+Before a click or dialogue-confirm input, require a fresh qualified scene and
+content match, a usable target control, and no unresolved blocking overlay.
+An old successful check, stored screenshot, common window border or previous
+page label cannot authorize the next input. Keep observation and dispatch in
+the same owned execution context; use the backend's frame/mode guards and stopped
+session discipline. A precheck followed by uncontrolled execution is not an
+atomic check-and-click guarantee. Revalidate after an intervening transition,
+popup handler, restore or ownership change. Do not use cached screen labels as
+an alternate route around these checks.
+
+`SceneHandle.act()` already observes before dispatch, can run explicitly enabled
+known popup handlers, checks each handler's outcome, and then observes the
+original target again. In inspected 0.31.1, that path is opt-in through
+`handle_popups=True` and has a five-handler-loop bound. Read-only checks do not
+dismiss anything. Reuse this machinery rather than copy a target's click loop.
+A future general supervisor must preserve these protections; documenting the
+policy does not mean every raw-input, Z or external GUI path already uses it.
+
+### Handle expected interruptions without consulting the player
+
+Enable automatic acknowledgement for explicit, qualified notification classes
+or a bounded known conversation route. That policy is set once for the task,
+not approved anew by the player before every click. Preserve the pending named
+operation while the harness identifies an interruption, records its useful
+content, performs the allowed acknowledgement, releases the input and verifies
+the continuation. Recheck the pending operation's context and relevance before
+resuming it; do not blindly deliver its old coordinates through a new window.
+Never replay an already submitted consequential operation merely to reconstruct
+an omitted observation.
+
+For a known scripted conversation, the harness can own the whole sequence of
+ordinary advances and bounded fast-forward intervals. Distinguish text being
+drawn, text complete but not yet accepted, an acknowledged page, and the next
+page or returned player control. One confirm may finish rendering rather than
+advance. Require observable progress before another confirm; identical repeated
+pages may need a qualified page/sequence or engine-state discriminator. A stale
+unchanged image is not permission to press again. Bound total pages, guest time,
+wall time and no-progress attempts, not just each individual helper call.
+
+Use frame stepping/TAS when exact timing matters, scripted named actions for
+learned transitions, and fast-forward for admitted waits. Fast-forward still
+executes original scripts and effects; it does not authorize jumping over code,
+changing story flags or dropping required observations. Poll at qualified
+boundaries often enough not to run past a choice or timing-sensitive event.
+Stop at a new choice without an authored choice policy, an unexpected message,
+conflicting identity, changed geometry, debugger stop or exhausted budget.
+An intentionally selected branch may be automated when explicitly part of the
+route; a generic dismiss policy must not invent that selection.
+
+Keep event/observation references so automated presentation removal does not
+remove knowledge. A known item-notice signature can produce a compact "message
+observed for item X; acknowledged; control restored" event. It does not prove
+inventory mutation without the relevant state evidence. The player normally
+receives a concise sequence summary and any decision that remains, not every
+screen. Unknown pages enter the reference/refinement path instead of receiving
+an automatic acceptance or a speculative handler.
+
+### Acceptance and scope
+
+Include shared-prefix/different-object messages, two glyphs sharing one row,
+required-field mismatch despite many prefix matches, partial text, an unknown
+choice, an already-open panel, a popup appearing before an intended click,
+changed context after dismissal, identical repeated pages and stalled advances.
+Known-state polling must use no model calls or screenshot export. Bound all
+automatic advances, retain partial effects and preserve the intended operation.
+The authored `test_scene_scanline_contract.py` exercises existing pixel predicates,
+sparse transport validation and dispatch with synthetic observations. It is not
+native-game qualification, text recognition, a complete dialogue supervisor or
+a performance benchmark. Keep those remaining integration checks explicit.
 
 ## Generalize discoveries into shared rules
 
