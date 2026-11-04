@@ -195,7 +195,7 @@ def test_same_pool_storage_is_admitted_once(tmp_path, monkeypatch):
 
 def test_local_unified_preparation_precedes_direct_acceptance():
     assert runner.profiles_for('unified') == ['unified-prepare', 'unified']
-    assert runner.profiles_for('all') == ['ordinary', 'stable', 'layers', 'unified-prepare', 'unified']
+    assert runner.profiles_for('all') == ['ordinary', 'stable', 'layers', 'unified-prepare', 'chat-prepare', 'chat-consumer', 'unified']
     assert runner.profiles_for('qualify') == []
     sha = 'a' * 40
     run = '27680f97-aaad-4846-a2fd-4a48b7bad36b'
@@ -211,7 +211,7 @@ def test_local_unified_preparation_precedes_direct_acceptance():
     assert 'native-unified.sh' not in runner.job_command('unified')
     assert 'native-receipt.py' not in runner.job_command('unified-prepare')
     assert runner.expected_bytes(SimpleNamespace(expected_bytes=None), 'unified-prepare') == 35_000_000_000
-    assert runner.expected_bytes(SimpleNamespace(expected_bytes=None), 'unified') == 8_000_000_000
+    assert runner.expected_bytes(SimpleNamespace(expected_bytes=None), 'unified') == 16_000_000_000
 
 
 def test_collect_retains_every_prepared_runtime_input(tmp_path):
@@ -284,3 +284,77 @@ def test_readback_qualification_does_not_request_bulk_storage_or_start_workers(t
     assert commands == [[sys.executable, str(run / 'ordinary/work/scripts/check_ci_qualification.py'),
                          '--root', str(run / 'qualification'), '--source-commit', sha,
                          '--local-run-id', run_id, '--output', str(run / 'qualification/qualification.json')]]
+
+
+def test_chat_consumer_mounts_only_archive_and_control(tmp_path):
+    image = {'image_reference': 'example@sha256:' + 'a' * 64}
+    command = runner.consumer_command(Path('/container'), 'job', image, tmp_path / 'input',
+                                      tmp_path / 'guest', 'bash /input/bootstrap.sh')
+    assert '--cap-add' in command and 'SYS_ADMIN' in command
+    assert not any('/source' in arg or '/work' in arg for arg in command)
+    assert any('target=/input,readonly' in arg for arg in command)
+    assert any('target=/run-data' in arg for arg in command)
+    assert runner.IMAGES['chat-consumer'].endswith('python:3.13.5-bookworm')
+
+
+def test_chat_staging_requires_real_matching_producer(tmp_path):
+    with pytest.raises(ValueError, match='preparation proof'):
+        runner.stage_chat_archive(tmp_path, tmp_path / 'output', tmp_path / 'input',
+                                  'a' * 40, 'run')
+
+
+def test_chat_archive_hash_mismatch_is_rejected(tmp_path):
+    phase = tmp_path / 'chat-prepare'
+    phase.mkdir()
+    output = tmp_path / 'output'
+    receipts = output / 'artifacts/receipts'
+    receipts.mkdir(parents=True)
+    archive = output / runner.CHAT_ARCHIVE
+    archive.parent.mkdir(parents=True)
+    archive.write_bytes(b'changed')
+    job = 'd0c36dcb-43d6-457c-889e-c97a0e82d6dd'
+    sha = 'a' * 40
+    identity = {'path': runner.CHAT_ARCHIVE, 'sha256': 'b' * 64, 'size': 7}
+    process = {'local_job_id': job, 'source_commit': sha, 'local_run_id': 'run',
+               'job_name': 'chat-native-prepare', 'exit_code': 0, 'termination': 'exited',
+               'container_state_after_stop': 'stopped', 'archive': identity,
+               'runtime': {'system': 'linux', 'machine': 'x86_64', 'python': '3.13.5'}}
+    (phase / 'process.json').write_text(json.dumps(process))
+    (phase / 'completed.json').write_text(json.dumps({'local_job_id': job, 'source_commit': sha}))
+    (receipts / 'chat-prepare.json').write_text(json.dumps({'archive': identity, 'local_job_id': job,
+        'source_commit': sha, 'local_run_id': 'run', 'status': 'passed'}))
+    with pytest.raises(ValueError, match='archive does not match'):
+        runner.stage_chat_archive(tmp_path, output, tmp_path / 'input', sha, 'run')
+
+
+def test_chat_prepare_receipt_requires_actual_successful_export(tmp_path):
+    output, guest = tmp_path / 'output', tmp_path / 'guest'
+    guest.mkdir()
+    sha, job = 'a' * 40, 'd0c36dcb-43d6-457c-889e-c97a0e82d6dd'
+    archive = output / runner.CHAT_ARCHIVE
+    archive.parent.mkdir(parents=True)
+    archive.write_bytes(b'zip fixture')
+    process = {'execution_origin': 'local-linux', 'source_commit': sha, 'local_run_id': 'run',
+               'local_job_id': job, 'job_name': 'chat-native-prepare', 'exit_code': 0,
+               'termination': 'exited', 'container_state_after_stop': 'stopped',
+               'runtime': {'system': 'linux', 'machine': 'x86_64', 'python': '3.13.5'},
+               'archive': runner.artifact_identity(output, runner.CHAT_ARCHIVE)}
+    receipt = output / 'artifacts/receipts/chat-prepare.json'
+    with pytest.raises(ValueError, match='postcheck'):
+        runner.write_chat_prepare_receipt(output, guest, process, sha, 'run')
+    assert not receipt.exists()
+    (guest / 'exported').mkdir()
+    proof = guest / 'source-postcheck.json'
+    proof.write_text(json.dumps({'source_commit': sha, 'expected_source_commit': sha,
+                                 'tracked_worktree_dirty': False, 'export_success': False}))
+    with pytest.raises(ValueError, match='postcheck'):
+        runner.write_chat_prepare_receipt(output, guest, process, sha, 'run')
+    assert not receipt.exists()
+    proof.write_text(json.dumps({'source_commit': sha, 'expected_source_commit': sha,
+                                 'tracked_worktree_dirty': False, 'export_success': True}))
+    with pytest.raises(ValueError, match='process'):
+        runner.write_chat_prepare_receipt(output, guest, dict(process, exit_code=1), sha, 'run')
+    assert not receipt.exists()
+    result = runner.write_chat_prepare_receipt(output, guest, process, sha, 'run')
+    assert result == json.loads(receipt.read_text())
+    assert result['archive'] == process['archive'] and result['export_success'] is True

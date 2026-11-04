@@ -17,6 +17,7 @@ import platform
 import re
 import subprocess
 import sys
+import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent / "ci"))
 from execution_identity import canonical_uuid, execution_identity
 import xml.etree.ElementTree as ET
@@ -167,7 +168,42 @@ def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_
         or receipt.get('artifacts') != [checked['tested_wheel'], *checked['inputs'].values()]
         or receipt.get('backend_identity') != read(local_path(root, checked['backend_identity']['path']))):
         raise ValueError('Unified acceptance receipt does not match prepared runtime')
-    return {'build_job_id': build_job, 'prepared_manifest': manifest_ref, **proof}
+    reused = verify_unified_base_reuse(root, checked, receipt['backend_identity'], build)
+    return {'build_job_id': build_job, 'prepared_manifest': manifest_ref, 'reused_base': reused, **proof}
+
+
+def verify_unified_base_reuse(root, manifest, backend, preparation_process):
+    """A retained compiler/OS base never becomes a fabricated current build."""
+    marker = 'native-evidence/pe/reuse/origin.json'
+    present = (root / marker).exists() or (root / marker).is_symlink()
+    declared = backend.get('reuse_origin')
+    if not present and declared is None:
+        return None
+    if declared != marker:
+        raise ValueError('Unified reused base needs its typed origin marker')
+    local_path(root, marker)
+    source = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('fdisbull_unified_base_reuse', source / 'scripts/ci/unified-base-reuse.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    origin = module.verify_reuse(root, source)
+    if origin['image_digest'] != preparation_process.get('image_digest'):
+        raise ValueError('Unified reused base image differs from current preparation')
+    for key, filename in (('FDISBULL_PE_QEMU', 'qemu'), ('FDISBULL_PE_KERNEL', 'kernel'),
+                          ('FDISBULL_PE_FIXTURE', 'oracle')):
+        if manifest['inputs'][key]['sha256'] != origin['files'][filename]:
+            raise ValueError('Current unified input differs from its reused original: ' + key)
+    firmware = {item['path'].replace('native-evidence/pe/firmware/', 'firmware/', 1): item['sha256']
+                for item in manifest['firmware']}
+    if firmware != origin['firmware']:
+        raise ValueError('Current firmware differs from the reused original')
+    if identity(root, 'native-evidence/pe/runtime-packages.txt')['sha256'] != origin['files']['wine-packages.txt']:
+        raise ValueError('Current Wine package inventory differs from the reused original')
+    for name in ('runtime-preparation.json', 'dos-runtime-preparation.json'):
+        if read(local_path(root, 'native-evidence/pe/' + name)).get('base_sha256') != origin['files']['wine-base']:
+            raise ValueError('Current runtime was not rebuilt from the declared reused base')
+    return {'origin': identity(root, marker), 'original_source_commit': origin['source_commit'],
+            'original_build_job_id': origin['local_job_id']}
 
 
 def passing_junit(path, *, native=False):
@@ -181,7 +217,105 @@ def passing_junit(path, *, native=False):
     return counts
 
 
-def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
+CHAT_CHECKS = frozenset({'dos_screenshot','dos_keyboard','dos_restore','pe_breakpoint','pe_memory',
+    'pe_screenshot','pe_click','pe_trace','pe_restore','solver_counterexample','solver_equivalence',
+    'player_save','player_resume','skill_fdisbull','skill_gamefaqs'})
+
+
+def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_artifacts):
+    """Require a separately executed, artifact-bound offline consumer run."""
+    if local_run_id is None:
+        raise ValueError('Complete chat qualification requires local consumer process evidence')
+    receipt_path = 'artifacts/receipts/chat-consumer.json'
+    process_path = 'artifacts/receipts/local-process-chat-consumer.json'
+    producer_path = 'artifacts/receipts/local-process-chat-prepare.json'
+    prepare_path = 'artifacts/receipts/chat-prepare.json'
+    preparation = read(local_path(root, prepare_path))
+    receipt = read(local_path(root, receipt_path))
+    process = read(local_path(root, process_path))
+    producer = read(local_path(root, producer_path))
+    job_id = canonical_uuid(receipt.get('local_job_id'))
+    producer_id = canonical_uuid(receipt.get('producer_job_id'))
+    if job_id == producer_id or job_id in other_jobs or producer_id in other_jobs:
+        raise ValueError('Chat producer and consumer job identities must be distinct')
+    if (receipt.get('schema') != 'fdisbull-chat-consumer-job-v1' or receipt.get('status') != 'passed'
+        or receipt.get('source_commit') != source_commit or receipt.get('test_source_commit') != source_commit
+        or receipt.get('execution_origin') != 'local-linux' or receipt.get('local_run_id') != local_run_id
+        or receipt.get('source_access') != 'absent' or receipt.get('source_check') != 'artifact-and-host-clone'):
+        raise ValueError('Chat consumer receipt source or run mismatch')
+    for observed, expected_id, name in ((process,job_id,'chat-native-consumer'),(producer,producer_id,'chat-native-prepare')):
+        if (observed.get('execution_origin') != 'local-linux' or observed.get('local_run_id') != local_run_id
+            or observed.get('local_job_id') != expected_id or observed.get('job_name') != name
+            or observed.get('source_commit') != source_commit or observed.get('termination') != 'exited'
+            or type(observed.get('exit_code')) is not int or observed.get('exit_code') != 0
+            or observed.get('container_state_after_stop') != 'stopped'
+            or not re.fullmatch(r'sha256:[0-9a-f]{64}', str(observed.get('image_digest', '')))
+            or not isinstance(observed.get('runtime'), dict) or observed['runtime'].get('system') != 'linux'
+            or observed['runtime'].get('machine') != 'x86_64' or observed['runtime'].get('python') != '3.13.5'):
+            raise ValueError('Chat producer or consumer process evidence failed')
+    if (preparation.get('schema') != 'fdisbull-chat-prepare-job-v1' or preparation.get('status') != 'passed'
+        or preparation.get('execution_origin') != 'local-linux' or preparation.get('source_commit') != source_commit
+        or preparation.get('test_source_commit') != source_commit or preparation.get('local_run_id') != local_run_id
+        or preparation.get('local_job_id') != producer_id or preparation.get('tracked_worktree_dirty') is not False
+        or preparation.get('export_success') is not True):
+        raise ValueError('Chat preparation receipt source or run mismatch')
+    archive, verification = receipt.get('archive'), receipt.get('verifier')
+    host_postcheck, junit = receipt.get('host_source_postcheck'), receipt.get('junit')
+    for item in (archive, verification, host_postcheck, junit): verify_artifact(root, item)
+    postcheck = read(local_path(root, host_postcheck['path']))
+    if (postcheck.get('schema') != 'fdisbull-chat-host-source-postcheck-v1'
+        or postcheck.get('source_commit') != source_commit or postcheck.get('expected_source_commit') != source_commit
+        or postcheck.get('tracked_worktree_dirty') is not False or postcheck.get('export_success') is not True
+        or postcheck.get('archive_sha256') != archive['sha256']):
+        raise ValueError('Chat host source postcheck mismatch')
+    passing_junit(local_path(root, junit['path']), native=True)
+    if archive['size'] > 500_000_000:
+        raise ValueError('Chat archive exceeds 500 MB qualification limit')
+    if process.get('archive') != archive or producer.get('archive') != archive or preparation.get('archive') != archive or process.get('verifier') != verification or process.get('junit') != junit or process.get('host_source_postcheck') != host_postcheck:
+        raise ValueError('Chat process artifacts do not match receipt')
+    result = read(local_path(root, verification['path']))
+    if (result.get('schema') != 'fdisbull-chat-consumer-verification-v1' or result.get('status') != 'passed'
+        or result.get('source_commit') != source_commit or result.get('test_source_commit') != source_commit
+        or result.get('archive_sha256') != archive['sha256'] or result.get('python') != '3.13.5'
+        or result.get('network_interfaces') != ['lo'] or result.get('python_origin') != 'kit'
+        or result.get('python_mappings') != 'kit' or result.get('loader_closure') != 'kit-lib'
+        or type(result.get('elf_objects_checked')) is not int or result['elf_objects_checked'] < 1
+        or type(result.get('skipped')) is not int or result['skipped'] != 0
+        or type(result.get('native_failures')) is not int or result['native_failures'] != 0
+        or result.get('profiles') != ['dos','wine','player','z3']):
+        raise ValueError('Chat verifier isolation, native or identity evidence failed')
+    checks = result.get('checks')
+    if not isinstance(checks, dict) or set(checks) != CHAT_CHECKS or any(checks[name] is not True for name in CHAT_CHECKS):
+        raise ValueError('Chat verifier required capability missing or failed')
+    for name in ('dos_screenshot_sha256','pe_screenshot_sha256'):
+        if not re.fullmatch(r'[0-9a-f]{64}', str(result.get(name, ''))):
+            raise ValueError('Chat screenshot identity missing')
+    runtime = result.get('runtime_sha256')
+    if not isinstance(runtime, dict) or set(runtime) != {'dos','wine'} or any(not re.fullmatch(r'[0-9a-f]{64}', str(x)) for x in runtime.values()):
+        raise ValueError('Chat prepared runtime identity missing')
+    with zipfile.ZipFile(local_path(root, archive['path'])) as zipped:
+        members = [i for i in zipped.infolist() if i.filename == 'fdisbull-chat-offline/MANIFEST.json']
+        if len(members) != 1 or members[0].file_size > 2 * 1024 * 1024:
+            raise ValueError('Chat archive manifest missing or duplicated')
+        data = zipped.read(members[0])
+    if hashlib.sha256(data).hexdigest() != result.get('manifest_sha256'):
+        raise ValueError('Chat manifest differs from consumer evidence')
+    manifest = json.loads(data)
+    if manifest.get('identities', {}).get('source_commit') != source_commit or manifest.get('identities', {}).get('test_source_commit') != source_commit:
+        raise ValueError('Chat manifest source identity mismatch')
+    wheels = manifest.get('wheel_artifacts')
+    if not isinstance(wheels, list): raise ValueError('Chat wheel identities missing')
+    for kind in ('core','player'):
+        expected = package_artifacts[kind]
+        matches = [w for w in wheels if isinstance(w, dict) and w.get('name') == expected['name']]
+        if len(matches) != 1 or matches[0] != {'name':expected['name'],'sha256':expected['sha256'],'size':expected['size_bytes']}:
+            raise ValueError('Chat wheel differs from ordinary package: ' + kind)
+    return {'receipt':identity(root, receipt_path),'process_receipt':identity(root,process_path),
+            'producer_process_receipt':identity(root,producer_path),'preparation_receipt':identity(root,prepare_path),'archive':archive,'verifier':verification,
+            'local_job_id':job_id,'producer_job_id':producer_id}
+
+
+def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy_dos_only=False):
     if not isinstance(source_commit, str) or not re.fullmatch('[0-9a-f]{40}', source_commit):
         raise ValueError("Qualification requires an exact commit")
     if local_run_id is None:
@@ -282,10 +416,13 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
     if local_run_id is not None:
         results['native-unified']['preparation'] = verify_local_unified_preparation(
             root, source_commit, local_run_id, job_ids, unified_receipt, unified_process)
-    result = {"schema": "fdisbull-ci-qualification-1", "status": "qualified", "source_commit": source_commit,
+    chat = None if legacy_dos_only else verify_chat_consumer(root, source_commit, local_run_id, job_ids, package_artifacts)
+    result = {"schema": "fdisbull-ci-qualification-1", "status": "legacy-dos-only" if legacy_dos_only else "qualified", "source_commit": source_commit,
               "required_jobs": results,
               "package_inventory": identity(root, 'artifacts/receipts/package-payloads.json'),
               "release_authorized": False}
+    if chat is not None:
+        result['chat_consumer'] = chat
     if local_run_id is not None:
         result.update(execution_origin='local-linux', local_run_id=local_run_id)
     else:
@@ -312,12 +449,13 @@ def main():
     parser.add_argument('--pipeline-id', default=os.environ.get('CI_PIPELINE_ID'))
     parser.add_argument('--local-run-id', default=None)
     parser.add_argument('--write-ordinary', action='store_true')
+    parser.add_argument('--legacy-dos-only', action='store_true', help='Report a partial legacy result without qualifying chat delivery')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Receipt exists; preserve it and choose a new output')
     try:
-        result = write_ordinary(args.root) if args.write_ordinary else validate(args.root, args.source_commit, args.pipeline_id, local_run_id=args.local_run_id)
+        result = write_ordinary(args.root) if args.write_ordinary else validate(args.root, args.source_commit, args.pipeline_id, local_run_id=args.local_run_id, legacy_dos_only=args.legacy_dos_only)
     except (ValueError, OSError, KeyError, TypeError, ET.ParseError) as exc:
         parser.exit(2, f'Incomplete qualification: {exc}\n')
     args.output.parent.mkdir(parents=True, exist_ok=True)

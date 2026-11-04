@@ -20,7 +20,7 @@ def pe_delta_locked(function):
 class WineCpuDeltaSessionMixin(CpuDeltaSessionMixin):
     _delta_registers = REGISTERS
     _delta_read_only = frozenset({'identity', 'status', 'registers', 'read', 'code',
-                                 'screenshot', 'state.save', 'machine.status'})
+                                 'screenshot', 'frame.probe', 'state.save', 'machine.status'})
     _delta_frozen_read_only = frozenset({'identity', 'status', 'registers', 'read',
                                         'close', 'machine.status'})
     _delta_max_bytes = 2 * 1024**3

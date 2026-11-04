@@ -118,6 +118,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/civd-food-web", "verification.json"),
     ("docs/evidence/snake-browser", "verification.json"),
     ("docs/verification", "kq1-tas-2026-10-31.json"),
+    ("docs/verification", "ci-qemu-firmware-20261104.json"),
+    ("docs/verification", "ci-window-readiness-20261104.json"),
     ("examples/recovery", "civd_food_swap.py"),
     ("examples/recovery", "civd_food_arm64.py"),
     ("examples/recovery", "civd_food_web.py"),

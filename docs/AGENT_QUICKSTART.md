@@ -4,6 +4,17 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+The complete **Linux chat kit** is a separate delivery format. Its portable
+Python, installed dependencies, private native libraries and DOS/Wine backends
+are intended to run from one attached ZIP without repository access or further
+downloads. Start with its `README.txt` and `bin/fdisbull`; do not install its
+packages into the receiving environment. `bin/prepare-runtimes --cache
+/absolute/writable/cache` reconstructs both guest images from bundled inputs and
+checks their hashes. Keep the kit immutable and the cache, projects and target
+files outside Git. A builder result alone does not qualify a kit: require the
+matching isolated consumer receipt. The legacy DOS-focused offline kit does not
+establish Wine availability. See [the chat-kit contract](CHAT_OFFLINE_KIT.md).
+
 Do not upload original or modified game binaries/assets, story files, saves,
 emulator states or raw game-containing databases/archives. New FDBs store
 external payload references with exact size/SHA-256 and loader provenance;

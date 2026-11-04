@@ -388,6 +388,10 @@ int main(int argc,char **argv) {
                 if(found>=0) {if(!writemem(next.Rip,&bp[found].original,1)) fatal("trace-breakpoint");bp[found].armed=0;hit=found;strcpy(reason,"breakpoint");stop_address=next.Rip;break;}
             }
             printf("],\"complete\":%s,\"session\":",count==n?"true":"false");state();puts("}");
+        } else if(!strcmp(op,"frame.probe")) {
+            RECT r;POINT p;
+            if(!frame(&r,&p)) puts("{\"available\":false}");
+            else printf("{\"available\":true,\"width\":%ld,\"height\":%ld}\n",r.right,r.bottom);
         } else if(!strcmp(op,"screenshot")) {
             RECT r;POINT p;
             if(!frame(&r,&p)) {puts("{\"error\":\"no-visible-client-window\"}");continue;}

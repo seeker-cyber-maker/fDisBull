@@ -18,7 +18,7 @@ def ci_section(name):
     return match.group(1)
 
 
-def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
+def test_provider_ci_is_manual_and_summary_is_legacy_diagnostic():
     workflow = ci_section('workflow')
     assert "- if: \'$CI_PIPELINE_SOURCE == \"web\" || $CI_PIPELINE_SOURCE == \"api\"\'" in workflow
     assert 'merge_request_event' not in workflow and '$CI_COMMIT_BRANCH' not in workflow
@@ -35,13 +35,16 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
     for name in ('native-debugger-stable', 'native-debugger-layers'):
         assert 'extends: .native_debugger_template' in ci_section(name)
     assert 'extends: .native_qualification_rules' in ci_section('native-unified')
-    summary = ci_section('qualify-candidate')
+    summary = ci_section('legacy-diagnostic')
     assert 'extends: .native_qualification_rules' in summary
     for name in ('test-and-package', 'native-debugger-stable', 'native-debugger-layers', 'native-unified'):
         assert f'    - {name}\n' in summary
-    assert 'python scripts/check_ci_qualification.py --output' in summary
+    assert 'python scripts/check_ci_qualification.py --legacy-dos-only --output artifacts/receipts/legacy-dos-only.json' in summary
+    assert 'fdisbull-legacy-diagnostic-' in summary
+    assert 'fdisbull-qualified-' not in summary
+    assert not re.search(r'^qualify-candidate:', (ROOT / '.gitlab-ci.yml').read_text(), re.M)
     assert 'bash scripts/ci/test-and-package.sh' in ci_section('test-and-package')
-    for name in ('native-qualification', '.native_qualification_rules', '.native_debugger_template', 'native-unified', 'qualify-candidate'):
+    for name in ('native-qualification', '.native_qualification_rules', '.native_debugger_template', 'native-unified', 'legacy-diagnostic'):
         assert 'allow_failure: true' not in ci_section(name)
 
 

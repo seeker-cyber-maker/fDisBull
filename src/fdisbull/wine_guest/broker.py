@@ -119,7 +119,7 @@ def invoke(method, params):
         return response(90)
     if process is None:
         raise ValueError('No live target')
-    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm'):
+    if method in ('status','registers','screenshot','frame.probe','close','scratch','bp-check','guard-arm'):
         command = method
     elif method=='setregs':
         values=params['values']

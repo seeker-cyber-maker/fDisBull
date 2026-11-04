@@ -164,7 +164,7 @@ native-unified:
         - native-evidence/pe/tests.xml
         - native-evidence/unified/tests.xml
 
-qualify-candidate:
+legacy-diagnostic:
   extends: .native_qualification_rules
   stage: qualification
   image: python:3.12-slim-bookworm
@@ -176,10 +176,10 @@ qualify-candidate:
     - native-debugger-layers
     - native-unified
   script:
-    - python scripts/check_ci_qualification.py --output artifacts/receipts/qualification.json
+    - python scripts/check_ci_qualification.py --legacy-dos-only --output artifacts/receipts/legacy-dos-only.json
   artifacts:
     when: on_success
-    name: "fdisbull-qualified-$CI_COMMIT_SHORT_SHA"
+    name: "fdisbull-legacy-diagnostic-$CI_COMMIT_SHORT_SHA"
     expire_in: 30 days
     paths:
       - artifacts/receipts/

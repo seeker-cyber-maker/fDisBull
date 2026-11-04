@@ -26,27 +26,31 @@ import uuid
 CLI = Path('/Users/tiga/.local/bin/container')
 ADMISSION = Path('/Users/tiga/.codex/bin/storage_admit.py')
 JOBS = {'ordinary': 'test-and-package', 'stable': 'native-debugger-stable',
-        'layers': 'native-debugger-layers', 'unified': 'native-unified'}
+        'layers': 'native-debugger-layers', 'unified': 'native-unified',
+        'chat-prepare': 'chat-native-prepare', 'chat-consumer': 'chat-native-consumer'}
 PREPARE_JOB = 'native-unified-prepare'
 IMAGES = {'ordinary': 'docker.io/library/python:3.12-bookworm',
           'stable': 'docker.io/library/python:3.12-bookworm',
           'layers': 'docker.io/library/python:3.13.5-bookworm',
           'unified': 'docker.io/library/python:3.12-bookworm',
-          'unified-prepare': 'docker.io/library/python:3.12-bookworm'}
+          'unified-prepare': 'docker.io/library/python:3.12-bookworm',
+          'chat-prepare': 'docker.io/library/python:3.13.5-bookworm',
+          'chat-consumer': 'docker.io/library/python:3.13.5-bookworm'}
 UNIFIED_INPUTS = ('.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                   '.native/pe/linux-amd64', '.native/pe/runtime.cpio.gz',
                   '.native/pe/dos-runtime.cpio.gz', '.native/pe/oracle.exe',
                   '.native/backends/layers/dosbox-x')
 EXPECTED_BYTES = {'ordinary': 12_000_000_000, 'stable': 14_000_000_000,
                   'layers': 18_000_000_000, 'unified-prepare': 35_000_000_000,
-                  'unified': 8_000_000_000}
+                  'unified': 16_000_000_000, 'chat-prepare': 8_000_000_000,
+                  'chat-consumer': 8_000_000_000}
 
 
 def profiles_for(profile):
     if profile == 'qualify':
         return []
     if profile == 'all':
-        return ['ordinary', 'stable', 'layers', 'unified-prepare', 'unified']
+        return ['ordinary', 'stable', 'layers', 'unified-prepare', 'chat-prepare', 'chat-consumer', 'unified']
     return ['unified-prepare', 'unified'] if profile == 'unified' else [profile]
 
 
@@ -168,7 +172,7 @@ def job_command(profile):
     # recorded as a host implementation detail, not called hardware parity.
     runtime = ('import json,platform,sys; '
                'assert sys.platform == "linux" and platform.machine() == "x86_64"; '
-               + ('assert platform.python_version() == "3.13.5"; ' if profile == 'layers'
+               + ('assert platform.python_version() == "3.13.5"; ' if profile in ('layers', 'chat-prepare', 'chat-consumer')
                   else 'assert sys.version_info[:2] == (3,12); ')
                + 'print(json.dumps({"python":platform.python_version(),"machine":platform.machine(),"system":sys.platform}))')
     setup += 'python -c ' + shlex.quote(runtime) + ' > /run-data/runtime.json; '
@@ -176,6 +180,8 @@ def job_command(profile):
         return setup + ('apt-get update && apt-get install -y --no-install-recommends '
                         'ca-certificates curl xz-utils git build-essential clang libx11-dev && '
                         'bash scripts/ci/test-and-package.sh')
+    if profile == 'chat-prepare':
+        return setup + 'bash scripts/ci/native-chat-prepare.sh'
     if profile == 'unified-prepare':
         return setup + 'bash scripts/ci/native-unified.sh'
     if profile == 'unified':
@@ -254,7 +260,7 @@ def run_container(args, log, timeout, name):
 def collect(work, output):
     selections = ['dist/*', 'artifacts/receipts/*.json', 'artifacts/ordinary/*',
                   'native-evidence/**/*', '.native/backends/**/*', '.native/offline/output/*',
-                  '.native/pe/packages/*.whl', *UNIFIED_INPUTS]
+                  '.native/pe/packages/*.whl', '.native/chat/output/*', *UNIFIED_INPUTS]
     for pattern in selections:
         for path in work.glob(pattern):
             relative = path.relative_to(work)
@@ -402,6 +408,88 @@ def stage_prepared_unified(source, run_root, output, work, sha, run_id):
     return process
 
 
+CHAT_ARCHIVE = '.native/chat/output/fdisbull-chat-offline.zip'
+
+
+def artifact_identity(root, name):
+    path = root / name
+    if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError('Missing or unsafe artifact: ' + name)
+    with path.open('rb') as stream:
+        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+    return {'path': name, 'sha256': digest, 'size': path.stat().st_size}
+
+
+
+def write_chat_prepare_receipt(output, guest_data, process, sha, run_id):
+    """Issue producer evidence only after the real process and guest export pass."""
+    if (process.get('execution_origin') != 'local-linux'
+        or process.get('source_commit') != sha or process.get('local_run_id') != run_id
+        or process.get('job_name') != JOBS['chat-prepare']
+        or type(process.get('exit_code')) is not int or process['exit_code'] != 0
+        or process.get('termination') != 'exited' or process.get('container_state_after_stop') != 'stopped'
+        or process.get('runtime') != {'system': 'linux', 'machine': 'x86_64', 'python': '3.13.5'}):
+        raise ValueError('Chat producer process did not pass')
+    verify_guest_postcheck(guest_data, sha)
+    identity = artifact_identity(output, CHAT_ARCHIVE)
+    if identity['size'] > 500_000_000 or process.get('archive') != identity:
+        raise ValueError('Chat producer archive did not pass')
+    receipt = {'schema': 'fdisbull-chat-prepare-job-v1', 'status': 'passed',
+               'execution_origin': 'local-linux', 'source_commit': sha, 'test_source_commit': sha,
+               'local_run_id': run_id, 'local_job_id': process['local_job_id'],
+               'tracked_worktree_dirty': False, 'export_success': True, 'archive': identity}
+    target = output / 'artifacts/receipts/chat-prepare.json'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    save(target, receipt)
+    return receipt
+
+
+def stage_chat_archive(run_root, output, stage, sha, run_id):
+    process = read_regular_json(run_root / 'chat-prepare/process.json')
+    marker = read_regular_json(run_root / 'chat-prepare/completed.json')
+    receipt = read_regular_json(output / 'artifacts/receipts/chat-prepare.json')
+    job = process.get('local_job_id')
+    try:
+        if str(uuid.UUID(job)) != job:
+            raise ValueError
+    except (ValueError, TypeError, AttributeError):
+        raise ValueError('Invalid chat producer identity') from None
+    identity = artifact_identity(output, CHAT_ARCHIVE)
+    if (identity['size'] > 500_000_000 or process.get('execution_origin') != 'local-linux'
+        or receipt.get('schema') != 'fdisbull-chat-prepare-job-v1'
+        or receipt.get('execution_origin') != 'local-linux'
+        or receipt.get('test_source_commit') != sha
+        or receipt.get('tracked_worktree_dirty') is not False
+        or receipt.get('export_success') is not True
+        or process.get('source_commit') != sha
+        or process.get('local_run_id') != run_id or process.get('job_name') != JOBS['chat-prepare']
+        or type(process.get('exit_code')) is not int or process['exit_code'] != 0
+        or process.get('termination') != 'exited' or process.get('container_state_after_stop') != 'stopped'
+        or process.get('runtime') != {'system': 'linux', 'machine': 'x86_64', 'python': '3.13.5'}
+        or marker.get('local_job_id') != job or marker.get('source_commit') != sha
+        or process.get('archive') != identity or receipt.get('archive') != identity
+        or receipt.get('local_job_id') != job or receipt.get('source_commit') != sha
+        or receipt.get('local_run_id') != run_id or receipt.get('status') != 'passed'):
+        raise ValueError('Chat producer or archive does not match this run')
+    verify_guest_postcheck(run_root / 'chat-prepare/guest-data', sha)
+    stage.mkdir()
+    shutil.copy2(output / CHAT_ARCHIVE, stage / 'archive.zip')
+    with (stage / 'archive.zip').open('rb') as stream:
+        if hashlib.file_digest(stream, 'sha256').hexdigest() != identity['sha256']:
+            raise ValueError('Staged chat archive differs from producer')
+    return process, identity
+
+
+def consumer_command(cli, name, image, stage, guest_data, bootstrap):
+    # The only input mount is the archive and small bootstrap; no checkout or
+    # host runtime is exposed to the consumer.
+    return [str(cli), 'run', '--name', name, '--arch', 'amd64', '--rosetta',
+            '--cpus', '4', '--memory', '8G', '--workdir', '/', '--cap-add', 'SYS_ADMIN',
+            '--mount', f'type=bind,source={stage},target=/input,readonly',
+            '--mount', f'type=bind,source={guest_data},target=/run-data',
+            image['image_reference'], 'bash', '-ec', bootstrap]
+
+
 def execute(args):
     source = args.source.resolve()
     sha, branch = source_identity(source)
@@ -448,36 +536,56 @@ def execute(args):
             raise ValueError('Failed attempt retained; use a new run directory')
         if profile != 'ordinary' and not (output / 'artifacts/receipts/ordinary.json').exists():
             raise ValueError('Ordinary package acceptance must pass first')
-        if profile in ('unified', 'unified-prepare') and not all((output / f'artifacts/receipts/native-{p}.json').exists() for p in ('stable', 'layers')):
+        if profile in ('unified', 'unified-prepare', 'chat-prepare') and not all((output / f'artifacts/receipts/native-{p}.json').exists() for p in ('stable', 'layers')):
             raise ValueError('Both DOS native profiles must pass before unified acceptance')
         phase = run_root / profile
         phase.mkdir()  # never overwrite an interrupted or failed attempt
-        save(phase / 'storage-admission.json', admit_destinations(run_root, expected_bytes(args, profile), args.reserve_bytes))
+        reuse_unified = getattr(args, 'reuse_unified_base', None) if profile == 'unified-prepare' else None
+        reuse_module = None
+        if reuse_unified is not None:
+            script = source / 'scripts/ci/unified-base-reuse.py'
+            spec = importlib.util.spec_from_file_location('unified_base_reuse', script)
+            reuse_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(reuse_module)
+            donor_process = read_regular_json(Path(reuse_unified).resolve(strict=True).parent.parent / 'process.json')
+            reuse_module.validate(reuse_unified, source, donor_process.get('image_digest'))
+        estimate = (8_000_000_000 if reuse_unified is not None and args.expected_bytes is None
+                    else expected_bytes(args, profile))
+        save(phase / 'storage-admission.json', admit_destinations(run_root, estimate, args.reserve_bytes))
         job_id = str(uuid.uuid4())
         name = f'fdb-ci-{profile}-{job_id[:8]}'
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
         clone_source(source, phase / 'work', sha, branch)
         work = phase / 'work'
-        if profile != 'ordinary':
+        if profile not in ('ordinary', 'chat-consumer'):
             shutil.copytree(output / 'dist', work / 'dist')
-        if profile in ('unified', 'unified-prepare'):
+        if profile in ('unified', 'unified-prepare', 'chat-prepare'):
             shutil.copytree(output / '.native/backends/layers', work / '.native/backends/layers')
             shutil.copytree(output / 'native-evidence/layers', work / 'native-evidence/layers')
         preparation = None
-        if profile == 'unified':
+        if profile in ('unified', 'chat-prepare'):
             preparation = stage_prepared_unified(source, run_root, output, work, sha, manifest['local_run_id'])
+        if profile == 'chat-prepare':
+            for relative in ('.native/offline/output', 'artifacts/receipts'):
+                shutil.copytree(output / relative, work / relative, dirs_exist_ok=True)
+        chat_producer = chat_archive = None
+        if profile == 'chat-consumer':
+            chat_producer, chat_archive = stage_chat_archive(run_root, output, phase / 'input', sha, manifest['local_run_id'])
+            shutil.copy2(work / 'scripts/ci/native-chat-consumer.sh', phase / 'input/bootstrap.sh')
         with (phase / 'image-pull.log').open('x') as log:
             subprocess.run([str(CLI), 'image', 'pull', '--arch', 'amd64', IMAGES[profile]],
                            stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
         image = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])))
         orchestrator = None
-        if profile == 'unified-prepare':
+        if profile == 'unified-prepare' and reuse_unified is None:
             with (phase / 'orchestrator-image-pull.log').open('x') as log:
                 subprocess.run([str(CLI), 'image', 'pull', '--arch', 'arm64', IMAGES[profile]],
                                stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
             orchestrator = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])), 'arm64')
             if orchestrator['image_index_digest'] != image['image_index_digest']:
                 raise ValueError('AMD64 and ARM64 images do not share one pinned index')
+        if reuse_unified is not None:
+            reuse_module.stage(reuse_unified, work, image['image_digest'], work / '.native/reuse-unified')
         if reuse_backend is not None:
             stage_backend_reuse(source, reuse_backend, work, image['image_digest'], profile)
         save(phase / 'image.json', image)
@@ -491,12 +599,23 @@ def execute(args):
                    '--mount', f'type=bind,source={guest_data},target=/run-data']
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
         if preparation is not None:
-            if preparation['image_digest'] != image['image_digest']:
+            if profile == 'unified' and preparation['image_digest'] != image['image_digest']:
                 raise ValueError('Prepared runtime build and test images differ')
             environment['FDISBULL_UNIFIED_BUILD_JOB_ID'] = preparation['local_job_id']
+        if reuse_unified is not None:
+            environment['FDISBULL_UNIFIED_REUSE_BASE'] = '1'
         if reuse_backend is not None:
             environment.update(FDISBULL_REUSE_BACKEND='1', FDISBULL_REUSE_IMAGE_DIGEST=image['image_digest'])
-        if orchestrator is not None:
+        if profile == 'chat-consumer':
+            environment.update(FDISBULL_CHAT_PRODUCER_JOB_ID=chat_producer['local_job_id'],
+                               FDISBULL_CHAT_ARCHIVE_SHA256=chat_archive['sha256'])
+            bootstrap = 'bash /input/bootstrap.sh /input/archive.zip /run-data'
+            command = consumer_command(CLI, name, image, phase / 'input', guest_data, bootstrap)
+            insert = command.index(image['image_reference'])
+            for key, value in environment.items():
+                command[insert:insert] = ['--env', key + '=' + value]
+                insert += 2
+        elif orchestrator is not None:
             command += ['--cap-add', 'ALL', orchestrator['image_reference'],
                         'bash', '-ec', unified_command(image, environment)]
         else:
@@ -525,9 +644,41 @@ def execute(args):
         exported = guest_data / 'exported'
         if exported.is_dir():
             collect(exported, output)
+        if profile == 'chat-prepare' and (output / CHAT_ARCHIVE).is_file():
+            process['archive'] = artifact_identity(output, CHAT_ARCHIVE)
         if code or termination != 'exited' or state != 'stopped' or runtime is None:
             raise ValueError(f'{profile} did not pass; preserved log: {phase / "container.log"}')
-        verify_guest_postcheck(guest_data, sha)
+        if profile == 'chat-consumer':
+            if artifact_identity(output, CHAT_ARCHIVE) != chat_archive:
+                raise ValueError('Chat archive changed during consumer')
+            with (phase / 'input/archive.zip').open('rb') as stream:
+                if hashlib.file_digest(stream, 'sha256').hexdigest() != chat_archive['sha256']:
+                    raise ValueError('Staged chat archive changed during consumer')
+            if source_identity(work) != (sha, branch):
+                raise ValueError('Frozen host clone changed during chat consumer')
+            post_path = output / 'native-evidence/chat/host-source-postcheck.json'
+            post_path.parent.mkdir(parents=True, exist_ok=True)
+            save(post_path, {'schema': 'fdisbull-chat-host-source-postcheck-v1',
+                'source_commit': sha, 'expected_source_commit': sha,
+                'tracked_worktree_dirty': False, 'export_success': True,
+                'archive_sha256': chat_archive['sha256']})
+            identities = {'archive': chat_archive,
+                'verifier': artifact_identity(output, 'native-evidence/chat/acceptance.json'),
+                'junit': artifact_identity(output, 'native-evidence/chat/tests.xml'),
+                'host_source_postcheck': artifact_identity(output, 'native-evidence/chat/host-source-postcheck.json')}
+            process.update(identities)
+            receipt_path_chat = output / 'artifacts/receipts/chat-consumer.json'
+            receipt_path_chat.parent.mkdir(parents=True, exist_ok=True)
+            save(receipt_path_chat, {'schema': 'fdisbull-chat-consumer-job-v1', 'status': 'passed',
+                'execution_origin': 'local-linux', 'source_commit': sha, 'test_source_commit': sha,
+                'local_run_id': manifest['local_run_id'], 'local_job_id': job_id,
+                'producer_job_id': chat_producer['local_job_id'], 'source_access': 'absent',
+                'source_check': 'artifact-and-host-clone', **identities})
+        else:
+            verify_guest_postcheck(guest_data, sha)
+        if profile == 'chat-prepare':
+            write_chat_prepare_receipt(output, guest_data, process, sha, manifest['local_run_id'])
+        (phase / 'process.json').write_text(json.dumps(process, indent=2) + '\n')
         if profile == 'unified-prepare':
             unified_input_verifier(source).verify(output, sha, manifest['local_run_id'], job_id,
                                                   source_root=source)
@@ -560,10 +711,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--reuse-unified-base', type=Path, help='Explicit completed original unified preparation guest export; reruns all current acceptance')
     parser.add_argument('--reuse-stable-backend', type=Path, help='Explicit prior stable exported evidence root; reruns all tests')
     parser.add_argument('--reuse-layers-backend', type=Path, help='Explicit prior layers exported evidence root; reruns all tests and offline-kit checks')
     parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
-    parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
+    parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests16GB, chat legs8GB each, ordinary12GB, stable14GB, layers18GB')
     parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)
     parser.add_argument('--timeout', type=int, default=7200, help='Per-container wall-clock seconds')
     args = parser.parse_args()

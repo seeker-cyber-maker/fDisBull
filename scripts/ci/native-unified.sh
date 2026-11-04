@@ -3,6 +3,9 @@ set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
   test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
 fi
+if [ "${FDISBULL_UNIFIED_REUSE_BASE:-}" = 1 ]; then
+  exec bash scripts/ci/native-unified-reuse.sh
+fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6

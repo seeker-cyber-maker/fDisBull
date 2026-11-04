@@ -18,7 +18,9 @@ requires the `fdisbull-local-linux` runner tag, including the ordinary job; it
 must never fall back to hosted instance runners. A dedicated runner would need
 separate user authorization and setup before that route can run. No runner or
 credentials are created by this policy. Native qualification remains behind a
-blocking manual start and requires stable, layers, unified and summary jobs.
+blocking manual start. The provider summary is a legacy diagnostic for ordinary,
+stable, layers and unified evidence; its status is `legacy-dos-only`, not full
+qualification. The local driver alone runs the complete chat consumer gate.
 Source configuration does not prove runner registration or provider settings.
 
 Apply the storage admission rules before image pulls, builds and each material
@@ -46,16 +48,20 @@ python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile layers
 # Prepare the pinned QEMU/Wine/DOS inputs in the dedicated build worker.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified-prepare
+# Build and independently accept the complete offline chat archive.
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile chat-prepare
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile chat-consumer
 # Recheck space; retain exports before any explicitly approved worker cleanup.
 # This reuses the completed preparation from this exact source and run.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile qualify
 ```
 
-`--profile all` explicitly starts the four qualification legs and their separate
-unified preparation stage; heavy work is never automatic on a push or MR.
-The default allocation estimates are 12 GB for ordinary, 14 GB for stable,
-18 GB for layers, 35 GB for unified preparation and 8 GB for unified acceptance.
+`--profile all` starts seven stages in order: ordinary, stable, layers, unified
+preparation, chat preparation, chat consumer, and unified acceptance. Heavy
+work is never automatic on a push or MR. The default allocation estimates are
+12 GB for ordinary, 14 GB for stable, 18 GB for layers, 35 GB for a fresh
+unified preparation, 8 GB for each chat stage, and 16 GB for unified acceptance.
 The destination reserve defaults to 40 GB and each worker has a two-hour wall
 timeout. `--expected-bytes` explicitly overrides the estimate for each newly
 executed stage. Choose a conservative estimate for the actual work; a bounded
@@ -108,14 +114,18 @@ completed preparation from this same source and run. The separate
 `unified-prepare` command allows an explicit pause for storage review before
 starting acceptance. Worker disks remain retained; inspect exported inputs,
 logs and source receipts before requesting any irreversible cleanup. Failed
-attempts are never overwritten or automatically retried. There is no cross-commit
-unified-runtime reuse. No persistent runner is registered. Missing
+attempts are never overwritten or automatically retried. `--reuse-unified-base`
+explicitly selects an original completed preparation export, checks its frozen
+source, recipe, image and inputs, and retains the original compilation origin.
+It regenerates runtimes with the current wheel and resources; all current native
+and chat acceptance gates still run. Reuse does not make the original preparation
+a qualified result. No persistent runner is registered. Missing
 kernel, namespace, Docker or Rosetta support leaves that leg incomplete; do not
 substitute another platform and claim the declared gate passed.
 
-The final `qualification/qualification.json` binds all four leg receipts and
-their host process exits, run/job UUIDs, image digests, test captures and package
-hashes. A zero process exit alone is not a completed leg; source checks and
+The final `qualification/qualification.json` binds the ordinary, stable, layers,
+unified and chat receipts, preparation proofs, host process exits, run/job UUIDs,
+image digests, test captures and package hashes. A zero process exit alone is not a completed leg; source checks and
 artifact collection must also finish. A missing required capture never becomes
 successful equality or qualification.
 
@@ -155,8 +165,8 @@ installed-wheel PE64/DOS/QEMU/boot on the same exact source SHA. The layers leg
 also verifies the offline kit. Missing, skipped, canceled, failed or wrong-source
 required tests leave qualification incomplete. The local runner's receipts use
 local execution identities, not fabricated GitLab IDs. The retained GitLab
-`qualify-candidate` validates GitLab pipeline and job identities only when that
-explicit runner route actually executes.
+`legacy-diagnostic` checks its pipeline and job identities only when that
+explicit runner route actually executes; it cannot produce full qualification.
 
 A local pass does not establish hosted CI and does not by itself authorize
 merging, tagging, publication or installation. The exact-SHA Linux CI release
@@ -194,3 +204,16 @@ Missing runs, incomplete pages, mismatched SHAs, stale data and provider errors 
 Authentication/access failures, rate limits, CI quota exhaustion and confirmed account restrictions stop refreshes through a persisted `provider_stop`. Do not repeatedly retry, change accounts/repositories, weaken checks or push empty commits to evade the condition. Resolve normal provider access first.
 
 Do not start watchers, scheduled checks or monitoring services without a separate user request. Source fixes, CI qualification, review readiness, merging and releasing remain separate gates.
+
+The local `all` route also requires `chat-prepare` and `chat-consumer` after
+unified preparation and before unified acceptance. Each is a separate Linux AMD64 Python 3.13.5 container,
+with an 8 GB default admission estimate. Preparation binds the same run's
+ordinary packages, layers inputs, and verified unified preparation evidence;
+the earlier unified preparation retains its own Python 3.12 image identity.
+The consumer receives only the designated ZIP and small bootstrap control,
+with no source checkout mount. It must run the verifier shipped in the archive
+on a read-only kit in a network namespace with only loopback. Its source proof
+is a host check of the frozen clone plus the archive identity, not a guest
+checkout claim. Failed attempts and their partial evidence remain retained.
+These local checks do not establish hosted CI, authorize a release, or install
+anything. A single archive larger than 500 MB cannot qualify.

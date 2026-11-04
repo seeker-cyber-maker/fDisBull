@@ -706,10 +706,33 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     'src/fdisbull/native_runtime/memory-win32.c',
 ) if path not in REQUIRED_SOURCE_FILES)
 DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
+CHAT_OFFLINE_FILES = (
+    'scripts/build_chat_offline_kit.py', 'scripts/verify_chat_offline_kit.py',
+    'scripts/prepare_chat_runtimes.py', 'docs/CHAT_OFFLINE_KIT.md',
+    'scripts/prepare_chat_offline_inventory.py', 'tests/test_chat_offline_inventory.py',
+    'scripts/ci/native-chat-prepare.sh', 'scripts/ci/prepare-chat-inputs.py',
+    'scripts/ci/native-chat-consumer.sh', 'tests/test_chat_ci_inputs.py',
+    'scripts/ci/unified-base-reuse.py', 'scripts/ci/native-unified-reuse.sh',
+    'tests/test_unified_base_reuse.py',
+    'tests/test_chat_offline_kit.py', 'tests/test_chat_offline_acceptance.py',
+    'tests/test_chat_runtime_preparation.py',
+    'docs/verification/ci-qemu-firmware-20261104.json',
+    'docs/verification/ci-window-readiness-20261104.json',
+)
+REQUIRED_SOURCE_FILES += CHAT_OFFLINE_FILES
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:
         for required in files:output.writestr('fdisbull-test/'+required,'')
+
+
+@pytest.mark.parametrize('required', CHAT_OFFLINE_FILES)
+def test_distribution_requires_complete_chat_offline_tooling(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-missing-chat-offline.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
 
 
 @pytest.mark.parametrize('required', ROM_ASM_RESOURCES)

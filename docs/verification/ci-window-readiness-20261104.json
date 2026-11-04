@@ -1,0 +1,79 @@
+{
+  "schema": "fdisbull-ci-window-readiness-regression-1",
+  "prior_source_commit": "1f16943dd29411ef1c6a27a8bc8c57ea673fbbca",
+  "prior_full_pe_result": {
+    "passed": 102,
+    "failed": 2,
+    "errors": 0,
+    "skipped": 0,
+    "runtime": "Linux x86-64 Python 3.12.16",
+    "failure_cases": [
+      "uil-text-win",
+      "uil-text-lose"
+    ],
+    "failure": "screenshot: no-visible-client-window",
+    "JUnit_sha256": "b39410d991e9cde1bb0ac10631da1f96c91da7ef8b071c854d8538eec9ee912b",
+    "dos_boot": "not run after PE suite failure"
+  },
+  "observed_boundary": "Both generated fixtures reached the verified notification entry with expected state and text pointer, advanced for 2000 milliseconds, then requested a screenshot while no usable target client window was available. The RPC failure closed the VM.",
+  "change": "Expose frame.probe as a read-only normal available=false/true result; wait with bounded execution slices and a wall deadline before the existing screenshot, click and exit assertions. Preserve exceptions, exits and breakpoints as failures.",
+  "local_checks": {
+    "runtime": "macOS ARM64 Python 3.13.14",
+    "passed": 73,
+    "skipped_optional_native": 10,
+    "JUnit_sha256": "e54167f670033efb44afa27eb0644f413ce661376b298dd845f2b5b70e347053",
+    "prior_local_setup_attempt": "73 fixture setup errors from a missing basetemp parent; retained separately; corrected before the recorded run"
+  },
+  "native_repair_qualification": "targeted native component evidence only; full exact-commit Linux gates pending",
+  "runtime_resources_changed": true,
+  "requires_current_Wine_runtime": true,
+  "release": false,
+  "original_game_files": false,
+  "saved_states_or_project_databases_in_source": false,
+  "native_component": {
+    "base_source_commit": "1f16943dd29411ef1c6a27a8bc8c57ea673fbbca",
+    "patch_sha256": "0c307a10baf9b76676aa1b498d7e74845d140076f49f893cd95bcd0f8915cd08",
+    "initial_diagnostic": {
+      "passed": 3,
+      "failed": 1,
+      "failure": "Wine prefix startup timeout before notification/window probe",
+      "filesystem": "host-mounted runtime inputs",
+      "JUnit_sha256": "21d2c1e88f206c532c064913c77a74acd257da9efd5647ff641063323f0d6d47"
+    },
+    "corrected_native_filesystem": {
+      "case": "uil-text-win",
+      "passed": 1,
+      "failed": 0,
+      "production_deadlines_unchanged": true,
+      "JUnit_sha256": "37b907c4917ee6cd779faa01257a59e72c6aebffea6afd8b4f8ac97cc5dedcde"
+    },
+    "scope": "The previously failing win and lose notification routes were observed passing; full exact-commit CI is still required."
+  },
+  "integrated_local_checks": {
+    "passed": 1179,
+    "optional_native_skips": 10,
+    "runtime": "macOS ARM64 Python 3.13.14",
+    "JUnit_sha256": "cda5b9a346b2b72e69fbf6eb9893c2bd8af4f400c633464e91cafa1a4521130e"
+  },
+  "offline_delivery_contract": {
+    "required": "One attached ZIP, no repository access or consumer downloads",
+    "archive_target_maximum_bytes": 500000000,
+    "private_python": "3.13.5",
+    "profiles": [
+      "dos",
+      "wine",
+      "player",
+      "z3"
+    ],
+    "legacy_DOS_kit_is_not_full_delivery": true,
+    "shared_base_measured_bytes": 250073868,
+    "shared_base_expanded_bytes": 1492568996,
+    "network_disabled_consumer": "mandatory; not run yet"
+  },
+  "final_focused_CI_contract_checks": {
+    "passed": 146,
+    "failed": 0,
+    "JUnit_sha256": "0f02a47a3e94024d2546bd571613104737d4eeffea63af19aeae18b44f743eea",
+    "scope": "host contract/provenance/unit checks; not complete Linux CI"
+  }
+}

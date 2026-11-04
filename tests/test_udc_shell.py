@@ -4,12 +4,78 @@ import json
 import os
 from pathlib import Path
 import struct
+import time
 
 import lief
 import pytest
 
 from fdisbull.project import Project
 from fdisbull.udc_shell import BASE, FORMAT, build_windows_shell
+
+
+def wait_for_client_window(debug, *, clock=time.monotonic, timeout=30):
+    deadline = clock() + timeout
+
+    def remaining_ms():
+        remaining = deadline - clock()
+        assert remaining >= 0.001, 'Timed out waiting for a usable client window'
+        return max(1, int(remaining * 1000))
+
+    while True:
+        probe = debug.call('frame.probe', timeout_ms=remaining_ms())
+        remaining_ms()
+        assert type(probe) is dict and type(probe.get('available')) is bool, probe
+        if probe['available']:
+            assert type(probe.get('width')) is int and probe['width'] > 0, probe
+            assert type(probe.get('height')) is int and probe['height'] > 0, probe
+            return probe
+        result = debug.run(timeout_ms=min(250, remaining_ms()))
+        assert result['outcome'] == 'timeout', result
+        remaining_ms()
+
+
+def test_window_wait_uses_only_required_slices():
+    class Fake:
+        def __init__(self, probes): self.probes = iter(probes); self.calls = []
+        def run(self, **kwargs):
+            self.calls.append(('run', kwargs)); return {'outcome': 'timeout'}
+        def call(self, method, **kwargs):
+            self.calls.append((method, kwargs)); return next(self.probes)
+    visible = {'available': True, 'width': 80, 'height': 40}
+    debug = Fake([visible])
+    assert wait_for_client_window(debug, clock=lambda: 0) == visible
+    assert debug.calls == [('frame.probe', {'timeout_ms': 30000})]
+    debug = Fake([{'available': False}, {'available': False}, visible])
+    assert wait_for_client_window(debug, clock=lambda: 0) == visible
+    assert [item[0] for item in debug.calls] == [
+        'frame.probe', 'run', 'frame.probe', 'run', 'frame.probe']
+    assert all(item[1]['timeout_ms'] == 250 for item in debug.calls if item[0] == 'run')
+
+
+def test_window_wait_rejects_stop_and_deadline():
+    class Fake:
+        def __init__(self): self.calls = []
+        def call(self, method, **kwargs):
+            self.calls.append((method, kwargs)); return {'available': False}
+        def run(self, **kwargs):
+            self.calls.append(('run', kwargs)); return {'outcome': 'breakpoint'}
+    debug = Fake()
+    with pytest.raises(AssertionError, match='breakpoint'):
+        wait_for_client_window(debug, clock=lambda: 0)
+    assert [item[0] for item in debug.calls] == ['frame.probe', 'run']
+    debug = Fake(); times = iter([0, 0.25, 1.01])
+    with pytest.raises(AssertionError, match='Timed out'):
+        wait_for_client_window(debug, clock=lambda: next(times), timeout=1)
+    assert debug.calls == [('frame.probe', {'timeout_ms': 750})]
+
+
+@pytest.mark.parametrize('probe', [{}, {'available': 1}, {'available': True},
+                                  {'available': True, 'width': 1, 'height': 0}])
+def test_window_wait_rejects_malformed_probe(probe):
+    class Fake:
+        def call(self, method, **kwargs): return probe
+    with pytest.raises(AssertionError):
+        wait_for_client_window(Fake(), clock=lambda: 0)
 
 
 def example(steps=3):
@@ -211,8 +277,11 @@ def test_real_native_windows_calls_state_loop_atomicity_and_notification(tmp_pat
             else:
                 assert int(registers['rdx'], 16) & 0xFFFFFFFF == (expected_outcome if status == 0 else status)
             if status == 0:
+                # No client window is visible at notification entry in this fixture.
+                assert debug.call('frame.probe') == {'available': False}
+                assert debug.registers()['general'] == registers
                 debug.delete_breakpoint(bp['breakpoint_id'])
-                assert debug.run(timeout_ms=2000)['outcome'] == 'timeout'
+                wait_for_client_window(debug)
                 frame = debug.screenshot('outcome.png')
                 assert frame['metadata']['width'] > 20 and frame['metadata']['height'] > 20
                 exit_bp = debug.breakpoint(BASE + build['slots']['entry']['rva'] + 23)

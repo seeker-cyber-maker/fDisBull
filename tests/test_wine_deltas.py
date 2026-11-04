@@ -347,7 +347,7 @@ def test_uncertain_undo_closes_and_never_resumes(debug, failure):
     assert 'run' not in debug.rpc.calls
 
 
-@pytest.mark.parametrize('method', ['run', 'step', 'screenshot', 'click', 'write', 'setregs', 'overlay'])
+@pytest.mark.parametrize('method', ['run', 'step', 'screenshot', 'frame.probe', 'click', 'write', 'setregs', 'overlay'])
 def test_actual_pe_call_gate_blocks_frozen_mutation_and_capture(debug, method):
     start_and_record(debug)
     debug.cpu_delta_rewind()

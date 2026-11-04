@@ -4,6 +4,15 @@ Use this reference to route a task to the smallest relevant fDisBull surface.
 Every command uses caller-selected paths. The Python package does not include an
 emulator, target executable, game files, saved states or project databases.
 
+If the user supplied a complete Linux chat-kit ZIP, use its `README.txt` and
+`bin/fdisbull` with the bundled portable Python. It requires no package downloads
+when correctly qualified. Prepare the local DOS/Wine images once with
+`bin/prepare-runtimes --cache /absolute/writable/cache`, then use the returned
+paths and an external private project directory. Check the matching consumer
+receipt; legacy DOS-only offline acceptance says nothing about Wine delivery.
+Keep the kit immutable, and treat a missing component as a delivery failure
+rather than substituting a fake module or silently using a host installation.
+
 ## Contents
 
 - [Start from the user's outcome](#start-from-the-users-outcome)

@@ -11,6 +11,43 @@ spec.loader.exec_module(gate)
 SHA = 'a' * 40
 
 
+def test_unified_reuse_declaration_requires_typed_original_proofs(tmp_path):
+    assert gate.verify_unified_base_reuse(tmp_path, {}, {}, {}) is None
+    with pytest.raises(ValueError, match='Missing or unsafe'):
+        gate.verify_unified_base_reuse(tmp_path, {}, {'reuse_origin':'native-evidence/pe/reuse/origin.json'}, {})
+    path = tmp_path / 'native-evidence/pe/reuse/origin.json'
+    path.parent.mkdir(parents=True); path.write_text('{}')
+    with pytest.raises(ValueError, match='typed origin'):
+        gate.verify_unified_base_reuse(tmp_path, {}, {}, {})
+
+
+@pytest.mark.parametrize('changed', [None, 'qemu', 'firmware', 'base', 'image', 'packages'])
+def test_unified_reuse_gate_binds_current_outputs_to_original(tmp_path, changed):
+    from test_unified_base_reuse import valid_staged_origin
+    origin_dir = tmp_path / 'native-evidence/pe/reuse'
+    origin_dir.mkdir(parents=True)
+    origin = valid_staged_origin(origin_dir)
+    original = json.loads((origin_dir / 'prepared-inputs.json').read_text())
+    current = {'inputs': original['inputs'], 'firmware': original['firmware']}
+    packages = tmp_path / 'native-evidence/pe/runtime-packages.txt'
+    packages.write_bytes((origin_dir / 'wine-packages.txt').read_bytes())
+    for name in ('runtime-preparation.json', 'dos-runtime-preparation.json'):
+        write(tmp_path, 'native-evidence/pe/' + name, {'base_sha256':origin['files']['wine-base']})
+    process = {'image_digest':origin['image_digest']}
+    if changed == 'qemu': current['inputs']['FDISBULL_PE_QEMU']['sha256'] = '0' * 64
+    if changed == 'firmware': current['firmware'][0]['sha256'] = '0' * 64
+    if changed == 'base': write(tmp_path, 'native-evidence/pe/runtime-preparation.json', {'base_sha256':'0' * 64})
+    if changed == 'image': process['image_digest'] = 'sha256:' + '0' * 64
+    if changed == 'packages': packages.write_text('Another runtime inventory')
+    arguments = (tmp_path, current, {'reuse_origin':'native-evidence/pe/reuse/origin.json'}, process)
+    if changed is not None:
+        with pytest.raises(ValueError): gate.verify_unified_base_reuse(*arguments)
+    else:
+        result = gate.verify_unified_base_reuse(*arguments)
+        assert result['original_source_commit'] == origin['source_commit']
+        assert result['original_build_job_id'] == origin['local_job_id']
+
+
 def write(root, name, value):
     path = root / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -51,8 +88,8 @@ def qualified(tmp_path):
 
 
 def test_complete_same_pipeline_and_source_qualifies_without_authorizing_release(qualified):
-    result = gate.validate(qualified, SHA, '123')
-    assert result['status'] == 'qualified'
+    result = gate.validate(qualified, SHA, '123', legacy_dos_only=True)
+    assert result['status'] == 'legacy-dos-only'
     assert set(result['required_jobs']) == set(gate.JOBS.values())
     assert result['release_authorized'] is False
 
@@ -196,7 +233,8 @@ def local_qualified(qualified, monkeypatch):
 
 
 def test_local_run_qualifies_without_claiming_gitlab(local_qualified):
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
+    assert result['status'] == 'legacy-dos-only'
     assert result['execution_origin'] == 'local-linux'
     assert result['local_run_id'] == LOCAL_RUN
     assert 'pipeline_id' not in result
@@ -313,7 +351,7 @@ def add_reused_backend(root, profile):
 @pytest.mark.parametrize('profile', ['stable', 'layers'])
 def test_local_reuse_retains_independently_checked_build_evidence(local_qualified, profile):
     add_reused_backend(local_qualified, profile)
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
     proof = result['required_jobs'][gate.JOBS[profile]]['build_provenance']
     assert set(proof) == set(gate.REUSE_FILES.values())
     assert proof['build-identity.json'] == gate.identity(local_qualified, f'native-evidence/{profile}/build-identity.json')
@@ -384,7 +422,7 @@ def test_reuse_provenance_marker_is_validated_when_present(local_qualified, prof
     backend = json.loads(path.read_text())['backend_identity']
     marker = local_qualified / f'native-evidence/{profile}/reuse-provenance.json'
     marker.write_text(json.dumps({field: backend[field] for field in gate.REUSE_FIELDS}))
-    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+    result = gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)
     assert 'reuse-provenance.json' in result['required_jobs'][gate.JOBS[profile]]['build_provenance']
     data = json.loads(marker.read_text())
     data['build_source_commit'] = '9' * 40
@@ -400,7 +438,7 @@ def test_reuse_provenance_marker_is_validated_when_present(local_qualified, prof
 def test_fresh_build_config_log_does_not_imply_reuse(local_qualified):
     path = local_qualified / 'native-evidence/stable/config.log'
     path.write_text('fresh compiler configuration')
-    assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)['status'] == 'qualified'
+    assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN, legacy_dos_only=True)['status'] == 'legacy-dos-only'
 
 
 @pytest.mark.parametrize('field', ['prepared_manifest', 'runtime_inputs', 'resource_receipts', 'firmware'])
@@ -483,3 +521,74 @@ def test_local_unified_cannot_replace_input_list_in_acceptance_receipt(local_qua
     path.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match='does not match prepared'):
         gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.fixture
+def chat_qualified(local_qualified):
+    import hashlib
+    import zipfile
+    root = local_qualified
+    packages = json.loads((root / 'artifacts/receipts/package-payloads.json').read_text())['artifacts']
+    manifest = {'identities':{'source_commit':SHA,'test_source_commit':SHA},
+                'wheel_artifacts':[{'name':packages[k]['name'],'sha256':packages[k]['sha256'],'size':packages[k]['size_bytes']} for k in ('core','player')]}
+    data=json.dumps(manifest).encode()
+    archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.parent.mkdir(parents=True)
+    with zipfile.ZipFile(archive,'w') as z:z.writestr('fdisbull-chat-offline/MANIFEST.json',data)
+    archive_ref=gate.identity(root,str(archive.relative_to(root)))
+    verifier={'schema':'fdisbull-chat-consumer-verification-v1','status':'passed','source_commit':SHA,'test_source_commit':SHA,
+              'archive_sha256':archive_ref['sha256'],'manifest_sha256':hashlib.sha256(data).hexdigest(),
+              'python':'3.13.5','network_interfaces':['lo'],'python_origin':'kit','python_mappings':'kit',
+              'loader_closure':'kit-lib','elf_objects_checked':2,'skipped':0,'native_failures':0,
+              'profiles':['dos','wine','player','z3'],'checks':{name:True for name in gate.CHAT_CHECKS},
+              'runtime_sha256':{'dos':'a'*64,'wine':'b'*64},'dos_screenshot_sha256':'c'*64,'pe_screenshot_sha256':'d'*64}
+    write(root,'native-evidence/chat/acceptance.json',verifier)
+    verifier_ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    producer='00000000-0000-4000-8000-000000000010';consumer='00000000-0000-4000-8000-000000000011'
+    common={'execution_origin':'local-linux','source_commit':SHA,'local_run_id':LOCAL_RUN,'status':'passed',
+            'test_source_commit':SHA,'archive':archive_ref,'tracked_worktree_dirty':False,'export_success':True}
+    write(root,'artifacts/receipts/chat-prepare.json',dict(common,schema='fdisbull-chat-prepare-job-v1',local_job_id=producer,tracked_worktree_dirty=False,export_success=True))
+    write(root,'native-evidence/chat/host-source-postcheck.json',{'schema':'fdisbull-chat-host-source-postcheck-v1','source_commit':SHA,'expected_source_commit':SHA,'tracked_worktree_dirty':False,'export_success':True,'archive_sha256':archive_ref['sha256']})
+    postcheck_ref=gate.identity(root,'native-evidence/chat/host-source-postcheck.json')
+    junit=root/'native-evidence/chat/tests.xml';junit.write_text('<testsuite tests="1" failures="0" errors="0" skipped="0"/>')
+    junit_ref=gate.identity(root,'native-evidence/chat/tests.xml')
+    write(root,'artifacts/receipts/chat-consumer.json',dict(common,schema='fdisbull-chat-consumer-job-v1',local_job_id=consumer,producer_job_id=producer,verifier=verifier_ref,source_access='absent',source_check='artifact-and-host-clone',host_source_postcheck=postcheck_ref,junit=junit_ref))
+    for name, jobid, jobname in [('prepare',producer,'chat-native-prepare'),('consumer',consumer,'chat-native-consumer')]:
+        process={'execution_origin':'local-linux','source_commit':SHA,'local_run_id':LOCAL_RUN,'local_job_id':jobid,
+                 'job_name':jobname,'termination':'exited','exit_code':0,'container_state_after_stop':'stopped',
+                 'image_digest':'sha256:'+'b'*64,'runtime':{'system':'linux','machine':'x86_64','python':'3.13.5'},'archive':archive_ref}
+        if name == 'consumer':process.update(verifier=verifier_ref,host_source_postcheck=postcheck_ref,junit=junit_ref)
+        write(root,'artifacts/receipts/local-process-chat-'+name+'.json',process)
+    return root
+
+
+def test_chat_consumer_required_for_final_qualification(local_qualified):
+    with pytest.raises(ValueError, match='chat-prepare'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_chat_consumer_qualifies_when_all_receipts_match(chat_qualified):
+    result=gate.validate(chat_qualified,SHA,local_run_id=LOCAL_RUN)
+    assert result['status']=='qualified' and result['chat_consumer']['archive']['size'] > 0
+
+
+@pytest.mark.parametrize('field,value', [('network_interfaces',['lo','eth0']),('loader_closure','host'),
+    ('python_mappings','host'),('source_commit','b'*40),('archive_sha256','f'*64),('skipped',1),('native_failures',1)])
+def test_chat_rejects_bad_isolation_identity_or_failures(chat_qualified,field,value):
+    root=chat_qualified; p=root/'native-evidence/chat/acceptance.json';data=json.loads(p.read_text());data[field]=value;p.write_text(json.dumps(data))
+    ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    for name in ('chat-consumer','local-process-chat-consumer'):
+        p=root/f'artifacts/receipts/{name}.json';obj=json.loads(p.read_text());obj['verifier']=ref;p.write_text(json.dumps(obj))
+    with pytest.raises(ValueError, match='verifier isolation'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+
+
+def test_chat_rejects_missing_wine_and_wrong_archive_bytes(chat_qualified):
+    root=chat_qualified;p=root/'native-evidence/chat/acceptance.json';data=json.loads(p.read_text());data['checks']['pe_restore']=False;p.write_text(json.dumps(data))
+    ref=gate.identity(root,'native-evidence/chat/acceptance.json')
+    for name in ('chat-consumer','local-process-chat-consumer'):
+        q=root/f'artifacts/receipts/{name}.json';obj=json.loads(q.read_text());obj['verifier']=ref;q.write_text(json.dumps(obj))
+    with pytest.raises(ValueError, match='capability'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
+    archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.write_bytes(b'changed')
+    with pytest.raises(ValueError, match='identity mismatch'):
+        gate.validate(root,SHA,local_run_id=LOCAL_RUN)
