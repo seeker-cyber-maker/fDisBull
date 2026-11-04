@@ -1,0 +1,62 @@
+{
+  "build_receipt_sha256": "d371e12201dca4fe604a6fe6a8a46afe46586f1af50e4eaa4f7b145830a3783b",
+  "format": "opening-native-app-1",
+  "frontend_sha256": "2d25def10cf3228db9cee65eada61dd0ae6fb76b8e102981d8e4030988158083",
+  "frontend_source_sha256": "982bd8b863326a1b3dd2c8ff9270fcf2950473e382062f45e61757f463cc2c46",
+  "limits": [
+    "Stored offscreen rendering; onscreen visibility and live keyboard interaction not independently qualified.",
+    "Adapted grid/text display; original artwork, display timing and APU playback excluded."
+  ],
+  "native_core": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "b9a99d74b00395a8f6939d857923810f2b5b824d57915c562b2626b259f9a18c",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "a62b2df38f9bd9ae803dd9c7fd532c797b3dff754f43b911c90448d9d15d8487",
+    "seed_sha256": "a107c0caef6fdeb72a3460d769ca64f579303830a56d3fbcf20f154f3240c6ca",
+    "source_sha256": "45f94a285fe34900ccfd2105bdf3f72a06614484535415876703beca27b48c31",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "program_sha256": "a62b2df38f9bd9ae803dd9c7fd532c797b3dff754f43b911c90448d9d15d8487",
+  "renders": {
+    "morgue": {
+      "png_sha256": "b7c5ead4e4f672d400e0b66e76e27e56a89d7a130eeffffaeefcb2873ce71bcc",
+      "result": {
+        "completed_updates": 1615,
+        "player_x": 1395,
+        "player_y": 2023,
+        "player_z": 256,
+        "stopped": false
+      }
+    },
+    "title": {
+      "png_sha256": "c091b86d7a8a1415ee9b24157272b001ec4b883c5cf4973160cdc0ffab22037d",
+      "result": {
+        "completed_updates": 0,
+        "player_x": 0,
+        "player_y": 0,
+        "player_z": 0,
+        "stopped": false
+      }
+    }
+  },
+  "result": "passed",
+  "seed_sha256": "8c90aefe7a7e61350f81beb7e442a3a9f5b832caa4d3ca1d7be28ff39fec4b80"
+}

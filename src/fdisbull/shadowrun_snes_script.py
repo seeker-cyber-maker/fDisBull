@@ -42,6 +42,7 @@ def tasks_from_capture(rom, snapshot):
                           for i in range(0, TASK_WORDS * 2, 2)],
         'task_frame': [int.from_bytes(snapshot[0x26e + i:0x270 + i], 'little')
                        for i in range(0, TASK_WORDS * 2, 2)],
+        'task_heap_first_header': list(snapshot[0x3ee:0x3f2]),
         'task_heap': list(snapshot[0x3f2:0xbbe]),
         'task_shared': list(snapshot[:65536]),
         'task_vm_resume': [
@@ -49,6 +50,7 @@ def tasks_from_capture(rom, snapshot):
              1 if (int.from_bytes(snapshot[0x2ce+i:0x2d0+i], 'little') == 0xf4d2 and
                    int.from_bytes(snapshot[int.from_bytes(snapshot[0x26e+i:0x270+i], 'little')+9:
                                            int.from_bytes(snapshot[0x26e+i:0x270+i], 'little')+11], 'little') == 0x9e)
+             else 3 if int.from_bytes(snapshot[0x2ce+i:0x2d0+i], 'little') == 0xf45e
              else 2)
             for i in range(0, TASK_WORDS * 2, 2)]})
     if SOURCE.read_bytes() != raw:

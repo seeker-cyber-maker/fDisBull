@@ -1,0 +1,68 @@
+{
+  "components": {
+    "party-native-final-01": {
+      "actor": 66,
+      "entry_sha256": "047f4e7482354a659b34bee8fac0285254111bb15a96df8da69e33637aede8ac",
+      "first_mismatches": [],
+      "native_elements": 268620,
+      "original_trace_sha256": "252b911e5c82ab078b250ddf44d0ba98667fc719e174f64b00b98b31439671c8",
+      "private_receipt_sha256": "18beddbf37d38e609f8cbd42d2fed0f8027cb33237261b25afa36bdeea8215ff",
+      "program_sha256": "6643271921d064bbc43b225ba240b5000ae8538b9c7839e576e67c933baf5259",
+      "result": "passed",
+      "scope": "source-fed single $A173 party insertion; does not qualify preceding title or script execution",
+      "source_write_bytes": 111,
+      "task_script": 473
+    },
+    "scene-init-native-final-02": {
+      "actor_entries": 21,
+      "actor_task_write_bytes": 1756,
+      "checkpoint_sha256": "4af5e56bea7f16881567d4f73a9ca276493aeab0853ab3178d51e74e2c10f4d9",
+      "collision_elements": 1975,
+      "first_mismatches": [],
+      "native_elements": 268628,
+      "original_write_trace_sha256": "da5564e5bb42602a38bb217a150698ec7becb4bff9554740daca6646b1a68d5b",
+      "private_receipt_sha256": "15f923a670f0886c7929f739282b7a7f2cd01ad3bf146b843e3ed64ab025512e",
+      "program_sha256": "a1b773d63090ac88838973dfc112656a6e0142e770ddfa4f84889d718ba78256",
+      "result": "passed",
+      "room_bytes": 263,
+      "scope": "single source-seeded initialization slice; direct-page scratch, later task execution, dynamic collision and rendering excluded",
+      "static_nodes": 115,
+      "static_records": 66,
+      "title_sha256": "15caaf78faed99408c783119ac5e1703da066b904e5570dd895b7bcb49db9d93",
+      "world_bytes": 3515
+    },
+    "text-layout-3c-native-01": {
+      "cursor": 8289,
+      "native_elements": 554,
+      "original_after_sha256": "c8c255e06402a3169f3cb56d711632f0f318acaada19f45266166d177ce82489",
+      "original_before_sha256": "a02612f70e2da3ecf6ebf3acb244b6b50b6a28241c655fcd823fdb5a6daabe5b",
+      "output_bytes": 29,
+      "output_sha256": "06344953acfe6dbcd6560094696bc086cf05d4267496eb9294903328077b873c",
+      "private_receipt_sha256": "0b6bbf0c6f31ad7652d6dab192716f3117897cabe17d0f4f6179db06515e1aaa",
+      "program_sha256": "25564ca8e962c20fa1a814142e91d9847d5c59ef2d5a352c9ae1ab5799f3c8da",
+      "result": "passed",
+      "scope": "source-fed one text decode and plain-layout cursor only; raster, DMA and later window lifecycle excluded",
+      "source_sha256": "a8c390af095c998a7412007ae45cf8fe021aa5bafc51c518e4b6afc30ebb6ef1",
+      "subpixel": 4
+    },
+    "text-layout-native-04": {
+      "cursor": 8261,
+      "native_elements": 554,
+      "original_after_sha256": "9a5f27cf6be0dedbf4c0f2af917fae5289ed070b95900ee4edcb29acc26905df",
+      "original_before_sha256": "7694a63ddf089059d5234378c91c17b0a845c32640f9d73dc566ce2222aa5dd4",
+      "output_bytes": 44,
+      "output_sha256": "9d8624294a4a0e883ef3d3c111a872f062b6dfe4c6a45e90e5cbcbf75c07f0e9",
+      "private_receipt_sha256": "fa93082645e3fded2a9bbcb5e42cd0f3d8fb1c04212284303dbec8e316de665d",
+      "program_sha256": "25564ca8e962c20fa1a814142e91d9847d5c59ef2d5a352c9ae1ab5799f3c8da",
+      "result": "passed",
+      "scope": "source-fed one text decode and plain-layout cursor only; raster, DMA and later window lifecycle excluded",
+      "source_sha256": "a8c390af095c998a7412007ae45cf8fe021aa5bafc51c518e4b6afc30ebb6ef1",
+      "subpixel": 0
+    }
+  },
+  "format": "opening-source-fed-components-1",
+  "limits": [
+    "Component comparisons can use source-fed inputs; only the composed opening comparison seeds once at the title.",
+    "No ROM, RAM, source text, generated program or seed dumps included."
+  ]
+}

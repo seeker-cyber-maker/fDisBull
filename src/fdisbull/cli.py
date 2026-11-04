@@ -235,7 +235,7 @@ METHODS = {
     'shadowrun-play-build': 'Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output',
     'shadowrun-ai-profiles': 'List source-bound Shadowrun actor/combat profiles and their limits',
     'shadowrun-ai-build': 'Build a private Shadowrun AI NES or native macOS ARM64 profile; path,rom_path,capture,output,[cc65_root,profile,preset,target]',
-    'shadowrun-snes-build': 'Build a private prepared SNES ARM64 study; rom_path,ram,save_ram,output,[profile:static-morgue|live-morgue|npc-intro|scripted-intro]',
+    'shadowrun-snes-build': 'Build a private prepared SNES ARM64 study; rom_path,ram,save_ram,output,[profile:static-morgue|live-morgue|npc-intro|scripted-intro|opening]',
     'shadowrun-city-export': 'Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output',
     'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
     'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
@@ -880,7 +880,7 @@ def parser():
     c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
     sub.add_parser('shadowrun-ai-profiles',help=METHODS['shadowrun-ai-profiles'])
     c=sub.add_parser('shadowrun-snes-build',help=METHODS['shadowrun-snes-build'])
-    c.add_argument('--profile',choices=['static-morgue','live-morgue','npc-intro','scripted-intro'],default='static-morgue')
+    c.add_argument('--profile',choices=['static-morgue','live-morgue','npc-intro','scripted-intro','opening'],default='static-morgue')
     c.add_argument('--rom',dest='rom_path',required=True)
     c.add_argument('--ram',required=True);c.add_argument('--save-ram',required=True)
     c.add_argument('--output',required=True)

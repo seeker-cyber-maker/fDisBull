@@ -27,6 +27,9 @@ def main():
         raise ValueError('expected checkpoint must be 128 KiB WRAM')
     machine = tasks_from_capture(args.rom.read_bytes(), seed)
     current, order = word(seed, 0x268), []
+    saved_current = word(seed, 0x26c)
+    if saved_current & 0x8000 or saved_current != current:
+        raise ValueError('not an active-head scheduler entry; primer and mid-pass states are excluded')
     while not current & 0x8000:
         if current >= 96 or current & 1 or current in order:
             raise ValueError('invalid source active task list')

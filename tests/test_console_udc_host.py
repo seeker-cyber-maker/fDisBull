@@ -21,7 +21,24 @@ def test_instruction_checkpoint_plan_requires_explicit_phase_and_bounded_storage
     for pc,frames,limit in [(None,'0',1),(0x80962e,None,1),(0,'0',1),
                             (0x1000000,'0',1),(True,'0',1),(0x80962e,'0',9)]:
         with pytest.raises(ValueError):HOST.checkpoint_plan(pc,frames,10,limit)
-    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(129))),130)
+    selected=','.join(map(str,range(129)))
+    assert len(HOST.checkpoint_plan(0x80962e,selected,130,1)) == 129
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,selected,130,2)
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(4097))),4097)
+
+
+def test_controller_journal_reports_duplicate_conflicts_and_consumer_disagreement():
+    main = {'kind': 'main', 'serial': 4, 'held': 0x100, 'previous': 0,
+            'edge': 0x100, 'actor': None, 'video_frame': 12}
+    player = {**main, 'kind': 'player', 'actor': 0x42}
+    conflict = {**main, 'edge': 0}
+    result = HOST.controller_journal_summary([main, player, conflict], 2)
+    assert result['dropped'] == 2
+    assert result['duplicate_serials'] == [{'kind': 'main', 'serial': 4}]
+    assert result['conflicting_serials'] == [{'kind': 'main', 'serial': 4}]
+    assert result['consumer_disagreements'] == []
+    player['held'] = 0
+    assert HOST.controller_journal_summary([main, player], 0)['consumer_disagreements'] == [4]
 
 
 def test_watch_defaults_preserve_system_ram_and_allow_save_ram():

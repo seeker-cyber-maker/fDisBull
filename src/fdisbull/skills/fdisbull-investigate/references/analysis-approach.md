@@ -305,6 +305,40 @@ control, while a separate interpreter consumed the bytecode. Keep native-only
 continuation and separately source-seeded single-pass checks below the claim
 ceiling of a continuous original-backed replay.
 
+For an initialization gap, work backward from the first real consumer and
+classify its missing inputs: constructor writes, ROM copy/decompression,
+allocator state, script effects, device input, or preserved earlier state.
+Choose the earliest missing producer that prevents the requested transition;
+more isolated checks of stable wait loops will not establish that producer.
+In the SNES opening, ROM decompression produced the entity flags, while task
+creation needed a heap header that an older captured-state model omitted.
+Zeroing all state would also have erased a preserved forced-motion countdown
+that the original script reset only after the player appeared.
+
+Inspect scheduler head, current pointer, insertion and return semantics before
+equating one visit with one update. The opening's first scheduler visit only
+primed its current pointer; nested task calls then ran a child and resumed its
+parent within the same pass. For apparent tables, resolve the complete bank,
+pointer and operand width: a low address in a nominal ROM bank can alias live
+WRAM. Supply that read set from the containing model, not a later source pose.
+
+Treat output routines as dependencies when they allocate identities, change
+cursors, consume resource budgets, or release ownership. The opening's text
+call owned window slots and timeouts; animation allocation gated actor sort
+metadata. A rendering projection may omit pixels while still deriving those
+effects. If hardware timing makes a sound or random result unknown, identify
+its consumers, retain explicit taint, and refuse a later dependent gameplay
+read. An acknowledgement without the producer does not complete this edge.
+
+When host and original clocks differ, observe external buttons at the actual
+source consumer. Validate the sampled held value, its prior latch and any later
+consumer; do not infer consumption solely from the containing video frame.
+Replay observed external input through the model's producer and compare the
+prior latch rather than injecting it. Bind the journal to the same uninterrupted
+reference execution and qualify observer neutrality separately. Distinguish
+defined reachable collision records from unused allocator bytes when reporting
+coverage; equal reachable lists do not establish whole-array equality.
+
 **When the first actors cannot exercise the claim:** In a locally inspected
 Shadowrun source run, the three captured moving actor records had item/weapon
 byte `+$57 = 0` in each of 15 sampled states from frame 5999 through 7399.

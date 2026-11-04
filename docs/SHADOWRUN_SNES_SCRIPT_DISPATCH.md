@@ -1,5 +1,8 @@
 # SNES Shadowrun: direction, task dispatch and title investigation
 
+The subsequent [title-to-morgue initialization study](SHADOWRUN_SNES_OPENING.md)
+extends this historical prepared-state result.
+
 Date: 2026-11-03. Follow-up to the [live actor handoff](SHADOWRUN_SNES_LIVE_HANDOFF.md),
 starting from `08525acefde3d72f695261fcb37c3d846eba5888`. GitLab draft !75 is
 the continuing review. Prior inputs, apps, captures and immutable local refs

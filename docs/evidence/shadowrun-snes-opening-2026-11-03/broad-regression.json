@@ -1,0 +1,21 @@
+{
+  "counts": {
+    "tests": 4154,
+    "failures": 3,
+    "errors": 23,
+    "skipped": 142
+  },
+  "passed": 3986,
+  "same_non_green_cases_and_types": true,
+  "non_green": 26,
+  "baseline_non_green": 26,
+  "unexpected": [],
+  "missing": [],
+  "source_unchanged": true,
+  "junit_sha256": "6fc9fd16f728c25ba05b7a499281a7bf96e549aad0535bfa4a81179026f78ceb",
+  "baseline_junit_sha256": "a5fd2b0fe40c5142ab04566c409ec2bfb4201ebad495db009edc237c900f6bd1",
+  "log_sha256": "8e813333e6504bc691eb7e4cc8096c218178ebb699bd735327512bd1903d0f87",
+  "limits": [
+    "Broad macOS suite remains non-green. The 26 non-green cases and result types match the prior baseline; this does not claim hosted Linux/native CI."
+  ]
+}

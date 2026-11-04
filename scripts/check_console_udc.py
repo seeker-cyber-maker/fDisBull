@@ -301,6 +301,26 @@ class SnesTraceEvent(C.Structure):
     _fields_ = [(name,C.c_uint32) for name in
                 ('kind','pc','address','value','a','x','y','s','d','p','db','opcode')]
 
+class SnesControllerSample(C.Structure):
+    _fields_ = [(name,C.c_uint32) for name in ('kind','serial','held','previous','edge','actor')]
+
+def controller_journal_summary(samples, dropped):
+    grouped={}
+    for sample in samples:
+        grouped.setdefault((sample['kind'],sample['serial']),[]).append(
+            (sample['held'],sample['previous'],sample['edge'],sample['actor']))
+    keys=lambda items:[{'kind':kind,'serial':serial} for kind,serial in items]
+    serials={sample['serial'] for sample in samples}
+    disagreements=[serial for serial in sorted(serials)
+                   if ('main',serial) in grouped and ('player',serial) in grouped
+                   and {v[0] for v in grouped['main',serial]}!={v[0] for v in grouped['player',serial]}]
+    return {'format':'snes-main-loop-controller-journal-1',
+            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; serial is latest 80:962E checkpoint',
+            'dropped':dropped,'samples':samples,
+            'duplicate_serials':keys([key for key,items in grouped.items() if len(items)>1]),
+            'conflicting_serials':keys([key for key,items in grouped.items() if len(set(items))>1]),
+            'consumer_disagreements':disagreements}
+
 
 def snes_range(value):
     if value is None:
@@ -320,7 +340,8 @@ def checkpoint_plan(pc, selected, frames, limit=4):
             or type(limit) is not int or not 1<=limit<=8):
         raise ValueError('SNES checkpoint requires a 24-bit PC, selected frames and limit1..8')
     result=frame_numbers(selected,frames)
-    if len(result)>128:raise ValueError('at most128 checkpoint video frames')
+    if len(result)>4096:raise ValueError('at most 4096 checkpoint video frames')
+    if len(result)>128 and limit!=1:raise ValueError('more than 128 checkpoint frames requires limit 1')
     return result
 
 
@@ -482,6 +503,8 @@ def worker(args):
     snes_trace=[]
     checkpoint_frames=checkpoint_plan(args.snes_checkpoint_pc,args.snes_checkpoint_frames,args.frames,args.snes_checkpoint_limit)
     checkpoints=[]
+    controller_samples=[]
+    controller_dropped=0
     if checkpoint_frames:
         if args.system!='snes':raise ValueError('SNES checkpoint requires SNES')
         lib.fdisbull_snes_checkpoint_config.argtypes=[C.c_uint32,C.c_uint32]
@@ -495,6 +518,13 @@ def worker(args):
         lib.fdisbull_snes_checkpoint_serial.argtypes=[C.c_uint32]
         lib.fdisbull_snes_checkpoint_serial.restype=C.c_uint32
         lib.fdisbull_snes_checkpoint_config(args.snes_checkpoint_pc,args.snes_checkpoint_limit)
+    if args.snes_controller_journal:
+        lib.fdisbull_snes_controller_config.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_controller_clear.argtypes=[]
+        lib.fdisbull_snes_controller_count.restype=C.c_uint32
+        lib.fdisbull_snes_controller_dropped.restype=C.c_uint32
+        lib.fdisbull_snes_controller_samples.restype=C.POINTER(SnesControllerSample)
+        lib.fdisbull_snes_controller_config(1)
     if args.snes_trace_frames:
         if args.system!='snes': raise ValueError('SNES trace requires SNES')
         start,end=(int(x) for x in args.snes_trace_frames.split(':'))
@@ -527,6 +557,7 @@ def worker(args):
         if args.snes_trace_frames and start<=i<end:
             configure(pc_lo,pc_hi,wr_lo,wr_hi,65536)
         if checkpoint_frames:lib.fdisbull_snes_checkpoint_clear()
+        if args.snes_controller_journal:lib.fdisbull_snes_controller_clear()
         lib.retro_run()
         if i in checkpoint_frames:
             count=lib.fdisbull_snes_checkpoint_count();dropped=lib.fdisbull_snes_checkpoint_dropped()
@@ -537,10 +568,23 @@ def worker(args):
                 registers=lib.fdisbull_snes_checkpoint_registers(j)
                 if not pointer or not registers:raise ValueError('checkpoint data missing')
                 raw=C.string_at(pointer,131072);serial=lib.fdisbull_snes_checkpoint_serial(j)
-                name=f'checkpoint-{i:06d}-{j:02d}.bin';(out/name).write_bytes(raw)
+                name=None
+                if not args.snes_checkpoint_digests:
+                    name=f'checkpoint-{i:06d}-{j:02d}.bin';(out/name).write_bytes(raw)
                 captures.append({'file':name,'size':len(raw),'sha256':sha(raw),'serial':serial,
                                  'registers':{k:getattr(registers.contents,k) for k,_ in SnesTraceEvent._fields_}})
             checkpoints.append({'video_frame':i,'dropped':dropped,'captures':captures})
+        if args.snes_controller_journal:
+            count=lib.fdisbull_snes_controller_count()
+            controller_dropped+=lib.fdisbull_snes_controller_dropped()
+            if count>32:raise ValueError('controller sample count exceeds bound')
+            samples=lib.fdisbull_snes_controller_samples()
+            for j in range(count):
+                sample=samples[j]
+                if sample.kind not in (1,2):raise ValueError('unknown controller consumer')
+                controller_samples.append({'video_frame':i,'kind':'main' if sample.kind==1 else 'player',
+                                           'serial':sample.serial,'held':sample.held,'previous':sample.previous,
+                                           'edge':sample.edge,'actor':sample.actor if sample.kind==2 else None})
         if args.snes_trace_frames and start<=i<end:
             count=lib.fdisbull_snes_trace_count();dropped=lib.fdisbull_snes_trace_dropped()
             events=lib.fdisbull_snes_trace_events()
@@ -586,6 +630,12 @@ def worker(args):
             'last_opcode_pc_for_writes':True,'frames':snes_trace},separators=(',',':'))+'\n').encode()
         (out/'snes_trace.json').write_bytes(trace_data)
         snes_trace_hash=sha(trace_data)
+    controller_hash=None
+    if args.snes_controller_journal:
+        journal=controller_journal_summary(controller_samples,controller_dropped)
+        journal_data=(json.dumps(journal,separators=(',',':'))+'\n').encode()
+        (out/'controller_journal.json').write_bytes(journal_data)
+        controller_hash=sha(journal_data)
     if frame[0] is None:
         raise RuntimeError('core produced no video frame')
     raw, width, height, pitch, fmt = frame[0]
@@ -623,7 +673,9 @@ def worker(args):
     receipt.update({'save_ram_size': len(save_memory), 'save_ram_sha256': sha(save_memory) if save_memory else None,
                     'frame_ram':ram_images,
                     'snes_trace_sha256':snes_trace_hash,
+                    'snes_controller_journal_sha256':controller_hash,
                     'snes_checkpoints':{'pc':args.snes_checkpoint_pc,'phase':'before selected opcode at instruction entry; video frame identifies containing retro_run','frames':checkpoints} if checkpoint_frames else None,
+                    'snes_checkpoint_digests_only':bool(args.snes_checkpoint_digests),
                     'snes_trace_filters':{'frames':args.snes_trace_frames,'pc':args.snes_trace_pc,'write':args.snes_trace_write} if snes_trace_hash else None,
                     'save_ram_byte_order': 'raw core bytes; address mapping not validated',
                     'audio_capture': captured_audio, 'frame_images': images,
@@ -665,8 +717,10 @@ def main():
     parser.add_argument('--snes-trace-pc', help='24-bit opcode address start:exclusive-end')
     parser.add_argument('--snes-trace-write', help='24-bit direct bus write address start:exclusive-end')
     parser.add_argument('--snes-checkpoint-pc',type=lambda x:int(x,0),help='Instruction-entry PC for private WRAM checkpoints; requires matching instrumented core')
-    parser.add_argument('--snes-checkpoint-frames',help='At most128 video frames in which to retain instruction-entry checkpoints')
+    parser.add_argument('--snes-checkpoint-frames',help='At most 4096 checkpoint video frames; more than 128 requires limit 1; each capture uses 128 KiB')
     parser.add_argument('--snes-checkpoint-limit',type=int,default=4,help='At most1..8 checkpoints per video frame; dropped count retained')
+    parser.add_argument('--snes-checkpoint-digests',action='store_true',help='Keep checkpoint hashes and metadata without writing private WRAM snapshots')
+    parser.add_argument('--snes-controller-journal',action='store_true',help='Observe main-loop held/previous controller words with a compatible core')
     parser.add_argument('--output', required=True)
     parser.add_argument('--timeout', type=float, default=60)
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
@@ -676,6 +730,10 @@ def main():
     try:
         frame_numbers(args.frame_images, args.frames)
         checkpoint_plan(args.snes_checkpoint_pc,args.snes_checkpoint_frames,args.frames,args.snes_checkpoint_limit)
+        if args.snes_checkpoint_digests and (args.system!='snes' or args.snes_checkpoint_pc is None or not args.snes_checkpoint_frames):
+            raise ValueError('checkpoint digests require SNES checkpoints')
+        if args.snes_controller_journal and (args.system!='snes' or args.snes_checkpoint_pc!=0x80962e or not args.snes_checkpoint_frames):
+            raise ValueError('controller journal requires SNES 80:962E checkpoints')
         if len(frame_numbers(args.frame_ram, args.frames)) > 64:
             raise ValueError('at most 64 full RAM snapshots')
     except ValueError as exc:

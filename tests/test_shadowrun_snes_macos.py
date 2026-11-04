@@ -27,7 +27,7 @@ def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     assert not output.exists()
 
 
-@pytest.mark.parametrize('profile',['static-morgue','live-morgue','npc-intro','scripted-intro'])
+@pytest.mark.parametrize('profile',['static-morgue','live-morgue','npc-intro','scripted-intro','opening'])
 def test_snes_build_cli_and_standalone_protocol(tmp_path,capsys,profile):
     params={'rom_path':str(tmp_path/'missing'),'ram':'missing','save_ram':'missing','output':str(tmp_path/'app'),'profile':profile}
     result=respond({'method':'shadowrun-snes-build','params':params},default_project='unrelated.fdb')

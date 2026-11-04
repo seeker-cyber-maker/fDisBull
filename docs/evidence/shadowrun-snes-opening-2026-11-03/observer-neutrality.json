@@ -1,0 +1,33 @@
+{
+  "baseline_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+  "baseline_receipt_sha256": "c2bbb6d07d67090b622c412d430dbd08031c1bc61bf86845f2524050156446ea",
+  "final_equal": {
+    "frame_png_sha256": true,
+    "frame_rgb_sha256": true,
+    "save_ram_sha256": true,
+    "state_sha256": true,
+    "system_ram_sha256": true
+  },
+  "format": "canonical-unpatched-baseline-neutrality-1",
+  "identical_rom_and_inputs": true,
+  "observer_core_sha256": "b98b6856f98d88070c1f28827dd95f8cc358d30f988c4bb14ab04c062fc81423",
+  "observer_receipt_sha256": "2b792656bb5d8744dd99c58e4dac96856ec873eac0d0b3c1f0fa862b63074eb4",
+  "scope": "selected post-frame snapshots and final state; unmodified baseline has no instruction checkpoints",
+  "selected_images_equal": {
+    "2699": true,
+    "2700": true,
+    "2710": true,
+    "2711": true,
+    "2715": true,
+    "839": true
+  },
+  "selected_ram_equal": {
+    "2699": true,
+    "2700": true,
+    "2701": true,
+    "2710": true,
+    "2711": true,
+    "2715": true,
+    "839": true
+  }
+}
