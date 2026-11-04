@@ -157,6 +157,11 @@ def invoke(method, params):
         command = method
     elif method=='selector':
         command=f"selector {number(params['selector'],0,65535):x}"
+    elif method=='context-diagnostics':
+        if set(params)-{'record_setters'} or ('record_setters' in params and type(params['record_setters']) is not bool):
+            raise ValueError('Context diagnostics accepts an optional Boolean record_setters')
+        command='context-diagnostics'
+        if 'record_setters' in params:command+=' record '+str(int(params['record_setters']))
     elif method=='setregs':
         values=params['values']
         names={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags',
@@ -229,7 +234,7 @@ def identity():
                                      'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
-      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'process_profiles':['pe32','pe64']},
+      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 
 def main():

@@ -50,6 +50,28 @@ def test_unordered_keyboard_batch_refuses_before_native_write():
     assert stream.getvalue()==b''
 
 
+@pytest.mark.parametrize('params,command',[
+    ({},b'context-diagnostics\n'),
+    ({'record_setters':True},b'context-diagnostics record 1\n'),
+    ({'record_setters':False},b'context-diagnostics record 0\n'),
+])
+def test_context_diagnostics_is_a_single_readonly_native_request(params,command):
+    scope=broker_functions();stream=io.BytesIO();scope['process']=SimpleNamespace(stdin=stream)
+    reply={'pending_event':{'thread':420},'setters':[]}
+    scope['response']=lambda *args,**kwargs:reply
+    assert scope['invoke']('context-diagnostics',params) is reply
+    assert stream.getvalue()==command
+
+
+@pytest.mark.parametrize('params',[{'record_setters':1},{'record_setters':'true'},
+    {'record_setters':None},{'resume':True}])
+def test_context_diagnostics_invalid_options_refuse_before_native_request(params):
+    scope=broker_functions();stream=io.BytesIO();scope['process']=SimpleNamespace(stdin=stream)
+    with pytest.raises(ValueError,match='optional Boolean'):
+        scope['invoke']('context-diagnostics',params)
+    assert stream.getvalue()==b''
+
+
 @pytest.mark.parametrize('error',['no-visible-client-window','capture-failed','write-failed'])
 @pytest.mark.parametrize('screenshot',[False,True])
 def test_only_known_readonly_capture_unavailability_is_recoverable(error,screenshot):
