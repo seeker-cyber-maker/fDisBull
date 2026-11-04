@@ -106,9 +106,11 @@ def _identity(data):
 
 
 def _prepare(path, adapter, volume_root, number):
-    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2'):
+    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2',
+          'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2'):
         raise ValueError('Unsupported adapter; discover media-modules first')
     inputs = []
+    metadata = {}
     if adapter == 'mz-envelope':
         if volume_root is not None or number is not None:
             raise ValueError('MZ envelope does not accept AGI resource parameters')
@@ -123,6 +125,58 @@ def _prepare(path, adapter, volume_root, number):
             members.append(('tail', end, data[end:]))
         inputs.append(dict(role='container', **_identity(data)))
         unknowns = ['Tail structure and compression are unknown; no overlay entries, addresses or semantics inferred.']
+    elif adapter.startswith('westwood-'):
+        if volume_root is not None or number is not None:
+            raise ValueError('Westwood adapter does not accept AGI volume parameters')
+        from .westwood_media import (inspect_pak, decode_cps, encode_cps_png,
+                                     inspect_wsa, decode_wsa_frames, parse_emc2)
+        limit = 64 * 1024 * 1024 if adapter not in ('westwood-cps', 'westwood-emc2') else (
+            2 * 1024 * 1024 if adapter == 'westwood-cps' else 8 * 1024 * 1024)
+        data = _snapshot(path, limit)
+        inputs.append(dict(role='container', **_identity(data)))
+        if adapter == 'westwood-pak':
+            report = inspect_pak(data)
+            members = []
+            for item in report['members']:
+                selector = (f"#{item['index']}:{item['name']}" if item['duplicate_name']
+                            else item['name'])
+                members.append((selector, item['offset'],
+                                data[item['offset']:item['offset'] + item['size']]))
+            metadata = dict(pak_layout=report['format'],
+                            pak_opaque_tail_bytes=report['opaque_tail_bytes'])
+            unknowns = ['Member bytes are intact; nested compression, game roles, and hidden tail are separate.']
+        elif adapter == 'westwood-cps':
+            image = decode_cps(data)
+            members = [('indices', None, image.pixels)]
+            if image.palette is not None:
+                members.append(('palette6', 10, image.palette))
+                if image.width == 320 and image.height == 200:
+                    members.append(('preview-png', None, encode_cps_png(image)))
+            metadata = dict(cps_compression=image.compression, cps_decoded_size=image.declared_size,
+                            cps_dimensions=(dict(width=image.width, height=image.height)
+                                            if image.width is not None else None),
+                            cps_palette_bytes=(len(image.palette) if image.palette else 0))
+            unknowns = ['Derived indexed pixels are not an original byte range.',
+                        'If palette is absent, color rendering requires separately identified original palette.']
+        elif adapter == 'westwood-wsa':
+            report = inspect_wsa(data)
+            metadata = {('wsa_' + key): value for key, value in report.items()
+                        if key not in ('format', 'offsets', 'size', 'sha256', 'input_executed')}
+            members = []
+            if not report['missing_first_frame']:
+                _, frames = decode_wsa_frames(data, max_frames=1)
+                members = [('frame0-indices', None, frames[0])]
+            unknowns = ['WSA frame state is delta-dependent; only an independently initialized first frame is exported.',
+                        'Frame timing, palette state, composite positioning and chained animations are not established.']
+        else:
+            script = parse_emc2(data)
+            members = [(tag, part['offset'], data[part['offset']:part['offset'] + part['size']])
+                       for tag, part in script['chunks'].items()]
+            metadata = dict(emc2_valid_entries=script['valid_entry_count'],
+                            emc2_entry_slots=len(script['entry_slots']),
+                            emc2_data_words=script['word_count'])
+            unknowns = ['Script payload is interpreted code, not native machine instructions.',
+                        'Entry policy and syscall binding must be qualified separately per game.']
     else:
         if volume_root is None or type(number) is not int or not 0 <= number < 256:
             raise ValueError('AGI v2 requires volume_root and resource number 0..255')
@@ -158,6 +212,7 @@ def _prepare(path, adapter, volume_root, number):
                   specification=SPEC)
     if adapter == 'agi-v2':
         result['resource_number'] = number
+    result.update(metadata)
     return result, {name: payload for name, _, payload in members}
 
 
