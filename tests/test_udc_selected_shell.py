@@ -10,6 +10,7 @@ import pytest
 from fdisbull.project import Project
 from fdisbull import udc_layers
 from fdisbull.udc_layers import register_contract, register_layer, select_layers, build_selection_shell
+from test_udc_shell import notification_frame
 
 
 def setup(project, *, contract_domain=False, layer_domain=False, mapping=False, service='ui.notify'):
@@ -255,7 +256,7 @@ def test_real_selected_database_qualifier_adapter_pe_and_native_notification(tmp
             assert int(debug.registers()['general']['rdx'], 16) == 1
             debug.delete_breakpoint(stop['breakpoint_id'])
             assert debug.run(timeout_ms=2000)['outcome'] == 'timeout'
-            frame = debug.screenshot('selected-win.png')
+            frame = notification_frame(debug, 'selected-win.png')
             assert frame['metadata']['width'] > 20
             debug.click(frame['metadata']['width'] // 2, frame['metadata']['height'] - 14,
                         mode_id=frame['metadata']['mode_id'])
