@@ -114,3 +114,12 @@ launcher, which exits before the work completes. Keep private signing settings
 outside the checkout and package. Routine progress stays quiet; a notification
 receipt is not CI qualification. No automatic retry, cleanup or release follows
 an alert.
+
+The compact DOS/PE64 base and the full Windows base are included separately in
+the chat kit. `bin/prepare-runtimes --cache PATH` reconstructs compact images;
+`bin/prepare-runtimes --windows --cache ANOTHER_PATH` reconstructs the larger
+Windows image. Use its explicit 8 GiB guest configuration and retain host memory
+headroom. The isolated kit consumer verifies both reconstructions and exercises
+DOS and PE64; full Windows native results remain a separate required CI receipt.
+Optional separately built engines retain their own platform and qualification
+boundaries; a macOS engine executable is not a Linux backend.

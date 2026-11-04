@@ -286,6 +286,12 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
                 "  ./bin/player --help\n")
         if profile == 'shared':
             text += ("  ./bin/prepare-runtimes --cache /absolute/writable/cache\n"
+                     "This prepares compact DOS and Wine PE64 images. The full Windows\n"
+                     "image is included separately and can be reconstructed offline:\n"
+                     "  ./bin/prepare-runtimes --windows --cache /absolute/writable/windows-cache\n"
+                     "Select that image explicitly for the larger Windows profile with\n"
+                     "memory_mib=8192. Check the delivery receipts for tested capabilities;\n"
+                     "runtime reconstruction alone does not establish native compatibility.\n"
                      "Runtime preparation is fully local and returns Wine, DOS and kernel paths.\n")
         text += ("\nUse ./bin/dosbox for the private DOS backend; use ./bin/qemu with\n"
                  "the prepared kernel and guest runtime paths for PE analysis.\n"
