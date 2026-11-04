@@ -1,0 +1,71 @@
+{
+  "schema": "fdisbull-0.33.0rc1-source-intake-v1",
+  "candidate_version": "0.33.0rc1",
+  "base_release_line": "b2159367f3d4c2587c75acd077f30b39223da8dc",
+  "previous_unpublished_candidate": "c80bff03e4cd2b946a93e7aecab61e5ff9281f81",
+  "integrated_source": "4a487e45e679025af4d2c0aca2b6c8742383ef08",
+  "merge_commit": "1dfe6e568679a4f31c806d24832e5f5e86ac0cd7",
+  "selected_mrs": [
+    83,
+    86,
+    87,
+    88,
+    46,
+    47,
+    53,
+    80,
+    79,
+    93
+  ],
+  "scope": [
+    "Carried 0.32.0 source feature line based on published 0.31.1",
+    "Boat CI handoff and finite runner",
+    "Built-in GOG Inno 5.6.2 reader",
+    "Westwood PAK/CPS/WSA readers and EMC2 guest processor",
+    "Experimental ScummVM Kyra controller and AGI-to-UIL pilot",
+    "Investigation-skill guidance updates"
+  ],
+  "excluded": [
+    "Unmerged !42 and !74",
+    "Alternative !67 captured-PE route",
+    "Unselected research and pending stacks",
+    "Original games, saves, machine states and private runtime inputs"
+  ],
+  "qualification": {
+    "status": "local_macos_candidate",
+    "host": "macOS arm64, Python 3.13",
+    "optional_dependencies": {
+      "z3-solver": "5.3.2.0",
+      "dnfile": "0.18.0",
+      "dncil": "1.0.2"
+    },
+    "full_suite": {
+      "passed": 10002,
+      "failed": 15,
+      "skipped": 386,
+      "errors": 23,
+      "subtests_passed": 2316,
+      "seconds": 280.58
+    },
+    "inherited_failures_reproduced_on": "c80bff03e4cd2b946a93e7aecab61e5ff9281f81",
+    "inherited_failure_classes": [
+      "macOS Mach-O/ELF expectation",
+      "macOS GCC Linux-ELF toolchain",
+      "packaged presentation/PSG fixture validation"
+    ],
+    "focused_modules": {
+      "passed": 175,
+      "skipped": 4
+    },
+    "boat_chat_ci": {
+      "passed": 190
+    },
+    "distribution_tests": {
+      "passed": 916
+    },
+    "shim": "Temporary tests-package shim used because host site-packages shadowed checkout tests; no repository change.",
+    "build": "check_dist.py and check_package_payloads.py passed for four checked artifacts; isolated wheel smoke passed.",
+    "hosted_qualification": "pending"
+  },
+  "published": false
+}
