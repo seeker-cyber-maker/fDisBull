@@ -22,6 +22,13 @@ original app. It does not require a replacement editor or a console port.
 Use [task framing](references/task-framing.md) when the deliverable, investigation
 depth, exact control or string provenance needs clarification. Revisit scope when
 a new backend, target platform or subsystem is proposed, not after every probe.
+For a human report, also choose its audience and detail level: `overview`,
+`practical` or `technical`. Default a human observer's report to a plain-language
+overview. Explain the goal, supported finding, actual observations when available,
+meaning, uncertainty and next useful decision. Explain code screenshots as
+evidence. Keep complete agent facts
+by reference. Invite relevant human corrections at useful milestones and feed
+them into the existing task/dossier without stopping unrelated ready work.
 
 Use a known command directly. Consult `<command> --help` for unfamiliar arguments;
 use `capabilities` or `methods` for an unknown capability or changed setup.

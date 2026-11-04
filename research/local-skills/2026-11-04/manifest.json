@@ -8,7 +8,7 @@
       "path": "src/fdisbull/skills/fdisbull-investigate",
       "role": "maintained project skill",
       "files": {
-        "SKILL.md": "cb14320c2f3ad692f852e4e21353fdceedb41dc27df11bd23ae6505a00dc734a",
+        "SKILL.md": "445313336a541fa7b7ff031de5961daf4fe0a4a23c64d1cda68de393aa5bc715",
         "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
         "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
         "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
@@ -25,7 +25,7 @@
         "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
         "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
         "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
-        "references/task-framing.md": "9fea2d3af95830b75179cdc0e7777ec0e8fcc03d7d126561b7fe2ac11b504bb9",
+        "references/task-framing.md": "7763ba5d11b9c6aedf1557768e6bbef6799fce75672041345a4737b2938fc7fd",
         "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
         "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
       }
@@ -35,11 +35,11 @@
       "path": "src/fdisbull/skills/write-gamefaqs-guide",
       "role": "maintained project skill",
       "files": {
-        "SKILL.md": "802b77a967de904fc901affe5e3d03d874dc5e65a184faa887a430d84366c333",
+        "SKILL.md": "c1d91a91ccd5201d4c56eb89fee1d03e53779ac1b6daa0956ed84cfc844d3bfb",
         "references/engine-source-examples.md": "86576e46facb85a2db58604a5c47ca94e3589c129a31b0ee0d63772257ca1ca1",
         "references/evidence-and-provenance.md": "316606bd635386561484a87ce6c72b9661fb6bdfb7aded5e1cd82f5bbdf06070",
         "references/formats-and-engine-reuse.md": "312c17a5efa93c70494bf6e6861531238a90aa95671a99573676a89429facdae",
-        "references/guide-structure.md": "4fdbecf2b397b9e3ef99a8edd6a112f5043723a9fab36b3f376d4fea697523cf",
+        "references/guide-structure.md": "ad95071ed3f2c9bc8f86044f53efa1393ff8360533fd6073d24b33fe5931ffcc",
         "references/routes-and-discoveries.md": "31de6d47c76e5b9b80d8ae8a3433462e33f2c912f6d8cf91373af5b6bc9d3429",
         "references/source-examples.md": "59b9afa1b94200694b489076d5357fce179fa8a9dc22f851b21899271b54a74c",
         "references/technical-mechanics.md": "22ff90f94d539f2e66bfb1eb3e1eaa78a4b5a1754baa02c475110f6135f05802"

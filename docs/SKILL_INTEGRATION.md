@@ -18,7 +18,7 @@ skills to be installed or loaded together.
 | `find-string-ai` | Classify a hit's region, source, owner and role; preserve offsets, containing text and use candidates. | Add bounded batched string/value searches and distinguish display text, mapped copies and authoritative state. Retain useful prior findings but discard accidental filters. Its LLDB helper is archived, not installed or presented as a fDisBull API; its 3 GiB scan default is not adopted. |
 | OMP `skill-creator` | Evaluate real outputs, compare baselines, collect quality and timing, and revise from user/worker feedback. | Add evaluation criteria that preserve required questions, failures, assistance and timing origin. Keep generic guidance separate from target answers. Do not import Claude-specific commands, mandatory viewers, unbounded evaluation loops or assumptions that token/timing metadata is available. This differs from the Codex system skill-creator already archived. |
 | `systematic-debugging` | Compare expected and actual behavior, locate the first differing boundary, form one causal hypothesis and make a discriminating change. | Clarify failure triage while retaining compatible HUD batches. Repeated failed probes cause reassessment; they do not prove the architecture is wrong. Do not require complete tracing, a new test for every discovery, a fixed ritual or unsupported performance percentages. |
-| `tell-story-ai` | Explain what was found, where it comes from and what role the evidence supports in concise prose. | Extend the existing compact handoff with expected versus observed outcome when they differ. Keep raw results by reference and distinguish likely from observed. Do not duplicate the dossier or write unsupported causal stories. |
+| `tell-story-ai` | Explain what was found, where it comes from and what role the evidence supports in concise prose. | Extend the compact handoff into a human story with purpose, result, implication and uncertainty. Define audience and `overview`/`practical`/`technical` detail independently of investigation depth and report length. Explain code captures; feed useful human corrections into the existing dossier/queue. Keep raw results by reference and distinguish likely from observed. |
 | `write-a-skill` | Use discriminating descriptions, progressive disclosure and deterministic helpers for repeated work. | Keep the new decision detail in a selectively retrieved reference, indexed by the CLI. Use an existing deterministic tool before adding another script. Do not adopt its contradictory fixed length thresholds, require interviews already answered by the conversation or create extra files merely to match a template. |
 
 Complete supplied sources and included notices are retained under
@@ -50,6 +50,15 @@ This supports the existing formal operation-goal syntax and work queue; it adds
 no second goal format or new runtime automation. A task brief is a planning aid,
 not executable syntax. A repeated operation can still be lowered into the
 existing typed operation/component definitions when that is useful.
+
+The human-report follow-up adds audience and technical detail to the task brief
+and guide-writing contract. A nontechnical observer receives a plain-language
+story with explained evidence; a technical reader can inspect mechanisms and
+artifact references. Human feedback can change goals, labels, hypotheses or
+presentation without creating a parallel ledger or a mandatory per-probe gate.
+This is guidance for reports and existing task notes, not a new report renderer,
+CLI option, queue schema field or feedback-ingestion service. Archived supplied
+skills remain unchanged. Effectiveness with human observers is not yet measured.
 
 ## Reasoning examples and validation scope
 
@@ -84,3 +93,9 @@ selectively retrieved without a project. An initial duplicate local Markdown
 link was caught by the existing gate and removed. Independent final document
 review reported no actionable findings. These checks do not measure runtime
 speed or prove the behavior of a future cold agent.
+
+The human-report follow-up passed the same 37 existing discovery/skill checks
+(0.51s), and both maintained skills passed frontmatter validation. Read-only
+review clarified that static findings can support a report without a fresh
+runtime observation; the wording was adjusted accordingly. No human usability
+trial, live target run or new report-rendering capability is claimed.

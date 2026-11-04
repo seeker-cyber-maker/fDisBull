@@ -69,6 +69,17 @@ walkthrough generator, native runner or automatic truth validator.
 
 ## 1. Establish the writing contract
 
+Choose the intended audience and report level: `overview` for a nontechnical
+observer, `practical` for someone following the route or testing the harness, or
+`technical` for inspecting implementation details. Default an unspecified human
+observer to `overview`; reuse an existing preference. Length is a separate choice.
+Lead with purpose, supported findings, actual observations when available,
+meaning, uncertainty and the next useful decision. Explain code screenshots and
+keep supporting details available by
+reference. Changing report level never changes claim strength or evidence scope.
+Use human feedback on terminology, remembered behavior or priorities to refine
+the existing dossier, keeping attributed reports distinct from observed results.
+
 Identify the game, platform, release, language, mod/patch and relevant settings
 from supplied evidence. Reuse existing artifact identities. If an identity is
 missing, say so; do not invent a hash or rehash an unchanged collection merely

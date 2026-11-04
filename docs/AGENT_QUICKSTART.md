@@ -20,6 +20,14 @@ capabilities do not make a port part of that request. For depth selection,
 control tracing and string-hit classification, retrieve
 `agent-skill --reference references/task-framing.md`.
 
+For human-facing results, choose `overview`, `practical` or `technical` detail
+for the intended reader. Default a human observer to an overview: purpose,
+supported finding, actual observations when available, implication, uncertainty
+and next step. Explain screenshots in
+that story and retain technical evidence by reference. Human corrections or
+domain knowledge can refine labels, hypotheses and priorities in the existing
+dossier/queue; ask at useful decision points and keep independent work moving.
+
 For repeated game work, grow a Z harness as you investigate, starting with menu
 choices and global controls such as map centering and zoom. Expose each learned
 action immediately and compose routes from those handlers. Add automated

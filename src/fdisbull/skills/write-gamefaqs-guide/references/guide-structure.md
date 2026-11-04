@@ -16,6 +16,25 @@ single puzzle, a recovered subsystem, a partial game, or the entire supported
 investigation. Match the title and section promises to that scope. A mechanics
 reference and a walkthrough can coexist without implying equal coverage.
 
+Set the reader and report level as part of that scope: `overview` explains the
+goal, supported finding, implication and uncertainty in ordinary language;
+`practical` adds
+usable steps, prerequisites and recovery; `technical` adds the relevant mechanisms
+and evidence details. Use an overview for an unspecified human observer, with
+optional detail for mixed audiences. Preserve the same facts and unknowns across
+levels. A short technical report and a long plain-language explanation are both
+possible; length does not define technical level.
+
+Tell the story of the investigation rather than presenting code captures alone.
+Caption a useful screenshot with what to notice, what it supports and what is
+still inferred. A disassembly image alone cannot show that an operation executed.
+Reuse retained evidence rather than producing new captures merely for decoration.
+At useful decision points, invite corrections about names, expected behavior or
+priorities. Attribute human observations and turn consequential feedback into
+the smallest next question in the existing dossier; presentation feedback can be
+handled by rewriting without another target run. Avoid a mandatory approval gate
+after every finding, and do not make the reader decode assembly to contribute.
+
 Adapt to the genre and evidence. An adventure benefits from puzzle dependencies,
 parser/action vocabulary, inventory use, timed hazards and dead ends. A strategy
 game benefits from unit/economy rules, scenario and faction distinctions, AI
