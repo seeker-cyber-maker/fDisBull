@@ -184,3 +184,14 @@ packages. Re-run the skill index/link gates after adding a reference. Preserve
 explicit errors/partial states; do not silently decode only a convenient prefix.
 Publish code, specifications and synthetic fixtures only within the user's
 publication authorization. Qualify consumer behavior in a separate experiment.
+
+
+## Shared format-module catalog and SMK2 framing
+
+Use `format-modules` and `file-identify` before format-specific research. Their
+SQLite catalog keeps minimal signature/header facts and links to the shipped
+reader seams without storing inspected payloads. The legacy adapters above keep
+their existing contracts. `media-inspect --adapter smacker` and `smk-frame` add
+bounded native SMK2 inspection/framing, with complete independent video/audio
+decoding and a separate original-game integration gate. See
+[format modules](file-formats.md) for commands and claim limits.

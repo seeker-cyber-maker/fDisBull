@@ -41,6 +41,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Check this copy's decoders, debuggers, diagnostics and UIL support without running a target | [Capabilities catalog](docs/CAPABILITIES.md) |
 | Understand an x86, ARM64 or Cortex-M executable without running it | [Disassemble, type and search](#disassemble-type-and-search) |
 | Unpack a local GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Identify an unfamiliar executable or media file, or prepare a compact cinematic variant | [Format modules and header catalog](docs/FILE_FORMAT_REGISTRY.md) |
 | Inventory a game collection, compare editions or inspect MZ/AGI/AVI media | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
 | Identify NES, SNES or Sega cartridges, CUE/ISO discs, or disassemble Saturn SH-2 / SNES 65816 | [Console media](docs/CONSOLE_MEDIA_PARSING.md) · [Disc parsing](docs/CUE_ISO_PARSING.md) · [ROM-to-ASM](docs/ROM_ASM.md) |
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |

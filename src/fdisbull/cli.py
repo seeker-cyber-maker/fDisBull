@@ -28,6 +28,7 @@ AGENT_SKILL_GUIDES = {
     "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",
     "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
     "references/media-modules.md": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
+    "references/file-formats.md": "Identify file headers through SQLite format modules and frame native SMK2 with explicit decoder/runtime gates",
     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
@@ -79,6 +80,9 @@ METHODS = {
     "macos-session-recover": "Inspect and restore owned pending native session changes; output",
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
+    "format-modules": "Discover format signatures, header fields and linked reader capabilities; [catalog_path]; no project required",
+    "file-identify": "Identify executable/media headers and nested views with a bounded format registry; path,[catalog_path,max_binary_bytes]; no input execution",
+    "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
@@ -487,6 +491,14 @@ def invoke(method, params, debugger=None):
         if p:
             raise ValueError("media-modules takes no parameters")
         return media_modules()
+    if method in ("format-modules", "file-identify"):
+        from .format_registry import format_catalog, identify_file
+
+        return (format_catalog if method == "format-modules" else identify_file)(**p)
+    if method == "smk-frame":
+        from .smacker import frame_smk
+
+        return frame_smk(**p)
     if method == "capture-audit":
         from .capture_audit import audit_capture
 
@@ -1187,6 +1199,9 @@ def respond(request, default_project=None, debugger=None):
                 "macos-session-recover",
                 "capabilities",
                 "media-modules",
+                "format-modules",
+                "file-identify",
+                "smk-frame",
                 "media-inspect",
                 "media-extract",
                 "agent-skill",
@@ -1922,6 +1937,20 @@ def parser():
                 c.add_argument("name")
                 c.add_argument("script", type=json.loads, help="JSON script object")
     sub.add_parser("media-modules", help=METHODS["media-modules"])
+    c = sub.add_parser("format-modules", help=METHODS["format-modules"])
+    c.add_argument("--catalog", dest="catalog_path", help="Persist/reopen metadata-only SQLite format catalog")
+    c = sub.add_parser("file-identify", help=METHODS["file-identify"])
+    c.add_argument("path")
+    c.add_argument("--catalog", dest="catalog_path")
+    c.add_argument("--max-binary-bytes", type=int, default=64 * 1024 * 1024)
+    c = sub.add_parser("smk-frame", help=METHODS["smk-frame"])
+    c.add_argument("path")
+    c.add_argument("output", help="New directory beneath an existing private parent outside Git")
+    c.add_argument("--keep-frames", type=int, default=32, help="Retain this many opening and ending images")
+    c.add_argument("--max-movie-bytes", dest="smk_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument("--ffmpeg", default="ffmpeg")
+    c.add_argument("--ffprobe", default="ffprobe")
+    c.add_argument("--timeout", type=float, default=120)
     c = sub.add_parser("capture-audit", help=METHODS["capture-audit"])
     c.add_argument(
         "inputs", nargs="+", help="Finalized AVI files; each keeps its own clock"
@@ -1961,7 +1990,7 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-extract":
@@ -2991,6 +3020,8 @@ def _dispatch(args):
             return 1
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
+    if command == "smk-frame":
+        args["max_output_bytes"] = args.pop("smk_max_output_bytes")
     if command == "capture-audit":
         args["max_output_bytes"] = args.pop("capture_max_output_bytes")
     if command.startswith(("udc-", "udl-")) and not command.startswith("udc-native-"):

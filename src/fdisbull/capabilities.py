@@ -66,6 +66,12 @@ def _entry(identifier, implementation, architectures, methods, providers, requir
 
 def _catalog():
     return [
+        _entry('inspect.file-formats', 'partial', ['container-dependent'],
+               ['cli:format-modules', 'cli:file-identify'], ['format_registry.py', 'inspection.py', 'image_views.py'], [],
+               'Versioned SQLite header facts and bounded signature/architecture/media probes. Recognition, structural validation, decoder availability and native execution are separate.'),
+        _entry('media.smk2-framing', 'partial', ['architecture-neutral'],
+               ['cli:media-inspect', 'cli:smk-frame'], ['smacker.py', 'media.py'], ['ffmpeg', 'ffprobe'],
+               'Bounded native SMK2 FULL/SKIP framing with exact selected images/palettes and complete original audio. Independent decoding does not qualify an original game or arbitrary seeking.'),
         _entry('decode.x86', 'implemented', ['x86-16', 'x86-32', 'x86-64'],
                ['python:decoder.decode', 'cli:disasm'], ['decoder.py'], ['iced-x86', 'capstone'],
                'Native instruction facts; indirect and segmented targets may remain unresolved.'),
@@ -172,6 +178,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
         'ghidra-headless': _tool('analyzeHeadless', analyze_headless),
         'lldb': _tool('lldb', lldb), 'java': _tool('java', java),
         'swiftc': _tool('swiftc', None),
+        'ffmpeg': _tool('ffmpeg', None), 'ffprobe': _tool('ffprobe', None),
         'dos-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'pe64-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'native-c-compiler': {'kind': 'configuration', 'status': 'not_selected'},

@@ -178,6 +178,22 @@ budgets and failed-run diagnostics.
 
 ## Choose a route
 
+### Identify an unfamiliar file or prepare a movie variant
+
+Start with `fdisbull file-identify /private/input` and `fdisbull format-modules`.
+The common format-module catalog records signature/header facts and links to
+implemented readers. `--catalog /private/formats.sqlite` persists those facts
+for later sessions. Unknown formats, header recognition, supported image views
+and decoder limitations are separate results; a filename extension is not proof.
+The older `identify` command retains its binary-header response contract.
+
+For a bounded native SMK2 framing variant, use `fdisbull media-inspect INPUT
+--adapter smacker`, then `fdisbull smk-frame INPUT /private/new-output`.
+This retains opening/ending images and complete embedded audio, with native hold
+frames between. Full independent decoding is required; original-game playback
+and seeking remain separate checks. Fetch
+`agent-skill --reference references/file-formats.md` for limits and examples.
+
 ### Intake a collection or a single addition
 
 Use [collection intake](TARGET_COLLECTION_INTAKE.md) for the common per-artifact
