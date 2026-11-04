@@ -43,7 +43,7 @@ class ScummVMRPC:
 
     def __init__(self, executable, game_dir, *, game_id, runtime_parent,
                  boot_timeout_ms=240000, on_spawn=None, engine='agi',
-                 language=None, platform=None):
+                 language=None, platform=None, extra_path=None):
         executable = Path(executable).expanduser().resolve(strict=True)
         game_dir = Path(game_dir).expanduser().resolve(strict=True)
         runtime_parent = Path(runtime_parent).expanduser().resolve(strict=True)
@@ -51,14 +51,20 @@ class ScummVMRPC:
             raise ScummVMError('Expected an executable patched ScummVM backend')
         if not game_dir.is_dir() or not runtime_parent.is_dir():
             raise ScummVMError('Expected existing game and private runtime directories')
-        if engine not in ('agi', 'gob'):
-            raise ValueError('ScummVM engine must be agi or gob')
+        if engine not in ('agi', 'gob', 'glk'):
+            raise ValueError('ScummVM engine must be agi, gob or glk')
+        if extra_path is not None:
+            extra_path = Path(extra_path).expanduser().resolve(strict=True)
+            if not extra_path.is_dir():
+                raise ValueError('ScummVM extra_path must be an existing directory')
         if isinstance(game_id, str) and game_id.startswith(engine + ':'):
             game_id = game_id[len(engine) + 1:]
         if not isinstance(game_id, str) or not _GAME_ID.fullmatch(game_id):
             raise ValueError(f'ScummVM {engine.upper()} game_id must be a simple ID or {engine}:<ID>')
         if engine == 'gob' and game_id not in _GOB_GAME_IDS:
             raise ValueError('ScummVM Gob agent profile supports only Lost in Time (lit, lit1, lit2)')
+        if engine == 'glk' and game_id not in ('zcode', 'zork1', 'zork2', 'zork3'):
+            raise ValueError('GLK agent selection is limited to the Z-code/Zork profiles')
         for name, value in (('language', language), ('platform', platform)):
             if value is not None and (not isinstance(value, str) or not _LAUNCH_OPTION.fullmatch(value)):
                 raise ValueError(f'ScummVM {name} must be a simple option value')
@@ -105,6 +111,8 @@ class ScummVMRPC:
                 arguments.append('--language=' + language)
             if platform is not None:
                 arguments.append('--platform=' + platform)
+            if extra_path is not None:
+                arguments.append('--extrapath=' + str(extra_path))
             arguments.append(engine + ':' + game_id)
             with (self.root / 'scummvm.log').open('wb') as log:
                 self.process = subprocess.Popen(arguments, cwd=self.root, env=environment,
@@ -124,6 +132,13 @@ class ScummVMRPC:
             if (hello.get('engine') != engine or not isinstance(hello.get('capabilities'), list)
                     or any(not isinstance(item, str) for item in hello['capabilities'])):
                 raise ScummVMError(f'Backend did not advertise the {engine.upper()} agent protocol')
+            if engine == 'glk':
+                expected = {'protocol': 'fdisbull-scummvm-agent', 'protocol_version': 1,
+                            'bridge_version': 1, 'subengine': 'zcode', 'zversion': 3,
+                            'profile': 'glk-zcode-v3', 'original_x86_executed': False}
+                if any(type(hello.get(k)) is not type(v) or hello.get(k) != v
+                       for k, v in expected.items()):
+                    raise ScummVMError('Backend lacks the pinned GLK/Z-code agent profile')
             if engine == 'gob' and (hello.get('protocol') != 'fdisbull-scummvm-agent'
                     or type(hello.get('protocol_version')) is not int or hello['protocol_version'] != 1
                     or type(hello.get('bridge_version')) is not int or hello['bridge_version'] != 1
