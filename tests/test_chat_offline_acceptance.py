@@ -265,3 +265,15 @@ def test_loader_closure_accepts_declared_private_vendor_elf(tmp_path, monkeypatc
     roles={'loader':[loader],'closure_receipt':[receipt],'other':[app,library]}
     monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw: SimpleNamespace(returncode=0,stdout=f'libimage.so => {library} (0x1234)\n',stderr=''))
     assert verifier.check_loader_closure(root,roles)==3
+
+
+def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path):
+    class Project:
+        def debugger(self, *args, **kwargs):
+            self.args, self.kwargs = args, kwargs
+            return 'session'
+    project = Project()
+    assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine') == 'session'
+    assert project.args == (tmp_path / 'bin/qemu', tmp_path / 'work')
+    assert project.kwargs == {'kernel': tmp_path / 'kernel', 'initramfs': tmp_path / 'wine',
+                              'memory_mib': 8192, 'boot_timeout_ms': 600000}

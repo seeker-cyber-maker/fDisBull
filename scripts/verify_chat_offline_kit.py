@@ -280,6 +280,12 @@ def confined(root, manifest):
 
 
 
+def windows_debugger(project, root, workspace, kernel, initramfs):
+    """Allow the full retained Windows guest room to boot under QEMU."""
+    return project.debugger(root / 'bin/qemu', workspace, kernel=kernel, initramfs=initramfs,
+                            memory_mib=8192, boot_timeout_ms=600000)
+
+
 def verify(root, workspace, archive):
     root, workspace, archive = root.resolve(), workspace.resolve(), archive.resolve()
     if root == workspace or root.is_relative_to(workspace) or workspace.is_relative_to(root):
@@ -287,7 +293,7 @@ def verify(root, workspace, archive):
     if any(workspace.iterdir()):
         raise ValueError('Workspace must start empty')
     if archive.stat().st_size > 2_000_000_000:
-        raise ValueError('Archive exceeds 512 MB attachment limit')
+        raise ValueError('Archive exceeds 2 GB limit')
     manifest, roles = inventory(root)
     verify_archive(archive, root)
     confined(root, manifest)
@@ -345,7 +351,7 @@ def verify(root, workspace, archive):
     pe=workspace/'oracle.exe';pe.write_bytes(fixture.read_bytes())
     with Project.create(workspace/'pe.fdb',pe) as project:
         project.analyze(start=checkpoint,max_instructions=64)
-        with project.debugger(root/'bin/qemu',workspace,kernel=required(roles,'kernel'),initramfs=runtime['wine']) as debug:
+        with windows_debugger(project, root, workspace, required(roles, 'kernel'), runtime['wine']) as debug:
             bp=debug.breakpoint(checkpoint)
             if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
             if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
