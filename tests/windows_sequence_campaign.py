@@ -21,9 +21,9 @@ class Case:
 
 
 WIN16_CASES = (
-    Case('bootstrap-only', ('bootstrap', 'register-edit-restore', 'physical-n', 'physical-r', 'named-scene', 'spectator'), False, False, True),
-    Case('entry-step', ('bootstrap', 'register-edit-restore', 'entry-jmp-step', 'breakpoint-hit', 'physical-n', 'physical-r', 'named-scene', 'spectator'), True, False, True),
     Case('full-debugger', ('bootstrap', 'register-edit-restore', 'entry-jmp-step', 'breakpoint-hit', 'far-call-trace', 'physical-n', 'physical-r', 'named-scene', 'spectator'), True, True, True),
+    Case('entry-step', ('bootstrap', 'register-edit-restore', 'entry-jmp-step', 'breakpoint-hit', 'physical-n', 'physical-r', 'named-scene', 'spectator'), True, False, True),
+    Case('bootstrap-only', ('bootstrap', 'register-edit-restore', 'physical-n', 'physical-r', 'named-scene', 'spectator'), False, False, True),
 )
 
 
@@ -168,20 +168,28 @@ def retain_campaign(output: Path, observations: list[dict]) -> dict:
 
 
 def run_bounded(cases: tuple[Case, ...], run_fresh_case, *, max_cases: int = 3) -> tuple[list[dict], dict]:
-    """Execute at most three fresh cases through the caller's existing harness.
+    """Run the highest-value case first, then narrower cases after its failure.
 
     The callback must return (terminal receipt, optional stopped fault). A
-    failed/uncertain cleanup ends the campaign; it is never replay permission.
+    passed first case needs no narrower isolation. A failed first case may be
+    followed by narrower *fresh* cases only after its guest is reaped. Failed
+    or uncertain cleanup at any point ends the campaign without replay.
     """
     if type(max_cases) is not int or not 1 <= max_cases <= 3 or len(cases) < max_cases:
         raise ValueError('Campaign requires one to three declared fresh cases')
     if len({case.name for case in cases}) != len(cases) or any(not case.operations for case in cases):
         raise ValueError('Campaign cases need distinct names and ordered operations')
     observations = []
-    for case in cases[:max_cases]:
+    for index, case in enumerate(cases[:max_cases]):
         receipt, fault = run_fresh_case(case)
         observation = observe(case, receipt, fault)
         observations.append(observation)
+        if observation['status'] == 'passed':
+            missing = set(case.operations) - set(observation['completed_operations'])
+            if missing:
+                raise ValueError('Passed case lacks observed operation milestones')
         if not observation['original_reaped']:
+            break
+        if index == 0 and observation['status'] == 'passed':
             break
     return observations, select_corpus(observations)

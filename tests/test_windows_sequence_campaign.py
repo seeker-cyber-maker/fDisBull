@@ -9,6 +9,8 @@ import pytest
 from windows_sequence_campaign import WIN16_CASES, fault_family, observe, retain_campaign, run_bounded, select_corpus
 from test_win16_native import qualify_win16_snake
 
+FULL, ENTRY, BOOTSTRAP = WIN16_CASES
+
 
 def fault(*,pc='ne:2:0xa56d',raw='0xa4a97d',access='0x0',target='0xffffffffffffffff'):
     return {'stop': {'project_address':pc,'raw_address':raw},
@@ -28,6 +30,20 @@ def receipt(case,stages,*,status='failed'):
             'owned_process_reaped':True}
 
 
+def passed_stages(case):
+    stages=['actual-original-ne-entry',
+            'actual-ne-checked-register-edit-restored-before-continuation']
+    if case.trace_farcall:
+        stages.append('actual-ne-memory-execution-breakpoint-step-trace')
+    elif case.debug_probes:
+        stages.append('controlled-entry-jmp-step-and-breakpoint-without-far-call-trace')
+    stages.extend(('physical-ne-key-produced-observed-body-pixel',
+                   'actual-ne-ordinary-r-reset',
+                   'actual-ne-named-scene-replayed-physical-transition',
+                   'actual-ne-dot-mode-retained-frame-http-no-host-input'))
+    return stages
+
+
 def test_fault_family_uses_access_kind_and_source_location_instead_of_code_and_pc_only():
     a=fault();b=fault(raw='0xb4a97d');c=fault(access='0x8',target='0x0');d=fault(pc=None,raw='0x0')
     assert fault_family(a)==fault_family(b)  # relocation does not split one source failure
@@ -36,22 +52,22 @@ def test_fault_family_uses_access_kind_and_source_location_instead_of_code_and_p
 
 
 def test_shortest_declared_failure_case_keeps_completed_prefix_and_new_stage_feedback():
-    full=observe(WIN16_CASES[2],receipt(WIN16_CASES[2],['actual-original-ne-entry','step','fault']),fault())
-    minimal=observe(WIN16_CASES[0],receipt(WIN16_CASES[0],['actual-original-ne-entry','fault']),fault(raw='0xb4a97d'))
-    different=observe(WIN16_CASES[0],receipt(WIN16_CASES[0],['entry','fault']),fault(access='0x8',target='0x0'))
+    full=observe(FULL,receipt(FULL,['actual-original-ne-entry','step','fault']),fault())
+    minimal=observe(BOOTSTRAP,receipt(BOOTSTRAP,['actual-original-ne-entry','fault']),fault(raw='0xb4a97d'))
+    different=observe(BOOTSTRAP,receipt(BOOTSTRAP,['entry','fault']),fault(access='0x8',target='0x0'))
     result=select_corpus([full,minimal,different])
     assert [row['case'] for row in result['novel_cases']]==['full-debugger','bootstrap-only','bootstrap-only']
     assert len(result['shortest_declared_failure_cases'])==2
     selected=result['shortest_declared_failure_cases'][0]
     assert selected['case']=='bootstrap-only'
-    assert selected['declared_operations']==list(WIN16_CASES[0].operations)
+    assert selected['declared_operations']==list(BOOTSTRAP.operations)
     assert selected['completed_operations']==['bootstrap']
     assert len(selected['completed_operations'])<len(selected['declared_operations'])
     assert result['shortest_declared_failure_cases'][1]['fault_family']!=selected['fault_family']
 
 
 def test_candidate_identity_scopes_stage_and_fault_novelty():
-    case=WIN16_CASES[0]
+    case=BOOTSTRAP
     initial=receipt(case,['actual-original-ne-entry','fault'])
     changed=receipt(case,['actual-original-ne-entry','fault'])
     changed['adapter_sha256']='d'*64
@@ -64,7 +80,7 @@ def test_candidate_identity_scopes_stage_and_fault_novelty():
 
 
 def test_invalid_or_unidentified_native_receipt_never_becomes_feedback():
-    case=WIN16_CASES[0]
+    case=BOOTSTRAP
     with pytest.raises(ValueError,match='identified'):
         observe(case,{'status':'failed','checks':[]},fault())
     invalid=receipt(case,['entry']);invalid['source_sha256']='unknown'
@@ -78,7 +94,7 @@ def test_invalid_or_unidentified_native_receipt_never_becomes_feedback():
 
 
 def test_completed_operation_feedback_tracks_observed_stages_only():
-    case=WIN16_CASES[0]
+    case=BOOTSTRAP
     stages=['actual-original-ne-entry','actual-ne-checked-register-edit-restored-before-continuation',
             'physical-ne-key-produced-observed-body-pixel']
     result=observe(case,receipt(case,stages,status='passed'))
@@ -88,7 +104,7 @@ def test_completed_operation_feedback_tracks_observed_stages_only():
 
 
 def test_campaign_summary_uses_fresh_private_file_and_does_not_embed_fault_dump(tmp_path):
-    case=WIN16_CASES[0];observation=observe(case,receipt(case,['entry','fault']),fault())
+    case=BOOTSTRAP;observation=observe(case,receipt(case,['entry','fault']),fault())
     path=tmp_path/'campaign.json'
     identity=retain_campaign(path,[observation])
     text=path.read_text();result=json.loads(text)
@@ -108,11 +124,58 @@ def test_bounded_runner_never_replays_or_continues_after_uncertain_guest_cleanup
         if len(called)==2:result['owned_process_reaped']=False
         return result,fault()
     observations,feedback=run_bounded(WIN16_CASES,fresh,max_cases=3)
-    assert called==['bootstrap-only','entry-step']
+    assert called==['full-debugger','entry-step']
     assert len(observations)==2 and observations[-1]['original_reaped'] is False
     assert feedback['schema']=='fdisbull-windows-sequence-campaign-2'
     with pytest.raises(ValueError,match='one to three'):
         run_bounded(WIN16_CASES,fresh,max_cases=4)
+
+
+def test_adaptive_campaign_starts_with_full_route_and_stops_after_its_pass():
+    assert [case.name for case in WIN16_CASES]==['full-debugger','entry-step','bootstrap-only']
+    called=[]
+    def fresh(case):
+        called.append(case.name)
+        return receipt(case,passed_stages(case),status='passed'),None
+    observations,feedback=run_bounded(WIN16_CASES,fresh,max_cases=3)
+    assert called==['full-debugger']
+    assert len(observations)==1 and observations[0]['status']=='passed'
+    assert feedback['shortest_declared_failure_cases']==[]
+
+
+def test_adaptive_campaign_refuses_a_partial_first_case_pass():
+    called=[]
+    def fresh(case):
+        called.append(case.name)
+        return receipt(case,['actual-original-ne-entry'],status='passed'),None
+    with pytest.raises(ValueError,match='Passed case lacks observed operation milestones'):
+        run_bounded(WIN16_CASES,fresh,max_cases=3)
+    assert called==['full-debugger']
+
+
+def test_adaptive_campaign_isolates_terminal_full_failure_with_two_fresh_cases():
+    called=[]
+    def fresh(case):
+        called.append(case.name)
+        if case is FULL:
+            return receipt(case,['actual-original-ne-entry']),fault()
+        return receipt(case,passed_stages(case),status='passed'),None
+    observations,feedback=run_bounded(WIN16_CASES,fresh,max_cases=3)
+    assert called==['full-debugger','entry-step','bootstrap-only']
+    assert [item['status'] for item in observations]==['failed','passed','passed']
+    assert [item['case'] for item in feedback['shortest_declared_failure_cases']]==['full-debugger']
+
+
+def test_adaptive_campaign_refuses_a_partial_narrow_case_pass():
+    called=[]
+    def fresh(case):
+        called.append(case.name)
+        if case is FULL:
+            return receipt(case,['actual-original-ne-entry']),fault()
+        return receipt(case,['actual-original-ne-entry'],status='passed'),None
+    with pytest.raises(ValueError,match='Passed case lacks observed operation milestones'):
+        run_bounded(WIN16_CASES,fresh,max_cases=3)
+    assert called==['full-debugger','entry-step']
 
 
 def test_real_win16_bounded_operation_campaign():
