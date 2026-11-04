@@ -83,5 +83,6 @@ project. Responses use the ordinary bounded-output policy:
 
 Python callers can use `fdisbull.gog_unpack.list_gog` and `unpack_gog` with the
 same keyword arguments. `timeout` is an integer from 1 to 3600 seconds for the
-whole native parsing, hashing and extraction deadline, defaulting to 300. Native
-format details and qualification evidence are in `docs/NATIVE_INNO_562.md`.
+native parsing, source hashing and extraction deadline, defaulting to 300.
+Adjacent-part receipt hashing happens outside that deadline. Native format
+details and qualification evidence are in `docs/NATIVE_INNO_562.md`.
