@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import shutil
+import importlib.util
 
 from execution_identity import canonical_uuid
 
@@ -15,7 +16,8 @@ IDENTITY = Path('native-evidence/pe/backend-identity.json')
 FIRMWARE = Path('native-evidence/pe/firmware')
 RESOURCES = {
     'wine': {'init': 'src/fdisbull/wine_guest/init.sh', 'opt/fdisbull/agent.c': 'src/fdisbull/wine_guest/agent.c',
-             'opt/fdisbull/broker.py': 'src/fdisbull/wine_guest/broker.py', 'opt/fdisbull/selftest.c': 'src/fdisbull/wine_guest/selftest.c'},
+             'opt/fdisbull/broker.py': 'src/fdisbull/wine_guest/broker.py', 'opt/fdisbull/selftest.c': 'src/fdisbull/wine_guest/selftest.c',
+             'opt/fdisbull/selftest32.c': 'src/fdisbull/wine_guest/selftest32.c'},
     'dos': {'init': 'src/fdisbull/dos_guest/init.sh', 'opt/fdisbull/dos_broker.py': 'src/fdisbull/dos_guest/broker.py',
             'opt/fdisbull/remote/__init__.py': 'src/fdisbull/dos_guest/__init__.py',
             'opt/fdisbull/remote/dosbox_rpc.py': 'src/fdisbull/dosbox_rpc.py'}}
@@ -119,6 +121,71 @@ def check_resources(root, source_root, inputs):
     return receipts
 
 
+def retained_base_checker():
+    spec = importlib.util.spec_from_file_location('retained_base_provenance', Path(__file__).with_name('retained-runtime-base.py'))
+    checker = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(checker)
+    return checker
+
+
+def retained_provenance(root, source_sha, run, job, inputs, identity, source_root):
+    """Bind foreign immutable components to this fresh preparation only."""
+    name = 'native-evidence/pe/retained-base-preparation.json'
+    if not (Path(root)/name).exists():
+        if 'retained_base' in identity:
+            raise ValueError('Retained base preparation proof missing')
+        return None
+    receipt_path = checked_path(name, root)
+    receipt = json.loads(receipt_path.read_text())
+    manifest_path = checked_path('native-evidence/pe/retained-base-manifest.json', root)
+    manifest = json.loads(manifest_path.read_text())
+    checker = retained_base_checker()
+    checker.original_proof(manifest)
+    if (manifest.get('schema') != checker.SCHEMA
+            or receipt.get('schema') != 'fdisbull-retained-base-preparation-1'
+            or receipt.get('source_commit') != source_sha or receipt.get('local_run_id') != run
+            or receipt.get('build_job_id') != job
+            or receipt.get('manifest_sha256') != item(manifest_path, root)['sha256']
+            or receipt.get('origin_source_commit') != manifest['origin_source_commit']
+            or receipt.get('origin_job_exit_code') != manifest['origin_process']['exit_code']
+            or receipt.get('os_capabilities') != manifest['os_inventory']['capabilities']
+            or not set(receipt.get('required_os_capabilities', ())) <= set(receipt['os_capabilities'])
+            or receipt.get('previous_project_resources_removed') != list(checker.EXTRA_OMIT)
+            or identity.get('retained_base') != item(receipt_path, root)):
+        raise ValueError('Retained base proof is foreign, changed or missing exact candidate preparation identity')
+    for key in checker.PATHS:
+        if (inputs[key]['sha256'], inputs[key]['size']) != (manifest['inputs'][key]['sha256'], manifest['inputs'][key]['size']):
+            raise ValueError('Retained component differs from original build proof')
+    for kind in ('runtime-preparation.json', 'dos-runtime-preparation.json'):
+        doc = json.loads(checked_path('native-evidence/pe/'+kind, root).read_text())
+        if doc.get('base_sha256') != manifest['shared_os_base']['sha256']:
+            raise ValueError('Fresh overlay used a different OS base')
+    windows_image = item(checked_path('native-evidence/pe/windows-runtime.cpio.gz', root), root)
+    windows_receipt_path = checked_path('native-evidence/pe/windows-runtime-preparation.json', root)
+    windows_receipt = json.loads(windows_receipt_path.read_text())
+    if (windows_receipt.get('base_sha256') != manifest['os_base']['sha256']
+            or windows_receipt.get('runtime_sha256') != windows_image['sha256']
+            or windows_receipt.get('resources') != json.loads(checked_path('native-evidence/pe/runtime-preparation.json', root).read_text())['resources']):
+        raise ValueError('Fresh Windows runtime base or candidate resource mismatch')
+    fixture = identity.get('authored_pe32_fixture', {})
+    binary = item(checked_path('native-evidence/pe/selftest32.exe', root), root)
+    if fixture.get('binary') != binary:
+        raise ValueError('Authored PE32 fixture changed')
+    if source_root is not None:
+        source = item(checked_path('src/fdisbull/wine_guest/selftest32.c', source_root), source_root)
+        ref = fixture.get('source', {})
+        if (source['sha256'], source['size']) != (ref.get('sha256'), ref.get('size')):
+            raise ValueError('Authored PE32 fixture source changed')
+    fixtures = None
+    if manifest.get('windows_fixtures') is not None:
+        fixtures = checker.windows_fixtures(Path(root)/'native-evidence/pe/windows-fixtures')
+        if fixtures != manifest['windows_fixtures']:
+            raise ValueError('Authored selector/Snake fixtures changed')
+    return {'manifest': item(manifest_path, root), 'preparation': item(receipt_path, root),
+            'pe32_fixture': binary, 'windows_fixtures': fixtures,
+            'windows_runtime': windows_image, 'windows_resources': item(windows_receipt_path, root)}
+
+
 def prepare():
     sha, run = context()
     build_job = canonical_uuid(os.environ.get('FDISBULL_LOCAL_JOB_ID'))
@@ -150,6 +217,9 @@ def prepare():
                 'local_run_id': run, 'build_job_id': build_job, 'inputs': inputs,
                 'backend_identity': item(IDENTITY), 'tested_wheel': tested_wheel,
                 'firmware': firmware, 'resource_receipts': resource_receipts}
+    provenance = retained_provenance(ROOT, sha, run, build_job, inputs, identity, ROOT)
+    if provenance is not None:
+        manifest['retained_base'] = provenance
     with MANIFEST.open('x') as stream:
         json.dump(manifest, stream, indent=2)
         stream.write('\n')
@@ -197,6 +267,8 @@ def verify(root=None, source_sha=None, run_uuid=None, build_job_uuid=None, sourc
         raise ValueError('QEMU firmware content mismatch')
     if check_resources(root, source_root, inputs) != manifest.get('resource_receipts'):
         raise ValueError('runtime resource preparation evidence changed')
+    if retained_provenance(root, source_sha, run_uuid, build_job_uuid, inputs, identity, source_root) != manifest.get('retained_base'):
+        raise ValueError('Retained base provenance changed')
     if install_firmware is not None:
         destination = Path(install_firmware)
         if os.path.lexists(destination):

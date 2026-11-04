@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 
 JOBS = {"ordinary": "test-and-package", "stable": "native-debugger-stable",
         "layers": "native-debugger-layers", "unified": "native-unified"}
-JUNIT = {"ordinary": ['artifacts/ordinary/tests.xml'], "stable": ['native-evidence/stable/tests.xml'],
+JUNIT = {"ordinary": ['artifacts/ordinary/tests.xml', 'artifacts/ordinary/required-contracts.xml'], "stable": ['native-evidence/stable/tests.xml'],
          "layers": ['native-evidence/layers/tests.xml'],
          "unified": ['native-evidence/pe/tests.xml', 'native-evidence/unified/tests.xml']}
 
@@ -247,6 +247,10 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
         for item in tests:
             verify_artifact(root, item)
             counts.append(passing_junit(local_path(root, item['path']), native=profile != 'ordinary'))
+            if item['path'] == 'artifacts/ordinary/required-contracts.xml':
+                required = passing_junit(local_path(root, item['path']), native=True)
+                if required['tests'] != 26:
+                    raise ValueError('Required return/event contract count changed')
         for item in artifacts:
             verify_artifact(root, item)
         if profile != 'ordinary' and receipt.get('backend_identity', {}).get('source_commit') != source_commit:
@@ -298,10 +302,13 @@ def write_ordinary(root):
     if payload.get('source_commit') != os.environ['CI_COMMIT_SHA'] or payload.get('tracked_worktree_dirty') is not False:
         raise ValueError("Cannot certify dirty or wrong-source package inventory")
     passing_junit(root / 'artifacts/ordinary/tests.xml')
+    required = passing_junit(root / 'artifacts/ordinary/required-contracts.xml', native=True)
+    if required['tests'] != 26:
+        raise ValueError('Required return/event contract count changed')
     return {"status": "passed", "profile": "ordinary", "source_commit": os.environ['CI_COMMIT_SHA'],
             **execution_identity(), "python_version": platform.python_version(),
             "node_version": subprocess.check_output(['node', '--version'], text=True).strip(),
-            "test_results": [identity(root, 'artifacts/ordinary/tests.xml')],
+            "test_results": [identity(root, name) for name in JUNIT['ordinary']],
             "artifacts": [identity(root, 'dist/' + v['name']) for v in payload['artifacts'].values()]}
 
 

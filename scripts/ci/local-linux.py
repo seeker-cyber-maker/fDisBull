@@ -402,6 +402,19 @@ def unified_input_verifier(source):
     return module
 
 
+def retained_base_verifier(source):
+    script = source / 'scripts/ci/retained-runtime-base.py'
+    spec = importlib.util.spec_from_file_location('fdisbull_ci_retained_base', script)
+    module = importlib.util.module_from_spec(spec)
+    original = sys.path[:]
+    try:
+        sys.path.insert(0, str(script.parent))
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = original
+    return module
+
+
 def read_regular_json(path):
     if path.is_symlink() or not path.is_file() or path.stat().st_size > 2 * 1024 * 1024:
         raise ValueError('Missing or invalid local preparation proof')
@@ -477,6 +490,18 @@ def execute(args):
         if upstream_archive is None or upstream_sha256 is None:
             raise ValueError('Local native CI requires an explicit pinned DOSBox upstream archive')
         upstream_archive_identity(upstream_archive, upstream_sha256)
+    base_manifest = getattr(args, 'retained_base_manifest', None)
+    base_root = getattr(args, 'retained_base_root', None)
+    os_base = getattr(args, 'retained_os_base', None)
+    base_hash = getattr(args, 'retained_base_sha256', None)
+    required_os = getattr(args, 'require_os_capability', None) or ['wine64', 'dos']
+    windows_fixtures = getattr(args, 'retained_windows_fixtures', None)
+    retained_base = None
+    if any(v is not None for v in (base_manifest, base_root, os_base, base_hash)):
+        if any(v is None for v in (base_manifest, base_root, os_base, base_hash)):
+            raise ValueError('Retained base requires explicit manifest, hash, component root and OS base')
+        retained_base = retained_base_verifier(source).verify(
+            base_manifest, base_root, os_base, base_hash, required=required_os, fixtures=windows_fixtures)
     run_root = args.output.absolute()
     if not any(run_root.is_relative_to(Path(p)) for p in ('/Volumes/CACHE', '/Volumes/CODEX')):
         raise ValueError('Use an external CACHE or CODEX output directory')
@@ -524,7 +549,27 @@ def execute(args):
             raise ValueError('Both DOS native profiles must pass before unified acceptance')
         phase = run_root / profile
         phase.mkdir()  # never overwrite an interrupted or failed attempt
-        save(phase / 'storage-admission.json', admit_destinations(run_root, expected_bytes(args, profile), args.reserve_bytes))
+        allocation = expected_bytes(args, profile)
+        if profile == 'unified-prepare' and retained_base is not None:
+            bound = retained_base_verifier(source).estimate(os_base,
+                (output / '.native/backends/layers/dosbox-x').stat().st_size, source_root=source,
+                shared_os_base=base_root / '.native/pe/runtime.cpio.gz')
+            save(phase / 'retained-base-allocation-bound.json', bound)
+            if args.expected_bytes is not None and args.expected_bytes < bound['expected_bytes']:
+                raise ValueError('Explicit allocation is below the measured retained-base bound')
+            allocation = bound['expected_bytes'] if args.expected_bytes is None else args.expected_bytes
+        if profile == 'unified' and (output/'native-evidence/pe/windows-runtime.cpio.gz').exists():
+            runtime_bytes = sum((output/name).stat().st_size for name in UNIFIED_INPUTS)
+            runtime_bytes += (output/'native-evidence/pe/windows-runtime.cpio.gz').stat().st_size
+            # Staged host input, guest working copy and exported evidence; the
+            # completed preparation/qualification copies already occupy space.
+            needed = ((3*runtime_bytes + 4_000_000_000 + 999_999_999)//1_000_000_000)*1_000_000_000
+            if args.expected_bytes is not None and args.expected_bytes < needed:
+                raise ValueError('Explicit acceptance allocation is below its retained-input copy bound')
+            allocation = needed if args.expected_bytes is None else args.expected_bytes
+            save(phase/'retained-acceptance-allocation-bound.json', {'expected_bytes':needed,
+                 'prepared_input_bytes':runtime_bytes,'retained_copies':3,'system_and_evidence_budget':4_000_000_000})
+        save(phase / 'storage-admission.json', admit_destinations(run_root, allocation, args.reserve_bytes))
         job_id = str(uuid.uuid4())
         name = f'fdb-ci-{profile}-{job_id[:8]}'
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
@@ -547,7 +592,7 @@ def execute(args):
                            stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
         image = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])))
         orchestrator = None
-        if profile == 'unified-prepare':
+        if profile == 'unified-prepare' and retained_base is None:
             with (phase / 'orchestrator-image-pull.log').open('x') as log:
                 subprocess.run([str(CLI), 'image', 'pull', '--arch', 'arm64', IMAGES[profile]],
                                stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
@@ -566,6 +611,25 @@ def execute(args):
                    '--mount', f'type=bind,source={work},target=/source,readonly',
                    '--mount', f'type=bind,source={guest_data},target=/run-data']
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
+        if profile == 'unified-prepare' and retained_base is not None:
+            staged = work / '.native/retained-base-manifest.json'
+            staged.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(base_manifest, staged)
+            if retained_base_verifier(source).digest(staged) != base_hash:
+                raise ValueError('Retained base manifest changed during staging')
+            command += ['--mount', f'type=bind,source={base_root.resolve()},target=/runtime-base,readonly',
+                        '--mount', f'type=bind,source={os_base.resolve().parent},target=/runtime-os-base,readonly']
+            environment.update(FDISBULL_RETAINED_BASE_MANIFEST='/work/.native/retained-base-manifest.json',
+                FDISBULL_RETAINED_BASE_ROOT='/runtime-base',
+                FDISBULL_RETAINED_OS_BASE='/runtime-os-base/' + os_base.name,
+                FDISBULL_RETAINED_BASE_SHA256=base_hash,
+                FDISBULL_RETAINED_REQUIRED=json.dumps(required_os))
+            if retained_base.get('windows_fixtures') is not None:
+                target = work / 'native-evidence/pe/windows-fixtures'
+                shutil.copytree(windows_fixtures, target)
+                if retained_base_verifier(source).windows_fixtures(target) != retained_base['windows_fixtures']:
+                    raise ValueError('Authored Windows fixtures changed during staging')
+                environment['FDISBULL_RETAINED_WINDOWS_FIXTURES'] = '/work/native-evidence/pe/windows-fixtures'
         if upstream is not None:
             environment.update(FDISBULL_DOSBOX_UPSTREAM_ARCHIVE='/work/' + DOSBOX_UPSTREAM_ARCHIVE,
                                FDISBULL_DOSBOX_UPSTREAM_SHA256=upstream['archive_sha256'])
@@ -573,6 +637,22 @@ def execute(args):
             if preparation['image_digest'] != image['image_digest']:
                 raise ValueError('Prepared runtime build and test images differ')
             environment['FDISBULL_UNIFIED_BUILD_JOB_ID'] = preparation['local_job_id']
+            retained_proof = output / 'native-evidence/pe/retained-base-preparation.json'
+            if retained_proof.is_file():
+                capabilities = read_regular_json(retained_proof)['os_capabilities']
+                if 'pe32' in capabilities:
+                    environment['FDISBULL_REQUIRE_WINDOWS'] = '1'
+                if (output / 'native-evidence/pe/windows-fixtures/selector.exe').is_file():
+                    environment.update(FDISBULL_NE_QEMU=environment['FDISBULL_PE_QEMU'],
+                        FDISBULL_NE_KERNEL=environment['FDISBULL_PE_KERNEL'],
+                        FDISBULL_NE_INITRAMFS=environment['FDISBULL_PE_INITRAMFS'],
+                        FDISBULL_NE_FIXTURE='/work/native-evidence/pe/windows-fixtures/selector.exe',
+                        FDISBULL_NE_SNAKE_EXE='/work/native-evidence/pe/windows-fixtures/PROGRAM.EXE',
+                        FDISBULL_NE_SNAKE_INITIAL='/work/native-evidence/pe/windows-fixtures/INITIAL.BIN',
+                        FDISBULL_REQUIRE_NE='1', FDISBULL_REQUIRE_NE_GUI='1',
+                        FDISBULL_NE_GUI_GPR_PROBE='1', FDISBULL_REQUIRE_NE_CAMPAIGN='1',
+                        FDISBULL_NE_CAMPAIGN_CASES='3',
+                        FDISBULL_NE_CAMPAIGN_OUTPUT='/work/native-evidence/pe/windows-campaign')
         if reuse_backend is not None:
             environment.update(FDISBULL_REUSE_BACKEND='1', FDISBULL_REUSE_IMAGE_DIGEST=image['image_digest'])
         if orchestrator is not None:
@@ -643,6 +723,12 @@ def main():
     parser.add_argument('--reuse-layers-backend', type=Path, help='Explicit prior layers exported evidence root; reruns all tests and offline-kit checks')
     parser.add_argument('--dosbox-upstream-archive', type=Path, help='Self-contained bare Git tar for the pinned DOSBox upstream; required by local native legs')
     parser.add_argument('--dosbox-upstream-sha256', help='Independently recorded SHA-256 of the explicit offline upstream archive')
+    parser.add_argument('--retained-base-manifest', type=Path, help='Verified OS/QEMU component provenance, never a foreign prepared-input manifest')
+    parser.add_argument('--retained-base-sha256')
+    parser.add_argument('--retained-base-root', type=Path, help='Read-only QEMU/kernel/oracle/firmware input root')
+    parser.add_argument('--retained-os-base', type=Path, help='Trusted gzip/newc OS base, independently pinned by the manifest')
+    parser.add_argument('--retained-windows-fixtures', type=Path, help='Explicit pinned authored selector.exe, PROGRAM.EXE and INITIAL.BIN')
+    parser.add_argument('--require-os-capability', choices=['wine64', 'dos', 'pe32', 'win16-guards'], action='append')
     parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
     parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
     parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)
