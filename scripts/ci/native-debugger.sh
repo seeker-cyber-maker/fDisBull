@@ -1,5 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Kept as one finite source-transport seam so it can be checked without builds.
+prepare_dosbox_source() {
+  local pinned_commit="$1" upstream
+  if [ -n "${FDISBULL_DOSBOX_UPSTREAM_ARCHIVE:-}" ]; then
+    python - "$FDISBULL_DOSBOX_UPSTREAM_ARCHIVE" "${FDISBULL_DOSBOX_UPSTREAM_SHA256:-}" "$pinned_commit" <<'PY'
+import importlib.util, sys, tarfile
+from pathlib import Path
+path, expected, pinned = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+spec = importlib.util.spec_from_file_location('local_upstream_check', 'scripts/ci/local-linux.py')
+checker = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(checker)
+checker.upstream_archive_identity(path, expected, expected_commit=pinned)
+destination = Path('.native/upstream/unpacked')
+destination.mkdir(parents=True, exist_ok=False)
+with tarfile.open(path, 'r:') as archive:
+    archive.extractall(destination, filter='data')
+PY
+    upstream="$PWD/.native/upstream/unpacked/dosbox-x.git"
+    test "$(git --git-dir="$upstream" rev-parse --is-bare-repository)" = true
+    test ! -e "$upstream/objects/info/alternates"
+    test "$(git --git-dir="$upstream" rev-parse refs/heads/upstream)" = "$pinned_commit"
+    git --git-dir="$upstream" fsck --connectivity-only --no-reflogs
+  elif [ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux ]; then
+    echo 'Local native CI requires an explicit verified offline upstream archive' >&2
+    return 1
+  else
+    upstream=https://github.com/joncampbell123/dosbox-x.git
+  fi
+  git init -q .native/dosbox-x
+  git -C .native/dosbox-x remote add origin "$upstream"
+  git -C .native/dosbox-x fetch --depth 1 --no-recurse-submodules origin "$pinned_commit"
+  git -c core.hooksPath=/dev/null -C .native/dosbox-x checkout --detach FETCH_HEAD
+}
+# End finite source-transport seam.
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang rustc libx11-dev autoconf automake pkg-config nasm llvm ffmpeg libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
@@ -8,10 +44,7 @@ python -m pip install ".[test]" build
 export NATIVE_EVIDENCE="native-evidence/$FDISBULL_PROFILE"
 export FDISBULL_FRAME_EVIDENCE="$CI_PROJECT_DIR/$NATIVE_EVIDENCE/frame-capture"
 mkdir -p .native "$NATIVE_EVIDENCE"
-git init -q .native/dosbox-x
-git -C .native/dosbox-x remote add origin https://github.com/joncampbell123/dosbox-x.git
-git -C .native/dosbox-x fetch --depth 1 origin 029bd65c5dcc7cdc7f2e14e35278620d9707d969
-git -C .native/dosbox-x checkout --detach FETCH_HEAD
+prepare_dosbox_source 029bd65c5dcc7cdc7f2e14e35278620d9707d969
 python - <<'PY'
 import hashlib, json, os, subprocess
 from pathlib import Path
@@ -47,7 +80,7 @@ else
   cp .native/dosbox-x/config.log "$NATIVE_EVIDENCE/config.log"
 fi
 python - <<'PY'
-import hashlib, json, os
+import hashlib, json, os, subprocess
 from pathlib import Path
 executable=Path(os.environ['FDISBULL_DOSBOX'])
 patch=Path(os.environ['FDISBULL_PATCH_DIRECTORY'])/'headless-agent.patch'
@@ -57,6 +90,10 @@ receipt={'source_commit':os.environ['CI_COMMIT_SHA'],
          'patch_sha256':hashlib.sha256(patch.read_bytes()).hexdigest(),
          'profile':os.environ['FDISBULL_PATCH_DIRECTORY'],
          'python_version':os.sys.version, 'configure_flags':['--enable-sdl2','--enable-debug=heavy','--enable-dosbox_agent','--disable-avcodec','--disable-libslirp','--disable-libfluidsynth'], 'acceptance_tests':(Path('scripts/ci/native-'+os.environ['FDISBULL_PROFILE']+'-tests.txt').read_text()+' '+Path('scripts/ci/native-shared-tests.txt').read_text()).split()}
+if os.environ.get('FDISBULL_DOSBOX_UPSTREAM_ARCHIVE'):
+    receipt['upstream_source']={'transport':'local-bare-git-archive',
+        'archive_sha256':os.environ['FDISBULL_DOSBOX_UPSTREAM_SHA256'],
+        'tree':subprocess.check_output(['git','-C','.native/dosbox-x','rev-parse','HEAD^{tree}'],text=True).strip()}
 reuse=Path(os.environ['NATIVE_EVIDENCE'])/'reuse-provenance.json'
 if reuse.exists():
     receipt.update(json.loads(reuse.read_text()))

@@ -8,6 +8,7 @@ Containers are stopped, not pruned; their files and failed attempts are retained
 from __future__ import annotations
 
 import argparse
+import configparser
 import datetime
 import hashlib
 import importlib.util
@@ -21,6 +22,7 @@ import shlex
 import signal
 import subprocess
 import sys
+import tarfile
 import uuid
 
 CLI = Path('/Users/tiga/.local/bin/container')
@@ -40,6 +42,70 @@ UNIFIED_INPUTS = ('.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
 EXPECTED_BYTES = {'ordinary': 12_000_000_000, 'stable': 14_000_000_000,
                   'layers': 18_000_000_000, 'unified-prepare': 35_000_000_000,
                   'unified': 8_000_000_000}
+DOSBOX_UPSTREAM_COMMIT = '029bd65c5dcc7cdc7f2e14e35278620d9707d969'
+DOSBOX_UPSTREAM_ARCHIVE = '.native/upstream/dosbox-x.git.tar'
+
+
+def upstream_archive_identity(path, expected_sha256, *, expected_commit=None):
+    """Check a self-contained, pinned bare Git archive without extracting it."""
+    expected_commit = expected_commit or DOSBOX_UPSTREAM_COMMIT
+    path = Path(path)
+    if (path.is_symlink() or not path.is_file() or path.stat().st_size > 1024**3
+            or not re.fullmatch('[0-9a-f]{64}', str(expected_sha256))):
+        raise ValueError('Expected a regular pinned upstream archive and SHA-256')
+    with path.open('rb') as stream:
+        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if digest != expected_sha256:
+        raise ValueError('DOSBox upstream archive hash mismatch')
+    required = {'dosbox-x.git/HEAD': b'ref: refs/heads/upstream\n',
+                'dosbox-x.git/refs/heads/upstream': (expected_commit + '\n').encode()}
+    seen, total = set(), 0
+    with tarfile.open(path, 'r:') as archive:
+        for member in archive:
+            name = member.name.rstrip('/')
+            parts = Path(name).parts
+            if (not parts or parts[0] != 'dosbox-x.git' or '..' in parts
+                    or Path(name).is_absolute() or str(Path(name)) != name
+                    or name in seen or not (member.isdir() or member.isfile())
+                    or (len(parts) > 1 and parts[1] not in {'HEAD', 'config', 'objects', 'refs', 'shallow'})
+                    or name == 'dosbox-x.git/objects/info/alternates'):
+                raise ValueError('Unsafe or dependent DOSBox upstream archive')
+            seen.add(name)
+            total += member.size
+            if total > 1024**3:
+                raise ValueError('DOSBox upstream archive exceeds its extraction bound')
+            if name in required:
+                if not member.isfile() or member.size > 1024 or archive.extractfile(member).read() != required[name]:
+                    raise ValueError('DOSBox upstream archive ref does not match the pinned commit')
+            if name == 'dosbox-x.git/config':
+                if not member.isfile() or member.size > 4096:
+                    raise ValueError('Unsafe DOSBox upstream Git configuration')
+                config = configparser.ConfigParser(interpolation=None)
+                try:
+                    config.read_string(archive.extractfile(member).read().decode('utf-8'))
+                except configparser.Error as error:
+                    raise ValueError('Unsafe DOSBox upstream Git configuration') from error
+                flags = {'filemode', 'ignorecase', 'precomposeunicode'}
+                if (config.sections() != ['core']
+                        or set(config['core']) - {'repositoryformatversion', 'bare', *flags}
+                        or config['core'].get('repositoryformatversion') != '0'
+                        or config['core'].get('bare') != 'true'
+                        or any(config['core'][key] not in ('true', 'false') for key in flags & set(config['core']))):
+                    raise ValueError('Unsafe DOSBox upstream Git configuration')
+    if not required.keys() <= seen or 'dosbox-x.git/config' not in seen:
+        raise ValueError('DOSBox upstream archive is incomplete')
+    return {'archive_sha256': digest, 'archive_bytes': path.stat().st_size,
+            'upstream_commit': expected_commit, 'transport': 'local-bare-git-archive'}
+
+
+def stage_upstream_archive(path, expected_sha256, work):
+    identity = upstream_archive_identity(path, expected_sha256)
+    target = work / DOSBOX_UPSTREAM_ARCHIVE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(path, target)
+    if upstream_archive_identity(target, expected_sha256) != identity:
+        raise ValueError('Staged DOSBox upstream archive identity changed')
+    return identity
 
 
 def profiles_for(profile):
@@ -405,6 +471,12 @@ def stage_prepared_unified(source, run_root, output, work, sha, run_id):
 def execute(args):
     source = args.source.resolve()
     sha, branch = source_identity(source)
+    upstream_archive = getattr(args, 'dosbox_upstream_archive', None)
+    upstream_sha256 = getattr(args, 'dosbox_upstream_sha256', None)
+    if any(p in ('stable', 'layers') for p in profiles_for(args.profile)):
+        if upstream_archive is None or upstream_sha256 is None:
+            raise ValueError('Local native CI requires an explicit pinned DOSBox upstream archive')
+        upstream_archive_identity(upstream_archive, upstream_sha256)
     run_root = args.output.absolute()
     if not any(run_root.is_relative_to(Path(p)) for p in ('/Volumes/CACHE', '/Volumes/CODEX')):
         raise ValueError('Use an external CACHE or CODEX output directory')
@@ -458,6 +530,10 @@ def execute(args):
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
         clone_source(source, phase / 'work', sha, branch)
         work = phase / 'work'
+        upstream = None
+        if profile in ('stable', 'layers'):
+            upstream = stage_upstream_archive(upstream_archive, upstream_sha256, work)
+            save(phase / 'upstream-source.json', upstream)
         if profile != 'ordinary':
             shutil.copytree(output / 'dist', work / 'dist')
         if profile in ('unified', 'unified-prepare'):
@@ -490,6 +566,9 @@ def execute(args):
                    '--mount', f'type=bind,source={work},target=/source,readonly',
                    '--mount', f'type=bind,source={guest_data},target=/run-data']
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
+        if upstream is not None:
+            environment.update(FDISBULL_DOSBOX_UPSTREAM_ARCHIVE='/work/' + DOSBOX_UPSTREAM_ARCHIVE,
+                               FDISBULL_DOSBOX_UPSTREAM_SHA256=upstream['archive_sha256'])
         if preparation is not None:
             if preparation['image_digest'] != image['image_digest']:
                 raise ValueError('Prepared runtime build and test images differ')
@@ -562,6 +641,8 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--reuse-stable-backend', type=Path, help='Explicit prior stable exported evidence root; reruns all tests')
     parser.add_argument('--reuse-layers-backend', type=Path, help='Explicit prior layers exported evidence root; reruns all tests and offline-kit checks')
+    parser.add_argument('--dosbox-upstream-archive', type=Path, help='Self-contained bare Git tar for the pinned DOSBox upstream; required by local native legs')
+    parser.add_argument('--dosbox-upstream-sha256', help='Independently recorded SHA-256 of the explicit offline upstream archive')
     parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
     parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
     parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)
