@@ -55,6 +55,7 @@ if profile == 'unified' and os.environ.get('FDISBULL_UNIFIED_PREPARED') == '1':
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     prepared = module.verify()
+    receipt['windows_native_cases'] = module.required_windows_cases(Path.cwd(), prepared)
     receipt['prepared_manifest'] = digest(module.MANIFEST)
     receipt['runtime_inputs'] = list(prepared['inputs'].values())
     receipt['artifacts'].extend(receipt['runtime_inputs'])

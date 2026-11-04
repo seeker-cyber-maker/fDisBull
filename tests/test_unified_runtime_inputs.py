@@ -177,3 +177,29 @@ def test_retained_os_proof_is_bound_to_fresh_source_job_and_windows_overlay(prep
         assert result['windows_runtime']==module.item(image,root)
     else:
         with pytest.raises(ValueError):module.retained_provenance(root,SHA,RUN,JOB,inputs,identity,root)
+
+
+@pytest.mark.parametrize('change', [None, 'missing', 'skipped', 'failed', 'duplicate'])
+def test_declared_windows_route_requires_all_authored_native_testcases(prepared,change):
+    from xml.etree import ElementTree as ET
+    module,root=prepared
+    pe=root/'native-evidence/pe'
+    (pe/'retained-base-preparation.json').write_text(json.dumps({'os_capabilities':['wine64','dos','pe32','win16-guards']}))
+    names=['test_real_pe32_original_process_shared_input_scenes_and_dot_mode',
+           'test_real_original_ne_entry_registers_memory_and_completed_instructions',
+           'test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode',
+           'test_real_win16_bounded_operation_campaign']
+    suite=ET.Element('testsuite')
+    for name in names:
+        case=ET.SubElement(suite,'testcase',name=name)
+        if name==names[-1]:
+            if change=='missing':suite.remove(case)
+            if change=='skipped':ET.SubElement(case,'skipped')
+            if change=='failed':ET.SubElement(case,'failure')
+            if change=='duplicate':ET.SubElement(suite,'testcase',name=name)
+    ET.ElementTree(suite).write(pe/'tests.xml')
+    manifest={'retained_base':{'windows_fixtures':{'authored':'identity-bound'}}}
+    if change is None:
+        assert module.required_windows_cases(root,manifest)==names
+    else:
+        with pytest.raises(ValueError):module.required_windows_cases(root,manifest)

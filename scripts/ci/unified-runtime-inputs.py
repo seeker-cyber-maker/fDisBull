@@ -7,6 +7,7 @@ import os
 from pathlib import Path, PurePosixPath
 import shutil
 import importlib.util
+from xml.etree import ElementTree as ET
 
 from execution_identity import canonical_uuid
 
@@ -184,6 +185,28 @@ def retained_provenance(root, source_sha, run, job, inputs, identity, source_roo
     return {'manifest': item(manifest_path, root), 'preparation': item(receipt_path, root),
             'pe32_fixture': binary, 'windows_fixtures': fixtures,
             'windows_runtime': windows_image, 'windows_resources': item(windows_receipt_path, root)}
+
+
+def required_windows_cases(root, prepared):
+    """A declared native route must actually appear in passing testcase bytes."""
+    retained = prepared.get('retained_base')
+    if retained is None:
+        return []
+    receipt = json.loads(checked_path('native-evidence/pe/retained-base-preparation.json', root).read_text())
+    expected = []
+    if 'pe32' in receipt['os_capabilities']:
+        expected.append('test_real_pe32_original_process_shared_input_scenes_and_dot_mode')
+    if retained.get('windows_fixtures') is not None:
+        expected += ['test_real_original_ne_entry_registers_memory_and_completed_instructions',
+                     'test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode',
+                     'test_real_win16_bounded_operation_campaign']
+    document = ET.parse(checked_path('native-evidence/pe/tests.xml', root)).getroot()
+    cases = document.findall('.//testcase')
+    for name in expected:
+        matches = [case for case in cases if case.get('name') == name]
+        if len(matches) != 1 or any(matches[0].find(tag) is not None for tag in ('skipped', 'failure', 'error')):
+            raise ValueError('Required authored Windows native testcase missing or not passing: '+name)
+    return expected
 
 
 def prepare():
