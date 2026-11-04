@@ -339,6 +339,40 @@ reference execution and qualify observer neutrality separately. Distinguish
 defined reachable collision records from unused allocator bytes when reporting
 coverage; equal reachable lists do not establish whole-array equality.
 
+For interaction recovery, separate selection, reach, action availability, dispatch,
+and committed effects. In the SNES morgue, a named Mortician could be selected
+without having an actionable wait mask. An in-range attempt remained a no-op.
+Opening a different object signalled an entity flag and woke the Mortician's
+task, which produced scripted text. Trace that causal route rather than adding
+a Talk action because the target has an NPC label. A task association identifies
+the producing task, not automatically the visual speaker of every text box.
+
+An interaction menu can suspend a main-loop pass across many video frames and
+controller polls. Record each actual poll, including post-confirm and
+post-dispatch polls; NMI can publish a changed held word while sound or display
+work runs between them. A main/player input difference can be valid when the
+intervening modal observations explain it. Resume the suspended scheduler once;
+do not advance physics once per menu input or reuse an earlier held word merely
+because the polling routine itself does not query hardware.
+
+For pickups, observe count/owner writes and actor teardown separately. The
+morgue item wrote its count and owner, then waited through a real child script
+before removing its actor. A second item changed ownership without a count increment. A placed actor record can also differ from the inventory-type record;
+follow the actual writer when choosing the displayed item state. A sprite
+disappearing or an emitted Pickup event is
+insufficient evidence of inventory transfer. Test cancellation and repeated
+attempts against source availability as well as the successful path.
+
+Follow camera and representation dependencies when extending a short route.
+A previously fixed camera began scrolling before cursor targeting diverged;
+recovering cursor arithmetic alone could not fix the missing producer. Compare
+camera position/velocity while keeping unmodeled tile-stream and NMI display
+latches explicitly unknown. Same-video-frame snapshots can lie on opposite
+sides of a source call; inspect their phase before aligning by frame number.
+Likewise distinguish a text ID, an encoded compressed-text pointer and a CPU
+address. Low-valued font glyphs can be controller icons; classify their source
+handling before treating them as formatting controls or discarding their width.
+
 **When the first actors cannot exercise the claim:** In a locally inspected
 Shadowrun source run, the three captured moving actor records had item/weapon
 byte `+$57 = 0` in each of 15 sampled states from frame 5999 through 7399.

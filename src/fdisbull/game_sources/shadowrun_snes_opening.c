@@ -61,8 +61,39 @@ void opening_forced_motion(void) {
 void opening_player_control(void) {
  u16 actor,joy,dir,walking;
  actor=scene_read(0x0cdeU);
- if((actor&1U) || actor>=88U || scene_read(0x01f4U) ||
-    (scene_read(0x01eaU)&61680U)) {opening_failure=26U;return;}
+ if((actor&1U) || actor>=88U ||
+    (scene_read(0x01eaU)&28912U)) {opening_failure=26U;return;}
+ if(scene_read(0x01f4U)) {
+  if(scene_read(0x1d79U)|scene_read(0x1d7bU)) {opening_failure=26U;return;}
+  shadowrun_snes_target_facing(0U);
+  if(!target_facing_status) {opening_failure=41U;return;}
+  opening_load(actor);npc_requested_direction=target_facing_direction;
+  shadowrun_snes_npc_direction(0U);
+  if(!npc_supported) {opening_failure=14U;return;}
+  if((scene_read(0x01f6U)&32768U) && (scene_read(0x01eaU)&32768U)) {
+   scene_write(0x1d79U,0U);scene_write(0x1d7bU,0U);scene_write(2U,0U);
+   npc_requested_action=0U;shadowrun_snes_npc_action(0U);
+   if(!npc_supported) {opening_failure=13U;return;}
+   interaction_status=1U;interaction_target_close();shadowrun_snes_target_end(0U);
+   if(!interaction_status || !target_status) {opening_failure=40U;return;}
+  }
+  opening_save(actor);
+  task_callback_result=0U;scene_write(0U,0U);
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);return;
+ }
+ if(scene_read(0x01eaU)&32768U) {
+  opening_load(actor);
+  if(!scene_read(0x1d77U)) {
+   scene_write(0x1d77U,65535U);npc_velocity_x=0U;npc_velocity_y=0U;
+  }
+  shadowrun_snes_target_begin(0U);
+  if(!target_status) {opening_failure=40U;return;}
+  interaction_cursor_display_tainted=1U;
+  scene_write(2U,0U);npc_requested_action=0U;shadowrun_snes_npc_action(0U);
+  if(!npc_supported) {opening_failure=13U;return;}
+  opening_save(actor);task_callback_result=0U;scene_write(0U,0U);
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);return;
+ }
  opening_load(actor);joy=(scene_read(0x01e6U)&3840U)>>8;
  dir=npc_rom16(0x5f15UL+((u32)joy<<1));
  if(dir<16U)dir=(dir-opening_rotation-opening_rotation)&14U;
@@ -156,6 +187,14 @@ void opening_callback(void) {
   opening_window_scratch_tainted=1U;
   task_callback_result=scene_read(0x1d7dU);scene_write(0U,task_callback_result);
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
+ } else if(task_vm_callback==177U) {
+  if((task_vm_arg0&1U) || task_vm_arg0>=88U) {opening_failure=43U;return;}
+  action_collision_actor=task_vm_arg0;action_collision_action=task_vm_arg1;
+  action_collision_flags_known=target_geometry_known[task_vm_arg0>>1];
+  shadowrun_snes_action_collision(0U);
+  if(!action_collision_supported) {opening_failure=43U;return;}
+  task_callback_result=action_collision_result;
+  task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
  } else if(task_vm_callback==76U && task_audio_tainted) {
   /* The source request is known; beam/APU-derived delivery and latches are
    * outside this opening projection. No random value or latch is invented. */
@@ -190,8 +229,7 @@ void opening_callback(void) {
   if(scene_party_status!=1U) {opening_failure=27U;return;}
   task_callback_success=1U;shadowrun_snes_task_callback_complete(0U);
  } else if(task_vm_callback==184U) {
-  /* A882/A9D9 logical actor teardown. Sprite-node release is outside this
-   * projection, whose renderer never allocates those original nodes. */
+  /* A882/A9D9 logical actor teardown and shared sprite-node release. */
   actor=task_vm_arg0;
   if((actor&1U) || actor>=88U) {opening_failure=12U;return;}
   count=scene_read(0x14ccU);found=65535U;
@@ -213,6 +251,7 @@ void opening_callback(void) {
  } else {
   shadowrun_snes_task_native(0U);
   if(!task_native_supported) {opening_failure=15U;return;}
+  interaction_item_written((u16)task_vm_callback,task_vm_arg0);
  }
 }
 
@@ -322,13 +361,21 @@ void opening_animation(u16 slot) {
 }
 
 void shadowrun_snes_frame(u8 pad) {
- u16 raw,previous,i,count,slot;
+ u16 raw,previous,i,count,slot,resuming;
  shadowrun_snes_frame_status=2U;opening_failure=0U;opening_pad=pad;
  if(pad&128U) {opening_failure=1U;return;}
  raw=0U;previous=0U;
  if(pad&1U)raw|=2048U;if(pad&2U)raw|=1024U;
  if(pad&4U)raw|=512U;if(pad&8U)raw|=256U;
  if(pad&16U)raw|=4096U;if(pad&32U)raw|=32768U;if(pad&64U)raw|=8192U;
+ resuming=0U;
+ if(opening_phase) {
+  interaction_poll(raw);
+  if(!interaction_status) {opening_failure=40U;return;}
+  if(opening_phase) {shadowrun_snes_frame_status=1U;return;}
+  resuming=1U;
+ }
+ if(!resuming) {
  previous=scene_read(0x01e8U);
  scene_write(0x01e6U,raw);scene_write(0x01eaU,(raw^previous)&raw);scene_write(0x01e8U,raw);
  opening_previous_pad=pad;
@@ -346,12 +393,20 @@ void shadowrun_snes_frame(u8 pad) {
    if(!opening_anim_supported) {opening_failure=35U;return;}
    shadowrun_snes_scene_construct(0U);
    if(scene_construct_status!=1U) {opening_failure=5U;return;}
+   target_globals_known=1U;
+   for(i=0U;i<44U;i+=1U)target_geometry_known[i]=1U;
    opening_window_reset();if(opening_window_status!=1U) {opening_failure=31U;return;}
    task_audio_tainted=1U;opening_window_audio_tainted=1U;
    task_visual_tainted=1U;
    opening_stage=1U;opening_publish();if(opening_failure)return;
   }
   shadowrun_snes_frame_status=1U;return;
+ }
+ if(opening_stage==2U) {
+  interaction_targets();if(!interaction_status) {opening_failure=40U;return;}
+  interaction_dispatch_begin();if(!interaction_status) {opening_failure=40U;return;}
+  if(opening_phase) {shadowrun_snes_frame_status=1U;return;}
+ }
  }
  opening_scheduler();if(opening_failure)return;
  opening_scene_gate();if(opening_failure)return;
@@ -373,6 +428,8 @@ void shadowrun_snes_frame(u8 pad) {
   opening_animation(slot);if(opening_failure)return;
   if(!i)break;i-=2U;
  }
+ shadowrun_snes_live_camera(0U);
+ if(!camera_status) {opening_failure=42U;return;}
  opening_sort();if(!opening_sort_supported) {opening_failure=29U;return;}
  opening_animation_metadata_pass_finish();
  opening_window_tick();if(opening_window_status!=1U) {opening_failure=31U;return;}

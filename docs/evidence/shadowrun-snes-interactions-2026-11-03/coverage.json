@@ -1,0 +1,42 @@
+{
+  "cancel_complete_input_replay": true,
+  "cancel_sparse_source_checkpoints": 82,
+  "format": "morgue-interaction-coverage-1",
+  "limits": [
+    "Routes share a common title/opening prefix; counts are not unique coverage totals.",
+    "Full native route replay is separate from prefix and sampled one-step native/UIL checks.",
+    "No original files, memory dumps, decoded text, screenshots or generated apps included."
+  ],
+  "routes": {
+    "door": {
+      "checkpoints": 2363,
+      "compiler_elements": 4401480,
+      "modal_polls": 119,
+      "selected_values": 5353426
+    },
+    "opening": {
+      "checkpoints": 1615,
+      "compiler_elements": 1613876,
+      "modal_polls": 0,
+      "selected_values": 3466199
+    },
+    "patch": {
+      "checkpoints": 1973,
+      "compiler_elements": 3081036,
+      "modal_polls": 64,
+      "selected_values": 4499113
+    },
+    "repeat": {
+      "checkpoints": 2128,
+      "compiler_elements": 3374468,
+      "modal_polls": 64,
+      "selected_values": 4839666
+    },
+    "scalpel": {
+      "checkpoints": 1928,
+      "compiler_elements": 2934320,
+      "modal_polls": 64,
+      "selected_values": 4396423
+    }
+  }
+}

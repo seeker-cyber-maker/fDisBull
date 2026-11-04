@@ -307,6 +307,8 @@ class SnesControllerSample(C.Structure):
 def controller_journal_summary(samples, dropped):
     grouped={}
     for sample in samples:
+        if sample['kind']=='modal':
+            continue  # Multiple selector polls in one main-loop pass are expected.
         grouped.setdefault((sample['kind'],sample['serial']),[]).append(
             (sample['held'],sample['previous'],sample['edge'],sample['actor']))
     keys=lambda items:[{'kind':kind,'serial':serial} for kind,serial in items]
@@ -315,7 +317,7 @@ def controller_journal_summary(samples, dropped):
                    if ('main',serial) in grouped and ('player',serial) in grouped
                    and {v[0] for v in grouped['main',serial]}!={v[0] for v in grouped['player',serial]}]
     return {'format':'snes-main-loop-controller-journal-1',
-            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; serial is latest 80:962E checkpoint',
+            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; modal after 9D9D calls at 80:A67D/A7B2/A7C1/C03A; serial is latest 80:962E checkpoint',
             'dropped':dropped,'samples':samples,
             'duplicate_serials':keys([key for key,items in grouped.items() if len(items)>1]),
             'conflicting_serials':keys([key for key,items in grouped.items() if len(set(items))>1]),
@@ -581,10 +583,11 @@ def worker(args):
             samples=lib.fdisbull_snes_controller_samples()
             for j in range(count):
                 sample=samples[j]
-                if sample.kind not in (1,2):raise ValueError('unknown controller consumer')
-                controller_samples.append({'video_frame':i,'kind':'main' if sample.kind==1 else 'player',
+                if sample.kind not in (1,2,3):raise ValueError('unknown controller consumer')
+                controller_samples.append({'video_frame':i,'kind':{1:'main',2:'player',3:'modal'}[sample.kind],
                                            'serial':sample.serial,'held':sample.held,'previous':sample.previous,
-                                           'edge':sample.edge,'actor':sample.actor if sample.kind==2 else None})
+                                           'edge':sample.edge,'actor':sample.actor if sample.kind==2 else None,
+                                           **({'pc':sample.actor} if sample.kind==3 else {})})
         if args.snes_trace_frames and start<=i<end:
             count=lib.fdisbull_snes_trace_count();dropped=lib.fdisbull_snes_trace_dropped()
             events=lib.fdisbull_snes_trace_events()
@@ -705,7 +708,7 @@ def main():
     parser.add_argument('--rom', required=True)
     parser.add_argument('--system', required=True, choices=['nes', 'genesis', 'snes'])
     parser.add_argument('--frames', required=True, type=int)
-    parser.add_argument('--inputs', help='JSON list of start/end exclusive frame ranges and Libretro button names')
+    parser.add_argument('--inputs', help='Path to a JSON file of start/end exclusive frame ranges and Libretro button names')
     parser.add_argument('--input-map', help='JSON mapping semantic button names to Libretro IDs')
     parser.add_argument('--feedback-policy',help='Finite read-only publication controller policy; incompatible with static inputs or RAM patches')
     parser.add_argument('--watch', help='JSON raw RAM slices: name, offset, length, optional memory_id (0 save RAM or default2 system RAM)')

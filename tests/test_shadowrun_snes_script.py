@@ -206,6 +206,98 @@ def test_task_termination_unlinks_and_releases_validated_heap_block():
     assert s['task_shared'][:2] == [0x34, 0x12]
 
 
+def test_unsigned_less_than_compares_top_against_next_stack_word():
+    import hashlib
+    for lower, upper, expected in [(20, 10, 0xffff), (10, 20, 0), (10, 10, 0)]:
+        rom = bytes([0x14, lower, 0, 0x14, upper, 0, 0x9a, 0x56])
+        program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                       'sha256': hashlib.sha256(rom).hexdigest()}])
+        m = GameMachine(program, {0: rom})
+        heap, frames = [0] * 1996, [0] * 48
+        frame, sp = 0x400, 0x500
+        heap[frame - 0x3f2:frame - 0x3f2 + 3] = [0, 0x80, 0x80]
+        heap[frame - 0x3f2 + 7:frame - 0x3f2 + 9] = [sp & 255, sp >> 8]
+        frames[0] = frame
+        m.set_state({'task_heap': heap, 'task_frame': frames, 'task_index': 0})
+        m.call('shadowrun_snes_task_vm', 0)
+        s = m.snapshot()
+        assert (s['task_vm_status'], s['task_return_value']) == (4, expected)
+
+
+def test_item_record_count_and_reference_callbacks():
+    import hashlib
+    rom = bytearray(1048576)
+    pointer_at = 438322 + 0x395
+    rom[pointer_at:pointer_at + 2] = bytes([0xa0, 0x2e])
+    rom = bytes(rom)
+    program = author_program(SOURCE.read_text(), [{'id': 0, 'length': len(rom),
+                                                   'sha256': hashlib.sha256(rom).hexdigest()}])
+    m = GameMachine(program, {0: rom})
+    shared = [0] * 65536
+    shared[0x2ea2] = 5
+    m.set_state({'task_shared': shared, 'task_index': 0, 'task_vm_pending_task': 0,
+                 'task_vm_pending': 1, 'task_vm_callback': 0x26, 'task_vm_argc': 2,
+                 'task_vm_arg0': 0x395, 'task_vm_arg1': 3})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1 and s['task_shared'][0x2ea2] == 6
+    m.set_state({'task_vm_pending': 1, 'task_vm_callback': 0x74, 'task_vm_arg1': 0x8b2})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1 and s['task_shared'][0x2ea3:0x2ea5] == [0xb2, 8]
+
+
+def test_pickup_owner_uses_live_party_entity_without_changing_count():
+    m = machine()
+    shared = [0] * 65536
+    shared[0x13c4 + 0x3e:0x13c6 + 0x3e] = [0x7d, 0x2e]
+    shared[0x2e7f:0x2e82] = [0, 255, 255]
+    shared[0x2df0:0x2df2] = [0xb2, 8]
+    m.set_state({'task_shared': shared, 'task_index': 0, 'task_vm_pending_task': 0,
+                 'task_vm_pending': 1, 'task_vm_callback': 0x6f,
+                 'task_vm_argc': 1, 'task_vm_arg0': 0x3e})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1
+    assert s['task_shared'][0x2e7f:0x2e82] == [0, 0xb2, 8]
+    # Source loads the entire owner word before storing, including alias cases.
+    shared = s['task_shared']
+    shared[0x13c4 + 0x3e:0x13c6 + 0x3e] = [0xee, 0x2d]
+    m.set_state({'task_shared': shared, 'task_vm_pending': 1})
+    m.call('shadowrun_snes_task_native', 0)
+    assert m.snapshot()['task_shared'][0x2df0:0x2df3] == [0xb2, 0xb2, 8]
+    shared = m.snapshot()['task_shared']
+    shared[0x13c4 + 0x3e:0x13c6 + 0x3e] = [0xfc, 0xff]
+    m.set_state({'task_shared': shared, 'task_vm_pending': 1})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 0 and s['task_vm_pending'] == 1
+    assert s['task_shared'] == shared
+
+
+def test_player_and_actor_x_callbacks_use_live_shared_state():
+    m = machine()
+    heap, frames, shared = [0] * 1996, [0] * 48, [0] * 65536
+    frames[0] = 0x400
+    heap[0x400 - 0x3f2 + 7:0x400 - 0x3f2 + 9] = [0, 5]
+    shared[0x0cde:0x0ce0] = [0x42, 0]
+    shared[0x0e86:0x0e88] = [0x73, 5]
+    m.set_state({'task_heap': heap, 'task_frame': frames, 'task_shared': shared,
+                 'task_index': 0, 'task_vm_pending_task': 0, 'task_vm_pending': 1,
+                 'task_vm_return': 1, 'task_vm_callback': 0x28, 'task_vm_argc': 0})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1 and s['task_callback_result'] == 0x42
+    m.set_state({'task_vm_pending': 1, 'task_vm_return': 1, 'task_vm_callback': 0x4f,
+                 'task_vm_argc': 1, 'task_vm_arg0': 0x42})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1 and s['task_callback_result'] == 0x15c
+    m.set_state({'task_vm_pending': 1, 'task_vm_return': 1, 'task_vm_arg0': 0x43})
+    m.call('shadowrun_snes_task_native', 0)
+    assert m.snapshot()['task_native_supported'] == 0
+
+
 def test_distance_callback_preserves_source_ffff_index_wrap():
     m = machine()
     heap, shared, frames = [0] * 1996, [0] * 65536, [0] * 48
@@ -312,6 +404,13 @@ def test_entity_and_actor_flag_callbacks_use_shared_source_state():
     m.set_state({'task_vm_pending': 1, 'task_vm_callback': 0x2c, 'task_vm_arg1': 0xff})
     m.call('shadowrun_snes_task_native', 0)
     assert m.snapshot()['task_shared'][0x1474 + actor:0x1476 + actor] == [0, 0]
+    shared = m.snapshot()['task_shared']
+    shared[0x3001] = 0x83
+    m.set_state({'task_shared': shared, 'task_vm_pending': 1, 'task_vm_callback': 0x7a,
+                 'task_vm_arg1': 0xfffd})
+    m.call('shadowrun_snes_task_native', 0)
+    s = m.snapshot()
+    assert s['task_native_supported'] == 1 and s['task_shared'][0x3001] == 0x81
 
 
 def test_local_byte_store_and_native_metadata_are_rom_derived():
@@ -516,10 +615,12 @@ def test_indexed_source_word_read_returns_on_task_stack():
 def test_visual_taint_blocks_overlapping_reads_but_not_known_windows():
     m = machine()
     m.set_state({'task_visual_tainted': 1})
-    for address, length in ((0x0225, 2), (0x1473, 2), (0x157e, 1),
+    for address, length in ((0x0203, 2), (0x0205, 1), (0x0225, 2), (0x0ce7, 2),
+                            (0x0cf3, 1), (0x1473, 2), (0x157e, 1),
                             (0x22ff, 2), (0x2adf, 1)):
         assert m.call('task_readable', address, length)['result'] == 0
-    for address, length in ((0x0224, 2), (0x146e, 2), (0x21a0, 2), (0x2ae0, 1)):
+    for address, length in ((0x0202, 2), (0x0206, 1), (0x0224, 2), (0x0ce6, 2),
+                            (0x0cf4, 1), (0x146e, 2), (0x21a0, 2), (0x2ae0, 1)):
         assert m.call('task_readable', address, length)['result'] == 1
 
 

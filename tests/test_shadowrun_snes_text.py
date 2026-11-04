@@ -18,6 +18,36 @@ def test_text_reads_leaf_pairs_and_source_terminator():
     assert s['shadowrun_snes_text_output'][:3]==[65,66,0]
 
 
+def test_encoded_pointer_is_not_a_text_id_or_cpu_address():
+    rom=bytearray(1<<20)
+    rom[0xe8000:0xe8004]=(0xc1c2).to_bytes(2,'little')+(0x8a00).to_bytes(2,'little')
+    rom[0xe8100:0xe8102]=bytes((0x40,0))
+    rom[0xabc8+65]=5;rom[0xabc8+66]=7
+    m=_machine(rom);m.set_state({'shadowrun_snes_text_encoded_pointer':0x100})
+    m.call('shadowrun_snes_text_decode_pointer',0);m.call('shadowrun_snes_text_measure',0)
+    s=m.snapshot()
+    assert s['shadowrun_snes_text_output'][:3]==[65,66,0]
+    assert (s['shadowrun_snes_text_measure_status'],s['shadowrun_snes_text_measured_pixels'])==(1,12)
+    m.set_state({'shadowrun_snes_text_output':[124]+[0]*255,'shadowrun_snes_text_length':1})
+    m.call('shadowrun_snes_text_measure',0)
+    assert m.snapshot()['shadowrun_snes_text_measure_status']==0
+
+
+def test_selector_icon_glyphs_have_source_font_width_without_rewriting_text():
+    rom=bytearray(1<<20);rom[0xabc8+14]=8;rom[0xabc8+15]=8
+    m=_machine(rom);m.set_state({'shadowrun_snes_text_status':1,
+        'shadowrun_snes_text_length':2,'shadowrun_snes_text_output':[14,15]+[0]*254,
+        'shadowrun_snes_text_layout_base':100,'shadowrun_snes_text_layout_cursor_in':100,
+        'shadowrun_snes_text_layout_width':5,'shadowrun_snes_text_layout_height':3})
+    m.call('shadowrun_snes_text_layout',0)
+    assert m.snapshot()['shadowrun_snes_text_layout_status']==0
+    m.set_state({'shadowrun_snes_text_layout_icon_glyphs':1})
+    m.call('shadowrun_snes_text_layout',0);s=m.snapshot()
+    assert (s['shadowrun_snes_text_layout_status'],s['shadowrun_snes_text_layout_cursor'],
+        s['shadowrun_snes_text_layout_subpixel'])==(1,102,0)
+    assert s['shadowrun_snes_text_output'][:2]==[14,15]
+
+
 def test_text_rejects_other_id_and_nonterminating_tree():
     rom=bytearray(1<<20);rom[0x59f6:0x59f8]=(0x100).to_bytes(2,'little')
     m=_machine(rom);m.set_state({'shadowrun_snes_text_id':0x1340});m.call('shadowrun_snes_text_decode',0)

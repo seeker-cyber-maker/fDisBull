@@ -76,3 +76,21 @@ def test_lifecycle_reports_unknown_rng_and_releases_top_slot():
     assert (word(state['task_shared'], 0x21e), state['task_shared'][0x1d04]) == (1, 0x5a)
     assert state['opening_window_rng_tainted'] == state['opening_window_audio_tainted'] == 1
     assert state['opening_window_display_tainted'] == 1
+
+
+def test_direct_window_close_preserves_lower_ownership_and_expiry_queue():
+    m=new_machine();m.call('opening_window_reset')
+    for values in ((2,2,10,3,0),(3,3,11,4,0)):
+        m.set_state({f'opening_window_arg{i}':v for i,v in enumerate(values)})
+        m.call('opening_window_begin')
+        # A direct-window owner completes its own text/presentation producer.
+        m.set_state({'opening_window_phase':2})
+    before=m.snapshot()['task_shared']
+    assert word(before,0x220)==2
+    m.call('opening_window_close',2)
+    s=m.snapshot();data=s['task_shared']
+    assert s['opening_window_status']==1
+    assert word(data,0x220)==0 and word(data,0x242)==0xffff and word(data,0x244)==0
+    assert data[0x232:0x242]==before[0x232:0x242]
+    m.call('opening_window_close',0)
+    assert word(m.snapshot()['task_shared'],0x220)==0xfffe

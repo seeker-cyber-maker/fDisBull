@@ -38,8 +38,8 @@ def source_fragment():
       else hit=zhi-z;
      }'''
     new = '''} else if(owner!=opening_col_player) {
-      /* Other dynamic-owner collision effects remain unqualified. */
-      return 0;
+      /* $81:86C4–86DC: player query skips self and retains other height. */
+      hit=zhi-z;
      }'''
     if collision.count(old) != 1:
         raise ValueError('unexpected player collision source')

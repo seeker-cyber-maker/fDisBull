@@ -39,6 +39,9 @@ static void fdb_controller_capture(uint32 pc) {
   uint32 player=(uint32)Memory.RAM[0xcdeU]|((uint32)Memory.RAM[0xcdfU]<<8);
   if(actor!=player || actor>=88U || (actor&1U))return;
   kind=2U;
+ } else if(pc==0x80a67dU || pc==0x80a7b2U || pc==0x80a7c1U || pc==0x80c03aU) {
+  /* Modal selector polls after its own 9D9D call, inside one main pass. */
+  kind=3U;actor=pc;
  } else return;
  if(fdb_controller_count>=32U) {if(fdb_controller_dropped!=0xffffffffU)fdb_controller_dropped++;return;}
  FdbControllerSample sample={kind,fdb_checkpoint_serial,

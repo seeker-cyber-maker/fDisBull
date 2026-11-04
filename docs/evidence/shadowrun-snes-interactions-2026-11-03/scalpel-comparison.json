@@ -1,0 +1,221 @@
+{
+  "compiler": {
+    "continuous_prefix": [
+      "title START",
+      [
+        1,
+        "main"
+      ],
+      [
+        2,
+        "main"
+      ]
+    ],
+    "native_elements": 2934320,
+    "sampled_one_step": [
+      [
+        63,
+        "main",
+        null
+      ],
+      [
+        183,
+        "main",
+        null
+      ],
+      [
+        300,
+        "main",
+        null
+      ],
+      [
+        500,
+        "main",
+        null
+      ],
+      [
+        800,
+        "main",
+        null
+      ],
+      [
+        1200,
+        "main",
+        null
+      ],
+      [
+        1600,
+        "main",
+        null
+      ],
+      [
+        1851,
+        "modal",
+        8431229
+      ],
+      [
+        1851,
+        "modal",
+        8431229
+      ],
+      [
+        1851,
+        "modal",
+        8431229
+      ],
+      [
+        1851,
+        "modal",
+        8431229
+      ],
+      [
+        1851,
+        "modal",
+        8431538
+      ],
+      [
+        1851,
+        "modal",
+        8437818
+      ],
+      [
+        1887,
+        "main",
+        null
+      ],
+      [
+        1896,
+        "main",
+        null
+      ],
+      [
+        1900,
+        "main",
+        null
+      ]
+    ]
+  },
+  "controller_journal_sha256": "a8f807e98a3ea776f454976451bee43868985742a4dd24ee9f2aba7ae4f3d596",
+  "core_sha256": "34f40027761df3cdbcfa9efad1ad68540cc069105757168e8b81f19864d0b022",
+  "first_divergence": null,
+  "format": "shadowrun-snes-interactions-checkpoint-1",
+  "limitations": "source main-loop checkpoints; cursor display $0204, rendering and audio excluded; modal polls are input observations",
+  "modal_steps": 64,
+  "native_build": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "367de36149bcad9d38ac550b42e145715d080dd01a220c176f441a500e585aee",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "b3f991904e66fd2c9148338a68508581f4f85804c3afd4bd4bb4200c948d7d2f",
+    "seed_sha256": "66a0de505770a489355b8ab6648b1fbacbe5a32141113982cc108135c91a1517",
+    "source_sha256": "91ad26bdc12704e62cf4509533e779fe7477a809d1a3d49e31481397ce110f78",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "native_build_origin": "validated_reuse",
+  "neutrality": {
+    "checkpoint_core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+    "checkpoint_receipt_sha256": "cd842f8111b7d8403f7349e74820de7ea4aa61e840d8e408bd1e7c74d8254667",
+    "image_frames": 9,
+    "matching_checkpoint_digests": 1928,
+    "ram_frames": 9,
+    "scope": "unpatched baseline compares selected post-frame and final hashes; no instruction checkpoints",
+    "unpatched_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+    "unpatched_receipt_sha256": "40209f7b1cc1f1ea586c0df855c72fef7a204d6a8b610f1f3898edd0c84d88e6"
+  },
+  "pickup_observation": {
+    "saw_after": false,
+    "saw_before": true
+  },
+  "pickup_required": false,
+  "private_receipt_sha256": "0e1559f05b97a5bc58574a6c4ab4682c3eabffb23fbd98a96629e82d3064f4ae",
+  "program_sha256": "b3f991904e66fd2c9148338a68508581f4f85804c3afd4bd4bb4200c948d7d2f",
+  "public_steps": 1991,
+  "receipt_sha256": "6f1899337e4b1106c0ba3c65bdcfe251c2677fd22c46723ea38a67aee28f84ee",
+  "repeat_observation": {
+    "attempt_serial": null,
+    "verified": false
+  },
+  "repeat_required": false,
+  "requested_until_serial": 1928,
+  "result": "passed",
+  "scalpel_observation": {
+    "saw_after": true,
+    "saw_before": true
+  },
+  "scalpel_required": true,
+  "scope": "title-seeded ordinary-input interaction; selected actor, task, collision, sprite, window, text, cursor and item fields",
+  "source_checkpoints": 1928,
+  "source_elements": {
+    "actor_entity_bytes": 218798,
+    "actor_fields": 789508,
+    "camera_words": 7712,
+    "collision_elements": 2418434,
+    "cursor_words": 21208,
+    "item_bytes": 19280,
+    "sprite_fields": 371272,
+    "task_fields": 457494,
+    "text_bytes": 45231,
+    "window_fields": 47486
+  },
+  "source_hashes": {
+    "scripts/check_shadowrun_snes_interactions.py": "81b2cc0e8e1528190bea01ce3904845c62d29dd654200ffb80607cc14082de13",
+    "scripts/check_shadowrun_snes_opening.py": "16caad0b790c9b24226fc94e4b1d71d3d880ae62028b2ca746e054c9639dfb23",
+    "src/fdisbull/game_sources/shadowrun_snes_action_collision.c": "28903bd50cb1d6b533935c23d77f345a9abfb6d64950de99656c34b7ea3ace57",
+    "src/fdisbull/game_sources/shadowrun_snes_camera.c": "7edde676586caf9a807a7b09faf2f4e5c99e2ea0c2bc48283f4986ca12332a1d",
+    "src/fdisbull/game_sources/shadowrun_snes_choice.c": "bdb5f5cc25604f40d622c7913e02d49221941bcbc034883a68b9cf425adf9a98",
+    "src/fdisbull/game_sources/shadowrun_snes_dialogue.c": "8052df53d8908bf0caed2a7bfc58d48516ed2f09e1cb9567faf04b0f50006825",
+    "src/fdisbull/game_sources/shadowrun_snes_field.c": "22521537b3e1dab393d712fcc6742499e31faa43887e20607c69bf117d1bae58",
+    "src/fdisbull/game_sources/shadowrun_snes_flags.c": "23fd9611bc32f4da9b8828822f32be885b5a672bf767bc7a467aaf5e3448160d",
+    "src/fdisbull/game_sources/shadowrun_snes_interaction.c": "f38f6214876d865f26e394207ec5f1d9d6c0c431e9f3b1fb15bf08883fd6ee9b",
+    "src/fdisbull/game_sources/shadowrun_snes_live.c": "4e5894addd2ccfb2ae36837f3a978fd1814a0a91dbf2a20a91c713b0ab9c9f82",
+    "src/fdisbull/game_sources/shadowrun_snes_menu.c": "46ece52d0115ebe5cd7cf77f83a7cb48097cdb8b0141d793c9574b517a927511",
+    "src/fdisbull/game_sources/shadowrun_snes_npc.c": "b23059c3fdb1b2232795d31d1c5dc340c81fe13077057ca9c942fc8cf6943e8a",
+    "src/fdisbull/game_sources/shadowrun_snes_opening.c": "5d0207e081a3cae3dede77175803a6001e612706a9c43cab3a2c82277554b546",
+    "src/fdisbull/game_sources/shadowrun_snes_opening_anim.c": "80cfc2580c187629ee36122ce4c7b81e4e01b79785d9baa00fd9f0dbf01217a6",
+    "src/fdisbull/game_sources/shadowrun_snes_opening_collision.c": "9b0bcb99eea822a47322d2df06384bac4dd110f1b72d67413739d793b80ef42d",
+    "src/fdisbull/game_sources/shadowrun_snes_opening_window.c": "26c2aab233b585253748af524a5682c1fef5ad8318a71173f300eb8032d3cb0f",
+    "src/fdisbull/game_sources/shadowrun_snes_scene_collision.c": "ab2c8eae0ab0db135e89d35fb785f88fd70a3ff2ab001f9f1da5949b26b13370",
+    "src/fdisbull/game_sources/shadowrun_snes_scene_init.c": "d19cd5e478607dfa7b0e3f16c130d39e465be79dc5ce9df8a275fa72e4fdcd7b",
+    "src/fdisbull/game_sources/shadowrun_snes_script.c": "00e50ed4ced76531b17183e9b77d874115c2b2bd60b85a414a2cee7da48057f3",
+    "src/fdisbull/game_sources/shadowrun_snes_target.c": "8fd3e1306518bc8586e5749ed83f48673b53405bb62da19e0287be56e9e761c5",
+    "src/fdisbull/game_sources/shadowrun_snes_task_init.c": "0265de0c212f877e5ad7ebf7628618c8d16fa37860e767f57185ab77a78cbcdb",
+    "src/fdisbull/game_sources/shadowrun_snes_text.c": "120bc6645cbb68269236296a252c3dfe3573335773ba3d19f7cd6c41b95ba854",
+    "src/fdisbull/shadowrun_snes_action_collision.py": "fa36bab0247faf4f1ad3b0ea3f488d2a4a51ac2ec95be627b6de022d5edc907c",
+    "src/fdisbull/shadowrun_snes_camera.py": "7db8a9f468d7e28619aa614a8430feb56f4ff1c2b0084086135c280b4d15a052",
+    "src/fdisbull/shadowrun_snes_choice.py": "a354331e99d2640dbb64b11c92c1be25f7787de687f7dee76ac225aff2ae2703",
+    "src/fdisbull/shadowrun_snes_dialogue.py": "d09270a81a22e75ec10d5a6b7762deb8719a709e908c541f23c62fda80999eea",
+    "src/fdisbull/shadowrun_snes_field.py": "ff56f944a5da5b75bd5f6b067132ae825405b095e8613ee3f001f587bf625903",
+    "src/fdisbull/shadowrun_snes_interaction.py": "0d4a81621d8a468233224dc3cfc96f5ba8a16c2d1b5778c0c05fc84907d81886",
+    "src/fdisbull/shadowrun_snes_live.py": "269acf76e59e60b6d642218855cc5069444bbac8abf32414df944de393e9e60d",
+    "src/fdisbull/shadowrun_snes_macos.py": "baf18b4563bf35a71d7c7a6256b43d5dfaaf90d18280b91cd3958dc5199ed255",
+    "src/fdisbull/shadowrun_snes_menu.py": "1c0794c7e2ed9010418b1a55efb1203ad6f37c4f2fcec014b9cd279ff1e17e65",
+    "src/fdisbull/shadowrun_snes_npc.py": "244962b9dc365a9a6b4937ccfa71ec136011f924e00dd667e65e93b80f33e907",
+    "src/fdisbull/shadowrun_snes_opening.py": "996897eec88208bb2b09a7c197722ab4a8a39650816b37a4c04453ef8c652c41",
+    "src/fdisbull/shadowrun_snes_opening_anim.py": "f585a140001a9973b328ef48453f89ea4338f56b10c5dac44c2e94e7e0383671",
+    "src/fdisbull/shadowrun_snes_opening_collision.py": "487bd784ee72f1a1ce822e33050320246ad55526756af6a46aad0795526cdb4e",
+    "src/fdisbull/shadowrun_snes_opening_window.py": "4b6504da54c0f27773b46ab4b1bf88c0fb93dff55c639831ea24dfcb21c7e8bb",
+    "src/fdisbull/shadowrun_snes_scene_init.py": "fb1c9556d9921fb2f4381b6e2454e1b7a1f186cdf69daab1e40922ab372e6362",
+    "src/fdisbull/shadowrun_snes_script.py": "e85266c62dec8f704894bd1d66f0ad65c219d715ae45f89896d8fad76b330f19",
+    "src/fdisbull/shadowrun_snes_scripted.py": "2104aa297b242c007bf39d31c2ff725f9beb4839a0f75b87029c57554d14ed1c",
+    "src/fdisbull/shadowrun_snes_target.py": "ced379c1463ad8fcbb30b1481c098917103446df35349b594d842d183453d517",
+    "src/fdisbull/shadowrun_snes_task_init.py": "93e4084ccbc0e7735ac94d5ec8175986cf2e928d7e3694d1942078669e90b631",
+    "src/fdisbull/shadowrun_snes_text.py": "bff01c6f3333944937e379e8af48cfeccc2145e29f5964cf90607263e9a898c5"
+  }
+}

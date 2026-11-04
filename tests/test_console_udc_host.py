@@ -41,6 +41,16 @@ def test_controller_journal_reports_duplicate_conflicts_and_consumer_disagreemen
     assert HOST.controller_journal_summary([main, player], 0)['consumer_disagreements'] == [4]
 
 
+def test_modal_polls_may_repeat_with_different_input_within_a_single_main_pass():
+    modal = {'kind':'modal','serial':5,'held':0,'previous':0,'edge':0,
+             'actor':None,'pc':0x80a67d,'video_frame':12}
+    second = {**modal,'held':0x1000,'edge':0x1000,'video_frame':13}
+    result = HOST.controller_journal_summary([modal,second], 0)
+    assert result['samples'] == [modal,second]
+    assert result['duplicate_serials'] == []
+    assert result['conflicting_serials'] == []
+
+
 def test_watch_defaults_preserve_system_ram_and_allow_save_ram():
     watches = [{'name': 'old', 'offset': 0, 'length': 1},
                {'name': 'save', 'memory_id': 0, 'offset': 8191, 'length': 1}]

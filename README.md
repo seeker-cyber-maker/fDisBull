@@ -324,11 +324,12 @@ The [actor-stage extension](docs/SHADOWRUN_MACOS_EXTENDED.md) adds source-backed
 menu navigation and a separate captured courtyard with player movement and
 three moving civilians. Original comparison windows and remaining combat
 boundaries are recorded alongside the native model checks.
-The separate [SNES opening study](docs/SHADOWRUN_SNES_OPENING.md) starts from
-the title menu, constructs the scene and its tasks, runs the scripted opening
-and reaches player movement in the morgue. It displays an adapted actor grid
-and source text; original graphics, audio playback and unrestricted game
-progression remain outside this bounded experiment.
+The separate [SNES interaction study](docs/SHADOWRUN_SNES_INTERACTIONS.md)
+starts from the title menu and recovers movement, targeting, an action menu,
+item pickup and a scripted response from a Mortician-associated task. It uses
+an adapted isometric actor view and source text; original artwork, audio
+playback, general conversations and unrestricted progression remain outside
+this bounded experiment.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

@@ -16,6 +16,13 @@ def _gamma(value):
     return ''.join('0'+bit for bit in bits)+'1'
 
 
+def test_scene_reset_initializes_source_camera_motion():
+    machine=_machine(bytearray(1<<20));shared=[0]*65536
+    shared[0x0ce4:0x0ce8]=[0x55]*4
+    machine.set_state({'task_shared':shared});machine.call('shadowrun_snes_scene_reset_camera_motion',0)
+    assert machine.snapshot()['task_shared'][0x0ce4:0x0ce8]==[0,0,0,0]
+
+
 def test_world_decoder_handles_source_style_overlapping_backreferences():
     rom=bytearray(1<<20);base=0x5fc42
     rom[base:base+2]=(3515).to_bytes(2,'little')

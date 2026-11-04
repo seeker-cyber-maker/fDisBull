@@ -108,10 +108,15 @@ void shadowrun_snes_scene_room_data(u8 unused) {
  scene_decode_target=0xda14U;scene_decode_length=263U;scene_decode_bank=1U;
  scene_decode();
 }
+/* $81:8926/$8929 initialize camera motion before scene construction. */
+void shadowrun_snes_scene_reset_camera_motion(u8 unused) {
+ scene_write(0x0ce4U,0U);scene_write(0x0ce6U,0U);
+}
 void shadowrun_snes_scene_begin(u8 unused) {
  u16 i,ptr;
  scene_status=0U;scene_pending=0U;
  shadowrun_snes_scene_world(0U);if(!scene_status)return;
+ shadowrun_snes_scene_reset_camera_motion(0U);
  /* $9590 selects scene 3; no carried-over party actor is present. */
  scene_write(0x3ca3U,65535U);scene_write(0x2de4U,1U);
  scene_write(0x2de6U,65534U);scene_write(0x2de2U,3U);

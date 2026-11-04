@@ -79,6 +79,25 @@ void opening_window_finish(void) {
  opening_window_display_tainted=1U;
  opening_window_priority=slot;opening_window_phase=2U;opening_window_status=1U;
 }
+/* $FA08 releases one directly owned window and invokes the display refresh.
+ * Direct target/choice windows are not entries in the FE8B expiry queue. */
+void opening_window_close(u16 slot) {
+ u16 head,cursor;
+ opening_window_status=0U;head=scene_read(0x0220U);
+ if((slot&1U) || slot>=32U || (head&32768U) || (head&1U) || head>=32U || slot>head)return;
+ scene_write(0x0242U+slot,0U);
+ if(slot==head) {
+  cursor=slot;
+  for(;;) {
+   if(!cursor || scene_read(0x0242U+cursor-2U))break;
+   cursor-=2U;
+  }
+  scene_write(0x022eU,scene_read(0x2060U+cursor));
+  scene_write(0x0220U,cursor-2U);
+ }
+ opening_window_display_tainted=1U;opening_window_scratch_tainted=1U;
+ opening_window_close_events+=1U;opening_window_status=1U;
+}
 void opening_window_tick(void) {
  u16 i,j,value,slot,head,cursor;
  opening_window_status=0U;

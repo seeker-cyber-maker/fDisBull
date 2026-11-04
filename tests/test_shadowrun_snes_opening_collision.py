@@ -10,7 +10,7 @@ void scene_write(u16 at,u16 value) {task_shared[at]=(u8)value;task_shared[at+1U]
 '''
 
 
-def test_rebuild_uses_mutable_banks_and_refuses_other_dynamic_actor():
+def test_player_collision_uses_other_actor_height_and_refuses_other_queries():
     shared, upper = bytearray(65536), bytearray(65536)
     shared[0xde88:0xe088] = b'\xff' * 512
     def word(at, value):
@@ -33,8 +33,9 @@ def test_rebuild_uses_mutable_banks_and_refuses_other_dynamic_actor():
     state = machine.snapshot()
     assert state['opening_rebuild_supported'] == 1
     assert state['scene_7f'][0xe214 + (0xa74 >> 2)] == 0x40
-    machine.call('opening_collision_at', 0x42, 400, 400, 0)
-    assert machine.snapshot()['opening_collision_supported'] == 0
+    result = machine.call('opening_collision_at', 0x42, 400, 400, 0)
+    assert machine.snapshot()['opening_collision_supported'] == 1
+    assert result['result'] == 4
     machine.call('opening_collision_at', 0x40, 400, 400, 0)
     assert machine.snapshot()['opening_collision_supported'] == 0
     before = machine.snapshot()

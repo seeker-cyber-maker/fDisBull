@@ -96,7 +96,7 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     if profile=='live-morgue':capture['scope']='prepared scene; reconstructed mutable collision lists and projected actor flags, fixed captured 7F tables, bounded analysis updates'
     if profile=='npc-intro':capture={'frame':2000,'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'actor_slots':[0x44,0x46],'scope':'two coordinate-target, noncolliding NPC kinematic projections'}
     if profile=='scripted-intro':capture={'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'actor_slots':[0x44,0x46,0x4e],'clock':'one source main-loop pass','scope':program['evidence']['scope']}
-    if profile=='opening':capture={'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'clock':'title controller updates followed by source main-loop passes','scope':program['evidence']['scope']}
+    if profile=='opening':capture={'rom_sha256':_sha(rom),'wram_sha256':_sha(snapshot),'clock':program['evidence']['clock'],'scope':program['evidence']['scope']}
     receipt={'format':'fdisbull-shadowrun-snes-macos-1','architecture':'arm64','profile':profile,
              'capture':capture,'program_sha256':_sha(canonical(program)),
              'seed_sha256':_sha((destination/'seed.json').read_bytes()),'native_core':native,
@@ -112,6 +112,9 @@ def build(*, rom_path, ram, save_ram, output, profile='static-morgue'):
     if profile=='static-morgue':receipt['limits']+=['captured static collision data; autonomous actors unqualified']
     if profile=='npc-intro':receipt['limits']+=['two noncolliding NPC controllers/kinematics only; rendering flags and animation excluded; direction/task changes refuse']
     if profile=='scripted-intro':receipt['limits']+=['source-seeded NPC/task projection on logical main-loop passes; source video pacing and APU audio delivery excluded']
-    if profile=='opening':receipt['limits']+=['source-derived title and scene initialization; source video presentation and APU delivery excluded; unknown continuations refuse']
+    if profile=='opening':
+        receipt['display']='adapted isometric actors and source cursor driven by recovered camera; decoded text and guarded item ownership; no original artwork'
+        receipt['limits'][1]='unobserved player actions, general conversations and room transitions remain unqualified'
+        receipt['limits']+=['one input update can be a suspended modal poll with no actor/physics pass; original video pacing and APU delivery excluded']
     (destination/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt

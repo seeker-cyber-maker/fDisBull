@@ -15,6 +15,11 @@ from .shadowrun_snes_field import SOURCE as FIELD_SOURCE
 from .shadowrun_snes_text import SOURCE as TEXT_SOURCE
 from .shadowrun_snes_opening_window import SOURCE as WINDOW_SOURCE
 from .shadowrun_snes_opening_anim import SOURCE as ANIM_SOURCE
+from .shadowrun_snes_target import SOURCE as TARGET_SOURCE
+from .shadowrun_snes_choice import SOURCE as CHOICE_SOURCE
+from .shadowrun_snes_interaction import SOURCE as INTERACTION_SOURCE
+from .shadowrun_snes_camera import SOURCE as CAMERA_SOURCE
+from .shadowrun_snes_action_collision import SOURCE as ACTION_COLLISION_SOURCE
 
 SOURCE = Path(__file__).parent / 'game_sources/shadowrun_snes_opening.c'
 TITLE_SHA256 = '15caaf78faed99408c783119ac5e1703da066b904e5570dd895b7bcb49db9d93'
@@ -35,7 +40,7 @@ def machine_from_title(rom, title, save_ram):
     prefix = ('typedef unsigned char u8;\ntypedef unsigned int u16;\n'
               'typedef unsigned long u32;\nu8 rom8(u8 region,u32 offset);\n')
     inputs = {p: p.read_text() for p in (VM_SOURCE, TASK_SOURCE, SCENE_SOURCE, COLLISION_SOURCE,
-              NPC_SOURCE, MENU_SOURCE, MOTION_SOURCE, LIVE_SOURCE, FIELD_SOURCE, TEXT_SOURCE, WINDOW_SOURCE, ANIM_SOURCE, SOURCE)}
+              NPC_SOURCE, MENU_SOURCE, MOTION_SOURCE, LIVE_SOURCE, FIELD_SOURCE, TEXT_SOURCE, WINDOW_SOURCE, ANIM_SOURCE, TARGET_SOURCE, CHOICE_SOURCE, INTERACTION_SOURCE, CAMERA_SOURCE, ACTION_COLLISION_SOURCE, SOURCE)}
     scene = inputs[SCENE_SOURCE].replace(prefix + 'u8 task_shared[65536];\n', '')
     npc = inputs[NPC_SOURCE].replace(prefix, '')
     menu = inputs[MENU_SOURCE].replace('typedef unsigned char u8;\ntypedef unsigned int u16;\n', '')
@@ -56,12 +61,14 @@ def machine_from_title(rom, title, save_ram):
         f'scene_write({at}U+slot,{name});' for name, at in FIELDS.items()) + '}'
     text = '\n'.join((inputs[VM_SOURCE], inputs[TASK_SOURCE], scene, inputs[COLLISION_SOURCE], npc, menu,
                        SCENE_TASK_WRAPPER, SCENE_PARTY_WRAPPER, source_fragment(), text_source,
-                       inputs[WINDOW_SOURCE], inputs[ANIM_SOURCE], inputs[SOURCE], load, save))
+                       inputs[WINDOW_SOURCE], inputs[ANIM_SOURCE], inputs[TARGET_SOURCE],
+                       inputs[CHOICE_SOURCE], inputs[INTERACTION_SOURCE], inputs[CAMERA_SOURCE],
+                       inputs[ACTION_COLLISION_SOURCE], inputs[SOURCE], load, save))
     program = author_program(text, [{'id': 0, 'length': len(rom), 'sha256': ROM_SHA256}], evidence={
         'kind': 'source-title-scene-task-opening', 'source_sha256': ROM_SHA256,
         'title_sha256': TITLE_SHA256, 'authoring_sha256': hashlib.sha256(text.encode()).hexdigest(),
-        'clock': 'menu input updates followed by logical source main-loop passes',
-        'scope': 'source-derived scene 3 initialization and guarded task/actor execution; presentation, audio delivery and unsupported transitions excluded'})
+        'clock': 'title input, logical source main-loop passes and suspended modal input polls',
+        'scope': 'source-derived scene 3, cursor/verb selection, guarded item pickup and scripted NPC responses; room transitions, keyword conversations, original raster and APU delivery excluded'})
     m = GameMachine(program, {0: rom})
     m.set_state(tasks_from_capture(rom, title).snapshot())
     word = lambda at: int.from_bytes(title[at:at + 2], 'little')

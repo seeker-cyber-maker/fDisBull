@@ -1,5 +1,8 @@
 # SNES Shadowrun: title-to-morgue initialization
 
+The subsequent [morgue interaction study](SHADOWRUN_SNES_INTERACTIONS.md)
+extends this historical movement result.
+
 This continues the [task-dispatch study](SHADOWRUN_SNES_SCRIPT_DISPATCH.md)
 on 2026-11-03. The `opening` profile starts from the qualified title-menu state,
 consumes NEW GAME, constructs the first scene and its tasks from ROM, executes
