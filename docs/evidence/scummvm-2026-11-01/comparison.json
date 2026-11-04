@@ -1,0 +1,293 @@
+{
+  "format": "fdisbull-scummvm-dos-scene-comparison-evidence-1",
+  "task": "kq1-room1-carrot-repeat-physical-1",
+  "scope": "One exact AGI 2.917 edition, fresh physical room transition, first carrot take, repeat take refusal, and authored partial Z replay.",
+  "qualified_source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "regular_file_manifest_sha256": "35174dac00ed12c66440c90ef82700e35a2a0e2388b391c1483e339e1987471a"
+  },
+  "design": {
+    "pairs": 5,
+    "order": [
+      "dosbox-x,scummvm-agi",
+      "scummvm-agi,dosbox-x",
+      "dosbox-x,scummvm-agi",
+      "scummvm-agi,dosbox-x",
+      "dosbox-x,scummvm-agi"
+    ],
+    "fresh_game_each_run": true,
+    "physical_input": true,
+    "interventions": 0,
+    "observation_nested_in_startup_or_route": true,
+    "time_unit": "host wall milliseconds",
+    "attempts_per_backend": 5,
+    "complete_pairs": 5,
+    "incomplete_final_protocol_attempts": 0
+  },
+  "backends": {
+    "dosbox-x": {
+      "completed": 5,
+      "failed": 0,
+      "runtime_binary_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "python_manifest_sha256": "35c4d4f1f92623fdbafb1f7b39f9f3af8f8a73eae8430c88e52f40a89eb3cb58",
+      "python_source_sha256": {
+        "examples/scummvm/capture_carrot_scene.py": "7a7fde2b57fbd4ed1ff8fe6c87c5e1eb1d815510431b469e3d81b503451f33b5",
+        "examples/scummvm/capture_transition.py": "527387036886155da8c96e4e9b524bdf009ec77935a20aa82336ff98bed351e2",
+        "src/fdisbull/project.py": "c0d3835d5d2f5117a5064ac612e32cc5de594f7c7b181ca566642584edaf7fe5",
+        "examples/agi/spatial_trial.py": "bdc335a7ac6acba8d1795147d588ec401113d478961d80dc539c095601ec8202",
+        "src/fdisbull/debugger.py": "ddacd3bb62b276001e0325895d39d089afca6e36dcb1b0f051b4536cc2ae32e7",
+        "src/fdisbull/dosbox_rpc.py": "3c747d6492e688acabe1f85c231b0772fa046cd4025f9dfcc11223cd16aaf489",
+        "src/fdisbull/runtime_observations.py": "ee3ae70fc821a3c413646a4bef43fd7bab51e66df1aa86bcaef081181142ca2c"
+      },
+      "timing_ms": {
+        "startup": {
+          "median": 2087.518,
+          "min": 2054.627,
+          "max": 2424.867
+        },
+        "route": {
+          "median": 2511.843,
+          "min": 2289.264,
+          "max": 2571.829
+        },
+        "observation": {
+          "median": 327.18,
+          "min": 307.843,
+          "max": 340.539
+        },
+        "teardown": {
+          "median": 49.479,
+          "min": 48.363,
+          "max": 56.106
+        },
+        "inclusive": {
+          "median": 4622.576,
+          "min": 4493.73,
+          "max": 4990.253
+        }
+      },
+      "inclusive_fraction_percent": {
+        "startup": {
+          "median": 46.454,
+          "min": 44.134,
+          "max": 48.91
+        },
+        "route": {
+          "median": 52.441,
+          "min": 50.033,
+          "max": 54.812
+        },
+        "observation": {
+          "median": 6.966,
+          "min": 6.556,
+          "max": 7.367
+        },
+        "teardown": {
+          "median": 1.057,
+          "min": 0.992,
+          "max": 1.214
+        }
+      },
+      "route_control_calls": {
+        "guest_runs": {
+          "median": 71,
+          "min": 67,
+          "max": 73
+        },
+        "state_reads": {
+          "median": 69,
+          "min": 65,
+          "max": 71
+        },
+        "memory_reads": {
+          "median": 276,
+          "min": 260,
+          "max": 284
+        },
+        "engine_state_reads": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "keyboard_state_reads": {
+          "median": 16,
+          "min": 16,
+          "max": 16
+        },
+        "keyboard_submissions": {
+          "median": 67,
+          "min": 63,
+          "max": 69
+        },
+        "screenshots": {
+          "median": 3,
+          "min": 3,
+          "max": 3
+        }
+      },
+      "startup_input_count": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "scummvm-agi": {
+      "completed": 5,
+      "failed": 0,
+      "runtime_binary_sha256": "f4f671cc3194cb290616644334a7dce5ba3233e9418d57e084438a76cc73659e",
+      "python_manifest_sha256": "0b80dc1ac442b5e3d23339e7dcdb22469adb170ddb1c9d8ec8511dff9898c3b8",
+      "python_source_sha256": {
+        "examples/scummvm/capture_carrot_scene.py": "7a7fde2b57fbd4ed1ff8fe6c87c5e1eb1d815510431b469e3d81b503451f33b5",
+        "examples/scummvm/capture_transition.py": "527387036886155da8c96e4e9b524bdf009ec77935a20aa82336ff98bed351e2",
+        "src/fdisbull/project.py": "c0d3835d5d2f5117a5064ac612e32cc5de594f7c7b181ca566642584edaf7fe5",
+        "src/fdisbull/scummvm_debugger.py": "44d397ea8c790e8b57a74ad90f11281b2dd617c4f33fcdbd0f39254571721b38",
+        "src/fdisbull/scummvm_rpc.py": "7bc36d2e00e9eaa341f30159e1b786218ac55cc92ca9bd9b3c92354e9bc65ae1"
+      },
+      "timing_ms": {
+        "startup": {
+          "median": 302.591,
+          "min": 278.605,
+          "max": 437.797
+        },
+        "route": {
+          "median": 3010.446,
+          "min": 2857.698,
+          "max": 3963.727
+        },
+        "observation": {
+          "median": 944.3,
+          "min": 881.968,
+          "max": 1197.512
+        },
+        "teardown": {
+          "median": 10.578,
+          "min": 9.791,
+          "max": 12.845
+        },
+        "inclusive": {
+          "median": 3322.827,
+          "min": 3150.502,
+          "max": 4353.458
+        }
+      },
+      "inclusive_fraction_percent": {
+        "startup": {
+          "median": 8.958,
+          "min": 8.399,
+          "max": 13.006
+        },
+        "route": {
+          "median": 90.706,
+          "min": 86.694,
+          "max": 91.253
+        },
+        "observation": {
+          "median": 27.995,
+          "min": 27.507,
+          "max": 28.914
+        },
+        "teardown": {
+          "median": 0.301,
+          "min": 0.295,
+          "max": 0.348
+        }
+      },
+      "route_control_calls": {
+        "guest_runs": {
+          "median": 66,
+          "min": 66,
+          "max": 66
+        },
+        "state_reads": {
+          "median": 70,
+          "min": 70,
+          "max": 70
+        },
+        "memory_reads": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "engine_state_reads": {
+          "median": 70,
+          "min": 70,
+          "max": 70
+        },
+        "keyboard_state_reads": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "keyboard_submissions": {
+          "median": 8,
+          "min": 8,
+          "max": 8
+        },
+        "screenshots": {
+          "median": 3,
+          "min": 3,
+          "max": 3
+        }
+      },
+      "startup_input_count": {
+        "median": 1,
+        "min": 1,
+        "max": 1
+      }
+    }
+  },
+  "paired_outcome": {
+    "same_room_score_and_carrot_flag": true,
+    "first_and_repeat_messages_opened_and_closed": true,
+    "repeat_take_preserved_room_score_flag_and_ego": true,
+    "stored_frames_per_run": 4,
+    "scummvm_committed_modal_revisions_at_boundaries": [
+      0,
+      0,
+      2,
+      4
+    ],
+    "partial_z_replays_complete": 5,
+    "partial_z_last_action": "rejected-repeat-take",
+    "scene_sha256": "a5618f498c7b65e6bfd07b38103a0edb294e4a287c5bc44561899992a157a00c",
+    "replay_sha256": "0409c4a550a3f4ea8e8830554148b9b0a0f0377740033ad661d96190682f9f79"
+  },
+  "frame_comparison": {
+    "dimensions": [
+      320,
+      200
+    ],
+    "different_rgb_pixels_by_pair": [
+      66,
+      94,
+      66,
+      94,
+      66
+    ],
+    "pixels_per_frame": 64000,
+    "meaning": "sampled post-carrot committed frames only; not general pixel equivalence"
+  },
+  "derived": {
+    "ratio_of_inclusive_medians_dos_over_scummvm": 1.391,
+    "ratio_of_route_medians_scummvm_over_dos": 1.199
+  },
+  "earlier_preserved_incomplete_receipts": [
+    {
+      "attempt": "scummvm-transition-01",
+      "category": "transition-startup-assumption"
+    },
+    {
+      "attempt": "scummvm-transition-02",
+      "category": "movement-input-policy"
+    },
+    {
+      "attempt": "scummvm-carrot-01",
+      "category": "runner-modal-revision-comparison"
+    },
+    {
+      "attempt": "carrot-final-03-dosbox-x",
+      "category": "transient-room-entry-qualification"
+    }
+  ],
+  "claim_ceiling": "Bounded original-DOS versus compatible-engine scene observation and authored partial Z replay; no automatic UIL extraction, authoring-time result, general decoder coverage, scheduler parity, or whole-engine equivalence."
+}

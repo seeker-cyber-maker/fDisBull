@@ -1,0 +1,161 @@
+{
+  "format": "fdisbull-scummvm-gob-verification-1",
+  "date": "2026-11-01",
+  "status": "local_experimental_source_and_bounded_scene_qualification",
+  "source_base": "498c0887f8d15ca3b2fb3dc8994d2de24e144273",
+  "branch": "codex/scummvm-execution-backend",
+  "GitLab_last_checked_main": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+  "GitLab_delta_from_base": "one new agent-handoff Markdown document; no executable source delta",
+  "platform": "macOS arm64; shared Python 3.13.18",
+  "native": {
+    "upstream_version": "v2026.4.0",
+    "upstream_commit": "7d2709da5136866589f7602f5f5a7b17de03420e",
+    "profile": "gob-inter-v3",
+    "patch_sha256": "32d24167f9307aa1d48121fa6eec82fd5704125fdf9c3ff1cb94865ab0927f0f",
+    "tested_binary_sha256": "b350172eec8e797cfe5c9ffec05c19b06cd84470210a83a0e443871bc43ccd98",
+    "patch_replay": {
+      "apply_check": true,
+      "all_touched_files_retrieved_from_clean_declared_pin": true,
+      "patched_files_equal_built_source": true,
+      "second_full_build": false
+    },
+    "watch_coverage": "scalar/string/copy variable accessors with byte-range alias overlap; excludes direct pointer dereferences, direct stream reads, and arbitrary arena replacement",
+    "unsupported": [
+      "arbitrary native Gob save/load checkpoints",
+      "script resource patch/restore",
+      "AGI room/flag/object state",
+      "AGI cycles"
+    ]
+  },
+  "native_manifest_sha256": "be95404194c9023167a71d07e61d18abe35bb1206334cf716e80ec0d8eb532df",
+  "preserved_AGI_runtime": {
+    "upstream_version": "2.8.1",
+    "binary_sha256": "f4f671cc3194cb290616644334a7dce5ba3233e9418d57e084438a76cc73659e",
+    "native_KQ1_and_PQ1_cases_active_in_combined_100_test_gate": true
+  },
+  "stock_application_update": {
+    "version": "2026.4.0",
+    "previous_version_preserved": "2.8.1",
+    "binary_sha256": "9ad5c580bf0f491c1e51ab02af7056782718c2144f8248971af3bc81f6778906",
+    "official_download_sha256": "5614527fa57ffce14773c69923b96eeb7b1b135bcd96bfe74640ca341cad4598",
+    "codesign_verified": true,
+    "normal_application_entry_version_probe_passed": true,
+    "payload_on_CODEX_application_entry_is_symlink": true,
+    "stock_application_is_separate_from_patched_debug_sidecar": true
+  },
+  "verification": {
+    "earlier_focused": {
+      "passed": 102,
+      "skipped": 1
+    },
+    "post_LostTime_scope_gate": {
+      "passed": 42,
+      "skipped": 1
+    },
+    "post_review_candidate_real_DOS_Gob_AGI_gate": {
+      "passed": 100,
+      "skipped": 0
+    },
+    "expanded_queued_popup_real_DOS_Gob_gate": {
+      "passed": 18,
+      "skipped": 0
+    },
+    "final_source_whole_macos": {
+      "passed": 2702,
+      "skipped": 127,
+      "failed": 5,
+      "errors": 23,
+      "all_failure_and_error_nodes_reproduced_on_unchanged_029": true
+    }
+  },
+  "closed_review_findings": [
+    "Capability-aware named-scene advancement; explicit unavailable ScummVM hook requests refuse.",
+    "Stable duplicate native breakpoint/watch ownership with typed byte-range alias identity.",
+    "Queued main-action and popup input receipts survive outcome-wait exceptions without replay.",
+    "A queued known-popup dismissal can advance; it must disappear before success, while other modals still stop."
+  ],
+  "native_test_seams": [
+    "public foreground CLI/async pause",
+    "typed arena aliases and source identity",
+    "real named action/wait/popup advancement",
+    "populated retained trace/hotspot ownership",
+    "current/loop/stale-source breakpoints",
+    "byte-range watch overlap",
+    "owner EOF reaping",
+    "project reopen and stored PNG export"
+  ],
+  "provider_sha256": {
+    "src/fdisbull/scummvm_rpc.py": "932c334c7ed0a5f9cecff3468110e111e2c0dcd12bb8b82dd7b38cf05cf960b8",
+    "src/fdisbull/scummvm_gob.py": "3acbfa952707df740c4b13bab72317a4bf9b968192cb2b603a8d1786ec80a4f1",
+    "src/fdisbull/scummvm_debugger.py": "2230943bed009bb3636f51fb0990cbcbb267c6d764daf2f2d4f9d31d2ea934be",
+    "src/fdisbull/debugger.py": "2039f682cb410bcb859e6931a2082faf3e0eb14c9e70863b3e677d58a7e8672e",
+    "src/fdisbull/debug_script.py": "f5135aa8935e600536d53f967d63ce650fa9c36b1eee6b6239142c2bd6edb584",
+    "src/fdisbull/scene_values.py": "a9926cd4fb8f2c1f8de7ea9912f7064c952b673b2612acaecaaf1af31ad1bb75",
+    "src/fdisbull/scenes.py": "f838736ad6bc178cff66fbe6c628103172f2a23bab437a5d20750996b7d24249",
+    "src/fdisbull/cli.py": "07684fd70fc4691a01fe4f1b083b3fbe8920b56d0f9d52ccf18e815727947afc",
+    "src/fdisbull/capabilities.py": "05ac800bd84a2077897f90dc83192fcbf9348eb6bf0b73639ad82d2a5e2c2823",
+    "src/fdisbull/debug_semantics.py": "11db1558e4598e6debbfaab5c6fd04cf2cdbf5a3de0326d995986189572ea2f7"
+  },
+  "log_sha256": {
+    "gob-implementation/verification/final9/final-source.log": "04c8c3ebed240b88ceca820f73c2c17cce4cdd2561dccfef1da7cb5848cc2a2e",
+    "pytest-baseline-macos.log": "0be5941ecb1c7fbf621df1d051ab92aae4bf210d6cb02f0349da66a1199b431e",
+    "pytest-baseline-lldb.log": "4fc799974d30b1339b93eb41f8fcc5fb93e6345b77a6be6c476017b40cc73757",
+    "gob-implementation/fix-candidate/tmp/integrated.log": "2e2b445d806c5f6d0e9800aae6eb86d08f243d87db6dcc5eece99ff5c506d73f",
+    "gob-implementation/fix-candidate/tmp/handler2.log": "90c4ffe792d8d4da0ecee0b7ebfd9f737ebf9042f1908f51c8db13424a166027"
+  },
+  "whole_suite_remaining_failures": [
+    "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+    "tests/test_loading.py::test_real_elf_retains_entry_and_named_function",
+    "tests/test_macos_lldb.py::test_arm64_lldb_observation_binds_source_runtime_and_stop",
+    "tests/test_macos_lldb.py::test_timeout_terminates_only_its_authored_fixture",
+    "tests/test_media_modules.py::test_resource_ambiguity_and_directory_bounds"
+  ],
+  "whole_suite_remaining_errors": [
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[0]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[100001]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[2]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[True]",
+    "tests/test_elf_metadata.py::test_conflicting_version_requirement_indices_do_not_prove_a_module",
+    "tests/test_elf_metadata.py::test_duplicate_versioned_export_names_remain_separate",
+    "tests/test_elf_metadata.py::test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+    "tests/test_elf_metadata.py::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+    "tests/test_elf_metadata.py::test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+    "tests/test_elf_metadata.py::test_limits_cap_metadata_and_path_lists_with_warnings",
+    "tests/test_elf_metadata.py::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+    "tests/test_elf_metadata.py::test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+    "tests/test_elf_metadata.py::test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+    "tests/test_elf_metadata.py::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+    "tests/test_platform_calls.py::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+    "tests/test_platform_calls.py::test_import_name_patch_replaces_old_symbol_alias_and_contract",
+    "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+    "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+    "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+    "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+    "tests/test_platform_calls.py::test_public_linkage_json_methods_and_refresh_return_structured_results",
+    "tests/test_platform_calls.py::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+    "tests/test_platform_calls.py::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child"
+  ],
+  "host_baseline_limits": "Linux ELF/GCC fixtures, case-insensitive filename fixture, and LLDB wall-time tests; whole macOS suite is not green",
+  "comparison": "comparison.json",
+  "limits": [
+    "English US v1.10 DOS CD slice tested; other editions/languages unqualified.",
+    "Transport accepts only Lost in Time family lit/lit1/lit2; no other Gob engine profile claim.",
+    "Original x86 execution belongs to DOSBox; Gob is a replacement interpreter.",
+    "Trace span covers opcode encoding, not decoded operand extent; no general Gob disassembler claimed.",
+    "Native Gob save/load snapshots and loaded-script patches are unsupported.",
+    "Watches omit direct pointer and uninstrumented stream accesses.",
+    "No Linux/native CI, commit, push, release or shared fDisBull activation performed.",
+    "An earlier private DOS diagnostic mount changed cat.inf; historical matching bytes could not be recovered, so that older dry checkpoint mount remains unqualified. Original targets and save bytes are preserved."
+  ],
+  "private_preservation_audit_sha256": "0b7cf50760681e2480c5a4b8d9a3a9034638a34c33079848b3cfd62a4040ffd7",
+  "experimental_distribution": {
+    "wheel_tool_entries": 200,
+    "wheel_sha256": "88b3bd51e12e05619e9c9c82b815837b65ebc6c41b8244792479f2974a0145c4",
+    "source_identical_python_modules": 156,
+    "isolated_wheel_actual_Gob_named_action_wait_popup_fault_and_project_PNG_reopen": true,
+    "isolated_prefix_smoke_sha256": "e33516a44e98cab810e81485d05d23ee7cd002927a1dd7fa9c65928a68b78a05",
+    "distribution_guard_tests_passed": 41,
+    "shared_fDisBull_prefix_activated": false,
+    "source_archive_final_hashes": "retained in private package receipt to avoid self-referential evidence hashes"
+  }
+}

@@ -43,6 +43,10 @@ include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
+include docs/evidence/scummvm-2026-11-01/verification.json
+include docs/evidence/scummvm-2026-11-01/comparison.json
+include docs/evidence/scummvm-gob-2026-11-01/verification.json
+include docs/evidence/scummvm-gob-2026-11-01/comparison.json
 include docs/evidence/common-uil-2026-11-01/verification.json
 include docs/evidence/agi-scenes-2026-10-30/verification.json
 include docs/evidence/kq1-bow-2026-10-30/verification.json

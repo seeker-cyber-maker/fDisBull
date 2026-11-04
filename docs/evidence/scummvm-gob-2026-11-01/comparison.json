@@ -1,0 +1,359 @@
+{
+  "format": "fdisbull-losttime-dos-gob-comparison-1",
+  "date": "2026-11-01",
+  "status": "both_corrected_models_pass_independent_bounded_rubric",
+  "qualified_input": "Lost in Time English US v1.10 DOS CD resources",
+  "execution_provenance": {
+    "dosbox-x": "original x86 interpreter",
+    "scummvm-gob": "ScummVM Gob Inter_v3 replacement interpreter"
+  },
+  "existing_models": {
+    "models": [
+      "bilge.pump.gentleness",
+      "bilge.pump.stuck",
+      "bilge.pump.work",
+      "bilge.water.first",
+      "bilge.water.repeat",
+      "bilge.water.small_pipe",
+      "hold.poster.inspect"
+    ],
+    "selected_native_model_cases": 14,
+    "declared_retained_field_comparisons": 9,
+    "retained_fields_agree": true,
+    "scope": "selected response leaves and terminal retained-effect projections; no full-handler equality"
+  },
+  "native_Gob_qualification": {
+    "ordinary_input_cases": 43,
+    "separate_assisted_cases": 25,
+    "ordinary_route_has_state_writes": false,
+    "native_binary_sha256": "b350172eec8e797cfe5c9ffec05c19b06cd84470210a83a0e443871bc43ccd98",
+    "private_packet_sha256": "3ccb4c4b5d3de4feb6c4b62a9eb05666861f0e116168c1ca2f7e9bfc8989ea17"
+  },
+  "nail": {
+    "identity": "early hold stool nail; distinct from cabin nail and desk-chair key",
+    "qualification": "current source, camera/subview, enabled active rectangle and current popup origin",
+    "finding": "local rectangle exists before underside view; local-table presence does not establish visibility",
+    "reopen_origin_changes": true,
+    "new_models_wrong_view_close_reopen_and_bare_hand_refusal_pass": true,
+    "natural_extraction_qualified": false
+  },
+  "fresh_authoring": {
+    "task": "connected hold/poster/stool/nail/lamp/oil/bilge/water/pump/drain/return slice",
+    "fresh_local_context": true,
+    "prior_solution_reuse": "prohibited; none reported; not an OS-enforced access boundary",
+    "same_brief_and_original_inputs": true,
+    "native_runs_per_author": 3,
+    "first_provider_freeze_sha256": "d8b5705631e71d2e787c8636109eb21a174571b1b722a36a5684bf0f6917ef7c",
+    "provider_fixes_integrated_only_after_both_first_freezes": true,
+    "results": {
+      "dosbox-x": {
+        "timing_seconds": {
+          "first_submission_seconds": 1764.34503275,
+          "repair_phase_seconds": 204.920715375,
+          "first_plus_repair_phase_seconds": 1969.265748125,
+          "corrected_submission_seconds_since_start": 2854.01535025,
+          "first_submission_to_feedback_seconds": 860.645762667,
+          "feedback_to_repair_start_seconds": 24.103839458,
+          "confirmed_seconds_since_start": 3300.212048458,
+          "corrected_submission_to_confirmation_seconds": 446.196698208,
+          "first_score": 97.5,
+          "repair_score": 100
+        },
+        "first_phase_effort": {
+          "first_elapsed_seconds": 1764.34503275,
+          "fresh_runs": 3,
+          "measured_commands": 122,
+          "failed_measured_commands": 3,
+          "runtime_calls": 1261,
+          "runtime_call_errors": 1,
+          "runtime_call_seconds": 92.069787749,
+          "python_version_snapshots_unique_content": 77,
+          "programs": 23,
+          "contexts": 14,
+          "objects": 55,
+          "scene_bytes": 80419,
+          "unlogged_pre_dispatch_helper_failures_reported": 1,
+          "command_starts": 123,
+          "command_completion_receipts": 122,
+          "command_starts_without_completion_receipt": 1
+        },
+        "first_scene_sha256": "5777ab2b651ade9cfada0d34459949519dfc2914d94a30a9c8d023a72e81f127",
+        "corrected_scene_sha256": "0298dbc7d06107cc061d071b5f188965931ebb596ba1f1575aedc1c8722d653f",
+        "first_score": 97.5,
+        "corrected_score": 100,
+        "corrected_model": {
+          "programs": 23,
+          "contexts": 14,
+          "objects": 55,
+          "bytes": 81564
+        },
+        "independent_grade_counts": {
+          "declared_programs": 23,
+          "declared_stateful_programs": 23,
+          "declared_contexts": 14,
+          "objects": 55,
+          "independently_executed_programs": [
+            "acknowledge",
+            "cask-inside",
+            "cask-view",
+            "close",
+            "dark-barrels",
+            "handle",
+            "lamp-view",
+            "leave",
+            "left",
+            "light-opening",
+            "nail",
+            "oil-handle",
+            "opening",
+            "poster",
+            "pump-view",
+            "right",
+            "stool-view",
+            "take-lamp",
+            "take-oil",
+            "under-stool",
+            "water"
+          ],
+          "independently_executed_stateful_programs": 21,
+          "independently_reached_contexts": [
+            "bilge-barrels",
+            "bilge-pump",
+            "bilge-water",
+            "cask-detail",
+            "cask-inside",
+            "drain-event",
+            "hold-chest",
+            "hold-opening",
+            "hold-poster",
+            "lamp-detail",
+            "pump-detail",
+            "stool-detail",
+            "stool-underside",
+            "water-event"
+          ],
+          "additional_rejected_controls": 17,
+          "minimum12_stateful6_contexts6_controls_met": true
+        },
+        "independent_grade_sha256": "79277f53ada6329fd0d2ee6f9a71aeb727f69db334d216134e8287cff51477c5",
+        "first_grade_sha256": "89a6b0b409cbbc035715b91c7baeecdcb2472a78dc754f325d7739016af743af",
+        "first_submitted_files_preserved": true,
+        "repair_submitted_files_preserved": true
+      },
+      "scummvm-gob": {
+        "timing_seconds": {
+          "first_submission_seconds": 1542.661217042,
+          "repair_phase_seconds": 256.191327875,
+          "first_plus_repair_phase_seconds": 1798.852544917,
+          "corrected_submission_seconds_since_start": 2517.657705,
+          "first_submission_to_feedback_seconds": 697.391206833,
+          "feedback_to_repair_start_seconds": 21.41395325,
+          "confirmed_seconds_since_start": 2949.448351042,
+          "corrected_submission_to_confirmation_seconds": 431.790646042,
+          "first_score": 97.5,
+          "repair_score": 100
+        },
+        "first_phase_effort": {
+          "first_elapsed_seconds": 1542.661217042,
+          "fresh_runs": 3,
+          "measured_commands": 110,
+          "failed_measured_commands": 0,
+          "runtime_calls": 665,
+          "runtime_call_errors": 0,
+          "runtime_call_seconds": 29.135403839,
+          "python_version_snapshots_unique_content": 11,
+          "programs": 28,
+          "contexts": 17,
+          "objects": 50,
+          "scene_bytes": 98340,
+          "unlogged_pre_dispatch_helper_failures_reported": 1,
+          "command_starts": 110,
+          "command_completion_receipts": 110,
+          "command_starts_without_completion_receipt": 0
+        },
+        "first_scene_sha256": "5adfbc375c119777b4d1412b3dea0a17b52b6294614ad42d0474d914c95f5424",
+        "corrected_scene_sha256": "648a5aa39e4e8bc399e9191d8be069f19da9a2a2e3ed9bf06db5127546bf5c0b",
+        "first_score": 97.5,
+        "corrected_score": 100,
+        "corrected_model": {
+          "programs": 29,
+          "contexts": 17,
+          "objects": 50,
+          "bytes": 102325
+        },
+        "independent_grade_counts": {
+          "programs": 29,
+          "state_assigning_programs": 23,
+          "contexts": 17,
+          "objects": 50,
+          "independently_executed_programs": [
+            "acknowledge-pump",
+            "acknowledge-rat",
+            "climb-to-hold",
+            "close-detail",
+            "enter-opening",
+            "inspect-cask",
+            "inspect-dark-barrels",
+            "inspect-lamp-barrels",
+            "inspect-poster",
+            "inspect-pump",
+            "inspect-stool",
+            "inspect-water",
+            "lamp-on-handle",
+            "light-opening",
+            "oil-handle",
+            "operate-pump",
+            "pump-with-oil-item",
+            "take-lamp",
+            "take-oil",
+            "try-nail",
+            "turn-cask",
+            "turn-left",
+            "turn-right",
+            "turn-stool"
+          ],
+          "independently_executed_stateful_programs": 21,
+          "independently_reached_contexts": [
+            "bilge-casks",
+            "bilge-chain-dry",
+            "bilge-chain-wet",
+            "bilge-pump-dry",
+            "bilge-pump-wet",
+            "cask-end",
+            "cask-side",
+            "hold-lamp",
+            "hold-opening",
+            "hold-poster",
+            "lamp-close",
+            "pump-close",
+            "pumping-modal",
+            "rat-modal",
+            "stool-top",
+            "stool-under"
+          ],
+          "rejected_controls": 18
+        },
+        "independent_grade_sha256": "71f6007e366ec512b3189f35c76c9dcdeb129431d6cfa9ef794bb05d95002b55",
+        "first_grade_sha256": "f7cc13d40a34300d02bdcce78a123fc47f515e682ca294106d328cf90b0a0be5",
+        "first_submitted_files_preserved": true,
+        "repair_submitted_files_preserved": true
+      }
+    }
+  },
+  "shared_first_failure": {
+    "first_scores": 97.5,
+    "deduction_each": 2.5,
+    "behavior": "empty-hands wide-pump action after oiling and closing detail must start pumping directly",
+    "incorrect_first_behavior": "reopened pump detail and required another operate action",
+    "confirmation": "new ordinary-input original DOS run in a fresh private mount",
+    "both_repairs_pass": true
+  },
+  "independent_repair_execution": {
+    "scummvm-gob": {
+      "Z_cases": 110,
+      "fresh_Z_sessions": 5,
+      "installed_player_routes_commands": [
+        44,
+        28
+      ]
+    },
+    "dosbox-x": {
+      "Z_cases": 116,
+      "fresh_Z_sessions": 5,
+      "installed_player_routes_commands": [
+        49,
+        31
+      ]
+    }
+  },
+  "images": [
+    {
+      "case": "completed-bilge-reentry",
+      "DOS_sha256": "55b6afee99a3aebeecba9f32b8ca2ac62b6ae17c12f6730030ccc9f1199eceee",
+      "Gob_sha256": "8e9295ca48553a144d844792ec4f734775e365dd39757014cb08d4dd2fd0341d",
+      "size": [
+        320,
+        200
+      ],
+      "native_Gob_sha256": "b350172eec8e797cfe5c9ffec05c19b06cd84470210a83a0e443871bc43ccd98",
+      "max_channel_difference_histogram": {
+        "0": 21149,
+        "1": 23151,
+        "2": 17421,
+        "3": 2203,
+        "84": 7,
+        "100": 35,
+        "119": 2,
+        "155": 6,
+        "171": 3,
+        "199": 18,
+        "207": 4,
+        "255": 1
+      },
+      "different_pixels": 42851,
+      "different_pixels_at_most_3_levels": 42775,
+      "pixels_over_3_levels": 76,
+      "limit": "matching named settled cases; no color/cursor/animation normalization, no pixel parity assertion"
+    },
+    {
+      "case": "nail-underside",
+      "DOS_sha256": "522ebc05c845c7350a82ee7171a2d5a1e073fd9467db6576b040caa2b904703f",
+      "Gob_sha256": "a180d6650dbd62406c11f839df5f8cedc4f94b88561e6571e22e607b4a5be215",
+      "size": [
+        320,
+        200
+      ],
+      "native_Gob_sha256": "b350172eec8e797cfe5c9ffec05c19b06cd84470210a83a0e443871bc43ccd98",
+      "max_channel_difference_histogram": {
+        "0": 33065,
+        "1": 18585,
+        "2": 10143,
+        "3": 2131,
+        "20": 3,
+        "28": 25,
+        "36": 11,
+        "60": 1,
+        "68": 1,
+        "100": 1,
+        "183": 1,
+        "195": 1,
+        "199": 1,
+        "227": 26,
+        "235": 4,
+        "255": 1
+      },
+      "different_pixels": 30935,
+      "different_pixels_at_most_3_levels": 30859,
+      "pixels_over_3_levels": 76,
+      "limit": "matching named settled cases; no color/cursor/animation normalization, no pixel parity assertion"
+    }
+  ],
+  "private_receipt_sha256": {
+    "dosbox-x": {
+      "first_receipt": "b9c98ce97cc3eed8c338f3c1d0c7401fbca21a7ff4edb2b9b2b84ea7813c3517",
+      "repair_receipt": "2c6efac52c097745b95423ea04ed7ae037160d385ef21c9669f3d9903d1888b8",
+      "journal": "50cb15513e07339ceafc179d0b60fb31164a0d5aaa93b5c009c4fe58576f3a32"
+    },
+    "scummvm-gob": {
+      "first_receipt": "062f9ca2ff83ec1cbf1c121667d117033c2099ce38141b1516bb896a9de29c68",
+      "repair_receipt": "3b0f3d97bf0e4b021cce492940e5416aabde8bd6d25b23e76c8a2c82992e14b6",
+      "journal": "4bb8d9cac940bba817e6d5bcbb82e75dcdbf4907c4fb5193422ae719b73b030d"
+    }
+  },
+  "interpretation": {
+    "first_plus_repair_phase_seconds_saved_by_Gob": 170.41320320800014,
+    "single_pair_only": true,
+    "general_productivity_ranking_established": false
+  },
+  "measurement_limits": [
+    "First plus repair reports elapsed wall time in those authoring phases, not cognitive or token effort.",
+    "Review/feedback/dispatch waits are separate; serial grading order makes raw confirmation time unsuitable as an engine speed ranking.",
+    "Native adapter engineering, independent gold construction and prequalified generic launch/arena binding are excluded prework; boot during each trial is charged.",
+    "Counts are top-level public API calls, not nested RPCs; capture/polling and command granularity differ.",
+    "DOS used one fresh generic-schema helper; its 14 wrapped commands are included in effort counts.",
+    "Each author reported one pre-dispatch long-argv measurement-helper failure; the common helper was fixed for both and versions retained.",
+    "DOS has one command-start without a completion receipt (reported missing /usr/bin/rg), plus a separately reported harmless note-shell quoting failure.",
+    "Source inspection, partial fixture checks and a 100-point bounded rubric do not prove complete game, all-state, pixel, timing or native-variable parity.",
+    "Models are newly authored shared-IL projections; no automatic whole-game UDC translation or natural nail removal is established."
+  ]
+}

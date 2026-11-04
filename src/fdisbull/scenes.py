@@ -97,6 +97,24 @@ def video_signature(metadata):
         result.update(backend=metadata['backend'],source_sha256=source,runtime_profile=profile,
                       runtime_identity_sha256=runtime,resource_manifest_sha256=resources,
                       coordinate_space='client-native-pixels')
+    if metadata.get('backend') in ('scummvm-agi','scummvm-gob'):
+        digest=metadata.get('resource_manifest_sha256')
+        layers=metadata.get('resource_layers_sha256')
+        if not isinstance(digest,str) or not re.fullmatch(r'[0-9a-f]{64}',digest):
+            raise ValueError('ScummVM scene requires a resource manifest identity')
+        if not isinstance(layers,str) or not re.fullmatch(r'[0-9a-f]{64}',layers):
+            raise ValueError('ScummVM scene requires a resource layer identity')
+        result.update(backend=metadata['backend'],resource_manifest_sha256=digest,resource_layers_sha256=layers)
+        if metadata['backend']=='scummvm-gob':
+            for key in ('script_loaded_sha256','script_decompressed_sha256','scummvm_sha256'):
+                value=metadata.get(key)
+                if not isinstance(value,str) or not re.fullmatch(r'[0-9a-f]{64}',value):
+                    raise ValueError('Gob scene requires loaded script and runtime identities')
+                result[key]=value
+            script=metadata.get('script')
+            if not isinstance(script,str) or not script:
+                raise ValueError('Gob scene requires a loaded script name')
+            result['script']=script.casefold()
     return result
 
 
@@ -681,7 +699,7 @@ class SceneHandle:
                        error_type=type(error).__name__,error=str(error)))
         failed=dict(observed,scene_revision=self.revision,input=queued,handlers=handlers,
                     outcome_observation=observed.get('observation'),**context)
-        return SceneError(self._store(failed))
+        return SceneError(self._store(failed,diagnostic=not isinstance(error,SceneError)))
 
     @reply_option
     def click(self, object, *, handle_popups=False, timeout_ms=None, slice_ms=100):
@@ -769,6 +787,9 @@ class SceneHandle:
             # A destination match is independent of the old scene name; keep
             # conflicts, absent captures and blocking modals as explicit failures.
             ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable','blocked')
+            # The handler being dismissed remains visible until its queued
+            # input executes. It must disappear before success, but must not
+            # prevent that execution. A different blocking modal still stops.
             own_handler=(result['status']=='blocked' and dismissing_handler is not None
                          and result.get('handlers')==[dismissing_handler])
             polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),matched=ok))

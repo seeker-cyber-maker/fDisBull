@@ -10,7 +10,18 @@ import time
 from .debugger import bounded
 from .operation_budget import rpc_budget
 
+ENGINE_OPERATIONS = {
+    'engine-state':'engine_state', 'engine-set':'write_engine_state',
+    'step':'step', 'watchpoint':'watchpoint', 'delete-watchpoint':'delete_watchpoint',
+    'engine-resource':'resource', 'engine-patch-resource':'patch_resource',
+    'engine-cycle':'run_until_cycle',
+    'engine-read-variable':'read_variable','engine-write-variable':'write_variable',
+    'engine-hotspot-events':'hotspot_events',
+    'engine-restore-resource':'restore_resource',
+}
+
 OPERATIONS = {
+    **ENGINE_OPERATIONS,
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
@@ -47,13 +58,16 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    if backend is not None and backend not in ('wine-qemu','wine-ne'):
-        raise ValueError('Script backend must be wine-qemu or wine-ne; omit it for the legacy DOS grammar')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob')
+    if backend is not None and backend not in supported_backends:
+        raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
+    actual=None
+    if session is not None:
+        actual=getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+        if actual=='wine-ne-qemu':actual='wine-ne'
     if backend is not None:
         if session is not None:
-            actual=getattr(session,'backend_name',None)
-            if actual=='wine-ne-qemu':actual='wine-ne'
             if backend!=actual:raise ValueError('Script backend differs from the live debugger')
         elif backend=='wine-qemu':
             from .wine_debugger import PEDebugSession
@@ -61,6 +75,15 @@ def validate_script(script, *, session=None):
         elif backend=='wine-ne':
             from .win16_debugger import Win16DebugSession
             owner=Win16DebugSession
+        elif backend=='scummvm-gob':
+            from .scummvm_gob import ScummVMGobSession
+            owner=ScummVMGobSession
+        else:
+            from .scummvm_debugger import ScummVMAGISession
+            owner=ScummVMAGISession
+    outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    if (backend or actual) in ('scummvm-agi','scummvm-gob'):
+        outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')
     expanded = []
@@ -72,8 +95,8 @@ def validate_script(script, *, session=None):
             if not isinstance(step,dict) or not isinstance(step.get('op'),str):
                 raise ValueError('Every step requires an op')
             op = step['op']
-            if 'expect' in step and (op!='run' or step['expect'] not in ('breakpoint','watchpoint','guest_time','timeout','exited','pause')):
-                raise ValueError('expect is a run outcome: breakpoint, watchpoint, guest_time, timeout, exited, or pause')
+            if 'expect' in step and (op!='run' or step['expect'] not in outcomes):
+                raise ValueError('expect must be a supported run outcome for this backend')
             if op=='repeat':
                 if set(step) != {'op','count','steps'}:
                     raise ValueError('repeat requires count and steps')
@@ -89,9 +112,15 @@ def validate_script(script, *, session=None):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    operation=getattr(owner,OPERATIONS[op],None)
+                    operation_owner=owner
+                    if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
+                        # Engine-only saved routes retain the AGI grammar; ordinary
+                        # step routes keep the established DOS signature.
+                        from .scummvm_debugger import ScummVMAGISession
+                        operation_owner=ScummVMAGISession
+                    operation=getattr(operation_owner,OPERATIONS[op],None)
                     if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
-                    if op=='write-registers' and getattr(owner,'register_edits_available',True) is False:
+                    if op=='write-registers' and getattr(operation_owner,'register_edits_available',True) is False:
                         raise ValueError('Win16 register writes are not qualified for this runtime')
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
@@ -199,7 +228,7 @@ def validate_script(script, *, session=None):
 @rpc_budget
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
-    steps = validate_script(script,session=session) # Reject malformed later steps before any guest mutation.
+    steps = validate_script(script, session=session) # Reject malformed later steps before any guest mutation.
     for step in steps:
         if step['op']=='delta-rewind' and 'policy' in step:
             from .debug_cpu_deltas import validate_policy
@@ -280,7 +309,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','step','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -309,6 +338,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
+            if step['op']=='step' and not result.get('completed'):
+                raise ValueError('Engine step stopped before the requested instruction boundary count')
+            if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
+                raise ValueError('Engine did not reach the requested cycle boundary')
             if _after_step is not None:_after_step(step,result)
             if 'as' in step:
                 results[step['as']] = result

@@ -2,9 +2,30 @@
 
 
 def contract(backend):
+    if backend=='scummvm-gob':
+        return {'format':'fdisbull-debug-semantics-1','backend':backend,
+                'native_hooks_available':False,
+                'execution_breakpoint_stage':'before encoded Gob function/draw/gob opcode; inspect family and script generation',
+                'watchpoint_stage':'instrumented byte-range accessor; pointer and uninstrumented bulk paths remain outside coverage',
+                'trace_registers_stage':'Gob script boundary; no original CPU registers',
+                'trace_completion':'correlated starts and returns; an unfinished nested caller remains incomplete',
+                'timing':'ScummVM virtual milliseconds; original DOS timing equivalence unverified',
+                'address_context':'source-bound loaded TOT, generation and original byte offset',
+                'guest_exit_reporting':'ScummVM engine lifecycle; original DOS process exit unavailable'}
+    if backend=='scummvm-agi':
+        return {'format':'fdisbull-debug-semantics-1','backend':backend,
+                'native_hooks_available':False,
+                'execution_breakpoint_stage':'before-AGI-opcode',
+                'watchpoint_stage':'instrumented AGI accessor observed at next safe point; direct raw field accesses may be unobserved',
+                'trace_registers_stage':'script boundary; inspect event',
+                'trace_completion':'opcode starts and completed-opcode counts; completion of a nested caller remains unknown',
+                'timing':'ScummVM virtual milliseconds; original DOS timing equivalence unverified',
+                'address_context':'AGI resource identity, logic number and byte offset',
+                'guest_exit_reporting':'ScummVM engine lifecycle; original DOS process exit unavailable'}
     dos=backend in ('dosbox','dosbox-qemu')
     pe=backend in ('wine-qemu','ida-wine-qemu')
     return {'format':'fdisbull-debug-semantics-1','backend':backend,
+            **({'native_hooks_available':True} if dos else {}),
             'execution_breakpoint_stage':'before-instruction',
             'watchpoint_stage':'after-access; instruction completion unknown' if dos else 'before-access' if backend=='wine-qemu' else 'unsupported' if backend=='ida-wine-qemu' else 'unknown; inspect native reply',
             'trace_registers_stage':'before-instruction',

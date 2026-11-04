@@ -108,6 +108,10 @@ REQUIRED_SOURCE_EVIDENCE |= {
 }
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scummvm-2026-11-01/" + name for name in
+                           ("verification.json", "comparison.json")}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scummvm-gob-2026-11-01/" + name for name in
+                           ("verification.json", "comparison.json")}
 REVIEWED_SOURCE_RECIPES = {
     "examples/recovery/civd_food_swap.py",
     "examples/recovery/civd_food_arm64.py",
@@ -855,6 +859,11 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/fdisbull-investigate/references/semantic-contracts.md",
     "skills/fdisbull-investigate/references/formats-and-media.md",
     "skills/fdisbull-investigate/references/udl-uil-udc.md",
+}
+REQUIRED_KNOWLEDGE_RESOURCES |= {
+    "scummvm_rpc.py",
+    "scummvm_debugger.py",
+    "scummvm_gob.py",
 }
 REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/SKILL.md",

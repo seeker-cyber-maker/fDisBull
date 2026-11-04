@@ -1,0 +1,16 @@
+{
+  "component": "experimental ScummVM AGI headless sidecar",
+  "upstream_repository": "https://github.com/scummvm/scummvm",
+  "upstream_version": "v2.8.1",
+  "upstream_commit": "750f2373fb100efe08c6444e36b68c01387fc307",
+  "upstream_license": "GPL-3.0-or-later; see ScummVM COPYING and source notices",
+  "patch_file": "headless-agi-bridge.patch",
+  "patch_sha256": "cfe0e44e58a3e1d90c185cc2ee28f15d7b18e6454e1c57b9184d9369b6915f42",
+  "tested_binary_sha256": "f4f671cc3194cb290616644334a7dce5ba3233e9418d57e084438a76cc73659e",
+  "tested_platform": "macOS arm64, clang 21.0.0, null backend, AGI engine only",
+  "tested_original": "Private KQ1 AGI game data, read-only; no original game files were edited",
+  "tested_date": "2026-11-01",
+  "distribution_scope": "source patch and reproducible build recipe; no first-party release install or publication",
+  "license_file": "COPYING",
+  "license_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+}
