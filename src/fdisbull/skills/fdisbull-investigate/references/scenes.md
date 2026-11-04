@@ -63,7 +63,8 @@ game-specific source predicates and pending transitions in an adapter. Use the
 controller's admission hook for existing execution blocks, including before
 keyboard delivery; a foreign debugger stop never becomes an ordinary pending
 scene state. Receipt completion requires explicit forward observation endpoints.
-Give a private full log and a portable summary distinct artifact roles/hashes.
+Reuse tool-retained identities and artifacts. Create a separate full log or
+portable summary only when a diagnostic, handoff or publication consumer needs it.
 The helpers cache one bounded artifact snapshot and do not authenticate a run.
 
 Start with one intended interaction or short contiguous route, its policy and
@@ -76,8 +77,8 @@ whole-game claim.
 
 Use ordinary inputs for a gameplay claim. Record the delivered input and the
 relevant before/after state in order, including enough identity and source
-provenance to associate each edge with the stable run. Hash source, resources
-and backend once per stable run or reusable qualified binding; recheck when the
+provenance to associate each edge with the stable run. Reuse the tool's source,
+resource and backend identities; refresh affected bindings when the
 identity, byte version, backend or restored context can have changed. This does
 not replace any per-stop binding or freshness check required by the selected
 native protocol.

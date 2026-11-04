@@ -21,11 +21,14 @@ may start in the middle of this guide; do not make unrelated recovery a gate.
 
 ## Start with an outcome and a finite evidence ledger
 
-1. **Intake and identity.** Record the requested outcome, allowed target and
-   edition, input identities and hashes, current project/version, backend and
-   observation/control policies. Check which inputs and capabilities actually
-   exist. A hash identifies bytes, not authenticity, rights or behavior. Do not
-   mistake a saved run record for a live emulator connection.
+For ordinary discovery, a question, useful result and next unlocked action are
+enough. Reuse identities and observations supplied by tools; do not prepare a
+manual ledger before a cheap probe. Use the fuller outline below for a broad
+investigation or handoff, filling only what its next consumer needs.
+
+1. **Intake and identity.** Reuse the allowed target/edition, current project,
+   backend and policies. Check only missing or changed capabilities. A hash
+   identifies bytes, not behavior. A saved run record is not a live connection.
 2. **Topology and state inventory.** From existing evidence and a bounded
    observation, list the relevant contexts/scenes, transitions, actors, placed
    items, player state, clocks/RNG, resources and persistence boundaries. For a
@@ -75,14 +78,17 @@ Conversely, reaching an intermediate node does not discharge downstream claims.
 Choose a small complete path through the graph: for a playable combat request,
 one qualified damage function is a component, while target selection, firing,
 impact, recovery and another usable turn make the first useful vertical slice.
-Keep following the missing critical edge instead of collecting more easy leaf
-checks after the requested path is already blocked somewhere else.
+Retain the missing critical edge and its next discriminator. If it cannot be
+resolved now, take another ready task that advances the requested outcome.
+Publish partial inputs so branches can start while neighboring work continues;
+do not park every worker behind one blocker or substitute irrelevant easy checks.
 
 Declare the observable contract before trying to reproduce every hidden field.
 If an unknown scratch or display field lies outside the bounded read-set of the
 requested motion or combat path, preserve it as unknown while verifying that
 projection. Establish that independence from source/dataflow and execution
-evidence; do not merely assume it. An unrelated unknown must not automatically
+evidence when claiming replacement fidelity. For exploration, a scoped candidate
+label can be used while that independence remains open. An unrelated unknown must not automatically
 invalidate a recovered position, and a required unknown must not become zero.
 For an item, track existence, identity, position, visibility, availability,
 interaction, effect and persistence separately. For an actor, track stable
@@ -141,8 +147,9 @@ stronger one. A screenshot may show a sprite but not the writer of health; a
 watchpoint and short trace can identify the writer but do not alone prove the
 same effect was caused by ordinary input. Use both where needed.
 
-Record one active question, candidate alternatives, expected observable
-outcomes, input and clock bounds, chosen probe, rationale and stopping point.
+Keep one bounded question per worker, or a compatible batch sharing one visit.
+Write down alternatives, rationale and detailed costs only when they help a
+handoff or a consequential choice. Retain execution bounds in the operation.
 After each result, update the graph and pick again. A failed or low-information
 probe is evidence for reconsidering the plan, not a reason to repeat it without
 a changed discriminator. See `methodology.md` for causal and
@@ -158,6 +165,9 @@ testing the operation and configuration needed by the claim.
 
 | Observation | Next discriminator | Stop or branch |
 | --- | --- | --- |
+| Runtime input is rejected in the current mode or state. | Identify the unmet prerequisite; try an already supported entry/readiness boundary within a short budget, preserving the guard. | Record a state-specific rejection, not permanent target incompatibility. Publish a working recipe as soon as one exists. |
+| Input is accepted but the requested effect is absent. | Distinguish queued, delivered and acted-on input. Check release/readiness and one changed timing or same-session press/release cycle when repetition is appropriate. | Stop on the requested effect; otherwise retain the exact unresolved condition. Do not restart and repeat the same first input indefinitely. |
+| A diagnostic step suggests guest behavior is broken. | Observe the next boundary through ordinary execution; the diagnostic itself may alter or omit dispatch. | Keep observer failure separate from guest failure. A normal-run result can unblock the action without repairing that observer first. |
 | A parser identifies a format or header. | Check whether it actually supplies the required runtime mapping, checksum, entry context or decoder; test the relevant operation on a small known input. | Treat identification as intake evidence only; do not infer execution or address translation. |
 | A library exposes an architecture or mode constant. | Instantiate that exact mode in the installed native library, then decode a short synthetic example with independently known expected boundaries and operands; repeat for each required mode. | An error or wrong boundary rules out that configuration, not every version or backend. Keep unsupported modes unknown. |
 | Installed tools offer a related processor or version. | Inventory the exact language and its state/addressing model, then compare a discriminating instruction against an independent reference. | Do not substitute a related processor when instruction widths or semantics differ. Use a verified existing alternative, or record the capability gap. |
@@ -170,6 +180,12 @@ does not establish the failed one. Check whether a different already-available
 backend supports the missing mode before proposing a new adapter or installation.
 Keep any resulting workaround separately qualified; stop before interpreting
 target code that depends on unresolved instruction lengths.
+
+For runtime cases, use `runtime-navigation.md`, "Establish one input and outcome."
+Return the failed condition, useful output and next discriminator. A blocked
+operation remains recorded if another route succeeds; it does not make the
+successful route unusable. Send the working recipe to dependent workers while
+other branches continue, without requiring them to read the diagnostic history.
 
 ## Transfer an investigation to another target
 

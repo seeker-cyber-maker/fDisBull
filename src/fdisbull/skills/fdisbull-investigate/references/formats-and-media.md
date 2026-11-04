@@ -233,7 +233,8 @@ of the affected game's behavior; unsupported operations remain unresolved.
 
 ## Finalized AVI capture audits
 
-Before inspecting individual pixels or citing a recorded run, run projectless
+Inspect a useful frame first when gathering a visual lead. For recording
+integrity, completeness or timing claims, run projectless
 `capture-audit` (`ffprobe`/`ffmpeg`) against finalized AVI segments into a new
 private output directory (`docs/TAS_CAPTURE_AUDIT.md`). It hashes input files
 and decoded RGBA frames, flags stream parameter drift, duplicate/dropped frames

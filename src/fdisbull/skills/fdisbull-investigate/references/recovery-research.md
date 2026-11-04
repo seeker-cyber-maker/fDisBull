@@ -19,7 +19,11 @@ prior work. A coordinator may research references separately from blind workers.
 
 ## Qualify prior work
 
-1. Record target hashes, edition, platform, language, executable and resource
+Use a relevant guide or format excerpt as an attributed hypothesis immediately.
+The checks below qualify stronger correspondence claims; they are not a gate
+before trying a cheap observation. Research only the current question's scope.
+
+1. Reuse recorded target identities, edition, platform, language, executable and resource
    identities, interpreter version and known modifications. Search for prior
    reverse engineering, reconstructed source, matching-build projects, format
    and interpreter projects for the exact
@@ -179,20 +183,21 @@ Convert each relevant milestone into candidate scenes, objects, entry state,
 prerequisites, actions, transitions, observable outcomes and persistence. Keep
 contradictory alternatives and unknowns. Track the source-qualified guide claim,
 our inferred steps, code binding, runtime readiness and persistence separately.
-For each useful lead, record context, exact claim and origin, inferred steps,
-resource/handler and effect binding, required runtime evidence, disposition
-and cheapest next question. A practical table in private project notes suffices;
-it adds no runtime schema:
+For an ordinary lead, retain its attributed prediction, current result and next
+useful question. The fuller table below is optional when coordinating recovery
+of an executable action contract; it adds no runtime schema:
 
 | Context or view | Predicted action and effect | Origin and version | Source binding | Runtime readiness and persistence | Disposition and next probe |
 | --- | --- | --- | --- | --- | --- |
 | Current scene or candidate closeup | Preserve the source claim and mark inferred steps | Guide section or viewed timestamp | Unknown until handler, resources and conditions are bound | Unknown until observed at the required boundary | Expected, contradicted or conditionally accepted; retain the open question |
 Guide order does not prove a prerequisite; a compressed step can hide closeups
-and intermediate interactions. Inspect relevant wrong-item, repeat, refusal and
-alternate branches omitted by a successful route. Prioritize the next discriminating
-probe by expected decision value, cost and confidence; use a bounded ordinary
-input and compare before/after with a control where practical. Confirm input
-consumption, readiness, completion and committed effects separately. A native
+and intermediate interactions. Confirm the requested positive outcome first.
+If the guide names a key and a radio, those are two useful pickup questions;
+proving there is no third item is separate work. Inspect wrong-item, repeat,
+refusal, alternative and persistence branches when the consumer needs them or a
+contradiction calls for them. Batch compatible observations in one visit. Confirm
+input consumption, readiness, completion and committed effects separately only
+where the distinction changes the next action or requested conclusion. A native
 action timeout or partial reply can leave effects unknown: inspect retained
 evidence and current state before deciding whether any retry is safe.
 
@@ -217,9 +222,10 @@ material claims; a minimal accepted slice does not complete a broader task.
 Use the dependency and worker procedure in [methodology.md](methodology.md)
 when independent work is available.
 
-For each reusable fact, retain source/resource identity, storage bank or
-address space, type, units, domain, meaning, evidence, competing interpretations
-and dependencies. Preserve refinements and conflicts instead of letting the
+For a routine discovery, retain finding, scope, reference and next use. When a
+typed model or downstream operation needs more, include the relevant source
+identity, address space, type, units, domain, alternatives and dependencies.
+Preserve refinements and conflicts instead of letting the
 latest prose silently replace an earlier meaning. Bind outlines, code views,
 semantic models and summaries to the fact revisions they use. An existing
 project annotation or private table suffices; no common dependency-graph API is

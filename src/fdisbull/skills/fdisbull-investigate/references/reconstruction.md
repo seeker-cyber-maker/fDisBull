@@ -1,8 +1,10 @@
 # Repeatable recovery: original → UIL → implementation
 
-Use this for recovering behavior, mapping third-party source, changing a
-platform/provider or selecting a different backing. No project history is
-required. Read only the additional reference needed for the next operation.
+Use this acceptance addendum when the deliverable requires a behavior-preserving
+model, replacement, port or backing swap. Exploratory labels, source leads and
+a live-original Z harness follow the short skill defaults without these gates.
+No project history is required. Read only the additional reference needed for
+the requested edge; a harness ending at UIL does not need a UDC target.
 
 ## 1. Select the actual task and tools
 
@@ -10,7 +12,8 @@ Record the user's intended deliverable and a finite first operation that
 advances it. Keep remaining required operations in a coverage ledger. A small
 slice is an incremental result, not permission to abandon the full task.
 
-Run the selected executable's `--version`, `agent-skill --index` and `methods`.
+Reuse the selected executable's known version and methods. If that setup is new
+or changed, consult `--version`, `agent-skill --index` or `methods` as needed.
 Prefer `agent-skill --reference SKILL.md` and references from that same
 environment. An agent-installed copy can be newer than the runtime bundle:
 read its local relative references, retain its source revision/file hashes and
@@ -18,7 +21,7 @@ record both identities. Its presence does not add methods to the selected tool. 
 For Python APIs use the matching interpreter; do not silently fall back to
 system Python. No target executable, emulator, compiler or game data is bundled.
 
-Record tool path/version, source commit if available, skill-file digests and
+Reuse the tool path/version, source commit if available, skill-file digests and
 backend/compiler identities. If the source checkout is newer than the install,
 use a matching explicit environment or retain the capability gap. Updating a
 skill does not update the binary. A skill install should name one reviewed

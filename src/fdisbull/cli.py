@@ -14,12 +14,12 @@ from .output_limits import (
 )
 
 AGENT_SKILL_GUIDES = {
-    "SKILL.md": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
+    "SKILL.md": "Start here: useful guesses, batched probes, progressive Z harness and next unlocked work",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
-    "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
-    "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
+    "references/methodology.md": "Addendum for causal controls, contradictions, independent workers and interpreter analysis",
+    "references/runtime-navigation.md": "Build the cumulative Z harness: controls, routes, scene starts, semantic actions and batched observations",
     "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
-    "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
+    "references/reconstruction.md": "Replacement/port acceptance: original-to-UIL-to-target gates and discriminating probes",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
     "references/workflows.md": "Choose static analysis, native debugging, scene, media/ROM, guest-module or UIL/UDC entry points",
     "references/analysis-approach.md": "Choose what to analyze next using evidence, dependencies, information gain and cost",
@@ -32,7 +32,7 @@ AGENT_SKILL_GUIDES = {
     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
-    "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
+    "references/binary-claim-verification.md": "Addendum for exhaustive writers, disputed mechanisms, absence and cross-edition claims",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -1360,6 +1360,18 @@ def parser():
         "--output-artifact-dir", help="Private output-artifact directory outside Git"
     )
     sub = root.add_subparsers(dest="command", required=True)
+    c = sub.add_parser(
+        "z-controller",
+        help="Retain one native guest and reload explicitly trusted local Z actions",
+    )
+    c.add_argument("project", help="Existing private fDisBull project")
+    c.add_argument("--executable", required=True, help="Prepared native debugger backend")
+    c.add_argument("--game-dir", required=True, help="Private writable target directory")
+    c.add_argument("--actions", required=True, help="Trusted Python ACTIONS module; executes local code")
+    c.add_argument("--root", help="Private action workspace; defaults to the actions directory")
+    c.add_argument("--version-id", type=int, help="Selected project version")
+    c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"],
+                   default="assisted")
     for name in ("output-info", "output-read", "output-select", "output-export"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("artifact")
@@ -2954,6 +2966,22 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == "z-controller":
+        from .z_controller import serve as serve_z_controller
+
+        options = {"spatial_mode": args["spatial_mode"]}
+        if args["version_id"] is not None:
+            options["version"] = args["version_id"]
+        try:
+            return serve_z_controller(
+                args["project"], args["executable"], args["game_dir"],
+                args["actions"], root=args["root"], debugger_options=options,
+                input_stream=sys.stdin, output_stream=sys.stdout,
+                error_stream=sys.stderr,
+            )
+        except (ValueError, OSError, RuntimeError) as error:
+            emit({"ok": False, "error": str(error)})
+            return 1
     if command.startswith("uil-"):
         try:
             from .uil_api import invoke_common

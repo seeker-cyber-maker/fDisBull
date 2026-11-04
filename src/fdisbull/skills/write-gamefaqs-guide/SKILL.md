@@ -23,8 +23,11 @@ valuable when their evidence and limits are explicit.
 
 Do not upload original or modified game binaries, game assets, story images,
 saves, emulator states, or raw game-containing FDBs/archives to GitLab, GitHub,
-local hubs or tool packages (outside any narrow repository-authorized freeware
-fixture directory). Semantic UIL/game representations are allowed pending
+local hubs or tool packages, except for repository-authorized freeware and
+homegrown targets. That exception includes new targets, binaries, assets, source
+and generated variants, with license/provenance notices preserved; eligible
+fixtures still stay out of tool-only distributions. Commercial/private saves,
+states and object stores remain private. Semantic UIL/game representations are allowed pending
 sanitation; complete originals embedded in memory arrays, hex caches or nested
 archives are excluded. Review contents, not names. New FDBs retain exact
 size/SHA-256 identities and loader provenance with payloads in a private
@@ -131,6 +134,14 @@ runs (zero hits in examined play never prove dead code); keep finalized AVI
 `capture-audit` frame hashes and video timestamps distinct from guest ticks; and
 distinguish console ROM/disc/multicart header metadata from verified unique
 playable games.
+
+For native save/load findings, preserve the component meaning: selecting a UI
+command, entering an original routine, returning through its continuation,
+writing a file, updating live state and refreshing a displayed value are
+separate observations. A prefix transfer does not establish a whole-save
+operation. Keep prepared harness use, independent binding recovery and assisted
+continuations distinct. Compare timings only with named start/stop clocks and
+the same completion criteria; report incomplete required questions visibly.
 
 ## 3. Write from gameplay meaning
 

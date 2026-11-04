@@ -8,18 +8,17 @@ saved run history does not reconnect it after exit.
 
 ## Start with the user's task
 
-- Read [the agent quickstart](docs/AGENT_QUICKSTART.md) for the workflow chooser,
-  concrete commands, backend requirements and portable project setup.
-- Read `fdisbull agent-skill --reference SKILL.md`, then retrieve only the
-  reference needed for the next question. The bundled skill is available even
-  from an installed wheel, without opening a project.
+- Reuse the established executable, project and live session. For first use or
+  an unfamiliar operation, consult [the quickstart](docs/AGENT_QUICKSTART.md)
+  and `fdisbull agent-skill --reference SKILL.md`, then only the needed reference.
+  The bundled skill is available from an installed wheel without a project.
 - For a human-readable review of established game knowledge, read
   `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`.
   Use `agent-skill --list` to discover both bundled skills. Keep attributed
   external findings distinct from recovered and observed game behavior.
-- Use `fdisbull --help` for commands, `fdisbull methods` for JSON methods and
-  `fdisbull doctor --help` to choose environment checks. Verify capabilities in
-  the actual backend before planning a native operation.
+- Use `fdisbull --help` or `fdisbull methods` when an interface is unknown.
+  Check capabilities after a relevant environment change or capability failure;
+  do not repeat discovery or diagnostics before known working operations.
 - Static analysis needs no running emulator. Debugging original DOS/PE64 code
   needs the matching separately prepared backend and the user's own inputs.
   The standalone player consumes an authored projection or compatible endpoint;
@@ -29,16 +28,26 @@ saved run history does not reconnect it after exit.
   record it when reporting how a result was obtained. Live player mode can save
   between model turns; verify the checkpoint receipt before claiming persistence.
 
-For a scene task, prefer named actions, sparse pixel/memory predicates and
-bounded waits. For a writer question, use a watchpoint and a short trace. For a
-theory, restore a saved experiment and compare a baseline with one declared
-layer change. For UDC work, qualify each source/model/output edge separately;
-preserved file bytes and a narrow Z3 result do not establish whole-game recovery.
+For repeated game work, grow a reusable Z harness from the startup menus and
+global controls onward. Expose each learned control as a named action immediately,
+compose useful routes, automate navigation, add compatible placement and scene
+presets, then
+replace repeated UI work with programmatic actions as those become available.
+Use the cheapest acquired capability for the next test. A Z/UIL harness does
+not require a UDC build; source/model/output qualification applies when the
+requested deliverable includes a replacement or target implementation.
 
-Keep one active question and choose probes by expected reward, cost and
-confidence. Return compact values and artifact IDs for routine success; expand
-the evidence on failure, ambiguity or first qualification. Preserve missing
-observations as unknown. Distinguish visible, ready, enabled and committed.
+Keep one bounded question per worker and batch compatible tests in one scene
+visit. Reuse a shared frame/memory snapshot; distinct in-range test values can
+identify several HUD fields together. Split only ambiguous results. Useful
+guesses and guide claims may drive probes immediately when marked as hypotheses.
+Return compact findings and existing artifact IDs, not duplicate hash/log ledgers.
+Preserve actual unknowns and distinguish visible, ready, enabled and committed.
+
+Give each worker only the relevant dossier claims, evidence, recipe and expected
+result. Publish useful partial findings and newly unlocked questions promptly.
+A blocker belongs to its dependent work; retain it and continue other ready work.
+One controller owns each live guest; other workers consume immutable evidence.
 
 ## Working in this repository
 
@@ -47,19 +56,22 @@ API examples and scope limits belong in the linked docs and bundled skill.
 Preserve that audience split when adding features. Testimony from users/agents
 must be attributed and scoped to what they actually tested.
 
-Keep original game/story files, emulator states, byte-retaining project
-databases and raw private deliveries out of Git and tool packages. Use a
-private workspace outside the checkout for runtime inputs and UDC outputs.
+Except for the target exemption below, keep original game/story files, emulator
+states, byte-retaining project databases and raw private deliveries out of Git
+and review uploads. Use a private workspace outside the checkout for runtime
+inputs and UDC outputs.
 Export authored scripts and sanitized verification evidence separately.
 
-The user explicitly authorizes a narrow freeware exception: the supplied
-Tic-tac-toe, Five Dice and Snake games, their generated variants and title-specific
-source/reference modules may be tracked under `fixtures/freeware-games/`, with
-`fixtures/freeware-games.zip` as the companion delivery. Preserve their included
-license/provenance notices, original bytes, variant identities and hash inventory.
-This exception does not cover other games, emulator states, project databases,
-external object stores or unrelated private deliveries. These fixtures remain
-separate from tool-only wheels, source distributions and tool source ZIPs.
+The user authorizes freeware and homegrown targets as repository fixtures and
+PR/MR attachments, including binaries, assets, source/reference modules, generated
+variants and target archives. This is not limited to Tic-tac-toe, Five Dice and
+Snake. Preserve included license/provenance notices, original identities and
+variant distinctions. The existing three-game corpus remains under
+`fixtures/freeware-games/`, with `fixtures/freeware-games.zip` as its companion;
+other eligible targets can use separate fixture inventories.
+Commercial/private game deliveries, saves, emulator states, project
+databases and external object stores remain excluded. Target fixtures stay out
+of tool-only wheels, source distributions and tool source ZIPs.
 
 Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
@@ -85,7 +97,7 @@ payload, version, commit and selector all verify.
 
 ## Game files and target identity
 
-Outside the narrow freeware fixture exception above, do not upload original
+Outside the freeware/homegrown target exception above, do not upload original
 or modified game binaries, assets, story images, saves, emulator states or
 byte-containing databases/archives to GitHub, GitLab, local hubs or packages.
 Semantic UIL/game representations are allowed pending sanitation; embedded
@@ -115,8 +127,9 @@ For an authorized contribution, follow [agent contribution and file handoff](doc
 Use a stable originating chat/task ID, a unique branch and the intended stack
 parent. Return a read-back draft GitLab MR URL, exact branch/head and target/base,
 tests, limitations and verified attachment links to the originating chat.
-Commit inspected authored source; attach sanitized reports separately. Preserve
-existing MR targets and other agents' work. Use `scripts/gitlab_handoff.py` for
+Commit inspected authored source and eligible target fixtures; attach sanitized
+reports separately. Preserve existing MR targets and other agents' work.
+Use `scripts/gitlab_handoff.py` for
 offline preview and, with existing API access, resumable publication. Chat agents
 without write/upload access export the documented handoff and report it pending.
 Never invent access, successful uploads, commit identities or completed MRs.

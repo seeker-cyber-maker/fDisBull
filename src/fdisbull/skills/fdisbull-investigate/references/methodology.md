@@ -1,17 +1,17 @@
 # Behavioral investigation reference
 
-For first use and source-to-model acceptance, follow the
-[repeatable reconstruction recipe](reconstruction.md).
-
-
-Use this reference when a plausible internal explanation disagrees with an
-interaction, a probe fails, or an observation is being generalized. It adds no
-new tool API and does not authorize actions beyond the user's task.
+This is the detailed methodology addendum. Use it for a contradiction, a failed
+interaction, a causal mechanism or a broader acceptance claim. Ordinary discovery
+follows the short defaults in [SKILL.md](../SKILL.md): useful candidates, batched
+observations and the next unlocked action. For source-to-model replacement
+acceptance, use the [reconstruction recipe](reconstruction.md). Neither reference
+adds a tool API or expands the user's authorization.
 
 ## Contents
 
 - [Plan depth and reuse evidence](#plan-depth-and-reuse-evidence)
 - [Parallelize independent questions](#parallelize-independent-questions)
+- [Operation goals and component meaning](#operation-goals-and-component-meaning)
 - [Screen for interpreted control flow](#screen-for-and-map-interpreted-control-flow)
 - [Select evidence](#select-evidence-for-the-exact-claim)
 - [Trace an action](#trace-a-complete-action-not-just-an-interesting-field)
@@ -25,10 +25,11 @@ Translate the requested outcome into material claims before choosing probes.
 For an interaction, consider entry conditions, refusal and repeat paths,
 committed and partial effects, presentation, time and persistence; mark which
 ones affect this task. For a format, consider structural validity, mapping,
-execution and consumer behavior separately. Keep an inexpensive ledger:
+execution and consumer behavior separately. For that deeper claim, keep an inexpensive ledger:
 claim and scope, current evidence, competing explanation, missing observation,
-next probe and completion condition. A private note or existing project
-annotation suffices; this is not a new required database schema.
+next probe and completion condition. Reuse existing tool records. A routine
+candidate needs only its meaning, scope, decisive observation and next use;
+there is no mandatory per-probe form or new database schema.
 
 Choose the cheapest probe capable of distinguishing the alternatives at the
 required boundary. An expensive trace is justified when a cheap visible result
@@ -69,6 +70,56 @@ first differing boundary before propagating a conclusion to later layers.
 Keep deterministic exporters as ordinary tools when they add no independent
 reasoning. Use sequential execution when work depends on a pending result or
 workers would contend for the same guest, database or file.
+
+The EGM lead's dossier is an index of reusable facts and hypotheses. Send a worker
+only the relevant subset, question, input references, required output, budget and
+next consumer. Publish a useful partial result immediately; dependent branches
+can start while the worker continues other required questions. When blocked,
+record the missing input and next discriminator, then take ready work. Do not
+make every worker rediscover documentation or wait for the entire previous row.
+Discovery, parsing, scene authoring and interpretation can overlap as their
+particular inputs arrive; one shared live guest still has one controller.
+
+## Operation goals and component meaning
+
+Define the semantic result separately from the interaction used to request it.
+For saving, selection, submission, the strategic serializer, individual file
+writers, metadata and completion can be distinct components. A native return is
+an observed control-flow result; path/open success, transferred bytes, adopted
+state and a refreshed display are other outputs. Require the ones needed by the
+next consumer. A useful file primitive remains reusable while the encompassing
+save operation is unresolved.
+
+Use the formal `fdisbull-operation-goals-1` companion described in the common UIL
+reference when a recurring goal will guide several questions. Keep known UDL
+block/region identities even while their meaning or signature is opaque. Typed
+child bindings and logical-field to record/buffer/file correspondences conserve
+meaning during decomposition. Backward planning exposes missing knowledge;
+execution order does not gate independent recovery work. Findings can update
+parent coverage without upgrading candidate meanings or requiring every block
+in the program to be understood first.
+
+Queue prerequisites mean that information is available, including a false or
+negative finding. They are not live scene predicates. Check a dynamic entry
+condition in the operation itself, using the smallest relevant memory or frame
+observation. Keep a capture watch armed across separate UI actions when needed;
+an interrupted click should not discard the chance to observe a later commit.
+Inspect partial progress before resuming remaining steps; do not replay an
+already completed effect just to recover an omitted result.
+
+Before probing again, inspect retained before/after argument-buffer changes.
+The cold UFO trial already captured a changed first word, but its compact reply
+hid the post-call sample and the evaluator attributed a later replay failure to
+that earlier successful transfer. Compact handoffs must preserve decisive
+changes and actual unknowns. A returned reader, a failed later replay and a
+missing restored display are separate findings.
+
+Measure recovery latency through completed required outputs and closure, then
+report writing separately where useful. Fast execution of a recovered action
+does not measure cold recovery. Keep generic repairs, process clarification,
+target hints, prepared states and warm continuations in their actual phases.
+An incomplete run is useful evidence about the workflow, not a completed speed
+comparison. Retain the evaluator's concrete feedback and scoped corrections.
 
 ## Screen for and map interpreted control flow
 
@@ -214,8 +265,11 @@ Before reporting a target or debugger defect, distinguish:
 - A harness expectation, unsupported tool call, adapter limit or exhausted budget.
 - An actual target behavior or reproducible tool fault.
 
-Do not force a cause when evidence cannot discriminate. Change one assumption
-per new probe. After repeated uninformative attempts, switch the observation
+Do not force a cause when evidence cannot discriminate. Batch compatible probes
+with distinguishable interventions and split only coupled or ambiguous results.
+For example, set independent HUD candidates to different valid sentinels and
+observe them in one frame; isolate one field if the outcomes cannot be assigned.
+After repeated uninformative attempts, switch the observation
 boundary or retain a bounded unresolved finding; do not merely lengthen sleeps.
 A small retry budget, normally three distinct hypotheses, is a reassessment
 trigger rather than a reason to abandon the user's required depth. Broaden or

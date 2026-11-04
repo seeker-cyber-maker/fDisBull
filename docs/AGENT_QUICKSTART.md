@@ -4,9 +4,40 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
-Do not upload original or modified game binaries/assets, story files, saves,
-emulator states or raw game-containing databases/archives. New FDBs store
-external payload references with exact size/SHA-256 and loader provenance;
+Reuse an established executable, project and live session. Select the operation
+that advances the current question; use discovery or diagnostics when an
+interface is unfamiliar, the environment changed, or a capability failed.
+Keep useful guesses labeled and move on once the next step has enough evidence.
+Existing tool results and artifact IDs supply routine provenance; do not repeat
+hashing, logging or successful probes merely to restate them.
+
+For repeated game work, grow a Z harness as you investigate, starting with menu
+choices and global controls such as map centering and zoom. Expose each learned
+action immediately and compose routes from those handlers. Add automated
+navigation, same-screen placement, scene-start presets and programmatic engine
+actions as they become available. Use the cheapest compatible capability on later
+visits. Group compatible tests by scene, share observations, and use distinctive
+in-range values to test several HUD candidates together; split only ambiguous
+results. A Z/UIL harness can keep using the original engine and needs no UDC port.
+Use the retained controller's `capture-action` to save a learned control immediately;
+`execute:true` couples its first attempt to before/after frames. Named replay has
+no extra observation cost. `frame` with `grid:20` helps identify small toolbar
+controls. Use `serializer-discovery` to find loaded-code candidates before the
+existing serializer extractor. Keep `record-frontier` file work running beside
+navigation: new handoff files can unlock record recovery while Save is unresolved.
+The [runtime navigation reference](../src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md)
+describes these operations and the native save/load discovery chain.
+Use `capture-native-call` to observe a recovered original call and retain its
+inputs, return and short continuation. `invoke-captured-call` reuses the captured
+CPU/stack context in that live owner for UI-free repetition. `work-queue` and
+`run-work` keep a few actual dependencies executable; successful captures publish
+entry, return and continuation facts separately. Full evidence stays by reference.
+
+Freeware/homegrown targets and variants may be repository fixtures or PR/MR
+attachments with their included notices and original identities preserved. Other
+game binaries/assets, story files, saves, emulator states and raw game-containing
+databases/archives remain private. Target fixtures stay out of tool packages.
+New FDBs store external payload references with exact size/SHA-256 and loader provenance;
 the private object store is never a publication artifact. See
 [external targets](EXTERNAL_TARGETS.md) for explicit divergent-source approval,
 separate analysis, legacy migration and remaining export limits. Semantic
@@ -26,10 +57,11 @@ export FDISBULL_OUTPUT_ARTIFACT_DIR=/tmp/fdisbull-artifacts
 Place all `.fdb` analysis databases in `/tmp/` or another private directory
 outside Git.
 
-For recovery, translation or a backing swap, retrieve
-`agent-skill --reference references/reconstruction.md`. It provides a first-use
-recipe, a runnable counterexample exercise and separate original/UIL/target
-acceptance gates. It requires no earlier conversation or project history.
+When the requested deliverable needs source/model equivalence, a replacement,
+translation or backing swap, retrieve
+`agent-skill --reference references/reconstruction.md` for its acceptance
+procedure. Its counterexample exercise and original/UIL/target gates are not
+prerequisites for exploratory labels, a writer probe or a live-original harness.
 
 For array/loop state and browser graphics/input, see
 [bounded-memory browser reconstruction](UDC_MEMORY_BROWSER.md). Its strict
@@ -56,6 +88,10 @@ boundary and original/composed behavior separately. A supported Wine 11 route
 does not establish original Windows 3.x or whole-game compatibility.
 
 ## Discover commands and bundled skills
+
+The following commands are a menu for first use or a specific missing capability,
+not a sequence to repeat before each investigation. Retrieve only the reference
+needed for the next operation.
 
 For repository CI and dual-mirror updates (Local Git + GitLab), first read
 [CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
@@ -164,9 +200,13 @@ the investigation skill:
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
 
-For multi-agent benchmarking, lead-dossier preparation, and zero-context worker
-verification under the Elephant-Goldfish Method (EGM), see
-[cold-agent skill evaluation and the Elephant-Goldfish Method](COLD_AGENT_EGM_BENCHMARK.md).
+For EGM investigation, give each worker one bounded question, the relevant
+dossier claims/evidence, a recipe and a useful return condition. Publish partial
+findings and newly unlocked tasks; a blocked dependency does not stop independent
+work. One owner controls a live guest while other workers read its immutable
+artifacts. The [cold-agent skill evaluation and Elephant-Goldfish Method](COLD_AGENT_EGM_BENCHMARK.md)
+records a controlled benchmark; blind/NO-WEB arms and challenge probes are not
+mandatory gates for ordinary collaborative investigation.
 
 ## Reuse media readers
 
@@ -183,8 +223,9 @@ executables or establish the purpose of their trailing bytes.
 For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
 /private/run/audit --every 4 --html` hashes every decoded frame and exports a
 sample with original timestamps for slower review. Its output parent must be
-private and outside Git. Check the audit receipt before analyzing pixels; video
-timestamps do not supply guest ticks or input alignment. The
+private and outside Git. Inspect a useful frame directly when seeking a visual
+lead; run the full audit when the question concerns recording integrity,
+completeness or timing. Video timestamps do not supply guest ticks or input alignment. The
 [capture-audit guide](TAS_CAPTURE_AUDIT.md) covers the Python/JSON interfaces,
 budgets and failed-run diagnostics.
 
@@ -284,6 +325,126 @@ the default. See `docs/DOSBOX_DEBUGGER.md` for detailed launch and command usage
 For PE or machine-level work, use the backend, kernel and runtime inputs
 documented for that interface. Do not assume DOS options or address mappings
 carry over.
+
+### Keep a live guest while adding Z actions
+
+Use `z-controller` when an investigation needs a growing set of executable
+target actions in one retained Project/DebugSession:
+
+```text
+fdisbull z-controller /private/work/analysis.fdb \
+  --executable /path/to/compatible-dosbox-x \
+  --game-dir /private/work/game \
+  --actions /private/work/actions.py \
+  --root /private/work --spatial-mode assisted
+```
+
+The explicitly selected action file is **trusted arbitrary Python**, not recovered
+game data or a sandbox. A minimal authored `actions.py` is:
+
+```python
+def look(ctx):
+    return ctx.frame()
+
+ACTIONS = {
+    "look": {
+        "handler": look,
+        "description": "Capture the original guest's current frame",
+        "entry": "owned guest available",
+        "next_state": "current frame retained as an artifact",
+    }
+}
+```
+
+Send JSON lines to the same running command:
+
+```json
+{"id":1,"verb":"list"}
+{"id":2,"verb":"look"}
+{"id":3,"verb":"run","params":{"guest_ms":250,"timeout_ms":3000}}
+{"id":4,"verb":"call","params":{"method":"state.get_registers","params":{}}}
+{"id":5,"verb":"close"}
+```
+
+The outer `params` supplies handler arguments; the inner `params` in `call`
+supplies backend arguments. There is no `invoke` envelope or `args` key.
+`list` describes action contracts; read the selected handler's signature for its
+parameters. Response timings cover each complete request. The ready event's
+controller-start timestamp includes project/backend initialization, but not
+interpreter startup; record an external dispatch/process timestamp for end-to-end
+comparisons and include time between requests.
+
+The controller reloads the selected action file from its current bytes for each
+action/list request; the guest and `ctx.state` persist. Add a menu or globe handler
+as soon as its input and outcome work, then compose handlers with
+`ctx.invoke("action-name", **params)`. A composed request uses one loaded generation.
+Entry/next-state metadata is descriptive: the handler checks the actual target
+state and returns the observed result. Imported helpers retain normal Python
+import caching; only the selected action file is automatically reloaded.
+
+Use `ctx.run(guest_ms=..., timeout_ms=...)`, `ctx.frame(output=...)`, or the
+complete supported backend response from `ctx.call(method, params)`. The reserved
+JSON verbs `run`, `frame` and `call` expose these same helpers. Shared native DOS
+helpers live in `fdisbull.z_dos`; `ctx.dos_click(...)` uses its bounded built-in
+INT33 recipe while preserving driver/mode guards. Reuse that helper instead of
+transcribing the input mechanics. Raw reads can feed a collector directly;
+return compact candidates and retain only the bytes/artifacts its next consumer
+needs. Failed requests keep the session for inspection; they do not roll back
+guest effects. `close`, EOF or stream failure closes the owned guest and project.
+
+Once serializer caller ranges and register arguments are known, use
+`ctx.serializer_candidates(ranges=..., serializers=..., code_base=...)` or the
+reserved JSON verb `serializer-candidates`. For example, a known x86-32 file writer
+whose pathname, buffer and length arrive in EAX, EDX and EBX can be described as:
+
+```python
+facts = ctx.serializer_candidates(
+    ranges=[(save_start, save_end)],  # absolute half-open code range
+    serializers=[{"entry": file_writer, "operation": "write",
+                  "filename": "eax", "buffer": "edx", "length": "ebx"}],
+    code_base=code_base,
+)
+```
+
+This bounded analysis reads original instructions and string references without a
+game filename catalogue. It returns callsites, filename candidates, direct buffers
+or pointer-global identities, observed lengths, matching filename families and
+unresolved facts. A pointer-global address identifies the slot holding a pointer,
+not the destination buffer itself. A nearby suffix does not prove full path
+construction. Reader lengths stay unknown when their ABI supplies none.
+`bounded_complete` describes the configured analysis range, not complete game
+state recovery; budget stops and unsupported facts remain explicit. Static readers
+can use `fdisbull.serializer_candidates.extract_serializer_candidates` with their
+own mapped-byte reader. Give each worker the relevant family and unresolved fields.
+The JSON verb defaults to paired reader/writer summary rows with hexadecimal
+addresses, observed write lengths and linked unknowns. The full numeric result is
+retained in `ctx.state['serializer_candidates']` and
+`evidence/serializer-candidates-{monotonic_ns}.json`; each call retains a distinct
+file and the reply includes its `path`. An explicit `output` selects a path and
+may overwrite it; use `"summary":false` for the full
+inline result. Relative output paths use the controller root. Python
+`ctx.serializer_candidates(...)` still returns the raw numeric schema by default;
+`summary=True` selects the compact view and `output=...` also retains a file.
+Extraction runs once; summarizing adds no native reads or inferred pointee.
+`summarize_serializer_candidates(result)` also summarizes retained results.
+
+For an offline record census, JSON `record-rows` similarly retains the full
+requested rows in `ctx.state['record_rows']` and `evidence/record-rows-{monotonic_ns}.json`, while
+returning `complete`, `record_count`, `returned_rows`, `next_row`, bounded name and
+byte previews, and `path`. Its default `limit=256` can collect a 250-row file in
+one request without printing every raw row. A smaller requested slice stays
+explicitly partial. Default output paths are distinct per call. Set `output`
+for a caller-selected path (which may be overwritten) or `"summary":false`
+to return all requested row bytes inline. Python `ctx.record_rows(...)` keeps its
+raw default; neither wrapper repeats the file read to prepare its summary.
+
+For a previously qualified flat32 DOS call boundary, use
+`fdisbull.z_dos.reach_flat32_boundary(session, address, selector)`. It reacquires
+the actual protected selector before creating its execution breakpoint: creating
+a protected-mode segmented address during a real/v8086 service would resolve it
+incorrectly in the native backend. It checks its own breakpoint and stops on other
+debugger events. The target action still checks its call-frame prerequisites before
+invoking original code. A scene label alone is not that check.
 
 ### Inspect scenes or qualify movement
 
@@ -610,11 +771,13 @@ documentation, authored tests and fresh native acceptance have different scope.
 
 ## Research a progression or recovery task
 
-For a game recovery or normal-progress request, qualify the supplied edition and
-search for prior source, interpreter and reverse-engineering work before choosing
-probes. Use manuals and walkthroughs to draft a source-attributed milestone
-checklist, with missing or version-specific steps marked unknown. Treat its scene
-compositions as hypotheses until bounded native observations establish them.
+For a game recovery or normal-progress request, reuse the selected edition and
+available prior source, manuals and guides. Their claims can immediately seed
+candidate names, values, actions and probes; investigate edition differences when
+they matter. Extend a small milestone checklist as findings arrive. A guide naming
+a key and radio creates two useful positive questions, not an obligation to prove
+there is no third item. Search for additional prior work when it helps the next
+question, without delaying an already useful probe.
 The bundled `references/recovery-research.md` describes the progression from
 source bytes to supported UDL/UIL and the scope of a bounded proof.
 

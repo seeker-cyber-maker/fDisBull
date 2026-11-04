@@ -69,8 +69,11 @@ For AGI, both directory and volume identities and the resource number are retain
 Sources stay unchanged. `media-extract` requires an existing private parent owned by
 the caller (0700), creates an exclusive 0700 destination and 0600 files, refuses
 Git/worktree ancestry and symlink output paths, and accepts only listed member
-names. Never publish payloads or private originals, including modified game
-assets. Reports contain hashes and sizes only, but still review provenance before
+names. Keep private payloads/originals, including modified game assets, out of
+publication. Repository-authorized freeware/homegrown fixtures and PR/MR
+attachments are the exception described in the main skill; the extraction
+tool's private-output guards still apply. Reports contain hashes and sizes only,
+but still review provenance before
 publication. No new FDB writes are made: parser output does not bypass the
 external-target storage boundary or grant permission to bind/import bytes.
 
@@ -168,7 +171,10 @@ upstream implementations. Record the missing variant and why existing readers
 are insufficient. Recover enough structure from authorized evidence to write a
 small bounded parser; preserve unknown fields rather than invent their meaning.
 
-Ship the adapter in `src/fdisbull`, wire the normal Python/CLI/JSON seams, add a
+An investigation can retain and reuse a small local helper immediately. Full
+product integration is separate work, not a blocker to its next useful result.
+When contributing a supported tool feature, ship the adapter in `src/fdisbull`,
+wire the normal Python/CLI/JSON seams, add a
 catalog entry, and extend the packaged specification/index and distribution gates.
 Document signatures/versions, fields/offset bases/endianness, counts/alignment,
 codec/compression and termination rules, bounds, unsupported encodings, provenance,
@@ -179,8 +185,10 @@ or load plugins from target-controlled text.
 Use authored fixtures with independently derived outputs: positive ranges and
 bytes, malformed/truncated headers, unsupported variants and budget refusal.
 Test paths/collisions, unchanged originals, provenance and installed-wheel reuse
-from outside the checkout. Keep targets and raw private evidence outside Git and
-packages. Re-run the skill index/link gates after adding a reference. Preserve
+from outside the checkout. Keep private targets/evidence outside Git; eligible
+freeware/homegrown targets may be fixtures or review attachments with their
+notices. Target fixtures remain outside tool-only packages. Re-run the skill
+index/link gates after adding a reference. Preserve
 explicit errors/partial states; do not silently decode only a convenient prefix.
-Publish code, specifications and synthetic fixtures only within the user's
+Publish code, specifications and eligible fixtures only within the user's
 publication authorization. Qualify consumer behavior in a separate experiment.

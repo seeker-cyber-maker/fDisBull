@@ -1,0 +1,249 @@
+{
+  "format": "fdisbull-local-skill-snapshots-1",
+  "captured_date": "2026-11-04",
+  "purpose": "Reviewable sources used during this research; not automatically installed or promoted",
+  "bundled_skills": [
+    {
+      "name": "fdisbull-investigate",
+      "path": "src/fdisbull/skills/fdisbull-investigate",
+      "role": "maintained project skill",
+      "files": {
+        "SKILL.md": "3558efacf535958b5538980d1249ba1df96cab0ff5b13c4329c9516188857c4b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
+        "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
+        "references/common-uil.md": "be142b607e4880ea7e89b40f1db68a522075788f5b758d771893a566a3d682dd",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "d4a1c865dc82b5f0caa75f8b01d6e6a0cb6231119b564576460c519dbde715ed",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "1ab9e7b5eea8433ac89b2fe3923dd427c41a9bd6098b294a271cfda9d09ed219",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    },
+    {
+      "name": "write-gamefaqs-guide",
+      "path": "src/fdisbull/skills/write-gamefaqs-guide",
+      "role": "maintained project skill",
+      "files": {
+        "SKILL.md": "802b77a967de904fc901affe5e3d03d874dc5e65a184faa887a430d84366c333",
+        "references/engine-source-examples.md": "86576e46facb85a2db58604a5c47ca94e3589c129a31b0ee0d63772257ca1ca1",
+        "references/evidence-and-provenance.md": "316606bd635386561484a87ce6c72b9661fb6bdfb7aded5e1cd82f5bbdf06070",
+        "references/formats-and-engine-reuse.md": "312c17a5efa93c70494bf6e6861531238a90aa95671a99573676a89429facdae",
+        "references/guide-structure.md": "4fdbecf2b397b9e3ef99a8edd6a112f5043723a9fab36b3f376d4fea697523cf",
+        "references/routes-and-discoveries.md": "31de6d47c76e5b9b80d8ae8a3433462e33f2c912f6d8cf91373af5b6bc9d3429",
+        "references/source-examples.md": "59b9afa1b94200694b489076d5357fce179fa8a9dc22f851b21899271b54a74c",
+        "references/technical-mechanics.md": "22ff90f94d539f2e66bfb1eb3e1eaa78a4b5a1754baa02c475110f6135f05802"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "name": "reverse-engineer-anything",
+      "local_origin": "~/.agents/skills/reverse-engineer-anything",
+      "role": "comparison methodology; does not bundle the REA server",
+      "files": {
+        "LICENSE.upstream": "798f9e4d18e49b30bf2f12696c8ced73dc4e1413da375a333d01281543a1ea8b",
+        "SKILL.md": "fbcd39d6abe803cf7aa49c1880815bc8e22ba2af87a23681944f687bb7629eb1",
+        "references/android-applications.md": "67a9237d76a5b736640c6404f5e1fe01d83369848142feb7e11d78f4a5e62732",
+        "references/connection-and-recovery.md": "a33760c84ae100f6ffd27d666e515956c5014ac33a6ee2414807833ae666a2b1",
+        "references/evidence-workflows.md": "2bdee98a843d018cf850c706111bb74c459ba8640da00799e9208122e4d5ab80",
+        "references/javascript-applications.md": "aaa78502a3e95268f6269e75f373908045291fedf6ddd106001555ed06bb2bf6",
+        "references/native-and-artifacts.md": "18b8828aec6476be03ca92bdb9506c47cc9ef8c1415c37d33e4af2f8c55cf8f9",
+        "references/runtime-observation.md": "fea85e2005a8fd1c86a946eeede24c20e57592a1deb36576b45216e9854803c8"
+      },
+      "upstream": "https://github.com/morluto/rea",
+      "license_notice": {
+        "path": "reverse-engineer-anything/LICENSE.upstream",
+        "source": "https://raw.githubusercontent.com/morluto/rea/main/LICENSE",
+        "note": "Fetched current upstream notice; local skill has its own version metadata and is not asserted byte-identical to current upstream main."
+      }
+    },
+    {
+      "name": "fetch-youtube-evidence",
+      "local_origin": "~/.codex/skills/fetch-youtube-evidence",
+      "role": "video metadata/caption evidence acquisition",
+      "files": {
+        "SKILL.md": "7f7c113ec098bf2ae9418313471a09184d19c97d6fdcb8aedfa716ef79b331e1",
+        "agents/openai.yaml": "fd8d0d7f231a3aff58562aff16c1d05ae6a7f693bb66323227bb2d784a0797e6",
+        "references/geo-and-salience-steering.md": "ee616f62f39b7f206e919fb19054b9abd0b21a424d922cb89f34e26a053488ce",
+        "references/source-boundary-cases.md": "5bef2017fc08ba2cc914ede9aa64a033b75a549af354d944a120df3320bac2a1",
+        "scripts/fetch_youtube_batch_evidence.py": "748ac8655aa0a2723481aab9465cffc6f69ae5dba80e8ed080cd6ab95d6fffea",
+        "scripts/fetch_youtube_catalog_metadata.py": "ceab6b3690a49950782e3446ebe4988d9f4480b499868a419eebb46b1e1feed1",
+        "scripts/fetch_youtube_evidence.py": "7159c817b68d53dad2e5393041271da1e55049945f00817a97048c7f0383b8f0",
+        "scripts/import_browser_transcript.py": "bc214478f0b0486f2671e7e81f816c3a672e22ee5f3408eef19f45b20130b743",
+        "tests/test_evidence_reuse.py": "a63b91df2fc5f5161028e54e7b6d2693ed3f269bc24edc2b187a266e232f54a5"
+      }
+    },
+    {
+      "name": "dos-target-media-rip",
+      "local_origin": "~/.codex/skills/dos-target-media-rip",
+      "role": "private DOS target preparation",
+      "files": {
+        "SKILL.md": "b98d27ea13da07a5b00bcafe608ae43b7e40fb65ef243637d2809e70e78676ec",
+        "references/catalog-intake.md": "f230136563e6e05404a7455ac8bc7244d2df88e77895bc4ff453553852c0dd1d",
+        "references/disc-audio.md": "3ee122c6ffc27ca674328b7f14202f76002c8d478d5fca7adf8d7bb17b34501f",
+        "references/imd-itk-ltk.md": "1ac5bd8b358de5554b45e569be7b3175644ed0eb1997c42cf8b8ee1b30a1ca5e",
+        "references/mve-slb.md": "e21e9cf21ba5c6bf93dacc294670f9319d08e45fb39e821a8ce6f0c5b4a77c70",
+        "references/smacker.md": "0411e803c23e1b0722001e45740b339d116f0ee0f2abe532424e9d9dd7e46bbf",
+        "scripts/disc_data_track.py": "7f2e54be1d90f050e9d4daafc57d85912424822dddfb27c4e93528fe3238a110"
+      }
+    },
+    {
+      "name": "skill-creator",
+      "local_origin": "~/.codex/skills/.system/skill-creator",
+      "role": "meta-tooling used to maintain the project skill",
+      "files": {
+        "SKILL.md": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66",
+        "agents/openai.yaml": "d07d21b93fcf3d4dc8d9a3399c05fc226a49a333a96d3e1c68b451b8dd9eade6",
+        "assets/skill-creator-small.svg": "6591bf8ea9bb9435890dbdea299e0d2bd05f3aa893a335d26e4c535e93c8e7fb",
+        "assets/skill-creator.png": "a4024b0306ddb05847e1012879d37aaf1e658205199da596f5145ed7a88d9162",
+        "license.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "references/openai_yaml.md": "ffac39318e408108141d40f820968e59f70434a891694f9bf1d25be8237b150c",
+        "scripts/generate_openai_yaml.py": "816df12072d74faf924d802a6599a139997e1441e90bfe4869ec304f2e5e2851",
+        "scripts/init_skill.py": "bf0656a5f9d8d8cdecf0245eaf27e1df8e0e9b6d40ccdda814eb8e3d5f6992c8",
+        "scripts/quick_validate.py": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c"
+      }
+    }
+  ],
+  "historical_test_snapshots": [
+    {
+      "id": "money-old",
+      "path": "tested/money-old",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "money-revised",
+      "path": "tested/money-revised",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "87bf711368e8c731b2aafa320bd314c45c9a9d97d3fa711d1372721bc6bb8aa1",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
+        "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "a333145da14b3648e7db9987e214b17e9bd6f2d60b8a76a9e61357f9f800110b",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "03a4c418f6defca850abdb34379aa6c8c68d0532da8a28d8edbf266de103d306",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    },
+    {
+      "id": "crossover-before",
+      "path": "tested/crossover-before",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "live-old",
+      "path": "tested/live-old",
+      "role": "Exact archived live HUD crossover skill, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "live-revised",
+      "path": "tested/live-revised",
+      "role": "Exact archived live HUD crossover skill, not current instructions",
+      "files": {
+        "SKILL.md": "fc03c05b016330e49a82d6568c51197c27eb5cd1771467bf27c3a4ee973fd604",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "f05a18599ba2079c8aca2df3c057b0c7d34cfd8c4aa6c06cb50ac5f142e3ebf2",
+        "references/binary-claim-verification.md": "3bfac677f792759ff2bbff8524df75093865ad9bbfe301fd3be621daa8e2203c",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "a333145da14b3648e7db9987e214b17e9bd6f2d60b8a76a9e61357f9f800110b",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "8f3c5f25d59ff63706a3d26137010b464d3adf4f2ffc2f374f1045bd51ddf088",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    }
+  ]
+}

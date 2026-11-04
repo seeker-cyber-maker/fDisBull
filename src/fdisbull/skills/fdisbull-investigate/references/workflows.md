@@ -20,12 +20,16 @@ emulator, target executable, game files, saved states or project databases.
 
 ## Start from the user's outcome
 
+Use this table as a menu. Known operations need no repeated discovery pass.
+For repeated game work, grow the cumulative Z harness in
+the runtime-navigation reference below; batch questions sharing a screen.
+
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
-| Check local decoders, debuggers, C diagnostics and UIL scope | `capabilities`, `methods`, `doctor` | `capabilities` detects code and PATH/Python dependencies without running tools (`runtime_validation: not_run`); `doctor` runs separate runtime acceptance. |
+| Resolve an unknown capability, changed setup or actual provider failure | `capabilities`, `methods`, `doctor` | Discover only the missing information; `doctor` runs separate runtime acceptance. Known operations can proceed directly. |
 | Unpack GOG installers, extract MZ/AGI members or audit AVI video | `media-modules`, `media-inspect`, `media-extract`, `gog-list`/`gog-unpack`, `capture-audit` | Non-executing structural extraction or full-frame RGBA hashing only; no guest clock mapping or execution proof. See [media-modules.md](media-modules.md). |
 | Identify or analyze an x86, ARM64 or Cortex-M binary | `identify`, `inspect`, `import`, `analyze`, `auto-analyze`, `analysis-status`, `functions`, `disasm`, `xrefs`, `render` | Static decoder facts and stored SQLite analysis only; candidate functions, indirect transfers and budget frontiers stay labeled. |
-| Prove or falsify a stored-value, writer or trigger claim in a binary | Decoded image offsets, xrefs and positive/negative writer controls | Scoped to pinned decoded editions and static scan windows; see [binary-claim-verification.md](binary-claim-verification.md). |
+| Find a candidate field/value/writer; resolve an exhaustive or disputed claim when required | Names, bounded record reads, xrefs or a short watch | Retain the first useful positive witness. Use [binary-claim-verification.md](binary-claim-verification.md) for exhaustive controls, absence and cross-edition claims. |
 | Inspect console cartridges, CUE/ISO discs or Saturn SH-2 / SNES 65816 | `rom-inspect`, `disc-inspect`, `rom-disasm`, `fdisbull.snes_decode` | Header/track facts and mode-explicit instruction decoding; decoding never proves a region is reachable code. |
 | Index edition-pinned source or verify period build-to-byte maps | `source-create`, `source-import`, `source-search`, `source-concept`, `source-build`, `source-map-native` | Separate from `.fdb` projects; lexical/vector ranks and symbol names require independent native qualification. See [source-and-concepts.md](source-and-concepts.md). |
 | Observe actual DOS, Windows PE64 or macOS ARM64 behavior | `debug PROJECT ...`, `Project.debugger()`, `macos-observe`, `macos-snapshot`/`macos-session` | Requires a compatible external backend and authorized target; verify live source/version binding and real guest or UI effects. |
@@ -56,7 +60,8 @@ Inspect before importing so format, slice and image profile are explicit:
   CUE/BIN + ISO 9660 tracks (`disc-inspect`), bounded Saturn SH-2 ranges
   (`rom-disasm` across Capstone, Ghidra and `saturn-recomp`), and mode-explicit
   SNES 65C816 spans (`fdisbull.snes_decode`). For finalized AVI recordings,
-  `capture-audit` verifies every decoded RGBA frame hash before pixel review.
+  inspect a useful frame for a visual lead. Use `capture-audit` for a requested
+  recording-integrity, completeness or timing claim, not before every pixel read.
 
 Start recursive analysis with an explicit instruction budget and check
 `analysis-status` or `advanced-status` for pending work; a bounded stop never
@@ -116,8 +121,8 @@ back mounted host files or external services.
 
 Use scenes for versioned screen context, pixel masks, `visible`/`ready`/`enabled`
 predicates and guarded actions, and spatial maps for game-unit safe regions,
-actor footprints, obstacles, hazards and interaction zones. Audit off-screen
-objects and scrolling margins with `debug-scene-domain-audit` or
+actor footprints, obstacles, hazards and interaction zones. Resolve relevant
+off-screen or scrolling-coordinate uncertainty with `debug-scene-domain-audit` or
 `debug-spatial-domain-audit`. Read [scenes.md](scenes.md) for scene authoring
 and [runtime-navigation.md](runtime-navigation.md) for spatial policies
 (`physical`, `assisted`, `story`, and voluntary `--fair-play`), bounded route
@@ -199,10 +204,10 @@ behavior in working lower-level IR.
 
 ## Retain knowledge without overstating it
 
-Promote verified facts into versioned scenes, spatial anchors, type/signature
-catalogs, source links or UIL packages only when doing so lowers future probe
-cost. Preserve provenance and revalidate whenever source bytes, resources,
-rooms, layers or backends change. Keep target-specific addresses and private
+Retain useful candidate names and associations immediately with a short hypothesis
+marker and observation reference. Promote supported facts into versioned scenes,
+anchors, catalogs or UIL when it lowers later cost. After a source, resource,
+room, layer or backend change, revisit only affected dependencies. Keep target-specific addresses and private
 paths in project evidence rather than in reusable skills.
 
 ## Retrieve bounded output

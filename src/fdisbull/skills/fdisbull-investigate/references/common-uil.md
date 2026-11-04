@@ -85,6 +85,52 @@ likewise needs a declared behavior variant, not a false equivalence claim.
   This pure profile allocates no GPU work and grants no physical cancellation
   or host-state-locking guarantee.
 
+## Recover an operation's meaningful children
+
+For a save action, model the interaction and serialization separately. Activating
+Save may open a chooser; selecting a row may only select a destination; submitting
+the request may begin or finish a later stage. Keep the observed order and
+completion conditions, including slot-name/index metadata when it is a separate
+operation. A named Z action can compose these steps and later use a programmatic
+implementation while retaining the same semantic operation.
+
+Expand the save into its state-component serializers, then records, encoded
+buffers and file writes. A captured single-file writer is a useful child, not a
+whole-save definition. Preserve the correspondence from a typed logical field
+through every copy and encoding to the final file range. Reuse its identity;
+retain widths, byte order, collection/record boundaries and any unknown bytes.
+Keep candidate labels, observed byte mappings and original evidence distinct.
+One known field or complete child can unlock its next question while other
+children remain unresolved.
+
+Use existing typed functions/imports and transparent groups for admitted
+computations and expandable views. Presentation holds display names/resources;
+source-map/adapter evidence holds original locations and the field-to-file
+correspondence. Loaded state and refreshed presentation are separate results.
+The source contract's “Semantic operation cascades and persistence” section gives
+an authoring outline. This is guidance for preserving recovered meaning: the
+current common profile has no admitted filesystem save/load host effect, and a
+native call capture does not automatically produce a UIL graph or a new opcode.
+
+For a formal definition and backward recovery plan, use the separate
+`fdisbull-operation-goals-1` companion in `fdisbull.operation_goals`.
+`load_operation_goals(path)` validates known UDL block/region references,
+explicit opaque or partial analysis, nominal ports, child-operation/block
+bindings, ordering, knowledge prerequisites and field-to-file correspondences.
+`plan_operation(definition, operation_id, available=[])` expands only the requested
+goal, deduplicates shared components and returns ready/blocked recovery work.
+`queue_frontier(plan)` supplies task/fact shapes for the small dependency queue;
+add tasks before publishing facts. `operation_goal_schema()` exposes its syntax.
+
+Keep semantic goals and interaction realizations distinct: `SaveGame(state,slot)`
+can be invoked programmatically, while a separate UI operation selects/submits
+the same inputs. Recovery work depends on missing knowledge, not every earlier
+execution step. Findings can unlock questions and raise parent result coverage
+while the underlying block remains opaque and the semantic claim remains a
+candidate. No operation is executed or synthesized by the planner. The source
+contract and `examples/synthetic/save-operation-goals.json` contain the full
+grammar/example; this companion is not a new executable common UIL profile.
+
 ## Output and persistent handoff
 
 `compile_program(program, presentation, catalog, plan, new_private_directory,
