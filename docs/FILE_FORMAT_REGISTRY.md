@@ -138,3 +138,33 @@ They are preserved within the metadata bounds and remain inert. JSON identificat
 results can be attached to a private analysis as evidence under the repository's
 ordinary target-storage rules. This separate catalog does not migrate or change
 existing FDB schemas.
+
+## Intake integration and observed media
+
+`intake-inventory` uses one qualified catalog snapshot and one bounded probe
+kernel across all explicitly supplied game roots. `identify_file` also accepts
+`max_read_bytes`; `_Reader` admits each read before issuing it and exceptions
+retain already consumed byte accounting. File limits, directory-entry/depth
+limits and aggregate read limits have explicit partial outcomes.
+
+The opened descriptor's device/inode/time identity binds observations to the
+actual file, separately from a requested or resolved symlink path. Persistent
+catalogs must not alias source files or lie within input roots. Complete
+enumeration and alias preflight precede catalog seeding; incomplete enumeration
+uses an in-memory catalog with an explicit not-written persistence result.
+
+[Media coverage](INTAKE_MEDIA_COVERAGE.md) distinguishes strong IFF/MIDI/VOC/PCX,
+MADSPACK and DinoPark headers from 96 observed consumer-context resource cohorts.
+The latter have no global magic and only suggest recovery tasks. All custom
+context fields remain inert, optional and bounded. A verified module's
+`decoder_role` is runtime metadata bound by shipped code, rather than an
+implementation claim supplied by the database. It distinguishes available
+container/pixel/media readers from recognition-only modules and never means
+intake has executed a decoder.
+
+The [FLIC structural reader](INTAKE_MEDIA_COVERAGE.md#fliflc-structural-reader)
+adds complete bounded packet/subchunk inventory and explicit TFTD IDX checks.
+A speed value matching a frame magic does not select the compact envelope:
+Bullfrog compact recognition also requires its qualified AF12/12-byte-size
+profile. Header recognition and structural inventory remain separate from
+pixel/audio decoding, safe movie edits and original consumer playback.

@@ -18,6 +18,10 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='flic', layer='container-inspection',
+                 api='fdisbull.flic.inspect_flic', methods=['media-inspect'], dependencies=[],
+                 variants='Standard FLI/FLC, Bullfrog compact12 and bounded TFTD VID/IDX',
+                 limits='64 MiB source; complete bounded packet/chunk extent census and explicit ring/prefix/codec gaps; no pixel/audio decoding, framing or native compatibility'),
             dict(name='smacker', layer='asset-framing',
                  api='fdisbull.smacker.inspect_smk / frame_smk',
                  methods=['media-inspect', 'smk-frame'],
@@ -137,8 +141,15 @@ def _prepare(path, adapter, volume_root, number):
     return result, {name: payload for name, _, payload in members}
 
 
-def inspect_media(path, *, adapter, volume_root=None, number=None):
+def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=None):
     """Inventory immutable member ranges with source and member digests."""
+    if adapter == 'flic':
+        if volume_root is not None or number is not None:
+            raise ValueError('FLIC does not accept AGI resource parameters')
+        from .flic import inspect_flic
+        return inspect_flic(path, index_path=index_path)
+    if index_path is not None:
+        raise ValueError('index_path is only supported by the FLIC inspector')
     if adapter == 'smacker':
         if volume_root is not None or number is not None:
             raise ValueError('Smacker does not accept AGI resource parameters')

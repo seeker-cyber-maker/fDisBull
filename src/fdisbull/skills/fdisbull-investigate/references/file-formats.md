@@ -40,6 +40,55 @@ minimal header facts with provenance and explicit unsupported capabilities,
 then implement a bounded reader with authored fixtures. Do not label a codec
 implemented merely because its signature is recorded.
 
+## Use the same catalog for single-game and batch intake
+
+```text
+fdisbull --output-artifact-dir /private/reports intake-inventory /private/game --catalog /private/formats.sqlite
+fdisbull --output-artifact-dir /private/reports intake-inventory /private/game-a /private/game-b --catalog /private/formats.sqlite
+```
+
+The inventory phase never extracts, executes or modifies inputs. Keep the
+catalog and report/artifact directory outside every input root. Bounded
+enumeration/alias preflight precedes catalog writes. Incomplete enumeration uses
+an in-memory catalog and records that requested persistence was not performed.
+`complete` describes filesystem accounting only; archives and embedded resources
+are separate recovery items. Regular-file links retain opened descriptor identity;
+directory links are reported without recursive traversal. Never follow a runtime
+`SWARS -> .` alias while archiving or recursively scanning.
+
+Inspect `recovery_queue`: unknown formats/context candidates, unsupported or
+invalid variants, unexpanded containers/embedded media, decoder recovery and
+available readers awaiting validation are distinct. Read/entry/file/depth budget
+stops and I/O errors are incomplete observations, not unsupported formats.
+Record companion dependencies before any rewrite. Filename/consumer profiles
+have no magic and remain candidates even when a whole game shares a suffix.
+
+Large replies use output artifacts; stdout redirection may capture a reference.
+Retain/read the artifact through the existing output APIs rather than rerunning
+intake. Preserve executable hashes and the private selected-program roster.
+
+## Inspect FLI/FLC and proprietary resource profiles
+
+```text
+fdisbull media-inspect /private/intro.fli --adapter flic
+fdisbull media-inspect /private/movie.vid --adapter flic --index-path /private/movie.idx
+```
+
+The FLIC reader checks packet/subchunk extents and explicitly distinguishes the
+128-byte standard header, Bullfrog's compact 12-byte header and TFTD's audio-bearing
+VID/IDX profile. Counts may include a ring-frame candidate or opaque prefix.
+Structural correspondence does not qualify pixels, audio, seeking or shortening;
+the SMK framing writer cannot edit FLIC. Unknown chunks stay recovery obligations.
+
+DinoPark's original intake has no FLI. It uses UNC2/UNCS actors, UNCP pictures,
+headerless ABT sounds and IFF XMIDI. Actor opacity/sequence behavior, external
+palettes, six-bit palette scaling, even picture stride and compressed rows need
+consumer-qualified readers. Civilization PIC is a different family. Other
+observed resource cohorts (Coktel ITK/LTK/IMD, MADSPACK, Eternam, AGI/SCI, Bullfrog,
+X-COM, platform fonts/resource forks and embedded assets) have separate catalog
+context profiles and explicit recovery gaps. Private recovered code is evidence;
+it is not automatically a shipped decoder.
+
 ## Frame native SMK2 movies
 
 ```text

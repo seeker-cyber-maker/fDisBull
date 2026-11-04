@@ -22,6 +22,7 @@ MAX_CATALOG_RECORD_BYTES = 64 * 1024
 MAX_CATALOG_BYTES = 4 * 1024 * 1024
 MAX_CATALOG_RECORDS = 4096
 MAX_CATALOG_LINKS = 16384
+MAX_IDENTIFY_READ_BYTES = MAX_BINARY_BYTES + PREFIX_BYTES + 2 * MAX_TABLE_BYTES + 4096
 _SYNC = b'\x00' + b'\xff' * 10 + b'\x00'
 
 
@@ -157,7 +158,9 @@ def _builtins():
             [_field('segment_bytes','marker+2','u16be','Length includes length field'),_field('geometry','SOF payload','precision/u16be height/u16be width','Bounded marker walk only')], endian='big',
             limitations=['At most64KiB of markers; no entropy data or complete JPEG validation.'], provenance=['https://www.w3.org/Graphics/JPEG/itu-t81.pdf']),
     ]
-    return native + media
+    from .format_media import definitions
+    resources = json.loads((Path(__file__).parent/'data'/'intake_resource_profiles.json').read_text())
+    return native + media + definitions(_definition, _field, _magic) + resources
 
 
 def _module_records():
@@ -194,10 +197,42 @@ def _catalog_links(definitions,modules):
         if definition['category']=='executable':links.append('native-images')
         if definition['category']=='console-media':links.append('console-headers')
         links += {'dos-mz':['mz-envelope'],'riff-avi':['avi-capture'],
-            'iso9660':['iso-primary'],'smacker':['smacker']}.get(ident,[])
+            'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic']}.get(ident,[])
         if definition['category']=='image':links.append('pillow-images')
         for module in links:
             if module in available:yield ident,definition['revision'],module,1
+
+
+def _decoder_role(identifier):
+    return {'format-headers':'recognition-only','native-images':'image-loader',
+        'console-headers':'recognition-only','iso-primary':'container-reader',
+        'pillow-images':'pixel-reader','agi-picture':'pixel-reader',
+        'smacker':'media-decoder-and-framer','avi-capture':'video-reader',
+        'mz-envelope':'container-reader','agi-v2':'container-reader',
+        'gog-inno':'container-reader','flic':'container-reader'}.get(identifier,'recognition-only')
+
+
+def resource_profile_hints(path, catalog):
+    """Filename/consumer hints are candidates, never signature recognition."""
+    import fnmatch
+    source=Path(path)
+    name=source.name.casefold()
+    context=str(source.parent).casefold()
+    rows=[]
+    for record in catalog['formats']:
+        hint=record.get('context_hints')
+        if not isinstance(hint,dict) or not all(isinstance(record.get(k),str) for k in ('name','category')):continue
+        patterns=hint.get('filename_patterns',[])
+        markers=hint.get('game_markers',[])
+        if not isinstance(patterns,list) or not isinstance(markers,list):continue
+        patterns=[p for p in patterns[:64] if isinstance(p,str) and len(p)<=128]
+        markers=[m for m in markers[:32] if isinstance(m,str) and len(m)<=128]
+        if not any(fnmatch.fnmatchcase(name,p.casefold()) for p in patterns):continue
+        if markers and not any(marker.casefold() in context for marker in markers):continue
+        rows.append(dict(format_id=record['format_id'],revision=record['revision'],
+            name=record['name'],category=record['category'],qualification='context-candidate-only',
+            companions=hint.get('companions',[]),recovery=record.get('limitations',[])))
+    return rows
 
 
 class FormatCatalog:
@@ -237,10 +272,10 @@ class FormatCatalog:
                 self.db.execute('INSERT INTO format_catalog_meta VALUES (?)', (SCHEMA_VERSION,))
             elif versions != [(SCHEMA_VERSION,)]:
                 raise ValueError('Unsupported format catalog schema version')
-            definitions = _builtins()
-            modules = _module_records()
             with self.db:
                 self._preflight()
+                definitions = _builtins()
+                modules = _module_records()
                 for table, key, records in (('format_definitions', 'format_id', definitions), ('format_decoder_modules', 'module_id', modules)):
                     for record in records:
                         encoded = _json(record)
@@ -312,6 +347,7 @@ class FormatCatalog:
             for module in modules:
                 verified=shipped.get((module['module_id'],module['revision']))==module
                 module['binding_verified']=verified
+                module['decoder_role']=_decoder_role(module['module_id']) if verified else 'unverified'
                 if not verified:
                     module['declared_implemented']=module.get('implemented')
                     module['implemented']=False
@@ -339,16 +375,28 @@ def format_catalog(*, catalog_path=None):
         catalog.close()
 
 
+class ReadBudgetExceeded(ValueError):
+    """An admission refusal before another source read, retaining consumed work."""
+    def __init__(self, bytes_read, sampled_regions):
+        super().__init__('File identification read budget exceeded')
+        self.bytes_read = bytes_read
+        self.sampled_regions = list(sampled_regions)
+
+
 class _Reader:
-    def __init__(self, stream, size):
+    def __init__(self, stream, size, max_read_bytes=MAX_IDENTIFY_READ_BYTES):
         self.stream, self.size, self.regions = stream, size, []
         self.bytes_read = 0
+        self.max_read_bytes = max_read_bytes
 
     def read(self, offset, count):
         if offset < 0 or count < 0 or count > MAX_BINARY_BYTES:
             raise ValueError('Invalid bounded read')
+        amount = min(count, max(0, self.size-offset))
+        if self.bytes_read + amount > self.max_read_bytes:
+            raise ReadBudgetExceeded(self.bytes_read, self.regions)
         self.stream.seek(offset)
-        value = self.stream.read(min(count, max(0, self.size-offset)))
+        value = self.stream.read(amount)
         self.bytes_read += len(value)
         self.regions.append(dict(file_offset=offset, size=len(value), sha256=hashlib.sha256(value).hexdigest()))
         return value
@@ -394,6 +442,9 @@ def _smacker(prefix, reader):
 
 
 def _media(prefix, reader):
+    from .format_media import probe
+    extra = probe(prefix, reader)
+    if extra is not None: return extra
     smk = _smacker(prefix, reader)
     if smk is not None: return smk
     image = _image(prefix,reader)
@@ -419,7 +470,8 @@ def _media(prefix, reader):
     if prefix[4:6] in (b'\x11\xaf', b'\x12\xaf'):
         # Bullfrog's packed legacy header stops at byte12. In that layout the
         # following u32 is a frame length, not Autodesk's depth/flags fields.
-        if len(prefix)>=20 and prefix[4:6]==b'\x12\xaf' and prefix[16:18]==b'\xfa\xf1':
+        if (len(prefix)>=20 and prefix[4:6]==b'\x12\xaf'
+                and int.from_bytes(prefix[:4],'little')==12 and prefix[16:18]==b'\xfa\xf1'):
             size_field,magic,frames,width,height=struct.unpack_from('<I4H',prefix)
             chunk_bytes=struct.unpack_from('<I',prefix,12)[0]
             valid=frames>0 and width>0 and height>0 and 16<=chunk_bytes<=reader.size-12
@@ -692,7 +744,8 @@ def _mz_tail(prefix, total):
     return fact
 
 
-def identify_file(path, *, catalog_path=None, max_binary_bytes=MAX_BINARY_BYTES):
+def identify_file(path, *, catalog_path=None, max_binary_bytes=MAX_BINARY_BYTES,
+                  max_read_bytes=MAX_IDENTIFY_READ_BYTES):
     """Identify one regular file without executing it or persisting source bytes.
 
     Media/disc reads are bounded samples. Existing native and cartridge readers
@@ -702,33 +755,58 @@ def identify_file(path, *, catalog_path=None, max_binary_bytes=MAX_BINARY_BYTES)
     """
     if type(max_binary_bytes) is not int or not 1<=max_binary_bytes<=MAX_BINARY_BYTES:
         raise ValueError('max_binary_bytes must be 1..67108864')
+    if type(max_read_bytes) is not int or not 0<=max_read_bytes<=MAX_IDENTIFY_READ_BYTES:
+        raise ValueError('max_read_bytes exceeds the bounded identification range')
     source = Path(path).expanduser()
+    _check_source_catalog(source, catalog_path)
+    catalog = format_catalog(catalog_path=catalog_path)
+    return _identify_file_with_catalog(source, catalog, max_binary_bytes=max_binary_bytes,
+                                       max_read_bytes=max_read_bytes)
+
+
+def _check_source_catalog(source, catalog_path):
     if catalog_path is not None:
         catalog = Path(catalog_path).expanduser()
         if catalog.resolve()==source.resolve() or catalog.exists() and source.exists() and os.path.samefile(source,catalog):
             raise ValueError('Source and catalog must be different files')
-    fd = os.open(source, os.O_RDONLY | getattr(os,'O_NONBLOCK',0))
-    with os.fdopen(fd,'rb') as stream:
-        before = os.fstat(stream.fileno())
-        if not stat.S_ISREG(before.st_mode): raise ValueError('Identification requires a regular file')
-        reader = _Reader(stream,before.st_size)
-        prefix = reader.read(0,min(PREFIX_BYTES,before.st_size))
-        result = _media(prefix,reader)
-        complete = prefix if len(prefix)==before.st_size else None
-        if result is None: result = _iso(prefix,reader)
-        if result is None:
-            result,data = _native(prefix,reader,max_binary_bytes)
-            if data is not None: complete=data
-        if result is None:
-            result = dict(format_id=None,name='unknown',category='unknown',status='unknown',recognized=False,
-                header_valid=None,metadata={},architecture=None,warnings=['No supported header established; filename extensions are not evidence. Signatureless COM requires explicit caller selection.'],
-                validation_scope='bounded signature/header probes only',full_decode=False,native_runtime_tested=False)
-        tail = _mz_tail(prefix,before.st_size)
-        if tail is not None: result['mz_envelope']=tail
-        after = os.fstat(stream.fileno())
-        if (before.st_size,before.st_mtime_ns,before.st_ctime_ns)!=(after.st_size,after.st_mtime_ns,after.st_ctime_ns):
-            raise ValueError('Source changed during identification')
-    catalog = format_catalog(catalog_path=catalog_path)
+
+
+def _identify_file_with_catalog(path, catalog, *, max_binary_bytes=MAX_BINARY_BYTES,
+                                max_read_bytes=MAX_IDENTIFY_READ_BYTES):
+    """One bounded probe with a pre-qualified catalog snapshot for batch reuse."""
+    if type(max_binary_bytes) is not int or not 1<=max_binary_bytes<=MAX_BINARY_BYTES:
+        raise ValueError('max_binary_bytes must be 1..67108864')
+    if type(max_read_bytes) is not int or not 0<=max_read_bytes<=MAX_IDENTIFY_READ_BYTES:
+        raise ValueError('max_read_bytes exceeds the bounded identification range')
+    source = Path(path).expanduser()
+    _check_source_catalog(source, catalog.get('catalog_path'))
+    reader = None
+    try:
+        fd = os.open(source, os.O_RDONLY | getattr(os,'O_NONBLOCK',0))
+        with os.fdopen(fd,'rb') as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode): raise ValueError('Identification requires a regular file')
+            reader = _Reader(stream,before.st_size,max_read_bytes)
+            prefix = reader.read(0,min(PREFIX_BYTES,before.st_size))
+            result = _media(prefix,reader)
+            complete = prefix if len(prefix)==before.st_size else None
+            if result is None: result = _iso(prefix,reader)
+            if result is None:
+                result,data = _native(prefix,reader,max_binary_bytes)
+                if data is not None: complete=data
+            if result is None:
+                result = dict(format_id=None,name='unknown',category='unknown',status='unknown',recognized=False,
+                    header_valid=None,metadata={},architecture=None,warnings=['No supported header established; filename extensions are not evidence. Signatureless COM requires explicit caller selection.'],
+                    validation_scope='bounded signature/header probes only',full_decode=False,native_runtime_tested=False)
+            tail = _mz_tail(prefix,before.st_size)
+            if tail is not None: result['mz_envelope']=tail
+            after = os.fstat(stream.fileno())
+            if (before.st_size,before.st_mtime_ns,before.st_ctime_ns)!=(after.st_size,after.st_mtime_ns,after.st_ctime_ns):
+                raise ValueError('Source changed during identification')
+    except BaseException as error:
+        error.bytes_read = reader.bytes_read if reader is not None else 0
+        error.sampled_regions = list(reader.regions) if reader is not None else []
+        raise
     identifier = result['format_id']
     links = [b for b in catalog['bindings'] if b['format_id']==identifier and b['format_revision']==1]
     modules = {(m['module_id'],m['revision']):m for m in catalog['modules']}
@@ -737,7 +815,8 @@ def identify_file(path, *, catalog_path=None, max_binary_bytes=MAX_BINARY_BYTES)
     return dict(format='fdisbull-file-identification-1',source=dict(path=str(source),size=before.st_size,
         sha256=hashlib.sha256(complete).hexdigest() if complete is not None else None,
         hash_scope='whole opened file' if complete is not None else 'sampled regions only; whole-file identity not established',
-        sampled_regions=reader.regions, bytes_read=reader.bytes_read), identification=result,
+        sampled_regions=reader.regions, bytes_read=reader.bytes_read,
+        opened_identity=dict(device=before.st_dev,inode=before.st_ino,mtime_ns=before.st_mtime_ns,ctime_ns=before.st_ctime_ns)), identification=result,
         catalog=dict(schema_version=SCHEMA_VERSION,path=catalog['catalog_path'],definition_revision=1 if identifier else None,
             contains_file_payloads=catalog['contains_file_payloads'],content_qualification=catalog['catalog_content_qualification']),
         input_executed=False, source_bytes_persisted=False,inspected_source_bytes_persisted=False)
