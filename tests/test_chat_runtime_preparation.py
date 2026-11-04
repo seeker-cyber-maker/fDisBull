@@ -86,3 +86,26 @@ def test_expanded_runtime_rejects_declared_size_above_hard_ceiling(tmp_path):
         runtime.materialize(tmp_path / 'unused', tmp_path / 'cache', tmp_path / 'dosbox',
                             {'size': runtime.MAX_EXPANDED_RUNTIME_BYTES + 1, 'sha256': '0' * 64})
     assert not (tmp_path / 'cache').exists()
+
+
+def test_full_windows_profile_is_separately_bound_and_reconstructable(tmp_path):
+    root, small = setup_kit(tmp_path)
+    base = root / 'windows.xz'
+    base.write_bytes((root / 'base.xz').read_bytes())
+    expanded = json.loads((root / 'recipe.json').read_text())['expanded_base']
+    output = runtime.materialize(base, tmp_path / 'windows-producer', root / 'dosbox', expanded, windows_only=True)
+    recipe = root / 'windows.json'
+    recipe.write_text(json.dumps({'schema': 'fdisbull-chat-windows-recipe-v1', 'expanded_base': expanded,
+                                  'resources': runtime.resource_identities(root / 'dosbox')['wine'],
+                                  'output': output['wine']}))
+    manifest_path = root / 'MANIFEST.json'; manifest = json.loads(manifest_path.read_text())
+    for role, path in [('windows_runtime_base', base), ('windows_runtime_recipe', recipe)]:
+        manifest['files'].append({'role': role, 'destination': path.name, **runtime.identity(path)})
+    manifest_path.write_text(json.dumps(manifest))
+    image = runtime.prepare_windows(root, tmp_path / 'windows-cache')
+    assert runtime.identity(image) == output['wine']
+    assert runtime.prepare_windows(root, tmp_path / 'windows-cache') == image
+    image.write_bytes(b'changed')
+    with pytest.raises(ValueError, match='hash/size'):
+        runtime.prepare_windows(root, tmp_path / 'windows-cache')
+    assert runtime.prepare(root, tmp_path / 'small-cache')['dos'].is_file()

@@ -116,7 +116,7 @@ def load_inventory(path):
     profile = inventory.get('profile', 'prebuilt')
     if profile not in ('prebuilt', 'shared'):
         raise ValueError('unknown profile')
-    required = REQUIRED_ROLES if profile == 'prebuilt' else (REQUIRED_ROLES - {'wine_initramfs', 'dos_initramfs'}) | {'runtime_base', 'runtime_recipe', 'runtime_preparer'}
+    required = REQUIRED_ROLES if profile == 'prebuilt' else (REQUIRED_ROLES - {'wine_initramfs', 'dos_initramfs'}) | {'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe'}
     if profile == 'shared' and ({'wine_initramfs', 'dos_initramfs'} & roles.keys()):
         raise ValueError('shared profile must not contain prebuilt initramfs')
     if profile == 'shared' and roles.get('runtime_preparer') != ['tools/preparer.py']:

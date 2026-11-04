@@ -276,4 +276,4 @@ def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path):
     assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine') == 'session'
     assert project.args == (tmp_path / 'bin/qemu', tmp_path / 'work')
     assert project.kwargs == {'kernel': tmp_path / 'kernel', 'initramfs': tmp_path / 'wine',
-                              'memory_mib': 8192, 'boot_timeout_ms': 600000}
+                              'memory_mib': 4096, 'boot_timeout_ms': 600000}

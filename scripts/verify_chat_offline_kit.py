@@ -281,9 +281,9 @@ def confined(root, manifest):
 
 
 def windows_debugger(project, root, workspace, kernel, initramfs):
-    """Allow the full retained Windows guest room to boot under QEMU."""
+    """Use the small Wine guest for the PE64 consumer check."""
     return project.debugger(root / 'bin/qemu', workspace, kernel=kernel, initramfs=initramfs,
-                            memory_mib=8192, boot_timeout_ms=600000)
+                            memory_mib=4096, boot_timeout_ms=600000)
 
 
 def verify(root, workspace, archive):
@@ -297,7 +297,7 @@ def verify(root, workspace, archive):
     manifest, roles = inventory(root)
     verify_archive(archive, root)
     confined(root, manifest)
-    for role in ('python', 'dosbox', 'qemu', 'kernel', 'runtime_base', 'runtime_recipe', 'runtime_preparer', 'pe_fixture'):
+    for role in ('python', 'dosbox', 'qemu', 'kernel', 'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe', 'pe_fixture'):
         required(roles, role)
     closure_objects = check_loader_closure(root, roles)
     for variable in ('HOME', 'TMPDIR', 'FDISBULL_TARGET_STORE', 'FDISBULL_OUTPUT_ARTIFACT_DIR'):
@@ -309,6 +309,9 @@ def verify(root, workspace, archive):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     runtime = module.prepare(root, workspace / 'runtime-cache')
+    windows_runtime = Path(module.prepare_windows(root, workspace / 'windows-runtime-cache')).resolve(strict=True)
+    if not windows_runtime.is_relative_to(workspace / 'windows-runtime-cache') or not windows_runtime.is_file():
+        raise ValueError('Prepared Windows runtime escaped private cache')
     for profile in ('wine', 'dos'):
         path = Path(runtime[profile]).resolve(strict=True)
         if not path.is_relative_to(workspace / 'runtime-cache') or not path.is_file():
@@ -365,7 +368,9 @@ def verify(root, workspace, archive):
             'archive_sha256':digest(archive),'manifest_sha256':digest(root/'MANIFEST.json'),
             'source_commit':manifest.get('identities',{}).get('source_commit'),
             'test_source_commit':manifest.get('identities',{}).get('test_source_commit'),
-            'runtime_sha256':{profile:digest(Path(runtime[profile])) for profile in ('wine','dos')},
+            'runtime_sha256':{**{profile:digest(Path(runtime[profile])) for profile in ('wine','dos')},
+                              'windows':digest(Path(windows_runtime))},
+            'windows_native_qualification':'not-tested',
             'elf_objects_checked':closure_objects,'python':platform.python_version(),
             'z3':z3.get_version_string(), 'network_interfaces':['lo'],
             'python_origin':'kit','python_mappings':'kit','loader_closure':'kit-lib',

@@ -104,7 +104,7 @@ def test_shared_zip_omits_wheels_and_limits_size(tmp_path):
     inv, data = inventory(tmp_path)
     data['profile'] = 'shared'
     data['files'] = [x for x in data['files'] if x['role'] not in ('wine_initramfs', 'dos_initramfs')]
-    for role, dest in [('runtime_base', 'runtime/base.cpio.xz'), ('runtime_recipe', 'runtime/recipe.json'), ('runtime_preparer', 'tools/preparer.py')]:
+    for role, dest in [('runtime_base', 'runtime/base.cpio.xz'), ('runtime_recipe', 'runtime/recipe.json'), ('runtime_preparer', 'tools/preparer.py'), ('windows_runtime_base', 'runtime/windows-base.cpio.xz'), ('windows_runtime_recipe', 'runtime/windows-recipe.json')]:
         p = tmp_path / role
         p.write_bytes(b'input')
         data['files'].append(dict(source=str(p), destination=dest, role=role, sha256=kit.sha256(p), size=p.stat().st_size))

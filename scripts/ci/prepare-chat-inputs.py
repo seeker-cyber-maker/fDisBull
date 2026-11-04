@@ -143,17 +143,26 @@ def main():
     transforms = {'dosbox': stripped_copy(prepared['FDISBULL_DOSBOX'], dosbox, strip),
                   'qemu': stripped_copy(prepared['FDISBULL_PE_QEMU'], qemu, strip)}
     base = CHAT / 'base.cpio.xz'
-    expanded = compress_base(full_windows_base(manifest, ROOT), base)
+    expanded = compress_base(prepared['FDISBULL_PE_INITRAMFS'], base)
     outputs = runtime.materialize(base, CHAT / 'measured-runtimes', dosbox, expanded)
     recipe = CHAT / 'runtime-recipe.json'
     recipe.write_text(json.dumps({'schema': 'fdisbull-chat-runtime-recipe-v1',
                                   'expanded_base': expanded, 'resources': runtime.resource_identities(dosbox),
                                   'outputs': outputs}, indent=2) + '\n')
+    windows_source = full_windows_base(manifest, ROOT)
+    windows_base = CHAT / 'windows-base.cpio.xz'
+    windows_expanded = compress_base(windows_source, windows_base)
+    windows_output = runtime.materialize(windows_base, CHAT / 'measured-windows', dosbox, windows_expanded, windows_only=True)['wine']
+    windows_recipe = CHAT / 'windows-recipe.json'
+    windows_recipe.write_text(json.dumps({'schema': 'fdisbull-chat-windows-recipe-v1',
+        'expanded_base': windows_expanded, 'resources': runtime.resource_identities(dosbox)['wine'],
+        'output': windows_output}, indent=2) + '\n')
     receipt = EVIDENCE / 'input-provenance.json'
     receipt.write_text(json.dumps({'schema':'fdisbull-chat-inputs-v1', 'source_commit':sha,
                                   'local_run_id':run, 'unified_manifest':identity(ROOT / 'native-evidence/pe/prepared-inputs.json'),
                                   'ordinary_core':identity(wheel), 'strip_version':strip_version,
-                                  'stripped':transforms, 'base':identity(base), 'recipe':identity(recipe)}, indent=2) + '\n')
+                                  'stripped':transforms, 'base_source':identity(prepared['FDISBULL_PE_INITRAMFS']), 'base':identity(base), 'recipe':identity(recipe),
+                                  'windows_source':identity(windows_source), 'windows_base':identity(windows_base), 'windows_recipe':identity(windows_recipe)}, indent=2) + '\n')
     def item(path, destination, role='payload'):
         return {'source': str(Path(path).resolve(strict=True)), 'destination': destination, 'role': role}
     inputs = [item(dosbox,'native/dosbox-x','dosbox'),
@@ -162,6 +171,8 @@ def main():
               item(prepared['FDISBULL_PE_KERNEL'],'runtime/kernel','kernel'),
               item(prepared['FDISBULL_PE_FIXTURE'],'fixtures/oracle.exe','pe_fixture'),
               item(base,'runtime/base.cpio.xz','runtime_base'), item(recipe,'runtime/recipe.json','runtime_recipe'),
+              item(windows_base,'runtime/windows-base.cpio.xz','windows_runtime_base'),
+              item(windows_recipe,'runtime/windows-recipe.json','windows_runtime_recipe'),
               item(ROOT/'scripts/prepare_chat_runtimes.py','tools/preparer.py','runtime_preparer'),
               item(ROOT/'scripts/verify_chat_offline_kit.py','tools/verify.py','verifier'),
               item(source,'source/dosbox-companion.tar','source_companion'),

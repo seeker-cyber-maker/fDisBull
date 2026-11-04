@@ -47,7 +47,7 @@ def resource_identities(dosbox):
                     dict(dos_resources(), **{'opt/fdisbull/dosbox-x': dosbox}).items()}}
 
 
-def materialize(base, cache, dosbox, expanded):
+def materialize(base, cache, dosbox, expanded, *, windows_only=False):
     """Build-side measurement primitive; its result alone is not qualification."""
     from fdisbull.wine_runtime import prepare as prepare_wine
     from fdisbull.dos_runtime import prepare as prepare_dos
@@ -72,8 +72,9 @@ def materialize(base, cache, dosbox, expanded):
     if {'sha256': digest.hexdigest(), 'size': total} != expanded:
         raise ValueError('Expanded runtime base identity mismatch')
     prepare_wine(canonical, cache / 'wine.cpio.gz')
-    prepare_dos(canonical, cache / 'dos.cpio.gz', dosbox)
-    return {profile: identity(cache / (profile + '.cpio.gz')) for profile in ('wine', 'dos')}
+    if not windows_only:
+        prepare_dos(canonical, cache / 'dos.cpio.gz', dosbox)
+    return {profile: identity(cache / (profile + '.cpio.gz')) for profile in (('wine',) if windows_only else ('wine', 'dos'))}
 
 
 def prepare(root, cache):
@@ -114,12 +115,49 @@ def prepare(root, cache):
     return {'wine': cache / 'wine.cpio.gz', 'dos': cache / 'dos.cpio.gz', 'kernel': kernel}
 
 
+def prepare_windows(root, cache):
+    """Reconstruct the separately inventoried full Windows image offline."""
+    root = Path(root).resolve(strict=True); cache = Path(cache).resolve()
+    if cache == root or cache.is_relative_to(root) or root.is_relative_to(cache):
+        raise ValueError('Runtime cache must be separate from the kit')
+    manifest = json.loads((root / 'MANIFEST.json').read_text())
+    base = one(root, manifest, 'windows_runtime_base')
+    recipe = json.loads(one(root, manifest, 'windows_runtime_recipe').read_text())
+    dosbox = one(root, manifest, 'dosbox')
+    if recipe.get('schema') != 'fdisbull-chat-windows-recipe-v1':
+        raise ValueError('Unsupported Windows runtime recipe')
+    if recipe.get('resources') != resource_identities(dosbox)['wine']:
+        raise ValueError('Installed Windows resources do not match recipe')
+    expected = recipe.get('output')
+    if (not isinstance(expected, dict) or set(expected) != {'sha256', 'size'}
+            or type(expected['size']) is not int or expected['size'] <= 0
+            or not re.fullmatch('[0-9a-f]{64}', expected.get('sha256', ''))):
+        raise ValueError('Invalid Windows runtime output identity')
+    receipt = cache / 'runtime-cache.json'
+    if receipt.exists():
+        if receipt.is_symlink() or json.loads(receipt.read_text()) != recipe:
+            raise ValueError('Runtime cache belongs to another recipe')
+        image = cache / 'wine.cpio.gz'
+        if image.is_symlink() or not image.is_file():
+            raise ValueError('Runtime cache contains an unsafe image')
+        actual = identity(image)
+    else:
+        actual = materialize(base, cache, dosbox, recipe.get('expanded_base'), windows_only=True)['wine']
+    if actual != expected:
+        raise ValueError('Reconstructed Windows runtime hash/size mismatch')
+    if not receipt.exists():
+        with receipt.open('x') as stream:
+            json.dump(recipe, stream, indent=2); stream.write('\n')
+    return cache / 'wine.cpio.gz'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kit', type=Path, required=True)
     parser.add_argument('--cache', type=Path, required=True)
+    parser.add_argument('--windows', action='store_true', help='Reconstruct the full Windows runtime')
     args = parser.parse_args()
-    paths = prepare(args.kit, args.cache)
+    paths = {'windows': prepare_windows(args.kit, args.cache)} if args.windows else prepare(args.kit, args.cache)
     print(json.dumps({key: str(path) for key, path in paths.items()}, indent=2))
 
 
