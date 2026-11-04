@@ -12,6 +12,12 @@ Luna's fresh Office/Bank/Street comparison records exact pixels and a 12–21%
 reduction in complete view-check median latency; other gameplay branches retain
 their separate qualification boundaries.
 
+The [installed closing-popup hotfix check](VERIFICATION-DINOPARK-INSTALLED-SHUTDOWN-2026-11-03.md)
+records eight muted entry/title process lifecycles using the installed local
+host change, separate from the source checkout and screenshot benchmark. No
+closing popup was reproduced in those starts/shutdowns; the record preserves
+the first harness correction and a concurrent crash from an unowned process.
+
 The [return-to-park recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md) retains the original return input under a shared deadline and adds guest-read-only Park reconciliation, including retry after host scene publication or witness failure. A source-bound native-save case qualifies normal return, repeated read-only recovery and all 97 probes armed; fresh-load first-scene publication is included.
 
 The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts, including the earlier unknown return, remain preserved.

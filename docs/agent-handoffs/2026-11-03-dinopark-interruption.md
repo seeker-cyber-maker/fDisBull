@@ -20,6 +20,14 @@ The installed source is not an ancestor of the audited main. Keep the installati
 main checkout and historical qualified source distinct. Reading the installation
 record does not independently rerun its reported qualification gates.
 
+A later [installed shutdown-hotfix check](../VERIFICATION-DINOPARK-INSTALLED-SHUTDOWN-2026-11-03.md)
+resolves the active selector to `0.31.1-27b388d` plus the user's local headless
+`dosbox quit warning=false` host addition. Luna verified eight original DinoPark
+entry/title starts and shutdowns, with no reproduced closing popup or crash
+report matching those PIDs. A delayed crash from a pre-existing unowned process
+is recorded separately. This result does not promote the installed local patch
+to tracked !72 runtime source or qualify visible-window/running-park shutdowns.
+
 Between the historical PR head and this main, the selected Park scene/purchase
 implementation and Park-return tests are unchanged. The DinoPark Z bridge adds
 a witness to successful checkpoint saves as well as restores. The old native
