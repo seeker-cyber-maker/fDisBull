@@ -81,7 +81,7 @@ def test_context_candidates_never_turn_suffix_into_recognition(tmp_path):
 
 def test_catalog_contains_context_candidates_without_unsupported_decoder_claims():
     c=format_catalog();context=[r for r in c['formats'] if r.get('detection')=='consumer-context-only']
-    assert len(context)==96 and all(not r['signatures'] for r in context)
+    assert len(context)==97 and all(not r['signatures'] for r in context)
     assert all(r['limitations'] and r['context_hints']['filename_patterns'] for r in context)
     assert c['contains_file_payloads'] is False
 

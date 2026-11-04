@@ -18,6 +18,24 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='mve', layer='asset-framing',
+                 api='fdisbull.mve.inspect_mve / frame_mve',
+                 methods=['media-inspect', 'mve-frame'], dependencies=['ffmpeg on PATH for framing'],
+                 capabilities=['bounded-opcode-inspection', 'native-video-framing', 'independent-video-audio-comparison'],
+                 variants='Explicitly admitted Interplay MVE indexed-video profiles; old opcode 0x06 / 0x10 corpus',
+                 limits='64 MiB source/output; bounded frames/decoded work; retain frame positions, control/audio packets and selected indexed images/palettes; unsupported layouts refuse; native playback is a separate gate'),
+            dict(name='castles2-slb', layer='audio-container',
+                 api='fdisbull.castles2_audio.decode_slb / inspect_slb',
+                 methods=['media-inspect', 'media-decode'], dependencies=[],
+                 capabilities=['bounded-slot-directory', 'exact-payload-partition', 'explicit-slot-selection'],
+                 variants='Explicit Castles II context; footer and 12-byte hashed directory slots; no global signature',
+                 limits='64 MiB source; 65536 slots; preserves repeated-key variants; timing and native randomized selection require separate profiles/context'),
+            dict(name='castles2-slb-playback', layer='asset-playback-profile',
+                 api='fdisbull.castles2_audio.bind_slb_playback',
+                 methods=['media-inspect', 'media-decode'], dependencies=[],
+                 capabilities=['explicit-consumer-profile', 'exact-device-rate-rational', 'integer-WAV-adapter'],
+                 variants='Explicit original Castles II AIL/Sound Blaster unsigned-8 mono footer-selector 11/22 route',
+                 limits='No literal kHz inference; exact DSP timing is separate from rounded WAV timing; no implicit duplicate-key/RNG selection or current-input native-playback claim'),
             dict(name='dinopark-abt-playback', layer='asset-playback-profile',
                  api='fdisbull.dinopark_playback.bind_abt_playback',
                  methods=['media-inspect', 'media-decode'], dependencies=[],
@@ -175,6 +193,14 @@ def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=No
         return inspect_flic(path, index_path=index_path)
     if index_path is not None:
         raise ValueError('index_path is only supported by the FLIC inspector')
+    if adapter in ('mve', 'castles2-slb', 'castles2-slb-playback'):
+        if volume_root is not None or number is not None:
+            raise ValueError('MVE/SLB inspection does not accept AGI resource parameters')
+        if adapter == 'mve':
+            from .mve import inspect_mve
+            return inspect_mve(path)
+        from .castles2_media import inspect_castles2
+        return inspect_castles2(path, adapter=adapter)
     if adapter in ('dinopark-act', 'dinopark-pic', 'dinopark-abt', 'dinopark-act-sequence', 'dinopark-abt-playback'):
         if volume_root is not None or number is not None:
             raise ValueError('DinoPark decoding does not accept AGI parameters')
@@ -187,6 +213,17 @@ def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=No
         return inspect_smk(path)
     result, _ = _prepare(path, adapter, volume_root, number)
     return result
+
+
+def decode_media(path, output, *, adapter, slot=None, **options):
+    """Dispatch explicit asset adapters without guessing a format or timing."""
+    if adapter == 'castles2-slb':
+        from .castles2_media import decode_slb_media
+        return decode_slb_media(path, output, slot=slot, **options)
+    if slot is not None:
+        raise ValueError('slot is only supported by the Castles II SLB decoder')
+    from .dinopark_media import decode_media as decode_dinopark
+    return decode_dinopark(path, output, adapter=adapter, **options)
 
 
 def extract_media(path, output, *, adapter, member, volume_root=None, number=None,

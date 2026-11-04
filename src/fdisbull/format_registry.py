@@ -197,7 +197,9 @@ def _catalog_links(definitions,modules):
         if definition['category']=='executable':links.append('native-images')
         if definition['category']=='console-media':links.append('console-headers')
         links += {'dos-mz':['mz-envelope'],'riff-avi':['avi-capture'],
-            'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic'],
+            'iso9660':['iso-primary'],'smacker':['smacker'],'interplay-mve':['mve'],
+            'context-castles2-slb':['castles2-slb','castles2-slb-playback'],
+            'flic':['flic'],'bullfrog-flic12':['flic'],
             'dinopark-actor':['dinopark-act','dinopark-act-sequence'],'dinopark-picture':['dinopark-pic'],
             'context-dinopark-act':['dinopark-act','dinopark-act-sequence'],'context-dinopark-pic':['dinopark-pic'],
             'context-dinopark-abt':['dinopark-abt','dinopark-abt-playback']}.get(ident,[])
@@ -210,7 +212,9 @@ def _decoder_role(identifier):
     return {'format-headers':'recognition-only','native-images':'image-loader',
         'console-headers':'recognition-only','iso-primary':'container-reader',
         'pillow-images':'pixel-reader','agi-picture':'pixel-reader',
-        'smacker':'media-decoder-and-framer','avi-capture':'video-reader',
+        'smacker':'media-decoder-and-framer','mve':'media-decoder-and-framer',
+        'castles2-slb':'audio-container-reader','castles2-slb-playback':'audio-playback-profile',
+        'avi-capture':'video-reader',
         'mz-envelope':'container-reader','agi-v2':'container-reader',
         'gog-inno':'container-reader','flic':'container-reader',
         'dinopark-act':'pixel-reader','dinopark-pic':'pixel-reader','dinopark-abt':'audio-reader',

@@ -154,3 +154,11 @@ an old reader limitation. DinoPark BUS/PEOPLE are valid UNCS resources rejected
 by a prior UNC2-only reader. An absent literal filename reference does not prove
 a resource is unused. Preserve exact rejected bytes and refusal details; never
 rewrite original resources or programs to compensate for a decoder mismatch.
+
+## Interplay MVE and Castles II sound libraries
+
+The catalog recognizes the canonical MVE header and links the explicit `mve`
+reader/framer. SLB remains a context candidate with `castles2-slb` directory and
+`castles2-slb-playback` timing bindings. Read [the scoped route](mve-slb.md)
+before framing or exporting. Decoder availability does not qualify original
+playback; unsupported codec families and opaque selectors stay recovery work.

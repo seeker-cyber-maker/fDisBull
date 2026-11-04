@@ -203,6 +203,14 @@ frames between. Full independent decoding is required; original-game playback
 and seeking remain separate checks. Fetch
 `agent-skill --reference references/file-formats.md` for limits and examples.
 
+For old Interplay MVE framing and Castles II SLB audio, read
+[the media contract](CASTLES2_MEDIA.md). `mve-frame` preserves the original
+codec family, audio and logical timing, with independently checked retained
+images and a bounded ending-reference recovery. `media-inspect --adapter
+castles2-slb|castles2-slb-playback` separates directory structure from the explicit
+original driver profile; selected WAV exports require `--slot` and
+`--playback-profile`. Original-game acceptance is a separate gate.
+
 For DinoPark resources, `media-inspect --adapter dinopark-act|dinopark-pic|dinopark-abt`
 uses the shipped bounded decoders. `media-decode` exports selected private PNG/WAV
 results with explicit palette/timing adapters. See

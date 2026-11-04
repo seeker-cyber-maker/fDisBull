@@ -141,3 +141,30 @@ beside the result. A movie routine returning is not a natural campaign playthrou
 Preserve failed baseline routes and distinguish decoder output, rendering,
 audible output, arbitrary seeking and whole-game behavior. Canonical inputs
 stay separate from the compact variant and all licensed media stays private.
+
+## Frame old Interplay MVE and inspect Castles II SLB
+
+```text
+fdisbull media-inspect /private/movie.mve --adapter mve
+fdisbull mve-frame /private/movie.mve /private/new-framed --keep-frames 32
+fdisbull media-inspect /private/SND190.SLB --adapter castles2-slb
+fdisbull media-inspect /private/SND190.SLB --adapter castles2-slb-playback
+fdisbull media-decode /private/SND190.SLB /private/new-sample \
+  --adapter castles2-slb --slot 515 \
+  --playback-profile castles2-ail-sb-mono-v1
+```
+
+MVE header recognition is separate from the explicit old indexed 0x06/0x10
+writer. Framing preserves codec family, frame numbering, audio and controls;
+first/last N images are checked exactly. Original ending packets restore needed
+references within a bounded search. Read pure-hold, warm-up and retained ranges
+from the manifest. A 16-bit packet length is not proof of native input-buffer
+capacity; no rewritten chunk may exceed the original maximum. Native tests must
+count presentations and check the actual ending and return, not just success.
+
+SLB has no global magic. Its explicit reader preserves original directory slots
+and duplicate-key variants. The playback profile maps selectors 11/22 to DSP
+time constants 166/211, keeping rational device timing separate from integer WAV
+rate and buffer-drain completion. Exports require the original slot and explicit
+profile; unknown selectors are not guessed. All current-query native flags stay
+false. See `docs/CASTLES2_MEDIA.md` for the implemented scope and native gates.

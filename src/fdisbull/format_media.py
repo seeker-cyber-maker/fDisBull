@@ -9,6 +9,12 @@ import struct
 
 def definitions(make, field, magic):
     rows = [
+        ('interplay-mve', 'Interplay MVE', 'video', [magic(0,b'Interplay MVE File\x1a\x00')],
+         [field('header_constants',20,'3*u16le','0x001a, 0x0100, 0x1133'),
+          field('chunk_bytes',26,'u16le','First chunk payload length'),
+          field('chunk_type',28,'u16le','Initialization, audio/video, shutdown or end chunk')], 'little',
+         'Canonical header and first chunk extent only; opcode interpretation, complete decoding, framing and original-player compatibility require the explicit MVE module.',
+         'https://github.com/FFmpeg/FFmpeg/blob/7aab64c1f2187a3d4607b699eb18810bbd806387/libavformat/ipmovie.c'),
         ('iff', 'IFF FORM / LIST / CAT', 'container', [magic(0,b'FORM'),magic(0,b'LIST'),magic(0,b'CAT ')],
          [field('chunk_bytes',4,'u32be','First top-level chunk payload'),field('form_type',8,'fourcc','ILBM/PBM image, XDIR/XMID music, 8SVX audio, or other subtype')], 'big',
          'Top-level chunk extent/subtype only; nested chunks, image/audio/music payloads and subsequent top-level chunks need separate readers.', 'https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/iff.c'),
@@ -36,6 +42,17 @@ def definitions(make, field, magic):
 
 def probe(prefix, reader):
     from .format_registry import _result, MAX_TABLE_BYTES
+    if prefix.startswith(b'Interplay MVE File\x1a\x00'):
+        valid=len(prefix)>=30
+        meta={'header_bytes':26}
+        if valid:
+            constants=struct.unpack_from('<3H',prefix,20)
+            amount,kind=struct.unpack_from('<2H',prefix,26)
+            valid=constants==(0x1a,0x100,0x1133) and kind<=5 and 30+amount<=reader.size
+            meta.update(first_chunk_bytes=amount,first_chunk_type=kind,
+                first_chunk_end=30+amount)
+        return _result('interplay-mve','Interplay MVE','video',valid=valid,metadata=meta,
+            warnings=['Header/first extent only; full opcode, video/audio and native-player checks are separate'])
     if prefix[:4] in (b'FORM',b'LIST',b'CAT '):
         valid=len(prefix)>=12
         meta={}
