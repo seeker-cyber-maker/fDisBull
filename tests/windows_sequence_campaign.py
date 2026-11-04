@@ -79,7 +79,8 @@ def fault_family(snapshot: dict) -> tuple | None:
 
 def observe(case: Case, receipt: dict, fault: dict | None = None) -> dict:
     """A stage edge is feedback; a failure signature is separate evidence."""
-    if receipt.get('source_sha256') is None or receipt.get('status') not in ('passed', 'failed'):
+    source = receipt.get('source_sha256')
+    if source is None or receipt.get('status') not in ('passed', 'failed'):
         raise ValueError('Campaign case requires an identified, terminal native receipt')
     if (receipt.get('debug_probes') is not case.debug_probes or
             receipt.get('trace_farcall') is not case.trace_farcall or
@@ -91,8 +92,8 @@ def observe(case: Case, receipt: dict, fault: dict | None = None) -> dict:
     adapter = receipt.get('adapter_sha256')
     if not all(isinstance(value, str) and len(value) == 64 and
                all(character in '0123456789abcdef' for character in value)
-               for value in (runtime, adapter)):
-        raise ValueError('Campaign observation requires exact runtime and adapter identities')
+               for value in (source, runtime, adapter)):
+        raise ValueError('Campaign observation requires exact source, runtime and adapter identities')
     stages = tuple(row['stage'] for row in receipt['checks'])
     edges = tuple(zip(('start',) + stages, stages + ('end',)))
     completed = tuple(op for stage in stages for op in _COMPLETED_STAGE_OPERATIONS.get(stage, ()))
@@ -101,7 +102,7 @@ def observe(case: Case, receipt: dict, fault: dict | None = None) -> dict:
     family = fault_family(fault) if fault is not None else None
     if receipt['status'] == 'failed' and receipt.get('first_unknown_av') and family is None:
         raise ValueError('First-fault family lacks authoritative exception context')
-    return {'case': case.name, 'source_sha256': receipt['source_sha256'],
+    return {'case': case.name, 'source_sha256': source,
             'runtime_sha256': runtime, 'adapter_sha256': adapter,
             'status': receipt['status'], 'operations': list(case.operations),
             'completed_operations': list(completed),
@@ -111,30 +112,41 @@ def observe(case: Case, receipt: dict, fault: dict | None = None) -> dict:
 
 
 def select_corpus(observations: list[dict]) -> dict:
-    """Retain first new stage edge/fault family and shortest reproducer per family."""
+    """Retain new feedback and the shortest declared failed case per family.
+
+    A stopped fault proves only the completed operation prefix. The remaining
+    declared operations are an intended test route, not a reproducer.
+    """
     seen_edges: set[tuple] = set()
     seen_faults: set[tuple] = set()
     novel = []
     for observation in observations:
-        edges = {tuple(edge) for edge in observation['stage_edges']}
-        family = (observation['runtime_sha256'], tuple(_freeze(observation['fault_family']))) if observation['fault_family'] else None
+        identity = tuple(observation[name] for name in
+                         ('source_sha256', 'runtime_sha256', 'adapter_sha256'))
+        edges = {(identity, tuple(edge)) for edge in observation['stage_edges']}
+        family = (identity, tuple(_freeze(observation['fault_family']))) if observation['fault_family'] else None
         new_edges = edges - seen_edges
         new_fault = family is not None and family not in seen_faults
         if new_edges or new_fault:
             novel.append({'case': observation['case'], 'new_stage_edges': len(new_edges),
-                          'new_fault_family': new_fault})
+                          'new_fault_family': new_fault,
+                          'source_sha256': identity[0], 'runtime_sha256': identity[1],
+                          'adapter_sha256': identity[2]})
         seen_edges.update(edges)
         if family is not None: seen_faults.add(family)
     shortest = {}
     for observation in observations:
-        if not observation['fault_family']: continue
-        key = json.dumps((observation['runtime_sha256'], observation['fault_family']), separators=(',', ':'))
+        if observation['status'] != 'failed' or not observation['fault_family']: continue
+        key = json.dumps((observation['source_sha256'], observation['runtime_sha256'],
+                          observation['adapter_sha256'], observation['fault_family']), separators=(',', ':'))
         if key not in shortest or len(observation['operations']) < len(shortest[key]['operations']):
             shortest[key] = observation
-    return {'schema': 'fdisbull-windows-sequence-campaign-1', 'novel_cases': novel,
-            'shortest_reproducers': [
-                {'runtime_sha256': v['runtime_sha256'], 'fault_family': v['fault_family'],
-                 'case': v['case'], 'operations': v['operations']}
+    return {'schema': 'fdisbull-windows-sequence-campaign-2', 'novel_cases': novel,
+            'shortest_declared_failure_cases': [
+                {'source_sha256': v['source_sha256'], 'runtime_sha256': v['runtime_sha256'],
+                 'adapter_sha256': v['adapter_sha256'], 'fault_family': v['fault_family'],
+                 'case': v['case'], 'declared_operations': v['operations'],
+                 'completed_operations': v['completed_operations']}
                 for v in shortest.values()]}
 
 
@@ -152,7 +164,7 @@ def retain_campaign(output: Path, observations: list[dict]) -> dict:
     data = (json.dumps(result, indent=2) + '\n').encode()
     output.write_bytes(data)
     return {'path': str(output), 'sha256': hashlib.sha256(data).hexdigest(),
-            'cases': len(observations), 'fault_families': len(result['shortest_reproducers'])}
+            'cases': len(observations), 'fault_families': len(result['shortest_declared_failure_cases'])}
 
 
 def run_bounded(cases: tuple[Case, ...], run_fresh_case, *, max_cases: int = 3) -> tuple[list[dict], dict]:

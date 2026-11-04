@@ -228,9 +228,12 @@ does not qualify the full Win16 debugger route.
 `tests/test_windows_sequence_campaign.py` can run at most three fresh Win16
 operation cases when the same native inputs and a fresh external
 `FDISBULL_NE_CAMPAIGN_OUTPUT` directory are provided. It reuses the GUI harness,
-retains stage and fault-family feedback, records declared versus completed
-operations, and stops after uncertain guest cleanup. It is a bounded diagnostic
-campaign, not a coverage-guided whole-program fuzzer.
+retains stage and fault-family feedback scoped to exact source, runtime and
+adapter identities, records declared versus completed operations, and stops
+after uncertain guest cleanup. Its shortest declared failure case is a
+candidate for another fresh run; operations after a stopped fault are not
+claimed as a reproducer. It is a bounded diagnostic campaign, not a
+coverage-guided whole-program fuzzer.
 
 PE32 advanced layers, CPU/RAM deltas and whole-VM state code use the actual
 32-bit context; each positive native feature still needs its own qualification.

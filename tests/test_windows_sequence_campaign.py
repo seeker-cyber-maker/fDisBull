@@ -35,22 +35,41 @@ def test_fault_family_uses_access_kind_and_source_location_instead_of_code_and_p
     assert fault_family(a)!=fault_family(d)  # source location vs unmapped null PC
 
 
-def test_shortest_reproducer_keeps_operation_history_and_new_stage_feedback():
-    full=observe(WIN16_CASES[2],receipt(WIN16_CASES[2],['entry','step','fault']),fault())
-    minimal=observe(WIN16_CASES[0],receipt(WIN16_CASES[0],['entry','fault']),fault(raw='0xb4a97d'))
+def test_shortest_declared_failure_case_keeps_completed_prefix_and_new_stage_feedback():
+    full=observe(WIN16_CASES[2],receipt(WIN16_CASES[2],['actual-original-ne-entry','step','fault']),fault())
+    minimal=observe(WIN16_CASES[0],receipt(WIN16_CASES[0],['actual-original-ne-entry','fault']),fault(raw='0xb4a97d'))
     different=observe(WIN16_CASES[0],receipt(WIN16_CASES[0],['entry','fault']),fault(access='0x8',target='0x0'))
     result=select_corpus([full,minimal,different])
     assert [row['case'] for row in result['novel_cases']]==['full-debugger','bootstrap-only','bootstrap-only']
-    assert len(result['shortest_reproducers'])==2
-    assert result['shortest_reproducers'][0]['case']=='bootstrap-only'
-    assert result['shortest_reproducers'][0]['operations']==list(WIN16_CASES[0].operations)
-    assert result['shortest_reproducers'][1]['fault_family']!=result['shortest_reproducers'][0]['fault_family']
+    assert len(result['shortest_declared_failure_cases'])==2
+    selected=result['shortest_declared_failure_cases'][0]
+    assert selected['case']=='bootstrap-only'
+    assert selected['declared_operations']==list(WIN16_CASES[0].operations)
+    assert selected['completed_operations']==['bootstrap']
+    assert len(selected['completed_operations'])<len(selected['declared_operations'])
+    assert result['shortest_declared_failure_cases'][1]['fault_family']!=selected['fault_family']
+
+
+def test_candidate_identity_scopes_stage_and_fault_novelty():
+    case=WIN16_CASES[0]
+    initial=receipt(case,['actual-original-ne-entry','fault'])
+    changed=receipt(case,['actual-original-ne-entry','fault'])
+    changed['adapter_sha256']='d'*64
+    observations=[observe(case,initial,fault()),observe(case,changed,fault())]
+    result=select_corpus(observations)
+    assert [row['new_fault_family'] for row in result['novel_cases']]==[True,True]
+    assert all(row['new_stage_edges']==3 for row in result['novel_cases'])
+    assert len(result['shortest_declared_failure_cases'])==2
+    assert {row['adapter_sha256'] for row in result['shortest_declared_failure_cases']}=={'b'*64,'d'*64}
 
 
 def test_invalid_or_unidentified_native_receipt_never_becomes_feedback():
     case=WIN16_CASES[0]
     with pytest.raises(ValueError,match='identified'):
         observe(case,{'status':'failed','checks':[]},fault())
+    invalid=receipt(case,['entry']);invalid['source_sha256']='unknown'
+    with pytest.raises(ValueError,match='source, runtime and adapter identities'):
+        observe(case,invalid,fault())
     wrong=receipt(case,['entry']);wrong['debug_probes']=True
     with pytest.raises(ValueError,match='flags differ'):
         observe(case,wrong,fault())
@@ -74,7 +93,8 @@ def test_campaign_summary_uses_fresh_private_file_and_does_not_embed_fault_dump(
     identity=retain_campaign(path,[observation])
     text=path.read_text();result=json.loads(text)
     assert identity['cases']==1 and identity['fault_families']==1
-    assert result['shortest_reproducers'][0]['case']==case.name
+    assert result['shortest_declared_failure_cases'][0]['case']==case.name
+    assert result['shortest_declared_failure_cases'][0]['completed_operations']==[]
     assert 'native_contexts' not in text and 'stack_descriptor' not in text
     with pytest.raises(ValueError,match='fresh file'):
         retain_campaign(path,[observation])
@@ -90,7 +110,7 @@ def test_bounded_runner_never_replays_or_continues_after_uncertain_guest_cleanup
     observations,feedback=run_bounded(WIN16_CASES,fresh,max_cases=3)
     assert called==['bootstrap-only','entry-step']
     assert len(observations)==2 and observations[-1]['original_reaped'] is False
-    assert feedback['schema']=='fdisbull-windows-sequence-campaign-1'
+    assert feedback['schema']=='fdisbull-windows-sequence-campaign-2'
     with pytest.raises(ValueError,match='one to three'):
         run_bounded(WIN16_CASES,fresh,max_cases=4)
 
@@ -131,5 +151,5 @@ def test_real_win16_bounded_operation_campaign():
     observations,feedback=run_bounded(WIN16_CASES,fresh,max_cases=count)
     retained=retain_campaign(output/'summary.json',observations)
     assert retained['cases']==len(observations)
-    assert feedback['schema']=='fdisbull-windows-sequence-campaign-1'
+    assert feedback['schema']=='fdisbull-windows-sequence-campaign-2'
     assert all(item['original_reaped'] for item in observations),'Campaign stopped after uncertain guest cleanup'
