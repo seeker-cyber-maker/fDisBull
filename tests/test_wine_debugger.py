@@ -194,6 +194,10 @@ def test_real_pe64_window_project_breakpoint_edit_trace_click_and_restart(tmp_pa
             assert arrived['outcome']=='breakpoint',arrived
             assert debug.registers()['project_address']==hex(checkpoint)
             assert debug.memory(counter,length=4)['hex']=='2a000000' # 41 edited + one actual click
+            # Explicit presentation execution after verifying the exact CPU stop; no new input.
+            presented=debug.run(timeout_ms=100)
+            assert presented['outcome']=='timeout' and presented['session']['state']=='stopped',presented
+            assert debug.memory(counter,length=4)['hex']=='2a000000'
             after=debug.screenshot('after.png')
             assert after['sha256']!=frame['metadata']['coordinate_grid']['source_sha256']
             # A second click proves the breakpoint was rearmed after the first hit.
