@@ -3,6 +3,10 @@
 Use this reference for authored native scene observations and actions. For recovering
 UIL scene intent from game data and handlers, read [scene-recovery.md](scene-recovery.md).
 
+For every target, retain full reference frames, poll sparse fingerprints, and
+learn unknown states through the [shared refinement rule](#retain-references-and-refine-fingerprints).
+Target-specific coordinates and labels are data, not a separate recognition policy.
+
 ## Contents
 
 - [Observe and reuse scenes](#observe-and-reuse-scenes)
@@ -12,6 +16,8 @@ UIL scene intent from game data and handlers, read [scene-recovery.md](scene-rec
 - [Retain action and failure evidence](#retain-action-and-failure-evidence)
 - [Investigate spatial predicate boundaries](#investigate-spatial-predicate-boundaries)
 - [Keep world, viewport and collision domains separate](#keep-world-viewport-and-collision-domains-separate)
+- [Retain references and refine fingerprints](#retain-references-and-refine-fingerprints)
+- [Generalize discoveries into shared rules](#generalize-discoveries-into-shared-rules)
 - [Adaptation provenance](#adaptation-provenance)
 
 ## Observe and reuse scenes
@@ -309,6 +315,129 @@ Preserve exact coordinates, stacked identities and elevation layers. Distinguish
 declared diagnostic anchors, static candidates, observed placements and
 qualified interactions. A scene/camera glyph or world census does not supply
 collision geometry or a safe teleport destination by itself.
+
+## Retain references and refine fingerprints
+
+This is a shared scene-authoring and reuse rule for every target, not a new
+runtime API or an assertion that automatic learning is implemented. Use the
+existing reference artifacts, predicates, scene revisions and observation store;
+do not invent fields in the strict `fdisbull-scene-1` format to represent this
+workflow. Keep any extra calibration evidence in linked project artifacts.
+
+### Full evidence, sparse routine checks
+
+Retain the original full, lossless reference frame for each admitted visual
+state, and additional frames when legitimate variations matter. The scene owns
+resolvable artifact references; image bytes can remain in the private external
+store rather than being embedded in a manifest or model prompt. A hash alone is
+not a replacement for recoverable pixels. Keep raw reference pixels unchanged;
+annotated, cropped, normalized or masked images are separately identified
+derivatives. Retain source, native geometry/mode, frame/run identity and relevant
+palette/coordinate assumptions. References are historical examples, not live
+readiness. Deduplicate identical stored frames and reuse existing identities.
+
+Derive a small core fingerprint plus independent reserve points from those
+frames and confusing alternatives. Select stable text strokes AND background
+points when their distinction matters; a common popup border only identifies a
+family. Variable words, dates, cursor pixels and animation may be excluded from
+family recognition but remain separate content checks when the action needs them.
+A retained example is sufficient for initial candidates, not a claim that every
+animation or occlusion has been qualified.
+
+Routine recognition uses the existing native sparse probe route when available,
+with samples bound to a coherent current framebuffer. It requires no full-image
+export, OCR or model interpretation. Read reserve discriminators only as needed,
+or batch the small union if that avoids another RPC. Do not combine samples from
+different frame identities. An unavailable sparse route is an explicit capability
+gap; a declared full-frame fallback must not be reported as sparse sampling.
+Exactly one qualified actionable candidate permits the next guarded action.
+Zero matches means unknown; competing matches mean ambiguous. A known occlusion
+may use a separately calibrated redundant signature; unexplained mismatches must
+not be voted away by lowering a threshold. No finite fingerprint proves unique
+recognition against every possible unseen image.
+
+### Unknown or colliding observations
+
+Preserve the unexpected observation before dismissing or replaying anything.
+Acquire a full frame, or a bounded sequence when transition timing is relevant,
+through an actually available capture interface. Reuse existing before/after or
+timeline evidence rather than recapturing it. Record what each captured frame
+represents; neither two screenshots nor a feature name proves atomic state or
+complete intermediate coverage. Do not make a model call on every routine poll.
+
+Compare the new frame with retained references. First decide whether it is a
+new stable state, a legitimate variant of an existing state, an overlay, or an
+unfinished transition. Do not make one new state per changed counter or movie
+frame. A local vision model or analyst may propose a label and new correlation
+points; that proposal is evidence for investigation, not automatic acceptance.
+An unfamiliar stable state can be retained immediately as an unqualified
+candidate even while its meaning remains unknown.
+
+Before admitting a new or revised recognizer, compare it with ALL prior states
+that could compete in its declared recognition context, including confusing
+popup text, background-only views and relevant transitions. Context partitions
+must be established independently, not inferred from the same disputed match.
+Perform the comparisons in BOTH directions:
+
+- the new predicate accepts its own examples and rejects other states' examples;
+- existing predicates reject the new state's examples;
+- every modified predicate still accepts its older legitimate examples and
+  rejects the preserved negative examples, under its exact tolerance and threshold.
+
+A new state can expose an old overly broad fingerprint. Refine the affected
+existing predicates too, not just the newcomer. Add the smallest useful stable
+points from the full references, preserve reserve discriminators, and keep the
+colliding example as a regression case. Test newly selected points on an
+additional observation when available; report a single-reference fit as such.
+An online path need not evaluate the whole library every frame: the full
+compatible-library comparison belongs to admission/refinement, with unchanged
+comparison results reusable under unchanged dependencies.
+
+If two relevant states are visually identical, more pixels cannot separate
+them. Use a separately qualified memory/context/transition predicate or retain
+ambiguity. A missing old reference blocks a collision-free promotion claim;
+it does not prove that the state was absent or justify silently forgetting it.
+
+Publish accepted changes as a new scene revision with parent/source links.
+Preserve old reference frames and failure evidence; do not silently mutate a
+revision already pinned by a script. Publish any mutually dependent fingerprint
+changes as one coherent selected set, or suspend affected actions until the set
+is consistent. Recognition alone does not add a dismissal handler, prove a
+control ready/enabled, or establish Save/Load completion. Qualify those separately.
+References and unfamiliar-frame evidence remain private under the target policy.
+
+### Acceptance examples for shared implementations
+
+Future shared runtime changes should exercise at least two unrelated authored
+scene families rather than one game-only fixture. Required discriminators are:
+new text inside an old popup border; an old predicate accepting the new state;
+new points breaking an old valid variation; a moving cursor or permitted
+occlusion; a half-drawn transition; stale/mismatched geometry; unavailable
+reference pixels; and visually identical states that need nonvisual context.
+Also check that known-state polling does not export images or call a model,
+and that reopen/transfer retains references and revisions without declaring
+historical observations currently ready. These are acceptance requirements,
+not test results or new implemented runtime methods.
+
+## Generalize discoveries into shared rules
+
+When a user supplies an architectural correction, separate the shared rule from
+the target evidence that motivated it. Put lifecycle, recognition, refinement
+and refusal policy in the shared scene framework/skill; keep coordinates, text
+signatures, edition bindings and action recipes in target adapters. Reuse the
+existing schema, storage and probe APIs before creating a parallel helper.
+A local fix is a regression example, not completion of a cross-target request.
+Explicitly identify what is already implemented, what is documented in an
+unmerged branch, what is available in the selected runtime, and what remains
+an integration gap. A PR note alone does not activate a shared rule.
+
+For a reusable contribution, make the rule discoverable from the shared skill,
+name the implementation owner and affected consumers, retain a target-independent
+regression contract, and link source changes to the relevant coordination MRs.
+Do not claim propagation until the selected shared runtime/skill contains the
+change and its consumers actually use it. Keep hypotheses, reference images and
+recognition recipes portable through existing project artifacts; commercial
+screenshots and payload-bearing stores do not belong in public source packages.
 
 ## Adaptation provenance
 
