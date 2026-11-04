@@ -3,6 +3,40 @@ set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
   test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
 fi
+prepare_retained_runtime() {
+  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  test "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update
+  apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev libglib2.0-0 libpixman-1-0 libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6 libzstd1 gcc-mingw-w64-i686-win32 binutils-mingw-w64-i686
+  bash scripts/ci/install-node.sh
+  python -m pip install ".[test]" build
+  shopt -s nullglob
+  core_wheels=(dist/fdisbull-*.whl)
+  [[ ${#core_wheels[@]} -eq 1 ]]
+  mkdir -p .native/pe/packages native-evidence/pe native-evidence/unified
+  cp "${core_wheels[0]}" .native/pe/packages/
+  python scripts/check_dist.py .native/pe/packages/*.whl
+  python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
+  python - <<'PY_RETAINED'
+import json, os, subprocess, sys
+args=[sys.executable, 'scripts/ci/retained-runtime-base.py', 'prepare',
+      '--manifest', os.environ['FDISBULL_RETAINED_BASE_MANIFEST'],
+      '--root', os.environ['FDISBULL_RETAINED_BASE_ROOT'],
+      '--os-base', os.environ['FDISBULL_RETAINED_OS_BASE'],
+      '--sha256', os.environ['FDISBULL_RETAINED_BASE_SHA256']]
+for capability in json.loads(os.environ['FDISBULL_RETAINED_REQUIRED']):
+    args += ['--require', capability]
+subprocess.run(args, check=True)
+PY_RETAINED
+  ldd "$FDISBULL_PE_QEMU" | tee native-evidence/pe/qemu-libraries.txt
+  ! grep -q 'not found' native-evidence/pe/qemu-libraries.txt
+  ldd "$FDISBULL_DOSBOX" | tee native-evidence/pe/dos-libraries.txt
+  ! grep -q 'not found' native-evidence/pe/dos-libraries.txt
+  i686-w64-mingw32-gcc -O0 -g -mwindows -o native-evidence/pe/selftest32.exe src/fdisbull/wine_guest/selftest32.c -luser32 -lgdi32
+}
+
+prepare_fresh_runtime() {
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6
@@ -85,6 +119,14 @@ python -m fdisbull.dos_runtime \
   > native-evidence/pe/dos-runtime-preparation.json
 rm .native/pe/rootfs.tar .native/pe/base.cpio.gz
 
+}
+
+if [ -n "${FDISBULL_RETAINED_BASE_MANIFEST:-}" ]; then
+  prepare_retained_runtime
+else
+  prepare_fresh_runtime
+fi
+
 python - <<'PY'
 import hashlib, json, os
 from pathlib import Path
@@ -101,6 +143,10 @@ receipt={'source_commit':os.environ['CI_COMMIT_SHA'],
              'FDISBULL_PE_QEMU','FDISBULL_PE_KERNEL','FDISBULL_PE_INITRAMFS','FDISBULL_PE_FIXTURE',
              'FDISBULL_DOSBOX','FDISBULL_DOS_INITRAMFS')},
          'wheel':identity(next(Path('.native/pe/packages').glob('*.whl')))}
+if Path('native-evidence/pe/retained-base-preparation.json').exists():
+    receipt['retained_base']=identity('native-evidence/pe/retained-base-preparation.json')
+    receipt['authored_pe32_fixture']={'source':identity('src/fdisbull/wine_guest/selftest32.c'),
+                                    'binary':identity('native-evidence/pe/selftest32.exe')}
 Path('native-evidence/pe/backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
 PY
 

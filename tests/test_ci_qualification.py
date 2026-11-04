@@ -24,7 +24,9 @@ def qualified(tmp_path):
             p = tmp_path / name
             p.parent.mkdir(parents=True, exist_ok=True)
             skipped = '1' if profile == 'ordinary' else '0'
-            p.write_text(f'<testsuites><testsuite tests="2" failures="0" errors="0" skipped="{skipped}"/></testsuites>')
+            count = 26 if name.endswith('required-contracts.xml') else 2
+            if name.endswith('required-contracts.xml'): skipped = '0'
+            p.write_text(f'<testsuites><testsuite tests="{count}" failures="0" errors="0" skipped="{skipped}"/></testsuites>')
         artifact = tmp_path / f'backend-{profile}'
         artifact.write_bytes(b'authored fixture')
         receipt = {'status': 'passed', 'source_commit': SHA, 'pipeline_id': '123', 'job_id': str(index),

@@ -69,7 +69,7 @@ def test_prepared_runtime_host_and_guest_checks(prepared):
     assert value['build_job_id'] == JOB
 
 
-@pytest.mark.parametrize('change', ['source', 'run', 'job', 'input', 'firmware', 'resource', 'receipt', 'extra', 'wheel', 'ordinary-wheel', 'extra-wheel'])
+@pytest.mark.parametrize('change', ['source', 'run', 'job', 'input', 'firmware', 'resource', 'resource32', 'receipt', 'extra', 'wheel', 'ordinary-wheel', 'extra-wheel'])
 def test_prepared_runtime_rejects_mismatch(prepared, change):
     module, root = prepared
     sha, run, job = SHA, RUN, JOB
@@ -79,6 +79,7 @@ def test_prepared_runtime_rejects_mismatch(prepared, change):
     if change == 'input': (root / module.INPUT_PATHS['FDISBULL_PE_QEMU']).write_bytes(b'changed')
     if change == 'firmware': (root / module.FIRMWARE / 'bios-256k.bin').write_bytes(b'changed')
     if change == 'resource': (root / module.RESOURCES['wine']['init']).write_bytes(b'changed')
+    if change == 'resource32': (root / module.RESOURCES['wine']['opt/fdisbull/selftest32.c']).write_bytes(b'changed')
     if change == 'receipt': (root / 'native-evidence/pe/runtime-preparation.json').write_text('{}')
     if change == 'extra': (root / module.FIRMWARE / 'extra').write_bytes(b'extra')
     if change == 'wheel': next((root / '.native/pe/packages').glob('*.whl')).write_bytes(b'substituted')
@@ -121,3 +122,58 @@ def test_prepare_and_acceptance_library_evidence_paths_are_distinct():
     for name in ('acceptance-dos-libraries.txt', 'acceptance-qemu-libraries.txt'):
         assert name not in prepare
         assert acceptance.count('native-evidence/pe/' + name) == 2
+
+
+@pytest.mark.parametrize('change', [None, 'source', 'run', 'job', 'windows-resource', 'fixture'])
+def test_retained_os_proof_is_bound_to_fresh_source_job_and_windows_overlay(prepared, monkeypatch, change):
+    module, root = prepared
+    checker = module.retained_base_checker()
+    inputs = json.loads((root/module.MANIFEST).read_text())['inputs']
+    monkeypatch.setattr(checker, 'KERNEL_SHA', inputs['FDISBULL_PE_KERNEL']['sha256'])
+    monkeypatch.setattr(module, 'retained_base_checker', lambda: checker)
+    recipe = checker.QEMU_SOURCE_SHA+'\n'+checker.KERNEL_SHA
+    shared = {'sha256':'c'*64,'size':123}
+    origin_inputs = {k:inputs[k] for k in checker.PATHS}
+    origin_inputs['FDISBULL_PE_INITRAMFS']=shared
+    origin_sha='e'*40
+    origin = {'schema':checker.SCHEMA,'origin_source_commit':origin_sha,
+        'origin_process':{'source_commit':origin_sha,'execution_origin':'local-linux','local_run_id':RUN,
+            'local_job_id':'00000000-0000-4000-8000-000000000009','job_name':'native-unified',
+            'termination':'exited','exit_code':2,'container_state_after_stop':'stopped',
+            'image_digest':'sha256:'+'f'*64,'runtime':{'system':'linux','machine':'x86_64'}},
+        'origin_source_postcheck':{'source_commit':origin_sha,'expected_source_commit':origin_sha,
+            'tracked_worktree_dirty':False,'export_success':True},
+        'origin_backend_identity':{'source_commit':origin_sha,'inputs':origin_inputs},
+        'inputs':{k:inputs[k] for k in checker.PATHS},'qemu_source':{'sha256':checker.QEMU_SOURCE_SHA},
+        'original_wine_receipt':{'runtime_sha256':shared['sha256']},'shared_os_base':shared,
+        'origin_build_recipe':{'text':recipe,'sha256':hashlib.sha256(recipe.encode()).hexdigest()},
+        'os_base':{'sha256':'d'*64},'os_inventory':{'capabilities':['wine64','dos','pe32']}}
+    pe=root/'native-evidence/pe'
+    for name in ('runtime-preparation.json','dos-runtime-preparation.json'):
+        path=pe/name;doc=json.loads(path.read_text());doc['base_sha256']=shared['sha256'];path.write_text(json.dumps(doc))
+    image=pe/'windows-runtime.cpio.gz';image.write_bytes(b'authored windows runtime')
+    wine=json.loads((pe/'runtime-preparation.json').read_text())
+    windows={'base_sha256':origin['os_base']['sha256'],'runtime_sha256':module.item(image,root)['sha256'],
+             'resources':dict(wine['resources'])}
+    if change=='windows-resource':windows['resources']['opt/fdisbull/selftest32.c']='0'*64
+    (pe/'windows-runtime-preparation.json').write_text(json.dumps(windows))
+    manifest=pe/'retained-base-manifest.json';manifest.write_text(json.dumps(origin))
+    receipt={'schema':'fdisbull-retained-base-preparation-1','source_commit':SHA,'local_run_id':RUN,
+        'build_job_id':JOB,'manifest_sha256':module.item(manifest,root)['sha256'],
+        'origin_source_commit':origin_sha,'origin_job_exit_code':2,'os_capabilities':['wine64','dos','pe32'],
+        'required_os_capabilities':['pe32'],'previous_project_resources_removed':list(checker.EXTRA_OMIT)}
+    if change=='source':receipt['source_commit']=origin_sha
+    if change=='run':receipt['local_run_id']='00000000-0000-4000-8000-000000000003'
+    if change=='job':receipt['build_job_id']='00000000-0000-4000-8000-000000000004'
+    receipt_path=pe/'retained-base-preparation.json';receipt_path.write_text(json.dumps(receipt))
+    identity=json.loads((pe/'backend-identity.json').read_text())
+    identity['retained_base']=module.item(receipt_path,root)
+    binary=pe/'selftest32.exe';binary.write_bytes(b'authored pe32')
+    identity['authored_pe32_fixture']={'source':module.item(root/'src/fdisbull/wine_guest/selftest32.c',root),
+                                     'binary':module.item(binary,root)}
+    if change=='fixture':binary.write_bytes(b'changed authored pe32')
+    if change is None:
+        result=module.retained_provenance(root,SHA,RUN,JOB,inputs,identity,root)
+        assert result['windows_runtime']==module.item(image,root)
+    else:
+        with pytest.raises(ValueError):module.retained_provenance(root,SHA,RUN,JOB,inputs,identity,root)
