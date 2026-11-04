@@ -23,8 +23,10 @@ independent capabilities; they do not establish original-program compatibility.
 On a stopped live 16-bit LDT selector, the guest reads both native and WOW64
 contexts, verifies their observed code selector and the live descriptor, and
 reports a low 32-bit projection of the native registers. Ordinary 32-bit stops
-continue to use the WOW64 view. Internal Win16 instruction-pointer and trap-flag
-changes update the native and WOW64 control views together before resuming.
+continue to use the WOW64 view. Internal instruction-pointer and trap-flag
+changes in observed LDT code selectors update the native and WOW64 control
+views together before resuming, including a 32-bit LDT callback reached by a
+Win16 far-call trace.
 This is a Wine 11 specific control path; a matching stopped readback alone does
 not prove that every native field survives continuation.
 

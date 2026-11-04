@@ -40,7 +40,7 @@ typedef size_t SIZE_T;
 typedef unsigned char BYTE;
 typedef struct { DWORD ContextFlags; uint64_t hidden; } CONTEXT;
 typedef struct { DWORD ContextFlags; uint64_t value; } WOW64_CONTEXT;
-typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt; } TargetContext;
+typedef struct { CONTEXT native; WOW64_CONTEXT wow; int native_ldt,ldt_control; } TargetContext;
 #define CONTEXT_CONTROL 0x100001u
 #define CONTEXT_ALL 0x10001fu
 #define WOW64_CONTEXT_CONTROL 0x10001u
