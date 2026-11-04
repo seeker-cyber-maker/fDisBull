@@ -15,6 +15,7 @@ from .output_limits import (
 
 AGENT_SKILL_GUIDES = {
     "SKILL.md": "Start here: useful guesses, batched probes, progressive Z harness and next unlocked work",
+    "references/task-framing.md": "Define the expected result and smallest sufficient harness; trace controls, strings and failed boundaries",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
     "references/methodology.md": "Addendum for causal controls, contradictions, independent workers and interpreter analysis",
     "references/runtime-navigation.md": "Build the cumulative Z harness: controls, routes, scene starts, semantic actions and batched observations",

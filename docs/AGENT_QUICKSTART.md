@@ -11,6 +11,15 @@ Keep useful guesses labeled and move on once the next step has enough evidence.
 Existing tool results and artifact IDs supply routine provenance; do not repeat
 hashing, logging or successful probes merely to restate them.
 
+Choose the deliverable before the backend: a finding, a reusable harness over
+the original program, a semantic UIL representation, or a replacement on a named
+platform. State the success condition and the smallest next action; use the
+user's existing answers and clarify only consequential missing choices. A request
+to automate Notepad can finish with open/edit/save actions. Available porting
+capabilities do not make a port part of that request. For depth selection,
+control tracing and string-hit classification, retrieve
+`agent-skill --reference references/task-framing.md`.
+
 For repeated game work, grow a Z harness as you investigate, starting with menu
 choices and global controls such as map centering and zoom. Expose each learned
 action immediately and compose routes from those handlers. Add automated

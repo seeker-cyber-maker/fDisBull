@@ -22,6 +22,9 @@ adds a tool API or expands the user's authorization.
 ## Plan depth and reuse evidence
 
 Translate the requested outcome into material claims before choosing probes.
+First fix the deliverable and depth using [task framing](task-framing.md): a
+finding, a working harness, semantic recovery and a replacement have different
+completion conditions. A richer backend is an option, not an implied objective.
 For an interaction, consider entry conditions, refusal and repeat paths,
 committed and partial effects, presentation, time and persistence; mark which
 ones affect this task. For a format, consider structural validity, mapping,

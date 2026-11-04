@@ -8,14 +8,14 @@
       "path": "src/fdisbull/skills/fdisbull-investigate",
       "role": "maintained project skill",
       "files": {
-        "SKILL.md": "3558efacf535958b5538980d1249ba1df96cab0ff5b13c4329c9516188857c4b",
+        "SKILL.md": "cb14320c2f3ad692f852e4e21353fdceedb41dc27df11bd23ae6505a00dc734a",
         "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
         "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
         "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
         "references/common-uil.md": "be142b607e4880ea7e89b40f1db68a522075788f5b758d771893a566a3d682dd",
         "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
         "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
-        "references/methodology.md": "d4a1c865dc82b5f0caa75f8b01d6e6a0cb6231119b564576460c519dbde715ed",
+        "references/methodology.md": "7dbd9037d0fef36e93cda17f46143a05a16b28f4b3f30bc5b71b4088ba7df7e5",
         "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
         "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
         "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
@@ -25,6 +25,7 @@
         "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
         "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
         "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/task-framing.md": "9fea2d3af95830b75179cdc0e7777ec0e8fcc03d7d126561b7fe2ac11b504bb9",
         "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
         "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
       }
@@ -243,6 +244,136 @@
         "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
         "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
         "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    }
+  ],
+  "reviewed_local_inputs": [
+    {
+      "name": "brainstorming",
+      "local_origin": "~/.omp/agent/skills/brainstorming",
+      "path": "omp/brainstorming",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "bba47904a7f6bbee3bf8a107ebbe84e65d392be683bbb898ded736b29e415f90",
+        "scripts/frame-template.html": "fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
+        "scripts/helper.js": "e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
+        "scripts/server.cjs": "ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
+        "scripts/start-server.sh": "3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
+        "scripts/stop-server.sh": "f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
+        "spec-document-reviewer-prompt.md": "12cb5ed58aef41b8da6fbb505547c71ca3f5658c83b66ca6e556c936308b3189",
+        "visual-companion.md": "a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae"
+      }
+    },
+    {
+      "name": "debug-decision-tree-ai",
+      "local_origin": "~/.omp/agent/skills/debug-decision-tree-ai",
+      "path": "omp/debug-decision-tree-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "9084b1d6994965e233aba57faa528a0af41c0ca175594d8b7a92be78b3f91f32"
+      }
+    },
+    {
+      "name": "debug-ready-ai",
+      "local_origin": "~/.omp/agent/skills/debug-ready-ai",
+      "path": "omp/debug-ready-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "9d0939b4099ec3e70f784cffe9afc59cd6f2c27c1395c6086f2db2e0b0321946",
+        "references/macos-lldb-omp-issues.md": "3116a144b96bb06eb8d538ca0910c5f07edd62580c4c1a773dfc3e7c25d809e8",
+        "references/offline-binary-analysis-tools.md": "8f282496612129507d1d625fd382bd0f954851ce7deccc0572f79ee5ab51c7e9",
+        "references/untrusted-analysis-artifacts.md": "e6727f61f477d98a035e61b2642dc82bef0b426cf6742ed152786dbb6738495e"
+      }
+    },
+    {
+      "name": "explain-button-ai",
+      "local_origin": "~/.omp/agent/skills/explain-button-ai",
+      "path": "omp/explain-button-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "cd4e8fc94a5022ed5bbeef1cd603cdbed30ddf648b6eca5bf3e2c8d4380445fb"
+      }
+    },
+    {
+      "name": "find-string-ai",
+      "local_origin": "~/.omp/agent/skills/find-string-ai",
+      "path": "omp/find-string-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "1478ee44943dec1ea232fcf8a038a5a9dba396995f24977cec21140394743a5c",
+        "scripts/find_string_ai.py": "40c22f9d45ab2170f10633e4b4a5621da16ee2a5412887d41a2d6ee1e7551d54"
+      }
+    },
+    {
+      "name": "skill-creator",
+      "local_origin": "~/.omp/agent/skills/skill-creator",
+      "path": "omp/skill-creator",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "LICENSE.txt": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "SKILL.md": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+        "agents/analyzer.md": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a",
+        "agents/comparator.md": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e",
+        "agents/grader.md": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a",
+        "assets/eval_review.html": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452",
+        "eval-viewer/generate_review.py": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb",
+        "eval-viewer/viewer.html": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa",
+        "references/schemas.md": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f",
+        "scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "scripts/aggregate_benchmark.py": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa",
+        "scripts/generate_report.py": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453",
+        "scripts/improve_description.py": "87d864570220b699fac52da309d2d6efdb060647bfebc74f768128e646accf80",
+        "scripts/package_skill.py": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f",
+        "scripts/quick_validate.py": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365",
+        "scripts/run_eval.py": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f",
+        "scripts/run_loop.py": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21",
+        "scripts/utils.py": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1"
+      }
+    },
+    {
+      "name": "systematic-debugging",
+      "local_origin": "~/.omp/agent/skills/systematic-debugging",
+      "path": "omp/systematic-debugging",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "CREATION-LOG.md": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+        "SKILL.md": "4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+        "condition-based-waiting-example.ts": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        "condition-based-waiting.md": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        "defense-in-depth.md": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        "find-polluter.sh": "6462747eae9b175ac145b78bcfaeab755654a75e32637f08eb633f065a9e1d7c",
+        "root-cause-tracing.md": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+        "test-academic.md": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+        "test-pressure-1.md": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+        "test-pressure-2.md": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+        "test-pressure-3.md": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708"
+      }
+    },
+    {
+      "name": "tell-story-ai",
+      "local_origin": "~/.omp/agent/skills/tell-story-ai",
+      "path": "omp/tell-story-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "c1b05fdadaea1d15e1b9b03e7e21e7281ffa54101d9dad4061e690324d189c4d"
+      }
+    },
+    {
+      "name": "write-a-skill",
+      "local_origin": "~/.omp/agent/skills/write-a-skill",
+      "path": "omp/write-a-skill",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "be8f20e66309258034b82a7db5040b03798aa40546f9d387662c2bd86be23123"
       }
     }
   ]

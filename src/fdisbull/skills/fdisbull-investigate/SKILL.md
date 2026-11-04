@@ -14,6 +14,15 @@ that need them, not a checklist to complete on every target.
 
 ## Start at the question
 
+State the expected result before choosing tools: the deliverable, target and
+platform, observable success, scope limit, and smallest next action. Reuse the
+user's answers; ask only when a missing choice would materially change the work.
+A Notepad automation request can end with working open/edit/save verbs over the
+original app. It does not require a replacement editor or a console port.
+Use [task framing](references/task-framing.md) when the deliverable, investigation
+depth, exact control or string provenance needs clarification. Revisit scope when
+a new backend, target platform or subsystem is proposed, not after every probe.
+
 Use a known command directly. Consult `<command> --help` for unfamiliar arguments;
 use `capabilities` or `methods` for an unknown capability or changed setup.
 Keep one explicit executable/environment. Read only the needed reference with
@@ -36,7 +45,7 @@ semantics remain candidates; do not silently turn guesses into runtime facts.
 
 ## Chain discoveries into a Z harness
 
-For repeated game investigation, build a small Zork-like text interface as the
+For repeated program or game investigation, build a small text/Z interface as the
 default working surface. A one-off data question needs only the relevant reader.
 Use the cheapest already available capability; do not repeat earlier rungs.
 Menus, difficulty selectors, maps and globe controls are part of this interface
