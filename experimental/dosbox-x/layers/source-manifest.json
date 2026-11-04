@@ -1,7 +1,7 @@
 {
   "feature": "Bounded automatic frame stepping and physical frame input; complete native keyboard state and frame ownership restoration",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "78c6dde366d10194135360ef7a1b54e5c56b24f723244b1cb511870948fcb754",
+  "patch_sha256": "07f6d8edbe79412ff11de09a199488023d33e463cac07b76287ff51fed5d1c3b",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -90,8 +90,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "sha256": "3489f24551ec09384c3b1c20cdc45bd475bdb7c91112f7fe3b014d83aea91e44",
-      "size": 24619
+      "sha256": "630cb9d0d10c52243cae176fa52dec62d5d8144a6b3f5d614cd06a6e40c2245c",
+      "size": 24994
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -177,6 +177,11 @@
       "path": "src/misc/savestates.cpp",
       "sha256": "7828e82d90fe8998633d8f1f5a42846c3f606883510fcb17755d8452db082338",
       "size": 32489
+    },
+    {
+      "path": "src/shell/shell.cpp",
+      "sha256": "4eb5112835aacd9ba850cc696701df9775794568f616ffd35024e6eb3074f72f",
+      "size": 120134
     },
     {
       "path": "tests/agent_headless/MOUSEVID.asm",

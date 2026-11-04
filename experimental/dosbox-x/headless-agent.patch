@@ -1207,10 +1207,9 @@ index d087ecc..e285d95 100644
  {
      if (error == NULL)
 diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
-index 465f7e7..4b00a6e 100644
 --- a/src/agent/debugger/debugger_adapter.cpp
 +++ b/src/agent/debugger/debugger_adapter.cpp
-@@ -241,8 +241,7 @@ bool DebuggerAdapter::Continue(std::string* error) const
+@@ -241,8 +241,7 @@
  
  #if C_DEBUG
      DEBUG_AgentClearLastBreakpoint();
@@ -1220,19 +1219,19 @@ index 465f7e7..4b00a6e 100644
          return true;
  
      if (error != NULL)
-@@ -253,6 +252,11 @@ bool DebuggerAdapter::Continue(std::string* error) const
+@@ -251,6 +250,11 @@
+ #else
+     return false;
  #endif
- }
- 
++}
++
 +std::uint16_t DebuggerAdapter::CurrentDosPsp() const
 +{
 +    return AGENT_EmulationQueue().IsBoundToCurrentThread() ? dos.psp() : 0;
-+}
-+
+ }
+ 
  bool DebuggerAdapter::Pause(std::string* error) const
- {
-     if (!RequireAvailable(error) || !RequireEmulationThread(error))
-@@ -491,6 +495,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
+@@ -491,6 +495,17 @@
                  *error = "Debugger rejected the execution breakpoint";
              return false;
          }
@@ -1250,6 +1249,25 @@ index 465f7e7..4b00a6e 100644
      } else {
  #if C_HEAVY_DEBUG
          if (once) {
+@@ -709,7 +724,17 @@
+         return false;
+ 
+ #if C_DEBUG
+-    DOS_Terminate(dos.psp(), false, 0);
++    try {
++        DOS_Terminate(dos.psp(), false, 0);
++    } catch (int code) {
++        if (code != 7)
++            throw;
++        if (error != NULL)
++            *error = "DOS target cleanup interrupted by corrupt MCB chain (DOS error 7)";
++        // No IRET, resume or successful guest-stop certificate after a
++        // partially completed DOS memory walk. The host may only shut down.
++        return false;
++    }
+ 
+     // Keep the externally initiated exit equivalent to DOS INT 21h/AH=4Ch.
+     // DOS_Terminate owns PSP/vector restoration; the interrupt handler owns
 diff --git a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
 index a315ca1..4f17576 100644
 --- a/src/agent/protocol/agent_protocol.cpp
@@ -7121,3 +7139,57 @@ index 0000000..31561fd
 +    except (OSError, ValueError, RuntimeError) as error:
 +        print(f"headless-agent: {error}", file=sys.stderr)
 +        raise SystemExit(1)
+diff --git a/src/shell/shell.cpp b/src/shell/shell.cpp
+--- a/src/shell/shell.cpp
++++ b/src/shell/shell.cpp
+@@ -329,6 +329,26 @@
+ 	Uninstall();
+ }
+ 
++// A debugger-owned guest can leave a corrupt MCB chain. DOS memory errors
++// are int(7) in debug builds; allowing one out of this destructor terminates
++// the host while unwinding. Discard that guest instead of claiming recovery.
++static bool SHELL_FreeMemoryForExit(uint16_t segment)
++{
++#if defined(C_DOSBOX_AGENT)
++    try {
++        DOS_FreeProcessMemory(segment);
++    } catch (int code) {
++        if (code != 7 || !control || control->opt_agent_config.empty())
++            throw;
++        LOG_MSG("AGENT: shell cleanup interrupted by corrupt MCB chain (DOS error 7); discarding guest");
++        return false;
++    }
++#else
++    DOS_FreeProcessMemory(segment);
++#endif
++    return true;
++}
++
+ DOS_Shell::~DOS_Shell() {
+ 	if (bf != NULL) delete bf; /* free batch file */
+ 
+@@ -336,14 +356,16 @@
+ 	 * memory allocated by the shell is not automatically freed on termination.
+ 	 * files are not automatically closed */
+ 	if (free_your_own_psp && psp && psp->GetSegment()) {
+-		DOS_FreeProcessMemory(psp->GetSegment());
++        const bool memory_released = SHELL_FreeMemoryForExit(psp->GetSegment());
+         free_your_own_psp = false;
+-		/* NTS: DOS_PSP would ideally allow JFT handle operations regardless of whatever the
+-		 *      current PSP segment is, but that's not how the code is written */
+-		const uint16_t o_psp = dos.psp();
+-		dos.psp(psp->GetSegment());
+-		psp->CloseFiles();
+-		dos.psp(o_psp);
++        // A failed memory walk leaves process metadata unsafe to traverse.
++        // Host DOS shutdown still owns final file/device disposal.
++        if (memory_released) {
++            const uint16_t o_psp = dos.psp();
++            dos.psp(psp->GetSegment());
++            psp->CloseFiles();
++            dos.psp(o_psp);
++        }
+ 	}
+ 
+ 	if (psp->GetSegment() == shell_psp)

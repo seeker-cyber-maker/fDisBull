@@ -1,5 +1,7 @@
 # DOS shutdown receipts
 
+The native DOS backend also contains the observed corrupt-MCB cleanup exception while preserving an interrupted guest certificate. See [the first-write trace and original-game regression](VERIFICATION-TFTD-MCB-WRITER-2026-11-04.md). A clean host exit does not certify that the corrupted guest was repaired.
+
 For inherited-pipe DOS sessions, successful shutdown now requires both a
 completed native guest stop and a reaped host process with return code zero.
 Process reaping alone is not successful guest shutdown.

@@ -1,5 +1,7 @@
 # Native cleanup exception and truthful shutdown receipts — November 4, 2026
 
+Follow-up: [the first corrupting write and native cleanup fix](VERIFICATION-TFTD-MCB-WRITER-2026-11-04.md) identify the original GEOSCAPE fill, contain the owned shell cleanup exception, and compare an actual SIGABRT baseline with a candidate that exits zero while retaining an interrupted guest receipt. The historical evidence below remains unchanged.
+
 This contribution continues the [PID 63534 investigation](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md).
 It captures a matching original TFTD cleanup exception before unwind, repairs
 the DOS shutdown certificate and tests that certificate against original TFTD

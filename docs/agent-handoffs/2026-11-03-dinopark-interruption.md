@@ -1,5 +1,7 @@
 # DinoPark interruption recovery and handoff — 2026-11-03
 
+November 4 continuation: [TFTD MCB writer and native cleanup regression](../VERIFICATION-TFTD-MCB-WRITER-2026-11-04.md) records the original audio-buffer fill, a source-bound native fix in both patches, Luna's baseline/candidate cases and the pending !60 fuzzer assessment. No packaging or installation.
+
 This handoff continues the original-backed DinoPark Z investigation. The initial
 documentation contribution records a fresh project audit and a bounded analysis
 of the remaining purchase presentation issue. A subsequent user-requested native

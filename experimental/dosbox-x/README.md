@@ -1,5 +1,7 @@
 # DOSBox-X headless debugger
 
+The candidate now contains the observed agent-owned corrupt-MCB cleanup exception at target termination and shell destruction. The guest stop remains failed/interrupted while the host can exit cleanly. See [the first-write trace and Luna regression](../../docs/VERIFICATION-TFTD-MCB-WRITER-2026-11-04.md) for exact baseline/candidate identities and the distinction from repairing original game memory.
+
 The current 0.19 development patch also fixes agent continuation from BIOS
 callbacks. Continue resumes through the normal emulator loop, rather than
 executing and discarding one decoder result inside the debugger's `RUN`
