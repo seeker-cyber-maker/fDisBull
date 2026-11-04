@@ -85,9 +85,17 @@ headerless ABT sounds and IFF XMIDI. Shipped `dinopark-act`, `dinopark-pic` and
 `dinopark-abt` adapters now decode bounded sprites/opacity, padded image rows/raw
 palettes and sample bytes. `media-inspect` returns hashes/scalars; `media-decode`
 exports a selected image or explicitly timed WAV into a new private directory.
-ACT sequences remain opaque, palettes are external, and ABT rate/channels are not
-guessed. Use explicit palette and WAV adapters; preserve original-game evidence
-separately from a pure decoder result. Civilization PIC is a different family. Other
+The companion `dinopark-act-sequence` inspector reports sequence boundaries and
+unsupported opcodes; `dinopark-animate` runs a bounded subset on explicit logical
+ticks, without assuming Hz or rendering a scene. `dinopark-abt-playback` binds
+the explicit original DigPak/SBPRO mono timing profile. WAV export can select
+`--playback-profile dinopark-digpak-sbpro-mono-v1`, preserving requested integer
+PCM timing separately from exact rational device timing. Palettes remain external.
+Native mixer recording requires the separate optional audio-capture backend and
+session-owned bounded controls; a closed capture does not prove a sample ended.
+Preserve normal-gameplay observations separately from pure decoding or simulation.
+See `docs/DINOPARK_ANIMATION_PLAYBACK.md` for the consumer profile and limits.
+Civilization PIC is a different family. Other
 observed resource cohorts (Coktel ITK/LTK/IMD, MADSPACK, Eternam, AGI/SCI, Bullfrog,
 X-COM, platform fonts/resource forks and embedded assets) have separate catalog
 context profiles and explicit recovery gaps. Private recovered code is evidence;

@@ -5,6 +5,10 @@ profiles. They do not execute an ACT sequence, play a sound, launch a game or
 rewrite an input. Header recognition, complete byte decoding, authored PNG/WAV
 export and original-game agreement are separate qualifications.
 
+For recovered sequence interpretation, an explicit original sound timing profile
+and normal-gameplay observations, see [animation and playback](DINOPARK_ANIMATION_PLAYBACK.md).
+The sprite/sample APIs described here retain their narrower byte-decoding contract.
+
 ## Discover and inspect
 
 ```text

@@ -1,0 +1,112 @@
+{
+  "format": "fdisbull-audio-capture-overlay-1",
+  "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "patch_sha256": "67fe2702a4be09d49a3ce980aeaa4259538278c2489787fd83703f22adf923e2",
+  "source_files": [
+    "include/agent/audio_capture.h",
+    "src/hardware/mixer.cpp",
+    "src/agent/server/agent_server.cpp"
+  ],
+  "variants": {
+    "stable": {
+      "base_patch_sha256": "c08a6084a8a99f5dd86005e33c75a1410405b0127aad3a1d8264586cd1544d0c",
+      "base_manifest_sha256": "0493bc459f62899e692243c2f640ffc838aec03249a31cf4b0bf5bdf82e29e46",
+      "before": {
+        "src/hardware/mixer.cpp": "a89c6ad3db41b5d69ef2ae744c5095a42d14a7e541c949c069660999f4e1de81",
+        "src/agent/server/agent_server.cpp": "a76d28c2c7ef3faef6db36d49eac7d076c366e27696be29729738c697f2c3e97"
+      },
+      "result_source_files": [
+        {
+          "path": "include/agent/audio_capture.h",
+          "sha256": "c44e63d81c387298e9861e69954463e028c0f1cc1fcc998f090013877c093f0a",
+          "size": 6250
+        },
+        {
+          "path": "src/hardware/mixer.cpp",
+          "sha256": "376b71add9068ca0707ba661de4c0a752470f5813214c1b020761c1208510347",
+          "size": 45972
+        },
+        {
+          "path": "src/agent/server/agent_server.cpp",
+          "sha256": "4ba2ea16e4bbae4116969ac2078bd3ecb8cdd6d68d9e69b7833e2a4eb14ea7f7",
+          "size": 215520
+        }
+      ],
+      "patch_replay": "passed"
+    },
+    "layers": {
+      "base_patch_sha256": "bce55cffd0211ba58fca4629efa336a00face6e803eb916f1796d3c7884a6820",
+      "base_manifest_sha256": "459016044636b7a0d12f9f7009a2d39f798d335d789aa70c6284370794d8c7bd",
+      "before": {
+        "src/hardware/mixer.cpp": "a89c6ad3db41b5d69ef2ae744c5095a42d14a7e541c949c069660999f4e1de81",
+        "src/agent/server/agent_server.cpp": "2b7344fc2699b01f0090567fcbe47efcaedaf9e3e3a9228ad88fe814889931b5"
+      },
+      "result_source_files": [
+        {
+          "path": "include/agent/audio_capture.h",
+          "sha256": "c44e63d81c387298e9861e69954463e028c0f1cc1fcc998f090013877c093f0a",
+          "size": 6250
+        },
+        {
+          "path": "src/hardware/mixer.cpp",
+          "sha256": "376b71add9068ca0707ba661de4c0a752470f5813214c1b020761c1208510347",
+          "size": 45972
+        },
+        {
+          "path": "src/agent/server/agent_server.cpp",
+          "sha256": "518d623ceeb6bd6739ecff6ca4a2a720b3907fa3a91656c9c9c4f40855946385",
+          "size": 221803
+        }
+      ],
+      "patch_replay": "passed"
+    }
+  },
+  "api": {
+    "methods": [
+      "audio.capture.start",
+      "audio.capture.status",
+      "audio.capture.stop"
+    ],
+    "encoding": "s16le",
+    "channels": 2,
+    "bits": 16,
+    "max_capture_bytes": 4194304,
+    "source": "mixer_recording_conversion",
+    "clock": "PIC_Ticks_milliseconds_and_mixer_frame_counter"
+  },
+  "qualification": {
+    "compiled_native_variant": "stable",
+    "architecture": "macOS ARM64",
+    "layers": "source replay only; not compiled/native-qualified",
+    "installed": false
+  },
+  "candidate": {
+    "status": "passed",
+    "backend_sha256": "8b307403cac1bf48725639b112bd2a5fd05b5c44ee9b93b446874310795ed9da",
+    "commands": [
+      [
+        "./autogen.sh"
+      ],
+      [
+        "./configure",
+        "--enable-sdl2",
+        "--enable-debug=heavy",
+        "--enable-dosbox_agent",
+        "--disable-avcodec",
+        "--disable-libslirp",
+        "--disable-libfluidsynth"
+      ],
+      [
+        "make",
+        "-j4"
+      ]
+    ],
+    "source_changes": {
+      "include/agent/audio_capture.h": "c44e63d81c387298e9861e69954463e028c0f1cc1fcc998f090013877c093f0a",
+      "src/hardware/mixer.cpp": "376b71add9068ca0707ba661de4c0a752470f5813214c1b020761c1208510347",
+      "src/agent/server/agent_server.cpp": "4ba2ea16e4bbae4116969ac2078bd3ecb8cdd6d68d9e69b7833e2a4eb14ea7f7"
+    },
+    "elapsed_seconds": 26.775,
+    "installed": false
+  }
+}

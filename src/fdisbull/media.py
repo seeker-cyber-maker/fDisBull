@@ -18,6 +18,18 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='dinopark-abt-playback', layer='asset-playback-profile',
+                 api='fdisbull.dinopark_playback.bind_abt_playback',
+                 methods=['media-inspect', 'media-decode'], dependencies=[],
+                 capabilities=['explicit-consumer-profile', 'requested-PCM-timing', 'exact-device-rate-rational'],
+                 variants='Explicit original DinoPark DigPak / shipped SBPRO default unsigned-8 mono route',
+                 limits='Decoded ABT required; exact pinned consumer/driver profile; requested WAV rate separate from quantized DSP timing; no dynamic stereo, other drivers or current-input native-playback claim'),
+            dict(name='dinopark-act-sequence', layer='guest-animation',
+                 api='fdisbull.dinopark_animation.inspect_animation / describe_animation / AnimationRuntime',
+                 methods=['media-inspect', 'dinopark-animate'], dependencies=[],
+                 capabilities=['sequence-token-decode', 'bounded-actor-interpreter', 'explicit-logical-ticks'],
+                 variants='DinoPark ACT sequence reader and explicitly supported actor-runtime subset',
+                 limits='Bounded instructions, actors and per-tick work; explicit time/signals/visibility; no assumed scheduling Hz, automatic game callbacks or whole-game animation recovery'),
             dict(name='dinopark-act', layer='asset-decoding',
                  api='fdisbull.dinopark_images.decode_act / describe_act',
                  methods=['media-inspect', 'media-decode'], dependencies=['Pillow for PNG export'],
@@ -163,7 +175,7 @@ def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=No
         return inspect_flic(path, index_path=index_path)
     if index_path is not None:
         raise ValueError('index_path is only supported by the FLIC inspector')
-    if adapter in ('dinopark-act', 'dinopark-pic', 'dinopark-abt'):
+    if adapter in ('dinopark-act', 'dinopark-pic', 'dinopark-abt', 'dinopark-act-sequence', 'dinopark-abt-playback'):
         if volume_root is not None or number is not None:
             raise ValueError('DinoPark decoding does not accept AGI parameters')
         from .dinopark_media import inspect_dinopark

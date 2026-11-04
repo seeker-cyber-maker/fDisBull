@@ -198,9 +198,9 @@ def _catalog_links(definitions,modules):
         if definition['category']=='console-media':links.append('console-headers')
         links += {'dos-mz':['mz-envelope'],'riff-avi':['avi-capture'],
             'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic'],
-            'dinopark-actor':['dinopark-act'],'dinopark-picture':['dinopark-pic'],
-            'context-dinopark-act':['dinopark-act'],'context-dinopark-pic':['dinopark-pic'],
-            'context-dinopark-abt':['dinopark-abt']}.get(ident,[])
+            'dinopark-actor':['dinopark-act','dinopark-act-sequence'],'dinopark-picture':['dinopark-pic'],
+            'context-dinopark-act':['dinopark-act','dinopark-act-sequence'],'context-dinopark-pic':['dinopark-pic'],
+            'context-dinopark-abt':['dinopark-abt','dinopark-abt-playback']}.get(ident,[])
         if definition['category']=='image':links.append('pillow-images')
         for module in links:
             if module in available:yield ident,definition['revision'],module,1
@@ -213,7 +213,9 @@ def _decoder_role(identifier):
         'smacker':'media-decoder-and-framer','avi-capture':'video-reader',
         'mz-envelope':'container-reader','agi-v2':'container-reader',
         'gog-inno':'container-reader','flic':'container-reader',
-        'dinopark-act':'pixel-reader','dinopark-pic':'pixel-reader','dinopark-abt':'audio-reader'}.get(identifier,'recognition-only')
+        'dinopark-act':'pixel-reader','dinopark-pic':'pixel-reader','dinopark-abt':'audio-reader',
+        'dinopark-act-sequence':'animation-reader',
+        'dinopark-abt-playback':'audio-playback-profile'}.get(identifier,'recognition-only')
 
 
 def resource_profile_hints(path, catalog):

@@ -37,7 +37,48 @@ def _decoded(path, adapter):
 
 def inspect_dinopark(path, *, adapter):
     """Completely decode the admitted byte profile, returning metadata/hashes only."""
+    if adapter == 'dinopark-act-sequence':
+        from .dinopark_animation import describe_animation
+        return describe_animation(_snapshot(path, 8 * 1024 * 1024))
+    if adapter == 'dinopark-abt-playback':
+        from .dinopark_playback import bind_abt_playback, PLAYBACK_PROFILE
+        return bind_abt_playback(_decoded(path, 'dinopark-abt')[1], profile=PLAYBACK_PROFILE).report()
     return _decoded(path, adapter)[2]
+
+
+def simulate_animation(path, *, ticks, program_indices=None, instruction_budget=256,
+                       display_mode=0, initial_time=0, initial_positions=None):
+    """Run an admitted ACT subset on caller-supplied logical ticks.
+
+    The initial actor bank is zeroed with explicit clock/display/position
+    adapters. Draw requests are semantic results, not rendered frames or gameplay.
+    The result contains no sprite buffers, sequence bytes or packed RAM records.
+    """
+    from .dinopark_animation import AnimationRuntime, RuntimeBudgetExceeded, RuntimeStateError, PROFILE
+    from .dinopark_images import decode_act, MAX_SOURCE
+    if not isinstance(ticks, (tuple, list)) or not 1 <= len(ticks) <= 128:
+        raise ValueError('ticks must contain 1..128 explicit unsigned logical ticks')
+    if any(type(t) is not int or not 0 <= t <= 0xFFFFFFFF for t in ticks):
+        raise ValueError('ticks must contain 1..128 explicit unsigned logical ticks')
+    raw = _snapshot(path, MAX_SOURCE)
+    runtime = AnimationRuntime(decode_act(raw), program_indices=program_indices,
+                               instruction_budget=instruction_budget, display_mode=display_mode,
+                               initial_time=initial_time, initial_positions=initial_positions)
+    context = dict(display_mode=display_mode, initial_time=initial_time,
+                   initial_positions=[[a.x, a.y] for a in runtime.actors],
+                   program_indices=[a.program_index for a in runtime.actors])
+    try:
+        results = [runtime.tick(t).to_dict() for t in ticks]
+    except (RuntimeBudgetExceeded, RuntimeStateError) as error:
+        raise ValueError(str(error)) from error
+    if _snapshot(path, MAX_SOURCE) != raw:
+        raise ValueError('Source changed during animation simulation')
+    return dict(format='fdisbull-dinopark-animation-simulation-1',
+        source=dict(bytes=len(raw), sha256=_sha(raw)), profile=PROFILE,
+        context=context,
+        ticks=results, input_executed=False, source_modified=False,
+        native_runtime_tested=False, rendered_graphics=False,
+        qualification='explicit-input bounded actor simulation; no inferred clock or scene playback')
 
 
 def _selected(items, index):
@@ -54,12 +95,13 @@ def _png(image):
 
 def decode_media(path, output, *, adapter, index=None, palette_path=None,
                  palette_index=0, palette_policy='shift2', sample_rate=None,
-                 channels=None, max_output_bytes=MAX_OUTPUT_BYTES):
+                 channels=None, playback_profile=None, max_output_bytes=MAX_OUTPUT_BYTES):
     """Export a selected decoded image or an explicitly timed unsigned-8 WAV.
 
     ACT without an external palette exports exact index/mask diagnostic PNGs.
     PIC exports indexed PNG with an explicit six-to-eight-bit palette policy.
-    WAV rate/channels are caller adapters, never inferred from an opaque header.
+    WAV rate/channels are explicit caller adapters or an explicitly selected
+    recovered consumer profile; current-input native playback is never implied.
     No output is created before decoding, adapter validation and byte admission.
     """
     if adapter not in ADAPTERS:
@@ -73,9 +115,15 @@ def decode_media(path, output, *, adapter, index=None, palette_path=None,
     if adapter == 'dinopark-abt':
         if index is not None or palette_path is not None or palette_index != 0 or palette_policy != 'shift2':
             raise ValueError('ABT does not accept image selection or palette adapters')
-        if type(sample_rate) is not int or not 1 <= sample_rate <= 192000 or type(channels) is not int or channels not in (1, 2):
+        if playback_profile is not None:
+            from .dinopark_playback import PLAYBACK_PROFILE
+            if playback_profile != PLAYBACK_PROFILE or type(playback_profile) is not str:
+                raise ValueError('Unknown or unsupported DinoPark playback profile')
+            if sample_rate is not None or channels is not None:
+                raise ValueError('playback_profile cannot be combined with caller sample_rate or channels')
+        elif type(sample_rate) is not int or not 1 <= sample_rate <= 192000 or type(channels) is not int or channels not in (1, 2):
             raise ValueError('WAV export requires explicit sample_rate (1..192000) and channels (1 or 2); ABT header timing is not assumed')
-    elif sample_rate is not None or channels is not None:
+    elif sample_rate is not None or channels is not None or playback_profile is not None:
         raise ValueError('Image decoding does not accept WAV timing/channel adapters')
     if adapter == 'dinopark-act' and palette_path is None and palette_index != 0:
         raise ValueError('palette_index requires an external ACT palette source')
@@ -92,6 +140,11 @@ def decode_media(path, output, *, adapter, index=None, palette_path=None,
     selection = {}
     palette_raw = None
     if adapter == 'dinopark-abt':
+        playback = None
+        if playback_profile is not None:
+            from .dinopark_playback import bind_abt_playback
+            playback = bind_abt_playback(decoded, profile=playback_profile)
+            sample_rate, channels = playback.requested_rate_hz, playback.channels
         pcm = decoded.pcm_u8
         if len(pcm) % channels:
             raise ValueError('Decoded sample bytes do not form complete caller-selected WAV frames')
@@ -105,6 +158,10 @@ def decode_media(path, output, *, adapter, index=None, palette_path=None,
         selection.update(sample_representation='unsigned-8-bit sequence', sample_rate=sample_rate,
                          channels=channels, timing_source='explicit-caller-adapter',
                          original_playback_timing_qualified=False)
+        if playback is not None:
+            selection.update(timing_source='explicit-recovered-consumer-profile',
+                             consumer_playback=playback.report(),
+                             wav_rate_scope='requested integer PCM rate; exact quantized device rate is separate metadata')
     else:
         from PIL import Image
         from .dinopark_images import decode_pic, palette_rgb, MAX_SOURCE

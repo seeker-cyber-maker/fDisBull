@@ -86,7 +86,8 @@ METHODS = {
     "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number,index_path]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
-    "media-decode": "Decode selected DinoPark ACT/PIC/ABT into new private PNG/WAV outputs; path,output,adapter,[index,palette_path,palette_index,palette_policy,sample_rate,channels,max_output_bytes]",
+    "media-decode": "Decode selected DinoPark ACT/PIC/ABT into new private PNG/WAV outputs; path,output,adapter,[index,palette_path,palette_index,palette_policy,sample_rate,channels,playback_profile,max_output_bytes]",
+    "dinopark-animate": "Simulate a supported ACT sequence subset on explicit logical ticks; path,ticks,[program_indices,instruction_budget,display_mode,initial_time,initial_positions]; no rendering or native execution",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
     "output-info": "Inspect an immutable private output artifact; artifact",
@@ -517,6 +518,10 @@ def invoke(method, params, debugger=None):
         from .dinopark_media import decode_media
 
         return decode_media(**p)
+    if method == "dinopark-animate":
+        from .dinopark_media import simulate_animation
+
+        return simulate_animation(**p)
     if method in ("gog-list", "gog-unpack"):
         from .gog_unpack import list_gog, unpack_gog
 
@@ -1216,6 +1221,7 @@ def respond(request, default_project=None, debugger=None):
                 "media-inspect",
                 "media-extract",
                 "media-decode",
+                "dinopark-animate",
                 "agent-skill",
                 "identify",
                 "inspect",
@@ -2009,7 +2015,7 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker", "flic", "dinopark-act", "dinopark-pic", "dinopark-abt") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "smacker", "flic", "dinopark-act", "dinopark-pic", "dinopark-abt", "dinopark-act-sequence", "dinopark-abt-playback") if name == "media-inspect" else ("mz-envelope", "agi-v2"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-inspect":
@@ -2034,7 +2040,18 @@ def parser():
     c.add_argument("--palette-policy", choices=("shift2", "replicate6"), default="shift2")
     c.add_argument("--sample-rate", type=int)
     c.add_argument("--channels", type=int, choices=(1, 2))
+    c.add_argument("--playback-profile", help="Explicit recovered DinoPark consumer/driver profile; excludes --sample-rate/--channels")
     c.add_argument("--max-decoded-output-bytes", dest="decode_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c = sub.add_parser("dinopark-animate", help=METHODS["dinopark-animate"])
+    c.add_argument("path")
+    c.add_argument("--tick", dest="ticks", action="append", type=int, required=True,
+                   help="Explicit logical tick; repeat for 1..128 bounded updates, no assumed Hz")
+    c.add_argument("--program", dest="program_indices", action="append", type=int)
+    c.add_argument("--instruction-budget", type=int, default=256)
+    c.add_argument("--display-mode", type=int, choices=(0, 1, 2, 3, 4), default=0)
+    c.add_argument("--initial-time", type=int, default=0)
+    c.add_argument("--initial-position", dest="initial_positions", nargs=2, action="append", type=int,
+                   metavar=("X", "Y"), help="One initial x/y pair per selected actor, in program order")
     for name in ("gog-list", "gog-unpack"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path", help="local GOG Inno Setup offline installer")

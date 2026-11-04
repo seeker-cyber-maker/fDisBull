@@ -207,7 +207,10 @@ For DinoPark resources, `media-inspect --adapter dinopark-act|dinopark-pic|dinop
 uses the shipped bounded decoders. `media-decode` exports selected private PNG/WAV
 results with explicit palette/timing adapters. See
 [DinoPark media modules](DINOPARK_MEDIA_DECODERS.md) for native comparison scope
-and the distinction between pixels, opaque sequences and playback.
+and the byte-decoder contract. [Animation and playback](DINOPARK_ANIMATION_PLAYBACK.md)
+adds sequence inspection, explicit-tick simulation, the original DigPak/SBPRO
+timing profile and separately built bounded mixer capture. Keep requested PCM
+timing, device timing and actual gameplay graphics/sound observations distinct.
 
 ### Intake a collection or a single addition
 

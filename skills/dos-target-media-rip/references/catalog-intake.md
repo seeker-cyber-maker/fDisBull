@@ -135,8 +135,22 @@ complete bounded decoding and metadata/hash reports. Use `media-decode` for a
 selected private PNG/WAV export. ACT index and opacity planes are separate;
 colored previews require an explicit external PIC palette. Preserve padded PIC
 rows and raw six-bit palette bytes; choose host expansion explicitly. ABT WAV
-exports require caller-supplied `--sample-rate` and `--channels` and do not imply
-original playback timing. ABT context remains explicit even with a shipped
-decoder. ACT sequences, animation control, clipping, consumer palette binding
-and audible output remain separate from byte-decoder admission. Never rewrite
-original resources or programs to compensate for a decoder mismatch.
+exports require caller-supplied `--sample-rate` and `--channels` or the explicit
+`--playback-profile dinopark-digpak-sbpro-mono-v1`. The profile preserves requested
+PCM timing separately from exact rational Sound Blaster device timing; it does
+not claim current-input native playback. `media-inspect --adapter
+dinopark-abt-playback` reports that binding; headerless ABT context stays explicit.
+
+Use `media-inspect --adapter dinopark-act-sequence` for sequence boundaries,
+authored operation names and unsupported runtime operations. `dinopark-animate`
+runs a bounded subset with explicit caller ticks; it does not infer wall-clock
+Hz, select palettes or render a scene. Native graphics and mixer audio require
+fresh normal-consumer observations with declared input/state policies. The
+optional bounded audio-capture backend controls observe stock PCM with speakers
+muted; closed/truncated capture windows are not sample completion receipts.
+
+Before calling a source malformed, distinguish a valid unsupported variant and
+an old reader limitation. DinoPark BUS/PEOPLE are valid UNCS resources rejected
+by a prior UNC2-only reader. An absent literal filename reference does not prove
+a resource is unused. Preserve exact rejected bytes and refusal details; never
+rewrite original resources or programs to compensate for a decoder mismatch.
