@@ -379,7 +379,7 @@ def main():
     elif args.action == 'verify':
         verify(args.manifest, args.root, args.os_base, args.sha256, required=args.require, fixtures=args.windows_fixtures)
     else:
-        if os.environ.get('FDISBULL_EXECUTION_ORIGIN') != 'local-linux':
+        if os.environ.get('FDISBULL_EXECUTION_ORIGIN') not in ('local-linux', 'boat-linux'):
             raise ValueError('Retained preparation is local Linux only')
         prepare(args.manifest, args.root, args.os_base, args.sha256, args.require, fixtures=args.windows_fixtures)
     print('retained runtime base', args.action, 'passed')

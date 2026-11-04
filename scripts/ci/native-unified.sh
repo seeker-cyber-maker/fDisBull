@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
-  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  [[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
 fi
 prepare_retained_runtime() {
-  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  [[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
   test "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
@@ -151,7 +151,7 @@ Path('native-evidence/pe/backend-identity.json').write_text(json.dumps(receipt,i
 PY
 
 if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
-  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  [[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
   python scripts/ci/unified-runtime-inputs.py prepare
   exit 0
 fi

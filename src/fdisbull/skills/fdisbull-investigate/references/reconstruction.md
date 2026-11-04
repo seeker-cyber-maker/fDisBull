@@ -124,6 +124,100 @@ compiler success does not qualify segmented file transfer, GDI or input.
 Its source-checkout guide is `docs/UDC_MEMORY_WIN16.md`. Keep the selected
 runtime's method inventory authoritative when a skill is newer than the install.
 
+### Progressive console support
+
+Use this procedure for cartridge compatibility, a hardware execution provider,
+or console UDC development. Keep the user's complete outcome in the coverage
+ledger; a small increment advances it without replacing it. Implement only the
+hardware dependencies needed by the declared boundary. A bounded code generator
+does not require an independently authored emulator for every device or opcode.
+
+Borrow the progressive replacement method from
+[EmuDevz at commit 95ee5a5](https://github.com/afska/emudevz/tree/95ee5a5b0d00ddca3ec288d069409d90e5ec721f):
+hold most components fixed, replace one component, run focused checks, inspect
+the first divergence, then expand the supported profile. Its
+[component builder](https://github.com/afska/emudevz/blob/95ee5a5b0d00ddca3ec288d069409d90e5ec721f/src/EmulatorBuilder.js)
+and staged tests provide a methodological reference, not a normative hardware
+specification. This procedure summarizes that method without copying lesson
+dialogue. Qualify educational approximations independently before using them
+as target-console facts.
+
+1. **Select the boundary and profile.** Distinguish a machine provider that
+   executes original cartridge code, a recovered UIL game model, and a UDC that
+   realizes UIL through selected code and adapters. Record the target format,
+   CPU/region, mapper or board variant, memory/resource layout, controllers and
+   observation clock relevant to the task. Keep native emission, host-native
+   execution and post-compilation multicart packaging separate. A matching
+   extension, header, title screen or mapper number does not establish their
+   other contracts.
+2. **Qualify intake and the reference.** Pin source bytes, model, parser,
+   runtime/core and configuration. Validate complete magic, version, declared
+   lengths, offsets and bounds before execution; test truncated and unsupported
+   cases. Preserve unknown fields and trailing data. Admit only understood
+   mappings, or explicitly refuse unsupported execution while continuing useful
+   inspection. For NES, do not silently reduce NES 2.0 mapper/submapper or region
+   fields to legacy defaults, confuse battery-backed memory with all RAM, or
+   assume trainer contents and CHR-RAM size. Reproduce a bounded baseline on an
+   independently qualified implementation; an educational parser's acceptance
+   is not its own compatibility oracle. A wrapper around the same implementation
+   is not an independent oracle.
+3. **Replace one explicit seam.** Choose the next missing capability on the
+   requested path: loader/map, CPU or lowering operation, controller service,
+   PPU/APU effect, scheduler, or mapper transition. Record actual provider
+   identities for candidate, reference and placeholder components after
+   construction, including automatic substitutions and fallbacks. Requested
+   provider settings alone are insufficient. A passing hybrid run qualifies its
+   tested composition; borrowed machinery remains a declared dependency. Hold
+   other components fixed where possible and retain their existing evidence.
+4. **Predict and compare deterministically.** Before running, define expected
+   state and ordered effects, an unchanged-state case, a deliberately incorrect
+   candidate or adapter, and a bounded stop condition. Require the wrong control
+   to fail the intended claim. Derive expected input
+   from the independent stimulus schedule and qualified controller mapping,
+   never from candidate RAM. Specify whether that schedule uses CPU cycles,
+   scanlines, frames or completed application ticks, and define startup and
+   sampling alignment explicitly; do not shift inputs until outputs match.
+   Run the narrow witness and affected regression set. Compare lengths, event
+   counts and completion boundaries before values: equal shared audio prefixes
+   do not establish equal streams. State the video representation, audio rate,
+   channel/mix boundary and justified numerical comparison policy. Preserve the
+   first divergent observation and context instead of repairing expectations.
+5. **Compose devices and state.** At the needed fidelity, test ordering between
+   CPU work, register effects, rendering, audio and input. Distinguish asserting
+   an interrupt, CPU recognition/service and device acknowledgement; include DMA
+   and bus interference when required. Equal final pixels or scalar values can
+   conceal different state or effects. For checkpoint claims, include owned
+   registers, buffers, mapper latches, interrupt/DMA state, clock phase, input
+   cursor and pending effects; branch, restore and compare continuation. A
+   serialized save object alone proves neither completeness nor durable replay.
+6. **Promote only the observed capability.** Report not-run, unsupported,
+   partial, finite-match or mismatch as scoped evidence descriptions, not new
+   tool status fields. A budget stop before the comparison boundary leaves
+   coverage partial; an observed unequal required value or effect is a
+   mismatch. A known violation of a required completion deadline is itself a
+   mismatch. A finite equal prefix cannot justify a completed-run claim.
+   Before blaming execution for a missing event, check the observation predicate
+   against actual instruction boundaries; an exclusive range-end label need not
+   execute.
+   Record candidate/oracle identities, actual providers, inputs, aligned
+   interval, cases and fields compared, skipped gates, negative-control result,
+   remaining fidelity debts and next discriminator in companion evidence.
+   Promote lesson-equivalent, target-console-verified and application-verified
+   claims separately. A new mapper, peripheral, region or timing requirement
+   opens another gate; do not generalize from one cartridge.
+
+For UDC output, preserve UIL semantics while selecting explicit storage, code
+placement, ABI, startup/vector, resource and hardware-effect adapters. An
+emulator may supply the independent execution oracle or a declared backing;
+its implementation is not automatically a UIL translator. Execute the emitted
+artifact and perform both edges and composition from this recipe. For a package,
+qualify each admitted program and launch/bank/reset/state-isolation behavior;
+header similarity cannot establish cartridge-write or RAM assumptions. Consult
+the installed console profile section in `udl-uil-udc.md` rather
+than treating this curriculum as new support. Keep source ROMs, assets and states
+outside publications under the existing target policy; retain authored code,
+attributed links and sanitized evidence separately.
+
 ## 8. Compose, persist and hand off
 
 Check the larger requested boundary before promoting the result: callers,

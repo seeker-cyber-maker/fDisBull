@@ -25,6 +25,24 @@ without changing the tested commit.
   checked; successful Windows loader execution remains a separate gate. The
   tool does not download, attach to or launch Galaxy, defeat anti-debugging, or
   provide a universal unpacker.
+- **Native GOG Inno intake:** `gog-list` and `gog-unpack` now use fDisBull's
+  built-in Inno Setup 5.6.2 Unicode reader instead of an external `innoextract`
+  executable. It validates the loader and metadata blocks, data chunks, per-chunk
+  SHA-1 and GOG multipart MD5, and refuses unsupported versions, external slices,
+  encryption and malformed checksums. The supported profile is bounded to the
+  observed GOG packaging conventions; it is not a general Inno reader or an
+  installer runner. See [GOG unpacking](GOG_UNPACKING.md) and
+  [native format details](NATIVE_INNO_562.md).
+- **Experimental ScummVM Kyra and Westwood intake:** the reviewed ScummVM
+  AGI/Gob substrate gains a source-bound Kyra/EMC2 controller scaffold and a
+  bounded AGI-to-UIL native component pilot. Westwood PAK/CPS/WSA readers and
+  the EMC2 guest processor are available as separate bounded media modules.
+  Native instrumentation, full AGI compilation, original-game execution and
+  whole-game equivalence remain separate qualification gates; no replacement
+  engine is promoted by these source modules. See
+  [ScummVM Kyra](SCUMMVM_KYRA_BACKEND.md),
+  [AGI pilot](AGI_TO_UIL_NATIVE_PILOT.md) and
+  [Westwood media](WESTWOOD_MEDIA_DECODERS.md).
 - **Context-aware file and media intake:** the
   [format catalog](FILE_FORMAT_REGISTRY.md) connects bounded header facts to
   actual reader capabilities, and [collection intake](TARGET_COLLECTION_INTAKE.md)
@@ -90,6 +108,11 @@ Signed 16-bit returns retain their signed meaning across the relevant UIL
 execution paths. Ordered semantic-event comparisons ignore transport or
 provenance decoration without discarding the original event lists. These are
 bounded correctness fixes, not a new claim of whole-program equivalence.
+
+Linux qualification can run as finite exact-source Docker phases on a
+provisioned Boat worker. The runner binds the actual worker/boot receipt and
+source/run/job identities, keeps provider CI disabled unless explicitly started,
+and never packages or publishes by itself. See [Boat CI](BOAT_CI.md).
 
 Wine cold-prefix setup has a five-minute limit inside a seven-minute launch
 request, allowing the native agent response and transport to finish within

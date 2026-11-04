@@ -46,14 +46,34 @@ def media_modules():
                  limits='768-byte directory; resource 0..255; 64 MiB volume; no AGI v3/LZW'),
             dict(name='gog-inno', layer='archive',
                  api='fdisbull.gog_unpack.list_gog / unpack_gog',
-                 methods=['gog-list', 'gog-unpack'], dependencies=['native innoextract on PATH'],
-                 variants='GOG Inno Setup variants accepted by installed innoextract',
-                 limits='External reader version and timeout recorded; no general archive/disk reader or hard decompression-size budget'),
+                 methods=['gog-list', 'gog-unpack'], dependencies=[],
+                 variants='Inno Setup 5.6.2 Unicode GOG installers with the supported loader, header and data profile',
+                 limits='Native bounded reader; unsupported versions, external slices, encryption and checksum failures are refused; no installer execution, general archive/disk reader or runtime-equivalence claim'),
             dict(name='gog-galaxy-upx', layer='captured-executable-reconstruction',
                  api='fdisbull.gog_galaxy.rebuild_galaxy_capture / rebuild_galaxy_files',
                  methods=['python-module:gog_galaxy_cli'], dependencies=[],
                  variants='Caller-captured PE32/PE32+ mapped image from a UPX0/UPX1 Galaxy wrapper',
                  limits='No download, launch, attachment, anti-debugging bypass or export enumeration; qualified capture/OEP/export inputs required; output is an unsigned analysis reconstruction'),
+            dict(name='westwood-pak', layer='resource-container',
+                 api='fdisbull.westwood_media.inspect_pak; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='Westwood PAK v2/v3; validated offset/name directory and opaque tails',
+                 limits='64 MiB input; bounded member count; duplicate names require index selector; no packer execution'),
+            dict(name='westwood-cps', layer='asset-decoding',
+                 api='fdisbull.westwood_media.decode_cps; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='DOS-PC CPS raw/Format3 RLE/Format4 LCW; palette optional',
+                 limits='2 MiB input; 1 MiB decoded indices; unknown geometry except 320x200; no palette synthesis'),
+            dict(name='westwood-wsa', layer='asset-decoding',
+                 api='fdisbull.westwood_media.inspect_wsa / decode_wsa_frames; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='Kyrandia early/early-flags and Lands late header; LCW+XOR Delta',
+                 limits='64 MiB input; 2000 frames; bounded first-frame export only when not chained; no playback timing'),
+            dict(name='westwood-emc2', layer='script-container',
+                 api='fdisbull.westwood_media.parse_emc2; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='IFF FORM/EMC2 ORDR/TEXT/DATA; no script execution',
+                 limits='8 MiB input; declared entry offset validation; game-specific syscall semantics excluded'),
             dict(name='agi-picture', layer='asset-decoding',
                  api='fdisbull.agi_picture.decode_picture', methods=[], dependencies=[],
                  variants='Prepared AGI 2.915/2.917 EGA picture stream',
@@ -86,9 +106,11 @@ def _identity(data):
 
 
 def _prepare(path, adapter, volume_root, number):
-    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2'):
+    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2',
+          'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2'):
         raise ValueError('Unsupported adapter; discover media-modules first')
     inputs = []
+    metadata = {}
     if adapter == 'mz-envelope':
         if volume_root is not None or number is not None:
             raise ValueError('MZ envelope does not accept AGI resource parameters')
@@ -103,6 +125,58 @@ def _prepare(path, adapter, volume_root, number):
             members.append(('tail', end, data[end:]))
         inputs.append(dict(role='container', **_identity(data)))
         unknowns = ['Tail structure and compression are unknown; no overlay entries, addresses or semantics inferred.']
+    elif adapter.startswith('westwood-'):
+        if volume_root is not None or number is not None:
+            raise ValueError('Westwood adapter does not accept AGI volume parameters')
+        from .westwood_media import (inspect_pak, decode_cps, encode_cps_png,
+                                     inspect_wsa, decode_wsa_frames, parse_emc2)
+        limit = 64 * 1024 * 1024 if adapter not in ('westwood-cps', 'westwood-emc2') else (
+            2 * 1024 * 1024 if adapter == 'westwood-cps' else 8 * 1024 * 1024)
+        data = _snapshot(path, limit)
+        inputs.append(dict(role='container', **_identity(data)))
+        if adapter == 'westwood-pak':
+            report = inspect_pak(data)
+            members = []
+            for item in report['members']:
+                selector = (f"#{item['index']}:{item['name']}" if item['duplicate_name']
+                            else item['name'])
+                members.append((selector, item['offset'],
+                                data[item['offset']:item['offset'] + item['size']]))
+            metadata = dict(pak_layout=report['format'],
+                            pak_opaque_tail_bytes=report['opaque_tail_bytes'])
+            unknowns = ['Member bytes are intact; nested compression, game roles, and hidden tail are separate.']
+        elif adapter == 'westwood-cps':
+            image = decode_cps(data)
+            members = [('indices', None, image.pixels)]
+            if image.palette is not None:
+                members.append(('palette6', 10, image.palette))
+                if image.width == 320 and image.height == 200:
+                    members.append(('preview-png', None, encode_cps_png(image)))
+            metadata = dict(cps_compression=image.compression, cps_decoded_size=image.declared_size,
+                            cps_dimensions=(dict(width=image.width, height=image.height)
+                                            if image.width is not None else None),
+                            cps_palette_bytes=(len(image.palette) if image.palette else 0))
+            unknowns = ['Derived indexed pixels are not an original byte range.',
+                        'If palette is absent, color rendering requires separately identified original palette.']
+        elif adapter == 'westwood-wsa':
+            report = inspect_wsa(data)
+            metadata = {('wsa_' + key): value for key, value in report.items()
+                        if key not in ('format', 'offsets', 'size', 'sha256', 'input_executed')}
+            members = []
+            if not report['missing_first_frame']:
+                _, frames = decode_wsa_frames(data, max_frames=1)
+                members = [('frame0-indices', None, frames[0])]
+            unknowns = ['WSA frame state is delta-dependent; only an independently initialized first frame is exported.',
+                        'Frame timing, palette state, composite positioning and chained animations are not established.']
+        else:
+            script = parse_emc2(data)
+            members = [(tag, part['offset'], data[part['offset']:part['offset'] + part['size']])
+                       for tag, part in script['chunks'].items()]
+            metadata = dict(emc2_valid_entries=script['valid_entry_count'],
+                            emc2_entry_slots=len(script['entry_slots']),
+                            emc2_data_words=script['word_count'])
+            unknowns = ['Script payload is interpreted code, not native machine instructions.',
+                        'Entry policy and syscall binding must be qualified separately per game.']
     else:
         if volume_root is None or type(number) is not int or not 0 <= number < 256:
             raise ValueError('AGI v2 requires volume_root and resource number 0..255')
@@ -138,6 +212,7 @@ def _prepare(path, adapter, volume_root, number):
                   specification=SPEC)
     if adapter == 'agi-v2':
         result['resource_number'] = number
+    result.update(metadata)
     return result, {name: payload for name, _, payload in members}
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "${FDISBULL_UNIFIED_PREPARED:-}" = 1 ]; then
-  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  [[ "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux || "${FDISBULL_EXECUTION_ORIGIN:-}" = boat-linux ]]
   # The stripped retained executable resolves firmware relative to build/.
   python scripts/ci/unified-runtime-inputs.py verify --install-firmware .native/pe/qemu-9.2.4/share/qemu
   export DEBIAN_FRONTEND=noninteractive

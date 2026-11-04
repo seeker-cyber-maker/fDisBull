@@ -10,6 +10,7 @@ import shutil
 import subprocess
 
 SELECTIONS = ('dist/*', 'artifacts/receipts/*.json', 'artifacts/ordinary/*',
+              '.native/chat/output/*',
               'native-evidence/**/*', '.native/backends/**/*', '.native/offline/output/*',
               '.native/pe/packages/*.whl', '.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
               '.native/pe/linux-amd64', '.native/pe/runtime.cpio.gz',

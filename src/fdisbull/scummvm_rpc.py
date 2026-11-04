@@ -34,6 +34,7 @@ _LAUNCH_OPTION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$")
 # These IDs select ScummVM's Lost in Time Inter_v3 factory. The experimental
 # Gob bridge profile does not qualify other Gob interpreter families.
 _GOB_GAME_IDS = frozenset(('lit', 'lit1', 'lit2'))
+_KYRA_GAME_IDS = frozenset(('kyra1', 'lol'))
 
 
 class ScummVMRPC:
@@ -51,14 +52,16 @@ class ScummVMRPC:
             raise ScummVMError('Expected an executable patched ScummVM backend')
         if not game_dir.is_dir() or not runtime_parent.is_dir():
             raise ScummVMError('Expected existing game and private runtime directories')
-        if engine not in ('agi', 'gob'):
-            raise ValueError('ScummVM engine must be agi or gob')
+        if engine not in ('agi', 'gob', 'kyra'):
+            raise ValueError('ScummVM engine must be agi, gob or kyra')
         if isinstance(game_id, str) and game_id.startswith(engine + ':'):
             game_id = game_id[len(engine) + 1:]
         if not isinstance(game_id, str) or not _GAME_ID.fullmatch(game_id):
             raise ValueError(f'ScummVM {engine.upper()} game_id must be a simple ID or {engine}:<ID>')
         if engine == 'gob' and game_id not in _GOB_GAME_IDS:
             raise ValueError('ScummVM Gob agent profile supports only Lost in Time (lit, lit1, lit2)')
+        if engine == 'kyra' and game_id not in _KYRA_GAME_IDS:
+            raise ValueError('ScummVM Kyra agent supports only Kyrandia I and Lands of Lore I')
         for name, value in (('language', language), ('platform', platform)):
             if value is not None and (not isinstance(value, str) or not _LAUNCH_OPTION.fullmatch(value)):
                 raise ValueError(f'ScummVM {name} must be a simple option value')
@@ -124,6 +127,15 @@ class ScummVMRPC:
             if (hello.get('engine') != engine or not isinstance(hello.get('capabilities'), list)
                     or any(not isinstance(item, str) for item in hello['capabilities'])):
                 raise ScummVMError(f'Backend did not advertise the {engine.upper()} agent protocol')
+            if engine == 'kyra' and (hello.get('protocol') != 'fdisbull-scummvm-agent'
+                    or type(hello.get('protocol_version')) is not int or hello['protocol_version'] != 1
+                    or type(hello.get('bridge_version')) is not int or hello['bridge_version'] != 1
+                    or hello.get('profile') != 'kyra-emc2-v1'):
+                raise ScummVMError('Backend lacks the supported Kyra/EMC2 agent protocol')
+            if engine == 'kyra' and (not isinstance(hello.get('variant'), dict)
+                    or hello['variant'].get('recognized_detection') is not True
+                    or hello['variant'].get('game_id') != game_id):
+                raise ScummVMError('Kyra backend did not bind the exact requested game')
             if engine == 'gob' and (hello.get('protocol') != 'fdisbull-scummvm-agent'
                     or type(hello.get('protocol_version')) is not int or hello['protocol_version'] != 1
                     or type(hello.get('bridge_version')) is not int or hello['bridge_version'] != 1

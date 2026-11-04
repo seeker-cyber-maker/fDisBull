@@ -11,6 +11,7 @@ capability contract; successful parsing establishes structure, not behavior.
 - [MZ envelope version 1](#mz-envelope-version-1)
 - [AGI v2 resource version 1](#agi-v2-resource-version-1)
 - [Existing readers and decoders](#existing-readers-and-decoders)
+- [Westwood Kyra-family media and EMC2](#westwood-kyra-family-media-and-emc2)
 - [Extend and qualify a module](#extend-and-qualify-a-module)
 
 ## Classify the next obstacle
@@ -74,7 +75,7 @@ assets. Reports contain hashes and sizes only, but still review provenance befor
 publication. No new FDB writes are made: parser output does not bypass the
 external-target storage boundary or grant permission to bind/import bytes.
 
-Both adapters cap each source volume/container at 64 MiB. `max_output_bytes`
+The original MZ and AGI adapters cap each source volume/container at 64 MiB. `max_output_bytes`
 limits the selected payload to 1..64 MiB before creating output (default 64 MiB).
 The CLI uses `--max-payload-bytes` for this limit. The global
 `--max-output-bytes` before the command controls the JSON reply budget instead;
@@ -143,12 +144,14 @@ select the v2 variant from evidence rather than treat acceptance as detection.
 ## Existing readers and decoders
 
 - `gog-inno`: `fdisbull.gog_unpack.list_gog/unpack_gog`, or `gog-list/gog-unpack`.
-  Requires native `innoextract`; versions/filters/part hashes and output hashes
-  are retained by its existing manifest. Multipart parts are provenance candidates,
-  not per-part consumption proof. Installer code is never launched. Native
-  reader support, filesystem inventory checks and per-process timeout apply;
-  this module does not provide a hard decompression byte quota. Use its existing
-  listing/extraction contract; do not mistake it for a general disk reader.
+  Uses fDisBull's built-in Inno Setup 5.6.2 Unicode reader; no external
+  `innoextract`, Wine or subprocess is required. Versions/filters/part hashes
+  and output hashes are retained by its manifest. Multipart parts are provenance
+  candidates, not per-part consumption proof. Installer code is never launched.
+  The bounded native decoder checks header, chunk and payload checksums and
+  refuses unsupported versions, external slices, encryption and malformed data;
+  its timeout covers parsing, hashing and extraction. Use its listing/extraction
+  contract; do not mistake it for a general disk reader or runtime qualification.
 - `gog-galaxy-upx`: `fdisbull.gog_galaxy.rebuild_galaxy_capture/files`, or
   `python -m fdisbull.gog_galaxy_cli`. Accepts an unchanged wrapper, caller-captured mapped PE,
   source-free process/thread/OEP receipt and export map. CHimpREC preserves
@@ -166,6 +169,24 @@ Keep archive/disk extraction, executable unpacking/overlay recovery, asset
 codecs, ISA loading and semantic analysis separate. Existing `dos.load_mz`,
 `agi.inspect_logic` and project loaders serve their own layers, not universal
 media recovery. Catalog entries describe real APIs, not promised format coverage.
+
+## Westwood Kyra-family media and EMC2
+
+The add-on `westwood-pak`, `westwood-cps`, `westwood-wsa` and `westwood-emc2`
+readers are registered through the same `media-inspect`/`media-extract`
+interfaces. Read `docs/WESTWOOD_MEDIA_DECODERS.md` in a source checkout for
+format profiles, supported compression, per-file bounds and provenance. The
+`fdisbull.westwood.emc2` guest processor exposes 19 bounded core opcodes via
+`module-analyze --profile kyrandia1-dos|lol1-dos --function-index N`, not a
+qualified script interpreter or UIL lifter. Never infer a shared game syscall
+ABI simply because the underlying EMC2 bytecode is the same.
+
+A first WSA frame may depend on a prior animation state: a zero initial offset
+is a hard refusal without an explicitly bound prior frame, not permission to
+zero-fill. Duplicate PAK names require an exact indexed member selector. For
+CPS graphics lacking their own palette, export indexed bytes but do not guess
+color; source-embedded 320x200 palettes permit a derived PNG preview. Archive
+member extraction and media decoding are distinct steps.
 
 ## Extend and qualify a module
 
