@@ -174,7 +174,7 @@ def test_project_records_window_request_without_changing_paused_entry_contract(t
             if method == 'state.get_registers':
                 return {'cpu_mode': 'real', 'segments': {'cs': '1000'}, 'instruction_pointer': '0000'}
             if method == 'session.stop': return {'operation_id': 'stop'}
-            if method == 'execution.wait': return {'state': 'stopped', 'running': False}
+            if method == 'execution.wait': return {'state': 'exited', 'running': False}
             raise AssertionError(method)
         def close(self): pass
 

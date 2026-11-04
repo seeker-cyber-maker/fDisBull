@@ -5,13 +5,14 @@ import base64
 import hashlib
 import io
 import json
+from copy import deepcopy
 from pathlib import Path
 import struct
 import time
 import uuid
 import tempfile
 
-from .dosbox_rpc import DOSBoxRPC, DebuggerError
+from .dosbox_rpc import DOSBoxRPC, DebuggerError, DebuggerShutdownError
 from .dos_launch import LaunchAlias, guest_name
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
@@ -283,6 +284,7 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         self.rpc = None
         self._launch_alias = None
         self.closed = False
+        self.close_receipt = None
         self.run_id = uuid.uuid4().hex
         self.version = project.version(version)
         if project.meta['format'] not in ('MZ', 'COM') or self.version['parent'] is not None:
@@ -360,7 +362,11 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         return self
 
     def __exit__(self, *args):
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            if not args or args[0] is None:
+                raise
 
     def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,window=self.window,on_spawn=self._spawn_callback)
     def _transport_metadata(self):return {}
@@ -1003,9 +1009,13 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
     @timeline_locked
     def close(self):
         if self.closed:
-            return
+            receipt = deepcopy(getattr(self, 'close_receipt', None))
+            if receipt is not None and not receipt['closed']:
+                raise DebuggerShutdownError(receipt)
+            return receipt
         result = {'state':'interrupted'}
         cleanup_error = interrupted = None
+        native_stop = None
         def failed(phase, error):
             nonlocal cleanup_error
             result.setdefault('cleanup_errors', []).append(
@@ -1028,6 +1038,7 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
             interrupted = error
             result = {'state':'interrupted','error':str(error)}
         finally:
+            native_stop = deepcopy(result)
             try:
                 cleanup('rpc.close', lambda: self.rpc.close())
             finally:
@@ -1041,26 +1052,50 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 result['launch_alias_cleanup'] = cleanup('launch-alias', self._launch_alias.close)
             process = getattr(self.rpc, 'process', None)
             result['process_reaped'] = None
+            result['process_returncode'] = None
             if process is not None:
                 try:
-                    result['process_reaped'] = process.poll() is not None
+                    result['process_returncode'] = process.poll()
+                    result['process_reaped'] = result['process_returncode'] is not None
                 except BaseException as error:
                     failed('process-status', error)
-            try:
-                cleanup('close-receipt', lambda: self._event('close',result))
-                def record_ended():
-                    with self.project.transaction(True):
-                        self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
-                cleanup('run-ended', record_ended)
-            finally:
-                def remove_owner():
-                    if self in self.project._live_debuggers:
-                        self.project._live_debuggers.remove(self)
-                cleanup('live-registry', remove_owner)
+            def finalize():
+                result['run'] = self.run_id
+                result['format'] = 'fdisbull-shutdown-1'
+                result['guest_stop'] = deepcopy(native_stop)
+                result['guest_stop_complete'] = (native_stop.get('state') == 'exited'
+                                                 and not native_stop.get('running'))
+                code = result['process_returncode']
+                result['termination_signal'] = -code if type(code) is int and code < 0 else None
+                result['session_terminal'] = True
+                result['closed'] = (result['guest_stop_complete'] and result['process_reaped'] is True
+                                    and type(code) is int and code == 0 and not result.get('cleanup_errors'))
+                result['status'] = 'closed' if result['closed'] else 'interrupted'
+                result['state'] = 'exited' if result['closed'] else 'interrupted'
+                if not result['closed'] and getattr(self.rpc, 'close_evidence', None) is not None:
+                    result['diagnostics'] = deepcopy(self.rpc.close_evidence)
+                self.close_receipt = deepcopy(result)
+
+            def record_ended():
+                with self.project.transaction(True):
+                    self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+            cleanup('run-ended', record_ended)
+            def remove_owner():
+                if self in self.project._live_debuggers:
+                    self.project._live_debuggers.remove(self)
+            cleanup('live-registry', remove_owner)
+            finalize()
+            cleanup('close-receipt', lambda: self._event('close',result))
+            finalize()
         if interrupted is not None:
+            interrupted.receipt = deepcopy(self.close_receipt)
             raise interrupted
         if cleanup_error is not None:
+            cleanup_error.receipt = deepcopy(self.close_receipt)
             raise cleanup_error
+        if not result['closed']:
+            raise DebuggerShutdownError(self.close_receipt)
+        return deepcopy(self.close_receipt)
 
 
 class DebugWorkspace:
@@ -1117,9 +1152,21 @@ class DebugWorkspace:
         if method=='debug-stop':
             if params:
                 raise ValueError('Unexpected stop options')
-            session.close()
-            session.project.__exit__()
-            del self.sessions[run]
+            try:
+                try:
+                    receipt = session.close()
+                except Exception as error:
+                    receipt = getattr(error, 'receipt', None)
+                    if not isinstance(receipt, dict):
+                        raise
+            finally:
+                try:
+                    session.project.__exit__()
+                finally:
+                    self.sessions.pop(run, None)
+            if isinstance(receipt, dict):
+                return {'run': run, 'closed': receipt['closed'], 'status': receipt['status'],
+                        'process_reaped': receipt['process_reaped'], 'receipt': receipt}
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
         operation=getattr(selected,methods[method],None)
@@ -1127,9 +1174,19 @@ class DebugWorkspace:
         return operation(**params)
 
     def close(self):
-        for session in self.sessions.values():
+        failure = None
+        for session in tuple(self.sessions.values()):
             try:
                 session.close()
+            except BaseException as error:
+                if failure is None:
+                    failure = error
             finally:
-                session.project.__exit__()
+                try:
+                    session.project.__exit__()
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
         self.sessions.clear()
+        if failure is not None:
+            raise failure

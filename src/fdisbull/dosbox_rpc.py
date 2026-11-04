@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 import os
 from pathlib import Path
 import select
@@ -14,6 +15,14 @@ import time
 
 class DebuggerError(ValueError):
     """A debugger operation failed; uncertain requests are never replayed."""
+
+
+class DebuggerShutdownError(DebuggerError):
+    """Terminal ownership was released without a successful shutdown certificate."""
+    def __init__(self, receipt):
+        self.receipt = deepcopy(receipt)
+        reason = receipt.get('error') or receipt.get('reason') or 'guest stop or process cleanup incomplete'
+        super().__init__('Debugger shutdown interrupted: ' + reason)
 
 
 class DOSBoxRPC:
@@ -176,7 +185,10 @@ class DOSBoxRPC:
             raise failure
 
     def close(self):
+        if self.temporary is None and getattr(self, 'close_evidence', None) is not None:
+            return deepcopy(self.close_evidence)
         failure = None
+        signals = []
         try:
             self._close_pipes()
         except BaseException as error:
@@ -184,16 +196,38 @@ class DOSBoxRPC:
         try:
             if self.process is not None:
                 if self.process.poll() is None:
+                    signals.append('terminate')
                     self.process.terminate()
                     try:
                         self.process.wait(timeout=2)
                     except subprocess.TimeoutExpired:
+                        signals.append('kill')
                         self.process.kill()
                 self.process.wait(timeout=2)
         except BaseException as error:
             if failure is None:
                 failure = error
         finally:
+            evidence = {'process_returncode': None, 'process_reaped': None, 'signals': signals}
+            try:
+                if self.process is not None:
+                    evidence['process_returncode'] = self.process.poll()
+                    evidence['process_reaped'] = evidence['process_returncode'] is not None
+            except Exception as error:
+                evidence['process_status_error'] = str(error)
+            directory = getattr(self.temporary, 'name', None)
+            if directory is not None:
+                try:
+                    with (Path(directory) / 'emulator.log').open('rb') as log:
+                        size = log.seek(0, 2)
+                        log.seek(max(0, size - 8192))
+                        raw = log.read(8192)
+                        encoded = raw.decode('utf-8', errors='replace').encode('utf-8')
+                        tail = encoded[-8192:].decode('utf-8', errors='ignore')
+                    evidence['native_log'] = {'size': size, 'tail': tail, 'truncated': size > 8192}
+                except OSError as error:
+                    evidence['native_log'] = {'error': str(error)}
+            self.close_evidence = evidence
             if self.temporary is not None:
                 try:
                     self.temporary.cleanup()
@@ -204,3 +238,4 @@ class DOSBoxRPC:
                     self.temporary = None
         if failure is not None:
             raise failure
+        return deepcopy(self.close_evidence)

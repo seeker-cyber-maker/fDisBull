@@ -6,6 +6,12 @@ and investigates the concurrent SIGABRT preserved by the
 [installed entry/title test](VERIFICATION-DINOPARK-INSTALLED-SHUTDOWN-2026-11-03.md).
 No package, installation or native rebuild is part of this contribution.
 
+The subsequent [November 4 follow-up](VERIFICATION-SHUTDOWN-RECEIPTS-2026-11-04.md)
+captures the literal cleanup exception in an owned TFTD reproduction and
+implements truthful persistent shutdown receipts. The dated unknowns below
+describe the earlier static/historical investigation; the first corruption
+writer and historical PID's exact memory remain unresolved.
+
 ## Source change and regression
 
 `DOSBoxRPC` now supplies `-set "dosbox quit warning=false"` in its headless

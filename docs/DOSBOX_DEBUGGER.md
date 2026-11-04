@@ -25,6 +25,12 @@ In 0.10.0 an explicit DOS seed is attempted first within that call's instruction
 
 Use the returned ID in place of `RUN` below. One-shot `request` calls cannot retain live sessions; live operations require the same foreground server. EOF, server exit, `debug-stop`, or Python context exit stops and reaps owned emulators. Saved history is explicitly not a liveness check; it cannot reattach an emulator after server restart.
 
+For DOS sessions, [shutdown receipts](SHUTDOWN_RECEIPTS.md) separately report
+guest-stop completion and actual host process exit. `debug-stop` can return
+`closed: false, status: interrupted` even when the process was reaped. Python
+`close()` retains the same certificate and raises on that interrupted outcome;
+repeated closes use retained evidence without replaying the stop.
+
 A prepared local project can retain analyzed routines, actual-game sessions, screenshots and traces. Keep original game files and runtime artifacts in a private local workspace; use your own project, game-directory and backend paths in the examples above.
 
 ## Dot-mode

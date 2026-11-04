@@ -25,6 +25,12 @@ It also identifies the concurrent PID 63534 crash as a TFTD shell-cleanup
 exception, retaining the distinction between the proven abort path and its
 unproven underlying corrupted state.
 
+The [November 4 cleanup trace and receipt fix](VERIFICATION-SHUTDOWN-RECEIPTS-2026-11-04.md)
+captures TFTD's actual cleanup `int(7)`/corrupt-MCB exception in an owned
+reproduction. It also qualifies persistent, idempotent shutdown certificates
+against TFTD and operating DinoPark, including an injected lost stop observation
+with exit code zero. Reaping now remains distinct from successful guest stop.
+
 The [return-to-park recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md) retains the original return input under a shared deadline and adds guest-read-only Park reconciliation, including retry after host scene publication or witness failure. A source-bound native-save case qualifies normal return, repeated read-only recovery and all 97 probes armed; fresh-load first-scene publication is included.
 
 The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts, including the earlier unknown return, remain preserved.

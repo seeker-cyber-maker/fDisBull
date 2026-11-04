@@ -196,11 +196,22 @@ class Project(
         return self
 
     def __exit__(self, *args):
+        failure = None
         try:
             for session in tuple(self._live_debuggers):
-                session.close()
+                try:
+                    session.close()
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
         finally:
-            self.db.close()
+            try:
+                self.db.close()
+            except BaseException as error:
+                if failure is None:
+                    failure = error
+        if failure is not None and (not args or args[0] is None):
+            raise failure
 
     @contextmanager
     def transaction(self, write=False):

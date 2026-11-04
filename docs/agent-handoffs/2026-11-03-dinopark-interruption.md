@@ -36,6 +36,14 @@ binary unwind evidence narrows its SIGABRT to shell memory/file cleanup, with
 the underlying throw/corruption still unresolved. Earlier acceptance boundaries
 remain dated rather than being replaced by this new result.
 
+The [November 4 shutdown-receipt follow-up](../VERIFICATION-SHUTDOWN-RECEIPTS-2026-11-04.md)
+captures a fresh TFTD cleanup `Corrupt MCB chain` / `int(7)` before unwind and
+tests the new certificate against two TFTD and two DinoPark cases. An
+interrupted native stop remains interrupted after reaping, including injected
+observation loss with process exit zero. Native corruption itself remains
+unfixed. The linked [video assessment](../research/2026-11-04-cpu-video-udl-uil-udc.md)
+recommends separate semantic contracts and measured UDC cost profiles.
+
 Between the historical PR head and this main, the selected Park scene/purchase
 implementation and Park-return tests are unchanged. The DinoPark Z bridge adds
 a witness to successful checkpoint saves as well as restores. The old native
