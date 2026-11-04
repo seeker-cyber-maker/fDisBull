@@ -65,6 +65,36 @@ Storage is admission-only, not a running quota.
 Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
+Local native legs require an explicit self-contained bare-Git archive through
+`--dosbox-upstream-archive` and `--dosbox-upstream-sha256`. The host and guest
+verify the archive, reject unsafe Git configuration, links and alternates, and
+fetch only its pinned local commit. The local path refuses a network fallback.
+Patched-source manifests and every declared source hash still have to match.
+
+An explicit retained-component preparation route accepts
+`--retained-base-manifest`, `--retained-base-sha256`, `--retained-base-root` and
+`--retained-os-base`. It verifies the original QEMU/kernel/firmware and OS
+component identities and build provenance, then removes earlier project
+resources and creates fresh overlays from this candidate's installed wheel.
+It does not reuse a foreign prepared-input manifest or its test outcome. Its
+allocation estimate measures the compressed immutable stream, bounds current
+resource growth and retained copies, and includes worker dependencies.
+
+For the reviewed Windows lane, supply `--retained-windows-fixtures` and require
+`wine64`, `dos`, `pe32` and `win16-guards` capabilities explicitly. The fixture
+directory contains exactly the hash-bound authored selector program, declared
+generated Snake program and INITIAL.BIN. Preparation retains a smaller Wine64
+and DOS base, plus a separate Wine 11 image for the 8 GiB Windows tests. The
+fresh acceptance worker verifies all three images and current resources. Its
+combined PE report must include passing PE32, selector, Snake and three-case
+campaign testcases; missing, duplicate, failed or skipped cases cannot qualify.
+Original Windows and replacement-engine checks remain distinct.
+
+The ordinary job separately requires all 22 typed-return cases and four
+semantic-event contracts with zero skips, including actual Linux callers and
+Unicorn-backed adapters. Optional backend skips in the broad ordinary suite do
+not waive these required cases.
+
 For a fixture/client-only correction, `--reuse-stable-backend` or
 `--reuse-layers-backend` can explicitly select the matching profile's original
 compiled leg's `guest-data/exported` directory. Each verifies the

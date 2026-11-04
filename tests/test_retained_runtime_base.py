@@ -80,7 +80,7 @@ def test_retained_component_proof_preserves_failed_original_job_without_qualifyi
 
 
 @pytest.mark.parametrize('changed', ['manifest-hash','foreign-prepared','origin-source','origin-postcheck',
-                                    'origin-process','component','firmware','os-base','recipe','source-pin'])
+                                    'origin-process','retained-origin','component','firmware','os-base','recipe','source-pin'])
 def test_retained_component_route_rejects_changed_identity(retained,changed):
     root, image, manifest, value = retained
     expected = base.digest(manifest)
@@ -89,6 +89,7 @@ def test_retained_component_route_rejects_changed_identity(retained,changed):
     elif changed=='origin-source': value['origin_source_commit']='b'*40
     elif changed=='origin-postcheck': value['origin_source_postcheck']['tracked_worktree_dirty']=True
     elif changed=='origin-process': value['origin_process']['runtime']['machine']='arm64'
+    elif changed=='retained-origin': value['origin_backend_identity']['retained_base']={'path':'later-rebase.json'}
     elif changed=='component': (root/base.PATHS['FDISBULL_PE_QEMU']).write_bytes(b'changed')
     elif changed=='firmware': (root/base.FIRMWARE/'bios-256k.bin').write_bytes(b'changed')
     elif changed=='os-base': image.write_bytes(b'changed')
@@ -141,3 +142,17 @@ def test_allocation_uses_measured_stream_and_three_retained_copies(retained):
     assert estimate['measured_compacted_gzip_bytes']>0
     assert estimate['retained_copies']==3
     assert estimate['expected_bytes']>=3*estimate['runtime_bound_bytes']+4_000_000_000
+
+
+def test_prepare_cli_forwards_explicit_windows_fixtures(tmp_path, monkeypatch):
+    captured=[]
+    fixtures=tmp_path/'authored-fixtures'
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN','local-linux')
+    monkeypatch.setattr(sys,'argv',['retained-runtime-base.py','prepare',
+        '--manifest',str(tmp_path/'components.json'),'--root',str(tmp_path/'inputs'),
+        '--os-base',str(tmp_path/'os.cpio.gz'),'--sha256','a'*64,
+        '--windows-fixtures',str(fixtures),'--require','pe32'])
+    monkeypatch.setattr(base,'prepare',lambda *args,**kwargs:captured.append((args,kwargs)))
+    base.main()
+    assert captured[0][0][-1]==['pe32']
+    assert captured[0][1]=={'fixtures':fixtures}

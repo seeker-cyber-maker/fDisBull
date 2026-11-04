@@ -23,5 +23,16 @@
     "The requested headless fix is applied once; equivalent60/72copies do not duplicate launcher settings.",
     "Three Windows preflight commits already patch-equivalent to0.31.1 remain from released lineage."
   ],
-  "qualification": "See exact-source local qualification and artifact receipts attached to the manual GitLab release; this intake document does not certify an untested SHA."
+  "qualification": "See exact-source local qualification and artifact receipts attached to the manual GitLab release; this intake document does not certify an untested SHA.",
+  "qualification_helpers": [
+    "c8bf8709b1044a584e55d53f4f9c23e613c69dab",
+    "41b8212b08d874342998c63c21ce0dd5bf77ae36",
+    "90812660c415e1a08b8833d1f6f2ded7b4a9eb30"
+  ],
+  "review_fixes": [
+    "Save checked Win16 register routes offline while enforcing live runtime capability before execution.",
+    "Correct the Win16 capability description and bound the expanded default discovery catalog at32KiB.",
+    "Honor explicit authored Windows fixture selection in retained-base preparation.",
+    "Reject previously rebased runtime provenance as an original OS component build."
+  ]
 }

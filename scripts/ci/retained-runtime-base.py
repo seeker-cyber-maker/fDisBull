@@ -175,6 +175,8 @@ def original_proof(value):
     identity = value['origin_backend_identity']
     if identity.get('source_commit') != source:
         raise ValueError('Original backend identity source mismatch')
+    if 'retained_base' in identity:
+        raise ValueError('Retained preparation cannot replace the original component build provenance')
     if (value['qemu_source']['sha256'] != QEMU_SOURCE_SHA
             or value['inputs']['FDISBULL_PE_KERNEL']['sha256'] != KERNEL_SHA):
         raise ValueError('Original source pins changed')
@@ -314,10 +316,10 @@ def estimate(os_base, dosbox_size, *, source_root, shared_os_base=None):
             'retained_copies': 3, 'system_and_small_component_budget': 4_000_000_000}
 
 
-def prepare(manifest, root, os_base, expected_sha, required):
+def prepare(manifest, root, os_base, expected_sha, required, *, fixtures=None):
     from fdisbull import dos_runtime, wine_runtime
     value = verify(manifest, root, os_base, expected_sha, required=required,
-                   fixtures=os.environ.get('FDISBULL_RETAINED_WINDOWS_FIXTURES'))
+                   fixtures=fixtures if fixtures is not None else os.environ.get('FDISBULL_RETAINED_WINDOWS_FIXTURES'))
     layers = load('native-evidence/layers/backend-identity.json')
     if (layers.get('source_commit') != os.environ['CI_COMMIT_SHA']
             or layers.get('backend_sha256') != digest(os.environ['FDISBULL_DOSBOX'])):
@@ -379,7 +381,7 @@ def main():
     else:
         if os.environ.get('FDISBULL_EXECUTION_ORIGIN') != 'local-linux':
             raise ValueError('Retained preparation is local Linux only')
-        prepare(args.manifest, args.root, args.os_base, args.sha256, args.require)
+        prepare(args.manifest, args.root, args.os_base, args.sha256, args.require, fixtures=args.windows_fixtures)
     print('retained runtime base', args.action, 'passed')
 
 
