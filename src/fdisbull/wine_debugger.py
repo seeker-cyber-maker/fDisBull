@@ -254,12 +254,13 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(result['events']),'complete':result['complete']})
 
-    def screenshot(self,name='screenshot.png',*,grid=False,grid_step=32):
+    def screenshot(self,name='screenshot.png',*,grid=False,grid_step=32,timeout_ms=30000):
         from PIL import Image
         from .screenshot_grid import validate_step
         _file_name(name);validate_step(grid_step)
         if type(grid) is not bool:raise ValueError('grid must be boolean')
-        result=self.call('screenshot');width=result['width'];height=result['height']
+        bounded(timeout_ms,'timeout_ms',1,600000)
+        result=self.call('screenshot',timeout_ms=timeout_ms);width=result['width'];height=result['height']
         if not (1<=width<=1920 and 1<=height<=1080):raise DebuggerError('Invalid PE frame dimensions')
         pixels=base64.b64decode(result.pop('bgra_base64'),validate=True)
         if len(pixels)!=width*height*4:raise DebuggerError('Invalid PE frame buffer length')

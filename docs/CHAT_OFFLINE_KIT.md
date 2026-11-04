@@ -51,8 +51,10 @@ The closure receipt has schema `fdisbull-elf-closure-v1`, `complete: true`, and
 `objects`, an array of `{ "path": "destination", "needed": { "soname":
 "lib/soname" } }`. It lists every ELF object in the inventory with each
 resolved private library. This is a preparer assertion, not proof of closure;
-the consumer must independently verify it. All ELF objects must be 64-bit,
-little-endian x86-64. Hashes bind bytes, not provenance or licensing.
+the consumer must independently verify it. Host ELF objects must be 64-bit,
+little-endian x86-64. Declared QEMU firmware under its fixed share directory is
+hashed separately and can target a guest architecture. Hashes bind bytes, not
+provenance or licensing.
 
 The root is `fdisbull-chat-offline/`. Entrypoints are `bin/python`,
 `bin/fdisbull`, `bin/player`, `bin/dosbox`, `bin/qemu`, and in shared profile
@@ -68,6 +70,14 @@ The source companion is operational source evidence, not a representation that
 all upstream source required for redistribution is supplied. Review component
 licenses and source obligations separately. A kit is unqualified until the
 independent clean, offline Linux extraction and native consumer checks pass.
+
+For the authored Windows oracle, acceptance also checks that the captured PNG
+contains drawn color variation, then reuses that exact artifact for the click.
+The oracle stays paused at its checkpoint while captures are polled. A visible
+client rectangle alone is insufficient: `frame.probe` reports geometry, not
+content readiness. The nonuniform-image check is specific to these authored
+fixtures and does not classify an arbitrary application's blank screen as an
+error. Probe and capture calls share a bounded remaining time budget.
 
 The generated archive README describes its portable Python, local runtime setup
 and entrypoints. This shared chat kit carries its operational dependencies for

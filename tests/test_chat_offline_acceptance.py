@@ -1,8 +1,11 @@
 """Small fail-closed checks; native acceptance requires the isolated kit run."""
 import hashlib
 import importlib.util
+import io
+import inspect
 import json
 from pathlib import Path
+import sqlite3
 import tarfile
 
 import pytest
@@ -97,14 +100,69 @@ def test_closure_checks_actual_loader_output_and_declared_map(tmp_path, monkeypa
         verifier.check_loader_closure(root, roles)
 
 
-def test_frame_probe_requires_real_ready_frame_and_valid_deadline():
-    class Debug:
-        def call(self, method, *, timeout_ms):
-            assert method == 'frame.probe' and timeout_ms > 0
-            return {'available':True, 'width':320, 'height':200}
-    assert verifier.wait_for_pe_frame(Debug())['width'] == 320
+class OracleDebug:
+    def __init__(self, images):
+        from types import SimpleNamespace
+        self.images = iter(images)
+        db = sqlite3.connect(':memory:'); db.row_factory = sqlite3.Row
+        db.execute('CREATE TABLE debug_artifacts (id INTEGER, data BLOB, sha256 TEXT)')
+        self.project = SimpleNamespace(db=db)
+        self.captures = 0
+
+    def call(self, method, *, timeout_ms):
+        assert method == 'frame.probe' and timeout_ms > 0
+        return {'available':True, 'width':320, 'height':200}
+
+    def screenshot(self, name, *, timeout_ms):
+        from PIL import Image
+        from fdisbull.wine_debugger import PEDebugSession
+        inspect.signature(PEDebugSession.screenshot).bind(self, name, timeout_ms=timeout_ms)
+        assert name == 'pe.png' and timeout_ms > 0
+        painted = next(self.images)
+        image = Image.new('RGB', (3, 3), 'black')
+        if painted: image.putpixel((1, 1), (255, 160, 32))
+        data = io.BytesIO(); image.save(data, format='PNG'); payload = data.getvalue()
+        self.captures += 1
+        self.project.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?)',
+                                (self.captures, payload, hashlib.sha256(payload).hexdigest()))
+        return {'artifact':self.captures, 'metadata':{'mode_id':'oracle'}}
+
+    def run(self, **kwargs):
+        pytest.fail('A readiness poll must not resume the stopped oracle')
+
+
+def test_oracle_wait_accepts_painted_artifact_without_running():
+    debug = OracleDebug([True])
+    assert verifier.wait_for_pe_frame(debug)['artifact'] == 1
+
+
+def test_oracle_wait_polls_blank_then_returns_exact_painted_artifact(monkeypatch):
+    monkeypatch.setattr(verifier.time, 'sleep', lambda _: None)
+    debug = OracleDebug([False, True])
+    assert verifier.wait_for_pe_frame(debug)['artifact'] == 2
+    assert debug.captures == 2
+
+
+def test_oracle_wait_fails_bounded_for_blank_frame(monkeypatch):
+    now = [0.0]
+    monkeypatch.setattr(verifier.time, 'monotonic', lambda: now[0])
+    monkeypatch.setattr(verifier.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
+    debug = OracleDebug([False] * 10)
     with pytest.raises(ValueError, match='deadline'):
-        verifier.wait_for_pe_frame(Debug(), 0)
+        verifier.wait_for_pe_frame(debug, 250)
+    assert 1 <= debug.captures <= 4
+    with pytest.raises(ValueError, match='deadline'):
+        verifier.wait_for_pe_frame(debug, 0)
+
+
+@pytest.mark.parametrize('operation', ['call', 'screenshot'])
+def test_oracle_wait_propagates_debugger_errors(operation):
+    debug = OracleDebug([True])
+    def failed(*args, **kwargs):
+        raise RuntimeError('debugger stopped unexpectedly')
+    setattr(debug, operation, failed)
+    with pytest.raises(RuntimeError, match='stopped unexpectedly'):
+        verifier.wait_for_pe_frame(debug)
 
 
 def test_closure_rejects_omitted_elf_and_resolved_map_mismatch(tmp_path, monkeypatch):

@@ -1,5 +1,8 @@
 """Native shell boundaries use authored programs, never original game bytes."""
 from copy import deepcopy
+import io
+
+from PIL import Image
 import json
 import os
 from pathlib import Path
@@ -13,12 +16,21 @@ from fdisbull.project import Project
 from fdisbull.udc_shell import BASE, FORMAT, build_windows_shell
 
 
-def wait_for_client_window(debug, *, clock=time.monotonic, timeout=30):
+def painted_frame(debug, frame):
+    row = debug.project.db.execute(
+        'SELECT data FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
+    assert row is not None, 'Screenshot artifact missing'
+    with Image.open(io.BytesIO(bytes(row['data']))) as image:
+        extrema = image.convert('RGB').getextrema()
+    return any(low != high for low, high in extrema)
+
+
+def wait_for_client_window(debug, *, clock=time.monotonic, timeout=30, is_painted=painted_frame):
     deadline = clock() + timeout
 
     def remaining_ms():
         remaining = deadline - clock()
-        assert remaining >= 0.001, 'Timed out waiting for a usable client window'
+        assert remaining >= 0.001, 'Timed out waiting for a painted client window'
         return max(1, int(remaining * 1000))
 
     while True:
@@ -28,7 +40,11 @@ def wait_for_client_window(debug, *, clock=time.monotonic, timeout=30):
         if probe['available']:
             assert type(probe.get('width')) is int and probe['width'] > 0, probe
             assert type(probe.get('height')) is int and probe['height'] > 0, probe
-            return probe
+            frame = debug.screenshot('outcome.png', timeout_ms=remaining_ms())
+            remaining_ms()
+            if is_painted(debug, frame):
+                remaining_ms()
+                return frame
         result = debug.run(timeout_ms=min(250, remaining_ms()))
         assert result['outcome'] == 'timeout', result
         remaining_ms()
@@ -36,20 +52,42 @@ def wait_for_client_window(debug, *, clock=time.monotonic, timeout=30):
 
 def test_window_wait_uses_only_required_slices():
     class Fake:
-        def __init__(self, probes): self.probes = iter(probes); self.calls = []
+        def __init__(self, probes, frames): self.probes = iter(probes); self.frames = iter(frames); self.calls = []
         def run(self, **kwargs):
             self.calls.append(('run', kwargs)); return {'outcome': 'timeout'}
         def call(self, method, **kwargs):
             self.calls.append((method, kwargs)); return next(self.probes)
+        def screenshot(self, name, **kwargs):
+            self.calls.append(('screenshot', name, kwargs)); return next(self.frames)
     visible = {'available': True, 'width': 80, 'height': 40}
-    debug = Fake([visible])
-    assert wait_for_client_window(debug, clock=lambda: 0) == visible
-    assert debug.calls == [('frame.probe', {'timeout_ms': 30000})]
-    debug = Fake([{'available': False}, {'available': False}, visible])
-    assert wait_for_client_window(debug, clock=lambda: 0) == visible
+    painted = {'artifact': 'painted'}
+    check = lambda debug, frame: frame['artifact'] == 'painted'
+    debug = Fake([visible], [painted])
+    assert wait_for_client_window(debug, clock=lambda: 0, is_painted=check) == painted
+    assert debug.calls == [('frame.probe', {'timeout_ms': 30000}), ('screenshot', 'outcome.png', {'timeout_ms': 30000})]
+    debug = Fake([{'available': False}, visible, visible], [{'artifact': 'blank'}, painted])
+    assert wait_for_client_window(debug, clock=lambda: 0, is_painted=check) == painted
     assert [item[0] for item in debug.calls] == [
-        'frame.probe', 'run', 'frame.probe', 'run', 'frame.probe']
+        'frame.probe', 'run', 'frame.probe', 'screenshot', 'run', 'frame.probe', 'screenshot']
     assert all(item[1]['timeout_ms'] == 250 for item in debug.calls if item[0] == 'run')
+
+
+def test_painted_frame_checks_actual_png():
+    class DB:
+        def __init__(self, image):
+            out = io.BytesIO(); image.save(out, format='PNG'); self.data = out.getvalue()
+        def execute(self, query, params):
+            assert params == ('frame',)
+            return self
+        def fetchone(self): return {'data': self.data}
+    class Debug: pass
+    debug = Debug(); debug.project = Debug()
+    image = Image.new('RGB', (2, 2), 'white')
+    debug.project.db = DB(image)
+    assert not painted_frame(debug, {'artifact': 'frame'})
+    image.putpixel((1, 1), (0, 0, 0))
+    debug.project.db = DB(image)
+    assert painted_frame(debug, {'artifact': 'frame'})
 
 
 def test_window_wait_rejects_stop_and_deadline():
@@ -67,6 +105,17 @@ def test_window_wait_rejects_stop_and_deadline():
     with pytest.raises(AssertionError, match='Timed out'):
         wait_for_client_window(debug, clock=lambda: next(times), timeout=1)
     assert debug.calls == [('frame.probe', {'timeout_ms': 750})]
+
+
+def test_window_wait_times_out_on_uniform_frame():
+    class Fake:
+        def call(self, method, **kwargs): return {'available': True, 'width': 2, 'height': 2}
+        def screenshot(self, name, **kwargs): return {'artifact': 'blank'}
+        def run(self, **kwargs): return {'outcome': 'timeout'}
+    times = iter([0, 0, 0, 0, 0, 0, 0, 1.1])
+    with pytest.raises(AssertionError, match='Timed out'):
+        wait_for_client_window(Fake(), clock=lambda: next(times), timeout=1,
+                               is_painted=lambda debug, frame: False)
 
 
 @pytest.mark.parametrize('probe', [{}, {'available': 1}, {'available': True},
@@ -281,8 +330,7 @@ def test_real_native_windows_calls_state_loop_atomicity_and_notification(tmp_pat
                 assert debug.call('frame.probe') == {'available': False}
                 assert debug.registers()['general'] == registers
                 debug.delete_breakpoint(bp['breakpoint_id'])
-                wait_for_client_window(debug)
-                frame = debug.screenshot('outcome.png')
+                frame = wait_for_client_window(debug)
                 assert frame['metadata']['width'] > 20 and frame['metadata']['height'] > 20
                 exit_bp = debug.breakpoint(BASE + build['slots']['entry']['rva'] + 23)
                 debug.click(frame['metadata']['width'] // 2, frame['metadata']['height'] - 14,
@@ -296,3 +344,13 @@ def test_real_native_windows_calls_state_loop_atomicity_and_notification(tmp_pat
             exited = debug.run(timeout_ms=60000)
             assert exited['outcome'] == 'exited' and exited['session']['exit_code'] == status
         assert debug.rpc.process.poll() is not None
+
+
+def test_window_wait_preserves_screenshot_errors():
+    class Fake:
+        def call(self, method, **kwargs):
+            return {'available': True, 'width': 80, 'height': 40}
+        def screenshot(self, name, **kwargs):
+            raise RuntimeError('capture failed')
+    with pytest.raises(RuntimeError, match='capture failed'):
+        wait_for_client_window(Fake(), clock=lambda: 0)

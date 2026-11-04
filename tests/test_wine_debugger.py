@@ -15,6 +15,27 @@ from fdisbull.wine_rpc import WineQemuRPC
 from fixtures_formats import pe64
 
 
+def test_pe_screenshot_passes_validated_capture_budget():
+    import base64
+    session = PEDebugSession.__new__(PEDebugSession)
+    calls = []
+    def call(method, *, timeout_ms):
+        calls.append((method, timeout_ms))
+        return {'width': 2, 'height': 1, 'window': 'fixture',
+                'bgra_base64': base64.b64encode(bytes(8)).decode()}
+    session.call = call
+    session._frame = None
+    session.mode_id = 0
+    session._artifact = lambda name, kind, data, metadata: metadata
+    session.screenshot(timeout_ms=57)
+    session.screenshot()
+    assert calls == [('screenshot', 57), ('screenshot', 30000)]
+    for invalid in (0, -1, True, 600001, '57'):
+        with pytest.raises(ValueError, match='timeout_ms'):
+            session.screenshot(timeout_ms=invalid)
+    assert len(calls) == 2
+
+
 def test_guest_call_waiting_for_machine_lock_rejects_a_concurrent_pause_without_closing():
     import threading
     from types import SimpleNamespace

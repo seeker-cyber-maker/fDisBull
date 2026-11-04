@@ -10,6 +10,7 @@ import hashlib
 import importlib
 import importlib.metadata
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -204,21 +205,39 @@ def check_loader_closure(root, roles):
 
 
 def wait_for_pe_frame(debug, timeout_ms=15000):
+    """Wait for the authored oracle's painted image while it remains stopped."""
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
         raise ValueError('Invalid frame readiness deadline')
     deadline = time.monotonic() + timeout_ms / 1000
-    while True:
+
+    def remaining_ms():
         remaining = int((deadline - time.monotonic()) * 1000)
         if remaining < 1:
             raise ValueError('PE frame readiness deadline exceeded')
-        probe = debug.call('frame.probe', timeout_ms=remaining)
+        return remaining
+
+    while True:
+        probe = debug.call('frame.probe', timeout_ms=remaining_ms())
+        remaining_ms()
         if probe.get('available') is True:
             if not (type(probe.get('width')) is int and 1 <= probe['width'] <= 1920 and type(probe.get('height')) is int and 1 <= probe['height'] <= 1080):
                 raise ValueError('Invalid PE frame dimensions')
-            return probe
-        if probe.get('available') is not False:
+            frame = debug.screenshot('pe.png', timeout_ms=remaining_ms())
+            remaining_ms()
+            row = debug.project.db.execute('SELECT data,sha256 FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
+            if row is None or hashlib.sha256(bytes(row['data'])).hexdigest() != row['sha256']:
+                raise ValueError('Missing or corrupt PE screenshot artifact')
+            from PIL import Image
+            with Image.open(io.BytesIO(bytes(row['data']))) as image:
+                extrema = image.convert('RGB').getextrema()
+            remaining_ms()
+            if any(low != high for low, high in extrema):
+                return frame
+        elif probe.get('available') is not False:
             raise ValueError('Invalid PE frame probe')
-        time.sleep(min(0.1, max(0, deadline - time.monotonic())))
+        # The oracle calls UpdateWindow before reaching its checkpoint. Never
+        # resume the guest here: doing so would consume the intentional stop.
+        time.sleep(min(0.1, remaining_ms() / 1000))
 
 
 def confined(root, manifest):
@@ -323,7 +342,7 @@ def verify(root, workspace, archive):
         bp=debug.breakpoint(checkpoint)
         if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
         if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
-        wait_for_pe_frame(debug); frame=debug.screenshot('pe.png'); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
+        frame=wait_for_pe_frame(debug); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
         if not trace['metadata']['complete']: raise ValueError('PE trace incomplete')
         state=debug.save_state('pe.sav'); debug.click(80,80,mode_id=frame['metadata']['mode_id'])
         if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')

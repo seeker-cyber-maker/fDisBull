@@ -47,7 +47,7 @@
       "production_deadlines_unchanged": true,
       "JUnit_sha256": "37b907c4917ee6cd779faa01257a59e72c6aebffea6afd8b4f8ac97cc5dedcde"
     },
-    "scope": "The previously failing win and lose notification routes were observed passing; full exact-commit CI is still required."
+    "scope": "The notification click/exit routes passed the targeted component checks, but retained captures were later found to be uniform black or white. Those passes do not establish useful painted screenshots. Full exact-commit Linux qualification is still required."
   },
   "integrated_local_checks": {
     "passed": 1179,
@@ -75,5 +75,27 @@
     "failed": 0,
     "JUnit_sha256": "0f02a47a3e94024d2546bd571613104737d4eeffea63af19aeae18b44f743eea",
     "scope": "host contract/provenance/unit checks; not complete Linux CI"
+  },
+  "painted_frame_follow_up": {
+    "finding": "Retained component captures had correct dimensions but uniform RGB pixels; visible client geometry is not sufficient evidence of first paint.",
+    "black_capture_sha256": "ff3529e633cda5b84826cf5a052d2135e9b6e9dbe548f53c96f0c1f43fab384d",
+    "white_capture_sha256": "06b6a9f243f165258b18841d34b321a1f33cc36e2abe7d7d342e49de27559812",
+    "fix": "Only the known authored UI fixtures require non-uniform captured pixels. MessageBox tests advance bounded slices; the already-painted oracle stays at its checkpoint. Both reuse the accepted artifact and pass the remaining deadline to screenshot.",
+    "generic_frame_probe": "visible client rectangle only; not a general content-readiness guarantee",
+    "host_tests": {
+      "runtime": "macOS ARM64 Python 3.13.14",
+      "passed": 46,
+      "optional_native_skips": 10,
+      "JUnit_sha256": "87cfa0f57829036ee9c5bcdb1d892ff7f6a923ed42e8476caa155c81c25e28f6"
+    },
+    "native_follow_up": "not run; new bulk work stopped by storage admission",
+    "consumer_attachment": "not yet assembled or qualified",
+    "integrated_host_checks": {
+      "runtime": "macOS ARM64 Python 3.13.14",
+      "passed": 1198,
+      "optional_native_skips": 10,
+      "JUnit_sha256": "0a14db57e5524ada061c71b6bfbe5f601457bec86e66b86813365f646cc6d5ef",
+      "scope": "Focused CI, kit, package, runtime provenance, delta and capture contracts; not complete Linux CI"
+    }
   }
 }
