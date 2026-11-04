@@ -68,6 +68,7 @@ SOURCE_PATTERNS = (
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
+    ("tests/fixtures", "*.cpp"),
     ("tests", "ida_rpc_vectors.json"),
     ("tests", "rom_asm_sh2_vectors.json"),
     ("docs", "*.md"),
@@ -161,6 +162,7 @@ SOURCE_PATTERNS = (
     ("skills/dos-target-media-rip", "*.py"),
     ("docs/evidence/gog-galaxy-chimprec-2026-11-02", "receipt.json"),
     ("docs/evidence/0.32.0-release", "intake.json"),
+    ("docs/evidence/0.33.0-release", "intake.json"),
 )
 
 

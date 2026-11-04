@@ -16,12 +16,14 @@ include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/fixtures/protected_mode_mouse.S
+include tests/fixtures/kyra_debug_core.cpp
 include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
 include docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json
 include docs/evidence/0.32.0-release/intake.json
+include docs/evidence/0.33.0-release/intake.json
 include docs/evidence/shadowrun-ai-2026-11-01/source.json
 include docs/evidence/shadowrun-ai-2026-11-01/nes.json
 include docs/evidence/shadowrun-ai-2026-11-01/skill.json

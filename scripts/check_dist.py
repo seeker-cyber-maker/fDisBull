@@ -97,6 +97,7 @@ REQUIRED_SOURCE_DELIVERY = {
     "skills/dos-target-media-rip/scripts/disc_data_track.py",
     "docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json",
     "docs/evidence/0.32.0-release/intake.json",
+    "docs/evidence/0.33.0-release/intake.json",
 }
 REQUIRED_TEST_HELPERS.add("tests/test_analysis_approach_skill.py")
 REQUIRED_TEST_HELPERS |= {

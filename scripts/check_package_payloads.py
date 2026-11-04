@@ -33,6 +33,8 @@ SOURCE_SUPPORT = (
     "docs/evidence/scummvm-gob-2026-11-01/comparison.json",
     "docs/evidence/0.32.0-release/README.md",
     "docs/evidence/0.32.0-release/intake.json",
+    "docs/evidence/0.33.0-release/README.md",
+    "docs/evidence/0.33.0-release/intake.json",
 )
 
 

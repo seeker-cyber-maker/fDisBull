@@ -1,5 +1,19 @@
 # Release records and qualification
 
+## 0.33.0rc1 local candidate (not published)
+
+The `0.33.0rc1` source is a local macOS release-candidate cut. It starts from
+the unpublished 0.32.0 candidate, carries the published 0.31.1 lineage and
+merges the selected 0.32 PR integration. It adds the Boat CI handoff, built-in
+GOG Inno reader, Westwood media modules, experimental ScummVM Kyra/AGI pilots
+and reviewed investigation-skill guidance.
+
+This candidate has not been tagged, uploaded or installed. Hosted Linux
+ordinary/native CI and installed-wheel PE/DOS/boot acceptance remain pending.
+Local results and inherited failures are recorded in the
+[0.33.0rc1 evidence](evidence/0.33.0-release/README.md) and the
+[release notes](RELEASE-0.33.0.md).
+
 ## 0.32.0 source scope and publication record
 
 The [0.32.0 notes](RELEASE-0.32.0.md) describe the reviewed feature line based on
