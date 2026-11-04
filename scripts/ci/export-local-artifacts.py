@@ -11,7 +11,9 @@ import subprocess
 
 SELECTIONS = ('dist/*', 'artifacts/receipts/*.json', 'artifacts/ordinary/*',
               'native-evidence/**/*', '.native/backends/**/*', '.native/offline/output/*',
-              '.native/pe/packages/*.whl')
+              '.native/pe/packages/*.whl', '.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
+              '.native/pe/linux-amd64', '.native/pe/runtime.cpio.gz',
+              '.native/pe/oracle.exe', '.native/pe/dos-runtime.cpio.gz')
 
 
 def export(work, output, expected_sha):

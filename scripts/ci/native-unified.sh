@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
+  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config libglib2.0-dev libpixman-1-dev ninja-build docker.io libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6
@@ -101,11 +104,9 @@ receipt={'source_commit':os.environ['CI_COMMIT_SHA'],
 Path('native-evidence/pe/backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
 PY
 
-set -euo pipefail
-python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py tests/test_wine_doctor.py tests/test_wine_deltas.py tests/test_wine_deltas_native.py tests/test_udc_shell.py tests/test_udc_selected_shell.py -o pythonpath= \
-  --junitxml=native-evidence/pe/tests.xml 2>&1 | tee native-evidence/pe/tests.log
-
-set -euo pipefail
-mkdir -p native-evidence/unified
-python -m pytest -q -s tests/test_dos_qemu.py tests/test_qemu_machine.py -o pythonpath= \
-  --junitxml=native-evidence/unified/tests.xml 2>&1 | tee native-evidence/unified/tests.log
+if [ "${FDISBULL_UNIFIED_PREPARE_ONLY:-}" = 1 ]; then
+  test "${FDISBULL_EXECUTION_ORIGIN:-}" = local-linux
+  python scripts/ci/unified-runtime-inputs.py prepare
+  exit 0
+fi
+bash scripts/ci/unified-acceptance.sh

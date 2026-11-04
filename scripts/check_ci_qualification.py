@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -122,6 +123,53 @@ def verify_reused_backend(root, profile, backend, artifacts, process):
     return proofs
 
 
+def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_ids, receipt, process):
+    """Bind independently prepared runtime inputs to the tested local job."""
+    base = 'native-evidence/pe/'
+    manifest_ref = receipt.get('prepared_manifest')
+    if not isinstance(manifest_ref, dict) or manifest_ref.get('path') != base + 'prepared-inputs.json':
+        raise ValueError('Local unified prepared manifest missing')
+    verify_artifact(root, manifest_ref)
+    manifest = read(local_path(root, base + 'prepared-inputs.json'))
+    build_job = canonical_uuid(manifest.get('build_job_id'))
+    if build_job in canonical_job_ids:
+        raise ValueError('Preparation job identity duplicates a qualification job')
+    paths = {name: base + 'preparation-' + name + '.json'
+             for name in ('process', 'source-postcheck', 'completed')}
+    proof = {name: identity(root, path) for name, path in paths.items()}
+    build = read(local_path(root, paths['process']))
+    postcheck = read(local_path(root, paths['source-postcheck']))
+    completed = read(local_path(root, paths['completed']))
+    if (build.get('execution_origin') != 'local-linux' or build.get('source_commit') != source_commit
+        or build.get('local_run_id') != run_id or build.get('local_job_id') != build_job
+        or build.get('job_name') != 'native-unified-prepare' or build.get('termination') != 'exited'
+        or type(build.get('exit_code')) is not int or build.get('exit_code') != 0
+        or build.get('container_state_after_stop') != 'stopped'
+        or build.get('image_digest') != process.get('image_digest')
+        or build.get('runtime') != process.get('runtime')):
+        raise ValueError('Unified preparation process identity or runtime mismatch')
+    if (postcheck.get('source_commit') != source_commit
+        or postcheck.get('expected_source_commit') != source_commit
+        or postcheck.get('tracked_worktree_dirty') is not False
+        or postcheck.get('export_success') is not True):
+        raise ValueError('Unified preparation source postcheck failed')
+    if (completed.get('source_commit') != source_commit or completed.get('local_job_id') != build_job
+        or not isinstance(completed.get('completed_at'), str) or not completed['completed_at']):
+        raise ValueError('Unified preparation completion marker mismatch')
+    spec = importlib.util.spec_from_file_location('fdisbull_unified_runtime_inputs',
+                    Path(__file__).resolve().parent / 'ci/unified-runtime-inputs.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    checked = module.verify(root, source_commit, run_id, build_job, source_root=None)
+    if (receipt.get('runtime_inputs') != list(checked['inputs'].values())
+        or receipt.get('resource_receipts') != list(checked['resource_receipts'].values())
+        or receipt.get('firmware') != checked['firmware']
+        or receipt.get('artifacts') != [checked['tested_wheel'], *checked['inputs'].values()]
+        or receipt.get('backend_identity') != read(local_path(root, checked['backend_identity']['path']))):
+        raise ValueError('Unified acceptance receipt does not match prepared runtime')
+    return {'build_job_id': build_job, 'prepared_manifest': manifest_ref, **proof}
+
+
 def passing_junit(path, *, native=False):
     tree = ET.parse(path).getroot()
     suites = [tree] if tree.tag == 'testsuite' else list(tree.findall('testsuite'))
@@ -144,6 +192,7 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
         if pipeline_id is not None:
             raise ValueError("Local qualification cannot claim a GitLab pipeline")
     results, job_ids = {}, set()
+    unified_receipt = unified_process = None
     for profile, job in JOBS.items():
         name = 'ordinary' if profile == 'ordinary' else 'native-' + profile
         path = root / f'artifacts/receipts/{name}.json'
@@ -212,6 +261,8 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
             results[job]['build_provenance'] = reuse
         if local_run_id is not None:
             results[job]['process_receipt'] = identity(root, str(process_path.relative_to(root)))
+            if profile == 'unified':
+                unified_receipt, unified_process = receipt, process
     payload = read(root / 'artifacts/receipts/package-payloads.json')
     if payload.get('source_commit') != source_commit or payload.get('tracked_worktree_dirty') is not False:
         raise ValueError("Package inventory is absent, dirty or from another commit")
@@ -225,8 +276,12 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None):
             raise ValueError(f"Package inventory and ordinary job disagree: {p}")
     core = package_artifacts['core']
     tested = results['native-unified']['artifacts']
-    if len(tested) != 1 or (tested[0]['sha256'], tested[0]['size']) != (core['sha256'], core['size_bytes']):
+    if (not tested or (local_run_id is None and len(tested) != 1)
+        or (tested[0]['sha256'], tested[0]['size']) != (core['sha256'], core['size_bytes'])):
         raise ValueError("The installed-wheel native acceptance did not test the ordinary core wheel")
+    if local_run_id is not None:
+        results['native-unified']['preparation'] = verify_local_unified_preparation(
+            root, source_commit, local_run_id, job_ids, unified_receipt, unified_process)
     result = {"schema": "fdisbull-ci-qualification-1", "status": "qualified", "source_commit": source_commit,
               "required_jobs": results,
               "package_inventory": identity(root, 'artifacts/receipts/package-payloads.json'),

@@ -112,7 +112,7 @@ def test_host_requires_matching_guest_proof_and_successful_export(source, tmp_pa
 def test_unified_uses_isolated_native_docker_and_pinned_amd64_child():
     image = {'image_reference': 'docker.io/library/python@sha256:' + 'a' * 64,
              'image_digest': 'sha256:' + 'b' * 64}
-    env = runner.job_environment('unified', 'c' * 40, 'run', 'job')
+    env = runner.job_environment('unified-prepare', 'c' * 40, 'run', 'job')
     command = runner.unified_command(image, env)
     assert 'source /source/scripts/ci/local-docker.sh' in command
     assert 'linux/amd64' in command and '--network host' in command
@@ -136,3 +136,20 @@ def test_image_identity_selects_amd64_and_arm64_variants():
     assert runner.image_identity(data, 'arm64')['image_digest'] == 'sha256:' + 'c' * 64
     with pytest.raises(ValueError, match='arm64'):
         runner.image_identity([dict(data[0], variants=data[0]['variants'][:1])], 'arm64')
+
+
+def test_unified_export_selects_only_declared_runtime_inputs(source, tmp_path):
+    work, sha = source
+    expected = ['.native/pe/qemu-9.2.4/build/qemu-system-x86_64', '.native/pe/linux-amd64',
+                '.native/pe/runtime.cpio.gz', '.native/pe/oracle.exe',
+                '.native/pe/dos-runtime.cpio.gz', '.native/backends/layers/dosbox-x']
+    for name in expected:
+        p = work / name
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(name.encode())
+    private = work / '.native/pe/private-game.exe'
+    private.write_bytes(b'private')
+    out = tmp_path / 'phase/exported'
+    exporter.export(work, out, sha)
+    assert all((out / name).is_file() for name in expected)
+    assert not (out / '.native/pe/private-game.exe').exists()

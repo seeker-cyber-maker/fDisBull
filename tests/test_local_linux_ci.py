@@ -191,3 +191,96 @@ def test_same_pool_storage_is_admitted_once(tmp_path, monkeypatch):
     monkeypatch.setattr(runner, 'admit', lambda path, expected, reserve: calls.append(path) or {'admitted': True})
     assert set(runner.admit_destinations(output, 123, 456)) == {'output'}
     assert calls == [output]
+
+
+def test_local_unified_preparation_precedes_direct_acceptance():
+    assert runner.profiles_for('unified') == ['unified-prepare', 'unified']
+    assert runner.profiles_for('all') == ['ordinary', 'stable', 'layers', 'unified-prepare', 'unified']
+    assert runner.profiles_for('qualify') == []
+    sha = 'a' * 40
+    run = '27680f97-aaad-4846-a2fd-4a48b7bad36b'
+    job = 'd0c36dcb-43d6-457c-889e-c97a0e82d6dd'
+    build = runner.job_environment('unified-prepare', sha, run, job)
+    direct = runner.job_environment('unified', sha, run, job)
+    assert build['CI_JOB_NAME'] == 'native-unified-prepare'
+    assert build['FDISBULL_UNIFIED_PREPARE_ONLY'] == '1'
+    assert direct['CI_JOB_NAME'] == 'native-unified'
+    assert direct['FDISBULL_UNIFIED_PREPARED'] == '1'
+    assert 'DOCKER_HOST' not in direct and 'FDISBULL_LOCAL_DOCKER' not in direct
+    assert 'unified-acceptance.sh' in runner.job_command('unified')
+    assert 'native-unified.sh' not in runner.job_command('unified')
+    assert 'native-receipt.py' not in runner.job_command('unified-prepare')
+    assert runner.expected_bytes(SimpleNamespace(expected_bytes=None), 'unified-prepare') == 35_000_000_000
+    assert runner.expected_bytes(SimpleNamespace(expected_bytes=None), 'unified') == 8_000_000_000
+
+
+def test_collect_retains_every_prepared_runtime_input(tmp_path):
+    work, output = tmp_path / 'work', tmp_path / 'output'
+    for index, name in enumerate(runner.UNIFIED_INPUTS):
+        path = work / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(bytes([index]))
+    runner.collect(work, output)
+    for index, name in enumerate(runner.UNIFIED_INPUTS):
+        assert (output / name).read_bytes() == bytes([index])
+
+
+def test_collect_rejects_symlinked_runtime_parent(tmp_path):
+    work, output, external = tmp_path / 'work', tmp_path / 'output', tmp_path / 'external'
+    (work / '.native').mkdir(parents=True)
+    external.mkdir()
+    (external / 'linux-amd64').write_bytes(b'synthetic kernel fixture')
+    (work / '.native/pe').symlink_to(external, target_is_directory=True)
+    with pytest.raises(ValueError, match='Symlink'):
+        runner.collect(work, output)
+    assert not (output / '.native/pe/linux-amd64').exists()
+
+
+@pytest.mark.parametrize('defect', ['failed', 'wrong-source', 'wrong-run', 'wrong-job',
+                                  'unstopped', 'wrong-runtime', 'boolean-exit'])
+def test_prepared_stage_rejects_uncompleted_or_foreign_build_before_staging(tmp_path, defect):
+    run = tmp_path / 'run'
+    phase = run / 'unified-prepare'
+    phase.mkdir(parents=True)
+    sha = 'a' * 40
+    run_id = '27680f97-aaad-4846-a2fd-4a48b7bad36b'
+    job = 'd0c36dcb-43d6-457c-889e-c97a0e82d6dd'
+    process = {'execution_origin': 'local-linux', 'source_commit': sha,
+               'local_run_id': run_id, 'local_job_id': job,
+               'job_name': 'native-unified-prepare', 'exit_code': 0,
+               'termination': 'exited', 'container_state_after_stop': 'stopped',
+               'runtime': {'system': 'linux', 'machine': 'x86_64', 'python': '3.12.16'}}
+    if defect == 'failed': process['exit_code'] = 1
+    elif defect == 'wrong-source': process['source_commit'] = 'b' * 40
+    elif defect == 'wrong-run': process['local_run_id'] = '01cfab60-1368-46d3-88b7-d45878385f74'
+    elif defect == 'wrong-job': process['job_name'] = 'native-unified'
+    elif defect == 'unstopped': process['container_state_after_stop'] = 'running'
+    elif defect == 'wrong-runtime': process['runtime']['machine'] = 'arm64'
+    elif defect == 'boolean-exit': process['exit_code'] = False
+    (phase / 'process.json').write_text(json.dumps(process))
+    (phase / 'completed.json').write_text(json.dumps({'source_commit': sha, 'local_job_id': job}))
+    with pytest.raises(ValueError, match='did not complete'):
+        runner.prepared_unified_stage(tmp_path / 'source', run, tmp_path / 'output', sha, run_id)
+
+
+def test_readback_qualification_does_not_request_bulk_storage_or_start_workers(tmp_path, monkeypatch):
+    source, run = tmp_path / 'source', tmp_path / 'run'
+    source.mkdir()
+    run.mkdir()
+    sha = 'a' * 40
+    run_id = '27680f97-aaad-4846-a2fd-4a48b7bad36b'
+    (run / 'run.json').write_text(json.dumps({'source_commit': sha, 'source': str(source),
+                                             'local_run_id': run_id}))
+    original_relative = Path.is_relative_to
+    monkeypatch.setattr(Path, 'is_relative_to', lambda path, *other:
+                        True if path == run and other == (Path('/Volumes/CACHE'),)
+                        else original_relative(path, *other))
+    monkeypatch.setattr(runner, 'source_identity', lambda path: (sha, 'fixture'))
+    monkeypatch.setattr(runner, 'admit_destinations', lambda *a: pytest.fail('Readback requested bulk allocation'))
+    commands = []
+    monkeypatch.setattr(runner.subprocess, 'run', lambda command, **kwargs: commands.append(command))
+    runner.execute(SimpleNamespace(source=source, output=run, profile='qualify',
+                                   expected_bytes=None, reserve_bytes=40_000_000_000, timeout=1))
+    assert commands == [[sys.executable, str(run / 'ordinary/work/scripts/check_ci_qualification.py'),
+                         '--root', str(run / 'qualification'), '--source-commit', sha,
+                         '--local-run-id', run_id, '--output', str(run / 'qualification/qualification.json')]]

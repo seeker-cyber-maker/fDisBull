@@ -49,6 +49,17 @@ receipt = {'status': 'passed',
            'node_version': subprocess.check_output(['node', '--version'], text=True).strip(),
            'backend_identity': identity, 'test_results': [digest(p) for p in junit],
            'artifacts': [digest(p) for p in outputs]}
+if profile == 'unified' and os.environ.get('FDISBULL_UNIFIED_PREPARED') == '1':
+    from importlib.util import spec_from_file_location, module_from_spec
+    spec = spec_from_file_location('unified_runtime_inputs', Path('scripts/ci/unified-runtime-inputs.py'))
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    prepared = module.verify()
+    receipt['prepared_manifest'] = digest(module.MANIFEST)
+    receipt['runtime_inputs'] = list(prepared['inputs'].values())
+    receipt['artifacts'].extend(receipt['runtime_inputs'])
+    receipt['resource_receipts'] = list(prepared['resource_receipts'].values())
+    receipt['firmware'] = prepared['firmware']
 out = Path('artifacts/receipts')
 out.mkdir(parents=True, exist_ok=True)
 (out / f'native-{profile}.json').write_text(json.dumps(receipt, indent=2) + '\n')

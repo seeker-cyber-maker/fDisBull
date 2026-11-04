@@ -51,6 +51,16 @@ the retained web/API GitLab graph; it is not a fallback to hosted runners. Heavy
 work requires a deliberate start. Registration, credentials, provider settings,
 merge, tag, publication and installation are separate actions.
 
+Local unified preparation and acceptance use separate workers. The ARM64
+Docker orchestrator builds the runtime in its AMD64 child; a fresh direct
+AMD64 Linux worker tests the exact exported inputs and ordinary wheel. A typed
+manifest binds six runtime files, the firmware inventory and resource receipts
+to the source/run/build UUID, while retained process and source-postcheck
+records prove preparation completed. Final qualification requires both the
+preparation proof and the full zero-skip acceptance results. The original
+Wine bootstrap deadlines remain in force. The web/API GitLab job retains its
+single-job build-and-test route on a dedicated Linux runner.
+
 The qualification should demonstrate that:
 
 - An absent or non-executable DOSBox fails required-native admission instead of

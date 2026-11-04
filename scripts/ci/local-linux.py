@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -26,10 +27,32 @@ CLI = Path('/Users/tiga/.local/bin/container')
 ADMISSION = Path('/Users/tiga/.codex/bin/storage_admit.py')
 JOBS = {'ordinary': 'test-and-package', 'stable': 'native-debugger-stable',
         'layers': 'native-debugger-layers', 'unified': 'native-unified'}
+PREPARE_JOB = 'native-unified-prepare'
 IMAGES = {'ordinary': 'docker.io/library/python:3.12-bookworm',
           'stable': 'docker.io/library/python:3.12-bookworm',
           'layers': 'docker.io/library/python:3.13.5-bookworm',
-          'unified': 'docker.io/library/python:3.12-bookworm'}
+          'unified': 'docker.io/library/python:3.12-bookworm',
+          'unified-prepare': 'docker.io/library/python:3.12-bookworm'}
+UNIFIED_INPUTS = ('.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
+                  '.native/pe/linux-amd64', '.native/pe/runtime.cpio.gz',
+                  '.native/pe/dos-runtime.cpio.gz', '.native/pe/oracle.exe',
+                  '.native/backends/layers/dosbox-x')
+EXPECTED_BYTES = {'ordinary': 12_000_000_000, 'stable': 14_000_000_000,
+                  'layers': 18_000_000_000, 'unified-prepare': 35_000_000_000,
+                  'unified': 8_000_000_000}
+
+
+def profiles_for(profile):
+    if profile == 'qualify':
+        return []
+    if profile == 'all':
+        return ['ordinary', 'stable', 'layers', 'unified-prepare', 'unified']
+    return ['unified-prepare', 'unified'] if profile == 'unified' else [profile]
+
+
+def expected_bytes(args, profile):
+    override = getattr(args, 'expected_bytes', None)
+    return EXPECTED_BYTES[profile] if override is None else override
 
 
 def now():
@@ -97,7 +120,7 @@ def image_identity(value, architecture="amd64"):
 
 def job_environment(profile, sha, run_id, job_id):
     env = {'CI_PROJECT_DIR': '/work', 'CI_BUILDS_DIR': '/ci-builds',
-           'CI_COMMIT_SHA': sha, 'CI_JOB_NAME': JOBS[profile],
+           'CI_COMMIT_SHA': sha, 'CI_JOB_NAME': PREPARE_JOB if profile == 'unified-prepare' else JOBS[profile],
            'FDISBULL_EXECUTION_ORIGIN': 'local-linux',
            'FDISBULL_LOCAL_RUN_ID': run_id, 'FDISBULL_LOCAL_JOB_ID': job_id,
            'TMPDIR': '/ci-tmp', 'PIP_CACHE_DIR': '/ci-cache/pip',
@@ -107,11 +130,8 @@ def job_environment(profile, sha, run_id, job_id):
                    FDISBULL_PATCH_DIRECTORY='experimental/dosbox-x' + ('/layers' if profile == 'layers' else ''),
                    FDISBULL_DOSBOX=f'/work/.native/backends/{profile}/dosbox-x',
                    FDISBULL_DOSBOX_SOURCE='/work/.native/dosbox-x')
-    elif profile == 'unified':
-        env.update(FDISBULL_LOCAL_DOCKER='0',
-                   FDISBULL_LOCAL_DOCKER_BUILD_NETWORK='host',
-                   DOCKER_HOST='unix:///var/run/docker.sock',
-                   FDISBULL_PE_QEMU='/work/.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
+    elif profile in ('unified', 'unified-prepare'):
+        env.update(FDISBULL_PE_QEMU='/work/.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                    FDISBULL_PE_KERNEL='/work/.native/pe/linux-amd64',
                    FDISBULL_PE_INITRAMFS='/work/.native/pe/runtime.cpio.gz',
                    FDISBULL_PE_FIXTURE='/work/.native/pe/oracle.exe',
@@ -123,6 +143,13 @@ def job_environment(profile, sha, run_id, job_id):
                    FDISBULL_MACHINE_EVIDENCE='/work/native-evidence/unified/boot',
                    FDISBULL_DOS_QEMU_EVIDENCE='/work/native-evidence/unified/dos',
                    FDISBULL_REQUIRE_MACHINE='1', FDISBULL_REQUIRE_DOS_QEMU='1')
+        if profile == 'unified-prepare':
+            env.update(FDISBULL_LOCAL_DOCKER='0',
+                       FDISBULL_LOCAL_DOCKER_BUILD_NETWORK='host',
+                       DOCKER_HOST='unix:///var/run/docker.sock',
+                       FDISBULL_UNIFIED_PREPARE_ONLY='1')
+        else:
+            env['FDISBULL_UNIFIED_PREPARED'] = '1'
     return env
 
 
@@ -149,7 +176,11 @@ def job_command(profile):
         return setup + ('apt-get update && apt-get install -y --no-install-recommends '
                         'ca-certificates curl xz-utils git build-essential clang libx11-dev && '
                         'bash scripts/ci/test-and-package.sh')
-    script = 'native-unified' if profile == 'unified' else 'native-debugger'
+    if profile == 'unified-prepare':
+        return setup + 'bash scripts/ci/native-unified.sh'
+    if profile == 'unified':
+        return setup + 'bash scripts/ci/unified-acceptance.sh'
+    script = 'native-debugger'
     return setup + f'bash scripts/ci/{script}.sh && python scripts/ci/native-receipt.py {profile}'
 
 
@@ -163,7 +194,7 @@ def unified_command(image, environment):
             '--mount', 'type=bind,src=/run/fdisbull-local-docker/docker.sock,dst=/var/run/docker.sock']
     for key, value in environment.items():
         args.extend(['--env', key + '=' + value])
-    args.extend([pinned, 'bash', '-ec', job_command('unified')])
+    args.extend([pinned, 'bash', '-ec', job_command('unified-prepare')])
     return ('set -Eeuo pipefail; export DEBIAN_FRONTEND=noninteractive; '
             'apt-get update; apt-get install -y --no-install-recommends docker.io; '
             'mkdir -p /run-data/orchestrator; cd /run-data/orchestrator; '
@@ -223,10 +254,12 @@ def run_container(args, log, timeout, name):
 def collect(work, output):
     selections = ['dist/*', 'artifacts/receipts/*.json', 'artifacts/ordinary/*',
                   'native-evidence/**/*', '.native/backends/**/*', '.native/offline/output/*',
-                  '.native/pe/packages/*.whl']
+                  '.native/pe/packages/*.whl', *UNIFIED_INPUTS]
     for pattern in selections:
         for path in work.glob(pattern):
-            if path.is_symlink():
+            relative = path.relative_to(work)
+            if any((work / Path(*relative.parts[:i])).is_symlink()
+                   for i in range(1, len(relative.parts) + 1)):
                 raise ValueError('Symlink in selected CI outputs')
             if not path.is_file():
                 continue
@@ -289,6 +322,86 @@ def stage_backend_reuse(source, export_root, work, image_digest, profile):
     native_backend_reuse.verify(stage, work / directory / 'source-manifest.json', image_digest, profile)
 
 
+def unified_input_verifier(source):
+    """Load the candidate's pure verifier without importing its product code."""
+    script = source / 'scripts/ci/unified-runtime-inputs.py'
+    spec = importlib.util.spec_from_file_location('fdisbull_ci_unified_inputs', script)
+    module = importlib.util.module_from_spec(spec)
+    original = sys.path[:]
+    try:
+        sys.path.insert(0, str(script.parent))
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = original
+    return module
+
+
+def read_regular_json(path):
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > 2 * 1024 * 1024:
+        raise ValueError('Missing or invalid local preparation proof')
+    value = json.loads(path.read_text())
+    if not isinstance(value, dict):
+        raise ValueError('Invalid local preparation proof object')
+    return value
+
+
+def prepared_unified_stage(source, run_root, output, sha, run_id):
+    """Require the completed real build, not merely a manifest with valid hashes."""
+    phase = run_root / 'unified-prepare'
+    process = read_regular_json(phase / 'process.json')
+    marker = read_regular_json(phase / 'completed.json')
+    job_id = process.get('local_job_id')
+    try:
+        if str(uuid.UUID(job_id)) != job_id:
+            raise ValueError
+    except (ValueError, TypeError, AttributeError):
+        raise ValueError('Invalid local preparation job identity') from None
+    if (process.get('execution_origin') != 'local-linux'
+            or process.get('source_commit') != sha or process.get('local_run_id') != run_id
+            or process.get('job_name') != PREPARE_JOB or process.get('exit_code') != 0
+            or type(process.get('exit_code')) is not int
+            or process.get('termination') != 'exited'
+            or process.get('container_state_after_stop') != 'stopped'
+            or marker.get('local_job_id') != job_id or marker.get('source_commit') != sha
+            or not isinstance(process.get('runtime'), dict)
+            or process['runtime'].get('system') != 'linux'
+            or process['runtime'].get('machine') != 'x86_64'
+            or not process['runtime'].get('python', '').startswith('3.12.')):
+        raise ValueError('Local unified preparation did not complete for this source and run')
+    postcheck = verify_guest_postcheck(phase / 'guest-data', sha)
+    copies = {'preparation-process.json': process,
+              'preparation-source-postcheck.json': postcheck,
+              'preparation-completed.json': marker}
+    for name, value in copies.items():
+        if read_regular_json(output / 'native-evidence/pe' / name) != value:
+            raise ValueError('Changed local preparation provenance')
+    unified_input_verifier(source).verify(output, sha, run_id, job_id, source_root=source)
+    return process
+
+
+def stage_prepared_unified(source, run_root, output, work, sha, run_id):
+    process = prepared_unified_stage(source, run_root, output, sha, run_id)
+    selections = (*UNIFIED_INPUTS, 'native-evidence/pe/**/*', '.native/pe/packages/*.whl')
+    for pattern in selections:
+        for path in output.glob(pattern):
+            relative = path.relative_to(output)
+            if any((output / Path(*relative.parts[:i])).is_symlink()
+                   for i in range(1, len(relative.parts) + 1)):
+                raise ValueError('Symlink in prepared runtime inputs')
+            if not path.is_file():
+                continue
+            target = work / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists():
+                with target.open('rb') as a, path.open('rb') as b:
+                    if hashlib.file_digest(a, 'sha256').digest() != hashlib.file_digest(b, 'sha256').digest():
+                        raise ValueError('Conflicting staged runtime input')
+            else:
+                shutil.copy2(path, target)
+    unified_input_verifier(source).verify(work, sha, run_id, process['local_job_id'], source_root=work)
+    return process
+
+
 def execute(args):
     source = args.source.resolve()
     sha, branch = source_identity(source)
@@ -298,7 +411,14 @@ def execute(args):
     if run_root.is_relative_to(source) or source.is_relative_to(run_root):
         raise ValueError('Output must be outside the source checkout')
     parent = run_root if run_root.exists() else run_root.parent
-    admit_destinations(parent, args.expected_bytes, args.reserve_bytes)
+    # Initial control-file admission is small; every new material leg gets its
+    # own budget after completed legs have been checked. A resumed preparation
+    # must not require the original compiler allocation a second time.
+    if args.profile == 'qualify':
+        if not run_root.is_dir() or not (run_root / 'run.json').is_file():
+            raise ValueError('Readback qualification requires an existing local run')
+    else:
+        admit_destinations(parent, 0, args.reserve_bytes)
     run_root.mkdir(exist_ok=True)
     manifest_path = run_root / 'run.json'
     if manifest_path.exists():
@@ -312,7 +432,7 @@ def execute(args):
         save(manifest_path, manifest)
     output = run_root / 'qualification'
     output.mkdir(exist_ok=True)
-    profiles = list(JOBS) if args.profile == 'all' else ([] if args.profile == 'qualify' else [args.profile])
+    profiles = profiles_for(args.profile)
     for profile in profiles:
         reuse_backend = getattr(args, f'reuse_{profile}_backend', None) if profile in ('stable', 'layers') else None
         receipt_path = output / f'artifacts/receipts/local-process-{profile}.json'
@@ -321,16 +441,18 @@ def execute(args):
             process = json.loads(receipt_path.read_text())
             if (marker.is_file() and process.get('exit_code') == 0
                     and json.loads(marker.read_text()).get('local_job_id') == process.get('local_job_id')):
+                if profile == 'unified-prepare':
+                    prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'])
                 print(f'{profile}: retained completed leg', flush=True)
                 continue
             raise ValueError('Failed attempt retained; use a new run directory')
         if profile != 'ordinary' and not (output / 'artifacts/receipts/ordinary.json').exists():
             raise ValueError('Ordinary package acceptance must pass first')
-        if profile == 'unified' and not all((output / f'artifacts/receipts/native-{p}.json').exists() for p in ('stable', 'layers')):
+        if profile in ('unified', 'unified-prepare') and not all((output / f'artifacts/receipts/native-{p}.json').exists() for p in ('stable', 'layers')):
             raise ValueError('Both DOS native profiles must pass before unified acceptance')
         phase = run_root / profile
         phase.mkdir()  # never overwrite an interrupted or failed attempt
-        save(phase / 'storage-admission.json', admit_destinations(run_root, args.expected_bytes, args.reserve_bytes))
+        save(phase / 'storage-admission.json', admit_destinations(run_root, expected_bytes(args, profile), args.reserve_bytes))
         job_id = str(uuid.uuid4())
         name = f'fdb-ci-{profile}-{job_id[:8]}'
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
@@ -338,15 +460,18 @@ def execute(args):
         work = phase / 'work'
         if profile != 'ordinary':
             shutil.copytree(output / 'dist', work / 'dist')
-        if profile == 'unified':
+        if profile in ('unified', 'unified-prepare'):
             shutil.copytree(output / '.native/backends/layers', work / '.native/backends/layers')
             shutil.copytree(output / 'native-evidence/layers', work / 'native-evidence/layers')
+        preparation = None
+        if profile == 'unified':
+            preparation = stage_prepared_unified(source, run_root, output, work, sha, manifest['local_run_id'])
         with (phase / 'image-pull.log').open('x') as log:
             subprocess.run([str(CLI), 'image', 'pull', '--arch', 'amd64', IMAGES[profile]],
                            stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
         image = image_identity(json.loads(capture([str(CLI), 'image', 'inspect', IMAGES[profile]])))
         orchestrator = None
-        if profile == 'unified':
+        if profile == 'unified-prepare':
             with (phase / 'orchestrator-image-pull.log').open('x') as log:
                 subprocess.run([str(CLI), 'image', 'pull', '--arch', 'arm64', IMAGES[profile]],
                                stdout=log, stderr=subprocess.STDOUT, env=safe_env(), check=True, timeout=600)
@@ -365,6 +490,10 @@ def execute(args):
                    '--mount', f'type=bind,source={work},target=/source,readonly',
                    '--mount', f'type=bind,source={guest_data},target=/run-data']
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id)
+        if preparation is not None:
+            if preparation['image_digest'] != image['image_digest']:
+                raise ValueError('Prepared runtime build and test images differ')
+            environment['FDISBULL_UNIFIED_BUILD_JOB_ID'] = preparation['local_job_id']
         if reuse_backend is not None:
             environment.update(FDISBULL_REUSE_BACKEND='1', FDISBULL_REUSE_IMAGE_DIGEST=image['image_digest'])
         if orchestrator is not None:
@@ -383,7 +512,8 @@ def execute(args):
             runtime = None
         process = {'execution_origin': 'local-linux', 'source_commit': sha,
                    'local_run_id': manifest['local_run_id'], 'local_job_id': job_id,
-                   'job_name': JOBS[profile], 'termination': termination, 'exit_code': code,
+                   'job_name': PREPARE_JOB if profile == 'unified-prepare' else JOBS[profile],
+                   'termination': termination, 'exit_code': code,
                    **image, 'container_name': name, 'host_process_id': pid,
                    'started_at': started, 'finished_at': now(), 'stop_cli_exit_code': stop_code,
                    'container_state_after_stop': state, 'runtime': runtime}
@@ -398,9 +528,19 @@ def execute(args):
         if code or termination != 'exited' or state != 'stopped' or runtime is None:
             raise ValueError(f'{profile} did not pass; preserved log: {phase / "container.log"}')
         verify_guest_postcheck(guest_data, sha)
+        if profile == 'unified-prepare':
+            unified_input_verifier(source).verify(output, sha, manifest['local_run_id'], job_id,
+                                                  source_root=source)
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
         save(receipt_path, process)
         save(phase / 'completed.json', {'local_job_id': job_id, 'source_commit': sha, 'completed_at': now()})
+        if profile == 'unified-prepare':
+            evidence = output / 'native-evidence/pe'
+            for name, value in [('preparation-process.json', process),
+                                ('preparation-source-postcheck.json', verify_guest_postcheck(guest_data, sha)),
+                                ('preparation-completed.json', read_regular_json(phase / 'completed.json'))]:
+                save(evidence / name, value)
+            prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'])
         print(f'{profile}: process exited successfully; evidence retained', flush=True)
     if args.profile in ('all', 'qualify'):
         checker = run_root / 'ordinary/work/scripts/check_ci_qualification.py'
@@ -422,12 +562,12 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--reuse-stable-backend', type=Path, help='Explicit prior stable exported evidence root; reruns all tests')
     parser.add_argument('--reuse-layers-backend', type=Path, help='Explicit prior layers exported evidence root; reruns all tests and offline-kit checks')
-    parser.add_argument('--profile', choices=['all', *JOBS, 'qualify'], default='all')
-    parser.add_argument('--expected-bytes', type=int, default=12_000_000_000)
+    parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
+    parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
     parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)
     parser.add_argument('--timeout', type=int, default=7200, help='Per-container wall-clock seconds')
     args = parser.parse_args()
-    if args.expected_bytes < 0 or args.reserve_bytes < 20_000_000_000 or args.timeout <= 0:
+    if (args.expected_bytes is not None and args.expected_bytes < 0) or args.reserve_bytes < 20_000_000_000 or args.timeout <= 0:
         parser.error('Require nonnegative estimate, at least 20 GB reserve and positive timeout')
     try:
         execute(args)

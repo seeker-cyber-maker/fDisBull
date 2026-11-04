@@ -33,11 +33,11 @@ def qualified(tmp_path):
                    'test_results': [gate.identity(tmp_path, name) for name in gate.JUNIT[profile]],
                    'artifacts': [gate.identity(tmp_path, artifact.name)], 'backend_identity': {'source_commit': SHA}}
         if profile == 'unified':
-            receipt['artifacts'] = [gate.identity(tmp_path, 'dist/fdisbull.whl')]
+            receipt['artifacts'] = [gate.identity(tmp_path, 'dist/fdisbull-test.whl')]
         if profile == 'ordinary':
             receipt['artifacts'] = []
             packages = {}
-            for kind, name in [('core', 'fdisbull.whl'), ('player', 'player.whl'), ('sdist', 'source.tar.gz'), ('tool', 'tool.zip')]:
+            for kind, name in [('core', 'fdisbull-test.whl'), ('player', 'player.whl'), ('sdist', 'source.tar.gz'), ('tool', 'tool.zip')]:
                 dest = tmp_path / 'dist' / name
                 dest.parent.mkdir(exist_ok=True)
                 dest.write_bytes(kind.encode())
@@ -84,7 +84,7 @@ def test_changed_package_and_dirty_inventory_are_rejected(qualified):
         gate.validate(qualified, SHA, '123')
     receipt['tracked_worktree_dirty'] = False
     path.write_text(json.dumps(receipt))
-    (qualified / 'dist/fdisbull.whl').write_bytes(b'replaced')
+    (qualified / 'dist/fdisbull-test.whl').write_bytes(b'replaced')
     with pytest.raises(ValueError, match='identity mismatch'):
         gate.validate(qualified, SHA, '123')
 
@@ -118,7 +118,7 @@ LOCAL_RUN = 'b4f5594b-2d10-4f1a-bd00-e25412e0f851'
 
 
 @pytest.fixture
-def local_qualified(qualified):
+def local_qualified(qualified, monkeypatch):
     for index, (profile, job) in enumerate(gate.JOBS.items(), 1):
         filename = 'ordinary' if profile == 'ordinary' else 'native-' + profile
         p = qualified / f'artifacts/receipts/{filename}.json'
@@ -134,6 +134,64 @@ def local_qualified(qualified):
                'image_digest': 'sha256:' + 'b' * 64, 'container_state_after_stop': 'stopped',
                'runtime': {'system': 'linux', 'machine': 'x86_64',
                            'python': '3.13.5' if profile == 'layers' else '3.12.12'}})
+    # Exercise the real runtime manifest producer and verifier, including the
+    # complete firmware set, rather than substituting a mock verifier.
+    import hashlib
+    monkeypatch.chdir(qualified)
+    spec = importlib.util.spec_from_file_location('fixture_runtime_inputs', Path(__file__).parents[1] / 'scripts/ci/unified-runtime-inputs.py')
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
+    build_job = '00000000-0000-4000-8000-000000000009'
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'local-linux')
+    monkeypatch.setenv('CI_COMMIT_SHA', SHA)
+    monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', LOCAL_RUN)
+    monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', build_job)
+    identity = {'source_commit': SHA, 'inputs': {}}
+    for key, name in runtime.INPUT_PATHS.items():
+        path = qualified / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(('input-' + key).encode())
+        monkeypatch.setenv(key, str(path))
+        identity['inputs'][key] = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(), 'size': path.stat().st_size}
+    wheel = qualified / 'dist/fdisbull-test.whl'
+    installed_wheel = qualified / '.native/pe/packages/fdisbull-test.whl'
+    installed_wheel.parent.mkdir(parents=True, exist_ok=True)
+    installed_wheel.write_bytes(wheel.read_bytes())
+    identity['wheel'] = {'sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(), 'size': wheel.stat().st_size}
+    pe = qualified / 'native-evidence/pe'
+    (pe / 'backend-identity.json').write_text(json.dumps(identity))
+    bios = qualified / '.native/pe/qemu-9.2.4/pc-bios'
+    bios.mkdir(parents=True)
+    for name in ('bios-256k.bin', 'vgabios-stdvga.bin', *(f'fixture-{i:03d}.bin' for i in range(169))):
+        (bios / name).write_bytes(name.encode())
+    for kind, mapping in runtime.RESOURCES.items():
+        resources = {}
+        for guest, name in mapping.items():
+            path = qualified / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(name.encode())
+            resources[guest] = hashlib.sha256(path.read_bytes()).hexdigest()
+        if kind == 'dos':
+            resources['opt/fdisbull/dosbox-x'] = identity['inputs']['FDISBULL_DOSBOX']['sha256']
+        name = 'runtime-preparation.json' if kind == 'wine' else 'dos-runtime-preparation.json'
+        key = 'FDISBULL_PE_INITRAMFS' if kind == 'wine' else 'FDISBULL_DOS_INITRAMFS'
+        (pe / name).write_text(json.dumps({'resources': resources, 'runtime_sha256': identity['inputs'][key]['sha256']}))
+    runtime.prepare()
+    prepared = json.loads((pe / 'prepared-inputs.json').read_text())
+    path = qualified / 'artifacts/receipts/native-unified.json'
+    receipt = json.loads(path.read_text())
+    receipt.update(backend_identity=identity, prepared_manifest=gate.identity(qualified, 'native-evidence/pe/prepared-inputs.json'),
+                   runtime_inputs=list(prepared['inputs'].values()), firmware=prepared['firmware'],
+                   resource_receipts=list(prepared['resource_receipts'].values()),
+                   artifacts=[prepared['tested_wheel'], *prepared['inputs'].values()])
+    path.write_text(json.dumps(receipt))
+    acceptance_process = json.loads((qualified / 'artifacts/receipts/local-process-unified.json').read_text())
+    preparation_process = dict(acceptance_process, local_job_id=build_job, job_name='native-unified-prepare')
+    write(qualified, 'native-evidence/pe/preparation-process.json', preparation_process)
+    write(qualified, 'native-evidence/pe/preparation-source-postcheck.json',
+          {'source_commit': SHA, 'expected_source_commit': SHA, 'tracked_worktree_dirty': False, 'export_success': True})
+    write(qualified, 'native-evidence/pe/preparation-completed.json',
+          {'source_commit': SHA, 'local_job_id': build_job, 'completed_at': '2026-11-03T12:00:00Z'})
     return qualified
 
 
@@ -225,8 +283,9 @@ def add_reused_backend(root, profile):
     receipt_path = root / f'artifacts/receipts/native-{profile}.json'
     receipt = json.loads(receipt_path.read_text())
     binary = root / f'.native/backends/{profile}/dosbox-x'
-    binary.parent.mkdir(parents=True)
-    binary.write_bytes(b'authored backend bytes')
+    binary.parent.mkdir(parents=True, exist_ok=True)
+    if not binary.exists():
+        binary.write_bytes(b'authored backend bytes')
     binary_item = gate.identity(root, str(binary.relative_to(root)))
     receipt['artifacts'].append(binary_item)
     build_sha = 'd' * 40
@@ -342,3 +401,85 @@ def test_fresh_build_config_log_does_not_imply_reuse(local_qualified):
     path = local_qualified / 'native-evidence/stable/config.log'
     path.write_text('fresh compiler configuration')
     assert gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)['status'] == 'qualified'
+
+
+@pytest.mark.parametrize('field', ['prepared_manifest', 'runtime_inputs', 'resource_receipts', 'firmware'])
+def test_local_unified_requires_every_prepared_capture(local_qualified, field):
+    path = local_qualified / 'artifacts/receipts/native-unified.json'
+    receipt = json.loads(path.read_text())
+    receipt.pop(field)
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('name', ['process', 'source-postcheck', 'completed'])
+def test_local_unified_missing_preparation_proof_fails(local_qualified, name):
+    (local_qualified / f'native-evidence/pe/preparation-{name}.json').unlink()
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('field,value', [
+    ('source_commit', 'b' * 40), ('local_run_id', 'b4f5594b-2d10-4f1a-bd00-e25412e0f852'),
+    ('job_name', 'native-unified'), ('exit_code', 1), ('exit_code', False),
+    ('termination', 'interrupted'), ('container_state_after_stop', 'running'),
+    ('image_digest', 'sha256:' + 'c' * 64),
+    ('runtime', {'system': 'linux', 'machine': 'arm64', 'python': '3.12.12'}),
+])
+def test_local_unified_rejects_bad_preparation_process(local_qualified, field, value):
+    path = local_qualified / 'native-evidence/pe/preparation-process.json'
+    process = json.loads(path.read_text())
+    process[field] = value
+    path.write_text(json.dumps(process))
+    with pytest.raises(ValueError, match='preparation process'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('name,field,value', [
+    ('source-postcheck', 'tracked_worktree_dirty', True), ('source-postcheck', 'export_success', False),
+    ('source-postcheck', 'source_commit', 'b' * 40), ('completed', 'source_commit', 'b' * 40),
+    ('completed', 'local_job_id', '00000000-0000-4000-8000-000000000004'),
+    ('completed', 'completed_at', ''),
+])
+def test_local_unified_rejects_bad_preparation_completion(local_qualified, name, field, value):
+    path = local_qualified / f'native-evidence/pe/preparation-{name}.json'
+    data = json.loads(path.read_text())
+    data[field] = value
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('path', [
+    '.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
+    'native-evidence/pe/firmware/bios-256k.bin',
+    'native-evidence/pe/runtime-preparation.json',
+])
+def test_local_unified_rehashes_actual_prepared_inputs(local_qualified, path):
+    p = local_qualified / path
+    p.write_bytes(p.read_bytes() + b'changed')
+    with pytest.raises(ValueError):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_local_unified_rejects_duplicate_prepare_job_id(local_qualified):
+    path = local_qualified / 'native-evidence/pe/prepared-inputs.json'
+    data = json.loads(path.read_text())
+    data['build_job_id'] = '00000000-0000-4000-8000-000000000001'
+    path.write_text(json.dumps(data))
+    receipt_path = local_qualified / 'artifacts/receipts/native-unified.json'
+    receipt = json.loads(receipt_path.read_text())
+    receipt['prepared_manifest'] = gate.identity(local_qualified, str(path.relative_to(local_qualified)))
+    receipt_path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='duplicates'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+def test_local_unified_cannot_replace_input_list_in_acceptance_receipt(local_qualified):
+    path = local_qualified / 'artifacts/receipts/native-unified.json'
+    receipt = json.loads(path.read_text())
+    receipt['runtime_inputs'] = receipt['runtime_inputs'][:-1]
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='does not match prepared'):
+        gate.validate(local_qualified, SHA, local_run_id=LOCAL_RUN)

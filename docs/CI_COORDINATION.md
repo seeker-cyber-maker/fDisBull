@@ -44,15 +44,24 @@ python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull
 # Continue the same exact commit and run directory, deliberately, one leg at a time.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile stable
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile layers
+# Prepare the pinned QEMU/Wine/DOS inputs in the dedicated build worker.
+python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified-prepare
+# Recheck space; retain exports before any explicitly approved worker cleanup.
+# This reuses the completed preparation from this exact source and run.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile qualify
 ```
 
-`--profile all` is an explicit start of all four legs; heavy work is never
-automatic on a push or MR. The default allocation estimate is 12 GB, destination
-reserve 40 GB, and per-container wall timeout two hours. Use a measured conservative
-estimate for the planned phase; a bounded local run may explicitly use the
-user-authorized 20 GB minimum. Storage is admission-only, not a running quota.
+`--profile all` explicitly starts the four qualification legs and their separate
+unified preparation stage; heavy work is never automatic on a push or MR.
+The default allocation estimates are 12 GB for ordinary, 14 GB for stable,
+18 GB for layers, 35 GB for unified preparation and 8 GB for unified acceptance.
+The destination reserve defaults to 40 GB and each worker has a two-hour wall
+timeout. `--expected-bytes` explicitly overrides the estimate for each newly
+executed stage. Choose a conservative estimate for the actual work; a bounded
+local run may explicitly use the user-authorized 20 GB minimum. Completed
+preparation does not reserve its compiler workspace again when resumed.
+Storage is admission-only, not a running quota.
 Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
@@ -76,14 +85,31 @@ refuse a pending video mode change and never silently execute the target.
 
 Before native compiler work, establish the actual local Docker route with a
 bounded daemon/build/create/start/copy/export preflight. On Apple Silicon,
-unified acceptance uses a native ARM64 guest VM for Docker and a pinned AMD64
-child container for the actual Python/acceptance job. It records both image
+unified preparation uses a native ARM64 guest VM for Docker and a pinned AMD64
+child container for the actual compiler/preparation job. It records both image
 digests and requires the child's Linux x86-64 runtime proof. The native daemon
 avoids Docker re-execution failures observed under Rosetta; the AMD64 job and
 Windows runtime remain translated or emulated as declared. The outer VM has
 Linux capabilities for Docker, VFS storage and VM-local host networking for
 dependency downloads. The child connects through a VM-local Unix socket; it
-has no macOS Docker socket or credentials. No persistent runner is registered. Missing
+has no macOS Docker socket or credentials.
+
+Acceptance then runs in a separate fresh AMD64 Linux worker with no Docker
+daemon. It checks the preparation's successful stopped process, exact source/run,
+distinct build job UUID, matching image, clean source/export, ordinary-tested
+wheel, six runtime input hashes, packaged runtime resource hashes and the
+pinned QEMU firmware inventory. It installs the verified firmware and wheel,
+then executes the complete existing PE64 and DOS/boot selections. The final
+qualification independently checks the preparation and acceptance evidence.
+A successful build never substitutes for successful tests.
+
+`--profile unified` performs missing preparation first or verifies and retains
+completed preparation from this same source and run. The separate
+`unified-prepare` command allows an explicit pause for storage review before
+starting acceptance. Worker disks remain retained; inspect exported inputs,
+logs and source receipts before requesting any irreversible cleanup. Failed
+attempts are never overwritten or automatically retried. There is no cross-commit
+unified-runtime reuse. No persistent runner is registered. Missing
 kernel, namespace, Docker or Rosetta support leaves that leg incomplete; do not
 substitute another platform and claim the declared gate passed.
 
