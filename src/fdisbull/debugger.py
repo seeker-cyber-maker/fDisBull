@@ -1160,7 +1160,7 @@ class DebugWorkspace:
     def _start_async(self, session, params):
         import inspect
         import threading
-        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
+        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob'):
             raise ValueError('Asynchronous foreground runs currently require a ScummVM engine backend')
         if any(j['run']==session.run_id and not j['done'].is_set() for j in self.async_runs.values()):
             raise ValueError('This session already has an asynchronous run')
