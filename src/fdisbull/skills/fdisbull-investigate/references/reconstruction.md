@@ -213,7 +213,7 @@ its implementation is not automatically a UIL translator. Execute the emitted
 artifact and perform both edges and composition from this recipe. For a package,
 qualify each admitted program and launch/bank/reset/state-isolation behavior;
 header similarity cannot establish cartridge-write or RAM assumptions. Consult
-[the installed console profile](udl-uil-udc.md#native-console-udc-profile) rather
+the installed console profile section in `udl-uil-udc.md` rather
 than treating this curriculum as new support. Keep source ROMs, assets and states
 outside publications under the existing target policy; retain authored code,
 attributed links and sanitized evidence separately.

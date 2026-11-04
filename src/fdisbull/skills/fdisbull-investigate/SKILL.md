@@ -58,7 +58,7 @@ for the original-to-model check. If original execution is unavailable, continue
 permitted work with that edge explicitly marked unqualified.
 
 For cartridge compatibility, console hardware support or a console UDC, follow
-[progressive console support](references/reconstruction.md#progressive-console-support).
+the progressive console support section in the same reference.
 Choose one required capability, retain declared reference components around it,
 and qualify the actual composition. Keep lesson completion, target-console
 compatibility and application behavior as separate claims. This procedure adds

@@ -373,7 +373,7 @@ a general slicing pass or change the installed exporter's prerequisites.
 <a id="native-console-udc-profile"></a>
 ## Native console UDC, replay and synthesis profiles
 
-Use [progressive console support](reconstruction.md#progressive-console-support)
+Use the progressive console support section in `reconstruction.md`
 to develop and qualify one required hardware capability at a time. The method
 does not widen the installed compiler or cartridge profiles below.
 
