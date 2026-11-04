@@ -9,6 +9,7 @@ import pytest
 
 from fdisbull.project import Project
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 @pytest.fixture
@@ -54,6 +55,7 @@ def test_layer_definitions_survive_restart_without_changing_static_bytes(layered
 def test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram(layered_game,layer_backend,tmp_path):
     path,binary=layered_game
     with Project(path) as p, p.debugger(layer_backend,binary.parent) as d:
+        prepare_native_fixture(d)
         entry=d.save_state('entry.sav')
         overlay=patch(p,'alternate immediate','execute','2222')
         ram=patch(p,'visible immediate','ram','3333')
@@ -102,6 +104,7 @@ def test_real_layered_checkpoint_restarts_with_both_views(layered_game,layer_bac
     path,binary=layered_game
     with Project(path) as p:
         with p.debugger(layer_backend,binary.parent) as d:
+            prepare_native_fixture(d)
             ram=patch(p,'RAM','ram','3333');overlay=patch(p,'fetch','execute','2222')
             d.layers([ram,overlay]);state=d.save_state('layered.sav')
             assert_checkpoint_crc(p, state['artifact'])
@@ -124,6 +127,7 @@ def test_real_guest_self_modification_stops_stale_overlay_before_execution(tmp_p
     with Project.create(tmp_path/'smc.fdb',binary) as p:
         p.analyze(max_instructions=20)
         with p.debugger(layer_backend,binary.parent) as d:
+            prepare_native_fixture(d)
             entry=d.save_state('entry.sav')
             assert_checkpoint_crc(p, entry['artifact'])
             layer=p.debug_layer('guard',kind='execute',patches=[{'address':'1000:0021',
@@ -200,6 +204,7 @@ def test_real_guest_self_integrity_can_disable_and_restore_ram_layer(tmp_path,la
     with Project.create(tmp_path/'check.fdb',binary) as p:
         p.analyze(max_instructions=100)
         with p.debugger(layer_backend,binary.parent) as d:
+            prepare_native_fixture(d)
             entry=d.save_state('entry.sav')
             ram=d.layer_patch('visible experiment','1000:0051',expected_hex='1111',data_hex='2222')['layer']
             d.breakpoint('1000:0029');d.breakpoint('1000:0053')

@@ -16,6 +16,7 @@ ROOT_FILES = (
     "pyproject.toml",
     "MANIFEST.in",
     "player/pyproject.toml",
+    ".gitlab-ci.yml",
 )
 DOC_EXAMPLE_FILES = (
     "docs/CLOUD-0.27.0-MANIFEST.json",
@@ -120,6 +121,10 @@ SOURCE_PATTERNS = (
     ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
     ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),
     ("scripts", "*.py"),
+    ("scripts", "*.c"),
+    ("scripts", "*.sh"),
+    ("scripts", "*.txt"),
+    (".github/workflows", "*.yml"),
     ("scripts", "miniplanets_display_observer.c"),
     ("docs/evidence/civd-browser-shell", "verification.json"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
@@ -151,7 +156,11 @@ SOURCE_PATTERNS = (
     ("tests/fixtures", "protected_mode_mouse.S"),
     ("tests", "macos_capture_fixture.swift"),
     ("tests", "memory_shell_checks.mjs"),
-    ("tests", "web_shell_checks.mjs"),
+    ("tests", "*.mjs"),
+    ("skills/dos-target-media-rip", "*.md"),
+    ("skills/dos-target-media-rip", "*.py"),
+    ("docs/evidence/gog-galaxy-chimprec-2026-11-02", "receipt.json"),
+    ("docs/evidence/0.32.0-release", "intake.json"),
 )
 
 

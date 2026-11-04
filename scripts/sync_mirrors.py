@@ -7,7 +7,7 @@ permanently retired.
 
 Key behaviors:
 1. Phase 1 (Fetch & Reconcile across all remotes): Fetches remote-tracking
-   branches and canonical tags (`git fetch --tags --force <remote>`) across all
+   branches and explicitly requested tags across all
    remotes first, fast-forwarding behind local branches and importing remote-only
    branches into local `refs/heads/*` before any push commands are built.
 2. Preserves diverged branch tips on both sides under `refs/heads/<remote>-archive/*`
@@ -15,14 +15,15 @@ Key behaviors:
 3. Phase 2 (Push to all remotes): Pushes only branches that are missing or behind
    on each remote, ensuring branches imported from `gitlab` also propagate to
    `local-hub` (and vice versa) in a single run. Always passes `-o ci.skip` on
-   topic/archive branches for GitLab so mirroring never triggers CI pipeline
-   storms during the 30-day GitLab trial.
+   all ordinary branch and tag syncs for GitLab. CI compute is local by default;
+   tags are otherwise omitted.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -149,10 +150,17 @@ def build_push_commands(
     remote: str,
     is_gitlab: bool,
     branches: list[str],
-    include_tags: bool = True,
+    include_tags: bool = False,
     ci_on_main: bool = False,
+    selected_tags: list[str] | None = None,
 ) -> list[list[str]]:
-    """Construct safe git push commands that suppress CI on non-main branch syncs."""
+    """Suppress provider compute by default, including main and selected tags."""
+    selected_tags = selected_tags or []
+    if include_tags and selected_tags:
+        raise MirrorSyncError("Choose bulk archive tags or selected version tags")
+    if any(not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-.][A-Za-z0-9][A-Za-z0-9.-]*)?", tag)
+           for tag in selected_tags):
+        raise MirrorSyncError("Selected tags must be explicit version tag names")
     commands: list[list[str]] = []
     main_branches = [b for b in branches if b == "main"]
     topic_branches = [b for b in branches if b != "main"]
@@ -178,9 +186,17 @@ def build_push_commands(
 
     if include_tags:
         cmd = ["git", "push"]
-        if is_gitlab and not ci_on_main:
+        # Bulk mirroring is archival, never a request to qualify every old tag.
+        if is_gitlab:
             cmd.extend(["-o", "ci.skip"])
         cmd.extend([remote, "--tags"])
+        commands.append(cmd)
+
+    for tag in dict.fromkeys(selected_tags):
+        cmd = ["git", "push"]
+        if is_gitlab and not ci_on_main:
+            cmd.extend(["-o", "ci.skip"])
+        cmd.extend([remote, f"refs/tags/{tag}:refs/tags/{tag}"])
         commands.append(cmd)
 
     return commands
@@ -191,10 +207,17 @@ def sync_mirrors(
     *,
     remotes: tuple[str, ...] = (DEFAULT_LOCAL_HUB_REMOTE, DEFAULT_GITLAB_REMOTE),
     branches: list[str] | None = None,
-    include_tags: bool = True,
+    include_tags: bool = False,
     ci_on_main: bool = False,
+    selected_tags: list[str] | None = None,
     dry_run: bool = False,
 ) -> dict[str, object]:
+    # Validate publication intent before any fetch or ref mutation.
+    build_push_commands(remote="validation", is_gitlab=False, branches=[],
+                        include_tags=include_tags, selected_tags=selected_tags)
+    for tag in selected_tags or []:
+        if _git(repo_dir, "show-ref", "--verify", f"refs/tags/{tag}", check=False).returncode:
+            raise MirrorSyncError(f"Selected local tag does not exist: {tag}")
     remote_meta: dict[str, dict[str, object]] = {}
 
     # Phase 1: Validate all remotes, fetch branches & canonical tags, and reconcile into local refs/heads/*
@@ -204,7 +227,7 @@ def sync_mirrors(
         fetch_ok = True
         fetch_error = None
         if not dry_run:
-            f_proc = _git(repo_dir, "fetch", "--tags", "--force", remote, check=False)
+            f_proc = _git(repo_dir, "fetch", "--tags" if include_tags else "--no-tags", remote, check=False)
             if f_proc.returncode != 0:
                 f_proc2 = _git(repo_dir, "fetch", "--no-tags", remote, check=False)
                 fetch_ok = f_proc2.returncode == 0
@@ -244,6 +267,7 @@ def sync_mirrors(
             branches=plan["to_push"],
             include_tags=include_tags,
             ci_on_main=ci_on_main,
+            selected_tags=selected_tags,
         )
         if dry_run:
             results[remote] = {
@@ -312,8 +336,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-dir", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--remotes", nargs="+", default=[DEFAULT_LOCAL_HUB_REMOTE, DEFAULT_GITLAB_REMOTE])
     parser.add_argument("--branch", action="append", dest="branches", help="Specific branch(es) to sync; default is all local branches")
-    parser.add_argument("--no-tags", action="store_true", help="Skip pushing tags")
-    parser.add_argument("--ci-on-main", action="store_true", help="Allow GitLab CI to trigger when pushing main")
+    tags = parser.add_mutually_exclusive_group()
+    tags.add_argument("--no-tags", action="store_true", help="Compatibility option: tags are omitted by default")
+    tags.add_argument("--tags", action="store_true", help="Mirror all tags as archives with GitLab CI suppressed")
+    tags.add_argument("--tag", action="append", dest="selected_tags", help="Publish one explicit version tag with CI suppressed by default")
+    ci = parser.add_mutually_exclusive_group()
+    ci.add_argument("--ci-on-main", action="store_true", dest="ci_on_main", default=False,
+                    help="Legacy push option override; server workflow still requires explicit web/API admission")
+    ci.add_argument("--skip-ci", action="store_false", dest="ci_on_main",
+                    help="Suppress CI on every pushed ref (the default)")
     parser.add_argument("--dry-run", action="store_true", help="Print planned commands without executing git push")
     args = parser.parse_args(argv)
     try:
@@ -321,8 +352,9 @@ def main(argv: list[str] | None = None) -> int:
             args.repo_dir.resolve(),
             remotes=tuple(args.remotes),
             branches=args.branches,
-            include_tags=not args.no_tags,
+            include_tags=args.tags,
             ci_on_main=args.ci_on_main,
+            selected_tags=args.selected_tags,
             dry_run=args.dry_run,
         )
     except MirrorSyncError as exc:

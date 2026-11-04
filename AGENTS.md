@@ -42,6 +42,15 @@ observations as unknown. Distinguish visible, ready, enabled and committed.
 
 ## Working in this repository
 
+CI is local-first: branch, merge-request and tag events must not automatically
+start provider pipelines. Use the finite local Linux qualification route and
+keep its receipts explicitly local. GitLab web/API pipelines require an explicit
+user action and a dedicated `fdisbull-local-linux` runner; do not register a
+runner, create credentials, or use hosted instance runners as a fallback. Heavy
+native work requires a deliberate start. Apply the storage admission rules
+before each material growth phase. Local results do not establish hosted CI.
+
+
 The [README](README.md) introduces the product to people. Technical contracts,
 API examples and scope limits belong in the linked docs and bundled skill.
 Preserve that audience split when adding features. Testimony from users/agents
@@ -76,7 +85,8 @@ payload, version, commit and selector all verify.
 - **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete.** Never push to, fetch from, or poll GitHub (`origin` push URL is locked to `RETIRED_GITHUB_DO_NOT_PUSH`).
 - **Local Git and GitLab (`gitlab` -> `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`) are equal representations.** Because GitLab is under a 30-day evaluation trial, agents must update **both** the local Git repository (`local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git` and local branches/tags in `/Volumes/CODEX/Codex_Projects/fDisBull`) and GitLab (`gitlab`), using `python scripts/sync_mirrors.py` or pushing to the `dual` remote (`git push -o ci.skip dual <branch>`).
 - Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before starting or observing hosted checks.
-- **Anti-abuse CI rules**: `.gitlab-ci.yml` never runs automatic pipelines on feature/topic/archive branch pushes or `Draft:` Merge Requests, and heavy C++ DOSBox-X compilation jobs (`native-debugger-*`) are manual-only (`when: manual` or `FDISBULL_RUN_NATIVE_CI=1`). Always pass `-o ci.skip` when mirroring non-main branches to GitLab.
+- **CI cost controls**: routine pushes, MRs and tags admit no automatic provider pipelines. The default is finite local Linux work with explicit local identities and storage admission. An explicitly requested web/API GitLab pipeline requires a separately authorized `fdisbull-local-linux` runner; its heavy qualification starts only after the blocking manual gate. No hosted runner fallback, runner registration or credential creation is implied.
+- **Package/release gate**: require the exact-source ordinary, stable, layers and unified results, including the tested package hashes, and preserve missing or failed evidence as incomplete. A local pass is not a hosted result. Release tagging still requires ordinary and required-native Linux CI on the exact SHA; publication and installation need separate authorization. Do not invent pipeline or job IDs for local work.
 - Name one CI owner for the repository; other agents consume that owner's dated receipt. Use `scripts/ci_status.py` in cache-only mode by default:
   ```sh
   python scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull --sha "$(git rev-parse HEAD)"

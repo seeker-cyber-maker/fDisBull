@@ -10,6 +10,7 @@ recursive-include src/fdisbull/data *.json *.txt
 include src/fdisbull/data/FdisbullMacCapture.swift
 include tests/macos_capture_fixture.swift
 recursive-include src/fdisbull/skills *.md
+recursive-include skills/dos-target-media-rip *.md *.py
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
@@ -19,6 +20,8 @@ include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json
+include docs/evidence/0.32.0-release/intake.json
 include docs/evidence/shadowrun-ai-2026-11-01/source.json
 include docs/evidence/shadowrun-ai-2026-11-01/nes.json
 include docs/evidence/shadowrun-ai-2026-11-01/skill.json
@@ -103,14 +106,14 @@ include docs/evidence/integration-025/zork.json
 include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
-recursive-include scripts *.py
+recursive-include scripts *.py *.c *.sh *.txt
 prune examples
 prune history
 prune experimental
 prune build
 prune dist
-prune .github
-exclude .gitlab-ci.yml
+recursive-include .github/workflows *.yml
+include .gitlab-ci.yml
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
 include docs/evidence/civd-food-arm64/verification.json
 # Exact authored food recipes; the private target/outputs remain excluded.

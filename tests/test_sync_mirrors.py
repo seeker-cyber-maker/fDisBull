@@ -41,6 +41,42 @@ def test_build_push_commands_suppresses_gitlab_ci_on_topic_branches():
     ]
 
 
+def test_default_main_sync_suppresses_compute_without_publishing_unrelated_tags():
+    assert mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=["main"]) == [
+        ["git", "push", "-o", "ci.skip", "gitlab", "refs/heads/main:refs/heads/main"]]
+    assert mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=[]) == []
+
+
+def test_bulk_and_selected_version_tags_suppress_compute_by_default():
+    assert mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=[], include_tags=True) == [
+        ["git", "push", "-o", "ci.skip", "gitlab", "--tags"]]
+    assert mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=[], selected_tags=["v0.32.0"]) == [
+        ["git", "push", "-o", "ci.skip", "gitlab", "refs/tags/v0.32.0:refs/tags/v0.32.0"]]
+    suppressed = mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=["main"],
+                                             selected_tags=["v0.32.0"], ci_on_main=False)
+    assert len(suppressed) == 2
+    assert all(cmd[2:4] == ["-o", "ci.skip"] for cmd in suppressed)
+
+
+def test_non_gitlab_mirror_uses_no_provider_push_options():
+    cmds = mirror.build_push_commands(remote="local-hub", is_gitlab=False,
+                                      branches=["main", "codex/test"], include_tags=True)
+    assert len(cmds) == 3
+    assert all("-o" not in cmd for cmd in cmds)
+
+
+@pytest.mark.parametrize("tags", [["--tags"], ["v0.32.0:main"], ["refs/tags/v0.32.0"]])
+def test_selected_tags_refuse_ambiguous_or_option_like_input(tags):
+    with pytest.raises(mirror.MirrorSyncError):
+        mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=[], selected_tags=tags)
+
+
+def test_bulk_and_selected_tags_cannot_be_combined():
+    with pytest.raises(mirror.MirrorSyncError):
+        mirror.build_push_commands(remote="gitlab", is_gitlab=True, branches=[],
+                                   include_tags=True, selected_tags=["v0.32.0"])
+
+
 def test_reconcile_with_remote_fast_forwards_behind_local_branch_and_skips_synced(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -88,16 +124,18 @@ def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
         mirror.sync_mirrors(repo, remotes=("origin",), dry_run=True)
 
 
-def test_gitlab_ci_yaml_enforces_trial_safe_workflow_rules():
+def test_gitlab_ci_yaml_blocks_routine_compute_and_requires_local_runner():
     ci_path = ROOT / ".gitlab-ci.yml"
     if not ci_path.is_file():
         pytest.skip("Repository checkout only")
     ci_text = ci_path.read_text()
     assert "workflow:" in ci_text
     assert '$CI_COMMIT_MESSAGE =~ /\\[(skip ci|ci skip)\\]/i' in ci_text
-    assert '$CI_PIPELINE_SOURCE == "merge_request_event"' in ci_text
-    assert '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' in ci_text
-    assert "interruptible: true" in ci_text
+    assert '$CI_PIPELINE_SOURCE == "merge_request_event"' not in ci_text
+    assert '$CI_PIPELINE_SOURCE == "push"' not in ci_text
+    assert '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"' in ci_text
+    assert '    - fdisbull-local-linux' in ci_text
+    assert "interruptible: true" not in ci_text
     assert "retry: 0" in ci_text
     assert 'resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"' in ci_text
     assert "when: manual" in ci_text

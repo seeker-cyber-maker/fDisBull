@@ -7,6 +7,7 @@ import pytest
 
 from fdisbull.project import Project
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 @pytest.fixture
@@ -129,6 +130,7 @@ def test_native_state_restore_retains_selected_process_identity(tmp_path,emulato
     code=bytes.fromhex('b80700050500a32001b8004ccd21')
     path=create_project(tmp_path,code)
     with Project(path) as project, project.debugger(emulator,tmp_path) as debug:
+        prepare_native_fixture(debug)
         psp=debug.registers()['segments']['ds']
         breakpoint=debug.breakpoint('1000:0109')
         assert debug.run(timeout_ms=3000,fast_forward=True)['outcome']=='breakpoint'
@@ -144,6 +146,7 @@ def test_foreign_session_snapshot_does_not_guess_target_process(tmp_path,emulato
     path=create_project(tmp_path,bytes.fromhex('b82a4ccd21'))
     with Project(path) as project:
         with project.debugger(emulator,tmp_path) as first:
+            prepare_native_fixture(first)
             state=first.save_state()
         with project.debugger(emulator,tmp_path) as second:
             second.load_state(state['artifact'])

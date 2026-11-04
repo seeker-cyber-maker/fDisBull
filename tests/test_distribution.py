@@ -3,12 +3,20 @@
 from pathlib import Path
 import re
 import runpy
+import subprocess
 import zipfile
 
 import pytest
 
 
 REQUIRED_SOURCE_FILES = (
+    ".gitlab-ci.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/native-debugger.yml",
+    "scripts/console_synthesis_oracle.c",
+    "tests/metrics_checks.mjs",
+    "tests/memory_cut_shell_checks.mjs",
+    "tests/memory_region_shell_checks.mjs",
     "AGENTS.md",
     "CLAUDE.md",
     "docs/AGENT_QUICKSTART.md",
@@ -83,6 +91,17 @@ GAMEFAQS_SKILL_FILES = tuple(
     )
 )
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+SELECTED_DELIVERY_FILES = (
+    "skills/dos-target-media-rip/SKILL.md",
+    "skills/dos-target-media-rip/references/catalog-intake.md",
+    "skills/dos-target-media-rip/references/disc-audio.md",
+    "skills/dos-target-media-rip/references/imd-itk-ltk.md",
+    "skills/dos-target-media-rip/references/smacker.md",
+    "skills/dos-target-media-rip/scripts/disc_data_track.py",
+    "docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json",
+    "docs/evidence/0.32.0-release/intake.json",
+)
+REQUIRED_SOURCE_FILES += SELECTED_DELIVERY_FILES
 REQUIRED_SOURCE_FILES += ("tests/fixtures/protected_mode_mouse.S",)
 REQUIRED_SOURCE_FILES += ("src/fdisbull/data/dinopark-e55-terminal.json",)
 UDC_EVIDENCE_FILES = {
@@ -1396,3 +1415,54 @@ def test_wheel_requires_windows_adapter_and_actual_pe32_guest_source(tmp_path,re
         output.writestr('fdisbull/__init__.py','')
         for name in resources- {required}:output.writestr('fdisbull/'+name,'')
     with pytest.raises(ValueError,match=re.escape(required)):checker['check_archive'](archive)
+
+
+@pytest.mark.parametrize("required", SELECTED_DELIVERY_FILES)
+def test_source_archive_requires_selected_media_skill_and_release_receipts(tmp_path, required):
+    check = runpy.run_path(
+        str(Path(__file__).resolve().parents[1] / "scripts/check_dist.py")
+    )["check_archive"]
+    archive = tmp_path / "fdisbull-selected-delivery.zip"
+    source_archive(archive)
+    assert check(archive) == len(REQUIRED_SOURCE_FILES)
+    source_archive(
+        archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required)
+    )
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
+
+
+@pytest.mark.parametrize("kind", ("sdist", "tool"))
+@pytest.mark.parametrize("damage", ("missing", "changed"))
+def test_selected_delivery_inventory_detects_omission_and_changed_bytes(tmp_path, kind, damage):
+    gate = runpy.run_path(
+        str(Path(__file__).resolve().parents[1] / "scripts/check_package_payloads.py")
+    )
+    repo = tmp_path / "source"
+    repo.mkdir()
+    source = {
+        "src/fdisbull/__init__.py": b"core",
+        "player/fdisbull_player/__init__.py": b"player",
+    }
+    delivery = SELECTED_DELIVERY_FILES + tuple(sorted(SCUMMVM_EVIDENCE_FILES))
+    for name in delivery:
+        source[name] = ("authored source receipt: " + name).encode()
+    for name, data in source.items():
+        path = repo / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    inventory = gate["tracked_payload"](repo)
+    assert inventory == source
+    archive = {"fdisbull-test/" + name: data for name, data in source.items()}
+    gate["check_payload"](inventory, archive, kind)
+    for name in delivery:
+        damaged = dict(archive)
+        member = "fdisbull-test/" + name
+        if damage == "missing":
+            del damaged[member]
+        else:
+            damaged[member] = b"modified after source inventory"
+        with pytest.raises(ValueError, match=re.escape(name)):
+            gate["check_payload"](inventory, damaged, kind)

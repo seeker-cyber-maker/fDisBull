@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 from fdisbull import player_checkpoints
 from fdisbull.text_projection import serve_stream
+from native_fixture import prepare_native_fixture
 
 
 class Project:
@@ -127,10 +128,11 @@ def test_native_experiment_restores_across_project_restart(tmp_path,monkeypatch)
         h._read=lambda: None if getattr(h,'_checkpoint_failed',False) else {'complete':True}
         return h
     with RealProject.create(path,binary) as p, p.debugger(backend,game) as d:
+        prepare_native_fixture(d)
         d.bind_runtime_memory('actor',d.runtime_load*16+0x20,length=4,expected_hex='00',provenance={'method':'synthetic'})
         d.breakpoint('1000:0030',access='w')
         h=handle(d); saved=player_checkpoints.save(h)
-        assert saved['complete'], p.db.execute('SELECT detail FROM player_checkpoint_events').fetchall()
+        assert saved['complete'], [tuple(row) for row in p.db.execute('SELECT detail FROM player_checkpoint_events')]
     with RealProject(path) as p, p.debugger(backend,game) as d:
         h=handle(d); result=player_checkpoints.load(h)
         assert result['status']=='restored', [tuple(x) for x in p.db.execute('SELECT detail FROM player_checkpoint_events')]

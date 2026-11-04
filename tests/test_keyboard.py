@@ -7,6 +7,7 @@ from fdisbull.debug_script import validate_script
 from fdisbull.project import Project
 from test_debugger import emulator
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 from fdisbull.keyboard_input import validate_keyboard
 
 
@@ -15,11 +16,16 @@ def assert_keyboard_idle(debug):
     assert state["pending_events"] == 0
     assert state["owned_keys"] == 0
     assert state["queued_guest_ms"] == 0
+    assert state["frame_keys"] == []
 
 
 def checkpoint_at_bios_callback(debug, address, breakpoint, name):
     for attempt in range(5):
         try:
+            registers = debug.registers()
+            assert int(registers["cs"], 16) == int(address["segment"], 16)
+            assert int(registers["ip"], 16) == int(address["offset"], 16)
+            assert debug.memory("1000:0100", length=2)["hex"] == "0000"
             return debug.save_state(name), breakpoint
         except Exception as exc:
             if "VGA mode change is pending" not in str(exc) or attempt == 4:
@@ -172,6 +178,7 @@ def keyboard_game(tmp_path):
 def test_real_keyboard_press_type_script_and_restore(keyboard_game, emulator, tmp_path):
     path, binary = keyboard_game
     with Project(path) as db, db.debugger(emulator, binary.parent) as debug:
+        prepare_native_fixture(debug)
         checkpoint = debug.save_state("before-input.sav")
         bp = debug.breakpoint("1000:0010")
         result = debug.keyboard.type("Az 19!?", hold_ms=20, gap_ms=20)
@@ -231,6 +238,7 @@ def test_real_keyboard_chords_atomic_rejection_and_pending_restore(
 ):
     path, binary = keyboard_game
     with Project(path) as db, db.debugger(emulator, binary.parent) as debug:
+        prepare_native_fixture(debug)
         checkpoint = debug.save_state("clean.sav")
         with pytest.raises(Exception, match="ASCII"):
             debug.call("input.keyboard.type", {"text": "valid\u2603"})

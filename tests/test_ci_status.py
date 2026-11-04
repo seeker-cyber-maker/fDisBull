@@ -53,6 +53,7 @@ def fake_gh(tmp_path, monkeypatch):
     command.write_text(f'#!{sys.executable}\n' + '''
 import json, os, sys, time
 with open(os.environ['CI_TEST_CALLS'], 'a') as stream:
+    time.sleep(float(os.environ.get('CI_TEST_PRE_WRITE_DELAY','0')))
     stream.write(json.dumps(sys.argv[1:])+'\\n')
 time.sleep(float(os.environ.get('CI_TEST_DELAY','0')))
 print(os.environ.get('CI_TEST_RESPONSE','{}'))
@@ -64,6 +65,7 @@ raise SystemExit(int(os.environ.get('CI_TEST_EXIT','0')))
     glab_cmd.write_text(f'#!{sys.executable}\n' + '''
 import json, os, sys, time
 with open(os.environ['CI_TEST_CALLS'], 'a') as stream:
+    time.sleep(float(os.environ.get('CI_TEST_PRE_WRITE_DELAY','0')))
     stream.write(json.dumps(['glab'] + sys.argv[1:])+'\\n')
 time.sleep(float(os.environ.get('CI_TEST_DELAY','0')))
 print(os.environ.get('CI_TEST_RESPONSE','[]'))
@@ -337,14 +339,19 @@ def test_concurrent_processes_share_one_refresh_and_sequential_calls_stay_cached
 
 def test_process_death_releases_lock_but_preserves_pre_io_reservation(tmp_path, fake_gh, monkeypatch):
     monkeypatch.setenv('CI_TEST_DELAY', '10')
+    # Exercise the observed schedule where creation precedes the flushed entry.
+    monkeypatch.setenv('CI_TEST_PRE_WRITE_DELAY', '.2')
     state = tmp_path / 'crash-state'
     process = subprocess.Popen(cli(state, SHA, '--refresh', '--owner', 'coordinator'),
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
     try:
         deadline = time.monotonic() + 5
-        while not fake_gh.exists() and time.monotonic() < deadline:
+        while time.monotonic() < deadline:
+            if fake_gh.exists() and fake_gh.read_text().endswith('\n'):
+                break
             time.sleep(.01)
-        assert fake_gh.exists(), 'The fake provider must have started after state was reserved'
+        assert fake_gh.exists() and fake_gh.read_text().endswith('\n'), (
+            'The fake provider must have recorded a complete invocation after state was reserved')
         os.killpg(process.pid, signal.SIGKILL)
         process.communicate(timeout=5)
         again = subprocess.run(cli(state, OTHER, '--refresh', '--owner', 'coordinator'),

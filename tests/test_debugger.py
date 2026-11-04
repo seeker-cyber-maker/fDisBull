@@ -11,6 +11,7 @@ import pytest
 from fdisbull.cli import respond
 from fdisbull.project import Project
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 @pytest.fixture
@@ -250,6 +251,7 @@ def test_real_native_state_restores_memory_registers_and_new_session(access_game
     path,binary=access_game
     with Project(path) as db:
         with db.debugger(emulator,binary.parent) as debug:
+            prepare_native_fixture(debug)
             bp=debug.breakpoint('1000:0005')
             assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
             debug.delete_breakpoint(bp['breakpoint_id'])
@@ -293,6 +295,7 @@ def test_script_validation_persistence_and_real_execution(access_game,emulator):
     with Project(access_game[0]) as db:
         stored=db.debug_save_script('route.json',script)
     with Project(access_game[0]) as db, db.debugger(emulator,access_game[1].parent) as debug:
+        prepare_native_fixture(debug)
         assert db.debug_scripts()['scripts'][0]['sha256']==stored['sha256']
         result=debug.script(script_id=stored['script_id'])
         assert result['ok'],result
@@ -374,6 +377,7 @@ def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_ga
     with Project(path) as db:
         static_before=db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']
         with db.debugger(emulator,binary.parent) as debug:
+            prepare_native_fixture(debug)
             bp=debug.breakpoint('1000:0005')
             assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
             debug.delete_breakpoint(bp['breakpoint_id'])

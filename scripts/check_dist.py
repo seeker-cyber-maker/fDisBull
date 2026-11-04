@@ -75,12 +75,29 @@ REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {
     "player/fdisbull_player/" + name for name in PLAYER_MODULES
 }
 REQUIRED_TEST_HELPERS = {
+    ".gitlab-ci.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/native-debugger.yml",
+    "scripts/console_synthesis_oracle.c",
+    "tests/metrics_checks.mjs",
+    "tests/memory_cut_shell_checks.mjs",
+    "tests/memory_region_shell_checks.mjs",
     "tests/fixtures_formats.py",
     "tests/fixtures_macho.py",
     "tests/ida_rpc_vectors.json",
     "tests/dosbox_zip_empty_write.cpp",
 }
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
+REQUIRED_SOURCE_DELIVERY = {
+    "skills/dos-target-media-rip/SKILL.md",
+    "skills/dos-target-media-rip/references/catalog-intake.md",
+    "skills/dos-target-media-rip/references/disc-audio.md",
+    "skills/dos-target-media-rip/references/imd-itk-ltk.md",
+    "skills/dos-target-media-rip/references/smacker.md",
+    "skills/dos-target-media-rip/scripts/disc_data_track.py",
+    "docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json",
+    "docs/evidence/0.32.0-release/intake.json",
+}
 REQUIRED_TEST_HELPERS.add("tests/test_analysis_approach_skill.py")
 REQUIRED_TEST_HELPERS |= {
     "tests/rom_asm_sh2_vectors.json",
@@ -1060,7 +1077,9 @@ def check_archive(path: Path) -> int:
         required |= {"src/fdisbull/" + name for name in REQUIRED_CONSOLE_RESOURCES}
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
         required |= {"scripts/check_agent_skill.py"}
-        required |= REQUIRED_SOURCE_EVIDENCE | REVIEWED_SOURCE_RECIPES
+        required |= (
+            REQUIRED_SOURCE_EVIDENCE | REVIEWED_SOURCE_RECIPES | REQUIRED_SOURCE_DELIVERY
+        )
         missing = required - relative
         if missing:
             raise ValueError(
