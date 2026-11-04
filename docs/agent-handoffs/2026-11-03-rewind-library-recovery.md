@@ -16,13 +16,14 @@ The observed local and GitLab `main` head is
 `3dc5c50d35f310a3ba39b1cf0cf82a20b8df69f7`. Its package source version is
 `0.30.0`; this does not verify an installed prefix or establish release readiness.
 The handoff branch is `codex/rewind-library-handoff-20261103`, based on that exact
-main head. It adds authored documentation and a bounded native validation probe;
-the product core and package version are unchanged.
+main head. It adds authored documentation, a bounded native validation probe
+and the headless transport quit-dialog correction described below. The package
+version is unchanged.
 
 Project `88349936`,
 [brewster-jennings-group/fdisbull](https://gitlab.com/brewster-jennings-group/fdisbull),
 is currently **public**, according to a fresh project metadata read. Older notes
-calling it private are historical. This handoff adds authored text and sanitized
+calling it private are historical. This handoff adds authored source and sanitized
 repository facts only. Private game inputs, RAM reads, FDBs, native states,
 captures, raw logs and original archives remain outside this contribution.
 Historical attachment availability and access controls were not re-audited.
@@ -31,7 +32,7 @@ The local `scripts/gitlab_handoff.py` publisher intentionally requires a private
 project. Its offline preview remains useful, but a public-project handoff must
 not be called a successful private-helper publication. Do not weaken that guard,
 change project visibility, credentials or account settings to make it pass.
-For this explicitly requested documentation MR, use the existing GitLab
+For this explicitly requested contribution MR, use the existing GitLab
 connector and verify its source head, target, draft state and returned URL.
 
 ## Current MR state supersedes the November 1 snapshot
@@ -53,7 +54,8 @@ Auto-merge was off in all seven responses. The !14/!16/!30/!36/!37/!41 merge and
 closure changes predate this recovery and were not performed by its owner.
 The later !42 source synchronization and independent review were completed in
 this chat and are recorded below. Preserve the existing history and MR targets;
-no new MR merge, release, installation or reversal is authorized here.
+no new MR merge, release or reversal is authorized here. The later installed
+hot-patch has separate explicit user authorization, recorded below.
 
 ## Delta capability and qualification boundary
 
@@ -257,6 +259,29 @@ That guide also records what was useful from
 explicit failure classification, exact reproducing inputs and clean state between
 attempts. Its Windows SEH handler is not a macOS crash-recovery implementation.
 No framework code was installed or executed, and no GitHub source was accessed.
+
+## Headless quit-popup fix and authorized local hot-patch
+
+The later follow-up at source `19c298edcae016e042a5e04f2267d61375d86831`
+suppresses quit-confirmation dialogs only for owned headless DOSBox launches.
+The user separately authorized hot-patching the installed 0.31.1 transport,
+which now matches that source file. A private original-file backup and exact
+before/after hashes were retained. The selector, native binary, package version
+and original wheel metadata were not changed; the installation is intentionally
+locally modified rather than release-identical. Existing Python controllers may
+still have the earlier launcher in memory.
+
+Five repeated native startup/bounded-run/shutdown cycles passed for the source
+checkout, and five passed for the installed hot-patch. Each used the authored
+COM target, acknowledged headless mode, exited normally with code 0 and avoided
+the forced-kill fallback. Neither run observed a new warning helper. All eleven
+processes, including an initial optional-capability setup failure, were reaped.
+One orphaned warning helper was selectively terminated only after executable,
+owner, parent, exact-command and immediate identity checks; its exit was verified.
+No emulator or unrelated AppleScript process was signalled during cleanup.
+Integrated local checks passed 182 tests with 21 skips. The source change and
+hot-patch received an independent review; exact limits and receipt hashes are
+recorded in [the crash replay guide](../CRASH_REPLAY.md).
 
 ## Next bounded action and stop conditions
 

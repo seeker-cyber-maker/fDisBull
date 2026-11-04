@@ -165,6 +165,69 @@ output. The execution path has a 120-second deadline, a finite owned-process
 ledger and final kill/wait cleanup. It never signals a process discovered by a
 global search. This is one finite test, not a persistent monitor.
 
+## Headless quit-dialog correction, November 3
+
+An ordinary shutdown exposed a separate host-UI problem. The Python transport
+sends SIGTERM and waits two seconds before force-stopping its owned emulator.
+SDL can convert SIGTERM to a quit event; the headless backend's ordinary event
+path then consults the default `quit warning=auto`. On macOS its confirmation
+uses a separate AppleScript dialog process, which can remain orphaned after
+the emulator is force-stopped. Headless video alone does not suppress that
+native dialog.
+
+At source `19c298edcae016e042a5e04f2267d61375d86831`, the transport now passes
+`-set "dosbox quit warning=false"` only for headless launches. Explicit visible
+launches keep their previous arguments. Subprocess-backed regression checks
+failed for both default and explicit headless launches before the correction,
+while the visible control passed; all three pass after the correction.
+
+Fresh local macOS validation used the existing authored 512-byte COM fixture
+and installed backend SHA-256
+`bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60`:
+
+| Launcher | Repeated native result |
+| --- | --- |
+| Source checkout at `19c298e` | Five fresh startup/bounded-run/shutdown cycles; every process exited normally with code 0, without the forced-kill fallback. |
+| Locally hot-patched installed 0.31.1 | Five equivalent cycles; all exited normally with code 0 and no forced kill. |
+
+Each cycle verified headless acknowledgement, the launch override and the
+authored target's memory signature after bounded guest execution. No new
+quit-warning helpers were observed after any cycle; both five-cycle runs began
+and ended with none. Observed close times were 21–137 ms. All eleven owned
+processes, including one earlier setup attempt, were reaped. That first attempt
+requested an optional frame-timeline capability unavailable in this installed
+backend; it was retained as a failed setup and its shutdown exited normally.
+The successful repeats used ordinary bounded execution, not frame-timeline
+qualification or the earlier full/delta crash experiment.
+
+The source receipt SHA-256 is
+`2f227abd72eb667be0212c736b42ed3c52135a840515b336398e583a721bb494`;
+the installed receipt is
+`36613d72b60fbbe078d323da920225dd8c3ea3b3bee10637682dcfec889c0100`.
+The integrated local transport/debugger/codec/timeline selection passed
+182 tests and skipped 21 optional-native or platform-specific checks.
+The focused window-contract file separately passed 31 tests with two skips.
+Native repeated shutdown is independently covered by the explicit runs above.
+
+The user separately authorized an immediate installed hot-patch. The installed
+transport now matches the source transport byte-for-byte, SHA-256
+`b6112a55b710ca10de454f499e1c74a8dd6d684d9a71ddc8c36f31bd83f8c17e`.
+Its original file, SHA-256
+`c6f4ebcc66df1ffe5c1f3da6e8b5145f06f0fb7d399ad12be01c654353478a30`,
+is backed up privately. The selector, native binary, package version and wheel
+metadata were preserved. Consequently the installed payload is intentionally
+locally modified, and its original wheel `RECORD` does not describe this one
+patched file. This is an explicit local hot-patch, not a release or a pristine
+release-payload verification. Existing Python controllers can retain the earlier
+launcher in memory; fresh controllers use the patch.
+
+One warning helper was cleaned up only after verifying its executable, owner,
+orphan status, exact previously observed dialog command and unchanged identity
+immediately before SIGTERM. Its exit was verified. The three helpers recorded
+in the earlier investigation had already disappeared. No emulator or unrelated
+AppleScript process was signalled during cleanup. Private process identities,
+backups, databases and logs stay outside Git.
+
 ## What wrfuzz contributes to the methodology
 
 The inspected reference is
