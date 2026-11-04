@@ -477,7 +477,7 @@ class ZService:
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
             if parking:
                 scenes = load_scenes()
-                _, image = scenes.take_frame(self.text.project, self.text.debug, 'z-parking-observation')
+                _, image = scenes.observe_frame(self.text.project, self.text.debug, 'z-parking-observation')
                 if (self.text.notice_outcome_unknown or
                         not scenes.matches(image, self.text.patterns['parking_hint']) or
                         scenes.matches(image, self.text.patterns['quarter_popup'])):
@@ -496,7 +496,7 @@ class ZService:
                     if (self.text.current != 'park' and not entering and not returning or
                             not self.text.park_opened or self.text.notice_outcome_unknown):
                         raise
-                    _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
+                    _,image = scenes.observe_frame(self.text.project,self.text.debug,'z-modal-observation')
                     notices = [n for n in ('quarter_popup', 'parking_hint')
                                if scenes.matches(image, self.text.patterns[n])]
                     if len(notices) != 1:

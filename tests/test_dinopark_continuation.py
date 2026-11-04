@@ -313,7 +313,7 @@ def test_pending_parking_advice_exposes_only_its_verified_action(tmp_path, monke
         debug=SimpleNamespace(registers=lambda: {'state_revision': 42}))
     service.objects = lambda: ([{'id': 'notice'}, {'id': 'food'}, {'id': 'route-street'}], {})
     visible = {'parking', 'quarter'} if ambiguous else {'parking'}
-    monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({}, visible))
+    monkeypatch.setattr(scenes, 'observe_frame', lambda *a: ({}, visible))
     monkeypatch.setattr(scenes, 'matches', lambda image, pattern: pattern in image)
     observed = service.observe()
     assert observed['complete'] is (not ambiguous)

@@ -55,7 +55,7 @@ def guide(monkeypatch):
     monkeypatch.setattr(scenes,'balances',lambda d:dict(cash=2250,working_cash=2250,loan=5000))
     monkeypatch.setattr(scenes,'park_resources',lambda d:dict(guides=d.guides,small_feeders=0))
     monkeypatch.setattr(scenes,'pending_guide',lambda d:d.pending)
-    monkeypatch.setattr(scenes,'take_frame',lambda p,d,name:({},d.view))
+    monkeypatch.setattr(scenes,'take_frame',lambda p,d,name,**kw:({},d.view))
     monkeypatch.setattr(scenes,'matches',lambda image,pattern:image==pattern)
     return make
 
@@ -86,11 +86,11 @@ def test_wrong_native_roster_does_not_claim_guide_commit(guide):
 
 def test_first_committed_frame_failure_keeps_native_hire_proof(guide,monkeypatch):
     text,world=guide();original=scenes.take_frame
-    def frame(project,debug,name):
+    def frame(project,debug,name,**options):
         if name=='guide-committed':
             assert world.guides==1
             raise RuntimeError('First committed frame unavailable')
-        return original(project,debug,name)
+        return original(project,debug,name,**options)
     monkeypatch.setattr(scenes,'take_frame',frame)
     with pytest.raises(RuntimeError,match='First committed frame'):text.hire_guide()
     assert len(world.clicks)==5

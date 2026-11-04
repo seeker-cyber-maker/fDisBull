@@ -132,10 +132,10 @@ native-debugger-stable:
   extends: .native_debugger_template
   variables:
     FDISBULL_PATCH_DIRECTORY: "experimental/dosbox-x"
-    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_screenshot_codecs.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py"
+    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_screenshot_codecs.py tests/test_dinopark_frame_observations.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py"
 
 native-debugger-layers:
   extends: .native_debugger_template
   variables:
     FDISBULL_PATCH_DIRECTORY: "experimental/dosbox-x/layers"
-    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_screenshot_codecs.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py"
+    FDISBULL_NATIVE_TESTS: "tests/test_debugger.py tests/test_screenshot_codecs.py tests/test_dinopark_frame_observations.py tests/test_dos_guest_exit.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py"
