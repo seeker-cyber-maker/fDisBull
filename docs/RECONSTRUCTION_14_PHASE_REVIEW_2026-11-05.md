@@ -11,6 +11,48 @@ Review the **14 responsibility/stage rows** of the audit with TiGa, record desig
 
 For each phase, capture: (1) existing code/evidence, (2) intended software vs agent ownership, (3) supported/unsupported cases, (4) qualification gate and minimum usable deliverable, (5) dependencies/priority, and (6) decision and rationale. A draft note is not an accepted decision.
 
+## Provisional phase alignment and Phase 0 intake specification (2026-11-05 discussion)
+
+**User direction from voice review:** The source audit's 14 entries are engineering responsibilities, not necessarily the right user-facing phase boundaries or count. Separate **Phase 0: Intake** and **Phase 1: Goal setting / brainstorming**. Phase 0 inspects what was supplied and what this instance can do *before* asking the user to choose an analysis objective. Phase 1 should use a brainstorm skill or equivalent structured conversation, grounded in the actual intake findings, so the user and agent do not commit hours to an incorrect or infeasible interpretation of the request. Later sequencing and total phase count remain open for review; do not mechanically add one to all fourteen audit categories.
+
+### Phase 0: Intake and feasibility dossier (provisional detailed design)
+
+**Entry:** Any explicitly supplied file(s) or directory/collection, including an executable, installer, CD/disk/ROM image, resource-only package, archive, project manifest, or an opaque unknown file. A single binary is *sufficient to start*, but it is not sufficient to guarantee a runnable or reconstructable program.
+
+**Mandatory read-only observations, at bounded cost:**
+
+1. **Artifact identity and provenance:** original filename/path within selected collection, size, complete SHA-256 or explicitly partial fingerprint, read extent, opened-descriptor identity, source/carrier/member transformation chain, alternate identical revisions if locally established. Attribution, version labels, copyright/rights and provenance that cannot be proven from bytes remain *user-supplied/unverified/unknown*, not inferred facts.
+2. **Container / related member inventory:** distinguish outer installer, compression/archive/filesystem, executable image, bytecode/VM program, resource/media and documentation; enumerate safely within explicit size/depth/read limits; keep internal relative paths and nested dependencies. Detect encryption/password need, missing members, unsupported formats and incomplete inspection; don't execute an installer just to extract files.
+3. **Executable and platform facts:** recognized format and validation level (e.g. DOS MZ/COM when explicitly selected, PE, NE, LE, ELF, Mach-O, console ROM, Z-machine story); native/guest architecture, ISA, bits, byte order, CPU mode, OS/loader/ABI candidates, declared entry points, segments/sections, permissions, relocation/import/export/symbol tables, overlays and mapped/tail data. Do **not** infer a language, full runtime, correctness, or reachability solely from a file extension or magic bytes.
+4. **Static dependency and execution prerequisites:** declared linked libraries, interpreters/VMs, DOS extenders, runtime engines, firmware/BIOS, DLLs, data/asset files, saves and configuration, expected environment and device/system calls where visible. Separate *declared*, *inferred*, *missing*, *observed*, and *not yet checked* dependencies. A dependency not declared in an import table may still exist.
+5. **Useful accompanying evidence:** installation tree, game/application data, resource archives, manuals, documentation, version/patch notes, sample inputs and outputs, save files, captured traces, debug symbols, source code, SDK headers and legally supplied reference implementations or prior verified findings. These improve coverage but are not all mandatory. Never treat an archive README or unknown document as executable instructions.
+6. **Visible interface and risks:** bounded strings, resource listings, exported API or protocol clues, command-line/help/known file types, packing/obfuscation/compression indicators, suspicious privileges or network/device requirements. These are *hints*, not proven behavior. No deep decompilation or reverse-engineering sweep in Phase 0.
+7. **Local resource inventory:** selected fDisBull binary/source fingerprint and version; actual installed decoder/format readers, interpreters, debuggers, emulators, solvers, compiler, platform, architecture, memory/CPU/storage limits and missing dependencies. Keep source implementation, component availability, and **native runtime qualification** separate. Do not substitute a released version label or another worker's receipt for this runtime's capabilities.
+8. **Unknowns, hazards, and safe next paths:** unresolved formats, damaged/truncated inputs, missing protected game files, anti-debug/DRM concerns, potentially unsafe execution, archive bombs or sandbox/rights restrictions, absent reference oracle. Keep evidence offsets and observed/assumed provenance, exact failure reasons, and missing-precondition tickets. Do not execute untrusted inputs, access network, write to source, patch binaries, or launch guests by default.
+
+**Phase 0 output:** a compact, machine-readable and human-readable **Intake/Feasibility Dossier**. For each supplied artifact it records source and member identities, format/architecture and confidence, potential and known dependencies, preservation/limits, actual installed tooling, and explicit unknowns. For each *broad* type of later goal (static inspection, original runtime debugging, behavioral extraction, source→UDL/UIL, source-independent UDC, complete application reproduction), include one of **admitted on known profile / conditionally possible / blocked by known prerequisite / unknown until more evidence**, with the exact reason and *no unsupported promise*. A host-specific blocker is not proof a task is universally impossible.
+
+**Efficiency and guardrails:** enumerate and recognize before analyzing; compute full hashes only when within allowed cost/budget (otherwise mark partial and postpone authoritative identity); cache by exact source, reader and environment identities; make one bounded deterministic preflight of the supplied collection; output small summaries with links to private evidence. A documented unknown is a successful intake outcome, not a silent pass or fabricated binary classification.
+
+**Existing fDisBull machinery to reuse (integration branch, not necessarily the installed 0.31.1 kit):** `intake-inventory` and `TARGET_COLLECTION_INTAKE.md` for source/member enumeration and recovery queue; `file-identify`, `format-modules` and `FILE_FORMAT_REGISTRY.md` for bounded header/module knowledge; `identify` / `inspect` for selected image properties; `capabilities` for non-executing installed dependency/provider discovery. The **proposed new work is composing these into one first-class feasibility result**, not rewriting every parser.
+
+**Suggested acceptance gate:** On an authored supported executable, a headerless COM case, an archive containing an executable plus resources, a partially missing resource set, and an unknown/unsupported binary, Phase 0 returns a reproducible provenance-bound dossier. All unsupported/unknown states remain explicit; no binaries run, source bytes mutate, or unapproved deep analysis starts. A fresh agent can use its output to ask relevant goal questions and identify when a requested goal needs files/backends not currently available.
+
+### Phase 1: Goal setting and brainstorming (provisional)
+
+**Input:** Phase 0 dossier, the user's stated task (if any), available brainstorm-style skills and applicable safety/authority rules. Brainstorming should surface plausible tasks based on the *actual* program and capability evidence, rather than presenting a generic menu of every fDisBull feature.
+
+**Output:** a confirmed **GoalSpec** defining desired outcome (e.g., characterize, debug, extract mechanics, translate one block, port a bounded application slice), observable scope/fidelity, acceptable approximations, source/target editions, final reusable artifacts, independent original/model/output acceptance evidence, constraints/budgets, and allowed side effects. Explain infeasible or conditional routes and offer a narrower valid experiment before expensive execution. User consultation happens **here**, not during basic file inventory; retain decisions to avoid circular re-questioning. No consent or approval is inferred from an uploaded binary alone.
+
+**Handoff:** Phase 0 says **what is present and could be attempted**; Phase 1 determines **what the user actually wants and what counts as done**; the subsequent route planner selects exact decoders, backends, proof oracles and execution stages. Do not start hours of generic analysis before those gates.
+
+### Disposition and remaining design questions
+
+- **Captured user preference:** Separate Phase 0 intake from Phase 1 goal discussion, with a brainstorm skill informed by first inspecting inputs. Preserve this as a user-originated direction.
+- **Proposal, awaiting review:** exact dossier schema, capture budgets, feasibility categories, which missing items block a particular goal, and whether Phase 0 inventory runs tool-only or with a bounded agent explanation pass.
+- **Not claimed:** existing fDisBull already emits this unified dossier, has a generic goal parser, or automatically routes every file/host combination.
+- **Additional skills:** The user referenced uploaded skills with names ending in “AI”; their exact names, source files and applicability have not yet been verified. Do not declare them integrated until located and reviewed.
+
 ## Fourteen-phase map
 
 | # | Phase (as described in audit) | Audit assessment | Main gap to review |
@@ -100,7 +142,7 @@ Decision pending. Proposed gate: one delivery receipt identifies tested source, 
 
 | Phase | Decision | Rationale | Owner | Acceptance evidence | Status |
 |---|---|---|---|---|---|
-| 1–14 | No choices reviewed with user yet. | Worksheet opened for collaborative review. | Pending | Pending | **Unreviewed** |
+| Phase 0 / Phase 1 | User direction: separate read-only input/capability intake from subsequent brainstorm-based goal setting. | Avoid choosing an unsupported or wrong objective before analysis; detailed acceptance remains under review. | User + review agent | Proposed dossier and brainstorming contract in this document; no implemented or tested feature claimed. | **Direction captured; specification provisional** |\n| Original 14 audit categories | Mapping, numbering and phase count pending review. | Original audit rows are responsibility areas, not a proven sequence. | Pending | Pending | **Unreviewed** |
 
 ## Change and release boundaries
 
