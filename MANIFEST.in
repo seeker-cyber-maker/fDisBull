@@ -17,6 +17,7 @@ include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/fixtures/protected_mode_mouse.S
 include tests/fixtures/kyra_debug_core.cpp
+include tests/fixtures/zcode_agent_driver.cpp
 include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt

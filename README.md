@@ -9,13 +9,13 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**0.33.0rc1 local release-candidate feature line:** recover captured Windows imports, identify more media
+**0.33.0 local release-candidate feature line:** recover captured Windows imports, identify more media
 formats, investigate Win32 and protected-mode DOS programs, and inspect AGI or
 Gob scenes through experimental ScummVM backends. Exact lossless frame options
 and a direct pixel-buffer API support repeated visual probes; headless DOSBox-X
 shutdown suppresses the recurring quit dialog. This line carries the 0.31.1
 features and packaging repairs forward. See the
-[0.33.0rc1 scope and limits](docs/RELEASE-0.33.0.md),
+[0.33.0 scope and limits](docs/RELEASE-0.33.0.md),
 [release records](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md). The
 [GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
@@ -400,7 +400,7 @@ GitLab (`brewster-jennings-group/fdisbull`) is the remote project authority;
 GitHub is retired. Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
-[0.33.0rc1 notes](docs/RELEASE-0.33.0.md), [0.32.0 notes](docs/RELEASE-0.32.0.md),
+[0.33.0 notes](docs/RELEASE-0.33.0.md), [0.32.0 notes](docs/RELEASE-0.32.0.md),
 [0.31.1 notes](docs/RELEASE-0.31.1.md),
 [0.31.0 notes](docs/RELEASE-0.31.0.md), [0.30.0 notes](docs/RELEASE-0.30.0.md),
 [0.29.0 notes](docs/RELEASE-0.29.0.md),

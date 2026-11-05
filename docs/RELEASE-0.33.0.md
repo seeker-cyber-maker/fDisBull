@@ -1,66 +1,76 @@
-# 0.33.0rc1 local release candidate
+# 0.33.0 local release candidate
 
 Status: **local candidate, not tagged or published**. The source version is
-`0.33.0rc1`. The candidate exists to exercise the next source line on macOS and
-to produce inspectable local artifacts; it does not promote the unpublished
-0.32.0 candidate, create a shared installation or assert hosted qualification.
+`0.33.0`. This cut carries the unpublished 0.32.0 source line, the reviewed
+`4a487e4` integration and the newer `7e43e32` integration stack. It does not
+create a tag, GitLab Release, shared installation or hosted-qualification
+claim.
 
 ## Lineage
 
-The candidate starts from the unpublished `0.32.0` candidate
-`c80bff03e4cd2b946a93e7aecab61e5ff9281f81`, which is based on published
-0.31.1 (`b2159367f3d4c2587c75acd077f30b39223da8dc`). It merges the selected
-0.32 PR integration `4a487e45e679025af4d2c0aca2b6c8742383ef08`:
+- Published base: `0.31.1` at
+  `b2159367f3d4c2587c75acd077f30b39223da8dc`.
+- Unpublished 0.32.0 candidate:
+  `c80bff03e4cd2b946a93e7aecab61e5ff9281f81`.
+- First 0.33 local candidate (`0.33.0rc1`):
+  `337848e992d62dc530cd02f42f9f52c8f2088e90`, based on the `4a487e4`
+  integration.
+- New integration source:
+  `7e43e32080eebb7a8cac5c5f1010db340fa39052`, merged as
+  `05a4f5ce0dacb2f3992daa7115c661e0ed85bb39`.
 
-- `!93` Boat offline/native qualification handoff and finite runner;
-- `!80` built-in GOG Inno 5.6.2 reader;
-- `!79` phase contracts and audit guidance;
-- `!83` Westwood PAK/CPS/WSA readers and EMC2 guest processor;
-- `!86` experimental ScummVM Kyra/EMC2 controller;
-- `!87` AGI-to-UIL native component pilot;
-- `!88` Kyra debugger control scaffold;
-- `!46`, `!47` and `!53` investigation-skill guidance changes.
+The 0.32.0 source line was never published. Its unpublished candidate remains
+part of the lineage, not a missing tag.
 
-The reviewed 0.32 `!73` ScummVM AGI/Gob substrate remains in the carried
-lineage; it is not duplicated by this merge.
+## New in this integration pass
 
-## Carried scope
+The newer `7e43e32` integration adds the reviewed 0.32/0.33 pull-request
+stack, including:
 
-The candidate carries the 0.32.0 source scope: captured Windows import
-recovery, context-aware format/media intake, restricted SMK2 framing, original
-Win32/experimental Win16 runtime controls, protected-mode DOS investigations,
-exact frame transport and direct RGBA pixels, experimental ScummVM AGI/Gob
-debugging, and the headless quit-dialog and signed-return fixes. It also carries
-the 0.31.1 packaging and native-CI repairs.
+- Library handoffs and dated handoff reconciliation (`!42`);
+- Colonization paired production/difficulty examples (`!50`);
+- Parallel research-workspace lifecycle and matched-methodology pilots
+  (`!51`, `!52`);
+- Syndicate tactical history, rewind and campaign/save studies
+  (`!54`, `!55`);
+- Portable UIL text, Z-harness and large-world reference studies (`!56`);
+- PE32-first reversible UIL feedback fusion (`!63`);
+- Maturity/deterministic-pipeline audits and reusable environment/ISA/target
+  packages (`!64`, `!65`);
+- Portable service-contract and common-UIL CI handoffs (`!66`, `!76`);
+- NES C/Python-before-UIL and P00 DOS intake comparisons (`!70`, `!81`);
+- Castles II Save/Load harness and page-cited manual OCR (`!84`, `!85`);
+- Shared scene fingerprints/scanline rules and text-asset shell connectors
+  (`!89`, `!90`);
+- Z3-to-direct-Python block translation and Z-machine provider comparison
+  (`!91`, `!92`);
+- Native ScummVM GLK/Z-code bridge and owned launcher (`!94`).
 
-## New in this candidate
+This cut also carries the earlier 0.32 integration: Boat CI handoff, built-in
+GOG Inno 5.6.2 intake, Westwood PAK/CPS/WSA and EMC2 modules, experimental
+ScummVM Kyra/AGI pilots, the headless quit-dialog fix, signed-return
+correction and package-completeness repairs.
 
-- **Boat CI handoff:** finite local/hosted Linux phases, retained-runtime
-  preparation, chat/offline inventory helpers and explicit phase receipts. The
-  runner does not package or publish by itself.
-- **Native GOG Inno intake:** bounded validation and multipart reconstruction
-  without an external `innoextract` process. This remains a bounded GOG profile,
-  not a general Inno reader or installer runner.
-- **Westwood media modules:** PAK/CPS/WSA readers and an EMC2 guest processor
-  with explicit duplicate-name, palette, delta-frame and syscall boundaries.
-- **ScummVM Kyra and AGI pilots:** source-bound Kyra controller and control-core
-  scaffolds, plus a bounded AGI-to-UIL native component path. These are not a
-  runnable full Kyra backend, whole AGI compiler or original-game equivalence
-  claim.
-- **Investigation-skill guidance:** progressive console qualification,
-  specialist/worker context selection, and deterministic execution requirements
-  merged into the current skill references.
+## Offline package Python boundary
+
+The source declares `requires-python >=3.12`. The binary Linux offline kit is
+built for CPython 3.13 (`cp313`) because its pinned dependency wheels include
+compiled extensions. The previous installer required exactly `3.13.5`; this
+cut accepts any CPython `3.13.x` and states the dependency boundary explicitly.
+A Python 3.12 host must use an isolated 3.13 runtime for the binary kit; a
+source install can use 3.12 subject to the separately declared dependency
+environment.
 
 ## Qualification at this cut
 
 Local macOS verification is recorded in
-[the candidate evidence](evidence/0.33.0-release/README.md). The full local
-suite reported **10002 passed, 15 failed, 386 skipped, 23 errors and 2316
-subtests passed**; the same 15 failures reproduce on the 0.32 candidate and are
-inherited macOS Mach-O/GCC or packaged presentation/PSG fixture limits, not
-0.33 regressions. Hosted Linux ordinary/native CI, installed-wheel PE/DOS/boot
-acceptance and fresh-prefix installation are **not** part of this local cut. See
-the evidence packet for exact commands, artifact checks and known failures.
+[the candidate evidence](evidence/0.33.0-release/README.md). The full suite
+reported **10,187 passed, 2 failed, 419 skipped, 23 errors and 2,322 subtests
+passed**. The same failure classes reproduce on the 0.32 candidate
+`c80bff0`; they are the inherited macOS Mach-O/GCC fixture limits. Focused
+packaging/distribution tests passed **932**. Hosted Linux ordinary/native CI,
+installed-wheel PE/DOS/boot acceptance and fresh-prefix installation are
+**not** part of this local cut.
 
 ## Exclusions and publication gates
 
@@ -68,9 +78,12 @@ the evidence packet for exact commands, artifact checks and known failures.
   is made by this candidate.
 - No original game payload, save, emulator state or private FDB payload is
   included.
-- `!42` and `!74` remain unmerged; unresolved research, the alternative `!67`
-  captured-PE route and unselected pending stacks are outside this cut.
-- Publication still requires frozen-source Linux ordinary/native qualification,
-  required native cases executing rather than skipping, artifact inventory and
-  private-input checks, isolated wheel/source installation, both bundled skills,
-  and an explicit release decision on the exact source SHA.
+- Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
+  `!43`, `!49`, `!60`, `!67`, `!69`, `!72`, `!75`, `!77` and `!82` remain
+  blocked by their recorded prerequisites; the alternative `!67` captured-PE
+  route is not merged.
+- Publication still requires frozen-source Linux ordinary/native
+  qualification, required native cases executing rather than skipping,
+  artifact inventory and private-input checks, isolated wheel/source
+  installation, both bundled skills, and an explicit release decision on the
+  exact source SHA.

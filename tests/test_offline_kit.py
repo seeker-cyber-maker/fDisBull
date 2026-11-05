@@ -122,6 +122,9 @@ def test_kit_naming_and_install_manifest_follow_project_version(tmp_path):
     assert manifest_data['wheels']['fdisbull-player']['version']==kit.VERSION
     assert f'fdisbull-player=={kit.VERSION}' in requirements
     assert f'm.version("fdisbull-player") == "{kit.VERSION}"' in installer
+    assert manifest_data['python'] == '3.13'
+    assert 'sys.version_info[:2] == (3,13)' in installer
+    assert '3.13.5' not in installer
 
 
 def test_player_discovery_excludes_nested_build_artifacts(tmp_path):
