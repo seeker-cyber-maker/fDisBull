@@ -446,6 +446,186 @@ orchestration, provider and backend versions form the relevant execution
 identity. Preserve this closure in a companion receipt using existing contracts;
 do not add speculative evidence fields to strict UIL documents.
 
+## 8. State-machine reasoning makes the boundary more precise
+
+A user-supplied video transcript, opening with "Finite state machines, states and
+transitions", provides a useful analysis method for this proposal. Its strongest
+connection is the need to identify retained state, input meaning, transition
+conditions and observable output timing separately from implementation encoding.
+
+Source provenance: `Pasted text(5).txt`, WEBVTT captions, ending at 18:53;
+SHA-256 `2055e48d8185c9c2baa61139da2f3b3f05e1ec49f91707f48a8d90b2f8ec7835`.
+The source-video URL and author were not supplied. The analysis below refers to
+the supplied text and timestamps, not unseen diagrams. It adds authored research
+to this note; the complete transcript is not reproduced.
+
+### Retained state is whatever the future can distinguish
+
+At 00:22-00:38 the transcript defines state through the past information needed
+for future behavior. For a claimed deterministic model, that gives a practical
+recovery test: if two supposedly identical recovered states produce different
+admitted behavior under the same future inputs, the state description or its
+environmental assumptions are incomplete.
+
+For example, two machines can both be labelled `processing` while having
+different progress, reserved output space or pending interruptions. Two identical
+images can hide different timers or queued events. Recover the values needed to
+predict the next observation; a descriptive mode name is only part of the state.
+
+A useful game model combines:
+
+| Part | Illustrative contents |
+| --- | --- |
+| Control mode | Waiting, processing, blocked or paused |
+| Typed data | Inventory, progress, energy, position and relevant RNG state |
+| Relationships | Input/output connections, network membership, ownership and reservations |
+| Pending work | Timers, queued events and continuation information |
+| Observation rules | Which state/effects become visible, at which phase and to which observer |
+
+This is an analytical decomposition, not a new UIL record schema or a recovered
+Factorio object layout. Different objects can need different subsets; static
+terrain or an inventory record need not have a separately authored state machine.
+
+State encoding is a separate issue. The transcript's binary and one-hot examples
+at 08:18-10:00 illustrate how the same control choices can use different storage.
+Likewise, a recovered phase can live in source bits, a generated integer, or a
+Python object while retaining the same admitted observable behavior. The mapping
+must still account for source-visible width, flags, aliasing and memory effects.
+
+### Compose object behavior without enumerating the whole world
+
+For a large game, use small control descriptions plus data and explicit
+interactions. Ten independent objects with four control modes already have up to
+`4^10 = 1,048,576` combined mode configurations before counting their data.
+Coupling can restrict which combinations are reachable; the product is an upper
+bound, not a requirement to enumerate them all.
+
+Represent interactions explicitly: one object's transition may change a shared
+resource, invalidate a reservation, or deliver an event to another object.
+Scheduling determines when those consequences are observed. A collection of
+local state diagrams alone does not specify shared-memory conflicts, event
+priority or same-tick write visibility.
+
+Established statechart notation provides nested and concurrently active states,
+guards and entry/exit/transition actions. SCXML also specifies transition
+selection and execution order; its parallel states do not require separate
+threads. This is a useful reference for the questions to answer, without adopting
+its execution semantics or XML format for UIL.
+[Source: W3C SCXML, sections 3.1 and 3.13](https://www.w3.org/TR/scxml/).
+
+Factorio's tick boundary must not be assumed equivalent to a synchronous circuit
+in which every component samples an unchanged old state and commits together.
+Retain the selected source's update phases and visibility rules. An optimization
+may alter internal scheduling only within the qualified observable contract.
+
+### A request, a state output and a completion event are different
+
+The transcript's Moore/Mealy discussion at 04:20-06:00 is useful here. A Moore
+output depends on the current state; a Mealy output can also depend on the input.
+Their observation phase must be specified. This does not imply that one software
+form is universally one tick faster.
+
+For media, distinguish a persistent desired condition from a one-time action.
+"Motor sound should remain active while processing" is a state-dependent
+condition. "Emit the arrival chime on this transition" is an occurrence.
+Calling a one-shot playback function on every update in the active state would
+change the latter behavior into repeated playback.
+
+The following is an illustrative lifecycle view for one media instance. It is
+not today's `pending_host` state machine or an exhaustive service specification:
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> Idle
+    Idle --> Pending: Start request
+    Pending --> Active: Start confirmed
+    Pending --> Rejected: Rejected before effect
+    Active --> Finished: Qualified completion
+    Active --> Cancelled: Cancellation confirmed
+```
+
+Queue acceptance alone need not confirm physical start. A returned call need not
+mean completion. A timeout is not evidence of rejection or cancellation. The
+selected contract must define any pause, retry, overlap, looping and uncertain
+outcome paths omitted from this small diagram.
+
+Completion may be a recovered logical deadline, a script marker, or an explicitly
+modelled external event. A device callback must enter the qualified simulation
+boundary with the correct instance and ordering; it must not silently replace
+the game's time model. For example, after effect A is cancelled and B starts, a
+late completion from A must not complete B. The identifiers and guards needed to
+enforce that rule belong in the proposed host protocol, not undeclared fields
+added to the current UIL service signatures.
+
+This extends the existing
+[semantic-contract guidance](../src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md):
+state assignment, a sampled predicate, an event occurrence and a retained queue
+are different mechanisms. Recover which one the source uses.
+
+### The transcript itself supplies a useful counterexample
+
+The captions at 17:08-17:17 list `1 1 0 1 1`, but the following explanation adds
+another final one and says the sequence contains five ones overall. Under its
+stated reset-on-zero rule, these are different traces:
+
+| Input samples, starting at Idle | States after each sample | Final Moore output |
+| --- | --- | --- |
+| `1,1,0,1,1` | One, Two, Idle, One, Two | 0 |
+| `1,1,0,1,1,1` | One, Two, Idle, One, Two, Fire | 1 |
+
+The six-sample trace matches the narrated conclusion. This is a discrepancy in
+the supplied captions; it does not establish whether the video or transcription
+introduced it. The caption spellings "more" and "mele/mely" refer to Moore and
+Mealy in this context.
+
+Also distinguish three sampled high values from three distinct button clicks.
+A held button may produce several high samples. A click-based contract must
+define event extraction, edges and any relevant debounce; a sampled-level
+detector has a different input alphabet and timing rule. Define the behavior
+after Fire explicitly, including whether subsequent input is consumed while
+rearming and whether detections may overlap. Under the transcript's unconditional
+Fire-to-Idle rule, a continuous stream of ones fires at samples 3, 7, 11 and so
+on, because the reset sample is consumed. Nonoverlapping groups of three would
+instead fire at 3, 6, 9. The same successful six-sample example does not distinguish
+these rules; a longer run of ones does.
+
+### Turn the idea into a repeatable recovery method
+
+Use the existing semantic-contract investigation records and supported evidence
+fields. No FSM opcode, SCXML importer or new strict document format is proposed.
+
+1. Identify the entity/context and candidate retained fields through existing
+   layout, reader/writer, control-flow and observation evidence. Keep a mode-name
+   hypothesis distinct from a verified encoding.
+2. Define inputs precisely: action occurrence, sampled level, tick, timer,
+   resource change or callback. Include the relevant time and RNG assumptions.
+3. Recover each transition's guard, read/write footprint, ordered effects,
+   continuation and observation boundary. Preserve unknown outcomes and opaque
+   source-backed behavior.
+4. Apply the recovered structure to other instances as candidates, then check
+   variant parameters, ownership and exceptional paths. Shared layout alone does
+   not prove shared behavior.
+5. Compare complete admitted traces, including nonzero initial progress,
+   rejection, cancellation, repetition and restoration. Compare effect order and
+   observation phase as well as final fields.
+6. Change the implementation only after defining the state mapping and the
+   observations that it must preserve. Intermediate original steps may be hidden
+   only where the admitted observer and continuation contract permit it.
+
+The final point is the connection to Python substitution. An RNG replacement
+must preserve its observable sequence and state effects for the selected
+contract. A media replacement must preserve its longer-lived interactions as
+well. Matching one final value or screenshot does not establish either property.
+
+Useful discriminating sequences for a future media fixture include start(A),
+cancel(A), start(B), then late-completion(A); repeated start while active; and
+save/restore midway through an animation. Compare the input and output sequence
+at aligned logical boundaries, as the transcript recommends at 18:18-18:36.
+A restored label such as `Active` is insufficient if progress, pending markers,
+RNG or source continuation state is missing. These are proposed checks, not new
+execution results.
+
 ## Evidence status
 
 - **Verified by source inspection:** the current common UIL services and their
@@ -454,6 +634,9 @@ do not add speculative evidence fields to strict UIL documents.
   optimization examples and multiplayer architecture. Historical blog posts
   describe their respective versions; current API pages are moving references.
   Pin exact game/mod versions before any behavioral experiment.
+- **User-supplied conceptual source:** the caption transcript discussed in section 8;
+  its trace discrepancy is retained explicitly. The proposed lifecycle diagram
+  and recovery method are authored analysis, not source-game observations.
 - **Proposed:** a host executor, Python media provider, asynchronous lifecycle,
   animation representation and backend qualification work.
 - **Not performed here:** a Factorio run or lift, whole-game substitution,
@@ -462,3 +645,4 @@ do not add speculative evidence fields to strict UIL documents.
 
 This document adds research and design rationale. It does not change a runtime,
 introduce a new profile, or promote a pending effect to a completed device action.
+
