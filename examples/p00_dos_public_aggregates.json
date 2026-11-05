@@ -1,0 +1,189 @@
+{
+  "format": "fdisbull-p00-dos-study-1",
+  "status": "qualified-artifact-intake-only",
+  "sources": [
+    {
+      "target": "castles1",
+      "source_kind": "gog-inno-installer",
+      "source_sha256": "6ae0653632e518adc5e3e7762c182b2846ed112113797555d2d44026392a5529",
+      "installer_profile": "Inno Setup Setup Data (5.6.2) (u)",
+      "source_bytes": 47589832,
+      "files": 190,
+      "payload_bytes": 52094833,
+      "role_file_counts": {
+        "game_candidate": 59,
+        "distribution_support": 129,
+        "documentation": 2
+      },
+      "role_bytes": {
+        "game_candidate": 1389006,
+        "distribution_support": 50553972,
+        "documentation": 151855
+      },
+      "executable_summary": {
+        "DOS-MZ-candidate": 3
+      },
+      "disc_images": [],
+      "qualification": {
+        "source_bytes_preserved": true,
+        "selected_artifact_hashes_checked": true,
+        "disc_primary_tree_inspected": false,
+        "run_or_original_semantic_evidence": false
+      },
+      "wall_seconds": 0.155817,
+      "phase_seconds": {
+        "total_wall_s": 0.155817,
+        "source_and_member_verification_s": 0.15468,
+        "nested_iso_metadata_and_member_hashing_s": 0.0,
+        "classification_and_receipt_s": 0.00115
+      }
+    },
+    {
+      "target": "castles2",
+      "source_kind": "gog-inno-installer",
+      "source_sha256": "d09debb49922e7e5ac83a5c9dc160053cc10599560d9525317a3925dbbadfe56",
+      "installer_profile": "Inno Setup Setup Data (5.6.2) (u)",
+      "source_bytes": 519724704,
+      "files": 259,
+      "payload_bytes": 776087369,
+      "role_file_counts": {
+        "game_candidate": 123,
+        "distribution_support": 134,
+        "documentation": 2
+      },
+      "role_bytes": {
+        "game_candidate": 754068779,
+        "distribution_support": 17452325,
+        "documentation": 4566265
+      },
+      "executable_summary": {
+        "DOS-MZ-candidate": 1
+      },
+      "disc_images": [
+        {
+          "framing": "MODE1/2352",
+          "volume_id": "C2CD",
+          "file_bytes": 748686288,
+          "primary_tree_valid": true,
+          "primary_tree_complete": true,
+          "primary_tree_entries": 461,
+          "primary_tree_directories": 6,
+          "primary_tree_files": 455,
+          "primary_tree_file_hashes_computed": 455,
+          "matches_loose_by_content": 5,
+          "same_path_different_content": 0,
+          "remaining_unclassified_sectors": 10893,
+          "track_layout_known": false,
+          "audio_validated": false
+        }
+      ],
+      "qualification": {
+        "source_bytes_preserved": true,
+        "selected_artifact_hashes_checked": true,
+        "disc_primary_tree_inspected": true,
+        "run_or_original_semantic_evidence": false
+      },
+      "wall_seconds": 3.036769,
+      "phase_seconds": {
+        "total_wall_s": 3.036769,
+        "source_and_member_verification_s": 1.815342,
+        "nested_iso_metadata_and_member_hashing_s": 1.219662,
+        "classification_and_receipt_s": 0.001778
+      }
+    },
+    {
+      "target": "aitd1",
+      "source_kind": "gog-inno-installer",
+      "source_sha256": "615904e894c3cc4312869156b452816402e7611ccd5d6480cc29a8fa09bc1394",
+      "installer_profile": "Inno Setup Setup Data (5.6.2) (u)",
+      "source_bytes": 312547608,
+      "files": 218,
+      "payload_bytes": 393743983,
+      "role_file_counts": {
+        "distribution_support": 129,
+        "game_candidate": 88,
+        "documentation": 1
+      },
+      "role_bytes": {
+        "distribution_support": 16942436,
+        "game_candidate": 362277657,
+        "documentation": 14523890
+      },
+      "executable_summary": {
+        "DOS-COM-candidate-raw": 12,
+        "DOS-MZ-candidate": 6,
+        "PE32-or-PE": 1,
+        "Win16-NE": 2
+      },
+      "disc_images": [
+        {
+          "framing": "MODE1/2352",
+          "volume_id": "ALONECD",
+          "file_bytes": 353924256,
+          "primary_tree_valid": true,
+          "primary_tree_complete": true,
+          "primary_tree_entries": 1567,
+          "primary_tree_directories": 3,
+          "primary_tree_files": 1564,
+          "primary_tree_file_hashes_computed": 1564,
+          "matches_loose_by_content": 80,
+          "same_path_different_content": 2,
+          "remaining_unclassified_sectors": 126011,
+          "track_layout_known": false,
+          "audio_validated": false
+        }
+      ],
+      "qualification": {
+        "source_bytes_preserved": true,
+        "selected_artifact_hashes_checked": true,
+        "disc_primary_tree_inspected": true,
+        "run_or_original_semantic_evidence": false
+      },
+      "wall_seconds": 1.321381,
+      "phase_seconds": {
+        "total_wall_s": 1.321381,
+        "source_and_member_verification_s": 0.993358,
+        "nested_iso_metadata_and_member_hashing_s": 0.326483,
+        "classification_and_receipt_s": 0.001554
+      }
+    },
+    {
+      "target": "hello-com",
+      "source_kind": "direct-dos-artifact",
+      "source_sha256": "c8c17e0cbfd0a8ab533554a7a4e92c6ca234fddd79331e75a2b183447786f7ed",
+      "installer_profile": null,
+      "source_bytes": 15,
+      "files": 1,
+      "payload_bytes": 15,
+      "role_file_counts": {
+        "game_candidate": 1
+      },
+      "role_bytes": {
+        "game_candidate": 15
+      },
+      "executable_summary": {
+        "DOS-COM-candidate-raw": 1
+      },
+      "disc_images": [],
+      "qualification": {
+        "source_bytes_preserved": true,
+        "selected_artifact_hashes_checked": true,
+        "disc_primary_tree_inspected": false,
+        "run_or_original_semantic_evidence": false
+      },
+      "wall_seconds": 9.2e-05,
+      "phase_seconds": {
+        "total_wall_s": 9.2e-05,
+        "source_and_member_verification_s": 9.6e-05,
+        "nested_iso_metadata_and_member_hashing_s": 0.0,
+        "classification_and_receipt_s": 0.0
+      }
+    }
+  ],
+  "limitations": [
+    "Private game originals, byte-retaining data and all game-member paths excluded from public report",
+    "No live game execution or original-to-UIL equivalence",
+    "Disc primary tree verified, but track layout, CDDA and EDC/ECC remain unqualified",
+    "Executable classifications are header-based candidates, not launch success"
+  ]
+}
