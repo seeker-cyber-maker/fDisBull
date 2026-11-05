@@ -16,8 +16,11 @@ been tagged, uploaded or installed.
 - Reviewed integration merged into this cut:
   `7e43e32080eebb7a8cac5c5f1010db340fa39052`, merge commit
   `05a4f5ce0dacb2f3992daa7115c661e0ed85bb39`.
-- Candidate source commit:
+- Candidate functional source commit:
   `1004bda484b0405e35247432447deb0e9c7d12de`.
+- Final release-tree merge of `main`:
+  `02669325f8c318901eeefe1d825eca21b3306c1b`; artifacts in this packet were
+  rebuilt from this exact tree.
 
 ## Local macOS verification (2026-11-05)
 

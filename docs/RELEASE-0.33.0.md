@@ -18,6 +18,8 @@ claim.
 - New integration source:
   `7e43e32080eebb7a8cac5c5f1010db340fa39052`, merged as
   `05a4f5ce0dacb2f3992daa7115c661e0ed85bb39`.
+- Final release-tree merge of `main`:
+  `02669325f8c318901eeefe1d825eca21b3306c1b`.
 
 The 0.32.0 source line was never published. Its unpublished candidate remains
 part of the lineage, not a missing tag.
