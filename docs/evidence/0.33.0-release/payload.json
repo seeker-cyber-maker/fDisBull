@@ -2,31 +2,31 @@
   "artifacts": {
     "core": {
       "name": "fdisbull-0.33.0-py3-none-any.whl",
-      "sha256": "1e4f5045e5afd22201c4d8d19259074028bb88053aba808ebaf52d83f321ea94",
+      "sha256": "412f2362aedf747db2f77cf3c5417577f77e1e9a05b46e6ea271b734ae2e1d80",
       "size_bytes": 2115344
     },
     "player": {
       "name": "fdisbull_player-0.33.0-py3-none-any.whl",
-      "sha256": "8b4279d9f65c50fe4547d802dbad79d8ba8eaf831d782774021f79d1362345bd",
+      "sha256": "3970e27b62c882e4ae33927db9b9dacd9ec2332215b5012ab241f4fcef275285",
       "size_bytes": 86673
     },
     "sdist": {
       "name": "fdisbull-0.33.0.tar.gz",
-      "sha256": "01e1d1a1882321d84e3f884e67e8b2b1e19b5256981ea0b78c9a09590bfd7f51",
-      "size_bytes": 6011761
+      "sha256": "b9f3466280601a3d551c39acd2915718478186d92a2a7652cab3c81a3a463127",
+      "size_bytes": 6013059
     },
     "tool": {
       "name": "fdisbull-0.33.0-tool.zip",
-      "sha256": "7683794fbe486083d05f07d8652fdefde596559a5824e4a796ba02c76624df37",
-      "size_bytes": 7271800
+      "sha256": "8180bfff599b2133468691d817e1adda7b5aa61a6c16514450a97c083d572929",
+      "size_bytes": 7274608
     }
   },
   "inventory_counts": {
     "core": 587,
     "player": 14,
-    "source_total": 1437
+    "source_total": 1438
   },
   "schema": "fdisbull-package-payloads-1",
-  "source_commit": "05a4f5ce0dacb2f3992daa7115c661e0ed85bb39",
-  "tracked_worktree_dirty": true
+  "source_commit": "db4414660a820fcec283d87f5f225e1950f2cf52",
+  "tracked_worktree_dirty": false
 }
