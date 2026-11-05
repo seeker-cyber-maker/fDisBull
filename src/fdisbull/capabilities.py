@@ -219,6 +219,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
         'win16-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'windows-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'scummvm-backend': {'kind': 'configuration', 'status': 'not_selected'},
+        'scummvm-kyra-sidecar': {'kind': 'configuration', 'status': 'not_selected'},
         'native-c-compiler': {'kind': 'configuration', 'status': 'not_selected'},
         'native-window-services': {'kind': 'configuration', 'status': 'not_selected'},
     })
