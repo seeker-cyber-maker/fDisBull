@@ -1,0 +1,2 @@
+75d43e43ebc7aff79fed6fe4debac737df1cc759f161b671f5c834722676c066  /tmp/fdb-033-boat-out/kit/fdisbull-0.33.0-linux-x86_64-offline.tar.gz
+ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7  /tmp/fdb-033-boat-out/kit/fdisbull-0.33.0-linux-x86_64-source-companion.tar

@@ -1,0 +1,250 @@
+{
+  "skill_name": "fdisbull-investigate",
+  "index_format": "fdisbull-skill-index-1",
+  "entrypoint": "SKILL.md",
+  "reference_count": 20,
+  "local_markdown_link_count": 68,
+  "files": [
+    {
+      "reference": "SKILL.md",
+      "purpose": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
+      "bytes": 16486,
+      "sha256": "4d71172be3ccc523e18b9e865fc2e9ddceba6b692e73072e4448603177b808b7",
+      "local_markdown_links": [
+        "references/reconstruction.md",
+        "references/analysis-approach.md",
+        "references/workflows.md",
+        "references/methodology.md",
+        "references/formats-and-media.md",
+        "references/media-modules.md",
+        "references/file-formats.md",
+        "references/source-and-concepts.md",
+        "references/recovery-research.md",
+        "references/binary-claim-verification.md",
+        "references/scenes.md",
+        "references/runtime-navigation.md",
+        "references/agi-scenes.md",
+        "references/scene-recovery.md",
+        "references/semantic-contracts.md",
+        "references/common-uil.md",
+        "references/udl-uil-udc.md",
+        "references/proofs.md",
+        "references/sweding.md"
+      ]
+    },
+    {
+      "reference": "references/scenes.md",
+      "purpose": "Define native scene objects, masks, recognition, readiness and named actions",
+      "bytes": 33953,
+      "sha256": "630692e5c544245f30017bb298954e1029b178a3e2a7cf049adbdf5450a18026",
+      "local_markdown_links": [
+        "references/scene-recovery.md"
+      ]
+    },
+    {
+      "reference": "references/methodology.md",
+      "purpose": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
+      "bytes": 26154,
+      "sha256": "ba8e4847b13e7f6cc964911f1aa5dde208ea736180fdc4e1194785d1558f69b6",
+      "local_markdown_links": [
+        "references/reconstruction.md"
+      ]
+    },
+    {
+      "reference": "references/runtime-navigation.md",
+      "purpose": "Choose movement, spatial policies, assistance and observation projections",
+      "bytes": 14478,
+      "sha256": "5e930299b84dddaec772116c132a15b5be9e178e2f0792526fd9885a63545de0",
+      "local_markdown_links": [
+        "references/proofs.md"
+      ]
+    },
+    {
+      "reference": "references/sweding.md",
+      "purpose": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
+      "bytes": 9193,
+      "sha256": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+      "local_markdown_links": [
+        "references/reconstruction.md",
+        "references/semantic-contracts.md",
+        "references/udl-uil-udc.md"
+      ]
+    },
+    {
+      "reference": "references/reconstruction.md",
+      "purpose": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
+      "bytes": 16473,
+      "sha256": "d8d84476466dadf2029c2cbd08340f4cf4cb3d45430150f97e5735cb3d206039",
+      "local_markdown_links": [
+        "references/udl-uil-udc.md"
+      ]
+    },
+    {
+      "reference": "references/proofs.md",
+      "purpose": "Build explicit bounded Z3 models and report their assumptions and scope",
+      "bytes": 3908,
+      "sha256": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+      "local_markdown_links": [
+        "references/reconstruction.md",
+        "references/semantic-contracts.md"
+      ]
+    },
+    {
+      "reference": "references/workflows.md",
+      "purpose": "Choose static analysis, native debugging, scene, media/ROM, guest-module or UIL/UDC entry points",
+      "bytes": 20521,
+      "sha256": "df3808a4ecfcb14cbfd5157ee40842aef135fd38224f69bc9f0d6328d3a0a9c0",
+      "local_markdown_links": [
+        "references/scene-recovery.md",
+        "references/udl-uil-udc.md",
+        "references/formats-and-media.md",
+        "references/methodology.md",
+        "references/scenes.md",
+        "references/runtime-navigation.md",
+        "references/recovery-research.md",
+        "references/semantic-contracts.md"
+      ]
+    },
+    {
+      "reference": "references/analysis-approach.md",
+      "purpose": "Choose what to analyze next using evidence, dependencies, information gain and cost",
+      "bytes": 21167,
+      "sha256": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+      "local_markdown_links": [
+        "references/workflows.md",
+        "references/methodology.md",
+        "references/scenes.md",
+        "references/runtime-navigation.md",
+        "references/semantic-contracts.md",
+        "references/recovery-research.md",
+        "references/udl-uil-udc.md",
+        "references/proofs.md",
+        "references/formats-and-media.md",
+        "references/media-modules.md"
+      ]
+    },
+    {
+      "reference": "references/udl-uil-udc.md",
+      "purpose": "Qualify memory/desktop/Win16/web shells, console replay/synthesis, direct AGI/Zork profiles and DOS block layers",
+      "bytes": 41136,
+      "sha256": "8ab843840cd2d3e4acac1566492ac3bdf87347c76efe8077ffb5a74ac9e9336a",
+      "local_markdown_links": [
+        "references/reconstruction.md",
+        "references/common-uil.md",
+        "references/semantic-contracts.md",
+        "references/scene-recovery.md",
+        "references/methodology.md"
+      ]
+    },
+    {
+      "reference": "references/common-uil.md",
+      "purpose": "Compose indexed typed UIL, semantic catalogs, native modules/desktop shells and persistent packages",
+      "bytes": 9888,
+      "sha256": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/recovery-research.md",
+      "purpose": "Qualify research, retain reusable meanings and compare recovery depth and cost",
+      "bytes": 24891,
+      "sha256": "2981b1b33e2d525ba28e5e15a490c3efc1a7a49bdb939b26d77b15fe530c7d68",
+      "local_markdown_links": [
+        "references/methodology.md",
+        "references/scene-recovery.md",
+        "references/udl-uil-udc.md",
+        "references/semantic-contracts.md"
+      ]
+    },
+    {
+      "reference": "references/semantic-contracts.md",
+      "purpose": "Recover complete intent contracts and compare facts, effects, time and projection losses",
+      "bytes": 10817,
+      "sha256": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+      "local_markdown_links": [
+        "references/scene-recovery.md",
+        "references/udl-uil-udc.md",
+        "references/methodology.md",
+        "references/scenes.md"
+      ]
+    },
+    {
+      "reference": "references/media-modules.md",
+      "purpose": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
+      "bytes": 14874,
+      "sha256": "e348e1963d4079870a348d55165965c489612f3f7153166efa39ec0f0ccbe367",
+      "local_markdown_links": [
+        "references/file-formats.md"
+      ]
+    },
+    {
+      "reference": "references/file-formats.md",
+      "purpose": "Identify file headers through SQLite format modules and frame native SMK2 with explicit decoder/runtime gates",
+      "bytes": 7261,
+      "sha256": "fe7b9d4692c7025f15b9feeb56cdb82a0a835a0631adb4e38c1eaf8c0f6b1351",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/scene-recovery.md",
+      "purpose": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
+      "bytes": 26840,
+      "sha256": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+      "local_markdown_links": [
+        "references/semantic-contracts.md",
+        "references/recovery-research.md",
+        "references/udl-uil-udc.md"
+      ]
+    },
+    {
+      "reference": "references/source-and-concepts.md",
+      "purpose": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
+      "bytes": 3652,
+      "sha256": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/formats-and-media.md",
+      "purpose": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
+      "bytes": 17661,
+      "sha256": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+      "local_markdown_links": [
+        "references/media-modules.md",
+        "references/methodology.md",
+        "references/udl-uil-udc.md"
+      ]
+    },
+    {
+      "reference": "references/agi-scenes.md",
+      "purpose": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
+      "bytes": 8557,
+      "sha256": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+      "local_markdown_links": [
+        "references/semantic-contracts.md",
+        "references/recovery-research.md"
+      ]
+    },
+    {
+      "reference": "references/binary-claim-verification.md",
+      "purpose": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
+      "bytes": 6472,
+      "sha256": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+      "local_markdown_links": []
+    }
+  ],
+  "status": "passed",
+  "checked_at_utc": "2026-11-05T15:32:02.580837+00:00",
+  "package_version": "0.33.0",
+  "python": {
+    "requested": "/home/user/fdb033/work/venv/bin/python",
+    "executable": "/home/user/.local/share/uv/python/cpython-3.13.14-linux-x86_64-gnu/bin/python3.13",
+    "version": "3.13.14",
+    "module_path": "/home/user/fdb033/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "isolated_mode": true
+  },
+  "bounded_commands": {
+    "command_timeout_seconds": 5.0,
+    "total_timeout_seconds": 30.0,
+    "response_limit_bytes": 65536,
+    "total_response_limit_bytes": 4194304,
+    "captured_response_bytes": 345656
+  }
+}

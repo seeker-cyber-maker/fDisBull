@@ -1,0 +1,100 @@
+{
+  "skill_name": "write-gamefaqs-guide",
+  "index_format": "fdisbull-skill-index-1",
+  "entrypoint": "SKILL.md",
+  "reference_count": 8,
+  "local_markdown_link_count": 13,
+  "files": [
+    {
+      "reference": "SKILL.md",
+      "purpose": "Start here: scope, evidence and workflow for a readable game guide",
+      "bytes": 14426,
+      "sha256": "d6db038c7518313847fecbdf9d931303332148bfa229c9fc065db16cd8cc65f0",
+      "local_markdown_links": [
+        "references/evidence-and-provenance.md",
+        "references/guide-structure.md",
+        "references/technical-mechanics.md",
+        "references/routes-and-discoveries.md",
+        "references/formats-and-engine-reuse.md",
+        "references/engine-source-examples.md",
+        "references/source-examples.md"
+      ]
+    },
+    {
+      "reference": "references/evidence-and-provenance.md",
+      "purpose": "Distinguish recovered facts, observations, external sources and unknowns",
+      "bytes": 12648,
+      "sha256": "316606bd635386561484a87ce6c72b9661fb6bdfb7aded5e1cd82f5bbdf06070",
+      "local_markdown_links": [
+        "references/routes-and-discoveries.md",
+        "references/formats-and-engine-reuse.md"
+      ]
+    },
+    {
+      "reference": "references/guide-structure.md",
+      "purpose": "Organize routes, reference sections, navigation, spoilers and text exports",
+      "bytes": 12008,
+      "sha256": "4fdbecf2b397b9e3ef99a8edd6a112f5043723a9fab36b3f376d4fea697523cf",
+      "local_markdown_links": [
+        "references/routes-and-discoveries.md",
+        "references/formats-and-engine-reuse.md"
+      ]
+    },
+    {
+      "reference": "references/technical-mechanics.md",
+      "purpose": "Explain algorithms, numeric semantics and worked examples with evidence",
+      "bytes": 11679,
+      "sha256": "22ff90f94d539f2e66bfb1eb3e1eaa78a4b5a1754baa02c475110f6135f05802",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/routes-and-discoveries.md",
+      "purpose": "Cover unused code, bugs, cheats, alternate routes, speedrun rules and completion goals",
+      "bytes": 13806,
+      "sha256": "31de6d47c76e5b9b80d8ae8a3433462e33f2c912f6d8cf91373af5b6bc9d3429",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/formats-and-engine-reuse.md",
+      "purpose": "Specify recovered files and media; qualify interpreters and cross-game reuse",
+      "bytes": 10834,
+      "sha256": "312c17a5efa93c70494bf6e6861531238a90aa95671a99573676a89429facdae",
+      "local_markdown_links": [
+        "references/engine-source-examples.md"
+      ]
+    },
+    {
+      "reference": "references/engine-source-examples.md",
+      "purpose": "External engine/layout examples: read only when the information policy permits game facts",
+      "bytes": 5353,
+      "sha256": "86576e46facb85a2db58604a5c47ca94e3589c129a31b0ee0d63772257ca1ca1",
+      "local_markdown_links": []
+    },
+    {
+      "reference": "references/source-examples.md",
+      "purpose": "External guide examples and rationale: check the information policy before reading",
+      "bytes": 15298,
+      "sha256": "59b9afa1b94200694b489076d5357fce179fa8a9dc22f851b21899271b54a74c",
+      "local_markdown_links": [
+        "references/engine-source-examples.md"
+      ]
+    }
+  ],
+  "status": "passed",
+  "checked_at_utc": "2026-11-05T15:32:03.134826+00:00",
+  "package_version": "0.33.0",
+  "python": {
+    "requested": "/home/user/fdb033/work/venv/bin/python",
+    "executable": "/home/user/.local/share/uv/python/cpython-3.13.14-linux-x86_64-gnu/bin/python3.13",
+    "version": "3.13.14",
+    "module_path": "/home/user/fdb033/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "isolated_mode": true
+  },
+  "bounded_commands": {
+    "command_timeout_seconds": 5.0,
+    "total_timeout_seconds": 30.0,
+    "response_limit_bytes": 65536,
+    "total_response_limit_bytes": 4194304,
+    "captured_response_bytes": 99922
+  }
+}

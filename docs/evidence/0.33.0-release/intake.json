@@ -11,6 +11,7 @@
   },
   "integrated_source": "7e43e32080eebb7a8cac5c5f1010db340fa39052",
   "merge_commit": "05a4f5ce0dacb2f3992daa7115c661e0ed85bb39",
+  "candidate_source": "1004bda484b0405e35247432447deb0e9c7d12de",
   "selected_mrs": [
     42, 46, 47, 50, 51, 52, 53, 54, 55, 56,
     63, 64, 65, 66, 68, 70, 71, 73, 74, 76, 79, 80, 81, 83,
@@ -41,7 +42,27 @@
     "source_python_requirement": ">=3.12",
     "installer_policy": "accept any CPython 3.13.x; reject 3.12 because the bundled binary wheels are cp313",
     "friction_observed": "A review host defaulted to Python 3.12.14 while the previous installer required exactly 3.13.5.",
-    "resolution": "Installer/build metadata now accept 3.13.x and explain the cp313 dependency boundary; a 3.12 host must use an isolated 3.13 runtime."
+    "resolution": "Installer/build metadata now accept 3.13.x and explain the cp313 dependency boundary; a 3.12 host must use an isolated 3.13 runtime.",
+    "native_offline_kit": {
+      "status": "built_and_verified",
+      "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
+      "python": "3.13.14",
+      "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
+      "offline_kit_sha256": "75d43e43ebc7aff79fed6fe4debac737df1cc759f161b671f5c834722676c066",
+      "source_companion_sha256": "ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7",
+      "dependency_bundle": "reused 0.31.1 bundle, fingerprint ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+      "acceptance": {
+        "equivalence": "equivalent_under_assumptions",
+        "counterexample": "counterexample",
+        "keyboard": true,
+        "memory": true,
+        "native_restore": true,
+        "player_live_resume": true,
+        "project_restart": true,
+        "agent_skill": "passed",
+        "guide_skill": "passed"
+      }
+    }
   },
   "qualification": {
     "status": "local_macos_candidate",
@@ -69,6 +90,6 @@
       "macOS GCC Linux-ELF toolchain"
     ],
     "hosted_qualification": "pending",
-    "native_offline_kit": "pending"
+    "native_offline_kit": "built_and_verified_local_linux"
   }
 }

@@ -1,0 +1,12 @@
+OK core: /tmp/fdisbull-0.33.0-dist/fdisbull-0.33.0-py3-none-any.whl
+OK player: /tmp/fdisbull-0.33.0-dist/fdisbull_player-0.33.0-py3-none-any.whl
+Traceback (most recent call last):
+  File "/private/tmp/fdisbull-033-final/scripts/check_package_payloads.py", line 148, in <module>
+    main()
+    ~~~~^^
+  File "/private/tmp/fdisbull-033-final/scripts/check_package_payloads.py", line 126, in main
+    check_payload(source, archive_payload(path), kind)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/fdisbull-033-final/scripts/check_package_payloads.py", line 111, in check_payload
+    raise ValueError(f"{kind} payload mismatch: missing={missing}; unexpected={unexpected}; changed={changed}")
+ValueError: sdist payload mismatch: missing=['fdisbull-0.33.0/docs/evidence/0.33.0-release/README.md']; unexpected=[]; changed=['fdisbull-0.33.0/docs/evidence/0.33.0-release/intake.json']
