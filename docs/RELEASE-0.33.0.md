@@ -27,6 +27,10 @@ installed and active only in the local macOS shared prefix described below.
   `95b8520449a2ed388798a6b2cf10053e67c7d923`; it keeps single-pass GOG source
   and output hashes, adds read-only library identity matching, and places
   installer compatibility checks before the payload checksum sweep.
+- Post-build bootstrap/status commit:
+  `34e7278c05b419bc1cd660e631edcda2dee0d07d`; it adds the `--python`
+  installer selector, repeats the native-library preflight in `bin/dosbox`,
+  and changes completed intake records to outer `status: inspected`.
 
 The 0.32.0 source line was never published. Its unpublished candidate remains
 part of the lineage, not a missing tag.
@@ -94,7 +98,7 @@ interpreter and documented libraries. Its installed-kit acceptance passed Z3 equ
 keyboard, memory, native restore, player live resume and project restart; both
 bundled skill text retrievals passed; this does not establish that an agent
 followed either methodology. The kit SHA-256 is
-`2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac`;
+`f15257d75245f0698948d5e54999f283b841572636f1ff0a531637902decb179`;
 the backend SHA-256 is
 `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 This is local Linux verification, not the required-native CI matrix or a
@@ -119,12 +123,12 @@ of this local cut.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| core wheel | `8ecaf82430cbbe9e6f6a20f5a2903bbaaa56d99bd6c22b050bdefc175b1fe994` |
-| sdist | `4cb02205cdc3f88b5bda74aa27625bf706510214eb1115a779842573fb6799b0` |
-| player wheel | `dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46` |
-| tool ZIP | `7b012239328be752a36353d3d95d5d2c222e80f81e74269d1184f78a4d646201` |
-| offline kit | `2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac` |
-| outer kit ZIP | `faa5742d348bb8c2a32afd06d79ce54c53c39750b3f7abf733bd1fd68a6a17b6` |
+| core wheel | `80b4a873a1d17f1c6613cc9ba83cf2761a993e774570ef6eb268325cad617ee9` |
+| sdist | `8db547c639f293b4dfde52f1506f3e7b5d4bf1c5d67dcf49332f99bb536b6f0b` |
+| player wheel | `d52b7ae86d87bc6a6775762c7418f1e68bc9891a00d9ff71ce6fa525f0a70240` |
+| tool ZIP | `ef251fb003146d8dd7166283d47825c72ac17d97a375fd04251394b453d22225` |
+| offline kit | `f15257d75245f0698948d5e54999f283b841572636f1ff0a531637902decb179` |
+| outer kit ZIP | **rebuild pending; old staging is stale** |
 
 ## Exclusions and publication gates
 
