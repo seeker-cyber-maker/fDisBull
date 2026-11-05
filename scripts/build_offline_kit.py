@@ -114,7 +114,7 @@ DEST=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$1")
 if [ -e "$DEST" ] || [ -L "$DEST" ]; then echo "Destination already exists" >&2; exit 1; fi
 cd "$HERE"
 sha256sum -c SHA256SUMS
-python3 -c 'import platform,sys; assert sys.version_info[:3] == (3,13,5), "Python 3.13.5 required"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
+python3 -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13.x required for cp313 wheels (source itself supports 3.12+)"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
 python3 -m venv "$DEST"
 "$DEST/bin/python" -m pip install --no-index --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
 "$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-player") == "__FDISBULL_VERSION__"; import fdisbull_player; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull and fdisbull-player __FDISBULL_VERSION__; Z3 equivalent and counterexample checks passed")'
@@ -126,7 +126,7 @@ def build(args):
     if not re.fullmatch(r"[0-9a-f]{40,64}", args.source_commit):
         raise ValueError("source commit must be a full lowercase hexadecimal object ID")
     if args.python_tag != "cp313":
-        raise ValueError("only cp313 / Python 3.13.5 is supported")
+        raise ValueError("only cp313 / Python 3.13.x is supported")
     wheels = sorted(Path(args.wheelhouse).glob("*.whl"))
     if getattr(args, "dependency_bundle", None):
         wheels += dependency_bundle_wheels(args.dependency_bundle)
@@ -221,7 +221,7 @@ def build(args):
         shutil.copyfile(args.source_companion, companion)
         manifest = {
             "source_commit": args.source_commit,
-            "python": "3.13.5",
+            "python": "3.13",
             "platform": "linux-x86_64",
             "source_companion": companion.name,
             "source_companion_sha256": digest(companion),
@@ -244,7 +244,7 @@ def build(args):
         )
         (root / "README.txt").write_text(
             f"fDisBull {VERSION} Linux x86-64 offline kit, including standalone player and genuine Z3.\n"
-            "Requires Python 3.13.5 and system SDL2, GL/X11, FreeType, PNG, ncurses, zlib and a compatible glibc.\n"
+            "Requires CPython 3.13.x (the bundled wheels are cp313; source supports Python 3.12+) and system SDL2, GL/X11, FreeType, PNG, ncurses, zlib and a compatible glibc.\n"
             "Run ./install.sh /absolute/path/to/NEW-venv; use bin/dosbox as the backend. Headless is default.\n"
             "No game assets, saved states or project databases are supplied. Existing projects are not changed.\n"
             f"Keep {companion.name} with this binary kit; manifest.json records its SHA-256 and source identity.\n"

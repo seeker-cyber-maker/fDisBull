@@ -70,6 +70,95 @@ Keep deterministic exporters as ordinary tools when they add no independent
 reasoning. Use sequential execution when work depends on a pending result or
 workers would contend for the same guest, database or file.
 
+### Preserve specialist continuity
+
+Persistent leads can own implementation, packaging/recovery, testing or a
+particular game's semantics. Retain their useful histories and durable findings;
+a fresh review supplements that continuity. The tester can retain recurring
+failure knowledge and commission a fresh reader for a narrower handoff question.
+A persistent tester is not automatically independent of an author's assumptions.
+
+Available worker slots are capacity, not a required team size. Choose assignments
+for the current uncertainty: independent research during investigation,
+non-overlapping implementation when changes are separable, or a fresh reader
+at a consequential handoff. Respect the host's total concurrency and resource
+limits across nested teams. A per-lead slot allowance does not guarantee that
+all leads can use it simultaneously.
+
+### Choose role and context independently
+
+Parallelism selects questions that can proceed together. Context policy selects
+what each worker knows before it begins. A researcher, implementer, tester or
+reviewer may use any appropriate context mode; these are separate decisions.
+
+| Assignment | Useful context | Expected result |
+| --- | --- | --- |
+| Collaborative investigation or implementation | Inherited relevant history or a selected briefing, with accepted findings and dependencies | Advance a scoped question or owned change without rediscovering settled work |
+| Independent interpretation | Question, necessary constraints and source/evidence; keep the author's preferred explanation separate where practical | Interpretation with supporting and conflicting evidence |
+| Fresh comprehension review | Deliverable plus its declared reading list, without the authoring conversation or private explanation | Recover the contract, dependencies and limits; expose assumptions missing from the handoff |
+| Cold tool-use trial | User task and advertised interface/discovery entry point, without a private walkthrough | Show what discovery, execution and recovery actually permit; retain failures and assistance |
+
+Inherited history is useful for collaboration. A selected briefing makes scope
+and accepted assumptions explicit. Fresh context tests what the available
+artifacts communicate; it does not establish new model knowledge or independent
+evidence. A fresh worker that reads the same prior report still depends on it.
+
+Use the host's actual context-isolation mechanism and record the supplied packet
+and inherited-history setting when claiming a fresh review. Asking the author to
+pretend to forget is not that check. If separation is unavailable, label the
+result an informed review and leave the fresh check incomplete. Shared workspace
+access is also separate: pin inputs, give workers separate output locations, and
+keep sibling answers and private walkthroughs outside a blind trial's permitted
+evidence scope. Report unintended answer access rather than silently calling
+the run independent. An isolated guest does not imply a fresh conversation, and
+a fresh conversation does not create isolated guest state.
+
+### Dispatch a bounded question
+
+Use ordinary host instructions or an existing task record; this adds no fDisBull
+orchestration API or mandatory database schema.
+
+| Parameter | Record |
+| --- | --- |
+| Question | The uncertainty or concrete result the worker owns |
+| Role | Investigation, implementation, interpretation, comprehension review or tool-use trial |
+| Context policy | Inherited history, selected briefing or fresh context; supplied packet and relevant exclusions |
+| Evidence scope | Source revisions, artifacts, target edition, accepted assumptions and permitted additional discovery |
+| Ownership | Files/state the worker may change, output location and controller of any live guest |
+| Bounds | Relevant effort, execution, output and stopping limits; available capabilities |
+| Return contract | Conclusion, evidence references and ancestry, checks actually performed, counterexamples, uncertainty and dependencies |
+| Completion condition | Observable useful result, and what must return as unresolved or incomplete |
+
+Pin the reviewed deliverable before dispatch. For a comprehension review, ask
+the reader to explain the contract and propose a concrete use or test from the
+packet. For a cold tool trial, give the task and entry point, then retain the
+observed discovery/action/recovery record. A written plan is not an executed
+tool trial. Do not rescue a stuck worker with an unrecorded walkthrough and
+continue to describe the result as cold.
+
+### Integrate results at their evidence boundary
+
+The coordinator reconciles disagreements against the source or a discriminating
+observation, not a vote among reports. Preserve shared derivation and distinguish
+four actions: consulting an earlier result, inspecting its underlying artifact,
+executing a check now, and establishing the requested semantic claim. Name the
+actual scope, assumptions and revision for each. Several readers repeating one
+model do not independently qualify its correspondence to the original program.
+
+Retain useful conclusions in the project's existing artifacts with provenance,
+unresolved dependencies and invalidation conditions. A handoff should let the
+next owner act without relying on facts held only in the lead's conversation.
+Historical guest handles, observations and addresses still require the tool's
+live binding/freshness checks before use.
+
+Finish a review when its stated question has an evidenced answer, or return the
+precise missing input, failed check or budget boundary. Silence, unavailable
+workers and failed/unfinished reviews are not clean results. Correct material
+findings and recheck the affected boundary; do not require every small action
+to pass an expanding chain of agents. The skill guides delegation, the host
+provides worker lifecycle/context controls, fDisBull provides authoritative
+operations/evidence, and the existing harness/verifiers qualify behavior.
+
 ## Screen for and map interpreted control flow
 
 Early, use a cheap, task-relevant check for a possible interpreter alongside

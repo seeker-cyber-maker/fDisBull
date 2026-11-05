@@ -1,0 +1,28 @@
+{
+  "format": "fdisbull-full-f001-intake-verification-1",
+  "original_payload_manifest_entries_verified": 323,
+  "original_checksum_entries_verified": 324,
+  "original_files": 325,
+  "nested_archives": 13,
+  "nested_members_read": 325,
+  "nested_uncompressed_bytes": 6778333,
+  "unsafe_paths_or_symlinks": 0,
+  "credential_pattern_hits": 0,
+  "main_exact_files": 21,
+  "draft_exact_payload_files": 86,
+  "draft_exact_trees": 6,
+  "tool_tests": {
+    "command": "python -m pytest -q -p no:cacheprovider research/library-handoffs/2026-11-01/full-f001/tools/test_handoff_bundle.py",
+    "passed": 16,
+    "subtests_passed": 7,
+    "platform": "Darwin",
+    "python": "3.13.14",
+    "source_sha256": "7ba9a70c0c40c3e69668c699b2d05ed47e1ca7e2b931937351500bbd4ddfe5a0",
+    "tests_sha256": "377a6d75d48f8c7232bb3eab77343215be1c042bd99abaa1462299790206a397"
+  },
+  "historical_scene_tests_rerun": false,
+  "native_guest_executed": false,
+  "runtime_installed": false,
+  "patches_applied": false,
+  "archive_tree_restored_to_repository": false
+}

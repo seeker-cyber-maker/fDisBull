@@ -10,18 +10,29 @@ import time
 from .debugger import bounded
 from .operation_budget import rpc_budget
 
+ENGINE_OPERATIONS = {
+    'engine-state':'engine_state', 'engine-set':'write_engine_state',
+    'step':'step', 'watchpoint':'watchpoint', 'delete-watchpoint':'delete_watchpoint',
+    'engine-resource':'resource', 'engine-patch-resource':'patch_resource',
+    'engine-cycle':'run_until_cycle',
+    'engine-read-variable':'read_variable','engine-write-variable':'write_variable',
+    'engine-hotspot-events':'hotspot_events',
+    'engine-restore-resource':'restore_resource',
+}
+
 OPERATIONS = {
+    **ENGINE_OPERATIONS,
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
-    'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory',
+    'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
     'workflow-observe':'workflow_observe','workflow-act':'workflow_act','text-observe':'text_observe','text-act':'text_act',
     'wait':'wait',
     'screenshot-hooks':'screenshot_hooks',
-    'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
+    'step':'step', 'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
     'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
@@ -41,10 +52,41 @@ OPERATIONS = {
 }
 
 
-def validate_script(script):
+def validate_script(script, *, session=None):
     from .debugger import DebugSession
-    if not isinstance(script,dict) or set(script) != {'format','steps'} or script['format'] != 'fdisbull-script-1':
+    if (not isinstance(script,dict) or not {'format','steps'}<=set(script)
+            or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
+    backend=script.get('backend')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra')
+    if backend is not None and backend not in supported_backends:
+        raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
+    owner=session if session is not None else DebugSession
+    actual=None
+    if session is not None:
+        actual=getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+        if actual=='wine-ne-qemu':actual='wine-ne'
+    if backend is not None:
+        if session is not None:
+            if backend!=actual:raise ValueError('Script backend differs from the live debugger')
+        elif backend=='wine-qemu':
+            from .wine_debugger import PEDebugSession
+            owner=PEDebugSession
+        elif backend=='wine-ne':
+            from .win16_debugger import Win16DebugSession
+            owner=Win16DebugSession
+        elif backend=='scummvm-kyra':
+            from .scummvm_kyra import ScummVMKyraSession
+            owner=ScummVMKyraSession
+        elif backend=='scummvm-gob':
+            from .scummvm_gob import ScummVMGobSession
+            owner=ScummVMGobSession
+        else:
+            from .scummvm_debugger import ScummVMAGISession
+            owner=ScummVMAGISession
+    outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    if (backend or actual) in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
+        outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
         raise ValueError('Script exceeds 1 MiB')
     expanded = []
@@ -56,8 +98,8 @@ def validate_script(script):
             if not isinstance(step,dict) or not isinstance(step.get('op'),str):
                 raise ValueError('Every step requires an op')
             op = step['op']
-            if 'expect' in step and (op!='run' or step['expect'] not in ('breakpoint','watchpoint','guest_time','timeout','exited','pause')):
-                raise ValueError('expect is a run outcome: breakpoint, watchpoint, guest_time, timeout, exited, or pause')
+            if 'expect' in step and (op!='run' or step['expect'] not in outcomes):
+                raise ValueError('expect must be a supported run outcome for this backend')
             if op=='repeat':
                 if set(step) != {'op','count','steps'}:
                     raise ValueError('repeat requires count and steps')
@@ -73,8 +115,20 @@ def validate_script(script):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
-                    signature.bind(None,**params)
+                    operation_owner=owner
+                    if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
+                        # Engine-only saved routes retain the AGI grammar; ordinary
+                        # step routes keep the established DOS signature.
+                        from .scummvm_debugger import ScummVMAGISession
+                        operation_owner=ScummVMAGISession
+                    operation=getattr(operation_owner,OPERATIONS[op],None)
+                    if operation is None:raise ValueError('Unsupported operation for this backend: '+op)
+                    if (session is not None and op=='write-registers'
+                            and getattr(operation_owner,'register_edits_available',True) is False):
+                        raise ValueError('Win16 register writes are not qualified for this runtime')
+                    signature = inspect.signature(operation)
+                    if session is None:signature.bind(None,**params)
+                    else:signature.bind(**params)
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
@@ -124,7 +178,36 @@ def validate_script(script):
                         validate_keyboard(**checked)
                     if op=='wait':
                         from .debug_wait import validate_wait
-                        validate_wait(**params)
+                        if getattr(owner,'scene_time_basis',None)=='host':
+                            checked=dict(params)
+                            active=checked.pop('active_ms',None);legacy=checked.pop('guest_ms',None)
+                            if (active is None)==(legacy is None):
+                                raise ValueError('Windows wait requires exactly one active_ms or legacy guest_ms budget')
+                            if checked.get('fast_forward',False) is not False:
+                                raise ValueError('Windows waits do not support DOS fast-forward')
+                            validate_wait(**checked,guest_ms=active if active is not None else legacy)
+                        else:validate_wait(**params)
+                    if op in ('scene-act','scene-click') and 'slice_ms' in params:
+                        value=params['slice_ms']
+                        if not (isinstance(value,str) and value.startswith('$')):
+                            bounded(value,'slice_ms',1,1000)
+                    if op=='write-runtime-memory':
+                        from .debug_state import byte_string
+                        literal={}
+                        for key in ('data_hex','expected_hex'):
+                            value=params[key]
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                literal[key]=byte_string(value)
+                        if len(literal)==2 and len(literal['data_hex'])!=len(literal['expected_hex']):
+                            raise ValueError('Runtime RAM edits cannot resize a binding')
+                        offset=params.get('offset',0)
+                        if not (isinstance(offset,str) and offset.startswith('$')):
+                            bounded(offset,'runtime view offset',0,65535)
+                    if op=='step':
+                        for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
+                            value=params.get(key)
+                            if value is not None and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
@@ -149,7 +232,7 @@ def validate_script(script):
 @rpc_budget
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
-    steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    steps = validate_script(script, session=session) # Reject malformed later steps before any guest mutation.
     for step in steps:
         if step['op']=='delta-rewind' and 'policy' in step:
             from .debug_cpu_deltas import validate_policy
@@ -230,7 +313,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -259,6 +342,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
+            if step['op']=='step' and not result.get('completed'):
+                raise ValueError('Engine step stopped before the requested instruction boundary count')
+            if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
+                raise ValueError('Engine did not reach the requested cycle boundary')
             if _after_step is not None:_after_step(step,result)
             if 'as' in step:
                 results[step['as']] = result

@@ -10,14 +10,21 @@ recursive-include src/fdisbull/data *.json *.txt
 include src/fdisbull/data/FdisbullMacCapture.swift
 include tests/macos_capture_fixture.swift
 recursive-include src/fdisbull/skills *.md
+recursive-include skills/dos-target-media-rip *.md *.py
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
+include tests/fixtures/protected_mode_mouse.S
+include tests/fixtures/kyra_debug_core.cpp
+include tests/fixtures/zcode_agent_driver.cpp
 include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json
+include docs/evidence/0.32.0-release/intake.json
+include docs/evidence/0.33.0-release/intake.json
 include docs/evidence/shadowrun-ai-2026-11-01/source.json
 include docs/evidence/shadowrun-ai-2026-11-01/nes.json
 include docs/evidence/shadowrun-ai-2026-11-01/skill.json
@@ -42,6 +49,10 @@ include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
+include docs/evidence/scummvm-2026-11-01/verification.json
+include docs/evidence/scummvm-2026-11-01/comparison.json
+include docs/evidence/scummvm-gob-2026-11-01/verification.json
+include docs/evidence/scummvm-gob-2026-11-01/comparison.json
 include docs/evidence/common-uil-2026-11-01/verification.json
 include docs/evidence/agi-scenes-2026-10-30/verification.json
 include docs/evidence/kq1-bow-2026-10-30/verification.json
@@ -98,14 +109,14 @@ include docs/evidence/integration-025/zork.json
 include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
-recursive-include scripts *.py
+recursive-include scripts *.py *.c *.sh *.txt
 prune examples
 prune history
 prune experimental
 prune build
 prune dist
-prune .github
-exclude .gitlab-ci.yml
+recursive-include .github/workflows *.yml
+include .gitlab-ci.yml
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
 include docs/evidence/civd-food-arm64/verification.json
 # Exact authored food recipes; the private target/outputs remain excluded.

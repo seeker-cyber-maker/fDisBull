@@ -1,0 +1,399 @@
+{
+  "scope": "Original x86 instructions in isolated Linux/i386 context; prepared campaign data; no DOS or UI execution",
+  "entry": "0x28d60",
+  "cases": [
+    {
+      "case": "starting",
+      "territory": 0,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 1,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 2,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 3,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 4,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 5,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 6,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 7,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 8,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 9,
+      "available": true,
+      "steps": 35,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 10,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 11,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 12,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 13,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 14,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 15,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 16,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 17,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 18,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 19,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 20,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 21,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 22,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 23,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 24,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 25,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 26,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 27,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 28,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 29,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 30,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 31,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 32,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 33,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 34,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 35,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 36,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 37,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 38,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 39,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 40,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 41,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 42,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 43,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 44,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 45,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 46,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 47,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 48,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "starting",
+      "territory": 49,
+      "available": false,
+      "steps": 635,
+      "selector_preserved": true
+    },
+    {
+      "case": "western-owned",
+      "territory": 4,
+      "available": true,
+      "steps": 168,
+      "selector_preserved": true
+    },
+    {
+      "case": "western-owned",
+      "territory": 9,
+      "available": false,
+      "steps": 22,
+      "selector_preserved": true
+    },
+    {
+      "case": "western-owned",
+      "territory": 10,
+      "available": false,
+      "steps": 766,
+      "selector_preserved": true
+    },
+    {
+      "case": "western-owned",
+      "territory": 20,
+      "available": false,
+      "steps": 766,
+      "selector_preserved": true
+    },
+    {
+      "case": "completed-marker",
+      "territory": 9,
+      "available": true,
+      "steps": 39,
+      "selector_preserved": true
+    },
+    {
+      "case": "override",
+      "territory": 27,
+      "available": true,
+      "steps": 12,
+      "selector_preserved": true
+    }
+  ],
+  "seconds": 0.6201889550002306
+}

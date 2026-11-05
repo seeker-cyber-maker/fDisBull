@@ -36,12 +36,13 @@ with os.fdopen(int(source), 'r') as reader, os.fdopen(int(sink), 'w') as writer:
     return executable, report
 
 
-def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkeypatch):
+@pytest.mark.parametrize('options', [{}, {'window': False}], ids=['default', 'explicit-headless'])
+def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkeypatch, options):
     executable, report = transport
     monkeypatch.setenv('SDL_VIDEODRIVER', 'dummy')
     monkeypatch.setenv('SDL_AUDIODRIVER', 'coreaudio')
     monkeypatch.setenv('DOSBOX_SECRET', 'discard')
-    rpc = DOSBoxRPC(executable, tmp_path)
+    rpc = DOSBoxRPC(executable, tmp_path, **options)
     try:
         result = json.loads(report.read_text())
         assert '-agent-window' not in result['args'] and '--agent-window' not in result['args']
@@ -49,6 +50,11 @@ def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkey
         assert result['env']['SDL_AUDIODRIVER'] == 'dummy'
         assert 'mixer nosound=true' in result['args']
         assert 'midi mididevice=none' in result['args']
+        # Space-containing DOSBox settings require the section name, and must
+        # be passed as one argument paired with -set to suppress exit dialogs.
+        quit_setting = 'dosbox quit warning=false'
+        assert result['args'].count(quit_setting) == 1
+        assert result['args'][result['args'].index(quit_setting) - 1] == '-set'
         assert 'DOSBOX_SECRET' not in result['env']
         assert rpc.capabilities['video']['headless'] is True
     finally:
@@ -65,6 +71,7 @@ def test_window_option_reaches_the_same_agent_and_keeps_display_env(transport, t
         result = json.loads(report.read_text())
         assert any(arg in ('-agent-window', '--agent-window') for arg in result['args'])
         assert '--agent-config' in result['args']
+        assert not any('quit warning' in arg for arg in result['args'])
         assert result['env']['DISPLAY'] == ':77'
         assert 'SDL_VIDEODRIVER' not in result['env']
         assert rpc.capabilities['video']['headless'] is False
@@ -103,7 +110,7 @@ def test_cli_option_is_opt_in_and_forwarded(monkeypatch):
     assert observed['options']['window'] is True
 
 
-@pytest.mark.parametrize('backend', ['qemu-machine', 'dosbox-qemu', 'wine-qemu', 'ida-wine-qemu'])
+@pytest.mark.parametrize('backend', ['qemu-machine', 'dosbox-qemu','ida-wine-qemu'])
 def test_unsupported_backends_reject_window_before_spawn(tmp_path, backend):
     binary = tmp_path / 'GAME.EXE'
     binary.write_bytes(mz_file())

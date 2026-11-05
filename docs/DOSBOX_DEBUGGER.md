@@ -29,7 +29,13 @@ A prepared local project can retain analyzed routines, actual-game sessions, scr
 
 ## Dot-mode
 
-Headless is the default. To request a **view-only** native window for the same
+Headless is the default. Its launch profile disables host quit-warning dialogs
+with `dosbox quit warning=false` and disables SDL/mixer/MIDI sound output. This
+keeps an owned shutdown from waiting for a host confirmation dialog. It does
+not turn native cleanup failures into successful shutdowns. See the
+[source running-park verification and native crash investigation](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md).
+
+To request a **view-only** native window for the same
 agent-owned DOSBox session, use a backend rebuilt from the current compatible
 patch and launch with:
 
@@ -141,6 +147,81 @@ not a separately booted operating system or arbitrary protected-mode lifecycle.
 ```
 
 Read `mode_id` from your actual screenshot; do not assume the example's value. Click coordinates are native screenshot pixels. Input queued while stopped is consumed on subsequent execution; the release timer uses guest milliseconds. Fast-forward accelerates that guest time too.
+
+### Optional lossless native screenshot encodings
+
+The rebuilt native backend advertises `video.screenshot_encodings`. Existing
+calls still request the original RGBA PNG. Select an encoding explicitly:
+
+```python
+frame = debug.screenshot("catalogue.png", hooks=False, encoding="png-indexed")
+frame = debug.screenshot("catalogue-transfer.png", hooks=False, encoding="rgba-zstd")
+```
+
+The JSON method accepts the same `encoding` parameter. `png-indexed` constructs
+an exact palette from the completed RGBA snapshot, with no quantization. If a
+frame has more than 256 colours or nonopaque pixels, it returns the original
+RGBA PNG and an explicit `fallback_reason`. Palette contents are rebuilt for
+every screenshot, including palette-only animation.
+
+`rgba-zstd` compresses the completed RGBA8 buffer with Zstandard level 1. It is
+advertised only when the backend was built with Zstandard. Configure detects
+the library automatically; `--enable-agent-zstd` requires it, and
+`--disable-agent-zstd` omits it. The Python client needs the optional
+`fdisbull[screenshot]` dependency. Unsupported encodings or a missing decoder
+are refused before screenshot preparation hooks run.
+
+Stored screenshots remain PNG for existing exports, grids, scene bundles and
+offline consumers. For raw transport, the client validates the compressed
+payload hash, exact RGBA layout, bounded frame size and decoded-pixel hash,
+then encodes a canonical PNG. Its artifact hash identifies that PNG;
+`metadata.transport` separately records the native compressed-payload and raw
+pixel hashes. This host conversion is additional work, so a faster native
+encoder does not establish a faster stored-screenshot call.
+
+For a wire-only experiment, call `video.screenshot` with `encoding` and optional
+`measure:true`. PNG replies retain `format:"png"` and `png_base64`; raw replies
+use `format:"rgba-zstd"`, `data_base64`, `pixel_format:"RGBA8"`, `stride`,
+`uncompressed_bytes` and `raw_sha256`. `sha256` identifies the encoded payload.
+All encodings retain the same completed-frame, mode and guest-tick identity.
+`encode_us`, present only when requested, measures native encoding including
+palette construction; it excludes snapshot acquisition, hashing, base64,
+JSON, IPC, host decoding and persistence. Older backends keep the default PNG
+path and do not gain codecs without rebuilding.
+
+### Direct RGBA consumer without PNG conversion
+
+For an in-process pixel consumer, use the Python API:
+
+```python
+frame = debug.frame_rgba()  # Requests rgba-zstd explicitly.
+rgba = frame.pixel(160, 100)
+buffer = memoryview(frame.pixels)  # Immutable RGBA8 bytes, no image encoding.
+width, height, stride = frame.width, frame.height, frame.stride
+frame_id = frame.metadata["frame_id"]
+```
+
+`frame_rgba` returns an `RGBAFrame` with validated pixels and native frame/mode/
+tick metadata. `frame.sha256` and `frame.metadata["sha256"]` identify the decoded
+RGBA bytes. `frame.metadata["transport"]` separately identifies the compressed
+native payload, its encoding and size. The Zstandard path performs neither PNG
+loading nor PNG saving. It preserves all existing layout, size, decompression
+and hash checks.
+
+This direct call does not run screenshot preparation hooks, create a database
+event or artifact, write an image, pause the guest, or advance execution. The
+normal guarded RPC path still applies. Own a paused session when comparing
+several encodings of one completed frame. Returned bytes are an in-memory
+observation; use the existing `screenshot()` API when a persistent PNG artifact
+is required. A raw frame object is a Python buffer consumer API, not a JSON tool
+reply containing all pixels.
+
+For a comparable direct PNG consumer, select
+`debug.frame_rgba(encoding="png")` or `encoding="png-indexed"`; those paths
+decode their native PNG into RGBA without re-encoding it or storing an artifact.
+The original PNG option also works with older native backends. The default
+Zstandard option requires the advertised native codec and optional Python
+`fdisbull[screenshot]` decoder; it does not silently substitute another encoding.
 
 ### Optional screenshot coordinate grid (0.11.0)
 

@@ -1,0 +1,225 @@
+{
+  "format": "colonization-difficulty-source-binding-research-1",
+  "edition": "DOS",
+  "new_cuts": {
+    "source_sha256": "a17ed64c27671e5e95236e54a7ddc85803a96ba822fbed05e1dad34d3917e2e3",
+    "new_source_cuts": [
+      {
+        "name": "morale",
+        "range": [
+          41005,
+          41135
+        ],
+        "bytes": 130,
+        "instructions": 47,
+        "sha256": "5f234bacfb57297ecf9c9f4fdde414305f091965995d3dbe1ed27dd45393627a",
+        "selector_fixups": []
+      },
+      {
+        "name": "food",
+        "range": [
+          41543,
+          41644
+        ],
+        "bytes": 101,
+        "instructions": 35,
+        "sha256": "1cfe83cee8ad37b3db78c59104f636dbbaddd7d31eeffa299af961a32ae9e0d4",
+        "selector_fixups": []
+      },
+      {
+        "name": "secondary",
+        "range": [
+          41899,
+          41910
+        ],
+        "bytes": 11,
+        "instructions": 3,
+        "sha256": "777dfabf22141883fc5f9b186a63461c0ed57a2e6d247ceafcbc9336faee6be4",
+        "selector_fixups": []
+      },
+      {
+        "name": "worker-path",
+        "range": [
+          41352,
+          41415
+        ],
+        "sha256": "0a42933d19487b4c6a48b7806745990c6fa10b881257d04f50a4d914e2810614"
+      },
+      {
+        "name": "worker-path",
+        "range": [
+          41255,
+          41266
+        ],
+        "sha256": "227dc5eac76397d0fa45a35b6441703b0a3c39d592e9add30b8d100f83500e60"
+      },
+      {
+        "name": "worker-path",
+        "range": [
+          41478,
+          41504
+        ],
+        "sha256": "3ffd5f6bb218a8a97bb1046829e5acb13c916861277a7a2d9b30819fc957a4dd"
+      }
+    ],
+    "difficulty_offset": 21414,
+    "controller_offset": 21567,
+    "harness_sha256": "5538739be417ebd64a22c9844063a69bb181a38335e0036512fcdfaab29101f4"
+  },
+  "prior_closure": {
+    "source_sha256": "a17ed64c27671e5e95236e54a7ddc85803a96ba822fbed05e1dad34d3917e2e3",
+    "blocks": [
+      {
+        "operation": "capacity",
+        "file_range": [
+          36096,
+          36134
+        ],
+        "sha256": "2dc3e52fffb08734ac52c464d509ef882cd1ea25dc18ce033dacbfb23ecaa64b",
+        "instructions": 13,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "surplus",
+        "file_range": [
+          36610,
+          36649
+        ],
+        "sha256": "e3d4a1d57c7792e2178e139e4f23c36da741b70f23e0ea03c9a1925046122ac7",
+        "instructions": 19,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "packed",
+        "file_range": [
+          36650,
+          36716
+        ],
+        "sha256": "ed9758582e52db910f556e15ea1ed4176ed8a053fb01a7f9843591ac946c0065",
+        "instructions": 28,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "recipe",
+        "file_range": [
+          36484,
+          36610
+        ],
+        "sha256": "187fbe0164adb27a31d9313b273cc78ef60c52ec6eb8549c33e1eb360f318a27",
+        "instructions": 50,
+        "calls": [
+          {
+            "offset": 23,
+            "target": "job"
+          },
+          {
+            "offset": 31,
+            "target": "grade"
+          },
+          {
+            "offset": 63,
+            "target": "wrapper"
+          }
+        ],
+        "selectors": []
+      },
+      {
+        "operation": "wrapper",
+        "file_range": [
+          36422,
+          36484
+        ],
+        "sha256": "971e19a4eef41fdd4a53884e61be117ddb12ff84ee117f4546b6b9281588f821",
+        "instructions": 24,
+        "calls": [
+          {
+            "offset": 52,
+            "target": "balance"
+          }
+        ],
+        "selectors": []
+      },
+      {
+        "operation": "balance",
+        "file_range": [
+          36354,
+          36422
+        ],
+        "sha256": "df5fd8fab5382a692365078980bcaf23cc5734f861e4ddd8b4a2475deb5b685b",
+        "instructions": 25,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "net",
+        "file_range": [
+          36284,
+          36353
+        ],
+        "sha256": "08c51739f10eb7ce5977fe0cb3ee45a46ed9638196173a4ae86df9c4227cd64a",
+        "instructions": 24,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "job",
+        "file_range": [
+          36252,
+          36284
+        ],
+        "sha256": "96817990460e3dc07e17e778de0950ebf7d69000ce5d201ae876f32c33808832",
+        "instructions": 12,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "grade",
+        "file_range": [
+          34382,
+          34438
+        ],
+        "sha256": "38e4c811784d520d1cede6504735112c4fd6cf0981fdb9dc36ea2e9ae6107f25",
+        "instructions": 23,
+        "calls": [
+          {
+            "offset": 13,
+            "target": "building"
+          }
+        ],
+        "selectors": []
+      },
+      {
+        "operation": "building",
+        "file_range": [
+          34366,
+          34382
+        ],
+        "sha256": "0870095b29263ad7bb7ca221079b77b4ea07d0f1fd5d498195e5bd1934db8821",
+        "instructions": 8,
+        "calls": [
+          {
+            "offset": 11,
+            "target": "flag"
+          }
+        ],
+        "selectors": []
+      },
+      {
+        "operation": "flag",
+        "file_range": [
+          34318,
+          34366
+        ],
+        "sha256": "127ed84128eea3532f644a50e8f1a0f8ce5f6e797ddf6432cd09d4d28eade859",
+        "instructions": 23,
+        "calls": [],
+        "selectors": []
+      }
+    ],
+    "harness_sha256": "41221a3d9dfe6dc1ecf397bbc8e573d96381f4473aaeeb0d837bcfc47b94c491"
+  },
+  "status": "observed at declared original-code cuts; not complete game routines"
+}

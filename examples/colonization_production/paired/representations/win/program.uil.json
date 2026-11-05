@@ -1,0 +1,930 @@
+{
+  "format": "fdisbull-common-uil-1",
+  "capabilities": [
+    "core.scalar@1",
+    "core.calls@1"
+  ],
+  "imports": [],
+  "functions": [
+    {
+      "variables": [
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        }
+      ],
+      "constants": [
+        {
+          "type": "i16"
+        }
+      ],
+      "inputs": [
+        0,
+        1,
+        2
+      ],
+      "outputs": [
+        3,
+        4,
+        5
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "set",
+          "dst": 3,
+          "value": {
+            "var": 1
+          }
+        },
+        {
+          "op": "set",
+          "dst": 4,
+          "value": {
+            "const": 0
+          }
+        },
+        {
+          "op": "set",
+          "dst": 5,
+          "value": {
+            "const": 0
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "op": "gt",
+            "type": "bool",
+            "args": [
+              {
+                "var": 1
+              },
+              {
+                "var": 0
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 4,
+              "value": {
+                "op": "sub",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 1
+                  },
+                  {
+                    "var": 0
+                  }
+                ]
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "set",
+          "dst": 6,
+          "value": {
+            "op": "add",
+            "type": "i16",
+            "args": [
+              {
+                "var": 0
+              },
+              {
+                "var": 2
+              }
+            ]
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "op": "lt",
+            "type": "bool",
+            "args": [
+              {
+                "var": 6
+              },
+              {
+                "var": 1
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 5,
+              "value": {
+                "op": "sub",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 1
+                  },
+                  {
+                    "var": 6
+                  }
+                ]
+              }
+            }
+          ],
+          "else": []
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        }
+      ],
+      "constants": [
+        {
+          "type": "bool"
+        },
+        {
+          "type": "bool"
+        }
+      ],
+      "inputs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "outputs": [
+        6,
+        7,
+        8
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "set",
+          "dst": 6,
+          "value": {
+            "op": "sub",
+            "type": "i16",
+            "args": [
+              {
+                "var": 0
+              },
+              {
+                "var": 1
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "dst": 7,
+          "value": {
+            "var": 5
+          }
+        },
+        {
+          "op": "set",
+          "dst": 8,
+          "value": {
+            "const": 0
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "var": 2
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 6,
+              "value": {
+                "op": "sub",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 6
+                  },
+                  {
+                    "var": 3
+                  }
+                ]
+              }
+            },
+            {
+              "op": "if",
+              "condition": {
+                "var": 4
+              },
+              "then": [
+                {
+                  "op": "set",
+                  "dst": 7,
+                  "value": {
+                    "var": 3
+                  }
+                },
+                {
+                  "op": "set",
+                  "dst": 8,
+                  "value": {
+                    "const": 1
+                  }
+                }
+              ],
+              "else": []
+            }
+          ],
+          "else": []
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        }
+      ],
+      "constants": [
+        {
+          "type": "i16"
+        },
+        {
+          "type": "u8"
+        }
+      ],
+      "inputs": [
+        0
+      ],
+      "outputs": [
+        1
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "set",
+          "dst": 1,
+          "value": {
+            "const": 0
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "op": "ne",
+            "type": "bool",
+            "args": [
+              {
+                "var": 0
+              },
+              {
+                "const": 1
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 1,
+              "value": {
+                "op": "add",
+                "type": "i16",
+                "args": [
+                  {
+                    "const": 0
+                  },
+                  {
+                    "op": "mul",
+                    "type": "i16",
+                    "args": [
+                      {
+                        "op": "cast",
+                        "type": "i16",
+                        "args": [
+                          {
+                            "var": 0
+                          }
+                        ]
+                      },
+                      {
+                        "const": 0
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "else": []
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        }
+      ],
+      "constants": [],
+      "inputs": [
+        0,
+        1,
+        2
+      ],
+      "outputs": [
+        3
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "set",
+          "dst": 3,
+          "value": {
+            "op": "gt",
+            "type": "bool",
+            "args": [
+              {
+                "op": "add",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 0
+                  },
+                  {
+                    "var": 1
+                  }
+                ]
+              },
+              {
+                "var": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "i8"
+        },
+        {
+          "type": "u16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "u8"
+        }
+      ],
+      "constants": [
+        {
+          "type": "u16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "u16"
+        },
+        {
+          "type": "u16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "u8"
+        }
+      ],
+      "inputs": [
+        0,
+        1,
+        2
+      ],
+      "outputs": [
+        3
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "require",
+          "condition": {
+            "op": "lt",
+            "type": "bool",
+            "args": [
+              {
+                "var": 1
+              },
+              {
+                "const": 0
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "dst": 3,
+          "value": {
+            "const": 1
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "op": "gt",
+            "type": "bool",
+            "args": [
+              {
+                "op": "cast",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 0
+                  }
+                ]
+              },
+              {
+                "op": "cast",
+                "type": "i16",
+                "args": [
+                  {
+                    "var": 1
+                  }
+                ]
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 3,
+              "value": {
+                "var": 2
+              }
+            },
+            {
+              "op": "if",
+              "condition": {
+                "op": "ne",
+                "type": "bool",
+                "args": [
+                  {
+                    "op": "and",
+                    "type": "u16",
+                    "args": [
+                      {
+                        "var": 1
+                      },
+                      {
+                        "const": 2
+                      }
+                    ]
+                  },
+                  {
+                    "const": 3
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "op": "set",
+                  "dst": 3,
+                  "value": {
+                    "op": "shr",
+                    "type": "u8",
+                    "args": [
+                      {
+                        "var": 3
+                      },
+                      {
+                        "const": 4
+                      }
+                    ]
+                  }
+                }
+              ],
+              "else": []
+            },
+            {
+              "op": "set",
+              "dst": 3,
+              "value": {
+                "op": "and",
+                "type": "u8",
+                "args": [
+                  {
+                    "var": 3
+                  },
+                  {
+                    "const": 5
+                  }
+                ]
+              }
+            }
+          ],
+          "else": []
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        }
+      ],
+      "constants": [
+        {
+          "type": "u8"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        },
+        {
+          "type": "bool"
+        }
+      ],
+      "inputs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "outputs": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "require",
+          "condition": {
+            "op": "le",
+            "type": "bool",
+            "args": [
+              {
+                "var": 3
+              },
+              {
+                "const": 0
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "dst": 4,
+          "value": {
+            "var": 2
+          }
+        },
+        {
+          "op": "if",
+          "condition": {
+            "op": "gt",
+            "type": "bool",
+            "args": [
+              {
+                "var": 3
+              },
+              {
+                "const": 1
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "set",
+              "dst": 4,
+              "value": {
+                "op": "div",
+                "type": "i16",
+                "args": [
+                  {
+                    "op": "mul",
+                    "type": "i16",
+                    "args": [
+                      {
+                        "var": 2
+                      },
+                      {
+                        "const": 2
+                      }
+                    ]
+                  },
+                  {
+                    "const": 3
+                  }
+                ]
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "call",
+          "function": 0,
+          "inputs": [
+            {
+              "var": 0
+            },
+            {
+              "var": 4
+            },
+            {
+              "var": 1
+            }
+          ],
+          "outputs": [
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "op": "call",
+          "function": 1,
+          "inputs": [
+            {
+              "var": 2
+            },
+            {
+              "const": 4
+            },
+            {
+              "const": 5
+            },
+            {
+              "var": 7
+            },
+            {
+              "const": 6
+            },
+            {
+              "const": 4
+            }
+          ],
+          "outputs": [
+            8,
+            9,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "variables": [
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i8"
+        },
+        {
+          "type": "u16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "bool"
+        },
+        {
+          "type": "u8"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        },
+        {
+          "type": "i16"
+        }
+      ],
+      "constants": [],
+      "inputs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "outputs": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "max_steps": 512,
+      "body": [
+        {
+          "op": "call",
+          "function": 2,
+          "inputs": [
+            {
+              "var": 0
+            }
+          ],
+          "outputs": [
+            9
+          ]
+        },
+        {
+          "op": "call",
+          "function": 3,
+          "inputs": [
+            {
+              "var": 1
+            },
+            {
+              "var": 2
+            },
+            {
+              "var": 3
+            }
+          ],
+          "outputs": [
+            10
+          ]
+        },
+        {
+          "op": "call",
+          "function": 4,
+          "inputs": [
+            {
+              "var": 4
+            },
+            {
+              "var": 5
+            },
+            {
+              "var": 6
+            }
+          ],
+          "outputs": [
+            11
+          ]
+        },
+        {
+          "op": "call",
+          "function": 5,
+          "inputs": [
+            {
+              "var": 2
+            },
+            {
+              "var": 1
+            },
+            {
+              "var": 7
+            },
+            {
+              "var": 8
+            }
+          ],
+          "outputs": [
+            12,
+            13,
+            14,
+            15
+          ]
+        }
+      ]
+    }
+  ],
+  "entry": 6
+}

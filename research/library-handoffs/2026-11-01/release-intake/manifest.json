@@ -1,0 +1,82 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_v0.29_Release_Intake_2026-11-01.zip",
+  "bytes": 4825,
+  "sha256": "36cbc643dcc6224123a4a0ef257c168077c36082e7e11897954e4bc45778db4e",
+  "source_url": "https://chatgpt.com/space/file/libfile_210f88b836148191b26ef80b0a31f148",
+  "outer_members": 4,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 0,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "00_READ_ME_FIRST.md",
+      "bytes": 5134,
+      "sha256": "e9d55fddf4bc0caa588be2e64388ad025272d8d5caea7fc857a2a16933ab268f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "console_source_comparison.json",
+      "bytes": 2160,
+      "sha256": "58c17091d3f940534d6b90984ea4428dc2dd842d41e8fad3f4120785ef50f5a9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "package_access_check.json",
+      "bytes": 667,
+      "sha256": "4a296ba3551faf966632cda635252beb02069d0858bed0737e6a30da14db651c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "release_intake.json",
+      "bytes": 2341,
+      "sha256": "686cea7cf0e4e58e9426fce0960f1cc5f254890174db1609d74b08dcfcdcef90",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    }
+  ],
+  "recursive_archive_count": 1,
+  "recursive_member_count": 4,
+  "recursive_members": [
+    {
+      "path": "fDisBull_v0.29_Release_Intake_2026-11-01.zip!00_READ_ME_FIRST.md",
+      "bytes": 5134,
+      "sha256": "e9d55fddf4bc0caa588be2e64388ad025272d8d5caea7fc857a2a16933ab268f",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_v0.29_Release_Intake_2026-11-01.zip!console_source_comparison.json",
+      "bytes": 2160,
+      "sha256": "58c17091d3f940534d6b90984ea4428dc2dd842d41e8fad3f4120785ef50f5a9",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_v0.29_Release_Intake_2026-11-01.zip!package_access_check.json",
+      "bytes": 667,
+      "sha256": "4a296ba3551faf966632cda635252beb02069d0858bed0737e6a30da14db651c",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_v0.29_Release_Intake_2026-11-01.zip!release_intake.json",
+      "bytes": 2341,
+      "sha256": "686cea7cf0e4e58e9426fce0960f1cc5f254890174db1609d74b08dcfcdcef90",
+      "nested_depth": 0
+    }
+  ],
+  "checksum_manifests": [],
+  "binary_leaf_inventory": [],
+  "raw_gitlab_upload": {
+    "id": 1460794012,
+    "url": "/uploads/c7ad20e522f904f02c73065943ab9aa3/fDisBull_v0.29_Release_Intake_2026-11-01.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

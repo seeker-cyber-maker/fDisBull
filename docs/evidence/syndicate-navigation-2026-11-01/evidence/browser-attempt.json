@@ -1,0 +1,10 @@
+{
+  "requested_transport": "signed-in side-browser",
+  "action": "Browser.list_tabs",
+  "result": "error before tab enumeration",
+  "error": "Browser access requires the originating browser context. Open ChatGPT in the browser with the connected extension and try again.",
+  "tabs_read": 0,
+  "remote_writes": false,
+  "gitlab_connector_used": false,
+  "pr_status": "local cumulative draft only; no remote status refreshed"
+}

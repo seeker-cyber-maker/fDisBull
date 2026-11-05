@@ -1,0 +1,92 @@
+[
+  {
+    "command": "look",
+    "result": {
+      "outcome": "Syndicate campaign review\nMission selection, equipment and research projections. Original input is not connected.\nVisible: world, research, mods, equipment.\nObservation coverage is partial.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "examine mission selection",
+    "result": {
+      "outcome": "SYNDICATE CAMPAIGN | WORLD | cash 27600\nRecorded semantic view; no game time advances and no native actions are sent.\nID  TERRITORY                  MISSION  ADMISSION\nAdmission is a directed progression rule, not geographic proximity.\n00  ALASKA                      17      not available\n01  NORTHWEST TERRITORIES       39      not available\n02  NORTHEAST TERRITORIES        8      not available\n03  GREENLAND                   16      not available\n04  SCANDINAVIA                 20      not available\n05  URALS                       18      not available\n06  SIBERIA                     22      not available\n07  KAMCHATKA                   12      not available\n08  YUKON                       21      not available\n09  WESTERN EUROPE               1      available\n10  CENTRAL EUROPE              15      not available\n11  EASTERN EUROPE              10      not available\n12  KAZAKHSTAN                   9      not available\n13  MONGOLIA                     3      not available\n14  FAR EAST                     2      not available\n15  NEWFOUNDLAND                42      not available\n16  CALIFORNIA                   5      not available\n17  ROCKIES                     23      not available\n18  MID WEST                    34      not available\n19  NEW ENGLAND                 29      not available\n20  ALGERIA                     28      not available\n21  LYBIA                       35      not available\n22  IRAQ                         6      not available\n23  IRAN                         4      not available\n24  CHINA                       50      not available\n25  COLORADO                    32      not available\n26  SOUTHERN STATES             24      not available\n27  ATLANTIC ACCELERATOR        37      not available\n28  MAURITANIA                  41      not available\n29  SUDAN                       33      not available\n30  ARABIA                      38      not available\n31  INDIA                        7      not available\n32  PACIFIC RIM                 48      not available\n33  MEXICO                      26      not available\n34  COLOMBIA                    44      not available\n35  NIGERIA                     45      not available\n36  ZAIRE                       27      not available\n37  KENYA                       40      not available\n38  PERU                        14      not available\n39  VENEZUALA                   36      not available\n40  BRAZIL                      46      not available\n41  SOUTH AFRICA                31      not available\n42  MOZAMBIQUE                  13      not available\n43  WESTERN AUSTRALIA           11      not available\n44  NORTHERN TERRITORIES        19      not available\n45  NEW SOUTH WALES             43      not available\n46  PARAGUAY                    49      not available\n47  ARGENTINA                   30      not available\n48  URUGUAY                     47      not available\n49  INDONESIA                   25      not available\nUnowned territory tax and owner remain hidden in this public-style projection.\nDiagnostic raw records are separately available; this is not a full visibility model.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "examine research",
+    "result": {
+      "outcome": "SYNDICATE CAMPAIGN | RESEARCH | cash 27600\nRecorded semantic view; no game time advances and no native actions are sent.\nActive: running\nUZI: 600/2400; 25.00% threshold progress\nFunding 9: 400/hour; 9600/day; +100 points/hour\nWEAPON PROJECTS\nweapon-00 PERSUADERTRON        complete\nweapon-01 PISTOL               complete\nweapon-02 GAUSS GUN            locked\nweapon-03 SHOTGUN              complete\nweapon-04 UZI                  600/2400\nweapon-05 MINI-GUN             locked\nweapon-06 LASER                0/2400\nweapon-07 FLAMER               0/2400\nweapon-08 LONG RANGE           locked\nweapon-09 SCANNER              complete\nweapon-10 MEDIKIT              complete\nweapon-11 TIME BOMB            locked\nweapon-12 ACCESS CARD          0/2400\nweapon-16 ENERGY SHIELD        locked\nMOD PROJECTS\nmod-00 LEGS V1              complete\nmod-01 LEGS V2              0/2400\nmod-02 LEGS V3              locked\nmod-03 ARMS V1              complete\nmod-04 ARMS V2              0/2400\nmod-05 ARMS V3              locked\nmod-06 CHEST V1             complete\nmod-07 CHEST V2             0/2400\nmod-08 CHEST V3             locked\nmod-09 HEART V1             complete\nmod-10 HEART V2             0/2400\nmod-11 HEART V3             locked\nmod-12 EYES V1              complete\nmod-13 EYES V2              0/2400\nmod-14 EYES V3              locked\nmod-15 BRAIN V1             complete\nmod-16 BRAIN V2             0/2400\nmod-17 BRAIN V3             locked\nRECORDED HOURLY GRAPH: 100 200 300 400 500 600\nCompletion, active graph, unlocks and equipment price are separate state fields.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "examine research graph",
+    "result": {
+      "outcome": "SYNDICATE CAMPAIGN | RESEARCH | cash 27600\nRecorded semantic view; no game time advances and no native actions are sent.\nActive: running\nUZI: 600/2400; 25.00% threshold progress\nFunding 9: 400/hour; 9600/day; +100 points/hour\nWEAPON PROJECTS\nweapon-00 PERSUADERTRON        complete\nweapon-01 PISTOL               complete\nweapon-02 GAUSS GUN            locked\nweapon-03 SHOTGUN              complete\nweapon-04 UZI                  600/2400\nweapon-05 MINI-GUN             locked\nweapon-06 LASER                0/2400\nweapon-07 FLAMER               0/2400\nweapon-08 LONG RANGE           locked\nweapon-09 SCANNER              complete\nweapon-10 MEDIKIT              complete\nweapon-11 TIME BOMB            locked\nweapon-12 ACCESS CARD          0/2400\nweapon-16 ENERGY SHIELD        locked\nMOD PROJECTS\nmod-00 LEGS V1              complete\nmod-01 LEGS V2              0/2400\nmod-02 LEGS V3              locked\nmod-03 ARMS V1              complete\nmod-04 ARMS V2              0/2400\nmod-05 ARMS V3              locked\nmod-06 CHEST V1             complete\nmod-07 CHEST V2             0/2400\nmod-08 CHEST V3             locked\nmod-09 HEART V1             complete\nmod-10 HEART V2             0/2400\nmod-11 HEART V3             locked\nmod-12 EYES V1              complete\nmod-13 EYES V2              0/2400\nmod-14 EYES V3              locked\nmod-15 BRAIN V1             complete\nmod-16 BRAIN V2             0/2400\nmod-17 BRAIN V3             locked\nRECORDED HOURLY GRAPH: 100 200 300 400 500 600\nCompletion, active graph, unlocks and equipment price are separate state fields.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "examine modifications",
+    "result": {
+      "outcome": "SYNDICATE CAMPAIGN | MODS | cash 27600\nRecorded semantic view; no game time advances and no native actions are sent.\nActive: running\nUZI: 600/2400; 25.00% threshold progress\nFunding 9: 400/hour; 9600/day; +100 points/hour\nMOD PROJECTS\nmod-00 LEGS V1              complete\nmod-01 LEGS V2              0/2400\nmod-02 LEGS V3              locked\nmod-03 ARMS V1              complete\nmod-04 ARMS V2              0/2400\nmod-05 ARMS V3              locked\nmod-06 CHEST V1             complete\nmod-07 CHEST V2             0/2400\nmod-08 CHEST V3             locked\nmod-09 HEART V1             complete\nmod-10 HEART V2             0/2400\nmod-11 HEART V3             locked\nmod-12 EYES V1              complete\nmod-13 EYES V2              0/2400\nmod-14 EYES V3              locked\nmod-15 BRAIN V1             complete\nmod-16 BRAIN V2             0/2400\nmod-17 BRAIN V3             locked\nRECORDED HOURLY GRAPH: 100 200 300 400 500 600\nCompletion, active graph, unlocks and equipment price are separate state fields.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "examine equipment",
+    "result": {
+      "outcome": "SYNDICATE CAMPAIGN | EQUIPMENT | cash 27600\nRecorded semantic view; no game time advances and no native actions are sent.\nActive: running\nUZI: 600/2400; 25.00% threshold progress\nFunding 9: 400/hour; 9600/day; +100 points/hour\nWEAPON PROJECTS\nweapon-00 PERSUADERTRON        complete\nweapon-01 PISTOL               complete\nweapon-02 GAUSS GUN            locked\nweapon-03 SHOTGUN              complete\nweapon-04 UZI                  600/2400\nweapon-05 MINI-GUN             locked\nweapon-06 LASER                0/2400\nweapon-07 FLAMER               0/2400\nweapon-08 LONG RANGE           locked\nweapon-09 SCANNER              complete\nweapon-10 MEDIKIT              complete\nweapon-11 TIME BOMB            locked\nweapon-12 ACCESS CARD          0/2400\nweapon-16 ENERGY SHIELD        locked\nRECORDED HOURLY GRAPH: 100 200 300 400 500 600\nCompletion, active graph, unlocks and equipment price are separate state fields.",
+      "status": "read",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "research mods",
+    "result": {
+      "outcome": "Action is not supported for that target; no action sent.",
+      "status": "rejected",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "go world",
+    "result": {
+      "outcome": "Action is not supported for that target; no action sent.",
+      "status": "rejected",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  },
+  {
+    "command": "save game",
+    "result": {
+      "outcome": "Target is not visible or supported; no action sent.",
+      "status": "rejected",
+      "complete": true,
+      "effects": "none-confirmed",
+      "action_sent": false
+    }
+  }
+]

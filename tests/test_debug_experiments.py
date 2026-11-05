@@ -10,6 +10,7 @@ import pytest
 from fdisbull.project import Project
 from fdisbull.debug_experiments import validate_observations, compare_trials
 from test_dos_loader import mz_file
+from native_fixture import prepare_native_fixture
 
 
 def test_observations_are_bounded_and_explicit():
@@ -67,7 +68,7 @@ def test_experiment_listing_is_available_through_the_offline_cli(tmp_path):
 
 def test_dos_trace_lookahead_is_not_mistaken_for_executed_bytes():
     from fdisbull.debug_experiments import _trace_event
-    first={'address':{'offset':'0x0','segment':'0x1000'},'execution_bytes':'90b81111','ram_bytes':'90b81111'}
+    first={'address':{'offset':'0x0','segment':'0x1000'},'execution_bytes':'90b81111','ram_bytes':'90b81111','cpu_mode':'real'}
     second={**first,'execution_bytes':'90b82222'}
     assert _trace_event(first)==_trace_event(second)
 
@@ -106,6 +107,7 @@ def test_real_experiment_restart_controls_layers_and_offline_exports(tmp_path,ex
             baseline=[p.debug_layer('RAM baseline',kind='ram',patches=[
                 {'address':'1000:0003','expected_hex':'1111','data_hex':'3333'}])['layer']]
         with p.debugger(experiment_backend,binary.parent) as d:
+            prepare_native_fixture(d)
             d.layers(baseline)
             bp=d.breakpoint('0x10008')
             watch=d.breakpoint('0x10020',access='w',length=2)
@@ -157,6 +159,7 @@ def test_real_failed_trial_restores_nonzero_hook_count_and_deleted_breakpoint(tm
     binary.write_bytes(mz_file(bytes.fromhex('0e1fb81111a3200040ebfa')+bytes(501),ss=0,sp=0x200))
     with Project.create(tmp_path/'fail.fdb',binary) as p, p.debugger(experiment_backend,binary.parent) as d:
         p.analyze(max_instructions=32)
+        prepare_native_fixture(d)
         bp=d.breakpoint('1000:0008')
         cx=d.registers()['general']['ecx']
         hook=d.hook('1000:0002',once=False,max_hits=3,

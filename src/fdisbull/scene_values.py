@@ -1,11 +1,36 @@
 """Typed scene relations and reads whose lifetime is one stopped observation."""
 import re
+import json
+
+
+def engine_state_ref(value):
+    """A typed VM path, independent of native CPU address spaces."""
+    if not isinstance(value,dict) or set(value)!={'path'}:
+        raise ValueError('engine_state requires a path')
+    path=value['path']
+    if not isinstance(path,list) or not 1<=len(path)<=8:
+        raise ValueError('Engine state path requires 1..8 components')
+    for part in path:
+        if type(part) is int and 0<=part<=65535:continue
+        if isinstance(part,str) and re.fullmatch(r'[A-Za-z_][A-Za-z_0-9]{0,63}',part):continue
+        raise ValueError('Invalid engine state path component')
 
 
 def scalar_type(value):
     if not isinstance(value,str) or not re.fullmatch(r'[ui](8|16|32|64)',value):
         raise ValueError('Scene scalar type must be u8/i8/u16/i16/u32/i32/u64/i64')
     return int(value[1:])//8,value.startswith('i')
+
+
+def engine_variable_ref(value):
+    if not isinstance(value,dict) or not {'offset','type'}<=set(value)<= {'offset','type','endian'}:
+        raise ValueError('engine_variable requires offset, type and optional endian')
+    if type(value['offset']) is not int or not 0<=value['offset']<=0xffffff:
+        raise ValueError('Invalid engine variable byte offset')
+    if value['type'] not in ('u8','i8','u16','i16','u32','i32'):
+        raise ValueError('Engine variable type must be u8/i8/u16/i16/u32/i32')
+    if value.get('endian','little') not in ('little','big'):
+        raise ValueError('Invalid engine variable byte order')
 
 
 def memory_ref(value):
@@ -33,10 +58,14 @@ def expression(value, *, allow_before=False, depth=0):
     op,data=next(iter(value.items()))
     if op=='memory':memory_ref(data)
     elif op=='runtime_memory':runtime_memory_ref(data)
+    elif op=='engine_state':engine_state_ref(data)
+    elif op=='engine_variable':engine_variable_ref(data)
     elif op=='before':
-        if not allow_before or not isinstance(data,dict) or set(data)!={'memory'}:
-            raise ValueError('before memory is only valid in an action outcome')
-        memory_ref(data['memory'])
+        if not allow_before or not isinstance(data,dict) or set(data) not in ({'memory'},{'engine_state'},{'engine_variable'}):
+            raise ValueError('before state is only valid in an action outcome')
+        if 'memory' in data:memory_ref(data['memory'])
+        elif 'engine_state' in data:engine_state_ref(data['engine_state'])
+        else:engine_variable_ref(data['engine_variable'])
     elif op in ('add','sub'):
         if not isinstance(data,list) or len(data)!=2:raise ValueError('Arithmetic needs two operands')
         for child in data:expression(child,allow_before=allow_before,depth=depth+1)
@@ -55,7 +84,8 @@ def comparison(value, *, allow_before=False):
 def before_refs(value):
     if isinstance(value,dict):
         if set(value)=={'before'}:
-            yield value['before']['memory']
+            data=value['before']
+            yield data['memory'] if 'memory' in data else data
         else:
             for child in value.values():yield from before_refs(child)
     elif isinstance(value,list):
@@ -65,8 +95,70 @@ def before_refs(value):
 class ObservationReads:
     def __init__(self,session):
         self.session=session;self.captures={};self.evaluations=0;self.hits=0
+        self.engine_snapshot=None
+        self.engine_variable_revision=None
+
+    @staticmethod
+    def engine_key(ref):
+        return 'engine/'+json.dumps(ref['path'],separators=(',',':'))
+
+    @staticmethod
+    def engine_variable_key(ref):
+        return f"engine-variable/{ref['offset']}/{ref['type']}/{ref.get('endian','little')}"
+
+    def engine_variable_scalar(self,ref):
+        engine_variable_ref(ref)
+        self.evaluations+=1
+        key=self.engine_variable_key(ref)
+        if key in self.captures:self.hits+=1
+        else:
+            capture=dict(id='m'+str(len(self.captures)+1),engine_variable=dict(ref))
+            try:
+                width,signed=scalar_type(ref['type'])
+                endian=ref.get('endian','little')
+                result=self.session.read_variable(ref['offset'],width=width,signed=signed,endian=endian)
+                raw=bytes.fromhex(result['hex'])
+                if len(raw)!=width or type(result.get('value')) is not int or int.from_bytes(raw,endian,signed=signed)!=result['value']:
+                    raise ValueError('Incomplete or inconsistent engine variable read')
+                revision=(result['run'],result['state_revision'])
+                if not isinstance(revision[0],str) or not revision[0] or type(revision[1]) is not int or revision[1]<0:
+                    raise ValueError('Engine variable read lacks a stopped-state identity')
+                if self.engine_variable_revision is None:self.engine_variable_revision=revision
+                elif self.engine_variable_revision!=revision:
+                    raise ValueError('Engine state changed during scene observation')
+                capture.update(value=result['value'],hex=raw.hex(),run=revision[0],state_revision=revision[1])
+            except Exception as error:capture['error']=str(error)
+            self.captures[key]=capture
+        capture=self.captures[key]
+        if 'error' in capture:raise ValueError(capture['error'])
+        return capture['value']
+
+    def engine_scalar(self,ref):
+        engine_state_ref(ref)
+        self.evaluations+=1
+        key=self.engine_key(ref)
+        if key in self.captures:self.hits+=1
+        else:
+            capture=dict(id='m'+str(len(self.captures)+1),engine_path=ref['path'])
+            try:
+                if self.engine_snapshot is None:self.engine_snapshot=self.session.engine_state()
+                value=self.engine_snapshot
+                for part in ref['path']:
+                    if type(part) is int:
+                        if not isinstance(value,list):raise ValueError('Engine state index requires an array')
+                    elif not isinstance(value,dict):raise ValueError('Engine state field requires an object')
+                    value=value[part]
+                if type(value) not in (int,bool):raise ValueError('Engine state path must select an integer or boolean')
+                capture['value']=int(value)
+            except Exception as error:capture['error']=str(error)
+            self.captures[key]=capture
+        capture=self.captures[key]
+        if 'error' in capture:raise ValueError(capture['error'])
+        return capture['value']
 
     def key(self,address,length,cs=None):
+        keyer=getattr(self.session,'scene_memory_key',None)
+        if callable(keyer):return keyer(address,length,cs)
         linear,_=self.session.project._dos_parse_address(address,cs)
         return f'{linear:x}/{length}'
 
@@ -75,7 +167,7 @@ class ObservationReads:
         key=self.key(address,length,cs)
         if key in self.captures:self.hits+=1
         else:
-            capture=dict(id='m'+str(len(self.captures)+1),project_address='0x'+key.split('/')[0],length=length)
+            capture=dict(id='m'+str(len(self.captures)+1),project_address=(str(address) if callable(getattr(self.session,'scene_memory_key',None)) else '0x'+key.split('/')[0]),length=length)
             try:
                 result=self.session.memory(address,length=length,**({'cs':cs} if cs is not None else {}))
                 data=bytes.fromhex(result['hex'])
@@ -121,9 +213,13 @@ class ObservationReads:
     def freeze(self,refs,binding):
         values={}
         for ref in refs:
-            key=self.scalar_key(ref)
+            engine='engine_state' in ref
+            variable='engine_variable' in ref
+            key=(self.engine_variable_key(ref['engine_variable']) if variable else
+                 self.engine_key(ref['engine_state']) if engine else self.scalar_key(ref))
             if key in values:continue
-            try:values[key]={'value':self.scalar(ref)}
+            try:values[key]={'value':self.engine_variable_scalar(ref['engine_variable']) if variable else
+                            self.engine_scalar(ref['engine_state']) if engine else self.scalar(ref)}
             except Exception as error:values[key]={'error':str(error)}
         return dict(binding,values=values)
 
@@ -136,9 +232,14 @@ def evaluate_expression(value,reads,baseline):
     op,data=next(iter(value.items()))
     if op=='memory':return reads.scalar(data)
     if op=='runtime_memory':return reads.runtime_scalar(data)
+    if op=='engine_state':return reads.engine_scalar(data)
+    if op=='engine_variable':return reads.engine_variable_scalar(data)
     if op=='before':
         if baseline is None:raise ValueError('Missing pre-action baseline')
-        captured=baseline['values'].get(reads.scalar_key(data['memory']))
+        key=(reads.scalar_key(data['memory']) if 'memory' in data else
+             reads.engine_variable_key(data['engine_variable']) if 'engine_variable' in data else
+             reads.engine_key(data['engine_state']))
+        captured=baseline['values'].get(key)
         if captured is None or 'error' in captured:raise ValueError('Incomplete pre-action memory capture')
         return captured['value']
     if op=='wrap':

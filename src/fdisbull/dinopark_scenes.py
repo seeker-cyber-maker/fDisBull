@@ -197,6 +197,30 @@ def take_frame(project, debug, name, *, hooks=True):
         return frame, image
 
 
+def observe_frame(project, debug, name):
+    """Read pixels for a scene check without creating a screenshot artifact.
+
+    Choose a compatible encoding before dispatch. A failed direct read remains
+    unknown; it is never retried through another capture path. Scene manifests
+    and durable action evidence continue to use take_frame explicitly.
+    """
+    reader = getattr(debug, 'frame_rgba', None)
+    if not callable(reader):
+        return take_frame(project, debug, name, hooks=False)
+    capabilities = getattr(getattr(debug, 'rpc', None), 'capabilities', {})
+    encodings = capabilities.get('video', {}).get('screenshot_encodings', [])
+    encoding = 'png-indexed' if 'png-indexed' in encodings else 'png'
+    pixels = reader(encoding=encoding)
+    if (pixels.width, pixels.height) != (320, 200):
+        raise RuntimeError('unsupported video dimensions')
+    # Drop only the alpha byte, just as the retained PNG's RGB conversion does.
+    image = Image.frombytes('RGB', (320, 200), pixels.pixels, 'raw', 'RGBX')
+    frame = {'name': name, 'capture': 'direct', 'persistent': False,
+             'sha256': pixels.sha256, 'size': len(pixels.pixels),
+             'metadata': pixels.metadata}
+    return frame, image
+
+
 def matches(image, pattern):
     return (sum(all(abs(a-b) <= pattern['tolerance'] for a, b in zip(image.getpixel((s['x'], s['y'])), s['rgb']))
                 for s in pattern['samples']) >= pattern['min_matches'] and
@@ -986,7 +1010,7 @@ class TextScene:
             return None, 'Park status is available after the first park entry. No input was sent.'
         if self.notice_outcome_unknown:
             return None, 'The last notice acknowledgment has an unknown outcome; do not retry automatically.'
-        frame, image = take_frame(self.project, self.debug, 'park-status')
+        frame, image = observe_frame(self.project, self.debug, 'park-status')
         notices = [name for name in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[name])]
         if notices:
             self.event({'phase': 'notice', 'command': label, 'notices': notices, 'frame': frame,
@@ -1168,7 +1192,7 @@ class TextScene:
 
     def observe_one_of(self, views, expected, label, *, wait_slices=12):
         for attempt in range(wait_slices + 1):
-            frame, image = take_frame(self.project, self.debug, label)
+            frame, image = observe_frame(self.project, self.debug, label)
             observed = balances(self.debug)
             found = [view for view in views if matches(image, self.patterns[view])]
             self.event({'phase': 'shop_observation', 'view': label, 'frame': frame,
@@ -1418,7 +1442,7 @@ class TextScene:
         self.event({'phase': 'intent', 'command': 'check inventory', 'input': 'not_yet_sent'})
         self.shop_click((145, 187), 2500, 'open inventory after purchase')
         self.shop_observe('inventory', before, 'inventory-after-purchase')
-        frame, image = take_frame(self.project, self.debug, 'inventory-counts')
+        frame, image = observe_frame(self.project, self.debug, 'inventory-counts')
         if not matches(image, self.patterns['inventory']):
             raise RuntimeError('inventory count frame not recognized; outcome unknown')
         # Each displayed digit is sampled separately; the shared catalogue
@@ -1437,7 +1461,7 @@ class TextScene:
 
     def store_fences_tab(self, expected):
         self.debug.scene_assert(self.locations['general_store'], object='general_store.catalogue')
-        frame, image = take_frame(self.project, self.debug, 'store-current')
+        frame, image = observe_frame(self.project, self.debug, 'store-current')
         self.event({'phase': 'shop_observation', 'view': 'store-current', 'frame': frame,
                     'observed_balances': balances(self.debug), 'persistence': 'unknown'})
         if matches(image, self.patterns['fence_tab']) or matches(image, self.patterns['fence_selected']):

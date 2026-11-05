@@ -13,6 +13,19 @@ separate analysis, legacy migration and remaining export limits. Semantic
 UIL/game representations are permitted pending sanitation, without embedded
 original files. Hash equality is byte identity, not publisher authenticity.
 
+When operating in containerized or agent environments where the working directory
+or `$HOME` resides inside a Git checkout (e.g. `/workspace/.git`), fDisBull's
+private storage guards deliberately reject creating object stores or databases
+there to prevent accidental repository pollution or leakage of binary assets.
+Configure private external stores outside Git ancestry before running an import
+or analysis:
+```sh
+export FDISBULL_TARGET_STORE=/tmp/fdisbull-targets
+export FDISBULL_OUTPUT_ARTIFACT_DIR=/tmp/fdisbull-artifacts
+```
+Place all `.fdb` analysis databases in `/tmp/` or another private directory
+outside Git.
+
 For recovery, translation or a backing swap, retrieve
 `agent-skill --reference references/reconstruction.md`. It provides a first-use
 recipe, a runnable counterexample exercise and separate original/UIL/target
@@ -35,6 +48,30 @@ For Windows x86/Win64 and Linux x86-64/X11 shells over that same memory UIL, see
 compilation, immutable artifact admission and native input/view qualification
 are separate gates; Wine execution does not qualify Microsoft Windows itself.
 
+### Original Windows debugging and dot-mode
+
+For original **Win32 PE32**, **Win64 PE32+** and **Win16 NE**, read the
+[Windows runtime and scene guide](WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md).
+`wine-qemu` selects the actual PE process width; `wine-ne` binds original NE
+segments to observed live selectors. Both share Windows keyboard, native frame
+probes and named scenes. They require a matching prepared offline guest.
+`--dot-mode` returns an owned read-only spectator URL, without host input hooks
+or forwarding. Frames refresh at stops/slices. Generated UDC shells and original
+debugger qualification remain separate.
+
+The **local Mac is a first-class host**: native Mach-O/ARM64 analysis, `macos-observe`, LLDB and native UDC do not depend on a Windows guest or a remote Linux runner. For original PE32 execution, the Mac can drive an isolated x86-64 QEMU/Linux/Wine guest; Linux CI is optional. Read-only setup probes (never execution proof):
+
+```sh
+python scripts/windows_runtime_preflight.py --mode macos-native --strict
+python scripts/windows_runtime_preflight.py --mode compilers --target pe32 --strict
+python scripts/windows_runtime_preflight.py --mode qemu-host --kernel /private/kernel --initramfs /private/wine.cpio.gz --strict
+```
+
+The `macos-native` check reports local Clang/LLDB/xcrun tool presence only. A
+successful `qemu-host` check establishes guest prerequisites; it does not qualify
+Wine startup, debugging or a particular game. Inspect the Windows guide and
+exact-head MR receipts for native results and unsupported advanced operations.
+
 For a genuine Win16 NE shell, see [segmented memory reconstruction](UDC_MEMORY_WIN16.md).
 It retains the same logical u32 arena, cuts and selectable RNG regions through
 paged storage, C89 blocks, native far-buffer file transfer and streamed GDI/RGBA.
@@ -43,6 +80,11 @@ boundary and original/composed behavior separately. A supported Wine 11 route
 does not establish original Windows 3.x or whole-game compatibility.
 
 ## Discover commands and bundled skills
+
+For a DOS program that enters protected/v86 mode, read
+[protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
+Keep guarded live RAM edits separate from edited-checkpoint interventions;
+queue acceptance alone does not prove game input consumption.
 
 For repository CI and dual-mirror updates (Local Git + GitLab), first read
 [CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
@@ -64,7 +106,8 @@ fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 
 `capabilities` reports the imported copy's bounded analysis, debugger, C and
 UIL support, provider hashes and dependency detection without launching tools
-or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+or targets. It is included in this source; check the selected executable's
+version and capability report. Read [capabilities](CAPABILITIES.md)
 before treating dependency presence as working support. `doctor` is a separate
 explicit runtime acceptance test. `methods` prints the JSON method names and
 their parameter summaries; some language operations are CLI-only and appear
@@ -151,6 +194,10 @@ the investigation skill:
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
 
+For multi-agent benchmarking, lead-dossier preparation, and zero-context worker
+verification under the Elephant-Goldfish Method (EGM), see
+[cold-agent skill evaluation and the Elephant-Goldfish Method](COLD_AGENT_EGM_BENCHMARK.md).
+
 ## Reuse media readers
 
 Run `fdisbull media-modules` to discover shipped parser APIs, dependencies and
@@ -172,6 +219,31 @@ timestamps do not supply guest ticks or input alignment. The
 budgets and failed-run diagnostics.
 
 ## Choose a route
+
+### Identify an unfamiliar file or prepare a movie variant
+
+Start with `fdisbull file-identify /private/input` and `fdisbull format-modules`.
+The common format-module catalog records signature/header facts and links to
+implemented readers. `--catalog /private/formats.sqlite` persists those facts
+for later sessions. Unknown formats, header recognition, supported image views
+and decoder limitations are separate results; a filename extension is not proof.
+The older `identify` command retains its binary-header response contract.
+
+For one game or a collection, use `intake-inventory /private/game-a
+/private/game-b --catalog /private/formats.sqlite`, with a private
+`--output-artifact-dir` for larger reports. The same per-file kernel returns a
+bounded filesystem inventory and grouped recovery queue. Containers and embedded
+media remain unexpanded. Catalog persistence requires complete alias-safe
+enumeration; incomplete walks report in-memory-only catalog use. See
+[media coverage and recovery](INTAKE_MEDIA_COVERAGE.md) for observed families,
+DinoPark's proprietary formats and FLI/FLC/VID/IDX distinctions.
+
+For a bounded native SMK2 framing variant, use `fdisbull media-inspect INPUT
+--adapter smacker`, then `fdisbull smk-frame INPUT /private/new-output`.
+This retains opening/ending images and complete embedded audio, with native hold
+frames between. Full independent decoding is required; original-game playback
+and seeking remain separate checks. Fetch
+`agent-skill --reference references/file-formats.md` for limits and examples.
 
 ### Intake a collection or a single addition
 

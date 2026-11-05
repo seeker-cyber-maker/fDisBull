@@ -210,6 +210,18 @@ def test_resource_ranges_are_retained_without_becoming_mapped_segments():
     assert next(row for row in inspect_binary(data)['strings'] if row['text'] == 'ICON')['address'] is None
 
 
+def test_empty_resource_table_can_share_the_resident_name_boundary():
+    # Open Watcom emits the same offset for both tables when there are no
+    # resources. The next table's first Pascal name is not an alignment word.
+    data=bytearray(ne_file())
+    header=struct.unpack_from('<I',data,0x3c)[0]
+    resident=struct.unpack_from('<H',data,header+38)[0]
+    struct.pack_into('<H',data,header+36,resident)
+    metadata=load_ne(bytes(data)).metadata['ne']
+    assert metadata['resources']==[]
+    assert metadata['segments'][0]['file_offset'] is not None
+
+
 def test_every_truncation_refuses_cleanly_and_budgets_are_enforced(monkeypatch):
     data = ne_file()
     for length in range(len(data)):

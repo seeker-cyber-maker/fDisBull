@@ -1,0 +1,56 @@
+SYNDICATE CAMPAIGN | WORLD | cash 27600
+Recorded semantic view; no game time advances and no native actions are sent.
+ID  TERRITORY                  MISSION  ADMISSION
+Admission is a directed progression rule, not geographic proximity.
+00  ALASKA                      17      not available
+01  NORTHWEST TERRITORIES       39      not available
+02  NORTHEAST TERRITORIES        8      not available
+03  GREENLAND                   16      not available
+04  SCANDINAVIA                 20      not available
+05  URALS                       18      not available
+06  SIBERIA                     22      not available
+07  KAMCHATKA                   12      not available
+08  YUKON                       21      not available
+09  WESTERN EUROPE               1      available
+10  CENTRAL EUROPE              15      not available
+11  EASTERN EUROPE              10      not available
+12  KAZAKHSTAN                   9      not available
+13  MONGOLIA                     3      not available
+14  FAR EAST                     2      not available
+15  NEWFOUNDLAND                42      not available
+16  CALIFORNIA                   5      not available
+17  ROCKIES                     23      not available
+18  MID WEST                    34      not available
+19  NEW ENGLAND                 29      not available
+20  ALGERIA                     28      not available
+21  LYBIA                       35      not available
+22  IRAQ                         6      not available
+23  IRAN                         4      not available
+24  CHINA                       50      not available
+25  COLORADO                    32      not available
+26  SOUTHERN STATES             24      not available
+27  ATLANTIC ACCELERATOR        37      not available
+28  MAURITANIA                  41      not available
+29  SUDAN                       33      not available
+30  ARABIA                      38      not available
+31  INDIA                        7      not available
+32  PACIFIC RIM                 48      not available
+33  MEXICO                      26      not available
+34  COLOMBIA                    44      not available
+35  NIGERIA                     45      not available
+36  ZAIRE                       27      not available
+37  KENYA                       40      not available
+38  PERU                        14      not available
+39  VENEZUALA                   36      not available
+40  BRAZIL                      46      not available
+41  SOUTH AFRICA                31      not available
+42  MOZAMBIQUE                  13      not available
+43  WESTERN AUSTRALIA           11      not available
+44  NORTHERN TERRITORIES        19      not available
+45  NEW SOUTH WALES             43      not available
+46  PARAGUAY                    49      not available
+47  ARGENTINA                   30      not available
+48  URUGUAY                     47      not available
+49  INDONESIA                   25      not available
+Unowned territory tax and owner remain hidden in this public-style projection.
+Diagnostic raw records are separately available; this is not a full visibility model.

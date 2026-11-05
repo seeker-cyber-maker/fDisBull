@@ -1,0 +1,11 @@
+{
+  "baseline_game_restored": true,
+  "baseline_registers_restored": true,
+  "remaining_breakpoints": 0,
+  "restored_baseline_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+  "source_windows_match": true,
+  "run_id": "5d8912fed1da4e3bb08ecece47685679",
+  "close_response": {
+    "closed": true
+  }
+}

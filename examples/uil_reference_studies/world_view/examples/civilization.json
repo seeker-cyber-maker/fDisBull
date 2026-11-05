@@ -1,0 +1,543 @@
+{
+  "format": "z-world-view-study-1",
+  "world": {
+    "id": "civilization-authored-world",
+    "setting": "Original Civilization-inspired synthetic map and city",
+    "evidence": "authored-design-fixture",
+    "coverage": "illustrative-partial"
+  },
+  "clock": {
+    "unit": "turn",
+    "position": 42
+  },
+  "spaces": [
+    {
+      "id": "world-map",
+      "kind": "grid",
+      "parent": null,
+      "dimensions": 2
+    },
+    {
+      "id": "empire-administration",
+      "kind": "abstract",
+      "parent": null,
+      "dimensions": 0
+    }
+  ],
+  "entities": [
+    {
+      "id": "city-1",
+      "kind": "city",
+      "state": {
+        "label": "City A",
+        "kind": "city",
+        "location": {
+          "space": "world-map",
+          "position": [
+            8,
+            4
+          ]
+        },
+        "population": 3,
+        "worked_tiles": [
+          "tile-1",
+          "tile-2"
+        ],
+        "food_store": 12,
+        "production": "unit"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:city-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "tile-1",
+      "kind": "tile",
+      "state": {
+        "label": "Western worked tile",
+        "kind": "tile",
+        "location": {
+          "space": "world-map",
+          "position": [
+            7,
+            4
+          ]
+        },
+        "terrain": "grassland",
+        "worked_by": "city-1"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:tile-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "tile-2",
+      "kind": "tile",
+      "state": {
+        "label": "Eastern worked tile",
+        "kind": "tile",
+        "location": {
+          "space": "world-map",
+          "position": [
+            9,
+            4
+          ]
+        },
+        "terrain": "hills",
+        "worked_by": "city-1"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:tile-2",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "unit-1",
+      "kind": "unit",
+      "state": {
+        "label": "Scout A",
+        "kind": "unit",
+        "location": {
+          "space": "world-map",
+          "position": [
+            9,
+            3
+          ]
+        },
+        "moves_left": 1
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:unit-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "government",
+      "kind": "controller",
+      "state": {
+        "label": "Empire administration",
+        "kind": "controller",
+        "location": {
+          "space": "empire-administration"
+        },
+        "treasury": 120,
+        "research": "authored-topic"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:government",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "rival-unit",
+      "kind": "unit",
+      "state": {
+        "label": "Rival scout",
+        "kind": "unit",
+        "location": {
+          "space": "world-map",
+          "position": [
+            11,
+            5
+          ]
+        },
+        "moves_left": 2
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:rival-unit",
+        "source_registers_or_addresses": "not recovered"
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "world",
+      "title": "Known world map",
+      "parent": null,
+      "spaces": [
+        "world-map"
+      ],
+      "descendants": false,
+      "kinds": [],
+      "entities": []
+    },
+    {
+      "id": "city-1",
+      "title": "City A economy",
+      "parent": "world",
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": [
+        "city-1",
+        "tile-1",
+        "tile-2"
+      ]
+    },
+    {
+      "id": "units",
+      "title": "Known unit view",
+      "parent": "world",
+      "spaces": [],
+      "descendants": false,
+      "kinds": [
+        "unit"
+      ],
+      "entities": []
+    },
+    {
+      "id": "empire",
+      "title": "Empire overview",
+      "parent": null,
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": []
+    }
+  ],
+  "observers": [
+    {
+      "id": "player",
+      "records": [
+        {
+          "entity": "city-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "City A",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "city",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "world-map",
+                "position": [
+                  8,
+                  4
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "population": {
+              "knowledge": "current",
+              "value": 3,
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "worked_tiles": {
+              "knowledge": "current",
+              "value": [
+                "tile-1",
+                "tile-2"
+              ],
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "food_store": {
+              "knowledge": "current",
+              "value": 12,
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "production": {
+              "knowledge": "current",
+              "value": "unit",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            }
+          }
+        },
+        {
+          "entity": "tile-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Western worked tile",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "tile",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "world-map",
+                "position": [
+                  7,
+                  4
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "terrain": {
+              "knowledge": "current",
+              "value": "grassland",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "worked_by": {
+              "knowledge": "current",
+              "value": "city-1",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            }
+          }
+        },
+        {
+          "entity": "tile-2",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Eastern worked tile",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "tile",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "world-map",
+                "position": [
+                  9,
+                  4
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "terrain": {
+              "knowledge": "current",
+              "value": "hills",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "worked_by": {
+              "knowledge": "current",
+              "value": "city-1",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            }
+          }
+        },
+        {
+          "entity": "unit-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Scout A",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "unit",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "world-map",
+                "position": [
+                  9,
+                  3
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "moves_left": {
+              "knowledge": "current",
+              "value": 1,
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            }
+          }
+        },
+        {
+          "entity": "government",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Empire administration",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "controller",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "empire-administration"
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "treasury": {
+              "knowledge": "current",
+              "value": 120,
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            },
+            "research": {
+              "knowledge": "current",
+              "value": "authored-topic",
+              "observed_at": {
+                "unit": "turn",
+                "position": 42
+              }
+            }
+          }
+        },
+        {
+          "entity": "rival-unit",
+          "fields": {
+            "label": {
+              "knowledge": "remembered",
+              "value": "Rival scout",
+              "observed_at": {
+                "unit": "turn",
+                "position": 40
+              }
+            },
+            "kind": {
+              "knowledge": "remembered",
+              "value": "unit",
+              "observed_at": {
+                "unit": "turn",
+                "position": 40
+              }
+            },
+            "location": {
+              "knowledge": "remembered",
+              "value": {
+                "space": "world-map",
+                "position": [
+                  10,
+                  4
+                ]
+              },
+              "observed_at": {
+                "unit": "turn",
+                "position": 40
+              }
+            },
+            "moves_left": {
+              "knowledge": "unknown"
+            }
+          }
+        }
+      ],
+      "actions": [
+        "move-unit",
+        "assign-worked-tile",
+        "end-turn"
+      ]
+    },
+    {
+      "id": "uninformed",
+      "records": [],
+      "actions": []
+    }
+  ],
+  "actions": [
+    {
+      "id": "move-unit",
+      "label": "Request unit movement",
+      "uil_contract_ref": "proposed.civilization.move_unit",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "assign-worked-tile",
+      "label": "Request a worked-tile assignment",
+      "uil_contract_ref": "proposed.civilization.assign_worked_tile",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "end-turn",
+      "label": "Request complete turn resolution",
+      "uil_contract_ref": "proposed.civilization.end_turn",
+      "binding_status": "unbound"
+    }
+  ]
+}

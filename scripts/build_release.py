@@ -9,7 +9,15 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
+ROOT_FILES = (
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "pyproject.toml",
+    "MANIFEST.in",
+    "player/pyproject.toml",
+    ".gitlab-ci.yml",
+)
 DOC_EXAMPLE_FILES = (
     "docs/CLOUD-0.27.0-MANIFEST.json",
     "docs/uil-rfcs/0001/README.md",
@@ -42,6 +50,7 @@ SOURCE_PATTERNS = (
     ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
     ("src/fdisbull/data", "*.txt"),
+    ("src/fdisbull/data", "*.swift"),
     ("src/fdisbull/skills", "*.md"),
     ("src/fdisbull/wine_guest", "*.c"),
     ("src/fdisbull/wine_guest", "*.sh"),
@@ -59,6 +68,7 @@ SOURCE_PATTERNS = (
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
+    ("tests/fixtures", "*.cpp"),
     ("tests", "ida_rpc_vectors.json"),
     ("tests", "rom_asm_sh2_vectors.json"),
     ("docs", "*.md"),
@@ -82,6 +92,10 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/integration-0261", "verification.json"),
+    ("docs/evidence/scummvm-2026-11-01", "verification.json"),
+    ("docs/evidence/scummvm-2026-11-01", "comparison.json"),
+    ("docs/evidence/scummvm-gob-2026-11-01", "verification.json"),
+    ("docs/evidence/scummvm-gob-2026-11-01", "comparison.json"),
     ("docs/evidence/rom-asm-2026-10-30", "benchmark.json"),
     ("docs/evidence/rom-asm-2026-10-30", "accuracy.json"),
     ("docs/evidence/rom-asm-2026-10-30", "benchmark-persistent.json"),
@@ -106,7 +120,12 @@ SOURCE_PATTERNS = (
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),
     ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
-    ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),    ("scripts", "*.py"),
+    ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),
+    ("scripts", "*.py"),
+    ("scripts", "*.c"),
+    ("scripts", "*.sh"),
+    ("scripts", "*.txt"),
+    (".github/workflows", "*.yml"),
     ("scripts", "miniplanets_display_observer.c"),
     ("docs/evidence/civd-browser-shell", "verification.json"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
@@ -135,9 +154,15 @@ SOURCE_PATTERNS = (
     ("examples/recovery", "snake_desktop.py"),
     ("examples/recovery", "verify_snake_desktop.py"),
     ("tests/fixtures", "frame_capture.S"),
+    ("tests/fixtures", "protected_mode_mouse.S"),
     ("tests", "macos_capture_fixture.swift"),
     ("tests", "memory_shell_checks.mjs"),
-    ("tests", "web_shell_checks.mjs"),
+    ("tests", "*.mjs"),
+    ("skills/dos-target-media-rip", "*.md"),
+    ("skills/dos-target-media-rip", "*.py"),
+    ("docs/evidence/gog-galaxy-chimprec-2026-11-02", "receipt.json"),
+    ("docs/evidence/0.32.0-release", "intake.json"),
+    ("docs/evidence/0.33.0-release", "intake.json"),
 )
 
 
@@ -145,11 +170,16 @@ def release_files(root: Path) -> list[Path]:
     """Select tool sources plus the exact authored RFC fixture allowlist."""
     files = [root / name for name in (*ROOT_FILES, *DOC_EXAMPLE_FILES)]
     for directory, pattern in SOURCE_PATTERNS:
-        candidates = ((root / directory).glob(pattern) if directory == "player/fdisbull_player"
-                      else (root / directory).rglob(pattern))
+        candidates = (
+            (root / directory).glob(pattern)
+            if directory == "player/fdisbull_player"
+            else (root / directory).rglob(pattern)
+        )
         if directory == "docs":
             fixture_root = root / "docs/uil-rfcs/0001"
-            files.extend(path for path in candidates if fixture_root not in path.parents)
+            files.extend(
+                path for path in candidates if fixture_root not in path.parents
+            )
         else:
             files.extend(candidates)
     selected = []
@@ -173,7 +203,9 @@ def main() -> None:
     destination = args.output_dir / f"fdisbull-{version}-tool.zip"
     with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in files:
-            archive.write(path, f"fdisbull-{version}/{path.relative_to(ROOT).as_posix()}")
+            archive.write(
+                path, f"fdisbull-{version}/{path.relative_to(ROOT).as_posix()}"
+            )
     print(f"Built {destination} ({len(files)} source files)")
 
 

@@ -1,0 +1,359 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_v029_Core_Installation_and_Receipts.zip",
+  "bytes": 895449,
+  "sha256": "f6a89309b1f676d872d91a6888fc9574bbcc150f229d2c84439a0cd8c5c422a9",
+  "source_url": "https://chatgpt.com/space/file/libfile_8fbcd44f99e8819191a5e9f0181475ff",
+  "outer_members": 41,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 11,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "00_READ_ME_FIRST.md",
+      "bytes": 500,
+      "sha256": "d7bdd71684f7708ed370e44a724c48497710228541ad6495e8ae3ad1befb5103",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "REPORT.md",
+      "bytes": 4855,
+      "sha256": "09478f3fba5a141631023a3eafc2af5321e91db25f2d3541284151ff9fd0ca48",
+      "decision": "imported_sanitized_report",
+      "import_path": "historical-report.md",
+      "import_sha256": "a8aa63ea0a80dbe77c0bb49eff2c45b95796288b528dd83356a09a867b62b820"
+    },
+    {
+      "path": "intake_smoke.py",
+      "bytes": 3621,
+      "sha256": "87a383f7a34f74720daf883cc6ed5cd22636d35d55a40c6a770fe015a6044552",
+      "decision": "imported_exact",
+      "import_path": "proposals/intake_smoke.py",
+      "import_sha256": "87a383f7a34f74720daf883cc6ed5cd22636d35d55a40c6a770fe015a6044552"
+    },
+    {
+      "path": "run_installed_tests.py",
+      "bytes": 831,
+      "sha256": "333c71ea842507f79edcfcfee9c7753dec9b04f55bac717bfaf7ba0270362724",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "wheels/fdisbull-0.29.0-py3-none-any.whl",
+      "bytes": 822752,
+      "sha256": "e854f5b1d44e0bab2cbeeda11caa54a31fc18e1547063077faf1cc017a4d309e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "wheels/fdisbull_player-0.29.0-py3-none-any.whl",
+      "bytes": 52283,
+      "sha256": "6b96f4377630ddf6156a50a806d56e64c879f2bb3d780b1f1c8c9918b5176407",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/application_install.log",
+      "bytes": 563,
+      "sha256": "4dfcf14172fb927e56c80eb70e58c30a542b6ca0b1f08ed8251b223bff2ffc2b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/archive_comparison.json",
+      "bytes": 758,
+      "sha256": "a35e606ba8c9c9d42afb5433fc71104e528f658e830488d6d6e0298f7bb252aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/build.log",
+      "bytes": 1602,
+      "sha256": "019e3db74060465e29aae2193f32502901057cb004b3813b144b2dc314735ddc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/capabilities.json",
+      "bytes": 12426,
+      "sha256": "64cca112eabe843c8b974d8cdccd0b4bd291f154972bab33e88b6e0d9c1f72d5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/console_tests.log",
+      "bytes": 607,
+      "sha256": "36f82453c2a01b919d4eb4ba00d8a74d115fb4706fc201777bdad25cd2267376",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/console_tests.xml",
+      "bytes": 9150,
+      "sha256": "fb31ad8ffd541d45546c9a925cefc39d8b6586307fc286ae32a56a569eba6185",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/dependency_checksums.log",
+      "bytes": 443,
+      "sha256": "260d75691154511c1c91d87ce045c94d4b606cc210b855208fe26886bf5fc672",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/dependency_install.log",
+      "bytes": 2182,
+      "sha256": "7af11d64bf72461f2d6c37cc0985755f33015a5b9a1a5a96ddc4c0f4bdec2a48",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/disasm_help.txt",
+      "bytes": 310,
+      "sha256": "7db7707375022ddb02da3b59ce30fce14c2b7475d85c8e5c0d341e8f7d8a9640",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/doctor_help.txt",
+      "bytes": 489,
+      "sha256": "a9cfad80757c36735ec5ab3b76e5d049f9111dce0581dcfc00e666cdc5d4d71c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/fdisbull_version.txt",
+      "bytes": 7,
+      "sha256": "a68641c6aacd345c4931a6217331d2bf43398c7bc134666a2f756953eab407aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/identify_help.txt",
+      "bytes": 121,
+      "sha256": "68c22fbadd44ac7e5b9fa8ee8315d7bd98f3819048b5fb5235ccfe8346cf59e1",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/installation_receipt.json",
+      "bytes": 5427,
+      "sha256": "4fc66337c2fe7106a73803d8fcac057ab4f07f3dbe2f04ba07a6ce7aa89cf03e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/installed_packages.json",
+      "bytes": 341,
+      "sha256": "ff2bee16699ee3e2654afd889dac1fdefd541eb519866f505e636dcf3de49831",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/installed_skill.json",
+      "bytes": 10018,
+      "sha256": "58bd436b1c4bd54acf163287eac1b85a26848add481136f5faccd0b58b753f64",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/pip_check.txt",
+      "bytes": 292,
+      "sha256": "8b580b3e968d419976e47e7e49c29223715a51d0eea13678814c493e1ce9e5cc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/player_help.txt",
+      "bytes": 2596,
+      "sha256": "dd518c6539185eaac32194faccec118127067bed44125e9b19c4a828f659a9ef",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/player_metadata_version.txt",
+      "bytes": 23,
+      "sha256": "9f64db96a341e6ca9a5ee95ae0fc28157821d58a740195d1d9b1996de206a105",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/player_version.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/player_version_probe.exit",
+      "bytes": 2,
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/player_version_probe.txt",
+      "bytes": 887,
+      "sha256": "6a78532aabe6a9e84285d3ad2b01b7d77d7a4c85251a171bdfa356dfbc046320",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "evidence/smoke_summary.json",
+      "bytes": 1947,
+      "sha256": "2f7e825d93e7f1eea90ea46464895455b725c568a00998dea1b3b8c08d73d46a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "installed_tests/test_console_synthesis.py",
+      "bytes": 13974,
+      "sha256": "e551a2d08d3f025d2f883dd8124c58dc8d557cba272f0e450e9ebeb9e6d31dc8",
+      "decision": "already_preserved_in_main",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_location": {
+        "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+        "path": "tests/console_synthesis/test_console_synthesis.py",
+        "byte_identical": true
+      }
+    },
+    {
+      "path": "smoke/image_smoke.png",
+      "bytes": 68,
+      "sha256": "7899d6ced52159786ff083934df42788da01a30b7ed9bb7756d7f3f5a94ef685",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/player_cli.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/player_cli.stdout",
+      "bytes": 110,
+      "sha256": "6ae1900a74adfa1a92efbdbb9bde27d6399c16c8abc34ba25e2dbb10de7990bc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/player_fixture.json",
+      "bytes": 747,
+      "sha256": "5c224cc323e6a34075fb294d1c6035258d05f054114cb20374df6df0e673c384",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/smoke_results.json",
+      "bytes": 1947,
+      "sha256": "2f7e825d93e7f1eea90ea46464895455b725c568a00998dea1b3b8c08d73d46a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_analyze.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_analyze.stdout",
+      "bytes": 249,
+      "sha256": "e0c3643543c6914d1321ba4216d1e866b74435e22480307add51a65a1f7b6ec0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_disasm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_disasm.stdout",
+      "bytes": 2507,
+      "sha256": "e5986673889bd73dbcf9e70745ea855a18313f545053492e705911687715d503",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_import.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke/static_import.stdout",
+      "bytes": 1716,
+      "sha256": "6323b94a8841a0b6bb7bd444c6c95d42c2c642fc2558c8b33b8952dff7b862fb",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3770,
+      "sha256": "4b716e22f0e0c549979ac453b9a33b058ddf775ca733b65497f7e813a23b61bf",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    }
+  ],
+  "checksums": {
+    "SHA256SUMS": {
+      "entries": 40,
+      "all_match": true
+    }
+  },
+  "raw_gitlab_upload": {
+    "id": 1460793961,
+    "url": "/uploads/a39a3ab83061ecfae9b03cb531413fe7/fDisBull_v029_Core_Installation_and_Receipts.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

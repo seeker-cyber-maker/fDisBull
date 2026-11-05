@@ -1,0 +1,148 @@
+{
+  "schema": "fdisbull-0.33.0-source-intake-v1",
+  "candidate_version": "0.33.0",
+  "published": false,
+  "base_release_line": "b2159367f3d4c2587c75acd077f30b39223da8dc",
+  "previous_unpublished_candidate": "c80bff03e4cd2b946a93e7aecab61e5ff9281f81",
+  "previous_local_candidate": {
+    "version": "0.33.0rc1",
+    "source": "337848e992d62dc530cd02f42f9f52c8f2088e90",
+    "evidence": "docs/evidence/0.33.0rc1-release/"
+  },
+  "integrated_source": "7e43e32080eebb7a8cac5c5f1010db340fa39052",
+  "merge_commit": "05a4f5ce0dacb2f3992daa7115c661e0ed85bb39",
+  "candidate_source": "1004bda484b0405e35247432447deb0e9c7d12de",
+  "release_tree_source": "02669325f8c318901eeefe1d825eca21b3306c1b",
+  "selected_mrs": [
+    42,
+    46,
+    47,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    63,
+    64,
+    65,
+    66,
+    68,
+    70,
+    71,
+    73,
+    74,
+    76,
+    79,
+    80,
+    81,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94
+  ],
+  "new_integration_mrs": [
+    42,
+    50,
+    51,
+    52,
+    54,
+    55,
+    56,
+    63,
+    64,
+    65,
+    66,
+    70,
+    76,
+    81,
+    84,
+    85,
+    89,
+    90,
+    91,
+    92,
+    94
+  ],
+  "scope": [
+    "Carried 0.32.0 source feature line based on published 0.31.1",
+    "Boat CI handoff and finite runner",
+    "Built-in GOG Inno 5.6.2 reader",
+    "Westwood PAK/CPS/WSA readers and EMC2 guest processor",
+    "Experimental ScummVM Kyra/GLK Z-code and AGI-to-UIL pilots",
+    "Shared scene fingerprint and scanline rules",
+    "Reviewed research, skill, packaging and research-workspace handoffs"
+  ],
+  "excluded": [
+    "Unmerged !43, !49, !60, !67, !69, !72, !75, !77 and !82",
+    "Alternative !67 captured-PE route",
+    "Open follow-up MRs !96, !97, !98 and !99",
+    "Unselected research and pending stacks",
+    "Original games, saves, machine states and private runtime inputs"
+  ],
+  "offline_package": {
+    "target": "Linux x86_64, CPython 3.13 (cp313)",
+    "source_python_requirement": ">=3.12",
+    "installer_policy": "accept any CPython 3.13.x; reject 3.12 because the bundled binary wheels are cp313",
+    "friction_observed": "A review host defaulted to Python 3.12.14 while the previous installer required exactly 3.13.5.",
+    "resolution": "Installer/build metadata now accept 3.13.x and explain the cp313 dependency boundary; a 3.12 host must use an isolated 3.13 runtime.",
+    "native_offline_kit": {
+      "status": "built_and_verified",
+      "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
+      "release_tree_source": "02669325f8c318901eeefe1d825eca21b3306c1b",
+      "python": "3.13.14",
+      "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
+      "offline_kit_sha256": "65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a",
+      "source_companion_sha256": "ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7",
+      "dependency_bundle": "reused 0.31.1 bundle, fingerprint ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+      "acceptance": {
+        "equivalence": "equivalent_under_assumptions",
+        "counterexample": "counterexample",
+        "keyboard": true,
+        "memory": true,
+        "native_restore": true,
+        "player_live_resume": true,
+        "project_restart": true,
+        "agent_skill": "passed",
+        "guide_skill": "passed"
+      }
+    }
+  },
+  "qualification": {
+    "status": "local_macos_candidate",
+    "host": "macOS arm64, Python 3.13.14",
+    "optional_dependencies": {
+      "z3-solver": "5.3.2.0",
+      "dnfile": "0.18.0",
+      "dncil": "1.0.2"
+    },
+    "full_suite": {
+      "passed": 10187,
+      "failed": 2,
+      "skipped": 419,
+      "errors": 23,
+      "subtests_passed": 2322,
+      "seconds": 281.26,
+      "command": "PYTHONPATH=/tmp/fdisbull-testshim:src:player python -m pytest -q -p no:cacheprovider"
+    },
+    "focus_tests": {
+      "packaging_and_distribution": 932
+    },
+    "inherited_failures_reproduced_on": "c80bff03e4cd2b946a93e7aecab61e5ff9281f81",
+    "inherited_failure_classes": [
+      "macOS Mach-O/ELF expectation",
+      "macOS GCC Linux-ELF toolchain"
+    ],
+    "hosted_qualification": "pending",
+    "native_offline_kit": "built_and_verified_local_linux"
+  }
+}

@@ -27,18 +27,19 @@ class QemuMachine:
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.lock=threading.RLock()
-        self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-',dir='/tmp')
+        self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
         root=Path(self.temporary.name);self.log_path=root/'boot.log';self.gdb_path=root/'gdb.sock';self.rpc_path=root/'rpc.sock'
         try:
             if on_spawn is not None and not callable(on_spawn):raise ValueError('Expected an internal process ownership callback')
-            if type(memory_mib) is not int or not 16<=memory_mib<=4096 or type(cpus) is not int or not 1<=cpus<=8:
-                raise ValueError('Machine memory must be 16..4096 MiB and CPUs 1..8')
+            if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
+                raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             if (boot_image is None)==(kernel is None) or (kernel is None)!=(initramfs is None):
                 raise ValueError('Choose a boot image or a kernel/initramfs pair')
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}
             paths.update({name:Path(path).expanduser().resolve(strict=True) for name,path in [('kernel',kernel),('initramfs',initramfs),('boot_image',boot_image)] if path is not None})
             if any(not p.is_file() for p in paths.values()) or not os.access(paths['qemu'],os.X_OK):raise ValueError('Expected regular QEMU and machine input files')
-            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=5).splitlines()[0]
+            # Cold executable startup can be slow under native/translated CI.
+            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=30).splitlines()[0]
             match=re.search(r'QEMU emulator version (\d+)\.(\d+)',version)
             if not match or tuple(map(int,match.groups()))<(9,1):raise DebuggerError('Machine debugging requires QEMU >= 9.1')
             self.inputs={name:dict(path=str(path),sha256=file_hash(path)) for name,path in paths.items()}

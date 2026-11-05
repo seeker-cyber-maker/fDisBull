@@ -1,0 +1,80 @@
+{
+  "status": "reviewer_only; NEVER expose to blind worker",
+  "target_sha256": "a17ed64c27671e5e95236e54a7ddc85803a96ba822fbed05e1dad34d3917e2e3",
+  "calibrated_relations": [
+    {
+      "output_id": 9,
+      "output": "Rum",
+      "input_id": 1,
+      "input": "Sugar",
+      "interpretation": "production-shortage dependency",
+      "job": "Distiller",
+      "building_entry": "Rum Distiller's House"
+    },
+    {
+      "output_id": 10,
+      "output": "Cigars",
+      "input_id": 2,
+      "input": "Tobacco",
+      "interpretation": "production-shortage dependency",
+      "job": "Tobacconist",
+      "building_entry": "Tobacconist's House"
+    },
+    {
+      "output_id": 11,
+      "output": "Cloth",
+      "input_id": 3,
+      "input": "Cotton",
+      "interpretation": "production-shortage dependency",
+      "job": "Weaver",
+      "building_entry": "Weaver's House"
+    },
+    {
+      "output_id": 12,
+      "output": "Coats",
+      "input_id": 4,
+      "input": "Furs",
+      "interpretation": "production-shortage dependency",
+      "job": "Fur Trader",
+      "building_entry": "Fur Trader's House"
+    },
+    {
+      "output_id": 14,
+      "output": "Tools",
+      "input_id": 6,
+      "input": "Ore",
+      "interpretation": "production-shortage dependency",
+      "job": "Blacksmith",
+      "building_entry": "Blacksmith's House"
+    },
+    {
+      "output_id": 15,
+      "output": "Muskets",
+      "input_id": 14,
+      "input": "Tools",
+      "interpretation": "production-shortage dependency",
+      "job": "Gunsmith",
+      "building_entry": "Armory"
+    },
+    {
+      "output_id": 16,
+      "output": "Hammers",
+      "input_id": 5,
+      "input": "Lumber",
+      "interpretation": "production-shortage dependency",
+      "job": "Carpenter",
+      "building_entry": "Carpenter's Shop"
+    }
+  ],
+  "exception": {
+    "output_id": 8,
+    "output": "Horses",
+    "input_id": 8,
+    "input": "Horses",
+    "interpretation": "self-adjustment dependency; NOT an established ingredient recipe",
+    "job": null,
+    "building_entry": null
+  },
+  "acceptance": "Results need independently checked locations plus a discrimination against wrong dependencies; named edges alone are not a source-backed pass.",
+  "quantities_and_complete_turn": "not established by this calibration"
+}

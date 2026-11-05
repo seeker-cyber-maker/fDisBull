@@ -1,0 +1,9 @@
+{
+  "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
+  "patch_sha256": "069fba0afbc7f8d0fad3a8e204362d4a2ed26877d28cec0298471aa50f0e3a41",
+  "profile": "experimental/dosbox-x/layers",
+  "built_by": "Boat Linux x86_64 build bx_re4n7swb",
+  "acceptance_tests": []
+}

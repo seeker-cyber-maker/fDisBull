@@ -1,0 +1,92 @@
+{
+  "artifacts": {
+    "fdisbull-0.31.1-py3-none-any.whl": {
+      "bytes": 1895364,
+      "sha256": "03bf5142aab0a9448c73b38c986ddeef92f68eab2630f6f1ef4842bb2364bf33"
+    },
+    "fdisbull-0.31.1-tool.zip": {
+      "bytes": 6390059,
+      "sha256": "81db8e19349b6fb26ea2f91b7de79ed8ba1f3691c3d7f9eaec7ed04c7f5eb5c3"
+    },
+    "fdisbull-0.31.1.tar.gz": {
+      "bytes": 5260503,
+      "sha256": "bd37507e6d91f0e3279f780b5238279a2b86fd02adc649ea1fe394cdde26b72c"
+    },
+    "fdisbull_player-0.31.1-py3-none-any.whl": {
+      "bytes": 86674,
+      "sha256": "6b5098b8ad425579bb50bfd5d12fb4a6cfd362b45a863b3fd4937cbeedfa20a3"
+    }
+  },
+  "ci": {
+    "native_layers": 148,
+    "native_stable": 86,
+    "pipeline": 3023448913,
+    "sha": "27b388d38cc14f04842a81b8ec1a113460900f53",
+    "status": "success",
+    "test_and_package": {
+      "passed": 8961,
+      "skipped": 402
+    }
+  },
+  "format": "fdisbull-release-evidence-1",
+  "local_full_suite": {
+    "errors": 23,
+    "failed": 3,
+    "known_macos_baseline": true,
+    "passed": 9005,
+    "skipped": 317,
+    "subtests": 2316
+  },
+  "local_install": {
+    "check_local_install": "passed",
+    "doctors": [
+      "dosbox",
+      "dosbox-qemu",
+      "wine-qemu"
+    ],
+    "errors": 0,
+    "failed": 0,
+    "passed": 97,
+    "payload_entries": 4379,
+    "player_smoke": "two fresh processes restored hall/key",
+    "prefix": "/Users/Shared/fDisBull/releases/0.31.1-27b388d",
+    "skipped": 0,
+    "source_commit": "27b388d38cc14f04842a81b8ec1a113460900f53",
+    "status": "active_verified",
+    "tests": 97
+  },
+  "logs": [
+    "full-suite.log",
+    "check-dist.log",
+    "ci-test-and-package.log",
+    "native-linux-stable.log",
+    "native-linux-layers.log",
+    "pipeline-3023448913.log"
+  ],
+  "published": true,
+  "release": {
+    "base_sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "base_tag": "v0.31.0",
+    "gitlab_release": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.1",
+    "package": "fdisbull-tool-packages",
+    "package_id": 75166749,
+    "package_version": "0.31.1-20261103",
+    "tag": "v0.31.1",
+    "tag_commit": "e94bae0fca9d6ffc090991e8daad04772a5ff32c",
+    "tag_object": "8e4ea4215c463074f231f752188eb2b5af49ea3a"
+  },
+  "source": {
+    "branch": "release/0.31.1",
+    "commit": "27b388d38cc14f04842a81b8ec1a113460900f53",
+    "tree": "6d7f5f1f5e2a5164c8e89f913d67f42ad078f91d"
+  },
+  "status": "published",
+  "swift_packaging": {
+    "helper": "fdisbull/data/FdisbullMacCapture.swift",
+    "prepare_helper": true,
+    "sdist": true,
+    "tool_zip": true,
+    "wheel": true
+  },
+  "version": "0.31.1"
+}

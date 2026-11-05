@@ -1,0 +1,95 @@
+{
+  "state14_source_window": {
+    "preferred_start": "0x30b2b",
+    "exclusive_end": "0x30b34",
+    "length": 9,
+    "sha256": "b75a7337998c845d57b8290b509de01270df96948d98913443b3576b06553613",
+    "live_matches": true,
+    "operations": [
+      "store actor state 14",
+      "add 0x40 to AL modulo 256",
+      "store AL into actor +0x1a"
+    ],
+    "observed_AL_before": 192,
+    "observed_byte_before": 160,
+    "observed_byte_after": 0
+  },
+  "restored": {
+    "game_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+    "baseline_game_equal": true,
+    "registers_equal": true
+  },
+  "remaining_breakpoints": {
+    "breakpoints": [],
+    "session_id": "ses-1",
+    "state_revision": 5673
+  },
+  "binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "saved_ds_qualified": true,
+    "observed_render_pointer_data_bytes": 32,
+    "differing_render_data_bytes": 24,
+    "unexplained_code_object_differences": 0,
+    "registered_entities": 44
+  },
+  "originals": {
+    "count": 897,
+    "changed": [],
+    "new": [],
+    "missing": [],
+    "manifest_sha256": "57f10508e28ef17a5bacf163240a9002cf54b230f85f7c9cca145893496b9d4c"
+  },
+  "kit_manifest": {
+    "returncode": 0,
+    "lines": [
+      "README.txt: OK",
+      "bin/dosbox: OK",
+      "bin/dosbox-x: OK",
+      "evidence/backend-receipt: OK",
+      "evidence/patch-manifest: OK",
+      "install.sh: OK",
+      "lib/libSDL2_net-2.0.so.0: OK",
+      "licenses/DOSBox-X-COPYING.txt: OK",
+      "licenses/SDL2_net-copyright.txt: OK",
+      "manifest.json: OK",
+      "requirements.txt: OK",
+      "wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl: OK",
+      "wheels/fdisbull-0.29.0-py3-none-any.whl: OK",
+      "wheels/fdisbull_player-0.29.0-py3-none-any.whl: OK",
+      "wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl: OK",
+      "wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl: OK",
+      "wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl: OK",
+      "wheels/z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl: OK"
+    ],
+    "stderr": ""
+  },
+  "close_acknowledgment": {
+    "closed": true
+  },
+  "cleanup": {
+    "pid": 969,
+    "closed_at": 1793571826.7994323,
+    "alive": false,
+    "errors": []
+  },
+  "processes": [
+    {
+      "pid": 968,
+      "exists": true,
+      "state": "Z",
+      "final_exists": false,
+      "final_state": null
+    },
+    {
+      "pid": 969,
+      "exists": false,
+      "state": null,
+      "final_exists": false,
+      "final_state": null
+    }
+  ],
+  "selected_program_exit_claimed": false,
+  "cleanup_limit": "Close acknowledgment and owned-process cleanup, not selected DOS-program exit. Controller briefly appeared exited/zombie awaiting parent reaping, then both PIDs were absent.",
+  "close_command_is_not_guest_exit": true
+}

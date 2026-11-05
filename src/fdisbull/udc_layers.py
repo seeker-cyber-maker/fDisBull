@@ -173,7 +173,10 @@ def run_layer(project,layer,inputs,*,caller_registers=None,max_steps=10000):
     behavior=contract['behavior'];expected=None
     if behavior['kind']=='uil':
         expected=_execute_uil(behavior,contract,inputs)
-        match=observed['outputs']==expected['outputs'] and observed['events']==expected['events']
+        # Provenance identifies the implementation; ordered effect payloads
+        # define its observable behavior. Preserve both raw event lists below.
+        semantic_events=lambda events: [{k:v for k,v in event.items() if k not in ('block_id','evidence')} for event in events]
+        match=observed['outputs']==expected['outputs'] and semantic_events(observed['events'])==semantic_events(expected['events'])
         comparison='matched_reference_uil'
     elif behavior['kind']=='bounded':
         match=all(b['min']<=observed['outputs'][p]<=b['max'] for p,b in behavior['bounds'].items()) and not observed['events']

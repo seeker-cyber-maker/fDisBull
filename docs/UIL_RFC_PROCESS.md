@@ -13,6 +13,12 @@ It formalizes executable backings, shared contracts and qualified composition;
 its evidence companion distinguishes prototype results from future requirements.
 It also remains draft and changes no current schema or runtime.
 
+Additional proposal: [RFC 0004: block registry, guided sweding and contribution intake](uil-rfcs/0004-block-registry-and-contribution-intake.md).
+It connects existing semantic catalogs, module/provider contracts and compiler
+products through a persistent discovery workflow, with a bounded local planning
+example and separate contribution/distribution decisions. It remains draft
+and changes no UIL profile or production execution authority.
+
 The [definitions and roadmap](DEFINITIONS_AND_ROADMAP.md) maps these drafts
 and the [historical #7 interface proposal](uil-rfcs/0001-interface-description.md).
 The latter independently used the RFC 0001 label; it is a distinct unadopted

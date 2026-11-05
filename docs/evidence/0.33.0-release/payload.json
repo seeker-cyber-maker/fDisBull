@@ -1,0 +1,32 @@
+{
+  "artifacts": {
+    "core": {
+      "name": "fdisbull-0.33.0-py3-none-any.whl",
+      "sha256": "bbe570cc2c4580e85b7e64d8a12966e5c1df3be73cb75897264469de6d1c4d8d",
+      "size_bytes": 2116706
+    },
+    "player": {
+      "name": "fdisbull_player-0.33.0-py3-none-any.whl",
+      "sha256": "dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46",
+      "size_bytes": 86673
+    },
+    "sdist": {
+      "name": "fdisbull-0.33.0.tar.gz",
+      "sha256": "4147f3bfe96dce72e6dce2d338075fe140b70ef4227aab58c87ce6935d0e8477",
+      "size_bytes": 6019980
+    },
+    "tool": {
+      "name": "fdisbull-0.33.0-tool.zip",
+      "sha256": "c1060a9ed5720dc391796ab544725de1708b3824a561e81a976e6fb94f4fc7cf",
+      "size_bytes": 7283622
+    }
+  },
+  "inventory_counts": {
+    "core": 587,
+    "player": 14,
+    "source_total": 1438
+  },
+  "schema": "fdisbull-package-payloads-1",
+  "source_commit": "a82605672e400baac040b0999b1f1002180b73fe",
+  "tracked_worktree_dirty": false
+}

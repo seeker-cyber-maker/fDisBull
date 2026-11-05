@@ -1,0 +1,92 @@
+{
+  "authored_tests": 19,
+  "date": "2026-11-02",
+  "format": "fdisbull-gog-galaxy-chimprec-acceptance-1",
+  "implementation_base": "f861d17ed4837f753e000f53cc777a7d906fde82",
+  "legacy_chimprec_tests_included": 11,
+  "original_inputs_unchanged": true,
+  "private_outputs_committed": false,
+  "scope": "Rebuild from previously retained private mapped captures and synthetic loader export tokens; no new attachment, Windows/Wine launch or Galaxy download",
+  "targets": {
+    "tftd": {
+      "candidate_slots": 158,
+      "certificate_directory": [
+        0,
+        0
+      ],
+      "differences_outside_qualified_iat": 0,
+      "fixed_base": true,
+      "import_modules": {
+        "ADVAPI32.dll": 4,
+        "KERNEL32.DLL": 145,
+        "SHELL32.dll": 3,
+        "SHLWAPI.dll": 2,
+        "USER32.dll": 2,
+        "urlmon.dll": 2
+      },
+      "lief_import_entries": 158,
+      "lief_import_modules": 12,
+      "mapped_sha256": "128d461be7faa608770b743cc7d67ab78c2d0c75279590b2449674d58d9114bb",
+      "mapped_size": 1179648,
+      "observed_oep": "0x435143",
+      "output_sha256": "7ee875918d3127bb7a1ce5e100057d66a35992649bbd9e3179bcf526d36d082a",
+      "output_size": 1183744,
+      "rebuilt_imports": 158,
+      "section_byte_differences": 627,
+      "section_names": [
+        "UPX0",
+        "UPX1",
+        ".rsrc",
+        ".reimp"
+      ],
+      "source_name": "GOG_Galaxy_X-COM_Terror_from_the_Deep.exe",
+      "source_sha256": "d96527e2c4aeb958321284365c6c361368e00789a6f5fa4b64fc3dd5bbbb4dee",
+      "source_size": 518216,
+      "transfer": {
+        "address": "0x5003f4",
+        "size": 5,
+        "target": "0x435143"
+      }
+    },
+    "ufo": {
+      "candidate_slots": 158,
+      "certificate_directory": [
+        0,
+        0
+      ],
+      "differences_outside_qualified_iat": 0,
+      "fixed_base": true,
+      "import_modules": {
+        "ADVAPI32.dll": 4,
+        "KERNEL32.DLL": 145,
+        "SHELL32.dll": 3,
+        "SHLWAPI.dll": 2,
+        "USER32.dll": 2,
+        "urlmon.dll": 2
+      },
+      "lief_import_entries": 158,
+      "lief_import_modules": 12,
+      "mapped_sha256": "63e102d262793dc78519416d8fca545c65b4416f083acf88e117bb0353f8cc2b",
+      "mapped_size": 1146880,
+      "observed_oep": "0x435143",
+      "output_sha256": "b4fd43842a4de9797c26d256516bb038b9031d25affa153e025f963b82e373b6",
+      "output_size": 1150976,
+      "rebuilt_imports": 158,
+      "section_byte_differences": 629,
+      "section_names": [
+        "UPX0",
+        "UPX1",
+        ".rsrc",
+        ".reimp"
+      ],
+      "source_name": "GOG_Galaxy_X-Com_UFO_Defense.exe",
+      "source_sha256": "55d8c9d6cc1e58c1d2a88bf72f26069f6fa431d450d71cb5e9560a4d8d0e216c",
+      "source_size": 500296,
+      "transfer": {
+        "address": "0x4fca14",
+        "size": 5,
+        "target": "0x435143"
+      }
+    }
+  }
+}

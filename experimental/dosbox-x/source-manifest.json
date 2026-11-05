@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "c08a6084a8a99f5dd86005e33c75a1410405b0127aad3a1d8264586cd1544d0c",
+  "patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -28,6 +28,11 @@
       "size": 9847
     },
     {
+      "path": "configure.ac",
+      "sha256": "86c58d9d4447eeaeb2981a7aa59fc289ffd4beb16291a2655f43436f74ffb637",
+      "size": 54858
+    },
+    {
       "path": "include/agent/agent_bridge.h",
       "sha256": "bf07375fd187bcf89c9f95c2da4dbd1220e767c765a2c11916a5e5b6979ecc68",
       "size": 1505
@@ -44,8 +49,8 @@
     },
     {
       "path": "include/agent/debugger_adapter.h",
-      "sha256": "febd9733743f4f6943fe1b153a45cf33b32c766ddb273bf26bf40f4d5917d05a",
-      "size": 3794
+      "sha256": "c9b905d45cd4a3dbfc9aaabd994cf7be4c81de79452626792de02c51db318c19",
+      "size": 4131
     },
     {
       "path": "include/agent/input_adapter.h",
@@ -59,8 +64,8 @@
     },
     {
       "path": "include/debug.h",
-      "sha256": "9579ff8b38281c3b91e30fdbeb2dcbe96dd3243182c7f07bc91a40abe4854738",
-      "size": 3036
+      "sha256": "2d2581aa678bb06a5b3cbf6655f41a7fcdd8ac3401103e8baa3f318293560511",
+      "size": 3169
     },
     {
       "path": "include/paging.h",
@@ -79,8 +84,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "sha256": "f01528e3fafc2c9672c201edbbbb39ed7832eb6e40cc7c2b0b3131a27a32b3d0",
-      "size": 24445
+      "sha256": "5eaffe031a616c4e99e27b05dd749144b240accc3724aeb306fe90dbcbeaf833",
+      "size": 24971
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -89,8 +94,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "a76d28c2c7ef3faef6db36d49eac7d076c366e27696be29729738c697f2c3e97",
-      "size": 208090
+      "sha256": "70cd74a6c75b2efcffdb2589576807dc02c85cc37ec1cf34129bd62c6ac76e01",
+      "size": 216172
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -109,8 +114,8 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "sha256": "2590016595a152802fef4fe420a227ca726bba94bec1bf39c37ec260a664ff99",
-      "size": 230220
+      "sha256": "994453372b546da4e315ec0a8c9f0b7ade3af7d425298a8f7247709f9be7f09d",
+      "size": 230473
     },
     {
       "path": "src/debug/debug_gui.cpp",
@@ -159,8 +164,8 @@
     },
     {
       "path": "src/ints/mouse.cpp",
-      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
-      "size": 112554
+      "sha256": "e5c9fc067fc93d48c1f0e07349ecfbc388b0fa98049b88be2cce2d7cc7131164",
+      "size": 112813
     },
     {
       "path": "src/misc/savestates.cpp",

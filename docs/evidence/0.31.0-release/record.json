@@ -1,0 +1,164 @@
+{
+  "format": "fdisbull-release-evidence-1",
+  "version": "0.31.0",
+  "status": "published",
+  "published": true,
+  "release": {
+    "tag": "v0.31.0",
+    "tag_object": "5f061f700a71021db57abf1a30da1fcaf1f2ee61",
+    "tag_sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "gitlab_release": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.0",
+    "package": "fdisbull-tool-packages",
+    "package_version": "0.31.0-20261103",
+    "package_id": 75116571
+  },
+  "post_tag_packaging": {
+    "commit": "a12441b3a6ba9d6816721d59a3d94727bea1eb3b",
+    "defect": "tool source ZIP omitted src/fdisbull/data/FdisbullMacCapture.swift",
+    "fix": "release allowlist and REQUIRED_MACOS_RESOURCES enforcement; source/wheel regression tests",
+    "corrected_tool_zip_entries": 1821,
+    "published_tag_contains_fix": false
+  },
+  "local_install": {
+    "prefix": "/Users/Shared/fDisBull/releases/0.31.0-a12441b",
+    "source_commit": "a12441b3a6ba9d6816721d59a3d94727bea1eb3b",
+    "status": "active_verified",
+    "installed_tests": 97,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "doctors": ["dosbox", "dosbox-qemu", "wine-qemu"],
+    "player_smoke": "two fresh processes restored hall/key",
+    "check_local_install": "passed"
+  },
+  "source": {
+    "branch": "release/0.31.0",
+    "base_main": "f861d17ed4837f753e000f53cc777a7d906fde82",
+    "code_commit": "518572040eda679933cddec7eb66b3dbe9ffc527",
+    "code_tree": "dba4fa1c5dde5eaf363d71b614b2ef9f3c409515",
+    "candidate_commit": "bda8107cf9f6c275e7db894e67217012fb49ecf2",
+    "candidate_tree": "e6f79878671ee57bc5610f85159edb59193fbc0f",
+    "artifact_source_commit": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "artifact_source_tree": "9956d54a16ad49c80bacf8cef58af776cabd706f"
+  },
+  "ci": {
+    "host": "gitlab.com",
+    "pipeline": 3022313149,
+    "sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+    "status": "success",
+    "test_and_package": {
+      "passed": 8958,
+      "skipped": 402,
+      "skill_gates": "passed",
+      "packages": "core 564; player 19; tool zip 1820; sdist 1842"
+    },
+    "tag_pipeline": {
+      "pipeline": 3022469643,
+      "ref": "v0.31.0",
+      "sha": "10d01062092a47bdc984ee59cd817b8ab57b6f1b",
+      "status": "success",
+      "passed": 8958,
+      "skipped": 402
+    },
+    "post_tag_pipeline": {
+      "pipeline": 3022926784,
+      "sha": "7537454da19eed58bbef98127a1d869aaade2c12",
+      "status": "success",
+      "native_stable": 86,
+      "native_layers": 148
+    },
+    "native_jobs": "post-tag pipeline 3022926784: stable 86 passed; layers 148 passed"
+  },
+  "native": {
+    "macos_stable": "86 passed",
+    "macos_layers": "148 passed",
+    "backend": "/Users/Shared/fDisBull/current/backend/native-macos-arm64/dosbox-x",
+    "linux_native_post_tag": "pipeline 3022926784: stable 86 passed; layers 148 passed",
+    "tag_contains_ci_fix": false
+  },
+  "included_merges": {
+    "frame_timeline_deltas": "2baaa1c",
+    "typed_c_frontend": "f861d17",
+    "typed_c_pointer_fix": "d92e613",
+    "windows_runtime_preflight": "0c44bd48b307",
+    "chip8_pilot": "a7eb55cade66",
+    "udc_registry": "5ef7b5f1666e",
+    "swede_trial": "33762992f012",
+    "cold_agent_benchmark": "70c871b8487d",
+    "skill_refresh": "99c0f8c"
+  },
+  "qualification": {
+    "full_suite": {
+      "passed": 8992,
+      "skipped": 335,
+      "failed": 3,
+      "errors": 23,
+      "subtests_passed": 2316,
+      "baseline": "known macOS ELF/GCC fixtures and one case-sensitive media fixture"
+    },
+    "focused_feature_suites": {
+      "passed": 67,
+      "skipped": 13
+    },
+    "targeted": {
+      "frame_timeline": 148,
+      "typed_c": 26
+    },
+    "check_dist": "core 564 entries; player 19; tool zip 1819; sdist 1841",
+    "packaging_note": "the evidence packet is excluded from packages; artifact hashes are authoritative outside the packages",
+    "installed_wheel": {
+      "command_version": "0.31.0",
+      "methods_version": "0.31.0",
+      "capabilities_runtime_version": "0.31.0",
+      "capabilities_distribution_version": "0.31.0",
+      "venv": "/tmp/fdisbull-031-venv",
+      "system_prefix_activated": false
+    }
+  },
+  "artifacts": [
+    {
+      "file": "fdisbull-0.31.0-py3-none-any.whl",
+      "bytes": 1895363,
+      "sha256": "a676c98e2d9c5c24f901d66ea03742d7e1f92351eb25c92530db861c5a1bf025"
+    },
+    {
+      "file": "fdisbull_player-0.31.0-py3-none-any.whl",
+      "bytes": 86673,
+      "sha256": "d80e27589174ca119b33bf7ca4d3f08f7cc5f930f5b934362028472d6205d8fc"
+    },
+    {
+      "file": "fdisbull-0.31.0-tool.zip",
+      "bytes": 6376596,
+      "sha256": "0f7371880eca1a462182fc90bcc181d80951c2db505e3573256df383f121dada"
+    },
+    {
+      "file": "fdisbull-0.31.0.tar.gz",
+      "bytes": 5258070,
+      "sha256": "e2f93e875cb3ed624525e10f7669810ee17da06de398f3f114cc1c63787ddb9a"
+    }
+  ],
+  "exclusions": [
+    "large indexed-UIL/Civilization z-work candidate",
+    "record-validation follow-up (!49)",
+    "Draft consolidated UDL/UIL/UDC (!45)",
+    "Draft console skill (!46)",
+    "Draft delegation guidance (!47)",
+    "Draft deterministic execution guidance (!53)",
+    "native Windows Win16/PE32 debugger and Wine guest image",
+    "historical CHIP-8 emulator qualification",
+    "shared-prefix activation"
+  ],
+  "logs": [
+    "full-suite.log",
+    "targeted.log",
+    "check-dist.log",
+    "installed-smoke.log",
+    "artifact-sha256.txt",
+    "native-macos-stable.log",
+    "native-macos-layers.log",
+    "native-linux-stable.log",
+    "native-linux-layers.log",
+    "native-pipeline-3022926784.log",
+    "tag-ci.log"
+  ]
+}

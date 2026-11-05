@@ -1,0 +1,75 @@
+{
+  "actor_departure_placement": [
+    23476,
+    10668,
+    256
+  ],
+  "actor_initial_placement": [
+    16512,
+    8576,
+    256
+  ],
+  "door_fields_directly_written": false,
+  "door_id": "object-3",
+  "events": [
+    {
+      "animation_frame": 4723,
+      "animation_index": 1085,
+      "door_state": 13,
+      "phase": "near",
+      "preferred_pc": "0x2bbb1",
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.332,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "animation_frame": 4723,
+      "animation_index": 1085,
+      "door_state": 14,
+      "phase": "near",
+      "preferred_pc": "0x2bbec",
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.434,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "animation_frame": 4715,
+      "animation_index": 1087,
+      "door_state": 15,
+      "phase": "far",
+      "preferred_pc": "0x2bc4f",
+      "run": {
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 3.582,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "animation_frame": 4713,
+      "animation_index": 1089,
+      "door_state": 12,
+      "phase": "far",
+      "preferred_pc": "0x2bc8d",
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.27,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    }
+  ],
+  "mode": "original DOSBox with actor-only diagnostic placements",
+  "source_helper_preferred": "0x2B940",
+  "total_breakpoint_observations": 16
+}

@@ -1,0 +1,204 @@
+{
+  "format": "fdisbull-full-f001-reconciliation-1",
+  "verified_at_utc": "2026-11-01T20:28:58.838270+00:00",
+  "main": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+  "main_file_count": 21,
+  "main_files": [
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md",
+      "repo_path": "examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md",
+      "sha256": "47619f49f1c8785e294ffacaa16a70ad2eb8b11247c4812fc36bd090e3041098",
+      "git_blob": "746bf852fdc5a362e08bf1daeec234f784d378c8",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/README.md",
+      "repo_path": "examples/syndicate_z_scene/README.md",
+      "sha256": "8916ec5170904d0b560a761e31e4f6286975a955b14f610f6e5914e628fb8e76",
+      "git_blob": "95cb583bd6572a7305739c0dd8d9f4c0510521d0",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/gitlab-status.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/ascii/gitlab-status.json",
+      "sha256": "2eeff0d989a65777f03b5b01082d90bcb88a1f3161abde895a65701a3c2a0e85",
+      "git_blob": "8ea8ac8a211e9055d57eed70120a8a50d410d2d9",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/tests.txt",
+      "repo_path": "examples/syndicate_z_scene/evidence/ascii/tests.txt",
+      "sha256": "96240512bacfe53de84a67b26b8fdfb8eaf882f3dd8f24d31e6333e179d02c5e",
+      "git_blob": "466fc4ee8354ee6e315ad4b9a3065c0dcb5d39d4",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/verification.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/ascii/verification.json",
+      "sha256": "119cfdfd9268baf74d6c26809fe9b8f307c604cd873f173b4991e927ffb8ab4a",
+      "git_blob": "c12d0e59dfd7cb3524bc62d948ceeb7e0b070e13",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/cleanup.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/cleanup.json",
+      "sha256": "d87c3c55cfcba96a2e421af1b4274ad80ddffdf7c838154801ed654a71b93d35",
+      "git_blob": "af9b92f810cd92f239cbf2b3ee63db4ba8e802b4",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/live-player-verification.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/live-player-verification.json",
+      "sha256": "297846dba11604be2fe35e77c6ed0ac499b112d068f70a32a11a6935b198c50d",
+      "git_blob": "012d3ebe0f5e3d106b744e442ee07e7cc2a63a89",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/preservation.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/preservation.json",
+      "sha256": "3cb64c6701980a7a6e2b70b2defae90e9bfc8356dba93b9461e8116c0f0d5024",
+      "git_blob": "24a8fd59c475c6b5ed790c222ff6db3e7207e2fe",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/runtime-binding.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/runtime-binding.json",
+      "sha256": "188a0242f8453c3b15194737aefd154525ded47c5ef186cdfb33204d09846a11",
+      "git_blob": "513c235cc55dcf867d89210f553a2a93fd32d0fe",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/source-identities.json",
+      "repo_path": "examples/syndicate_z_scene/evidence/source-identities.json",
+      "sha256": "5bb6d5aafcd01204e8d0ea6285a2a5f759df6dd93328e8ce995959af2f8dd681",
+      "git_blob": "6d82caaf73e41bf939ed99bc951a0992bc16759b",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/unit-tests-final.txt",
+      "repo_path": "examples/syndicate_z_scene/evidence/unit-tests-final.txt",
+      "sha256": "7192acea2d99f0da15f4f003e65a40fd0561fa055032d54b2643aa7ad940fc71",
+      "git_blob": "c5ebc95f735acef665036e5879423ff5cab2710d",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tests/test_agent_map.py",
+      "repo_path": "examples/syndicate_z_scene/tests/test_agent_map.py",
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2",
+      "git_blob": "7551901891fb36999d2f66f995793c21c580fa07",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tests/test_scene.py",
+      "repo_path": "examples/syndicate_z_scene/tests/test_scene.py",
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "git_blob": "2ff48aefeb024cafead4a107ebd6324b15b683eb",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/agent_map.py",
+      "repo_path": "examples/syndicate_z_scene/tools/agent_map.py",
+      "sha256": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+      "git_blob": "261e1800cb62aa850f19df16b4b26c312c5b7d63",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/bind_scene.py",
+      "repo_path": "examples/syndicate_z_scene/tools/bind_scene.py",
+      "sha256": "c6e4bb8600ebd766551ad2c7a719a8f6e80d10a9227b3f47e2f8813f4c8ac04f",
+      "git_blob": "8f6a247a4b0b2e4e6ece65d31bbfd6789b0bd541",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/build_map.py",
+      "repo_path": "examples/syndicate_z_scene/tools/build_map.py",
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "git_blob": "f5490c0b7da91c4e69d02980f996e92b21c50b14",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/render_static_map.py",
+      "repo_path": "examples/syndicate_z_scene/tools/render_static_map.py",
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "git_blob": "d367e423f01b029daa0126b1751ad639e3ca2d0d",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/session_controller.py",
+      "repo_path": "examples/syndicate_z_scene/tools/session_controller.py",
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "git_blob": "d52551c2f0768a3e24f288d405497b150fcac12f",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/syndicate_scene.py",
+      "repo_path": "examples/syndicate_z_scene/tools/syndicate_scene.py",
+      "sha256": "f091b0fd5cfb2371a585f554a26a762bbf22716c43d79bd90075d58d04677c1f",
+      "git_blob": "e8e81ca37c827379d32315ba185af9d59c61830b",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/z_provider.py",
+      "repo_path": "examples/syndicate_z_scene/tools/z_provider.py",
+      "sha256": "8824634a44178e87f1623746c578cd9604039ddc3e55e8e6b0ea7188b682b651",
+      "git_blob": "f28b994ac09d0b49edbcff0c91c433b5165cfc1a",
+      "matches": true
+    },
+    {
+      "source_path": "publication/historical-scene-draft/proposed/docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md",
+      "repo_path": "docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md",
+      "sha256": "02756851d5657d647626f84b45f7df038bda67541cd2e52a7fadffdf9bb08245",
+      "git_blob": "1bb7f330eb29651efd71dc57b5eb9c0b337e1ffb",
+      "matches": true
+    }
+  ],
+  "draft_mr": 35,
+  "draft_head": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+  "draft_state": "opened/draft/unmerged",
+  "draft_payload_file_count": 86,
+  "draft_trees": [
+    {
+      "name": "audio-lifecycle",
+      "files": 12,
+      "git_tree": "f0ac99597fdd375415e85b51f6c40a4d3a23eeb1",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle",
+      "matches": true
+    },
+    {
+      "name": "audio-progress",
+      "files": 11,
+      "git_tree": "f0575b22c910803dcdd82202b510c01ffd829b8e",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress",
+      "matches": true
+    },
+    {
+      "name": "graphics",
+      "files": 37,
+      "git_tree": "6ef8eaa64c8f7028a52f6a0bd786a110f52c1bf6",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics",
+      "matches": true
+    },
+    {
+      "name": "le-dispatch",
+      "files": 14,
+      "git_tree": "0b7196d1c40c7e4c12253b3ea0478b287143f07d",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch",
+      "matches": true
+    },
+    {
+      "name": "early-le",
+      "files": 10,
+      "git_tree": "5ac5f64b76ba460fa43f9c5ad8206a6232689a2a",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le",
+      "matches": true
+    },
+    {
+      "name": "audio-patches",
+      "files": 2,
+      "git_tree": "2676a928348e8cdf0b87447dadd11659a1b354ec",
+      "remote_path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-patches",
+      "matches": true
+    }
+  ],
+  "method": "Current GitLab main/MR metadata and six current tree IDs; complete local Git blob and independently reconstructed tree comparison. No CI/job query, runtime execution or patches applied."
+}

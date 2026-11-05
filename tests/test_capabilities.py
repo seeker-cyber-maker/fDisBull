@@ -21,7 +21,8 @@ def test_cli_and_projectless_json_agree(capsys):
     assert cli['ok'] and reply['ok']
     assert cli['result'] == reply['result']
     assert cli['result']['format'] == 'fdisbull-capabilities-1'
-    assert len(json.dumps(cli).encode()) < 24576
+    # The expanded 0.32 catalog stays within half the ordinary 64 KiB reply limit.
+    assert len(json.dumps(cli).encode()) < 32 * 1024
     assert all(item['status'] == 'read' for item in cli['result']['sources'].values())
 
 

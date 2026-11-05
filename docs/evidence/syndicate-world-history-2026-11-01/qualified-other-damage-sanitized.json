@@ -1,0 +1,1593 @@
+{
+  "car-delivered": {
+    "_derivation": {
+      "byte_identical_to_source": false,
+      "format": "syndicate-recipient-damage-semantic-fixture-1",
+      "immutable_original_modified": false,
+      "limits": "Cannot reproduce or validate the omitted writes; source identities and historical native claims do not qualify a current guest.",
+      "omitted_fields": [
+        "$.car-delivered.preparation.input_edits[0].old",
+        "$.car-delivered.preparation.input_edits[0].new",
+        "$.car-delivered.preparation.input_edits[1].old",
+        "$.car-delivered.preparation.input_edits[1].new",
+        "$.car-delivered.preparation.input_edits[2].old",
+        "$.car-delivered.preparation.input_edits[2].new",
+        "$.car-delivered.preparation.input_edits[3].old",
+        "$.car-delivered.preparation.input_edits[3].new",
+        "$.car-delivered.preparation.input_edits[4].old",
+        "$.car-delivered.preparation.input_edits[4].new",
+        "$.car-delivered.preparation.input_edits[5].old",
+        "$.car-delivered.preparation.input_edits[5].new",
+        "$.car-delivered.preparation.input_edits[6].old",
+        "$.car-delivered.preparation.input_edits[6].new",
+        "$.car-delivered.preparation.input_edits[7].old",
+        "$.car-delivered.preparation.input_edits[7].new",
+        "$.car-delivered.preparation.input_edits[8].old",
+        "$.car-delivered.preparation.input_edits[8].new",
+        "$.car-delivered.preparation.input_edits[9].old",
+        "$.car-delivered.preparation.input_edits[9].new",
+        "$.car-delivered.preparation.input_edits[10].old",
+        "$.car-delivered.preparation.input_edits[10].new",
+        "$.car-delivered.preparation.input_edits[11].old",
+        "$.car-delivered.preparation.input_edits[11].new"
+      ],
+      "omitted_raw_bytes_total": 68,
+      "omitted_raw_values": 24,
+      "scope": "Derived sanitized historical fixture; no new native execution or qualification",
+      "source_archive_library_id": "libfile_b995297031a48191b85edf8470091000",
+      "source_archive_member": "fDisBull_Syndicate_FULL_F002/publication/world-history-D006/proposed/docs/evidence/syndicate-world-history-2026-11-01/qualified-other-damage.json",
+      "source_archive_sha256": "05cf6785ef549443bbdb7a737c4529074b51e954da988048bfa82ae8d72b5f89",
+      "source_archive_url": "https://chatgpt.com/library?file_id=libfile_b995297031a48191b85edf8470091000&account_id=personal",
+      "source_document_sha256": "6b2b88a613a659ec60c62f141067d28d93742ff87faf93ce9acc8d98dbb7c790",
+      "source_report_url": "https://chatgpt.com/library?file_id=libfile_07414ad9ef808191842d0650969bb02b&account_id=personal",
+      "source_trial": "car-delivered",
+      "transformation": "Omit only raw old/new preparation byte values; retain each recorded width, change flag, address/reason and all existing semantic events/results."
+    },
+    "events": [
+      {
+        "car": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15528,
+            9194,
+            256
+          ]
+        },
+        "destination": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 1026,
+          "subtype": 0,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        },
+        "mask": 1,
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15528,
+            9194,
+            256
+          ]
+        },
+        "tick": 110307,
+        "victim": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 1026,
+          "subtype": 0,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        }
+      },
+      {
+        "car": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15552,
+            9244,
+            256
+          ]
+        },
+        "destination": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 1026,
+          "subtype": 19,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        },
+        "mask": 1,
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15552,
+            9244,
+            256
+          ]
+        },
+        "tick": 110578,
+        "victim": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 1026,
+          "subtype": 19,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        }
+      },
+      {
+        "car": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15552,
+            9244,
+            256
+          ]
+        },
+        "destination": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 3074,
+          "subtype": 22,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        },
+        "pc": "0x32fa0",
+        "tick": 110832,
+        "victim": {
+          "flags_c": 1,
+          "hp": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 3074,
+          "subtype": 22,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        }
+      },
+      {
+        "car": {
+          "flags_c": 0,
+          "hp": 30,
+          "id": "vehicle-0",
+          "kind": 2,
+          "last_source": 0,
+          "owner_head": 94,
+          "subtype": 13,
+          "xyz": [
+            15552,
+            9244,
+            256
+          ]
+        },
+        "destination": {
+          "flags_c": 1,
+          "hp": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 3074,
+          "subtype": 22,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        },
+        "pc": "0x32fa6",
+        "tick": 110832,
+        "victim": {
+          "flags_c": 1,
+          "hp": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source": 0,
+          "owner_head": 3074,
+          "subtype": 22,
+          "xyz": [
+            15496,
+            9144,
+            256
+          ]
+        }
+      }
+    ],
+    "final_hp": -1,
+    "guest_end": 110832,
+    "guest_start": 110283,
+    "preparation": {
+      "driver_id": "person-1",
+      "input_edits": [
+        {
+          "preferred": "0x5e552",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 1,
+          "why": "diagnostic driving order selection/latch"
+        },
+        {
+          "preferred": "0x55390",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 4,
+          "why": "diagnostic driving order selection/latch"
+        },
+        {
+          "preferred": "0x60b22",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 4,
+          "why": "diagnostic driving order selection/latch"
+        },
+        {
+          "preferred": "0x60b3f",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 1,
+          "why": "diagnostic driving order selection/latch"
+        },
+        {
+          "preferred": "0x60b12",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 2,
+          "why": "diagnostic vehicle world target"
+        },
+        {
+          "preferred": "0x60b14",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 2,
+          "why": "diagnostic vehicle world target"
+        },
+        {
+          "preferred": "0x60b1a",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": false,
+          "recorded_width_bytes": 2,
+          "why": "diagnostic vehicle world target"
+        },
+        {
+          "preferred": "0x60b1c",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 6,
+          "why": "diagnostic vehicle world target"
+        },
+        {
+          "preferred": "0x82486",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 2,
+          "why": "explicit diagnostic graph-preserving pedestrian placement overlapping vehicle; no advance"
+        },
+        {
+          "preferred": "0x88110",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 8,
+          "why": "explicit diagnostic graph-preserving pedestrian placement overlapping vehicle; no advance"
+        },
+        {
+          "preferred": "0x91694",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 1,
+          "why": "explicit diagnostic graph-preserving pedestrian placement overlapping vehicle; no advance"
+        },
+        {
+          "preferred": "0x916de",
+          "raw_preparation_bytes_omitted": true,
+          "recorded_value_changed": true,
+          "recorded_width_bytes": 1,
+          "why": "explicit diagnostic graph-preserving pedestrian placement overlapping vehicle; no advance"
+        }
+      ],
+      "order": {
+        "command": 3,
+        "xyz": [
+          15496,
+          10680,
+          256
+        ]
+      },
+      "overlap": {
+        "changed_spans": 4,
+        "graph_valid": true,
+        "position_raw": [
+          15496,
+          9144,
+          256
+        ]
+      }
+    },
+    "scope": "diagnostic pedestrian overlap; original car movement/contact/health effects; not an ordinary approach or universal capacity/speed model"
+  },
+  "flame-delivered": {
+    "_derivation": {
+      "byte_identical_to_source": false,
+      "format": "syndicate-recipient-damage-semantic-fixture-1",
+      "immutable_original_modified": false,
+      "limits": "Cannot reproduce or validate the omitted writes; source identities and historical native claims do not qualify a current guest.",
+      "omitted_fields": [
+        "$.flame-delivered.writes[1].old",
+        "$.flame-delivered.writes[1].new",
+        "$.flame-delivered.writes[2].old",
+        "$.flame-delivered.writes[2].new"
+      ],
+      "omitted_raw_bytes_total": 6,
+      "omitted_raw_values": 4,
+      "scope": "Derived sanitized historical fixture; no new native execution or qualification",
+      "source_archive_library_id": "libfile_b995297031a48191b85edf8470091000",
+      "source_archive_member": "fDisBull_Syndicate_FULL_F002/publication/world-history-D006/proposed/docs/evidence/syndicate-world-history-2026-11-01/qualified-other-damage.json",
+      "source_archive_sha256": "05cf6785ef549443bbdb7a737c4529074b51e954da988048bfa82ae8d72b5f89",
+      "source_archive_url": "https://chatgpt.com/library?file_id=libfile_b995297031a48191b85edf8470091000&account_id=personal",
+      "source_document_sha256": "6b2b88a613a659ec60c62f141067d28d93742ff87faf93ce9acc8d98dbb7c790",
+      "source_report_url": "https://chatgpt.com/library?file_id=libfile_07414ad9ef808191842d0650969bb02b&account_id=personal",
+      "source_trial": "flame-delivered",
+      "transformation": "Omit only raw old/new preparation byte values; retain each recorded width, change flag, address/reason and all existing semantic events/results."
+    },
+    "bp_hits": 10,
+    "coverage": "selected contact and health sinks; not all damage writers",
+    "end": 122172,
+    "events": [
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 0,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x127a0",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121627,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 0,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x127b7",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121627,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 8,
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x12b7f",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121627,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 8,
+        "destination": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121627,
+        "victim": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x127a0",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-4",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121904,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x127b7",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-4",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121904,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 8,
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x12b7f",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-4",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121904,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 8,
+        "destination": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 13,
+          "id": "effect-4",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 33,
+          "xyz": [
+            18240,
+            10464,
+            364
+          ]
+        },
+        "tick": 121904,
+        "victim": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x32d1b",
+        "tick": 122172,
+        "victim": {
+          "flags_c": 8,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 8,
+          "hp_word": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        },
+        "pc": "0x32d21",
+        "tick": 122172,
+        "victim": {
+          "flags_c": 8,
+          "hp_word": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 20,
+          "xyz": [
+            18240,
+            10432,
+            256
+          ]
+        }
+      }
+    ],
+    "final_ammo6": 184,
+    "final_hp": -1,
+    "final_selected": 38458,
+    "label": "flame-delivered",
+    "native_no_rewind_during_capture": true,
+    "start": 108704,
+    "type": 8,
+    "writes": [
+      {
+        "preparation": "graph-preserving teleport to original guard vicinity",
+        "xyz": [
+          18240,
+          10432,
+          256
+        ]
+      },
+      {
+        "preferred": "0x9175c",
+        "raw_preparation_bytes_omitted": true,
+        "recorded_value_changed": true,
+        "recorded_width_bytes": 2
+      },
+      {
+        "preferred": "0x91761",
+        "raw_preparation_bytes_omitted": true,
+        "recorded_value_changed": true,
+        "recorded_width_bytes": 1
+      }
+    ]
+  },
+  "laser-delivered": {
+    "_derivation": {
+      "byte_identical_to_source": false,
+      "format": "syndicate-recipient-damage-semantic-fixture-1",
+      "immutable_original_modified": false,
+      "limits": "Cannot reproduce or validate the omitted writes; source identities and historical native claims do not qualify a current guest.",
+      "omitted_fields": [
+        "$.laser-delivered.writes[0].old",
+        "$.laser-delivered.writes[0].new",
+        "$.laser-delivered.writes[1].old",
+        "$.laser-delivered.writes[1].new"
+      ],
+      "omitted_raw_bytes_total": 6,
+      "omitted_raw_values": 4,
+      "scope": "Derived sanitized historical fixture; no new native execution or qualification",
+      "source_archive_library_id": "libfile_b995297031a48191b85edf8470091000",
+      "source_archive_member": "fDisBull_Syndicate_FULL_F002/publication/world-history-D006/proposed/docs/evidence/syndicate-world-history-2026-11-01/qualified-other-damage.json",
+      "source_archive_sha256": "05cf6785ef549443bbdb7a737c4529074b51e954da988048bfa82ae8d72b5f89",
+      "source_archive_url": "https://chatgpt.com/library?file_id=libfile_b995297031a48191b85edf8470091000&account_id=personal",
+      "source_document_sha256": "6b2b88a613a659ec60c62f141067d28d93742ff87faf93ce9acc8d98dbb7c790",
+      "source_report_url": "https://chatgpt.com/library?file_id=libfile_07414ad9ef808191842d0650969bb02b&account_id=personal",
+      "source_trial": "laser-delivered",
+      "transformation": "Omit only raw old/new preparation byte values; retain each recorded width, change flag, address/reason and all existing semantic events/results."
+    },
+    "bp_hits": 17,
+    "coverage": "selected contact and health sinks; not all damage writers",
+    "end": 113827,
+    "events": [
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 0,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x127a0",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111661,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 0,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x127b7",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111661,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 16,
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x12b7f",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111661,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 16,
+        "destination": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111661,
+        "victim": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x127a0",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111662,
+        "victim": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "caller": "0x12b75",
+        "destination": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x127b7",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111662,
+        "victim": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 16,
+        "destination": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x12b7f",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111662,
+        "victim": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "applied_mask": 16,
+        "destination": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x12b83",
+        "source": {
+          "flags_c": 0,
+          "hp_word": 64,
+          "id": "effect-0",
+          "kind": 3,
+          "last_source_ref": 0,
+          "owner_field_raw": 1014,
+          "subtype": 39,
+          "xyz": [
+            18240,
+            10304,
+            384
+          ]
+        },
+        "tick": 111662,
+        "victim": {
+          "flags_c": 16,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 1026,
+          "subtype": 0,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 112188,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 112458,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 112730,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 112996,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 113277,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 113555,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x32fc0",
+        "tick": 113827,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x33003",
+        "source": {
+          "id": null
+        },
+        "tick": 113827,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": 16,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      },
+      {
+        "destination": {
+          "flags_c": 0,
+          "hp_word": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        },
+        "pc": "0x33009",
+        "source": {
+          "id": null
+        },
+        "tick": 113827,
+        "victim": {
+          "flags_c": 0,
+          "hp_word": -1,
+          "id": "person-0",
+          "kind": 1,
+          "last_source_ref": 1014,
+          "owner_field_raw": 3074,
+          "subtype": 17,
+          "xyz": [
+            18304,
+            9856,
+            256
+          ]
+        }
+      }
+    ],
+    "final_ammo6": 199,
+    "final_hp": -1,
+    "final_selected": 38458,
+    "label": "laser-delivered",
+    "native_no_rewind_during_capture": true,
+    "start": 108446,
+    "type": 7,
+    "writes": [
+      {
+        "preferred": "0x9175c",
+        "raw_preparation_bytes_omitted": true,
+        "recorded_value_changed": true,
+        "recorded_width_bytes": 2
+      },
+      {
+        "preferred": "0x91761",
+        "raw_preparation_bytes_omitted": true,
+        "recorded_value_changed": true,
+        "recorded_width_bytes": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "fdisbull-handoff-description-1",
+  "id": "SYNDICATE-F001-20261101",
+  "kind": "full",
+  "created_at_utc": "2026-11-01T19:18:48.841675+00:00",
+  "scope": "Complete retained authored Syndicate work; not a game/runtime/private-project backup",
+  "continuation_expected": true,
+  "future_deliveries": "manifest-bound deltas",
+  "gitlab_main": "498c0887f8d15ca3b2fb3dc8994d2de24e144273",
+  "research_draft": {
+    "iid": 35,
+    "head": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+    "merged": false
+  },
+  "main_files_matched": 21,
+  "draft_payload_files_matched": 86,
+  "native_execution_this_packaging": false,
+  "v029_runtime_downloaded": false,
+  "v029_runtime_installed": false,
+  "entrypoint": "00_START_HERE.md",
+  "runtime_limit": "04_MISSING_EXTERNAL_INPUTS.md",
+  "fresh_packaging_tests": 16,
+  "fresh_scene_source_tests": 63,
+  "fresh_source_smoke_commands": 7,
+  "remote_writes": false
+}

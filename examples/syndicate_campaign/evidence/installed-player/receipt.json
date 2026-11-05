@@ -1,0 +1,13 @@
+{
+  "scope": "Authored model tests and real installed Player over a fresh recorded-state backend; no native game execution",
+  "core": "0.30.0",
+  "player": "0.30.0",
+  "tests": 51,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "commands": 9,
+  "state_unchanged": true,
+  "actions_sent": 0,
+  "native_execution": false
+}

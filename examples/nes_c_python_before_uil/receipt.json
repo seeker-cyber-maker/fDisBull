@@ -1,0 +1,292 @@
+{
+  "toolchain": {
+    "clang_version": "clang version 17.0.0 (https://github.com/swiftlang/llvm-project.git 10999b6d034fe318f3d56c83bddb6572593a8bb0)",
+    "clang_sha256": "aa7389d9766be7e61df76cf094ac4f1861fd067e12908d1e9fd5cd7eb2a078f4"
+  },
+  "fixture": {
+    "rom_sha256": "b9754e368c7f898f3b52f4970dd536906290824452cf287f45329ba43dbe068e",
+    "rom_bytes": 32784,
+    "tick_sha256": "caf0b050373f016eb2c6d43b80dc311145196873e46e9d4ff543c27746732148",
+    "tick_bytes": 56,
+    "states_tested": 131072,
+    "instruction_count_range": [
+      12,
+      23
+    ],
+    "emulator_presentation_tested": false
+  },
+  "equivalence": {
+    "c_vs_6502_mismatches": 0,
+    "masked_python_vs_6502_mismatches": 0,
+    "unmasked_python_vs_6502_mismatches": 3,
+    "unmasked_examples": [
+      {
+        "buttons": 16,
+        "x": 253,
+        "cooldown": 0,
+        "original": [
+          0,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            0
+          ]
+        ],
+        "unmasked_python": [
+          256,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            256
+          ]
+        ]
+      },
+      {
+        "buttons": 16,
+        "x": 254,
+        "cooldown": 0,
+        "original": [
+          1,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            1
+          ]
+        ],
+        "unmasked_python": [
+          257,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            257
+          ]
+        ]
+      },
+      {
+        "buttons": 16,
+        "x": 255,
+        "cooldown": 0,
+        "original": [
+          2,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            2
+          ]
+        ],
+        "unmasked_python": [
+          258,
+          4,
+          1,
+          [
+            15
+          ],
+          [
+            258
+          ]
+        ]
+      }
+    ]
+  },
+  "structure": {
+    "6502_instruction_count": 28,
+    "6502_basic_blocks": 8,
+    "6502_blocks": [
+      {
+        "start": 32768,
+        "end": 32778,
+        "instructions": 5,
+        "successors": [
+          32778,
+          32800
+        ],
+        "effects": []
+      },
+      {
+        "start": 32778,
+        "end": 32782,
+        "instructions": 2,
+        "successors": [
+          32782,
+          32800
+        ],
+        "effects": []
+      },
+      {
+        "start": 32782,
+        "end": 32800,
+        "instructions": 9,
+        "successors": [
+          32809
+        ],
+        "effects": []
+      },
+      {
+        "start": 32800,
+        "end": 32804,
+        "instructions": 2,
+        "successors": [
+          32804,
+          32809
+        ],
+        "effects": []
+      },
+      {
+        "start": 32804,
+        "end": 32809,
+        "instructions": 3,
+        "successors": [
+          32809
+        ],
+        "effects": []
+      },
+      {
+        "start": 32809,
+        "end": 32813,
+        "instructions": 2,
+        "successors": [
+          32813,
+          32818
+        ],
+        "effects": []
+      },
+      {
+        "start": 32813,
+        "end": 32818,
+        "instructions": 2,
+        "successors": [
+          32818
+        ],
+        "effects": [
+          "apu.write"
+        ]
+      },
+      {
+        "start": 32818,
+        "end": 32824,
+        "instructions": 3,
+        "successors": [],
+        "effects": [
+          "ppu.write"
+        ]
+      }
+    ],
+    "deterministic_effect_partition": [
+      {
+        "kind": "pure_logic_candidate",
+        "blocks": [
+          {
+            "start": 32768,
+            "end": 32778,
+            "instructions": 5,
+            "successors": [
+              32778,
+              32800
+            ],
+            "effects": []
+          },
+          {
+            "start": 32778,
+            "end": 32782,
+            "instructions": 2,
+            "successors": [
+              32782,
+              32800
+            ],
+            "effects": []
+          },
+          {
+            "start": 32782,
+            "end": 32800,
+            "instructions": 9,
+            "successors": [
+              32809
+            ],
+            "effects": []
+          },
+          {
+            "start": 32800,
+            "end": 32804,
+            "instructions": 2,
+            "successors": [
+              32804,
+              32809
+            ],
+            "effects": []
+          },
+          {
+            "start": 32804,
+            "end": 32809,
+            "instructions": 3,
+            "succcessors": [
+              32809
+            ],
+            "effects": []
+          },
+          {
+            "start": 32809,
+            "end": 32813,
+            "instructions": 2,
+            "successors": [
+              32813,
+              32818
+            ],
+            "effects": []
+          }
+        ]
+      },
+      {
+        "kind": "effect_boundary",
+        "blocks": [
+          {
+            "start": 32813,
+            "end": 32818,
+            "instructions": 2,
+            "succcessors": [
+              32818
+            ],
+            "effects": [
+              "apu.write"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "effect_boundary",
+        "blocks": [
+          {
+            "start": 32818,
+            "end": 32824,
+            "instructions": 3,
+            "successors": [],
+            "effects": [
+              "ppu.write"
+            ]
+          }
+        ]
+      }
+    ],
+    "llvm_O0_blocks": 7,
+    "llvm_O2_blocks": 4
+  },
+  "interpretation": {
+    "python_before_uil": "optional executable hypothesis/oracle, not a mandatory IL",
+    "typed_c_before_uil": "structured recovery view for pure regions",
+    "python_as_udc_provider": "high-level host services, formatting, orchestration and reference providers"
+  }
+}

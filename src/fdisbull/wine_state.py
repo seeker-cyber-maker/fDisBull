@@ -14,6 +14,7 @@ import zipfile
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
 from .anchor_stones import AnchorStoneSessionMixin
+from .wine_arch import register_names, ip_name, flags_name
 
 FORMAT='fdisbull-qemu-native-1'
 REGISTERS={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags'}
@@ -67,13 +68,13 @@ def export_state(project,artifact,destination):
             'artifact_sha256':row['sha256'],'size':destination.stat().st_size,'format':FORMAT}
 
 
-def integer(value):
-    if isinstance(value,str) and re.fullmatch(r'0x[0-9a-fA-F]{1,16}',value):return int(value,16)
-    if type(value) is int and 0<=value<2**64:return value
+def integer(value, bits=64):
+    if isinstance(value,str) and re.fullmatch(r'0x[0-9a-fA-F]{1,16}',value):value=int(value,16)
+    if type(value) is int and 0<=value<2**bits:return value
     raise ValueError('PE register values require unsigned 64-bit integers or explicit 0x strings')
 
 
-def validate_edits(memory,registers):
+def validate_edits(memory,registers, *, bits=64):
     from .debug_state import byte_string
     if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):raise ValueError('Invalid PE state edit collection')
     total=0
@@ -84,9 +85,9 @@ def validate_edits(memory,registers):
         total+=len(after)
     if total>65536:raise ValueError('Native state memory edits exceed 64 KiB')
     for name,change in registers.items():
-        if name not in REGISTERS or not isinstance(change,dict) or set(change)!={'expected','value'}:raise ValueError('Invalid PE register edit')
-        old=integer(change['expected']);new=integer(change['value'])
-        if name=='rflags' and (old^new)&~0xcd5:raise ValueError('PE flags editing supports arithmetic/direction flags; debugger control flags are reserved')
+        if name not in register_names(bits) or not isinstance(change,dict) or set(change)!={'expected','value'}:raise ValueError('Invalid PE register edit')
+        old=integer(change['expected'],bits);new=integer(change['value'],bits)
+        if name in ('rflags','eflags') and (old^new)&~0xcd5:raise ValueError('PE flags editing supports arithmetic/direction flags; debugger control flags are reserved')
 
 
 def checked_runtime_rip(debug,value):
@@ -98,7 +99,7 @@ def checked_runtime_rip(debug,value):
 
 
 def apply_edits(debug,memory,registers):
-    validate_edits(memory,registers);debug._layer_setup()
+    validate_edits(memory,registers,bits=getattr(debug,'bits',64));debug._layer_setup()
     if debug._pending_exec:raise ValueError('Complete the execution-layer instruction before editing registers or state')
     ranges=[];plans=[];snapshot=debug.registers()
     for edit in memory:
@@ -110,9 +111,9 @@ def apply_edits(debug,memory,registers):
         if debug.memory(address,length=len(data))['hex']!=edit['expected_hex'].lower():raise ValueError('Native state edit expected bytes mismatch')
         plans.append((address,edit))
     for name,change in registers.items():
-        value=snapshot[name] if name in ('rip','rflags') else snapshot['general'][name]
+        value=snapshot[name] if name in (ip_name(snapshot),flags_name(snapshot)) else snapshot['general'][name]
         if int(value,16)!=integer(change['expected']):raise ValueError('Native state register expected value mismatch: '+name)
-        if name=='rip':checked_runtime_rip(debug,integer(change['value']))
+        if name in ('rip','eip'):checked_runtime_rip(debug,integer(change['value']))
     evidence={'memory':[],'registers':[],'target_execution_during_edits':False,'guest_services_running':True}
     try:
         for address,edit in plans:evidence['memory'].append(debug.write_memory(address,edit['data_hex'],expected_hex=edit['expected_hex']))
@@ -120,7 +121,7 @@ def apply_edits(debug,memory,registers):
             debug.call('setregs',{'values':{name:integer(change['value']) for name,change in registers.items()}})
             after=debug.registers()
             for name,change in registers.items():
-                value=after[name] if name in ('rip','rflags') else after['general'][name]
+                value=after[name] if name in (ip_name(after),flags_name(after)) else after['general'][name]
                 if int(value,16)!=integer(change['value']):raise DebuggerError('Native register readback mismatch')
                 evidence['registers'].append({'register':name,'before':hex(integer(change['expected'])),'after':value,'verified':True})
     except BaseException:
@@ -160,6 +161,10 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
             raise ValueError('PE native state max_bytes must be 1..2 GiB including manifest and sidecar')
         _file_name(name);self._layer_setup()
         if self._pending_exec:raise ValueError('Finish the pending execution-layer instruction before native capture')
+        if self.rpc.capabilities.get('keyboard'):
+            inputs=self.call('keyboard-state')
+            if inputs.get('pending') or inputs.get('held') or getattr(self,'_keyboard_leases',{}):
+                raise ValueError('Native checkpoint requires released keys and an empty input queue')
         directory=sidecar(self.project)
         if shutil.disk_usage(directory).free<2*1024**3:raise ValueError('Native VM capture requires at least 2 GiB of free space')
         if sum(p.stat().st_size for p in directory.glob('*.mig.gz'))>6*1024**3:raise ValueError('Project native checkpoints exceed 6 GiB budget')
@@ -216,7 +221,7 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
         options=[self.rpc.inputs[n]['path'] for n in ('qemu','kernel','initramfs')]
         self.rpc.close()
         try:
-            replacement=WineQemuRPC(*options,restore=path)
+            replacement=WineQemuRPC(*options,restore=path,memory_mib=document['metadata'].get('memory_mib',4096))
             try:
                 if any(replacement.inputs[n]['sha256']!=document['metadata']['runtime_inputs'][n]['sha256']
                        for n in ('qemu','kernel','initramfs')):
@@ -232,9 +237,14 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
                 'format','registers','native_sha256','native_size','storage','capture','target_paused','host_files_restored','derivation')}
             self.metadata.update(qemu_pid=self.rpc.process.pid,runtime_inputs=self.rpc.inputs,restored_from=artifact)
             self._load_state_host(document['host']);self._frame=None;self.mode_id+=1
+            changed=getattr(self,'_windows_invalidate_input_leases',None) or getattr(self,'_windows_state_changed',None)
+            if callable(changed):changed()
             registers=self.registers()
-            for name in ('rip','rflags','general','thread'):
+            for name in (ip_name(registers),flags_name(registers),'general','thread'):
                 if registers[name]!=document['metadata']['registers'][name]:raise DebuggerError('Native restored registers differ: '+name)
+            bits=getattr(self,'bits',64)
+            self.rpc.capabilities.update(bits=bits,architecture='x86-32' if bits==32 else 'x86-64')
+            self.metadata['capabilities']=self.rpc.capabilities
             result={'artifact':artifact,'sha256':row['sha256'],'registers':registers,'state':'stopped','native_size':document['machine_size']}
             with self.project.transaction(True):
                 self.project.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?',(json.dumps(self.metadata),self.run_id))

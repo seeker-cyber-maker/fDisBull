@@ -81,7 +81,41 @@ def encoded(value):
 
 
 def video_signature(metadata):
-    return {k:metadata[k] for k in ('width','height','source_bpp','double_width','double_height')}
+    result={k:metadata[k] for k in ('width','height','source_bpp','double_width','double_height')}
+    if metadata.get('coordinate_space')=='client-native-pixels' and metadata.get('backend'):
+        source=metadata.get('source_sha256')
+        if not isinstance(source,str) or not re.fullmatch('[0-9a-f]{64}',source):
+            raise ValueError('Windows scenes require their original source identity')
+        profile=metadata.get('runtime_profile')
+        if not isinstance(profile,str) or not profile:raise ValueError('Windows scenes require their runtime profile')
+        runtime=metadata.get('runtime_identity_sha256')
+        if not isinstance(runtime,str) or not re.fullmatch('[0-9a-f]{64}',runtime):
+            raise ValueError('Windows scenes require their runtime identity')
+        resources=metadata.get('resource_manifest_sha256')
+        if not isinstance(resources,str) or not re.fullmatch('[0-9a-f]{64}',resources):
+            raise ValueError('Windows scenes require their explicit resource identity')
+        result.update(backend=metadata['backend'],source_sha256=source,runtime_profile=profile,
+                      runtime_identity_sha256=runtime,resource_manifest_sha256=resources,
+                      coordinate_space='client-native-pixels')
+    if metadata.get('backend') in ('scummvm-agi','scummvm-gob'):
+        digest=metadata.get('resource_manifest_sha256')
+        layers=metadata.get('resource_layers_sha256')
+        if not isinstance(digest,str) or not re.fullmatch(r'[0-9a-f]{64}',digest):
+            raise ValueError('ScummVM scene requires a resource manifest identity')
+        if not isinstance(layers,str) or not re.fullmatch(r'[0-9a-f]{64}',layers):
+            raise ValueError('ScummVM scene requires a resource layer identity')
+        result.update(backend=metadata['backend'],resource_manifest_sha256=digest,resource_layers_sha256=layers)
+        if metadata['backend']=='scummvm-gob':
+            for key in ('script_loaded_sha256','script_decompressed_sha256','scummvm_sha256'):
+                value=metadata.get(key)
+                if not isinstance(value,str) or not re.fullmatch(r'[0-9a-f]{64}',value):
+                    raise ValueError('Gob scene requires loaded script and runtime identities')
+                result[key]=value
+            script=metadata.get('script')
+            if not isinstance(script,str) or not script:
+                raise ValueError('Gob scene requires a loaded script name')
+            result['script']=script.casefold()
+    return result
 
 
 def name(value):
@@ -434,9 +468,9 @@ class SceneSessionMixin:
 
     def scene_assert(self, scene, *, object=None, compact=False):return self.scene(scene).assert_current(object,compact=compact)
 
-    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
+    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None, slice_ms=100, compact=False):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
 
-    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
+    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, slice_ms=100, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
 
     def scene_wait(self, scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100, compact=False):
         return self.scene(scene).wait(object,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
@@ -474,7 +508,9 @@ class SceneHandle:
                     status='unavailable',complete=False,availability={},evidence=[],conflicts=[],handlers=[],run=d.run_id)
         reads=ObservationReads(d)
         try:
-            if d.call('session.status')['state']!='stopped':raise ValueError('Scene checks require a paused guest')
+            status=getattr(d,'status',None)
+            if (status() if callable(status) else d.call('session.status'))['state']!='stopped':
+                raise ValueError('Scene checks require a paused guest')
             specs=list(_predicates(doc))+[s['definition']['match'] for s in others]+([extra] if extra else [])
             coordinates=sorted(set().union(*(points(v) for v in specs)))
             if len(coordinates)>4096:raise ValueError('Combined scene checks exceed 4096 points')
@@ -591,6 +627,34 @@ class SceneHandle:
         if result['status']!='matched':raise SceneError(result)
         return result
 
+    def _advance(self, *, guest_ms, timeout_ms):
+        advance=getattr(self.session,'scene_advance',None)
+        if callable(advance):return advance(slice_ms=guest_ms,timeout_ms=timeout_ms)
+        hooks=getattr(self.session,'native_hooks_available',True)
+        if type(hooks) is not bool:raise ValueError('Session must declare Boolean native hook support')
+        return self.session.run(guest_ms=guest_ms,timeout_ms=timeout_ms,fast_forward=True,stop_on_hook=hooks)
+
+    def _elapsed_value(self,result):
+        return result.get('budget_elapsed_ms',result.get('guest_elapsed_ms',0))
+
+    def _elapsed(self,result,elapsed):
+        basis=getattr(self.session,'scene_time_basis','guest')
+        result.update(time_basis=basis,budget_elapsed_ms=elapsed)
+        if basis=='host':
+            result.pop('guest_elapsed_ms',None)
+            result['host_active_elapsed_ms']=elapsed
+        else:result['guest_elapsed_ms']=elapsed
+        return result
+
+    def _progress(self,stop):
+        value=stop.get('scene_elapsed_ms') if getattr(self.session,'scene_time_basis','guest')=='host' else stop.get('guest_elapsed_ms',0)
+        if type(value) not in (int,float) or value<0:raise ValueError('Backend did not report valid scene advancement')
+        return value
+
+    def _slice_complete(self,stop):
+        expected='slice' if getattr(self.session,'scene_time_basis','guest')=='host' else 'guest_time'
+        return stop.get('outcome')==expected and not stop.get('hook_hits')
+
     def _wait(self, object, predicate, *, guest_ms, timeout_ms, slice_ms):
         integer(guest_ms,1,120000);integer(timeout_ms,1,60000);integer(slice_ms,1,1000)
         started=time.monotonic();elapsed=0;polls=[];observer_stops=[]
@@ -602,18 +666,21 @@ class SceneHandle:
             polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),status=result['status']))
             remaining=timeout_ms-int((time.monotonic()-started)*1000)
             if result['status']=='matched' and remaining>0:
-                result.update(polls=polls,guest_elapsed_ms=elapsed,host_elapsed_ms=round((time.monotonic()-started)*1000,3))
+                result.update(polls=polls,host_elapsed_ms=round((time.monotonic()-started)*1000,3))
+                self._elapsed(result,elapsed)
                 return self._store(result)
             if result['status'] in ('ambiguous','unavailable','blocked') or elapsed>=guest_ms or remaining<=0 or len(polls)>=1000:
-                result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
+                result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls)
+                self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            stop=self.session.run(guest_ms=min(slice_ms,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
-            elapsed+=stop.get('guest_elapsed_ms',0)
+            stop=self._advance(guest_ms=max(1,int(min(slice_ms,guest_ms-elapsed))),timeout_ms=max(1,remaining))
+            elapsed+=self._progress(stop)
             if scene_observer_stop(self.session,stop):
                 observer_stops.append(self._observer_stop(stop,observer_stops[-1]['observation'] if observer_stops else None))
                 continue
-            if stop['outcome']!='guest_time' or stop.get('hook_hits'):
-                result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
+            if not self._slice_complete(stop):
+                result.update(status='stopped',complete=False,stop=stop,polls=polls)
+                self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
 
     @reply_option
@@ -626,15 +693,25 @@ class SceneHandle:
             return d.click(*point,button=spec.get('button','left'),hold_ms=spec.get('hold_ms',80),mode_id=frame['mode_id'],frame_id=frame['frame_id'])
         return getattr(d,'keyboard_'+spec['kind'])(**{k:v for k,v in spec.items() if k!='kind'})
 
-    @reply_option
-    def click(self, object, *, handle_popups=False, timeout_ms=None):
-        obj=self._object(object)
-        if obj['action']['kind']!='click':raise ValueError('Named click requires a mouse action')
-        return self.act(object,handle_popups=handle_popups,timeout_ms=timeout_ms)
+    def _input_failure(self,error,queued,handlers,**context):
+        observed=(error.result if isinstance(error,SceneError) else
+                  dict(status='input-unknown' if getattr(error,'input_receipt',None) is not None else 'observation-failed',complete=False,run=self.session.run_id,
+                       error_type=type(error).__name__,error=str(error)))
+        failed=dict(observed,scene_revision=self.revision,input=queued,handlers=handlers,
+                    outcome_observation=observed.get('observation'),**context)
+        return SceneError(self._store(failed,diagnostic=not isinstance(error,SceneError)))
 
     @reply_option
-    def act(self, object, *, handle_popups=False, timeout_ms=None):
+    def click(self, object, *, handle_popups=False, timeout_ms=None, slice_ms=100):
+        integer(slice_ms,1,1000)
+        obj=self._object(object)
+        if obj['action']['kind']!='click':raise ValueError('Named click requires a mouse action')
+        return self.act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,slice_ms=slice_ms)
+
+    @reply_option
+    def act(self, object, *, handle_popups=False, timeout_ms=None, slice_ms=100):
         if type(handle_popups) is not bool:raise ValueError('handle_popups must be boolean')
+        integer(slice_ms,1,1000)
         self.info=self.session.project.debug_scene_info(self.revision,version=self.session.version['id'])
         obj=self._object(object);handlers=[];elapsed=0
         if timeout_ms is not None:integer(timeout_ms,1,60000)
@@ -642,18 +719,32 @@ class SceneHandle:
         def budgets():
             host=int((deadline-time.monotonic())*1000);guest=obj['guest_ms']-elapsed
             if host<=0 or guest<=0:
-                result=dict(status='timeout',complete=False,scene_revision=self.revision,run=self.session.run_id,guest_elapsed_ms=elapsed)
+                result=dict(status='timeout',complete=False,scene_revision=self.revision,run=self.session.run_id)
+                self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            return dict(guest_ms=guest,timeout_ms=host)
+            return dict(guest_ms=max(1,int(guest)),timeout_ms=host,slice_ms=slice_ms)
         for _ in range(5):
             before=self._observe(object)
             if before['status']=='blocked' and handle_popups and len(before['handlers'])==1:
                 handler=next(h for h in self.info['definition']['handlers'] if h['name']==before['handlers'][0])
-                handlers.append(self._input(handler['action'],handler.get('point'),before['frame']))
+                checked_handler=self._store(before)
+                try:queued=self._input(handler['action'],handler.get('point'),before['frame'])
+                except Exception as error:
+                    unknown=getattr(error,'input_receipt',None)
+                    if unknown is not None:
+                        raise self._input_failure(error,unknown,handlers,handler_name=handler['name'],
+                            action_object=obj['id'],action_name=obj['name'],before_observation=checked_handler['observation']) from error
+                    raise
+                handlers.append(queued)
                 # Verify the popup's own postcondition without requiring its
                 # containing scene's main-match predicate during dismissal.
-                outcome=self._wait_outcome(handler['outcome'],baseline=before.get('baseline'),**budgets())
-                elapsed+=outcome.get('guest_elapsed_ms',0)
+                try:
+                    outcome=self._wait_outcome(handler['outcome'],baseline=before.get('baseline'),
+                                               dismissing_handler=handler['name'],**budgets())
+                except Exception as error:
+                    raise self._input_failure(error,queued,handlers,handler_name=handler['name'],
+                        action_object=obj['id'],action_name=obj['name'],before_observation=checked_handler['observation']) from error
+                elapsed+=self._elapsed_value(outcome)
                 handlers.append(outcome)
                 continue
             break
@@ -667,7 +758,9 @@ class SceneHandle:
         try:
             queued=self._input(obj['action'],obj['point'],before['frame'])
         except Exception as error:
-            before.update(status='input-rejected',complete=False,error=str(error))
+            unknown=getattr(error,'input_receipt',None)
+            before.update(status='input-unknown' if unknown is not None else 'input-rejected',complete=False,error=str(error))
+            if unknown is not None:before['input']=unknown
             raise SceneError(self._store(before,diagnostic=True)) from error
         # Postconditions describe the destination, so its pixels may no longer
         # match the containing scene. Observe only that explicit predicate.
@@ -677,19 +770,14 @@ class SceneHandle:
             # Preserve the single queued input even when its destination wait
             # fails. A later observation must never have to replay the action
             # to discover whether an input was submitted.
-            observed = (error.result if isinstance(error, SceneError) else
-                        dict(status='observation-failed', complete=False, run=self.session.run_id,
-                             error_type=type(error).__name__, error=str(error)))
-            failed=dict(observed,scene_revision=self.revision,action_object=obj['id'],
-                        action_name=obj['name'],before_observation=checked['observation'],
-                        input=queued,handlers=handlers,
-                        outcome_observation=observed.get('observation'))
-            raise SceneError(self._store(failed)) from error
-        outcome['guest_elapsed_ms']+=elapsed
+            raise self._input_failure(error,queued,handlers,action_object=obj['id'],
+                        action_name=obj['name'],before_observation=checked['observation']) from error
+        self._elapsed(outcome,self._elapsed_value(outcome)+elapsed)
         outcome.update(action_object=obj['id'],outcome_phase=obj.get('outcome_phase','unspecified'),before_observation=checked['observation'],input=queued,handlers=handlers)
         return self._store(outcome)
 
-    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):
+    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None, dismissing_handler=None, slice_ms=100):
+        integer(slice_ms,1,1000)
         started=time.monotonic();elapsed=0;polls=[];observer_stops=[]
         while True:
             result=self._observe(extra=predicate,baseline=baseline)
@@ -698,22 +786,31 @@ class SceneHandle:
                 result['observer_stop_count']=len(observer_stops)
             # A destination match is independent of the old scene name; keep
             # conflicts, absent captures and blocking modals as explicit failures.
-            ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable')
+            ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable','blocked')
+            # The handler being dismissed remains visible until its queued
+            # input executes. It must disappear before success, but must not
+            # prevent that execution. A different blocking modal still stops.
+            own_handler=(result['status']=='blocked' and dismissing_handler is not None
+                         and result.get('handlers')==[dismissing_handler])
             polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),matched=ok))
             remaining=timeout_ms-int((time.monotonic()-started)*1000)
             if ok and remaining>0:
-                result.update(status='matched',complete=True,polls=polls,guest_elapsed_ms=elapsed)
+                result.update(status='matched',complete=True,polls=polls)
+                self._elapsed(result,elapsed)
                 return result
-            if remaining<=0 or elapsed>=guest_ms or result['status'] in ('ambiguous','unavailable') or len(polls)>=1000:
-                result.update(status='timeout' if result['status'] in ('mismatch','matched','blocked') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
+            if (remaining<=0 or elapsed>=guest_ms or result['status'] in ('ambiguous','unavailable')
+                    or result['status']=='blocked' and not own_handler or len(polls)>=1000):
+                result.update(status='timeout' if result['status'] in ('mismatch','matched') else result['status'],complete=False,polls=polls)
+                self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
-            stop=self.session.run(guest_ms=min(100,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
-            elapsed+=stop.get('guest_elapsed_ms',0)
+            stop=self._advance(guest_ms=max(1,int(min(slice_ms,guest_ms-elapsed))),timeout_ms=max(1,remaining))
+            elapsed+=self._progress(stop)
             if scene_observer_stop(self.session,stop):
                 observer_stops.append(self._observer_stop(stop,observer_stops[-1]['observation'] if observer_stops else None))
                 continue
-            if stop['outcome']!='guest_time' or stop.get('hook_hits'):
-                result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
+            if not self._slice_complete(stop):
+                result.update(status='stopped',complete=False,stop=stop,polls=polls)
+                self._elapsed(result,elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
 
 

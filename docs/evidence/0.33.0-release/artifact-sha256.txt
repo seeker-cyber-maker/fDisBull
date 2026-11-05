@@ -1,0 +1,5 @@
+bbe570cc2c4580e85b7e64d8a12966e5c1df3be73cb75897264469de6d1c4d8d  fdisbull-0.33.0-py3-none-any.whl
+c1060a9ed5720dc391796ab544725de1708b3824a561e81a976e6fb94f4fc7cf  fdisbull-0.33.0-tool.zip
+4147f3bfe96dce72e6dce2d338075fe140b70ef4227aab58c87ce6935d0e8477  fdisbull-0.33.0.tar.gz
+dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46  fdisbull_player-0.33.0-py3-none-any.whl
+ebe95169b0371513d6f1dc61fd83cf5fb8a18ee38d61ddf44f3e66cac6d723a0  fdisbull_player-0.33.0.tar.gz

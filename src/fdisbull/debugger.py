@@ -77,17 +77,57 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
-                 spatial_mode=None, fair_play=False):
-        if self.meta['format'] == 'NE':
-            raise ValueError('NE currently supports static analysis only; DOS and PE64 launch backends cannot execute Win16 NE projects')
+                 spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None):
+        if dot_mode is not None:
+            if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
+            if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
+            window=dot_mode
+        if type(window) is not bool:raise ValueError('window must be boolean')
+        if memory_mib is not None:bounded(memory_mib,'memory_mib',16,8192)
+        if memory_mib is not None and (self.meta['format'] not in ('PE','NE')
+                or backend not in (None,'wine-qemu','wine-ne','ida-wine-qemu')):
+            raise ValueError('memory_mib is a Windows guest option')
+        if backend == 'scummvm-kyra':
+            if (any(x is not None for x in (kernel, initramfs, files, state, remote_server,
+                                           spatial_mode, language, platform)) or window or fair_play):
+                raise ValueError('ScummVM Kyra currently supports only headless EMC2 VM controls')
+            from .scummvm_kyra import ScummVMKyraSession
+            return ScummVMKyraSession(self, executable, game_dir, version=version, game_id=game_id,
+                                      boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
+        if backend == 'scummvm-gob':
+            if any(x is not None for x in (kernel, initramfs, files, state, remote_server, spatial_mode)) or window or fair_play:
+                raise ValueError('ScummVM Gob uses an explicit variant and headless VM controls without native launch options')
+            from .scummvm_gob import ScummVMGobSession
+            return ScummVMGobSession(self, executable, game_dir, version=version,
+                                     game_id=game_id or 'lit', language=language, platform=platform,
+                                     boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
+        if language is not None or platform is not None:
+            raise ValueError('language and platform require backend=scummvm-gob')
+        if backend == 'scummvm-agi':
+            if any(x is not None for x in (kernel, initramfs, files, state, remote_server, spatial_mode)) or window or fair_play:
+                raise ValueError('ScummVM AGI uses an explicit game_id and headless VM controls without native launch options')
+            from .scummvm_debugger import ScummVMAGISession
+            return ScummVMAGISession(self, executable, game_dir, version=version, game_id=game_id,
+                                    boot_timeout_ms=boot_timeout_ms, _on_spawn=_on_spawn)
+        if game_id is not None:
+            raise ValueError('game_id requires a ScummVM backend')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
-        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] == 'PE'):
+        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE')):
             raise ValueError('Spatial game policy currently requires native DOSBox')
+        if self.meta['format']=='NE':
+            if backend not in (None,'wine-qemu','wine-ne'):
+                raise ValueError('NE original programs require the Win16 Wine backend')
+            if kernel is None or initramfs is None:
+                raise ValueError('Win16 launch requires kernel and prepared Wine runtime')
+            if remote_server is not None:raise ValueError('Win16 does not use an IDA remote server')
+            from .win16_debugger import Win16DebugSession
+            return Win16DebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
         if type(window) is not bool:
             raise ValueError('window must be boolean')
-        if window and (backend not in (None, 'dosbox') or (backend is None and self.meta['format']=='PE')):
-            raise ValueError('window is supported only by the native DOSBox backend')
+        if window and backend not in (None,'dosbox','wine-qemu'):
+            raise ValueError('dot-mode requires native DOSBox or a Windows spectator backend')
         if backend=='qemu-machine':
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')
@@ -103,15 +143,15 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
                 raise ValueError('IDA launch requires kernel, prepared IDA initramfs and remote_server')
             from .ida_debugger import IDAPEDebugSession
             return IDAPEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,remote_server=remote_server)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,remote_server=remote_server,window=window,memory_mib=memory_mib)
         if remote_server is not None:
             raise ValueError('remote_server requires backend=ida-wine-qemu')
         if backend == 'wine-qemu' or (backend is None and self.meta['format']=='PE'):
             if kernel is None or initramfs is None:
-                raise ValueError('PE64 Wine/QEMU launch requires kernel and prepared initramfs')
+                raise ValueError('PE32/PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
@@ -160,7 +200,11 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         data = bytes(row['data'])
         if hashlib.sha256(data).hexdigest()!=row['sha256']:
             raise ValueError('Stored state hash mismatch')
-        if json.loads(row['metadata']).get('format')=='fdisbull-qemu-native-1':
+        metadata=json.loads(row['metadata'])
+        if metadata.get('format')=='scummvm-agi-native-slot-v1':
+            return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
+                    'metadata':metadata,'exact_vm_checkpoint':False}
+        if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -171,6 +215,8 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
     def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None,
                          backend=None,kernel=None,initramfs=None,boot_timeout_ms=240000,window=False):
         info = self.debug_state_info(artifact)
+        if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
+            raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):
@@ -263,10 +309,11 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
 
 class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+    native_hooks_available = True
     @property
     def script_operations(self):
-        from .debug_script import OPERATIONS
-        return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
+        from .debug_script import OPERATIONS, ENGINE_OPERATIONS
+        return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}-set(ENGINE_OPERATIONS)
 
     """One explicitly owned emulator; closing the project also closes sessions."""
     def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None,
@@ -303,7 +350,7 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
                          'runtime_profile':'real-normal-com-v1' if project.meta['format']=='COM' else 'real-normal-v1','game_dir':str(self.game_dir),'target':target,
                          'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment'],
-                         'window_requested':window}
+                         'window_requested':window,'native_hooks_available':self.native_hooks_available}
         try:
             self._prepare_launch_target(target, source_data)
             self.rpc = self._open_rpc(executable,self.game_dir)
@@ -427,7 +474,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         from .debug_semantics import contract
         result = self.call('session.status')
         return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata,
-                'semantics':contract(self.metadata.get('backend','dosbox'))}
+                'semantics':contract(self.metadata.get('backend','dosbox')),
+                'native_hooks_available':self.native_hooks_available}
 
     def _timing(self, enabled=None):
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):
@@ -548,30 +596,30 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
             "session": result,
         }
         evidence["hook_hits"] = hook_hits
-        if result and result.get("stop_reason", {}).get("address"):
-            result["stop_reason"]["project_address"] = self.project_address(
-                result["stop_reason"]["address"]
-            )
-        if result and result.get("stop_reason", {}).get("data_access"):
-            access = result["stop_reason"]["data_access"]
-            access["project_instruction"] = self.project_address(access["instruction"])
         from .debug_semantics import normalize_stop
 
         stopped_pc = None
-        if (
-            result
-            and result.get("stop_reason", {}).get("data_access")
-            and result.get("state") != "exited"
-        ):
+        stopped_registers = None
+        if result and result.get('state') != 'exited' and callable(getattr(self,'registers',None)):
             try:
-                registers = self.registers()
-                stopped_pc = {
-                    "space": "segmented",
-                    "segment": registers["segments"]["cs"],
-                    "offset": registers["instruction_pointer"],
-                }
+                stopped_registers = self.registers()
+                stopped_pc = {'space':'segmented',
+                    'segment':stopped_registers['segments']['cs'],
+                    'offset':stopped_registers['instruction_pointer']}
             except (DebuggerError, KeyError):
-                pass  # Preserve the stop evidence even if the post-stop PC is unavailable.
+                pass  # Preserve native evidence when the stopped context is unavailable.
+        real_mode = stopped_registers is not None and stopped_registers.get('cpu_mode') == 'real'
+        stop_reason = (result or {}).get('stop_reason', {})
+        if stop_reason.get('address'):
+            stop_reason['project_address'] = self.project_address(stop_reason['address']) if real_mode else None
+        if stop_reason.get('data_access'):
+            access = stop_reason['data_access']
+            access['project_instruction'] = (self.project_address(access['instruction'])
+                if access.get('cpu_mode')=='real' else None)
+            if access.get('cpu_mode')!='real':
+                access['source_mapping']='causing instruction mode unqualified for DOS source projection'
+        if stopped_registers is not None:
+            stop_reason['cpu_mode'] = stopped_registers.get('cpu_mode')
         evidence["stop"] = normalize_stop(
             self.metadata.get("backend", "dosbox"),
             (result or {}).get("stop_reason", {}),
@@ -593,11 +641,18 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
     def registers(self):
         result = self.call('state.get_registers')
         result.update(cs=result['segments']['cs'],ip=result['instruction_pointer'])
-        result['project_address'] = self.project_address({'space':'segmented',
+        # Protected-mode CS is a selector, never a DOS paragraph. The stopped
+        # CPU remains inspectable without inventing a static source address.
+        result['project_address'] = (self.project_address({'space':'segmented',
             'segment':result['segments']['cs'],'offset':result['instruction_pointer']})
+            if result.get('cpu_mode')=='real' else None)
+        if result.get('cpu_mode')!='real':
+            result['source_mapping']='unqualified protected/v86 selector; no DOS paragraph projection'
         return result
 
     def breakpoint(self, address, *, cs=None, access='x', length=1, view='static'):
+        if self.call('state.get_registers').get('cpu_mode')!='real':
+            raise ValueError('DOS source breakpoints require real mode; protected/v86 selectors need explicit runtime qualification')
         if view not in ('static','execute'):
             raise ValueError('Breakpoint view must be static or execute')
         if access not in ('x','r','w','rw'):
@@ -673,6 +728,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         return evidence
 
     def memory(self, address, *, cs=None, length=16):
+        if self.call('state.get_registers').get('cpu_mode')!='real':
+            raise ValueError('DOS source memory requires real mode; use an explicitly qualified runtime RAM binding')
         bounded(length,'length',1,65536)
         linear, _ = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
@@ -718,11 +775,13 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 raise ValueError('Run until queued keyboard input completes before saving a state')
         before = self._disk_manifest()
         layer_state = self._layer_state()
+        registers = self.registers()
+        if registers.get('cpu_mode') not in ('real','v86','protected'):
+            raise ValueError('Native project checkpoint has an unknown CPU mode')
+        if registers['cpu_mode']!='real' and (layer_state['active'] or layer_state.get('ram_applied')):
+            raise ValueError('Disable real-mode code layers before a protected/v86 checkpoint')
         if layer_state['active']:
             self.layers(layer_state['active'])
-        registers = self.registers()
-        if registers['cpu_mode']!='real':
-            raise ValueError('Native project checkpoints currently require real mode')
         with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'
             saved = self.call('state.save',{'path':str(path)})
@@ -734,7 +793,9 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         if before != self._disk_manifest():
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
-                    'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state}
+                    'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state,
+                    'checkpoint_scope':'full native machine; CPU mode/descriptor state belongs to the serializer',
+                    'register_verification':'exposed registers, CPU mode and observed address context'}
         if self.rpc.capabilities.get('frame_timeline'):
             metadata['frame_keys'] = saved.get('frame_keys', [])
         if hasattr(self,'_state_provenance'):
@@ -773,6 +834,10 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 raise ValueError('State compatibility mismatch: '+field)
         if metadata['disk_manifest'] != self._disk_manifest():
             raise ValueError('Mounted game files differ from state; restore the matching files first')
+        protected_snapshot=metadata['registers'].get('cpu_mode') in ('protected','v86')
+        saved_layers=metadata.get('code_layers',{})
+        if protected_snapshot and (saved_layers.get('active') or saved_layers.get('ram_applied')):
+            raise ValueError('Protected/v86 checkpoint cannot restore real-mode code layers')
         frame_keys = metadata.get('frame_keys', [])
         from .keyboard_input import KEYS
         if (not isinstance(frame_keys, list) or any(not isinstance(key, str) or key not in KEYS for key in frame_keys)
@@ -791,10 +856,15 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                     raise DebuggerError('Restored frame input ownership differs from saved state')
                 _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
                 registers = self.registers()
-                for field in ('general','segments','instruction_pointer','flags'):
+                for field in ('general','segments','instruction_pointer','flags','cpu_mode'):
                     if registers.get(field) != metadata['registers'].get(field):
                         raise DebuggerError('Restored CPU differs from saved state: '+field)
-                self._restore_layer_state(metadata.get('code_layers',{}))
+                if ('address_context' in metadata['registers']
+                        and registers.get('address_context')!=metadata['registers']['address_context']):
+                    raise DebuggerError('Restored CPU differs from saved state: address_context')
+                if protected_snapshot:
+                    self._layer_setup();self._layers=[];self._ram_base={};self._ram_applied={}
+                else:self._restore_layer_state(saved_layers)
             except BaseException:
                 self.close() # A partially failed native restore must never be resumed.
                 raise
@@ -802,6 +872,14 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                       framebuffer='invalidated_until_next_completed_frame')
         self._keyboard_leases={}
         self._invalidate_runtime_bindings()
+        self.metadata['execution_origin']='restored-full-native-checkpoint'
+        self.metadata['checkpoint_intervention']=metadata.get('derivation')
+        if metadata.get('derivation') is not None:self._state_provenance=metadata['derivation']
+        elif hasattr(self,'_state_provenance'):del self._state_provenance
+        result['intervention']={'kind':'full-native-checkpoint-restore',
+                                'edited_fork':metadata.get('derivation') is not None,
+                                'derivation':metadata.get('derivation'),
+                                'live_session_ram_edit':False,'host_files_restored':False}
         for key in ('delta_experiment', 'timeline_experiment'):
             self.metadata.pop(key, None)
             if metadata.get(key) is not None:
@@ -927,28 +1005,37 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                 metadata = dict(metadata, **{key: experiment})
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
-    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):
+    def frame_rgba(self, *, encoding='rgba-zstd'):
+        """Consume a completed frame in memory, without hooks or artifact writes.
+
+        This observes the current completed frame. It does not pause or advance
+        the guest; callers comparing observations should own a paused session.
+        """
+        from .screenshot_codecs import decode_frame_rgba, validate_encoding
+        capabilities = {} if encoding == 'png' else getattr(getattr(self, 'rpc', None), 'capabilities', {})
+        validate_encoding(encoding, capabilities)
+        result = self.call('video.screenshot', {'encoding': encoding}) if encoding != 'png' else self.call('video.screenshot')
+        return decode_frame_rgba(result)
+
+    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True, encoding='png'):
         from .screenshot_grid import validate_step
+        from .screenshot_codecs import validate_encoding
         _file_name(name)
         if type(grid) is not bool:
             raise ValueError('grid must be boolean')
         validate_step(grid_step)
-        return self._capture_with_hooks(lambda evidence:self._screenshot_capture(name,grid,grid_step,evidence),hooks=hooks)
+        capabilities = {} if encoding == 'png' else getattr(getattr(self, 'rpc', None), 'capabilities', {})
+        validate_encoding(encoding, capabilities)
+        return self._capture_with_hooks(lambda evidence:self._screenshot_capture(name,grid,grid_step,evidence,encoding),hooks=hooks)
 
-    def _screenshot_capture(self,name,grid,grid_step,hook_evidence):
-        result = self.call('video.screenshot')
+    def _screenshot_capture(self,name,grid,grid_step,hook_evidence,encoding='png'):
+        from .screenshot_codecs import decode_screenshot
+        result = self.call('video.screenshot', {'encoding': encoding}) if encoding != 'png' else self.call('video.screenshot')
         if hook_evidence and hook_evidence.get('require_fresh_frame'):
             before=hook_evidence['before_frame_id'];after=result.get('frame_id')
             if type(after) is not int or (before is not None and after<=before):
                 raise DebuggerError('Screenshot preparation did not produce a newly completed frame')
-        data = base64.b64decode(result.pop('png_base64'),validate=True)
-        if not data.startswith(b'\x89PNG\r\n\x1a\n') or hashlib.sha256(data).hexdigest()!=result['sha256']:
-            raise DebuggerError('Screenshot signature/hash mismatch')
-        from PIL import Image
-        with Image.open(io.BytesIO(data)) as image:
-            if image.size != (result['width'],result['height']):
-                raise DebuggerError('Screenshot dimensions differ from metadata')
-            image.verify()
+        data, result = decode_screenshot(result)
         if hook_evidence is not None:result['screenshot_hooks']=hook_evidence
         if not grid:
             return self._artifact(name,'screenshot',data,result)
@@ -977,7 +1064,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
         finally:
             self.call('trace.stop')
         for event in events:
-            event['project_address'] = self.project_address(event['address'])
+            event['project_address'] = (self.project_address(event['address'])
+                if event.get('cpu_mode')=='real' else None)
             if event['project_address'] is not None:
                 segment = int(event['address']['segment'],16)-self.runtime_load+self.dos['load_segment']
                 event['project_segmented_address'] = (f"{segment:04x}:{int(event['address']['offset'],16):04x}"
@@ -1058,6 +1146,64 @@ class DebugWorkspace:
     """Live session ownership for the existing foreground JSON-lines server."""
     def __init__(self):
         self.sessions = {}
+        self.async_runs = {}
+
+    def _async_result(self, run, operation, wait_ms=0):
+        bounded(wait_ms,'wait_ms',0,1000)
+        job=self.async_runs.get(operation)
+        if job is None or job['run']!=run:raise ValueError('Unknown asynchronous run for this session')
+        complete=job['done'].wait(wait_ms/1000)
+        if complete:job['collected']=True
+        return {'run':run,'operation':operation,'complete':complete,
+                **({'result':job.get('result'),'error':job.get('error')} if complete else {'state':'running'})}
+
+    def _start_async(self, session, params):
+        import inspect
+        import threading
+        if session.metadata.get('backend') not in ('scummvm-agi','scummvm-gob'):
+            raise ValueError('Asynchronous foreground runs currently require a ScummVM engine backend')
+        if any(j['run']==session.run_id and not j['done'].is_set() for j in self.async_runs.values()):
+            raise ValueError('This session already has an asynchronous run')
+        if len(self.async_runs)>=64:
+            retired=next((key for key,value in self.async_runs.items()
+                          if value['done'].is_set() and value.get('collected')),None)
+            if retired is None:raise ValueError('Collect completed asynchronous runs before starting another operation')
+            del self.async_runs[retired]
+        inspect.signature(session.run).bind(**params)
+        operation=uuid.uuid4().hex
+        job={'run':session.run_id,'done':threading.Event()}
+        self.async_runs[operation]=job
+        def execute():
+            try:
+                job['result']=session.run(**params)
+                session._event('async-run-complete',{'operation':operation,'result':job['result']})
+            except Exception as error:
+                job['error']={'type':type(error).__name__,'message':str(error)}
+                try:session._event('async-run-failed',{'operation':operation,'error':job['error']})
+                except Exception as event_error:job['error']['receipt_error']=str(event_error)
+            finally:job['done'].set()
+        job['thread']=threading.Thread(target=execute,name='fdisbull-scummvm-run',daemon=True)
+        try:job['thread'].start()
+        except BaseException:
+            del self.async_runs[operation]
+            raise
+        # Wait only for dispatch, not the bounded native run. This lets the
+        # foreground server accept a subsequent pause request immediately.
+        deadline=time.monotonic()+1
+        with session._run_condition:
+            while not session._run_sent and not job['done'].is_set():
+                remaining=deadline-time.monotonic()
+                if remaining<=0:break
+                session._run_condition.wait(remaining)
+        return self._async_result(session.run_id,operation)
+
+    def _join_async(self, run):
+        for operation,job in list(self.async_runs.items()):
+            if job['run']==run:
+                job['thread'].join(timeout=5)
+                if job['thread'].is_alive():
+                    raise DebuggerError('Engine closed but its asynchronous operation has not finished')
+                del self.async_runs[operation]
 
     def invoke(self, method, project, params):
         from .project import Project
@@ -1074,7 +1220,22 @@ class DebugWorkspace:
         session = self.sessions.get(run)
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
-        methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+        if method=='debug-run-result':
+            return self._async_result(run,**params)
+        pending=any(j['run']==run and not j['done'].is_set() for j in self.async_runs.values())
+        if pending and method not in ('debug-status','debug-pause','debug-stop'):
+            raise ValueError('Pause or collect the outstanding asynchronous run before another operation')
+        if method=='debug-run-async':
+            return self._start_async(session,params)
+        methods = {'debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
+                   'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
+                   'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
+                   'debug-hotspot-events':'hotspot_events',
+                   'debug-step':'step','debug-watchpoint':'watchpoint','debug-delete-watchpoint':'delete_watchpoint',
+                   'debug-resource':'resource_info',
+                   'debug-read-resource':'resource','debug-patch-resource':'patch_resource','debug-engine-cycle':'run_until_cycle',
+                   'debug-restore-resource':'restore_resource',
                    'debug-keyboard-press':'keyboard_press','debug-keyboard-type':'keyboard_type','debug-keyboard-state':'keyboard_state',
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-screenshot-hooks':'screenshot_hooks',
@@ -1100,7 +1261,7 @@ class DebugWorkspace:
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
                         'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
-                        'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
+                        'debug-runtime-memory':'runtime_memory','debug-write-runtime-memory':'write_runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})
@@ -1109,6 +1270,7 @@ class DebugWorkspace:
             if params:
                 raise ValueError('Unexpected stop options')
             session.close()
+            self._join_async(run)
             session.project.__exit__()
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
@@ -1121,6 +1283,7 @@ class DebugWorkspace:
         for session in self.sessions.values():
             try:
                 session.close()
+                self._join_async(session.run_id)
             finally:
                 session.project.__exit__()
         self.sessions.clear()

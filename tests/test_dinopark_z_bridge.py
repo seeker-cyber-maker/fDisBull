@@ -102,7 +102,7 @@ def test_known_modal_exposes_handler_without_background_or_hidden_routes(tmp_pat
     backend.text.describe=obscured
     backend.text.park_opened=True;backend.text.notice_outcome_unknown=False
     backend.text.project=object();backend.text.patterns={'quarter_popup':'known','parking_hint':'other'}
-    profile=SimpleNamespace(take_frame=lambda *args:({},object()), matches=lambda image,p:p=='known')
+    profile=SimpleNamespace(observe_frame=lambda *args:({},object()), matches=lambda image,p:p=='known')
     monkeypatch.setattr(bridge,'load_scenes',lambda:profile)
     obs=backend.observe()
     assert obs['complete'] and obs['context']['id']=='park.quarter-notice'
@@ -131,6 +131,8 @@ def test_promoted_profiles_and_adapter_edits_keep_provenance():
     expected=provenance.get('adapted_text_scene_class_source_sha256',
                             provenance['native_text_scene_class_source_sha256'])
     assert hashlib.sha256(original_class.encode()).hexdigest()==expected
+    observation=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='observe_frame')
+    assert hashlib.sha256(ast.get_source_segment(source,observation).encode()).hexdigest()==provenance['direct_scene_observation_helper_source_sha256']
     assert hashlib.sha256((data.parent/'dinopark_purchase.py').read_bytes()).hexdigest()==provenance['bounded_purchase_helper_source_sha256']
 
 

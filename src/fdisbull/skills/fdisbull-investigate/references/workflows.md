@@ -23,7 +23,7 @@ emulator, target executable, game files, saved states or project databases.
 | Unpack an owned local GOG Inno Setup installer | `gog-list`, then `gog-unpack INSTALLER NEW_PRIVATE_DIRECTORY` | Native external innoextract reads payloads without Wine or running the installer; listing and hash manifests do not prove game execution or loader support. See `docs/GOG_UNPACKING.md`. |
 | Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
 | Inspect a qualified raw Z-machine v3 story | `zmachine-disasm STORY`, `zmachine-analyze STORY` | Bounded source instruction facts, separate from the generic Z scene interface. Retain unresolved calls, overlaps and worklist frontiers; a drained graph is not whole-game coverage. No native-to-guest mapping or guest project persistence is implied. |
-| Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
+| Observe actual DOS, PE32/PE64/NE or macOS behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
 | Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
 | Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
 | Run an authored text slice | `python -m fdisbull_player --package FILE` | The independent player evaluates the declared slice; this does not emulate or recover the source game. |
@@ -146,6 +146,22 @@ For a rebuilt DOS backend advertising `lifecycle.dos_guest_exit`, a
 resident. Record target registers before exit because DOS has restored the
 parent context at this boundary. A legacy `program_exit` on debugger closure,
 a pause outside the image, or an exit interrupt alone is not this evidence.
+
+For macOS ARM64, `macos-observe` runs a source-bound executable to one LLDB
+breakpoint. On macOS 14+, `macos-snapshot` inspects displays and target
+accessibility without input, while `macos-session` journals bounded captures
+using CoreGraphics global logical coordinates; `--live` is limited to declared
+status-menu or `CFPreferences` trials, and `macos-session-recover` restores owned
+pending changes. See `docs/MACOS_REVERSIBLE_CAPTURE.md`.
+
+Windows scenes and spectator mode use original PE32 and NE process widths and
+observed address bindings. Shared keyboard, native `frame-probe` and named scenes
+use host-time slices, not DOS guest ticks. `--dot-mode` or `dot_mode=True` exposes
+an owned read-only loopback viewer refreshed at stops; it never forwards host
+input. Query `debug-spectator` for its URL. Missing-client-window capture is
+recoverable; exceptions interrupt a scene and retain queued input without replay.
+NE logical segments require live source/selector verification; native NE states,
+deltas and layers remain unavailable. See `docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md`.
 
 ## Scenes, maps and movement
 

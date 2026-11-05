@@ -1,0 +1,36 @@
+{
+  "all_aborted_trials_retained_privately": true,
+  "automatic_replay_of_uncertain_actions": false,
+  "items": [
+    {
+      "detail": "x+160 met the narrow predicate but lay outside fixed three-column lookup. Original return 0; corrected model retains asymmetry.",
+      "id": "DV-F1",
+      "kind": "model counterexample"
+    },
+    {
+      "detail": "First vehicle adapter sampled a timer selector after elapsed-time wait, held incomplete, then the operator restored the baseline. Final adapter observes original input-loop entry.",
+      "id": "DV-F2",
+      "kind": "observer boundary"
+    },
+    {
+      "detail": "A later two-agent trial stopped after a successful elapsed-time teleport in another selector context. Final opt-in profile uses the same qualified input-loop entry for teleport settlement.",
+      "id": "DV-F3",
+      "kind": "teleport boundary"
+    },
+    {
+      "detail": "Deleting an already-fired one-shot breakpoint returned BREAKPOINT_NOT_FOUND. One trial was held incomplete; final code admits only that explicit expected cleanup result and preserves other errors.",
+      "id": "DV-F4",
+      "kind": "cleanup interpretation"
+    },
+    {
+      "detail": "Keyboard 2 did not produce the required second actor at the original producer. Trial was refused before vehicle hit-test replacement and restored. Later trials explicitly prepared the source-bound selected-agent field.",
+      "id": "DV-F5",
+      "kind": "selection preparation"
+    },
+    {
+      "detail": "An exploratory portrait/camera input script wrote coordinates before noticing an already-pending flag. Baseline was restored before vehicle tests. Final interaction profile preflights all fields before the first write.",
+      "id": "DV-F6",
+      "kind": "early diagnostic input preflight"
+    }
+  ]
+}

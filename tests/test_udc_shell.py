@@ -4,12 +4,156 @@ import json
 import os
 from pathlib import Path
 import struct
+import time
 
 import lief
 import pytest
 
 from fdisbull.project import Project
 from fdisbull.udc_shell import BASE, FORMAT, build_windows_shell
+from fdisbull.operation_budget import deadline_scope
+from fdisbull.windows_ui import WindowsCaptureUnavailable
+
+
+def notification_frame(debug, name, *, timeout_ms=60000, max_polls=60):
+    """Wait for this stopped program's client, without replaying launch/input."""
+    if (type(timeout_ms) is not int or not 1 <= timeout_ms <= 60000
+            or type(max_polls) is not int or not 1 <= max_polls <= 60):
+        raise ValueError('Notification wait requires at most 60000ms and 60 polls')
+    deadline = time.monotonic() + timeout_ms / 1000
+    with deadline_scope(debug, deadline):
+        deadline = debug._rpc_deadline
+        for poll in range(max_polls):
+            if time.monotonic() >= deadline:
+                break
+            try:
+                frame = debug.screenshot(name)
+            except WindowsCaptureUnavailable as error:
+                if error.capture_receipt.get('reason') != 'no-visible-client-window':
+                    raise
+            else:
+                if time.monotonic() >= deadline:
+                    break
+                return frame
+            remaining = int((deadline - time.monotonic()) * 1000)
+            if remaining <= 0 or poll + 1 == max_polls:
+                break
+            advanced = debug.scene_advance(slice_ms=min(1000, remaining), timeout_ms=remaining)
+            assert advanced['outcome'] == 'slice', advanced
+    raise TimeoutError('Notification client did not become capturable within the bounded wait')
+
+
+class _NotificationProbe:
+    """Deterministic native-boundary stand-in; no program or emulator runs."""
+    def __init__(self, monkeypatch, captures=(), *, stop='slice', step_seconds=None):
+        from types import SimpleNamespace
+        self.clock = 10.0
+        monkeypatch.setitem(globals(), 'time', SimpleNamespace(monotonic=lambda: self.clock))
+        self.captures = list(captures)
+        self.stop = stop
+        self.step_seconds = step_seconds
+        self.calls = []
+        self._rpc_deadline = 200.0
+        self._rpc_timeout_cap_ms = 9000
+        self._rpc_admission_ms = 2000
+        self._rpc_cleanup_grace_ms = 3000
+        self.original_budget = self.budget()
+
+    def budget(self):
+        return tuple(getattr(self, name) for name in
+                     ('_rpc_deadline', '_rpc_timeout_cap_ms', '_rpc_admission_ms', '_rpc_cleanup_grace_ms'))
+
+    def screenshot(self, name):
+        self.calls.append(('capture', name, self._rpc_deadline))
+        value = self.captures.pop(0) if self.captures else WindowsCaptureUnavailable(
+            {'available': False, 'reason': 'no-visible-client-window'})
+        if isinstance(value, Exception):
+            raise value
+        if callable(value):
+            return value()
+        return value
+
+    def scene_advance(self, *, slice_ms, timeout_ms):
+        self.calls.append(('advance', slice_ms, timeout_ms))
+        assert 0 < slice_ms <= 1000 and slice_ms <= timeout_ms
+        self.clock += slice_ms / 1000 if self.step_seconds is None else self.step_seconds
+        return {'outcome': self.stop}
+
+
+@pytest.mark.parametrize('unavailable_count', [0, 2])
+def test_notification_frame_observes_actual_capture_and_restores_budget(monkeypatch, unavailable_count):
+    frame = {'artifact': 'authored-frame', 'metadata': {'width': 200, 'height': 100}}
+    missing = WindowsCaptureUnavailable({'available': False, 'reason': 'no-visible-client-window'})
+    debug = _NotificationProbe(monkeypatch, [missing] * unavailable_count + [frame])
+    assert notification_frame(debug, 'outcome.png') is frame
+    assert len([call for call in debug.calls if call[0] == 'capture']) == unavailable_count + 1
+    advances = [call for call in debug.calls if call[0] == 'advance']
+    assert len(advances) == unavailable_count
+    assert all(call[2] == 70.0 for call in debug.calls if call[0] == 'capture')
+    if advances:
+        assert advances == [('advance', 1000, 60000), ('advance', 1000, 59000)]
+    assert debug.budget() == debug.original_budget
+
+
+def test_notification_frame_exhausts_shared_deadline_without_more_dispatch(monkeypatch):
+    debug = _NotificationProbe(monkeypatch)
+    with pytest.raises(TimeoutError, match='bounded wait'):
+        notification_frame(debug, 'outcome.png', timeout_ms=2500)
+    assert [call for call in debug.calls if call[0] == 'advance'] == [
+        ('advance', 1000, 2500), ('advance', 1000, 1500), ('advance', 500, 500)]
+    assert len([call for call in debug.calls if call[0] == 'capture']) == 3
+    assert debug.clock == 12.5 and debug.budget() == debug.original_budget
+
+
+def test_notification_frame_poll_limit_refuses_even_without_clock_progress(monkeypatch):
+    debug = _NotificationProbe(monkeypatch, step_seconds=0)
+    with pytest.raises(TimeoutError, match='bounded wait'):
+        notification_frame(debug, 'outcome.png', max_polls=3)
+    assert len([call for call in debug.calls if call[0] == 'capture']) == 3
+    assert len([call for call in debug.calls if call[0] == 'advance']) == 2
+    assert debug.budget() == debug.original_budget
+
+
+@pytest.mark.parametrize('stop', ['exited', 'breakpoint', 'watchpoint', 'error'])
+def test_notification_frame_never_hides_exit_or_unexpected_stop(monkeypatch, stop):
+    debug = _NotificationProbe(monkeypatch, stop=stop)
+    with pytest.raises(AssertionError, match=stop):
+        notification_frame(debug, 'outcome.png')
+    assert [call[0] for call in debug.calls] == ['capture', 'advance']
+    assert debug.budget() == debug.original_budget
+
+
+@pytest.mark.parametrize('error', [
+    WindowsCaptureUnavailable({'available': False, 'reason': 'capture-failed'}),
+    RuntimeError('authored backend failure'), TimeoutError('authored RPC failure')])
+def test_notification_frame_propagates_other_capture_and_backend_errors(monkeypatch, error):
+    debug = _NotificationProbe(monkeypatch, [error])
+    with pytest.raises(type(error)) as caught:
+        notification_frame(debug, 'outcome.png')
+    assert caught.value is error and [call[0] for call in debug.calls] == ['capture']
+    assert debug.budget() == debug.original_budget
+
+
+def test_notification_frame_rejects_capture_that_finishes_after_deadline(monkeypatch):
+    debug = _NotificationProbe(monkeypatch)
+    def late_capture():
+        debug.clock += 2
+        return {'artifact': 'late-frame'}
+    debug.captures = [late_capture]
+    with pytest.raises(TimeoutError, match='bounded wait'):
+        notification_frame(debug, 'outcome.png', timeout_ms=1000)
+    assert [call[0] for call in debug.calls] == ['capture']
+    assert debug.budget() == debug.original_budget
+
+
+def test_notification_frame_honors_an_earlier_outer_deadline(monkeypatch):
+    debug = _NotificationProbe(monkeypatch)
+    debug._rpc_deadline = 10.5
+    before = debug.budget()
+    with pytest.raises(TimeoutError, match='bounded wait'):
+        notification_frame(debug, 'outcome.png')
+    assert debug.calls == [('capture', 'outcome.png', 10.5), ('advance', 500, 500)]
+    assert debug.budget() == before
 
 
 def example(steps=3):
@@ -213,7 +357,7 @@ def test_real_native_windows_calls_state_loop_atomicity_and_notification(tmp_pat
             if status == 0:
                 debug.delete_breakpoint(bp['breakpoint_id'])
                 assert debug.run(timeout_ms=2000)['outcome'] == 'timeout'
-                frame = debug.screenshot('outcome.png')
+                frame = notification_frame(debug, 'outcome.png')
                 assert frame['metadata']['width'] > 20 and frame['metadata']['height'] > 20
                 exit_bp = debug.breakpoint(BASE + build['slots']['entry']['rva'] + 23)
                 debug.click(frame['metadata']['width'] // 2, frame['metadata']['height'] - 14,

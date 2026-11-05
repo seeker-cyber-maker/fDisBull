@@ -1,5 +1,30 @@
 # DinoPark scenes through the original-backed UDC
 
+The [November 3 interruption handoff](agent-handoffs/2026-11-03-dinopark-interruption.md)
+records merged delivery, expired native sessions, preserved evidence, fresh tests
+and the narrowed Coelophysis presentation issue. Earlier live-provider statements
+below describe their dated acceptance runs; they do not reconnect an exited guest.
+
+The [direct indexed-PNG scene-check follow-up](VERIFICATION-DINOPARK-INDEXED-SCENE-CHECKS-2026-11-03.md)
+uses transient native pixels for selected image-only checks while preserving
+durable publication/recovery captures and the existing sparse native predicates.
+Luna's fresh Office/Bank/Street comparison records exact pixels and a 12–21%
+reduction in complete view-check median latency; other gameplay branches retain
+their separate qualification boundaries.
+
+The [installed closing-popup hotfix check](VERIFICATION-DINOPARK-INSTALLED-SHUTDOWN-2026-11-03.md)
+records eight muted entry/title process lifecycles using the installed local
+host change, separate from the source checkout and screenshot benchmark. No
+closing popup was reproduced in those starts/shutdowns; the record preserves
+the first harness correction and a concurrent crash from an unowned process.
+
+The [source popup-hotfix follow-up](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md)
+integrates that headless launch setting and qualifies four source-client
+shutdowns after original native-save loading and observed park operation.
+It also identifies the concurrent PID 63534 crash as a TFTD shell-cleanup
+exception, retaining the distinction between the proven abort path and its
+unproven underlying corrupted state.
+
 The [return-to-park recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md) retains the original return input under a shared deadline and adds guest-read-only Park reconciliation, including retry after host scene publication or witness failure. A source-bound native-save case qualifies normal return, repeated read-only recovery and all 97 probes armed; fresh-load first-scene publication is included.
 
 The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts, including the earlier unknown return, remain preserved.

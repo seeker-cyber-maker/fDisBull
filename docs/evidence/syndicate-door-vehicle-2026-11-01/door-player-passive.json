@@ -1,0 +1,94 @@
+{
+  "after_counts": {
+    "agent": 4,
+    "civilian": 2,
+    "door": 4,
+    "guard": 4,
+    "tree": 11,
+    "vehicle": 1,
+    "weapon": 10,
+    "window-closed-class": 7,
+    "window-open-class": 1
+  },
+  "before_counts": {
+    "agent": 4,
+    "civilian": 2,
+    "door": 4,
+    "guard": 4,
+    "tree": 11,
+    "vehicle": 1,
+    "weapon": 10,
+    "window-closed-class": 7,
+    "window-open-class": 1
+  },
+  "door_id": "object-3",
+  "door_state": "open",
+  "observations": [
+    {
+      "after_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "before_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "command": "examine doors",
+      "reply": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "4 registered door entities in this entire mission snapshot, not a visible/alive count. Nearest other: object-3 at (64.375, 32.875, z=2); XY straight-line distance 0.637 tiles. Route not verified. Source door subtypes 12/13/14/15 mean closed/opening/open/closing. Animation state does not certify collision clearance or a car-gate relationship.",
+        "status": "read"
+      },
+      "unchanged_revision": 1326
+    },
+    {
+      "after_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "before_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "command": "examine door 3",
+      "reply": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "object-3: door; position [64.375, 32.875, 2.0]; health raw 40; status/class byte 14. Door state: open. Collision passage is not inferred solely from animation or subtype. ",
+        "status": "read"
+      },
+      "unchanged_revision": 1326
+    },
+    {
+      "after_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "before_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "command": "examine map",
+      "reply": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Local map / ASCII overlay 096c83e5443bfc2d; z-layer=2; cell=1 tile\norigin_raw=(11264,6144) raw_step=256; display only; y increases downward\nfocus=person-0 raw=[16512, 8576, 256] world=(64.5, 33.5, 2)\n     00000000001111111111222222222233333333334\n     01234567890123456789012345678901234567890\n00 | .......................?????..?.?.???????\n01 | ..................................???????\n02 | .............................?.?..??????.\n03 | ..................?????...........??????.\n04 | ..................?...?...........??????.\n05 | ..................?...?...........??????.\n06 | ..................?.!.?...???????....???.\n07 | ..................?...?...?.....?....???.\n08 | ..................??+??...?...g.???..???.\n09 | ................?...@.....???+???....???.\n10 | .....?...............................???.\n11 | ................v....................???.\n12 | .......................????..........???.\n13 | .......................?..?...?...?..???.\n14 | .......................?..?..........???.\n15 | ..........................?.........????.\n16 | .......................?..?g.............\n17 | .......................????...?...?.????.\n18 | .....................................???.\n@ focus  A agent  c civilian  p police  g guard  v car  + door  ! target\nt tree  w window-class  i loose item  * stacked entities  : candidate route\n. candidate terrain  ? excluded/unresolved; neither is a walking certificate\nENTITY KEY: overlay | ID | exact world XYZ | raw XYZ | sub-tile raw XYZ\nr09c29 + object-2: (73.40625, 33.84375, 2) raw=[18792, 8664, 256] sub=[104, 216, 0]\nr08c20 + object-3: (64.375, 32.875, 2) raw=[16480, 8416, 256] sub=[96, 224, 0]\nr09c20 @ person-0: (64.5, 33.5, 2) raw=[16512, 8576, 256] sub=[128, 128, 0]\nr08c30 g person-10: (74.75, 32.25, 2) raw=[19136, 8256, 256] sub=[192, 64, 0]\nr16c27 g person-11: (71.25, 40.25, 2) raw=[18240, 10304, 256] sub=[64, 64, 0]\nr06c20 ! person-8: (64.25, 30.75, 2) raw=[16448, 7872, 256] sub=[64, 192, 0]\nr11c16 v vehicle-0: (60.53125, 35.71875, 2) raw=[15496, 9144, 256] sub=[136, 184, 0]\n10 owned item records omitted from glyphs, retained in scene/inventory records.\nScope: global diagnostic snapshot, not line-of-sight visibility.\nMission map: 128 x 96 tiles, 12 height layers. Coordinates are world tiles, not screen pixels. Conditional flat-surface graph does not qualify doors, slopes, dynamic collisions, line-of-sight or a walked route. Consult mission-map.html.",
+        "status": "read"
+      },
+      "unchanged_revision": 1326
+    },
+    {
+      "after_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "before_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "command": "examine car",
+      "reply": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 4.547 tiles. Route not verified. vehicle-0 occupants: none recorded. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read"
+      },
+      "unchanged_revision": 1326
+    },
+    {
+      "after_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "before_sha256": "72847d79241f8490852fe5d8d841edacdce384d5a84f0e6a7cec5cdec69ce1c4",
+      "command": "examine team",
+      "reply": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "person-0: (64.500, 33.500, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-1: (91.484, 41.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read"
+      },
+      "unchanged_revision": 1326
+    }
+  ],
+  "passed": true
+}

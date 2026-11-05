@@ -261,7 +261,9 @@ def load_ne(data: bytes, *, entry: int | None = None, module: bool = False) -> I
         exports.extend(dict(item, name=r['name'], source=r['source']) for r in labels)
 
     resources = []
-    if word(36):
+    # A linker may express an empty resource table as the next table's
+    # boundary. In particular Open Watcom uses the resident-name offset.
+    if word(36) and word(36) != word(38):
         resource_start = relative(word(36), 2, 'resource table')
         resource_end, cursor = bound(word(36)), resource_start
         shift = struct.unpack_from('<H', data, cursor)[0]; cursor += 2

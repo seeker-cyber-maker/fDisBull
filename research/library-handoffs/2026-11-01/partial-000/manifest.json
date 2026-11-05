@@ -1,0 +1,53 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_PARTIAL_HANDOFF_000_2026-11-01.zip",
+  "bytes": 8316,
+  "sha256": "930f177233c2ce9c3df81ac739a7d537acbe4b3bea0a8376d70ae36c1ef272b1",
+  "source_url": "https://chatgpt.com/space/file/libfile_b17b58cba3ac8191a0ed750555b0d94f",
+  "outer_members": 4,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 0,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "DELTA_000_BASELINE.md",
+      "bytes": 1189,
+      "sha256": "7be46ab6039f9812461426c535429a4468436cff7b0135e351f13db1d7938fdc",
+      "decision": "imported_exact",
+      "import_path": "historical-baseline.md",
+      "import_sha256": "7be46ab6039f9812461426c535429a4468436cff7b0135e351f13db1d7938fdc"
+    },
+    {
+      "path": "GITLAB_SNAPSHOT.json",
+      "bytes": 16741,
+      "sha256": "e5f9aa9432d9eae82600325d32b6d30f5ffafbb23bd0ad046af237acbd27a05e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "GITLAB_MR_INDEX.csv",
+      "bytes": 6318,
+      "sha256": "f808e2ad2b9b2a4b3c16de9cbb2b33e146af5cb69a2188f8be5a56915f95e5a5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "ACTION_CHECKLIST.md",
+      "bytes": 2286,
+      "sha256": "894b36c872991ec9846a059fdcb8efb311b8494bdfe511c629c5de3fcc429ee4",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    }
+  ],
+  "checksums": {},
+  "raw_gitlab_upload": {
+    "id": 1460793965,
+    "url": "/uploads/5f04cfb8f150dfef2f634e1a35102b35/fDisBull_PARTIAL_HANDOFF_000_2026-11-01.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

@@ -30,8 +30,8 @@ def test_dos_watch_does_not_infer_completion_from_the_stopped_pc():
 
 
 def test_fetch_trace_is_not_upgraded_to_completed_instructions():
-    events=[{'address':{'space':'segmented','segment':'0x1234','offset':'0x20'},'project_address':'0x10020','bytes':'90'},
-            {'address':{'space':'segmented','segment':'0x1234','offset':'0x21'},'project_address':'0x10021','bytes':'90'}]
+    events=[{'address':{'space':'segmented','segment':'0x1234','offset':'0x20'},'project_address':'0x10020','bytes':'90','cpu_mode':'real'},
+            {'address':{'space':'segmented','segment':'0x1234','offset':'0x21'},'project_address':'0x10021','bytes':'90','cpu_mode':'real'}]
     normalize_trace('dosbox',events,version=1,delta=0x2340,budget_reached=True)
     assert events[0]['observation']['instruction_completed'] is None
     assert events[1]['observation']['instruction_completed'] is False

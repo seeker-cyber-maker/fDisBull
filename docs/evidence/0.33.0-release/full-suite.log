@@ -1,0 +1,11 @@
+fDisBull 0.33.0 merged-tree full suite
+date: 2026-11-05
+source: 02669325f8c318901eeefe1d825eca21b3306c1b plus evidence commits
+host: macOS arm64, Python 3.13.14
+command: PYTHONPATH=/tmp/fdisbull-testshim:src:player python -m pytest -q
+result: 2 failed, 10,187 passed, 419 skipped, 23 errors, 2,322 subtests passed in 281.26s
+
+The two failures and 23 errors are the inherited Mach-O/ELF and macOS GCC
+Linux-ELF fixture limits reproduced on candidate c80bff03; see
+base-failure-reproduction.log. The earlier pre-merge raw run remains in
+full-suite-candidate.log.

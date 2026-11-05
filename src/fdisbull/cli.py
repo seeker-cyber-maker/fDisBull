@@ -21,16 +21,17 @@ AGENT_SKILL_GUIDES = {
     "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
     "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
-    "references/workflows.md": "Choose static analysis, native debugging, scene or text-player entry points",
+    "references/workflows.md": "Choose static analysis, native debugging, scene, media/ROM, guest-module or UIL/UDC entry points",
     "references/analysis-approach.md": "Choose what to analyze next using evidence, dependencies, information gain and cost",
-    "references/udl-uil-udc.md": "Qualify direct AGI components, source blocks, retained Zork IR, recovered intents and scene rules, and original-backed DOS compilation",
-    "references/common-uil.md": "Compose indexed typed UIL, semantic catalogs, recoverable blocks and standalone selected output",
+    "references/udl-uil-udc.md": "Qualify memory/desktop/Win16/web shells, console replay/synthesis, direct AGI/Zork profiles and DOS block layers",
+    "references/common-uil.md": "Compose indexed typed UIL, semantic catalogs, native modules/desktop shells and persistent packages",
     "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",
     "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
     "references/media-modules.md": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
+    "references/file-formats.md": "Identify file headers through SQLite format modules and frame native SMK2 with explicit decoder/runtime gates",
     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
-    "references/formats-and-media.md": "Qualify containers, executable mappings, release differences and valid media reduction",
+    "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
 }
@@ -57,6 +58,23 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    "debug-step": "Step native or engine instructions with the selected backend contract; run,[count,timeout_ms]",
+    "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
+    "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
+    "debug-engine-state": "Read paused engine VM state with its own address context; run",
+    "debug-write-engine-state": "Apply a checked engine state edit; run,kind,index,value,[expected,width,signed,endian]",
+    "debug-read-variable": "Read a typed engine variable at a byte offset; run,offset,[width,signed,endian]",
+    "debug-write-variable": "Write a typed engine variable with an optional expected value; run,offset,value,[width,signed,endian,expected]",
+    "debug-hotspot-events": "Read retained engine hotspot dispatch receipts; run",
+    "debug-watchpoint": "Watch a typed engine state location; run,kind,index",
+    "debug-delete-watchpoint": "Remove an engine watchpoint; run,watchpoint_id",
+    "debug-resource": "Read an engine resource identity and original source extent; run,kind,number",
+    "debug-read-resource": "Read source-bound loaded engine bytes; run,[logic,script,generation,offset,length] (parameters depend on backend)",
+    "debug-patch-resource": "Apply a checked reversible loaded-logic edit; run,logic,offset,expected_hex,data_hex",
+    "debug-engine-cycle": "Run to an explicit engine cycle boundary; run,[max_instructions,timeout_ms]",
+    "debug-restore-resource": "Restore retained original loaded-logic bytes after checking current identity; run,logic,[expected_fnv1a64]",
+    "debug-run-async": "Start one finite ScummVM run while keeping the foreground server responsive; run,[timeout_ms,guest_ms,max_instructions]",
+    "debug-run-result": "Read the result of an explicitly started asynchronous run; run,operation,[wait_ms]",
     "uil-check": "Validate indexed common UIL or a complete package; program,[presentation,catalog,orchestration] or package; no execution",
     "uil-catalog": "Compile a list of UDL descriptors into exact semantic groups; blocks; unsupported languages remain explicit",
     "uil-run": "Execute bounded indexed UIL with typed copies and planned effects; program,presentation,[catalog,orchestration,inputs,max_steps]",
@@ -79,7 +97,11 @@ METHODS = {
     "macos-session-recover": "Inspect and restore owned pending native session changes; output",
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
-    "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
+    "format-modules": "Discover format signatures, header fields and linked reader capabilities; [catalog_path]; no project required",
+    "intake-inventory": "Inventory one or many private input roots through the format catalog; paths,[catalog_path,max_files,max_read_bytes,max_binary_bytes]; no extraction or input execution",
+    "file-identify": "Identify executable/media headers and nested views with a bounded format registry; path,[catalog_path,max_binary_bytes]; no input execution",
+    "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
+    "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number,index_path]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
@@ -116,8 +138,9 @@ METHODS = {
     "debug-import-macros": "Import a matching source/version vocabulary envelope; envelope,[version,author]",
     "debug-macro": "Expand and execute a selected typed input macro; run,macro_set,name,[args,timeout_ms,allowed_authorities]",
     "debug-move": "Observe a bounded route with explicit controls, destination, progress and stop contracts; run,macro_set,start,stop,observations,until,progress,settle,[guest_ms,timeout_ms,scene,spatial_map,map_conditions,room_field,position,target,target_tolerance]",
-    "debug-bind-runtime-memory": "Qualify a session-local read-only DOS runtime view; run,name,address,length,expected_hex,provenance,[mask_hex]",
+    "debug-bind-runtime-memory": "Qualify explicit runtime RAM with a source witness and address context; run,name,address,length,expected_hex,provenance,[mask_hex,space]",
     "debug-runtime-memory": "Read a qualified runtime view; run,binding,[offset,length]",
+    "debug-write-runtime-memory": "Guard and verify a live RAM edit without save/load; run,binding,data_hex,expected_hex,[offset]",
     "debug-proof-check": "Persist a bounded model check with live run provenance; run,spec,[timeout_ms,author,evidence]",
     "debug-keyboard-down": "Queue make and return an owned physical key lease; run,key",
     "debug-keyboard-up": "Consume an owned lease and queue physical break; run,lease",
@@ -135,8 +158,8 @@ METHODS = {
     "debug-frame-probe": "Read at most 4096 RGB pixels from one native completed frame, without PNG transfer; run,points",
     "debug-scene-check": "Check scene identity and optional object availability; run,scene,[object,compact]",
     "debug-scene-assert": "Assert current scene/object or save a diagnostic snapshot; run,scene,[object,compact]",
-    "debug-scene-click": "Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups,compact]",
-    "debug-scene-act": "Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms,compact]",
+    "debug-scene-click": "Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups,timeout_ms,slice_ms,compact]",
+    "debug-scene-act": "Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms,slice_ms,compact]",
     "debug-scene-wait": "Wait on authored scene/object conditions with explicit budgets; run,scene,[object,guest_ms,timeout_ms,slice_ms,compact]",
     "capture-signature": "Capture a named closed stored function for cross-project reuse; address,name,[version,cs,author,max_instructions]",
     "import-signatures": "Atomically import an explicit signature catalog; catalog,[version]",
@@ -155,9 +178,9 @@ METHODS = {
     "debug-restore-experiment": "Restore native state, layers, breakpoints, watches and hook hit counts; run,experiment",
     "debug-compare-experiment": "Run baseline and an explicit layer stack, save differences and restore baseline; run,experiment,layers,[timeout_ms]",
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
-    "debug-pause": "Pause all vCPUs in the selected machine context; run,context=machine",
-    "debug-resume": "Resume the selected machine so guest services can run; run,context=machine",
-    "debug-launch": "Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,spatial_mode,fair_play]",
+    "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
+    "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
@@ -182,7 +205,7 @@ METHODS = {
     "debug-keyboard-type": "Queue 1..64 US-layout ASCII characters; run,text,[hold_ms,gap_ms]",
     "debug-keyboard-state": "Inspect queued guest keyboard events and owned keys; run",
     "debug-click-frame": "Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]",
-    "debug-screenshot": "Store an actual guest PNG with optional native-pixel grid and persistent DOS hooks; run,[name,grid,grid_step,hooks]",
+    "debug-screenshot": "Store an actual guest PNG with optional grid, DOS hooks and negotiated native encoding; run,[name,grid,grid_step,hooks,encoding]",
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
     "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",
@@ -487,6 +510,18 @@ def invoke(method, params, debugger=None):
         if p:
             raise ValueError("media-modules takes no parameters")
         return media_modules()
+    if method == "intake-inventory":
+        from .intake import intake_inventory
+
+        return intake_inventory(**p)
+    if method in ("format-modules", "file-identify"):
+        from .format_registry import format_catalog, identify_file
+
+        return (format_catalog if method == "format-modules" else identify_file)(**p)
+    if method == "smk-frame":
+        from .smacker import frame_smk
+
+        return frame_smk(**p)
     if method == "capture-audit":
         from .capture_audit import audit_capture
 
@@ -556,6 +591,8 @@ def invoke(method, params, debugger=None):
         limit = p.pop("max_instructions", 40 if method == "module-analyze" else 128)
         if method == "module-analyze":
             address = p.pop("address", None)
+            if p.get("function_index") is None:
+                p.pop("function_index", None)
             return analyze_input(registry.open(identity, path, **p),
                                  address=address, max_instructions=limit)
         state_file = p.pop("state_file", None)
@@ -922,6 +959,7 @@ def invoke(method, params, debugger=None):
             "debug-save-script",
             "debug-scripts",
             "debug-state-info",
+            "debug-anchor-stone-info",
             "debug-fork-state",
             "debug-layer",
             "debug-layer-info",
@@ -1187,6 +1225,10 @@ def respond(request, default_project=None, debugger=None):
                 "macos-session-recover",
                 "capabilities",
                 "media-modules",
+                "format-modules",
+                "intake-inventory",
+                "file-identify",
+                "smk-frame",
                 "media-inspect",
                 "media-extract",
                 "agent-skill",
@@ -1825,16 +1867,21 @@ def parser():
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
     c = sub.add_parser(
         "debug",
-        help="Launch a DOS or PE64 project and accept live debugger JSON commands on stdin",
+        help="Launch a project execution backend and accept live debugger JSON commands on stdin",
     )
     c.add_argument("project")
     c.add_argument("--executable", required=True)
     c.add_argument("--game-dir", required=True)
+    c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine"],
+        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
+                 "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
+    c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")
+    c.add_argument("--language", help="Explicit Gob language code, for example us (English US) or it")
+    c.add_argument("--platform", help="Explicit Gob game platform, for example dos")
     c.add_argument(
         "--remote-server",
         help="User-supplied IDA 9.4 win64_remote.exe (IDA backend only)",
@@ -1851,7 +1898,7 @@ def parser():
         "--window",
         dest="window",
         action="store_true",
-        help="Request dot-mode: a watch-only native DOSBox window (requires compatible backend and display)",
+        help="Request dot-mode: a watch-only DOSBox window or Windows spectator viewer; host input stays outside the guest",
     )
     c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"])
     c.add_argument(
@@ -1922,6 +1969,27 @@ def parser():
                 c.add_argument("name")
                 c.add_argument("script", type=json.loads, help="JSON script object")
     sub.add_parser("media-modules", help=METHODS["media-modules"])
+    c = sub.add_parser("format-modules", help=METHODS["format-modules"])
+    c.add_argument("--catalog", dest="catalog_path", help="Persist/reopen metadata-only SQLite format catalog")
+    c = sub.add_parser("intake-inventory", help=METHODS["intake-inventory"])
+    c.add_argument("paths", nargs="+", help="Explicit game/collection file or directory roots")
+    c.add_argument("--catalog", dest="catalog_path")
+    c.add_argument("--max-files", type=int, default=10000)
+    c.add_argument("--max-read-bytes", type=int, default=256 * 1024 * 1024)
+    c.add_argument("--max-binary-bytes", type=int, default=64 * 1024 * 1024)
+    c = sub.add_parser("file-identify", help=METHODS["file-identify"])
+    c.add_argument("path")
+    c.add_argument("--catalog", dest="catalog_path")
+    c.add_argument("--max-binary-bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument("--max-read-bytes", type=int)
+    c = sub.add_parser("smk-frame", help=METHODS["smk-frame"])
+    c.add_argument("path")
+    c.add_argument("output", help="New directory beneath an existing private parent outside Git")
+    c.add_argument("--keep-frames", type=int, default=32, help="Retain this many opening and ending images")
+    c.add_argument("--max-movie-bytes", dest="smk_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument("--ffmpeg", default="ffmpeg")
+    c.add_argument("--ffprobe", default="ffprobe")
+    c.add_argument("--timeout", type=float, default=120)
     c = sub.add_parser("capture-audit", help=METHODS["capture-audit"])
     c.add_argument(
         "inputs", nargs="+", help="Finalized AVI files; each keeps its own clock"
@@ -1961,9 +2029,14 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2"))
+        choices = ("mz-envelope", "agi-v2", "westwood-pak", "westwood-cps", "westwood-wsa", "westwood-emc2")
+        if name == "media-inspect":
+            choices = choices + ("smacker", "flic")
+        c.add_argument("--adapter", required=True, choices=choices)
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
+        if name == "media-inspect":
+            c.add_argument("--index-path", help="Explicit TFTD VID companion IDX for structural cross-check")
         if name == "media-extract":
             c.add_argument("output")
             c.add_argument("--member", required=True)
@@ -1982,13 +2055,13 @@ def parser():
         c.add_argument(
             "--include",
             action="append",
-            help="repeatable native innoextract path filter; list first",
+            help="repeatable native Inno 5.6.2 member filter; list first",
         )
         c.add_argument(
             "--timeout",
             type=int,
             default=300,
-            help="per-extractor-process timeout in seconds (1..3600)",
+            help="bounded native decoding deadline in seconds (1..3600)",
         )
     for name in ("identify", "inspect"):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2142,10 +2215,11 @@ def parser():
         c.add_argument("path")
         c.add_argument("--volume-dir")
         c.add_argument("--logic", type=int)
-        c.add_argument("--profile", choices=["2.917"])
+        c.add_argument("--profile", choices=["2.917", "kyrandia1-dos", "lol1-dos"])
         c.add_argument("--max-instructions", type=int, default=40 if name == "module-analyze" else 128)
         if name == "module-analyze":
             c.add_argument("--address", type=lambda s: int(s, 0))
+            c.add_argument("--function-index", type=int)
         else:
             c.add_argument("--state-file", required=True)
             c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
@@ -2991,6 +3065,8 @@ def _dispatch(args):
             return 1
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
+    if command == "smk-frame":
+        args["max_output_bytes"] = args.pop("smk_max_output_bytes")
     if command == "capture-audit":
         args["max_output_bytes"] = args.pop("capture_max_output_bytes")
     if command.startswith(("udc-", "udl-")) and not command.startswith("udc-native-"):

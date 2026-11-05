@@ -1,0 +1,347 @@
+{
+  "format": "colonization-difficulty-source-binding-research-1",
+  "edition": "WIN",
+  "new_cuts": {
+    "source_sha256": "ae7d9149f056766a534fe8f0006c9512aac1e1004e9776ab3cca818e4833b650",
+    "new_source_cuts": [
+      {
+        "name": "morale",
+        "range": [
+          57495,
+          57673
+        ],
+        "bytes": 178,
+        "instructions": 60,
+        "sha256": "299d985c857bca7507112ab6c84cf5e778d18bbe579edc1e6e276a7be271e49b",
+        "selector_fixups": [
+          {
+            "offset": 119,
+            "target_segment": 19
+          },
+          {
+            "offset": 69,
+            "target_segment": 19
+          },
+          {
+            "offset": 54,
+            "target_segment": 19
+          }
+        ]
+      },
+      {
+        "name": "food",
+        "range": [
+          51893,
+          52017
+        ],
+        "bytes": 124,
+        "instructions": 39,
+        "sha256": "431c529e610c0e8437be8d88dd0962113630fd4ed6ca5b8ac4febc1537299491",
+        "selector_fixups": [
+          {
+            "offset": 108,
+            "target_segment": 19
+          },
+          {
+            "offset": 87,
+            "target_segment": 19
+          }
+        ]
+      },
+      {
+        "name": "secondary",
+        "range": [
+          52320,
+          52337
+        ],
+        "bytes": 17,
+        "instructions": 5,
+        "sha256": "0b67ff0370893a624bbc40c86eb297f7be901e6718ea5cfd5b5f8ae978e7991e",
+        "selector_fixups": [
+          {
+            "offset": 1,
+            "target_segment": 19
+          }
+        ]
+      },
+      {
+        "name": "worker-path",
+        "range": [
+          57951,
+          58009
+        ],
+        "sha256": "d71d4e92a7895da45d6e676e37bb90166edf0eb89ecca8d1e171068bb3ffa33d"
+      },
+      {
+        "name": "worker-path",
+        "range": [
+          58091,
+          58131
+        ],
+        "sha256": "69352004f9cd134ccbddf097d784f220602827952f89854145e83fa4d3d61aad"
+      },
+      {
+        "name": "maximum",
+        "range": [
+          76162,
+          76203
+        ],
+        "bytes": 41,
+        "instructions": 28,
+        "sha256": "87ae1416bfc721715c7fbd54cc5c795a088a9bc71b0ad043d3ba69f87c3aab9e",
+        "selector_fixups": []
+      }
+    ],
+    "difficulty_offset": 30370,
+    "controller_offset": 30523,
+    "harness_sha256": "491aabf3fdd974bcc7c90bcccc5cb6a8a51e202ccc9d814bd1f63f481296cc39"
+  },
+  "prior_closure": {
+    "source_sha256": "ae7d9149f056766a534fe8f0006c9512aac1e1004e9776ab3cca818e4833b650",
+    "blocks": [
+      {
+        "operation": "capacity",
+        "file_range": [
+          48359,
+          48410
+        ],
+        "sha256": "6b2ecca6bbb4548591af685232325004cf2babb389956a551038e601f97d908a",
+        "instructions": 25,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "surplus",
+        "file_range": [
+          49053,
+          49132
+        ],
+        "sha256": "c4274647f67798fd0845c480185781e24168fe51386f75da9ef5dacbe2831391",
+        "instructions": 41,
+        "calls": [],
+        "selectors": [
+          {
+            "offset": 27,
+            "target_segment": 20
+          },
+          {
+            "offset": 20,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "packed",
+        "file_range": [
+          49132,
+          49209
+        ],
+        "sha256": "17112d146742635e31e9949fde727669c82fb08ddd8fd0bdcc6a4a4c3a0b4e65",
+        "instructions": 39,
+        "calls": [],
+        "selectors": []
+      },
+      {
+        "operation": "recipe",
+        "file_range": [
+          48963,
+          49053
+        ],
+        "sha256": "2f1aa1876109a4e0008a83b2a618543eb6befc59e8d77fc4052acf53a1192e76",
+        "instructions": 45,
+        "calls": [
+          {
+            "offset": 34,
+            "target": "job"
+          },
+          {
+            "offset": 47,
+            "target": "grade"
+          },
+          {
+            "offset": 75,
+            "target": "wrapper"
+          }
+        ],
+        "selectors": [
+          {
+            "offset": 23,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "wrapper",
+        "file_range": [
+          48873,
+          48963
+        ],
+        "sha256": "68856cee5d71571637091d98fe9e4968c77ffae637b566a41b9bc3572b9ddcba",
+        "instructions": 41,
+        "calls": [
+          {
+            "offset": 78,
+            "target": "balance"
+          }
+        ],
+        "selectors": [
+          {
+            "offset": 48,
+            "target_segment": 20
+          },
+          {
+            "offset": 35,
+            "target_segment": 20
+          },
+          {
+            "offset": 20,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "balance",
+        "file_range": [
+          48745,
+          48873
+        ],
+        "sha256": "7acca7ee4903928eba05633202ff129da3789efcfef3c2810b744f724bf85eda",
+        "instructions": 54,
+        "calls": [],
+        "selectors": [
+          {
+            "offset": 103,
+            "target_segment": 20
+          },
+          {
+            "offset": 74,
+            "target_segment": 20
+          },
+          {
+            "offset": 53,
+            "target_segment": 20
+          },
+          {
+            "offset": 37,
+            "target_segment": 20
+          },
+          {
+            "offset": 23,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "net",
+        "file_range": [
+          48605,
+          48740
+        ],
+        "sha256": "37e67db8ec8c144da324bf5c3b50f31a2b84a6e06b981193a2b68a1fa5831b50",
+        "instructions": 57,
+        "calls": [],
+        "selectors": [
+          {
+            "offset": 19,
+            "target_segment": 20
+          },
+          {
+            "offset": 111,
+            "target_segment": 20
+          },
+          {
+            "offset": 96,
+            "target_segment": 20
+          },
+          {
+            "offset": 77,
+            "target_segment": 20
+          },
+          {
+            "offset": 62,
+            "target_segment": 20
+          },
+          {
+            "offset": 45,
+            "target_segment": 20
+          },
+          {
+            "offset": 33,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "job",
+        "file_range": [
+          48559,
+          48605
+        ],
+        "sha256": "74b7062a28d663fe5802dfa728e63d3ad78ac7fcdf37e30fe108f94e1426525f",
+        "instructions": 26,
+        "calls": [],
+        "selectors": [
+          {
+            "offset": 22,
+            "target_segment": 20
+          }
+        ]
+      },
+      {
+        "operation": "grade",
+        "file_range": [
+          46088,
+          46154
+        ],
+        "sha256": "9677681172a993125f1547e7b99bda1847bb462ce90cab498f9147e4b4605282",
+        "instructions": 40,
+        "calls": [
+          {
+            "offset": 19,
+            "target": "building"
+          }
+        ],
+        "selectors": [
+          {
+            "offset": 36,
+            "target_segment": 19
+          }
+        ]
+      },
+      {
+        "operation": "building",
+        "file_range": [
+          46056,
+          46088
+        ],
+        "sha256": "ff7e767973eeb83e7dfbc53f95538d4cd67c13acc8e63a218971113ddc78f3be",
+        "instructions": 20,
+        "calls": [
+          {
+            "offset": 18,
+            "target": "flag"
+          }
+        ],
+        "selectors": []
+      },
+      {
+        "operation": "flag",
+        "file_range": [
+          45987,
+          46056
+        ],
+        "sha256": "367d42be11ea5d9a4feb66beb8fa2357f84757349b3a0c9b3c9994383de38814",
+        "instructions": 36,
+        "calls": [],
+        "selectors": [
+          {
+            "offset": 38,
+            "target_segment": 19
+          }
+        ]
+      }
+    ],
+    "harness_sha256": "013a3dff7675e6ef745376edb5689d66eda234e2e0153ad90e9861b3b395671a"
+  },
+  "status": "observed at declared original-code cuts; not complete game routines"
+}

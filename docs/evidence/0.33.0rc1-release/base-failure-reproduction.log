@@ -1,0 +1,1036 @@
+FFFFFFFF.FFFFFFF                                                         [100%]
+=================================== FAILURES ===================================
+__________ test_typed_uil_is_deterministic_and_has_no_private_regions __________
+
+    def test_typed_uil_is_deterministic_and_has_no_private_regions():
+>       first = lift_presentation()
+                ^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+_______________________ test_full_clear_and_ready_guard ________________________
+
+    def test_full_clear_and_ready_guard():
+>       m = presentation_machine()
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/presentation_il.py:54: in presentation_machine
+    program = lift_presentation()
+              ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+__________________ test_sparse_certificate_and_pause_fallback __________________
+
+    def test_sparse_certificate_and_pause_fallback():
+>       m = presentation_machine()
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/presentation_il.py:54: in presentation_machine
+    program = lift_presentation()
+              ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+_______________ test_cache_classification_and_clear_intersection _______________
+
+    def test_cache_classification_and_clear_intersection():
+>       m = presentation_machine()
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/presentation_il.py:54: in presentation_machine
+    program = lift_presentation()
+              ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+________ test_exact_cache_still_updates_hud_and_detects_overlay_change _________
+
+    def test_exact_cache_still_updates_hud_and_detects_overlay_change():
+>       m = presentation_machine()
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/presentation_il.py:54: in presentation_machine
+    program = lift_presentation()
+              ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+_____________ test_oversized_budget_mutant_changes_full_partition ______________
+
+    def test_oversized_budget_mutant_changes_full_partition():
+>       program = lift_presentation()
+                  ^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+___________ test_packaged_artifact_missing_or_modified_fails_closed ____________
+
+tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_packaged_artifact_missing0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x104dd7100>
+
+    def test_packaged_artifact_missing_or_modified_fails_closed(tmp_path, monkeypatch):
+>       original = lift_presentation()
+                   ^^^^^^^^^^^^^^^^^^^
+
+tests/test_presentation_il.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_presentation() -> dict:
+        """Return a versioned executable GameIL program, not an opaque C payload."""
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-presentation-model',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-presentation-1',
+            'entries': ['presentation_classify', 'presentation_clear_terrain',
+                        'presentation_terrain_miss', 'presentation_prepare',
+                        'presentation_complete'],
+            'limits': ['model of a source-bound NES adapter, not Genesis ROM lifting',
+                       'geometry applies only to independently qualified projection pages',
+                       'callers must not mutate the declared-const geometry tables',
+                       'active nametable and per-nametable validity fields are binary (0 or 1)',
+                       'sparse hint is valid only when staging bytes outside the 174-cell union are zero',
+                       'exact-terrain hint and validity require the documented producer certificate',
+                       'pending staging and queued jobs are immutable by caller contract',
+                       'completion models job application, not PPU timing or DMC DMA',
+                       'native machine code requires independent equivalence checks'],
+        })
+        try:
+            artifact_bytes = ARTIFACT.read_bytes()
+            artifact = json.loads(artifact_bytes)
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError('Packaged presentation UIL artifact is missing or invalid') from exc
+        if canonical(artifact) != canonical(program):
+>           raise ValueError('Packaged presentation UIL artifact does not match its authored source')
+E           ValueError: Packaged presentation UIL artifact does not match its authored source
+
+src/fdisbull/presentation_il.py:42: ValueError
+________ test_lift_psg_is_source_bound_game_il_without_external_regions ________
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+>           validate_program(packaged)
+
+src/fdisbull/psg_il.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/game_il.py:108: in validate_program
+    tree = _decode(program.get('tree'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:80: in _decode
+    return cls(**{key: _decode(value[key], depth + 1, budget) for key in allowed})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:72: in _decode
+    return [_decode(x, depth + 1, budget) for x in value]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'attributes': [], 'name': 'u8', 'node': 'Typedef', 'quals': [], ...}
+depth = 2, budget = [99997]
+
+    def _decode(value, depth=0, budget=None):
+        if budget is None:
+            budget = [MAX_NODES]
+        budget[0] -= 1
+        if budget[0] < 0 or depth > 256:
+            raise ValueError('Procedural UIL tree exceeds its size/depth limit')
+        if value is None or isinstance(value, (str, int, bool)):
+            return value
+        if isinstance(value, list):
+            return [_decode(x, depth + 1, budget) for x in value]
+        if not isinstance(value, dict) or value.get('node') not in NODES:
+            raise ValueError('Invalid procedural UIL node')
+        c_ast, _, _ = _parser()
+        cls = getattr(c_ast, value['node'])
+        allowed = set(cls.__slots__) - {'coord', '__weakref__'}
+        if set(value) - {'node'} != allowed:
+>           raise ValueError(f'Invalid fields for {value["node"]}')
+E           ValueError: Invalid fields for Typedef
+
+src/fdisbull/game_il.py:79: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_lift_psg_is_source_bound_game_il_without_external_regions():
+>       program = lift_psg()
+                  ^^^^^^^^^^
+
+tests/test_psg_il.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+            validate_program(packaged)
+        except (TypeError, ValueError) as exc:
+>           raise ValueError('Packaged PSG GameIL artifact failed validation') from exc
+E           ValueError: Packaged PSG GameIL artifact failed validation
+
+src/fdisbull/psg_il.py:47: ValueError
+________ test_lift_psg_fails_closed_when_packaged_artifact_is_modified _________
+
+tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_lift_psg_fails_closed_whe1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x103033bf0>
+
+    def test_lift_psg_fails_closed_when_packaged_artifact_is_modified(tmp_path, monkeypatch):
+        modified = json.loads(psg_il.ARTIFACT_PATH.read_text())
+        modified['evidence']['profile'] = 'unexpected-profile'
+        path = tmp_path / 'modified.json'
+        path.write_text(json.dumps(modified), encoding='utf-8')
+        monkeypatch.setattr(psg_il, 'ARTIFACT_PATH', path)
+>       with pytest.raises(ValueError, match='differs from the source-derived program'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'differs from the source-derived program'
+E         Actual message: 'Packaged PSG GameIL artifact failed validation'
+
+tests/test_psg_il.py:92: AssertionError
+_____________ test_psg_phase_gate_preserves_every_field_and_period _____________
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+>           validate_program(packaged)
+
+src/fdisbull/psg_il.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/game_il.py:108: in validate_program
+    tree = _decode(program.get('tree'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:80: in _decode
+    return cls(**{key: _decode(value[key], depth + 1, budget) for key in allowed})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:72: in _decode
+    return [_decode(x, depth + 1, budget) for x in value]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'attributes': [], 'name': 'u8', 'node': 'Typedef', 'quals': [], ...}
+depth = 2, budget = [99997]
+
+    def _decode(value, depth=0, budget=None):
+        if budget is None:
+            budget = [MAX_NODES]
+        budget[0] -= 1
+        if budget[0] < 0 or depth > 256:
+            raise ValueError('Procedural UIL tree exceeds its size/depth limit')
+        if value is None or isinstance(value, (str, int, bool)):
+            return value
+        if isinstance(value, list):
+            return [_decode(x, depth + 1, budget) for x in value]
+        if not isinstance(value, dict) or value.get('node') not in NODES:
+            raise ValueError('Invalid procedural UIL node')
+        c_ast, _, _ = _parser()
+        cls = getattr(c_ast, value['node'])
+        allowed = set(cls.__slots__) - {'coord', '__weakref__'}
+        if set(value) - {'node'} != allowed:
+>           raise ValueError(f'Invalid fields for {value["node"]}')
+E           ValueError: Invalid fields for Typedef
+
+src/fdisbull/game_il.py:79: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_psg_phase_gate_preserves_every_field_and_period():
+>       machine = GameMachine(lift_psg())
+                              ^^^^^^^^^^
+
+tests/test_psg_il.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+            validate_program(packaged)
+        except (TypeError, ValueError) as exc:
+>           raise ValueError('Packaged PSG GameIL artifact failed validation') from exc
+E           ValueError: Packaged PSG GameIL artifact failed validation
+
+src/fdisbull/psg_il.py:47: ValueError
+______ test_psg_envelope_and_period_mapping_match_independent_state_model ______
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+>           validate_program(packaged)
+
+src/fdisbull/psg_il.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/game_il.py:108: in validate_program
+    tree = _decode(program.get('tree'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:80: in _decode
+    return cls(**{key: _decode(value[key], depth + 1, budget) for key in allowed})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:72: in _decode
+    return [_decode(x, depth + 1, budget) for x in value]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'attributes': [], 'name': 'u8', 'node': 'Typedef', 'quals': [], ...}
+depth = 2, budget = [99997]
+
+    def _decode(value, depth=0, budget=None):
+        if budget is None:
+            budget = [MAX_NODES]
+        budget[0] -= 1
+        if budget[0] < 0 or depth > 256:
+            raise ValueError('Procedural UIL tree exceeds its size/depth limit')
+        if value is None or isinstance(value, (str, int, bool)):
+            return value
+        if isinstance(value, list):
+            return [_decode(x, depth + 1, budget) for x in value]
+        if not isinstance(value, dict) or value.get('node') not in NODES:
+            raise ValueError('Invalid procedural UIL node')
+        c_ast, _, _ = _parser()
+        cls = getattr(c_ast, value['node'])
+        allowed = set(cls.__slots__) - {'coord', '__weakref__'}
+        if set(value) - {'node'} != allowed:
+>           raise ValueError(f'Invalid fields for {value["node"]}')
+E           ValueError: Invalid fields for Typedef
+
+src/fdisbull/game_il.py:79: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_psg_envelope_and_period_mapping_match_independent_state_model():
+        rng = random.Random(0x505347)
+>       machine = GameMachine(lift_psg())
+                              ^^^^^^^^^^
+
+tests/test_psg_il.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+            validate_program(packaged)
+        except (TypeError, ValueError) as exc:
+>           raise ValueError('Packaged PSG GameIL artifact failed validation') from exc
+E           ValueError: Packaged PSG GameIL artifact failed validation
+
+src/fdisbull/psg_il.py:47: ValueError
+_________ test_psg_attack_overflow_decay_borrow_and_zero_release_edges _________
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+>           validate_program(packaged)
+
+src/fdisbull/psg_il.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/game_il.py:108: in validate_program
+    tree = _decode(program.get('tree'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:80: in _decode
+    return cls(**{key: _decode(value[key], depth + 1, budget) for key in allowed})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:72: in _decode
+    return [_decode(x, depth + 1, budget) for x in value]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'attributes': [], 'name': 'u8', 'node': 'Typedef', 'quals': [], ...}
+depth = 2, budget = [99997]
+
+    def _decode(value, depth=0, budget=None):
+        if budget is None:
+            budget = [MAX_NODES]
+        budget[0] -= 1
+        if budget[0] < 0 or depth > 256:
+            raise ValueError('Procedural UIL tree exceeds its size/depth limit')
+        if value is None or isinstance(value, (str, int, bool)):
+            return value
+        if isinstance(value, list):
+            return [_decode(x, depth + 1, budget) for x in value]
+        if not isinstance(value, dict) or value.get('node') not in NODES:
+            raise ValueError('Invalid procedural UIL node')
+        c_ast, _, _ = _parser()
+        cls = getattr(c_ast, value['node'])
+        allowed = set(cls.__slots__) - {'coord', '__weakref__'}
+        if set(value) - {'node'} != allowed:
+>           raise ValueError(f'Invalid fields for {value["node"]}')
+E           ValueError: Invalid fields for Typedef
+
+src/fdisbull/game_il.py:79: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_psg_attack_overflow_decay_borrow_and_zero_release_edges():
+>       machine = GameMachine(lift_psg())
+                              ^^^^^^^^^^
+
+tests/test_psg_il.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+            validate_program(packaged)
+        except (TypeError, ValueError) as exc:
+>           raise ValueError('Packaged PSG GameIL artifact failed validation') from exc
+E           ValueError: Packaged PSG GameIL artifact failed validation
+
+src/fdisbull/psg_il.py:47: ValueError
+_____ test_psg_volume_owner_pan_and_attenuation_match_fixed_lookup_tables ______
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+>           validate_program(packaged)
+
+src/fdisbull/psg_il.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fdisbull/game_il.py:108: in validate_program
+    tree = _decode(program.get('tree'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:80: in _decode
+    return cls(**{key: _decode(value[key], depth + 1, budget) for key in allowed})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fdisbull/game_il.py:72: in _decode
+    return [_decode(x, depth + 1, budget) for x in value]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = {'attributes': [], 'name': 'u8', 'node': 'Typedef', 'quals': [], ...}
+depth = 2, budget = [99997]
+
+    def _decode(value, depth=0, budget=None):
+        if budget is None:
+            budget = [MAX_NODES]
+        budget[0] -= 1
+        if budget[0] < 0 or depth > 256:
+            raise ValueError('Procedural UIL tree exceeds its size/depth limit')
+        if value is None or isinstance(value, (str, int, bool)):
+            return value
+        if isinstance(value, list):
+            return [_decode(x, depth + 1, budget) for x in value]
+        if not isinstance(value, dict) or value.get('node') not in NODES:
+            raise ValueError('Invalid procedural UIL node')
+        c_ast, _, _ = _parser()
+        cls = getattr(c_ast, value['node'])
+        allowed = set(cls.__slots__) - {'coord', '__weakref__'}
+        if set(value) - {'node'} != allowed:
+>           raise ValueError(f'Invalid fields for {value["node"]}')
+E           ValueError: Invalid fields for Typedef
+
+src/fdisbull/game_il.py:79: ValueError
+
+The above exception was the direct cause of the following exception:
+
+    def test_psg_volume_owner_pan_and_attenuation_match_fixed_lookup_tables():
+>       machine = GameMachine(lift_psg())
+                              ^^^^^^^^^^
+
+tests/test_psg_il.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def lift_psg() -> dict:
+        """Parse the authored fixed-width PSG routines into a bounded GameIL AST.
+    
+        The two entry points model the optimized envelope/period service and its
+        PSG volume helper. They are not the full audio driver. The source has no
+        external ROM regions; declared lookup tables must remain immutable by
+        callers, since ``GameMachine.set_state`` itself does not enforce constness.
+        """
+        source = SOURCE.read_bytes()
+        program = author_program(source.decode('utf-8'), evidence={
+            'kind': 'authored-bounded-psg',
+            'source_sha256': hashlib.sha256(source).hexdigest(),
+            'profile': 'miniplanets-nes-psg-envelope-volume-1',
+            'entries': ['audio_render_psg', 'audio_render_psg_volume'],
+            'limits': [
+                'models eight fixed PSG envelope voices, half-rate period copies, and PSG volume for channels 8 through 11',
+                'does not model the complete audio driver, FM voices, PCM/DMC scheduling, APU writes, stream decoding, waveforms, or hardware timing',
+                'the gain lookup tables are const by source declaration but GameMachine.set_state does not enforce constness; callers must not mutate them',
+                'native 6502 behavior remains separately qualified by the bounded C/ASM comparison',
+            ],
+        })
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if program['evidence']['source_sha256'] != source_sha256:
+            raise ValueError('PSG model source capture does not match its evidence')
+        if SOURCE.read_bytes() != source:
+            raise ValueError('PSG model source changed during export')
+        try:
+            packaged = json.loads(ARTIFACT_PATH.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('Packaged PSG GameIL artifact is unavailable or invalid') from exc
+        try:
+            validate_program(packaged)
+        except (TypeError, ValueError) as exc:
+>           raise ValueError('Packaged PSG GameIL artifact failed validation') from exc
+E           ValueError: Packaged PSG GameIL artifact failed validation
+
+src/fdisbull/psg_il.py:47: ValueError
+__________ test_actual_elf_exports_and_unresolved_imports_are_honest ___________
+
+tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_actual_elf_exports_and_un0')
+
+    def test_actual_elf_exports_and_unresolved_imports_are_honest(tmp_path):
+        gcc = shutil.which('gcc')
+        if not gcc:
+            pytest.skip('gcc unavailable for ELF metadata fixture')
+        source = tmp_path / 'fixture.c'
+        source.write_text('#include <stdio.h>\nint helper(void){return puts("EvidenceString");}\nint main(void){return helper();}\n')
+        binary = tmp_path / 'fixture'
+        subprocess.run([gcc, '-rdynamic', '-o', str(binary), str(source)], check=True, capture_output=True)
+        metadata = inspect_binary(binary.read_bytes())
+>       assert metadata['header']['format'] == 'ELF' and metadata['header']['valid']
+E       AssertionError: assert ('Mach-O' == 'ELF'
+E         
+E         - ELF
+E         + Mach-O)
+
+tests/test_inspection.py:115: AssertionError
+________________ test_real_elf_retains_entry_and_named_function ________________
+
+tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0')
+
+    def test_real_elf_retains_entry_and_named_function(tmp_path):
+        compiler = shutil.which("gcc")
+        if compiler is None:
+            pytest.skip("gcc is required to build the ELF fixture")
+        assembly = tmp_path / "sample.s"
+        assembly.write_text(".text\n.global _start\n.type _start,@function\n_start:\n call helper\n ret\n.type helper,@function\nhelper:\n mov $42,%eax\n ret\n")
+        executable = tmp_path / "sample.elf"
+>       subprocess.run([compiler, "-nostdlib", "-no-pie", "-Wl,--build-id=none", str(assembly), "-o", str(executable)],
+                       check=True, capture_output=True)
+
+tests/test_loading.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['/usr/bin/gcc', '-nostdlib', '-no-pie', '-Wl,--build-id=none', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0/sample.s', '-o', ...],)
+kwargs = {'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-nostdlib', '-no-pie', '-Wl,--build-id=none', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0/sample.s', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0/sample.elf']' returned non-zero exit status 1.
+
+/Users/tiga/miniconda/lib/python3.13/subprocess.py:577: CalledProcessError
+=========================== short test summary info ============================
+FAILED tests/test_presentation_il.py::test_typed_uil_is_deterministic_and_has_no_private_regions - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_full_clear_and_ready_guard - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_sparse_certificate_and_pause_fallback - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_cache_classification_and_clear_intersection - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_exact_cache_still_updates_hud_and_detects_overlay_change - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_oversized_budget_mutant_changes_full_partition - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_presentation_il.py::test_packaged_artifact_missing_or_modified_fails_closed - ValueError: Packaged presentation UIL artifact does not match its authored source
+FAILED tests/test_psg_il.py::test_lift_psg_is_source_bound_game_il_without_external_regions - ValueError: Packaged PSG GameIL artifact failed validation
+FAILED tests/test_psg_il.py::test_lift_psg_fails_closed_when_packaged_artifact_is_modified - AssertionError: Regex pattern did not match.
+  Expected regex: 'differs from the source-derived program'
+  Actual message: 'Packaged PSG GameIL artifact failed validation'
+FAILED tests/test_psg_il.py::test_psg_phase_gate_preserves_every_field_and_period - ValueError: Packaged PSG GameIL artifact failed validation
+FAILED tests/test_psg_il.py::test_psg_envelope_and_period_mapping_match_independent_state_model - ValueError: Packaged PSG GameIL artifact failed validation
+FAILED tests/test_psg_il.py::test_psg_attack_overflow_decay_borrow_and_zero_release_edges - ValueError: Packaged PSG GameIL artifact failed validation
+FAILED tests/test_psg_il.py::test_psg_volume_owner_pan_and_attenuation_match_fixed_lookup_tables - ValueError: Packaged PSG GameIL artifact failed validation
+FAILED tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest - AssertionError: assert ('Mach-O' == 'ELF'
+  
+  - ELF
+  + Mach-O)
+FAILED tests/test_loading.py::test_real_elf_retains_entry_and_named_function - subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-nostdlib', '-no-pie', '-Wl,--build-id=none', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0/sample.s', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-1424/test_real_elf_retains_entry_an0/sample.elf']' returned non-zero exit status 1.
+15 failed, 1 passed in 0.69s

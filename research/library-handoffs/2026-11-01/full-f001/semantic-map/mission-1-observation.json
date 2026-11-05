@@ -1,0 +1,1935 @@
+{
+  "schema": "syndicate-diagnostic-scene-research-1",
+  "source_state_sha256": "7e041f4416892d95dede2fbddc9f8ad0f585c432864a9b61b0448fa3d9870e72",
+  "map_number": 1,
+  "selected": "person-0",
+  "coordinates": {
+    "x_y_units_per_tile": 256,
+    "z_units_per_level": 128,
+    "screen_coordinates": false
+  },
+  "scope": "global diagnostic registered-entity census; not line-of-sight or alive-count proof",
+  "team": [
+    {
+      "id": "person-0",
+      "family": "person",
+      "slot": 0,
+      "position_raw": [
+        23476,
+        10668,
+        256
+      ],
+      "position": [
+        91.703125,
+        41.671875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38278,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-1"
+    },
+    {
+      "id": "person-1",
+      "family": "person",
+      "slot": 1,
+      "position_raw": [
+        23420,
+        10516,
+        256
+      ],
+      "position": [
+        91.484375,
+        41.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38350,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-3"
+    },
+    {
+      "id": "person-2",
+      "family": "person",
+      "slot": 2,
+      "position_raw": [
+        23420,
+        10388,
+        256
+      ],
+      "position": [
+        91.484375,
+        40.578125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38422,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-5"
+    },
+    {
+      "id": "person-3",
+      "family": "person",
+      "slot": 3,
+      "position_raw": [
+        23404,
+        10260,
+        256
+      ],
+      "position": [
+        91.421875,
+        40.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38494,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-7"
+    }
+  ],
+  "counts": {
+    "agent": 4,
+    "civilian": 2,
+    "door": 4,
+    "guard": 4,
+    "tree": 11,
+    "vehicle": 1,
+    "weapon": 10,
+    "window-closed-class": 7,
+    "window-open-class": 1
+  },
+  "nearest": {
+    "agent": {
+      "id": "person-1",
+      "position": [
+        91.484375,
+        41.078125,
+        2.0
+      ],
+      "distance_xy": 0.6327642728536433,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "civilian": {
+      "id": "person-8",
+      "position": [
+        64.25,
+        30.75,
+        2.0
+      ],
+      "distance_xy": 29.545920628426018,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "door": {
+      "id": "object-2",
+      "position": [
+        73.40625,
+        33.84375,
+        2.0
+      ],
+      "distance_xy": 19.90113503751105,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "guard": {
+      "id": "person-10",
+      "position": [
+        74.75,
+        32.25,
+        2.0
+      ],
+      "distance_xy": 19.39536480144805,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "police": null,
+    "tree": {
+      "id": "object-20",
+      "position": [
+        91.9375,
+        39.6875,
+        2.0
+      ],
+      "distance_xy": 1.9981681063539174,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "vehicle": {
+      "id": "vehicle-0",
+      "position": [
+        60.53125,
+        35.71875,
+        2.0
+      ],
+      "distance_xy": 31.735240479335427,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "weapon": {
+      "id": "weapon-1",
+      "position": [
+        91.703125,
+        41.671875,
+        2.0
+      ],
+      "distance_xy": 0.0,
+      "same_elevation": true,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "window-closed-class": {
+      "id": "object-4",
+      "position": [
+        67.125,
+        32.875,
+        3.0
+      ],
+      "distance_xy": 26.10496577820492,
+      "same_elevation": false,
+      "path_distance": null,
+      "reachable": "unqualified"
+    },
+    "window-open-class": {
+      "id": "object-21",
+      "position": [
+        62.71875,
+        33.46875,
+        5.0
+      ],
+      "distance_xy": 30.1228360867009,
+      "same_elevation": false,
+      "path_distance": null,
+      "reachable": "unqualified"
+    }
+  },
+  "objectives": [
+    {
+      "id": "objective-0",
+      "state_raw": 0,
+      "type_raw": 2,
+      "target_id": "person-8",
+      "target_reference": 738,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "assassination candidate"
+    },
+    {
+      "id": "objective-1",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-2",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-3",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-4",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-5",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-6",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    },
+    {
+      "id": "objective-7",
+      "state_raw": 1,
+      "type_raw": 0,
+      "target_id": null,
+      "target_reference": 0,
+      "position_raw": [
+        0,
+        0,
+        0
+      ],
+      "interpretation": "unresolved objective type"
+    }
+  ],
+  "entities": [
+    {
+      "id": "person-0",
+      "family": "person",
+      "slot": 0,
+      "position_raw": [
+        23476,
+        10668,
+        256
+      ],
+      "position": [
+        91.703125,
+        41.671875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38278,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-1"
+    },
+    {
+      "id": "person-1",
+      "family": "person",
+      "slot": 1,
+      "position_raw": [
+        23420,
+        10516,
+        256
+      ],
+      "position": [
+        91.484375,
+        41.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38350,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-3"
+    },
+    {
+      "id": "person-2",
+      "family": "person",
+      "slot": 2,
+      "position_raw": [
+        23420,
+        10388,
+        256
+      ],
+      "position": [
+        91.484375,
+        40.578125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38422,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-5"
+    },
+    {
+      "id": "person-3",
+      "family": "person",
+      "slot": 3,
+      "position_raw": [
+        23404,
+        10260,
+        256
+      ],
+      "position": [
+        91.421875,
+        40.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38494,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-7"
+    },
+    {
+      "id": "person-8",
+      "family": "person",
+      "slot": 8,
+      "position_raw": [
+        16448,
+        7872,
+        256
+      ],
+      "position": [
+        64.25,
+        30.75,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 40,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "civilian",
+      "role_raw": 1,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 0,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        63,
+        33,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "mission_critical": true,
+      "inventory_head_id": null
+    },
+    {
+      "id": "person-9",
+      "family": "person",
+      "slot": 9,
+      "position_raw": [
+        18624,
+        13504,
+        256
+      ],
+      "position": [
+        72.75,
+        52.75,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 40,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "guard",
+      "role_raw": 8,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38314,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        76,
+        38,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          50,
+          178
+        ],
+        "intelligence": [
+          128,
+          50,
+          178
+        ],
+        "perception": [
+          128,
+          50,
+          178
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-2"
+    },
+    {
+      "id": "person-10",
+      "family": "person",
+      "slot": 10,
+      "position_raw": [
+        19136,
+        8256,
+        256
+      ],
+      "position": [
+        74.75,
+        32.25,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 40,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "guard",
+      "role_raw": 8,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38638,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        70,
+        34,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          50,
+          178
+        ],
+        "intelligence": [
+          128,
+          50,
+          178
+        ],
+        "perception": [
+          128,
+          50,
+          178
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-11"
+    },
+    {
+      "id": "person-11",
+      "family": "person",
+      "slot": 11,
+      "position_raw": [
+        18240,
+        10304,
+        256
+      ],
+      "position": [
+        71.25,
+        40.25,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 40,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "guard",
+      "role_raw": 8,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38386,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        80,
+        38,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          50,
+          178
+        ],
+        "intelligence": [
+          128,
+          80,
+          208
+        ],
+        "perception": [
+          128,
+          80,
+          208
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-4"
+    },
+    {
+      "id": "person-12",
+      "family": "person",
+      "slot": 12,
+      "position_raw": [
+        12924,
+        13876,
+        256
+      ],
+      "position": [
+        50.484375,
+        54.203125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "guard",
+      "role_raw": 8,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38242,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        0,
+        0,
+        0
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          50,
+          178
+        ],
+        "intelligence": [
+          128,
+          50,
+          178
+        ],
+        "perception": [
+          128,
+          50,
+          178
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-0"
+    },
+    {
+      "id": "person-13",
+      "family": "person",
+      "slot": 13,
+      "position_raw": [
+        15552,
+        11968,
+        256
+      ],
+      "position": [
+        60.75,
+        46.75,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 40,
+      "health_raw": 0,
+      "life_state": "unqualified",
+      "category": "civilian",
+      "role_raw": 1,
+      "team_member": false,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "inventory_head": 38674,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        58,
+        50,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          110,
+          238
+        ],
+        "intelligence": [
+          128,
+          50,
+          178
+        ],
+        "perception": [
+          128,
+          50,
+          178
+        ]
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-12"
+    },
+    {
+      "id": "vehicle-0",
+      "family": "vehicle",
+      "slot": 0,
+      "position_raw": [
+        15496,
+        9144,
+        256
+      ],
+      "position": [
+        60.53125,
+        35.71875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 13,
+      "health_raw": 30,
+      "life_state": "unqualified",
+      "category": "vehicle",
+      "occupant_ref_candidate": 0,
+      "gate_state": "unknown",
+      "boarding": "unqualified",
+      "mission_critical": false
+    },
+    {
+      "id": "object-0",
+      "family": "object",
+      "slot": 0,
+      "position_raw": [
+        18900,
+        13436,
+        256
+      ],
+      "position": [
+        73.828125,
+        52.484375,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 12,
+      "health_raw": 40,
+      "life_state": "unqualified",
+      "category": "door",
+      "mission_critical": false
+    },
+    {
+      "id": "object-1",
+      "family": "object",
+      "slot": 1,
+      "position_raw": [
+        15460,
+        12524,
+        256
+      ],
+      "position": [
+        60.390625,
+        48.921875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 12,
+      "health_raw": 40,
+      "life_state": "unqualified",
+      "category": "door",
+      "mission_critical": false
+    },
+    {
+      "id": "object-2",
+      "family": "object",
+      "slot": 2,
+      "position_raw": [
+        18792,
+        8664,
+        256
+      ],
+      "position": [
+        73.40625,
+        33.84375,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 12,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "door",
+      "mission_critical": false
+    },
+    {
+      "id": "object-3",
+      "family": "object",
+      "slot": 3,
+      "position_raw": [
+        16480,
+        8416,
+        256
+      ],
+      "position": [
+        64.375,
+        32.875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 12,
+      "health_raw": 40,
+      "life_state": "unqualified",
+      "category": "door",
+      "mission_critical": false
+    },
+    {
+      "id": "object-4",
+      "family": "object",
+      "slot": 4,
+      "position_raw": [
+        17184,
+        8416,
+        384
+      ],
+      "position": [
+        67.125,
+        32.875,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-5",
+      "family": "object",
+      "slot": 5,
+      "position_raw": [
+        17184,
+        8160,
+        384
+      ],
+      "position": [
+        67.125,
+        31.875,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-6",
+      "family": "object",
+      "slot": 6,
+      "position_raw": [
+        17184,
+        7904,
+        384
+      ],
+      "position": [
+        67.125,
+        30.875,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-7",
+      "family": "object",
+      "slot": 7,
+      "position_raw": [
+        17184,
+        8288,
+        384
+      ],
+      "position": [
+        67.125,
+        32.375,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-8",
+      "family": "object",
+      "slot": 8,
+      "position_raw": [
+        17184,
+        8032,
+        384
+      ],
+      "position": [
+        67.125,
+        31.375,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-9",
+      "family": "object",
+      "slot": 9,
+      "position_raw": [
+        17184,
+        7776,
+        384
+      ],
+      "position": [
+        67.125,
+        30.375,
+        3.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-10",
+      "family": "object",
+      "slot": 10,
+      "position_raw": [
+        22728,
+        12296,
+        256
+      ],
+      "position": [
+        88.78125,
+        48.03125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-11",
+      "family": "object",
+      "slot": 11,
+      "position_raw": [
+        22952,
+        12200,
+        256
+      ],
+      "position": [
+        89.65625,
+        47.65625,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-12",
+      "family": "object",
+      "slot": 12,
+      "position_raw": [
+        22880,
+        12288,
+        256
+      ],
+      "position": [
+        89.375,
+        48.0,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-13",
+      "family": "object",
+      "slot": 13,
+      "position_raw": [
+        22924,
+        11828,
+        256
+      ],
+      "position": [
+        89.546875,
+        46.203125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-14",
+      "family": "object",
+      "slot": 14,
+      "position_raw": [
+        22532,
+        11788,
+        256
+      ],
+      "position": [
+        88.015625,
+        46.046875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-15",
+      "family": "object",
+      "slot": 15,
+      "position_raw": [
+        22968,
+        11880,
+        256
+      ],
+      "position": [
+        89.71875,
+        46.40625,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-16",
+      "family": "object",
+      "slot": 16,
+      "position_raw": [
+        23120,
+        12144,
+        256
+      ],
+      "position": [
+        90.3125,
+        47.4375,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-17",
+      "family": "object",
+      "slot": 17,
+      "position_raw": [
+        23640,
+        10088,
+        256
+      ],
+      "position": [
+        92.34375,
+        39.40625,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-18",
+      "family": "object",
+      "slot": 18,
+      "position_raw": [
+        23768,
+        10072,
+        256
+      ],
+      "position": [
+        92.84375,
+        39.34375,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-19",
+      "family": "object",
+      "slot": 19,
+      "position_raw": [
+        23308,
+        9988,
+        256
+      ],
+      "position": [
+        91.046875,
+        39.015625,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-20",
+      "family": "object",
+      "slot": 20,
+      "position_raw": [
+        23536,
+        10160,
+        256
+      ],
+      "position": [
+        91.9375,
+        39.6875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 22,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "tree",
+      "mission_critical": false
+    },
+    {
+      "id": "object-21",
+      "family": "object",
+      "slot": 21,
+      "position_raw": [
+        16056,
+        8568,
+        640
+      ],
+      "position": [
+        62.71875,
+        33.46875,
+        5.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 18,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-open-class",
+      "mission_critical": false
+    },
+    {
+      "id": "object-22",
+      "family": "object",
+      "slot": 22,
+      "position_raw": [
+        16184,
+        8568,
+        640
+      ],
+      "position": [
+        63.21875,
+        33.46875,
+        5.0
+      ],
+      "registered": true,
+      "flags": [
+        6,
+        0
+      ],
+      "status_raw": 19,
+      "health_raw": 50,
+      "life_state": "unqualified",
+      "category": "window-closed-class",
+      "mission_critical": false
+    },
+    {
+      "id": "weapon-0",
+      "family": "weapon",
+      "slot": 0,
+      "position_raw": [
+        12924,
+        13876,
+        256
+      ],
+      "position": [
+        50.484375,
+        54.203125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 5,
+      "health_raw": 299,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 1106,
+      "inventory_next": 0,
+      "inventory_previous": 1106,
+      "mission_critical": false,
+      "owner_id": "person-12"
+    },
+    {
+      "id": "weapon-1",
+      "family": "weapon",
+      "slot": 1,
+      "position_raw": [
+        23476,
+        10668,
+        256
+      ],
+      "position": [
+        91.703125,
+        41.671875,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 2,
+      "inventory_next": 0,
+      "inventory_previous": 2,
+      "mission_critical": false,
+      "owner_id": "person-0"
+    },
+    {
+      "id": "weapon-2",
+      "family": "weapon",
+      "slot": 2,
+      "position_raw": [
+        18624,
+        13504,
+        256
+      ],
+      "position": [
+        72.75,
+        52.75,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 4,
+      "health_raw": 15,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 830,
+      "inventory_next": 0,
+      "inventory_previous": 830,
+      "mission_critical": false,
+      "owner_id": "person-9"
+    },
+    {
+      "id": "weapon-3",
+      "family": "weapon",
+      "slot": 3,
+      "position_raw": [
+        23420,
+        10516,
+        256
+      ],
+      "position": [
+        91.484375,
+        41.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 94,
+      "inventory_next": 0,
+      "inventory_previous": 94,
+      "mission_critical": false,
+      "owner_id": "person-1"
+    },
+    {
+      "id": "weapon-4",
+      "family": "weapon",
+      "slot": 4,
+      "position_raw": [
+        18240,
+        10304,
+        256
+      ],
+      "position": [
+        71.25,
+        40.25,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 1014,
+      "inventory_next": 38458,
+      "inventory_previous": 1014,
+      "mission_critical": false,
+      "owner_id": "person-11"
+    },
+    {
+      "id": "weapon-5",
+      "family": "weapon",
+      "slot": 5,
+      "position_raw": [
+        23420,
+        10388,
+        256
+      ],
+      "position": [
+        91.484375,
+        40.578125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 186,
+      "inventory_next": 0,
+      "inventory_previous": 186,
+      "mission_critical": false,
+      "owner_id": "person-2"
+    },
+    {
+      "id": "weapon-6",
+      "family": "weapon",
+      "slot": 6,
+      "position_raw": [
+        18240,
+        10304,
+        256
+      ],
+      "position": [
+        71.25,
+        40.25,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 1014,
+      "inventory_next": 0,
+      "inventory_previous": 38386,
+      "mission_critical": false,
+      "owner_id": "person-11"
+    },
+    {
+      "id": "weapon-7",
+      "family": "weapon",
+      "slot": 7,
+      "position_raw": [
+        23404,
+        10260,
+        256
+      ],
+      "position": [
+        91.421875,
+        40.078125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 2,
+      "health_raw": 12,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 278,
+      "inventory_next": 0,
+      "inventory_previous": 278,
+      "mission_critical": false,
+      "owner_id": "person-3"
+    },
+    {
+      "id": "weapon-11",
+      "family": "weapon",
+      "slot": 11,
+      "position_raw": [
+        19136,
+        8256,
+        256
+      ],
+      "position": [
+        74.75,
+        32.25,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 4,
+      "health_raw": 15,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 922,
+      "inventory_next": 0,
+      "inventory_previous": 922,
+      "mission_critical": false,
+      "owner_id": "person-10"
+    },
+    {
+      "id": "weapon-12",
+      "family": "weapon",
+      "slot": 12,
+      "position_raw": [
+        15552,
+        11968,
+        256
+      ],
+      "position": [
+        60.75,
+        46.75,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        5,
+        0
+      ],
+      "status_raw": 4,
+      "health_raw": 15,
+      "life_state": "unqualified",
+      "category": "weapon",
+      "owner_ref": 1198,
+      "inventory_next": 0,
+      "inventory_previous": 1198,
+      "mission_critical": false,
+      "owner_id": "person-13"
+    }
+  ],
+  "spatial_index": {
+    "valid": true,
+    "entity_count": 44,
+    "occupied_cells": 26
+  },
+  "coverage": {
+    "partial": true,
+    "static_code_complete": false,
+    "visibility": "unknown",
+    "vehicle_gate_relationship": "unqualified",
+    "inventory_complete": false
+  },
+  "observed_run": "501bf9e4bc514b18add042518d2ffa73",
+  "observation_kind": "paused original mission; diagnostic setup; baseline restored"
+}

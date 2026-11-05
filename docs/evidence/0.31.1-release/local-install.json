@@ -1,0 +1,18 @@
+{
+  "check_local_install": "passed",
+  "doctors": {
+    "dosbox": "passed",
+    "dosbox-qemu": "passed",
+    "wine-qemu": "passed"
+  },
+  "errors": 0,
+  "failed": 0,
+  "installed_tests": 97,
+  "passed": 97,
+  "payload_entries": 4379,
+  "player_smoke": "two fresh processes restored hall/key; 0600 save",
+  "prefix": "/Users/Shared/fDisBull/releases/0.31.1-27b388d",
+  "skipped": 0,
+  "source_commit": "27b388d38cc14f04842a81b8ec1a113460900f53",
+  "status": "active_verified"
+}

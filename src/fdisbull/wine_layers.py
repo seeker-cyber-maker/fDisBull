@@ -72,7 +72,7 @@ class PELayerSessionMixin(LayerSessionMixin):
         observed=self._view(address,cs=cs,length=length,view=view)
         runtime=int(observed['runtime_address'],16);value=int(observed['project_address'],16);raw=bytes.fromhex(observed['hex'])
         instructions=[]
-        for instruction in Decoder(64,raw,ip=runtime):
+        for instruction in Decoder(getattr(self,'bits',64),raw,ip=runtime):
             if instruction.is_invalid:break
             offset=instruction.ip-runtime
             instructions.append({'runtime_address':hex(instruction.ip),'project_address':hex(value+offset),

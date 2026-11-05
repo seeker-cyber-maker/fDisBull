@@ -34,7 +34,24 @@ class IDAPEDebugSession(PEDebugSession):
     rpc_type = IDAQemuRPC
     backend_name = 'ida-wine-qemu'
     script_operations = PEDebugSession.script_operations - {'branch','save-state','load-state','save-anchor-stone','load-anchor-stone',
-        'delta-start','delta-record','delta-status','delta-rewind','delta-recover'}
+        'delta-start','delta-record','delta-status','delta-rewind','delta-recover',
+        'keyboard.press','keyboard.type','keyboard.state','keyboard.key-down','keyboard.key-up',
+        'frame-probe','scene-check','scene-assert','scene-click','scene-act','scene-wait','wait'}
+    # This endpoint has its own guest protocol and is not upgraded by changes
+    # to the Wine agent. Preserve the qualified legacy frame/mouse behavior.
+    screenshot=PEDebugSession._legacy_screenshot
+    click=PEDebugSession._legacy_click
+
+    def _windows_not_qualified(self,*args,**kwargs):
+        raise ValueError('Shared Windows input, scenes and spectator are not qualified for the IDA endpoint; use wine-qemu')
+
+    keyboard_press=keyboard_type=keyboard_state=keyboard_key_down=keyboard_key_up=_windows_not_qualified
+    frame_probe=scene_check=scene_assert=scene_click=scene_act=scene_wait=wait=_windows_not_qualified
+    spectator_frame=_scene_slice=_windows_not_qualified
+
+    def dot_mode(self,enabled=None):
+        if enabled not in (None,False):return self._windows_not_qualified()
+        return {'enabled':False,'available':False,'view_only':True,'host_input_capture':False}
 
     def __init__(self, project, executable, game_dir, *, remote_server, state=None, **kwargs):
         if state is not None:
@@ -47,6 +64,7 @@ class IDAPEDebugSession(PEDebugSession):
             raise ValueError('Expected a Windows IDA remote-server executable')
         self.engine_start = {'remote_server':dict(sha256=hashlib.sha256(data).hexdigest(),
                                                  data_base64=base64.b64encode(data).decode())}
+        if project.bits!=64:raise ValueError('The configured IDA win64 endpoint requires a 64-bit PE project')
         super().__init__(project, executable, game_dir, **kwargs)
         # Persist only the identity, never the server binary in the project.
         self.engine_start = None

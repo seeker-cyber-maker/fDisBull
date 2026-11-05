@@ -239,6 +239,53 @@ the chosen player-information policy consistently to narration, JSON, action
 lists and visual summaries. A concise player description is not a complete
 investigator checkpoint.
 
+## Use a compatible save corpus to reach later systems
+
+Look for existing compatible saves early when a new game cannot expose the
+requested feature efficiently. Classify donor title, edition, platform, patch,
+language, expansion and mod/ruleset before loading. A sequel, remake or another
+platform's similarly named save is not a qualified input. An external save is
+someone else's entry state; its ordinary progression or editing history can
+remain unknown. Do not execute a bundled trainer or editor merely to use its data.
+
+Select a small corpus by discriminating state: new, active, paused, nearly
+complete, just unlocked, missing a prerequisite, or a relevant failure boundary.
+Keep strategic and tactical saves separate when the system has both. Preserve
+source URLs, original bytes and hashes; inspect archive paths, file sets and
+budgets; use a private writable clone. Preserve linked files and identities as a
+dependency group rather than copying a convenient unlock flag.
+
+Qualification requires more than parsing or seeing a menu. Load in the original,
+check the required system and linked invariants, advance one relevant original
+update, then save/reload and compare. A fresh-process original-save load and a
+same-session emulator checkpoint have different scopes. Record initialization,
+cache rebuilding, schema migration and all assisted preparation. When no suitable
+donor is obtained, label an original-generated or diagnostic seed accurately;
+keep unserved late-game coverage open instead of pretending an all-unlocks edit
+is a normal progression witness.
+
+Investigate saving as an operation with effects. Verify the actual configured
+path, file creation and contents, not just a return to a menu. The selected
+Syndicate writer subtracts funds above a threshold before attempting file-open;
+its active research graph can be newer than the per-project progress word.
+Those findings motivate generic safeguards, not hard-coded behavior for every
+program. Record pre-save, committed effects and post-load separately. Do not
+replay an uncertain save or assume native-state recovery restores host files.
+
+Use source ports, converters and format notes as attributed hypotheses. They may
+repair or normalize the original and do not replace original behavior checks.
+For X-COM-like research, include base, staffing, inventory, discovered topics and
+active-project dependencies; investigate the chosen edition before asserting
+exact formats or rules. The same method applies to project/document examples in
+other applications, with embedded code and external I/O handled explicitly.
+
+The bounded Syndicate example under `examples/syndicate_campaign` includes a
+private-input reader, separate research update/finalization models, safe archive
+intake checks and a read-only Player projection. Its tests are not authority to
+execute an arbitrary donor or claim complete campaign reconstruction. Preserve
+profile-specific unknowns and origin labels. See that example's report and
+`SAVE_CORPUS_METHOD.md` for evidence and acceptance requirements SC01-SC08.
+
 ## From code to semantics
 
 For UIL scene extraction, start with the required scene elements and their missing
@@ -254,6 +301,22 @@ the declared inputs/outputs with satisfiable assumptions, and compare selected
 original-runtime outcomes where authorized. A narrow Z3 result proves equality
 of supplied models at that boundary, not model fidelity, full-game equivalence
 or independent generated code. See [udl-uil-udc.md](udl-uil-udc.md).
+
+Report whether a result was read in prior research, checked against its source
+artifact or reproduced by an execution in this investigation. Retain the
+original result's revision, assumptions and untested edges when reusing it.
+A helper that consumes precomputed supply, demand or production quantities can
+qualify bounded accounting arithmetic; it does not establish the upstream
+worker rates, building rules, commodity mapping or complete turn process.
+Connect those claims to the relevant producers, tables, callers and committed
+effects before expanding the recovered contract. Algebraic equality alone
+does not establish either model's correspondence to the executable.
+
+Treat gameplay guides and sibling implementations as attributed leads. For
+each externally supplied rule, identify the target edition, exact claim, source
+span or table, input/output meaning and relevant conditions. Mark a missing
+connection unresolved. Precise addresses and proof terminology do not turn a
+guide-derived rule into recovered behavior.
 
 ## Compare depth and cost fairly
 
@@ -287,3 +350,30 @@ with the same failures as the baseline is still a failing full suite, with the
 comparison reported separately. Stop benchmarking when the requested decision
 is supported; carry the remaining investigation forward rather than rerunning
 settled measurements.
+
+### Evaluate skill and context interventions
+
+A reported agent experiment is evidence about what its report says until its
+underlying prompts, outputs and checks are inspected. Preserve the task,
+revision, model/settings when available, context mode, tool/web access, budgets,
+assistance, raw outputs and resulting evidence artifacts. Attribute missing
+records and do not infer that named sub-agents had fresh contexts. One task and
+one run per setup can reveal friction and motivate improvements; they cannot
+establish general effectiveness or reliable causal rankings.
+
+Compare the intervention that answers the question. A no-skill worker with
+repository research is a documentation-assisted baseline. If separating skill
+guidance from web access matters, compare skill present/absent with web
+present/absent, or explicitly retain the confounding limitation. Hold other
+conditions and accessible repository artifacts fixed, isolate sibling outputs,
+and use additional matched tasks/runs only when needed for the decision.
+Follow the methodology reference's role/context policy for the actual host
+separation. This is evaluation guidance, not a required benchmark for each edit.
+
+Score correctly supported claims, appropriately bounded unknowns and successful
+authorized actions. Evidence headings, longer answers, precise addresses and
+reported tool-call totals are not substitutes. Define what a call counts and
+report accepted scope, errors, time/tokens and worker costs when measured before
+claiming efficiency. Keep unavailable metrics unavailable. Distinguish an
+improved report structure from a reproduced proof or demonstrated gameplay
+recovery; retain counterexamples and incomplete runs in the result.

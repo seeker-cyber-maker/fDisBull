@@ -1,4 +1,103 @@
-# Release status checked on 2026-11-02 (America/New_York)
+# Release records and qualification
+
+## 0.33.0 local candidate (not published)
+
+The `0.33.0` source is a local macOS release-candidate cut. It starts from
+the unpublished 0.32.0 candidate, carries the published 0.31.1 lineage, merges
+the reviewed `4a487e4` integration and then the newer `7e43e32` integration
+stack, then merges current `main`, and adds the Boat CI handoff, built-in GOG
+Inno reader, Westwood media modules, experimental ScummVM Kyra/GLK Z-code and
+AGI-to-UIL pilots, shared scene fingerprint rules, and the reviewed
+research/skill integration work.
+
+This candidate has not been tagged, uploaded or installed. Hosted Linux
+ordinary/native CI and installed-wheel PE/DOS/boot acceptance remain pending.
+Local results and inherited failures are recorded in the
+[0.33.0 evidence](evidence/0.33.0-release/README.md) and the
+[release notes](RELEASE-0.33.0.md). The older `0.33.0rc1` packet is retained
+separately as `evidence/0.33.0rc1-release/`.
+
+## 0.32.0 source scope and publication record
+
+The [0.32.0 notes](RELEASE-0.32.0.md) describe the reviewed feature line based on
+0.31.1: captured-PE recovery, format/media intake, bounded Windows and
+protected-mode DOS debugging, lossless frame consumers, experimental AGI/Gob
+backends, the headless quit-dialog fix and signed-return correction. The version
+label describes source scope; it is not evidence that a tag, package or system
+installation already exists.
+
+Use the [GitLab release inventory](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
+and, when published, the
+[v0.32.0 record](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.32.0)
+for the exact tagged commit, dated qualification receipts, artifact inventory,
+checksums and download verification. Publication results belong with that
+immutable source identity, allowing the source to remain frozen throughout
+qualification and manual upload. Shared installation is a separate operation
+and needs its own receipt.
+
+The release gate requires ordinary local Linux CI and required-native Linux
+acceptance on the exact release commit, including stable and layers DOSBox
+profiles and the installed-wheel PE/DOS/boot path. Required native tests must
+execute rather than skip. Local macOS checks, source/package completeness,
+private-input exclusion, isolated package installation and both bundled skills
+are separate evidence. A historical feature receipt or a passing subset does
+not replace a missing release gate. See [CI coordination](CI_COORDINATION.md)
+and the [release scope](RELEASE-0.32.0.md#qualification-and-publication).
+
+GitLab !42 and !74 remain unmerged. The candidate takes reviewed, bounded fixes
+from the development work without merging those broader branches. The broken
+alternative !67 and unfinished research/RFC work are outside the 0.32 scope.
+
+## Historical status snapshots
+
+The entries below preserve earlier release and installation receipts. Their
+dates, source identities, test counts, selectors and words such as "current" or
+"now" apply to the recorded snapshot, not to today's source or installation.
+Retired-provider links are historical evidence, not current CI instructions.
+
+# Release status checked on 2026-11-03 (America/New_York)
+
+## 0.31.1 patch release published
+
+`v0.31.1` is an annotated tag at `e94bae0`, with GitLab Release
+<https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.31.1> and
+generic package `fdisbull-tool-packages` `0.31.1-20261103` (package ID
+`75166749`). It contains no new analysis features; it packages the native CI
+repair and the macOS Swift capture helper in the tool source ZIP, wheel and
+sdist. Pipeline `3023448913` passed `test-and-package`, native stable (86) and
+native layers (148). The local prefix `0.31.1-27b388d` passed 97 installed
+tests, three doctors and a two-process player smoke. See
+[0.31.1 evidence](evidence/0.31.1-release/README.md).
+
+## 0.31.0 published on GitLab; local shared-prefix active
+
+`v0.31.0` is an annotated GitLab tag at source
+`10d01062092a47bdc984ee59cd817b8ab57b6f1b`, with a GitLab Release and generic
+package `fdisbull-tool-packages` `0.31.0-20261103`. The release branch is
+`release/0.31.0`.
+
+Hosted `test-and-package` passed on the exact source (`10d0106`, pipeline
+`3022313149`; tag pipeline `3022469643` also passed), with 8,958 passed and 402
+skipped. The macOS native stable and layers suites passed 86 and 148 tests
+against the installed backend. Post-tag native CI was repaired on
+`release/0.31.0`; pipeline `3022926784` passed stable 86/86 and layers 148/148.
+The full local suite retains the known 3 failures and 23 errors from Linux
+ELF/GCC/media fixtures.
+
+The local shared selector now points to
+`releases/0.31.0-a12441b` (branch tip `a12441b`, version `0.31.0`). It is a local
+candidate, not a new tag: 97 installed tests passed with no failures or skips,
+all three backend doctors restored native state, and the two-process player
+smoke restored `hall`/`key`. The previous 0.30.0 prefix and rollback helper are
+intact. See [0.31.0 release notes](RELEASE-0.31.0.md) and
+[candidate evidence](evidence/0.31.0-release/README.md).
+
+Post-tag packaging repair on `release/0.31.0` (`a12441b`): the tool source ZIP
+was missing `src/fdisbull/data/FdisbullMacCapture.swift`. The release allowlist
+now includes it, and the distribution checker requires the macOS Swift capture
+resources in both wheel and source ZIP. The published `v0.31.0` tag tool ZIP
+still predates this repair; the local 0.31.0 prefix was built with the corrected
+ZIP.
 
 ## 0.30.0 release published on GitLab; local shared installation active
 

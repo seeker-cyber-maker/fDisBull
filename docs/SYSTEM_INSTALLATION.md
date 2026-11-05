@@ -1,24 +1,24 @@
-# fDisBull 0.29.0 — local shared Mac installation
+# fDisBull 0.31.1 — local shared Mac installation
 
 The active selector `/Users/Shared/fDisBull/current` points to
-`/Users/Shared/fDisBull/releases/0.29.0-c03dc4f`, source
-`c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`. This is a local candidate:
-`INSTALLATION.json` records `active_verified`, but no tag or publication exists.
-Core and player 0.29.0 run in Python 3.13.18 ARM64 with genuine decoding,
-managed-analysis and Z3 dependencies. The installed payload has 3,221 entries
-and its backend was inherited from the 0.28.0 prefix by an APFS clone.
+`/Users/Shared/fDisBull/releases/0.31.1-27b388d`, source
+`27b388d38cc14f04842a81b8ec1a113460900f53`. This is the 0.31.1 patch release
+installed from CI-verified artifacts; `INSTALLATION.json` records
+`active_verified`.
 
-The installed-package gate passed **818 tests with no failures, errors or
-skips**. DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed native-state
-restoration on authored targets. The installed player restored `hall`/`key`
-state across two fresh processes and kept private checkpoint permissions.
-Global core/player aliases and the global DOSBox doctor passed after activation.
+The local prefix contains the shipped Swift capture helper
+`fdisbull/data/FdisbullMacCapture.swift` in both the core wheel and the tool
+source ZIP. The installed package passed **97 tests** with no failures, errors or
+skips (63 required-native debugger/layer/keyboard plus 34 macOS capture tests).
+DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed native-state restoration. The
+installed player restored `hall`/`key` across two fresh processes and kept
+private checkpoint permissions. `scripts/check_local_install.py --version
+0.31.1 --commit 27b388d38cc14f04842a81b8ec1a113460900f53` passed.
 
-The previous 0.28.0 prefix remains intact. Its backup is
-`/Users/Shared/fDisBull/backups/0.28.0-d06bffb-to-0.29.0-c03dc4f`; the guarded
-`current/share/rollback-to-0.28.0.py` reports the rollback plan by default and
-requires `--apply` to switch. Preflight reported `ready`; no rollback was
-applied. Existing projects and user checkpoints were not migrated.
+The previous 0.31.0 prefix remains intact. Backup:
+`/Users/Shared/fDisBull/backups/0.31.0-a12441b-to-0.31.1-27b388d`; the guarded
+`current/share/rollback-to-0.31.0.py` reports the plan by default and requires
+`--apply`. Existing projects and user checkpoints were not migrated.
 
 Commands are `fdisbull`, `fdisbull-player`, `fdisbull-python`,
 `fdisbull-dosbox`, `fdisbull-qemu` and `fdisbull-runtime`. `RUNTIME.json`
@@ -31,8 +31,8 @@ fdisbull-python -B -I /Users/Shared/fDisBull/current/share/verify-system.py veri
 After each release, confirm the local installation from the release source tree:
 
 ```bash
-python scripts/check_local_install.py --version 0.29.0 \
-  --commit c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9
+python scripts/check_local_install.py --version 0.31.1 \
+  --commit 27b388d38cc14f04842a81b8ec1a113460900f53
 ```
 
 The check requires `INSTALLATION.json` to be `active_verified`, the selector to
@@ -41,10 +41,8 @@ release, and the complete payload verifier to report `active_default: true`.
 
 Discover both skills with `fdisbull agent-skill --list`; retrieve only the
 needed reference. Keep games, story inputs, saved native states and project
-databases outside the managed prefix. The macOS backend was not rebuilt for
-0.29.0; it was requalified from the 0.28.0 prefix. Hosted Linux CI, the hosted
-native matrix, a Git tag and publication remain pending. These checks qualify
-this host and prefix, not arbitrary macOS hosts or complete game parity.
+databases outside the managed prefix. These checks qualify this host and
+prefix, not arbitrary macOS hosts or complete game parity.
 
 Historical 0.25.0 publication details remain in
 [PUBLICATION-0.25.md](PUBLICATION-0.25.md) and [RELEASE_STATUS.md](RELEASE_STATUS.md).

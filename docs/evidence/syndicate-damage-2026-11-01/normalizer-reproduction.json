@@ -1,0 +1,38 @@
+{
+  "scope": "Pure replay of captured native stop metadata through installed normalize_stop, not a new guest execution",
+  "version": "0.29.0",
+  "module": "fdisbull/debug_semantics.py",
+  "module_sha256": "fc6ecbc6110232aa06e0c137c5d9a6e183f888418d8cbdb1a2dc03f6c65c7238",
+  "native_stop": {
+    "address": {
+      "offset": "0x00220154",
+      "space": "linear"
+    },
+    "breakpoint_id": "bp-447",
+    "kind": "breakpoint",
+    "project_address": null
+  },
+  "provided_actual_stopped_pc": {
+    "space": "segmented",
+    "segment": "0x0158",
+    "offset": "0x001C7C18"
+  },
+  "normalized": {
+    "format": "fdisbull-debug-stop-1",
+    "trigger": "breakpoint",
+    "native_kind": "breakpoint",
+    "causing_instruction": {
+      "offset": "0x00220154",
+      "space": "linear"
+    },
+    "resume_pc": {
+      "offset": "0x00220154",
+      "space": "linear"
+    },
+    "instruction_completed": false,
+    "registers_stage": "before-instruction",
+    "context": "dos-cpu"
+  },
+  "reproduced_watched_data_as_pc": true,
+  "cause": "Native memory-change stop is tagged breakpoint without data_access; execution-breakpoint fallback copies its address into cause/resume and before-instruction stage. Passing actual stopped_pc does not fix this branch. Higher wrapper fetches stopped_pc only for data_access stops."
+}
