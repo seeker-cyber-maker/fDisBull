@@ -15,13 +15,51 @@ on one wrapper format and then stop inventing more.
 optional Windows debugger backend is needed. They do not execute the Windows
 installer or its extracted programs.
 
-The supported profile is **Inno Setup 5.6.2 Unicode**, including GOG Galaxy
-multipart payloads. The reader validates the loader table, LZMA1 metadata
+The supported profiles are **Inno Setup 5.5.7 Unicode and 5.6.2 Unicode**,
+including the observed GOG Galaxy multipart payloads. The reader validates the loader table, LZMA1 metadata
 blocks, file-location table, stored/LZMA2 data chunks, Inno 5.3.9+ x86 CALL/JMP
 filter, per-chunk SHA-1, GOG zlib part sizes and final MD5. Other Inno versions,
 external source slices, encrypted payloads, unknown compression and malformed
 checksums are refused rather than guessed. This is not a universal GOG archive
 reader or an installer runner.
+
+### Profile identity and delivery checks
+
+The 5.5.7 header predates the two environment/association strings introduced in
+5.6.1. Its layout is selected explicitly, not guessed by retrying a failed parse.
+The manifest reports the actual accepted profile. Compressed payloads require
+the declared LZMA2 method; unknown profiles/compressors refuse without trying an
+external program. This extension does not admit all versions between the two
+named profiles or add external installer-slice support.
+
+A package version alone is insufficient: the earlier 0.32.0 candidate at
+`c80bff0` still used the external adapter. Native extraction was introduced by
+!80 and incorporated into !95. Build the native-containing source, rather than
+repacking that earlier wheel or installing an executable as a workaround.
+
+Before delivering a native-capable package, run the narrow source-identity check
+alongside the normal distribution/privacy checks:
+
+```bash
+python scripts/check_native_gog_distribution.py \
+  dist/fdisbull-0.32.0-py3-none-any.whl \
+  dist/fdisbull-0.32.0.tar.gz dist/fdisbull-0.32.0-tool.zip
+python scripts/check_native_gog_distribution.py /private/new-offline-kit.zip
+```
+
+This check reads archive contents without importing them. It requires both
+native modules, the adapter import, the two declared profiles, and identical
+module bytes across supplied application artifacts. It also rejects direct
+subprocess imports. It is a separate explicit check, not a replacement for
+`check_dist.py`, a comprehensive code-security audit, or runtime qualification.
+Follow it with extraction from an isolated installed wheel with an empty PATH
+and process launches forbidden. Unknown input must fail, not fall back.
+
+The authored tests in `tests/test_native_inno_profiles.py` exercise real CRC-
+framed metadata, stored/LZMA2 payloads and GOG zlib reconstruction for both
+profiles without game data. Corrupt hashes, unknown versions/compressors and
+unsafe destinations must refuse. These fixture tests are distinct from
+acceptance against privately supplied original installers.
 
 ### List before extracting
 
@@ -55,7 +93,7 @@ The output contains `gog-unpack-manifest.json` with the native reader profile,
 source SHA-256, selected paths, file sizes and SHA-256 hashes. The installer and
 adjacent files matching its basename plus `-*.bin` are hashed before and after
 the operation. The adjacent-part list records provenance candidates, not
-individually traced file consumption; the supported profile requires embedded
+individually traced file consumption; both supported profiles require embedded
 slices. Input changes, unexpected output files, links and incomplete extractions
 are errors. Source installers remain unchanged.
 
