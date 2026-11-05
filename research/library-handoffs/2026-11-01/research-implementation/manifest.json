@@ -1,0 +1,2894 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip",
+  "bytes": 15734119,
+  "sha256": "aa3627a4ac061fdccb9f816e0d8e685417275220e60dee119b8a9db655e8fdf2",
+  "source_url": "https://chatgpt.com/space/file/libfile_00a0666f275c8191bc891ea3d8b14686",
+  "outer_members": 61,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 12,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "00_READ_ME_FIRST.md",
+      "bytes": 3680,
+      "sha256": "004b40d0dc621abf98106de82e1dc40550bbb528f8d73ad6db0957955192d261",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "MANIFEST.json",
+      "bytes": 16636,
+      "sha256": "75dd69d1dcf366fc213b3d9e549800d3e7746e7c736feff605654127264ae81f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "SHA256SUMS.txt",
+      "bytes": 7642,
+      "sha256": "ea4998f4316e7e2a7d994b15e6b307042376390dea23f3e557a566c195651972",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/First_Party_Console_Synthesis.zip",
+      "bytes": 132579,
+      "sha256": "6bcdee97fd51e0079f3d65cad9a6d3794a6c8ffcd8d9d110f3f5312b544b8554",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/First_Party_Console_Synthesis.patch",
+      "bytes": 85926,
+      "sha256": "046ce005db5ce7a115b5a03a75347baea552507506f92406d55c0e50f096d6c5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/First_Party_Console_Synthesis_Report.md",
+      "bytes": 12643,
+      "sha256": "86ec497e07dca7b9ad5b450a305c2f8fe3615d08eb3c03013dc3391b7d481a66",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/First_Party_Console_Synthesis_Verification.json",
+      "bytes": 10415,
+      "sha256": "034e55fe35a790d656c48568b5f4622a276bbc61afcdc1d5d358f5d442cda064",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip",
+      "bytes": 7739,
+      "sha256": "473dbebd8eae9c5af9b36209fba7686addb4181d061aa4faf008bfa5d491b18a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/rom_route_audit/ROUTE_STATUS.md",
+      "bytes": 5899,
+      "sha256": "a4bec9f09946cfaab2f9e1df50a8d291ee7aeda25c609721afd7e306f1a71b8f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/rom_route_audit/route_audit.json",
+      "bytes": 2763,
+      "sha256": "574554227e4ffd11faf9e5edd34b7c8ea6772d036123068615bf5c153e846996",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/Console_First_Party_Synthesis_Update.zip",
+      "bytes": 29437,
+      "sha256": "49f61c8368d4993a105e107c12e512a441f9e249f9bcea6d4d9ac5f2951b2b76",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "01_Console_Current/console_recompiler_survey/RESEARCH_BRIEF.md",
+      "bytes": 9294,
+      "sha256": "c105c43822d1719176a4a9261e650571b63a163adbc5ddb5e8a286534a2b53cc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip",
+      "bytes": 146860,
+      "sha256": "426cec48f4805da897d21eab96d89ec244d01921f7629497a092ab1f8b06da4b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "02_Colonization/Colonization_DOS_Windows_Shared_UIL_Report.md",
+      "bytes": 11540,
+      "sha256": "38a4770d60c657e59529397a555dc5e5a8a8757e16dce684234300f371de7bde",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "02_Colonization/Colonization_Shared_UIL_Verification.json",
+      "bytes": 3593,
+      "sha256": "899cfcc0e7d66d98839a3a913cbca05f0daec5fd85d890a93c2ef02f4f134914",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip",
+      "bytes": 4856777,
+      "sha256": "82db20931f60a2e32bfa205b16cb24602531756984dc0c3c25dbde1e6bbe1f55",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "03_Architecture_and_Illustrations/PR29-full-resolution-illustrations.patch",
+      "bytes": 6175508,
+      "sha256": "33e12f91616f20973e1b973abf15f1236e35d24a601e421b2da7d15ace08d8e2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "03_Architecture_and_Illustrations/a_wide_infographic_style_diagram_on_a_dark_backgr.png",
+      "bytes": 2427320,
+      "sha256": "bf6f94819fcecda9a205f0c7bb0e0d2d587b8b1f3af00a0cae43ddeb469fcd6b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "03_Architecture_and_Illustrations/a_wide_infographic_diagram_on_a_dark_background_l.png",
+      "bytes": 2556527,
+      "sha256": "acfe1323b07e4c996e977f09ab885eb85d2839de7dabbcb63d350db91d373e7d",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip",
+      "bytes": 31297,
+      "sha256": "3fc1ea0a3a7d7490bb5ed4b216db10f5555778e2ce58eee34c11edfd0f8d6e64",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "04_Civilization_and_Guide_Research/civ_replication_plan/PLAN.md",
+      "bytes": 24521,
+      "sha256": "b02f77cae403c1b03d93d966644e5e5f54df776eb75041a8fb02f5613b0ce0c5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "04_Civilization_and_Guide_Research/civ_replication_plan/reference_match.json",
+      "bytes": 1408,
+      "sha256": "9bb715d757b223269d33855f83fdb9497d43a703c52bfb3226889f8ced217c0b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "04_Civilization_and_Guide_Research/civ_replication_plan/startup_correction_check.json",
+      "bytes": 886,
+      "sha256": "87597b34ed561ed7e52a2860e22e795b76caf86c973fc1c4019abd6fc9a96199",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "04_Civilization_and_Guide_Research/FF7_GameFAQs_Localization_Case_Study.md",
+      "bytes": 12879,
+      "sha256": "79799031cc645931eb0858bdd7d111ed9d2e1a353b8c6fa1e218ae581abe108a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Console_Recompiler_Integration_Plan.zip",
+      "bytes": 14652,
+      "sha256": "186b29f9743476737e4dc7b714d77cbc5636249be66e84ee472f7d1c46b5d3da",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip",
+      "bytes": 50295,
+      "sha256": "ed704fbabf665a8fa316036f78917c7b742955513ee949751f6f5ebfe963cb27",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/UDL_UIL_UDC_Patch_Report.md",
+      "bytes": 11936,
+      "sha256": "ea3281579e847e78f45c3612a2b38314e59f6f022b63b919d1aabe601f657e50",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/UDL_UIL_UDC_Patch_Results.json",
+      "bytes": 3547,
+      "sha256": "0d9b8d1ab635e285f3f4a83c83a09a2d4032f2460e071e42b99bdbb4bfab0fdc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Patch_Demo_Pre.js",
+      "bytes": 1925,
+      "sha256": "5af201e75398e75131296edccc7b89b3894f2555e3cf56636564ee065705a97c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Patch_Demo_Post.js",
+      "bytes": 2177,
+      "sha256": "b0216b5335aad723f70bc4f51b7f6d88637afa71a2f6c29b6e6cc798b8150c95",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/udl_patch_lab/results/generated.js.diff",
+      "bytes": 813,
+      "sha256": "cae1291b79be0a07041ffcb6d8c94c3db8b4e849ab2ae92dcb63481287362807",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/udl_patch_lab/results/reproduction.json",
+      "bytes": 846,
+      "sha256": "c143e5ebb8c584936de24a942978e24e4885d1ee566cac826246cf997994a5d2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/udl_patch_lab/results/examples.json",
+      "bytes": 966,
+      "sha256": "9d1bdd42c6bd1d32ed8d2c5a4d8447a0e82f807ec3f6c332a0c904bc22413f21",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/udl_patch_lab/results/block-diff.json",
+      "bytes": 2342,
+      "sha256": "68aedea17b9d21f88c90d1971ada02af830ebc7ea95b8f1994b0d13d9fcd387e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Polyglot_U8_Handoff.zip",
+      "bytes": 8423,
+      "sha256": "c562aa4f8ed64f3d09784ef3dc72b3c76f315353b27b01fe4e327899b540aad5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Polyglot_U8_Results.json",
+      "bytes": 2366,
+      "sha256": "06d1668bd79ebbbe0a8a3634aee664c9bb1aafd5abe7ec5ba8cfd4b1d49a6798",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip",
+      "bytes": 20589,
+      "sha256": "d1907a445bf045ac01e7d214daf91a819866d49657cc0b9f27262a7ee57a13a6",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/fDisBull_v026_Verification.md",
+      "bytes": 4400,
+      "sha256": "6f894228de59f848d4c759fb15f5c7073d8abfc43114f666ba028db117ff1b50",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/fDisBull_v026_Verification.json",
+      "bytes": 6756,
+      "sha256": "ce507cbe6264d75e022a4660856139f390559f1a12ecb16f86089f28033a0949",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip",
+      "bytes": 312359,
+      "sha256": "f69f38822d462bd260185777f554b5d4e257592c3cc752b2c014ff24f9ddd77a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Lost_in_Time_Export_Order_Report.md",
+      "bytes": 9617,
+      "sha256": "de58203ca7e5b37cf91d9dbe2cb6f3e42cf0bd7f08940b5689a89c41b8cbf9aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Lost_in_Time_Export_Order_Benchmark.json",
+      "bytes": 1823118,
+      "sha256": "401fce14835944f4a237d699981e506e1cb6edd36c3283c11977b86561703c27",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/lit_order_experiment/results/audit.json",
+      "bytes": 3798,
+      "sha256": "bddc3559d98f578aa01cb5b1835c153a2083bb53c26c3aa5832fa464c4201de0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip",
+      "bytes": 81285,
+      "sha256": "0b1a185153791a55a12257c2e9ec123eec3f2a83f17a3360d255cb9f1e5cf5d1",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Game_Patch_Comparison.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Game_Patch_Benchmark.json",
+      "bytes": 3441,
+      "sha256": "91644ae96f982f7ad5d3382e3fcf5f353b57c0d146c1ee5b9db57360aa27a514",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/PR20-game-patch-study.patch",
+      "bytes": 13129,
+      "sha256": "b3923ba9fc19eded47e98db2f4c82a9d9e114de12975dc30797bcb89c58863fb",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip",
+      "bytes": 23495,
+      "sha256": "185868630aca93bc5afdf392043bffd8d8124f30fbfc9a0bdde6937b1a8abf29",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Patch_and_Ultima_Intake.md",
+      "bytes": 12650,
+      "sha256": "4b13ae8443eeead1153c1943cf152eff3429bc39b7d26a9f36e5c9263496a69b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/sq1_prepatch/prepatch_identity.json",
+      "bytes": 2239,
+      "sha256": "078a4008b314664d9154f4a4b50d12efba50ad5b9ca6ee708af095409a6b8921",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/game_patch_study/results/c_saved_read_regression.json",
+      "bytes": 217,
+      "sha256": "cd6f6aba874348926562efbdea9788d639ef69c48052e1290b541b37c9dc6fcb",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/game_patch_study/results/c_validation.json",
+      "bytes": 554,
+      "sha256": "198c03cbbeb1813684ddd646a009477127fd3838dc9c38f955aa3c9140f22453",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/game_patch_study/results/comparison_summary.json",
+      "bytes": 24282,
+      "sha256": "16575a0145c3d226de71a2bcd533ef62cb5221a5e7243205310e57759f1fbd9c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/game_patch_study/results/gog_patch_oracle.json",
+      "bytes": 11416,
+      "sha256": "a5ee6f662eb16ef1feba1628b6d8a74d855d1592d7dade67f6cb785bb30609e9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/ultima_avatar-analysis-summary.json",
+      "bytes": 664,
+      "sha256": "22820a27c904fe7b559dd0b22acc3db61489461abc9af1982287beb692b3f9c8",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/ultima_title-analysis-summary.json",
+      "bytes": 674,
+      "sha256": "5f5c94a1098aa3c8df7fba9bf7f6c4e9182860f00b282468a8e833e71bafc53e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-versus-full.json",
+      "bytes": 2882,
+      "sha256": "f186b2eb97c592ad52222f96578515dedca42aa7cfbd9dbc62265d39f18b286c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-declared-support-actions.json",
+      "bytes": 3393,
+      "sha256": "ee0501a63fae216f253848f4c3c90e7106fd27a103eff2be378dd7e034a3f712",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/summary.json",
+      "bytes": 7011,
+      "sha256": "5cf903dd545cc44b01ebac69cf544a8cb3dd60dd646be749137d7c3554325e2c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-target-manifest.json",
+      "bytes": 12578,
+      "sha256": "3c5fbf597cf96e8ef8d732dd5c10077f56477e19db32fe85069bee73cd1c3afe",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "05_Historical_Experiments/fdisbull_pr_update/HELD_OUT_RECOVERY_STUDY.md",
+      "bytes": 19735,
+      "sha256": "296be0a0fd3d7da2f9856cd053e6fc610e8d4df8018fcf58af660c2e4f942684",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    }
+  ],
+  "recursive_archive_count": 14,
+  "recursive_member_count": 387,
+  "recursive_members": [
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!00_READ_ME_FIRST.md",
+      "bytes": 3680,
+      "sha256": "004b40d0dc621abf98106de82e1dc40550bbb528f8d73ad6db0957955192d261",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!MANIFEST.json",
+      "bytes": 16636,
+      "sha256": "75dd69d1dcf366fc213b3d9e549800d3e7746e7c736feff605654127264ae81f",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!SHA256SUMS.txt",
+      "bytes": 7642,
+      "sha256": "ea4998f4316e7e2a7d994b15e6b307042376390dea23f3e557a566c195651972",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip",
+      "bytes": 132579,
+      "sha256": "6bcdee97fd51e0079f3d65cad9a6d3794a6c8ffcd8d9d110f3f5312b544b8554",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!MANIFEST.json",
+      "bytes": 8855,
+      "sha256": "c1f7e76f0f47ab79dab7a944afcd1764b8216a9cb6bd7785c6323d2b98d95a91",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!PR_UPDATE.md",
+      "bytes": 2867,
+      "sha256": "e748980c61ee962f7d6adabe06ec7c507c4a0aec392714f76d7b0daf59db4233",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!README.md",
+      "bytes": 3215,
+      "sha256": "9a9888b46ae4ed2e12ea5ec3f8e5ca655efdada035509a59291436bb2269e13a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/final-pytest.xml",
+      "bytes": 11070,
+      "sha256": "c54680be63d3b5fbefe6c7955e8a0675adcdf7e37bcf920d7593cd3d9124da5b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/bindings.json",
+      "bytes": 2266,
+      "sha256": "294085acd99e4943d6b93d24200b1853077d9b43a92c5dd78d3a219488d8a1e4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/generated.c",
+      "bytes": 2493,
+      "sha256": "dd8e463516160a60a1a7b44e9ffa16ddef97e53a8bc7ca5e4cc5c9fa4d602852",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/generated.mjs",
+      "bytes": 3121,
+      "sha256": "3a3e868b6d852352f693fd1fe168b6fafa8374af8a2503d9302149d55c364d5d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/input_cases.json",
+      "bytes": 31163,
+      "sha256": "fd51666285233558c05fac9397664f3bec36372f909d5139afe6c3a0c124dd08",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/observed.json",
+      "bytes": 32119,
+      "sha256": "6c80a2f3cca420e94da77b6a67470236670dd7ff63ce6fa46b00001bc8459c4b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/program.udl.json",
+      "bytes": 7472,
+      "sha256": "1c804f2d512ba1e41847885ab2e4224f51fc7ffa111e8d0b4897fab3ab66fc75",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/adc/program.uil.json",
+      "bytes": 7472,
+      "sha256": "f530aed7c8262d35034271d77c9852d99449f1ee77985e8ba0293a1a1f1285be",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/bindings.json",
+      "bytes": 2044,
+      "sha256": "9d48054d5fc12387405d083e28d310d97eeae00c1f38b701b3bb80aaad87825a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/generated.c",
+      "bytes": 1875,
+      "sha256": "aa8b8f872422f0c9ca0dbf5003ad8d745768c9a15d5b2756724d189d3bab34cf",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/generated.mjs",
+      "bytes": 2139,
+      "sha256": "3a1f850ba3b9ac739aa062bf9b18f5753e67bc5dc30dff7a3317998dc7f8d0d7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/input_cases.json",
+      "bytes": 25610,
+      "sha256": "295f4d09b4b0c2fb67016670d9bdb0424a3cd88b416c80ab759862d98892794d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/observed.json",
+      "bytes": 25331,
+      "sha256": "531613f9390db4c6f8dff37c1d9f054f19331ef12d4c22b391a4386fa3f8df11",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/program.udl.json",
+      "bytes": 3379,
+      "sha256": "728f52632af000c2d8c6458abee3b77b9d953f9f131f7def31b831c58c229685",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/branch/program.uil.json",
+      "bytes": 3379,
+      "sha256": "1fda1306fe946e5e6781954527e3366f92501f60042a9d6b6e0cae35e5c7326d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_0_adc/module.c",
+      "bytes": 2493,
+      "sha256": "dd8e463516160a60a1a7b44e9ffa16ddef97e53a8bc7ca5e4cc5c9fa4d602852",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_0_cmp/module.c",
+      "bytes": 2030,
+      "sha256": "36bf10beb64924d52d964334a4cd0b5a3f8615a227769fa2ddbbc6659c9c44ee",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_0_sbc/module.c",
+      "bytes": 2533,
+      "sha256": "1e1c2d0a13fa17c999cacbd0d5a26f5261921ad770e53792097f92831a2efbf8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_1_adc/module.c",
+      "bytes": 2493,
+      "sha256": "dd8e463516160a60a1a7b44e9ffa16ddef97e53a8bc7ca5e4cc5c9fa4d602852",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_1_cmp/module.c",
+      "bytes": 2030,
+      "sha256": "36bf10beb64924d52d964334a4cd0b5a3f8615a227769fa2ddbbc6659c9c44ee",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_1_sbc/module.c",
+      "bytes": 2533,
+      "sha256": "1e1c2d0a13fa17c999cacbd0d5a26f5261921ad770e53792097f92831a2efbf8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_2_adc/module.c",
+      "bytes": 2493,
+      "sha256": "dd8e463516160a60a1a7b44e9ffa16ddef97e53a8bc7ca5e4cc5c9fa4d602852",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_2_cmp/module.c",
+      "bytes": 2030,
+      "sha256": "36bf10beb64924d52d964334a4cd0b5a3f8615a227769fa2ddbbc6659c9c44ee",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/build_2_sbc/module.c",
+      "bytes": 2533,
+      "sha256": "1e1c2d0a13fa17c999cacbd0d5a26f5261921ad770e53792097f92831a2efbf8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/bindings.json",
+      "bytes": 4393,
+      "sha256": "8941c325b1f673f62bbdabbed087f0dc7fa239e6e93b4afda5f63745995c71f3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/generated.c",
+      "bytes": 4987,
+      "sha256": "6ddd53bee5147238bf1ff27037198d61c5df0b337dda0d7b5d6c8dbc75d1e2ec",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/generated.mjs",
+      "bytes": 5655,
+      "sha256": "d65391c0517113d5b3a41d62e9fbb5e0087a649dd67d3a67b8cda063eab3eef2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/input_cases.json",
+      "bytes": 39856,
+      "sha256": "2c0032548cf65ec5682f4d811acab0504581d688dee5719fd1b10550cc21118d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/observed.json",
+      "bytes": 40211,
+      "sha256": "2d08333d35118abeadac3cff65680ac03c4f0ef8e9f969e1fb112aee30bf7a2d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/program.udl.json",
+      "bytes": 16502,
+      "sha256": "5a442a0188d19b67d0fceed127dd16c59feb3b2355648d9b3bb462d7b4cd1e36",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/carry_chain/program.uil.json",
+      "bytes": 16502,
+      "sha256": "588e872b8103fc8e14ba421bb9a80a510761f9f552c6e0f3409805dbbb1b2f78",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/bindings.json",
+      "bytes": 1981,
+      "sha256": "1dc62387e59f3963dac8bdec9b489f8fa4d5423a9657d73098dba2cdcd1e0f7a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/generated.c",
+      "bytes": 2030,
+      "sha256": "36bf10beb64924d52d964334a4cd0b5a3f8615a227769fa2ddbbc6659c9c44ee",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/generated.mjs",
+      "bytes": 2557,
+      "sha256": "cbabbb0b8a3166237c32564aa9aaaf0ae020b90a251a96e1df37d7347bc85ba3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/input_cases.json",
+      "bytes": 31168,
+      "sha256": "b37df8cc158743f45b493ba14dedfb9b83c85050a3c39d98e66e146855b15e88",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/observed.json",
+      "bytes": 32064,
+      "sha256": "661c8ba3e4060b97e391c9657810c83f9217f8d99a103aa5577fdf659b4c6821",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/program.udl.json",
+      "bytes": 3070,
+      "sha256": "99b12dcd47dec0c33745311f98db11f03c4e2a407e0aaa1654a5ec125e68beb6",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/cmp/program.uil.json",
+      "bytes": 3070,
+      "sha256": "fcf4369b62833ab9e0f557faf0abbc804a7e8255147552fb6b5a4a0248029bef",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/composition_a/module.c",
+      "bytes": 2188,
+      "sha256": "3698b11748d8e66882e9d93287f38dc38f564a27e012b34751ae7d77d4883507",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/composition_b/module.c",
+      "bytes": 2188,
+      "sha256": "71b6449471a52d88873d7466c6a1c698b2e65b8595cd75301e5266bc1c89d250",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/mutant/module.c",
+      "bytes": 2454,
+      "sha256": "7b5570c81dccda1cc4f2fd6bbb9ef580f4664e779d004015aa3a9062c3546531",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/bindings.json",
+      "bytes": 2392,
+      "sha256": "3ea6a962d8d662ed97f2d1e65b15f7914345351f3dd59eff33e28dc8a749f3bf",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/generated.c",
+      "bytes": 2188,
+      "sha256": "e580079e9a8f019bc0781a4021e9c93854843d81ec3ef3e94ade83dbaafcb8b9",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/generated.mjs",
+      "bytes": 2413,
+      "sha256": "99c82b7ea726890ae7291410c4292c3f27d0557060c45750373ead444badc450",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/input_cases.json",
+      "bytes": 24626,
+      "sha256": "346286592baabafe471cbc7d132d985ba6061dbc4de7bf241a3345ccae5d4297",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/observed.json",
+      "bytes": 24345,
+      "sha256": "7f9326fa34bc71735de89d824728204572632732aeede9f3925d3ba9de35e6e0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/program.udl.json",
+      "bytes": 4017,
+      "sha256": "f386b9cac1dcd30e6c4d06c4ead7462c5ae24b020374968a0b0becd636cd97a5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/saved/program.uil.json",
+      "bytes": 4017,
+      "sha256": "6b81b7978fc37a901309f212974303228426a9828ad16dfb47071dba3c404f3c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/batch.mjs",
+      "bytes": 214,
+      "sha256": "0c9e72e553b57541971aedee17c49b3b2f226b22a29795fa413e052f8bce2b00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/bindings.json",
+      "bytes": 2323,
+      "sha256": "c7c0251176eeee9f6a5d76f8d1cf8b53f1e28003d012b0ef64f6826a8bd26583",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/generated.c",
+      "bytes": 2533,
+      "sha256": "1e1c2d0a13fa17c999cacbd0d5a26f5261921ad770e53792097f92831a2efbf8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/generated.mjs",
+      "bytes": 3172,
+      "sha256": "6dd3874313be88af5511a1fc61d9925ab179909a7b24b9857194f44b75566776",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/input_cases.json",
+      "bytes": 31132,
+      "sha256": "17f889db6159d021ae8661ea205e79ec95e7805c3e1640a5f112768167e60a67",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/observed.json",
+      "bytes": 32060,
+      "sha256": "8d6fff632df8c85886bffb28e369e831611d96b8768d05bc2390494cd8087d4f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/program.udl.json",
+      "bytes": 7754,
+      "sha256": "c2bb3b38e6454eed27ef73504a3601644cecd49fa7740f7f982a528f6a8b61b4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/sbc/program.uil.json",
+      "bytes": 7754,
+      "sha256": "1fcb36c359278ae0ddca9ac9c0df9c1bde16f85c969728e157c4250064c455d3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/generated/verification.json",
+      "bytes": 11003,
+      "sha256": "0c94bd43773fcdfeb7050d18f998d8c4120f5726bb3700739cb4fc2b70285d3f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/patch-replay-pytest.xml",
+      "bytes": 11070,
+      "sha256": "ef9e6c3a3aec725d90bf9fa15b9731f9e7bfa8bc7efe087481943477063994fa",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/reproduction.json",
+      "bytes": 1979,
+      "sha256": "ff1d79654d57874a4919219850219bd2d51b43183139f419a6e9ae36f79417de",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!evidence/summary.json",
+      "bytes": 10415,
+      "sha256": "034e55fe35a790d656c48568b5f4622a276bbc61afcdc1d5d358f5d442cda064",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!integration.patch",
+      "bytes": 85926,
+      "sha256": "046ce005db5ce7a115b5a03a75347baea552507506f92406d55c0e50f096d6c5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/docs/CONSOLE_SYNTHESIS_LOCAL_PILOT.md",
+      "bytes": 12643,
+      "sha256": "86ec497e07dca7b9ad5b450a305c2f8fe3615d08eb3c03013dc3391b7d481a66",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/scripts/check_console_synthesis.py",
+      "bytes": 12603,
+      "sha256": "142c43459ea99b4df89a339b8bf6a7a45c0483fd5fafe8adf220a071043a10eb",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/scripts/console_synthesis_oracle.c",
+      "bytes": 2226,
+      "sha256": "df36b8f657d2a9b4ffa55d086fb3abf55da76efefff29b4598d439af402939a4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/__init__.py",
+      "bytes": 749,
+      "sha256": "7b7af18f133364f8f63db2cd167137e9ad31256eeaaae062d96cdf41c4497d2c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/compare.py",
+      "bytes": 2235,
+      "sha256": "b3cc5452aecd73a2e5c0e27e61369789df496f82947a57d2f151c35b7206cf88",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/mapping.py",
+      "bytes": 7273,
+      "sha256": "0af05fd692445cd160aba58553b039426c1029ce6a1df3aaee985c0355e401e7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/model.py",
+      "bytes": 7432,
+      "sha256": "907204c83c9682f7492bc5971f8c8d5022fd77c7aecd0fbeecfdb0fe014ee91e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/recover.py",
+      "bytes": 12362,
+      "sha256": "3f83d33207c6eb23998817426c2a5c02e02bde37bedda54748b23697b4e3f0c7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/src/fdisbull/console_synthesis/targets.py",
+      "bytes": 10068,
+      "sha256": "82cdd5c10a3ec054b37848ca4aaa8bc750f2c5570944f690f9c0675581174402",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/tests/console_synthesis/conftest.py",
+      "bytes": 261,
+      "sha256": "77b1ce673566161a1af9b9f4a77d7615e138fbb189c7435b41b64d0933f887e9",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.zip!source/tests/console_synthesis/test_console_synthesis.py",
+      "bytes": 13974,
+      "sha256": "e551a2d08d3f025d2f883dd8124c58dc8d557cba272f0e450e9ebeb9e6d31dc8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis.patch",
+      "bytes": 85926,
+      "sha256": "046ce005db5ce7a115b5a03a75347baea552507506f92406d55c0e50f096d6c5",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis_Report.md",
+      "bytes": 12643,
+      "sha256": "86ec497e07dca7b9ad5b450a305c2f8fe3615d08eb3c03013dc3391b7d481a66",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/First_Party_Console_Synthesis_Verification.json",
+      "bytes": 10415,
+      "sha256": "034e55fe35a790d656c48568b5f4622a276bbc61afcdc1d5d358f5d442cda064",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip",
+      "bytes": 7739,
+      "sha256": "473dbebd8eae9c5af9b36209fba7686addb4181d061aa4faf008bfa5d491b18a",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!ROUTE_STATUS.md",
+      "bytes": 5899,
+      "sha256": "a4bec9f09946cfaab2f9e1df50a8d291ee7aeda25c609721afd7e306f1a71b8f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!check_routes.py",
+      "bytes": 4337,
+      "sha256": "b18d0bd85b182469a48bacab91f7203c8c9e795ca7f967108bb0cf9949851339",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!route_audit.json",
+      "bytes": 2763,
+      "sha256": "574554227e4ffd11faf9e5edd34b7c8ea6772d036123068615bf5c153e846996",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!generated.c",
+      "bytes": 2188,
+      "sha256": "3698b11748d8e66882e9d93287f38dc38f564a27e012b34751ae7d77d4883507",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!generated_host.s",
+      "bytes": 894,
+      "sha256": "d5067842b1ad4ae37a0f9353fc113eb5c17245ab429a1effcbe5a0445d15e574",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/ROM_ASM_C_UIL_Route_Audit.zip!recovered.uil.json",
+      "bytes": 4015,
+      "sha256": "c85f98926058a9700b73d00acba4e4f0c480290ee6423ee1730f53f2e9719ea1",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/rom_route_audit/ROUTE_STATUS.md",
+      "bytes": 5899,
+      "sha256": "a4bec9f09946cfaab2f9e1df50a8d291ee7aeda25c609721afd7e306f1a71b8f",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/rom_route_audit/route_audit.json",
+      "bytes": 2763,
+      "sha256": "574554227e4ffd11faf9e5edd34b7c8ea6772d036123068615bf5c153e846996",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/Console_First_Party_Synthesis_Update.zip",
+      "bytes": 29437,
+      "sha256": "49f61c8368d4993a105e107c12e512a441f9e249f9bcea6d4d9ac5f2951b2b76",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/Console_First_Party_Synthesis_Update.zip!docs/CONSOLE_RECOMPILER_ACCEPTANCE.md",
+      "bytes": 14320,
+      "sha256": "b9b4dcdc0f83bd13920393079d87d3f53aaefe00821e8730c1657035006271c4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/Console_First_Party_Synthesis_Update.zip!docs/CONSOLE_RECOMPILER_INTEGRATION_PLAN.md",
+      "bytes": 28488,
+      "sha256": "099c3466e153b9f8a89f2c55842728c15f93b49f0d0086b5c7285f6ea52db216",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/Console_First_Party_Synthesis_Update.zip!document-checks.json",
+      "bytes": 780,
+      "sha256": "0ff63ad7fb2249a3013cae92e57bc12336acabedce7ac7f42797a91639b88aea",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/Console_First_Party_Synthesis_Update.zip!first-party-synthesis.patch",
+      "bytes": 32713,
+      "sha256": "8471ba370329c2822171bd2f472094310344aa6b57421f3037b08e960ec827de",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!01_Console_Current/console_recompiler_survey/RESEARCH_BRIEF.md",
+      "bytes": 9294,
+      "sha256": "c105c43822d1719176a4a9261e650571b63a163adbc5ddb5e8a286534a2b53cc",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip",
+      "bytes": 146860,
+      "sha256": "426cec48f4805da897d21eab96d89ec244d01921f7629497a092ab1f8b06da4b",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/README.md",
+      "bytes": 1982,
+      "sha256": "d079a85c60dfb248d40fb3970ece4911daa992ff695c390b06662346ceb08f1b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/REPLAY.md",
+      "bytes": 1197,
+      "sha256": "e53b38544435a791315e1429a27a142c8202aaab0983776d255caab00ef2e515",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/SHA256.json",
+      "bytes": 2352,
+      "sha256": "ff3b6e849782e64448ec42d897fb6947074cf84bc0b4a7ead60010c399d37f95",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/build_native.py",
+      "bytes": 6797,
+      "sha256": "2098d2a51f7a92900312c88178371d90b2ea259ff2afae58002b02fe464a6f0c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/contracts_and_bindings.json",
+      "bytes": 2840,
+      "sha256": "d33b4a29d7136acf686b819db1fe76ed4f7606ff63c3ce8a265c575dd85eae1b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/definitions/input_balance.udl.json",
+      "bytes": 9755,
+      "sha256": "1cc59816397e59b92ce38591b0c6b45f2a605ffc064e10cbe883c16ef96f0d2a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/definitions/input_balance.uil.json",
+      "bytes": 9755,
+      "sha256": "a530b174f5f830d516f8bdfe3c7206654d103130431a9f27a6257e20e33f4a98",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/definitions/net_production.udl.json",
+      "bytes": 2218,
+      "sha256": "069e68e15443ebb1117c6ba21c3a5bbd0a307d36d6c57d76716e70540b204b83",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/definitions/net_production.uil.json",
+      "bytes": 2218,
+      "sha256": "f19e4204be32465d85de2f4e2f9f5505a686c7a5cd5c7b33b18b1b05255674a2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/docs/COLONIZATION_SHARED_PRODUCTION_HELPERS.md",
+      "bytes": 11360,
+      "sha256": "3151c2a170e34b6c174d8f247ff4fb879eae264873523850ce7a56fd87caff09",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/make_cases.py",
+      "bytes": 922,
+      "sha256": "f79d82791627bcddc7f13851bcb68ee032dda0600a94cba02e4f83ee1cb1ddc4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/native_bindings.json",
+      "bytes": 1793,
+      "sha256": "823eec8ea45e93ed9dc6b5b868bc9cdbccc34dada1d4921629b4545e1cfba8b7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/observations/DOSOUT.BIN",
+      "bytes": 36864,
+      "sha256": "efb9ee541d2dc84fdec4eb36758e77c450db78bbb3c86508e6acc024670b1894",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/observations/WINOUT.BIN",
+      "bytes": 36864,
+      "sha256": "efb9ee541d2dc84fdec4eb36758e77c450db78bbb3c86508e6acc024670b1894",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/observations/cases.json",
+      "bytes": 191535,
+      "sha256": "f512a90374f13c9c739b57e13e4563ab9c084b03a23ae7950c8f94c968ac4b49",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/proofs/balance_dos.smt2",
+      "bytes": 1811,
+      "sha256": "8d50924705830d73972afd7828f5891b2f11677bff9f10b7832ae042e8bbc14e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/proofs/balance_windows.smt2",
+      "bytes": 1789,
+      "sha256": "597cfc56b3934238cf25de43ef6efecfcdead11807cc4bbbb9783e436f030af7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/proofs/net_both.smt2",
+      "bytes": 1224,
+      "sha256": "41ff05bc32cf4a3ccb4e141d9b1ebb762a0c7e32aebf9b28f39130b1d3534a7f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/replay.py",
+      "bytes": 1261,
+      "sha256": "055a496960401f91c75178b7e5c6424f9713196a23a82db4595bb34599cf86d3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/replay_receipt.json",
+      "bytes": 555,
+      "sha256": "38a4d1f17356dde3cb94042ce7a0adfb8233fa7eb09cc2e7c688a93befbec76e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/scripts/colonization_shared_helpers.py",
+      "bytes": 4882,
+      "sha256": "a2999ce2e7fd7e821ec9bb6e27d1843ca03cb21958cce0442a1aee6bfadfa391",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/shared_uil.py",
+      "bytes": 4882,
+      "sha256": "a2999ce2e7fd7e821ec9bb6e27d1843ca03cb21958cce0442a1aee6bfadfa391",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/tests/test_colonization_shared_helpers.py",
+      "bytes": 4300,
+      "sha256": "b4d00a82338e4c62921c2b57fc2c0780cc0e86af80d7461af5a3ded85c463589",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/verification.json",
+      "bytes": 3593,
+      "sha256": "899cfcc0e7d66d98839a3a913cbca05f0daec5fd85d890a93c2ef02f4f134914",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/verify_shared_uil.py",
+      "bytes": 7128,
+      "sha256": "f6e0c6017ba3adfcad578425277839a1385615fb5a428b02c46ec71896dbf91f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL_Report.md",
+      "bytes": 11540,
+      "sha256": "38a4770d60c657e59529397a555dc5e5a8a8757e16dce684234300f371de7bde",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_Shared_UIL_Verification.json",
+      "bytes": 3593,
+      "sha256": "899cfcc0e7d66d98839a3a913cbca05f0daec5fd85d890a93c2ef02f4f134914",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip",
+      "bytes": 4856777,
+      "sha256": "82db20931f60a2e32bfa205b16cb24602531756984dc0c3c25dbde1e6bbe1f55",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!GALLERY.html",
+      "bytes": 1681,
+      "sha256": "9847e93fa7e9342afe68d76878a6dc78df12057cba084f47ca161fadd925a315",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!README.md",
+      "bytes": 1786,
+      "sha256": "d93b23ab4345d6fb0336a4c830baa1a3e89652e4abb620190a0e7c0d6d38ea3c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!asset-patch-validation.json",
+      "bytes": 289,
+      "sha256": "21cd16148874e58ce398b1bcc71d0ce4e5f57a02032fb0d69de4d2ddd75eb281",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!delivery-manifest.json",
+      "bytes": 1270,
+      "sha256": "7618442c856f02ffb235e31c92c364987a09f872a6182a5db8b54884639ce7ca",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/ILLUSTRATION_NOTES.md",
+      "bytes": 2773,
+      "sha256": "0b1e35305a9d092e2a1819355d43cade89b60fb86efe7829a63143577bcfe2d6",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/ILLUSTRATION_NOTES.published.md",
+      "bytes": 2207,
+      "sha256": "7d90d9b9d2322a8d07018b891038ed0b431592ff231e7d8a53cab656b7de30a6",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/LABELS_ORCHESTRATION_AND_ROUNDTRIPS.md",
+      "bytes": 20040,
+      "sha256": "19ae328c902c9bd74c107cf7c2077eac01c9059f9443e623ad449268b9137442",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/check_component_witnesses.py",
+      "bytes": 8915,
+      "sha256": "68ab30a1efa8d3e3fa47c9fddc71afb80ccd545a42db7837706484ac6a5df14e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/component-witness-results.json",
+      "bytes": 568,
+      "sha256": "d549c0825391cd73e88b4a86ef15c283d50c5f26bcc2c8d31f69e96ad75ec774",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/illustrations/concept-topography-01.png",
+      "bytes": 2556527,
+      "sha256": "acfe1323b07e4c996e977f09ab885eb85d2839de7dabbcb63d350db91d373e7d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/illustrations/concept-topography-02.png",
+      "bytes": 2427320,
+      "sha256": "bf6f94819fcecda9a205f0c7bb0e0d2d587b8b1f3af00a0cae43ddeb469fcd6b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/illustrations/manifest.json",
+      "bytes": 902,
+      "sha256": "dc51842902e0efbfcf563cf88c9774a236c551331766989dee6adf00e12e609e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29-full-resolution-illustrations.patch",
+      "bytes": 6175508,
+      "sha256": "33e12f91616f20973e1b973abf15f1236e35d24a601e421b2da7d15ace08d8e2",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/a_wide_infographic_style_diagram_on_a_dark_backgr.png",
+      "bytes": 2427320,
+      "sha256": "bf6f94819fcecda9a205f0c7bb0e0d2d587b8b1f3af00a0cae43ddeb469fcd6b",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/a_wide_infographic_diagram_on_a_dark_background_l.png",
+      "bytes": 2556527,
+      "sha256": "acfe1323b07e4c996e977f09ab885eb85d2839de7dabbcb63d350db91d373e7d",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip",
+      "bytes": 31297,
+      "sha256": "3fc1ea0a3a7d7490bb5ed4b216db10f5555778e2ce58eee34c11edfd0f8d6e64",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/MANIFEST.json",
+      "bytes": 1058,
+      "sha256": "b0c202c0a150200f565f933d64a4bf115a9b5a15891b7010ad4487e88d9c4f12",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/PLAN.md",
+      "bytes": 24521,
+      "sha256": "b02f77cae403c1b03d93d966644e5e5f54df776eb75041a8fb02f5613b0ce0c5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/benchmark_protocol.json",
+      "bytes": 3561,
+      "sha256": "22ebd580325ff17919591048452d70bf30962caa761c019d8255888a833bb66b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/disk_merge_check.json",
+      "bytes": 517,
+      "sha256": "6ae774de34ae5ab65be69920acf2bb6b367383b4a023beeaa9bc3c869cf68d6f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/input_inventory.json",
+      "bytes": 94884,
+      "sha256": "fe5151d402b158977a188681cf0a5574b081cf1e3db9c19023f2174519525396",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/inspect_floppies.py",
+      "bytes": 4480,
+      "sha256": "44cfb5da31d742173acb926d3ad9648f54441b13097f7d01fe0f8788c60a772f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/reference_match.json",
+      "bytes": 1408,
+      "sha256": "9bb715d757b223269d33855f83fdb9497d43a703c52bfb3226889f8ced217c0b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/results_template.json",
+      "bytes": 472,
+      "sha256": "6dd99e0443be3a9fd7e5694177e4ca4502ecdcaca41d87ea0d3038ae44fd176d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/Civilization_Replication_Plan_and_Intake.zip!civilization-replication/startup_correction_check.json",
+      "bytes": 886,
+      "sha256": "87597b34ed561ed7e52a2860e22e795b76caf86c973fc1c4019abd6fc9a96199",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/civ_replication_plan/PLAN.md",
+      "bytes": 24521,
+      "sha256": "b02f77cae403c1b03d93d966644e5e5f54df776eb75041a8fb02f5613b0ce0c5",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/civ_replication_plan/reference_match.json",
+      "bytes": 1408,
+      "sha256": "9bb715d757b223269d33855f83fdb9497d43a703c52bfb3226889f8ced217c0b",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/civ_replication_plan/startup_correction_check.json",
+      "bytes": 886,
+      "sha256": "87597b34ed561ed7e52a2860e22e795b76caf86c973fc1c4019abd6fc9a96199",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!04_Civilization_and_Guide_Research/FF7_GameFAQs_Localization_Case_Study.md",
+      "bytes": 12879,
+      "sha256": "79799031cc645931eb0858bdd7d111ed9d2e1a353b8c6fa1e218ae581abe108a",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Console_Recompiler_Integration_Plan.zip",
+      "bytes": 14652,
+      "sha256": "186b29f9743476737e4dc7b714d77cbc5636249be66e84ee472f7d1c46b5d3da",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Console_Recompiler_Integration_Plan.zip!docs/CONSOLE_RECOMPILER_ACCEPTANCE.md",
+      "bytes": 11518,
+      "sha256": "739f01b0e9474275e185e759d7c6637c93aa47d1293c119512e8b64f91eefa35",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Console_Recompiler_Integration_Plan.zip!docs/CONSOLE_RECOMPILER_INTEGRATION_PLAN.md",
+      "bytes": 21866,
+      "sha256": "26d868931ea2f9a8a81776b19c4c26e6880eda844f8b02c576305327a94828da",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Console_Recompiler_Integration_Plan.zip!document-checks.json",
+      "bytes": 1036,
+      "sha256": "c2f73435a34c075bf65da6b906a3fd2596c6a17aa3fc1e95f1474652b0733e29",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip",
+      "bytes": 50295,
+      "sha256": "ed704fbabf665a8fa316036f78917c7b742955513ee949751f6f5ebfe963cb27",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/MANIFEST.json",
+      "bytes": 4024,
+      "sha256": "9880436b6388019bd24c1c491cfb0b921a7b0ad83c7e68512ec752fde3911dce",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/README.md",
+      "bytes": 2094,
+      "sha256": "b130b24efdd66cd11586f819fd3ee4ab6e319d23da6d9c545872a64e75ba3ea2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/REPORT.md",
+      "bytes": 11936,
+      "sha256": "ea3281579e847e78f45c3612a2b38314e59f6f022b63b919d1aabe601f657e50",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/control.no_wrap.js",
+      "bytes": 2103,
+      "sha256": "e47cb07015d954bf6ef88011b4a419e96d34eed5436c769f7272e1e03b112000",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/patch.layer.json",
+      "bytes": 1055,
+      "sha256": "a8d5bc42506186c1908f3308f02d5e814c2cebc8ea2bc8d01a69b2eee1fe7e23",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.disassembly.txt",
+      "bytes": 13674,
+      "sha256": "60764ed13849888efe4346a90b8f9d1aa191e8c5ef1999b9a112e382a48ec2fc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.equal31.generated.js",
+      "bytes": 2177,
+      "sha256": "4e5eac77df3d277bd219324e05b6b40dc74815905b6949f346b15370e8bbb4d2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.generated.js",
+      "bytes": 2177,
+      "sha256": "b0216b5335aad723f70bc4f51b7f6d88637afa71a2f6c29b6e6cc798b8150c95",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.layered.bin",
+      "bytes": 512,
+      "sha256": "d05571bc894b61272d1d0cbf99368392fca288c819d64d4ce0290b670d60507d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.reference.bin",
+      "bytes": 512,
+      "sha256": "d05571bc894b61272d1d0cbf99368392fca288c819d64d4ce0290b670d60507d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.udc.bin",
+      "bytes": 512,
+      "sha256": "d05571bc894b61272d1d0cbf99368392fca288c819d64d4ce0290b670d60507d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.udl.json",
+      "bytes": 2629,
+      "sha256": "60b5b3a26c2c961797d45fc8ab9d45fc2c0c64a2a707c2c2d6f1069a7b21622f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.uil.json",
+      "bytes": 2629,
+      "sha256": "58e7679715639bfc97648ed1544cc13545f04ccdccf778c9fb4243e3c5c19a85",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.disassembly.txt",
+      "bytes": 14206,
+      "sha256": "9be1135603996cff5aac921a4c4feb41e2fd840736f712ba7a71fc67213cb119",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.generated.js",
+      "bytes": 1925,
+      "sha256": "5af201e75398e75131296edccc7b89b3894f2555e3cf56636564ee065705a97c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.reference.bin",
+      "bytes": 512,
+      "sha256": "7f278b753606622c96420d6e3a6639a191c38e2c66de7f801bad2d7b0706e982",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.udc.bin",
+      "bytes": 512,
+      "sha256": "7f278b753606622c96420d6e3a6639a191c38e2c66de7f801bad2d7b0706e982",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.udl.json",
+      "bytes": 1991,
+      "sha256": "69eae379676a2103ca644341d142e6fce3216553c430747082e7cb078d7ab827",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.uil.json",
+      "bytes": 1991,
+      "sha256": "0402375871151d03d2b565e0af5e47c27d0b13eaf84ba204760602b4d3472fb6",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/uil.patch.json",
+      "bytes": 2764,
+      "sha256": "30011513b7fa936a2617d62b9cb3e8e0081a02890a606378ddb67dff8a363b80",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/javascript.udc.json",
+      "bytes": 589,
+      "sha256": "53befaaf84c407eabd4a56f35c7bcb4524a0f54d2744af91917cef0581e39e61",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/native.udc.json",
+      "bytes": 9776,
+      "sha256": "38fd637c690ce6f8e318683fdf4d1c1728fb24b63e26cb7a8223ccdd69330699",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/post.native.udc.json",
+      "bytes": 8211,
+      "sha256": "73fe7cb1038a73a59b089f7fe22c4715e18b28f22f67a957f65d1cee534306a1",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/post.udl-backings.json",
+      "bytes": 5901,
+      "sha256": "e0b09d13a3a6c97468b968a4418062654825aa6fb99e7e3f60f4e4bcf33bc934",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/pre.native.udc.json",
+      "bytes": 8209,
+      "sha256": "2316959afe289aa6fb71118a7bcfa78e4511892f4cec66e1fd82ac4bb82a2b39",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/definitions/pre.udl-backings.json",
+      "bytes": 5893,
+      "sha256": "8d82a82f9782760601ce5a1b34ad77deaecf94f3d4284ee8731cfc460fc67f09",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/block-contracts.json",
+      "bytes": 1198,
+      "sha256": "0b01b092d9f45f57de6b60f289fbe18f915afe012ecf158bf63e0647e4c870af",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/block-diff.json",
+      "bytes": 2342,
+      "sha256": "68aedea17b9d21f88c90d1971ada02af830ebc7ea95b8f1994b0d13d9fcd387e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/conversion-timings.json",
+      "bytes": 827,
+      "sha256": "94ac77969e8138419501853ca6a579e6a6c41bfc650de6298ddb51e00c8fd1b1",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/examples.json",
+      "bytes": 966,
+      "sha256": "9d1bdd42c6bd1d32ed8d2c5a4d8447a0e82f807ec3f6c332a0c904bc22413f21",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/generated.js.diff",
+      "bytes": 813,
+      "sha256": "cae1291b79be0a07041ffcb6d8c94c3db8b4e849ab2ae92dcb63481287362807",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/native-selections.json",
+      "bytes": 3766,
+      "sha256": "6d1e16b6690332884f61f307ac0334e8fc34aef97efd53df8f7fca14109860f1",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/negative-controls.json",
+      "bytes": 2927,
+      "sha256": "3895fbbccfd1e42178e80fd0b6ed1f354209e30441e2c429b88d652dcbc99d11",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/provenance.json",
+      "bytes": 775,
+      "sha256": "7f996e8298bc8d3cc84c29a546bccd1f29e8d62182bf835df9caaf2bdb8793d2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/reproduction.json",
+      "bytes": 846,
+      "sha256": "c143e5ebb8c584936de24a942978e24e4885d1ee566cac826246cf997994a5d2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/run.log",
+      "bytes": 374,
+      "sha256": "9a0b6521f30a28f5b21560509a1b3e3e088371ea316f7f4b3ed74828444da570",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/summary.json",
+      "bytes": 3547,
+      "sha256": "0d9b8d1ab635e285f3f4a83c83a09a2d4032f2460e071e42b99bdbb4bfab0fdc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/udl.json.diff",
+      "bytes": 1286,
+      "sha256": "e2d3a4f81a1cf9460510f41ff22c3777eaa0d747e50bf65e2fac95c1feb8eea8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/results/uil.json.diff",
+      "bytes": 1286,
+      "sha256": "1e5722aa9bb19d95ed0c90b1ca0af63f5ab78bd7c17abf959334d58dee102195",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/run_lab.py",
+      "bytes": 34613,
+      "sha256": "1b689230c6f25cbfc616056d1d33f8f2396c8dc5280ed27257efb51631475e94",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/src/post.S",
+      "bytes": 1294,
+      "sha256": "5005781afdec1790388f039654c5e0065ef1f0f78b59e64292f1eeeee7b01a64",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/src/pre.S",
+      "bytes": 1246,
+      "sha256": "3fa2fe102697ecb54d70980e64462ad2ed5838e40e88f3d0fbb0a9246858c35e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Report.md",
+      "bytes": 11936,
+      "sha256": "ea3281579e847e78f45c3612a2b38314e59f6f022b63b919d1aabe601f657e50",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Results.json",
+      "bytes": 3547,
+      "sha256": "0d9b8d1ab635e285f3f4a83c83a09a2d4032f2460e071e42b99bdbb4bfab0fdc",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Patch_Demo_Pre.js",
+      "bytes": 1925,
+      "sha256": "5af201e75398e75131296edccc7b89b3894f2555e3cf56636564ee065705a97c",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Patch_Demo_Post.js",
+      "bytes": 2177,
+      "sha256": "b0216b5335aad723f70bc4f51b7f6d88637afa71a2f6c29b6e6cc798b8150c95",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/udl_patch_lab/results/generated.js.diff",
+      "bytes": 813,
+      "sha256": "cae1291b79be0a07041ffcb6d8c94c3db8b4e849ab2ae92dcb63481287362807",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/udl_patch_lab/results/reproduction.json",
+      "bytes": 846,
+      "sha256": "c143e5ebb8c584936de24a942978e24e4885d1ee566cac826246cf997994a5d2",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/udl_patch_lab/results/examples.json",
+      "bytes": 966,
+      "sha256": "9d1bdd42c6bd1d32ed8d2c5a4d8447a0e82f807ec3f6c332a0c904bc22413f21",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/udl_patch_lab/results/block-diff.json",
+      "bytes": 2342,
+      "sha256": "68aedea17b9d21f88c90d1971ada02af830ebc7ea95b8f1994b0d13d9fcd387e",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip",
+      "bytes": 8423,
+      "sha256": "c562aa4f8ed64f3d09784ef3dc72b3c76f315353b27b01fe4e327899b540aad5",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/README.md",
+      "bytes": 3570,
+      "sha256": "02df94726fd68a3245029ef155944f6f0ae21c7f6c56175c2688cb893200113d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/contract.json",
+      "bytes": 923,
+      "sha256": "15ad858e3d6c281c630d442dd4825a7b1f7f51bbedd206af7cc8f7599a3734cc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/native.c",
+      "bytes": 2741,
+      "sha256": "1160589a1008a9f3bfb0eb0739c24fc88d76ea390974050438e4b7f1eb697e84",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/pipeline.cjs",
+      "bytes": 1086,
+      "sha256": "e7e4c925385eb4a157ee88de79329a6ad7dabc0fdad32c3021fa7ca1d6aa8b49",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/test.cjs",
+      "bytes": 2924,
+      "sha256": "a5ea298b4d9b55c4356a8e276064e6de9e8ff2441979ccefc786623e72ede9ff",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/run.py",
+      "bytes": 2366,
+      "sha256": "deea8795f2030ec7e29fba03502cbd0e41349dd76e58520f8a1fbab76cbdb17d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Handoff.zip!polyglot_u8_lab/results/results.json",
+      "bytes": 2366,
+      "sha256": "06d1668bd79ebbbe0a8a3634aee664c9bb1aafd5abe7ec5ba8cfd4b1d49a6798",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Polyglot_U8_Results.json",
+      "bytes": 2366,
+      "sha256": "06d1668bd79ebbbe0a8a3634aee664c9bb1aafd5abe7ec5ba8cfd4b1d49a6798",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip",
+      "bytes": 20589,
+      "sha256": "d1907a445bf045ac01e7d214daf91a819866d49657cc0b9f27262a7ee57a13a6",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!README.md",
+      "bytes": 4400,
+      "sha256": "6f894228de59f848d4c759fb15f5c7073d8abfc43114f666ba028db117ff1b50",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!verification_summary.json",
+      "bytes": 6756,
+      "sha256": "ce507cbe6264d75e022a4660856139f390559f1a12ecb16f86089f28033a0949",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!intake.json",
+      "bytes": 3903,
+      "sha256": "41cec7596bf38098d21ab8ffda30fef2f6a96965799c31e44feaa27f101641dd",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!doctor_receipt.json",
+      "bytes": 6861,
+      "sha256": "cdea808c3242740485629dc0094a7e3cfa049099e4ad401e70417c98ffeec6e3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!module_comparison.json",
+      "bytes": 1252,
+      "sha256": "c0657d2c563c4afe0b144d4e330081dc9cf8e0928a66b23fb20d0f2cfc92e49b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!production_udc_smoke.py",
+      "bytes": 3443,
+      "sha256": "8858b98d68918a9532bc9991347e8c0f5fb1668fe00b72be5bde1a41d54ee04e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!production_udc_receipt.json",
+      "bytes": 10125,
+      "sha256": "7bdd895a3dc8709ab10fbc834e47765f41440070d8e62995e6c6d673b66dc649",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!patch_results.json",
+      "bytes": 3548,
+      "sha256": "f887c5e3021662fbc9550e2f54463603d2816b59e09ee26b12aea5bf90c46bc5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!patch_provenance.json",
+      "bytes": 511,
+      "sha256": "cdfdaf18c65bd60faf153a135cdcff77565c1b23bf5dfe75e7dc48b9043c2a55",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!patch_negative_controls.json",
+      "bytes": 2927,
+      "sha256": "3895fbbccfd1e42178e80fd0b6ed1f354209e30441e2c429b88d652dcbc99d11",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!polyglot_results.json",
+      "bytes": 2366,
+      "sha256": "06d1668bd79ebbbe0a8a3634aee664c9bb1aafd5abe7ec5ba8cfd4b1d49a6798",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!logs/install.log",
+      "bytes": 2774,
+      "sha256": "08ff143a39d70ffdc6c583543331d5368a9ebbe74b5c370f144ce2ef7cc2b184",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!logs/patch_rerun.log",
+      "bytes": 375,
+      "sha256": "98fdcc2d854b1dc25da6a7014e26c2478e9af93556f2a7a7108ae36f77ea7812",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!logs/polyglot.log",
+      "bytes": 220,
+      "sha256": "b5317ff8b4b4637793180f798fafa332d210fba2ac0f50e57f80f5fce449d258",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!logs/component.log",
+      "bytes": 2749,
+      "sha256": "078b958ac0d362dd617be2a4368074ce3e83445c39242c53e7d50c5b230a55a0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!logs/production_udc.log",
+      "bytes": 396,
+      "sha256": "f908f6613c713e094a25ab2e9737453d0ec6cffe0de84fe809a4c5f1cf0dd6f0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification_Evidence.zip!SHA256.json",
+      "bytes": 1505,
+      "sha256": "d97ca644ca8040ed398a598396df318810fe465cf0dcb914b4698f7b4a14e087",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification.md",
+      "bytes": 4400,
+      "sha256": "6f894228de59f848d4c759fb15f5c7073d8abfc43114f666ba028db117ff1b50",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fDisBull_v026_Verification.json",
+      "bytes": 6756,
+      "sha256": "ce507cbe6264d75e022a4660856139f390559f1a12ecb16f86089f28033a0949",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip",
+      "bytes": 312359,
+      "sha256": "f69f38822d462bd260185777f554b5d4e257592c3cc752b2c014ff24f9ddd77a",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/README.md",
+      "bytes": 3350,
+      "sha256": "f127535a23fd28bdd100cd744a3f70ef749d89a78232ba8b5d831c3307de99dc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/EXPORT_ORDER_REPORT.md",
+      "bytes": 9617,
+      "sha256": "de58203ca7e5b37cf91d9dbe2cb6f3e42cf0bd7f08940b5689a89c41b8cbf9aa",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/experiment/audit_results.py",
+      "bytes": 6092,
+      "sha256": "9c676382b3e6706344b455056f614c2c6cf1952ad75824ae973cba5b6ec87220",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/experiment/benchmark_order.py",
+      "bytes": 24099,
+      "sha256": "812128b6530ef542e81752a269b7b59632957a61c7d3f634f9fcfacae1cffe00",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/vendor/il_scenes.py",
+      "bytes": 13077,
+      "sha256": "8fbaaf4cd44d218d0cf1fc7133316b2bbd47e6e68fb584e1a5ff92ebd071eae8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/benchmark.json",
+      "bytes": 1823118,
+      "sha256": "401fce14835944f4a237d699981e506e1cb6edd36c3283c11977b86561703c27",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/runs.jsonl",
+      "bytes": 1314407,
+      "sha256": "20a095344c9d35052a9aeb534160a7cd0bc08dcdea7ba6df9bd48de0b02ed03e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/audit.json",
+      "bytes": 3798,
+      "sha256": "bddc3559d98f578aa01cb5b1835c153a2083bb53c26c3aa5832fa464c4201de0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/shared_knowledge_catalog.json",
+      "bytes": 174907,
+      "sha256": "a58465744660183d6899dbdab476870041dc6d05d54c2dc239f6164e8a02f558",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/implementation_identity.json",
+      "bytes": 714,
+      "sha256": "4f76353efd5c2f0353ba0089f5bead8978071e8e941a63f0027a6ab5b063a27a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.pump.gentleness.json",
+      "bytes": 3794,
+      "sha256": "45073415200270b1534473bbbd17c7b67ffa742b9f8ca285f0873abd89575605",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.pump.stuck.json",
+      "bytes": 3789,
+      "sha256": "754a5722bcf5cc145af54ac002b9fad278ad09d3f8a60ea177335eaf2836e6a2",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.pump.work.json",
+      "bytes": 3788,
+      "sha256": "da78b11f223330a9c9662151d0225e547eec642c0e8677b21686d6966e033e07",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.water.first.json",
+      "bytes": 6048,
+      "sha256": "4898a94d708b416ad67cedd9a6f041d503df7f5ba7f6c9846839891a82a6bb71",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.water.repeat.json",
+      "bytes": 6049,
+      "sha256": "230c5b61e084a52b6b531e46d50d22df5152c4c216383488133147ca598def16",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/bilge.water.small_pipe.json",
+      "bytes": 3789,
+      "sha256": "663c2c313bfeda6433f2c4878f84688681c4d9835b916b7d4c03def90aac06fc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/harness/hold.poster.inspect.json",
+      "bytes": 4090,
+      "sha256": "79230b1505019e329a14f130bd284e3b4216369263289c99390917b4cee2fc99",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.pump.gentleness.json",
+      "bytes": 1318,
+      "sha256": "712c9c5cf46654a689eb20fe56ed58cbff191b2dd6abaa3a8901db53d7e25d21",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.pump.stuck.json",
+      "bytes": 1584,
+      "sha256": "d25d28748e71d0a99639cfa3888d0ecfb674e2f9f305fb538a239d2cdf31ee5a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.pump.work.json",
+      "bytes": 1863,
+      "sha256": "a6b13a72b03f6740eaa1e15423035196ab50adde70de8e21f3cac5cc75a549e0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.water.first.json",
+      "bytes": 1290,
+      "sha256": "8554fca2d03a0fd3b60aba4e988bb8512e1c686d48d50363970555f8a87772bc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.water.repeat.json",
+      "bytes": 1291,
+      "sha256": "6bb39a8a2dff86a2f2f420b35f08a6b6568906af894bd16ec66cf5e0233afc6e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/bilge.water.small_pipe.json",
+      "bytes": 998,
+      "sha256": "686116cbf893f45161bc49aaf0168e4b19e67e9bc20f2a607f068d139f9b8760",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/hud/hold.poster.inspect.json",
+      "bytes": 1359,
+      "sha256": "fca8af4893dd0688a188b782adc0c37915650845451138148bd7636089b8c94a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.pump.gentleness.json",
+      "bytes": 3946,
+      "sha256": "e1f21a2dc232d6e11add86116f9f09ddca17b44ecae37d3298d2b59953c5f7a0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.pump.stuck.json",
+      "bytes": 3947,
+      "sha256": "3e4d9b42c0f0b7a111145aecd3241721c5e09e2133b9a8a7e3cca3f51cd83694",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.pump.work.json",
+      "bytes": 6972,
+      "sha256": "1dad7040aee9f3eba81d7ce70e884d102bd8c146b4ca0b21c9600aeeea81070d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.water.first.json",
+      "bytes": 9804,
+      "sha256": "d8915517a3bf8d482357e15567953f5afa2cc7e99d6c6589d18936a08a842b0d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.water.repeat.json",
+      "bytes": 7205,
+      "sha256": "83f1f14cad568ca5190091c0071c3f409c80358be518eb0a9cded9a6f99df16e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/bilge.water.small_pipe.json",
+      "bytes": 3872,
+      "sha256": "a30b50c2f503ff66282fc7ddda99d176bdb77486f35c0aa764a520d2e88c3ea1",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/outline/hold.poster.inspect.json",
+      "bytes": 8116,
+      "sha256": "05239acad3cbad4c3c525826b68dd5b3048c9cb17950d7000302b929cf9e67ad",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.pump.gentleness.json",
+      "bytes": 6425,
+      "sha256": "339726fd7828d5b79e1a3543b360b841ae38a4eb9c049fd96b31a512d34e5e59",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.pump.stuck.json",
+      "bytes": 6642,
+      "sha256": "aa11c35004715cfbf7cdf17febb9c4c7a887f1a8d7449b394ffd15b8f6cc71b9",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.pump.work.json",
+      "bytes": 14337,
+      "sha256": "e7983ea60f550a11c8dc82e35775b4a7127a65d7fdf5bbe14486ef5ec0835229",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.water.first.json",
+      "bytes": 14430,
+      "sha256": "73215b831704c9684956168a2a11ad30a4ceeebaff8b057db4172f7503355f1c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.water.repeat.json",
+      "bytes": 7906,
+      "sha256": "6710d306c786a22890a49ed6574a8857f33fe7dc1509a7df3521303c5e40dd41",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/bilge.water.small_pipe.json",
+      "bytes": 5181,
+      "sha256": "88faca5b6ee542cd7359de90202dd87b08f9a49e6ad58afdbd953dab6890da67",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/udl/hold.poster.inspect.json",
+      "bytes": 9560,
+      "sha256": "665f052efffbbfc98a29eb902a06c57a8dfaef583955e04ba793793ce3879c7f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.pump.gentleness.json",
+      "bytes": 6425,
+      "sha256": "23d3f06abd9df1c18b3ab5ba2e40e7fb5e3752d88eddbf3e3e2b2956e571c3e7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.pump.stuck.json",
+      "bytes": 6642,
+      "sha256": "ae7c1c01a482b037e3ac327f39944649cde9b723d2410f2952857df687ee8b4c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.pump.work.json",
+      "bytes": 14337,
+      "sha256": "231e2d6878a5c346db4615433bb38d6989bb9d43a9c964074d23819719d72a19",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.water.first.json",
+      "bytes": 14430,
+      "sha256": "f559b20d25f96a88a59ae6ccaf39df57e56e158c4fe19ae8e44df3021ef047ed",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.water.repeat.json",
+      "bytes": 7906,
+      "sha256": "c18d45332a88bd68ebc405d1dc6dd5eb4680261305d33ec11c481881ca99bd4a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/bilge.water.small_pipe.json",
+      "bytes": 5181,
+      "sha256": "658186d3c2b2fb9adaa83f8c9429faf584c537d6ffdfe2e7c0aecc961f232d35",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/uil/hold.poster.inspect.json",
+      "bytes": 9560,
+      "sha256": "5aa3030588526b4e2875f8e8603c9ad26e70778a006730374e738b65f830cfb6",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.pump.gentleness.json",
+      "bytes": 12404,
+      "sha256": "b9d1bededa842411537fb288740349d3cd9c5e68b0687f1537a57fa5731ef3d4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.pump.stuck.json",
+      "bytes": 9271,
+      "sha256": "9e8020dec8a383339d9a24e4694a11ee65cc2381e54e852acdef305796925f15",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.pump.work.json",
+      "bytes": 19019,
+      "sha256": "069eafd8e7ba244e41bbd63541687040beffce7dab1460c26e875f1d38e4de82",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.water.first.json",
+      "bytes": 19591,
+      "sha256": "233ede93778b741cbdfa618ce6055759fae985c1ce728144ffb1e28b5a125508",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.water.repeat.json",
+      "bytes": 12216,
+      "sha256": "8c570d5a0359faef0026974fa96660f3aa9e3da897a1d542144acdc4cef080f8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/bilge.water.small_pipe.json",
+      "bytes": 9523,
+      "sha256": "08257eba8b0274f975123f9463a1ffc4aa9ce7d4dec7066141f35b582185183e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/results/examples/joint/memory/z/hold.poster.inspect.json",
+      "bytes": 12037,
+      "sha256": "53443f1068d5dbfacd2f949a16cdcbca1f4e54ca16a3ef064f5094c6c7fa734d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Experiment.zip!Lost_in_Time_Export_Order_Experiment/PACKAGE_MANIFEST.json",
+      "bytes": 6536,
+      "sha256": "c2264924cc31bf8c941fefa62b56d5dc85e8d0aaed00fcde8ed50ee5fff117c8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Report.md",
+      "bytes": 9617,
+      "sha256": "de58203ca7e5b37cf91d9dbe2cb6f3e42cf0bd7f08940b5689a89c41b8cbf9aa",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Lost_in_Time_Export_Order_Benchmark.json",
+      "bytes": 1823118,
+      "sha256": "401fce14835944f4a237d699981e506e1cb6edd36c3283c11977b86561703c27",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/lit_order_experiment/results/audit.json",
+      "bytes": 3798,
+      "sha256": "bddc3559d98f578aa01cb5b1835c153a2083bb53c26c3aa5832fa464c4201de0",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip",
+      "bytes": 81285,
+      "sha256": "0b1a185153791a55a12257c2e9ec123eec3f2a83f17a3360d255cb9f1e5cf5d1",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!DELIVERY_MANIFEST.json",
+      "bytes": 7639,
+      "sha256": "0a7a85e17172e301972246307a059976674e3e19f7bb52e26d8dc50ca14139d8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!GAME_PATCH_DIFFERENTIAL_STUDY.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!PR20-game-patch-study.patch",
+      "bytes": 13129,
+      "sha256": "b3923ba9fc19eded47e98db2f4c82a9d9e114de12975dc30797bcb89c58863fb",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!README_REPRODUCE.md",
+      "bytes": 4222,
+      "sha256": "04fadd1aa2bde755e56060849d99053cfc2ec3d56ef9d54fd9a88a24b1d87c0f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!bootstrap_intake.py",
+      "bytes": 4631,
+      "sha256": "04288afaf44b80f7ec06fd70bdbf87c60711fc2ea4f91f861d961b340d3996ed",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!compare_game_patches.py",
+      "bytes": 16917,
+      "sha256": "4420ca11e397740c87abd91bcfbdb66cf841e11f7c29bb473223907a406d8abc",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!extract_verified_payloads.py",
+      "bytes": 4340,
+      "sha256": "4c395ca885453957fd7aeb3a2dab85a9e0883e6a2fde206c829759a57978ec2a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!inno_probe.py",
+      "bytes": 3884,
+      "sha256": "9bb956cbc6a55c4f7e3df2f833a007a61ccf5b910809aad5da10af4eec60e246",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!make_report.py",
+      "bytes": 13984,
+      "sha256": "94b3e5d8ca77127c6a7a53d209022d8b865c360f6e510aa039d7a2b1da3eea16",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!prepare_sq_intake.py",
+      "bytes": 1071,
+      "sha256": "09855a6f41dfcc1737b0011670d9b47c098afd50eb4590e8eaec92d299d118c0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!resource_manifest.json",
+      "bytes": 44512,
+      "sha256": "248397d3b357a70e992bf1ead57ec51c58f80fc8b5489b1d786c0b7f3cb63148",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/bar_detail_predicate/0_after.asm",
+      "bytes": 176,
+      "sha256": "1fa749f11dbec3128da402cee917c156b4788995a6ff389dd7601cc2cc3d3f03",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/bar_detail_predicate/0_after.c.txt",
+      "bytes": 105,
+      "sha256": "40fca32932d5026be45f430704d12da3cd9449fcae78ce22d31f6b0a0f3ed479",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/bar_detail_predicate/0_before.asm",
+      "bytes": 176,
+      "sha256": "4dbd5f444f89ba4d1b60018d2c43e8a42d2c329289b31cd398421a501f25f4a5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/bar_detail_predicate/0_before.c.txt",
+      "bytes": 106,
+      "sha256": "bf01d93fc1bb969e557beb94f0432bfe3088810249b7b1e9cf451c57033e3e52",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/bar_detail_predicate/comparison.json",
+      "bytes": 2226,
+      "sha256": "2d9abd546d29ba585f1c502581188d1214761377927af3b48747d9fc774c4724",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/benchmarks.json",
+      "bytes": 3441,
+      "sha256": "91644ae96f982f7ad5d3382e3fcf5f353b57c0d146c1ee5b9db57360aa27a514",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/c_compile.stderr",
+      "bytes": 1235,
+      "sha256": "8682afce042e6001de8a05ee4b08924be1e7b36069fbc5a54f99d3185f854184",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/c_saved_read_regression.json",
+      "bytes": 217,
+      "sha256": "cd6f6aba874348926562efbdea9788d639ef69c48052e1290b541b37c9dc6fcb",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/c_validation.json",
+      "bytes": 554,
+      "sha256": "198c03cbbeb1813684ddd646a009477127fd3838dc9c38f955aa3c9140f22453",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/comparison_summary.json",
+      "bytes": 24282,
+      "sha256": "16575a0145c3d226de71a2bcd533ef62cb5221a5e7243205310e57759f1fbd9c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/decompressor_comparison.json",
+      "bytes": 211,
+      "sha256": "c39d832dc15249abf7b2473f8056a4ca994dfdb7a1b805e4ebb8ff9d6a6378f5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generated_models_and_vm.c",
+      "bytes": 9868,
+      "sha256": "f4c65a930461899bc2883275cae61195362fbb854635fb55877bf833e6479e87",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generator_branch/0_after.asm",
+      "bytes": 57,
+      "sha256": "5cc0aed159790d87f8bea87e27669feee9b8e1d3c90bd9479054893f83703509",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generator_branch/0_after.c.txt",
+      "bytes": 71,
+      "sha256": "622d2041ff54aed4e735f3f56026e838205a48d3923ce5f8668e3e52f26709ac",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generator_branch/0_before.asm",
+      "bytes": 62,
+      "sha256": "008f1d3c4b44806923df5b46c2ad29a333430a6e9c6b515a4931b0e89ede7dff",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generator_branch/0_before.c.txt",
+      "bytes": 111,
+      "sha256": "e7170816d8e53f8bfe5ed46be0f5a2d05add57fd60450bf5d2d45ae1c4d74efd",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/generator_branch/comparison.json",
+      "bytes": 2545,
+      "sha256": "ad0d61f055bcda05e8fec9e5d85a087bb9c4a24589526e7bd4a634028376a6ff",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/gog_patch_oracle.json",
+      "bytes": 11416,
+      "sha256": "a5ee6f662eb16ef1feba1628b6d8a74d855d1592d7dade67f6cb785bb30609e9",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/id_card_counter/0_after.asm",
+      "bytes": 385,
+      "sha256": "980787500b3e3c9eca4b1304f31d0d785d28c7b7c682325166500a5f3def28d0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/id_card_counter/0_after.c.txt",
+      "bytes": 175,
+      "sha256": "f2c1ca5fa93c5a2d257f03dcb30eec7c72dde0be05d3c885e4ec8e83cff4c01f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/id_card_counter/0_before.asm",
+      "bytes": 385,
+      "sha256": "ba86920e6091e29e18456ca9df67be8c873ea0f0ac70515d01832b53d572b6cf",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/id_card_counter/0_before.c.txt",
+      "bytes": 188,
+      "sha256": "f051a02331b468ac2e0f0d17641dca001854f4eea42779db13afe49bd5eeb47e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/id_card_counter/comparison.json",
+      "bytes": 5093,
+      "sha256": "fe3e35115c8e17b5da1333c93e59bb320d5f65e9037701087c0c64f6ee906701",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/implementation_manifest.json",
+      "bytes": 924,
+      "sha256": "60c04ea99fd7ba60c8fd590c5027e09743bd9b58393f14197da1a9e7226edaee",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/0_after.asm",
+      "bytes": 27,
+      "sha256": "d23dbe11fef7b91f54f3b59d46b26c467cb4ed37d9b26f60daef68f4a21ddd7c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/0_after.c.txt",
+      "bytes": 80,
+      "sha256": "9021ba95683eaf0796b8d4abb06975e687ba8b3ddd25956d4b10244c0a9899ca",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/0_before.asm",
+      "bytes": 25,
+      "sha256": "e1334a36b5e5da948e80f94d6039fca35e2ee6588d970b1f65e193d79d66253e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/0_before.c.txt",
+      "bytes": 68,
+      "sha256": "2cdc071380f97960e00c8e34fbc610f93ce2669c489ea1e1917a9453c0e27da5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/1_after.asm",
+      "bytes": 27,
+      "sha256": "a34813d61019b22f3bc205234a9c378404157c1624f3ff03016af0faf5979640",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/1_after.c.txt",
+      "bytes": 74,
+      "sha256": "faf944605b9e31cf1ebf89fcd2d2559f5f3ac1892372d66510afbb8a1b560c78",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/1_before.asm",
+      "bytes": 25,
+      "sha256": "fa0a0e9c520061bbe500e283957374d6e4e04f8c11519820a143947ec676f7a5",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/1_before.c.txt",
+      "bytes": 62,
+      "sha256": "3e551fef627cebd7bb893ef13552a4629f720b66da95fb514f6de6fe2330a3cb",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/orat_state_storage/comparison.json",
+      "bytes": 5113,
+      "sha256": "4bfe9724e64c110f9fccb9ee1e071f7d7aa0ea0f330298415947a9696f264ccd",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/patch_oracle_extra_controls.json",
+      "bytes": 1239,
+      "sha256": "7335923a3e5d054e7900b39156947525030fe0d0d1bf06cac7bf316e1d8cb1ca",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/pilot_timing_superseded.json",
+      "bytes": 3068,
+      "sha256": "d7394580643f6251bb107a5d34554da084d2f742ed812f834a7b8100b1db364d",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/timepod_cel/0_after.asm",
+      "bytes": 108,
+      "sha256": "9d8c75feacee54f18fd5d7acd8512eb60db512899ed889352d74762a816cd1a3",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/timepod_cel/0_after.c.txt",
+      "bytes": 112,
+      "sha256": "a1458c681c929557024d162eeff522c21e7ecf34d5c8340373b3c4a7feb9ab4f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/timepod_cel/0_before.asm",
+      "bytes": 109,
+      "sha256": "5dae4fe5adba56fa0898a26e1a99ca3ddd677f4e903eadea05014cd1c1efcea4",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/timepod_cel/0_before.c.txt",
+      "bytes": 113,
+      "sha256": "face50527779f52c74180330429d6d9769017176a6b992cfda85460891e13d6f",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!results/timepod_cel/comparison.json",
+      "bytes": 2186,
+      "sha256": "c5001787fb8b639ae61efe994c87154e6c27ef61b72be9d67c1d9df4e17a5051",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!sci_extract.py",
+      "bytes": 3645,
+      "sha256": "119880b05c3baa55276354e1968fcba9af191f44dd94b7e1009a42c37323df4a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!verify_generated_c.py",
+      "bytes": 8118,
+      "sha256": "ee5d54f58fdbcca559521677271ac00a0a8883b0106c921ba3bab6f5ead74616",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Evidence.zip!verify_patch_oracles.py",
+      "bytes": 5168,
+      "sha256": "2402e998d291ebc47aceb0333a5d4ffb8de92bea4aff6bb8aa8d3130f2ae1de7",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Comparison.md",
+      "bytes": 12735,
+      "sha256": "30459dce12e4e3b776c0180a2c4e1957fd7f0a355afe05d967750a704449666d",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Game_Patch_Benchmark.json",
+      "bytes": 3441,
+      "sha256": "91644ae96f982f7ad5d3382e3fcf5f353b57c0d146c1ee5b9db57360aa27a514",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/PR20-game-patch-study.patch",
+      "bytes": 13129,
+      "sha256": "b3923ba9fc19eded47e98db2f4c82a9d9e114de12975dc30797bcb89c58863fb",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip",
+      "bytes": 23495,
+      "sha256": "185868630aca93bc5afdf392043bffd8d8124f30fbfc9a0bdde6937b1a8abf29",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/README.md",
+      "bytes": 1628,
+      "sha256": "9eba0663791e4aa49bc0c718af6ec2209a8f2172e7768438dac18bd434e21ca0",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/REPORT.md",
+      "bytes": 12650,
+      "sha256": "4b13ae8443eeead1153c1943cf152eff3429bc39b7d26a9f36e5c9263496a69b",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/SHA256SUMS",
+      "bytes": 1196,
+      "sha256": "8fb95f54d0491694db499aeaf9b563b07d457aba0781151830b615ffc2a165cf",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/patch-declared-support-actions.json",
+      "bytes": 3393,
+      "sha256": "ee0501a63fae216f253848f4c3c90e7106fd27a103eff2be378dd7e034a3f712",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/patch-target-manifest.json",
+      "bytes": 12578,
+      "sha256": "3c5fbf597cf96e8ef8d732dd5c10077f56477e19db32fe85069bee73cd1c3afe",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/patch-versus-full.json",
+      "bytes": 2882,
+      "sha256": "f186b2eb97c592ad52222f96578515dedca42aa7cfbd9dbc62265d39f18b286c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/space-quest-launch-tasks.json",
+      "bytes": 670,
+      "sha256": "e6fee866ab60bacda226430c32e3a605d3052daaa04b037507365cbe4928593a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/sq1_agi_loader-analysis-summary.json",
+      "bytes": 669,
+      "sha256": "838afb48306e8de3890613353e81e82c91b42506e34e361d0f6d80efb5f60a7e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/summary.json",
+      "bytes": 7011,
+      "sha256": "5cf903dd545cc44b01ebac69cf544a8cb3dd60dd646be749137d7c3554325e2c",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/tools/bootstrap_intake.py",
+      "bytes": 4631,
+      "sha256": "04288afaf44b80f7ec06fd70bdbf87c60711fc2ea4f91f861d961b340d3996ed",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/tools/extract_verified_payloads.py",
+      "bytes": 4340,
+      "sha256": "4c395ca885453957fd7aeb3a2dab85a9e0883e6a2fde206c829759a57978ec2a",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/tools/inno_probe.py",
+      "bytes": 3884,
+      "sha256": "9bb956cbc6a55c4f7e3df2f833a007a61ccf5b910809aad5da10af4eec60e246",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/ultima_avatar-analysis-summary.json",
+      "bytes": 664,
+      "sha256": "22820a27c904fe7b559dd0b22acc3db61489461abc9af1982287beb692b3f9c8",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/ultima_title-analysis-summary.json",
+      "bytes": 674,
+      "sha256": "5f5c94a1098aa3c8df7fba9bf7f6c4e9182860f00b282468a8e833e71bafc53e",
+      "nested_depth": 1
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Patch_and_Ultima_Intake.md",
+      "bytes": 12650,
+      "sha256": "4b13ae8443eeead1153c1943cf152eff3429bc39b7d26a9f36e5c9263496a69b",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/sq1_prepatch/prepatch_identity.json",
+      "bytes": 2239,
+      "sha256": "078a4008b314664d9154f4a4b50d12efba50ad5b9ca6ee708af095409a6b8921",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/game_patch_study/results/c_saved_read_regression.json",
+      "bytes": 217,
+      "sha256": "cd6f6aba874348926562efbdea9788d639ef69c48052e1290b541b37c9dc6fcb",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/game_patch_study/results/c_validation.json",
+      "bytes": 554,
+      "sha256": "198c03cbbeb1813684ddd646a009477127fd3838dc9c38f955aa3c9140f22453",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/game_patch_study/results/comparison_summary.json",
+      "bytes": 24282,
+      "sha256": "16575a0145c3d226de71a2bcd533ef62cb5221a5e7243205310e57759f1fbd9c",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/game_patch_study/results/gog_patch_oracle.json",
+      "bytes": 11416,
+      "sha256": "a5ee6f662eb16ef1feba1628b6d8a74d855d1592d7dade67f6cb785bb30609e9",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/ultima_avatar-analysis-summary.json",
+      "bytes": 664,
+      "sha256": "22820a27c904fe7b559dd0b22acc3db61489461abc9af1982287beb692b3f9c8",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/ultima_title-analysis-summary.json",
+      "bytes": 674,
+      "sha256": "5f5c94a1098aa3c8df7fba9bf7f6c4e9182860f00b282468a8e833e71bafc53e",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-versus-full.json",
+      "bytes": 2882,
+      "sha256": "f186b2eb97c592ad52222f96578515dedca42aa7cfbd9dbc62265d39f18b286c",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-declared-support-actions.json",
+      "bytes": 3393,
+      "sha256": "ee0501a63fae216f253848f4c3c90e7106fd27a103eff2be378dd7e034a3f712",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/summary.json",
+      "bytes": 7011,
+      "sha256": "5cf903dd545cc44b01ebac69cf544a8cb3dd60dd646be749137d7c3554325e2c",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Evidence/patch-target-manifest.json",
+      "bytes": 12578,
+      "sha256": "3c5fbf597cf96e8ef8d732dd5c10077f56477e19db32fe85069bee73cd1c3afe",
+      "nested_depth": 0
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/fdisbull_pr_update/HELD_OUT_RECOVERY_STUDY.md",
+      "bytes": 19735,
+      "sha256": "296be0a0fd3d7da2f9856cd053e6fc610e8d4df8018fcf58af660c2e4f942684",
+      "nested_depth": 0
+    }
+  ],
+  "checksum_manifests": [
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!SHA256SUMS.txt",
+      "passed": 58,
+      "unresolved": [],
+      "failed": []
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/Space_Quest_Ultima_Intake_Evidence.zip!Space_Quest_Ultima_Evidence/SHA256SUMS",
+      "passed": 13,
+      "unresolved": [],
+      "failed": []
+    }
+  ],
+  "binary_leaf_inventory": [
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/observations/DOSOUT.BIN",
+      "bytes": 36864
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!02_Colonization/Colonization_DOS_Windows_Shared_UIL.zip!Colonization_Shared_UIL/observations/WINOUT.BIN",
+      "bytes": 36864
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/illustrations/concept-topography-01.png",
+      "bytes": 2556527
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/PR29_Revised_Contracts_and_Illustrations.zip!docs/uil-rfcs/0002/illustrations/concept-topography-02.png",
+      "bytes": 2427320
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/a_wide_infographic_style_diagram_on_a_dark_backgr.png",
+      "bytes": 2427320
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!03_Architecture_and_Illustrations/a_wide_infographic_diagram_on_a_dark_background_l.png",
+      "bytes": 2556527
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.layered.bin",
+      "bytes": 512
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.reference.bin",
+      "bytes": 512
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/post.udc.bin",
+      "bytes": 512
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.reference.bin",
+      "bytes": 512
+    },
+    {
+      "path": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip!05_Historical_Experiments/UDL_UIL_UDC_Patch_Lab.zip!udl_patch_lab/artifacts/pre.udc.bin",
+      "bytes": 512
+    }
+  ],
+  "raw_gitlab_upload": {
+    "id": 1460793972,
+    "url": "/uploads/2441503b49f0370655255ec78ee90548/fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

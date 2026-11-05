@@ -1,0 +1,7 @@
+{
+  "format": "fdisbull-uil-orchestration-1",
+  "program_sha256": "e70f31a40e387f1ba4c786c2469a2d6989c9ffde5ef9ccdc887d6f8ec70159fb",
+  "bindings": [],
+  "ownership": "copy-in-copy-out",
+  "max_call_depth": 32
+}

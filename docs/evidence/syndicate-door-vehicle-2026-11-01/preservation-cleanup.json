@@ -1,0 +1,33 @@
+{
+  "restored_baseline": true,
+  "baseline_game_sha256": "0ab7b995727aca8e04fd061786c6ad0a515199d1049d3f54907af909b1b86335",
+  "restored_registers": true,
+  "breakpoints_before_close": {
+    "breakpoints": [],
+    "session_id": "ses-1",
+    "state_revision": 1454
+  },
+  "original_paths": 897,
+  "unchanged": 897,
+  "changed_or_missing": [],
+  "new_files": [],
+  "close_ack": {
+    "closed": true
+  },
+  "controller_cleanup": {
+    "pid": 839,
+    "closed_at": 1793567040.4353833,
+    "alive": false,
+    "errors": []
+  },
+  "owned_pids": {
+    "837": true,
+    "839": false
+  },
+  "final_owned_pids": {
+    "837": false,
+    "839": false
+  },
+  "selected_dos_program_exit_observed": false,
+  "cleanup_scope": "The initial controller poll preceded its final exit. Both owned PIDs absent on final readback; no guest exit-code claim."
+}

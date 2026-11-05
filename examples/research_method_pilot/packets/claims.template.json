@@ -1,0 +1,26 @@
+{
+  "run_id": "REPLACE_WITH_ACTUAL_DISPATCH_ID",
+  "worker_id": null,
+  "model": null,
+  "assistance_mode": null,
+  "target_sha256": "a17ed64c27671e5e95236e54a7ddc85803a96ba822fbed05e1dad34d3917e2e3",
+  "source_familiarity_declaration": "",
+  "claims": [],
+  "claim_shape": {
+    "id": "",
+    "input": {"logical_id": null, "label": null},
+    "output": {"logical_id": null, "label": null},
+    "relation_kind": "direct_material_input | derived_chain | adjustment | unresolved",
+    "hypothesis_source_ids": [],
+    "name_binding": {"source": null, "qualification": null},
+    "code_evidence": [{"source_sha256": null, "file_range": null, "reader": null, "writer": null, "scope": null}],
+    "checks": [],
+    "status": "candidate | supported_within_scope | refined | refuted | unresolved"
+  },
+  "unresolved": [],
+  "tool_calls": null,
+  "input_tokens": null,
+  "output_tokens": null,
+  "elapsed_seconds": null,
+  "reviewer_acceptance_seconds": null
+}

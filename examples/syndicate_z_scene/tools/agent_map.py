@@ -309,7 +309,7 @@ def plan_approach(scene: dict, terrain: Any, target_id: str, *,
               'waypoints_raw': waypoints, 'approach_raw': approach, 'grid_steps': len(path)-1,
               'conditional_gates': doors,
               'arrival_contract': 'exact approach point only; interaction/boarding NOT established',
-              'execution_policy': {'walk': 'not implemented; observe bounded original movement',
+              'execution_policy': {'walk': 'requires explicit original-navigation opt-in; conditional plan is not traversal proof',
                                    'teleport': 'existing guarded adapter only; no walkability inference'},
               'remaining_limits': ['actor clearance', 'dynamic collision', 'door state',
                                    'sub-tile steering', 'interaction range', 'fair-play visibility']}
@@ -327,6 +327,8 @@ class ProgressWatch:
     last_waypoint: int = -1
     best_distance_sq: int | None = None
     stagnant: int = 0
+    stationary: int = 0
+    last_position: tuple[int, int, int] | None = None
     halted: bool = False
     positions: deque = field(default_factory=lambda: deque(maxlen=4))
 
@@ -357,6 +359,8 @@ class ProgressWatch:
             return 'gate_unqualified_hold'
         if position == self.goal_raw:
             return 'arrived_at_approach' if attachments_settled else 'observe_attachment_settlement'
+        self.stationary = self.stationary + 1 if position == self.last_position else 0
+        self.last_position = position
         self.positions.append(position)
         if len(self.positions) == 4 and self.positions[0] == self.positions[2] and \
            self.positions[1] == self.positions[3] and self.positions[0] != self.positions[1]:
@@ -374,7 +378,7 @@ class ProgressWatch:
             self.stagnant += 1
         if self.stagnant >= self.stall_limit:
             self.halted = True
-            return 'stalled_replan'
+            return 'stalled_replan' if self.stationary >= self.stall_limit else 'moving_without_progress_hold'
         return 'continue_bounded_observation'
 
 

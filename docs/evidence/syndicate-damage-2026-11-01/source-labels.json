@@ -1,0 +1,46 @@
+{
+  "entry_stride": 12,
+  "index_formula": "base + 12 * (weapon_type - 1) + 4 * language_index",
+  "language_index": 0,
+  "language_stride": 4,
+  "main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "name": "PISTOL",
+  "name_pointer": "0x53224",
+  "run_id": "d1c814dbd55d4e9391b126450ed7c3c4",
+  "scope": "Original-source name-table lookup plus source-window identities; code bytes are private",
+  "selected_pointer_slot": "0x54b1c",
+  "table_base": "0x54b10",
+  "weapon_type": 2,
+  "windows": {
+    "fire_and_ammo": {
+      "exclusive_end": "0x3ab45",
+      "length": 17,
+      "preferred_start": "0x3ab34",
+      "sha256": "c7295189a9e1630aa6ff551a0461be4d551f0d438b5d00becb21fe9dc5968087"
+    },
+    "health_decrement": {
+      "exclusive_end": "0x13be8",
+      "length": 13,
+      "preferred_start": "0x13bdb",
+      "sha256": "c848ecf94692ea2cad080225809c5a8a4edaf4b07ed10d794a708d78d4ce9c01"
+    },
+    "hit_query_call": {
+      "exclusive_end": "0x1f0fb",
+      "length": 5,
+      "preferred_start": "0x1f0f6",
+      "sha256": "bd8e32177786147f9023646bc7b2b8d1bd4b88825f2caeb4f286bb03171b4315"
+    },
+    "projectile_owner_store": {
+      "exclusive_end": "0x3a8f7",
+      "length": 4,
+      "preferred_start": "0x3a8f3",
+      "sha256": "7d880e15299bdaedae8aad2cdf60e2f46c6a24afcca39e18c3beb3f2a9b6d111"
+    },
+    "weapon_name_consumer": {
+      "exclusive_end": "0x2cf70",
+      "length": 42,
+      "preferred_start": "0x2cf46",
+      "sha256": "5c4a561b427dc898666da7eff7e3117f2e93722b2d43fecc2ac37799152df45e"
+    }
+  }
+}

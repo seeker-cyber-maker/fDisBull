@@ -1,0 +1,38 @@
+{
+  "run": "695f191889e94be8afcdb356cb342855",
+  "save_sha256": "6b069d3e05f5917523b864d86c8a85434bab538ba3580e5adcacc156372b5439",
+  "new_process": true,
+  "native_loader_return": "0x001EC448",
+  "blocks": [
+    {
+      "name": "companies",
+      "length": 8376,
+      "match": true
+    },
+    {
+      "name": "territories",
+      "length": 500,
+      "match": true
+    },
+    {
+      "name": "weapon_projects",
+      "length": 10020,
+      "match": true
+    },
+    {
+      "name": "mod_projects",
+      "length": 8838,
+      "match": true
+    },
+    {
+      "name": "active_project",
+      "length": 489,
+      "match": true
+    },
+    {
+      "name": "trailer",
+      "length": 4,
+      "match": true
+    }
+  ]
+}

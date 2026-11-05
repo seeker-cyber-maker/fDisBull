@@ -1,0 +1,109 @@
+{
+  "format": "fdisbull-gitlab-package-file-identities-1",
+  "project_id": 88349936,
+  "source": "Publishing-owner authenticated GitLab API metadata read, 2026-11-01",
+  "files": [
+    {
+      "id": 381580942,
+      "package_id": 74791785,
+      "created_at": "2026-11-01T15:43:33.916Z",
+      "file_name": "fdisbull-0.29.0-py3-none-any.whl",
+      "size": 822752,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6"
+    },
+    {
+      "id": 381580944,
+      "package_id": 74791785,
+      "created_at": "2026-11-01T15:43:35.160Z",
+      "file_name": "fdisbull_player-0.29.0-py3-none-any.whl",
+      "size": 52281,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "6e5b4f48974de56ca1ba81779d3b903fcbb5269ff424d8f46b3f3d1d4a045c3c"
+    },
+    {
+      "id": 381580946,
+      "package_id": 74791785,
+      "created_at": "2026-11-01T15:43:36.781Z",
+      "file_name": "fdisbull-0.29.0.tar.gz",
+      "size": 2234060,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8"
+    },
+    {
+      "id": 381580949,
+      "package_id": 74791785,
+      "created_at": "2026-11-01T15:43:38.508Z",
+      "file_name": "fdisbull-0.29.0-tool.zip",
+      "size": 2650174,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "4bb1b5227ce39a4b1095e15e20d8e52a3c603c634a2426c63aaaddbb551fbf26"
+    },
+    {
+      "id": 381581003,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:44:00.839Z",
+      "file_name": "0.29.0-linux-x86_64-offline.tar.gz",
+      "size": 103013282,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f"
+    },
+    {
+      "id": 381581034,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:44:08.960Z",
+      "file_name": "0.29.0-linux-x86_64-dependencies.tar.gz",
+      "size": 50475916,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6"
+    },
+    {
+      "id": 381581079,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:44:23.883Z",
+      "file_name": "0.29.0-linux-x86_64-source-companion.tar",
+      "size": 106905600,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118"
+    },
+    {
+      "id": 381581083,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:44:24.976Z",
+      "file_name": "SHA256SUMS",
+      "size": 4294,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "33eae05d47dc3f18a63e7bdda6229afb63f69d4b7e662532685f6a888e0f2e32"
+    },
+    {
+      "id": 381581086,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:44:25.981Z",
+      "file_name": "BUILD.json",
+      "size": 1979,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "86d91c9694569209e6315746f72db9dff4b2f24832f6f6322329f9b2bc61f38a"
+    },
+    {
+      "id": 381581379,
+      "package_id": 74791804,
+      "created_at": "2026-11-01T15:45:51.225Z",
+      "file_name": "fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz.sha256",
+      "size": 115,
+      "file_md5": null,
+      "file_sha1": null,
+      "file_sha256": "29641236824f635e18415dc71a40c01c675f6e2b96a7444f031bae5d009ced4a"
+    }
+  ],
+  "file_count": 10,
+  "qualification": "Metadata accounts for all ten published release artifacts. Local readback comparison is separately recorded for the three Library release copies; this metadata is not a new native run or installation."
+}

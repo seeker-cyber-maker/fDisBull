@@ -1,0 +1,584 @@
+{
+  "actor_or_vehicle_membership_written_by_harness": false,
+  "assistance": "diagnostic input latches and vehicle hit-test result; second-agent selection was additionally prepared in the source-bound native profile",
+  "field_meanings": {
+    "person+0x22": "next occupant reference",
+    "person+0x24": "previous person or vehicle-root reference",
+    "person+0x2c": "vehicle order target, not authoritative current membership",
+    "vehicle+0x1c": "first occupant reference"
+  },
+  "first_board": [
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9328,
+        256
+      ],
+      "agent_state": 5,
+      "i": 0,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9312,
+        256
+      ],
+      "agent_state": 5,
+      "i": 1,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9296,
+        256
+      ],
+      "agent_state": 5,
+      "i": 2,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9280,
+        256
+      ],
+      "agent_state": 5,
+      "i": 3,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9264,
+        256
+      ],
+      "agent_state": 5,
+      "i": 4,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15488,
+        9264,
+        256
+      ],
+      "agent_state": 6,
+      "i": 5,
+      "vehicle_head": 0,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        5,
+        0
+      ],
+      "agent_link": 0,
+      "agent_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "agent_state": 0,
+      "i": 6,
+      "vehicle_head": 2,
+      "vehicle_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "vehicle_ref": 23554
+    }
+  ],
+  "head_and_last_exits": [
+    {
+      "label": "head-exit",
+      "samples": [
+        {
+          "graph_valid": true,
+          "head": 94,
+          "i": 0,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                5,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15496,
+                9144,
+                256
+              ],
+              "prev": 23554,
+              "state": 0
+            }
+          ]
+        },
+        {
+          "graph_valid": true,
+          "head": 94,
+          "i": 1,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                5,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15496,
+                9144,
+                256
+              ],
+              "prev": 23554,
+              "state": 0
+            }
+          ]
+        },
+        {
+          "graph_valid": true,
+          "head": 94,
+          "i": 2,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                5,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15496,
+                9144,
+                256
+              ],
+              "prev": 23554,
+              "state": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "last-exit",
+      "samples": [
+        {
+          "graph_valid": true,
+          "head": 0,
+          "i": 0,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            }
+          ]
+        },
+        {
+          "graph_valid": true,
+          "head": 0,
+          "i": 1,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            }
+          ]
+        },
+        {
+          "graph_valid": true,
+          "head": 0,
+          "i": 2,
+          "persons": [
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-0",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            },
+            {
+              "flags": [
+                4,
+                0
+              ],
+              "health": 16,
+              "id": "person-1",
+              "next": 0,
+              "position_raw": [
+                15497,
+                9145,
+                256
+              ],
+              "prev": 0,
+              "state": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "native_pose_after_exit": "car_x+1, car_y+1, unchanged z for observed same-height subtype-13 car",
+  "second_board": [
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 0,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9328,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 5
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 1,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9296,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 5
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 2,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9296,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 5
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 3,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9280,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 5
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 4,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9264,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 5
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 5,
+      "p0_next": 0,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15488,
+        9264,
+        256
+      ],
+      "p1_prev": 0,
+      "p1_state": 6
+    },
+    {
+      "graph_valid": true,
+      "head": 2,
+      "i": 6,
+      "p0_next": 94,
+      "p0_prev": 23554,
+      "p1_next": 0,
+      "p1_pos": [
+        15496,
+        9144,
+        256
+      ],
+      "p1_prev": 2,
+      "p1_state": 8
+    }
+  ],
+  "single_exit": [
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_next_occupant": 0,
+      "agent_pos": [
+        15497,
+        9145,
+        256
+      ],
+      "agent_state": 0,
+      "i": 0,
+      "spatial_graph_valid": true,
+      "vehicle_head": 0,
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_next_occupant": 0,
+      "agent_pos": [
+        15497,
+        9145,
+        256
+      ],
+      "agent_state": 0,
+      "i": 1,
+      "spatial_graph_valid": true,
+      "vehicle_head": 0,
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_next_occupant": 0,
+      "agent_pos": [
+        15497,
+        9145,
+        256
+      ],
+      "agent_state": 0,
+      "i": 2,
+      "spatial_graph_valid": true,
+      "vehicle_head": 0,
+      "vehicle_ref": 0
+    },
+    {
+      "agent_flags": [
+        4,
+        0
+      ],
+      "agent_next_occupant": 0,
+      "agent_pos": [
+        15497,
+        9145,
+        256
+      ],
+      "agent_state": 0,
+      "i": 3,
+      "spatial_graph_valid": true,
+      "vehicle_head": 0,
+      "vehicle_ref": 0
+    }
+  ],
+  "unsupported": "capacity, other vehicle subtypes, driving, combat, alternate missions and normal screen picking"
+}

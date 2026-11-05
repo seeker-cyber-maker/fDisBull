@@ -1,0 +1,233 @@
+{
+  "scope": "authored fixture only",
+  "historical": {
+    "source": "authored-not-game",
+    "session": "s",
+    "lineage": "one",
+    "snapshot": "past",
+    "revision": 1,
+    "epoch": 0,
+    "tick": 100,
+    "rng": [
+      1,
+      2
+    ],
+    "guard_ammo": 200,
+    "doors": {
+      "d": "closed"
+    },
+    "projectiles": [
+      "authored-old-effect"
+    ],
+    "blocked_raw": [],
+    "actors": {
+      "a": {
+        "generation": 1,
+        "raw": [
+          256,
+          256,
+          256
+        ],
+        "health": 16,
+        "items": [
+          "w"
+        ],
+        "vehicle": null,
+        "pending_conditions": []
+      },
+      "b": {
+        "generation": 1,
+        "raw": [
+          512,
+          256,
+          256
+        ],
+        "health": 16,
+        "items": [],
+        "vehicle": null,
+        "pending_conditions": []
+      }
+    },
+    "items": {
+      "w": {
+        "generation": 1,
+        "owner": "a",
+        "raw": [
+          256,
+          256,
+          256
+        ],
+        "ammo": 11
+      }
+    },
+    "spatial": {
+      "1,1,2": [
+        "a"
+      ],
+      "2,1,2": [
+        "b"
+      ]
+    }
+  },
+  "current": {
+    "source": "authored-not-game",
+    "session": "s",
+    "lineage": "one",
+    "snapshot": "now",
+    "revision": 2,
+    "epoch": 0,
+    "tick": 120,
+    "rng": [
+      9,
+      10
+    ],
+    "guard_ammo": 190,
+    "doors": {
+      "d": "open"
+    },
+    "projectiles": [
+      "authored-current-effect"
+    ],
+    "blocked_raw": [],
+    "actors": {
+      "a": {
+        "generation": 1,
+        "raw": [
+          1024,
+          768,
+          256
+        ],
+        "health": 6,
+        "items": [
+          "w"
+        ],
+        "vehicle": null,
+        "pending_conditions": []
+      },
+      "b": {
+        "generation": 1,
+        "raw": [
+          1024,
+          1024,
+          256
+        ],
+        "health": 16,
+        "items": [],
+        "vehicle": null,
+        "pending_conditions": []
+      }
+    },
+    "items": {
+      "w": {
+        "generation": 1,
+        "owner": "a",
+        "raw": [
+          1024,
+          768,
+          256
+        ],
+        "ammo": 10
+      }
+    },
+    "spatial": {
+      "4,3,2": [
+        "a"
+      ],
+      "4,4,2": [
+        "b"
+      ]
+    }
+  },
+  "result": {
+    "format": "authored-mixed-time-study-1",
+    "candidate": {
+      "source": "authored-not-game",
+      "session": "s",
+      "lineage": "one",
+      "snapshot": "authored-mix-40abdcf58b491a41584ff8ee1b4ff01ed2b1bfec058b4e8532b846a67dccf91b",
+      "revision": 3,
+      "epoch": 1,
+      "tick": 120,
+      "rng": [
+        9,
+        10
+      ],
+      "guard_ammo": 190,
+      "doors": {
+        "d": "open"
+      },
+      "projectiles": [
+        "authored-current-effect"
+      ],
+      "blocked_raw": [],
+      "actors": {
+        "a": {
+          "generation": 1,
+          "raw": [
+            256,
+            256,
+            256
+          ],
+          "health": 16,
+          "items": [
+            "w"
+          ],
+          "vehicle": null,
+          "pending_conditions": []
+        },
+        "b": {
+          "generation": 1,
+          "raw": [
+            1024,
+            1024,
+            256
+          ],
+          "health": 16,
+          "items": [],
+          "vehicle": null,
+          "pending_conditions": []
+        }
+      },
+      "items": {
+        "w": {
+          "generation": 1,
+          "owner": "a",
+          "raw": [
+            256,
+            256,
+            256
+          ],
+          "ammo": 10
+        }
+      },
+      "spatial": {
+        "1,1,2": [
+          "a"
+        ],
+        "4,4,2": [
+          "b"
+        ]
+      }
+    },
+    "current_parent": "now",
+    "historical_sources": [
+      {
+        "actor": "a",
+        "from_snapshot": "past",
+        "fields": [
+          "raw",
+          "health"
+        ],
+        "derived": [
+          "owned_item_positions",
+          "spatial_index"
+        ]
+      }
+    ],
+    "native_execution": false,
+    "geometry_qualified": false,
+    "resume_safe": false,
+    "execution_allowed": false,
+    "scope": "Data-only authored fixture; not a native restoration command"
+  }
+}

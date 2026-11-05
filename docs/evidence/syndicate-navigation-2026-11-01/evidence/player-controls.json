@@ -1,0 +1,311 @@
+{
+  "scope": "Final actual installed Player runs; action_sent means a backend invocation, not necessarily guest input",
+  "agent0": [
+    {
+      "command": "examine route to car",
+      "result": {
+        "outcome": "{\"actor_id\":\"person-0\",\"approach_raw\":[15488,9344,256],\"arrival_contract\":\"exact approach point only; interaction/boarding NOT established\",\"blocked_cells\":[],\"blocked_edges\":[],\"boarding_qualified\":false,\"conditional_gates\":[],\"execution_policy\":{\"teleport\":\"existing guarded adapter only; no walkability inference\",\"walk\":\"requires explicit original-navigation opt-in; conditional plan is not traversal proof\"},\"format\":\"syndicate-candidate-route-1\",\"grid_steps\":4,\"map_identity\":\"d71a88e8b628fd7e9458210e7f66879a9f73adea4bbe52cabb75328eeaeba5eb\",\"map_number\":1,\"native_movement\":false,\"observed_run\":\"c9a908e5f7184992a2db271f01ee1a6c\",\"path_cells\":[[60,40,2],[60,39,2],[60,38,2],[60,37,2],[60,36,2]],\"plan_id\":\"5259e9d28153616786ea6c4007fd59cc4a3991ccfe1903cf19868bea9d3be80f\",\"qualification\":\"conditional_model_only\",\"remaining_limits\":[\"actor clearance\",\"dynamic collision\",\"door state\",\"sub-tile steering\",\"interaction range\",\"fair-play visibility\"],\"runtime_revision\":3071,\"source_state_sha256\":\"b82cd08ccb506ab513bc3cf56df705f9899fc7d7f0ec5550d3e5c67df9c5f44d\",\"start_raw\":[15488,10368,256],\"status\":\"candidate_requires_validation\",\"target_id\":\"vehicle-0\",\"target_raw\":[15496,9144,256],\"visibility\":\"global diagnostic registered-entity census; not line-of-sight or alive-count proof\",\"waypoints_raw\":[[15488,10368,256],[15488,10112,256],[15488,9856,256],[15488,9600,256],[15488,9344,256]]}",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 3071,
+      "revision_after": 3071,
+      "wall_seconds": 0.014526625999906173
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Success: arrived-at-approach: person-0 reached the exact approach via 4 original movement orders. Diagnostic hit-test input; no actor-position writes. This witnesses only the observed route and state, not general clearance, safe combat exposure or boarding.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-car",
+          "item": null
+        }
+      },
+      "revision_before": 3071,
+      "revision_after": 3385,
+      "wall_seconds": 2.980231612999887
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Success: already-at-approach: person-0 reached the exact approach via 0 original movement orders. Diagnostic hit-test input; no actor-position writes. This witnesses only the observed route and state, not general clearance, safe combat exposure or boarding.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-car",
+          "item": null
+        }
+      },
+      "revision_before": 3385,
+      "revision_after": 3385,
+      "wall_seconds": 0.05945012899996982
+    },
+    {
+      "command": "board car",
+      "result": {
+        "outcome": "Success: board-complete: person-0, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "board",
+          "target": "summary-vehicle",
+          "item": null
+        }
+      },
+      "revision_before": 3385,
+      "revision_after": 3423,
+      "wall_seconds": 0.4097940809999727
+    },
+    {
+      "command": "examine car",
+      "result": {
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 0.000 tiles. Route not verified. vehicle-0 occupants: person-0. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 3423,
+      "revision_after": 3423,
+      "wall_seconds": 0.014500447999807875
+    },
+    {
+      "command": "exit car",
+      "result": {
+        "outcome": "Success: exit-complete: person-0, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "exit",
+          "target": "summary-vehicle",
+          "item": null
+        }
+      },
+      "revision_before": 3423,
+      "revision_after": 3437,
+      "wall_seconds": 0.14911835799989603
+    },
+    {
+      "command": "examine team",
+      "result": {
+        "outcome": "person-0: (60.535, 35.723, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 23554]\nperson-1: (91.484, 41.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 3437,
+      "revision_after": 3437,
+      "wall_seconds": 0.01335373899996739
+    }
+  ],
+  "agent1": [
+    {
+      "command": "focus team agent 2",
+      "result": {
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "focus",
+          "target": "person-1",
+          "item": null
+        }
+      },
+      "revision_before": 5257,
+      "revision_after": 5257,
+      "wall_seconds": 0.052142268999887165
+    },
+    {
+      "command": "examine route to car",
+      "result": {
+        "outcome": "{\"actor_id\":\"person-1\",\"approach_raw\":[15488,9344,256],\"arrival_contract\":\"exact approach point only; interaction/boarding NOT established\",\"blocked_cells\":[],\"blocked_edges\":[],\"boarding_qualified\":false,\"conditional_gates\":[],\"execution_policy\":{\"teleport\":\"existing guarded adapter only; no walkability inference\",\"walk\":\"requires explicit original-navigation opt-in; conditional plan is not traversal proof\"},\"format\":\"syndicate-candidate-route-1\",\"grid_steps\":4,\"map_identity\":\"d71a88e8b628fd7e9458210e7f66879a9f73adea4bbe52cabb75328eeaeba5eb\",\"map_number\":1,\"native_movement\":false,\"observed_run\":\"c9a908e5f7184992a2db271f01ee1a6c\",\"path_cells\":[[60,40,2],[60,39,2],[60,38,2],[60,37,2],[60,36,2]],\"plan_id\":\"42d1d841faa4363a7591ac613b19973a439d6daafe11775c4de95c3899fc8246\",\"qualification\":\"conditional_model_only\",\"remaining_limits\":[\"actor clearance\",\"dynamic collision\",\"door state\",\"sub-tile steering\",\"interaction range\",\"fair-play visibility\"],\"runtime_revision\":5257,\"source_state_sha256\":\"f503967533e7839c511faeeba093a7c6e241b0a697767a224691f4a7bbab2275\",\"start_raw\":[15488,10368,256],\"status\":\"candidate_requires_validation\",\"target_id\":\"vehicle-0\",\"target_raw\":[15496,9144,256],\"visibility\":\"global diagnostic registered-entity census; not line-of-sight or alive-count proof\",\"waypoints_raw\":[[15488,10368,256],[15488,10112,256],[15488,9856,256],[15488,9600,256],[15488,9344,256]]}",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 5257,
+      "revision_after": 5257,
+      "wall_seconds": 0.015742461999934676
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Success: arrived-at-approach: person-1 reached the exact approach via 4 original movement orders. Diagnostic hit-test input; no actor-position writes. This witnesses only the observed route and state, not general clearance, safe combat exposure or boarding.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-car",
+          "item": null
+        }
+      },
+      "revision_before": 5257,
+      "revision_after": 5572,
+      "wall_seconds": 2.9512197010001273
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Success: already-at-approach: person-1 reached the exact approach via 0 original movement orders. Diagnostic hit-test input; no actor-position writes. This witnesses only the observed route and state, not general clearance, safe combat exposure or boarding.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-car",
+          "item": null
+        }
+      },
+      "revision_before": 5572,
+      "revision_after": 5572,
+      "wall_seconds": 0.056808262000004106
+    },
+    {
+      "command": "board car",
+      "result": {
+        "outcome": "Success: board-complete: person-1, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "board",
+          "target": "summary-vehicle",
+          "item": null
+        }
+      },
+      "revision_before": 5572,
+      "revision_after": 5610,
+      "wall_seconds": 0.4193893960000423
+    },
+    {
+      "command": "examine car",
+      "result": {
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 0.000 tiles. Route not verified. vehicle-0 occupants: person-1. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 5610,
+      "revision_after": 5610,
+      "wall_seconds": 0.013489101000004666
+    },
+    {
+      "command": "exit car",
+      "result": {
+        "outcome": "Success: exit-complete: person-1, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "exit",
+          "target": "summary-vehicle",
+          "item": null
+        }
+      },
+      "revision_before": 5610,
+      "revision_after": 5624,
+      "wall_seconds": 0.1501354590000119
+    },
+    {
+      "command": "examine team",
+      "result": {
+        "outcome": "person-0: (91.703, 41.672, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-1: (60.535, 35.723, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 23554]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      },
+      "revision_before": 5624,
+      "revision_after": 5624,
+      "wall_seconds": 0.014007816000003004
+    }
+  ],
+  "controls": [
+    {
+      "command": "walk route to mission target",
+      "result": {
+        "outcome": "Rejected: Route crosses an unqualified gate; no movement request sent",
+        "status": "rejected",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-mission-target",
+          "item": null
+        }
+      },
+      "revision_before": 3438,
+      "revision_after": 3438,
+      "before_game_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+      "after_game_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+      "wall_seconds": 0.08700718199997937
+    },
+    {
+      "case": "stale token",
+      "result": {
+        "status": "rejected",
+        "complete": true,
+        "effects": "none-confirmed",
+        "message": "Stale context; no action sent."
+      },
+      "unchanged": true
+    },
+    {
+      "command": "walk route to car",
+      "result": {
+        "outcome": "Incomplete: Movement held; inspect or restore, never replay its input: Actor context/health changed",
+        "status": "incomplete",
+        "complete": false,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "walk",
+          "target": "route-car",
+          "item": null
+        },
+        "recovery_required": true
+      },
+      "revision_before": 3443,
+      "revision_after": 5247,
+      "before_game_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+      "after_game_sha256": "9784c21a6a2bd9fc8fed93b0a82c1687a4d712a904aed3bbafc131a491f57eb2",
+      "wall_seconds": 16.982054593000157
+    },
+    {
+      "case": "held action not replayed",
+      "error": "Provider held after uncertain action; no further guest actions",
+      "unchanged": true
+    }
+  ],
+  "initial_preparation": {
+    "separate_baseline_restore_per_trial": true,
+    "successful_walk_start": "One separate assisted teleport to [15488,10368,256] before route execution",
+    "long_route_start": "Unmodified initial mission actor position; no start teleport",
+    "no_position_state_or_instruction_writes_during_walk": true
+  }
+}

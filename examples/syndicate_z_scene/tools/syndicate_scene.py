@@ -17,7 +17,8 @@ TABLES = {'person': (0x8008, 92, 256, 1), 'vehicle': (0xdc08,42,64,2),
           'object': (0xe688,30,400,5), 'weapon': (0x11568,36,512,4),
           'effect': (0x15d68,30,256,3)}
 ROLE_NAMES = {1:'civilian',2:'agent',4:'police',8:'guard'}
-OBJECT_NAMES = {12:'door',18:'window-open-class',19:'window-closed-class',22:'tree'}
+DOOR_STATES = {12:'closed',13:'opening',14:'open',15:'closing'}
+OBJECT_NAMES = {**{k:'door' for k in DOOR_STATES},18:'window-open-class',19:'window-closed-class',22:'tree'}
 TERRAIN_NAMES = {0:'empty',1:'slope-1',2:'slope-2',3:'slope-3',4:'slope-4',5:'flat',6:'roadside-6',7:'roadside-7',8:'roadside-8',9:'roadside-9',10:'wall',11:'road-curve',12:'handrail/light',13:'roof',14:'crosswalk',15:'road',16:'other-empty-class'}
 FLAT_CLASSES = {5,6,7,8,9,11,13,14,15}
 CLEAR_CLASSES = {0,12,16}
@@ -56,13 +57,20 @@ class Mission:
                     role=r[28]
                     item.update(role_raw=role,category=ROLE_NAMES.get(role,f'person-class-{role}'),
                                 team_member=i<4 and role==2,vehicle_refs=[u16(r,36),u16(r,44)],
+                                occupant_previous_ref=u16(r,36),occupant_next_ref=u16(r,34),
+                                vehicle_order_target_ref=u16(r,44),
+                                vehicle_refs_semantics='legacy raw pair: occupant predecessor/root, order target; not two direct vehicle IDs',
                                 inventory_head=u16(r,58),selected_weapon_ref=u16(r,68),
                                 target_position_raw=list(struct.unpack_from('<HHH',r,46)),
                                 stimulants_raw={'adrenaline':list(r[71:74]),'intelligence':list(r[75:78]),'perception':list(r[79:82])})
                 elif family=='vehicle':
-                    item.update(occupant_ref_candidate=u16(r,28), gate_state='unknown',boarding='unqualified')
+                    item.update(occupant_ref_candidate=u16(r,28),occupant_head_ref=u16(r,28),
+                                gate_state='unknown',boarding='bounded original diagnostic requests only')
                 elif family=='weapon':
                     item.update(owner_ref=u16(r,32),inventory_next=u16(r,28),inventory_previous=u16(r,30))
+                if family=='object' and r[25] in DOOR_STATES:
+                    item.update(door_state=DOOR_STATES[r[25]],door_state_source='native object updater subtype 12..15',
+                                traversal='unqualified',animation_base=u16(r,14),animation_frame=u16(r,16),animation_index=u16(r,18))
                 out.append(item)
         return out
     def graph(self)->dict:
@@ -94,6 +102,58 @@ class Mission:
         if flagged-set(seen):errors.append(f'{len(flagged-set(seen))} flagged entities absent from root chains')
         return {'valid':not errors,'errors':errors,'membership':seen,'chains':chains,
                 'entity_count':len(seen),'occupied_cells':len(chains)}
+    def vehicle_occupancy(self, entities=None)->dict:
+        """Resolve the separate occupant list without guessing from a nonzero word.
+
+        The first person's predecessor is the car; later predecessors are people.
+        This is not the cell-list next/previous relation at record offsets 0/2.
+        Invalid components remain unknown. No target bytes are modified.
+        """
+        entities=self.entities() if entities is None else entities
+        byref={e['offset_reference']:e for e in entities}
+        cars=[e for e in entities if e['family']=='vehicle']
+        persons=[e for e in entities if e['family']=='person']
+        chains={};errors=[];members={};local_errors={}
+        for car in cars:
+            refs=[];previous=car['offset_reference'];ref=car['occupant_head_ref'];seen=set();err=[]
+            while ref:
+                if ref in seen:
+                    err.append('cycle');break
+                if len(refs)>=TABLES['person'][2]:
+                    err.append('person-budget');break
+                seen.add(ref);person=byref.get(ref)
+                if person is None or person['family']!='person':
+                    err.append('non-person-or-dangling-reference');break
+                if person['occupant_previous_ref']!=previous:
+                    err.append('predecessor-mismatch')
+                refs.append(ref);members.setdefault(ref,[]).append(car['id'])
+                previous,ref=ref,person['occupant_next_ref']
+            chains[car['id']]=refs;local_errors[car['id']]=err
+        duplicates={ref for ref,owners in members.items() if len(owners)>1}
+        for car in cars:
+            if any(ref in duplicates for ref in chains[car['id']]):
+                local_errors[car['id']].append('person-in-multiple-vehicles')
+        vehicles={}
+        for car in cars:
+            err=local_errors[car['id']]
+            vehicles[car['id']]={'valid':not err,'errors':err,
+                'occupants':[byref[r]['id'] for r in chains[car['id']]] if not err else [],
+                'head_ref':car['occupant_head_ref'],
+                'scope':'bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility'}
+            errors.extend(car['id']+': '+e for e in err)
+        people={}
+        for person in persons:
+            owners=members.get(person['offset_reference'],[])
+            good=[owner for owner in owners if vehicles[owner]['valid']]
+            if len(owners)==len(good)==1:
+                people[person['id']]={'state':'occupant','vehicle_id':good[0]}
+            elif person['occupant_previous_ref']==0 and person['occupant_next_ref']==0 and not owners:
+                people[person['id']]={'state':'no-vehicle-membership','vehicle_id':None}
+            else:
+                people[person['id']]={'state':'unknown','vehicle_id':None}
+                errors.append(person['id']+': unresolved or inconsistent occupant links')
+        return {'valid':not errors,'errors':errors,'vehicles':vehicles,'people':people}
+
     def objectives(self)->list[dict]:
         """Eight native-consumer records, not ten external-description records."""
         out=[]
@@ -110,7 +170,11 @@ class Mission:
     def summary(self, selected='person-0')->dict:
         graph=self.graph()
         if not graph['valid']:raise ValueError('Spatial graph not coherent: '+str(graph['errors'][:5]))
-        entities=self.entities();byid={e['id']:e for e in entities};sel=byid[selected]
+        entities=self.entities();occupancy=self.vehicle_occupancy(entities)
+        for e in entities:
+            if e['family']=='vehicle':e['occupancy']=occupancy['vehicles'][e['id']]
+            elif e['family']=='person':e['vehicle_membership']=occupancy['people'][e['id']]
+        byid={e['id']:e for e in entities};sel=byid[selected]
         active=[e for e in entities if e['offset_reference'] in graph['membership']]
         objectives=self.objectives();targetids={x['target_id'] for x in objectives if x['target_id']}
         ref_ids={e['offset_reference']:e['id'] for e in entities}
@@ -135,6 +199,7 @@ class Mission:
                 'scope':'global diagnostic registered-entity census; not line-of-sight or alive-count proof',
                 'team':[e for e in entities if e.get('team_member')],
                 'counts':dict(sorted(counts.items())),'nearest':nearest,'objectives':objectives,
+                'vehicle_occupancy':occupancy,
                 'entities':active,'spatial_index':{k:graph[k] for k in ['valid','entity_count','occupied_cells']},
                 'coverage':{'partial':True,'static_code_complete':False,'visibility':'unknown',
                             'vehicle_gate_relationship':'unqualified','inventory_complete':False}}

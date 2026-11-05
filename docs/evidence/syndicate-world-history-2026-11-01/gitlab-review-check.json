@@ -1,0 +1,27 @@
+{
+  "native_damage_history_not_in_that_description": true,
+  "new_remote_write": false,
+  "older_preservation_mr": 35,
+  "pagination_exhausted": true,
+  "project": "brewster-jennings-group/fdisbull",
+  "project_id": 88349936,
+  "queries": [
+    {
+      "matching_iids": [
+        35,
+        29
+      ],
+      "search": "Syndicate",
+      "state": "all"
+    },
+    {
+      "matching_iids": [
+        5
+      ],
+      "search": "damage",
+      "state": "all"
+    }
+  ],
+  "relevant_current_findings_mr_found": false,
+  "scope": "title/description search of all-state MRs, not a full repository-implementation audit; !5 is Shadowrun, !29 is coordinate-domain work"
+}

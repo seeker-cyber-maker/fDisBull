@@ -1,0 +1,17 @@
+{
+  "publication": {
+    "browser_failed_before_tabs": true,
+    "gitlab_connector_used": false,
+    "remote_writes": false
+  },
+  "initial_receipt_checker_error": {
+    "error": "KeyError: revision_before for the condensed stale-token control",
+    "effect": "Receipt checker stopped before native execution; no runtime action was repeated",
+    "correction": "Use that explicitly retained control\u2019s unchanged flag and no-effect outcome; detailed revision/hash comparison remains required for the full command receipt"
+  },
+  "native_limits": [
+    "long candidate route held on health change, not certified completed",
+    "obstruction hit-test supplied to excluded terrain; not ordinary mouse route",
+    "dynamic clearance, hazard routing and driving remain unqualified"
+  ]
+}

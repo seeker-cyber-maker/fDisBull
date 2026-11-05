@@ -1,0 +1,3584 @@
+{
+  "archive": "fdisbull-0.29.0.tar(1).gz",
+  "bytes": 2234060,
+  "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+  "files": [
+    {
+      "path": "fdisbull-0.29.0/AGENTS.md",
+      "bytes": 6613,
+      "sha256": "582770f7075754073165177c63657cf8b447b450a0ffd6b44669f5103722fb9b"
+    },
+    {
+      "path": "fdisbull-0.29.0/CLAUDE.md",
+      "bytes": 1164,
+      "sha256": "ff64d3bab048bfad8f12aae4ab7478c5df5dc085baec5762407952f082c15d27"
+    },
+    {
+      "path": "fdisbull-0.29.0/MANIFEST.in",
+      "bytes": 2467,
+      "sha256": "938fe6800c97d4588d7c311a4f1d2796f90b82ff6e8d584a00ce2150410f10b3"
+    },
+    {
+      "path": "fdisbull-0.29.0/PKG-INFO",
+      "bytes": 729,
+      "sha256": "45aaca4771dc3b95eec7c8306db1287e2d83da87ac8ed4ef6a0b433c2d5a5a17"
+    },
+    {
+      "path": "fdisbull-0.29.0/README.md",
+      "bytes": 19667,
+      "sha256": "f1e4b7daf90addbf740621fa3e7621abb976825a9f3c51aa1bddcddae304a703"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ADVANCED_ANALYSIS.md",
+      "bytes": 14404,
+      "sha256": "e2f78c25e4026871c69789c64431c1f1d7af966f686bd065de16a315f7468b59"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/AGENT_QUICKSTART.md",
+      "bytes": 18889,
+      "sha256": "446174075124194f8aae1f7847d71dd4382bdfba1abe5d2c3906a31be41c925c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/AGI_LOGIC.md",
+      "bytes": 1786,
+      "sha256": "ed7444daa1fb68302188ea254e535b1f9381f98c31fcb12e17a2ce9b3c1b590b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/API.md",
+      "bytes": 56427,
+      "sha256": "9ddfb72aa177ab8f4d83b250c5b4e0ad12b42571b4893bee9e7ff2bc5ac88e4d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ARCHITECTURE.md",
+      "bytes": 27575,
+      "sha256": "5b81d4a1b3dc2228ff84a5f43f4a5853e7728f80ba2bc33b784b56f512d679da"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ASSISTED_TRAVEL.md",
+      "bytes": 4327,
+      "sha256": "54a3f5a9810a6d531eef8cfb4848235ef7ea67790d9e1044b2f33d475061649b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/BOUNDED_PROOFS.md",
+      "bytes": 5099,
+      "sha256": "9513b8c6d655ee3f5caf085fc021d295d4242e5a914e59558ea9fc321967be51"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CAPABILITIES.md",
+      "bytes": 5622,
+      "sha256": "3d37f474e21438dac3e311a5d265b577f4e6d91e445d5c97ae9895b003c4230e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CIVILIZATION_RESEARCH_LEADS.md",
+      "bytes": 4039,
+      "sha256": "15fb8bcca293a11e97df359bc851faf2138fb0bd9d2b9699a578a2c54d3cb54f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CIV_WORLD_Z_SCENE_2026-10-31.md",
+      "bytes": 3462,
+      "sha256": "3fc40730f2ea4f36638780bf3a2306a9591f990681473ddf02e0040eea182079"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CI_COORDINATION.md",
+      "bytes": 5508,
+      "sha256": "1fbbabd1573f6e7ad42326b1d0d0f1e95efb26ff8a0961f36ca8a49c66254512"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CLOUD-0.27.0-MANIFEST.json",
+      "bytes": 13363,
+      "sha256": "f68eb383bb47b85646247957979a7d2ef7064ae7991a9c1985d604a47f23fadc"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CODE_BACKINGS.md",
+      "bytes": 9068,
+      "sha256": "826771c80b1c91d20f6d202f524ebcdecbd4492e62685a77ee7646e2baff5e74"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CODE_LAYERS.md",
+      "bytes": 13641,
+      "sha256": "4fb5f6802fcc07fed4dcacb295e82dda6e66c8dde2945d518ac40aa0e13be4ee"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/COLONIZATION_DOS_WIN16_PILOT.md",
+      "bytes": 11005,
+      "sha256": "fbc451bef6ef256c7caca4687cbb4460ba63b37288a8cfe0b9412d2175176161"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/COLONIZATION_FOOD_EQUIVALENCIES.md",
+      "bytes": 7587,
+      "sha256": "1e7f5dd3a6dabdbbb46c83eb3a563f6bb6bdd1c050e50e855d5ba59550d35ff1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CONSOLE_SYNTHESIS_LOCAL_PILOT.md",
+      "bytes": 12643,
+      "sha256": "86ec497e07dca7b9ad5b450a305c2f8fe3615d08eb3c03013dc3391b7d481a66"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CONTRACT.md",
+      "bytes": 5690,
+      "sha256": "bcd592e78e0ba0429a3cae6d75c42abee93b57fe3f1348b66c7effba57b54475"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/CORPUS.md",
+      "bytes": 6479,
+      "sha256": "d8209bc8c2be08056c6a69d485f08d19cbfd5f56a7d35e4cd5ac951d788cb58e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DEBUGGER_EXPERIMENTS.md",
+      "bytes": 8673,
+      "sha256": "bd18a9e471fb4f45811b972bc3e405845588afe4aeb739667c00f1192b7a152c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DEBUGGER_SCRIPTS.md",
+      "bytes": 14497,
+      "sha256": "251341e5908d7388b13b3e0264e07559824840f5a55581ae161347487e1bf5e3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DEBUGGER_SEMANTICS.md",
+      "bytes": 3398,
+      "sha256": "24426826039190e54d77c636d01048a48f0a932af5541eff2554b2320275acb8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DECODER_RESEARCH.md",
+      "bytes": 7631,
+      "sha256": "ad7f166090beece43989f97fb79aefb53e787bf4a90faf8ce99549a0eae69705"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DEFINITIONS_AND_ROADMAP.md",
+      "bytes": 9657,
+      "sha256": "ca84633520d695a84929b39f4edcd77c9a5793e14af04156f7447c2b65349296"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.11.md",
+      "bytes": 2931,
+      "sha256": "b6fd68a3b0ff36c79998d94ce27dcc2f69a7f37fbbdff7a6fa7ba7ba7888ed53"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.12.md",
+      "bytes": 3925,
+      "sha256": "414d225035dd5becac6e22469949ad3ea09b45835613fd43764119fe40f61096"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.13.md",
+      "bytes": 5113,
+      "sha256": "e5b3772051c6cd2299fe41d7599642e8ca95615d60a5d273d3a3500580b5a930"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.14.md",
+      "bytes": 6929,
+      "sha256": "2af20ed07f543a7a83ddc0f506bf246690800e4df055fdd9cd14b593cb7ef786"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.16.md",
+      "bytes": 6511,
+      "sha256": "d4a2df1a47cdf74a4ca37c9768b3a1711e5fc32b259431e05da57dc07e96bb0e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DELIVERY-0.17.md",
+      "bytes": 6384,
+      "sha256": "5f8134fb0a7b1207362bbc8e90a7b92db68c0c4d8ca3045d0021f13a9ef99abe"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DINOPARK_FUNDED_RECOVERY.md",
+      "bytes": 4453,
+      "sha256": "11fb9b80a74634c556df4e41f719faa6d501c9dd5eebadd8790fcb28deca6cc8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md",
+      "bytes": 18016,
+      "sha256": "5b7e2fa6768d1bb29f8eaa2fa365f3d2a34753d443955ad2b20ba2cda9ce5b48"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DINOPARK_Z.md",
+      "bytes": 13259,
+      "sha256": "47a9f67505592708f8d25749354f05c596e2b87227c3ec3615ad9d2b64b0ea55"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DINOPARK_Z_TERMINAL_ACTIONS.md",
+      "bytes": 5627,
+      "sha256": "b3acd8bc1a0f46429d188ba8d62ae7dd752b913b671c278fe83e859926990734"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOSBOX_DEBUGGER.md",
+      "bytes": 23954,
+      "sha256": "0afe1011750c0ecd56cb3c3729cdd817186b6598c21fd0574a0a3d72e3447425"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_AUDIO_DRIVERS.md",
+      "bytes": 6082,
+      "sha256": "f1eb9ad2b5bd46d858c18d1bc6a2d2e6a6d6bb2f2602a54f407af9a381bbc480"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_CONTINUE_CALLBACK_FIX.md",
+      "bytes": 4502,
+      "sha256": "f08ccb8e36962d9cb87680ef7e7fe694684bc3b82b746d27de118d0af7fdf3dc"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_DECOMPILERS_RESEARCH.md",
+      "bytes": 7829,
+      "sha256": "0884deabc26151418c531a24b99276c94ca9054f67fdb400678f99ef64ac5867"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_FORMAT_FINDINGS_2026-10-29.md",
+      "bytes": 12906,
+      "sha256": "0b1df9d1aa22d2f77dfa0998e3a05efe31fb389bc2fde90b75c9239010526ccf"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_INPUT_NAMES.md",
+      "bytes": 4481,
+      "sha256": "56c825b232c46121d15eba08e92176f86a44da17f2abdd7dcbaf9e91075f92f3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/DOS_KNOWLEDGE.md",
+      "bytes": 5169,
+      "sha256": "30d67fede63b9e34f02ae588d9fa6899f1e5040819519777ebb59231730b4991"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/EXTERNAL_FILES.md",
+      "bytes": 16885,
+      "sha256": "cce6c1032382ab9b9ace6c00e158ce63ffe2d17dff2af687d2fe3732dadee9a2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/EXTERNAL_TARGETS.md",
+      "bytes": 10010,
+      "sha256": "906636a8c7e7ff224616fb10e7dafd9e9d64eab218a3008e653d924990007d42"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/GAMEFAQS_GUIDE_SKILL_RATIONALE.md",
+      "bytes": 21472,
+      "sha256": "bdd1c3caf30a8f78ad443b189d0364feafefd8d6737dbfdf8974b40b6f9f3eab"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/GAME_CONTENT_AND_PLAYER.md",
+      "bytes": 5591,
+      "sha256": "3316e621e001dd9d5645f8ace2a80062c4ba4589320abc0100be618bb6d548bf"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/GOG_UNPACKING.md",
+      "bytes": 4472,
+      "sha256": "f2a98727ff42d02702c6aafa42197da41a3bd8ac1eb345f659015aaacc7057c7"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/GUEST_KEYBOARD.md",
+      "bytes": 3630,
+      "sha256": "1493e06a49db8b0fdd0f7cef1cf037724c319c282d5077d1eb950135cc70b6bb"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/HELD_OUT_RECOVERY_STUDY.md",
+      "bytes": 19735,
+      "sha256": "296be0a0fd3d7da2f9856cd053e6fc610e8d4df8018fcf58af660c2e4f942684"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/IDA_REMOTE.md",
+      "bytes": 9264,
+      "sha256": "e938ce27524db2cacdb4e021672e0f0ed36f1d2b9dcd6463c5d5377ebb58f837"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/IDA_REMOTE_VERIFICATION.md",
+      "bytes": 8228,
+      "sha256": "01f5f1adbef66f9d8a19781bd1fd9e99804097dbad74264d5b43799e9e04290d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/IDA_TRACE_PERFORMANCE.md",
+      "bytes": 7892,
+      "sha256": "c8ef2c8a31a08cd435c2e00ff05f8079259a64e930a1e60e8a047eaf87a845a2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/INTENT_PIPELINE_RECOVERY_CASES.md",
+      "bytes": 18047,
+      "sha256": "aa71e76764091e11ccaf7246960ad237dea44d1d39aaef18b0e42944ba8e5dba"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/INTENT_PIPELINE_RFC.md",
+      "bytes": 20508,
+      "sha256": "01747301070a3fcd1f443357378d85eb18bcdb2136f6e84c17a8281e92f84dcb"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/INTERACTION_IL.md",
+      "bytes": 4261,
+      "sha256": "7d2422c8394c06d1589ea90f00aaf7e75bee5e7d4eac9ad84d676f26646c4e8a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/INVESTIGATION_SKILL_RECONCILIATION.md",
+      "bytes": 11117,
+      "sha256": "9b9a49322d5f38281d7ab91f5e1b883b5bed5e90a5d3d30c06b880821bd9d74c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/KEYBOARD_SAMPLING.md",
+      "bytes": 4927,
+      "sha256": "bda6945bfcbcc043d4d848462f3803f6fb09b0123c4bf18273abac36ea9d27b6"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/KQ1_ASSISTED_TRAVEL_BENCHMARK.md",
+      "bytes": 6429,
+      "sha256": "f5d45d111391f97da62b9b0f90b46de55ed9457e5a37db630f0ce45f96aabfba"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/LE_WHOLE_BINARY_SCOPE_2026-10-30.md",
+      "bytes": 14006,
+      "sha256": "0f6cde8ca1a5680b814a75d2fa55ca431d83c6e8d898c58ca11b19f0343bac4e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/LINUX_STATE_CRC_FIX.md",
+      "bytes": 5352,
+      "sha256": "000dcd2194ca2ea0b9c6a96037b27644c48319dd3e6d43519ff12fd06724127c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/LOCAL-AGENT-HANDOFF-0.20.md",
+      "bytes": 1860,
+      "sha256": "3cbb715aa214395e2ac26e6eb11098f1681ad6cb1c4f48005c07feeb354645f0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/LOCAL_DELIVERY.md",
+      "bytes": 3522,
+      "sha256": "50889efd14229ccf756920040d7796f0f73d9aaece1d6ab7fc0806e74f163265"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/LOST_IN_TIME_FAST_RECOVERY.md",
+      "bytes": 9233,
+      "sha256": "569fd5858965e4c25f4ea8cdb997a19af7702f2f766351f2bbcc509be1399d92"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/MACOS_APP_REPLICATION.md",
+      "bytes": 6188,
+      "sha256": "7f10d7cdc532e7e5b0cb6b4e95c4dd61cabe926d02c8b52f0055d7a09c6076ed"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/MACOS_ARM64_ANALYSIS.md",
+      "bytes": 6092,
+      "sha256": "0d9e6d6b4c52b3fee9adc65600e5c95f433d87308353587d33cc4ac83373cac4"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/NATIVE_UDL_UDC.md",
+      "bytes": 8974,
+      "sha256": "70de7bc28af38c5cc207635579c9b41895f5011b9aac7946864a5234c57f2af3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/NE_LOADING.md",
+      "bytes": 8971,
+      "sha256": "54f889517b1c017f738e8eecce61e57569b15eafdbcce6de3cb7052c718cb32a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/NOCD_RIP_RESEARCH.md",
+      "bytes": 12023,
+      "sha256": "5c24a88b0962d92332b2b4bbcb0e3961265f3e107c45fc23afdbef3b26db3f62"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/OBSERVATION_WAIT.md",
+      "bytes": 3444,
+      "sha256": "38a045e725372c631bd207fa60e89a70d208e87d86347ef472298a253e534c66"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/OFFLINE_DEPENDENCIES.md",
+      "bytes": 4083,
+      "sha256": "03ee4717be7aa6a1ba40df8c8b167a0ff0e86fd9ee52addabff598253afbbdf4"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/OFFLINE_KIT_0.20.md",
+      "bytes": 3432,
+      "sha256": "dc47be6714f13e5c1b369ac2272c24469a6e0c15da04d09a1c4e409e775a0401"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/OUTPUT_LIMITS.md",
+      "bytes": 6481,
+      "sha256": "60869d092d0916cf564c883ec9cc00c95e96491f276bb49d4fbf3322d89046e0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PARKING_COMMIT.md",
+      "bytes": 3809,
+      "sha256": "b4140d0dc3f809b73ada1ac8330e30de960fdda15e6dbf9030e1dafc9742e84b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PE64_ADVANCED_VERIFICATION.md",
+      "bytes": 9907,
+      "sha256": "1ca662b54665c641a7467546909cd74bd244730ff83da3e9d9d7ca40e8b56775"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PE64_VERIFICATION.md",
+      "bytes": 6711,
+      "sha256": "44e977b469a011c897d01bca8ac8f2e444fe432284a87159f1655796656d0018"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PLATFORMS.md",
+      "bytes": 7246,
+      "sha256": "f2a729ab7bfd7452c1532de96b68efc8faacd6357abcaab162e1cc0006102259"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PLAYER_LIVE.md",
+      "bytes": 4735,
+      "sha256": "20f6c0da70663b68a5e3f4b5dcc5cbbc72f5a22924bd49c2fdbb60026c2b1cec"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PQ1_CONDITIONAL_NAVIGATION_FINDING.md",
+      "bytes": 9963,
+      "sha256": "dac30e5fd0c0a7476219ff56d0fd974fd3050d2c85b75c7b61ed3cbd9b1e826e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PQ1_RUNTIME_RESOURCE_LAYER_FINDING.md",
+      "bytes": 9638,
+      "sha256": "6c8886dedc3a81293336560d7d019a44e12fd2f008d9fde6c98ae5ba258d2059"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PROCESSOR_MODULES.md",
+      "bytes": 3501,
+      "sha256": "a215ea02cea55ed99cef6f661c5e33f9a0e00f29e99b726ea5bd15fd334cc443"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PROGRESSIVE_SCENES.md",
+      "bytes": 5585,
+      "sha256": "5fe2f0e10e658caecf8a6acd4fa124c925088bad5b5b1419afa73f3d8edcd743"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PROJECT_HISTORY.md",
+      "bytes": 27301,
+      "sha256": "9eb5d0ebb4d44df86d7c68c33692cedd14ece344766fdd352ef8d3eb163f507a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PR_BACKLOG.md",
+      "bytes": 12855,
+      "sha256": "c94e5c86d1687c28bb90675c70594cfc21b28c4923546f7a94292f016787217b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.18.md",
+      "bytes": 4963,
+      "sha256": "ff4987d59bda6ec8c583f76e79fcf410bed5a5090b510bb2ae3785eafa02d2a4"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.19.md",
+      "bytes": 5344,
+      "sha256": "54beabd7cf32b59bda0b3fa95d3023232a0893d008153219108e4371d9c2107b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.20.md",
+      "bytes": 5776,
+      "sha256": "6e463ad67effde2aaa63774db222be9fe50b5662c64a74e23b78a3c480a9fc12"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.21.md",
+      "bytes": 6447,
+      "sha256": "ecf8f45224f77191eee4fca02e7412d757185ccdd23d046146ea4911a8b47591"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.22.md",
+      "bytes": 6034,
+      "sha256": "20aab86f84dfde79d03e96f1c5c999875caf6ffabf84927b34c5893d77a9312f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.23.md",
+      "bytes": 6283,
+      "sha256": "0fe27a1c41e087c12013dd182b5d9bc8aac556161cad0a6f88719eba078a5523"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.24.md",
+      "bytes": 7036,
+      "sha256": "d419cb7a7b8a307628c8b7589a1fdb58b4b2d5fdf2d60458478256e7ec4258ce"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/PUBLICATION-0.25.md",
+      "bytes": 7230,
+      "sha256": "a03068c772fcaea2aeb903515234abe33d50a432efc9ea908186db105afcf981"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/QUERYING.md",
+      "bytes": 4448,
+      "sha256": "b5ee68547f02a29aaeb67bfc5e748618d6dc8eda174e77f5617a31c875f45873"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RECONCILIATION-0.20.md",
+      "bytes": 6288,
+      "sha256": "df65dbffe2b6ebb8c36f56a3c08ef0881577dda417671a66b48a6ec4ef8abfa9"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.10.0.md",
+      "bytes": 3186,
+      "sha256": "86127fedf1e46069cba54650d35e19d97b1ed914c8ac0da0d4525e0210b9cb27"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.11.0.md",
+      "bytes": 4188,
+      "sha256": "0c32a12ff63fc2fdd4f45f4b7c98da2c7edce9c656bca4320a4b01f6c68f655e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.12.0.md",
+      "bytes": 4211,
+      "sha256": "0d91825285e23b8d2959eed0366cb52653d2a55d39b83f7d6e5f0149bbd6a1d5"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.13.0.md",
+      "bytes": 4668,
+      "sha256": "4079691aa7649a88f73aafa1e73559a11f6656602c6ec4f8546f105a7621433e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.14.0.md",
+      "bytes": 5771,
+      "sha256": "0f9a90b0cfd556417f0dcafcd94d3c8d0e34f55198eed8839e15cc746d8c479d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.15.0.md",
+      "bytes": 2204,
+      "sha256": "0b23391be528cbb8755609396ae1098b691934e21127a31216c68c6317e85df1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.16.0.md",
+      "bytes": 2542,
+      "sha256": "316026a78a20a5aba83f55bb3b3cce96855d1588e24b679d0ee809d76d5d8710"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.17.0.md",
+      "bytes": 4021,
+      "sha256": "e304d5781d00d57fb6ee35464f69214d888c3d65e5c336d0e74cb90aa95ea861"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.18.0.md",
+      "bytes": 4752,
+      "sha256": "92e77444e2be440351e3867b50dfc89c25db04a7f126c40a94c7b9046b03f2fa"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.19.0.md",
+      "bytes": 5706,
+      "sha256": "af492a120e18e05b85ad97ca7e86d93658d205752c6b47c9748c80ee2061b585"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.20.0.md",
+      "bytes": 5712,
+      "sha256": "b51574694869110b25a2b860509b56128b875f71357bf12fbf2f37b0942fef5e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.21.0.md",
+      "bytes": 6539,
+      "sha256": "ff465e169b76ab5bff4c06137e638c5f8199c9c478b6f1318136ccded6cb0a78"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.22.0.md",
+      "bytes": 6167,
+      "sha256": "1748c292d3f40ee73788b6ebddd5eca197297df2ee12cbca95e2debb55d8ed18"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.23.0.md",
+      "bytes": 2675,
+      "sha256": "691ae11165edfb8c543a9003421c23d51b1960afd61d1f3e73a3da93b527a2be"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.24.0.md",
+      "bytes": 2896,
+      "sha256": "c453c61017b18d4cdd32b5cc62a2e6a452cbeac3d7141fe234c23bd79613e43a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.25.0.md",
+      "bytes": 4282,
+      "sha256": "1783b7ed34785688845629ac2489ad4241e5f58cc8fabd0ba9a8d15019340c3c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.26.0.md",
+      "bytes": 3318,
+      "sha256": "da2b1510d537981c3a1d9cec5eb7e6897a4e375b931162b02ec3d538b2b6361c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.26.1.md",
+      "bytes": 2811,
+      "sha256": "06d4af1e1819d4bec98af0f926e64b0614e09b1e95c6054c2580a95c7237b722"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.27.0.md",
+      "bytes": 3965,
+      "sha256": "cde3d38e290e9dc2dbf1375cc92ae80491ef6fefa7888859550fe2b65812a1fe"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.28.0.md",
+      "bytes": 4145,
+      "sha256": "ff68433890ddb2f86cc0cb30635f8ac4c058c9553830ee12b4455629e91afa8d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE-0.29.0.md",
+      "bytes": 7792,
+      "sha256": "1b5507dfa28630f7a15342cedbbc40b61e6a9614d5816ced719caa7e1f6855d0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RELEASE_STATUS.md",
+      "bytes": 24279,
+      "sha256": "772377b78f96227e357b480add1b82f2e704e918cb2dae7aec6ee8df75fcb670"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/REPRESENTATION_EXPORT_ORDER_EXPERIMENT.md",
+      "bytes": 8457,
+      "sha256": "5da43c9a67b25465703d8f201c1fdf13f580c99beb348d0e7af372f5be16fa5c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RUNTIME_CODE.md",
+      "bytes": 3641,
+      "sha256": "a04735b3e4f4eb5ec7d2e1df14d3422d19652e0d9084568bf740e9ab9ba62894"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/RUNTIME_DOCTOR.md",
+      "bytes": 3160,
+      "sha256": "e4f66f52b6bc8a49d25498833b0f7882a2d070bd9de443b82178224cca82ab91"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_ACTIONS_PROPOSAL.md",
+      "bytes": 13367,
+      "sha256": "6ce5108fafd03a99bf85578fd71baf1ca11eda94518c6b54c6f813104d08664c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_CONTENT_READINESS.md",
+      "bytes": 7017,
+      "sha256": "2111aa6fe81032b03f9e56beee369fdae1dac32ae5d2aefb6e4cb22a7f233b09"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_FRAMEWORK.md",
+      "bytes": 9290,
+      "sha256": "259c829a4ec65e8c47f6a8612fd82d120693b89d7c681fa947011cc75e5c6f15"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_IMPROVEMENTS.md",
+      "bytes": 6073,
+      "sha256": "9d1121a7608494d60266f330812ac3f705d2b26436b7c9e79242df20badae200"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_NAVIGATION.md",
+      "bytes": 2415,
+      "sha256": "fac40092b4acace25bc02cd5bb419df3c117ad26416ab63db872f02cb94b17f1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_RECOVERY_FAST_PATH.md",
+      "bytes": 13062,
+      "sha256": "72eefd3263c37ee037a652d75b0a23af004cc2547330ce8f124c66630afedb43"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCENE_STREAMING_WORKFLOW.md",
+      "bytes": 17731,
+      "sha256": "9c315c6cff143687c8572a850835e5dbaab8cbf38a66b7ce079b9864dfbd2d53"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SCREENSHOT_HOOKS.md",
+      "bytes": 6261,
+      "sha256": "6b01227ddb497e87d1d0a4436814b694b60a289bf9f15cfa0717a608caa1b0ed"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SEMANTIC_INPUT_MACROS.md",
+      "bytes": 5753,
+      "sha256": "cf162524519fbe59ae623c3725ec34eace3ab53e887e71eaad2349e3bc78db23"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SPATIAL_MAPS.md",
+      "bytes": 12000,
+      "sha256": "9ce074bdf4f49eb5e73aca80c8b8fd4f15998985816a8b29733e7dd7044b0859"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md",
+      "bytes": 19624,
+      "sha256": "02756851d5657d647626f84b45f7df038bda67541cd2e52a7fadffdf9bb08245"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SYNTHETIC_HUD_PROPOSAL.md",
+      "bytes": 19821,
+      "sha256": "929584acbf5fa804e504a755c0464fd67bd090a46d38695f98bdb196d0e077d5"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/SYSTEM_INSTALLATION.md",
+      "bytes": 2799,
+      "sha256": "dcacbff64657ce381f8eb9242d9759b3f6e65b7708d9a7b6585005200128a3b1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/TAS_ANALYSIS_HARNESS.md",
+      "bytes": 27987,
+      "sha256": "79085833c5e2b68e6606f093d5278095bf5d0d5119e552a0e5f0eb59d3e56c85"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/TAS_CAPTURE_AUDIT.md",
+      "bytes": 8694,
+      "sha256": "47f331b76387d220bbc57a35fabc44f648c8f8094ca58c8b8a40d4dd1ef95f56"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/TEXT_PLAYER.md",
+      "bytes": 9073,
+      "sha256": "06c247ef13781b19aab7c5279c8703d05dea57e4c19bfcde58df92ecfb99c39d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/TEXT_PROJECTION.md",
+      "bytes": 9118,
+      "sha256": "c1ddca0549cb107e07c0144b4f5aa842894357617d183011a8cf639f406e5205"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/THIRD_PARTY.md",
+      "bytes": 2281,
+      "sha256": "c218d50755f554df62bd0d48671ae521b8f4eb3c675410fdeadbaa02c0367534"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/THIRD_PARTY_IDA_SDK.md",
+      "bytes": 1536,
+      "sha256": "1aa38574cc892153a2d2e9e5b606a5dadcf25c656ca29ce21d960ba0a4c44a85"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/TYPE_CATALOGS.md",
+      "bytes": 5521,
+      "sha256": "6e2d0c88bd1ce4d9641c2cbd3304015710142f2f7be3861e65dce63d92dbcad8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UDC_DOS.md",
+      "bytes": 6269,
+      "sha256": "fb3c67623090ed132af8916b721bb2335c4adc2a86243d4890e614f23f56ac70"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UDC_HARDWARE_BOUNDARIES.md",
+      "bytes": 10706,
+      "sha256": "70eb5e3f840fae1e7c192dcdd6b70b2f5d7a926558d2e02b45d377269c0cd4bd"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UDC_TESTING.md",
+      "bytes": 4969,
+      "sha256": "1b8ae83088a092b33853a2a7e147c79fcc692a8aee2d6b2bc7350e803760f805"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UDL_OVERLAP_RECONSTRUCTION.md",
+      "bytes": 13434,
+      "sha256": "05e5219682b89ac88b85041a96cf70c136738bfd3905b1377ccdc9eb6807a4cc"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UDL_UIL_EFFECT_ISOLATION_FINDINGS.md",
+      "bytes": 17228,
+      "sha256": "81f3f24520b6601ed9561c3f8be686909cb0f46814bdfbbc7b3847b72cb19e65"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UIL_BOUNDARY.md",
+      "bytes": 6790,
+      "sha256": "96f591ac279923f92e97168373b7c856838d57cd4a7cf61042f8379121f5c544"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UIL_RFC_PROCESS.md",
+      "bytes": 6114,
+      "sha256": "446042b4788fce05745fe434e945d623e3ed04675c031a770eb5ba0faa9493c8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UIL_Z3_PROOF_CONTRACT.md",
+      "bytes": 15869,
+      "sha256": "352db3102037fe643e45a830d55ad8715f8cf866549be363bbfb8ec5773726a8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UI_CAPTURE_BOUNDARIES.md",
+      "bytes": 6733,
+      "sha256": "86e5d9e651af5c9ebf4ed7ac9833015cabd3c01643140094517e6d4441806742"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UNIFIED_DEBUGGER.md",
+      "bytes": 10082,
+      "sha256": "66a722ac39e70582fc4f243341fc26ebb792f1a698c76c9ff1b2ae9c2f37bc1a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UNRELEASED-0.19.md",
+      "bytes": 5000,
+      "sha256": "ba435e6b0e881f9ec777bcba097db32e9a7fc3e4b1b21a059c95665f0d3f88c9"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UNRELEASED-0.20.md",
+      "bytes": 2619,
+      "sha256": "657179df8691ad719fcd4c432b8bb920226b30014b6b038ffc1f0d0a6c1233a3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UNRELEASED-0.21.md",
+      "bytes": 9383,
+      "sha256": "6003e0dbf6fd6e6ec17bbf290fa57a4e69a069f2a000e8c3a16b1d4e62a28bf4"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/UNRELEASED_AGENT_DISCOVERY.md",
+      "bytes": 993,
+      "sha256": "3e2fe0257f5f881f5831f53c0f24572756a929a9d9272e7c28b1c7ed4665417d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/USER_GUIDE.md",
+      "bytes": 34377,
+      "sha256": "dcbadd702f980a5e55a2bd5e7dea8f9e71ef0cfde07c8a72ee1d934ddd3840d5"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/V020_INTERPRETER_PLAN.md",
+      "bytes": 6297,
+      "sha256": "2e38d403a4f432895b4927ec38ba50701f3e4207f9d35045627b0b46b008563d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/V02_CONTRACT.md",
+      "bytes": 1158,
+      "sha256": "89b21161905f16286d50b4d52dafeed6db7731791f23700d1bab6ba522c66969"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.10.md",
+      "bytes": 3703,
+      "sha256": "d1aacb745c87b410d92f13b32eba1d00b748c63cfbf0914d7f44059f3edff717"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.11.md",
+      "bytes": 5323,
+      "sha256": "7d6a8f99fdea12a512aa6d807a7883437d16f9a4169ce06ca4bef864aa229fe2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.12.md",
+      "bytes": 4318,
+      "sha256": "c6368e64efc1111b8b2fd97e7706d4269dda4b6d6f4a61f2020d69cefe20d6ba"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.13.md",
+      "bytes": 4541,
+      "sha256": "65d4ff9b1cc7c588a1e250fe1097a83d4ba23e0a7f7f43d0f76aefd47a8a3899"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.15.md",
+      "bytes": 5552,
+      "sha256": "6cd2f39402dd7e3b8ac975581f4966cc2811384a46deff8b3f98e6a6efb11e5e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.16.md",
+      "bytes": 5971,
+      "sha256": "eb725211e2fd0765a37d2aeafaa7e5a2f21a87a39e0deaa26fd9d06e3683ee96"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.21.md",
+      "bytes": 10461,
+      "sha256": "3174f1801ca18524da7957c5fc8ff5581443bfe09c23024de934f8fec60da9b3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.22.md",
+      "bytes": 4525,
+      "sha256": "c704e8ce8d4fafe20f285733a6c8c91a1ad6e27dda8378f3f90b0ad75fa34896"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.23.md",
+      "bytes": 4405,
+      "sha256": "2f95e4f2790bd1cd2c961ea42176f537d826ebe5e586fb3e26a00069a762b5d6"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.24.md",
+      "bytes": 8895,
+      "sha256": "7d0735d7092caa6df3afa37418b719d965f09885d1216543dc56c3fcd1dd6881"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.25.md",
+      "bytes": 8282,
+      "sha256": "aa81384206952bc0f506b57363f4a246a68bf9ec59ab9ff73d8baeca3147191a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.26.1.md",
+      "bytes": 7338,
+      "sha256": "a90f8a06463de6a91430099f6c7b353e308f66296c81e8f4a6432c10064fc2be"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.26.md",
+      "bytes": 6450,
+      "sha256": "a1beeeb4accbdfc10e58cc5304f816684e770a6a41df10019b70f7e868dc1bdf"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.3.md",
+      "bytes": 5070,
+      "sha256": "a228407f951e03a25e5935c8175958f2bc0c813219047993a2949d2c8ebf9fbd"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.4.md",
+      "bytes": 7042,
+      "sha256": "c3d7cb1c406e9aca271b2a28b44a6ec31d9166a8311839a066f93b8fbc1d79ef"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.5.md",
+      "bytes": 4541,
+      "sha256": "17e74f430967d09ec40579cb321b6a2c24d33ff30750fca5db69a7f0c6166512"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.6.md",
+      "bytes": 5877,
+      "sha256": "f94a20c04b7c5730bda46570bc51aa6216f6e1299dd82c40c7ee2508295d44ea"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.7.md",
+      "bytes": 6217,
+      "sha256": "ff3f495462e6a3beb032bc9b4f567488cfb37c2d13676f818578a0bae0fd2a50"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.8.1.md",
+      "bytes": 4804,
+      "sha256": "4d74d164a9ea1f4887f6516e430b7b70dd93240f847b59667f05be057798c0ef"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.8.md",
+      "bytes": 6672,
+      "sha256": "1a0e0e6e945ca7e5bba6e5cc5ddf1095fd31aca2f2742927d4de787671f0505d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-0.9.md",
+      "bytes": 4618,
+      "sha256": "511a810ed4ae3e2f6e04151651c12eab7511161843cb05059e9d7be82291e3f2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md",
+      "bytes": 15112,
+      "sha256": "30abcb7506e6217914d01a67318a26f50f181b84af313dfec114e4ef866cab15"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md",
+      "bytes": 18860,
+      "sha256": "cf0a61464606f0d08d671b03a9dac8108581e01bf66683b9a0a58d1d1bfe2e02"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-CONTENT-ACCOUNTING-2026-10-31.md",
+      "bytes": 11654,
+      "sha256": "d7ed450616cf0710188b774235af8498fa6014763d661575fae44c4874b19f0e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md",
+      "bytes": 12449,
+      "sha256": "26773f16ff738d6ab1d7cb0598f13091f7d26657fa8ef26e2e11f2be190b5434"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-LEADERBOARD.md",
+      "bytes": 7481,
+      "sha256": "92524d11588c9c30cc7b744467f0387ab3a1ff4637feae928d34d2ee4d46685b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-RECOVERY-LIFECYCLE-2026-10-30.md",
+      "bytes": 9039,
+      "sha256": "99625f00d75c22b653ae49580185cede3e16bd7d2cc8dceeed228aa04fdf2479"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-RESIDUAL-ANALYSIS-2026-10-31.md",
+      "bytes": 11883,
+      "sha256": "646af6b9e0edac922c0b3e447334cdcf9ab8b9aa03d31d808036a9e8cd9d761c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-UNUSED-CONTENT-2026-10-30.md",
+      "bytes": 7223,
+      "sha256": "416a1418eea9325cee56b590a7f253b9b6061582fe43a028f9bde6369d5e2014"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-Z-2026-10-29.md",
+      "bytes": 10207,
+      "sha256": "bad51e520bfba84e9b4185a981bcafb11ebced8cf2ea2e1b6c4f8fa406f0a95b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md",
+      "bytes": 15300,
+      "sha256": "6b52bdc2de9b9ee1a3b5d52730728cb02151ceee35e8403889c9fa1c3bee8b69"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-30.md",
+      "bytes": 6856,
+      "sha256": "de8f9a1a889be36842daef4a258584b4b8efc93fd9669b9cdb8722151660740a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md",
+      "bytes": 9107,
+      "sha256": "1820a779913e168b12aca97511b9933e40991de7f7929d9078314faa6040431c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DINOPARK-Z-REPLY-RECOVERY-2026-10-30.md",
+      "bytes": 9578,
+      "sha256": "39297f45a771a492a80f0a51905db3bc71c1db1d64e6c6331d3856e93625df36"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DOS-AUDIO-2026-10-30.md",
+      "bytes": 10367,
+      "sha256": "c516aab17aa416acd345a0bdc598aadcdd82fd757bbc3c34af997112b8af044a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DOS-CAPTURE-UNRELEASED.md",
+      "bytes": 6030,
+      "sha256": "41ff1e229df9d4c2349cf70e03cc5e4dc5a5e2bbac5691a15fad9a354c3d5121"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DOS-KNOWLEDGE.md",
+      "bytes": 4874,
+      "sha256": "1c9983da5a0504a0d3b7f4c48ec5a0d33ef5c36e12e8e3e385f362e58a89459c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-DOS-TERMINATION.md",
+      "bytes": 4281,
+      "sha256": "9544c953fb87207209d2ec3d45a002cf9ce6183ba75d5dcd123958b7bda7c5ed"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-FUNDED26K-RECOVERY-2026-10-30.md",
+      "bytes": 12066,
+      "sha256": "261b5b966124fa8b8dbef4df212dd43116a32c70579b85de40646eca75a7593d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-GUEST-KEYBOARD.md",
+      "bytes": 4664,
+      "sha256": "8270347cfa766a20fa6342d4aa14bbe83ef80e66a2f6ef0a87352ea1aba1614a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-KQ1-TAS-2026-10-31.md",
+      "bytes": 16966,
+      "sha256": "02b6cf5fecf94fc4d45a20883726a41fae6b2e3b6979ee78e9c152033c72748b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-LAYERS.md",
+      "bytes": 7316,
+      "sha256": "c6dc41c9ccfc1fd8f98efcff4b581e4f5eb1eec0c7bb805ca7fc7db93d07b76a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-OVERLAP-ENGINE-2026-10-30.md",
+      "bytes": 9306,
+      "sha256": "11bbb4c336f37270e7406a43e78202dd3b35f19be8b589a523f507d91391ca6f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-SCENE-IMPROVEMENTS.md",
+      "bytes": 5861,
+      "sha256": "bbe48232804d1d0eac03ff2a884b0fcf116d62672c64e70532cce3240f80977d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-SCENES.md",
+      "bytes": 6514,
+      "sha256": "4054eaf741dc34aaec78466b759beb2a0bd094fca8af299e86331e528a6da0ff"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-SPATIAL-2026-10-29.md",
+      "bytes": 8700,
+      "sha256": "3c814b39ad0bf735527354eb9a2c6f2776f4d742c79a505dc65d90491ad3bbd2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-SPECTATOR-CLOUD.md",
+      "bytes": 2233,
+      "sha256": "71a96144969b044c17daaf29c92bc45ea06acbe9eef5dec76bbd6b2ecc90cc86"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-STATES.md",
+      "bytes": 4074,
+      "sha256": "bc061ecf1fd910f39d420ec7bf181c0dcd4ae518a748606f1801af3a92fc4208"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-Z-BATCH-RECOVERY-2026-10-29.md",
+      "bytes": 11460,
+      "sha256": "970f103a10e969a118b752d8c8e9568b5de49a6f3f58a64041e85a199d54a73b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-Z-RECONCILIATION-2026-10-30.md",
+      "bytes": 10519,
+      "sha256": "735280ab0bd9b1494d1dc18369f813fe825a0631da84c56446da774b85ce10dd"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-Z-RECONCILIATION-V026-2026-10-30.md",
+      "bytes": 6744,
+      "sha256": "026af569bb6ba503b7627c8914ae57931e76a5c61dcb2ff79d063c2f89c0367f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-Z-SCENES-2026-10-29.md",
+      "bytes": 3761,
+      "sha256": "0792102b0714f3684eb8b980551a742f331ab05d075e23163b81e805858311d5"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-Z-V023-MERGE-READINESS.md",
+      "bytes": 6050,
+      "sha256": "09a1157da2e1fc3c4e2041a991a8b376e2d6dd23c18e2b3cdbe9972f598f2952"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-ZMACHINE-PROCESSOR-2026-10-29.md",
+      "bytes": 13145,
+      "sha256": "4c383bc6b7c2dc5e196313ff5fea510bb850444b4bf13aca35dbb1bd26ec398b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-ZORK-2026-10-29.md",
+      "bytes": 5915,
+      "sha256": "fd6e8cec35deda82bd3ce2ec0af7ba26bc2fc6d1fad4ff446fd37d7d6e283059"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-ZORK-INTENTS-2026-10-29.md",
+      "bytes": 15508,
+      "sha256": "eb80fc26913fd9b1800fc77b6eabdd09edc274a8e4b2878627491c2b6f608045"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION-ZORK-UIL-2026-10-29.md",
+      "bytes": 10186,
+      "sha256": "a3ce4ab40d94d11154330a8c58eb96fa4bc4e59286a7454f432739719cc89992"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/VERIFICATION.md",
+      "bytes": 4709,
+      "sha256": "38cc5efa9bf51f632b79c40b48363423e30e68d1405255535627da7e23c29406"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/WINE_DEBUGGER.md",
+      "bytes": 20445,
+      "sha256": "919404cae0567272661ec8c33e7b63ddc9f2aa6adf450311c91b1bdc25785896"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/WINE_DEBUGGER_RESEARCH.md",
+      "bytes": 17315,
+      "sha256": "84d64d0df0c1eef15ec81740e8fbd01921e62a8b983813ff7d1d1f2197d21445"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ZMACHINE_PROCESSOR.md",
+      "bytes": 16187,
+      "sha256": "0a925e116c256b3e864eb0d0aef97aa0abb7849149b276794542c8705b4ca50f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ZORK_HARNESS.md",
+      "bytes": 3441,
+      "sha256": "7ab18ff9933d4d9f8a6a4d82bb74d44459eaacb2c8e47f47311d186e592458f8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ZORK_INTENTS.md",
+      "bytes": 19986,
+      "sha256": "5af1830a4e795d16500fc3b5b6f870d33ef36adb65dd5b8668077121dcdba75c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ZORK_UIL.md",
+      "bytes": 7812,
+      "sha256": "372581221a81539241c01b4c4dd49b5e34070615105bd034e523c12a14f4e429"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/ZORK_UIL_PR_REVIEW.md",
+      "bytes": 14407,
+      "sha256": "f3a2f3781037233ab7bbd085f3ceef9c3700395da31a3454ff7f4df5843aaf70"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_BATCH_RECOVERY.md",
+      "bytes": 13172,
+      "sha256": "bb9cc3e97f2308405f165a8310d924a298d95d98c099e8a5b5212c36de411f8c"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_PLAYER_INTEGRATION_0.23_0.24.md",
+      "bytes": 10119,
+      "sha256": "808a6046b2fadc170fb298ea0b8dfc86de026e268eda35c448262d6be0c69477"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_REPLY_RECOVERY.md",
+      "bytes": 5973,
+      "sha256": "7a9663e8f5bab1344c6fb724b3440737c01a6c20e82d6642438e2fc9ac4f89b4"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_SCENES.md",
+      "bytes": 8045,
+      "sha256": "fb05ab0f2e90f2c554dac0369a3e88548e2be1e147224599055f0211ad30f08b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_TEXT_PROJECTION.md",
+      "bytes": 11927,
+      "sha256": "a51b183b4a0b3b7de081530398f8c234c476da2203ca51c2ae0fda0aebefcb85"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/Z_WORLD_LANGUAGE.md",
+      "bytes": 3857,
+      "sha256": "809c21537e983ac1207d31612d7dfc9ecc6e5bba36fa776f9aa3b3ac0dbcc2be"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/dos4gw-le.md",
+      "bytes": 8129,
+      "sha256": "8281f4fc3a762bbed6c95301f5439be6212983ecc2d8a2f1434716187f9634bd"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/0.29.0-release/README.md",
+      "bytes": 3349,
+      "sha256": "624fa063f8e1758f7e64962e97e3a28d8d34b3f96323a0f05df2b0c2bfc90fff"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-025/dinopark.json",
+      "bytes": 12361,
+      "sha256": "c9348006cd73ff5a5c3e828a40490a410af9d042f02adf302bea674b535b0ebb"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-025/packages.json",
+      "bytes": 3645,
+      "sha256": "0be491e82431b7ffa9826a20390d3d91513ee2b9112d401d60ae344d34a00d3f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-025/tests.json",
+      "bytes": 7031,
+      "sha256": "c94158b97b03cc8388e1eb88bece57c009a69162573160a4dbc1b808d6ababc9"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-025/zork.json",
+      "bytes": 4426,
+      "sha256": "32821a3e137f4c1d24893c72a738e25b2e624f956c4d7e9904b88ff4212e4ec2"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-026/verification.json",
+      "bytes": 11472,
+      "sha256": "73570290ee3a0891cdcacfd719bfadc06177357479517deb0b011c1c9e340926"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/integration-0261/verification.json",
+      "bytes": 6444,
+      "sha256": "9df81ec73b9d47be5aa603aea055f5452927ad6081e039beb90a17ad7beaf02a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/output-024/amplification.json",
+      "bytes": 1210,
+      "sha256": "93c62f03851fb6852f32584d7b09966439440e2502440f4dc0cd5f9974e370be"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/output-024/dinopark-native.json",
+      "bytes": 6594,
+      "sha256": "43266c3117e97c8c873c5a752fd7f8113a7787d5379011d0608453782bdb6424"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/output-024/dinopark-output.json",
+      "bytes": 734,
+      "sha256": "5bf83419ddf59f8ccf8c46064fe182db4d6f50c637ee24ee9122e51f8d2458c0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/output-024/tests.json",
+      "bytes": 4110,
+      "sha256": "8193f3b3298c0d91d98e1e3fbebd68f3d7f2e26d0cea74601ebdada5831c3b77"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/scene-recovery-2026-10-29/representation-paths.json",
+      "bytes": 4402,
+      "sha256": "b92f663985890d17cdc8308dcb7fc723d3d37f483805afe6a4b3574c733aaa60"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json",
+      "bytes": 4389,
+      "sha256": "0d951219202aa36965decc30ac7163b5f53344fd157e56dfb110b0b7207af1d0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/spatial-2026-10-29/verification.json",
+      "bytes": 20068,
+      "sha256": "5202bdc68ce238dcebd18880741489b482e3494921027748316d04cf55833e7e"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/udc-2026-10-29/dino.json",
+      "bytes": 2806,
+      "sha256": "08ff41b2334a773405ff821d83f627f151fada4a858d8f44b9377540d99a06d3"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/udc-2026-10-29/synthetic.json",
+      "bytes": 9092,
+      "sha256": "308d75ed0a8e6a1006c62aee057a4aeb119c801013724068fd0fb3fc59a95cb0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/udc-2026-10-29/zork.json",
+      "bytes": 2016,
+      "sha256": "0aaa67fb478831e6114251560ba5b564d107842b188e4adbafafe5380b3dac31"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/zmachine-processor-2026-10-29/verification.json",
+      "bytes": 23545,
+      "sha256": "ac9d795f68ade6d4c523900e351a001269d076835a2e4dcc3f4a785efbae1209"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/zork-2026-10-29/verification.json",
+      "bytes": 3870,
+      "sha256": "152b440e5bc6d41c84dfd7af80d8b4e75c892261ddcfd7e2e624b4fa0aa3e6cf"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/zork-intents-2026-10-29/verification.json",
+      "bytes": 38552,
+      "sha256": "f1f7760cb960a1982f236c527c1c65e07cc08cac04515d30dd559b12f12121ca"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/evidence/zork-uil-2026-10-29/verification.json",
+      "bytes": 14571,
+      "sha256": "d67f05c56c55d28c76ba5557ea7c2a40f229447f8cb21d7c3ca08ede2760318a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/AUDIT.md",
+      "bytes": 2147,
+      "sha256": "c7105e56996e9a9cf31d072a32963fffb19686c2d5b63e15b1c3b63e5781feb1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/INDEX.md",
+      "bytes": 5260,
+      "sha256": "b0cee184932d1275843a982b368f9ec975288a7e4ff99c297736ede133ddac29"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-E55-Behavioral-Story-Report.md",
+      "bytes": 23786,
+      "sha256": "8e252ddcff65dbb9b252d26f1496b5a7948ce0167cd14c49dd3cbb453f6c134d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-E55-Game-Story-Map.md",
+      "bytes": 35859,
+      "sha256": "7579f9dece9844a85ae269de33fef6206bb4a014ed83f14d53e725f223da7e62"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-E55-Handoff.md",
+      "bytes": 5854,
+      "sha256": "9188cf3b9aadb705b95ed961dca8dc9daa1410b60236f072d96b49e77e320dd8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-JS-Validation-0.8.md",
+      "bytes": 2288,
+      "sha256": "f2fd047e306b5fb1b0be8f15161c9edbad6c684210d0bb8fbafce0cc320b3d7f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-Public-Guide-Reconciliation.md",
+      "bytes": 12490,
+      "sha256": "949339eebd478a59f6af6273c9b9c54288cdf811e15ec0713a45389b34e7be14"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/DinoPark-Tycoon-Mechanics-0.3.md",
+      "bytes": 146552,
+      "sha256": "ceaf94cad74691d65356f9d0e3a5c55b46967f176e252fb1cb38a9f077c01803"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_Export_Order_Report.md",
+      "bytes": 9617,
+      "sha256": "de58203ca7e5b37cf91d9dbe2cb6f3e42cf0bd7f08940b5689a89c41b8cbf9aa"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_IT_Compact_Report.md",
+      "bytes": 12975,
+      "sha256": "b21fca2bc43613efa3682be3dd286035bea061c25769eb874151c25c123a5c5b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_Knowledge_Pack.md",
+      "bytes": 13935,
+      "sha256": "18ddcaaf08993f771a67743789f6d1ee192533a4a4613f76720ab692fbf4f8d6"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_Live.md",
+      "bytes": 173840,
+      "sha256": "4e422052e843e22685d1c4d1772c521f663d13bf5694b589b55e46290d0f1c07"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_Play_Guide.md",
+      "bytes": 8280,
+      "sha256": "3a0809faa8b29ee802ea62eb69d32f919a9774eb76fecdcbe40aec464a1c9d3b"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/Lost_in_Time_UIL_Contract.md",
+      "bytes": 11558,
+      "sha256": "503d915cd33d05e3515cdf626d4a246563c37e83e44062badad29e28b41220f1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/UDL_UIL_UDC_Patch_Report.md",
+      "bytes": 11936,
+      "sha256": "ea3281579e847e78f45c3612a2b38314e59f6f022b63b919d1aabe601f657e50"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/research-artifacts/documents/fDisBull_v026_Verification.md",
+      "bytes": 4400,
+      "sha256": "6f894228de59f848d4c759fb15f5c7073d8abfc43114f666ba028db117ff1b50"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0000-template.md",
+      "bytes": 1807,
+      "sha256": "ee3e6f0ea698f5d90ec8810c158704da5d4054c274f51434879b7cc9c14b9520"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/README.md",
+      "bytes": 4303,
+      "sha256": "9029b0cb69b51c8457b25ddfab5e8932438db63dc82563e27a5bd8210b2ce1c8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/check_examples.py",
+      "bytes": 7878,
+      "sha256": "a5dbef91ccdc7cc168a40739c143bcf7c413bc86506c38e781d7d8138e1b6591"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/commit.js",
+      "bytes": 821,
+      "sha256": "9bf56b275d33c72c3e4743ea9a410ab24c08e413b293375cd9b72c7a71cbafd1"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/commit.py",
+      "bytes": 891,
+      "sha256": "1c9511c00e711a65f99583b21c21477c2db0c61b7b44262b49c15c7215b465c5"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/commit.rs",
+      "bytes": 1090,
+      "sha256": "efd3b0fd309f575caa0ffb3f9ed24b01bfa605e49b86a5c7c97d19f528ae310d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/native-observation.json",
+      "bytes": 4516,
+      "sha256": "db48c06e291b886a215d4ef7f596af0b53371fff6b934d06f230d0a1dc5e140a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/native_probe.py",
+      "bytes": 9111,
+      "sha256": "59b42366923e410f82f2bed1d7c297a7dc08fc88ea6b1cb49f8bea6b012843b8"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/source-definition-observation.json",
+      "bytes": 1770,
+      "sha256": "004faa96ae36206e1941d584a713d554e2d389c5d352a97bb26f37a9099cf229"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001/vectors.json",
+      "bytes": 1779,
+      "sha256": "080714ca45f2d215f1e12b26fc74043760dbadf2a01cea967e4305d4c009b811"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001-interface-description.md",
+      "bytes": 13302,
+      "sha256": "7a19f77652afe1068099c46aa6d1d6967e81aab6cae234f8b797fca346ad333f"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0001-shared-intents-and-compiler-definitions.md",
+      "bytes": 34896,
+      "sha256": "7cfd254de910acbfcce495305ab25fdb013a635ee140a8baeff4e36d1446fbe0"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0002/README.md",
+      "bytes": 5203,
+      "sha256": "3f28182cc92cd50d6cd6d176579fddc0f9256b30fd343422d7d100cce4c59f7a"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0002/replay-summary.json",
+      "bytes": 5185,
+      "sha256": "ccf7a90fadd3501b156c5b4fe0aa39aacb4c67cc96ac7f36b4ca58cd6e8175ce"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0002/vectors.json",
+      "bytes": 2453,
+      "sha256": "fcb55a351f949a34a2b10fbffe893dbbe545ed6348a5ad66a5d717aebb6ffd2d"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0002-executable-rosetta-contracts.md",
+      "bytes": 26758,
+      "sha256": "417c3ccbffa40fd9e667a4e57bc4aa3f4516b7c84fe1d70c121aec03dd130d80"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/uil-rfcs/0003-cross-edition-snippet-links.md",
+      "bytes": 10477,
+      "sha256": "ba42f6132c0a981ae7d6335dea0a7f23ccb13eb24ac392830ca4392f7c362700"
+    },
+    {
+      "path": "fdisbull-0.29.0/docs/verification/kq1-tas-2026-10-31.json",
+      "bytes": 11332,
+      "sha256": "dea8941bb2ed844afb74d4088ccfaeaf61143fa9018fcbee27ee0672265f86fd"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/__init__.py",
+      "bytes": 348,
+      "sha256": "5aba0f26e3280a65904e0d2272103cf4bc63d87e088ccf69b8288642384ca4d6"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/__main__.py",
+      "bytes": 9844,
+      "sha256": "b82287a01cc5e26c2324cc4f3b5f7947ed9f265101a24a2de41a45eb2f987c96"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/batch.py",
+      "bytes": 29976,
+      "sha256": "5c670fc6ad3e7b21cf972c17f791dc038fe0d6c32d6d404ac732a0a8d63849f8"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/game_intents.py",
+      "bytes": 17437,
+      "sha256": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/intent_runtime.py",
+      "bytes": 40615,
+      "sha256": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/live.py",
+      "bytes": 9729,
+      "sha256": "f92d10b2ddc07b6e72320d3a07ad3efc2c3fa9d2eb1bbcd794ebe24d3db47afe"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/player.py",
+      "bytes": 15669,
+      "sha256": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/runtime.py",
+      "bytes": 16829,
+      "sha256": "3f29d223b3f36b46ca8c1bb956234a0ae423d467ac3a6e986da8c90f80fe5f80"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/fdisbull_player/word16.py",
+      "bytes": 55233,
+      "sha256": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168"
+    },
+    {
+      "path": "fdisbull-0.29.0/player/pyproject.toml",
+      "bytes": 490,
+      "sha256": "871b7baed00a1ce6d5ee14632cacc54fd2077e092dffe21cb4d1d7276da33b84"
+    },
+    {
+      "path": "fdisbull-0.29.0/pyproject.toml",
+      "bytes": 1003,
+      "sha256": "540bf6a222f5bd39ef4ace14270b92b3cc3b71cabed023a71b03dfbc70d5c7c6"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/build_dos_signatures.py",
+      "bytes": 1823,
+      "sha256": "ac4ea49233a12cb3cc5c35e57d124ea9d2cd1e9255412aa5f84fb3e933847ff6"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/build_dosbox_source_companion.py",
+      "bytes": 4467,
+      "sha256": "9531e0d277d9ae5501e9d8e40d47476d85a0ca123c42bb6a7f649052a7c74f96"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/build_offline_kit.py",
+      "bytes": 13212,
+      "sha256": "797563a0bb7432dad0f2a5ed7a184b13c259dda4621065922f998507c86ce7dd"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/build_release.py",
+      "bytes": 4529,
+      "sha256": "d603f7e4bca480761952cabd99dcf11b2e04114fc63ed904d0860239e498438b"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/check_agent_skill.py",
+      "bytes": 21092,
+      "sha256": "eac61c93a909ebabb7e06d83b957f53991432bafdb215d92d3aba81a4107b0ed"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/check_console_synthesis.py",
+      "bytes": 12603,
+      "sha256": "142c43459ea99b4df89a339b8bf6a7a45c0483fd5fafe8adf220a071043a10eb"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/check_dist.py",
+      "bytes": 9672,
+      "sha256": "827797bd4126ddffa28c7f4bd0653a2edc25e0b1afa65eaf937cafdb7b05caec"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/ci_status.py",
+      "bytes": 13857,
+      "sha256": "e912bf332035fd11358d73366d4b3e7c21e27557d55378d872aa36ddd1943ad6"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/offline_dependencies.py",
+      "bytes": 27122,
+      "sha256": "7357b8e02023dee82bda410971cc9a7f5b508f7d53ccb08aec20ae2be29ff77c"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/verify_offline_kit.py",
+      "bytes": 5600,
+      "sha256": "315cc995da780315909947fae5011badb690cc151a1fc194bf079eb4490712c3"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/verify_zork_intents.py",
+      "bytes": 26033,
+      "sha256": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6"
+    },
+    {
+      "path": "fdisbull-0.29.0/scripts/verify_zork_uil.py",
+      "bytes": 16397,
+      "sha256": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a"
+    },
+    {
+      "path": "fdisbull-0.29.0/setup.cfg",
+      "bytes": 38,
+      "sha256": "1c473cbaee8da5fc46e7f0158794af5cea4414c34a3cf3f180c2001f5e38bd3e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/__init__.py",
+      "bytes": 95,
+      "sha256": "022332faa8799c2709c5a723f10ea6ada6c9811238887c58e71a4ee26cb075dd"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/__main__.py",
+      "bytes": 47,
+      "sha256": "79ee6f134c5c5193377cf9b189cbdcc3e2095e49ba9cec310114441c15a917c4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/_macos_lldb_driver.py",
+      "bytes": 9962,
+      "sha256": "ae90461b5239eb8a1fe50b1fba5586de59875c4cb5789311133af46027a314e8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/action_continuations.py",
+      "bytes": 3981,
+      "sha256": "475213a1a5cdf90a32b48985a22161447a0679c39d37831009b8435e45c231f8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/advanced.py",
+      "bytes": 40747,
+      "sha256": "06a4ac8e0f91d11c38b3d24fdb9e5ee7576427455bb7e1062be4758d00cffdb5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/agi.py",
+      "bytes": 7377,
+      "sha256": "4435af5ff05a9d906b6237e91190f4ddebefeb7bd8d56349ac413d7cadac2601"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/agi_layout.py",
+      "bytes": 3378,
+      "sha256": "9c3c172715a6d60cfab0a882e6d2c35a1008ca4fa6e8ffc3f00076a9284fdff4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/agi_picture.py",
+      "bytes": 8050,
+      "sha256": "0d1334fb7d4c94abaec4d2079efd386e1e9978f7b73c51b57ec83bb966e49b40"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ail.py",
+      "bytes": 7242,
+      "sha256": "a2b8df05ecd1b7ed791dcef3faa6bbc88116ce7364bd0b3391763112628d6485"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/analysis.py",
+      "bytes": 37093,
+      "sha256": "d1825d10da1df0200a9b0ba5aa4ecf5c7c92975c2a099fe4b7c9efa5f8f27f79"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/assisted_travel.py",
+      "bytes": 15082,
+      "sha256": "72b6403ef95cf79a8d2f49791e4ea8f0e9399a41289fe174daeea15afaab358a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/audio_services.py",
+      "bytes": 3165,
+      "sha256": "04701df824b9b439fb2f381af5afa8973eb69a0917770590d3cec53c1b21614d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/boundaries.py",
+      "bytes": 20948,
+      "sha256": "e4cf6a29e6ab66c0afc99a9081bbb325bce4512ba5761efaedd9937ae5dffeed"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/calls.py",
+      "bytes": 11809,
+      "sha256": "1a707a94ea9ad0b97219fdeff877b8cc8a4edcfdca61208141c1174019768131"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/capabilities.py",
+      "bytes": 11934,
+      "sha256": "4c7d32b8aeca4a51204a2b374aa91ca9c17a87e941b3c6d751b0a620e87e0ab0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/capture_audit.py",
+      "bytes": 30438,
+      "sha256": "b10af9805b19b06f3dbfa16bef24cfb9496c23fe1ba1c47b090a9fc49b3348ba"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/cfg.py",
+      "bytes": 17513,
+      "sha256": "c5c0da99e3ddb828da5acea9534fb1338083666141c62ae554c7037d464c2cff"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/cfg_render.py",
+      "bytes": 20891,
+      "sha256": "85f7f59a5cc4277275688b05ad994f5ebf553aa2430decbbcbe1f46161cc4955"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/chimprec.py",
+      "bytes": 11796,
+      "sha256": "a33cf1cbfe042dcda10997af06e64b5dc6a57b49efa21fa41ea2d065b074ac14"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/cli.py",
+      "bytes": 91658,
+      "sha256": "0842abae48f349cd6e53fd111cadd36b1f1f2d8faaf91d7171df68ac7fcc0d4b"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/code_backings.py",
+      "bytes": 23093,
+      "sha256": "f026320ec156f76a091e3006a83e2de84d6362afe1a7eed61c8064a280ec8063"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/code_blocks.py",
+      "bytes": 10284,
+      "sha256": "9c0dfc527c116640e19c09bb2aadec9ca040b837224d403cb6064ab9485541a1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/code_layers.py",
+      "bytes": 23664,
+      "sha256": "bb6873d66d14b5ea3954482abf606dc118f0c5e5721687513c6fbab4d95d3eff"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/code_layout.py",
+      "bytes": 15208,
+      "sha256": "e777327085bf202b2cbd3f98b06fed905b35218c4abc73bf363e12a79a8d4d85"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/__init__.py",
+      "bytes": 749,
+      "sha256": "7b7af18f133364f8f63db2cd167137e9ad31256eeaaae062d96cdf41c4497d2c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/compare.py",
+      "bytes": 2235,
+      "sha256": "b3cc5452aecd73a2e5c0e27e61369789df496f82947a57d2f151c35b7206cf88"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/mapping.py",
+      "bytes": 7273,
+      "sha256": "0af05fd692445cd160aba58553b039426c1029ce6a1df3aaee985c0355e401e7"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/model.py",
+      "bytes": 7432,
+      "sha256": "907204c83c9682f7492bc5971f8c8d5022fd77c7aecd0fbeecfdb0fe014ee91e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/recover.py",
+      "bytes": 12362,
+      "sha256": "3f83d33207c6eb23998817426c2a5c02e02bde37bedda54748b23697b4e3f0c7"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/console_synthesis/targets.py",
+      "bytes": 10068,
+      "sha256": "82cdd5c10a3ec054b37848ca4aaa8bc750f2c5570944f690f9c0675581174402"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/FdisbullGhidraArm64.txt",
+      "bytes": 7744,
+      "sha256": "4a630b8fd5ebff73eba8d54641fbff03881508a973871564f38d2300de6d50a3"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt",
+      "bytes": 1074,
+      "sha256": "b5179f780ec212a434efcc989a2295a140deb0bdb17182d2bf9c5f6f1f1a01c4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-catalogue.json",
+      "bytes": 40154,
+      "sha256": "bdac5e66cc37b9921559e8c40c73cb013e64dc266b3b21d6382d3313c9c42b61"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-mart.json",
+      "bytes": 12855,
+      "sha256": "e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-newgame.json",
+      "bytes": 43877,
+      "sha256": "5b2acae80d3ddf6a83af9e76c1e4154f5466014be8dd310189fe8a197094c9a4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-operating.json",
+      "bytes": 54094,
+      "sha256": "310a639a373323b6b7fb7c7d66c0d1762ee3f08391b68c9135dd421b25888fa1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-save.json",
+      "bytes": 3448,
+      "sha256": "71537783f8aebee49a75c5edfb314fed938daed811aa8cbfec75a0dcfd8aa55f"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-shop.json",
+      "bytes": 31118,
+      "sha256": "56b840fdd0a4a21b7e4223cdd922459aac4e1bbb019f472f64bc4be209ad5046"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-source-provenance.json",
+      "bytes": 5226,
+      "sha256": "f4ac0dfafcd1af797a95f5b1ed5b084c9abf2b4eb5632d90f8d47eaf2bb5d738"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-street.json",
+      "bytes": 2086,
+      "sha256": "cce87b5c4da70adccb1364142106c4b8669768619a8f878edcb33a4b9e7e4c6a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dinopark-e55-terminal.json",
+      "bytes": 4480,
+      "sha256": "a0016c0900f265fa2d4f23ebe69cb2cad1d774f39c515c00a07d74842d9f2f11"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/data/dos-runtime-signatures.json",
+      "bytes": 150158,
+      "sha256": "0c7ec56a167040d00d9fa5c96dd87131466ffac3d661ebffbbc2ff006c90aa55"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debug_experiments.py",
+      "bytes": 23877,
+      "sha256": "4569a4fbd8a817f8a6bda06b1ebd380ef3ef556d50111f7d5ea5804352b3b541"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debug_script.py",
+      "bytes": 11011,
+      "sha256": "b8ce5684e64b40f9a48303bdcae646a460300a9ba467f85443b1521ebbe3d1a0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debug_semantics.py",
+      "bytes": 4146,
+      "sha256": "fc6ecbc6110232aa06e0c137c5d9a6e183f888418d8cbdb1a2dc03f6c65c7238"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debug_state.py",
+      "bytes": 4680,
+      "sha256": "e61fed80ee31abfe61dc1e00c6c3b16b80a33f757bf1d9b05b954c5366e26d61"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debug_wait.py",
+      "bytes": 10067,
+      "sha256": "d32d84f1db21d7ef6129afcb56fb8552e75b1dea92f53a634ba6e818cf6e4ab0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/debugger.py",
+      "bytes": 57576,
+      "sha256": "f1c99efb3a113f11dd2b0df741f1ff4b4c52c00d44e29d1ff4738ec4ef7d8e13"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/decoder.py",
+      "bytes": 6955,
+      "sha256": "d6611cdae47c73b710205e77a0c38de3f7e9c0ef488a7092ffd9cc4fc20a1bf9"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/decoder_check.py",
+      "bytes": 5650,
+      "sha256": "03cbbe01e475f24226e2005b8b1423818e9a086104b90f6fce487d1c3ea86e2c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dinopark_purchase.py",
+      "bytes": 14700,
+      "sha256": "1fde19aa4496dd4c19894886224858d9c4f71fe485ac9eeba399846000b63b3e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dinopark_scenes.py",
+      "bytes": 144597,
+      "sha256": "96cc4e1e46a086844cdb0ddbc6d334d75ab3e5a48cdfcc23752e1cdcf515b1f5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dinopark_terminal.py",
+      "bytes": 13252,
+      "sha256": "7eb34578ef433858ed33b3840f11d8867179d03202aa886eaccbaab65bdc8d1d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dinopark_z.py",
+      "bytes": 60131,
+      "sha256": "41f73d5be3ccce61082e3efdafaf4eadf7c309f61c61f2fe20c7b9a13eba4225"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/doctor.py",
+      "bytes": 11740,
+      "sha256": "0244b6347cb89a909a713824d3da29e915baf9cf281749778441664070000093"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos.py",
+      "bytes": 12984,
+      "sha256": "66cb4aff2b753c4397f4db43209727bcfc1bdeea816b9afd6deef12a926ce105"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_analysis.py",
+      "bytes": 38631,
+      "sha256": "3c09a88453b991df10ba45d610e9304ea152ca0625240ddae376fde26520c689"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_decoder.py",
+      "bytes": 17936,
+      "sha256": "62de193ad1c3d2a9c1a9addd713e67a48f937a9a90fc379c9587f528a5a353b5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_guest/__init__.py",
+      "bytes": 62,
+      "sha256": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_guest/broker.py",
+      "bytes": 6297,
+      "sha256": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_guest/init.sh",
+      "bytes": 672,
+      "sha256": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_launch.py",
+      "bytes": 3458,
+      "sha256": "24bdcb8c50802b9d7afad99ec8f0acda040fee2abee776bb17d48a7c9919fad8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_qemu.py",
+      "bytes": 5783,
+      "sha256": "b5177a27edfd39a2003997d12860a0f79089a0f3779714328c183b524be09f42"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_runtime.py",
+      "bytes": 1190,
+      "sha256": "49a1f342243274946d05d015932cb55ca20b4e707a7f97c63f722f5df43991fd"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_services.py",
+      "bytes": 9967,
+      "sha256": "7bb57e98609ffacaf735652df22182d92d3ba4896ef95dff29a56b8622dc1147"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_state_refresh.py",
+      "bytes": 9915,
+      "sha256": "5891de32a7c2ff5f9aa0916bbd09c14b7da4c846497447ffea0753453353d918"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dos_views.py",
+      "bytes": 20684,
+      "sha256": "6d5caf79a0fa3b2ae95b3f2aa6ee6ca986bb330f9dc2dd47b76a14ef260ff39f"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/dosbox_rpc.py",
+      "bytes": 8669,
+      "sha256": "3c747d6492e688acabe1f85c231b0772fa046cd4025f9dfcc11223cd16aaf489"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/elf_metadata.py",
+      "bytes": 21165,
+      "sha256": "2fd5e317eb9fab7d25057d58a3a19b65613ddbe1d51dd7d6b1b1936f6630b7a1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/external_files.py",
+      "bytes": 14511,
+      "sha256": "2557f48b632097ab77ab86922f609a1850d79375215b28d18a5a26067aa33a3e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/facts.py",
+      "bytes": 5542,
+      "sha256": "c7c31ce781407f143f481e3e83ba5dd13c51c05d5c1999baef6c814e6b3f48b4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/file_references.py",
+      "bytes": 9007,
+      "sha256": "ce3c64c5dcaff3eee5cfdd1a8c5a25279b73c4d9659dc2c04d64e499b0fe8f3a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/flowdata.py",
+      "bytes": 29878,
+      "sha256": "aec0ae83719ec225c658c1ff417df2fd531e31b6dd95aa660a931912d8645abd"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/frames.py",
+      "bytes": 22523,
+      "sha256": "b502bfce6af31577e7158f555177677bd93c0981124d5d177a0d755829d60e97"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/function_analysis.py",
+      "bytes": 17161,
+      "sha256": "da61e91a801a661c1e85c42173bb520b7f7f2be77b636d67771398fea83af26e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/gdb_rpc.py",
+      "bytes": 9492,
+      "sha256": "bc479a110262b3c0a07484983732b00562e20df4389a3e258ef8ad47e549f81d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ghidra_arm64.py",
+      "bytes": 17023,
+      "sha256": "d62e45727ac251d24bdd8cc4c18e89536fb8504df40a630e6ca2ec0122244de6"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/gog_unpack.py",
+      "bytes": 7074,
+      "sha256": "6f42d8872e3648416db703539477765826582766d47c63e2939e2f7f154e6265"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/guest_assets.py",
+      "bytes": 2081,
+      "sha256": "a116b486c7175768657d7611f94e3a28f70a26260eb1ad80bebd7b67136fe9e5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_debugger.py",
+      "bytes": 5155,
+      "sha256": "552bc5ca3d41dea6b6d6bf86654a83d36e23b0e0f6b90764d1bffa188045a5e9"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_dosbox.py",
+      "bytes": 19889,
+      "sha256": "847b4e15eec75d6bb8c46553909e0b1534983cce72fabe94db965c82e617488b"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_guest/SDK-LICENSE.txt",
+      "bytes": 1069,
+      "sha256": "209c7463ca3927fa6ac029e7e7121f665db20a47d4a269c9bf21fa1825afa2e0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_guest/__init__.py",
+      "bytes": 78,
+      "sha256": "4df28a19cb13efac25ce941d3aa40c2168114cc42407c61f57f75416dece5272"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_guest/broker.py",
+      "bytes": 6805,
+      "sha256": "948c9ca0593ed7a3e78d795738ddb3afe9b370401d32b822bc39bde351c4cd97"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_guest/init.sh",
+      "bytes": 1353,
+      "sha256": "45d223e9bc29af2ad00827c9deadc2b398fc47f6b17b5001a80637e9a8610905"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_guest/ui.c",
+      "bytes": 4119,
+      "sha256": "cb2a1f857da9325a26ae704b6c5e05212f790be5e50f242959e872b427d43382"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_remote.py",
+      "bytes": 18298,
+      "sha256": "b073880b6284acc84924ddad535cc65d2a65939dc480c4213c1adc2c5164e159"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_runtime.py",
+      "bytes": 1301,
+      "sha256": "fd21e0191bd6078319d331f7fcdad8c00544a49e1dc9ab55a26a8effde2ed8e6"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_trace.py",
+      "bytes": 2887,
+      "sha256": "83bba70fc0accf56c565fd0bcaca956f1cbe3b5f7ed1862427510b79ad7e2c3e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ida_wire.py",
+      "bytes": 11606,
+      "sha256": "97f42ef607fddf31a968b087e90a4395bf2b63b8a1629948eee2c26a0b6dd2a3"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/il_recovery.py",
+      "bytes": 6975,
+      "sha256": "b8a36c2340dfeb962d34b440dce0ff331bff3f24c74640030776884140d5ae8f"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/il_scenes.py",
+      "bytes": 13651,
+      "sha256": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/image_views.py",
+      "bytes": 8083,
+      "sha256": "d1d6705dfdf85bd892e6c4274be311df56f66191b67cce143c26177e23c7d6e4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/incremental.py",
+      "bytes": 13095,
+      "sha256": "ca3b0e97708ab257ad3eb474b64cf0417a9a1a91698a232324d7964e14f3c18b"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/indirect.py",
+      "bytes": 18271,
+      "sha256": "96fb59d032d4cbe17745a2d5fa00b2d2f67f5382faa36a538f89bfe31c049f2a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/input_macros.py",
+      "bytes": 21291,
+      "sha256": "05e426acf8736186c3cb2ea335a422dc77f11ed2002aa7250525a32b61c2d876"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/inspection.py",
+      "bytes": 30032,
+      "sha256": "b4c8205ccd367465fed34ce0385ea32133dfafb66e6b4da2b77b4e6a7b39d863"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/interaction_il.py",
+      "bytes": 11043,
+      "sha256": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/keyboard_input.py",
+      "bytes": 2162,
+      "sha256": "9060b6282fdeb42e33fa589dc325dc74d0211b2ceaf79f57e61c21d1939b2a6e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/le.py",
+      "bytes": 20989,
+      "sha256": "5b9383ddbe7ba5c83f0dd84e698cb3665bb95292d4770e7338c5530671c337b1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/linkage.py",
+      "bytes": 4727,
+      "sha256": "42964a25c4dc2f01ab6b6c6901a25616459861d4d4925c4eaf55c12eaf1352be"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/loader.py",
+      "bytes": 22104,
+      "sha256": "73a74de1d648c81a39321cb8d813d8e8e3b397ebc5512329e8ba4cbec2afc714"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/macho_metadata.py",
+      "bytes": 36407,
+      "sha256": "78169450ee7cc40bbe2f5ce7ac771eef8b250c27fe1efabb38f56d05a72f0ff0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/macho_slices.py",
+      "bytes": 8165,
+      "sha256": "f7df331017a9e5fdb64a6697d4d3a8d828ebffbee4c3a927fb010c6290811de0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/macos_lldb.py",
+      "bytes": 10895,
+      "sha256": "4b7474eab45c0be9cdc8e3865b8af2ddbd12563785465c0f6be235cb61fdf339"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/managed.py",
+      "bytes": 25848,
+      "sha256": "b1457ce14aba3dbdb4635032e4044a8927bfcb397dc2a330f4973ddb133b2614"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/media.py",
+      "bytes": 9242,
+      "sha256": "a8f8a03aff3569533dcdcf786c624972ee409c3e32cfe0ccc6f50dabc89721c6"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/membership_view.py",
+      "bytes": 8451,
+      "sha256": "3da260554303eceb6a6802659fac26a823331250e664fd7350dcdad8c13ee96a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/memory.py",
+      "bytes": 29434,
+      "sha256": "72771cb46d80d5087255082d0e5fafd2e7caed06ebbdd065702a0ee494f98d16"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/model.py",
+      "bytes": 488,
+      "sha256": "510979117cbd52c196395fb9a243edce70a4bb9ca8063c8c04f091f1d2e241d9"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/modules.py",
+      "bytes": 3035,
+      "sha256": "8b6f4a8408dd064bf3cf5fb7c959ef89807043db76a55a2a44e5a796cec42b40"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/movement.py",
+      "bytes": 24256,
+      "sha256": "176335612de62eb6941de2b31e1819fb06be2414fb1ae459a448631eff0507a6"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/native_udc.py",
+      "bytes": 14715,
+      "sha256": "8728ba710e7bde920dd8e130bc6fb467c53e6c2daa6252b065ce23121d116688"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/navigation_geometry.py",
+      "bytes": 5933,
+      "sha256": "b205364c6d29f15625be6afe8eb984ce0e7a7c359ea25dc1042e87b772dbbd94"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ne.py",
+      "bytes": 23553,
+      "sha256": "bbc90a2cc5839e6bc0d002a6332e6a9eb312f30210995583b8e5d820d949e174"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/ne_processor.py",
+      "bytes": 8968,
+      "sha256": "f6298bf217597936ce3fb93d3824562378a9fd2eb68e9a7a88cd22384fcd5c0d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/omf_catalog.py",
+      "bytes": 8002,
+      "sha256": "aae593db27fe5759799d4480ec357bbd2496fb532a00a37f12a2af9709ba7845"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/operation_budget.py",
+      "bytes": 2545,
+      "sha256": "cff20f8ec2054db5cd658854cb34ee04b967d816be6e07111f6a8b3682b7fe5a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/output_artifacts.py",
+      "bytes": 10925,
+      "sha256": "d4dd11b4b5a62da5ed1146c4f5f3e26ecf19247440be4d0963b65eaa01124a3d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/output_limits.py",
+      "bytes": 6639,
+      "sha256": "359d07b64abd8fab5ffef1973340f24bb1006de18eb511020cde657f10f15884"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/player_checkpoints.py",
+      "bytes": 8251,
+      "sha256": "cfe724a0b16d92b9dbcf2f45e7c0d23da0040781e162d34b714c1b09ed2fce34"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/processor.py",
+      "bytes": 7253,
+      "sha256": "e878637d03622f49d81ca66fca4fdefbed5e52d2a0dd22111a773a8dd0fe5844"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/progressive_scenes.py",
+      "bytes": 17164,
+      "sha256": "896769831ec394659b63ac06673372438a6a4ab620190add3bf27866f9646a0e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/project.py",
+      "bytes": 34341,
+      "sha256": "c0d3835d5d2f5117a5064ac612e32cc5de594f7c7b181ca566642584edaf7fe5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/proofs.py",
+      "bytes": 12667,
+      "sha256": "edd73a34f2fd67c6dba3295d9159ddeeeab69aedeeb307a5c20fb2f32ee68bed"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/qemu_control.py",
+      "bytes": 4278,
+      "sha256": "5981c1a235bb9e53d694f25d36c42a3b717aecf017f8095247b74c3757505a2a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/qemu_machine.py",
+      "bytes": 21640,
+      "sha256": "4e4c2f8139568ea710280631040a83b2d9b27765452d6e7a96fdb3ac6cb30b49"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/render.py",
+      "bytes": 11443,
+      "sha256": "f3ae48bd7d2401bab6873505f74b3a23ce8e2bb870f26be76a99551cf9898784"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/runtime_code.py",
+      "bytes": 18802,
+      "sha256": "666b589e81ecd955ae7103de10bafdbff706b69a8d3995e38293e2bd491f30b6"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/runtime_observations.py",
+      "bytes": 9125,
+      "sha256": "ee3ae70fc821a3c413646a4bef43fd7bab51e66df1aa86bcaef081181142ca2c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/scene_bundles.py",
+      "bytes": 9116,
+      "sha256": "5e83ef107e1cfa07860bf6eddd95c34f7e25fe3700da7d57a1ede9e8fd5cccc0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/scene_geometry.py",
+      "bytes": 2840,
+      "sha256": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/scene_values.py",
+      "bytes": 8131,
+      "sha256": "3c57781b42ad04bce2dec91e3fc7f8075dc44d4ebb8003197604664934fa1926"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/scenes.py",
+      "bytes": 41758,
+      "sha256": "3b10ce393bbf96e2da13fea2a875bf27a573e98c3585844bca20c45bd583115a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/screenshot_grid.py",
+      "bytes": 2931,
+      "sha256": "79799cc0149ad9640bcbe6db8dafc5ad868e463b89b3583921bcd505ae5f3e03"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/screenshot_hooks.py",
+      "bytes": 8640,
+      "sha256": "9afe3a997219b4bb217e5c2f33a78157011c18458fa96fd911b43bbf8a835330"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/semantics.py",
+      "bytes": 33717,
+      "sha256": "43017f5bc0dfbb70b0771d75c9cb03d1082593740e71f4cf404119e040e0ce48"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/shared_labels.py",
+      "bytes": 20547,
+      "sha256": "ae42039f7a5cc908591da617dd186bba1dcdaf5ce862449e2f401cc0e58e2529"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/SKILL.md",
+      "bytes": 9763,
+      "sha256": "f9bc99ed978c928e885c79ae670ddaa1d0945c30a8346aa1a55adcc6202c6095"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/binary-claim-verification.md",
+      "bytes": 6472,
+      "sha256": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md",
+      "bytes": 9383,
+      "sha256": "305e47ee53bc524ba599898473436cb985a9a88bac20da0e9af039d045ca0ff0"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/media-modules.md",
+      "bytes": 11863,
+      "sha256": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/methodology.md",
+      "bytes": 16481,
+      "sha256": "3f839029326da89d51fd2b4fcf4fc84fd84fac7f0a8a52b9a1cab141349ad5c4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/proofs.md",
+      "bytes": 3794,
+      "sha256": "9465d2a16504fde04347061d20a1776b27b6cd0ffc20c68c4d90561851d1766d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/recovery-research.md",
+      "bytes": 18832,
+      "sha256": "68f3efb4305122431d828a776229233c02123ff3966aba57f3f2616a08a47d52"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md",
+      "bytes": 13478,
+      "sha256": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/scenes.md",
+      "bytes": 8918,
+      "sha256": "ced4d15bf0040f26411599ac9aecd754aa7563c7ab838929f4cddc6f93515046"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md",
+      "bytes": 10616,
+      "sha256": "b5f74f803a7e6eceee8bc1d98cde3c188691357b058498105137590960f27cd8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md",
+      "bytes": 12462,
+      "sha256": "a4cb77ea0067e5360f9da9d498a61ce0412578b403d4291ec44f4c8b3f5e4a2b"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/fdisbull-investigate/references/workflows.md",
+      "bytes": 14689,
+      "sha256": "527c71a1ff8dc1e06eb4546925a20aa123ad125a441512885f6f0199c252a226"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/SKILL.md",
+      "bytes": 13617,
+      "sha256": "ae381e02beb797c77c407936aea3f936bdce50f7edbd3b0475ea3792e292b9fa"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/engine-source-examples.md",
+      "bytes": 5353,
+      "sha256": "86576e46facb85a2db58604a5c47ca94e3589c129a31b0ee0d63772257ca1ca1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
+      "bytes": 12648,
+      "sha256": "316606bd635386561484a87ce6c72b9661fb6bdfb7aded5e1cd82f5bbdf06070"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/formats-and-engine-reuse.md",
+      "bytes": 10834,
+      "sha256": "312c17a5efa93c70494bf6e6861531238a90aa95671a99573676a89429facdae"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/guide-structure.md",
+      "bytes": 12008,
+      "sha256": "4fdbecf2b397b9e3ef99a8edd6a112f5043723a9fab36b3f376d4fea697523cf"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/routes-and-discoveries.md",
+      "bytes": 13806,
+      "sha256": "31de6d47c76e5b9b80d8ae8a3433462e33f2c912f6d8cf91373af5b6bc9d3429"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/source-examples.md",
+      "bytes": 15298,
+      "sha256": "59b9afa1b94200694b489076d5357fce179fa8a9dc22f851b21899271b54a74c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/skills/write-gamefaqs-guide/references/technical-mechanics.md",
+      "bytes": 11679,
+      "sha256": "22ff90f94d539f2e66bfb1eb3e1eaa78a4b5a1754baa02c475110f6135f05802"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/spatial.py",
+      "bytes": 11782,
+      "sha256": "a138a05fa325d04b43f7815f3ba215813d79731f7a20e76207ae10744d4569e3"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/spatial_map.py",
+      "bytes": 16753,
+      "sha256": "ccdcefdf9b5100f51b2238ad57d0205fd494b00c759da4372878d2ca62d02798"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/spatial_modes.py",
+      "bytes": 22057,
+      "sha256": "c3fd715f3fb90090d7c286fa6a4ba2dedefc965aef15e797398f9c58df4e24f9"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/summaries.py",
+      "bytes": 25947,
+      "sha256": "902264fba8c4602581111eadeefa88de77fd0582ef5788c26610b0c6d9f3780a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/target_sources.py",
+      "bytes": 15785,
+      "sha256": "8c5fce5b3c3941baadab635414afa1f72ae8a01339860f273e6f1446688420a2"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/target_storage.py",
+      "bytes": 11255,
+      "sha256": "76439f8ae0cd5eb87a2acb8d5dc17c2d31731e15a8e9130d9090625c83cfa8f4"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/text_host.py",
+      "bytes": 6354,
+      "sha256": "4c4e497519df460022a6ebf015568d5be3618300034fb1aa7d2303e5f5805806"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/text_projection.py",
+      "bytes": 17864,
+      "sha256": "04a3184b026a60ab61365e3954b25123b55347c9f550006e5fdc766672589a13"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/type_catalog.py",
+      "bytes": 11309,
+      "sha256": "254478fc6992ceea59adde1d383d3970f650647c8aadc41f543c3fb8492d9d1e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/typesystem.py",
+      "bytes": 23574,
+      "sha256": "81cc07acd6eda5ca7f6c4876ae3673b697b703c45dfa4ab32201d14ae6f024b7"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/udc.py",
+      "bytes": 17471,
+      "sha256": "bd43d42d598192f54a7d7c4fe69f22469e089408a47ff75f83bf2213c3f81c6c"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/udl_blocks.py",
+      "bytes": 12011,
+      "sha256": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_debugger.py",
+      "bytes": 18944,
+      "sha256": "1121914e7016922a4606e1fd07ffa7d11c4f76cfa2aa0aeded01c85efc61a034"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_execution.py",
+      "bytes": 7821,
+      "sha256": "6b85c7915871f20eb42c02823fa66b4e17eeb7fe8ed2307cf46c791e3bc6a126"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_guest/agent.c",
+      "bytes": 25411,
+      "sha256": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_guest/broker.py",
+      "bytes": 9658,
+      "sha256": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_guest/init.sh",
+      "bytes": 1361,
+      "sha256": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_guest/selftest.c",
+      "bytes": 3554,
+      "sha256": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_layers.py",
+      "bytes": 6386,
+      "sha256": "960b95686f26d66d8c290212e7e795006156bc7ff8d3e11744aae7efd1709517"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_rpc.py",
+      "bytes": 7292,
+      "sha256": "2aab95f43c3a5355a69dfaa601455f518706df395c542b23a0f58623e8001f9e"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_runtime.py",
+      "bytes": 5768,
+      "sha256": "934e2bb9dd171e946891085ff7bfef7f33346a0b66786cca9457849dcb953d14"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_state.py",
+      "bytes": 13378,
+      "sha256": "4bf0c41a59fc46dbcd15864fd5945f0b375b35c593db78dd9a475b77ba9e72a3"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/wine_watch.py",
+      "bytes": 4376,
+      "sha256": "47280622631a01458751ccc7bdc0d8a8b24724d330d0482dfa7ea27f4e2adc75"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/z_replies.py",
+      "bytes": 7861,
+      "sha256": "a6b397be484939ae0448be1c73fefc3f0a63601f4fa8e7e4ca8ae2d3d94ccecd"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zmachine.py",
+      "bytes": 9015,
+      "sha256": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zmachine_analysis.py",
+      "bytes": 10940,
+      "sha256": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zmachine_processor.py",
+      "bytes": 14906,
+      "sha256": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork.py",
+      "bytes": 17975,
+      "sha256": "eb1ab714668045655a10ecb2a0174d40b0bf1c678d620738d4c47f04680d40a7"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork_intent_export.py",
+      "bytes": 1927,
+      "sha256": "90028d1074104775a5974fca275c0611f2b79b2317b3466438c23030bb4dd2c5"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork_intents.py",
+      "bytes": 23384,
+      "sha256": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork_recovery.py",
+      "bytes": 9732,
+      "sha256": "70011eeb57897ccd911e6f9928cad941836ef0e181e7d834d9ed9cf31d85c25d"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork_uil.py",
+      "bytes": 18733,
+      "sha256": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull/zork_worker.py",
+      "bytes": 4969,
+      "sha256": "cf6e161ffa083c47c6801f992d8dc00d753da2eaab750a1aa661ff49940cbec1"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/PKG-INFO",
+      "bytes": 729,
+      "sha256": "45aaca4771dc3b95eec7c8306db1287e2d83da87ac8ed4ef6a0b433c2d5a5a17"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/SOURCES.txt",
+      "bytes": 22720,
+      "sha256": "b23ee01577e6411f61700937f0aabbaff763d4893466383e5d8c5a85c7c98b50"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/dependency_links.txt",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/entry_points.txt",
+      "bytes": 47,
+      "sha256": "f0e53f7c180997c2da64f504b81388bf8b1bf3392634a4bb66a34149b6c859c8"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/requires.txt",
+      "bytes": 213,
+      "sha256": "8d617cb83743067445279a0f803ea5c810b6aed848c4c4013f4f67704340315f"
+    },
+    {
+      "path": "fdisbull-0.29.0/src/fdisbull.egg-info/top_level.txt",
+      "bytes": 9,
+      "sha256": "9436d3e78e79a9c69b70006fea394c98a9f8b2d4d48990c35941cd6aad20e2c8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/conftest.py",
+      "bytes": 834,
+      "sha256": "d2a0f6e0b46b552e2f1ed92db7d4befab4911ea43055fcdf621d089d0450f5e1"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/console_synthesis/conftest.py",
+      "bytes": 261,
+      "sha256": "77b1ce673566161a1af9b9f4a77d7615e138fbb189c7435b41b64d0933f887e9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/console_synthesis/test_console_synthesis.py",
+      "bytes": 13974,
+      "sha256": "e551a2d08d3f025d2f883dd8124c58dc8d557cba272f0e450e9ebeb9e6d31dc8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/dosbox_zip_empty_write.cpp",
+      "bytes": 3904,
+      "sha256": "6fb8691083aca0e74a3fd682c9d35cf2e8fe65b8b7cafcaff2df3b0acb81a15c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures/frame_capture.S",
+      "bytes": 2967,
+      "sha256": "d73eb5eca676d5b32df75836e61f4bd1d4ba8f682af8179695bc6c1c2dd3fd44"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures_dinopark_food_return.py",
+      "bytes": 7091,
+      "sha256": "2d33c852f72a7f0409f25c60974117f8da5ae6ea46d7ac18063bda7c3392893e"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures_dinopark_scene_probes.py",
+      "bytes": 21296,
+      "sha256": "b38c4bae221dba605df7ed5eb3eb269809fa090da2b684f072fd7c2827dda251"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures_formats.py",
+      "bytes": 2121,
+      "sha256": "2e65c01578395ced8f2f31cc10fa3d4d8bee167c88e76395013082d99bccf490"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures_macho.py",
+      "bytes": 7887,
+      "sha256": "2ebffb06a7e2eb7e683776fc41eb8df564d10e06d20705e8946d0e1afb92452d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/fixtures_z_scenes.py",
+      "bytes": 7869,
+      "sha256": "8d61bd7c6c16c6d7e8901498c276173b409ff528eee35f36f6d5d5a5583dd72d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/ida_rpc_vectors.json",
+      "bytes": 7123,
+      "sha256": "a6ae9ba9469977d358d6599fffad8f5e0b4b92793498b82b0831ab51da8ba76a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_action_continuations.py",
+      "bytes": 2222,
+      "sha256": "7037490a2f1613bbe3a6d2139c52897a0865c60e716623a5b9d553f3903fd8e8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_advanced.py",
+      "bytes": 18001,
+      "sha256": "f91f7702cc9e5218e9a0c2d3f33ce558f3b010381191bc588383ad40a3410356"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_advanced_cli.py",
+      "bytes": 9294,
+      "sha256": "dcfeaea83f6fb370b44b84916759aa06757458a73077cb75e9d1fe0d889290d1"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_advanced_formats.py",
+      "bytes": 7985,
+      "sha256": "dca596b43b42c853932a09e188aa0de3a25fe69bc3fc7dddfc83347434f70dde"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_agent_discovery.py",
+      "bytes": 4635,
+      "sha256": "48a853fd7b61b4e56fd0918af69504e505c5f6d90d3962b2c53c3bfca09d1a5f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_agent_skill_gate.py",
+      "bytes": 8457,
+      "sha256": "5e569849057276f3d23c7b3ccb71b1c0da60f8c650b26aa2e4575d28df903a59"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_agi.py",
+      "bytes": 4562,
+      "sha256": "552df1e6ac6487a81933a038ab3d445d1c6a94f1e58f85371096498383a758fb"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_agi_layout.py",
+      "bytes": 1122,
+      "sha256": "ed2d4b639d314549a0916cf38c30cb7cf50bbb59484e50e8bfeebb78c122f722"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_agi_picture.py",
+      "bytes": 2258,
+      "sha256": "3634a638881c21f8f1c0ab8f96594d1c1de5104bbb48151dc395bd26047f81ad"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ail.py",
+      "bytes": 5766,
+      "sha256": "c423e7b9b19bc5a736bf81b7e550377fb3edfb5b15cef7cdb1759f3adc28b2b4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_assisted_travel.py",
+      "bytes": 12549,
+      "sha256": "078a7f9303e46b6c90bdef1addce18a74d7cf23a409b41d7c1265f5237af7389"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_audio_services.py",
+      "bytes": 3084,
+      "sha256": "e32424d7dc6a464803e81c48d7986aff604fcc89cc6b1c07da0c58dfa1fd2d07"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_autoanalysis.py",
+      "bytes": 14049,
+      "sha256": "61568e6557a580a20c50a5177d79f72faa900976a9e38972b7cf2cc8d23046fd"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_boundaries.py",
+      "bytes": 9727,
+      "sha256": "942f6501281dc0a6c95821760a1ca2c98a87067aa36ef9e2b02f10dd07956b21"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_calls.py",
+      "bytes": 8165,
+      "sha256": "cb0375edeb1bbde67d048225bb56739746c8b747f9d5cfef0ee052ea7c20393f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_capabilities.py",
+      "bytes": 6387,
+      "sha256": "4479eb3ff6c6692a623535ca58f35b1de214d03131fd9109548641312117f617"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_capture_audit.py",
+      "bytes": 10926,
+      "sha256": "52f1c8454e96884459e9fadfaeeb5f93644c2da92c1e238ba68fc65055db13ba"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_cfg.py",
+      "bytes": 9143,
+      "sha256": "36bb10c590c0700616df988b8533f28d3295d049a129e20deb91aec56c2c3b9a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_cfg_render.py",
+      "bytes": 9317,
+      "sha256": "eefdc3cdf24b4bf12923f952a54e9c14eddede6fe5000c2ae7f9bafc7ea22150"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_chimprec.py",
+      "bytes": 5904,
+      "sha256": "02b17d4f6bfefbbd0ba5b45a8e596d1fec52a80593055c269a94ba241fcf4074"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ci_status.py",
+      "bytes": 15912,
+      "sha256": "99e83f6758c4825dc1048c9fa005fd52cefe96ab1630178a6094f6712996cd31"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_backings.py",
+      "bytes": 7783,
+      "sha256": "6ff3779701488ce8dc5217aa305556f57a3399b869000524760a5b7d0c97904c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_backings_arm_macho.py",
+      "bytes": 6335,
+      "sha256": "190f7acb0cedec23fabfa5d9d11681787c064e86a2dc22ef4c838ed071500e7b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_blocks.py",
+      "bytes": 7299,
+      "sha256": "aa0c43806cef904b8decc5740394630bb6d50d10c7dbccd1b8d1e041572f54cb"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_layers.py",
+      "bytes": 15850,
+      "sha256": "bdfdcb744f95b65f43c63dcbc9c4bf10bd5d7bb1c296184bffcb4a4eb2f5b4be"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_layout.py",
+      "bytes": 9417,
+      "sha256": "2b7da7c8466bd5af983f5cb5c0c5e1459f340422d7a073acd376b74d6a68a3e9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_overlap_native.py",
+      "bytes": 15310,
+      "sha256": "5ea058bc3554426ea32f5f7c08c4670e19f665d123a03cfc25f15d61dc3b60c5"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_code_overlap_proof.py",
+      "bytes": 4987,
+      "sha256": "48d2402006e5ba3942e9bfe214a42c2bd294f6b0c1ac10b492afd58fb03890d9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_debug_experiments.py",
+      "bytes": 11306,
+      "sha256": "51484113dd4891029d6b905ac61a69ebaccc469f01967e015a2e6bb7339afc9f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_debug_semantics.py",
+      "bytes": 4166,
+      "sha256": "643c57ca70fc2639249a45cbad920b6dedb71b62e64dda4c3df7736bb7962ce0"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_debug_wait.py",
+      "bytes": 7443,
+      "sha256": "0a2f6d59c4014de7d803974a27de51364a70ceaf781430cc3871629a55a06d94"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_debugger.py",
+      "bytes": 26141,
+      "sha256": "b4329725c5b96e2e24cfebadf3827aee1338b1b73296abac50e14f06e77e1cb8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_decoder_check.py",
+      "bytes": 3714,
+      "sha256": "044775b70a7407a6816f6ca4cdec213f95bfa3a66b01e4e66b3ddef9fc3d59ee"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_continuation.py",
+      "bytes": 20542,
+      "sha256": "1f071d18fc7c1b198829eb71bd2351c93bc861410ae486867472091bd1cda6d1"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_navigation_reconcile.py",
+      "bytes": 8142,
+      "sha256": "90a0f484752b3d6f75e62f3a46ee04946d447b0d2ee81dee220eeaea59fdb2ee"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_picked_catalogue.py",
+      "bytes": 3274,
+      "sha256": "436432954a0b2f121700f3840649a014e922e654e9ba8c7ece0a45aed8c918f6"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_purchase_continuation.py",
+      "bytes": 5836,
+      "sha256": "ae0a6167e996783aede8ad983e7553a97c0557ecdf0f3ff299bfe5f5d7f6c264"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_purchase_native_pen.py",
+      "bytes": 2000,
+      "sha256": "594e9f0562337b5e386e2e453ddd3bbce38266cb400985393816b3038b69b7c8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_purchase_reconcile.py",
+      "bytes": 23839,
+      "sha256": "33fecf0005f56e329dec2a07d4660a22e63cee908089365ba4935571cb7fca36"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_recovery_lifecycle.py",
+      "bytes": 6543,
+      "sha256": "a585ada5517e8a11c0d62bf9063cb607351a080b40dd29d710ba14e5419a4900"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_recovery_mode.py",
+      "bytes": 7630,
+      "sha256": "3ba963e69325924f4131ad3ba7d1db4de2ca90c71d6dfa0ec423e8aebe020849"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_selected_catalogue.py",
+      "bytes": 5102,
+      "sha256": "5c8dfe87c3771401a1b9c65c3f9426a41a3751a3380b30c640ef94921139f4e4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_terminal.py",
+      "bytes": 9447,
+      "sha256": "583bf3671fb8ee5c468899747b287604231a11928bd1d1c72fadc5fd78fa9138"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_z_bridge.py",
+      "bytes": 13432,
+      "sha256": "43de9e1217249ee9d1f01403a35db12cd8939d6978df85d863fc5211302a1d8c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dinopark_z_replies.py",
+      "bytes": 10843,
+      "sha256": "c5dfb4c0a4feec31220e6db36878c8679b2d972d5d55a97bfdf828118503c815"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_distribution.py",
+      "bytes": 10004,
+      "sha256": "0d1c7628b3e8d8eae30e8f7f610c778a2d07aaaec3e9863a76563f863dbb7fb4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_doctor.py",
+      "bytes": 2036,
+      "sha256": "56f7a5f196b677a19dbeac8e3ac5879b3d1a0bf9f9b86903c0607df13daea8b1"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_analysis.py",
+      "bytes": 6699,
+      "sha256": "471e70e16e93a49ada082a94824f352b2f85d94590aa53982028c14162b5abcc"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_com.py",
+      "bytes": 7586,
+      "sha256": "3f98b80d3090e4bb523ff4c7f2a4340e27841c5febdbd123b7e7e30428948ab7"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_decoder.py",
+      "bytes": 8907,
+      "sha256": "54ce9cb60c591013c49aeb84f1ef26d1d34c61d3fadcee88e49854a5166f97a4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_guest_exit.py",
+      "bytes": 7753,
+      "sha256": "680378001769ed712464189185e1cc88bc8e4d3f337d594d53959f097d1e8a67"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_inspection.py",
+      "bytes": 3104,
+      "sha256": "fafe6e325a5fe16e316fa4ab98ea973b46efa931c266ae7ff31093b99a99654a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_launch.py",
+      "bytes": 2310,
+      "sha256": "4bf81ac23b06a965d92070fe8b1f12e23565531f7221874124d4f8fac923805b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_loader.py",
+      "bytes": 6296,
+      "sha256": "1be1fc49ba4d8c3ad7b88bea34aff28fc6d8197cbc9f8f980df12080e5039b27"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_qemu.py",
+      "bytes": 10244,
+      "sha256": "1f7d54aa41ab37fe2de1ade49769130b054bc255789c848311d9f91310167920"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_regressions.py",
+      "bytes": 8871,
+      "sha256": "2b9a986e9780040b8e89fbd62b58870846f8fee51eb89ee93885ebeebdd05e42"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_services.py",
+      "bytes": 2617,
+      "sha256": "252fbe8727755cd405ea9af79152e973ccb0f0d0ba8a4d588b742f9a2ccb9b02"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_snapshot_pointers.py",
+      "bytes": 5636,
+      "sha256": "cc444d4bbb5eb9fcb78c00029f647b660928fd66d04b6012329707c2df822e86"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_state_refresh.py",
+      "bytes": 11650,
+      "sha256": "d5946252418892c8a0684ebcc49ad4444965441fba4ef356898a99bc73015052"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dos_views.py",
+      "bytes": 11372,
+      "sha256": "6e064b657a66ea06e9011a5a195c7526326e57fed582e1e7412aaf8b0a1dbfe5"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dosbox_source_companion.py",
+      "bytes": 1557,
+      "sha256": "f81746dd0659948895ab9c4d4c76b70ae306403ad99f20ae21b718dbd7ca7e38"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dosbox_window.py",
+      "bytes": 12633,
+      "sha256": "2970adaf5235fcc15d22aaafa29c171d90d4ec225eeac9768a4aefe9360f5cca"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dosbox_window_native_contract.py",
+      "bytes": 2725,
+      "sha256": "db210b12295715a4bc98bbb5175e11315792302a7239d1b38fb9e23c1e800d24"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_dosbox_zip_stream.py",
+      "bytes": 1757,
+      "sha256": "1b637a4846d78d5a6b7c2d533c079829b7bc0e4778ad8371268f20e76cf7398b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_elf_metadata.py",
+      "bytes": 14565,
+      "sha256": "b3d7c95244d84f1b1670fb0d21eb5ad04b7bfc5bcf3c44fbcc18039e1350ed5d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_external_files.py",
+      "bytes": 9552,
+      "sha256": "5d5c47a0a2d603f362b19900f07cec3afe56bacb2b9df6bf3be006d6cb0fc699"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_external_native_udc.py",
+      "bytes": 17124,
+      "sha256": "68ad7e8331b9ff442cf9e332c2a5a3ec61eeb1858d161fc09bcbc681f5c6ba3f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_facts.py",
+      "bytes": 3529,
+      "sha256": "9080aea54c7dc3ee0820e1e4a6cb261f101e508d0d58f68f65195ab4e5b3b63d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_facts_review.py",
+      "bytes": 4788,
+      "sha256": "31c2c5b39209681d763fbfa858e4985836093f576dfe9de6306ee5c54e24bb94"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_fair_play.py",
+      "bytes": 824,
+      "sha256": "c880e089a562a755777640f39ddb9dc881f0b30907936a1aa77f6f7a407e902c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_file_references.py",
+      "bytes": 11407,
+      "sha256": "790b4bbc39b61a5d95b5a909dfd50d96880bd4c2a9d80ffb9052d175a1b6597b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_flowdata.py",
+      "bytes": 20526,
+      "sha256": "d2b53f580d7d84ac7285ed26699f9ac0ff19834cbd2be77376c0662bf47d1fe6"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_frame_cache_contract.py",
+      "bytes": 7859,
+      "sha256": "95d04f2423c92abe93417608e6a489f29561601e8665dc907bd1378f4786fa50"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_frame_capture_native.py",
+      "bytes": 16545,
+      "sha256": "39c59660a192ddfbd8315698c95c504a85c7755ad3cb4002ca9ec0bef02fa27b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_frames.py",
+      "bytes": 9050,
+      "sha256": "480899b867a442d7d4ca6246e2321582e9899b55e45b508b64c77eedc8d3976d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_function_analysis.py",
+      "bytes": 8276,
+      "sha256": "97523fbb3bd58f74aed648a394027cff4e27e54239ee22262ee70b55dbe401b5"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_game_intents.py",
+      "bytes": 12515,
+      "sha256": "22bf971349a869142d71ccd46310d0838ffcafc3872b69c4be32dae17606979d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ghidra_arm64.py",
+      "bytes": 5522,
+      "sha256": "f2e6b3d1e15352e452eab5bb1c8602d18f8cd6b88fec7f95bfa93204ae0f798d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_gog_unpack.py",
+      "bytes": 8794,
+      "sha256": "23744f0cfcb5f3c63379b07f2d584ea4d761daed753360f0e3b7ad0bc2130bcf"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ida_debugger.py",
+      "bytes": 6844,
+      "sha256": "b5a8a116c5bb9b61ee0d2ee935ee525a4113aece6daae56b6ad7aed9f23e3d2f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ida_dosbox.py",
+      "bytes": 7803,
+      "sha256": "0651cd1fb66b76455a7bc63377b1ce215834c20ee480c8671503c7a21c1bd6bb"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ida_trace.py",
+      "bytes": 7885,
+      "sha256": "80bb806250cc4052daefcf9218f2b44f1c6b9fe522a7fe01e653ef830a5605f5"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ida_wire.py",
+      "bytes": 5302,
+      "sha256": "0ab35e3311be333f77c53c6c5bb50d4d47c41a2b3f4cf266d2048353834416e8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_il_recovery.py",
+      "bytes": 2629,
+      "sha256": "5df0904f0bf96557a2c223a6acbd315628eea32c650a594929ea18cde9ca50fa"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_il_scenes.py",
+      "bytes": 6420,
+      "sha256": "8efc5a10f9bdc1053a8fd136cabb8bbf6e24f756da38f1f997983716353835a2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_image_views.py",
+      "bytes": 5915,
+      "sha256": "a1cdc2f60e38d1f8fe5a7f8fad27efe0634426a85a1865d53b971951f5dc9c66"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_incremental.py",
+      "bytes": 10927,
+      "sha256": "4569dec5b4f67a507171afef53d815905462f1a9133ba5a307a832c0de9c673d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_indirect.py",
+      "bytes": 18033,
+      "sha256": "6fff55fdeddfc42a4f33868888c63e8cde4ab842559af03e9766d58a08b7189e"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_input_macros.py",
+      "bytes": 8021,
+      "sha256": "fc7d7074faf6c2444cf9b9c4442e8367f4fb87bf9159412057ccc2d8355548a5"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_inspection.py",
+      "bytes": 7163,
+      "sha256": "2a17db333c8e87eda6d87dc76847bfda22ffb7ba8f4b3f9e7fd8eb0b89451061"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_instruction_overlap.py",
+      "bytes": 4756,
+      "sha256": "9c10d462fb5f2f3f80e63add035f0f97f97900d939eceacabeddf5ae37115ccd"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_interaction_il.py",
+      "bytes": 2803,
+      "sha256": "8893c41fbecced3c9b90a305e260d85a944f685de857333486faeafc8b935862"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_keyboard.py",
+      "bytes": 14234,
+      "sha256": "0c9fe5aa3f0e14876bc5038758b79c7248f73134fb20fd7367640f0773a00dd4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_language_cli.py",
+      "bytes": 2855,
+      "sha256": "56ab570aa00b6f4798ef3e097efc839a97dc3ef427e1adfefc59a0b9a996be62"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_le_loader.py",
+      "bytes": 11697,
+      "sha256": "41a9dd20ffef61a0c92ff17e51eb4bc3e92b2bc5955d8e703a5b69fceacd8381"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_le_workflow.py",
+      "bytes": 8555,
+      "sha256": "3e8d5a0835fe342a2a291818cb03d381f24e798cc670c122cc144802f600ae65"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_library_catalog.py",
+      "bytes": 5551,
+      "sha256": "90d24a3311165e8d310ac7f232ad1d66db692db3ee9df75749017b1088181bbc"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_linkage.py",
+      "bytes": 3181,
+      "sha256": "9e842d309aabfffdcec3e04fe478ca433734d791bd0d66f26b7f96b91fbfddf4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_loading.py",
+      "bytes": 5712,
+      "sha256": "3979c88cf4c8c844c8858e6364954b2c2dffd10428346d598977961d13bba66b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macho_code_seeds.py",
+      "bytes": 3549,
+      "sha256": "033ed65863b3ddc30fe2af960208041474cdd00b052caa6c96345a67a5eb355b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macho_function_starts_arm64.py",
+      "bytes": 7128,
+      "sha256": "84f92321fe4b8ba744104e9fcc7ece438ba8ae3148b3e6a2b7716b8c26144e91"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macho_metadata.py",
+      "bytes": 10107,
+      "sha256": "abe8066f131533c150737458998b8427c7b3de809d4c245e91f7b1c65f3ae237"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macho_slices.py",
+      "bytes": 8142,
+      "sha256": "89b4222c7b59f43357deb608819a84f45400bc926c113e1de205be267e51f79b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macos_calls.py",
+      "bytes": 10727,
+      "sha256": "0eb96a03f00ae4514da640e41bc83d35827e0e37ab8698ff8b4c08215faef90f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macos_cli.py",
+      "bytes": 3434,
+      "sha256": "8bac05a092411db0575230be0e48a10577daba907c023d6f0d45d74c292f1fb7"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_macos_lldb.py",
+      "bytes": 6313,
+      "sha256": "db7eab6f329e9d7f6162eb58f64e866f92e24e020b99083a8068863ce7ebe7e8"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_managed.py",
+      "bytes": 11550,
+      "sha256": "0f8a12a72a682ab1f587bef8f411339a777324d0011e549b8bf3aaa35c76093a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_managed_api.py",
+      "bytes": 2463,
+      "sha256": "f76048417b8a7ce69c25b40aa9a71342ed06c4757c26ae159470e0aca9297d8d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_media_modules.py",
+      "bytes": 11267,
+      "sha256": "8462001032bd68f74eee5740f4e577cc7460e9851d6bc82df949f537ffc1b223"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_membership_view.py",
+      "bytes": 5660,
+      "sha256": "8b01d32120c205485110fa2df8743af6ad32d1cd0c883d62fe7e0b3d33bccc07"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_memory.py",
+      "bytes": 14447,
+      "sha256": "cb44de0fce0483bd06e7af1c69bd4a7e76a69f1faed392c44f39038b3fe6913d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_modules.py",
+      "bytes": 3529,
+      "sha256": "63ad89bbcf1bea7e91248c044b70212cef179f2bc3ba6623f725c5adf639c980"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_movement.py",
+      "bytes": 18248,
+      "sha256": "33e3b98a13920153b926ab4bbc99ceb1a953e8dc1217fe6f9bcc631ead63019c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_native_udc.py",
+      "bytes": 15884,
+      "sha256": "10425cae5ca3dd9423667ac2e6668a9cb84118f26007173b4c0cbf1eda8cdc2a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_native_udc_cli.py",
+      "bytes": 5285,
+      "sha256": "1e494da99c3e3011c2b60251167fd970ece02a985a98d4de9b6d9845763e0d5d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_navigation_geometry.py",
+      "bytes": 2005,
+      "sha256": "fbf1862b84866ed560918591bd7496d75c2f5247b41e110b698e4fc296f666c6"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ne_loader.py",
+      "bytes": 13599,
+      "sha256": "fa218275632fe27b6d860e2da53b5514fef236a27b8319dc552fc89f12036f7b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_ne_workflow.py",
+      "bytes": 12290,
+      "sha256": "288255e76ce4430caa78943cd77930de444cc6dfdf7c11d6d27f9843a9f6e422"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_offline_dependencies.py",
+      "bytes": 5923,
+      "sha256": "383c3344a2d0718fe5ad1bc942c5895fc64f339464e9e83140f3f7f33898f157"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_offline_kit.py",
+      "bytes": 6907,
+      "sha256": "8535b53e1235b70c05b47e700bcdc9efbf1ee1586570a9272981c6ce17e797af"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_output_artifacts.py",
+      "bytes": 5812,
+      "sha256": "aceb8b65988443f2592dc87631e9a7ef68c43812c7003b0dfa98313c8e7d6956"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_output_cli.py",
+      "bytes": 8045,
+      "sha256": "d3c5146118403fd207f79d5b986414a96e5f639fa1a28c3aee1d266d3ae52e2b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_output_limits.py",
+      "bytes": 5971,
+      "sha256": "3ebc73538c1784086d85c8be429fc215d84326d75c00ef6fc5791dc829f51c67"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_pe_mz_workflow.py",
+      "bytes": 5531,
+      "sha256": "5861666de765a146c0e6eb2a52c897e042d865a731f51776e107deb21761604b"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_platform_calls.py",
+      "bytes": 14799,
+      "sha256": "40c4dcdbfc6f46d0a18029917c14e40166a5bda8012ec56be4283210db1a97a7"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_platform_review.py",
+      "bytes": 11818,
+      "sha256": "3786b32d8995aea41da48fa60a1ff2559974fd3a0bcf334c590f5985ea258aed"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_player_checkpoints.py",
+      "bytes": 7667,
+      "sha256": "15061fa1c9a019fa4b2f91bfada1e294c50fce34cf30e254ff822acc1aa7872c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_player_live.py",
+      "bytes": 10787,
+      "sha256": "c02507bf1a1149eb8d465918910abbca24b8a0f6e0dd284fe0a300e6e2b64246"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_pr17_examples.py",
+      "bytes": 5101,
+      "sha256": "44c41ef6bdf9d96e2bad93a47af9e880176ef500c2422516cf297056faec4c11"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_processor.py",
+      "bytes": 7594,
+      "sha256": "f58d17239aa586bb8fa8e665d2514c6a75edf9eecc15c121fbc0b4973bea7d20"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_progressive_cli.py",
+      "bytes": 1723,
+      "sha256": "56e188d87775a000f9facfe661fe4cc74b80c3475e8751779dc13babcfaff9b2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_progressive_scenes.py",
+      "bytes": 13261,
+      "sha256": "adf9d0a8e8ad7bef0678412bd10b20858ecc9f8580d622384dce89a4454b9296"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_proofs.py",
+      "bytes": 7840,
+      "sha256": "4578bf8d6c1978d0f7d7f53f654d390a0b43c09300aa3bbf80a530a343f15e9c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_purchase_operation_budget.py",
+      "bytes": 4949,
+      "sha256": "8c66f3e0874398d065fbc952466704368316202c152a3576ca653b0f4ea79efb"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_qemu_machine.py",
+      "bytes": 7486,
+      "sha256": "de2ab179b63eb435bfa2ca292ab52509add3f1f2e7d7037c439ec9591cc86624"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_recovery_movement.py",
+      "bytes": 5480,
+      "sha256": "5d18a682040aacd7d71748b069def2d7439ec54a1748fe182e0a14ffb95fe866"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_render.py",
+      "bytes": 4556,
+      "sha256": "4023e1392f338f0cfe43ff9e65977e76af728a63e3adeb63c2db1b62591177a0"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_rich_types.py",
+      "bytes": 6033,
+      "sha256": "771d5a0c07dcb8835e804a9d1bdbe8952cce65758f32306410c04fee645556f9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_run_boundaries.py",
+      "bytes": 2567,
+      "sha256": "e4433ce4473b5427d7645d7b40b51ff4278546de58e9755df639a310f8f5b135"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_runtime_code.py",
+      "bytes": 6633,
+      "sha256": "dd91c98e91f12e02fc2cc83f6c564e16496187049e20ad2d6d288b9b9e43f346"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_runtime_observations.py",
+      "bytes": 4168,
+      "sha256": "56b1dc8e6cda96d7c336d298784ec1547caaf8cf1222d9ecd6c0613a263f087c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_scene_improvements.py",
+      "bytes": 12960,
+      "sha256": "aef922100ca2e8d9f4d270f4c6f58d5893f64b39a93c0fe5af7e9dcbd8ed8851"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_scene_layers.py",
+      "bytes": 330,
+      "sha256": "ba3002b586c38de4437ecec3bf2b4f06791079cbadca2368100b8ce17067e4d4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_scene_readiness.py",
+      "bytes": 9245,
+      "sha256": "ba80c40460fa1cd09aa68f9c4529d0951b39afdcfe234161a345c85326f8a0c9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_scenes.py",
+      "bytes": 17351,
+      "sha256": "93fb0dc2e460fc969410eb16d09688313fa66f29e3425c6007ff45c5e4f392aa"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_screenshot_grid.py",
+      "bytes": 5971,
+      "sha256": "fee3e81f5d9742b68daf2f1e615d9d7f6c6f8bfd3db47e1ccc65af6a91e65ac0"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_screenshot_hooks.py",
+      "bytes": 9227,
+      "sha256": "c2833422450b8383b6a6662452764a5f55f5e84a18bdc1b04f8c1f0f70696f55"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_semantics.py",
+      "bytes": 10302,
+      "sha256": "58139423d38a54a7aaceda263feffeff0d7a96d4236ad1f355708647f2a62db1"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_shared_label_atomicity.py",
+      "bytes": 1686,
+      "sha256": "e5c3364fda01a5b22d26a4a05f026b7b076e650175ec1a14dffff68697f06c89"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_shared_labels.py",
+      "bytes": 19464,
+      "sha256": "4cd75c27c33d6f091362147d0b2640a8f8da655e1464703be4a445474cbfc5ec"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_source_reconstruction_skill.py",
+      "bytes": 2453,
+      "sha256": "d3ea0c75e357140c75f049814581d4148c869c77707e6b886aadb1b59efab437"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_spatial_integration.py",
+      "bytes": 11673,
+      "sha256": "731204ce8dbb5e4696bd994c1efef539bd24fbaaf713ff673c79ab473c2bdf79"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_spatial_map.py",
+      "bytes": 9831,
+      "sha256": "f2c5b60c4d4e19699add5541f527d1668f9ecfb2ab740213dcc5cf9348b0f429"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_spatial_modes.py",
+      "bytes": 16110,
+      "sha256": "25efc37cd98b9bfddd8b1c067c0b92ea31f4973a8d372875e51d82c9159b011f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_spatial_native.py",
+      "bytes": 7081,
+      "sha256": "f5e4fa8275233905f967da93c6529b16af560e0d62f000a77386e6a77efb20f2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_summaries.py",
+      "bytes": 13633,
+      "sha256": "844b531995843b69c915c36046f0611bbaa455c6700693405e1363286a9ba160"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_target_storage.py",
+      "bytes": 16573,
+      "sha256": "bd50ca3d20ab7a3b7adc84c0abd9013000a7da3469a196bd00905a8f00c9f561"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_text_distribution.py",
+      "bytes": 2321,
+      "sha256": "5d2174beea1eb809616f61d216326ece38395960134c4fa8115341197646d569"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_text_host.py",
+      "bytes": 5931,
+      "sha256": "16ab827b3e751d341124ece09af9db064e6988a403a0f9f12c253948762e7d30"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_text_player.py",
+      "bytes": 12279,
+      "sha256": "4bf0506234469c9fe7b7c78ce0d2eb4d6359bbc684764aef6ec4e8bc24914962"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_text_projection.py",
+      "bytes": 11764,
+      "sha256": "04c2ac50db81b7d1957ebc7bc78bd21f624628f044e63004d10b824b0be16c30"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_type_catalog.py",
+      "bytes": 12429,
+      "sha256": "dd9d5ef919531778bd78e92cb33f3c043892aee1f276d9e387820568097ab1e2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_type_catalog_cli.py",
+      "bytes": 7640,
+      "sha256": "805d78ca132171696fabf04c6b308281518c15bce3ee8d5a009189648ae499da"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_typesystem.py",
+      "bytes": 7814,
+      "sha256": "c57daf41b2396dd13046bb37bad69649a0a0cc3dc730dede7a475a2c9211f045"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_udc.py",
+      "bytes": 10534,
+      "sha256": "a2f6edae939045c5a0d814cf49947b5bba0b1bbe474cf6eae605aca689666640"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_udc_cli.py",
+      "bytes": 3626,
+      "sha256": "1bec80b298f6096c0d7f1ea7446f17442d36fe4ac3dbb6fbf20273e2cc5b5c4a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_udc_native.py",
+      "bytes": 3750,
+      "sha256": "1968136d366a3d69b240207807067620585af848721d35d1d99dfc64ba4469f2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_udl_blocks.py",
+      "bytes": 5171,
+      "sha256": "950a2a780cd7021f737842d35a10ed1905d8b6246aea2bdb1169f420c1fba644"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_uil_word16_runtime.py",
+      "bytes": 16293,
+      "sha256": "59a2e87e840a06d643725deddf4e3469f1a93960c56ad5e151804fd7841660c0"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_universal_workflow.py",
+      "bytes": 10993,
+      "sha256": "932ec5ab0a31745c4f186a2ba7a6ba464c4340f9b7693722848f7e6589bf4fe4"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_unlink_labels.py",
+      "bytes": 18935,
+      "sha256": "4f482dfcd6c65a53cbd9a3880316c7b78ec467ed88bf091f5040a704d9b1680c"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_v04_review.py",
+      "bytes": 9454,
+      "sha256": "d7dec04864cfe6f75d2b3ea013c86af361539570aeb4a36ddaa45f757fc27375"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_watchpoint_completion.py",
+      "bytes": 2481,
+      "sha256": "bc0a758bd6251c0e93060af9d413376a45759a1284f056a375758f1c6e6f3caf"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_wine_advanced.py",
+      "bytes": 19531,
+      "sha256": "5a1c53e2d8a0823b81785b1665c77be7b1bd0a60505207f1ef565e90f23007fc"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_wine_debugger.py",
+      "bytes": 12408,
+      "sha256": "21b4effb19a3b0bd5374640cb829fc1f4c3e6f7522bbeae9fc2adea3dd52a633"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_wine_doctor.py",
+      "bytes": 899,
+      "sha256": "bce8f66b83fbc0dc2c8f81ce25ed515fec2fff49113d10eb8ed15fbe51538e96"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_workflow.py",
+      "bytes": 7105,
+      "sha256": "8e32f5d31cb2b8d32790b9320b77b995b31badd8042708cd792c7e39c590a6d9"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_z_batch.py",
+      "bytes": 14410,
+      "sha256": "c2913f6b0513db2a01a347ecf35bf7c0d714d094c647f6490b0bb1330710a2f6"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_z_checkpoint_reconciliation.py",
+      "bytes": 12439,
+      "sha256": "4998a40d6c534605ea3a47656a98d63756baaad35c6acc26a334a7f4319b92ad"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_z_process_backend.py",
+      "bytes": 7462,
+      "sha256": "5377c8bcf3487fbfee8adc746149b0d247255c068803d6c4123d88985e15e00f"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_z_reconciliation.py",
+      "bytes": 17636,
+      "sha256": "b4068f3f8aafde648ee04a420144d7a963e3184bba97023d966205bea5c4fd83"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zmachine.py",
+      "bytes": 3666,
+      "sha256": "3d2b263f0b33f25f3bf73e496ad2ad3fef3312d161c68ed8566c81e527d7eade"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zmachine_analysis.py",
+      "bytes": 7390,
+      "sha256": "14dcc44201b334deb982c63a4355b4fce83faacd085f86ee477fe93013d9435d"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zmachine_processor.py",
+      "bytes": 6999,
+      "sha256": "53a0db775b7fd385e3343c53b554af196d5da534664c9aab5543f9f4efca5d0a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zmachine_processor_acceptance.py",
+      "bytes": 15630,
+      "sha256": "4bd77fcbbde589580e12ab99c7fefc8948a35dbf9fca0ec14402dd9bb6b231cb"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork.py",
+      "bytes": 7904,
+      "sha256": "354f03460d585c6647b012880b22301e54c6bf3cb8ec7c62f949972b61043167"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_intent_runtime.py",
+      "bytes": 32380,
+      "sha256": "00b2c1b546585a5984beede0b45c4a9a1f33342458fb6e4e5a254432d3409cd2"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_intents_cli.py",
+      "bytes": 3229,
+      "sha256": "a4c3e6a50853d10882f919d98e9553ba0d72850a53f6df4f0670623af30b8b87"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_intents_mapper.py",
+      "bytes": 7847,
+      "sha256": "d48b9399990f2adb3c261430adc2f020a1397bbca6e56935142ae543118cfd63"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_recovery_example.py",
+      "bytes": 1828,
+      "sha256": "3bdd72f17801b73f5a06e0becc5955dfc1a9fd5b8803195ea9689202b715c303"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_uil.py",
+      "bytes": 11376,
+      "sha256": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/test_zork_uil_cli.py",
+      "bytes": 1968,
+      "sha256": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/wine_gui_fixture.c",
+      "bytes": 3554,
+      "sha256": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+    },
+    {
+      "path": "fdisbull-0.29.0/tests/zork_worker_fixture.py",
+      "bytes": 1679,
+      "sha256": "28da9d2fae702d35a258efacc78d7baff6e95c38d0116fb0a5c6db361d752307"
+    }
+  ],
+  "unsafe_paths_or_links": [],
+  "publisher_byte_identical": true,
+  "unpacked_on_disk": false,
+  "payload_executed_or_installed": false,
+  "source_url": "https://chatgpt.com/space/file/libfile_9889bc62b4f08191bcbe345961f78874",
+  "publisher_package_file": {
+    "id": 381580946,
+    "package_id": 74791785,
+    "created_at": "2026-11-01T15:43:36.781Z",
+    "file_name": "fdisbull-0.29.0.tar.gz",
+    "size": 2234060,
+    "file_md5": null,
+    "file_sha1": null,
+    "file_sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8"
+  },
+  "canonical_archive_byte_identical": true,
+  "raw_original_location": "Existing canonical GitLab package file"
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "authored-burst-load-test",
+  "native_game": false,
+  "identical_hit_records": 10000,
+  "same_guest_tick": true,
+  "other_notices": 3,
+  "unique_hit_ids": 10000,
+  "records_after_reopen": 10003,
+  "paginated_records_accounted": 10003,
+  "display_groups_across_all_pages": 11,
+  "notices_retained_across_burst": 3,
+  "sample_display_chars": 279,
+  "display_bound": 1000,
+  "seconds": 6.6598180450000655,
+  "status": "passed",
+  "script_sha256": "fb18fa2c77f6798dd4c673783c8008d89b2b710542bfcad7675964f68938b22c"
+}

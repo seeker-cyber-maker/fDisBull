@@ -1,0 +1,17 @@
+{
+  "status": "two_guarded_native_replays_passed",
+  "date": "2026-11-04",
+  "unit_tests_passed": 21,
+  "replay_seconds": [26.196, 29.493],
+  "source_exe_sha256": "512efad4a4d771f6c975702cad9a688aeef10f8d81798b8c7260e37c74e87d43",
+  "old_green_fraction_for_load_dialog_changed_map_restored_map": [0.87109375, 0.87109375, 0.87109375],
+  "visible_date_diagnostic": {
+    "saved": "May 13, 1312",
+    "advanced": "May 19, 1312",
+    "restored_in_session": "May 13, 1312",
+    "restored_fresh_process": "May 13, 1312"
+  },
+  "scope": "visible-date restoration only; no complete strategic-state proof",
+  "cold_agent_AB_run": false,
+  "shutdown": "owned host-forced, no clean guest-exit claim"
+}

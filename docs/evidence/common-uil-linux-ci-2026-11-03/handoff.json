@@ -1,0 +1,226 @@
+{
+  "format": "fdisbull-common-uil-ci-handoff-1",
+  "record_date": "2026-11-03",
+  "scope": "Authored recovery documentation and sanitized verification aggregates; no production or UIL change",
+  "project_state": {
+    "feature_mr": "https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/24",
+    "feature_mr_state": "merged",
+    "feature_merge_commit": "bc18e882d82c7d57ff8f06687c7e9aae3b26b9a5",
+    "handoff_base_commit": "3dc5c50d35f310a3ba39b1cf0cf82a20b8df69f7",
+    "handoff_base_package_version": "0.30.0",
+    "integration_is_test_qualification": false
+  },
+  "verification_target": {
+    "commit": "5a55bc00a5b4298a1483a2760f288c035ee9a291",
+    "source_archive_bytes": 70645760,
+    "source_archive_sha256": "7ade003f480655f2f0c9975e40109f534b65a3751827f8740e3bf3b1f6289a82",
+    "source_files_freshly_verified": 2012,
+    "source_proof_sha256": "b1f6b0167662dd8144ae0bedfdc481b3058ffa1dc4b21bc906681f14358d6e54",
+    "frozen_uil_files_freshly_verified": 22,
+    "uil_freeze_sha256": "3f6e11eaeed0810b72de0e111e56f8f3929f66c1bd554949fdb9474ec3d29e63",
+    "common_uil_changed": false,
+    "common_document_identities": {
+      "program": "8e59ebfa9b2535e5ef11c1b144a4fc18b5eb83dd32a647f4162db005b9ff8500",
+      "presentation": "39c3597742c984b3c19468d0cc9a08b5d74c2d878b76f0df2e0d82a8048eca85",
+      "catalog": "ad7618f822d24d82e232b8e611c6a171a9755bb968eb866eaf0123ef6b735f2c",
+      "orchestration": "948d06b4007b31906fa3857d24c1378a446be47c4cb471c7ca417f6397f44e74"
+    },
+    "completed_green_full_suite": true
+  },
+  "artifact_path_convention": "NOV1 and historical root aliases are defined in docs/handoffs/common-uil-linux-ci-2026-11-03.md; raw artifacts remain private",
+  "current_target_runs": [
+    {
+      "run": "ci05/collect-01",
+      "status": "collection-passed",
+      "collected": 3077,
+      "receipt_sha256": "31d0d1da9abc32a099469d534c576d9092017ac77e97edbdcb55cca93cf1445c"
+    },
+    {
+      "run": "ci05/focused-01",
+      "status": "passed",
+      "passed": 3,
+      "receipt_sha256": "c3396110ef17127959d9076d8370271d86d23086b2dcce880658ab347c8b4a53",
+      "junit_sha256": "4cff7bdb5dfd6e37c3ff5fa883297c22a196e44cd21ec5c7afaf6c0814bf0839"
+    },
+    {
+      "run": "ci05/full-01",
+      "status": "unqualified-recorder-internal-error",
+      "reported_passed": 1123,
+      "reported_skipped": 74,
+      "pending_nodes": 1881,
+      "product_failed_reports": 0,
+      "cause": "Observer consumed a shared finite time.monotonic mock",
+      "receipt_sha256": "868e6d8f72f15801814c21d666c8dca8e6b55098058e3c76db1c3deeaebaf635"
+    },
+    {
+      "run": "ci05/focused-02",
+      "status": "passed",
+      "passed": 4,
+      "scope": "Finite-clock problem node plus native/control checks after external observer correction",
+      "receipt_sha256": "15e15c730dd65b8953a4587a28e34ca2ac65aed8dc30a55b1973841f9a2b7ff7",
+      "junit_sha256": "7a79427f04408bb71b3d946864756584957b438a1f49518653142101293b1b6f"
+    },
+    {
+      "run": "ci05/full-02",
+      "status": "completed-not-green",
+      "collected": 3077,
+      "passed": 2940,
+      "skipped": 136,
+      "failed": 1,
+      "errors": 0,
+      "pending_nodes": 0,
+      "elapsed_seconds": 506.862281191,
+      "sole_failure": "tests/test_media_modules.py::test_resource_ambiguity_and_directory_bounds",
+      "cause": "Case-insensitive shared temporary filesystem collapsed VOL.2 and vol.2 to one file",
+      "source_and_uil_unchanged": true,
+      "receipt_sha256": "b5ac9f544d24b2bbebd1736eb74acca3a76aacd9df4211517c5075b40105f739",
+      "junit_sha256": "42d0c1b97566f26a32db4f864c7ac7cfd6f248ae4a37be404101119ab780aeb5"
+    },
+    {
+      "run": "ci05/focused-03",
+      "status": "passed",
+      "passed": 1,
+      "scope": "Unchanged sole failing case on case-sensitive ext4 temporary storage",
+      "receipt_sha256": "0bc21877e72bfa0b1f9bbff0b39bdff853162731fdb46a729a7fc465bcdb0209",
+      "junit_sha256": "655af05f6f15c45e32238961c37dd34f5e3a931c711f74c67667f90de0926ded"
+    },
+    {
+      "run": "ci05/full-03",
+      "status": "resource-stopped-incomplete",
+      "completed_test_end_records": 919,
+      "failed_phase_reports": 0,
+      "final_result_available": false,
+      "junit_available": false,
+      "session_finish_available": false,
+      "capacity_stop_seconds": 176.6917353750032,
+      "physical_growth_bytes_at_stop": 811433984,
+      "admitted_estimate_bytes": 805306368,
+      "owned_container_stopped": true,
+      "pipeline_receipt_sha256": "fb437af44cc999dbb32883e64abf0af9bb54918c1c4850130d358fc6a1ee7d7a",
+      "event_ledger_sha256": "de60dbe0a9cc889f8160a2f001a276fa888bbc4bd81cd6a4804403da764d2862"
+    },
+    {
+      "run": "ci05/full-04-20261103",
+      "status": "passed",
+      "collected": 3077,
+      "passed": 2942,
+      "skipped": 135,
+      "failed": 0,
+      "errors": 0,
+      "pending_nodes": 0,
+      "elapsed_seconds": 456.64821275300005,
+      "source_and_uil_unchanged": true,
+      "filters": [],
+      "collection_exact_prior": true,
+      "event_count": 15288,
+      "phase_report_count": 9130,
+      "event_mirror_equal": true,
+      "owned_container_stopped": true,
+      "host_transport_reaped": true,
+      "receipt_sha256": "1700319f23f271e94fbf21b0d943e1c3c5a6cad5034c5e58d88bee7216692dc9",
+      "junit_sha256": "768b13ea76394e5349698abe67b9c08e5eaf19c3c70c0bf55b4faba82f5d6177",
+      "host_receipt_sha256": "cfcb28bdfac7e6b8918c15881ab161059e0b85f0cb9ef27160e6ea651cf484db",
+      "independent_audit_sha256": "2735d3d8947e266a67f9ee57dfc292ec2edb4d309b7cd8a3559e0adb6c1e8940",
+      "previously_skipped_case_now_executed": "tests.test_agi::test_duplicate_case_volume_is_rejected",
+      "new_skips": []
+    }
+  ],
+  "historical_diagnosis": {
+    "source_commit": "1c909fcfb8187ec53cbdec44d5132cbf9d57b113",
+    "source_archive_sha256": "9c0281c5b3968ce024df9a5b45f15f94277be61a99e705e4c5c68851209d8889",
+    "image_sha256": "5850ce58acf99922d52387fffd3ac92a3ab65bcc5faec576c9d5354f67e3cfec",
+    "original_two_error_causes": "unknown",
+    "original_test_identity_status": "inferred from retained progress stream; not confirmed by retained exception reports",
+    "original_summary_sha256": "4df442d1f7f999b7702c7ab0ea2350b587d975ab38612a6c42c0ec45f6e445cc",
+    "focused_same_image": {
+      "status": "passed",
+      "passed": 3,
+      "elapsed_seconds": 102.33768999999995,
+      "source_files_unchanged": 2007,
+      "qemu_exit_code": 0,
+      "qemu_reaped": true,
+      "receipt_sha256": "4c019075470207fbd7d8a064108e3daa3a77d24753936d31adb90f5c46c8d861"
+    },
+    "full_replay_01": {
+      "status": "unqualified-replay-entry-import-context",
+      "collected": 3065,
+      "expected_original_collection": 3069,
+      "tests_started": 94,
+      "tests_completed": 93,
+      "cause": "External entry omitted source root from sys.path and importorskip omitted four examples.udc.verify_native tests",
+      "qemu_exit_code": 0,
+      "qemu_reaped": true,
+      "receipt_sha256": "7861e37b2c874fdc67c82a54d52cc637a5cc2051ac875d7692a9d34a50df2f08"
+    },
+    "full_replay_02": {
+      "status": "controller-review-deadline",
+      "entry_import_autoload_core_limit_preflight": "passed",
+      "pytest_started": false,
+      "qemu_exit_code": 0,
+      "qemu_reaped": true,
+      "receipt_sha256": "81790cfefce7c4ea746fea11305779a8fa71e37e39acbf6548307ac3b0606a4e"
+    },
+    "isolated_pass_establishes_original_full_suite_cause": false
+  },
+  "service_recovery": {
+    "historical_date": "2026-11-01",
+    "status": "supported Apple container service recovery and owned-container execution verified; owned container stopped",
+    "receipt_sha256": "660fac4fb21c4562e6564316736a82fd47e0d73797fd4fd7fa709e0f1d63f678",
+    "new_cow_clone_receipt_sha256": "8284527fec97b760cab2946e82f8de8ca9ebd8239fc1237f3bedddfa8ceee7eb",
+    "full_logical_rootfs_sha_computed": false,
+    "fresh_november_3_runtime_probe": "passed normal guarded start, actual GCC/SQLite/case/source probes, final normal stop and reaped transport"
+  },
+  "recorder": {
+    "corrected_observer_sha256": "6092acab2ab7b8d26e7892fe42e8df66ecf93959cc5651f1961f400db87a7583",
+    "clockfix_selftest_receipt_sha256": "1eb6321e3f4d322b274d95b4eae356630bbd648a6659f41e932ef57583f50471",
+    "production_source_changed": false
+  },
+  "sparse_relocation_probe": {
+    "status": "read-only probe before interruption; not a completed relocation receipt",
+    "logical_bytes": 550829555712,
+    "data_extent_count": 9298,
+    "data_extent_bytes": 16448045056,
+    "probe_receipt_sha256": "c236e8c3125a4d7ae0b0b9eb6ce0d1de4b964dff25b317ae17f9665baaad7706",
+    "extent_map_compact_sha256": "83f17f08a1e07c8b344cbd140bf2a4ba2102f545f1e0b1c491db1bda7d34375e",
+    "extent_manifest_file_sha256": "cc8c4dbafcab7f14b85e1e646f40441bacdf00964f728e8ca60e51dca8835ad7"
+  },
+  "november_3_continuation": {
+    "status": "verified frozen-source ordinary Linux suite; historical two error causes remain unknown",
+    "disk_relocation": "logical-byte-equivalence verified; original-path alias published",
+    "rootfs_finalization_receipt_sha256": "29c74cf3266f1f5d64010f6f163757fc2bbf580cbfdb9c5c159e1b08accc5941",
+    "rootfs_base_relocation_receipt_sha256": "783ba6ec2bdc513f9a157de802fe57d9e0acf5ae5601a935ff46130d045c4879",
+    "cold_wheel_relocation_receipt_sha256": "e3370ef142b8dd6054784d653f66174297c852949442be2da89d2a16da9cb69d",
+    "normal_runtime_probe": "passed GCC ELF execution, case-distinct files, SQLite transaction and selected source imports",
+    "new_full_suite": "passed: 2942 passed,135 skipped,zero failures/errors,all3077 accounted",
+    "controller_sha256": "eb5f6d5387fcdee555ccfc0196ba884f6122080d18e2fca1a5c1edeb2063e252",
+    "source_and_uil_readback": "all2012 source files and22 frozen UIL files independently rehashed unchanged after full04",
+    "raw_disk_uploaded": false,
+    "full_run_receipt_sha256": "1700319f23f271e94fbf21b0d943e1c3c5a6cad5034c5e58d88bee7216692dc9",
+    "host_cleanup_receipt_sha256": "cfcb28bdfac7e6b8918c15881ab161059e0b85f0cb9ef27160e6ea651cf484db",
+    "independent_audit_sha256": "2735d3d8947e266a67f9ee57dfc292ec2edb4d309b7cd8a3559e0adb6c1e8940",
+    "physical_free_after_stop": {
+      "CODEX": 49016127488,
+      "CACHE": 20071321600
+    },
+    "rootfs_logical_equivalence": {
+      "source_data_bytes": 16448045056,
+      "destination_only_zero_bytes": 1076183040,
+      "implicit_both_hole_bytes": 533305327616,
+      "full_logical_sha_computed": false
+    },
+    "cache_40GB_target_restored": false
+  },
+  "publication_boundary": {
+    "raw_private_artifacts_included": false,
+    "credentials_or_environments_included": false,
+    "original_game_bytes_included": false,
+    "source_document_proves_uploaded_attachment": false,
+    "current_main_qualification_inferred_from_old_source": false
+  },
+  "remaining_gates": [
+    "Original two E markers have no retained tracebacks; cause remains unknown",
+    "This suite qualifies5a55bc0,not currentmain3dc5c50 or a release SHA",
+    "Hosted CI and required-native debugger/boot release gates are separate",
+    "CACHE is above20GB minimum but close to it; new bulk CACHE work requires fresh admission"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "actual_register_ip": "0x001C7C18",
+  "effect_owner_unchanged_negative_control": {
+    "consequence": "A memory-change watch cannot certify absence of an equal-value write or distinguish reused effect lifetimes.",
+    "execution_store_witnessed": true,
+    "memory_change_owner_watch_fired": false,
+    "new": 1014,
+    "old": 1014
+  },
+  "health_after": 15,
+  "health_before": 16,
+  "health_runtime": "0x220154",
+  "kind": "memory_change",
+  "preferred_pc": "0x13be8",
+  "reported_stop_metadata": {
+    "causing_instruction": {
+      "offset": "0x00220154",
+      "space": "linear"
+    },
+    "context": "dos-cpu",
+    "format": "fdisbull-debug-stop-1",
+    "instruction_completed": false,
+    "native_kind": "breakpoint",
+    "registers_stage": "before-instruction",
+    "resume_pc": {
+      "offset": "0x00220154",
+      "space": "linear"
+    },
+    "trigger": "breakpoint"
+  },
+  "scope": "Observed stop metadata is a locator, not a correct causing-instruction identity. Actual CPU state plus separate execution-before/after replay establish the write."
+}

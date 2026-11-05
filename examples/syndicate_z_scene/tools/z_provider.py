@@ -21,6 +21,10 @@ class Controller:
         if config['main_sha256']!=MAIN_SHA:raise ValueError('Unsupported original source identity')
         self.mapping=config['objects'];self.sock=config['socket'];self.counter=0
         self.log=Path(config['private_action_log']);self.log.parent.mkdir(parents=True,exist_ok=True)
+        self.vehicle_interactions=None
+        if config.get('original_vehicle_source'):
+            from original_interactions import OriginalVehicleInteractions
+            self.vehicle_interactions=OriginalVehicleInteractions(self,Path(config['original_vehicle_source']),Path(config['private_vehicle_trials']))
     def call(self,op,args=None,**kw):
         q={'op':op,'args':args or {},**kw}
         with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as s:
@@ -87,7 +91,8 @@ class Controller:
             samples=[];okay=False;deadline=time.monotonic()+10
             for attempt in range(10):
                 if time.monotonic()>deadline:break
-                run=self.call('run',{'guest_ms':200,'timeout_ms':1000,'fast_forward':True})
+                run=(self.vehicle_interactions.advance_to_frame() if self.vehicle_interactions else
+                     self.call('run',{'guest_ms':200,'timeout_ms':1000,'fast_forward':True}))
                 settled=self.read(0x80108,116010);world=Mission(settled);view=world.summary(entity_id)
                 chosen=next(e for e in view['entities'] if e['id']==entity_id)
                 attachments=[e for e in view['entities'] if e.get('owner_ref')==chosen['offset_reference']]
@@ -108,11 +113,17 @@ class SceneBackend:
     def __init__(self,controller=None,snapshot=None,terrain=None):
         self.controller=controller;self.static=snapshot;self.terrain=terrain;self.selected='person-0';self.epoch=0;self.held=False
         self.session_token=controller.cfg['run_id'] if controller else 'offline-observation'
+        self.navigation=None
+        if controller and controller.cfg.get('enable_original_navigation'):
+            if terrain is None:raise ValueError('Original navigation requires source-bound terrain')
+            from original_navigation import OriginalNavigation
+            self.navigation=OriginalNavigation(controller,terrain,Path(controller.cfg['private_navigation_trials']))
     def state(self):
         if self.held:raise ValueError('Provider held after uncertain action; no further guest actions')
         if self.controller:
             s=Mission(self.controller.snapshot()).summary(self.selected)
             s['runtime_revision']=self.controller.last_revision
+            s['observed_run']=self.controller.cfg['run_id']
         else:s=json.loads(json.dumps(self.static))
         return s
     def token(self,s):return digest(canonical({'state':s['source_state_sha256'],'selected':self.selected,'epoch':self.epoch,'run':self.session_token,'runtime_revision':s.get('runtime_revision')}).encode())
@@ -122,19 +133,24 @@ class SceneBackend:
         inventory=[]
         objects=[]
         def add(ident,label,description,aliases=None,verbs=None):objects.append({'id':ident,'label':label,'description':description,'aliases':aliases or [],'verbs':verbs or []})
+        vehicle_actions=bool(self.controller and getattr(self.controller,'vehicle_interactions',None))
         descriptions=[]
         for e in s['team']:
-            descriptions.append(f"{e['id']}: ({e['position'][0]:.3f}, {e['position'][1]:.3f}, z={e['position'][2]:g}); health raw {e['health_raw']}; status {e['status_raw']}; vehicle refs {e['vehicle_refs']}")
+            descriptions.append(f"{e['id']}: ({e['position'][0]:.3f}, {e['position'][1]:.3f}, z={e['position'][2]:g}); health raw {e['health_raw']}; status {e['status_raw']}; vehicle membership {e.get('vehicle_membership','unqualified legacy snapshot')}; raw links {e['vehicle_refs']}")
         add('team','team','\n'.join(descriptions)+ '\nHealth/life/drug semantics remain partially recovered.','squad'.split())
         for category in ['civilian','police','guard','agent','vehicle','door']:
             n=nearest.get(category);count=counts.get(category,0)
             text=f'{count} registered {category} entities in this entire mission snapshot, not a visible/alive count.'
             if n:text+=f" Nearest other: {n['id']} at ({n['position'][0]:.3f}, {n['position'][1]:.3f}, z={n['position'][2]:g}); XY straight-line distance {n['distance_xy']:.3f} tiles. Route not verified."
             else:text+=' No matching registered entity in this snapshot; future spawns are not excluded.'
-            aliases={'vehicle':['cars','car','nearest car','nearest vehicle'],'door':['gates','gate','car gate','nearest gate','nearest door']}.get(category,[category,category+'s','nearest '+category])
-            if category=='vehicle':text+=' Boarding point, lock/gate state and occupant interpretation are unqualified.'
-            if category=='door':text+=' Door-class records are candidate portals. Open/closed and vehicle-gate relationships are not yet recovered.'
-            add('summary-'+category,category+' summary',text,aliases)
+            aliases={'vehicle':['cars','car','nearest car','nearest vehicle'],'door':['doors','gates','gate','car gate','nearest gate','nearest door']}.get(category,[category,category+'s','nearest '+category])
+            if category=='vehicle':
+                for car in (e for e in s['entities'] if e['family']=='vehicle'):
+                    occ=car.get('occupancy')
+                    text+=f" {car['id']} occupants: "+((', '.join(occ['occupants']) or 'none recorded') if occ and occ['valid'] else 'unknown')+'.'
+            if category=='vehicle':text+=' Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.'
+            if category=='door':text+=' Source door subtypes 12/13/14/15 mean closed/opening/open/closing. Animation state does not certify collision clearance or a car-gate relationship.'
+            add('summary-'+category,category+' summary',text,aliases,['board','exit','leave'] if category=='vehicle' and vehicle_actions and count==1 else [])
         for e in s['entities']:
             if e['family'] in ('effect','weapon') or e['category']=='tree':continue
             critical=e['mission_critical'];label=f"{e['category']} {e['slot']}"+(' [MISSION TARGET]' if critical else '')
@@ -143,10 +159,17 @@ class SceneBackend:
             if e.get('team_member'):aliases+=['team agent '+str(e['slot']+1)]
             desc=f"{e['id']}: {e['category']}; position {e['position']}; health raw {e['health_raw']}; status/class byte {e['status_raw']}. "
             if critical:desc+='Explicit objective reference points here; identity survives other civilian classifications. '
-            if e['family']=='vehicle':desc+='Occupancy and boarding semantics unqualified. '
-            if e['family']=='object':desc+='Portal behavior/blocked state not inferred from drawing or subtype alone. '
-            if e['family']=='person':desc+=f"Vehicle references {e['vehicle_refs']}; life state unknown. "
-            add(e['id'],label,desc,aliases,['focus'] if e.get('team_member') and self.controller else [])
+            if e['family']=='vehicle':
+                desc+=f"Occupancy: {e.get('occupancy','unqualified legacy snapshot')}. "
+                desc+='Board/exit, when enabled, prepare diagnostic input for original code; not ordinary mouse input. '
+                aliases+=['car '+str(e['slot'])]
+            if e['family']=='object':
+                if 'door_state' in e:desc+=f"Door state: {e['door_state']}. "
+                desc+='Collision passage is not inferred solely from animation or subtype. '
+            if e['family']=='person':desc+=f"Vehicle membership {e.get('vehicle_membership','unqualified legacy snapshot')}; raw predecessor/order refs {e['vehicle_refs']}; life state unknown. "
+            verbs=['focus'] if e.get('team_member') and self.controller else []
+            if e['family']=='vehicle' and vehicle_actions:verbs+=['board','exit','leave']
+            add(e['id'],label,desc,aliases,verbs)
         for e in s['entities']:
             if e.get('owner_id')==sel['id']:
                 inventory.append({'id':'inventory-'+e['id'],'label':e['id']+' (weapon class '+str(e['status_raw'])+')',
@@ -164,10 +187,10 @@ class SceneBackend:
                     chosen=min(candidates,key=lambda e:(sum((e['position_raw'][i]-sel['position_raw'][i])**2 for i in (0,1)),e['id']))
                     route=plan_approach(s,self.terrain,chosen['id'])
                     add('route-'+label.replace(' ','-'),'route to '+label,
-                        canonical(route),['path to '+label,'route '+label])
+                        canonical(route),['path to '+label,'route '+label],['walk'] if self.navigation else [])
         for name,pos in WAYPOINTS.items():
             add('waypoint-'+name.replace(' ','-'),name,f'Diagnostic placement waypoint {list(pos)}. Prior placement persisted through 200 guest ms; this does not prove walking access, visibility, stairs, boarding or permission to enter a vehicle.',[],['teleport'] if self.controller else [])
-        add('world','world','Request 200 emulated milliseconds of original mission execution; actual elapsed time may overshoot. AI and time-dependent effects can change the world.',[],['advance'] if self.controller else [])
+        add('world','world',('Advance to a source-verified original frame boundary.' if vehicle_actions else 'Request 200 emulated milliseconds of original mission execution; actual elapsed time may overshoot.')+' AI and time-dependent effects can change the world.',[],['advance'] if self.controller else [])
         description=(f"Diagnostic global view. Focus {s['selected']} at ({sel['position'][0]:.3f}, {sel['position'][1]:.3f}, z={sel['position'][2]:g}). "
                      f"Team {len(s['team'])}; civilians {counts.get('civilian',0)}; police {counts.get('police',0)}; guards {counts.get('guard',0)}; cars {counts.get('vehicle',0)}; doors {counts.get('door',0)}. "
                      "Special objective targets are listed independently of character class. Nearest means XY geometric distance, not travel cost. "
@@ -189,8 +212,60 @@ class SceneBackend:
             self.selected=target;self.epoch+=1
             return {'status':'success','complete':True,'effects':'applied-confirmed','message':'Observer focus changed; native UI selection was not changed.'}
         if verb=='advance' and target=='world':
+            profile=getattr(self.controller,'vehicle_interactions',None)
+            if profile:
+                try:profile.advance_to_frame()
+                except Exception as exc:
+                    self.held=True
+                    return {'status':'incomplete','complete':False,'effects':'unknown','recovery_required':True,'message':str(exc)}
+                self.epoch+=1
+                return {'status':'success','complete':True,'effects':'applied-confirmed','message':'Original execution advanced to the verified foreground frame boundary; actual elapsed guest time is recorded.'}
             self.controller.call('run',{'guest_ms':200,'timeout_ms':10000,'fast_forward':True});self.epoch+=1
             return {'status':'success','complete':True,'effects':'applied-confirmed','message':'Original world advanced for the bounded interval; refreshed state requires a new observation.'}
+        if verb=='walk':
+            if self.navigation is None:return reject('Original walking profile is not enabled; no input sent.')
+            goals={'route-car':'vehicle','route-mission-target':'civilian'}
+            if target not in goals:return reject('Choose an explicit route object.')
+            actor=next(e for e in s['team'] if e['id']==self.selected)
+            candidates=[e for e in s['entities'] if e['category']==goals[target] and
+                        (target!='route-mission-target' or e.get('mission_critical'))]
+            if not candidates:return reject('No matching current target.')
+            chosen=min(candidates,key=lambda e:(sum((e['position_raw'][i]-actor['position_raw'][i])**2 for i in (0,1)),e['id']))
+            route=plan_approach(s,self.terrain,chosen['id'])
+            from original_interactions import RejectedInteraction
+            from original_navigation import NavigationHeld
+            try:result=self.navigation.follow(route)
+            except RejectedInteraction as exc:return reject(str(exc))
+            except Exception as exc:
+                self.held=True
+                receipt=getattr(exc,'receipt',{})
+                return {'status':'incomplete','complete':False,'effects':receipt.get('effects','unknown'),
+                        'recovery_required':True,'message':str(exc)}
+            if result['effects']!='none-confirmed':self.epoch+=1
+            return {'status':'success','complete':True,'effects':result['effects'],
+                    'assistance':{'kind':'spatial','mode':'assisted'},
+                    'message':f"{result['state']}: {self.selected} reached the exact approach via {result['orders']} original movement orders. Diagnostic hit-test input; no actor-position writes. This witnesses only the observed route and state, not general clearance, safe combat exposure or boarding."}
+        if verb in ('board','exit','leave'):
+            profile=getattr(self.controller,'vehicle_interactions',None)
+            if profile is None:return reject('Original vehicle interaction profile is not qualified/enabled.')
+            cars=[e for e in s['entities'] if e['family']=='vehicle']
+            if target=='summary-vehicle' and len(cars)==1:target=cars[0]['id']
+            if target not in [e['id'] for e in cars]:return reject('Select one explicit vehicle.')
+            from original_interactions import RejectedInteraction
+            try:
+                result=profile.perform(s['source_state_sha256'],self.selected,target,'exit' if verb=='leave' else verb)
+            except RejectedInteraction as exc:return reject(str(exc))
+            except Exception as exc:
+                self.held=True
+                return {'status':'incomplete','complete':False,'effects':'unknown','recovery_required':True,
+                        'message':str(exc)}
+            if result['effects']=='none-confirmed':
+                return {'status':'success','complete':True,'effects':'none-confirmed',
+                        'message':'Already an occupant of this car; no input writes or guest-time advance.'}
+            self.epoch+=1
+            return {'status':'success','complete':True,'effects':result['effects'],
+                    'assistance':{'kind':'spatial','mode':'assisted'},
+                    'message':f"{result['state']}: {self.selected}, {target}. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification."}
         points={'waypoint-'+k.replace(' ','-'):v for k,v in WAYPOINTS.items()}
         if verb!='teleport' or target not in points:return reject('Unsupported action; no diagnostic writes.')
         pos=points[target];raw=(round(pos[0]*256),round(pos[1]*256),round(pos[2]*128))

@@ -1,0 +1,56 @@
+test_active_graph_overrides_stale_record (test_campaign.CampaignTests.test_active_graph_overrides_stale_record) ... ok
+test_catalog_mismatch (test_campaign.CampaignTests.test_catalog_mismatch) ... ok
+test_company_range (test_campaign.CampaignTests.test_company_range) ... ok
+test_completed_tick_refused (test_campaign.CampaignTests.test_completed_tick_refused) ... ok
+test_completion_unlock_not_price (test_campaign.CampaignTests.test_completion_unlock_not_price) ... ok
+test_counts (test_campaign.CampaignTests.test_counts) ... ok
+test_daily_is_not_progress (test_campaign.CampaignTests.test_daily_is_not_progress) ... ok
+test_directed_unlock (test_campaign.CampaignTests.test_directed_unlock) ... ok
+test_disabled_records_not_presented (test_campaign.CampaignTests.test_disabled_records_not_presented) ... ok
+test_exact_affordability (test_campaign.CampaignTests.test_exact_affordability) ... ok
+test_existing_player (test_campaign.CampaignTests.test_existing_player) ... ok
+test_finalizer_separate (test_campaign.CampaignTests.test_finalizer_separate) ... ok
+test_foreign_source (test_campaign.CampaignTests.test_foreign_source) ... ok
+test_funding_range (test_campaign.CampaignTests.test_funding_range) ... ok
+test_graph_full_refused (test_campaign.CampaignTests.test_graph_full_refused) ... ok
+test_graph_hole (test_campaign.CampaignTests.test_graph_hole) ... ok
+test_graph_length (test_campaign.CampaignTests.test_graph_length) ... ok
+test_graph_reversal (test_campaign.CampaignTests.test_graph_reversal) ... ok
+test_inactive_uses_record (test_campaign.CampaignTests.test_inactive_uses_record) ... ok
+test_input_not_mutated (test_campaign.CampaignTests.test_input_not_mutated) ... ok
+test_insufficient_does_not_consume_graph (test_campaign.CampaignTests.test_insufficient_does_not_consume_graph) ... ok
+test_invalid_territory (test_campaign.CampaignTests.test_invalid_territory) ... ok
+test_mod_completion (test_campaign.CampaignTests.test_mod_completion) ... ok
+test_next_project_range (test_campaign.CampaignTests.test_next_project_range) ... ok
+test_no_automatic_state_flag (test_campaign.CampaignTests.test_no_automatic_state_flag) ... ok
+test_no_erase_already_unlocked_successor (test_campaign.CampaignTests.test_no_erase_already_unlocked_successor) ... ok
+test_no_selection_is_idle (test_campaign.CampaignTests.test_no_selection_is_idle) ... ok
+test_only_initial_mission (test_campaign.CampaignTests.test_only_initial_mission) ... ok
+test_original_word_rounding (test_campaign.CampaignTests.test_original_word_rounding) ... ok
+test_override_explicit (test_campaign.CampaignTests.test_override_explicit) ... ok
+test_owned_is_not_available (test_campaign.CampaignTests.test_owned_is_not_available) ... ok
+test_owner_range (test_campaign.CampaignTests.test_owner_range) ... ok
+test_passive_provider (test_campaign.CampaignTests.test_passive_provider) ... ok
+test_paused_no_charge (test_campaign.CampaignTests.test_paused_no_charge) ... ok
+test_premature_finalize_refused (test_campaign.CampaignTests.test_premature_finalize_refused) ... ok
+test_size_partition (test_campaign.CampaignTests.test_size_partition) ... ok
+test_status255_path (test_campaign.CampaignTests.test_status255_path) ... ok
+test_unknown_kind (test_campaign.CampaignTests.test_unknown_kind) ... ok
+test_unknown_runtime_flag (test_campaign.CampaignTests.test_unknown_runtime_flag) ... ok
+test_unknown_status (test_campaign.CampaignTests.test_unknown_status) ... ok
+test_wrong_size (test_campaign.CampaignTests.test_wrong_size) ... ok
+test_budget (test_campaign.SaveCorpusTests.test_budget) ... ok
+test_candidate_not_compatible (test_campaign.SaveCorpusTests.test_candidate_not_compatible) ... ok
+test_case_collision (test_campaign.SaveCorpusTests.test_case_collision) ... ok
+test_complete_gates_scoped (test_campaign.SaveCorpusTests.test_complete_gates_scoped) ... ok
+test_executable (test_campaign.SaveCorpusTests.test_executable) ... ok
+test_extra (test_campaign.SaveCorpusTests.test_extra) ... ok
+test_loaded_does_not_qualify (test_campaign.SaveCorpusTests.test_loaded_does_not_qualify) ... ok
+test_missing (test_campaign.SaveCorpusTests.test_missing) ... ok
+test_parse_does_not_qualify (test_campaign.SaveCorpusTests.test_parse_does_not_qualify) ... ok
+test_traversal (test_campaign.SaveCorpusTests.test_traversal) ... ok
+
+----------------------------------------------------------------------
+Ran 51 tests in 0.077s
+
+OK

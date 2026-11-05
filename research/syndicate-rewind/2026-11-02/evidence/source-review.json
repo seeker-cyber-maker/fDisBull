@@ -1,0 +1,48 @@
+{
+  "format": "syndicate-v030-source-review-1",
+  "checked_at_utc": "2026-11-02T15:38:59.039452+00:00",
+  "reference_archive": {
+    "name": "fDisBull_ChatGPT_Offline_Reference_v0.30.0.zip",
+    "sha256": "525f972a0e6b13f4b7f0b4aa43c1cc66fae125fca1a2aed2849849e5e2f77b50",
+    "manifest_entries_verified": 69
+  },
+  "gitlab_project_id": 88349936,
+  "tag": "v0.30.0",
+  "commit": "dc6d7e7709802e743e79cf46e648a4e87b2a0a27",
+  "release_lookup": "get_release(v0.30.0) returned 404; get_tag succeeded and returned this commit. A missing Release API object is not absence of the tag.",
+  "tagged_contracts": [
+    {
+      "path": "docs/FRAME_INPUT_TIMELINE.md",
+      "url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/docs/FRAME_INPUT_TIMELINE.md",
+      "reviewed_via": "GitLab.get_repository_file_raw",
+      "facts": [
+        "First backend: real-mode DOSBox with frame_timeline capability; rebuilt experimental backend required.",
+        "Full historical native point then current-memory preservation overlay.",
+        "Preservation: at most 64 disjoint conventional RAM ranges, at most 65536 bytes total, below 0xA0000.",
+        "Mixed state remains resume_safe:false; allow_partial_resume permits later execution, operation returns stopped.",
+        "Renderer frames are not guaranteed game logic ticks or 1/60 second."
+      ]
+    },
+    {
+      "path": "docs/CPU_RAM_DELTAS.md",
+      "url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/dc6d7e7709802e743e79cf46e648a4e87b2a0a27/docs/CPU_RAM_DELTAS.md",
+      "reviewed_via": "GitLab.get_repository_file_raw",
+      "facts": [
+        "DOS real-mode exposed CPU projection and explicit project-mapped RAM, at most 64 ranges and 64 KiB.",
+        "Unselected memory, device state, clocks and hidden CPU state are not restored.",
+        "Preserve_registers and preserve_memory policies are explicit, bounded, and checked before native writes.",
+        "Policy ends old delta chain; execution_allowed is not resume_safe.",
+        "Native edits are multiple RPCs, not an atomic transaction; uncertain application closes session.",
+        "Recorded benchmark is a small prior local fixture, not this session or a Syndicate benchmark."
+      ]
+    }
+  ],
+  "reference_pinned_branch_documents_also_read": [
+    "3e89b5d43d26bfaea6213f39591bd0eb204f2ecc/docs/FRAME_INPUT_TIMELINE.md",
+    "6225da7643d91258b9406cf2b7f0aeff1090e680/docs/CPU_RAM_DELTAS.md"
+  ],
+  "source_review_not_runtime_test": true,
+  "current_main_audited": false,
+  "remote_writes": false,
+  "transcription_note": "This is an authored summary of tool readbacks, not a raw GitLab response or an implementation execution receipt."
+}

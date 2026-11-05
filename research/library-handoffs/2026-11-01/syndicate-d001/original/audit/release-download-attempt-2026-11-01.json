@@ -1,0 +1,93 @@
+{
+  "format": "syndicate-runtime-download-audit-1",
+  "checked_at_utc": "2026-11-01T19:44:28.391697+00:00",
+  "status": "release_confirmed_native_offline_kit_not_retrieved",
+  "release_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.29.0",
+  "release_tag": "v0.29.0",
+  "release_commit": "09a820952ad3f54d0d0707db0515a8010f7eceb1",
+  "package_build_source": "c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9",
+  "release_check": "Fresh GitLab.list_releases: one release, v0.29.0; authenticated repository connector succeeded.",
+  "browser": {
+    "attempted": "Browser.list_tabs",
+    "success": false,
+    "error": "Browser access requires the originating browser context. Open ChatGPT in the browser with the connected extension and try again.",
+    "claim_limit": "No tab IDs or signed-in page contents were returned. No conclusion that the user is signed out."
+  },
+  "connector_download": {
+    "package_actions_discovered": false,
+    "available_download_action": "download_project_upload",
+    "reason_not_used": "This action requires an existing Markdown upload secret and filename; a package registry link is not an upload reference."
+  },
+  "unauthenticated_download_probe": {
+    "method": "HEAD",
+    "attempted": true,
+    "downloaded": false,
+    "result": "URL error: temporary failure in name resolution",
+    "claim_limit": "No HTTP authorization result was obtained; no credentials or browser cookies were requested or accessed."
+  },
+  "uploads": [
+    {
+      "local_filename": "fdisbull-0.29.0-linux-x86_64-dependencies.tar(1).gz",
+      "kind": "dependency wheels",
+      "bytes": 50475916,
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "contains_full_native_offline_kit": false,
+      "publisher_expected_sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "publisher_hash_match": true,
+      "archive_entries": 12
+    },
+    {
+      "local_filename": "fdisbull-0.29.0.tar(1).gz",
+      "kind": "source distribution",
+      "bytes": 2234060,
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "contains_full_native_offline_kit": false,
+      "publisher_expected_sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "publisher_hash_match": true,
+      "archive_entries": 752
+    },
+    {
+      "local_filename": "fdisbull-0.29.0-tool(1).zip",
+      "kind": "tool source ZIP",
+      "bytes": 2649440,
+      "sha256": "ca0b76fdbf896862fd718dbbb70cc98b952783a5a9e82ed58669c2becf185c82",
+      "contains_full_native_offline_kit": false,
+      "publisher_hash_match": null,
+      "publisher_hash_note": "No independent published tool-ZIP hash obtained in this check.",
+      "archive_entries": 704,
+      "zip_crc_passed": true
+    }
+  ],
+  "publisher_hash_source": {
+    "path": "runtime-v029/source-check/download/fdisbull-v0.29.0-release-inventory.json",
+    "sha256": "7aee64be744e3ee2e8cb34616c8215476c50798980c749eac78f7b6bf3915d40",
+    "scope": "Previously retrieved publisher identities preserved in verified F001"
+  },
+  "packaging_note": "First packaging invocation expected a publisher evidence file inside the source archive; it was absent, so that invocation stopped. Final comparison uses the preserved publisher inventory. No source or original baseline file was changed.",
+  "missing_native_kit": {
+    "filename": "fdisbull-0.29.0-linux-x86_64-offline.tar.gz",
+    "bytes": 103013282,
+    "sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f",
+    "package_page": "https://gitlab.com/brewster-jennings-group/fdisbull/-/packages/74791804",
+    "identity_source": "Publisher inventory retained in verified F001; not a fresh binary download"
+  },
+  "baseline": {
+    "archive": "fDisBull_Syndicate_FULL_F001.zip",
+    "sha256": "53c85cb2ac29f7986cbee35c83ed059d34bebc92c8258756fb50fe49df63b8c9",
+    "manifest_verification": {
+      "status": "passed",
+      "id": "SYNDICATE-F001-20261101",
+      "file_count": 323,
+      "manifest_sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607",
+      "total_bytes": 6614252
+    }
+  },
+  "scope": {
+    "new_runtime_installation": false,
+    "native_execution": false,
+    "repository_writes": false,
+    "new_product_tests": false,
+    "browser_download_success": false,
+    "repository_main_or_MR_status_reaudited": false
+  }
+}

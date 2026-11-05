@@ -1,0 +1,34 @@
+{
+  "original_paths_unchanged": 897,
+  "new_or_missing_original_paths": 0,
+  "baseline_game_restored": true,
+  "baseline_game_sha256": "826c57b37dd0c1805f0c427375235c63ef2d3d418ccd7990514bbe55f4c7d48f",
+  "cpu_register_fields_restored": [
+    "cpu_mode",
+    "flags",
+    "general",
+    "instruction_pointer",
+    "segments"
+  ],
+  "watch_list_empty": true,
+  "post_binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "saved_ds_qualified": true,
+    "observed_render_pointer_data_bytes": 32,
+    "differing_render_data_bytes": 24,
+    "unexplained_code_object_differences": 0,
+    "registered_entities": 44
+  },
+  "kit_checksum_entries_passed": 18,
+  "selected_program_exit_witnessed": false,
+  "cleanup": {
+    "pid": 1002,
+    "closed_at": 1793591191.0284708,
+    "alive": false,
+    "errors": []
+  },
+  "controller_pid": 1001,
+  "emulator_pid": 1002,
+  "owned_processes_absent": true
+}

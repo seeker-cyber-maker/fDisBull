@@ -1,0 +1,37 @@
+{
+  "scope": "Original x86 prefix in isolated CPU harness; stopped before any file operation; no native DOS save was performed in these four probes",
+  "cases": [
+    {
+      "before": 29999,
+      "after": 29999,
+      "fee": 0,
+      "original_instructions": 16,
+      "stop_preferred": "0x38470",
+      "before_file_open": true
+    },
+    {
+      "before": 30000,
+      "after": 30000,
+      "fee": 0,
+      "original_instructions": 16,
+      "stop_preferred": "0x38470",
+      "before_file_open": true
+    },
+    {
+      "before": 30001,
+      "after": 27001,
+      "fee": 3000,
+      "original_instructions": 23,
+      "stop_preferred": "0x38470",
+      "before_file_open": true
+    },
+    {
+      "before": 40000,
+      "after": 36000,
+      "fee": 4000,
+      "original_instructions": 23,
+      "stop_preferred": "0x38470",
+      "before_file_open": true
+    }
+  ]
+}

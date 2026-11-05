@@ -1,0 +1,112 @@
+{
+  "dimensions": [
+    128,
+    96,
+    12
+  ],
+  "source_hashes": {
+    "map": "f4d8d98ada24d840df68648eb883abf0ee29f00c1b2b19b306cc483f7f07f639",
+    "classes": "5d3df45363372a7bc320a01991045f24e695aa8f1c0832ef6ba22e5363c85a7f"
+  },
+  "layer_stats": [
+    {
+      "z": 1,
+      "candidate_cells": 0,
+      "component_count": 0,
+      "largest_component": 0
+    },
+    {
+      "z": 2,
+      "candidate_cells": 11430,
+      "component_count": 1,
+      "largest_component": 11430
+    },
+    {
+      "z": 3,
+      "candidate_cells": 5,
+      "component_count": 2,
+      "largest_component": 4
+    },
+    {
+      "z": 4,
+      "candidate_cells": 5,
+      "component_count": 5,
+      "largest_component": 1
+    },
+    {
+      "z": 5,
+      "candidate_cells": 62,
+      "component_count": 7,
+      "largest_component": 28
+    },
+    {
+      "z": 6,
+      "candidate_cells": 41,
+      "component_count": 11,
+      "largest_component": 23
+    },
+    {
+      "z": 7,
+      "candidate_cells": 21,
+      "component_count": 4,
+      "largest_component": 6
+    },
+    {
+      "z": 8,
+      "candidate_cells": 13,
+      "component_count": 8,
+      "largest_component": 5
+    },
+    {
+      "z": 9,
+      "candidate_cells": 11,
+      "component_count": 8,
+      "largest_component": 4
+    },
+    {
+      "z": 10,
+      "candidate_cells": 0,
+      "component_count": 0,
+      "largest_component": 0
+    },
+    {
+      "z": 11,
+      "candidate_cells": 12,
+      "component_count": 1,
+      "largest_component": 12
+    }
+  ],
+  "routes": {
+    "civilian": {
+      "destination": "person-8",
+      "candidate_steps": 38,
+      "conditional_doors": [
+        "object-3"
+      ],
+      "qualification": "resource-model candidate only; dynamic gates, collision footprint and walking unverified"
+    },
+    "door": {
+      "destination": "object-2",
+      "candidate_steps": 26,
+      "conditional_doors": [
+        "object-2"
+      ],
+      "qualification": "resource-model candidate only; dynamic gates, collision footprint and walking unverified"
+    },
+    "guard": {
+      "destination": "person-10",
+      "candidate_steps": 28,
+      "conditional_doors": [
+        "object-2"
+      ],
+      "qualification": "resource-model candidate only; dynamic gates, collision footprint and walking unverified"
+    },
+    "vehicle": {
+      "destination": "vehicle-0",
+      "candidate_steps": 37,
+      "conditional_doors": [],
+      "qualification": "resource-model candidate only; dynamic gates, collision footprint and walking unverified"
+    }
+  },
+  "qualification": "Semantic derivative. No original tile bytes, artwork or raw memory. Conditional surfaces are not certified routes."
+}

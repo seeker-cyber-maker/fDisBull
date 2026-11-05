@@ -1,0 +1,5 @@
+World history (player); individual events are retained.
+#2 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- unattributed; unknown [observed-health-loss].
+#3 [pistol-qualified] 1 hit occurrence(s), 1 HP: person-0 <- unattributed; unknown [observed-health-loss].
+#6..#10 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- unattributed; unknown [observed-health-loss].
+#11..#15 [minigun-qualified] 5 hit occurrence(s), 5 HP: person-0 <- unattributed; unknown [observed-health-loss].

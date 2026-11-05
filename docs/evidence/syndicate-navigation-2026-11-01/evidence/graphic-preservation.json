@@ -1,0 +1,17 @@
+{
+  "unchanged": true,
+  "files": [
+    {
+      "path": "scene/public/mission-map.svg",
+      "sha256": "e183186d37c44af21ed403067e98c822d6a4bd7c6d9ea76e8a08f05d09a858cb"
+    },
+    {
+      "path": "scene/public/mission-map.html",
+      "sha256": "99072bc1f37e074914a56e4de7e7fcde6fea89bc4b546d70355cec3b0a583871"
+    },
+    {
+      "path": "scene/public/mission-map.png",
+      "sha256": "ba232de48aaedcd25993f532a25d2ff2494f9f6bdda1a048cccc127a43e1d648"
+    }
+  ]
+}

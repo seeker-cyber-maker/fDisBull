@@ -1,0 +1,38 @@
+{
+  "format": "fdisbull-library-release-copy-comparison-1",
+  "date": "2026-11-01",
+  "rows": [
+    {
+      "library_name": "fdisbull-0.29.0-tool(1).zip",
+      "library_url": "https://chatgpt.com/space/file/libfile_39a8bf57283481919dc34e56281aba6a",
+      "bytes": 2649440,
+      "sha256": "ca0b76fdbf896862fd718dbbb70cc98b952783a5a9e82ed58669c2becf185c82",
+      "gitlab_package_id": 74791785,
+      "gitlab_package_file_id": 381580949,
+      "published_sha256": "4bb1b5227ce39a4b1095e15e20d8e52a3c603c634a2426c63aaaddbb551fbf26",
+      "matches_published_package": false
+    },
+    {
+      "library_name": "fdisbull-0.29.0.tar(1).gz",
+      "library_url": "https://chatgpt.com/space/file/libfile_9889bc62b4f08191bcbe345961f78874",
+      "bytes": 2234060,
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "gitlab_package_id": 74791785,
+      "gitlab_package_file_id": 381580946,
+      "published_sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "matches_published_package": true
+    },
+    {
+      "library_name": "fdisbull-0.29.0-linux-x86_64-dependencies.tar(2).gz",
+      "library_url": "https://chatgpt.com/space/file/libfile_0d1263abe63c819188222b730ee22a3e",
+      "bytes": 50475916,
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "gitlab_package_id": 74791804,
+      "gitlab_package_file_id": 381581034,
+      "published_sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "matches_published_package": true
+    }
+  ],
+  "claim_scope": "Nine handoff archives plus these three release copies; unrelated Library enumeration is not exhaustive.",
+  "binary_execution_or_installation": false
+}

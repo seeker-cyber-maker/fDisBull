@@ -1,0 +1,30 @@
+{
+  "save_sha256": "6b069d3e05f5917523b864d86c8a85434bab538ba3580e5adcacc156372b5439",
+  "pc": "0x001EC448",
+  "blocks": [
+    {
+      "name": "companies",
+      "match": true
+    },
+    {
+      "name": "territories",
+      "match": true
+    },
+    {
+      "name": "weapon_projects",
+      "match": true
+    },
+    {
+      "name": "mod_projects",
+      "match": true
+    },
+    {
+      "name": "active_project",
+      "match": true
+    },
+    {
+      "name": "trailer",
+      "match": true
+    }
+  ]
+}

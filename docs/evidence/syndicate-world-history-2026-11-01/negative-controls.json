@@ -1,0 +1,48 @@
+[
+  {
+    "name": "flamer-watch",
+    "requested_type": 8,
+    "final_hp": 16,
+    "tested_weapon_ammo": 200,
+    "selected_weapon_ref": 38458,
+    "observed_changes": [],
+    "scope": "bounded diagnostic substitution, not a universal AI or weapon rule"
+  },
+  {
+    "name": "gauss-watch",
+    "requested_type": 3,
+    "final_hp": 13,
+    "tested_weapon_ammo": 200,
+    "selected_weapon_ref": 38386,
+    "observed_changes": [
+      {
+        "guest_tick": 111661,
+        "hp_before": 16,
+        "hp_after": 15,
+        "preferred_pc": "0x13be8"
+      },
+      {
+        "guest_tick": 122180,
+        "hp_before": 15,
+        "hp_after": 14,
+        "preferred_pc": "0x13be8"
+      },
+      {
+        "guest_tick": 133901,
+        "hp_before": 14,
+        "hp_after": 13,
+        "preferred_pc": "0x13be8"
+      }
+    ],
+    "scope": "bounded diagnostic substitution, not a universal AI or weapon rule"
+  },
+  {
+    "name": "first car path",
+    "scope": "original order moved car but did not produce pedestrian damage within trial",
+    "final_hp": 16
+  },
+  {
+    "name": "car-forward-placement",
+    "scope": "graph edits committed; original pedestrian moved 32 units and entered state 39 during settlement; capture was never armed; not a successful teleport or collision witness"
+  }
+]

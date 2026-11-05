@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "recorded_assertions": 219,
+  "authored_tests": 140,
+  "native_execution": false,
+  "scope": "Recorded receipt consistency and authored tests, not new original-game execution",
+  "checker_sha256": "56fc88bae32bad8abe49939ab3f3330644c5efae4cf2ddd3dcad1d376a579b32"
+}
