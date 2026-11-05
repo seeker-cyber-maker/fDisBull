@@ -67,7 +67,7 @@ The 0.33 offline kit was built and installed on Boat Linux x86-64 with CPython
 3.13.14. Its installed-kit acceptance passed Z3 equivalence/counterexample,
 keyboard, memory, native restore, player live resume and project restart; both
 bundled skills passed. The kit SHA-256 is
-`9c091ebbbb21711212c343727a8ac0c8ffd85a7cdb54b75f2bf67b452efb8ee5`;
+`65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a`;
 the backend SHA-256 is
 `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 This is local Linux verification, not the required-native CI matrix or a

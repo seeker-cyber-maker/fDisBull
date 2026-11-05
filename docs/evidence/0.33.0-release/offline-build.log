@@ -1,2 +1,36 @@
-/tmp/fdb-033-final-kit/fdisbull-0.33.0-linux-x86_64-offline.tar.gz
-/tmp/fdb-033-final-kit/fdisbull-0.33.0-linux-x86_64-source-companion.tar
+fDisBull 0.33.0 offline kit rebuild
+date: 2026-11-05
+packaging host: macOS arm64
+release tree: 02669325f8c318901eeefe1d825eca21b3306c1b
+artifact build source: 655e7e68b328e5290d11525a0e7c55f028fe9410
+native backend/source receipt: 1004bda484b0405e35247432447deb0e9c7d12de
+
+command:
+  python scripts/build_offline_kit.py \
+    --wheelhouse /tmp/fdb-033-final-wheelhouse \
+    --backend <extracted 0.33.0 backend>/bin/dosbox-x \
+    --source-companion <DOSBox source companion>.tar \
+    --source-commit 1004bda484b0405e35247432447deb0e9c7d12de \
+    --backend-receipt docs/evidence/0.33.0-release/backend-receipt.json \
+    --patch-manifest experimental/dosbox-x/layers/source-manifest.json \
+    --dosbox-license <DOSBox-X-COPYING.txt> \
+    --sdl-license <SDL2_net-copyright.txt> \
+    --sdl-lib <libSDL2_net-2.0.so.0> \
+    --dependency-bundle <0.31.1 dependencies>.tar.gz \
+    --output /tmp/fdb-033-final-kit
+
+inputs:
+  fdisbull wheel: bbe570cc2c4580e85b7e64d8a12966e5c1df3be73cb75897264469de6d1c4d8d
+  fdisbull-player wheel: dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46
+  backend: 0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212
+  source companion: ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7
+  dependency bundle: e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6
+
+outputs:
+  fdisbull-0.33.0-linux-x86_64-offline.tar.gz: 65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a
+  fdisbull-0.33.0-linux-x86_64-source-companion.tar: ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7
+
+The rebuilt installer and the consumer verifier were run in a fresh Boat Linux
+x86-64 sandbox (bx_7d4e4ths) with CPython 3.13.14. The verifier and both bundled
+skill reads passed; see offline-acceptance.json, offline-agent-skill.json and
+offline-guide-skill.json.
