@@ -2058,6 +2058,10 @@ def parser():
             help="repeatable native Inno 5.6.2 member filter; list first",
         )
         c.add_argument(
+            "--library-config",
+            help="libraries.json to check registered SHA-256 identities (read-only)",
+        )
+        c.add_argument(
             "--timeout",
             type=int,
             default=300,

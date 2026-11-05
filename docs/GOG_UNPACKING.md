@@ -34,6 +34,14 @@ fdisbull gog-list "/private/downloads/setup_owned_game.exe" --include "GAME/"
 fdisbull gog-unpack "/private/downloads/setup_owned_game.exe" "/private/targets/new-game" --include "GAME/"
 ```
 
+Both methods also accept `--library-config PATH` (or
+`FDISBULL_LIBRARIES_CONFIG`) naming a host-local `libraries.json`. The read-only
+check looks up the installer identity for `gog-list` and every extracted output
+SHA-256 for `gog-unpack` in the configured `library.sqlite3`. A match means the
+content identity is already registered; it does not prove semantic validity,
+intake success or runtime acceptance. If no configuration exists, extraction
+still succeeds and reports `library.status: not_configured`.
+
 `--include` is repeatable and applies to both the inventory and extraction.
 Matching is case-insensitive: an exact member path, a directory prefix such as
 `GAME/`, or an `fnmatch` pattern such as `*.EXE`. It is not a shell glob and a
@@ -52,12 +60,15 @@ target. Installer member paths with traversal, absolute paths or ambiguous case
 collisions are refused.
 
 The output contains `gog-unpack-manifest.json` with the native reader profile,
-source SHA-256, selected paths, file sizes and SHA-256 hashes. The installer and
-adjacent files matching its basename plus `-*.bin` are hashed before and after
-the operation. The adjacent-part list records provenance candidates, not
-individually traced file consumption; the supported profile requires embedded
-slices. Input changes, unexpected output files, links and incomplete extractions
-are errors. Source installers remain unchanged.
+source SHA-256, selected paths, file sizes and SHA-256 hashes. The native reader
+hashes the installer once while admitting it; adjacent files matching its
+basename plus `-*.bin` are hashed once, and their size/mtime/inode identities are
+rechecked after the operation. The adjacent-part list records provenance
+candidates, not individually traced file consumption; the supported profile
+requires embedded slices. Output files retain the SHA-256 computed while the
+native writer produced them rather than being hashed a second time. Input
+changes, unexpected output files, links and incomplete extractions are errors.
+Source installers remain unchanged.
 
 ## Galaxy UPX wrappers
 
@@ -108,8 +119,8 @@ movie framing remain separate format-specific operations.
 The Inno methods work without a project:
 
 ```json
-{"method":"gog-list","params":{"path":"/private/downloads/setup_owned_game.exe","include":["GAME/"]}}
-{"method":"gog-unpack","params":{"path":"/private/downloads/setup_owned_game.exe","output":"/private/targets/new-game","include":["GAME/"],"timeout":300}}
+{"method":"gog-list","params":{"path":"/private/downloads/setup_owned_game.exe","include":["GAME/"],"library_config":"/home/me/.config/fdisbull/libraries.json"}}
+{"method":"gog-unpack","params":{"path":"/private/downloads/setup_owned_game.exe","output":"/private/targets/new-game","include":["GAME/"],"timeout":300,"library_config":"/home/me/.config/fdisbull/libraries.json"}}
 ```
 
 The Galaxy coordinator is also projectless through its module CLI:

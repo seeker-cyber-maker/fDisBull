@@ -20,7 +20,8 @@ full native qualification remain separate gates.
 - `native_inno.py`: native format reader, data-stream validator and reassembler.
 - `gog_unpack.py`: keeps the existing `gog-unpack-manifest.json` and response
   names, `include` filtering and existing-output refusal.
-- `tests/test_gog_unpack.py`: authored no-original contract suite; 21 cases.
+- `gog_unpack.py` can attach a read-only Game/Database Library identity check when a host `libraries.json` is configured; it does not create or mutate the library.
+- `tests/test_gog_unpack.py`: authored no-original contract suite; 26 cases.
 - `tests/test_gog_original_562.py`: optional original-backed oracle suite;
   read-only source location provided by `FDISBULL_PRIVATE_GOG_INSTALLERS`.
   It skips without the user's private installers.

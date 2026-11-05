@@ -110,12 +110,43 @@ set -eu
 unset PYTHONPATH PYTHONHOME
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 if [ "$#" -ne 1 ]; then echo "Usage: $0 NEW_VENV_PATH" >&2; exit 2; fi
-DEST=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$1")
+case "$1" in
+  /*) DEST=$1 ;;
+  *) DEST=$PWD/$1 ;;
+esac
 if [ -e "$DEST" ] || [ -L "$DEST" ]; then echo "Destination already exists" >&2; exit 1; fi
+# Cheap compatibility and dependency checks precede the payload checksum sweep.
+if [ -n "${FDISBULL_PYTHON:-}" ]; then
+  PYTHON=$FDISBULL_PYTHON
+  command -v "$PYTHON" >/dev/null 2>&1 || { echo "FDISBULL_PYTHON is not executable: $PYTHON" >&2; exit 1; }
+else
+  PYTHON=
+  for candidate in python3.13 python3; do
+    if command -v "$candidate" >/dev/null 2>&1 \
+      && "$candidate" -c 'import sys; raise SystemExit(sys.version_info[:2] != (3,13))' >/dev/null 2>&1; then
+      PYTHON=$candidate
+      break
+    fi
+  done
+fi
+if [ -z "$PYTHON" ]; then
+  echo "fDisBull requires CPython 3.13.x for these cp313 wheels; set FDISBULL_PYTHON=/absolute/path/to/python3.13" >&2
+  echo "The source itself supports Python 3.12+, but this binary kit does not." >&2
+  exit 1
+fi
+"$PYTHON" -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13.x required for cp313 wheels (source itself supports 3.12+)"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
+command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is required for payload verification" >&2; exit 1; }
+if command -v ldd >/dev/null 2>&1; then
+  missing=$({ ldd "$HERE/bin/dosbox-x" || true; } | awk '/not found/{print $1}' | sort -u | tr '\n' ' ')
+  if [ -n "$missing" ]; then
+    echo "Missing native backend libraries: $missing" >&2
+    echo "Install these system libraries or supply a compatible LD_LIBRARY_PATH before installing." >&2
+    exit 1
+  fi
+fi
 cd "$HERE"
 sha256sum -c SHA256SUMS
-python3 -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13.x required for cp313 wheels (source itself supports 3.12+)"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
-python3 -m venv "$DEST"
+"$PYTHON" -m venv "$DEST"
 "$DEST/bin/python" -m pip install --no-index --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
 "$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-player") == "__FDISBULL_VERSION__"; import fdisbull_player; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull and fdisbull-player __FDISBULL_VERSION__; Z3 equivalent and counterexample checks passed")'
 printf '%s\n' "DOSBox backend with private libraries: $HERE/bin/dosbox"
@@ -245,6 +276,8 @@ def build(args):
         (root / "README.txt").write_text(
             f"fDisBull {VERSION} Linux x86-64 offline kit, including standalone player and genuine Z3.\n"
             "Requires CPython 3.13.x (the bundled wheels are cp313; source supports Python 3.12+) and system SDL2, GL/X11, FreeType, PNG, ncurses, zlib and a compatible glibc.\n"
+            "The installer checks Python 3.13, Linux x86_64, sha256sum and missing backend libraries before hashing the payload.\n"
+            "Set FDISBULL_PYTHON=/absolute/path/to/python3.13 when no suitable interpreter is on PATH.\n"
             "Run ./install.sh /absolute/path/to/NEW-venv; use bin/dosbox as the backend. Headless is default.\n"
             "No game assets, saved states or project databases are supplied. Existing projects are not changed.\n"
             f"Keep {companion.name} with this binary kit; manifest.json records its SHA-256 and source identity.\n"

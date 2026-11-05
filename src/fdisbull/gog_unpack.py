@@ -15,6 +15,7 @@ import tempfile
 import time
 from pathlib import Path, PurePosixPath
 
+from .library import check_library
 from .native_inno import SUPPORTED, NativeInno
 
 MANIFEST = "gog-unpack-manifest.json"
@@ -25,20 +26,37 @@ def _digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def _inputs(path):
+def _identity(path):
+    st = path.stat()
+    return (st.st_size, st.st_mtime_ns, st.st_ino, st.st_dev)
+
+
+def _parts(path):
     # These adjacent parts are provenance candidates, not proof of consumption.
     prefix = path.stem.casefold() + "-"
-    parts = [
+    return sorted(
         p
         for p in path.parent.iterdir()
         if p.is_file()
         and p.name.casefold().startswith(prefix)
         and p.suffix.casefold() == ".bin"
-    ]
-    return [
-        {"name": p.name, "size": p.stat().st_size, "sha256": _digest(p)}
-        for p in [path, *sorted(parts)]
-    ]
+    )
+
+
+def _inputs(path, *, source_sha256, source_size):
+    """Admit one installer identity without re-hashing the main executable."""
+    entries = [{"name": path.name, "size": source_size, "sha256": source_sha256}]
+    admissions = {path: _identity(path)}
+    for part in _parts(path):
+        entries.append(
+            {"name": part.name, "size": part.stat().st_size, "sha256": _digest(part)}
+        )
+        admissions[part] = _identity(part)
+    return entries, admissions
+
+
+def _unchanged(admissions):
+    return all(_identity(path) == identity for path, identity in admissions.items())
 
 
 def _safe_inventory(files):
@@ -78,8 +96,14 @@ def _prepare(path, include, timeout):
     if not source.is_file():
         raise ValueError("Expected a local GOG Inno Setup installer file")
     deadline = time.monotonic() + timeout
-    inputs = _inputs(source)
     native = NativeInno.open(source, deadline=deadline)
+    inputs, admissions = _inputs(
+        source,
+        source_sha256=native.source_sha256,
+        source_size=getattr(native, "size", source.stat().st_size),
+    )
+    if not _unchanged(admissions):
+        raise ValueError("Installer inputs changed during admission")
     names = [item["path"] for item in native.inventory]
     if include:
         selected = []
@@ -111,25 +135,28 @@ def _prepare(path, include, timeout):
         "installer_executed": False,
         "source_sha256": native.source_sha256,
     }
-    return source, native, result, deadline
+    return source, native, result, deadline, admissions
 
 
-def list_gog(path, *, include=None, timeout=300):
+def list_gog(path, *, include=None, timeout=300, library_config=None):
     """Return a read-only, filtered installer inventory; never launch its EXE."""
-    source, _, result, _ = _prepare(path, include, timeout)
-    if _inputs(source) != result["inputs"]:
+    source, native, result, _, admissions = _prepare(path, include, timeout)
+    if not _unchanged(admissions):
         raise ValueError("Installer inputs changed during inventory")
+    result["library"] = check_library(
+        [(source.name, native.source_sha256)], library_config
+    )
     return result
 
 
-def unpack_gog(path, output, *, include=None, timeout=300):
+def unpack_gog(path, output, *, include=None, timeout=300, library_config=None):
     """Extract to a new directory, verify the listing, and retain file hashes."""
     destination = Path(output).expanduser().absolute()
     if destination.exists() or destination.is_symlink():
         raise ValueError("Output already exists; choose a new private directory")
     if not destination.parent.is_dir():
         raise ValueError("Output parent must already be a directory")
-    source, native, result, deadline = _prepare(path, include, timeout)
+    source, native, result, deadline, admissions = _prepare(path, include, timeout)
     # Exclusive mkdir owns the new destination even if another writer races us.
     # Staging and final payload share a filesystem, so publication moves files
     # without copying large disc images a second time.
@@ -138,38 +165,48 @@ def unpack_gog(path, output, *, include=None, timeout=300):
         with tempfile.TemporaryDirectory(prefix=".inno-", dir=destination) as temp:
             staging = Path(temp)
             data_root = staging / "payload"
-            native.extract_selected(
+            written = native.extract_selected(
                 data_root, result["files"], emit_manifest=False, deadline=deadline
             )
             files = []
+            actual = set()
             for item in sorted(data_root.rglob("*")):
                 mode = item.lstat().st_mode
                 if stat.S_ISDIR(mode):
                     continue
                 if not stat.S_ISREG(mode):
                     raise ValueError("Native decoder produced a non-regular file")
-                name = item.relative_to(data_root).as_posix()
+                actual.add(item.relative_to(data_root).as_posix())
+            for record in written:
+                item = data_root / record["path"]
+                if item.stat().st_size != record["bytes"]:
+                    raise ValueError("Extracted file size changed during publication")
                 with item.open("rb") as stream:
                     magic = stream.read(4)
                 files.append(
                     {
-                        "path": name,
-                        "size": item.stat().st_size,
-                        "sha256": _digest(item),
+                        "path": record["path"],
+                        "size": record["bytes"],
+                        "sha256": record["sha256"],
                         "executable_candidate": (
                             item.suffix.casefold() in (".exe", ".com")
                             or magic[:2] in (b"MZ", b"ZM")
                         ),
                     }
                 )
-            if sorted(item["path"] for item in files) != result["files"]:
+            if actual != {item["path"] for item in files} or sorted(
+                item["path"] for item in files
+            ) != result["files"]:
                 raise ValueError("Extracted files do not match the selected inventory")
-            if _inputs(source) != result["inputs"]:
+            if not _unchanged(admissions):
                 raise ValueError("Installer inputs changed during extraction")
             result.update(
                 output=str(destination),
                 files=files,
                 manifest=str(destination / MANIFEST),
+            )
+            result["library"] = check_library(
+                [(item["path"], item["sha256"]) for item in files], library_config
             )
             for member in data_root.iterdir():
                 member.rename(destination / member.name)

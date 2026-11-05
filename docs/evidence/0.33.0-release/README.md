@@ -77,7 +77,7 @@ offline kit SHA-256 is
 the backend is `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 The installed-kit acceptance passed equivalence/counterexample, keyboard,
 memory, native restore, player live resume and project restart; both bundled
-skills passed. See `offline-acceptance.json`, `offline-kit-manifest.json`,
+skill text retrievals passed; this is not a methodology-following test. See `offline-acceptance.json`, `offline-kit-manifest.json`,
 `backend-receipt.json` and `offline-build.log`. No full required-native CI or
 GitLab release qualification is claimed.
 

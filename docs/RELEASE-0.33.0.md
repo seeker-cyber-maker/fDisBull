@@ -54,7 +54,9 @@ stack, including:
 This cut also carries the earlier 0.32 integration: Boat CI handoff, built-in
 GOG Inno 5.6.2 intake, Westwood PAK/CPS/WSA and EMC2 modules, experimental
 ScummVM Kyra/AGI pilots, the headless quit-dialog fix, signed-return
-correction and package-completeness repairs.
+correction and package-completeness repairs. GOG extraction now retains its
+single-pass source and output hashes while optionally comparing extracted
+SHA-256 identities with a configured, read-only Game/Database Library registry.
 
 ## Offline package Python boundary
 
@@ -68,9 +70,14 @@ environment.
 
 The 0.33 offline kit was assembled locally from the verified Boat-built backend
 and installed/tested on Boat Linux x86-64 with CPython
-3.13.14. Its installed-kit acceptance passed Z3 equivalence/counterexample,
+3.13.14. Its installer now checks Python 3.13, Linux x86-64, `sha256sum` and
+missing backend libraries before the payload checksum sweep, discovers
+`python3.13` or accepts `FDISBULL_PYTHON`, and still requires the documented
+system native libraries; no CPython or native-library environment layer is
+bundled. Its installed-kit acceptance passed Z3 equivalence/counterexample,
 keyboard, memory, native restore, player live resume and project restart; both
-bundled skills passed. The kit SHA-256 is
+bundled skill text retrievals passed; this does not establish that an agent
+followed either methodology. The kit SHA-256 is
 `3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e`;
 the backend SHA-256 is
 `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
@@ -95,11 +102,12 @@ installed-wheel PE/DOS/boot acceptance and fresh-prefix installation are
 - No original game payload, save, emulator state or private FDB payload is
   included.
 - Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
-  `!43`, `!49`, `!60`, `!67`, `!69`, `!72`, `!75`, `!77` and `!82` remain
-  blocked by their recorded prerequisites; the alternative `!67` captured-PE
-  route is not merged.
+  `!43`, `!49`, `!60`, `!69`, `!72`, `!75`, `!77` and `!82` remain blocked by
+  their recorded prerequisites. `!67` is not blocked: its captured-PE writer
+  is merged as `b397a95d42b1747c2da713d10c2b63d2251e031c`. The separate `!96`
+  GOG/Inno provider follow-up remains outside this cut.
 - Publication still requires frozen-source Linux ordinary/native
   qualification, required native cases executing rather than skipping,
   artifact inventory and private-input checks, isolated wheel/source
-  installation, both bundled skills, and an explicit release decision on the
+  installation, both bundled skill retrievals, and an explicit release decision on the
   exact source SHA.

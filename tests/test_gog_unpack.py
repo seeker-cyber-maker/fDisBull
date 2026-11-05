@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import sqlite3
 from pathlib import Path
 import pytest
 from fdisbull.cli import main, respond
@@ -39,10 +40,20 @@ def native_fixture(tmp_path, monkeypatch):
             events.append(("extract", tuple(selected), emit_manifest))
             out = Path(out)
             out.mkdir()
+            written = []
             for path in selected:
                 child = out / path
                 child.parent.mkdir(parents=True, exist_ok=True)
-                child.write_bytes(content[path])
+                payload = content[path]
+                child.write_bytes(payload)
+                written.append(
+                    {
+                        "path": path,
+                        "bytes": len(payload),
+                        "sha256": hashlib.sha256(payload).hexdigest(),
+                    }
+                )
+            return written
 
     def opened(path, *, deadline):
         events.append(("opened", str(path)))
@@ -227,3 +238,150 @@ def test_executable_filter_preserves_non_opcodes_and_block_boundary():
     assert undo_call_filter_5309(bytes([0x90, 0x90, 0x90])) == bytes([0x90, 0x90, 0x90])
     data = bytes([0x90]) * 0xFFFE + b"\xe8" + b"\x00" * 4
     assert undo_call_filter_5309(data) == data  # x86 opcode crosses 64 KiB block
+
+
+def _library_config(tmp_path, content, *, intake="accepted", registry_name="library.sqlite3"):
+    root = tmp_path / "games"
+    root.mkdir(exist_ok=True)
+    registry = tmp_path / registry_name
+    connection = sqlite3.connect(registry)
+    try:
+        connection.execute(
+            "CREATE TABLE inputs (sha256 TEXT, path TEXT, size INTEGER, intake_status TEXT)"
+        )
+        connection.executemany(
+            "INSERT INTO inputs VALUES (?, ?, ?, ?)",
+            [
+                (
+                    hashlib.sha256(payload).hexdigest(),
+                    name,
+                    len(payload),
+                    intake,
+                )
+                for name, payload in content.items()
+            ],
+        )
+        connection.commit()
+    finally:
+        connection.close()
+    config = tmp_path / "libraries.json"
+    config.write_text(
+        json.dumps(
+            {
+                "game_root": str(root),
+                "database_root": str(tmp_path),
+                "registry": str(registry),
+            }
+        )
+    )
+    return config
+
+
+def test_library_match_retains_output_hashes(native_fixture, tmp_path):
+    source, content, _, _ = native_fixture
+    config = _library_config(tmp_path, content)
+    response = respond(
+        {
+            "method": "gog-unpack",
+            "params": {
+                "path": str(source),
+                "output": str(tmp_path / "private"),
+                "library_config": str(config),
+            },
+        }
+    )
+    assert response["ok"], response
+    result = response["result"]
+    assert result["library"]["status"] == "matched"
+    assert result["library"]["present"] == len(content)
+    assert result["library"]["match_count"] == len(content)
+    assert result["library"]["already_present"] is True
+    assert result["library"]["already_intaken"] is True
+    assert result["library"]["intake"] == ["accepted"]
+    assert result["library"]["matches"][0]["records"][0]["intake_status"] == "accepted"
+    assert {
+        item["path"]: item["sha256"] for item in result["files"]
+    } == {
+        name: hashlib.sha256(payload).hexdigest() for name, payload in content.items()
+    }
+
+
+def test_library_lists_registered_carrier(native_fixture, tmp_path):
+    source, content, _, _ = native_fixture
+    config = _library_config(
+        tmp_path,
+        {"installer.exe": source.read_bytes()},
+    )
+    response = respond(
+        {
+            "method": "gog-list",
+            "params": {"path": str(source), "library_config": str(config)},
+        }
+    )
+    assert response["ok"], response
+    library = response["result"]["library"]
+    assert library["status"] == "matched"
+    assert library["checked"] == 1
+    assert library["present"] == 1
+    assert library["matches"][0]["records"][0]["path"] == "installer.exe"
+
+
+def test_library_reports_partial_registration(native_fixture, tmp_path):
+    source, content, _, _ = native_fixture
+    partial = dict(content)
+    partial.pop("GAME/DATA.TXT")
+    config = _library_config(tmp_path, partial)
+    response = respond(
+        {
+            "method": "gog-unpack",
+            "params": {
+                "path": str(source),
+                "output": str(tmp_path / "private"),
+                "library_config": str(config),
+            },
+        }
+    )
+    assert response["ok"], response
+    library = response["result"]["library"]
+    assert library["status"] == "partial"
+    assert library["present"] == 2
+    assert library["unregistered"][0]["path"] == "GAME/DATA.TXT"
+
+
+def test_library_absent_does_not_block_unpack(native_fixture, tmp_path):
+    source, content, _, _ = native_fixture
+    response = respond(
+        {
+            "method": "gog-unpack",
+            "params": {
+                "path": str(source),
+                "output": str(tmp_path / "private"),
+                "library_config": str(tmp_path / "absent.json"),
+            },
+        }
+    )
+    assert response["ok"], response
+    assert response["result"]["library"]["status"] == "not_configured"
+    assert (tmp_path / "private" / "GAME" / "MAIN.EXE").is_file()
+
+
+def test_library_missing_registry_is_reported(native_fixture, tmp_path):
+    source, content, _, _ = native_fixture
+    config = tmp_path / "libraries.json"
+    config.write_text(
+        json.dumps(
+            {
+                "game_root": str(tmp_path),
+                "database_root": str(tmp_path),
+                "registry": str(tmp_path / "missing.sqlite3"),
+            }
+        )
+    )
+    response = respond(
+        {
+            "method": "gog-list",
+            "params": {"path": str(source), "library_config": str(config)},
+        }
+    )
+    assert response["ok"], response
+    assert response["result"]["library"]["status"] == "unavailable"
