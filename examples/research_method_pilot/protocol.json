@@ -1,0 +1,29 @@
+{
+  "study": "Colonization item-production recovery: binary-only versus references-assisted",
+  "created_utc": "2026-11-02T17:50:20.724440+00:00",
+  "status": "prepared-not-dispatched",
+  "workers_launched": 0,
+  "launcher": "No independent sub-agent execution tool exposed; no codex/claude/opencode executable found. Plugin discovery found no usable launch capability.",
+  "target": {
+    "edition": "DOS supplied VICEROY.EXE",
+    "sha256": "a17ed64c27671e5e95236e54a7ddc85803a96ba822fbed05e1dad34d3917e2e3"
+  },
+  "primary_goal": "Recover direct input/output dependencies for manufactured items from original executable consumers and tables; classify special cases and boundary conditions.",
+  "arm_A": "Fresh worker; no target-specific guides, previous reports, annotations or pre-built analysis DB.",
+  "arm_B": "Same target/toolchain/task; guides and prior RE reports allowed and logged. Freeze hypotheses before code verification.",
+  "equal_budget": {
+    "active_wall_clock_minutes": 30,
+    "model_output_token_budget": 16000,
+    "tool_call_budget": 80
+  },
+  "primary_metric": "Elapsed time to verifier acceptance of same required code-backed scope, including source retrieval/read/notes time for B.",
+  "prebuilt_metric": "Report verification-only time separately and charge packet preparation once; do not confuse with primary end-to-end metric.",
+  "expected_claims_location": "Reviewer-only, not supplied to either worker at kickoff.",
+  "fixed_scope": "Both arms same DOS target; Windows only as a later held-out portability trial.",
+  "not_blind": "Coordinator already exposed to prior investigations; coordinator findings are assisted setup, not Arm A.",
+  "not_measured": [
+    "independent-agent completion times",
+    "agent token costs",
+    "causal speedup"
+  ]
+}

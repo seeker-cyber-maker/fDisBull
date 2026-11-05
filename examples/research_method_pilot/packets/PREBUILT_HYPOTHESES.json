@@ -1,0 +1,90 @@
+{
+  "format": "research-seed-packet-1",
+  "created_utc": "2026-11-02T17:59:18.512024+00:00",
+  "status": "prepared_for_future_fresh_worker; not a preregistered discovery log for this coordinator",
+  "read_only_seed": true,
+  "source_pages": [
+    {
+      "id": "S1",
+      "url": "https://gamefaqs.gamespot.com/pc/562685-sid-meiers-colonization/faqs/1516",
+      "author": "JCox",
+      "revision": "2.0",
+      "page_update": "2008-10-13",
+      "lineage": "Compiled from earlier Steckelberg FAQ and contributions; parts cite NAMES.TXT/Colonopedia/personal observation",
+      "applicability": "Original PC game; exact executable not pinned"
+    },
+    {
+      "id": "S2",
+      "url": "https://gamefaqs.gamespot.com/pc/562685-sid-meiers-colonization/faqs/68691",
+      "author": "jez9999",
+      "revision": "1.4",
+      "page_update": "2023-12-05",
+      "lineage": "Author experience; exact independence of mechanical claims unknown",
+      "applicability": "Original PC game; exact executable not pinned"
+    },
+    {
+      "id": "S3",
+      "url": "https://gamefaqs.gamespot.com/pc/562685-sid-meiers-colonization/faqs/19931",
+      "author": "Denouement",
+      "revision": "1.0",
+      "page_update": "2003-05-11",
+      "lineage": "Tables resemble original resources; no independence assumed",
+      "applicability": "Original PC game; exact executable not pinned"
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "G01",
+      "claim": "Investigate tobacco-to-cigars and cotton-to-cloth as direct conversion edges.",
+      "sources": [
+        "S2"
+      ],
+      "status": "unverified_seed",
+      "falsifier": "Original producer/consumer uses a different ingredient or relation kind."
+    },
+    {
+      "id": "G02",
+      "claim": "Investigate ore-to-tools followed by tools-to-muskets as two edges, not a single direct ore-to-muskets recipe.",
+      "sources": [
+        "S2"
+      ],
+      "status": "unverified_seed",
+      "falsifier": "Original code bypasses tools rather than calculating or consuming them as an intermediate."
+    },
+    {
+      "id": "G03",
+      "claim": "The paired commodity price table suggests sugar/rum and furs/coats as additional candidate chains; price pairing alone does not prove conversion.",
+      "sources": [
+        "S1"
+      ],
+      "status": "unverified_seed",
+      "falsifier": "Names are related in commerce only, with no relevant production dependency."
+    },
+    {
+      "id": "G04",
+      "claim": "Inspect original building/job resources as potential labels and level associations, but verify which numeric records code actually uses.",
+      "sources": [
+        "S1",
+        "S3"
+      ],
+      "status": "unverified_seed",
+      "falsifier": "The apparent ordered table does not bind to the tested runtime IDs."
+    },
+    {
+      "id": "G05",
+      "claim": "Separate material dependencies from production-rate, expertise and building-level claims. Lumber/carpentry may form a non-cargo production relationship.",
+      "sources": [
+        "S1"
+      ],
+      "status": "unverified_seed",
+      "falsifier": "Code and accounting distinguish a different role; do not impose one common ratio."
+    }
+  ],
+  "excludes": [
+    "original code offsets",
+    "current calibration results",
+    "answers from prior private recovery"
+  ],
+  "coordinator_preparation_time_seconds": null,
+  "note": "Preparation timing was not prospectively instrumented; do not invent a time-saving measurement."
+}
