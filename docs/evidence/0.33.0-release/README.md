@@ -20,7 +20,7 @@ been tagged, uploaded or installed.
   `1004bda484b0405e35247432447deb0e9c7d12de`.
 - Final release-tree merge of `main`:
   `02669325f8c318901eeefe1d825eca21b3306c1b`.
-- App artifacts and source archives were rebuilt from that merged tree. The
+- App artifacts and source archives were rebuilt from this merged tree. The
   native DOSBox backend and its source companion retain their functional-source
   receipt at `1004bda484b0405e35247432447deb0e9c7d12de`; only documentation
   changed in the later merge.
@@ -34,7 +34,7 @@ shadowed the checkout. The shim is an environment workaround, not repository
 code.
 
 - Full suite: **10,187 passed, 2 failed, 419 skipped, 23 errors, 2,322
-  subtests passed** in 282.03 seconds.
+  subtests passed** in 281.26 seconds.
 - The two failures and the 23 errors reproduce on the 0.32 candidate
   `c80bff0`; they are inherited macOS Mach-O/ELF and GCC Linux-ELF toolchain
   limits. See `base-failure-reproduction.log`.
@@ -49,9 +49,9 @@ Built with `uv build` and `scripts/build_release.py` from the candidate source:
 | Artifact | Entries | Check |
 | --- | --- | --- |
 | core wheel | 592 | `check_dist.py` OK |
-| core sdist | 2,053 | `check_dist.py` OK |
+| core sdist | 2,055 | `check_dist.py` OK |
 | player wheel | 19 | `check_dist.py` OK |
-| tool ZIP | 2,035 | `check_dist.py` OK |
+| tool ZIP | 2,037 | `check_dist.py` OK |
 | player sdist | — | built, auxiliary |
 
 `check_package_payloads.py` passed for the four checked artifacts; see
