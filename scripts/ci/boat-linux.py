@@ -557,6 +557,13 @@ def main():
     args = parser.parse_args()
     if args.reserve_bytes < 20_000_000_000 or args.timeout <= 0 or (args.expected_bytes is not None and args.expected_bytes < 0):
         parser.error('Require nonnegative estimate, at least 20 GB reserve, and positive timeout')
+    if args.profile == 'all':
+        try:
+            session_id = os.environ['FDISBULL_BOAT_SESSION_ID']
+            if str(uuid.UUID(session_id)) != session_id:
+                raise ValueError
+        except (KeyError, ValueError):
+            parser.error('Whole Boat CI requires the Mac-side boat-session.py automatic-stop controller')
     try:
         execute(args)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
