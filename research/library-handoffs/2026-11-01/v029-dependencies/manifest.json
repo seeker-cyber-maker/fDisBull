@@ -1,0 +1,122 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_v029_Dependency_Installation_Receipt.zip",
+  "bytes": 11252,
+  "sha256": "2e8172c8c3192cf5ef388d0f69514cac14cc38b44b0a62f47272e392093cef92",
+  "source_url": "https://chatgpt.com/space/file/libfile_fccc992e231881919544fda9b063e906",
+  "outer_members": 12,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 4,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "00_READ_ME_FIRST.md",
+      "bytes": 3291,
+      "sha256": "6cf8c8b9aca462362783c42418450591832969f00a5b361b7264f406fce2289c",
+      "decision": "imported_sanitized_report",
+      "import_path": "historical-report.md",
+      "import_sha256": "9903a10578df7c397028c8f9a132d2204537c9a3bb4b5f1bdc0d74d4ba9dc021"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 8529,
+      "sha256": "369e58065d0fc6f7958a82d79d82ea3453bcbad724e71967632acd1fdbef38e8",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "install.log",
+      "bytes": 1937,
+      "sha256": "96cdfceca34ed11eec2f449f1bd07e7246cfd3dfe6ddfd41da83020be48043bd",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "pip-check.log",
+      "bytes": 30,
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "smoke_dependencies.py",
+      "bytes": 3536,
+      "sha256": "9d592a11162fb828c194800214ee80ad4a6e672fe07e8a66f3a29f48fdd46c4b",
+      "decision": "imported_exact",
+      "import_path": "proposals/smoke_dependencies.py",
+      "import_sha256": "9d592a11162fb828c194800214ee80ad4a6e672fe07e8a66f3a29f48fdd46c4b"
+    },
+    {
+      "path": "smoke-results.json",
+      "bytes": 1424,
+      "sha256": "526a74707d7b292f22d1c1bf4dcb1b99e35d7ac6e4715d154503deec858e116a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "original-bundle-metadata/README.txt",
+      "bytes": 720,
+      "sha256": "f132269bdc41dd1a8c1277d0ace3b74453c3595eb036ca84e5d2bd09974610ce",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "original-bundle-metadata/manifest.json",
+      "bytes": 1829,
+      "sha256": "fa6c5a4031a99f9bab2557d8ac8fd0d50d872fed97f380c2c42267e5a2c8053a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "original-bundle-metadata/requirements.txt",
+      "bytes": 474,
+      "sha256": "f686ce5f4a91bc910bd3706a759fdb4640da2cc5af657f0a6128610bff7364ed",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "original-bundle-metadata/SHA256SUMS",
+      "bytes": 1001,
+      "sha256": "da0dc1028789b23f7641c2c9b25448ac4539a899140a93d394159681bcf32139",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "original-bundle-metadata/install.sh",
+      "bytes": 972,
+      "sha256": "dfb0fb0fb3e18775224431309c25cdbdcfb23246537874308d699b9c1f7af995",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "DELIVERY_SHA256SUMS",
+      "bytes": 1020,
+      "sha256": "bed7bbe3971aa4451066fcfa43bb21fcc5392725da76edde95cc0e457cc4d873",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    }
+  ],
+  "checksums": {
+    "DELIVERY_SHA256SUMS": {
+      "entries": 11,
+      "all_match": true
+    }
+  },
+  "raw_gitlab_upload": {
+    "id": 1460793964,
+    "url": "/uploads/155f924e6cbfa7a9104871a8ea8989d8/fDisBull_v029_Dependency_Installation_Receipt.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

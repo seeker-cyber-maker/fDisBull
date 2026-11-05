@@ -1,0 +1,74 @@
+{
+  "archive": "fdisbull-0.29.0-linux-x86_64-dependencies.tar(2).gz",
+  "bytes": 50475916,
+  "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+  "files": [
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/README.txt",
+      "bytes": 720,
+      "sha256": "f132269bdc41dd1a8c1277d0ace3b74453c3595eb036ca84e5d2bd09974610ce"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/SHA256SUMS",
+      "bytes": 1001,
+      "sha256": "da0dc1028789b23f7641c2c9b25448ac4539a899140a93d394159681bcf32139"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/install.sh",
+      "bytes": 972,
+      "sha256": "dfb0fb0fb3e18775224431309c25cdbdcfb23246537874308d699b9c1f7af995"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/manifest.json",
+      "bytes": 1829,
+      "sha256": "fa6c5a4031a99f9bab2557d8ac8fd0d50d872fed97f380c2c42267e5a2c8053a"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt",
+      "bytes": 474,
+      "sha256": "f686ce5f4a91bc910bd3706a759fdb4640da2cc5af657f0a6128610bff7364ed"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "bytes": 1485316,
+      "sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "bytes": 949386,
+      "sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+      "bytes": 3674893,
+      "sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 6937129,
+      "sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3"
+    },
+    {
+      "path": "fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels/z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl",
+      "bytes": 37738288,
+      "sha256": "f17df07300228a383470d4b4e1ad9daf429dc94885996712a1844a8242803935"
+    }
+  ],
+  "unsafe_paths_or_links": [],
+  "publisher_byte_identical": true,
+  "unpacked_on_disk": false,
+  "payload_executed_or_installed": false,
+  "source_url": "https://chatgpt.com/space/file/libfile_0d1263abe63c819188222b730ee22a3e",
+  "publisher_package_file": {
+    "id": 381581034,
+    "package_id": 74791804,
+    "created_at": "2026-11-01T15:44:08.960Z",
+    "file_name": "0.29.0-linux-x86_64-dependencies.tar.gz",
+    "size": 50475916,
+    "file_md5": null,
+    "file_sha1": null,
+    "file_sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6"
+  },
+  "canonical_archive_byte_identical": true,
+  "raw_original_location": "Existing canonical GitLab package file"
+}

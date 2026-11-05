@@ -1,0 +1,32 @@
+{
+  "archive": "fDisBull_Syndicate_FULL_F001.zip",
+  "bytes": 2656225,
+  "sha256": "53c85cb2ac29f7986cbee35c83ed059d34bebc92c8258756fb50fe49df63b8c9",
+  "zip_crc": "passed",
+  "extracted_manifest_verification": {
+    "status": "passed",
+    "id": "SYNDICATE-F001-20261101",
+    "file_count": 323,
+    "manifest_sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607",
+    "total_bytes": 6614252
+  },
+  "extracted_source_checks": {
+    "scope": "Direct Player-source and authored-scene test, not installed/runtime acceptance",
+    "tests": 63,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "success": true,
+    "seconds": 0.202591,
+    "checks": {
+      "scene_unchanged": true,
+      "reads_sent_no_actions": true,
+      "reconcile_reports_unsupported": true,
+      "offline_teleport_refused": true
+    },
+    "native_execution": false,
+    "release_package_installed": false
+  },
+  "historical_archives_crc_checked": 13,
+  "created_at_utc": "2026-11-01T19:18:52.475835+00:00"
+}

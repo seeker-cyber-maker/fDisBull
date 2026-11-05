@@ -1,0 +1,95 @@
+{
+  "main": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+  "files": [
+    {
+      "archive_path": "source/docs/CONSOLE_SYNTHESIS_LOCAL_PILOT.md",
+      "repo_path": "docs/CONSOLE_SYNTHESIS_LOCAL_PILOT.md",
+      "bytes": 12643,
+      "sha256": "86ec497e07dca7b9ad5b450a305c2f8fe3615d08eb3c03013dc3391b7d481a66",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/scripts/check_console_synthesis.py",
+      "repo_path": "scripts/check_console_synthesis.py",
+      "bytes": 12603,
+      "sha256": "142c43459ea99b4df89a339b8bf6a7a45c0483fd5fafe8adf220a071043a10eb",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/scripts/console_synthesis_oracle.c",
+      "repo_path": "scripts/console_synthesis_oracle.c",
+      "bytes": 2226,
+      "sha256": "df36b8f657d2a9b4ffa55d086fb3abf55da76efefff29b4598d439af402939a4",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/__init__.py",
+      "repo_path": "src/fdisbull/console_synthesis/__init__.py",
+      "bytes": 749,
+      "sha256": "7b7af18f133364f8f63db2cd167137e9ad31256eeaaae062d96cdf41c4497d2c",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/compare.py",
+      "repo_path": "src/fdisbull/console_synthesis/compare.py",
+      "bytes": 2235,
+      "sha256": "b3cc5452aecd73a2e5c0e27e61369789df496f82947a57d2f151c35b7206cf88",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/mapping.py",
+      "repo_path": "src/fdisbull/console_synthesis/mapping.py",
+      "bytes": 7273,
+      "sha256": "0af05fd692445cd160aba58553b039426c1029ce6a1df3aaee985c0355e401e7",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/model.py",
+      "repo_path": "src/fdisbull/console_synthesis/model.py",
+      "bytes": 7432,
+      "sha256": "907204c83c9682f7492bc5971f8c8d5022fd77c7aecd0fbeecfdb0fe014ee91e",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/recover.py",
+      "repo_path": "src/fdisbull/console_synthesis/recover.py",
+      "bytes": 12362,
+      "sha256": "3f83d33207c6eb23998817426c2a5c02e02bde37bedda54748b23697b4e3f0c7",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/src/fdisbull/console_synthesis/targets.py",
+      "repo_path": "src/fdisbull/console_synthesis/targets.py",
+      "bytes": 10068,
+      "sha256": "82cdd5c10a3ec054b37848ca4aaa8bc750f2c5570944f690f9c0675581174402",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/tests/console_synthesis/conftest.py",
+      "repo_path": "tests/console_synthesis/conftest.py",
+      "bytes": 261,
+      "sha256": "77b1ce673566161a1af9b9f4a77d7615e138fbb189c7435b41b64d0933f887e9",
+      "present_current_main": true,
+      "byte_identical": true
+    },
+    {
+      "archive_path": "source/tests/console_synthesis/test_console_synthesis.py",
+      "repo_path": "tests/console_synthesis/test_console_synthesis.py",
+      "bytes": 13974,
+      "sha256": "e551a2d08d3f025d2f883dd8124c58dc8d557cba272f0e450e9ebeb9e6d31dc8",
+      "present_current_main": true,
+      "byte_identical": true
+    }
+  ],
+  "all_eleven_identical": true,
+  "patch_applied": false
+}

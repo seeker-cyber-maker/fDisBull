@@ -1,0 +1,62 @@
+{
+  "format": "fdisbull-standalone-library-receipt-intake-1",
+  "members": [
+    {
+      "id": "standalone-f001-json-receipt",
+      "file": "fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "bytes": 1011,
+      "sha256": "1d5e0a4ce51c9043a927d8eeb6ef8e3f5e93f4a945ff473be9ff8fc046a99115",
+      "source_url": "https://chatgpt.com/space/file/libfile_d19471652ae88191a29e21ac3f37886b",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "imported_exact",
+      "import_path": "fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "import_sha256": "1d5e0a4ce51c9043a927d8eeb6ef8e3f5e93f4a945ff473be9ff8fc046a99115",
+      "git_preservation_path": "receipts/fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "private_host_root_pattern_hits": 0,
+      "f001_identity_matches_independent_archive": true,
+      "historical_source_test_claim": {
+        "tests": 63,
+        "independently_rerun_this_intake": false,
+        "scope": "Direct player-source/authored-scene test; not installed/runtime acceptance"
+      }
+    },
+    {
+      "id": "standalone-f001-sha256-receipt",
+      "file": "fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "bytes": 99,
+      "sha256": "81df3f30f809e96afb13f0a93441993a11797621e465d857fbb8ed34071e3fc9",
+      "source_url": "https://chatgpt.com/space/file/libfile_d0c5ff1038688191b1144bdfcce7d625",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "imported_exact",
+      "import_path": "fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "import_sha256": "81df3f30f809e96afb13f0a93441993a11797621e465d857fbb8ed34071e3fc9",
+      "git_preservation_path": "receipts/fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "private_host_root_pattern_hits": 0,
+      "f001_identity_matches_independent_archive": true
+    },
+    {
+      "id": "standalone-report",
+      "file": "REPORT(10).md",
+      "bytes": 4855,
+      "sha256": "09478f3fba5a141631023a3eafc2af5321e91db25f2d3541284151ff9fd0ca48",
+      "source_url": "https://chatgpt.com/space/file/libfile_c630ab7163c48191b1643bbe0a8ad7b2",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "archive_member_alias",
+      "private_host_root_pattern_hits": true,
+      "archive_id": "v029-core",
+      "archive_member": "REPORT.md",
+      "byte_identical_to_archive_member": true,
+      "raw_gitlab_upload": {
+        "id": 1460793961,
+        "url": "/uploads/a39a3ab83061ecfae9b03cb531413fe7/fDisBull_v029_Core_Installation_and_Receipts.zip"
+      },
+      "sanitized_report_path": "v029-core/historical-report.md",
+      "raw_report_copied_to_git": false
+    }
+  ],
+  "all_three_outer_identities_verified": true,
+  "additional_private_uploads": 0
+}

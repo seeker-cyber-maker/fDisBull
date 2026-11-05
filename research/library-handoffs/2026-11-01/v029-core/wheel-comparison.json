@@ -1,0 +1,36 @@
+{
+  "format": "fdisbull-local-rebuild-wheel-comparison-1",
+  "source_tag_commit": "09a820952ad3f54d0d0707db0515a8010f7eceb1",
+  "publisher_metadata_source": "Authenticated GitLab package 74791785 file-metadata receipt supplied by publishing owner",
+  "publisher_metadata_sha256": "bab27c019c5705f0e37be664955e9c426685324f0e84c671a52b7900b0becbc9",
+  "wheels": [
+    {
+      "file": "wheels/fdisbull-0.29.0-py3-none-any.whl",
+      "bytes": 822752,
+      "sha256": "e854f5b1d44e0bab2cbeeda11caa54a31fc18e1547063077faf1cc017a4d309e",
+      "source_files_checked": 191,
+      "source_files_mismatch": [],
+      "source_files_unresolved": [],
+      "publisher_bytes": 822752,
+      "publisher_sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6",
+      "archive_byte_identical_to_publisher": false,
+      "source_payload_matches_tag": true,
+      "qualification": "Declared locally rebuilt historical Linux wheel. Archive identity differs; all package source bytes match tag. No new installation or runtime acceptance."
+    },
+    {
+      "file": "wheels/fdisbull_player-0.29.0-py3-none-any.whl",
+      "bytes": 52283,
+      "sha256": "6b96f4377630ddf6156a50a806d56e64c879f2bb3d780b1f1c8c9918b5176407",
+      "source_files_checked": 9,
+      "source_files_mismatch": [],
+      "source_files_unresolved": [],
+      "publisher_bytes": 52281,
+      "publisher_sha256": "6e5b4f48974de56ca1ba81779d3b903fcbb5269ff424d8f46b3f3d1d4a045c3c",
+      "archive_byte_identical_to_publisher": false,
+      "source_payload_matches_tag": true,
+      "qualification": "Declared locally rebuilt historical Linux wheel. Archive identity differs; all package source bytes match tag. No new installation or runtime acceptance."
+    }
+  ],
+  "runtime_tests_rerun": false,
+  "release_replaced": false
+}
