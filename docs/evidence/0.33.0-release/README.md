@@ -2,7 +2,8 @@
 
 This packet covers a **local macOS release-candidate cut**, not publication or
 hosted qualification. The source version is `0.33.0`; the candidate has not
-been tagged, uploaded or installed.
+been tagged or uploaded. It was installed into a local shared prefix for
+verification and the active local selector currently resolves to that prefix.
 
 ## Source lineage
 
@@ -22,21 +23,23 @@ been tagged, uploaded or installed.
   `02669325f8c318901eeefe1d825eca21b3306c1b`.
 - CHimpREC captured-PE writer PR `!67` merged as
   `b397a95d42b1747c2da713d10c2b63d2251e031c`.
-- App artifacts and source archives were rebuilt from this merged tree. The
-  native DOSBox backend and its source companion retain their functional-source
-  receipt at `1004bda484b0405e35247432447deb0e9c7d12de`; only documentation
-  changed in the later merge.
+- Library/preflight follow-up commit:
+  `95b8520449a2ed388798a6b2cf10053e67c7d923`; it keeps the single-pass GOG
+  identity hashes, adds read-only Game/Database Library matching, and orders
+  installer preflight before payload checksums. App artifacts and source
+  archives were rebuilt from this commit. The native DOSBox backend and its
+  source companion retain their functional-source receipt at
+  `1004bda484b0405e35247432447deb0e9c7d12de`.
 
 ## Local macOS verification (2026-11-05)
 
-Environment: macOS arm64, Python 3.13.14, optional `z3-solver==5.3.2.0`,
-`dnfile==0.18.0` and `dncil==1.0.2` from the host environment. The full-suite
-run used a temporary `tests` package shim because a host `tests` package
-shadowed the checkout. The shim is an environment workaround, not repository
-code.
+Environment: macOS arm64, CPython 3.13.18 from the freshly installed local
+prefix, optional `z3-solver==5.3.2.0`, `dnfile==0.18.0` and `dncil==1.0.2`.
+The full-suite command imported the candidate source through `PYTHONPATH` so
+the installed interpreter could exercise it.
 
-- Full suite: **10,191 passed, 2 failed, 419 skipped, 23 errors, 2,322
-  subtests passed** in 269.77 seconds.
+- Full suite: **10,248 passed, 2 failed, 359 skipped, 23 errors, 2,322
+  subtests passed** in 291.74 seconds.
 - The two failures and the 23 errors reproduce on the 0.32 candidate
   `c80bff0`; they are inherited macOS Mach-O/ELF and GCC Linux-ELF toolchain
   limits. See `base-failure-reproduction.log`.
@@ -50,10 +53,10 @@ Built with `uv build` and `scripts/build_release.py` from the candidate source:
 
 | Artifact | Entries | Check |
 | --- | --- | --- |
-| core wheel | 597 | `check_dist.py` OK |
-| core sdist | 2,062 | `check_dist.py` OK |
+| core wheel | 598 | `check_dist.py` OK |
+| core sdist | 2,063 | `check_dist.py` OK |
 | player wheel | 19 | `check_dist.py` OK |
-| tool ZIP | 2,044 | `check_dist.py` OK |
+| tool ZIP | 2,045 | `check_dist.py` OK |
 | player sdist | — | built, auxiliary |
 
 `check_package_payloads.py` passed for the four checked artifacts; see
@@ -71,9 +74,12 @@ runtime for the binary kit; this is recorded in `intake.json`.
 
 The native backend was built on Boat Linux x86-64. The offline kit was assembled
 from that verified backend and the final wheelhouse, then installed and verified
-in a fresh Boat x86-64 sandbox with CPython **3.13.14** (any 3.13.x is accepted). Its
-offline kit SHA-256 is
-`3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e`;
+in a fresh Boat x86-64 sandbox with CPython **3.13.14** (any 3.13.x is accepted). Its installer checks Python 3.13, Linux x86-64, `sha256sum` and missing
+backend libraries before the payload checksum sweep; it discovers
+`python3.13` or accepts `FDISBULL_PYTHON`, and applies the bundled library path
+to the `ldd` check. It does not bundle a CPython interpreter or the system
+native-library environment. Its offline kit SHA-256 is
+`2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac`;
 the backend is `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 The installed-kit acceptance passed equivalence/counterexample, keyboard,
 memory, native restore, player live resume and project restart; both bundled
@@ -81,10 +87,24 @@ skill text retrievals passed; this is not a methodology-following test. See `off
 `backend-receipt.json` and `offline-build.log`. No full required-native CI or
 GitLab release qualification is claimed.
 
+## Local shared-prefix installation
+
+The candidate is active at
+`/Users/Shared/fDisBull/releases/0.33.0-c18afda` (selector
+`releases/0.33.0-c18afda`) with source identity
+`95b8520449a2ed388798a6b2cf10053e67c7d923`. The payload verifier passed with
+`active_default: true` and 4,561 entries. The installed-prefix smoke included
+`pip check`, version, authored MZ create/reopen, both bundled skill text
+retrievals, player help and a passing DOSBox doctor. `check_local_install.py`
+reported PASSED. The guarded rollback plan targets
+`releases/0.32.0-c80bff0-prototype`; applying it remains a caller action.
+
 ## Limits
 
-- No tag, GitLab release, package upload, shared installation or system change.
+- No tag, GitLab release, package upload or public release.
+- Local shared-prefix installation and activation are performed; the
+  candidate remains a local release candidate.
 - No original game payload, save, emulator state or private FDB payload.
 - Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
-- Hosted Linux ordinary/native CI, installed-wheel PE/DOS/boot acceptance and
-  fresh-prefix installation remain pending.
+- Hosted Linux ordinary/native CI and installed-wheel PE/DOS/boot acceptance
+  remain pending.

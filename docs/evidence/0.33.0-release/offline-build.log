@@ -1,22 +1,10 @@
-fDisBull 0.33.0 offline kit rebuild after CHimpREC PR !67 merge
-date: 2026-11-05
-packaging host: macOS arm64
-release tree: 02669325f8c318901eeefe1d825eca21b3306c1b plus CHimpREC writer merge b397a95d
-artifact build source: 81b9c6ef7da1b1e3e73dd22b63ea6634fec41522
-native backend/source receipt: 1004bda484b0405e35247432447deb0e9c7d12de
-
-inputs:
-  fdisbull wheel: acd23fa0dbee2f8e9ecf06b275a60163bdbccbe68a9785b52b769efb81a707fb
-  fdisbull-player wheel: dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46
-  backend: 0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212
-  source companion: ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7
-  dependency bundle: e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6
+/tmp/fdb-033-final3-kit2/fdisbull-0.33.0-linux-x86_64-offline.tar.gz
+/tmp/fdb-033-final3-kit2/fdisbull-0.33.0-linux-x86_64-source-companion.tar
 
 outputs:
-  fdisbull-0.33.0-linux-x86_64-offline.tar.gz: 3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e
+  fdisbull-0.33.0-linux-x86_64-offline.tar.gz: 2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac
   fdisbull-0.33.0-linux-x86_64-source-companion.tar: ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7
 
-The rebuilt kit was installed with CPython 3.13.14 in a fresh Boat Linux
-x86-64 sandbox (bx_47x7jp53). The verifier and both bundled skill reads passed;
-see offline-acceptance.json, offline-agent-skill.json and
-offline-guide-skill.json.
+Installed in a fresh Boat Linux x86-64 sandbox with CPython 3.13.14 using
+FDISBULL_PYTHON. The installer applied the bundled library path during its ldd
+preflight, passed, and the acceptance plus both skill reads passed.

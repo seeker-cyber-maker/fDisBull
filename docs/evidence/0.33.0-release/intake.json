@@ -12,7 +12,7 @@
   "integrated_source": "7e43e32080eebb7a8cac5c5f1010db340fa39052",
   "merge_commit": "05a4f5ce0dacb2f3992daa7115c661e0ed85bb39",
   "candidate_source": "1004bda484b0405e35247432447deb0e9c7d12de",
-  "release_tree_source": "b397a95d42b1747c2da713d10c2b63d2251e031c",
+  "release_tree_source": "95b8520449a2ed388798a6b2cf10053e67c7d923",
   "selected_mrs": [
     42,
     46,
@@ -80,11 +80,12 @@
     "Westwood PAK/CPS/WSA readers and EMC2 guest processor",
     "Experimental ScummVM Kyra/GLK Z-code and AGI-to-UIL pilots",
     "Shared scene fingerprint and scanline rules",
-    "Reviewed research, skill, packaging and research-workspace handoffs"
+    "Reviewed research, skill, packaging and research-workspace handoffs",
+    "Single-pass GOG source/output identity with read-only Game/Database Library matching",
+    "Installer compatibility and native-library preflight before payload checksums"
   ],
   "excluded": [
-    "Unmerged !43, !49, !60, !67, !69, !72, !75, !77 and !82",
-    "Alternative !67 captured-PE route",
+    "Unmerged !43, !49, !60, !69, !72, !75, !77 and !82",
     "Open follow-up MRs !96, !97, !98 and !99",
     "Unselected research and pending stacks",
     "Original games, saves, machine states and private runtime inputs"
@@ -92,16 +93,16 @@
   "offline_package": {
     "target": "Linux x86_64, CPython 3.13 (cp313)",
     "source_python_requirement": ">=3.12",
-    "installer_policy": "accept any CPython 3.13.x; reject 3.12 because the bundled binary wheels are cp313",
+    "installer_policy": "discovers python3.13 or accepts FDISBULL_PYTHON; accepts any CPython 3.13.x; checks Linux x86-64, sha256sum and backend libraries before the payload checksum sweep (applying the bundled library path to ldd)",
     "friction_observed": "A review host defaulted to Python 3.12.14 while the previous installer required exactly 3.13.5.",
     "resolution": "Installer/build metadata now accept 3.13.x and explain the cp313 dependency boundary; a 3.12 host must use an isolated 3.13 runtime.",
     "native_offline_kit": {
       "status": "built_and_verified",
       "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
-      "release_tree_source": "b397a95d42b1747c2da713d10c2b63d2251e031c",
+      "release_tree_source": "95b8520449a2ed388798a6b2cf10053e67c7d923",
       "python": "3.13.14",
       "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
-      "offline_kit_sha256": "3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e",
+      "offline_kit_sha256": "2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac",
       "source_companion_sha256": "ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7",
       "dependency_bundle": "reused 0.31.1 bundle, fingerprint ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
       "acceptance": {
@@ -112,30 +113,32 @@
         "native_restore": true,
         "player_live_resume": true,
         "project_restart": true,
-        "agent_skill": "passed",
-        "guide_skill": "passed"
-      }
+        "agent_skill": "retrieved",
+        "guide_skill": "retrieved"
+      },
+      "outer_kit_sha256": "faa5742d348bb8c2a32afd06d79ce54c53c39750b3f7abf733bd1fd68a6a17b6"
     }
   },
   "qualification": {
     "status": "local_macos_candidate",
-    "host": "macOS arm64, Python 3.13.14",
+    "host": "macOS arm64, CPython 3.13.18 (installed candidate prefix)",
     "optional_dependencies": {
       "z3-solver": "5.3.2.0",
       "dnfile": "0.18.0",
       "dncil": "1.0.2"
     },
     "full_suite": {
-      "passed": 10191,
+      "passed": 10248,
       "failed": 2,
-      "skipped": 419,
+      "skipped": 359,
       "errors": 23,
       "subtests_passed": 2322,
-      "seconds": 269.77,
-      "command": "PYTHONPATH=/tmp/fdisbull-testshim:src:player python -m pytest -q -p no:cacheprovider"
+      "seconds": 291.74,
+      "command": "PYTHONPATH=/tmp/fdisbull-033-final/src PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 <prefix>/venv/bin/python -B -m pytest -q"
     },
     "focus_tests": {
-      "packaging_and_distribution": 932
+      "packaging_and_distribution": 932,
+      "gog_contract": 26
     },
     "inherited_failures_reproduced_on": "c80bff03e4cd2b946a93e7aecab61e5ff9281f81",
     "inherited_failure_classes": [
@@ -143,7 +146,17 @@
       "macOS GCC Linux-ELF toolchain"
     ],
     "hosted_qualification": "pending",
-    "native_offline_kit": "built_and_verified_local_linux"
+    "native_offline_kit": "built_and_verified_local_linux",
+    "shared_prefix": {
+      "path": "/Users/Shared/fDisBull/releases/0.33.0-c18afda",
+      "selector": "releases/0.33.0-c18afda",
+      "source_commit": "95b8520449a2ed388798a6b2cf10053e67c7d923",
+      "payload_entries": 4561,
+      "active_verified": true,
+      "check_local_install": "passed",
+      "rollback_plan": "releases/0.32.0-c80bff0-prototype (not applied)",
+      "doctor_dosbox": "passed"
+    }
   },
   "chimprec_writer_merge": "b397a95d42b1747c2da713d10c2b63d2251e031c"
 }

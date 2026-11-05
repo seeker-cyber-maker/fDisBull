@@ -3,8 +3,8 @@
 Status: **local candidate, not tagged or published**. The source version is
 `0.33.0`. This cut carries the unpublished 0.32.0 source line, the reviewed
 `4a487e4` integration and the newer `7e43e32` integration stack. It does not
-create a tag, GitLab Release, shared installation or hosted-qualification
-claim.
+create a tag, GitLab Release or hosted-qualification claim. The candidate is
+installed and active only in the local macOS shared prefix described below.
 
 ## Lineage
 
@@ -23,6 +23,10 @@ claim.
 - CHimpREC captured-PE writer PR `!67` merged as
   `b397a95d42b1747c2da713d10c2b63d2251e031c`; it adds the missing writer,
   reviewed plan-file path and focused PE32/PE32+ round-trip tests.
+- Artifact/source build commit:
+  `95b8520449a2ed388798a6b2cf10053e67c7d923`; it keeps single-pass GOG source
+  and output hashes, adds read-only library identity matching, and places
+  installer compatibility checks before the payload checksum sweep.
 
 The 0.32.0 source line was never published. Its unpublished candidate remains
 part of the lineage, not a missing tag.
@@ -78,7 +82,7 @@ bundled. Its installed-kit acceptance passed Z3 equivalence/counterexample,
 keyboard, memory, native restore, player live resume and project restart; both
 bundled skill text retrievals passed; this does not establish that an agent
 followed either methodology. The kit SHA-256 is
-`3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e`;
+`2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac`;
 the backend SHA-256 is
 `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 This is local Linux verification, not the required-native CI matrix or a
@@ -87,18 +91,34 @@ published artifact.
 ## Qualification at this cut
 
 Local macOS verification is recorded in
-[the candidate evidence](evidence/0.33.0-release/README.md). The full suite
-reported **10,191 passed, 2 failed, 419 skipped, 23 errors and 2,322 subtests
-passed**. The same failure classes reproduce on the 0.32 candidate
-`c80bff0`; they are the inherited macOS Mach-O/GCC fixture limits. Focused
-packaging/distribution tests passed **932**. Hosted Linux ordinary/native CI,
-installed-wheel PE/DOS/boot acceptance and fresh-prefix installation are
-**not** part of this local cut.
+[the candidate evidence](evidence/0.33.0-release/README.md). The installed
+prefix full suite reported **10,248 passed, 2 failed, 359 skipped, 23 errors and
+2,322 subtests passed** in 291.74 seconds. The same failure classes reproduce
+on the 0.32 candidate `c80bff0`; they are the inherited macOS Mach-O/GCC fixture
+limits. Focused packaging/distribution tests passed **932**; the GOG contract
+suite now has **26** cases. The candidate is active at
+`/Users/Shared/fDisBull/releases/0.33.0-c18afda` with source identity
+`95b8520`; `check_local_install.py` passed and rollback to
+`0.32.0-c80bff0-prototype` is planned but not applied. Hosted Linux
+ordinary/native CI and installed-wheel PE/DOS/boot acceptance are **not** part
+of this local cut.
+
+### Artifact bytes
+
+| Artifact | SHA-256 |
+| --- | --- |
+| core wheel | `8ecaf82430cbbe9e6f6a20f5a2903bbaaa56d99bd6c22b050bdefc175b1fe994` |
+| sdist | `4cb02205cdc3f88b5bda74aa27625bf706510214eb1115a779842573fb6799b0` |
+| player wheel | `dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46` |
+| tool ZIP | `7b012239328be752a36353d3d95d5d2c222e80f81e74269d1184f78a4d646201` |
+| offline kit | `2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac` |
+| outer kit ZIP | `faa5742d348bb8c2a32afd06d79ce54c53c39750b3f7abf733bd1fd68a6a17b6` |
 
 ## Exclusions and publication gates
 
-- No tag, GitLab release, package upload, shared installation or system change
-  is made by this candidate.
+- No tag, GitLab release or package upload is made by this candidate. A local
+  shared-prefix installation is performed; it is not a publication or a system
+  qualification claim.
 - No original game payload, save, emulator state or private FDB payload is
   included.
 - Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
@@ -109,5 +129,5 @@ installed-wheel PE/DOS/boot acceptance and fresh-prefix installation are
 - Publication still requires frozen-source Linux ordinary/native
   qualification, required native cases executing rather than skipping,
   artifact inventory and private-input checks, isolated wheel/source
-  installation, both bundled skill retrievals, and an explicit release decision on the
-  exact source SHA.
+  installation, both bundled skill retrievals, and an explicit release decision
+  on the exact source SHA.

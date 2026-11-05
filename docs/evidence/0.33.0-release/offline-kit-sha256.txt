@@ -1,2 +1,2 @@
-3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e  fdisbull-0.33.0-linux-x86_64-offline.tar.gz
+2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac  fdisbull-0.33.0-linux-x86_64-offline.tar.gz
 ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7  fdisbull-0.33.0-linux-x86_64-source-companion.tar
