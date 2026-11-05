@@ -1,3 +1,13 @@
+# D004 continuation
+
+The original ASCII/planner study below is retained. [NAVIGATION.md](NAVIGATION.md)
+now documents an explicitly enabled original walking executor. Candidate plans
+remain conditional; unresolved gates are refused. The watchdog now separates
+stationary stalls from movement without waypoint improvement. Neither decision
+automatically resends input or proves a destination unreachable.
+
+---
+
 # Syndicate ASCII scene, exact coordinates, and candidate routing
 
 Date: 31 October 2026. Local follow-up to the preserved mission-1 scene example.
@@ -115,7 +125,7 @@ unit tests do not establish that the original game's pathfinder no longer sticks
 
 ## Working commands
 
-With the existing player installed, from the separate local analysis-delivery root:
+With the existing player installed, from this package root:
 
 ```sh
 python -m fdisbull_player --backend-command "python tools/z_provider.py --snapshot public/mission-1-observation.json --map-model public/map-model.json"
