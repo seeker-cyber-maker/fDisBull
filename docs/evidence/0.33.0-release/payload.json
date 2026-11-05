@@ -12,13 +12,13 @@
     },
     "sdist": {
       "name": "fdisbull-0.33.0.tar.gz",
-      "sha256": "2f4716e650e5934a6c587887718860f98a5e378e2875eabb824f3d685cc4ac69",
-      "size_bytes": 6020004
+      "sha256": "4147f3bfe96dce72e6dce2d338075fe140b70ef4227aab58c87ce6935d0e8477",
+      "size_bytes": 6019980
     },
     "tool": {
       "name": "fdisbull-0.33.0-tool.zip",
-      "sha256": "b5e511708b33bca2b5034faed1512b239c5fce1fe7f4d9011896559738ab7b35",
-      "size_bytes": 7283617
+      "sha256": "c1060a9ed5720dc391796ab544725de1708b3824a561e81a976e6fb94f4fc7cf",
+      "size_bytes": 7283622
     }
   },
   "inventory_counts": {
@@ -27,6 +27,6 @@
     "source_total": 1438
   },
   "schema": "fdisbull-package-payloads-1",
-  "source_commit": "655e7e68b328e5290d11525a0e7c55f028fe9410",
+  "source_commit": "a82605672e400baac040b0999b1f1002180b73fe",
   "tracked_worktree_dirty": false
 }
