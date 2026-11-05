@@ -161,3 +161,12 @@ Additional primary protocol references:
 [BIOS extended-memory copy](https://fd.lod.bz/rbil/interrup/bios/1587.html),
 [RBIL memory-management interfaces](https://fd.lod.bz/rbil/interrup/memory/index.html),
 and [DIGPAK source](https://github.com/jratcliff63367/digpak).
+
+## Related research
+
+[Factorio, UIL, and a Python host media boundary](FACTORIO_PYTHON_MEDIA_BOUNDARY.md)
+connects deterministic simulation and multiplayer replication to the existing
+common UIL effect plans, the earlier RNG provider experiments, and a proposed
+host media provider. It distinguishes current services from lifecycle and
+animation capabilities that still require implementation and qualification.
+
