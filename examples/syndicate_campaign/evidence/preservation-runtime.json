@@ -1,0 +1,58 @@
+{
+  "format": "syndicate-strategy-preservation-1",
+  "original_paths_verified": 897,
+  "play_clone_original_files_checked": 446,
+  "changed_play_originals": [],
+  "expected_new_private_save_files": [
+    {
+      "path": "SYND/SAVE/00.GAM",
+      "bytes": 28247,
+      "sha256": "6b069d3e05f5917523b864d86c8a85434bab538ba3580e5adcacc156372b5439"
+    }
+  ],
+  "kit_payloads_verified": 18,
+  "core_version": "0.30.0",
+  "player_version": "0.30.0",
+  "reference_archive": {
+    "name": "fDisBull_ChatGPT_Offline_Reference_v0.30.0(4).zip",
+    "sha256": "3b6fb2b1fb930f0988b62bb49361c6231aff9455b707db39d2152310c558d236"
+  },
+  "wheels": [
+    {
+      "name": "fdisbull-0.30.0-py3-none-any.whl",
+      "sha256": "b8090196c8f7e9fda8e337229cd257ca5d0ed9f0bc0121f22325450d0dd8ea85",
+      "payload_files_matched": 557
+    },
+    {
+      "name": "fdisbull_player-0.30.0-py3-none-any.whl",
+      "sha256": "35290997c80b8889add9e9d16123ca5cf016bb02c1bc0b2d43a19ec3b22cb823",
+      "payload_files_matched": 14
+    }
+  ],
+  "backend": {
+    "label": "retained v0.29 kit backend; no v0.30 rebuild",
+    "native_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+    "launcher_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f"
+  },
+  "sessions": [
+    {
+      "run": "bdab3a4b1680421ba2d27c386882891a",
+      "pid": 1065,
+      "pid_exists_now": false,
+      "cleanup_errors": [],
+      "clean_guest_exit_claim": false,
+      "client_timeout_broken_pipe": true
+    },
+    {
+      "run": "695f191889e94be8afcdb356cb342855",
+      "pid": 1628,
+      "pid_exists_now": false,
+      "cleanup_errors": [],
+      "clean_guest_exit_claim": false,
+      "client_timeout_broken_pipe": true
+    }
+  ],
+  "runtime_paths_private": true,
+  "remote_calls_or_writes": false,
+  "full_repository_suite": false
+}

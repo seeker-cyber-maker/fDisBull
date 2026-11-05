@@ -1,0 +1,48 @@
+{
+  "size": 28247,
+  "sha256": "6b069d3e05f5917523b864d86c8a85434bab538ba3580e5adcacc156372b5439",
+  "blocks": [
+    {
+      "name": "companies",
+      "file_start": 20,
+      "length": 8376,
+      "preferred": "0x5e49c",
+      "native_ram_matches": true
+    },
+    {
+      "name": "territories",
+      "file_start": 8396,
+      "length": 500,
+      "preferred": "0x5539c",
+      "native_ram_matches": true
+    },
+    {
+      "name": "weapon_projects",
+      "file_start": 8896,
+      "length": 10020,
+      "preferred": "0x57bf4",
+      "native_ram_matches": true
+    },
+    {
+      "name": "mod_projects",
+      "file_start": 18916,
+      "length": 8838,
+      "preferred": "0x55780",
+      "native_ram_matches": true
+    },
+    {
+      "name": "active_project",
+      "file_start": 27754,
+      "length": 489,
+      "preferred": "0x55594",
+      "native_ram_matches": true
+    },
+    {
+      "name": "trailer",
+      "file_start": 28243,
+      "length": 4,
+      "preferred": "0x60aa4",
+      "native_ram_matches": true
+    }
+  ]
+}
