@@ -20,13 +20,15 @@ debugger rewind history, standing probes, and verified trial-safe GitLab CI.
 
 ## New in 0.30.0
 
-- **Common indexed UIL contract (MR !24):** Formalizes the four-document UIL
-  representation (`fdisbull-common-uil-1`, `fdisbull-uil-presentation-1`,
-  `fdisbull-uil-orchestration-1`, and `fdisbull-uil-catalog-1`) with indexed
-  variable/constant tables, acyclic call graphs, eager `select` evaluation,
-  copy-in/copy-out array ownership, and selectable semantic realization catalogs.
-  Connects common UIL to native desktop windows, frame events, and input
-  plumbing (`docs/COMMON_UIL_CONTRACT.md`, `docs/COMMON_UIL_DESKTOP.md`).
+- **Common indexed UIL contract & bounded typed C frontend (MR !24):**
+  Formalizes the four-document UIL representation (`fdisbull-common-uil-1`,
+  `fdisbull-uil-presentation-1`, `fdisbull-uil-orchestration-1`, and
+  `fdisbull-uil-catalog-1`) with indexed variable/constant tables, acyclic call
+  graphs, eager `select` evaluation, copy-in/copy-out array ownership, bounded
+  typed C-to-UIL lowering (`docs/BOUNDED_TYPED_C_FRONTEND.md`), and selectable
+  semantic realization catalogs (`docs/UDL_UIL_UDC_CONSOLIDATED.md`). Connects
+  common UIL to native desktop windows, frame events, and input plumbing
+  (`docs/COMMON_UIL_CONTRACT.md`, `docs/COMMON_UIL_DESKTOP.md`).
 - **Console intake & synthesis (PR #56):** Replayable Genesis UIL, full
   Miniplanets NES port with multicart packaging, Shadowrun SNES/Genesis
   dialogue and playable combat projections, Capstone 5.0.9-backed SH2/65816
@@ -37,15 +39,18 @@ debugger rewind history, standing probes, and verified trial-safe GitLab CI.
   shared native controller alignment (`docs/AGI_BOUNDARY_EXCEPTIONS.md`,
   `docs/AGI_NATURAL_GOAT.md`, `docs/AGI_TROLL_BRIDGE.md`,
   `docs/VERIFICATION-KQ1-BOW-2026-10-30.md`).
-- **Debugger rewind & frame input timeline:** Bounded native debugger rewind
-  history, Wine/x86 CPU & RAM delta undo/redo, and frame-accurate input
-  timeline scrubbing (`docs/DEBUGGER_REWIND.md`, `docs/FRAME_INPUT_TIMELINE.md`,
+- **Debugger rewind, lossless frame deltas & frame input timeline:** Bounded
+  native debugger rewind history, Wine/x86 CPU & RAM delta undo/redo, lossless
+  frame-state delta storage (`docs/FRAME_STATE_DELTAS.md`), and frame-accurate
+  input timeline scrubbing (`docs/DEBUGGER_REWIND.md`, `docs/FRAME_INPUT_TIMELINE.md`,
   `docs/CPU_RAM_DELTAS.md`).
-- **Standing probes RFC & DinoPark full-loop recovery:** Standing probes for
-  month rollover and visitor gates, plus DinoPark land, fence, employment,
-  visitor, and park return source recovery with native Borland C receipts
-  (`docs/STANDING_PROBES_RFC.md`, `docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md`,
-  `docs/VERIFICATION-DINOPARK-VISITORS-2026-11-01.md`).
+- **Standing probes RFC, DinoPark full-loop recovery & EGM cold-agent evaluation:**
+  Standing probes for month rollover and visitor gates, DinoPark land, fence,
+  employment, visitor, and park return source recovery with native Borland C
+  receipts (`docs/STANDING_PROBES_RFC.md`, `docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md`,
+  `docs/VERIFICATION-DINOPARK-VISITORS-2026-11-01.md`), plus the 4-stage
+  cold-agent skill & Elephant-Goldfish Method (EGM) benchmark
+  (`docs/COLD_AGENT_EGM_BENCHMARK.md`).
 - **Multi-target memory UDC shells & Cortex-M Thumb:** Segmented Win16,
   Win32, native Win64/Linux, and macOS ARM64 memory shells with selectable RNG
   Snake, plus Cortex-M Thumb decoder (`docs/UDC_MEMORY_WIN16.md`,

@@ -13,6 +13,19 @@ separate analysis, legacy migration and remaining export limits. Semantic
 UIL/game representations are permitted pending sanitation, without embedded
 original files. Hash equality is byte identity, not publisher authenticity.
 
+When operating in containerized or agent environments where the working directory
+or `$HOME` resides inside a Git checkout (e.g. `/workspace/.git`), fDisBull's
+private storage guards deliberately reject creating object stores or databases
+there to prevent accidental repository pollution or leakage of binary assets.
+Configure private external stores outside Git ancestry before running an import
+or analysis:
+```sh
+export FDISBULL_TARGET_STORE=/tmp/fdisbull-targets
+export FDISBULL_OUTPUT_ARTIFACT_DIR=/tmp/fdisbull-artifacts
+```
+Place all `.fdb` analysis databases in `/tmp/` or another private directory
+outside Git.
+
 For recovery, translation or a backing swap, retrieve
 `agent-skill --reference references/reconstruction.md`. It provides a first-use
 recipe, a runnable counterexample exercise and separate original/UIL/target
