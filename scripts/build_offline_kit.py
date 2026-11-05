@@ -137,7 +137,8 @@ fi
 "$PYTHON" -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13.x required for cp313 wheels (source itself supports 3.12+)"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
 command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is required for payload verification" >&2; exit 1; }
 if command -v ldd >/dev/null 2>&1; then
-  missing=$({ ldd "$HERE/bin/dosbox-x" || true; } | awk '/not found/{print $1}' | sort -u | tr '\n' ' ')
+  missing=$(LD_LIBRARY_PATH="$HERE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+    ldd "$HERE/bin/dosbox-x" 2>/dev/null | awk '/not found/{print $1}' | sort -u | tr '\n' ' ')
   if [ -n "$missing" ]; then
     echo "Missing native backend libraries: $missing" >&2
     echo "Install these system libraries or supply a compatible LD_LIBRARY_PATH before installing." >&2

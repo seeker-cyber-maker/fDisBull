@@ -128,6 +128,7 @@ def test_kit_naming_and_install_manifest_follow_project_version(tmp_path):
     assert 'FDISBULL_PYTHON' in installer
     assert installer.index('FDISBULL_PYTHON') < installer.index('sha256sum -c SHA256SUMS')
     assert 'ldd' in installer
+    assert 'LD_LIBRARY_PATH="$HERE/lib' in installer
     assert installer.index('ldd') < installer.index('sha256sum -c SHA256SUMS')
     assert 'python3 -m venv' not in installer
 
