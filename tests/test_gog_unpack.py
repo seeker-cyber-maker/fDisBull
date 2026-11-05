@@ -29,6 +29,7 @@ def native_fixture(tmp_path, monkeypatch):
     events = []
 
     class Fake:
+        profile = "Inno Setup Setup Data (5.6.2) (u)"
         source_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
 
         @property
