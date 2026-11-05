@@ -11,6 +11,7 @@ prior work. A coordinator may research references separately from blind workers.
 ## Contents
 
 - [Qualify prior work](#qualify-prior-work)
+- [Research newly encountered game concepts](#research-newly-encountered-game-concepts)
 - [Reuse reconstructed source](#reuse-reconstructed-source)
 - [Turn leads into scenes](#turn-leads-into-qualified-scenes)
 - [Retain reusable meanings](#retain-reusable-meanings)
@@ -51,6 +52,58 @@ files before relying on them.
 This checklist builds on the guide-derived scene investigation proposed in
 [PR #20](https://github.com/seeker-cyber-maker/fDisBull/pull/20); the broader
 Gob/source-adapter and acceptance contracts there remain proposals.
+
+## Research newly encountered game concepts
+
+Repeat a bounded documentation pass when a newly encountered mechanic or
+unexplained behavior leaves a material implementation choice unresolved. Name
+the player-facing concept and observed behavior, then research established
+terminology, alternative meanings and implementation families before costly
+recovery or implementation. Start with retained target documentation; consult
+primary algorithm references and related games when they can distinguish the
+alternatives. A familiar label is a search lead, not this target's specification.
+
+Record only what changes the next decision: the observation and open question,
+reference and pinned revision, candidate mechanisms, predicted differences,
+and the cheapest target probe with a budget and stop condition. Existing
+project notes or source/concept catalogs suffice. Keep borrowed concepts,
+upstream source claims and target-qualified behavior distinct; similarity does
+not establish common code, rules, ordering, timing or presentation. Respect
+declared independent-recovery information bounds.
+
+For example, a hint can involve proving a forced move, finding its supporting
+facts, choosing among moves and presenting an explanation. Research those
+decisions separately. Likewise, a unique puzzle is not automatically solvable
+by a specified deduction repertoire, and a small support set is not necessarily
+an understandable explanation. Label a native improvement separately from
+recovered original behavior.
+
+Stop when research yields a useful discriminating probe or reusable reference,
+or further searching no longer changes the live alternatives. Resume after a
+counterexample or new mechanic warrants it. Retain unresolved choices; do not
+make exhaustive genre research a gate for a bounded recovery slice.
+
+### Worked lead: hint support in Bombe
+
+[CharlieBrej/Bombe](https://github.com/CharlieBrej/Bombe/tree/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d)
+at commit `40bbb2962ff847d6d371a909bda4a9da3cc3ea4d` provides a related-game
+implementation lead. Its
+[hint reduction](https://github.com/CharlieBrej/Bombe/blob/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d/GameState.cpp#L1954-L2046)
+tries removing regions while retaining a provable target. This suggests asking
+which clues and background rules support a deduction, separately from how a
+game selects or phrases the hint. Greedy removal does not establish the
+globally smallest or easiest explanation.
+
+Inspect implementation assumptions before reuse. Bombe's
+[determinability helper](https://github.com/CharlieBrej/Bombe/blob/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d/Grid.cpp#L3291-L3473)
+consults stored bomb values and does not distinguish an unknown solver result
+from unsatisfiable at its final check. This static observation is not a
+reproduced faulty hint. An answer-free verifier must derive its conclusion
+from declared visible premises and retain an explicit unresolved outcome.
+Replay any proposed explanation under its stated clues, givens, row rules and
+player assumptions. Use matched original states to test hint-order hypotheses;
+Bombe's source does not establish another game's original algorithm. This
+example was source-reviewed, not locally built or executed.
 
 ## Reuse reconstructed source
 

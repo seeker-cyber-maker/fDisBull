@@ -94,7 +94,7 @@ bundle:
 | Qualify containers (MZ/COM/LE/NE/PE/ELF/AIL, Mach-O ARM64, Cortex-M, ROM/disc), reversible macOS UI or media reduction | [references/formats-and-media.md](references/formats-and-media.md) |
 | Discover `media-modules`, inspect MZ tails or AGI v2 volumes, audit AVI captures, or build a bounded missing reader | [references/media-modules.md](references/media-modules.md) |
 | Index edition-pinned source snapshots (`source-*`), search concepts and verify period build-to-byte maps | [references/source-and-concepts.md](references/source-and-concepts.md) |
-| Plan research-led progression, source-reconstruction reuse or normal-play milestone checklists | [references/recovery-research.md](references/recovery-research.md) |
+| Research gameplay concepts, reuse reconstructed source or plan normal-play milestones | [references/recovery-research.md](references/recovery-research.md) |
 | Prove or falsify a stored-value, writer, signedness or trigger claim against a pinned decoded binary | [references/binary-claim-verification.md](references/binary-claim-verification.md) |
 | Author versioned screen scenes, pixel masks, `visible`/`ready`/`enabled` predicates and coordinate-domain audits | [references/scenes.md](references/scenes.md) |
 | Qualify game-unit spatial maps, actor footprints, bounded routes and Physical / Assisted / Story / Fair-play policies | [references/runtime-navigation.md](references/runtime-navigation.md) |
@@ -137,6 +137,9 @@ report a budget stop as convergence or whole-binary coverage.
   identities, use `source-*` catalogs when available, and keep
   independent-binary, notes-assisted and results-derived definitions distinct;
   a clean rebuild or matching symbol name is not semantic proof.
+  Revisit the [game-concept research checkpoint](references/recovery-research.md#research-newly-encountered-game-concepts)
+  when a new mechanic or unexplained behavior leaves an implementation choice
+  unresolved.
 - **Direct guest interpreters:** when behavior lives in AGI v2 logic or a
   Z-machine v3 story, check `decoder-modules` and use `module-analyze`,
   `module-lift`, `agi-scenes` or `zmachine-analyze` directly rather than
