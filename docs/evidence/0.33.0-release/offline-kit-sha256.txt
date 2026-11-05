@@ -1,2 +1,2 @@
-9c091ebbbb21711212c343727a8ac0c8ffd85a7cdb54b75f2bf67b452efb8ee5  /tmp/fdb-033-boat-final3/kit-final3/fdisbull-0.33.0-linux-x86_64-offline.tar.gz
-ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7  /tmp/fdb-033-boat-final3/kit-final3/fdisbull-0.33.0-linux-x86_64-source-companion.tar
+9c091ebbbb21711212c343727a8ac0c8ffd85a7cdb54b75f2bf67b452efb8ee5  fdisbull-0.33.0-linux-x86_64-offline.tar.gz
+ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7  fdisbull-0.33.0-linux-x86_64-source-companion.tar
