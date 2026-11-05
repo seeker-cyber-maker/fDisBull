@@ -12,6 +12,9 @@ mkdir -p "$SHERLOCK_CHECK"
   tests/test_shi.c media/shi.c -o "$SHERLOCK_CHECK/test-shi"
 "$SHERLOCK_CHECK/test-shi"
 "$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+  tests/test_images.c state/sherlock_images.c media/shi.c -o "$SHERLOCK_CHECK/test-images"
+"$SHERLOCK_CHECK/test-images"
+"$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
   tests/test_font.c media/sherlock_font.c -o "$SHERLOCK_CHECK/test-font"
 "$SHERLOCK_CHECK/test-font"
 "$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \

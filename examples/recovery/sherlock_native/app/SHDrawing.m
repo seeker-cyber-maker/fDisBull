@@ -129,6 +129,7 @@ NSString *SHTime(uint64_t milliseconds) {
 BOOL SHLoadProfileImages(NSDictionary *profile, NSString *defaultPath,
                          uint8_t pixels[46][32][32]) {
     NSData *stored = profile[@"images"];
+    if (!stored) stored = profile[@"legacyImages"];
     if ([stored isKindOfClass:[NSData class]] && stored.length == 46 * 32 * 32) {
         [stored getBytes:pixels length:stored.length];
         const uint8_t *flat = (const uint8_t *)pixels;

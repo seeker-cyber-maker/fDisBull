@@ -86,7 +86,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
                 options:NSPropertyListMutableContainersAndLeaves format:NULL error:NULL] : nil;
     if (![root isKindOfClass:NSDictionary.class] ||
         ![root[@"version"] isKindOfClass:NSNumber.class] ||
-        [root[@"version"] integerValue] != 1)
+        ([root[@"version"] integerValue] != 1 && [root[@"version"] integerValue] != 2))
         return;
     NSArray *records = root[@"players"];
     if (![records isKindOfClass:NSArray.class]) return;
@@ -104,11 +104,16 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
         if ([profile[@"limit"] unsignedLongLongValue] > 359999)
             profile[@"limit"] = @600;
         profile[@"colors"] = SHNormalizedColors(candidate[@"colors"]);
-        for (NSString *key in @[@"pattern", @"images"]) {
-            NSData *data = candidate[key];
-            NSUInteger expected = [key isEqualToString:@"pattern"] ? 8 : 46 * 32 * 32;
-            if ([data isKindOfClass:NSData.class] && data.length == expected) profile[key] = data;
-        }
+        NSData *pattern = candidate[@"pattern"];
+        if ([pattern isKindOfClass:NSData.class] && pattern.length == 8)
+            profile[@"pattern"] = pattern;
+        /* Version 1 silently persisted accepted editor pixels. Preserve that
+         * existing artwork as a migration fallback; newly accepted pixels are
+         * session state and never enter the version-2 preferences document. */
+        NSData *legacy = candidate[[root[@"version"] integerValue] == 1 ?
+                                    @"images" : @"legacyImages"];
+        if ([legacy isKindOfClass:NSData.class] && legacy.length == 46 * 32 * 32)
+            profile[@"legacyImages"] = legacy;
         [self.profiles addObject:profile];
     }
     if ([root[@"selected"] isKindOfClass:NSNumber.class])
@@ -121,7 +126,13 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 - (void)saveProfiles {
     if (!_preferencesURL || !self.profiles.count) return;
     NSError *error = nil;
-    NSDictionary *root = @{@"version":@1, @"players":self.profiles,
+    NSMutableArray *records = [NSMutableArray arrayWithCapacity:self.profiles.count];
+    for (NSDictionary *profile in self.profiles) {
+        NSMutableDictionary *record = [profile mutableCopy];
+        [record removeObjectForKey:@"images"];
+        [records addObject:record];
+    }
+    NSDictionary *root = @{@"version":@2, @"players":records,
                            @"selected":@(self.selectedProfile)};
     NSData *data = [NSPropertyListSerialization dataWithPropertyList:root
                   format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error];
@@ -195,6 +206,9 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
         [self.participants addIndex:0];
         [self saveProfiles];
     }
+    uint8_t initialImages[46][32][32];
+    if (SHLoadProfileImages(self.profile, self.defaultImagePath, initialImages))
+        self.profile[@"images"] = [NSData dataWithBytes:initialImages length:sizeof initialImages];
     _lastTick = NSProcessInfo.processInfo.systemUptime;
     _timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 target:self selector:@selector(timerFired:)
                                  userInfo:nil repeats:YES];
@@ -277,6 +291,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
             shi_load(panel.URL.fileSystemRepresentation, pixels) != 0) return NO;
         profile[@"imagePath"] = panel.URL.path;
         [profile removeObjectForKey:@"images"];
+        [profile removeObjectForKey:@"legacyImages"];
         [self saveProfiles];
     }
     NSArray<NSImage *> *full = SHImages(pixels, NO);
@@ -291,6 +306,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     self.halfTiles = half;
     self.clueImages = clues;
     self.tilePixels = [NSData dataWithBytes:pixels length:sizeof pixels];
+    profile[@"images"] = self.tilePixels;
     return YES;
 }
 
@@ -564,6 +580,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
             if (self.tournamentActive) break;
             if (self.hasGame && self.showingGame) break;
             if ([self canResume]) {
+                if (![self loadImagesForGame:self.profile puzzle:&_game.puzzle]) break;
                 self.showingGame = YES; sh_set_paused(&_game, 0);
                 _lastTick = NSProcessInfo.processInfo.systemUptime;
             } else if (self.tournamentMode) [self startTournament];
@@ -571,6 +588,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
             break;
         case 1:
             if ([self canResume]) {
+                if (![self loadImagesForGame:self.profile puzzle:&_game.puzzle]) break;
                 sh_game_init(&_game, &_game.puzzle, _initialTimeLimit);
                 [self.gameView prepareForNewPuzzle];
                 self.visibleBank = 0; self.showingGame = YES; _reportedOutcome = NO;
@@ -695,6 +713,9 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
         SHMessage(@"Tournament in progress", @"Finish the current tournament before changing its participant list."); return;
     }
     if (self.showingGame) { sh_set_paused(&_game, 1); self.showingGame = NO; }
+    uint8_t currentImages[46][32][32];
+    NSData *workingImages = SHLoadProfileImages(self.profile, self.defaultImagePath, currentImages) ?
+        [NSData dataWithBytes:currentImages length:sizeof currentImages] : nil;
     for (;;) {
         NSAlert *alert = [[NSAlert alloc] init];
         alert.messageText = @"Players";
@@ -752,9 +773,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
                  * pattern/images, starts at number 0 with no limit/sound off,
                  * leaves its image filename empty, and does not select it. */
                 created[@"pattern"] = [self.profile[@"pattern"] copy];
-                uint8_t workingImages[46][32][32];
-                if (SHLoadProfileImages(self.profile, self.defaultImagePath, workingImages))
-                    created[@"images"] = [NSData dataWithBytes:workingImages length:sizeof workingImages];
+                if (workingImages) created[@"images"] = workingImages;
                 [self.profiles addObject:created];
             }
         } else if (answer == NSAlertThirdButtonReturn) {
@@ -774,6 +793,21 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
                     [self.participants removeAllIndexes]; [self.participants addIndex:0];
                 }
             }
+        }
+    }
+    /* Players Done reloads the selected file even without changing players.
+     * Empty filenames keep working artwork. Migrated artwork remains protected
+     * until the owner accepts explicit Load/Save/Defaults. */
+    NSString *imagePath = self.profile[@"imagePath"];
+    if (!self.profile[@"legacyImages"]) {
+        if (workingImages) self.profile[@"images"] = workingImages;
+        if (imagePath.length) {
+            uint8_t reloaded[46][32][32];
+            if (shi_load(imagePath.fileSystemRepresentation, reloaded) == 0)
+                self.profile[@"images"] = [NSData dataWithBytes:reloaded length:sizeof reloaded];
+            else
+                SHMessage(@"The selected image file could not be reloaded",
+                          @"The current working images have been retained. Use Images > Load to choose a valid SHI file.");
         }
     }
     [self saveProfiles]; [self changed];
@@ -813,9 +847,10 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
      "HINT AND TIME\nHINT shows a logical deduction. The next click applies it. Each offered deduction costs 30 seconds. Click the time display to pause, and click again to continue. Without a limit the timer counts upward; with a limit it counts down. The Game menu also provides Undo (Command-Z), Hint (Command-Shift-H), Pause/Resume (Command-P), and the clue-bin switch (Command-B).\n\n"
      "PLAYERS AND TOURNAMENTS\nEach player has a puzzle number, image set, colors, pattern, time and sound preferences. A tournament gives every participant the same puzzle, hides it between turns and ranks the results. In a tournament QUIT ends your turn.\n\n"
      "RANDOM PUZZLES\nGame > New Random Puzzle creates a new puzzle with exactly one valid answer. Its seed and version appear in the window title; Game > Copy Puzzle Identity copies the identifier used by the JSON CLI. Solving it does not advance your numbered puzzle progress.\n\n"
-     "IMAGES\nThe image editor can copy tiles, paint pixels, draw lines, replace colors, flip, shift and clear. It imports/exports the original .SHI format and merges rows. Pixel-editor INIT restores that editor's entry image; the overview's Defaults restores the supplied default set.\n\n"
+     "IMAGES\nThe image editor can copy tiles, paint pixels, draw lines, replace colors, flip, shift and clear. It imports/exports the original .SHI format and merges a row or just the empty image. Pixel-editor INIT restores that editor's entry image; the overview's Defaults restores the supplied default set.\n\n"
+     "Done keeps working images for this session. Use Save to write a .SHI file, then Done to remember that file for this player. Players > Done reloads the selected SHI file, even if the player stays the same. Save edits before that reload or before quitting. Abort restores the overview's entry images and filename; it cannot undo a completed file Save. Artwork retained by an earlier native version remains available until you accept a replacement set or explicitly save it.\n\n"
      "FINISH\nA correct board stays visible with Elementary, Watson! Click or press a key to start the tile celebration. Click or press a key again to skip after the current burst.\n\n"
-     "RESUME\nMENU preserves the current game within this session. Selecting a different puzzle number changes RESUME to PLAY; selecting the active number again restores RESUME and RESTART. RESTART begins that puzzle again. Other setting changes apply to future puzzles; SOUND also changes the resumed game. Profiles and accepted artwork persist when the app exits; an in-progress board is not saved across application restarts.";
+     "RESUME\nMENU preserves the current game within this session. Selecting a different puzzle number changes RESUME to PLAY; selecting the active number again restores RESUME and RESTART. RESTART begins that puzzle again. Edited images and SOUND also update the resumed game. Other setting changes apply to future puzzles. Profiles and selected SHI filenames persist when the app exits; working image edits and in-progress boards are not saved across application restarts.";
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = @"Sherlock help";
     NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 550, 420)];

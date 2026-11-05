@@ -1,14 +1,15 @@
 #import "SHUI.h"
+#include "../state/sherlock_images.h"
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* Native editor transactions are explicit: a pixel editor has its own entry
- * snapshot; the overview has another. File Save writes atomically and is not
- * undone by cancelling a later edit dialog. No bundled resource is overwritten
- * merely by accepting an edit: accepted artwork lives in the player's profile. */
+/* Done accepts working pixels for this process; only explicit Save writes a
+ * SHI file. The overview commits a pending filename only on Done. Abort never
+ * reverses a completed file write. Native rollback includes all 46 records,
+ * repairing the original's 37-record rollback hole for loaded clue markers. */
 
 @class SHPixelEditor;
 @interface SHPixelCanvas : NSView
@@ -28,6 +29,7 @@
 @property(nonatomic) NSUInteger color;
 @property(nonatomic) NSUInteger replacePhase;
 @property(nonatomic) NSUInteger replaceSource;
+@property(nonatomic) BOOL modified;
 @property(nonatomic, strong) SHPixelCanvas *canvas;
 @property(nonatomic, strong) SHPixelPreview *preview;
 @property(nonatomic, strong) SHPaletteView *palette;
@@ -98,7 +100,10 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         self.editor->linePreview = YES;
         self.editor->lineX0 = self.editor->lineX1 = x;
         self.editor->lineY0 = self.editor->lineY1 = y;
-    } else self.editor->pixels[y][x] = (uint8_t)self.editor.color;
+    } else {
+        self.editor->pixels[y][x] = (uint8_t)self.editor.color;
+        self.editor.modified = YES;
+    }
     [self.editor refresh];
 }
 - (void)mouseDown:(NSEvent *)event { [self begin:event line:NO]; }
@@ -112,6 +117,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         SHRasterLine(self.editor->pixels, _lastX, _lastY,
                      (int)point.x, (int)point.y, (uint8_t)self.editor.color);
         _lastX = (int)point.x; _lastY = (int)point.y;
+        self.editor.modified = YES;
     }
     [self.editor refresh];
 }
@@ -127,6 +133,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         SHRasterLine(self.editor->pixels, _lastX, _lastY,
                      (int)point.x, (int)point.y, (uint8_t)self.editor.color);
     }
+    self.editor.modified = YES;
     _drawing = NO; self.editor->linePreview = NO;
     [self.editor refresh];
 }
@@ -202,6 +209,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         for (unsigned y = 0; y < 32; ++y) for (unsigned x = 0; x < 32; ++x)
             if (pixels[y][x] == self.replaceSource) pixels[y][x] = (uint8_t)color;
         self.replacePhase = 0; self.color = color;
+        self.modified = YES;
         self.status.stringValue = @"Color replaced. Left drag paints; right drag draws a line.";
         [self refresh];
     }
@@ -211,7 +219,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     self.status.stringValue = @"Choose the color to replace, from the palette or image.";
 }
 - (void)horizontalFlip:(id)sender {
-    (void)sender; self.replacePhase = 0;
+    (void)sender; self.replacePhase = 0; self.modified = YES;
     for (unsigned y = 0; y < 32; ++y) for (unsigned x = 0; x < 16; ++x) {
         uint8_t saved = pixels[y][x]; pixels[y][x] = pixels[y][31 - x];
         pixels[y][31 - x] = saved;
@@ -219,7 +227,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     [self refresh];
 }
 - (void)verticalFlip:(id)sender {
-    (void)sender; self.replacePhase = 0;
+    (void)sender; self.replacePhase = 0; self.modified = YES;
     for (unsigned y = 0; y < 16; ++y) for (unsigned x = 0; x < 32; ++x) {
         uint8_t saved = pixels[y][x]; pixels[y][x] = pixels[31 - y][x];
         pixels[31 - y][x] = saved;
@@ -227,16 +235,16 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     [self refresh];
 }
 - (void)clear:(id)sender {
-    (void)sender; self.replacePhase = 0;
+    (void)sender; self.replacePhase = 0; self.modified = YES;
     memset(pixels, (int)self.color, sizeof pixels); [self refresh];
 }
 - (void)reset:(id)sender {
-    (void)sender; self.replacePhase = 0;
+    (void)sender; self.replacePhase = 0; self.modified = YES;
     memcpy(pixels, entry, sizeof pixels); [self refresh];
 }
 - (void)shift:(NSButton *)button {
     uint8_t old[32][32];
-    self.replacePhase = 0; memcpy(old, pixels, sizeof old);
+    self.replacePhase = 0; self.modified = YES; memcpy(old, pixels, sizeof old);
     int dx = button.tag == 0 ? -1 : button.tag == 3 ? 1 : 0;
     int dy = button.tag == 1 ? -1 : button.tag == 2 ? 1 : 0;
     for (int y = 0; y < 32; ++y) for (int x = 0; x < 32; ++x) {
@@ -256,7 +264,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
 @end
 
 @interface SHImageEditor : SHModalEditor {
-@public uint8_t images[46][32][32];
+@public SHImageEdit edit;
 }
 @property(nonatomic, strong) SHImageOverview *overview;
 @property(nonatomic, strong) NSArray<NSImage *> *tiles;
@@ -265,6 +273,9 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
 @property(nonatomic, copy) NSString *factoryPath;
 @property(nonatomic, strong) NSTextField *filename;
 @property(nonatomic) BOOL validImages;
+@property(nonatomic) BOOL associationChanged;
+@property(nonatomic) BOOL legacyArtwork;
+@property(nonatomic, strong) NSPopUpButton *mergeDestination;
 - (instancetype)initWithProfile:(NSDictionary *)profile defaultPath:(NSString *)defaultPath
                      factoryPath:(NSString *)factoryPath;
 - (void)refresh;
@@ -308,7 +319,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
     NSInteger destination = [self indexAt:point];
     if (_dragged && destination >= 0 && destination != _source) {
-        memcpy(self.editor->images[destination], self.editor->images[_source], 32 * 32);
+        sh_images_copy_tile(&self.editor->edit, (unsigned)_source, (unsigned)destination);
         [self.editor refresh];
     } else if (!_dragged && destination == _source) {
         [self.editor editImage:(NSUInteger)_source];
@@ -325,16 +336,19 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         self.defaultPath = defaultPath;
         self.factoryPath = factoryPath;
         self.path = profile[@"imagePath"];
-        self.validImages = SHLoadProfileImages(profile, defaultPath, images);
+        self.legacyArtwork = [profile[@"legacyImages"] isKindOfClass:NSData.class];
+        uint8_t loaded[46][32][32];
+        self.validImages = SHLoadProfileImages(profile, defaultPath, loaded) &&
+            sh_images_begin(&edit, &loaded[0][0][0], sizeof loaded) == 0;
         self.overview = [[SHImageOverview alloc] initWithFrame:NSMakeRect(20, 65, 384, 448)];
         self.overview.editor = self; [self.panel.contentView addSubview:self.overview];
-        NSArray *names = @[@"Load…", @"Save…", @"Merge row…", @"Defaults"];
+        NSArray *names = @[@"Load…", @"Save…", @"Merge…", @"Defaults"];
         SEL actions[] = {@selector(load:), @selector(save:), @selector(merge:), @selector(defaults:)};
         for (NSUInteger i = 0; i < names.count; ++i)
             [self.panel.contentView addSubview:SHButton(names[i], NSMakeRect(440, 465 - i * 48, 175, 36),
                                                         self, actions[i])];
-        NSTextField *note = SHLabel(@"Click an image to edit.\n\nDrag one image onto another to copy it.\n\nSave writes a .SHI file. Done retains your edits for this player.",
-                                    NSMakeRect(435, 135, 195, 135));
+        NSTextField *note = SHLabel(@"Click an image to edit. Drag to copy.\n\nDone keeps edits in memory. Save writes a .SHI file. Save, then Done, to keep its filename for this player.",
+                                    NSMakeRect(435, 125, 195, 145));
         [self.panel.contentView addSubview:note];
         self.filename = SHLabel(@"", NSMakeRect(20, 37, 610, 24));
         [self.panel.contentView addSubview:self.filename];
@@ -345,15 +359,29 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     return self;
 }
 - (void)refresh {
-    self.tiles = self.validImages ? SHImages(images, NO) : @[];
-    self.filename.stringValue = self.path.length ? self.path.lastPathComponent : @"Working image set — no separate saved file";
+    self.tiles = self.validImages ? SHImages(edit.images, NO) : @[];
+    NSString *identity = self.legacyArtwork ? @"Recovered artwork from an earlier native version" :
+        self.path.length ? self.path.lastPathComponent : @"Working image set — no separate saved file";
+    self.filename.stringValue = edit.dirty ? [identity stringByAppendingString:@" — changes not saved"] : identity;
     self.overview.needsDisplay = YES;
 }
 - (void)editImage:(NSUInteger)index {
     if (!self.validImages || index > 36) return;
     SHPixelEditor *editor = [[SHPixelEditor alloc]
-        initWithData:[NSData dataWithBytes:images[index] length:32 * 32]];
-    if ([editor run]) { memcpy(images[index], editor->pixels, 32 * 32); [self refresh]; }
+        initWithData:[NSData dataWithBytes:edit.images[index] length:32 * 32]];
+    if ([editor run] && editor.modified) {
+        sh_images_replace_tile(&edit, (unsigned)index, &editor->pixels[0][0], sizeof editor->pixels);
+        [self refresh];
+    }
+}
+- (BOOL)confirmDiscard {
+    if (!edit.dirty) return YES;
+    NSAlert *ask = [[NSAlert alloc] init];
+    ask.messageText = @"Discard unsaved image changes?";
+    ask.informativeText = @"Unsaved edits will be discarded. Abort restores the images from when this overview was opened. Files already saved are kept.";
+    [ask addButtonWithTitle:@"Discard Changes"];
+    [ask addButtonWithTitle:@"Keep Editing"];
+    return [ask runModal] == NSAlertFirstButtonReturn;
 }
 - (NSOpenPanel *)filePanel {
     NSOpenPanel *panel = NSOpenPanel.openPanel;
@@ -366,6 +394,7 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
 }
 - (void)load:(id)sender {
     (void)sender;
+    if (![self confirmDiscard]) return;
     NSOpenPanel *panel = [self filePanel];
     if ([panel runModal] != NSModalResponseOK) return;
     uint8_t loaded[46][32][32];
@@ -373,8 +402,10 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         SHMessage(@"Image set was not loaded", [NSString stringWithFormat:@"%@\n%s", panel.URL.lastPathComponent, strerror(errno)]);
         return;
     }
-    memcpy(images, loaded, sizeof images);
-    self.path = panel.URL.path; self.validImages = YES; [self refresh];
+    if (self.validImages) sh_images_load(&edit, &loaded[0][0][0], sizeof loaded);
+    else sh_images_begin(&edit, &loaded[0][0][0], sizeof loaded);
+    self.path = panel.URL.path; self.validImages = YES;
+    self.associationChanged = YES; self.legacyArtwork = NO; [self refresh];
 }
 - (void)save:(id)sender {
     (void)sender;
@@ -389,14 +420,19 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     NSURL *target = panel.URL;
     NSString *temporaryName = [NSString stringWithFormat:@".sherlock-%@.shi", NSUUID.UUID.UUIDString];
     NSURL *temporary = [[target URLByDeletingLastPathComponent] URLByAppendingPathComponent:temporaryName];
-    if (shi_save(temporary.fileSystemRepresentation, images) != 0 ||
+    if (shi_save(temporary.fileSystemRepresentation, edit.images) != 0 ||
         rename(temporary.fileSystemRepresentation, target.fileSystemRepresentation) != 0) {
         int savedError = errno;
         [NSFileManager.defaultManager removeItemAtURL:temporary error:NULL];
         SHMessage(@"Image set was not saved", [NSString stringWithFormat:@"%@\n%s", target.lastPathComponent, strerror(savedError)]);
         return;
     }
-    self.path = target.path; [self refresh];
+    sh_images_saved(&edit);
+    self.path = target.path; self.associationChanged = YES;
+    self.legacyArtwork = NO; [self refresh];
+}
+- (void)mergeSourceChanged:(NSPopUpButton *)source {
+    self.mergeDestination.enabled = source.indexOfSelectedItem < 6;
 }
 - (void)merge:(id)sender {
     (void)sender;
@@ -404,11 +440,11 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
     if ([panel runModal] != NSModalResponseOK) return;
     uint8_t source[46][32][32];
     if (shi_load(panel.URL.fileSystemRepresentation, source) != 0) {
-        SHMessage(@"Image row was not loaded", [NSString stringWithUTF8String:strerror(errno)]); return;
+        SHMessage(@"Images were not loaded", [NSString stringWithUTF8String:strerror(errno)]); return;
     }
     NSAlert *ask = [[NSAlert alloc] init];
-    ask.messageText = @"Merge a row";
-    ask.informativeText = @"Choose the source row and the destination row to replace. Other rows and the empty image are preserved.";
+    ask.messageText = @"Merge images";
+    ask.informativeText = @"Choose a source and destination row, or choose Empty image to replace only the empty block. All other images are preserved.";
     NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, 75)];
     NSPopUpButton *from = [[SHActionPopUp alloc] initWithFrame:NSMakeRect(0, 5, 190, 30) pullsDown:NO];
     NSPopUpButton *to = [[SHActionPopUp alloc] initWithFrame:NSMakeRect(210, 5, 190, 30) pullsDown:NO];
@@ -416,27 +452,50 @@ static void SHRasterLine(uint8_t image[32][32], int x0, int y0, int x1, int y1,
         [from addItemWithTitle:[NSString stringWithFormat:@"Source row %u", i]];
         [to addItemWithTitle:[NSString stringWithFormat:@"Destination row %u", i]];
     }
+    [from addItemWithTitle:@"Empty image"];
+    self.mergeDestination = to;
+    from.target = self; from.action = @selector(mergeSourceChanged:);
     [controls addSubview:from]; [controls addSubview:to]; ask.accessoryView = controls;
     [ask addButtonWithTitle:@"Merge"]; [ask addButtonWithTitle:@"Cancel"];
-    if ([ask runModal] != NSAlertFirstButtonReturn) return;
+    NSModalResponse answer = [ask runModal];
+    self.mergeDestination = nil;
+    if (answer != NSAlertFirstButtonReturn) return;
     if (!self.validImages) {
-        if (!self.factoryPath.length || shi_load(self.factoryPath.fileSystemRepresentation, images) != 0) {
+        uint8_t factory[46][32][32];
+        if (!self.factoryPath.length || shi_load(self.factoryPath.fileSystemRepresentation, factory) != 0) {
             SHMessage(@"Load a destination set first", @"The default set is unavailable. Load the image set that should receive this row."); return;
         }
+        sh_images_begin(&edit, &factory[0][0][0], sizeof factory);
         self.validImages = YES;
     }
-    memcpy(&images[to.indexOfSelectedItem * 6], &source[from.indexOfSelectedItem * 6], 6 * 32 * 32);
+    if (from.indexOfSelectedItem == 6)
+        sh_images_merge_empty(&edit, &source[0][0][0], sizeof source);
+    else
+        sh_images_merge_row(&edit, &source[0][0][0], sizeof source,
+                            (unsigned)from.indexOfSelectedItem, (unsigned)to.indexOfSelectedItem);
     [self refresh];
 }
 - (void)defaults:(id)sender {
     (void)sender;
-    if (!self.factoryPath.length || shi_load(self.factoryPath.fileSystemRepresentation, images) != 0) {
+    if (![self confirmDiscard]) return;
+    uint8_t factory[46][32][32];
+    if (!self.factoryPath.length || shi_load(self.factoryPath.fileSystemRepresentation, factory) != 0) {
         SHMessage(@"Factory images unavailable", @"The supplied ORGINAL.SHI could not be loaded. Your working set is unchanged."); return;
     }
-    self.validImages = YES; self.path = nil; [self refresh];
+    if (self.validImages) sh_images_load(&edit, &factory[0][0][0], sizeof factory);
+    else sh_images_begin(&edit, &factory[0][0][0], sizeof factory);
+    self.validImages = YES; self.path = nil;
+    self.associationChanged = YES; self.legacyArtwork = NO; [self refresh];
+}
+- (void)abort:(id)sender {
+    if (![self confirmDiscard]) return;
+    if (self.validImages) sh_images_abort(&edit);
+    [super abort:sender];
 }
 - (void)done:(id)sender {
     if (!self.validImages) { SHMessage(@"Load an image set", @"Choose a valid .SHI file before accepting the images."); return; }
+    if (edit.dirty)
+        SHMessage(@"Changes not saved", @"Your edited images will be used in memory. Save them before quitting or returning from Players, which reloads the selected image file.");
     [super done:sender];
 }
 @end
@@ -446,8 +505,9 @@ BOOL SHShowImageEditor(NSMutableDictionary *profile, NSString *defaultPath,
     SHImageEditor *editor = [[SHImageEditor alloc] initWithProfile:profile
         defaultPath:defaultPath factoryPath:factoryPath];
     if (![editor run]) return NO;
-    profile[@"images"] = [NSData dataWithBytes:editor->images length:sizeof editor->images];
+    profile[@"images"] = [NSData dataWithBytes:editor->edit.images length:sizeof editor->edit.images];
     if (editor.path.length) profile[@"imagePath"] = editor.path;
     else [profile removeObjectForKey:@"imagePath"];
+    if (editor.associationChanged) [profile removeObjectForKey:@"legacyImages"];
     return YES;
 }

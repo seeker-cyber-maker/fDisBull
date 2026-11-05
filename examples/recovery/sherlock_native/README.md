@@ -63,7 +63,7 @@ CLI is built separately and needs only a C runtime. Apple Command Line Tools
 are required to compile the Mac host. The app has been source-reviewed here,
 but **has not been built against an Apple SDK or run on a Mac**. Original hint
 ordering/wording, exact victory RNG initialization/pacing, and remaining
-tournament/editor details are still fidelity gaps. This example is not a
+tournament and editor presentation details are still fidelity gaps. This example is not a
 claim of complete original equivalence.
 
 ### Presentation and clue inspection
@@ -88,13 +88,39 @@ penalty; ordinary elapsed time continues. Right-click archive and drag gestures
 retain their original roles. Undo, Hint, Pause and clue-bank switching also
 have state-aware native menu commands and keyboard equivalents.
 
+### Image editing and file persistence
+
+The image editor separates working artwork from file persistence. **Done**
+keeps edits in memory; **Save** writes the complete SHI file. Save or Load,
+followed by Done, accepts that filename for the player. Abort restores the
+overview entry images and association, while leaving a completed file Save
+intact. Dirty state follows accepted editing operations, including painting
+the same color. Opening and accepting an untouched pixel editor stays clean.
+
+Merge supports a selected source/destination row or only the empty image.
+Other images and clue markers are preserved. Players > Done reloads the
+associated SHI even when the player stays the same; a profile with no filename
+inherits the current working set. PLAY and RESUME retain working artwork.
+
+Version-2 native preferences store player metadata and selected filenames,
+excluding newly accepted session pixels. Existing version-1 artwork is kept
+as a migration fallback until an explicit replacement is accepted. Unsaved
+edits should be saved before quitting or returning from Players.
+
+Native Abort deliberately restores all 46 records, correcting the original's
+37-record rollback hole for loaded clue markers. Failed/canceled saves retain
+dirty state, and Merge does not change the selected filename. These data-handling
+corrections are explicit differences from original behavior. The portable
+transaction core is independently original-matched for 43 normal operations;
+native profile migration and file-panel interaction still need a Mac run.
+
 ## Test scope and private resources
 
 ```sh
 ./check-portable.sh
 ```
 
-This builds with strict C11 warnings and runs SHI, bitmap-font, clue-description,
+This builds with strict C11 warnings and runs SHI, image-transaction, bitmap-font, clue-description,
 victory-event, state, solver/generator and CLI tests. The CLI tests use an
 independently implemented public-JSON solver.
 Python is needed to run that test harness, not to run the product. With an
