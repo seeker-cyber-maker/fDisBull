@@ -93,7 +93,7 @@ The candidate is active at
 `/Users/Shared/fDisBull/releases/0.33.0-c18afda` (selector
 `releases/0.33.0-c18afda`) with source identity
 `95b8520449a2ed388798a6b2cf10053e67c7d923`. The payload verifier passed with
-`active_default: true` and 4,561 entries. The installed-prefix smoke included
+`active_default: true` and 4,562 entries. The installed-prefix smoke included
 `pip check`, version, authored MZ create/reopen, both bundled skill text
 retrievals, player help and a passing DOSBox doctor. `check_local_install.py`
 reported PASSED. The guarded rollback plan targets
