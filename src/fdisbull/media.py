@@ -43,6 +43,11 @@ def media_modules():
                  api='fdisbull.agi_picture.decode_picture', methods=[], dependencies=[],
                  variants='Prepared AGI 2.915/2.917 EGA picture stream',
                  limits='2 MiB payload; fixed 160x168 planes; 20 million work units; not runtime walkability'),
+            dict(name='sherlock-shi', layer='asset-decoding',
+                 api='fdisbull.shi.decode_shi / encode_shi; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=['Pillow for PNG extraction'],
+                 variants='Sherlock 1.50: 46 fixed 32x32 four-plane records',
+                 limits='Exactly 23920 bytes; strict headers; indices 0..15; external game palette; mask/ink semantics retained; no other SHI profiles'),
         ],
         'input_executed': False,
         'extension': 'Add bounded adapter, authored tests, indexed specification and catalog entry; no dynamic plugins are loaded',
@@ -71,8 +76,30 @@ def _identity(data):
 
 
 def _prepare(path, adapter, volume_root, number):
-    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2'):
+    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2', 'sherlock-shi'):
         raise ValueError('Unsupported adapter; discover media-modules first')
+    if adapter == 'sherlock-shi':
+        if volume_root is not None or number is not None:
+            raise ValueError('Sherlock SHI does not accept AGI resource parameters')
+        from .shi import FILE_SIZE, HEADER, RECORD_SIZE, decode_shi, image_metadata, profile_metadata
+        data = _snapshot(path, FILE_SIZE)
+        images = decode_shi(data)
+        members = []
+        for image_id, pixels in enumerate(images):
+            offset = image_id * RECORD_SIZE
+            members.append(dict(name=f'image-{image_id:02d}', input_role='container',
+                offset=offset, payload_offset=offset + len(HEADER),
+                payload_size=RECORD_SIZE - len(HEADER),
+                **_identity(data[offset:offset + RECORD_SIZE]),
+                **image_metadata(image_id), pixels_sha256=_identity(pixels)['sha256']))
+        result = dict(format='fdisbull-media-members-1', adapter=adapter, adapter_version=1,
+                      inputs=[dict(role='container', **_identity(data))], members=members,
+                      **profile_metadata(), input_executed=False, qualification='structural-only',
+                      specification=SPEC,
+                      unknowns=['Header words 4 and 1 are fixed profile markers; broader field semantics are unqualified.',
+                                'Palette and record roles are external game-profile facts, not embedded SHI metadata.',
+                                'Other SHI variants and whole-game behavior are not qualified.'])
+        return result, {item['name']: images[item['image_id']] for item in members}
     inputs = []
     if adapter == 'mz-envelope':
         if volume_root is not None or number is not None:
@@ -134,14 +161,25 @@ def inspect_media(path, *, adapter, volume_root=None, number=None):
 
 def extract_media(path, output, *, adapter, member, volume_root=None, number=None,
                   max_output_bytes=MAX_OUTPUT):
-    """Copy one bounded member to a fresh private directory outside Git."""
+    """Extract a bounded member (SHI: indexed PNGs) to a fresh private directory."""
     if type(max_output_bytes) is not int or not 1 <= max_output_bytes <= MAX_OUTPUT:
         raise ValueError('max_output_bytes must be 1..67108864')
     result, payloads = _prepare(path, adapter, volume_root, number)
-    if not isinstance(member, str) or member not in payloads:
+    is_shi = adapter == 'sherlock-shi'
+    if not isinstance(member, str) or (member not in payloads and not (is_shi and member == 'all')):
         raise ValueError('Unknown member; inspect this source first')
-    payload = payloads[member]
-    if len(payload) > max_output_bytes:
+    if is_shi:
+        from .shi import _png_payload
+        selected = [item for item in result['members'] if member in ('all', item['name'])]
+        files = {f"{item['name']}.png": _png_payload(payloads[item['name']]) for item in selected}
+        extracted = dict(member=member, format='indexed-png', images=[dict(
+            image_id=item['image_id'], source_member=item['name'], path=f"{item['name']}.png",
+            **_identity(files[f"{item['name']}.png"])) for item in selected])
+    else:
+        files = {'payload.bin': payloads[member]}
+        selected = next(item for item in result['members'] if item['name'] == member)
+        extracted = dict(selected, path='payload.bin')
+    if sum(len(payload) for payload in files.values()) > max_output_bytes:
         raise ValueError('Member exceeds output budget')
     from .output_artifacts import _private_directory
     destination = Path(os.path.abspath(os.path.expanduser(os.fspath(output))))
@@ -152,12 +190,11 @@ def extract_media(path, output, *, adapter, member, volume_root=None, number=Non
     destination.mkdir(mode=0o700)  # Exclusive; existing paths and links refused.
     try:
         _private_directory(destination)
-        with (destination / 'payload.bin').open('xb') as stream:
-            os.chmod(stream.fileno(), 0o600)
-            stream.write(payload)
-        selected = next(item for item in result['members'] if item['name'] == member)
-        result.update(output=str(destination), extracted=dict(selected, path='payload.bin'),
-                      manifest='media-manifest.json')
+        for name, payload in files.items():
+            with (destination / name).open('xb') as stream:
+                os.chmod(stream.fileno(), 0o600)
+                stream.write(payload)
+        result.update(output=str(destination), extracted=extracted, manifest='media-manifest.json')
         with (destination / 'media-manifest.json').open('x', encoding='utf-8') as stream:
             os.chmod(stream.fileno(), 0o600)
             json.dump(result, stream, indent=2, ensure_ascii=True)

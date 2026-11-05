@@ -80,7 +80,7 @@ METHODS = {
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
-    "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
+    "media-extract": "Extract a member or SHI indexed PNGs to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
     "output-info": "Inspect an immutable private output artifact; artifact",
@@ -1961,7 +1961,7 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2", "sherlock-shi"))
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-extract":
