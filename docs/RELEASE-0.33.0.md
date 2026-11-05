@@ -20,6 +20,9 @@ claim.
   `05a4f5ce0dacb2f3992daa7115c661e0ed85bb39`.
 - Final release-tree merge of `main`:
   `02669325f8c318901eeefe1d825eca21b3306c1b`.
+- CHimpREC captured-PE writer PR `!67` merged as
+  `b397a95d42b1747c2da713d10c2b63d2251e031c`; it adds the missing writer,
+  reviewed plan-file path and focused PE32/PE32+ round-trip tests.
 
 The 0.32.0 source line was never published. Its unpublished candidate remains
 part of the lineage, not a missing tag.
@@ -77,7 +80,7 @@ published artifact.
 
 Local macOS verification is recorded in
 [the candidate evidence](evidence/0.33.0-release/README.md). The full suite
-reported **10,187 passed, 2 failed, 419 skipped, 23 errors and 2,322 subtests
+reported **10,191 passed, 2 failed, 419 skipped, 23 errors and 2,322 subtests
 passed**. The same failure classes reproduce on the 0.32 candidate
 `c80bff0`; they are the inherited macOS Mach-O/GCC fixture limits. Focused
 packaging/distribution tests passed **932**. Hosted Linux ordinary/native CI,

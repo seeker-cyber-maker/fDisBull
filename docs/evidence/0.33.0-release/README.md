@@ -20,6 +20,8 @@ been tagged, uploaded or installed.
   `1004bda484b0405e35247432447deb0e9c7d12de`.
 - Final release-tree merge of `main`:
   `02669325f8c318901eeefe1d825eca21b3306c1b`.
+- CHimpREC captured-PE writer PR `!67` merged as
+  `b397a95d42b1747c2da713d10c2b63d2251e031c`.
 - App artifacts and source archives were rebuilt from this merged tree. The
   native DOSBox backend and its source companion retain their functional-source
   receipt at `1004bda484b0405e35247432447deb0e9c7d12de`; only documentation
@@ -33,8 +35,8 @@ run used a temporary `tests` package shim because a host `tests` package
 shadowed the checkout. The shim is an environment workaround, not repository
 code.
 
-- Full suite: **10,187 passed, 2 failed, 419 skipped, 23 errors, 2,322
-  subtests passed** in 281.26 seconds.
+- Full suite: **10,191 passed, 2 failed, 419 skipped, 23 errors, 2,322
+  subtests passed** in 269.77 seconds.
 - The two failures and the 23 errors reproduce on the 0.32 candidate
   `c80bff0`; they are inherited macOS Mach-O/ELF and GCC Linux-ELF toolchain
   limits. See `base-failure-reproduction.log`.

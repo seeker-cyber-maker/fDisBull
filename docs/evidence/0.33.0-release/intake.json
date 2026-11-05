@@ -12,7 +12,7 @@
   "integrated_source": "7e43e32080eebb7a8cac5c5f1010db340fa39052",
   "merge_commit": "05a4f5ce0dacb2f3992daa7115c661e0ed85bb39",
   "candidate_source": "1004bda484b0405e35247432447deb0e9c7d12de",
-  "release_tree_source": "02669325f8c318901eeefe1d825eca21b3306c1b",
+  "release_tree_source": "b397a95d42b1747c2da713d10c2b63d2251e031c",
   "selected_mrs": [
     42,
     46,
@@ -126,12 +126,12 @@
       "dncil": "1.0.2"
     },
     "full_suite": {
-      "passed": 10187,
+      "passed": 10191,
       "failed": 2,
       "skipped": 419,
       "errors": 23,
       "subtests_passed": 2322,
-      "seconds": 281.26,
+      "seconds": 269.77,
       "command": "PYTHONPATH=/tmp/fdisbull-testshim:src:player python -m pytest -q -p no:cacheprovider"
     },
     "focus_tests": {
@@ -144,5 +144,6 @@
     ],
     "hosted_qualification": "pending",
     "native_offline_kit": "built_and_verified_local_linux"
-  }
+  },
+  "chimprec_writer_merge": "b397a95d42b1747c2da713d10c2b63d2251e031c"
 }
