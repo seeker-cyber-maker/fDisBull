@@ -128,7 +128,13 @@ of this local cut.
 | player wheel | `d52b7ae86d87bc6a6775762c7418f1e68bc9891a00d9ff71ce6fa525f0a70240` |
 | tool ZIP | `ef251fb003146d8dd7166283d47825c72ac17d97a375fd04251394b453d22225` |
 | offline kit | `f15257d75245f0698948d5e54999f283b841572636f1ff0a531637902decb179` |
-| outer kit ZIP | **rebuild pending; old staging is stale** |
+| outer kit ZIP | `f809e36b09a0cc55f6d9e2c99e6343d80f74f9aaabf7f13844c12c186b48b4be` |
+
+The outer wrapper is packaging-only. Its inner kit was rebuilt after the prior
+acceptance, so the new outer kit has **no new Linux acceptance result**; its
+`evidence/offline-acceptance.json` explicitly records `not_run` and the prior
+tested kit hash. The prior acceptance claim refers only to kit
+`2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac`.
 
 ## Exclusions and publication gates
 
