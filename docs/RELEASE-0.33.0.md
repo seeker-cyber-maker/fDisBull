@@ -66,11 +66,12 @@ A Python 3.12 host must use an isolated 3.13 runtime for the binary kit; a
 source install can use 3.12 subject to the separately declared dependency
 environment.
 
-The 0.33 offline kit was built and installed on Boat Linux x86-64 with CPython
+The 0.33 offline kit was assembled locally from the verified Boat-built backend
+and installed/tested on Boat Linux x86-64 with CPython
 3.13.14. Its installed-kit acceptance passed Z3 equivalence/counterexample,
 keyboard, memory, native restore, player live resume and project restart; both
 bundled skills passed. The kit SHA-256 is
-`65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a`;
+`3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e`;
 the backend SHA-256 is
 `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 This is local Linux verification, not the required-native CI matrix or a

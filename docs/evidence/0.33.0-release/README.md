@@ -50,10 +50,10 @@ Built with `uv build` and `scripts/build_release.py` from the candidate source:
 
 | Artifact | Entries | Check |
 | --- | --- | --- |
-| core wheel | 592 | `check_dist.py` OK |
-| core sdist | 2,055 | `check_dist.py` OK |
+| core wheel | 597 | `check_dist.py` OK |
+| core sdist | 2,062 | `check_dist.py` OK |
 | player wheel | 19 | `check_dist.py` OK |
-| tool ZIP | 2,037 | `check_dist.py` OK |
+| tool ZIP | 2,044 | `check_dist.py` OK |
 | player sdist | — | built, auxiliary |
 
 `check_package_payloads.py` passed for the four checked artifacts; see
@@ -69,10 +69,11 @@ required exactly `3.13.5`; this cut accepts any CPython `3.13.x` and states the
 dependency boundary. A host defaulting to 3.12 must use an isolated 3.13
 runtime for the binary kit; this is recorded in `intake.json`.
 
-The native Linux offline kit was built on Boat Linux x86-64 from the candidate
-source and verified with CPython **3.13.14** (any 3.13.x is accepted). Its
+The native backend was built on Boat Linux x86-64. The offline kit was assembled
+from that verified backend and the final wheelhouse, then installed and verified
+in a fresh Boat x86-64 sandbox with CPython **3.13.14** (any 3.13.x is accepted). Its
 offline kit SHA-256 is
-`65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a`;
+`3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e`;
 the backend is `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 The installed-kit acceptance passed equivalence/counterexample, keyboard,
 memory, native restore, player live resume and project restart; both bundled

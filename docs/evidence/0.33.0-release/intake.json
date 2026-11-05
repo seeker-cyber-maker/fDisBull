@@ -98,10 +98,10 @@
     "native_offline_kit": {
       "status": "built_and_verified",
       "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
-      "release_tree_source": "02669325f8c318901eeefe1d825eca21b3306c1b",
+      "release_tree_source": "b397a95d42b1747c2da713d10c2b63d2251e031c",
       "python": "3.13.14",
       "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
-      "offline_kit_sha256": "65ac1925c75d41130213c91154b5c0186c9cde97d2334f617f04373c46f55b4a",
+      "offline_kit_sha256": "3e5b4b0cd2720475bcd415374393e6cdee31a21a2cedb36f30d132f3e0b1ac8e",
       "source_companion_sha256": "ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7",
       "dependency_bundle": "reused 0.31.1 bundle, fingerprint ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
       "acceptance": {
