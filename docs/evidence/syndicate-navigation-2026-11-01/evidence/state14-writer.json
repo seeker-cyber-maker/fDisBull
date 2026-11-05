@@ -1,0 +1,44 @@
+{
+  "scope": "Original writer and subsequent state/direction stores witnessed; full detour/pathfinding semantics unresolved",
+  "source_main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "writer_preferred": "0x30b2b",
+  "writer_runtime": "0x001E4B5B",
+  "actor_pointer": "0x00220140",
+  "position_raw": [
+    15368,
+    12552,
+    256
+  ],
+  "pre_state": 0,
+  "after_store_state": 14,
+  "previous_direction_byte": 160,
+  "after_state_store_direction_byte": 160,
+  "AL_at_state_store": 192,
+  "AL_addend": 64,
+  "final_direction_byte": 0,
+  "arithmetic_modulus": 256,
+  "graph": {
+    "valid": true,
+    "entity_count": 44,
+    "occupied_cells": 27
+  },
+  "other_actor_hits": [],
+  "source_window": {
+    "preferred_start": "0x30b2b",
+    "exclusive_end": "0x30b34",
+    "length": 9,
+    "sha256": "b75a7337998c845d57b8290b509de01270df96948d98913443b3576b06553613",
+    "live_matches": true,
+    "operations": [
+      "store actor state 14",
+      "add 0x40 to AL modulo 256",
+      "store AL into actor +0x1a"
+    ],
+    "observed_AL_before": 192,
+    "observed_byte_before": 160,
+    "observed_byte_after": 0
+  },
+  "memory_preparation": "same declared diagnostic movement input; no actor-state/direction, code or register writes",
+  "entry_observation_stage": "before instruction; stores qualified at subsequent execution breakpoints",
+  "native_receipt_sha256": "6c207373a6cc34e06afbf940c7914ca9c2e277603066d2ec3131478e98129097"
+}

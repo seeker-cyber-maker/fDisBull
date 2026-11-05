@@ -1,0 +1,1161 @@
+{
+  "commands": [
+    {
+      "after_revision": 1328,
+      "after_sha256": "0ab7b995727aca8e04fd061786c6ad0a515199d1049d3f54907af909b1b86335",
+      "before_revision": 1328,
+      "before_sha256": "0ab7b995727aca8e04fd061786c6ad0a515199d1049d3f54907af909b1b86335",
+      "command": "board car",
+      "index": 0,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 0,
+            "occupants": [],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "board"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Rejected: Move to a separately qualified nearby approach first",
+        "status": "rejected"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1336,
+      "after_sha256": "da85b83897db9c234212b028727055793c14b1a37a7a4532c49b500650704778",
+      "before_revision": 1328,
+      "before_sha256": "0ab7b995727aca8e04fd061786c6ad0a515199d1049d3f54907af909b1b86335",
+      "command": "teleport car approach",
+      "index": 1,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 0,
+            "occupants": [],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "waypoint-car-approach",
+          "verb": "teleport"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: Diagnostic relocation of person-0 to [60.5, 36.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 266 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1376,
+      "after_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "before_revision": 1336,
+      "before_sha256": "da85b83897db9c234212b028727055793c14b1a37a7a4532c49b500650704778",
+      "command": "board car",
+      "index": 2,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "board"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: board-complete: person-0, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1376,
+      "after_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "before_revision": 1376,
+      "before_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "command": "board car",
+      "index": 3,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "board"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "Success: Already an occupant of this car; no input writes or guest-time advance.",
+        "status": "success"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1376,
+      "after_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "before_revision": 1376,
+      "before_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "command": "focus team agent 2",
+      "index": 4,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "person-1",
+          "verb": "focus"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1383,
+      "after_sha256": "02d2cdd391d4092bd16dd340b09964a979e5cb1c0201a4b8dca66920284833e1",
+      "before_revision": 1376,
+      "before_sha256": "ba40478a25624ad9f1eeda89c22c757a29373b468f0a796b5b6824a8abc9ffe7",
+      "command": "teleport car approach",
+      "index": 5,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "waypoint-car-approach",
+          "verb": "teleport"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: Diagnostic relocation of person-1 to [60.5, 36.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 268 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1422,
+      "after_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "before_revision": 1383,
+      "before_sha256": "02d2cdd391d4092bd16dd340b09964a979e5cb1c0201a4b8dca66920284833e1",
+      "command": "board car",
+      "index": 6,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0",
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "board"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: board-complete: person-1, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1422,
+      "after_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "before_revision": 1422,
+      "before_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "command": "examine car",
+      "index": 7,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0",
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 0.000 tiles. Route not verified. vehicle-0 occupants: person-0, person-1. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1422,
+      "after_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "before_revision": 1422,
+      "before_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "command": "examine team",
+      "index": 8,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0",
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "person-0: (60.531, 35.719, z=2); health raw 16; status 0; vehicle membership {'state': 'occupant', 'vehicle_id': 'vehicle-0'}; raw links [23554, 23554]\nperson-1: (60.531, 35.719, z=2); health raw 16; status 8; vehicle membership {'state': 'occupant', 'vehicle_id': 'vehicle-0'}; raw links [2, 23554]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1422,
+      "after_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "before_revision": 1422,
+      "before_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "command": "focus team agent 1",
+      "index": 9,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 2,
+            "occupants": [
+              "person-0",
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "person-0",
+          "verb": "focus"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1437,
+      "after_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "before_revision": 1422,
+      "before_sha256": "46eaa5af6962e284e95e6d5b778cb1f8c56df15160e024f2d8ad7865b97a9bf3",
+      "command": "exit car",
+      "index": 10,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 94,
+            "occupants": [
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "exit"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: exit-complete: person-0, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1437,
+      "after_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "before_revision": 1437,
+      "before_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "command": "examine car",
+      "index": 11,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 94,
+            "occupants": [
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 0.006 tiles. Route not verified. vehicle-0 occupants: person-1. Occupants are read through a separately validated linked list when supplied. Lock/gate, capacity and ordinary mouse reachability remain unqualified.",
+        "status": "read"
+      },
+      "selected": "person-0"
+    },
+    {
+      "after_revision": 1437,
+      "after_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "before_revision": 1437,
+      "before_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "command": "focus team agent 2",
+      "index": 12,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "occupant",
+            "vehicle_id": "vehicle-0"
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 94,
+            "occupants": [
+              "person-1"
+            ],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "person-1",
+          "verb": "focus"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1452,
+      "after_sha256": "a7168c8d83eebe95eb0c5d743e99f62334170d3a1264a6b99f3fcfb741f7517e",
+      "before_revision": 1437,
+      "before_sha256": "305f1a56a8a97c6db88663e77eadba7c407e761fb16d99de971f12247a1e0d38",
+      "command": "leave car",
+      "index": 13,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 0,
+            "occupants": [],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action": {
+          "item": null,
+          "target": "summary-vehicle",
+          "verb": "leave"
+        },
+        "action_sent": true,
+        "complete": true,
+        "effects": "applied-confirmed",
+        "outcome": "Success: exit-complete: person-1, vehicle-0. Original code produced the occupant transition after declared diagnostic input; no walking-route or physical-mouse qualification.\nSpatial policy: assisted.",
+        "status": "success"
+      },
+      "selected": "person-1"
+    },
+    {
+      "after_revision": 1452,
+      "after_sha256": "a7168c8d83eebe95eb0c5d743e99f62334170d3a1264a6b99f3fcfb741f7517e",
+      "before_revision": 1452,
+      "before_sha256": "a7168c8d83eebe95eb0c5d743e99f62334170d3a1264a6b99f3fcfb741f7517e",
+      "command": "examine team",
+      "index": 14,
+      "occupancy": {
+        "errors": [],
+        "people": {
+          "person-0": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-1": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-10": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-11": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-12": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-13": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-2": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-3": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-8": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          },
+          "person-9": {
+            "state": "no-vehicle-membership",
+            "vehicle_id": null
+          }
+        },
+        "valid": true,
+        "vehicles": {
+          "vehicle-0": {
+            "errors": [],
+            "head_ref": 0,
+            "occupants": [],
+            "scope": "bounded source-linked occupant chain, not capacity, allegiance or boarding accessibility",
+            "valid": true
+          }
+        }
+      },
+      "result": {
+        "action_sent": false,
+        "complete": true,
+        "effects": "none-confirmed",
+        "outcome": "person-0: (60.535, 35.723, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 23554]\nperson-1: (60.535, 35.723, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 23554]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle membership {'state': 'no-vehicle-membership', 'vehicle_id': None}; raw links [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read"
+      },
+      "selected": "person-1"
+    }
+  ],
+  "commands_count": 15,
+  "fresh_native_execution": true,
+  "passed": true,
+  "scope": "15 commands; two boards, two exits, two assisted teleports, one no-op, one pre-input distance refusal, observer focus and passive reads",
+  "source_binding_note": "These exact runtime modules supplied the final 15-command original session. The binder CLI opt-in switch is syntax/help checked separately.",
+  "source_files": {
+    "tools/agent_map.py": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+    "tools/original_interactions.py": "24558f9df02d5bf8e01d6537089601b99bbf2eb0a12fb8bbb3a4e571cafa9ae2",
+    "tools/syndicate_scene.py": "54d774e01cb7b040ddb0a5c087adece6b29565754f95e80dd9b835ff57bb9a6e",
+    "tools/z_provider.py": "56e1d3ef15f952ceff6ae8bc084450683ece3481e3e601f2abfef5f821fcfab1"
+  }
+}

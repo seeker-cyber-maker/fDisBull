@@ -1,0 +1,118 @@
+{
+  "all_three_replays_per_arm_have_matching_semantic_outcomes": true,
+  "full_world_preparation": {
+    "checkpoints_created": 12,
+    "do_not_compare_as_hot_trace_cost": true,
+    "request_total": 7896,
+    "requests": {
+      "breakpoints.create": 439,
+      "breakpoints.delete": 439,
+      "memory.read": 3440,
+      "memory.write": 48,
+      "regs": 2195,
+      "run": 439,
+      "session.status": 884,
+      "state.save": 12
+    },
+    "snapshots": 393,
+    "wall_seconds": 32.47000731000003
+  },
+  "native": {
+    "conclusion": "Definitive original source/weapon/projectile/victim path under the recorded run",
+    "median_wall_seconds": 0.37040036100006546,
+    "runs": [
+      {
+        "events": 8,
+        "request_total": 49,
+        "requests": {
+          "breakpoints.create": 8,
+          "breakpoints.delete": 8,
+          "memory.read": 13,
+          "regs": 10,
+          "run": 8,
+          "session.status": 1,
+          "state.load": 1
+        },
+        "wall_seconds": 0.49958747499999845
+      },
+      {
+        "events": 8,
+        "request_total": 49,
+        "requests": {
+          "breakpoints.create": 8,
+          "breakpoints.delete": 8,
+          "memory.read": 13,
+          "regs": 10,
+          "run": 8,
+          "session.status": 1,
+          "state.load": 1
+        },
+        "wall_seconds": 0.37040036100006546
+      },
+      {
+        "events": 8,
+        "request_total": 49,
+        "requests": {
+          "breakpoints.create": 8,
+          "breakpoints.delete": 8,
+          "memory.read": 13,
+          "regs": 10,
+          "run": 8,
+          "session.status": 1,
+          "state.load": 1
+        },
+        "wall_seconds": 0.3643164640000123
+      }
+    ]
+  },
+  "recommended_workflow": "Use the world projection to bracket the change and rank hypotheses; locate the write, replay to its producer and owner, then attach an evidence-qualified event to the world.",
+  "scope": "Three reproducibility replays per arm from checkpoint384. Shared setup, locating PCs, and authoring instrumentation are excluded; not independent games or a general benchmark. Native arm reuses the checkpoint gathered during the world arm.",
+  "world": {
+    "conclusion": "Fast context/candidate ranking, but no definitive damage-source field",
+    "median_wall_seconds": 0.5188915070000348,
+    "runs": [
+      {
+        "request_total": 121,
+        "requests": {
+          "breakpoints.create": 9,
+          "breakpoints.delete": 9,
+          "memory.read": 42,
+          "regs": 31,
+          "run": 9,
+          "session.status": 20,
+          "state.load": 1
+        },
+        "snapshots": 10,
+        "wall_seconds": 0.5388954350000859
+      },
+      {
+        "request_total": 121,
+        "requests": {
+          "breakpoints.create": 9,
+          "breakpoints.delete": 9,
+          "memory.read": 42,
+          "regs": 31,
+          "run": 9,
+          "session.status": 20,
+          "state.load": 1
+        },
+        "snapshots": 10,
+        "wall_seconds": 0.5188915070000348
+      },
+      {
+        "request_total": 121,
+        "requests": {
+          "breakpoints.create": 9,
+          "breakpoints.delete": 9,
+          "memory.read": 42,
+          "regs": 31,
+          "run": 9,
+          "session.status": 20,
+          "state.load": 1
+        },
+        "snapshots": 10,
+        "wall_seconds": 0.5099603159999333
+      }
+    ]
+  }
+}

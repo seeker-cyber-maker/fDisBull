@@ -1,0 +1,1892 @@
+{
+  "scope": "Diagnostic hit-test into a terrain-excluded cell. Original order issued once, 100 bounded observations; not a normal-input failure or global unreachable proof",
+  "observation": {
+    "actor": "person-0",
+    "start_raw": [
+      15488,
+      12672,
+      256
+    ],
+    "destination_raw": [
+      15232,
+      12416,
+      256
+    ],
+    "samples": [
+      {
+        "i": 0,
+        "position_raw": [
+          15476,
+          12660,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2666,
+        "guest_elapsed_ms": 279,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 1,
+        "position_raw": [
+          15464,
+          12648,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2670,
+        "guest_elapsed_ms": 261,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 2,
+        "position_raw": [
+          15452,
+          12636,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2674,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 3,
+        "position_raw": [
+          15440,
+          12624,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2678,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 4,
+        "position_raw": [
+          15428,
+          12612,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2682,
+        "guest_elapsed_ms": 272,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 5,
+        "position_raw": [
+          15416,
+          12600,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2686,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 6,
+        "position_raw": [
+          15404,
+          12588,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2690,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 7,
+        "position_raw": [
+          15392,
+          12576,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2694,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 8,
+        "position_raw": [
+          15380,
+          12564,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2698,
+        "guest_elapsed_ms": 283,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 9,
+        "position_raw": [
+          15368,
+          12552,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2702,
+        "guest_elapsed_ms": 286,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 10,
+        "position_raw": [
+          15368,
+          12552,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2706,
+        "guest_elapsed_ms": 322,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 11,
+        "position_raw": [
+          15368,
+          12568,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2710,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 12,
+        "position_raw": [
+          15368,
+          12584,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2714,
+        "guest_elapsed_ms": 288,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 13,
+        "position_raw": [
+          15368,
+          12600,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2718,
+        "guest_elapsed_ms": 286,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 14,
+        "position_raw": [
+          15368,
+          12616,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2722,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 15,
+        "position_raw": [
+          15368,
+          12632,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2726,
+        "guest_elapsed_ms": 286,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 16,
+        "position_raw": [
+          15368,
+          12648,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2730,
+        "guest_elapsed_ms": 288,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 17,
+        "position_raw": [
+          15368,
+          12664,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2734,
+        "guest_elapsed_ms": 269,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 18,
+        "position_raw": [
+          15368,
+          12680,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2738,
+        "guest_elapsed_ms": 244,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 19,
+        "position_raw": [
+          15368,
+          12696,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2742,
+        "guest_elapsed_ms": 237,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 15,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 20,
+        "position_raw": [
+          15368,
+          12712,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2746,
+        "guest_elapsed_ms": 254,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 21,
+        "position_raw": [
+          15368,
+          12728,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2750,
+        "guest_elapsed_ms": 253,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 22,
+        "position_raw": [
+          15368,
+          12744,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2754,
+        "guest_elapsed_ms": 253,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 23,
+        "position_raw": [
+          15352,
+          12744,
+          283
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2758,
+        "guest_elapsed_ms": 261,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 24,
+        "position_raw": [
+          15352,
+          12728,
+          291
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2762,
+        "guest_elapsed_ms": 255,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 25,
+        "position_raw": [
+          15352,
+          12712,
+          299
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2766,
+        "guest_elapsed_ms": 268,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 26,
+        "position_raw": [
+          15352,
+          12696,
+          307
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2770,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 27,
+        "position_raw": [
+          15352,
+          12680,
+          315
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2774,
+        "guest_elapsed_ms": 279,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 13,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 28,
+        "position_raw": [
+          15352,
+          12664,
+          323
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2778,
+        "guest_elapsed_ms": 280,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 29,
+        "position_raw": [
+          15352,
+          12648,
+          331
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2782,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 30,
+        "position_raw": [
+          15352,
+          12632,
+          339
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2786,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 31,
+        "position_raw": [
+          15352,
+          12616,
+          347
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2790,
+        "guest_elapsed_ms": 288,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 32,
+        "position_raw": [
+          15352,
+          12600,
+          355
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2794,
+        "guest_elapsed_ms": 288,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 33,
+        "position_raw": [
+          15352,
+          12584,
+          363
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2798,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 34,
+        "position_raw": [
+          15352,
+          12568,
+          371
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2802,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 35,
+        "position_raw": [
+          15352,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2806,
+        "guest_elapsed_ms": 294,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 36,
+        "position_raw": [
+          15352,
+          12552,
+          379
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 2810,
+        "guest_elapsed_ms": 297,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 37,
+        "position_raw": [
+          15352,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2814,
+        "guest_elapsed_ms": 321,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 38,
+        "position_raw": [
+          15336,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2818,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 39,
+        "position_raw": [
+          15320,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2822,
+        "guest_elapsed_ms": 286,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 40,
+        "position_raw": [
+          15304,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2826,
+        "guest_elapsed_ms": 262,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 14,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 41,
+        "position_raw": [
+          15288,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2830,
+        "guest_elapsed_ms": 253,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 15,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 42,
+        "position_raw": [
+          15272,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2834,
+        "guest_elapsed_ms": 254,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 43,
+        "position_raw": [
+          15256,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2838,
+        "guest_elapsed_ms": 254,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 44,
+        "position_raw": [
+          15240,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2842,
+        "guest_elapsed_ms": 253,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 45,
+        "position_raw": [
+          15224,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2846,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 46,
+        "position_raw": [
+          15208,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2850,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 47,
+        "position_raw": [
+          15192,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2854,
+        "guest_elapsed_ms": 269,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 48,
+        "position_raw": [
+          15176,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2858,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 49,
+        "position_raw": [
+          15160,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2862,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 50,
+        "position_raw": [
+          15144,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2866,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 51,
+        "position_raw": [
+          15128,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2870,
+        "guest_elapsed_ms": 267,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 52,
+        "position_raw": [
+          15112,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2874,
+        "guest_elapsed_ms": 272,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 53,
+        "position_raw": [
+          15096,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2878,
+        "guest_elapsed_ms": 293,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 54,
+        "position_raw": [
+          15080,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2882,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 55,
+        "position_raw": [
+          15064,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2886,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 56,
+        "position_raw": [
+          15048,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2890,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 57,
+        "position_raw": [
+          15032,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2894,
+        "guest_elapsed_ms": 288,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 58,
+        "position_raw": [
+          15016,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2898,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 59,
+        "position_raw": [
+          15000,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2902,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 60,
+        "position_raw": [
+          14984,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2906,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 61,
+        "position_raw": [
+          14968,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2910,
+        "guest_elapsed_ms": 289,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 62,
+        "position_raw": [
+          14952,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2914,
+        "guest_elapsed_ms": 312,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 63,
+        "position_raw": [
+          14936,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2918,
+        "guest_elapsed_ms": 297,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 64,
+        "position_raw": [
+          14920,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2922,
+        "guest_elapsed_ms": 261,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 65,
+        "position_raw": [
+          14904,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2926,
+        "guest_elapsed_ms": 265,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 66,
+        "position_raw": [
+          14888,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2930,
+        "guest_elapsed_ms": 257,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 67,
+        "position_raw": [
+          14872,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2934,
+        "guest_elapsed_ms": 266,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 68,
+        "position_raw": [
+          14856,
+          12552,
+          379
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2938,
+        "guest_elapsed_ms": 249,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 69,
+        "position_raw": [
+          14856,
+          12568,
+          371
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2942,
+        "guest_elapsed_ms": 253,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 70,
+        "position_raw": [
+          14856,
+          12584,
+          363
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2946,
+        "guest_elapsed_ms": 254,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 71,
+        "position_raw": [
+          14856,
+          12600,
+          355
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2950,
+        "guest_elapsed_ms": 256,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 72,
+        "position_raw": [
+          14856,
+          12616,
+          347
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2954,
+        "guest_elapsed_ms": 272,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 73,
+        "position_raw": [
+          14856,
+          12632,
+          339
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2958,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 74,
+        "position_raw": [
+          14856,
+          12648,
+          331
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2962,
+        "guest_elapsed_ms": 337,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 75,
+        "position_raw": [
+          14856,
+          12664,
+          323
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2966,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 76,
+        "position_raw": [
+          14856,
+          12680,
+          315
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2970,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 77,
+        "position_raw": [
+          14856,
+          12696,
+          307
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2974,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 78,
+        "position_raw": [
+          14856,
+          12712,
+          299
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2978,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 79,
+        "position_raw": [
+          14856,
+          12728,
+          291
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2982,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 80,
+        "position_raw": [
+          14856,
+          12744,
+          283
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2986,
+        "guest_elapsed_ms": 282,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 81,
+        "position_raw": [
+          14856,
+          12760,
+          275
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2990,
+        "guest_elapsed_ms": 289,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 82,
+        "position_raw": [
+          14856,
+          12776,
+          267
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2994,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 83,
+        "position_raw": [
+          14856,
+          12792,
+          259
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 2998,
+        "guest_elapsed_ms": 286,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 84,
+        "position_raw": [
+          14856,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3002,
+        "guest_elapsed_ms": 290,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 85,
+        "position_raw": [
+          14840,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3006,
+        "guest_elapsed_ms": 296,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 86,
+        "position_raw": [
+          14824,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3010,
+        "guest_elapsed_ms": 303,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 87,
+        "position_raw": [
+          14808,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3014,
+        "guest_elapsed_ms": 300,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 88,
+        "position_raw": [
+          14792,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3018,
+        "guest_elapsed_ms": 308,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 89,
+        "position_raw": [
+          14776,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3022,
+        "guest_elapsed_ms": 259,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 90,
+        "position_raw": [
+          14760,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3026,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 91,
+        "position_raw": [
+          14744,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3030,
+        "guest_elapsed_ms": 287,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 92,
+        "position_raw": [
+          14728,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3034,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 93,
+        "position_raw": [
+          14712,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3038,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 94,
+        "position_raw": [
+          14696,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3042,
+        "guest_elapsed_ms": 271,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 95,
+        "position_raw": [
+          14680,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3046,
+        "guest_elapsed_ms": 320,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 96,
+        "position_raw": [
+          14664,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3050,
+        "guest_elapsed_ms": 279,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 97,
+        "position_raw": [
+          14648,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3054,
+        "guest_elapsed_ms": 279,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 98,
+        "position_raw": [
+          14632,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3058,
+        "guest_elapsed_ms": 270,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      },
+      {
+        "i": 99,
+        "position_raw": [
+          14616,
+          12808,
+          256
+        ],
+        "status_raw": 14,
+        "health_raw": 16,
+        "revision": 3062,
+        "guest_elapsed_ms": 260,
+        "door_states": {
+          "object-0": 12,
+          "object-1": 12,
+          "object-2": 12,
+          "object-3": 12
+        }
+      }
+    ],
+    "final_graph": {
+      "valid": true,
+      "entity_count": 44,
+      "occupied_cells": 27
+    },
+    "final_actor": {
+      "id": "person-0",
+      "family": "person",
+      "slot": 0,
+      "source_offset": 32776,
+      "offset_reference": 2,
+      "next": 0,
+      "previous": 38278,
+      "position_raw": [
+        14616,
+        12808,
+        256
+      ],
+      "position": [
+        57.09375,
+        50.03125,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 14,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "occupant_previous_ref": 0,
+      "occupant_next_ref": 0,
+      "vehicle_order_target_ref": 0,
+      "vehicle_refs_semantics": "legacy raw pair: occupant predecessor/root, order target; not two direct vehicle IDs",
+      "inventory_head": 38278,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        15232,
+        12416,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "vehicle_membership": {
+        "state": "no-vehicle-membership",
+        "vehicle_id": null
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-1"
+    },
+    "private_events": "PRIVATE_WORKSPACE/live/door1-obstruction/events.jsonl"
+  }
+}

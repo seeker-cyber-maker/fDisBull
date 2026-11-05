@@ -1,0 +1,61 @@
+{
+  "backend_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "differing_render_data_bytes": 24,
+    "observed_render_pointer_data_bytes": 32,
+    "registered_entities": 44,
+    "saved_ds_qualified": true,
+    "unexplained_code_object_differences": 0
+  },
+  "checkpoint_game_sha256": "d47956af84cf11298166551644df3128a4ce3d16e25afbaed3c04762422f63c8",
+  "checkpoint_sample": 384,
+  "common_setup": "Recovered original assets; original MZ/DOS4GW startup; keyboard and diagnostic menu-click preparations; four foreground updates settled startup selection before the route. No actor-health, code, register or damage-source edits.",
+  "fdisbull": "0.29.0",
+  "launcher_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
+  "main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "objects": [
+    {
+      "id": 1,
+      "preferred": 65536,
+      "runtime": 1851440,
+      "size": 261620
+    },
+    {
+      "id": 2,
+      "preferred": 327680,
+      "runtime": 2113584,
+      "size": 81504
+    },
+    {
+      "id": 3,
+      "preferred": 458752,
+      "runtime": 1641360,
+      "size": 3072
+    },
+    {
+      "id": 4,
+      "preferred": 524288,
+      "runtime": 2195504,
+      "size": 116274
+    }
+  ],
+  "private_receipt_identities": {
+    "local-world-comparison-2/receipt.json": "8edcd877210808908ed0a5a91c6a63d4406fed7138fc3f3e366d2f2e7849fde8",
+    "local-world-comparison-3/receipt.json": "e21b8546ee26a03932bb5f343a83da3d11c809bc5a06d4b5805f0555ece5e754",
+    "local-world-comparison/receipt.json": "dab9855b7edcee1af409e7dae31875c74cc658a052345969b92475c89ee5eeb6",
+    "source-labels.json": "40eebe4a8b74ada38d6314c857cdbd5b8efb5a38c92475288044fe9cf9b88fe0",
+    "world-arm-ready/receipt.json": "8e8d596d52bd1f998a0ca3b35349e4159cec818397e3a10ed77f43b2713973f4",
+    "world-arm-ready/world.jsonl": "b824dec892a830cd9721e2e34aa7e9737a18018a7429431b583e5dcb5bbc0ba1",
+    "writer-arm/causal-chain-2/receipt.json": "8420a4d5e9807037d9714e9be26331c6c2cbe50535b775c5de44bac8bc3157b6",
+    "writer-arm/causal-chain-3/receipt.json": "5f40145698dd08835e20b77506889faf60e7e7a8a7df75ea95166c803fa5d114",
+    "writer-arm/causal-chain/receipt.json": "024f866f7824c25517273c81c47058b8399dba17b1b5f2a90104211f022fecf0",
+    "writer-arm/replay/evidence.json": "8d14fac725f81414eb5c591471633f00ae1df10fcdd0967ac5fce65a0ebf5447",
+    "writer-arm/watch.json": "1c90c738550fec73f12f0db46832f1ebed7ad4fc9b2ecd0c5f300449cf2ea21e"
+  },
+  "private_receipts_not_distributed": true,
+  "python": "3.13.5",
+  "run_id": "d1c814dbd55d4e9391b126450ed7c3c4",
+  "source_version": "uploaded original"
+}

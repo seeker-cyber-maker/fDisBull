@@ -1,0 +1,50 @@
+[
+  {
+    "preferred": "0x127a0",
+    "bytes": 24,
+    "sha256": "247189106751806a0532633e62e2501f6185684781cdd9b82fc8a757ad43db3b",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x13b62",
+    "bytes": 157,
+    "sha256": "34fb6875a7cca0af679cd5af4d30687559dd5d60df09836eb1dd95f2db0cceea",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x3aa89",
+    "bytes": 223,
+    "sha256": "b25f89c94e37acdf21ff69db9e0f6846f758746b2fb6805a12cfed060c615f87",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x3add0",
+    "bytes": 232,
+    "sha256": "89250f761d457b4cf9b21d362d75d0092a590d98702689e5ea4b9cd03f214b72",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x12b4a",
+    "bytes": 101,
+    "sha256": "4671a2cd1e01f99ef23e8cced79b33685fa28f1377ecc0c2f4d9a1965fb5bd9c",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x32ce0",
+    "bytes": 208,
+    "sha256": "53b8fa31db6ff548336fcba9cb42b1d609ae6c7aa2ec19406656d2d8e615e92b",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x32f60",
+    "bytes": 238,
+    "sha256": "69bde1b737ba9a20efc27f840cc269200fcc507a627758b11b8570760051a64e",
+    "relocation_context": "current verified object mapping"
+  },
+  {
+    "preferred": "0x396b2",
+    "bytes": 91,
+    "sha256": "1bc5516dbe63b3bb5d59b4fa68abb6683a3d3cc4e5fa7205c60085290f950c0f",
+    "relocation_context": "current verified object mapping"
+  }
+]

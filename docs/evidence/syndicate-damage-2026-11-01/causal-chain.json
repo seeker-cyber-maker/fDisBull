@@ -1,0 +1,106 @@
+{
+  "arm": "source-causal-chain",
+  "checkpoint_sample": 384,
+  "events": [
+    {
+      "ammo_before": 11,
+      "args": {
+        "direction": 147,
+        "effect_subtype": 29,
+        "range": 10,
+        "source_ref": 1014,
+        "vertical_direction": 0,
+        "x": 18739,
+        "y": 10621,
+        "z": 384
+      },
+      "owner_id": "person-11",
+      "owner_ref": 1014,
+      "phase": "fire-request",
+      "preferred_pc": "0x3ab34",
+      "weapon_id": "weapon-6",
+      "weapon_type": 2
+    },
+    {
+      "effect_id": "effect-0",
+      "effect_kind": 3,
+      "effect_subtype": 29,
+      "old_source_ref": 1014,
+      "phase": "owner-store-before",
+      "preferred_pc": "0x3a8f3",
+      "source_ref_in_ax": 1014
+    },
+    {
+      "effect_id": "effect-0",
+      "phase": "owner-store-after",
+      "preferred_pc": "0x3a8f7",
+      "source_id": "person-11",
+      "source_ref": 1014
+    },
+    {
+      "ammo_after": 10,
+      "phase": "ammo-after",
+      "preferred_pc": "0x3ab45",
+      "weapon_id": "weapon-6"
+    },
+    {
+      "args": [
+        128,
+        128,
+        256,
+        64
+      ],
+      "effect_id": "effect-0",
+      "effect_subtype": 30,
+      "phase": "projectile-hit-query",
+      "preferred_pc": "0x1f0f6",
+      "query_position_raw": [
+        18681,
+        10507,
+        256
+      ]
+    },
+    {
+      "effect_id": "effect-0",
+      "health_before": 16,
+      "health_value_in_ax": 15,
+      "phase": "health-store-before",
+      "preferred_pc": "0x13be4",
+      "source_ref": 1014,
+      "victim_id": "person-0"
+    },
+    {
+      "health_after": 15,
+      "phase": "health-store-after",
+      "preferred_pc": "0x13be8",
+      "victim_id": "person-0"
+    },
+    {
+      "phase": "hit-query-return",
+      "preferred_pc": "0x1f0fb",
+      "returned_id": "person-0"
+    }
+  ],
+  "register_edits": 0,
+  "request_wall_seconds": {
+    "breakpoints.create": 0.008599724000077913,
+    "breakpoints.delete": 0.006378463000146439,
+    "memory.read": 0.01732265900011498,
+    "regs": 0.00880724699993607,
+    "run": 0.3408031240002174,
+    "session.status": 0.0004977849999932005,
+    "state.load": 0.11611878900009742
+  },
+  "requests": {
+    "breakpoints.create": 8,
+    "breakpoints.delete": 8,
+    "memory.read": 13,
+    "regs": 10,
+    "run": 8,
+    "session.status": 1,
+    "state.load": 1
+  },
+  "target_code_edits": 0,
+  "target_memory_writes": 0,
+  "wall_seconds": 0.49958747499999845
+}

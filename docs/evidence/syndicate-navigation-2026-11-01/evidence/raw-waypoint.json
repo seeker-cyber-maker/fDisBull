@@ -1,0 +1,332 @@
+{
+  "scope": "Exact raw-coordinate arrival from the off-grid initial actor position",
+  "observation": {
+    "actor": "person-0",
+    "start_raw": [
+      23476,
+      10668,
+      256
+    ],
+    "destination_raw": [
+      23168,
+      10624,
+      256
+    ],
+    "samples": [
+      {
+        "i": 0,
+        "position_raw": [
+          23460,
+          10666,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 89,
+        "guest_elapsed_ms": 250
+      },
+      {
+        "i": 1,
+        "position_raw": [
+          23444,
+          10664,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 93,
+        "guest_elapsed_ms": 277
+      },
+      {
+        "i": 2,
+        "position_raw": [
+          23428,
+          10662,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 97,
+        "guest_elapsed_ms": 263
+      },
+      {
+        "i": 3,
+        "position_raw": [
+          23412,
+          10660,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 101,
+        "guest_elapsed_ms": 254
+      },
+      {
+        "i": 4,
+        "position_raw": [
+          23396,
+          10658,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 105,
+        "guest_elapsed_ms": 253
+      },
+      {
+        "i": 5,
+        "position_raw": [
+          23380,
+          10655,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 109,
+        "guest_elapsed_ms": 252
+      },
+      {
+        "i": 6,
+        "position_raw": [
+          23364,
+          10653,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 113,
+        "guest_elapsed_ms": 271
+      },
+      {
+        "i": 7,
+        "position_raw": [
+          23348,
+          10651,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 117,
+        "guest_elapsed_ms": 269
+      },
+      {
+        "i": 8,
+        "position_raw": [
+          23332,
+          10648,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 121,
+        "guest_elapsed_ms": 271
+      },
+      {
+        "i": 9,
+        "position_raw": [
+          23316,
+          10646,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 125,
+        "guest_elapsed_ms": 270
+      },
+      {
+        "i": 10,
+        "position_raw": [
+          23300,
+          10643,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 129,
+        "guest_elapsed_ms": 303
+      },
+      {
+        "i": 11,
+        "position_raw": [
+          23284,
+          10641,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 133,
+        "guest_elapsed_ms": 282
+      },
+      {
+        "i": 12,
+        "position_raw": [
+          23268,
+          10639,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 137,
+        "guest_elapsed_ms": 277
+      },
+      {
+        "i": 13,
+        "position_raw": [
+          23252,
+          10636,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 141,
+        "guest_elapsed_ms": 286
+      },
+      {
+        "i": 14,
+        "position_raw": [
+          23236,
+          10634,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 145,
+        "guest_elapsed_ms": 286
+      },
+      {
+        "i": 15,
+        "position_raw": [
+          23220,
+          10632,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 149,
+        "guest_elapsed_ms": 288
+      },
+      {
+        "i": 16,
+        "position_raw": [
+          23204,
+          10629,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 153,
+        "guest_elapsed_ms": 285
+      },
+      {
+        "i": 17,
+        "position_raw": [
+          23188,
+          10627,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 157,
+        "guest_elapsed_ms": 285
+      },
+      {
+        "i": 18,
+        "position_raw": [
+          23172,
+          10624,
+          256
+        ],
+        "status_raw": 2,
+        "health_raw": 16,
+        "revision": 161,
+        "guest_elapsed_ms": 294
+      },
+      {
+        "i": 19,
+        "position_raw": [
+          23168,
+          10624,
+          256
+        ],
+        "status_raw": 0,
+        "health_raw": 16,
+        "revision": 165,
+        "guest_elapsed_ms": 295
+      }
+    ],
+    "final_graph": {
+      "valid": true,
+      "entity_count": 44,
+      "occupied_cells": 27
+    },
+    "final_actor": {
+      "id": "person-0",
+      "family": "person",
+      "slot": 0,
+      "source_offset": 32776,
+      "offset_reference": 2,
+      "next": 0,
+      "previous": 38278,
+      "position_raw": [
+        23168,
+        10624,
+        256
+      ],
+      "position": [
+        90.5,
+        41.5,
+        2.0
+      ],
+      "registered": true,
+      "flags": [
+        4,
+        0
+      ],
+      "status_raw": 0,
+      "health_raw": 16,
+      "life_state": "unqualified",
+      "category": "agent",
+      "role_raw": 2,
+      "team_member": true,
+      "vehicle_refs": [
+        0,
+        0
+      ],
+      "occupant_previous_ref": 0,
+      "occupant_next_ref": 0,
+      "vehicle_order_target_ref": 0,
+      "vehicle_refs_semantics": "legacy raw pair: occupant predecessor/root, order target; not two direct vehicle IDs",
+      "inventory_head": 38278,
+      "selected_weapon_ref": 0,
+      "target_position_raw": [
+        23168,
+        10624,
+        256
+      ],
+      "stimulants_raw": {
+        "adrenaline": [
+          128,
+          128,
+          128
+        ],
+        "intelligence": [
+          128,
+          128,
+          128
+        ],
+        "perception": [
+          128,
+          128,
+          128
+        ]
+      },
+      "vehicle_membership": {
+        "state": "no-vehicle-membership",
+        "vehicle_id": null
+      },
+      "mission_critical": false,
+      "inventory_head_id": "weapon-1"
+    },
+    "private_events": "PRIVATE_WORKSPACE/live/walk-first-waypoint/events.jsonl"
+  }
+}

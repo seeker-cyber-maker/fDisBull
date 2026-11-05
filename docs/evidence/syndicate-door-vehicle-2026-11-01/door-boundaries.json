@@ -1,0 +1,941 @@
+{
+  "cases": [
+    {
+      "broadphase_contains_actor": true,
+      "case": "x-161",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16319,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 232
+      },
+      "relative_to_door": [
+        -161,
+        0,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.326,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "x-160",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16320,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 251
+      },
+      "relative_to_door": [
+        -160,
+        0,
+        0
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.361,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "x159",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16639,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 271
+      },
+      "relative_to_door": [
+        159,
+        0,
+        0
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.391,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": false,
+      "case": "x160",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": true,
+      "observed_return": "0x0",
+      "position_raw": [
+        16640,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 290
+      },
+      "relative_to_door": [
+        160,
+        0,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.327,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": false,
+      "case": "x161",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16641,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 309
+      },
+      "relative_to_door": [
+        161,
+        0,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.323,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "y-161",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16480,
+        8255,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 329
+      },
+      "relative_to_door": [
+        0,
+        -161,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.42,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "y-160",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16480,
+        8256,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 349
+      },
+      "relative_to_door": [
+        0,
+        -160,
+        0
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.324,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "y159",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16480,
+        8575,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 368
+      },
+      "relative_to_door": [
+        0,
+        159,
+        0
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.353,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "y160",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16480,
+        8576,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 387
+      },
+      "relative_to_door": [
+        0,
+        160,
+        0
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.385,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "y161",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16480,
+        8577,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 406
+      },
+      "relative_to_door": [
+        0,
+        161,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.303,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "z-256",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16480,
+        8416,
+        0
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 427
+      },
+      "relative_to_door": [
+        0,
+        0,
+        -256
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.4,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "z256",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": true,
+      "narrow_geometry": true,
+      "observed_return": "0x220140",
+      "position_raw": [
+        16480,
+        8416,
+        512
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00220140",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000200",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 448
+      },
+      "relative_to_door": [
+        0,
+        0,
+        256
+      ],
+      "returned_person0": true,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.42,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "z257",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16480,
+        8416,
+        513
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 468
+      },
+      "relative_to_door": [
+        0,
+        0,
+        257
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.409,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": false,
+      "case": "corner-in",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": true,
+      "observed_return": "0x0",
+      "position_raw": [
+        16640,
+        8576,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 487
+      },
+      "relative_to_door": [
+        160,
+        160,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.363,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": false,
+      "case": "corner-out",
+      "diagnostic_filter_mutation": null,
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16641,
+        8576,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 506
+      },
+      "relative_to_door": [
+        161,
+        160,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.501,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "excluded-person-flag",
+      "diagnostic_filter_mutation": "exclude",
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16480,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 527
+      },
+      "relative_to_door": [
+        0,
+        0,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.304,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    },
+    {
+      "broadphase_contains_actor": true,
+      "case": "zero-role-mask",
+      "diagnostic_filter_mutation": "role",
+      "door_subtype_before_store": 12,
+      "expected_match": false,
+      "narrow_geometry": false,
+      "observed_return": "0x0",
+      "position_raw": [
+        16480,
+        8416,
+        256
+      ],
+      "registers": {
+        "cpu_mode": "protected",
+        "cs": "0x0158",
+        "flags": "0x00000206",
+        "general": {
+          "eax": "0x00000000",
+          "ebp": "0x000003F0",
+          "ebx": "0x0022681A",
+          "ecx": "0x00000080",
+          "edi": "0x00000001",
+          "edx": "0x00000003",
+          "esi": "0x00000000",
+          "esp": "0x00217D80"
+        },
+        "instruction_pointer": "0x001DFBD6",
+        "ip": "0x001DFBD6",
+        "project_address": null,
+        "segments": {
+          "cs": "0x0158",
+          "ds": "0x0160",
+          "es": "0x0160",
+          "fs": "0x0000",
+          "gs": "0x0160",
+          "ss": "0x0160"
+        },
+        "session_id": "ses-1",
+        "state_revision": 548
+      },
+      "relative_to_door": [
+        0,
+        0,
+        0
+      ],
+      "returned_person0": false,
+      "run": {
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 3.356,
+        "outcome": "breakpoint",
+        "requested_guest_ms": 3000,
+        "timed_out": false
+      }
+    }
+  ],
+  "first_model_missing_root_lookup": true,
+  "source_scope": "17 original proximity-helper returns after prepared actor positions and two person-filter negative controls; no walked-route claim"
+}

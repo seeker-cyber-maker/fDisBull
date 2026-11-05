@@ -1,0 +1,54 @@
+{
+  "backend_native_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "binding": {
+    "code_bytes_checked": 261620,
+    "code_side_fixup_records": 9209,
+    "differing_render_data_bytes": 24,
+    "observed_render_pointer_data_bytes": 32,
+    "registered_entities": 44,
+    "saved_ds_qualified": true,
+    "unexplained_code_object_differences": 0
+  },
+  "fdisbull": "0.29.0",
+  "launcher_sha256": "60f5496b0e67e83f938f04cc9fce09ea475a09122c33fa24e9e89ea07a925e1f",
+  "move_helper": {
+    "length": 292,
+    "preferred": 169264,
+    "sha256": "2cdf665b71cf59e26c8d3c9729f4edae15829ffb872eadbfcb71b1420f3672ad"
+  },
+  "objects": [
+    {
+      "id": 1,
+      "preferred": 65536,
+      "runtime": 1851440,
+      "size": 261620
+    },
+    {
+      "id": 2,
+      "preferred": 327680,
+      "runtime": 2113584,
+      "size": 81504
+    },
+    {
+      "id": 3,
+      "preferred": 458752,
+      "runtime": 1641360,
+      "size": 3072
+    },
+    {
+      "id": 4,
+      "preferred": 524288,
+      "runtime": 2195504,
+      "size": 116274
+    }
+  ],
+  "player": "0.29.0",
+  "python": "3.13.5",
+  "rebound_after_trials": true,
+  "run_id": "83cd9d8fc5564a58ad5580ab7ccb24ec",
+  "selectors": {
+    "cs": "0x0158",
+    "ds": "0x0160"
+  },
+  "source_main_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078"
+}

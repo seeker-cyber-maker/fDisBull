@@ -1,0 +1,1554 @@
+{
+  "door_id": "object-3",
+  "legs": {
+    "door-walk-in": {
+      "samples": [
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 276,
+            "host_elapsed_ms": 26.528,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 0,
+          "position_raw": [
+            16512,
+            8560,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 262,
+            "host_elapsed_ms": 22.578,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 1,
+          "position_raw": [
+            16512,
+            8544,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 266,
+            "host_elapsed_ms": 25.556,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 2,
+          "position_raw": [
+            16512,
+            8528,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 23.4,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 3,
+          "position_raw": [
+            16512,
+            8512,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 24.504,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 4,
+          "position_raw": [
+            16512,
+            8496,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 279,
+            "host_elapsed_ms": 25.772,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 5,
+          "position_raw": [
+            16512,
+            8480,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 264,
+            "host_elapsed_ms": 24.525,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 6,
+          "position_raw": [
+            16512,
+            8464,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 25.024,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 7,
+          "position_raw": [
+            16512,
+            8448,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 269,
+            "host_elapsed_ms": 25.074,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 8,
+          "position_raw": [
+            16512,
+            8432,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 275,
+            "host_elapsed_ms": 26.439,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 9,
+          "position_raw": [
+            16512,
+            8416,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 355,
+            "host_elapsed_ms": 41.476,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 10,
+          "position_raw": [
+            16512,
+            8400,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 32.002,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 11,
+          "position_raw": [
+            16512,
+            8384,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 266,
+            "host_elapsed_ms": 24.125,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 12,
+          "position_raw": [
+            16512,
+            8368,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 255,
+            "host_elapsed_ms": 20.962,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 13,
+          "position_raw": [
+            16512,
+            8352,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 21.925,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 14,
+          "position_raw": [
+            16512,
+            8336,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 255,
+            "host_elapsed_ms": 20.582,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 15,
+          "position_raw": [
+            16512,
+            8320,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 21.606,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 16,
+          "position_raw": [
+            16512,
+            8304,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.497,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 17,
+          "position_raw": [
+            16512,
+            8288,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 254,
+            "host_elapsed_ms": 28.683,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 18,
+          "position_raw": [
+            16512,
+            8272,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 280,
+            "host_elapsed_ms": 25.061,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 19,
+          "position_raw": [
+            16512,
+            8256,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.449,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 15,
+          "graph_valid": true,
+          "health": 16,
+          "i": 20,
+          "position_raw": [
+            16512,
+            8240,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 263,
+            "host_elapsed_ms": 21.958,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 21,
+          "position_raw": [
+            16512,
+            8224,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 22.055,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 22,
+          "position_raw": [
+            16512,
+            8208,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 257,
+            "host_elapsed_ms": 21.586,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 23,
+          "position_raw": [
+            16512,
+            8192,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 23.461,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 24,
+          "position_raw": [
+            16512,
+            8176,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 254,
+            "host_elapsed_ms": 20.646,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 25,
+          "position_raw": [
+            16512,
+            8160,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 273,
+            "host_elapsed_ms": 22.172,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 26,
+          "position_raw": [
+            16512,
+            8144,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 23.599,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 27,
+          "position_raw": [
+            16512,
+            8128,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 256,
+            "host_elapsed_ms": 20.998,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 28,
+          "position_raw": [
+            16512,
+            8112,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 22.338,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 29,
+          "position_raw": [
+            16512,
+            8096,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 264,
+            "host_elapsed_ms": 22.643,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 30,
+          "position_raw": [
+            16512,
+            8080,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 264,
+            "host_elapsed_ms": 21.95,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 31,
+          "position_raw": [
+            16512,
+            8064,
+            256
+          ]
+        },
+        {
+          "actor_state": 0,
+          "advance": {
+            "guest_elapsed_ms": 270,
+            "host_elapsed_ms": 21.689,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 32,
+          "position_raw": [
+            16512,
+            8064,
+            256
+          ]
+        }
+      ],
+      "target_raw": [
+        16512,
+        8064,
+        256
+      ]
+    },
+    "door-walk-out": {
+      "samples": [
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 270,
+            "host_elapsed_ms": 22.846,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 0,
+          "position_raw": [
+            16512,
+            8080,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 255,
+            "host_elapsed_ms": 22.903,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 1,
+          "position_raw": [
+            16512,
+            8096,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 254,
+            "host_elapsed_ms": 20.912,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 2,
+          "position_raw": [
+            16512,
+            8112,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 23.379,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 3,
+          "position_raw": [
+            16512,
+            8128,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 23.813,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 4,
+          "position_raw": [
+            16512,
+            8144,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 296,
+            "host_elapsed_ms": 26.703,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 5,
+          "position_raw": [
+            16512,
+            8160,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 280,
+            "host_elapsed_ms": 26.06,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 6,
+          "position_raw": [
+            16512,
+            8176,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 253,
+            "host_elapsed_ms": 24.418,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 7,
+          "position_raw": [
+            16512,
+            8192,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 254,
+            "host_elapsed_ms": 22.276,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 8,
+          "position_raw": [
+            16512,
+            8208,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 21.969,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 9,
+          "position_raw": [
+            16512,
+            8224,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 273,
+            "host_elapsed_ms": 24.806,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 12,
+          "graph_valid": true,
+          "health": 16,
+          "i": 10,
+          "position_raw": [
+            16512,
+            8240,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 23.599,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 13,
+          "graph_valid": true,
+          "health": 16,
+          "i": 11,
+          "position_raw": [
+            16512,
+            8256,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 256,
+            "host_elapsed_ms": 22.87,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 12,
+          "position_raw": [
+            16512,
+            8272,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.318,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 13,
+          "position_raw": [
+            16512,
+            8288,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 24.182,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 14,
+          "position_raw": [
+            16512,
+            8304,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 281,
+            "host_elapsed_ms": 26.151,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 15,
+          "position_raw": [
+            16512,
+            8320,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 262,
+            "host_elapsed_ms": 22.266,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 16,
+          "position_raw": [
+            16512,
+            8336,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 324,
+            "host_elapsed_ms": 26.753,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 17,
+          "position_raw": [
+            16512,
+            8352,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 255,
+            "host_elapsed_ms": 22.79,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 18,
+          "position_raw": [
+            16512,
+            8368,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.585,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 19,
+          "position_raw": [
+            16512,
+            8384,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 23.965,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 20,
+          "position_raw": [
+            16512,
+            8400,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 24.771,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 21,
+          "position_raw": [
+            16512,
+            8416,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 265,
+            "host_elapsed_ms": 26.331,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 22,
+          "position_raw": [
+            16512,
+            8432,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 23.77,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 23,
+          "position_raw": [
+            16512,
+            8448,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 263,
+            "host_elapsed_ms": 24.533,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 24,
+          "position_raw": [
+            16512,
+            8464,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 28.614,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 25,
+          "position_raw": [
+            16512,
+            8480,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 26.342,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 26,
+          "position_raw": [
+            16512,
+            8496,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 256,
+            "host_elapsed_ms": 21.418,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 27,
+          "position_raw": [
+            16512,
+            8512,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 256,
+            "host_elapsed_ms": 21.718,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 28,
+          "position_raw": [
+            16512,
+            8528,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 271,
+            "host_elapsed_ms": 22.493,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 29,
+          "position_raw": [
+            16512,
+            8544,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 273,
+            "host_elapsed_ms": 22.311,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 30,
+          "position_raw": [
+            16512,
+            8560,
+            256
+          ]
+        },
+        {
+          "actor_state": 2,
+          "advance": {
+            "guest_elapsed_ms": 270,
+            "host_elapsed_ms": 22.955,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 31,
+          "position_raw": [
+            16512,
+            8576,
+            256
+          ]
+        },
+        {
+          "actor_state": 0,
+          "advance": {
+            "guest_elapsed_ms": 272,
+            "host_elapsed_ms": 22.786,
+            "outcome": "breakpoint",
+            "requested_guest_ms": 2000,
+            "timed_out": false
+          },
+          "door_flags": [
+            4,
+            0
+          ],
+          "door_state": 14,
+          "graph_valid": true,
+          "health": 16,
+          "i": 32,
+          "position_raw": [
+            16512,
+            8576,
+            256
+          ]
+        }
+      ],
+      "target_raw": [
+        16512,
+        8576,
+        256
+      ]
+    }
+  },
+  "position_writes_after_movement_request": 0,
+  "preparation": "initial linked-state teleport and diagnostic world-coordinate hit-test input; original movement thereafter",
+  "start_raw": [
+    16512,
+    8576,
+    256
+  ],
+  "turn_raw": [
+    16512,
+    8064,
+    256
+  ],
+  "universal_door_clearance_claim": false
+}
