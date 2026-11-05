@@ -6,5 +6,6 @@ cd "$SHERLOCK_ROOT"
 SHERLOCK_CC=${CC:-cc}
 mkdir -p bin
 "$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
-    core/*.c cli/sherlock_cli.c cli/main.c -o bin/sherlock-cli
+    core/*.c state/sherlock_state.c state/sherlock_hint_proof.c \
+    cli/sherlock_cli.c cli/main.c -o bin/sherlock-cli
 printf 'Built %s\n' "$SHERLOCK_ROOT/bin/sherlock-cli"

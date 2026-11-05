@@ -27,6 +27,10 @@ mkdir -p "$SHERLOCK_CHECK"
   tests/test_state.c state/sherlock_state.c core/sherlock_logic.c -o "$SHERLOCK_CHECK/test-state"
 "$SHERLOCK_CHECK/test-state"
 "$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+  tests/test_hint_proof.c state/sherlock_hint_proof.c state/sherlock_state.c \
+  core/sherlock_logic.c -o "$SHERLOCK_CHECK/test-hint-proof"
+"$SHERLOCK_CHECK/test-hint-proof"
+"$SHERLOCK_CC" -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
   tests/test_logic.c core/sherlock_logic.c -o "$SHERLOCK_CHECK/test-logic"
 "$SHERLOCK_CHECK/test-logic"
 ./Build-CLI.sh

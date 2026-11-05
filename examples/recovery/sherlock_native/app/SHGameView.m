@@ -2,6 +2,8 @@
 #import "SHBitmapFont.h"
 #import "SHClueExplanation.h"
 #import "SHVictoryCanvas.h"
+#include "../state/sherlock_hint_proof.h"
+#include "../state/sherlock_explain.h"
 #include <math.h>
 
 static void SHText(NSString *text, NSRect rect, CGFloat size,
@@ -50,6 +52,17 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
                  : NSMakeRect(14 + slot * 34, 267, 32, 64);
 }
 
+static const NSRect SHHintWhyRect = {{363, 84}, {92, 20}};
+static const NSRect SHHintPreviousRect = {{345, 233}, {54, 18}};
+static const NSRect SHHintBackRect = {{405, 233}, {54, 18}};
+static const NSRect SHHintNextRect = {{465, 233}, {54, 18}};
+static const NSRect SHHintApplyRect = {{525, 233}, {102, 18}};
+
+static void SHHintButton(NSString *title, NSRect rect, BOOL enabled) {
+    SHBox(rect, SHColor(enabled ? 15 : 7), SHColor(8));
+    SHText(title, NSInsetRect(rect, 2, 4), 8, SHColor(enabled ? 0 : 8), YES, nil);
+}
+
 @implementation SHGameView {
     BOOL _tracking, _right, _dragging;
     NSPoint _down, _current;
@@ -62,6 +75,11 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     BOOL _drawingGame, _hasGameBackdrop;
     SHVictoryCanvas *_victoryCanvas;
     NSMutableDictionary<NSString *, NSImage *> *_menuImages;
+    BOOL _hintDetails;
+    NSUInteger _hintSupportPage;
+    uint64_t _hintDisplayTime;
+    SHHintProof _hintProof;
+    SHHintProofResult _hintProofResult;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame {
@@ -80,6 +98,88 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     [self dismissClueExplanation];
     _hasGameBackdrop = YES;
     _victoryCanvas = nil;
+    _hintDetails = NO;
+}
+
+- (BOOL)prepareHintExplanation {
+    SherlockGame *game = self.app.game;
+    _hintDetails = NO;
+    _hintSupportPage = 0;
+    _hintDisplayTime = sh_display_time_ms(game);
+    /* A single shared budget covers consistency, the frozen contrary move,
+     * and optional clue reduction. Incomplete reduction can still prove a
+     * sufficient set. It never authorizes changing the selected target. */
+    return sh_explain_hint(game, &game->pending_hint, 20000,
+                          &_hintProof, &_hintProofResult) == SH_PROOF_PROVED;
+}
+
+- (NSString *)hintExplanationFailure {
+    return [NSString stringWithFormat:@"%@\n\nNo move or hint penalty was applied.",
+            [NSString stringWithUTF8String:_hintProofResult.reason]];
+}
+
+- (void)drawHintPanel {
+    SherlockGame *game = self.app.game;
+    const SHHint *hint = &game->pending_hint;
+    unsigned object = hint->row * 6 + hint->item;
+    NSString *action = hint->kind == SH_HINT_CHOOSE ? @"Place this picture" : @"Remove this picture";
+    NSString *location = [NSString stringWithFormat:@"Row %u, column %u", hint->row + 1, hint->column + 1];
+    if (!_hintDetails) {
+        SHBox(NSMakeRect(353, 1, 286, 126), SHColor(7), SHColor(8));
+        [self tile:object at:NSMakeRect(363, 10, 32, 32) half:NO];
+        SHText(action, NSMakeRect(405, 10, 222, 12), 8, SHColor(0), NO, nil);
+        SHText(location, NSMakeRect(405, 27, 222, 12), 8, SHColor(0), NO, nil);
+        SHClueExplanation clue;
+        if (hint->clue_index >= 0 &&
+            sh_explain_clue(&game->puzzle, (unsigned)hint->clue_index, &clue) == 0) {
+            for (unsigned i = 0; i < clue.arity; ++i)
+                [self tile:clue.objects[i] at:NSMakeRect(363 + i * 18, 51, 16, 16) half:YES];
+            SHText([NSString stringWithUTF8String:clue.title],
+                   NSMakeRect(424, 51, 203, 20), 8, SHColor(0), NO, nil);
+        } else {
+            SHText(@"Row rules and the remaining possibilities",
+                   NSMakeRect(363, 51, 264, 24), 8, SHColor(0), NO, nil);
+        }
+        SHHintButton(@"Show why", SHHintWhyRect, YES);
+        SHText(@"Click elsewhere to apply.", NSMakeRect(465, 88, 164, 18),
+               8, SHColor(0), NO, nil);
+        SHText(@"Cost on apply: 30 seconds.", NSMakeRect(363, 111, 266, 10),
+               8, SHColor(0), YES, nil);
+        return;
+    }
+    SHBox(NSMakeRect(333, 1, 306, 259), SHColor(7), SHColor(8));
+    SHText(@"Why this move works", NSMakeRect(345, 9, 282, 12),
+           8, SHColor(0), YES, nil);
+    [self tile:object at:NSMakeRect(345, 29, 32, 32) half:NO];
+    SHText(action, NSMakeRect(387, 30, 240, 12), 8, SHColor(0), NO, nil);
+    SHText(location, NSMakeRect(387, 47, 240, 12), 8, SHColor(0), NO, nil);
+    SHText(@"Assumes your current candidates and givens.\nEach row uses every picture once. The\nopposite move has no complete solution.",
+           NSMakeRect(345, 69, 282, 29), 8, SHColor(0), NO, nil);
+    if (_hintProof.support_count) {
+        unsigned index = _hintProof.support[_hintSupportPage].index;
+        SHClueExplanation clue;
+        if (sh_explain_clue(&game->puzzle, index, &clue) == 0) {
+            SHText([NSString stringWithFormat:@"Supporting clue %lu of %u (card %u)",
+                    (unsigned long)_hintSupportPage + 1, _hintProof.support_count, index + 1],
+                   NSMakeRect(345, 106, 282, 12), 8, SHColor(0), YES, nil);
+            CGFloat stride = 282.0 / clue.arity;
+            for (unsigned i = 0; i < clue.arity; ++i) {
+                CGFloat center = 345 + stride * (i + .5);
+                SHText([NSString stringWithFormat:@"%c", 'A' + (int)i],
+                       NSMakeRect(center - 10, 122, 20, 9), 8, SHColor(0), YES, nil);
+                [self tile:clue.objects[i] at:NSMakeRect(center - 16, 134, 32, 32) half:NO];
+            }
+            SHText([NSString stringWithUTF8String:clue.rule],
+                   NSMakeRect(345, 177, 282, 43), 8, SHColor(0), NO, nil);
+        }
+    } else {
+        SHText(@"No relationship clue is needed for this\nmove. The given cells, your candidate marks\nand the six distinct pictures in each row\nare sufficient.",
+               NSMakeRect(345, 119, 282, 65), 8, SHColor(0), NO, nil);
+    }
+    SHHintButton(@"Previous", SHHintPreviousRect, _hintSupportPage > 0);
+    SHHintButton(@"Back", SHHintBackRect, YES);
+    SHHintButton(@"Next", SHHintNextRect, _hintSupportPage + 1 < _hintProof.support_count);
+    SHHintButton(@"Apply hint", SHHintApplyRect, YES);
 }
 
 - (BOOL)beginVictoryWithRandomState:(uint32_t)randomState {
@@ -320,7 +420,6 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
         }
         return;
     }
-    NSColor *panel = [self role:6 fallback:1];
     NSColor *ink = [self role:9 fallback:14];
     NSColor *shadow = [self role:10 fallback:0];
     [self background:app.activeAppearance];
@@ -363,7 +462,8 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     [self menuBox:NSMakeRect(198, 245, 126, 15)];
     SHText([@"NAME: " stringByAppendingString:app.activePlayerName ?: @"Player"],
            NSMakeRect(201, 219, 121, 12), 8, ink, NO, shadow);
-    SHText([@"TIME: " stringByAppendingString:SHTime(sh_display_time_ms(game))],
+    SHText([@"TIME: " stringByAppendingString:SHTime(game->hint_pending ?
+                                                    _hintDisplayTime : sh_display_time_ms(game))],
            NSMakeRect(201, 233, 121, 12), 8, ink, NO, shadow);
     SHText(app.puzzleLabel,
            NSMakeRect(201, 247, 121, 12), 8, ink, NO, shadow);
@@ -398,12 +498,7 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
         [arrow lineToPoint:tip];
         [arrow lineToPoint:NSMakePoint(tip.x + 3, tip.y - 5)];
         arrow.lineWidth = 2; [arrow stroke];
-        SHBox(NSMakeRect(353, 1, 286, 126), panel, SHColor(5));
-        SHText(@"HINT", NSMakeRect(363, 5, 266, 16), 10, SHColor(5), YES, shadow);
-        SHText([NSString stringWithUTF8String:hint.explanation],
-               NSMakeRect(363, 24, 266, 71), 9, ink, NO, shadow);
-        SHText(@"Click to apply. 30 seconds added.",
-               NSMakeRect(363, 104, 266, 17), 8, ink, YES, shadow);
+        [self drawHintPanel];
     }
     if (_tracking && _dragging && _object >= 0) {
         CGFloat size = _right ? 16 : 32;
@@ -472,7 +567,27 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     }
     _explanationClue = -1; /* A hidden inspector must never eat a menu click. */
     if (self.app.showingGame && game->hint_pending) {
+        if (!_hintDetails && NSPointInRect(_down, SHHintWhyRect)) {
+            _hintDetails = YES;
+            self.needsDisplay = YES;
+            return;
+        }
+        if (_hintDetails && !NSPointInRect(_down, SHHintApplyRect)) {
+            if (NSPointInRect(_down, SHHintBackRect)) _hintDetails = NO;
+            else if (NSPointInRect(_down, SHHintPreviousRect) && _hintSupportPage)
+                --_hintSupportPage;
+            else if (NSPointInRect(_down, SHHintNextRect) &&
+                     _hintSupportPage + 1 < _hintProof.support_count)
+                ++_hintSupportPage;
+            self.needsDisplay = YES;
+            return;
+        }
+        /* Sample before the state can become terminal. A later timer callback
+         * cannot recover time discarded after a last-cell win. Pending state
+         * keeps timeout deferred until acceptance adds its fee. */
+        [self.app sampleGameClock];
         enum SHHintKind kind = game->pending_hint.kind;
+        _hintDetails = NO;
         if (sh_accept_hint(game) == 1)
             SHPlaySound(kind == SH_HINT_CHOOSE ? @"choose" : @"remove",
                         [self.app.activeAppearance[@"sound"] boolValue]);
@@ -526,6 +641,7 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
         return;
     }
     SherlockGame *game = self.app.game;
+    [self.app sampleGameClock];
     int mutation = 0;
     NSString *cue = nil;
     if (_dragging) {
@@ -563,6 +679,10 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
 - (void)keyDown:(NSEvent *)event {
     if (self.app.awaitingWinAcknowledgement || self.app.celebrating)
         [self.app acknowledgeWin];
+    else if (event.keyCode == 53 && self.app.game->hint_pending && _hintDetails) {
+        _hintDetails = NO;
+        self.needsDisplay = YES;
+    }
     else if (event.keyCode == 53 && _explanationClue >= 0) [self dismissClueExplanation];
     else if (event.keyCode == 53 && self.app.showingGame) [self.app gameAction:0];
     else [super keyDown:event];

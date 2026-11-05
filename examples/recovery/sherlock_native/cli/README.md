@@ -2,8 +2,9 @@
 
 This interface lets an agent obtain a puzzle, solve its public clues, and submit
 an answer to the **same native constraint verifier used by the application**.
-It also provides a deterministic native generator and bounded uniqueness
-analysis. The command implementation uses C and the shared core; it has no
+It also provides a deterministic native generator, bounded uniqueness analysis,
+and replayable supporting premises for a fixed hint. The command implementation
+uses C and the shared core; it has no
 AppKit, Python, DOSBox, Wine, browser, or original-executable dependency.
 
 There are two separate puzzle sources:
@@ -65,19 +66,26 @@ qualification; portable builds and the Linux entry path have been executed.
 | `generate --seed UINT64` | Construct and export a uniquely proved native challenge. |
 | `verify (--number N \| --seed UINT64) --solution PATH\|- [--data PATH]` | Reconstruct the canonical challenge and verify the submitted complete answer. |
 | `analyze (--number N \| --seed UINT64) [--max-nodes UINT64] [--data PATH]` | Classify the canonical public constraints as `unique`, `multiple`, `unsat`, or `unknown`. |
+| `hint (--number N \| --seed UINT64) [--state PATH\|-] [--max-nodes UINT] [--data PATH]` | Select a native logical hint, then prove its exact target and reduce its supporting clues. |
+| `check-hint (--number N \| --seed UINT64) --move PATH\|- [--state PATH\|-] [--max-nodes UINT] [--data PATH]` | Prove or refute a submitted fixed move against canonical clues and explicit candidate assumptions. |
 | `help`, `--help`, or no command | Return machine-readable help. |
 | `version` or `--version` | Return protocol and native generator version information. |
 
 Flags and their values must be separate arguments. The two source flags are
 mutually exclusive. Repeated flags, unknown flags, irrelevant command options,
 and trailing arguments are errors. For example, `--data` is accepted only for
-original-number commands, and `--max-nodes` is accepted only for `analyze`.
+original-number commands, and `--max-nodes` is accepted only for `analyze`,
+`hint`, and `check-hint`. `--state` belongs to the two hint commands;
+`--move` is required by `check-hint` and accepted by no other command.
+At most one input document can use `-` for stdin in an invocation.
 `<command> --help` is supported as a complete two-argument request.
 
 All numeric flags accept unsigned decimal digits only. Signs, spaces, decimal
 points, exponents, base prefixes, suffixes, and overflow are rejected. Leading
 zeroes are accepted and canonicalized. The original number range is
-`0..65535`; seeds and node budgets span `0..18446744073709551615`.
+`0..65535`; seeds and analysis node budgets span `0..18446744073709551615`.
+Hint proof budgets span `0..UINT_MAX` (`0..4294967295` on the supported
+Mac/Linux targets); machine-readable help reports `hint_node_maximum`.
 
 Native generation uses fixed default limits in generator version 1: a total
 solver-node budget of `1000000`, at most `16` attempts, and at most `3` givens.
@@ -86,6 +94,9 @@ explicit failure; it does not return an unproved puzzle or substitute a
 different seed. `analyze` defaults to `200000` nodes. Its `--max-nodes` flag
 limits the analysis after canonical challenge construction; it does not alter
 the native generation budget or generated puzzle.
+The two hint commands default to `20000` proof nodes shared across consistency,
+target refutation and support reduction. `hint` first uses a separate fixed
+`20000`-node selector allowance; `--max-nodes` does not change that allowance.
 
 ## Standard output and exit status
 
@@ -103,11 +114,11 @@ bounded JSON integers.
 
 | Exit status | Meaning |
 | --- | --- |
-| `0` | Success, accepted answer, or conclusive analysis (`unique`, `multiple`, or `unsat`). |
-| `1` | The answer was well formed but rejected by the canonical constraints. |
-| `2` | Invalid command arguments or invalid answer JSON. |
+| `0` | Success, accepted answer, conclusive analysis, a proved hint, or no available hint. |
+| `1` | A well-formed answer was rejected, a proposed hint was refuted, or its candidate premises are inconsistent. |
+| `2` | Invalid command arguments, input JSON, state, or move target. |
 | `3` | Resource, input/output, or engine failure. |
-| `4` | Analysis is `unknown`, or native generation exhausted its configured budget. |
+| `4` | Analysis is `unknown`, a hint is `unresolved`, or native generation exhausted its configured budget. |
 
 A rejected answer is an ordinary verification result: `kind` is
 `"verification"`, `ok` is `true`, and `accepted` is `false`. Likewise, an
@@ -270,6 +281,163 @@ The CLI selects canonical original or native sources. It does not accept an
 arbitrary client-defined constraint document for analysis. The shared C solver
 also supports such in-memory puzzles through its core API.
 
+## Hints and fixed-target verification
+
+Both commands use public clues, givens, row permutations and the stated
+candidate masks. They do not read the stored private answer. They are read-only:
+no move is applied, no game clock advances, and no hint penalty is charged.
+The selector and explanation support are native logical features; their output
+does not claim exact original DOS hint order or prose.
+
+```sh
+./bin/sherlock-cli hint --seed 42 > hint.json
+./bin/sherlock-cli hint --number 235 --state state.json
+./bin/sherlock-cli check-hint --seed 42 --state state.json --move move.json
+./bin/sherlock-cli check-hint --seed 42 --move - < move.json
+```
+
+`hint` selects a target first and then holds that target fixed while checking
+and reducing its support. `check-hint` receives the exact target from the caller;
+it never substitutes an easier move. Its document has exactly four fields,
+in any order:
+
+```json
+{"kind":"remove","row":0,"column":1,"item":4}
+```
+
+This is a syntax example. The kind is `remove` or `choose`; all three indices
+are integers `0..5`. `remove` claims that the specified item cannot occupy that
+cell. `choose` claims that it must occupy that cell. The item must currently be
+present in that cell's candidate mask. An absent target is invalid input.
+An already chosen or given item can be checked as a logical claim; the command
+still performs no interaction or mutation.
+
+### Current-state input
+
+Without `--state`, the engine initializes candidates and chosen givens from
+the canonical challenge. With `--state`, the input is an object containing a
+required `candidates` matrix and an optional `chosen` matrix:
+
+```json
+{
+  "candidates":[
+    [63,63,63,63,63,63],
+    [63,63,63,63,63,63],
+    [63,63,63,63,63,63],
+    [63,63,63,63,63,63],
+    [63,63,63,63,63,63],
+    [63,63,63,63,63,63]
+  ]
+}
+```
+
+This example shows the matrix shape before imposing any givens. An actual
+submission must preserve the canonical given cells. The `state` object returned
+by `hint` contains a valid starting snapshot that can be saved and updated.
+
+Each matrix has exactly six rows and six columns. A candidate entry is an
+integer `0..63`; bit `item` permits that within-row item at the cell. Thus `63`
+permits all six items and `1 << 4` permits only item 4. Zero is accepted as a
+contradictory player state, not silently repaired.
+
+`chosen` contains `-1` for an unchosen cell or an item `0..5`. A chosen item
+requires exactly its singleton candidate mask. If the matrix is omitted,
+only canonical givens are marked chosen; all other cells remain unchosen,
+including singletons. Chosen flags affect which interaction the selector
+offers, but the proof's logical background consists of the masks, givens and
+row rule. Marking a cell chosen does not automatically update other masks.
+Canonical given masks and their chosen items cannot be replaced or unset.
+
+These are intentionally narrow JSON inputs. Integer strings, fractions,
+exponents, Booleans, `-0`, leading zeroes, malformed dimensions, duplicate or
+extra fields, comments, Markdown fences, trailing commas and trailing documents
+are rejected. Ordinary JSON whitespace, arbitrary field order and equivalent
+ASCII `\uXXXX` escapes in field names and move kinds are accepted. Each input
+document is limited to 65,536 bytes, including whitespace.
+
+**Candidate masks are premises, not certified earlier deductions.** A result
+proves what follows from those masks and the canonical constraints. It does
+not prove that an agent's prior edits followed logically from an earlier state.
+Before proving the move, the engine checks that the entire premise set has
+at least one completion, so an inconsistent board cannot prove a move by
+vacuity. Both commands reload the canonical challenge; neither accepts
+caller-supplied clues, givens, private solutions, `accepted` flags, nor a
+previous `support_record` as authoritative input.
+
+### Results and supporting-premise records
+
+A response has `kind:"hint"` or `kind:"hint_verification"`, the canonical
+identity, and these additional fields:
+
+| Field | Meaning |
+| --- | --- |
+| `classification` | `proved`, `refuted`, `inconsistent`, `unresolved`, or, for `hint`, `none`. |
+| `proved` | True only after consistent premises and an impossible contrary move have both been established. |
+| `reason` | A readable explanation of the outcome and any incomplete reduction. |
+| `state_origin` | `canonical_initial` or `submitted_assumptions`. |
+| `assumptions` | Explicitly labels masks as premises and says earlier edits were not verified. |
+| `state` | The complete candidate/chosen snapshot used by this invocation. |
+| `proposed_move` | The selected or submitted target, or null when selection yielded no target. Its presence alone does not certify it. |
+| `selection` | For `hint`, the native policy, separate selector budget, advisory clue index and explanation. Null for `check-hint`. |
+| `proof` | Proof budget, used nodes, deletion checks, `reduction_complete` and qualified minimality; null if no target reached the proof stage. |
+| `support_record` | The self-contained supporting premises for a proved move; null for every other classification. |
+
+`refuted` means that a completion exists with the contrary move. `inconsistent`
+means the masks and canonical constraints have no completion. `unresolved`
+means a required search exhausted its budget before establishing the result;
+it is neither a contradiction nor a proof. `none` means the selector found no
+new move. Consumers must inspect `classification` or `proved`, not merely `ok`
+or the presence of `proposed_move`.
+
+A proved `support_record` has format `sherlock-hint-support-1`, version `1`,
+background-rule mask `1` (six row permutations), and the exact `target`.
+Its `candidates` matrix freezes **all** candidate assumptions; `givens` is a
+six-by-six matrix containing a canonical item or `-1`. Its `clues` array contains
+only retained active relations, each with the canonical source `index`, `type`
+and global object operands. `source_clue_count` includes all source cards;
+`support_count` counts retained active clues. Informational `reference` cards
+add no constraint and are omitted. The advisory `selected_clue_index` describes
+the selector's provenance; it need not survive support reduction.
+
+The proof first checks consistency, then searches for a completion with the
+exact contrary claim: target presence for a removal, target absence for a
+choice. Only an impossible contrary claim establishes `proved`. It then tries
+to delete supporting clues while preserving that same target. Candidate masks,
+givens and row rules stay fixed throughout.
+
+`proof.reduction_complete:true` certifies **deletion-minimal retained clues
+relative to that fixed background**: deleting any remaining clue would leave
+a counterexample to the move. It does not establish globally fewest clues,
+the easiest explanation, a human-readable inference chain, or the original
+game's hint method. Deletion attempts visit other clues in source order before
+the selector's advisory clue, preserving a direct explanation when sufficient;
+the advisory clue is still deleted if redundant. This preference does not
+solve the minimum-support problem.
+
+If reduction runs out of nodes after the move was proved, the result stays
+`proved` with sufficient retained support, `reduction_complete:false` and
+`minimality:"not_certified"`. This is different from exhausting the budget
+before consistency or refutation, which yields `unresolved` and no certified
+record. A zero-node fixed-target check exercises that boundary:
+
+```sh
+./bin/sherlock-cli check-hint --seed 42 --move move.json --max-nodes 0
+```
+
+The proof's budget is shared by consistency, refutation and reduction, with
+actual usage reported in `proof.nodes_used`. Selector fallback search has its
+own fixed budget; its direct propagation work is not counted as search nodes.
+Neither budget is a wall-clock deadline, and neither changes canonical native
+generation limits.
+
+The portable C API `sh_replay_hint_proof` can independently rerun consistency
+and the contrary search from the equivalent `SHHintProof` structure. It does
+not trust a saved status or certify saved minimality. Replay verifies the
+stated premises; a consumer of an external record must also compare its target,
+masks, givens and indexed clues with the intended challenge and current state.
+The CLI's `check-hint` avoids an external-premise trust boundary by reconstructing
+canonical clues itself and accepting only the target and explicit player masks.
+
 ## Identity and reproducibility
 
 Challenge IDs have these exact forms:
@@ -351,10 +519,11 @@ output. A supplied resource directory contains `sherlock_puzzles.bin`.
 output buffer unchanged on failure. It only formats a public identity; it
 does not prove that a caller-provided puzzle is canonical.
 
-Production sources are `main.c` (executable-location adapter),
+Production entry sources are `main.c` (executable-location adapter),
 `sherlock_cli.c` (portable command implementation), and `sherlock_cli.h`.
-The app links the latter implementation alongside the core and supplies its
-bundle resource directory directly.
+The CLI also links the core, `state/sherlock_state.c` and
+`state/sherlock_hint_proof.c`. The app links these shared implementations
+and supplies its bundle resource directory directly.
 
 The black-box contract tests accept a compiled binary and an optional original
 table:
@@ -370,13 +539,18 @@ solves public JSON for seeds `0`, `1`, `4294967296`, and
 swaps. Optional original cases include `0`, `235`, `11656`, and `65535`.
 The harness also checks deterministic output, public fingerprints, full-width
 identities, no hidden answer fields, strict parser failures, inclusive input
-size limits, error exits, incomplete analysis, and resource discovery.
+size limits, error exits, incomplete analysis, and resource discovery. The hint
+checks independently reconstruct support from public JSON, verify consistent
+premises and impossible contrary moves, and check each retained clue when a
+completed deletion pass claims minimality. They cover canonical givens and
+chosen/mask coherence, malformed state/move documents, counterexamples,
+inconsistent premises, zero budgets, and proved support with incomplete reduction.
 
-At implementation handoff, the strict C11 build (`-Wall -Wextra -Wpedantic
--Werror`) and all **130 invocations with the original table** passed on Linux.
-All **117 invocations without an original table** also passed with AddressSanitizer
-and UndefinedBehaviorSanitizer, with leak detection disabled.
-Independent review additionally exercised hidden-answer poisoning of the shared
+At the hint-slice handoff, the strict C11 build (`-Wall -Wextra -Wpedantic
+-Werror`) and all **208 invocations with the original table** passed on Linux.
+All **194 invocations without an original table** also passed with AddressSanitizer
+and UndefinedBehaviorSanitizer, with leak detection disabled. The earlier
+independent identity-helper review exercised hidden-answer poisoning of the shared
 identity helper, unchanged output on formatter failure, and malformed UTF-8
 diagnostics. Core solver/generator correctness and original corpus qualification
 have separate core tests and evidence; these CLI checks establish the public

@@ -238,12 +238,19 @@ int sh_move_clue(SherlockGame *game, unsigned clue, unsigned destination) {
     return 1;
 }
 
-void sh_tick(SherlockGame *game, uint64_t milliseconds) {
-    if (!game || game->paused || game->outcome != SH_PLAYING) return;
+static void advance_elapsed(SherlockGame *game, uint64_t milliseconds) {
     if (UINT64_MAX - game->elapsed_ms < milliseconds)
         game->elapsed_ms = UINT64_MAX;
     else game->elapsed_ms += milliseconds;
-    if (game->limit_ms && game->elapsed_ms >= game->limit_ms) {
+}
+
+void sh_tick(SherlockGame *game, uint64_t milliseconds) {
+    if (!game || game->paused || game->outcome != SH_PLAYING) return;
+    advance_elapsed(game, milliseconds);
+    /* The original modal defers expiration until its acknowledgement. Elapsed
+     * wall time still counts; closing the hint must not create a free pause. */
+    if (!game->hint_pending && game->limit_ms &&
+        game->elapsed_ms >= game->limit_ms) {
         game->outcome = SH_TIMED_OUT;
         game->hint_pending = 0;
     }
@@ -391,6 +398,42 @@ static int satisfiable(const SherlockPuzzle *puzzle, uint8_t domains[36],
     return unknown ? -1 : 0;
 }
 
+enum SHConstraintStatus sh_check_candidates(const SherlockPuzzle *puzzle,
+    const uint8_t candidates[SH_SIZE][SH_SIZE], unsigned *remaining_nodes) {
+    uint8_t domains[36] = { 0 };
+    unsigned row, column, item, i;
+    if (!puzzle || !candidates || !remaining_nodes ||
+        puzzle->clue_count > SH_CLUE_CAPACITY) return SH_CONSTRAINT_INVALID;
+    for (row = 0; row < SH_SIZE; ++row)
+        for (column = 0; column < SH_SIZE; ++column) {
+            int given = puzzle->given[row][column];
+            if (given < -1 || given >= SH_SIZE ||
+                (candidates[row][column] & (uint8_t)~63u))
+                return SH_CONSTRAINT_INVALID;
+        }
+    for (i = 0; i < puzzle->clue_count; ++i) {
+        const SherlockClue *clue = &puzzle->clues[i];
+        if (clue->type > SHERLOCK_UNUSED || clue->a >= 36 ||
+            (clue->type != SHERLOCK_UNUSED && clue->b >= 36) ||
+            ((clue->type == SHERLOCK_BETWEEN ||
+              clue->type == SHERLOCK_NOT_BETWEEN) && clue->c >= 36))
+            return SH_CONSTRAINT_INVALID;
+    }
+    for (row = 0; row < SH_SIZE; ++row)
+        for (column = 0; column < SH_SIZE; ++column)
+            for (item = 0; item < SH_SIZE; ++item)
+                if (candidates[row][column] & (1u << item))
+                    domains[row * SH_SIZE + item] |= (uint8_t)(1u << column);
+    for (row = 0; row < SH_SIZE; ++row)
+        for (column = 0; column < SH_SIZE; ++column) {
+            int given = puzzle->given[row][column];
+            if (given >= 0)
+                domains[row * SH_SIZE + (unsigned)given] &=
+                    (uint8_t)(1u << column);
+        }
+    return (enum SHConstraintStatus)satisfiable(puzzle, domains, remaining_nodes);
+}
+
 static void hint_at(SHHint *hint, enum SHHintKind kind, unsigned object,
                     unsigned column, int clue, const char *reason) {
     hint->kind = kind;
@@ -403,9 +446,81 @@ static void hint_at(SHHint *hint, enum SHHintKind kind, unsigned object,
              object / 6 + 1, column + 1, object % 6 + 1);
 }
 
-int sh_find_hint(const SherlockGame *game, SHHint *hint, unsigned search_budget) {
+/* Recovered local ordering for the two vertical relations and LEFT_OF. The
+ * original inspects columns before directions, and can choose a SAME partner
+ * immediately. Keep these choices separate from the stronger native fallback.
+ * No stored answer or inferred completion is consulted here. */
+static int ordered_clue_hint(const SherlockGame *game, unsigned index,
+                              const uint8_t domains[36], SHHint *hint) {
+    const SherlockClue *clue = &game->puzzle.clues[index];
+    unsigned a = clue->a, b = clue->b, column;
+    if (clue->type == SHERLOCK_SAME_COLUMN ||
+        clue->type == SHERLOCK_NOT_SAME_COLUMN) {
+        uint8_t abit = (uint8_t)(1u << (a % 6));
+        uint8_t bbit = (uint8_t)(1u << (b % 6));
+        for (column = 0; column < SH_SIZE; ++column) {
+            uint8_t amask = game->board.candidates[a / 6][column];
+            uint8_t bmask = game->board.candidates[b / 6][column];
+            if (clue->type == SHERLOCK_SAME_COLUMN) {
+                if (amask == abit && (bmask & bbit) &&
+                    game->board.chosen[b / 6][column] < 0) {
+                    hint_at(hint, SH_HINT_CHOOSE, b, column, (int)index,
+                            "The partner is in this column. These pictures share a column, so select this one here.");
+                    return 1;
+                }
+                if (bmask == bbit && (amask & abit) &&
+                    game->board.chosen[a / 6][column] < 0) {
+                    hint_at(hint, SH_HINT_CHOOSE, a, column, (int)index,
+                            "The partner is in this column. These pictures share a column, so select this one here.");
+                    return 1;
+                }
+                if (!(amask & abit) && (bmask & bbit)) {
+                    hint_at(hint, SH_HINT_REMOVE, b, column, (int)index,
+                            "The partner is absent from this column. These pictures share a column, so remove this one here.");
+                    return 1;
+                }
+                if (!(bmask & bbit) && (amask & abit)) {
+                    hint_at(hint, SH_HINT_REMOVE, a, column, (int)index,
+                            "The partner is absent from this column. These pictures share a column, so remove this one here.");
+                    return 1;
+                }
+            } else {
+                if (amask == abit && (bmask & bbit)) {
+                    hint_at(hint, SH_HINT_REMOVE, b, column, (int)index,
+                            "The partner is in this column. These pictures belong in different columns, so remove this one here.");
+                    return 1;
+                }
+                if (bmask == bbit && (amask & abit)) {
+                    hint_at(hint, SH_HINT_REMOVE, a, column, (int)index,
+                            "The partner is in this column. These pictures belong in different columns, so remove this one here.");
+                    return 1;
+                }
+            }
+        }
+    } else if (clue->type == SHERLOCK_LEFT_OF) {
+        unsigned first_a = first_bit(domains[a]);
+        unsigned last_b = SH_SIZE;
+        for (column = 0; column <= first_a && column < SH_SIZE; ++column)
+            if (domains[b] & (1u << column)) {
+                hint_at(hint, SH_HINT_REMOVE, b, column, (int)index,
+                        "This picture must be to the right of its partner, which has no possible column to its left here.");
+                return 1;
+            }
+        while (last_b && !(domains[b] & (1u << (last_b - 1)))) --last_b;
+        if (last_b) for (column = SH_SIZE; column-- > last_b - 1;)
+            if (domains[a] & (1u << column)) {
+                hint_at(hint, SH_HINT_REMOVE, a, column, (int)index,
+                        "This picture must be to the left of its partner, which has no possible column to its right here.");
+                return 1;
+            }
+    }
+    return 0;
+}
+
+int sh_find_hint_in_bank(const SherlockGame *game, unsigned bank,
+                         SHHint *hint, unsigned search_budget) {
     uint8_t domains[36], checked[36];
-    unsigned row, column, i;
+    unsigned row, column, i, group, slot, validation_budget = 0;
     static const char *reasons[7] = {
         "These items must share a column; this position has no matching partner.",
         "These items cannot share a column; this position has no legal partner.",
@@ -415,10 +530,13 @@ int sh_find_hint(const SherlockGame *game, SHHint *hint, unsigned search_budget)
         "The middle item must have the other two as its immediate neighbors.",
         "The outer items must be two columns apart, with the named item absent from the middle."
     };
-    if (!game || !hint) return -1;
+    if (!game || !hint || bank >= 2) return -1;
     memset(hint, 0, sizeof *hint);
     hint->clue_index = -1;
     if (game->outcome != SH_PLAYING) return 0;
+    if (sh_check_candidates(&game->puzzle, game->board.candidates,
+                            &validation_budget) == SH_CONSTRAINT_INVALID)
+        return -1;
     visible_domains(game, domains);
     memcpy(checked, domains, sizeof checked);
     if (!propagate(&game->puzzle, checked)) {
@@ -443,10 +561,15 @@ int sh_find_hint(const SherlockGame *game, SHHint *hint, unsigned search_budget)
             return 1;
         }
     }
-    for (i = 0; i < game->puzzle.clue_count; ++i) {
+    for (group = 0; group < 2; ++group)
+      for (slot = 0; slot < (group ? SH_HORIZONTAL_SLOTS : SH_VERTICAL_SLOTS); ++slot) {
+        int index = game->board.clue_slots[bank][group][slot];
+        if (index < 0 || (unsigned)index >= game->puzzle.clue_count) continue;
+        i = (unsigned)index;
         const SherlockClue *clue = &game->puzzle.clues[i];
         unsigned k, objects[3] = { clue->a, clue->b, clue->c };
         if (clue->type >= 7) continue;
+        if (ordered_clue_hint(game, i, domains, hint)) return 1;
         for (k = 0; k < clue_arity(clue); ++k) {
             unsigned object = objects[k];
             for (column = 0; column < 6; ++column)
@@ -504,30 +627,45 @@ unresolved:
     return 0;
 }
 
-int sh_request_hint(SherlockGame *game, unsigned search_budget) {
+int sh_find_hint(const SherlockGame *game, SHHint *hint, unsigned search_budget) {
+    return sh_find_hint_in_bank(game, 0, hint, search_budget);
+}
+
+int sh_request_hint_in_bank(SherlockGame *game, unsigned bank,
+                            unsigned search_budget) {
     SHHint hint;
     int result;
-    if (!game) return -1;
+    if (!game || bank >= 2) return -1;
     if (game->hint_pending || game->paused || game->outcome != SH_PLAYING) return 0;
-    result = sh_find_hint(game, &hint, search_budget);
+    result = sh_find_hint_in_bank(game, bank, &hint, search_budget);
     game->pending_hint = hint;
     if (result != 1) return result;
     game->hint_pending = 1;
-    /* The logical clock continues while the hint is displayed. The AppKit view
-     * does not pause it merely because a hint overlay is visible. */
-    sh_tick(game, 30000);
+    /* Original caller charges after the modal applies its move and returns. */
     return 1;
+}
+
+int sh_request_hint(SherlockGame *game, unsigned search_budget) {
+    return sh_request_hint_in_bank(game, 0, search_budget);
 }
 
 int sh_accept_hint(SherlockGame *game) {
     SHHint hint;
+    int mutation = 0;
     if (!game) return -1;
     if (!game->hint_pending || game->outcome != SH_PLAYING) return 0;
     hint = game->pending_hint;
     game->hint_pending = 0;
     if (hint.kind == SH_HINT_REMOVE)
-        return sh_remove(game, hint.row, hint.column, hint.item);
-    if (hint.kind == SH_HINT_CHOOSE)
-        return sh_choose(game, hint.row, hint.column, hint.item);
-    return 0;
+        mutation = sh_remove(game, hint.row, hint.column, hint.item);
+    else if (hint.kind == SH_HINT_CHOOSE)
+        mutation = sh_choose(game, hint.row, hint.column, hint.item);
+    if (mutation == 1) {
+        advance_elapsed(game, 30000);
+        /* Original expiration is checked before completion after the modal.
+         * This includes a hint that placed the board's final item. */
+        if (game->limit_ms && game->elapsed_ms >= game->limit_ms)
+            game->outcome = SH_TIMED_OUT;
+    }
+    return mutation;
 }

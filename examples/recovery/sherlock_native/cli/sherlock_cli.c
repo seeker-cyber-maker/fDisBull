@@ -5,9 +5,11 @@
 #include "sherlock_cli.h"
 #include "../core/sherlock_core.h"
 #include "../core/sherlock_logic.h"
+#include "../state/sherlock_hint_proof.h"
 
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,12 +17,16 @@
 
 #define SH_CLI_FORMAT "sherlock-cli-1"
 #define SH_ANSWER_LIMIT 65536u
+#define SH_CLI_HINT_NODES 20000u
+#define SH_CLI_HINT_SELECTION_NODES 20000u
 
 enum {
     CLI_OK = 0, CLI_REJECTED = 1, CLI_INPUT_ERROR = 2,
     CLI_ENGINE_ERROR = 3, CLI_INCOMPLETE = 4
 };
-typedef enum Command { CMD_PUZZLE, CMD_GENERATE, CMD_VERIFY, CMD_ANALYZE } Command;
+typedef enum Command {
+    CMD_PUZZLE, CMD_GENERATE, CMD_VERIFY, CMD_ANALYZE, CMD_HINT, CMD_CHECK_HINT
+} Command;
 typedef enum Source { SOURCE_NONE, SOURCE_ORIGINAL, SOURCE_NATIVE } Source;
 
 typedef struct Options {
@@ -28,8 +34,9 @@ typedef struct Options {
     Source source;
     uint16_t number;
     uint64_t seed, node_budget;
-    const char *data_path, *answer_path;
+    const char *data_path, *answer_path, *state_path, *move_path;
     int have_number, have_seed, have_nodes, have_data, have_answer;
+    int have_state, have_move;
 } Options;
 
 typedef struct Challenge {
@@ -38,6 +45,12 @@ typedef struct Challenge {
     uint64_t fingerprint;
     char id[192];
 } Challenge;
+
+typedef struct HintStateInput {
+    uint8_t candidates[SH_SIZE][SH_SIZE];
+    int8_t chosen[SH_SIZE][SH_SIZE];
+    int have_chosen;
+} HintStateInput;
 
 static const char *const clue_names[8] = {
     "same_column", "not_same_column", "next_to", "not_next_to",
@@ -141,23 +154,36 @@ static int help_json(void) {
            "\"generate --seed UINT64\","
            "\"verify (--number N | --seed UINT64) --solution PATH|- [--data PATH]\","
            "\"analyze (--number N | --seed UINT64) [--max-nodes UINT64] [--data PATH]\","
+           "\"hint (--number N | --seed UINT64) [--state PATH|-] [--max-nodes UINT] [--data PATH]\","
+           "\"check-hint (--number N | --seed UINT64) --move PATH|- [--state PATH|-] [--max-nodes UINT] [--data PATH]\","
            "\"help\",\"version\"],"
            "\"number_range\":[0,65535],\"seed_range\":[\"0\",\"18446744073709551615\"],"
            "\"answer\":{\"forms\":[\"6x6 array\",\"object with only a solution field containing that array\"],"
            "\"layout\":\"answer[row][column] is the within-row item ID 0..5\","
            "\"item_tokens\":\"single JSON integer digits 0 through 5\",\"maximum_bytes\":%u},"
            "\"default_analyze_nodes\":\"%" PRIu64 "\","
+           "\"default_hint_nodes\":\"%u\",\"hint_selection_nodes\":\"%u\","
+           "\"hint_node_maximum\":\"%u\","
+           "\"hint_state\":{\"required\":\"candidates: six by six masks 0..63\","
+           "\"optional\":\"chosen: six by six integers -1..5; chosen items need singleton masks\","
+           "\"meaning\":\"Candidate masks are assumptions, not certified earlier deductions; canonical givens cannot change.\"},"
+           "\"hint_move\":{\"fields\":[\"kind\",\"row\",\"column\",\"item\"],"
+           "\"kinds\":[\"remove\",\"choose\"],\"index_range\":[0,5]},"
            "\"data_precedence\":[\"--data PATH\",\"SHERLOCK_PUZZLE_TABLE\","
            "\"embedded resource directory or executable ../Resources\","
            "\"working-directory Resources/, core/, current directory when no resource directory was supplied\"],"
            "\"notes\":[\"Flags and values are separate arguments.\","
            "\"--data applies only to original-number commands. Native generation needs no puzzle table.\","
            "\"Verification regenerates or reloads the canonical challenge and checks all public constraints.\","
+           "\"Hint commands prove a fixed target from public clues and stated candidate assumptions; they do not apply moves or charge time.\","
+           "\"Hint selection has its own fixed budget; --max-nodes is shared by consistency, refutation and clue reduction.\","
+           "\"Only a proved hint has a certified support_record. Incomplete reduction does not invalidate an already proved move.\","
            "\"No command emits a hidden solution. 64-bit values are decimal JSON strings.\"],"
-           "\"exit_codes\":{\"0\":\"success or conclusive analysis\",\"1\":\"answer rejected\","
-           "\"2\":\"invalid arguments or answer JSON\",\"3\":\"resource, I/O or engine error\","
-           "\"4\":\"analysis unknown or generator budget exhausted\"}}",
-           SH_CLI_FORMAT, SH_ANSWER_LIMIT, SHERLOCK_DEFAULT_SOLVE_NODES);
+           "\"exit_codes\":{\"0\":\"success, proved hint, no hint or conclusive analysis\",\"1\":\"answer rejected or hint refuted/inconsistent\","
+           "\"2\":\"invalid arguments or input JSON/target\",\"3\":\"resource, I/O or engine error\","
+           "\"4\":\"analysis/hint unresolved or generator budget exhausted\"}}",
+           SH_CLI_FORMAT, SH_ANSWER_LIMIT, SHERLOCK_DEFAULT_SOLVE_NODES,
+           SH_CLI_HINT_NODES, SH_CLI_HINT_SELECTION_NODES, UINT_MAX);
     return finish_json(CLI_OK);
 }
 
@@ -176,14 +202,19 @@ static int parse_options(int argc, char **argv, Options *options) {
     else if (!strcmp(argv[1], "generate")) options->command = CMD_GENERATE;
     else if (!strcmp(argv[1], "verify")) options->command = CMD_VERIFY;
     else if (!strcmp(argv[1], "analyze")) options->command = CMD_ANALYZE;
+    else if (!strcmp(argv[1], "hint")) options->command = CMD_HINT;
+    else if (!strcmp(argv[1], "check-hint")) options->command = CMD_CHECK_HINT;
     else return argument_error("Unknown command. Use help for the supported commands.", argv[1]);
+    if (options->command == CMD_HINT || options->command == CMD_CHECK_HINT)
+        options->node_budget = SH_CLI_HINT_NODES;
     for (i = 2; i < argc; ++i) {
         const char *flag = argv[i];
         const char *value;
         uint64_t number;
         if (strcmp(flag, "--number") && strcmp(flag, "--seed") &&
             strcmp(flag, "--max-nodes") && strcmp(flag, "--data") &&
-            strcmp(flag, "--solution")) return argument_error("Unknown option or trailing argument.", flag);
+            strcmp(flag, "--solution") && strcmp(flag, "--state") &&
+            strcmp(flag, "--move")) return argument_error("Unknown option or trailing argument.", flag);
         if (i + 1 >= argc) return argument_error("This option requires a value.", flag);
         value = argv[++i];
         if (!strcmp(flag, "--number")) {
@@ -205,10 +236,18 @@ static int parse_options(int argc, char **argv, Options *options) {
             if (options->have_data) return argument_error("Duplicate --data option.", flag);
             if (!*value) return argument_error("The data path must not be empty.", flag);
             options->data_path = value; options->have_data = 1;
-        } else {
+        } else if (!strcmp(flag, "--solution")) {
             if (options->have_answer) return argument_error("Duplicate --solution option.", flag);
             if (!*value) return argument_error("The solution path must not be empty; use - for stdin.", flag);
             options->answer_path = value; options->have_answer = 1;
+        } else if (!strcmp(flag, "--state")) {
+            if (options->have_state) return argument_error("Duplicate --state option.", flag);
+            if (!*value) return argument_error("The state path must not be empty; use - for stdin.", flag);
+            options->state_path = value; options->have_state = 1;
+        } else {
+            if (options->have_move) return argument_error("Duplicate --move option.", flag);
+            if (!*value) return argument_error("The move path must not be empty; use - for stdin.", flag);
+            options->move_path = value; options->have_move = 1;
         }
     }
     if (options->have_number + options->have_seed != 1)
@@ -219,15 +258,26 @@ static int parse_options(int argc, char **argv, Options *options) {
         return argument_error("puzzle requires --number; generate requires --seed.", NULL);
     if ((options->command == CMD_VERIFY) != options->have_answer)
         return argument_error("Only verify accepts and requires --solution PATH|-.", NULL);
-    if (options->have_nodes && options->command != CMD_ANALYZE)
-        return argument_error("--max-nodes is supported only by analyze.", NULL);
+    if (options->have_nodes && options->command != CMD_ANALYZE &&
+        options->command != CMD_HINT && options->command != CMD_CHECK_HINT)
+        return argument_error("--max-nodes is supported only by analyze, hint and check-hint.", NULL);
+    if ((options->command == CMD_HINT || options->command == CMD_CHECK_HINT) &&
+        options->node_budget > UINT_MAX)
+        return argument_error("Hint proof node budgets must fit an unsigned int; see help for hint_node_maximum.", NULL);
+    if (options->have_state && options->command != CMD_HINT && options->command != CMD_CHECK_HINT)
+        return argument_error("--state is supported only by hint and check-hint.", NULL);
+    if ((options->command == CMD_CHECK_HINT) != options->have_move)
+        return argument_error("Only check-hint accepts and requires --move PATH|-.", NULL);
+    if (options->have_state && options->have_move &&
+        !strcmp(options->state_path, "-") && !strcmp(options->move_path, "-"))
+        return argument_error("Only one input document may use stdin; supply a file for --state or --move.", NULL);
     if (options->have_data && options->source != SOURCE_ORIGINAL)
         return argument_error("--data applies only to original-number commands.", NULL);
     return CLI_OK;
 }
 
-/* This is deliberately a narrow JSON parser, not a permissive general parser.
- * The only accepted document forms are the specified array and one-key object.
+/* The answer parser deliberately accepts only the specified array and one-key
+ * object. Hint inputs below share its reader but have their own closed schemas.
  * Every accepted byte sequence is valid JSON; unsupported JSON forms fail. */
 typedef struct AnswerReader {
     const unsigned char *start, *at, *end;
@@ -353,6 +403,212 @@ static int read_answer(const char *path, uint8_t answer[6][6]) {
     result = parse_answer(bytes, size, answer, &reason, &offset);
     free(bytes);
     return result ? CLI_OK : error_json(CLI_INPUT_ERROR, "invalid_answer", reason, NULL, NULL, 1, offset);
+}
+
+/* Hint documents have a small, closed schema too. These parsers accept JSON
+ * ASCII strings (including equivalent Unicode escapes) and bounded integers;
+ * they never skip an unknown field or coerce a Boolean/float/string to a number. */
+static int ascii_string(AnswerReader *reader, char *output, size_t capacity) {
+    size_t length = 0;
+    if (!expect(reader, '"', "Expected a quoted ASCII field name or move kind.")) return 0;
+    while (reader->at < reader->end) {
+        unsigned value = *reader->at++;
+        if (value == '"') {
+            output[length] = '\0';
+            return 1;
+        }
+        if (value == '\\') {
+            unsigned j;
+            if (reader->at >= reader->end) goto invalid;
+            value = *reader->at++;
+            if (value == 'u') {
+                value = 0;
+                for (j = 0; j < 4; ++j) {
+                    int digit;
+                    if (reader->at >= reader->end || (digit = hex_digit(*reader->at++)) < 0)
+                        goto invalid;
+                    value = value * 16u + (unsigned)digit;
+                }
+            } else if (value != '"' && value != '\\' && value != '/') goto invalid;
+        }
+        /* The accepted vocabulary has no control characters, including NUL.
+         * Rejecting decoded NUL also prevents truncated-key comparisons. */
+        if (value < 0x20u || value > 0x7eu || length + 1u >= capacity) goto invalid;
+        output[length++] = (char)value;
+    }
+invalid:
+    reader->reason = "Expected a supported ASCII field name or move kind.";
+    return 0;
+}
+
+static int bounded_json_integer(AnswerReader *reader, int minimum,
+                                 unsigned maximum, int *output) {
+    unsigned value = 0;
+    whitespace(reader);
+    if (minimum == -1 && reader->at < reader->end && *reader->at == '-') {
+        ++reader->at;
+        if (reader->at >= reader->end || *reader->at++ != '1') goto invalid;
+        if (reader->at < reader->end && *reader->at >= '0' && *reader->at <= '9') goto invalid;
+        *output = -1;
+        return 1;
+    }
+    if (reader->at >= reader->end || *reader->at < '0' || *reader->at > '9') goto invalid;
+    if (*reader->at == '0') {
+        ++reader->at;
+        if (reader->at < reader->end && *reader->at >= '0' && *reader->at <= '9') goto invalid;
+    } else {
+        do {
+            unsigned digit = (unsigned)(*reader->at++ - '0');
+            if (value > maximum / 10u ||
+                (value == maximum / 10u && digit > maximum % 10u)) goto invalid;
+            value = value * 10u + digit;
+        } while (reader->at < reader->end && *reader->at >= '0' && *reader->at <= '9');
+    }
+    *output = (int)value;
+    return 1;
+invalid:
+    reader->reason = minimum == -1 ?
+        "Chosen entries must be JSON integers -1 or 0 through 5." :
+        maximum == 63u ? "Candidate masks must be JSON integers 0 through 63." :
+        "Move coordinates and item IDs must be JSON integers 0 through 5.";
+    return 0;
+}
+
+static int bounded_matrix(AnswerReader *reader, int minimum, unsigned maximum,
+                            int matrix[SH_SIZE][SH_SIZE]) {
+    unsigned row, column;
+    if (!expect(reader, '[', "Expected a matrix of exactly six rows.")) return 0;
+    for (row = 0; row < SH_SIZE; ++row) {
+        if (!expect(reader, '[', "Each matrix row must be an array.")) return 0;
+        for (column = 0; column < SH_SIZE; ++column) {
+            if (!bounded_json_integer(reader, minimum, maximum, &matrix[row][column])) return 0;
+            if (column < SH_SIZE - 1u &&
+                !expect(reader, ',', "Each row must contain exactly six integers.")) return 0;
+        }
+        if (!expect(reader, ']', "Each row must end after exactly six integers.")) return 0;
+        if (row < SH_SIZE - 1u &&
+            !expect(reader, ',', "The matrix must contain exactly six rows.")) return 0;
+    }
+    return expect(reader, ']', "The matrix must end after exactly six rows.");
+}
+
+static int parse_hint_state(AnswerReader *reader, HintStateInput *state) {
+    unsigned seen = 0;
+    memset(state, 0, sizeof *state);
+    memset(state->chosen, -1, sizeof state->chosen);
+    if (!expect(reader, '{', "State must be an object with candidates and optional chosen.")) return 0;
+    for (;;) {
+        char key[32];
+        unsigned field, row, column;
+        int matrix[SH_SIZE][SH_SIZE];
+        if (!ascii_string(reader, key, sizeof key)) return 0;
+        field = !strcmp(key, "candidates") ? 1u : !strcmp(key, "chosen") ? 2u : 0u;
+        if (!field || (seen & field)) {
+            reader->reason = "State accepts exactly one candidates field and at most one chosen field; no other fields.";
+            return 0;
+        }
+        seen |= field;
+        if (!expect(reader, ':', "Expected ':' after the state field name.") ||
+            !bounded_matrix(reader, field == 2u ? -1 : 0, field == 2u ? 5u : 63u, matrix)) return 0;
+        for (row = 0; row < SH_SIZE; ++row) for (column = 0; column < SH_SIZE; ++column) {
+            if (field == 1u) state->candidates[row][column] = (uint8_t)matrix[row][column];
+            else state->chosen[row][column] = (int8_t)matrix[row][column];
+        }
+        whitespace(reader);
+        if (reader->at < reader->end && *reader->at == '}') { ++reader->at; break; }
+        if (!expect(reader, ',', "Expected ',' or the end of the state object.")) return 0;
+    }
+    if (!(seen & 1u)) {
+        reader->reason = "State requires its candidates matrix.";
+        return 0;
+    }
+    state->have_chosen = (seen & 2u) != 0;
+    return 1;
+}
+
+static int parse_hint_move(AnswerReader *reader, SHHint *move) {
+    unsigned seen = 0;
+    memset(move, 0, sizeof *move);
+    move->clue_index = -1;
+    if (!expect(reader, '{', "Move must be an object with kind, row, column and item.")) return 0;
+    for (;;) {
+        char key[32];
+        unsigned field;
+        int value;
+        if (!ascii_string(reader, key, sizeof key)) return 0;
+        field = !strcmp(key, "kind") ? 1u : !strcmp(key, "row") ? 2u :
+                !strcmp(key, "column") ? 4u : !strcmp(key, "item") ? 8u : 0u;
+        if (!field || (seen & field)) {
+            reader->reason = "Move requires exactly kind, row, column and item; duplicates and other fields are rejected.";
+            return 0;
+        }
+        seen |= field;
+        if (!expect(reader, ':', "Expected ':' after the move field name.")) return 0;
+        if (field == 1u) {
+            char kind[16];
+            if (!ascii_string(reader, kind, sizeof kind)) return 0;
+            if (!strcmp(kind, "remove")) move->kind = SH_HINT_REMOVE;
+            else if (!strcmp(kind, "choose")) move->kind = SH_HINT_CHOOSE;
+            else {
+                reader->reason = "Move kind must be remove or choose.";
+                return 0;
+            }
+        } else {
+            if (!bounded_json_integer(reader, 0, 5u, &value)) return 0;
+            if (field == 2u) move->row = (uint8_t)value;
+            else if (field == 4u) move->column = (uint8_t)value;
+            else move->item = (uint8_t)value;
+        }
+        whitespace(reader);
+        if (reader->at < reader->end && *reader->at == '}') { ++reader->at; break; }
+        if (!expect(reader, ',', "Expected ',' or the end of the move object.")) return 0;
+    }
+    if (seen != 15u) {
+        reader->reason = "Move requires all four fields: kind, row, column and item.";
+        return 0;
+    }
+    return 1;
+}
+
+static int read_hint_document(const char *path, HintStateInput *state, SHHint *move) {
+    FILE *file = !strcmp(path, "-") ? stdin : fopen(path, "rb");
+    unsigned char *bytes;
+    size_t size, offset;
+    AnswerReader reader;
+    const char *io_code = state ? "state_io_error" : "move_io_error";
+    int valid;
+    if (!file) return error_json(CLI_ENGINE_ERROR, io_code, strerror(errno), "path", path, 0, 0);
+    bytes = (unsigned char *)malloc(SH_ANSWER_LIMIT + 1u);
+    if (!bytes) {
+        if (file != stdin) fclose(file);
+        return error_json(CLI_ENGINE_ERROR, "out_of_memory", "Unable to allocate the input buffer.", NULL, NULL, 0, 0);
+    }
+    size = fread(bytes, 1, SH_ANSWER_LIMIT + 1u, file);
+    if (ferror(file)) {
+        int saved_errno = errno;
+        if (file != stdin) fclose(file);
+        free(bytes);
+        return error_json(CLI_ENGINE_ERROR, io_code, saved_errno ? strerror(saved_errno) : "The JSON document could not be read.", "path", path, 0, 0);
+    }
+    if (file != stdin) fclose(file);
+    if (size > SH_ANSWER_LIMIT) {
+        free(bytes);
+        return error_json(CLI_INPUT_ERROR, state ? "state_too_large" : "move_too_large",
+                           "The JSON document exceeds 65536 bytes.", "path", path, 0, 0);
+    }
+    reader.start = bytes; reader.at = bytes; reader.end = bytes + size; reader.reason = NULL;
+    valid = state ? parse_hint_state(&reader, state) : parse_hint_move(&reader, move);
+    if (valid) {
+        whitespace(&reader);
+        if (reader.at != reader.end) {
+            reader.reason = "Trailing data after the JSON document is not permitted.";
+            valid = 0;
+        }
+    }
+    offset = (size_t)(reader.at - reader.start);
+    free(bytes);
+    return valid ? CLI_OK : error_json(CLI_INPUT_ERROR, state ? "invalid_state" : "invalid_move",
+        reader.reason ? reader.reason : "Invalid JSON document.", NULL, NULL, 1, offset);
 }
 
 static char *table_path(const char *directory) {
@@ -607,10 +863,191 @@ static int analyze_json(const Options *options, const Challenge *challenge) {
     return finish_json(status == SH_SOLVE_UNKNOWN ? CLI_INCOMPLETE : CLI_OK);
 }
 
+static void print_candidate_matrix(const uint8_t matrix[SH_SIZE][SH_SIZE]) {
+    unsigned row, column;
+    putchar('[');
+    for (row = 0; row < SH_SIZE; ++row) {
+        if (row) putchar(',');
+        putchar('[');
+        for (column = 0; column < SH_SIZE; ++column) {
+            if (column) putchar(',');
+            printf("%u", (unsigned)matrix[row][column]);
+        }
+        putchar(']');
+    }
+    putchar(']');
+}
+
+static void print_index_matrix(const int8_t matrix[SH_SIZE][SH_SIZE]) {
+    unsigned row, column;
+    putchar('[');
+    for (row = 0; row < SH_SIZE; ++row) {
+        if (row) putchar(',');
+        putchar('[');
+        for (column = 0; column < SH_SIZE; ++column) {
+            if (column) putchar(',');
+            printf("%d", (int)matrix[row][column]);
+        }
+        putchar(']');
+    }
+    putchar(']');
+}
+
+static void print_hint_target(enum SHHintKind kind, unsigned row,
+                               unsigned column, unsigned item) {
+    fputs("{\"kind\":", stdout);
+    json_string(kind == SH_HINT_REMOVE ? "remove" : "choose");
+    printf(",\"row\":%u,\"column\":%u,\"item\":%u}", row, column, item);
+}
+
+static void print_hint_support(const SHHintProof *record) {
+    unsigned i;
+    printf("{\"format\":\"sherlock-hint-support-1\",\"version\":%u,"
+           "\"background_rule_mask\":%u,\"row_rule\":\"Each row is a permutation of items 0..5.\","
+           "\"candidate_semantics\":\"candidates[row][column] is a mask; bit item permits that item at that column. All masks are frozen premises.\","
+           "\"target\":", (unsigned)record->version, (unsigned)record->background_rules);
+    print_hint_target(record->target.kind, record->target.row,
+                      record->target.column, record->target.item);
+    fputs(",\"selected_clue_index\":", stdout); nullable_index(record->selected_clue_index);
+    printf(",\"source_clue_count\":%u,\"candidates\":", (unsigned)record->source_clue_count);
+    print_candidate_matrix(record->candidates);
+    fputs(",\"givens\":", stdout); print_index_matrix(record->given);
+    printf(",\"support_count\":%u,\"clues\":[", (unsigned)record->support_count);
+    for (i = 0; i < record->support_count; ++i) {
+        const SHHintProofClue *support = &record->support[i];
+        const SherlockClue *clue = &support->clue;
+        unsigned arity = clue_arity(clue->type);
+        if (i) putchar(',');
+        printf("{\"index\":%u,\"type\":", (unsigned)support->index);
+        json_string(clue_names[clue->type]);
+        printf(",\"a\":%u", (unsigned)clue->a);
+        if (arity >= 2) printf(",\"b\":%u", (unsigned)clue->b);
+        if (arity == 3) printf(",\"c\":%u", (unsigned)clue->c);
+        putchar('}');
+    }
+    fputs("]}", stdout);
+}
+
+static int prepare_hint_game(const Challenge *challenge, const HintStateInput *state,
+                              SherlockGame *game) {
+    unsigned row, column;
+    sh_game_init(game, &challenge->puzzle, 0);
+    if (game->outcome != SH_PLAYING)
+        return error_json(CLI_ENGINE_ERROR, "state_error",
+            "The canonical challenge could not initialize a player state.", NULL, NULL, 0, 0);
+    if (!state) return CLI_OK;
+    for (row = 0; row < SH_SIZE; ++row) for (column = 0; column < SH_SIZE; ++column) {
+        int chosen = state->have_chosen ? state->chosen[row][column] : game->board.chosen[row][column];
+        if (chosen >= 0 && state->candidates[row][column] != (uint8_t)(1u << chosen))
+            return error_json(CLI_INPUT_ERROR, "invalid_state",
+                "A chosen item requires exactly its singleton candidate mask.", NULL, NULL, 0, 0);
+        if (game->fixed[row][column] &&
+            (state->candidates[row][column] != game->board.candidates[row][column] ||
+             chosen != game->board.chosen[row][column]))
+            return error_json(CLI_INPUT_ERROR, "invalid_state",
+                "State cannot change a canonical given's candidate mask or chosen item.", NULL, NULL, 0, 0);
+    }
+    memcpy(game->board.candidates, state->candidates, sizeof game->board.candidates);
+    if (state->have_chosen) memcpy(game->board.chosen, state->chosen, sizeof game->board.chosen);
+    return CLI_OK;
+}
+
+static int hint_json(const Options *options, const Challenge *challenge,
+                      const HintStateInput *state, const SHHint *requested) {
+    SherlockGame game;
+    SHHint selected;
+    SHHintProof record;
+    SHHintProofResult report;
+    SHHintProofStatus proof_status = SH_PROOF_UNRESOLVED;
+    const char *classification, *reason;
+    int status, have_target, proof_ran = 0;
+    status = prepare_hint_game(challenge, state, &game);
+    if (status) return status;
+    memset(&selected, 0, sizeof selected);
+    selected.clue_index = -1;
+    if (requested) { selected = *requested; have_target = 1; }
+    else {
+        int found = sh_find_hint(&game, &selected, SH_CLI_HINT_SELECTION_NODES);
+        if (found < 0)
+            return error_json(CLI_ENGINE_ERROR, "hint_error",
+                "The native hint selector rejected the canonical state.", NULL, NULL, 0, 0);
+        have_target = found == 1;
+    }
+    if (have_target) {
+        proof_ran = 1;
+        proof_status = sh_explain_hint(&game, &selected, (unsigned)options->node_budget,
+                                       &record, &report);
+        if (proof_status == SH_PROOF_INVALID)
+            return error_json(requested ? CLI_INPUT_ERROR : CLI_ENGINE_ERROR,
+                requested ? "invalid_move" : "hint_error", report.reason, NULL, NULL, 0, 0);
+        classification = proof_status == SH_PROOF_PROVED ? "proved" :
+                         proof_status == SH_PROOF_REFUTED ? "refuted" :
+                         proof_status == SH_PROOF_INCONSISTENT ? "inconsistent" : "unresolved";
+        reason = report.reason;
+        status = proof_status == SH_PROOF_PROVED ? CLI_OK :
+                 proof_status == SH_PROOF_UNRESOLVED ? CLI_INCOMPLETE : CLI_REJECTED;
+    } else {
+        if (selected.kind != SH_HINT_NONE && selected.kind != SH_HINT_CONTRADICTION &&
+            selected.kind != SH_HINT_UNRESOLVED)
+            return error_json(CLI_ENGINE_ERROR, "hint_error",
+                "The native selector returned an unsupported result.", NULL, NULL, 0, 0);
+        classification = selected.kind == SH_HINT_CONTRADICTION ? "inconsistent" :
+                         selected.kind == SH_HINT_UNRESOLVED ? "unresolved" : "none";
+        reason = selected.explanation;
+        status = selected.kind == SH_HINT_CONTRADICTION ? CLI_REJECTED :
+                 selected.kind == SH_HINT_UNRESOLVED ? CLI_INCOMPLETE : CLI_OK;
+    }
+    printf("{\"format\":\"%s\",\"kind\":", SH_CLI_FORMAT);
+    json_string(requested ? "hint_verification" : "hint");
+    fputs(",\"ok\":true,", stdout); print_identity(options, challenge);
+    fputs(",\"classification\":", stdout); json_string(classification);
+    printf(",\"proved\":%s,\"reason\":", proof_status == SH_PROOF_PROVED ? "true" : "false");
+    json_string(reason);
+    fputs(",\"state_origin\":", stdout);
+    json_string(state ? "submitted_assumptions" : "canonical_initial");
+    fputs(",\"assumptions\":{\"candidate_masks\":\"premises\","
+          "\"earlier_edits_verified\":false,"
+          "\"meaning\":\"A proved result follows from these candidate masks, canonical givens and retained clues; it does not certify how earlier edits were obtained.\"},"
+          "\"state\":{\"candidates\":", stdout);
+    print_candidate_matrix((const uint8_t (*)[SH_SIZE])game.board.candidates);
+    fputs(",\"chosen\":", stdout);
+    print_index_matrix((const int8_t (*)[SH_SIZE])game.board.chosen);
+    fputs("},\"proposed_move\":", stdout);
+    if (have_target) print_hint_target(selected.kind, selected.row, selected.column, selected.item);
+    else fputs("null", stdout);
+    fputs(",\"selection\":", stdout);
+    if (requested) fputs("null", stdout);
+    else {
+        printf("{\"policy\":\"native_visible_constraints_v1\",\"node_budget\":\"%u\","
+               "\"budget_scope\":\"bounded fallback search; propagation is not counted\","
+               "\"selected_clue_index\":", SH_CLI_HINT_SELECTION_NODES);
+        nullable_index(selected.clue_index);
+        fputs(",\"explanation\":", stdout); json_string(selected.explanation);
+        putchar('}');
+    }
+    fputs(",\"proof\":", stdout);
+    if (proof_ran) {
+        printf("{\"node_budget\":\"%u\",\"nodes_used\":\"%u\",\"deletion_checks\":%u,"
+               "\"reduction_complete\":%s,\"minimality\":",
+               report.node_budget, report.nodes_used, report.deletion_checks,
+               report.reduction_complete ? "true" : "false");
+        json_string(proof_status == SH_PROOF_PROVED && report.reduction_complete ?
+            "deletion_minimal_clues_relative_to_frozen_background" : "not_certified");
+        putchar('}');
+    } else fputs("null", stdout);
+    fputs(",\"support_record\":", stdout);
+    if (proof_status == SH_PROOF_PROVED) print_hint_support(&record);
+    else fputs("null", stdout);
+    putchar('}');
+    return finish_json(status);
+}
+
 int sh_cli_main(int argc, char **argv, const char *resource_directory) {
     Options options;
     Challenge challenge;
     uint8_t answer[6][6];
+    HintStateInput hint_state;
+    SHHint requested_move;
     int status;
     if (argc < 2 || !argv || !argv[1]) return help_json();
     if (!strcmp(argv[1], "help") || !strcmp(argv[1], "--help"))
@@ -619,11 +1056,20 @@ int sh_cli_main(int argc, char **argv, const char *resource_directory) {
         return argc == 2 ? version_json() : argument_error("version accepts no additional arguments.", argv[2]);
     if (argc == 3 && !strcmp(argv[2], "--help") &&
         (!strcmp(argv[1], "puzzle") || !strcmp(argv[1], "generate") ||
-         !strcmp(argv[1], "verify") || !strcmp(argv[1], "analyze"))) return help_json();
+         !strcmp(argv[1], "verify") || !strcmp(argv[1], "analyze") ||
+         !strcmp(argv[1], "hint") || !strcmp(argv[1], "check-hint"))) return help_json();
     status = parse_options(argc, argv, &options);
     if (status) return status;
     if (options.command == CMD_VERIFY) {
         status = read_answer(options.answer_path, answer);
+        if (status) return status;
+    }
+    if (options.have_state) {
+        status = read_hint_document(options.state_path, &hint_state, NULL);
+        if (status) return status;
+    }
+    if (options.have_move) {
+        status = read_hint_document(options.move_path, NULL, &requested_move);
         if (status) return status;
     }
     status = canonical_challenge(&options, resource_directory, &challenge);
@@ -631,5 +1077,8 @@ int sh_cli_main(int argc, char **argv, const char *resource_directory) {
     if (options.command == CMD_VERIFY)
         return verify_json(&options, &challenge, (const uint8_t (*)[6])answer);
     if (options.command == CMD_ANALYZE) return analyze_json(&options, &challenge);
+    if (options.command == CMD_HINT || options.command == CMD_CHECK_HINT)
+        return hint_json(&options, &challenge, options.have_state ? &hint_state : NULL,
+                         options.have_move ? &requested_move : NULL);
     return puzzle_json(&options, &challenge);
 }

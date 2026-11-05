@@ -143,13 +143,15 @@ static void two_phase_hint_and_time(void) {
     assert(sh_find_hint(&other, &other_hint, 1000) == 1);
     assert(memcmp(&hint, &other_hint, sizeof hint) == 0);
     assert(sh_request_hint(&g, 1000) == 1);
-    assert(g.hint_pending && g.elapsed_ms == 31000);
+    assert(g.hint_pending && g.elapsed_ms == 1000); /* Fee waits for acknowledgement. */
     assert(memcmp(&before, &g.board, sizeof before) == 0);
     assert(sh_request_hint(&g, 1000) == 0); /* No double charge. */
     sh_tick(&g, 2000); /* The logical clock does not freeze at the hint. */
-    assert(g.elapsed_ms == 33000);
+    assert(g.elapsed_ms == 3000);
     assert(sh_accept_hint(&g) == 1);
     assert(!g.hint_pending && g.board.candidates[0][0] == 62);
+    assert(g.elapsed_ms == 33000);
+    assert(sh_accept_hint(&g) == 0 && g.elapsed_ms == 33000); /* No double charge. */
     assert(sh_undo(&g) == 1);
     assert(memcmp(&before, &g.board, sizeof before) == 0);
     assert(g.elapsed_ms == 33000); /* Undo never refunds the penalty. */
@@ -167,6 +169,110 @@ static void two_phase_hint_and_time(void) {
     g.board.candidates[0][0] = 0;
     assert(sh_find_hint(&g, &hint, 1000) == 0);
     assert(hint.kind == SH_HINT_CONTRADICTION);
+}
+
+static void hint_timeout_waits_for_acknowledgement(void) {
+    SherlockPuzzle p = fixture();
+    SherlockGame g;
+    SHBoard before;
+    unsigned row, column;
+    p.given[1][2] = 0;
+    p.clue_count = 1;
+    p.clues[0] = (SherlockClue){ SHERLOCK_SAME_COLUMN, 0, 6, 255 };
+    sh_game_init(&g, &p, 30);
+    sh_tick(&g, 1000);
+    before = g.board;
+    assert(sh_request_hint(&g, 1000) == 1);
+    assert(g.elapsed_ms == 1000 && g.outcome == SH_PLAYING);
+    sh_tick(&g, 40000);
+    assert(g.hint_pending && g.outcome == SH_PLAYING && g.elapsed_ms == 41000);
+    assert(memcmp(&before, &g.board, sizeof before) == 0);
+    assert(sh_accept_hint(&g) == 1); /* Move applies before expiration. */
+    assert(g.board.candidates[0][0] == 62 && g.elapsed_ms == 71000);
+    assert(g.outcome == SH_TIMED_OUT && !g.hint_pending);
+
+    /* Expiration takes priority over a last-cell success; without a limit the
+     * same successful final hint includes its fee in the finished game time. */
+    for (unsigned limited = 0; limited < 2; ++limited) {
+        p = fixture();
+        sh_game_init(&g, &p, limited ? 30 : 0);
+        for (row = 0; row < 6; ++row) for (column = 0; column < 6; ++column)
+            if (row != 5 || column != 5) assert(sh_choose(&g, row, column, column) == 1);
+        sh_tick(&g, 1000);
+        assert(sh_request_hint(&g, 1000) == 1);
+        assert(g.pending_hint.kind == SH_HINT_CHOOSE);
+        assert(sh_accept_hint(&g) == 1);
+        assert(g.board.chosen[5][5] == 5 && g.elapsed_ms == 31000);
+        assert(g.outcome == (limited ? SH_TIMED_OUT : SH_WON));
+    }
+    sh_game_init(&g, &p, 0);
+    g.elapsed_ms = UINT64_MAX - 10;
+    g.board.candidates[0][0] = 1;
+    assert(sh_request_hint(&g, 1000) == 1);
+    assert(sh_accept_hint(&g) == 1 && g.elapsed_ms == UINT64_MAX);
+}
+
+static void hint_order_follows_displayed_clues(void) {
+    SherlockPuzzle p = fixture();
+    SherlockGame g;
+    SHHint h, other;
+    p.given[0][5] = 2;
+    p.clue_count = 2;
+    p.clues[0] = (SherlockClue){ SHERLOCK_SAME_COLUMN, 0, 6, 255 };
+    p.clues[1] = (SherlockClue){ SHERLOCK_SAME_COLUMN, 1, 7, 255 };
+    sh_game_init(&g, &p, 0);
+    assert(sh_find_hint(&g, &h, 1000) == 1 && h.clue_index == 0);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 1 && h.column == 5 && h.item == 0);
+    assert(sh_move_clue(&g, 1, 0) == 1);
+    assert(sh_find_hint(&g, &h, 1000) == 1 && h.clue_index == 1 && h.item == 1);
+    assert(sh_archive_clue(&g, 1) == 1);
+    assert(sh_find_hint_in_bank(&g, 0, &h, 1000) == 1 && h.clue_index == 0);
+    assert(sh_find_hint_in_bank(&g, 1, &h, 1000) == 1 && h.clue_index == 1);
+    memset(g.puzzle.solution, 255, sizeof g.puzzle.solution);
+    assert(sh_find_hint_in_bank(&g, 1, &other, 1000) == 1);
+    assert(memcmp(&h, &other, sizeof h) == 0);
+    assert(sh_request_hint_in_bank(&g, 1, 1000) == 1);
+    assert(g.pending_hint.clue_index == 1 && g.elapsed_ms == 0);
+    assert(sh_find_hint_in_bank(&g, 2, &h, 1000) == -1);
+
+    p = fixture();
+    p.clue_count = 1;
+    p.clues[0] = (SherlockClue){ SHERLOCK_SAME_COLUMN, 0, 6, 255 };
+    /* Column order outranks object order: remove B at 0 before A at 4. */
+    p.given[0][0] = 2;
+    p.given[1][4] = 2;
+    sh_game_init(&g, &p, 0);
+    assert(sh_find_hint(&g, &h, 1000) == 1);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 1 && h.column == 0 && h.item == 0);
+    /* A known partner can immediately choose, in either relation direction. */
+    for (unsigned known = 0; known < 2; ++known) {
+        memset(p.given, -1, sizeof p.given);
+        p.given[known][0] = 0;
+        sh_game_init(&g, &p, 0);
+        assert(sh_find_hint(&g, &h, 1000) == 1);
+        assert(h.kind == SH_HINT_CHOOSE && h.row == 1 - known && h.column == 0 && h.item == 0);
+    }
+    p.clues[0].type = SHERLOCK_NOT_SAME_COLUMN;
+    memset(p.given, -1, sizeof p.given);
+    p.given[1][0] = 0;
+    sh_game_init(&g, &p, 0);
+    assert(sh_find_hint(&g, &h, 1000) == 1);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 0 && h.column == 0);
+    memset(p.given, -1, sizeof p.given);
+    p.given[0][3] = 0;
+    sh_game_init(&g, &p, 0);
+    assert(sh_find_hint(&g, &h, 1000) == 1);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 1 && h.column == 3);
+    p.clues[0].type = SHERLOCK_LEFT_OF;
+    memset(p.given, -1, sizeof p.given);
+    sh_game_init(&g, &p, 0);
+    assert(sh_find_hint(&g, &h, 1000) == 1);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 1 && h.column == 0);
+    /* Once the right-edge impossibility is removed, scan left object's
+     * impossible positions from right to left, not object/column ascending. */
+    assert(sh_remove(&g, 1, 0, 0) == 1);
+    assert(sh_find_hint(&g, &h, 1000) == 1);
+    assert(h.kind == SH_HINT_REMOVE && h.row == 0 && h.column == 5);
 }
 
 static void full_clue_grid_stays_visible(void) {
@@ -237,6 +343,8 @@ int main(void) {
     clue_relations();
     undo_capacity_and_clue_holes();
     two_phase_hint_and_time();
+    hint_timeout_waits_for_acknowledgement();
+    hint_order_follows_displayed_clues();
     full_clue_grid_stays_visible();
     unused_references_follow_original_slot();
     puts("Player state: synthetic constraints and retained original board/undo witnesses passed.");

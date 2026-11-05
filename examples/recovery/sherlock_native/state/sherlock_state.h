@@ -76,14 +76,41 @@ void sh_quit(SherlockGame *game);
  * column numbers; BETWEEN and NOT_BETWEEN use a/c as outer items, b as middle. */
 int sh_relation_holds(unsigned type, int a, int b, int c);
 
-/* The hint routine first uses single-cell/single-item deductions, each clue's
- * supported tuples and row Hall sets. If necessary it performs a bounded CSP
- * contradiction search using only clues and current candidates. Unknown is
- * returned explicitly if the shared node budget is exhausted. The hint order
- * and prose are this implementation's logical presentation, not a claim to
- * reproduce the DOS hint engine's exact wording/order. */
+enum SHConstraintStatus {
+    SH_CONSTRAINT_INVALID = -2,
+    SH_CONSTRAINT_UNKNOWN = -1,
+    SH_CONSTRAINT_UNSAT = 0,
+    SH_CONSTRAINT_SAT = 1
+};
+
+/* Read-only bounded existence check using the same solver as native hints.
+ * Enforces every row's six distinct items, all givens, active clues, and the
+ * supplied six-bit cell masks. Empty masks/conflicting givens are logical
+ * contradictions, not malformed input. Validates bounds before searching;
+ * invalid input consumes no budget. Zero budget validates but returns UNKNOWN.
+ * remaining_nodes is shared across calls and reduced once per search node.
+ * The stored solution, display slots and all mutable game metadata are ignored.
+ */
+enum SHConstraintStatus sh_check_candidates(const SherlockPuzzle *puzzle,
+    const uint8_t candidates[SH_SIZE][SH_SIZE], unsigned *remaining_nodes);
+
+/* Simple deductions visit the displayed bank's vertical then horizontal slots.
+ * SAME/NOT_SAME and LEFT_OF local order has bounded original witnesses. The
+ * remaining tuple checks, all-clue propagation/Hall deductions and bounded CSP
+ * fallback are native policy. In particular, archived clues remain logical
+ * premises of the fallback. Neither selection nor acceptance reads the answer.
+ * Unknown search is explicit. Prose and complete order are not DOS replicas.
+ * The original API defaults to bank 0; the UI supplies the displayed bank. */
 int sh_find_hint(const SherlockGame *game, SHHint *hint, unsigned search_budget);
+int sh_find_hint_in_bank(const SherlockGame *game, unsigned bank,
+                         SHHint *hint, unsigned search_budget);
+/* Request freezes an offer without charging. Acceptance applies its mutation,
+ * then adds 30 seconds and checks timeout before success. While pending, elapsed
+ * time advances but expiration waits for acknowledgement. Undo never refunds
+ * the fee. Native NONE/CONTRADICTION/UNRESOLVED messages remain free. */
 int sh_request_hint(SherlockGame *game, unsigned search_budget);
+int sh_request_hint_in_bank(SherlockGame *game, unsigned bank,
+                            unsigned search_budget);
 int sh_accept_hint(SherlockGame *game);
 
 #endif

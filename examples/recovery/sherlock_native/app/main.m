@@ -248,16 +248,21 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     NSApp.mainMenu = bar;
 }
 
-- (void)timerFired:(NSTimer *)timer {
-    (void)timer;
+- (void)sampleGameClock {
     NSTimeInterval now = NSProcessInfo.processInfo.systemUptime;
-    NSTimeInterval previousTick = _lastTick;
-    uint64_t previousDisplay = sh_display_time_ms(&_game) / 1000;
     double delta = MAX(0, now - _lastTick) * 1000 + _fractionalMilliseconds;
     uint64_t whole = (uint64_t)floor(delta);
     _fractionalMilliseconds = delta - whole;
     _lastTick = now;
     if (self.hasGame) sh_tick(&_game, whole);
+}
+
+- (void)timerFired:(NSTimer *)timer {
+    (void)timer;
+    NSTimeInterval previousTick = _lastTick;
+    uint64_t previousDisplay = sh_display_time_ms(&_game) / 1000;
+    [self sampleGameClock];
+    NSTimeInterval now = _lastTick;
     if (self.celebrating) {
         /* Native presentation cadence: four bounded motion events per refresh.
          * Original movement is qualified independently of DOS CPU pacing. */
@@ -637,7 +642,16 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
             }
             break;
         case 3:
-            if (sh_request_hint(&_game, 20000) == 1 && _game.hint_pending) {
+            if (sh_request_hint_in_bank(&_game, (unsigned)self.visibleBank, 20000) == 1 &&
+                _game.hint_pending) {
+                if (![self.gameView prepareHintExplanation]) {
+                    /* The selected target stays fixed during proof. An
+                     * inconsistent or unresolved premise set offers no move
+                     * and has not incurred an acknowledgement penalty. */
+                    _game.hint_pending = 0;
+                    SHMessage(@"Hint", [self.gameView hintExplanationFailure]);
+                    break;
+                }
                 unsigned bank;
                 if (_game.pending_hint.clue_index >= 0 &&
                     sh_clue_location(&_game, (unsigned)_game.pending_hint.clue_index,
@@ -844,7 +858,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
      "Horizontal A–B–A means neighboring columns in either order. A prohibition mark over B means they are not neighbors. A…B means A is somewhere left of B.\n\n"
      "A↔B↔C means B is between A and C with both immediately adjacent; the order of A and C may be reversed. With B crossed out, A and C are still exactly two columns apart, but B is not in their intervening column.\n\n"
      "ORGANIZE\nDrag clues within their horizontal or vertical area. Right-click a clue to put it in the other bin. OTHER CLUES / GAME CLUES switches bins.\n\n"
-     "HINT AND TIME\nHINT shows a logical deduction. The next click applies it. Each offered deduction costs 30 seconds. Click the time display to pause, and click again to continue. Without a limit the timer counts upward; with a limit it counts down. The Game menu also provides Undo (Command-Z), Hint (Command-Shift-H), Pause/Resume (Command-P), and the clue-bin switch (Command-B).\n\n"
+     "HINT AND TIME\nHINT shows a verified logical deduction using your current candidate marks as assumptions. Show why displays its supporting clues and row rules without applying the move. In the summary, click outside Show why to apply; in the details, use Apply hint. Acceptance costs 30 seconds. Elapsed time still counts while the hint is open; its clock display and timeout wait until acknowledgment. Click the time display to pause, and click again to continue. Without a limit the timer counts upward; with a limit it counts down. The Game menu also provides Undo (Command-Z), Hint (Command-Shift-H), Pause/Resume (Command-P), and the clue-bin switch (Command-B).\n\n"
      "PLAYERS AND TOURNAMENTS\nEach player has a puzzle number, image set, colors, pattern, time and sound preferences. A tournament gives every participant the same puzzle, hides it between turns and ranks the results. In a tournament QUIT ends your turn.\n\n"
      "RANDOM PUZZLES\nGame > New Random Puzzle creates a new puzzle with exactly one valid answer. Its seed and version appear in the window title; Game > Copy Puzzle Identity copies the identifier used by the JSON CLI. Solving it does not advance your numbered puzzle progress.\n\n"
      "IMAGES\nThe image editor can copy tiles, paint pixels, draw lines, replace colors, flip, shift and clear. It imports/exports the original .SHI format and merges a row or just the empty image. Pixel-editor INIT restores that editor's entry image; the overview's Defaults restores the supplied default set.\n\n"
