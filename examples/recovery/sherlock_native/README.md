@@ -52,16 +52,41 @@ bash Build-and-Run.command
 ```
 
 That resource pack includes the 128-byte `PatternPresets.bin` (sixteen eight-row
-background patterns, bit 0 at the left), as well as the table and image/audio
-resources. Pattern pixels are loaded from that private file and are not
-embedded in this source. GUI startup rejects missing or malformed pattern data.
+background patterns, bit 0 at the left), the 2304-byte `SherlockFont.bin`
+(256 advance-plus-eight-row glyph records), `Menu*.png` artwork, and the table
+and image/audio resources. Original pixels are loaded from private files and
+are not embedded in this source. GUI startup rejects missing or malformed
+pattern/font data.
 
 The bundle dispatches `--cli` before creating `NSApplication`. Its standalone
 CLI is built separately and needs only a C runtime. Apple Command Line Tools
 are required to compile the Mac host. The app has been source-reviewed here,
 but **has not been built against an Apple SDK or run on a Mac**. Original hint
-ordering/wording and victory presentation remain known fidelity gaps; this
-example is not a claim of complete original equivalence.
+ordering/wording, exact victory RNG initialization/pacing, and remaining
+tournament/editor details are still fidelity gaps. This example is not a
+claim of complete original equivalence.
+
+### Presentation and clue inspection
+
+The canvas uses the recovered bitmap font for small ASCII text, with Unicode
+and native-dialog fallbacks. Default-color menu artwork comes from the private
+resource pack; custom colors use role-based drawing. MENU retains the board
+behind the left control panel, while TIME pause and tournament handoffs hide it.
+The original solved-board acknowledgement leads into native tile trails and
+sixteen-particle bursts, preserving their original movement rules and sound.
+
+`sherlock_victory` is a bounded, allocation-free event iterator with an explicit
+32-bit RNG state. Each event is a clear, full-tile stamp, sixteen-tile burst
+frame, bounded selection wait, or done. The host owns clipping, accumulation
+and pacing. The native starting state is derived from the challenge identity;
+it is not the unexported original post-generation RNG state. Skip finishes the
+current burst. A stationary tile never blocks the event loop.
+
+Left-clicking a clue opens an authored, non-mutating explanation using current
+SHI thumbnails and stable row/item IDs. This Watson-inspired aid adds no time
+penalty; ordinary elapsed time continues. Right-click archive and drag gestures
+retain their original roles. Undo, Hint, Pause and clue-bank switching also
+have state-aware native menu commands and keyboard equivalents.
 
 ## Test scope and private resources
 
@@ -69,15 +94,16 @@ example is not a claim of complete original equivalence.
 ./check-portable.sh
 ```
 
-This builds with strict C11 warnings and runs SHI, state, solver/generator and
-CLI tests. The CLI tests use an independently implemented public-JSON solver.
+This builds with strict C11 warnings and runs SHI, bitmap-font, clue-description,
+victory-event, state, solver/generator and CLI tests. The CLI tests use an
+independently implemented public-JSON solver.
 Python is needed to run that test harness, not to run the product. With an
 owner-supplied table, additional tests exercise hint deductions and every one
 of the 65,536 recovered initial states and accepted original answers. Without
 it, the private corpus tests are explicitly skipped.
 
 No original executable, table, SHI artwork, manual, pause image, audio,
-screenshots, save files, runtime states or byte-retaining database is included
+font/menu pixels, screenshots, save files, runtime states or byte-retaining database is included
 in this directory. Do not add those resources to Git or tool packages.
 The SHI fixture bytes in tests are authored synthetic vectors.
 

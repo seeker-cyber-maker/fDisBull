@@ -1,20 +1,12 @@
 #import "SHUI.h"
+#import "SHBitmapFont.h"
+#import "SHClueExplanation.h"
+#import "SHVictoryCanvas.h"
 #include <math.h>
 
 static void SHText(NSString *text, NSRect rect, CGFloat size,
                    NSColor *color, BOOL centered, NSColor *shadow) {
-    NSMutableParagraphStyle *paragraph = [[NSMutableParagraphStyle alloc] init];
-    paragraph.alignment = centered ? NSTextAlignmentCenter : NSTextAlignmentLeft;
-    paragraph.lineBreakMode = NSLineBreakByWordWrapping;
-    NSMutableDictionary *attributes = [@{
-        NSFontAttributeName:[NSFont monospacedSystemFontOfSize:size
-                                                        weight:NSFontWeightRegular],
-        NSForegroundColorAttributeName:shadow ?: color,
-        NSParagraphStyleAttributeName:paragraph
-    } mutableCopy];
-    if (shadow) [text drawInRect:NSOffsetRect(rect, 1, 1) withAttributes:attributes];
-    attributes[NSForegroundColorAttributeName] = color;
-    [text drawInRect:rect withAttributes:attributes];
+    SHDrawBitmapText(text, rect, size, color, centered, shadow);
 }
 
 static void SHBox(NSRect rect, NSColor *fill, NSColor *border) {
@@ -66,7 +58,44 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     BOOL _boardHit;
     NSImage *_pauseImage;
     BOOL _pauseImageChecked;
+    NSInteger _explanationClue;
+    BOOL _drawingGame, _hasGameBackdrop;
+    SHVictoryCanvas *_victoryCanvas;
+    NSMutableDictionary<NSString *, NSImage *> *_menuImages;
 }
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) _explanationClue = -1;
+    return self;
+}
+
+- (void)dismissClueExplanation {
+    _explanationClue = -1;
+    _tracking = _dragging = NO;
+    self.needsDisplay = YES;
+}
+
+- (void)prepareForNewPuzzle {
+    [self dismissClueExplanation];
+    _hasGameBackdrop = YES;
+    _victoryCanvas = nil;
+}
+
+- (BOOL)beginVictoryWithRandomState:(uint32_t)randomState {
+    _victoryCanvas = [[SHVictoryCanvas alloc] initWithTiles:self.app.tilePixels
+                                              randomState:randomState];
+    _victoryCanvas.soundEnabled = [self.app.activeAppearance[@"sound"] boolValue];
+    return _victoryCanvas != nil;
+}
+
+- (BOOL)advanceVictory {
+    BOOL active = _victoryCanvas && [_victoryCanvas advance];
+    self.needsDisplay = YES;
+    return active;
+}
+
+- (void)skipVictory { [_victoryCanvas requestSkip]; }
 
 - (BOOL)isFlipped { return YES; }
 - (BOOL)acceptsFirstResponder { return YES; }
@@ -85,7 +114,7 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
 }
 
 - (NSColor *)role:(NSUInteger)role fallback:(NSUInteger)fallback {
-    NSDictionary *appearance = self.app.showingGame ? self.app.activeAppearance
+    NSDictionary *appearance = (_drawingGame || self.app.showingGame) ? self.app.activeAppearance
                                                    : self.app.profile;
     NSArray *colors = appearance[@"colors"];
     NSUInteger index = role < colors.count ? [colors[role] unsignedIntegerValue]
@@ -140,45 +169,77 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
                 operation:NSCompositingOperationCopy fraction:1 respectFlipped:YES hints:nil];
 }
 
+- (BOOL)menuImage:(NSString *)name at:(NSRect)rect {
+    if (!_menuImages) _menuImages = [NSMutableDictionary dictionary];
+    NSImage *image = _menuImages[name];
+    if (!image) {
+        NSURL *url = [NSBundle.mainBundle URLForResource:name withExtension:@"png"];
+        if (url) image = [[NSImage alloc] initWithContentsOfURL:url];
+        if (image) _menuImages[name] = image;
+    }
+    if (!image) return NO;
+    [image drawInRect:rect fromRect:NSZeroRect operation:NSCompositingOperationCopy
+        fraction:1 respectFlipped:YES hints:nil];
+    return YES;
+}
+
 - (void)drawMainMenu {
     SHApp *app = self.app;
     NSDictionary *profile = app.profile;
-    [self background:profile];
-    NSColor *panel = [self role:6 fallback:1];
-    NSColor *ink = [self role:9 fallback:14];
-    NSColor *shadow = [self role:10 fallback:0];
-    [self frame:NSMakeRect(30, 38, 277, 210) fill:[self role:5 fallback:0]];
-    NSString *number = [NSString stringWithFormat:@"PUZZLE\nNUMBER\n\n%u",
-        app.tournamentMode ? app.pendingTournamentNumber :
-        (uint16_t)[profile[@"puzzle"] unsignedIntValue]];
-    NSString *time = [profile[@"countDown"] boolValue]
-        ? SHTime([profile[@"limit"] unsignedLongLongValue] * 1000)
-        : @"No limit";
-    NSArray *labels = @[
-        [app canResume] ? @"RESUME" : @"PLAY", [app canResume] ? @"RESTART" : @"",
-        number, app.tournamentMode ? @"PLAYER\n\nTOURNEY" : @"PLAYER\n\nSINGLE",
-        [@"TIME\n\n" stringByAppendingString:time], @"COLORS",
-        @"BACK\nGROUND\nPATTERN", @"IMAGES",
-        [profile[@"sound"] boolValue] ? @"SOUND\n\nYES" : @"SOUND\n\nNO",
-        @"", @"HELP!", @"EXIT"
-    ];
-    for (NSUInteger index = 0; index < labels.count; ++index) {
-        if (![labels[index] length]) continue;
-        NSRect rect = NSMakeRect(42 + (index % 4) * 64,
-                                 50 + (index / 4) * 64, 60, 60);
-        [self menuBox:rect];
-        SHText(labels[index], NSInsetRect(rect, 3, 8), 8, ink, YES, shadow);
+    BOOL originalColors = [SHNormalizedColors(profile[@"colors"])
+                          isEqualToArray:SHDefaultColors()];
+    BOOL boardBehindMenu = _hasGameBackdrop && !app.tournamentActive && !app.tournamentMode;
+    if (boardBehindMenu) {
+        /* Original menu overlays the board; the separate TIME pause screen
+         * conceals it. Never reveal a board between tournament participants. */
+        _drawingGame = YES;
+        [self drawGameWithPauseScreen:NO];
+        _drawingGame = NO;
+    } else {
+        [[self role:5 fallback:0] setFill]; NSRectFill(NSMakeRect(0, 0, 640, 350));
+        if (!originalColors || ![self menuImage:@"MenuInformation" at:NSMakeRect(320, 38, 301, 210)]) {
+            [self frame:NSMakeRect(320, 38, 301, 210) fill:[self role:6 fallback:1]];
+            if (![self menuImage:@"MenuTitle" at:NSMakeRect(324, 44, 291, 101)])
+                SHText(@"Sherlock", NSMakeRect(330, 67, 282, 60), 40,
+                       SHColor(12), YES, SHColor(0));
+            SHText(@"Revision 1.5 UK\nEverett Kaser\nNative macOS reconstruction",
+                   NSMakeRect(330, 157, 282, 70), 8, [self role:9 fallback:14], YES,
+                   [self role:10 fallback:0]);
+        }
+        if (!originalColors || ![self menuImage:@"MenuFooter" at:NSMakeRect(30, 260, 591, 90)]) {
+            [self frame:NSMakeRect(30, 260, 591, 90) fill:[self role:6 fallback:1]];
+            SHText(@"Sherlock by Everett Kaser.\nYour original images and numbered puzzles run in a native macOS application.",
+                   NSMakeRect(40, 270, 570, 70), 8, [self role:9 fallback:14], NO,
+                   [self role:10 fallback:0]);
+        }
     }
-    [self frame:NSMakeRect(322, 38, 299, 210) fill:panel];
-    SHText(@"Sherlock", NSMakeRect(330, 67, 282, 60), 40,
-           SHColor(12), YES, shadow);
-    SHText(@"Everett Kaser's 1.50 puzzle\nNative macOS reconstruction",
-           NSMakeRect(330, 136, 282, 34), 10, ink, YES, shadow);
-    SHText(@"Use the clues to locate all 36 items.\nLeft: choose. Right: remove.\nClues can be moved or put aside.",
-           NSMakeRect(335, 185, 274, 50), 9, SHColor(5), YES, shadow);
-    [self frame:NSMakeRect(30, 260, 591, 78) fill:panel];
-    SHText([NSString stringWithFormat:@"Player: %@\nOriginal 1991–1992 game by Everett Kaser. Supplied images remain external resources.\nNative settings, file dialogs and editor windows adapt the DOS interface.",
-            profile[@"name"] ?: @"Player"], NSMakeRect(40, 272, 570, 61), 9, ink, NO, shadow);
+    if (!originalColors || ![self menuImage:@"MenuFrame" at:NSMakeRect(30, 38, 276, 210)])
+        [self frame:NSMakeRect(30, 38, 276, 210) fill:[self role:5 fallback:0]];
+    NSString *number = [NSString stringWithFormat:@"%u", app.tournamentMode ?
+        app.pendingTournamentNumber : (uint16_t)[profile[@"puzzle"] unsignedIntValue]];
+    NSString *time = [profile[@"countDown"] boolValue]
+        ? SHTime([profile[@"limit"] unsignedLongLongValue] * 1000) : @"No Limit";
+    NSArray<NSArray<NSString *> *> *lines = @[
+        @[@"", [app canResume] ? @"RESUME" : @"PLAY"],
+        @[@"", [app canResume] ? @"RESTART" : @""],
+        @[@"PUZZLE", @"NUMBER", @"", number],
+        @[@"", @"PLAYER", @"", app.tournamentMode ? @"TOURNEY" : @"SINGLE"],
+        @[@"", @"TIME", @"", time], @[@"", @"COLORS"],
+        @[@"BACK", @"GROUND", @"", @"PATTERN"], @[@"", @"IMAGES"],
+        @[@"", @"SOUND", @"", [profile[@"sound"] boolValue] ? @"YES" : @"NO"],
+        @[], @[@"", @"HELP!"], @[@"", @"EXIT"]
+    ];
+    for (NSUInteger index = 0; index < lines.count; ++index) {
+        NSRect rect = NSMakeRect(42 + (index % 4) * 64,
+                                 49 + (index / 4) * 64, 61, 61);
+        if (!originalColors || ![self menuImage:@"MenuButton" at:rect]) [self menuBox:rect];
+        for (NSUInteger line = 0; line < lines[index].count; ++line) {
+            BOOL value = line == 3 && (index == 2 || index == 3 || index == 4 || index == 8);
+            SHText(lines[index][line], NSMakeRect(rect.origin.x, rect.origin.y + 10 + line * 10, 60, 9),
+                   8, value ? SHColor(7) : [self role:9 fallback:14], YES,
+                   value ? nil : [self role:10 fallback:0]);
+        }
+    }
 }
 
 - (void)notSymbolAt:(NSRect)rect {
@@ -238,10 +299,10 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     if (clue->type == 5 || clue->type == 6) [self betweenArrow:rect];
 }
 
-- (void)drawGame {
+- (void)drawGameWithPauseScreen:(BOOL)showPause {
     SHApp *app = self.app;
     SherlockGame *game = app.game;
-    if (game->paused) {
+    if (showPause && game->paused) {
         /* Original observation: pause conceals the entire puzzle and every
          * clue. Never draw the game behind a smaller pause notice. */
         [SHColor(0) setFill]; NSRectFill(NSMakeRect(0, 0, 640, 350));
@@ -294,7 +355,8 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
                          NSMakeRect(13, 241, 89, 19), NSMakeRect(107, 241, 87, 19)};
     for (unsigned i = 0; i < 4; ++i) {
         [self menuBox:buttons[i]];
-        SHText(names[i], NSInsetRect(buttons[i], 2, 5), 8, ink, YES, shadow);
+        SHText(names[i], NSMakeRect(i % 2 ? 105 : 12, i < 2 ? 223 : 246, 88, 9),
+               8, ink, YES, shadow);
     }
     [self menuBox:NSMakeRect(198, 217, 126, 14)];
     [self menuBox:NSMakeRect(198, 231, 126, 14)];
@@ -305,6 +367,12 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
            NSMakeRect(201, 233, 121, 12), 8, ink, NO, shadow);
     SHText(app.puzzleLabel,
            NSMakeRect(201, 247, 121, 12), 8, ink, NO, shadow);
+    if (game->outcome == SH_WON) {
+        SHBox(NSMakeRect(28, 272, 139, 21), SHColor(14), SHColor(0));
+        [SHColor(15) setFill]; NSRectFill(NSMakeRect(30, 274, 135, 1));
+        SHText(@"Elementary, Watson!", NSMakeRect(42, 278, 120, 9),
+               8, SHColor(9), NO, nil);
+    }
     if (game->hint_pending) {
         SHHint hint = game->pending_hint;
         unsigned bank, group, slot;
@@ -342,6 +410,20 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
         [self tile:_object at:NSMakeRect(_current.x - size / 2,
                                          _current.y - size / 2, size, size) half:_right];
     }
+    [_victoryCanvas draw];
+    if (self.app.showingGame && game->outcome == SH_PLAYING &&
+        !game->paused && !game->hint_pending && _explanationClue >= 0) {
+        unsigned bank, group, slot;
+        if (sh_clue_location(game, (unsigned)_explanationClue, &bank, &group, &slot) &&
+            bank == (unsigned)app.visibleBank) {
+            [SHColor(5) setStroke];
+            NSBezierPath *border = [NSBezierPath bezierPathWithRect:
+                NSInsetRect(SHClueRect(group, slot), -1, -1)];
+            border.lineWidth = 2; [border stroke];
+            SHDrawClueExplanation(&game->puzzle, (unsigned)_explanationClue,
+                                 app.fullTiles, NSMakePoint(337, 23));
+        }
+    }
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
@@ -355,7 +437,11 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     [transform scaleBy:scale]; [transform concat];
     NSRectClip(NSMakeRect(0, 0, 640, 350));
     NSGraphicsContext.currentContext.imageInterpolation = NSImageInterpolationNone;
-    if (self.app.showingGame) [self drawGame]; else [self drawMainMenu];
+    if (self.app.showingGame) {
+        _drawingGame = YES;
+        [self drawGameWithPauseScreen:YES];
+        _drawingGame = NO;
+    } else [self drawMainMenu];
     [NSGraphicsContext restoreGraphicsState];
 }
 
@@ -377,6 +463,14 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     _right = right;
     _down = _current = [self logicalPoint:event];
     SherlockGame *game = self.app.game;
+    if (self.app.awaitingWinAcknowledgement || self.app.celebrating) {
+        [self.app acknowledgeWin]; return;
+    }
+    if (_explanationClue >= 0 && self.app.showingGame && !game->paused &&
+        game->outcome == SH_PLAYING) {
+        [self dismissClueExplanation]; return;
+    }
+    _explanationClue = -1; /* A hidden inspector must never eat a menu click. */
     if (self.app.showingGame && game->hint_pending) {
         enum SHHintKind kind = game->pending_hint.kind;
         if (sh_accept_hint(game) == 1)
@@ -426,7 +520,7 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     if (!self.app.showingGame) {
         if (!_dragging) for (NSUInteger i = 0; i < 12; ++i)
             if (NSPointInRect(point, NSMakeRect(42 + (i % 4) * 64,
-                                              50 + (i / 4) * 64, 60, 60))) {
+                                              49 + (i / 4) * 64, 61, 61))) {
                 [self.app menuAction:i]; break;
             }
         return;
@@ -452,6 +546,8 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
     } else if (_clue >= 0 && _right) {
         mutation = sh_archive_clue(game, (unsigned)_clue);
         cue = mutation == 1 ? @"archive" : @"error";
+    } else if (_clue >= 0 && !_right && game->outcome == SH_PLAYING) {
+        _explanationClue = _clue;
     } else {
         NSRect controls[] = {NSMakeRect(13, 217, 89, 21), NSMakeRect(107, 217, 87, 21),
                              NSMakeRect(13, 241, 89, 19), NSMakeRect(107, 241, 87, 19),
@@ -465,7 +561,10 @@ static NSRect SHClueRect(unsigned group, unsigned slot) {
 - (void)rightMouseUp:(NSEvent *)event { [self mouseUp:event]; }
 
 - (void)keyDown:(NSEvent *)event {
-    if (event.keyCode == 53 && self.app.showingGame) [self.app gameAction:0];
+    if (self.app.awaitingWinAcknowledgement || self.app.celebrating)
+        [self.app acknowledgeWin];
+    else if (event.keyCode == 53 && _explanationClue >= 0) [self dismissClueExplanation];
+    else if (event.keyCode == 53 && self.app.showingGame) [self.app gameAction:0];
     else [super keyDown:event];
 }
 @end

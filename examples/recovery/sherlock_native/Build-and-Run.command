@@ -27,7 +27,10 @@ SHERLOCK_MACOS="$SHERLOCK_APP/Contents/MacOS"
 SHERLOCK_RESOURCES="$SHERLOCK_APP/Contents/Resources"
 mkdir -p "$SHERLOCK_BUILD/objects" "$SHERLOCK_MACOS" "$SHERLOCK_RESOURCES"
 
-for SHERLOCK_REQUIRED in Resources/sherlock_puzzles.bin Resources/PatternPresets.bin Resources/Images/SHERLOCK.SHI Resources/Images/ORGINAL.SHI; do
+for SHERLOCK_REQUIRED in Resources/sherlock_puzzles.bin Resources/PatternPresets.bin \
+    Resources/SherlockFont.bin Resources/MenuFrame.png Resources/MenuButton.png \
+    Resources/MenuInformation.png Resources/MenuFooter.png Resources/MenuTitle.png \
+    Resources/Images/SHERLOCK.SHI Resources/Images/ORGINAL.SHI; do
     if [[ ! -f "$SHERLOCK_REQUIRED" ]]; then
         printf 'Missing application resource: %s\n' "$SHERLOCK_REQUIRED"
         echo "Extract the complete source package before building."

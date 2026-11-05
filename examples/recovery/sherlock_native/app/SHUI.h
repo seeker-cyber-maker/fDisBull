@@ -68,6 +68,9 @@ BOOL SHShowPatternEditor(NSMutableDictionary *profile);
 @property(nonatomic, strong) NSArray<NSImage *> *fullTiles;
 @property(nonatomic, strong) NSArray<NSImage *> *halfTiles;
 @property(nonatomic, strong) NSArray<NSImage *> *clueImages;
+@property(nonatomic, strong) NSData *tilePixels;
+@property(nonatomic) BOOL awaitingWinAcknowledgement;
+@property(nonatomic) BOOL celebrating;
 @property(nonatomic, strong) NSDictionary *activeAppearance;
 @property(nonatomic, copy) NSString *activePlayerName;
 @property(nonatomic, copy) NSString *defaultImagePath;
@@ -81,9 +84,15 @@ BOOL SHShowPatternEditor(NSMutableDictionary *profile);
 - (void)gameAction:(NSUInteger)action;
 - (void)changed;
 - (void)finishIfNeeded;
+- (void)acknowledgeWin;
 - (void)saveProfiles;
 @end
 
 @interface SHGameView : NSView
 @property(nonatomic, weak) SHApp *app;
+- (void)prepareForNewPuzzle;
+- (void)dismissClueExplanation;
+- (BOOL)beginVictoryWithRandomState:(uint32_t)randomState;
+- (BOOL)advanceVictory;
+- (void)skipVictory;
 @end

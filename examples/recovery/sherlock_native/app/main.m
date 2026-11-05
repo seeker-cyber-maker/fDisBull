@@ -1,4 +1,5 @@
 #import "SHUI.h"
+#import "SHBitmapFont.h"
 #include "../cli/sherlock_cli.h"
 #include "../core/sherlock_logic.h"
 #include <dispatch/dispatch.h>
@@ -135,6 +136,12 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     (void)notification;
     NSString *resources = NSBundle.mainBundle.resourcePath;
+    if (!SHBitmapFontIsAvailable()) {
+        SHMessage(@"The original font could not be loaded",
+                  @"Extract the complete source package, including Resources/SherlockFont.bin, before building.");
+        [NSApp terminate:nil];
+        return;
+    }
     if ([SHPresetPatterns() length] != 16 * 8) {
         SHMessage(@"Pattern resources could not be loaded",
                   @"The private resource pack must include a 128-byte PatternPresets.bin file.");
@@ -189,7 +196,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
         [self saveProfiles];
     }
     _lastTick = NSProcessInfo.processInfo.systemUptime;
-    _timer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(timerFired:)
+    _timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 target:self selector:@selector(timerFired:)
                                  userInfo:nil repeats:YES];
     [NSRunLoop.mainRunLoop addTimer:_timer forMode:NSRunLoopCommonModes];
     [self changed];
@@ -210,6 +217,15 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     [commands addItem:SHMenuItem(@"Play / Resume", @selector(play:), @"n", self)];
     [commands addItem:SHMenuItem(@"New Random Puzzle", @selector(newRandomPuzzle:), @"r", self)];
     [commands addItem:SHMenuItem(@"Copy Puzzle Identity", @selector(copyPuzzleIdentity:), @"", self)];
+    [commands addItem:NSMenuItem.separatorItem];
+    [commands addItem:SHMenuItem(@"Undo", @selector(undoMove:), @"z", self)];
+    NSMenuItem *hint = SHMenuItem(@"Hint", @selector(requestHint:), @"h", self);
+    hint.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+    [commands addItem:hint];
+    [commands addItem:SHMenuItem(@"Pause", @selector(togglePause:), @"p", self)];
+    [commands addItem:SHMenuItem(@"Show Other Clues", @selector(toggleClueBank:), @"b", self)];
+    [commands addItem:SHMenuItem(@"Return to Main Menu", @selector(returnToMenu:), @"", self)];
+    [commands addItem:NSMenuItem.separatorItem];
     [commands addItem:SHMenuItem(@"Players…", @selector(players:), @"", self)];
     [commands addItem:SHMenuItem(@"Images…", @selector(images:), @"", self)];
     [commands addItem:SHMenuItem(@"Help", @selector(help:), @"?", self)];
@@ -228,6 +244,18 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     _fractionalMilliseconds = delta - whole;
     _lastTick = now;
     if (self.hasGame) sh_tick(&_game, whole);
+    if (self.celebrating) {
+        /* Native presentation cadence: four bounded motion events per refresh.
+         * Original movement is qualified independently of DOS CPU pacing. */
+        for (unsigned i = 0; i < 4; ++i) {
+            if (![self.gameView advanceVictory]) {
+                self.celebrating = NO;
+                self.hasGame = NO;
+                self.showingGame = NO;
+                break;
+            }
+        }
+    }
     if (self.showingGame &&
         (previousDisplay != sh_display_time_ms(&_game) / 1000 ||
          (_game.hint_pending && floor(now * 2) != floor(previousTick * 2))))
@@ -262,6 +290,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     self.fullTiles = full;
     self.halfTiles = half;
     self.clueImages = clues;
+    self.tilePixels = [NSData dataWithBytes:pixels length:sizeof pixels];
     return YES;
 }
 
@@ -276,9 +305,12 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     self.activePlayerName = [profile[@"name"] copy];
     _initialTimeLimit = limit;
     _reportedOutcome = NO;
+    self.awaitingWinAcknowledgement = NO;
+    self.celebrating = NO;
     self.visibleBank = 0;
     self.hasGame = YES;
     self.showingGame = YES;
+    [self.gameView prepareForNewPuzzle];
     _lastTick = NSProcessInfo.processInfo.systemUptime;
     _fractionalMilliseconds = 0;
     self.gameView.needsDisplay = YES;
@@ -369,6 +401,26 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
     if (_generatingRandom) return item.action == @selector(terminate:);
+    if (self.awaitingWinAcknowledgement || self.celebrating)
+        return item.action == @selector(copyPuzzleIdentity:) || item.action == @selector(terminate:);
+    if (self.hasGame && _game.hint_pending)
+        return item.action == @selector(copyPuzzleIdentity:) || item.action == @selector(terminate:);
+    BOOL playing = self.hasGame && self.showingGame && _game.outcome == SH_PLAYING;
+    BOOL editable = playing && !_game.paused && !_game.hint_pending && !NSApp.modalWindow;
+    if (item.action == @selector(undoMove:)) return editable && _game.undo_count > 0;
+    if (item.action == @selector(requestHint:)) return editable;
+    if (item.action == @selector(togglePause:)) {
+        item.title = playing && _game.paused ? @"Resume Puzzle" : @"Pause";
+        return playing && !_game.hint_pending && !NSApp.modalWindow;
+    }
+    if (item.action == @selector(toggleClueBank:)) {
+        item.title = self.visibleBank ? @"Show Game Clues" : @"Show Other Clues";
+        return editable;
+    }
+    if (item.action == @selector(returnToMenu:)) {
+        item.title = self.tournamentActive ? @"Quit Tournament Turn" : @"Return to Main Menu";
+        return playing && !_game.hint_pending && !NSApp.modalWindow;
+    }
     if (item.action == @selector(copyPuzzleIdentity:)) return self.hasGame;
     if (item.action == @selector(newRandomPuzzle:)) return !self.tournamentActive;
     return YES;
@@ -414,6 +466,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 }
 
 - (void)advanceTournament {
+    [self.gameView dismissClueExplanation];
     self.hasGame = NO;
     self.showingGame = NO; /* Do not reveal the puzzle between participants. */
     self.gameView.needsDisplay = YES;
@@ -473,10 +526,29 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
     if (_game.outcome == SH_WON && !_randomGame)
         _activeProfile[@"puzzle"] = @((uint16_t)(_game.puzzle.number + 1));
     [self saveProfiles];
+    [self.gameView dismissClueExplanation];
+    if (_game.outcome == SH_WON) {
+        self.awaitingWinAcknowledgement = YES;
+        self.gameView.needsDisplay = YES;
+        return;
+    }
     SHMessage(_game.outcome == SH_WON ? @"You solved the puzzle!" : result,
               [NSString stringWithFormat:@"%@\nTime: %@", self.puzzleIdentity,
                 SHTime(_game.elapsed_ms)]);
     self.hasGame = NO; self.showingGame = NO;
+    [self changed];
+}
+
+- (void)acknowledgeWin {
+    if (self.celebrating) { [self.gameView skipVictory]; return; }
+    if (!self.awaitingWinAcknowledgement) return;
+    self.awaitingWinAcknowledgement = NO;
+    /* The original's post-generation RNG state is outside the recovered puzzle
+     * table. Use a stable native starting state; keep this adapter explicit. */
+    uint32_t state = _randomGame ? (uint32_t)(_randomSeed ^ (_randomSeed >> 32))
+                                : (uint32_t)_game.puzzle.number;
+    self.celebrating = [self.gameView beginVictoryWithRandomState:state];
+    if (!self.celebrating) { self.hasGame = NO; self.showingGame = NO; }
     [self changed];
 }
 
@@ -486,7 +558,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 }
 
 - (void)menuAction:(NSUInteger)action {
-    if (_generatingRandom) return;
+    if (_generatingRandom || self.awaitingWinAcknowledgement || self.celebrating) return;
     switch (action) {
         case 0:
             if (self.tournamentActive) break;
@@ -500,6 +572,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
         case 1:
             if ([self canResume]) {
                 sh_game_init(&_game, &_game.puzzle, _initialTimeLimit);
+                [self.gameView prepareForNewPuzzle];
                 self.visibleBank = 0; self.showingGame = YES; _reportedOutcome = NO;
                 _lastTick = NSProcessInfo.processInfo.systemUptime;
                 _fractionalMilliseconds = 0;
@@ -529,6 +602,10 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 }
 
 - (void)gameAction:(NSUInteger)action {
+    if (!self.hasGame || !self.showingGame || _game.outcome != SH_PLAYING ||
+        _generatingRandom || _game.hint_pending) return;
+    if (_game.paused && action != 0 && action != 4) return;
+    [self.gameView dismissClueExplanation];
     switch (action) {
         case 0:
             if (self.tournamentActive) sh_quit(&_game);
@@ -551,7 +628,11 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
                 SHMessage(@"Hint", [NSString stringWithUTF8String:_game.pending_hint.explanation]);
             }
             break;
-        case 4: sh_set_paused(&_game, 1); break;
+        case 4:
+            sh_set_paused(&_game, !_game.paused);
+            _lastTick = NSProcessInfo.processInfo.systemUptime;
+            _fractionalMilliseconds = 0;
+            break;
         default: break;
     }
     [self changed];
@@ -609,6 +690,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 
 - (void)players:(id)sender {
     (void)sender;
+    [self.gameView dismissClueExplanation];
     if (self.tournamentActive) {
         SHMessage(@"Tournament in progress", @"Finish the current tournament before changing its participant list."); return;
     }
@@ -705,6 +787,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 
 - (void)images:(id)sender {
     (void)sender;
+    [self.gameView dismissClueExplanation];
     if (self.tournamentActive) {
         SHMessage(@"Tournament in progress", @"Change image sets between tournaments."); return;
     }
@@ -716,20 +799,22 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 
 - (void)help:(id)sender {
     (void)sender;
+    [self.gameView dismissClueExplanation];
     if (self.showingGame && !self.tournamentActive) {
         sh_set_paused(&_game, 1); self.showingGame = NO;
     }
     NSString *instructions =
     @"GOAL\nLocate all 36 items. Each row contains each of its six items once. Small pictures are possibilities. Large pictures are chosen positions. Initial large givens cannot be changed.\n\n"
      "BOARD\nLeft-click a possibility to choose it. Right-click to remove it. A final remaining small possibility still needs a left click. Mistakes are checked only when the board is fully chosen. Right-drag an item from a clue or the board to restore a missing possibility in that item's row. UNDO reverses up to 25 actions; it does not refund time.\n\n"
-     "CLUES\nVertical pairs mean same column; a red prohibition mark means different columns. A single reference picture is an item appearing in no clue.\n\n"
+     "CLUES\nLeft-click a clue to explain its relationship using your current pictures. Click again or press Escape to close the explanation. The clock keeps running and no hint penalty is charged. Vertical pairs mean same column; a red prohibition mark means different columns. A single reference picture is an item appearing in no clue.\n\n"
      "Horizontal A–B–A means neighboring columns in either order. A prohibition mark over B means they are not neighbors. A…B means A is somewhere left of B.\n\n"
      "A↔B↔C means B is between A and C with both immediately adjacent; the order of A and C may be reversed. With B crossed out, A and C are still exactly two columns apart, but B is not in their intervening column.\n\n"
      "ORGANIZE\nDrag clues within their horizontal or vertical area. Right-click a clue to put it in the other bin. OTHER CLUES / GAME CLUES switches bins.\n\n"
-     "HINT AND TIME\nHINT shows a logical deduction. The next click applies it. Each offered deduction costs 30 seconds. Click the time display to pause, and click again to continue. Without a limit the timer counts upward; with a limit it counts down.\n\n"
+     "HINT AND TIME\nHINT shows a logical deduction. The next click applies it. Each offered deduction costs 30 seconds. Click the time display to pause, and click again to continue. Without a limit the timer counts upward; with a limit it counts down. The Game menu also provides Undo (Command-Z), Hint (Command-Shift-H), Pause/Resume (Command-P), and the clue-bin switch (Command-B).\n\n"
      "PLAYERS AND TOURNAMENTS\nEach player has a puzzle number, image set, colors, pattern, time and sound preferences. A tournament gives every participant the same puzzle, hides it between turns and ranks the results. In a tournament QUIT ends your turn.\n\n"
      "RANDOM PUZZLES\nGame > New Random Puzzle creates a new puzzle with exactly one valid answer. Its seed and version appear in the window title; Game > Copy Puzzle Identity copies the identifier used by the JSON CLI. Solving it does not advance your numbered puzzle progress.\n\n"
      "IMAGES\nThe image editor can copy tiles, paint pixels, draw lines, replace colors, flip, shift and clear. It imports/exports the original .SHI format and merges rows. Pixel-editor INIT restores that editor's entry image; the overview's Defaults restores the supplied default set.\n\n"
+     "FINISH\nA correct board stays visible with Elementary, Watson! Click or press a key to start the tile celebration. Click or press a key again to skip after the current burst.\n\n"
      "RESUME\nMENU preserves the current game within this session. Selecting a different puzzle number changes RESUME to PLAY; selecting the active number again restores RESUME and RESTART. RESTART begins that puzzle again. Other setting changes apply to future puzzles; SOUND also changes the resumed game. Profiles and accepted artwork persist when the app exits; an in-progress board is not saved across application restarts.";
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = @"Sherlock help";
@@ -750,6 +835,7 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 
 - (void)originalManual:(id)sender {
     (void)sender;
+    [self.gameView dismissClueExplanation];
     if (self.showingGame && !self.tournamentActive) {
         sh_set_paused(&_game, 1); self.showingGame = NO; [self changed];
     }
@@ -761,6 +847,11 @@ static NSMenuItem *SHMenuItem(NSString *title, SEL action, NSString *key, id tar
 }
 
 - (void)play:(id)sender { (void)sender; [self menuAction:0]; }
+- (void)undoMove:(id)sender { (void)sender; [self gameAction:2]; }
+- (void)requestHint:(id)sender { (void)sender; [self gameAction:3]; }
+- (void)togglePause:(id)sender { (void)sender; [self gameAction:4]; }
+- (void)toggleClueBank:(id)sender { (void)sender; [self gameAction:1]; }
+- (void)returnToMenu:(id)sender { (void)sender; [self gameAction:0]; }
 - (void)about:(id)sender {
     (void)sender;
     SHMessage(@"Sherlock Native", @"A native macOS reconstruction of Everett Kaser's Sherlock 1.50. The game uses your supplied original SHI images and a recovered table of numbered puzzles. Native window, settings, editor and file-dialog presentation is adapted for macOS.");
