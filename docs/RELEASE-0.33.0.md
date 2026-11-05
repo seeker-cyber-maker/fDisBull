@@ -115,9 +115,14 @@ limits. Focused packaging/distribution tests passed **932**; the GOG contract
 suite now has **26** cases. The candidate is active at
 `/Users/Shared/fDisBull/releases/0.33.0-c18afda` with source identity
 `95b8520`; `check_local_install.py` passed and rollback to
-`0.32.0-c80bff0-prototype` is planned but not applied. Hosted Linux
-ordinary/native CI and installed-wheel PE/DOS/boot acceptance are **not** part
-of this local cut.
+`0.32.0-c80bff0-prototype` is planned but not applied. A Boat Linux ordinary run
+on the exact source reached the full suite: **10,272 passed, 6 failed, 370
+skipped, 2,322 subtests passed**. All six failures were X11 `BadMatch` focus
+errors from a sandbox display without a usable window manager; the headless
+retry attempted to remove that display dependency but timed out at 3,600
+seconds without a receipt. The package build and payload checks in that run
+passed. Hosted Linux ordinary/native CI and installed-wheel PE/DOS/boot
+acceptance are **not** part of this local cut.
 
 ### Artifact bytes
 
