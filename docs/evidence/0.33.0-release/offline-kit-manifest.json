@@ -15,12 +15,12 @@
     },
     "fdisbull": {
       "filename": "fdisbull-0.33.0-py3-none-any.whl",
-      "sha256": "412f2362aedf747db2f77cf3c5417577f77e1e9a05b46e6ea271b734ae2e1d80",
+      "sha256": "2edda315a899424658d41800a92b6cf2a5c94ebb72bd48fd254a25fdff4d0bd9",
       "version": "0.33.0"
     },
     "fdisbull-player": {
       "filename": "fdisbull_player-0.33.0-py3-none-any.whl",
-      "sha256": "8b4279d9f65c50fe4547d802dbad79d8ba8eaf831d782774021f79d1362345bd",
+      "sha256": "dd662e553b903f005eb1c5bb092808ae18ebce0d80d72328c54b11349b913a46",
       "version": "0.33.0"
     },
     "iced-x86": {

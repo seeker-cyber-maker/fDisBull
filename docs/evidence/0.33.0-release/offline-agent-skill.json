@@ -231,13 +231,13 @@
     }
   ],
   "status": "passed",
-  "checked_at_utc": "2026-11-05T15:37:10.513049+00:00",
+  "checked_at_utc": "2026-11-05T15:41:07.744932+00:00",
   "package_version": "0.33.0",
   "python": {
-    "requested": "venv-final/bin/python",
+    "requested": "venv-final3/bin/python",
     "executable": "/home/user/.local/share/uv/python/cpython-3.13.14-linux-x86_64-gnu/bin/python3.13",
     "version": "3.13.14",
-    "module_path": "/home/user/fdb033/work/venv-final/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "module_path": "/home/user/fdb033/work/venv-final3/lib/python3.13/site-packages/fdisbull/__init__.py",
     "isolated_mode": true
   },
   "bounded_commands": {
@@ -245,6 +245,6 @@
     "total_timeout_seconds": 30.0,
     "response_limit_bytes": 65536,
     "total_response_limit_bytes": 4194304,
-    "captured_response_bytes": 345668
+    "captured_response_bytes": 345670
   }
 }

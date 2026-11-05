@@ -48,7 +48,7 @@
       "source_commit": "1004bda484b0405e35247432447deb0e9c7d12de",
       "python": "3.13.14",
       "backend_sha256": "0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212",
-      "offline_kit_sha256": "9b5a1e4310a8ad955555910cb50d7eafdfbeb03094eb17fbe9c34fa1c11c2909",
+      "offline_kit_sha256": "9c091ebbbb21711212c343727a8ac0c8ffd85a7cdb54b75f2bf67b452efb8ee5",
       "source_companion_sha256": "ec377cb290e0e6e0547e66016d0ec0db61648aa71e9e750bfe567c6319c4efb7",
       "dependency_bundle": "reused 0.31.1 bundle, fingerprint ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
       "acceptance": {
