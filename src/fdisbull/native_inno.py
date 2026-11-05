@@ -1,4 +1,4 @@
-"""Bounded native Inno Setup 5.6.2 Unicode/GOG Galaxy reader.
+"""Bounded native Inno Setup 5.5.7/5.6.2 Unicode/GOG Galaxy reader.
 
 Experimental fDisBull P00 format adapter. No installer execution, subprocesses, or
 external innoextract dependency. This is a new implementation based on the
@@ -6,7 +6,7 @@ publicly documented format and independent fixture measurements. The zlib-
 licensed innoextract project by Daniel Scharrer was consulted as a format
 reference: https://github.com/dscharrer/innoextract (not bundled or copied).
 
-Claim ceiling: Inno 5.6.2 Unicode, these GOG packaging conventions only. All
+Claim ceiling: Inno 5.5.7/5.6.2 Unicode, these GOG packaging conventions only. All
 other variants MUST refuse instead of guessing their layout.
 """
 from __future__ import annotations
@@ -25,7 +25,10 @@ from typing import BinaryIO, Iterator
 
 MAGIC = b"rDlPtS"  # Inno loader table signature (12 bytes)
 BLOCK_MAGIC = b"zlb\x1a"
+# Preserve the historical default for callers constructing authored fixtures.
 SUPPORTED = "Inno Setup Setup Data (5.6.2) (u)"
+PROFILE_557 = "Inno Setup Setup Data (5.5.7) (u)"
+SUPPORTED_PROFILES = (PROFILE_557, SUPPORTED)
 MAX_SOURCE_BYTES = 3_000_000_000
 MAX_HEADER_SIZE = 25_000_000
 MAX_MEM_FILE = 80_000_000
@@ -118,9 +121,14 @@ def read_block(f: BinaryIO, off: int, size: int) -> tuple[bytes,int]:
     return out,at
 
 
-def parse_header0(raw: bytes):
+def parse_header0(raw: bytes, *, profile: str = SUPPORTED):
+    check(profile in SUPPORTED_PROFILES, f"unsupported data profile: {profile}")
+    # These two strings were added in 5.6.1. Treating 5.5.7 as 5.6.2 shifts
+    # every following count/table; selecting a profile must change the parser.
+    names = [name for name in HEAD_STRINGS if profile != PROFILE_557 or name not in
+             {"changes_environment", "changes_associations"}]
     c=Cursor(raw)
-    strs={name:c.string(decode=name not in {'compiled_code','license_text','info_before','info_after'}) for name in HEAD_STRINGS}
+    strs={name:c.string(decode=name not in {'compiled_code','license_text','info_before','info_after'}) for name in names}
     counts={name:c.u32() for name in COUNTS}
     check(all(0 <= x <= MAX_ENTRIES for x in counts.values()),'count exceeds bound')
     c.take(20)  # OS version range
@@ -128,7 +136,11 @@ def parse_header0(raw: bytes):
     c.take(1)   # alpha enum
     c.take(20+8) # hashed password, salt
     c.take(8+4) # additional space, disk slices
-    c.take(10)  # installed/allowed architecture and UI flags
+    ui = c.take(10)  # installed/allowed architecture and UI flags
+    # The sixth byte is the compression method, not a per-file flag.
+    # Only stored/LZMA2 payloads are implemented by this adapter.
+    check(ui[5] in (0, 4), f"unsupported payload compression method: {ui[5]}")
+    strs['compression_method'] = ui[5]
     c.take(8)   # uninstall display size
     c.take(6)   # packed header capability bits
     for _ in range(counts['language']):
@@ -305,6 +317,7 @@ class NativeInno:
     locations:list[dict]
     inventory:list[dict]
     header_residual_size:int
+    profile:str=SUPPORTED
 
     @classmethod
     def open(cls,path:Path|str, *,deadline:float|None=None):
@@ -315,11 +328,11 @@ class NativeInno:
         with path.open('rb') as f:
             offsets=get_loader(f,size)
             version=read_at(f,offsets['header_offset'],64,size).rstrip(b'\0').decode('ascii','strict')
-            check(version==SUPPORTED,f'unsupported data profile: {version}')
+            check(version in SUPPORTED_PROFILES,f'unsupported data profile: {version}; no external fallback')
             h0,nxt=read_block(f,offsets['header_offset']+64,size)
             h1,end=read_block(f,nxt,size)
             check(end==offsets['exe_offset'],'loader offsets do not delimit two header blocks')
-            header,counts,files,residual=parse_header0(h0)
+            header,counts,files,residual=parse_header0(h0, profile=version)
             locations=parse_header1(h1,counts['data'])
             inventory=build_inventory(files,locations)
             f.seek(0)
@@ -327,11 +340,11 @@ class NativeInno:
             for b in iter(lambda:f.read(1024*1024),b''):
                 if deadline is not None:check(time.monotonic()<=deadline,'hashing deadline exceeded')
                 h.update(b)
-        return cls(path,size,h.hexdigest(),offsets,header,counts,files,locations,inventory,residual)
+        return cls(path,size,h.hexdigest(),offsets,header,counts,files,locations,inventory,residual,version)
 
     def describe(self):
         return {'source_file':self.path.name, 'source_sha256':self.source_sha256,
-                'format':SUPPORTED,'data_offset':self.offsets['data_offset'],
+                'format':self.profile,'data_offset':self.offsets['data_offset'],
                 'header':{'file_count':self.counts['file'], 'data_count':self.counts['data'],
                           'main_header_opaque_tail_bytes':self.header_residual_size},
                 'output_files':len(self.inventory),
@@ -349,6 +362,7 @@ class NativeInno:
         check(loc['chunk_size'] <= MAX_OUTPUT_FILE and off+loc['chunk_size']<=self.size,'chunk outside source')
         payload=read_at(f,off,loc['chunk_size'],self.size)
         if compressed:
+            check(self.header['compression_method'] == 4, 'compressed chunk requires LZMA2 header profile')
             check(len(payload)>1,'short compressed chunk')
             try:
                 settings=lzma._decode_filter_properties(lzma.FILTER_LZMA2, payload[:1])
@@ -429,7 +443,7 @@ class NativeInno:
             end_stat=self.path.stat()
             check((start_stat.st_size,start_stat.st_mtime_ns,start_stat.st_ino)==(end_stat.st_size,end_stat.st_mtime_ns,end_stat.st_ino), 'source changed during extraction')
             if emit_manifest:
-                (out/'gog-native-manifest.json').write_text(json.dumps({'profile':SUPPORTED,
+                (out/'gog-native-manifest.json').write_text(json.dumps({'profile':self.profile,
                     'source_sha256':self.source_sha256,'files':written},indent=2)+'\n')
         except Exception:
             # do not erase uncertain outputs after failure: caller explicitly reviews partials

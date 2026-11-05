@@ -15,7 +15,7 @@ import tempfile
 import time
 from pathlib import Path, PurePosixPath
 
-from .native_inno import SUPPORTED, NativeInno
+from .native_inno import NativeInno
 
 MANIFEST = "gog-unpack-manifest.json"
 
@@ -102,7 +102,7 @@ def _prepare(path, include, timeout):
         ),
         "extractor": {
             "implementation": "fdisbull-native-inno",
-            "profile": SUPPORTED,
+            "profile": native.profile,
             "requires_innoextract": False,
         },
         "include": include,
