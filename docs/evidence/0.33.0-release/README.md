@@ -64,7 +64,7 @@ runtime for the binary kit; this is recorded in `intake.json`.
 The native Linux offline kit was built on Boat Linux x86-64 from the candidate
 source and verified with CPython **3.13.14** (any 3.13.x is accepted). Its
 offline kit SHA-256 is
-`75d43e43ebc7aff79fed6fe4debac737df1cc759f161b671f5c834722676c066`;
+`9b5a1e4310a8ad955555910cb50d7eafdfbeb03094eb17fbe9c34fa1c11c2909`;
 the backend is `0548d21a5072cc13957b4771af9d31fcc04a50d36159f53066b0d84b572e8212`.
 The installed-kit acceptance passed equivalence/counterexample, keyboard,
 memory, native restore, player live resume and project restart; both bundled
