@@ -109,14 +109,42 @@ INSTALL = r"""#!/bin/sh
 set -eu
 unset PYTHONPATH PYTHONHOME
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-if [ "$#" -ne 1 ]; then echo "Usage: $0 NEW_VENV_PATH" >&2; exit 2; fi
+usage() {
+  echo "Usage: $0 [--python /absolute/path/to/python3.13] NEW_VENV_PATH" >&2
+}
+PYTHON_OPT=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --python)
+      [ "$#" -ge 2 ] || { usage; exit 2; }
+      PYTHON_OPT=$2
+      shift 2
+      ;;
+    --python=*)
+      PYTHON_OPT=${1#--python=}
+      [ -n "$PYTHON_OPT" ] || { usage; exit 2; }
+      shift
+      ;;
+    -*)
+      usage
+      exit 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+if [ "$#" -ne 1 ]; then usage; exit 2; fi
 case "$1" in
   /*) DEST=$1 ;;
   *) DEST=$PWD/$1 ;;
 esac
 if [ -e "$DEST" ] || [ -L "$DEST" ]; then echo "Destination already exists" >&2; exit 1; fi
 # Cheap compatibility and dependency checks precede the payload checksum sweep.
-if [ -n "${FDISBULL_PYTHON:-}" ]; then
+if [ -n "$PYTHON_OPT" ]; then
+  PYTHON=$PYTHON_OPT
+  command -v "$PYTHON" >/dev/null 2>&1 || { echo "--python is not executable: $PYTHON" >&2; exit 1; }
+elif [ -n "${FDISBULL_PYTHON:-}" ]; then
   PYTHON=$FDISBULL_PYTHON
   command -v "$PYTHON" >/dev/null 2>&1 || { echo "FDISBULL_PYTHON is not executable: $PYTHON" >&2; exit 1; }
 else
@@ -130,20 +158,23 @@ else
   done
 fi
 if [ -z "$PYTHON" ]; then
-  echo "fDisBull requires CPython 3.13.x for these cp313 wheels; set FDISBULL_PYTHON=/absolute/path/to/python3.13" >&2
+  echo "fDisBull requires CPython 3.13.x for these cp313 wheels; use --python or set FDISBULL_PYTHON=/absolute/path/to/python3.13" >&2
   echo "The source itself supports Python 3.12+, but this binary kit does not." >&2
   exit 1
 fi
 "$PYTHON" -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13.x required for cp313 wheels (source itself supports 3.12+)"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
 command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is required for payload verification" >&2; exit 1; }
-if command -v ldd >/dev/null 2>&1; then
-  missing=$(LD_LIBRARY_PATH="$HERE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
-    ldd "$HERE/bin/dosbox-x" 2>/dev/null | awk '/not found/{print $1}' | sort -u | tr '\n' ' ')
-  if [ -n "$missing" ]; then
-    echo "Missing native backend libraries: $missing" >&2
-    echo "Install these system libraries or supply a compatible LD_LIBRARY_PATH before installing." >&2
-    exit 1
-  fi
+command -v ldd >/dev/null 2>&1 || { echo "ldd is required to check native backend libraries" >&2; exit 1; }
+if ! backend_ldd=$(LD_LIBRARY_PATH="$HERE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+  ldd "$HERE/bin/dosbox-x" 2>&1); then
+  printf '%s\n' "Unable to inspect native backend libraries:" "$backend_ldd" >&2
+  exit 1
+fi
+missing=$(printf '%s\n' "$backend_ldd" | awk '/not found/{print $1}' | sort -u | tr '\n' ' ')
+if [ -n "$missing" ]; then
+  echo "Missing native backend libraries: ${missing% }" >&2
+  echo "Install these system libraries (for example libncurses.so.6 and libtinfo.so.6) or supply a compatible LD_LIBRARY_PATH before installing." >&2
+  exit 1
 fi
 cd "$HERE"
 sha256sum -c SHA256SUMS
@@ -238,7 +269,22 @@ def build(args):
         shutil.copyfile(backend, root / "bin" / "dosbox-x")
         (root / "bin" / "dosbox-x").chmod(0o755)
         (root / "bin" / "dosbox").write_text(
-            '#!/bin/sh\nset -eu\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport LD_LIBRARY_PATH="$HERE/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec "$HERE/dosbox-x" "$@"\n'
+            "#!/bin/sh\n"
+            "set -eu\n"
+            'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+            'export LD_LIBRARY_PATH="$HERE/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\n'
+            'command -v ldd >/dev/null 2>&1 || { echo "ldd is required to check native backend libraries" >&2; exit 127; }\n'
+            'if ! backend_ldd=$(ldd "$HERE/dosbox-x" 2>&1); then\n'
+            '  printf \'%s\\n\' "Unable to inspect native backend libraries:" "$backend_ldd" >&2\n'
+            "  exit 127\n"
+            "fi\n"
+            "missing=$(printf '%s\\n' \"$backend_ldd\" | awk '/not found/{print $1}' | sort -u | tr '\\n' ' ')\n"
+            'if [ -n "$missing" ]; then\n'
+            '  echo "DOSBox backend cannot start; missing native libraries: ${missing% }" >&2\n'
+            '  echo "Install these system libraries (for example libncurses.so.6 and libtinfo.so.6) or set LD_LIBRARY_PATH." >&2\n'
+            "  exit 127\n"
+            "fi\n"
+            'exec "$HERE/dosbox-x" "$@"\n'
         )
         (root / "bin" / "dosbox").chmod(0o755)
         for p in libs:
@@ -276,10 +322,11 @@ def build(args):
         )
         (root / "README.txt").write_text(
             f"fDisBull {VERSION} Linux x86-64 offline kit, including standalone player and genuine Z3.\n"
-            "Requires CPython 3.13.x (the bundled wheels are cp313; source supports Python 3.12+) and system SDL2, GL/X11, FreeType, PNG, ncurses, zlib and a compatible glibc.\n"
-            "The installer checks Python 3.13, Linux x86_64, sha256sum and missing backend libraries before hashing the payload.\n"
-            "Set FDISBULL_PYTHON=/absolute/path/to/python3.13 when no suitable interpreter is on PATH.\n"
-            "Run ./install.sh /absolute/path/to/NEW-venv; use bin/dosbox as the backend. Headless is default.\n"
+            "Requires CPython 3.13.x (the bundled wheels are cp313; source supports Python 3.12+) and system SDL2, GL/X11, FreeType, PNG, ncurses (libncurses.so.6/libtinfo.so.6), zlib and a compatible glibc.\n"
+            "The installer checks Python 3.13, Linux x86_64, sha256sum, ldd and all missing backend libraries before hashing the payload.\n"
+            "Use --python /absolute/path/to/python3.13 or set FDISBULL_PYTHON when no suitable interpreter is on PATH.\n"
+            "Run ./install.sh [--python /absolute/path/to/python3.13] /absolute/path/to/NEW-venv; use bin/dosbox as the backend. Headless is default.\n"
+            "bin/dosbox repeats the missing-library preflight before starting the debugger and reports every missing soname, including libncurses.so.6.\n"
             "No game assets, saved states or project databases are supplied. Existing projects are not changed.\n"
             f"Keep {companion.name} with this binary kit; manifest.json records its SHA-256 and source identity.\n"
             "The paired source includes the upstream GPL license; private SDL2_net notices are in licenses/.\n"

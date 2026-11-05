@@ -117,6 +117,8 @@ def test_kit_naming_and_install_manifest_follow_project_version(tmp_path):
         prefix=f'fdisbull-{kit.VERSION}-linux-x86_64-offline/'
         manifest_data=json.load(tar.extractfile(prefix+'manifest.json'))
         installer=tar.extractfile(prefix+'install.sh').read().decode()
+        launcher=tar.extractfile(prefix+'bin/dosbox').read().decode()
+        readme=tar.extractfile(prefix+'README.txt').read().decode()
         requirements=tar.extractfile(prefix+'requirements.txt').read().decode()
     assert manifest_data['wheels']['fdisbull']['version']==kit.VERSION
     assert manifest_data['wheels']['fdisbull-player']['version']==kit.VERSION
@@ -125,12 +127,19 @@ def test_kit_naming_and_install_manifest_follow_project_version(tmp_path):
     assert manifest_data['python'] == '3.13'
     assert 'sys.version_info[:2] == (3,13)' in installer
     assert '3.13.5' not in installer
+    assert '--python /absolute/path/to/python3.13' in installer
     assert 'FDISBULL_PYTHON' in installer
+    assert installer.index('--python') < installer.index('sha256sum -c SHA256SUMS')
     assert installer.index('FDISBULL_PYTHON') < installer.index('sha256sum -c SHA256SUMS')
     assert 'ldd' in installer
     assert 'LD_LIBRARY_PATH="$HERE/lib' in installer
+    assert 'Missing native backend libraries' in installer
     assert installer.index('ldd') < installer.index('sha256sum -c SHA256SUMS')
     assert 'python3 -m venv' not in installer
+    assert 'libncurses.so.6' in readme
+    assert 'ldd' in launcher
+    assert 'missing native libraries' in launcher
+    assert launcher.index('ldd') < launcher.index('exec "$HERE/dosbox-x"')
 
 
 def test_player_discovery_excludes_nested_build_artifacts(tmp_path):

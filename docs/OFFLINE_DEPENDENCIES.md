@@ -96,6 +96,15 @@ the complete wheel set into the offline kit. A dependency bundle extracted from
 a previous release remains valid for the kit as long as its target and
 fingerprint match the release constraints.
 
+The generated full-kit installer accepts
+`./install.sh --python /absolute/path/to/python3.13 NEW_VENV_PATH` as well as
+`FDISBULL_PYTHON`. Before the payload checksum sweep it checks the interpreter,
+Linux x86-64, `sha256sum`, `ldd` and every missing backend soname. The generated
+`bin/dosbox` wrapper repeats that `ldd` preflight before starting the debugger,
+so a missing host library such as `libncurses.so.6` is reported by name before
+any native process starts. Neither bootstrap bundles CPython or the host
+native-library environment layer.
+
 ## Limits
 
 Hash verification and reuse prove byte identity and spec equality, not that a

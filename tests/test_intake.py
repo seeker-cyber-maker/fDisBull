@@ -51,6 +51,16 @@ def test_unknown_suffixes_are_hints_and_recovery_groups_are_deduplicated(tmp_pat
     assert not any(g['reason'] == 'media-decoder-recovery' for g in result['recovery_queue'])
 
 
+def test_outer_status_reports_inspection_not_format_recognition(tmp_path):
+    _file(tmp_path, 'UNKNOWN.SHI', b'Not a recognized authored header')
+    report = intake_inventory(tmp_path)
+    row = report['files'][0]
+    assert row['status'] == 'inspected'
+    assert row['identification']['status'] == 'unknown'
+    assert row['identification']['recognized'] is False
+    assert report['summary']['statuses']['unknown'] == 1
+
+
 def test_known_media_header_does_not_claim_decoding(tmp_path):
     _file(tmp_path, 'SOUND.WAV', wave())
     report = intake_inventory(tmp_path)

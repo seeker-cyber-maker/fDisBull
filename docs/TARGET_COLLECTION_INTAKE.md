@@ -34,6 +34,11 @@ explicit partial results. Regular-file links retain requested/resolved paths and
 opened-descriptor identity. Archive members, embedded resources, decoding and
 native execution remain unqualified even after complete directory enumeration.
 A one-byte read budget cannot be exceeded by admitting a larger probe first.
+A completed per-file record uses outer `status: inspected`; that means the
+bounded inspection finished, not that a format was recognized. Read the nested
+`identification.status`, `recognized` and `header_valid` fields for the format
+outcome. An unknown or invalid source therefore remains explicitly
+`identification.status: unknown` or `recognized-invalid`.
 
 The recovery queue groups unknown signatures/context candidates, invalid or
 unsupported profiles, unexpanded containers, unqualified embedded media and

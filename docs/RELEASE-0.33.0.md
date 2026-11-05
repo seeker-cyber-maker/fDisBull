@@ -62,6 +62,14 @@ correction and package-completeness repairs. GOG extraction now retains its
 single-pass source and output hashes while optionally comparing extracted
 SHA-256 identities with a configured, read-only Game/Database Library registry.
 
+Format intake now labels a completed file record `status: inspected`; format
+recognition remains in nested `identification.status`, `recognized` and
+`header_valid`. This prevents an unknown source such as an unrecognized SHI
+file from appearing to be identified. The intake catalog still recognizes a
+16-bit DOS MZ header and reports an unknown SHI without inventing a decoder.
+SHI decoding and its discovery adapter remain in the separate `!97` follow-up,
+which is outside this cut.
+
 ## Offline package Python boundary
 
 The source declares `requires-python >=3.12`. The binary Linux offline kit is
@@ -74,11 +82,15 @@ environment.
 
 The 0.33 offline kit was assembled locally from the verified Boat-built backend
 and installed/tested on Boat Linux x86-64 with CPython
-3.13.14. Its installer now checks Python 3.13, Linux x86-64, `sha256sum` and
-missing backend libraries before the payload checksum sweep, discovers
-`python3.13` or accepts `FDISBULL_PYTHON`, and still requires the documented
-system native libraries; no CPython or native-library environment layer is
-bundled. Its installed-kit acceptance passed Z3 equivalence/counterexample,
+3.13.14. Its installer checks Python 3.13, Linux x86-64, `sha256sum`, `ldd` and
+all missing backend libraries before the payload checksum sweep. It accepts
+`--python /absolute/path/to/python3.13` (which takes precedence over
+`FDISBULL_PYTHON`) and discovers `python3.13`/a 3.13 `python3` otherwise. The
+generated `bin/dosbox` wrapper repeats the complete `ldd` preflight before
+starting the debugger, so missing host sonames such as `libncurses.so.6` and
+`libtinfo.so.6` are reported together before any native process starts. No
+CPython or native-library environment layer is bundled; a host must supply the
+interpreter and documented libraries. Its installed-kit acceptance passed Z3 equivalence/counterexample,
 keyboard, memory, native restore, player live resume and project restart; both
 bundled skill text retrievals passed; this does not establish that an agent
 followed either methodology. The kit SHA-256 is

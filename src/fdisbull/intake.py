@@ -260,7 +260,11 @@ def intake_inventory(paths, *, catalog_path=None, max_files=MAX_FILES,
             record['status'] = 'source-changed'
             issue(root, member, 'source-changed', 'Source path/identity changed between enumeration, opening and final verification.')
             return
-        record.update(status='identified', identification=_identified(report))
+        # Outer status reports completed inspection, not format recognition.
+        # Unknown, invalid and unsupported results remain in the nested
+        # identification.status field; callers must not treat 'inspected' as
+        # evidence that a decoder recognized the source.
+        record.update(status='inspected', identification=_identified(report))
         if record['identification']['status'] == 'unknown':
             record['candidate_profiles'] = _hints(path, catalog)
         for reason, action in _queue_reasons(record['identification']):
