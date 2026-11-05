@@ -19,8 +19,11 @@ been tagged, uploaded or installed.
 - Candidate functional source commit:
   `1004bda484b0405e35247432447deb0e9c7d12de`.
 - Final release-tree merge of `main`:
-  `02669325f8c318901eeefe1d825eca21b3306c1b`; artifacts in this packet were
-  rebuilt from this exact tree.
+  `02669325f8c318901eeefe1d825eca21b3306c1b`.
+- App artifacts and source archives were rebuilt from that merged tree. The
+  native DOSBox backend and its source companion retain their functional-source
+  receipt at `1004bda484b0405e35247432447deb0e9c7d12de`; only documentation
+  changed in the later merge.
 
 ## Local macOS verification (2026-11-05)
 
