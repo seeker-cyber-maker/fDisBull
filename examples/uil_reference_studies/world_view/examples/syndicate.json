@@ -1,0 +1,485 @@
+{
+  "format": "z-world-view-study-1",
+  "world": {
+    "id": "syndicate-authored-world",
+    "setting": "Original Syndicate-inspired synthetic mission",
+    "evidence": "authored-design-fixture",
+    "coverage": "illustrative-partial"
+  },
+  "clock": {
+    "unit": "simulation_tick",
+    "position": 1200
+  },
+  "spaces": [
+    {
+      "id": "campaign",
+      "kind": "abstract",
+      "parent": null,
+      "dimensions": 0
+    },
+    {
+      "id": "territory-1",
+      "kind": "abstract",
+      "parent": "campaign",
+      "dimensions": 0
+    },
+    {
+      "id": "district-west",
+      "kind": "grid",
+      "parent": "territory-1",
+      "dimensions": 2
+    },
+    {
+      "id": "district-east",
+      "kind": "grid",
+      "parent": "territory-1",
+      "dimensions": 2
+    },
+    {
+      "id": "vehicle-cabin",
+      "kind": "abstract",
+      "parent": "district-west",
+      "dimensions": 0
+    },
+    {
+      "id": "tunnel",
+      "kind": "graph",
+      "parent": "district-west",
+      "dimensions": 0
+    }
+  ],
+  "entities": [
+    {
+      "id": "territory-1",
+      "kind": "territory",
+      "state": {
+        "label": "Territory A",
+        "kind": "territory",
+        "location": {
+          "space": "territory-1"
+        },
+        "control": "rival"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:territory-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "agent-1",
+      "kind": "agent",
+      "state": {
+        "label": "Agent One",
+        "kind": "agent",
+        "location": {
+          "space": "district-west",
+          "position": [
+            20,
+            7
+          ]
+        },
+        "hp": 80,
+        "order": "hold"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:agent-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "agent-2",
+      "kind": "agent",
+      "state": {
+        "label": "Agent Two",
+        "kind": "agent",
+        "location": {
+          "space": "vehicle-cabin"
+        },
+        "hp": 75,
+        "aboard": "vehicle-1"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:agent-2",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "vehicle-1",
+      "kind": "vehicle",
+      "state": {
+        "label": "Team vehicle",
+        "kind": "vehicle",
+        "location": {
+          "space": "district-west",
+          "position": [
+            21,
+            7
+          ]
+        },
+        "occupants": [
+          "agent-2"
+        ]
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:vehicle-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "contact-1",
+      "kind": "agent",
+      "state": {
+        "label": "Observed contact",
+        "kind": "agent",
+        "location": {
+          "space": "district-east",
+          "position": [
+            70,
+            9
+          ]
+        },
+        "hp": 17,
+        "affiliation": "rival"
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:contact-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    },
+    {
+      "id": "unseen-1",
+      "kind": "agent",
+      "state": {
+        "label": "Unseen operative",
+        "kind": "agent",
+        "location": {
+          "space": "district-east",
+          "position": [
+            71,
+            9
+          ]
+        },
+        "hp": 99,
+        "secret_alarm": 777
+      },
+      "bindings": {
+        "status": "unbound-authored-metadata",
+        "proposed_uil_object": "fixture-object:unseen-1",
+        "source_registers_or_addresses": "not recovered"
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "campaign",
+      "title": "Campaign territories",
+      "parent": null,
+      "spaces": [
+        "campaign"
+      ],
+      "descendants": true,
+      "kinds": [
+        "territory"
+      ],
+      "entities": []
+    },
+    {
+      "id": "mission-west",
+      "title": "Mission: western district",
+      "parent": "campaign",
+      "spaces": [
+        "district-west"
+      ],
+      "descendants": true,
+      "kinds": [],
+      "entities": []
+    },
+    {
+      "id": "mission-east",
+      "title": "Mission: eastern district",
+      "parent": "campaign",
+      "spaces": [
+        "district-east"
+      ],
+      "descendants": true,
+      "kinds": [],
+      "entities": []
+    },
+    {
+      "id": "squad",
+      "title": "Squad status",
+      "parent": "mission-west",
+      "spaces": [],
+      "descendants": false,
+      "kinds": [],
+      "entities": [
+        "agent-1",
+        "agent-2",
+        "vehicle-1"
+      ]
+    }
+  ],
+  "observers": [
+    {
+      "id": "player",
+      "records": [
+        {
+          "entity": "territory-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Territory A",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "territory",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "territory-1"
+              },
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "control": {
+              "knowledge": "current",
+              "value": "rival",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            }
+          }
+        },
+        {
+          "entity": "agent-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Agent One",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "agent",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "district-west",
+                "position": [
+                  20,
+                  7
+                ]
+              },
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "hp": {
+              "knowledge": "current",
+              "value": 80,
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "order": {
+              "knowledge": "current",
+              "value": "hold",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            }
+          }
+        },
+        {
+          "entity": "agent-2",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Agent Two",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "agent",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "vehicle-cabin"
+              },
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "hp": {
+              "knowledge": "current",
+              "value": 75,
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "aboard": {
+              "knowledge": "current",
+              "value": "vehicle-1",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            }
+          }
+        },
+        {
+          "entity": "vehicle-1",
+          "fields": {
+            "label": {
+              "knowledge": "current",
+              "value": "Team vehicle",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "kind": {
+              "knowledge": "current",
+              "value": "vehicle",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "location": {
+              "knowledge": "current",
+              "value": {
+                "space": "district-west",
+                "position": [
+                  21,
+                  7
+                ]
+              },
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "occupants": {
+              "knowledge": "current",
+              "value": [
+                "agent-2"
+              ],
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            }
+          }
+        },
+        {
+          "entity": "contact-1",
+          "fields": {
+            "kind": {
+              "knowledge": "current",
+              "value": "agent",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1200
+              }
+            },
+            "label": {
+              "knowledge": "remembered",
+              "value": "Observed contact",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1190
+              }
+            },
+            "location": {
+              "knowledge": "remembered",
+              "value": {
+                "space": "district-west",
+                "position": [
+                  8,
+                  9
+                ]
+              },
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1190
+              }
+            },
+            "affiliation": {
+              "knowledge": "remembered",
+              "value": "rival",
+              "observed_at": {
+                "unit": "simulation_tick",
+                "position": 1190
+              }
+            },
+            "hp": {
+              "knowledge": "unknown"
+            }
+          }
+        }
+      ],
+      "actions": [
+        "move-squad",
+        "board-vehicle"
+      ]
+    },
+    {
+      "id": "uninformed",
+      "records": [],
+      "actions": []
+    }
+  ],
+  "actions": [
+    {
+      "id": "move-squad",
+      "label": "Request squad movement",
+      "uil_contract_ref": "proposed.syndicate.move_squad",
+      "binding_status": "unbound"
+    },
+    {
+      "id": "board-vehicle",
+      "label": "Request vehicle boarding",
+      "uil_contract_ref": "proposed.syndicate.board_vehicle",
+      "binding_status": "unbound"
+    }
+  ]
+}
