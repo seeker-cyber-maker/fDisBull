@@ -59,6 +59,23 @@ file. Auxiliary unpacker sections can remain, code/data layout reflects the
 captured module, and a valid structure does not prove successful Windows
 initialization.
 
+### Reviewed plan-file writer
+
+The modular writer accepts a source container, a mapped capture and a
+`chimprec-import-plan-1` document:
+
+```bash
+python -m fdisbull.chimprec_pe \
+  packed-wrapper.exe mapped-module.bin reviewed-plan.json rebuilt.exe \
+  --entry-rva 0x1010
+```
+
+`rebuild_pe_file` refuses to overwrite the output and writes a sidecar receipt
+with source/capture/output hashes, entry RVA, import counts and validation
+results. The plan keeps unresolved, ambiguous or cut entries explicit; the
+writer does not guess an import identity. This path is additive to the
+`rebuild_captured_pe` coordinator and preserves its existing public API.
+
 ## Capture provenance
 
 `validate_capture_manifest` accepts `fdisbull-chimprec-capture-1` documents. A
