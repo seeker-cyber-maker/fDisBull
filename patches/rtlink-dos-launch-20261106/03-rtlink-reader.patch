@@ -1,0 +1,314 @@
+diff --git a/src/fdisbull/rtlink.py b/src/fdisbull/rtlink.py
+new file mode 100644
+index 0000000..61b324c
+--- /dev/null
++++ b/src/fdisbull/rtlink.py
+@@ -0,0 +1,308 @@
++"""Bounded, read-only RTLink/Plus v2 overlay analysis.
++
++Format reference: dreammaster/tools, rtlink_decode/variation2.cpp (GPL-2.0+),
++blob d6dfccff3c143d04fc169bdf2606b99105413b34. This implementation emits
++separate unrelocated regions, never an executable reconstructed from overlays.
++See docs/RTLINK.md for provenance, unsupported layouts and claim limits.
++"""
++from __future__ import annotations
++
++import argparse
++from collections import Counter
++from hashlib import sha256
++import json
++import os
++from pathlib import Path
++import shutil
++import stat
++import struct
++
++MAX_SOURCE = 64 * 1024 * 1024
++MAX_OVERLAYS = 4096
++MAX_RELOCATIONS = 1_000_000
++
++
++def _require(condition, message):
++    if not condition:
++        raise ValueError(message)
++
++
++def _bounded(value, name, minimum, maximum):
++    _require(type(value) is int and minimum <= value <= maximum,
++             f'{name} must be an integer in {minimum}..{maximum}')
++    return value
++
++
++def _words(data, offset, count):
++    _require(0 <= offset <= len(data) and 2 * count <= len(data) - offset,
++             'Truncated structure or out-of-range file offset')
++    return struct.unpack_from('<' + 'H' * count, data, offset)
++
++
++def mz_header(data):
++    """Validate a DOS load image, without guessing COM or following false e_lfanew."""
++    _require(isinstance(data, bytes) and 28 <= len(data) <= MAX_SOURCE,
++             'Expected 28 bytes to 64 MiB of DOS file data')
++    _require(data[:2] in (b'MZ', b'ZM'), 'Not a DOS MZ header at file offset zero')
++    h = _words(data, 0, 14)
++    _, last, pages, relocations, paragraphs, minimum, maximum, ss, sp, checksum, ip, cs, table, overlay = h
++    _require(pages > 0 and last < 512, 'Invalid MZ page count or last-page length')
++    extent = pages * 512 if last == 0 else (pages - 1) * 512 + last
++    header_bytes = paragraphs * 16
++    _require(28 <= header_bytes <= extent <= len(data), 'MZ header/load extent outside file')
++    if relocations:
++        _require(28 <= table and table + 4 * relocations <= header_bytes,
++                 'MZ relocation table outside declared header')
++    image_size = extent - header_bytes
++    entries = []
++    for i in range(relocations):
++        offset, segment = _words(data, table + 4 * i, 2)
++        site = segment * 16 + offset
++        _require(site + 2 <= image_size, 'MZ relocation word outside loaded image')
++        entries.append({'offset': offset, 'segment': segment,
++                        'image_offset': site, 'file_offset': header_bytes + site})
++    entry = cs * 16 + ip
++    _require(entry < image_size, 'MZ initial CS:IP is outside the file-backed image')
++    # A DOS 0x1e relocation table can own 0x3c. Those bytes are not e_lfanew.
++    pointer_free = (header_bytes >= 64 and
++                    not (relocations and table < 64 and table + relocations * 4 > 60))
++    secondary = None
++    if pointer_free:
++        target = struct.unpack_from('<I', data, 60)[0]
++        if header_bytes <= target < len(data) - 1:
++            signature = data[target:target + 4]
++            family = ('PE' if signature == b'PE\0\0' else
++                      signature[:2].decode('ascii') if signature[:2] in (b'NE', b'LE', b'LX') else None)
++            if family:
++                secondary = {'format': family, 'file_offset': target,
++                             'status': 'signature_candidate; use the full format validator'}
++    return {'format': 'DOS MZ', 'header_bytes': header_bytes,
++            'declared_file_bytes': extent, 'loaded_image_bytes': image_size,
++            'appended_bytes': len(data) - extent, 'relocation_count': relocations,
++            'relocation_table_offset': table, 'relocations': entries,
++            'entry_cs': cs, 'entry_ip': ip, 'entry_file_offset': header_bytes + entry,
++            'initial_ss': ss, 'initial_sp': sp, 'minimum_extra_paragraphs': minimum,
++            'maximum_extra_paragraphs': maximum, 'overlay_number': overlay,
++            'secondary_header_pointer_available': pointer_free,
++            'secondary_header': secondary, 'runtime_verified': False}
++
++
++def _parse_table(data, mz, start):
++    end = mz['declared_file_bytes']
++    rows, ranges, total_relocations = [], [], 0
++    for index in range(2, MAX_OVERLAYS + 2):
++        at = start + (index - 2) * 32
++        _require(at + 32 <= end, 'Unterminated RTLink table at root-image boundary')
++        row = _words(data, at, 16)
++        if row[7] != index:
++            # This profile has a zeroed terminal record. A broken sequence is
++            # not permission to silently discard the remaining overlay records.
++            _require(row[7] == 0, 'Broken RTLink overlay index sequence')
++            break
++        location = struct.unpack_from('<I', data, at + 8)[0]
++        _require(location >= end, 'Embedded RTLink block overlaps the DOS root image')
++        words = _words(data, location, 8)
++        paragraphs, header_paragraphs, _, relocation_start, count, *_ = words
++        _require(0 < header_paragraphs < paragraphs, 'Invalid RTLink paragraph bounds')
++        _require(relocation_start == 0, 'Unsupported RTLink relocation-start variant')
++        _require(16 + count * 4 <= header_paragraphs * 16,
++                 'RTLink relocations exceed block header')
++        total_relocations += count
++        _require(total_relocations <= MAX_RELOCATIONS, 'RTLink relocation budget exceeded')
++        code = location + header_paragraphs * 16
++        declared_size = (paragraphs - header_paragraphs) * 16
++        declared_end = location + paragraphs * 16
++        missing = max(0, declared_end - len(data))
++        # Some observed files omit bytes in the final allocated paragraph.
++        # Never synthesize them or claim that their contents are known.
++        _require(code <= len(data) and missing < 16,
++                 'Truncated RTLink block exceeds a terminal paragraph')
++        available = min(declared_size, len(data) - code)
++        relocations = []
++        for j in range(count):
++            offset, segment = _words(data, location + 16 + j * 4, 2)
++            site = segment * 16 + offset
++            _require(site + 2 <= available, 'RTLink relocation word outside available code')
++            relocations.append({'offset': offset, 'segment': segment, 'code_offset': site,
++                                'file_offset': code + site})
++        payload = data[code:code + available]
++        rows.append({'overlay_id': index, 'index_file_offset': at,
++                     'index_sha256': sha256(data[at:at + 32]).hexdigest(),
++                     'load_segment_field': row[0],
++                     'block_file_offset': location, 'header_bytes': header_paragraphs * 16,
++                     'declared_block_end': declared_end, 'code_file_offset': code,
++                     'declared_code_bytes': declared_size, 'available_code_bytes': available,
++                     'unavailable_terminal_bytes': missing,
++                     'code_sha256': sha256(payload).hexdigest(),
++                     'relocation_count': count, 'relocations': relocations,
++                     'mapping': 'overlay-relative; runtime segment/generation not observed',
++                     'entrypoints': [], 'code_data_boundaries': 'unknown'})
++        ranges.append((location, min(declared_end, len(data))))
++    else:
++        raise ValueError('RTLink overlay count exceeds budget or table is unterminated')
++    _require(len(rows) >= 2, 'RTLink profile requires at least two indexed overlays')
++    ordered = sorted(ranges)
++    _require(all(a[1] <= b[0] for a, b in zip(ordered, ordered[1:])),
++             'RTLink block extents overlap or repeat')
++    _require(not any(row['unavailable_terminal_bytes'] for row in rows[:-1]),
++             'Only the last indexed overlay may reach the terminal partial paragraph')
++    return rows
++
++
++def inspect_rtlink_bytes(data):
++    """Recognize and validate the observed embedded v2 layout; other variants refuse."""
++    mz = mz_header(data)
++    _require(mz['secondary_header'] is None, 'Extended-executable candidate needs its own loader')
++    banner = data.find(b'RTLink')
++    _require(banner >= 0, 'No RTLink marker; format is not established')
++    candidates = set()
++    for rel in mz['relocations']:
++        if rel['offset'] != 0:
++            continue
++        at = rel['file_offset'] + 48
++        if at + 64 <= mz['declared_file_bytes'] and _words(data, at + 14, 1)[0] == 2 and _words(data, at + 46, 1)[0] == 3:
++            candidates.add(at)
++    _require(len(candidates) == 1,
++             'RTLink marker found but embedded v2 index is unsupported or ambiguous')
++    start = next(iter(candidates))
++    overlays = _parse_table(data, mz, start)
++    used = sorted((row['block_file_offset'],
++                   min(row['declared_block_end'], len(data))) for row in overlays)
++    cursor = mz['declared_file_bytes']
++    residuals = []
++    for begin, finish in used:
++        if cursor < begin:
++            residuals.append({'file_offset': cursor, 'bytes': begin - cursor})
++        cursor = finish
++    if cursor < len(data):
++        residuals.append({'file_offset': cursor, 'bytes': len(data) - cursor})
++    repeated = {str(segment): count for segment, count in
++                Counter(row['load_segment_field'] for row in overlays).items() if count > 1}
++    return {'format': 'fdisbull-rtlink-1', 'profile': 'rtlink-plus-embedded-v2',
++            'source_sha256': sha256(data).hexdigest(), 'source_bytes': len(data),
++            'marker_file_offset': banner, 'mz': mz, 'index_file_offset': start,
++            'overlay_count': len(overlays), 'overlays': overlays,
++            'total_relocations': sum(row['relocation_count'] for row in overlays),
++            'available_overlay_bytes': sum(row['available_code_bytes'] for row in overlays),
++            'unavailable_terminal_bytes': sum(row['unavailable_terminal_bytes'] for row in overlays),
++            'reused_load_segment_fields': repeated, 'residual_ranges': residuals,
++            'original_executed': False, 'runtime_mapping_verified': False,
++            'flattened_executable_produced': False,
++            'limitations': ['Only embedded v2 is admitted; other RTLink layouts and external OVL files refuse.',
++                            'Overlay payloads can mix code and data; no entrypoint or reachability inferred.',
++                            'Load-segment fields are not observed live addresses. Overlays may share them.',
++                            'Unavailable terminal bytes remain unknown, not repaired or zero-filled.']}
++
++
++def _read(path):
++    path = Path(path).expanduser()
++    _require(not path.is_symlink(), 'Source symlinks are not admitted')
++    with path.open('rb') as stream:
++        before = os.fstat(stream.fileno())
++        _require(stat.S_ISREG(before.st_mode) and 28 <= before.st_size <= MAX_SOURCE,
++                 'Source must be a regular file from 28 bytes to 64 MiB')
++        data = stream.read(MAX_SOURCE + 1)
++        after = os.fstat(stream.fileno())
++    identity = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
++    _require(identity(before) == identity(after) == identity(path.stat()) and len(data) == before.st_size,
++             'Source changed while reading')
++    return data
++
++
++def inspect_rtlink(path):
++    return inspect_rtlink_bytes(_read(path))
++
++
++def extract_rtlink(path, output, *, expected_sha256=None):
++    """Export private, separate byte-exact regions; no relinking or execution."""
++    data = _read(path)
++    report = inspect_rtlink_bytes(data)
++    if expected_sha256 is not None:
++        _require(expected_sha256 == report['source_sha256'], 'Source identity differs from expected SHA-256')
++    destination = Path(output).expanduser().absolute()
++    _require(destination.parent.is_dir(), 'Output parent must exist')
++    _require(not destination.exists() and not destination.is_symlink(), 'Output already exists')
++    destination.mkdir(mode=0o700)
++    owned = destination.stat()
++    files = []
++    try:
++        regions = [('root-image.raw', report['mz']['header_bytes'], report['mz']['loaded_image_bytes'])]
++        regions += [(f"overlay-{row['overlay_id']:04d}.raw", row['code_file_offset'], row['available_code_bytes'])
++                    for row in report['overlays']]
++        for name, offset, size in regions:
++            payload = data[offset:offset + size]
++            with (destination / name).open('xb') as stream:
++                stream.write(payload)
++            files.append({'path': name, 'source_offset': offset, 'bytes': size,
++                          'sha256': sha256(payload).hexdigest(), 'relocations_applied': False})
++        _require(sha256(_read(path)).hexdigest() == report['source_sha256'], 'Source changed during extraction')
++        manifest = {**report, 'files': files, 'private_game_derived_data': True}
++        with (destination / 'rtlink-manifest.json').open('x', encoding='utf-8') as stream:
++            json.dump(manifest, stream, indent=2)
++            stream.write('\n')
++        return manifest
++    except BaseException:
++        current = destination.lstat()
++        if stat.S_ISDIR(current.st_mode) and (current.st_dev, current.st_ino) == (owned.st_dev, owned.st_ino):
++            shutil.rmtree(destination)
++        raise
++
++
++def disassemble_rtlink(path, overlay_id, *, offset=0, max_instructions=64, max_bytes=4096):
++    """Linear candidate disassembly of one identified, unrelocated overlay."""
++    from iced_x86 import Decoder, Formatter, FormatterSyntax, Code
++    _bounded(overlay_id, 'overlay_id', 2, MAX_OVERLAYS + 1)
++    _bounded(offset, 'offset', 0, MAX_SOURCE)
++    _bounded(max_instructions, 'max_instructions', 1, 4096)
++    _bounded(max_bytes, 'max_bytes', 1, 65536)
++    data = _read(path)
++    report = inspect_rtlink_bytes(data)
++    row = next((r for r in report['overlays'] if r['overlay_id'] == overlay_id), None)
++    _require(row is not None, 'Overlay ID not in this source')
++    _require(offset < row['available_code_bytes'], 'Offset outside available overlay')
++    size = min(max_bytes, row['available_code_bytes'] - offset)
++    begin = row['code_file_offset'] + offset
++    decoder, formatter = Decoder(16, data[begin:begin + size], ip=offset), Formatter(FormatterSyntax.INTEL)
++    instructions = []
++    consumed = 0
++    for inst in decoder:
++        instructions.append({'overlay_offset': inst.ip, 'source_file_offset': begin + consumed,
++                             'size': inst.len, 'bytes': data[begin + consumed:begin + consumed + inst.len].hex(),
++                             'text': formatter.format(inst), 'invalid': inst.code == Code.INVALID})
++        consumed += inst.len
++        if len(instructions) >= max_instructions or inst.code == Code.INVALID:
++            break
++    return {'format': 'fdisbull-rtlink-disassembly-1', 'source_sha256': report['source_sha256'],
++            'overlay_id': overlay_id, 'code_sha256': row['code_sha256'],
++            'address_space': 'overlay-relative-unrelocated', 'instructions': instructions,
++            'decoded_bytes': consumed, 'selected_bytes': size,
++            'reachable': 'unknown', 'runtime_mapping_verified': False,
++            'scope': 'Linear candidate instructions only; data and indirect overlay transitions remain unresolved'}
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    sub = parser.add_subparsers(dest='command', required=True)
++    sub.add_parser('inspect').add_argument('path')
++    e = sub.add_parser('extract'); e.add_argument('path'); e.add_argument('output')
++    e.add_argument('--expected-sha256')
++    d = sub.add_parser('disasm'); d.add_argument('path'); d.add_argument('--overlay', type=int, required=True)
++    d.add_argument('--offset', type=lambda s: int(s, 0), default=0)
++    d.add_argument('--max-instructions', type=int, default=64)
++    args = parser.parse_args(argv)
++    try:
++        if args.command == 'inspect':
++            result = inspect_rtlink(args.path)
++        elif args.command == 'extract':
++            result = extract_rtlink(args.path, args.output, expected_sha256=args.expected_sha256)
++        else:
++            result = disassemble_rtlink(args.path, args.overlay, offset=args.offset, max_instructions=args.max_instructions)
++        print(json.dumps({'ok': True, 'result': result}, indent=2))
++        return 0
++    except (ValueError, OSError) as exc:
++        print(json.dumps({'ok': False, 'error': str(exc)}))
++        return 1
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
