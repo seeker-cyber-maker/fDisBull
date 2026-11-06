@@ -1,5 +1,142 @@
 # File formats, containers and media
 
+## DOS executable triage: bytes, loader, runtime and game engine
+
+Read this before proposing a replacement DOS stub or diagnosing a missing extender.
+Identify the **exact bytes** first: installer/container, extracted original file,
+static loaded image, or runtime dump. Record size/SHA-256 and the first bytes from
+the actual file. A compact output-artifact receipt is not the inspection result:
+use `output-info`, `output-read` or `output-select` when the tool returns an artifact.
+Do not interpret truncated console output as a missing MZ header.
+
+Keep four identities separate: file container (MZ/LE/etc.), CPU execution mode,
+runtime services (DOS/extender/overlay manager), and game engine (MADS/Kyra/AGI/etc.).
+A common engine label does not imply common native code or script syscall tables.
+
+| Evidence | Interpretation and next check |
+| --- | --- |
+| Headerless small file | Possible COM, raw code or data; not automatically COM. COM has no magic and uses a PSP-relative entry at 0100h. Use explicit `--image com` only after identifying its role. |
+| `MZ` at file offset 0 | Validate DOS header size, page count, relocations and entry before selecting a loader. MZ alone does not distinguish real-mode code from a protected-mode stub or a Windows executable. |
+| `ZM` at offset 0 | Historical reversed DOS signature, not proof of corruption. Recognition and loader support are separate; this canonical MZ loader does not admit it. Preserve source and report that boundary rather than silently rewriting bytes. |
+| Valid secondary `NE` | Segmented New Executable, commonly Windows/OS/2. Check its target-OS field and segment/entry tables, not just the letters or extension. |
+| Valid secondary `LE`/`LX` | Linear executable, potentially DOS-extender/OS/2/VxD code. Validate the object/page/fixup tables and executable context. The format alone does not establish DOS/4GW or DPMI compatibility. |
+| Valid `PE\0\0` | Validate COFF/optional header and sections. The MZ front may be a DOS stub while the main program targets Windows. GOG installers are not the DOS game inside them. |
+| Appended MZ bytes | Preserve them. They may be overlays, resources, a packed image, another executable or padding; the tail is not all proven code and is not safely discardable. |
+| `.BAT` / configuration | The launch contract: command order, arguments, current directory, environment and disc mounts. Read it before launching an arbitrarily chosen EXE. |
+| `.OVL`, `.DRV`, `.COM`, `.DAT`, extensionless | Filenames are hints, not formats. A sound driver can be MZ; a DAT can be bytecode, a resource archive or a CD image; an extensionless program can still be an MZ. |
+| DOS device-driver header | A SYS driver has a device chain, attributes and strategy/interrupt offsets, not necessarily an EXE header. OMF OBJ/LIB records are linker inputs, not runnable COM files. |
+
+### MZ arithmetic and the 0x3c trap
+
+Read little-endian fields: `e_cblp` at 02h, `e_cp` at 04h, `e_crlc` at 06h,
+`e_cparhdr` at 08h, `e_ss:e_sp` at 0Eh:10h, `e_ip:e_cs` at 14h:16h and
+`e_lfarlc` at 18h. The declared extent **includes the header**:
+
+```text
+header_bytes = e_cparhdr * 16
+declared_bytes = e_cp * 512                         when e_cblp == 0
+               = (e_cp - 1) * 512 + e_cblp         otherwise
+resident_file_bytes = [header_bytes, declared_bytes)
+appended_bytes = [declared_bytes, actual_file_size)
+relocation_site = header_bytes + segment * 16 + offset
+```
+
+Validate `e_cp > 0`, legal last-page byte count, the entire relocation table within
+the header, each relocated word within the loaded module and the file extent. DOS
+relocation adds the chosen load segment to each specified word; file offsets are
+not runtime physical addresses. Entry CS is load-relative. A runtime real-mode
+address is `segment*16+offset`, subject to A20/wrap and the tool's supported bounds.
+A loaded-module dump may correctly have no MZ header: DOS loaded the module, not
+the file header. 386 registers or size-override prefixes alone do not establish
+protected mode. The header's `e_ovno` word is not a universal overlay directory.
+CS:IP, PSP, file offset, load-relative address and protected-mode selector are not
+interchangeable. A protected-mode selector is not multiplied by 16 like real mode.
+
+**Do not unconditionally read 0x3c as `e_lfanew`.** Old MZ headers can begin their
+relocation table at 1Ch or 1Eh; relocation data can occupy 3Ch. Check the canonical
+secondary-header detector's structural prerequisites, then validate the pointed
+header. Random `LE`/`LX` strings anywhere in code do not identify that file format.
+A valid modern DOS stub can have zero relocations; that is not proof of COM or a
+particular packer. Do not “repair” a declared image size to swallow an unexplained tail.
+
+### Overlay managers are not DOS extenders
+
+An overlay manager loads banks into reusable address ranges under a resident
+program. An extender supplies protected-mode execution/services. Executable
+compression is a third mechanism. These can coexist; identify each independently.
+RTLink signatures plus a validated bank directory support overlay analysis, not
+adding DOS4GW. Likewise a DOS4GW string is a clue, not a proven missing dependency.
+Require launch documentation, an actual loader error or verified code/container
+structure before changing runtime prerequisites. Never fabricate or prepend a
+stub, rename arbitrary files to DOS4GW, or patch original headers to make a
+hypothesis pass. A stub cannot infer an unknown payload's ABI.
+
+For supported embedded RTLink v2, the shipped Python reader needs no external
+`rtlink_decode` executable. Discover `fdisbull-dos methods`, then use:
+
+```sh
+fdisbull-dos rtlink-inspect /private/DRAGON/SPHERE.EXE
+fdisbull-dos rtlink-disasm /private/DRAGON/SPHERE.EXE --overlay 16 --offset 0xce --count 32
+fdisbull-dos rtlink-export /private/DRAGON/SPHERE.EXE /private/new-analysis-view
+```
+
+The same entrypoint is `python -m fdisbull.dos_tools`. Inspection records table IDs,
+original ranges/hashes, relocation sites, and guarded thunk candidates. Export
+creates `analysis-flat.bin` plus `rtlink-map.json`, **not a runnable EXE**. It does
+not apply relocations or resolve every cross-bank reference. Alignment zeros are
+labeled synthetic; absent final-paragraph bytes remain explicitly unbacked. Unknown
+external OVL/RTLINKST layouts refuse. Never claim full upstream RTLink-tool parity.
+
+Key an overlay observation by source hash, bank ID, generation and observed load
+binding, not just a reused CS:IP. Static descriptor load paragraphs are not proof
+of a currently loaded bank. Breakpoint the resident loader or qualified thunk,
+observe the read/relocation, then bind the runtime bytes. A flattened analysis
+address must never be sent directly to the live debugger as a guest address.
+
+### Reproduce the launch contract before diagnosing a format failure
+
+The standard tool's DOS session launch initially passed an empty command tail.
+The additive `fdisbull-dos debug` route exposes explicit arguments/CD configuration
+while retaining the ordinary debugger JSON operations, evidence store and owned
+process cleanup. It does not alter flags of `fdisbull debug` on older installations.
+
+```sh
+fdisbull import /private/DRAGON/MAINMENU.EXE /private/mainmenu.fdb
+fdisbull-dos debug /private/mainmenu.fdb --executable /private/backend/dosbox \
+  --game-dir /private/DRAGON --argument=-p --cd-image /private/GAME.INS
+```
+
+`--argument` is repeatable; use `--argument=-p` for a switch. This profile supports
+bounded unquoted ASCII tokens, not arbitrary shell syntax/quoting. C: is the
+explicit game directory. D: is an explicitly selected, read-only .cue/.ins/.iso.
+There is no guessed CD search or shell-command passthrough. The supplied .INS is a
+CUE alias; one- or two-digit TRACK/INDEX numbers are accepted through the same
+validator. `fdisbull disc-inspect GAME.INS` reads the referenced data tracks directly.
+
+Retain neighboring drivers/resources and verify CD paths and ISO contents. An IDX
+can be an index into a HAG archive on the CD, not missing code. Host working
+directory, guest current directory, C: root and D: media are different concepts.
+The controlled backend starts without user autoexec; custom BAT/environment setup
+must be explicitly qualified separately. A startup mount request is recorded as
+intent, not automatically certified successful: verify guest filesystem access or
+an actual game observation. Preserve owned source files; run games in private
+copies because they can write configuration and saves.
+
+For a held frame after changing memory, distinguish backing state, cached/derived
+state and the next presented frame. A native save/load can rebuild state through
+the game's own path, but a screenshot immediately after restore may still be
+unavailable. Use explicit bounded frame readiness, not repeated blind input.
+A successful menu boot proves that path only, not all overlays or a full playthrough.
+
+References: Ralf Brown's DOS EXE header table
+(https://www.delorie.com/djgpp/doc/rbinter/it/94/15.html), Microsoft's PE/COFF
+specification (https://learn.microsoft.com/en-us/windows/win32/debug/pe-format),
+and the ScummVM developer's RTLink research tool
+(https://github.com/dreammaster/tools/tree/rtlink_decode/rtlink_decode).
+Implementation and source-provenance details are in the repository document
+`docs/DOS_FORMATS_AND_RTLINK.md`; this installed reference is self-contained.
+
+
 Use this reference to qualify an input, diagnose a loading boundary, compare
 editions or reduce media under an authorized task. These are investigation
 procedures, not a promise that the installed tool supports every format.
@@ -8,6 +145,8 @@ Discover `media-modules` before building another reader. For missing-tool recove
 shipped APIs and reusable format contracts, read [media-modules.md](media-modules.md).
 
 ## Contents
+
+- [DOS executable triage](#dos-executable-triage-bytes-loader-runtime-and-game-engine)
 
 - [Keep each layer's identity](#keep-each-layers-identity)
 - [Establish a bounded format contract](#establish-a-bounded-format-contract)
