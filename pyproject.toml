@@ -20,6 +20,7 @@ screenshot = ["zstandard>=0.23,<1"]
 
 [project.scripts]
 fdisbull = "fdisbull.cli:main"
+fdisbull-dos = "fdisbull.dos_tools:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

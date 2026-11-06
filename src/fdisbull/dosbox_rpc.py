@@ -19,7 +19,8 @@ class DebuggerError(ValueError):
 class DOSBoxRPC:
     limit = 8 * 1024 * 1024
 
-    def __init__(self, executable, game_dir, *, window=False, on_spawn=None):
+    def __init__(self, executable, game_dir, *, window=False, on_spawn=None,
+                 launch_arguments=None, cd_image=None):
         if type(window) is not bool:
             raise ValueError('window must be boolean')
         if window:
@@ -36,6 +37,8 @@ class DOSBoxRPC:
             raise DebuggerError('Expected an executable DOSBox agent and a game directory')
         if any(c in str(executable) + str(game_dir) for c in '\r\n\0'):
             raise DebuggerError('Paths cannot contain configuration line breaks or NUL')
+        from .dos_launch_profile import prepare_launch_options
+        self.launch_profile = prepare_launch_options(launch_arguments, cd_image)
         self.process = None
         self.reader = self.writer = None
         self.sequence = 0
@@ -59,6 +62,8 @@ class DOSBoxRPC:
             environment['XDG_CONFIG_HOME'] = str(directory / 'config')
             arguments = [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
                          '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
+            if self.launch_profile['cd'] is not None:
+                arguments.extend(['-c', self.launch_profile['cd']['startup_command']])
             if window:
                 arguments.append('-agent-window')
             else:
@@ -96,6 +101,9 @@ class DOSBoxRPC:
             raise
 
     def call(self, method, params=None, timeout_ms=15000):
+        if method == 'session.start' and self.launch_profile['explicit']:
+            from .dos_launch_profile import bind_start
+            params = bind_start(params, self.launch_profile)
         deadline = time.monotonic() + timeout_ms / 1000
         if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
             raise DebuggerError('Timed out waiting for RPC channel ownership')
