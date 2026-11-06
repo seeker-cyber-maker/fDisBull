@@ -481,7 +481,8 @@ def write_ordinary(root):
     return {"status": "passed", "profile": "ordinary", "source_commit": os.environ['CI_COMMIT_SHA'],
             **execution_identity(), "python_version": platform.python_version(),
             "node_version": subprocess.check_output(['node', '--version'], text=True).strip(),
-            "test_results": [identity(root, 'artifacts/ordinary/tests.xml')],
+            "test_results": [identity(root, 'artifacts/ordinary/tests.xml'),
+                              identity(root, 'artifacts/ordinary/required-contracts.xml')],
             "artifacts": [identity(root, 'dist/' + v['name']) for v in payload['artifacts'].values()]}
 
 

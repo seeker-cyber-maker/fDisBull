@@ -57,7 +57,7 @@ def job_environment(profile, sha, run_id, job_id, *, origin='local-linux', boat_
                    FDISBULL_PATCH_DIRECTORY='experimental/dosbox-x' + ('/layers' if profile == 'layers' else ''),
                    FDISBULL_DOSBOX=f'/work/.native/backends/{profile}/dosbox-x',
                    FDISBULL_DOSBOX_SOURCE='/work/.native/dosbox-x')
-    elif profile in ('unified', 'unified-prepare'):
+    elif profile in ('unified', 'unified-prepare', 'chat-prepare'):
         env.update(FDISBULL_PE_QEMU='/work/.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                    FDISBULL_PE_KERNEL='/work/.native/pe/linux-amd64',
                    FDISBULL_PE_INITRAMFS='/work/.native/pe/runtime.cpio.gz',
