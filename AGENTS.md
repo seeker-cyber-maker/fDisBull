@@ -50,6 +50,14 @@ runner, create credentials, or use hosted instance runners as a fallback. Heavy
 native work requires a deliberate start. Apply the storage admission rules
 before each material growth phase. Local results do not establish hosted CI.
 
+For an authorized unattended Boat CI run, use the Mac-side
+`scripts/ci/boat-session.py` whole-session controller. It finalizes persistent
+results and requests a snapshot-preserving stop on success or failure, then
+checks the stopped/snapshot state. Keep shutdown outside individual phases.
+Do not resume Boat merely to install or test this control; starting another run
+requires the user's authorization. See [Boat CI](docs/BOAT_CI.md) for the
+preservation guards and the finite controller's connectivity limits.
+
 
 The [README](README.md) introduces the product to people. Technical contracts,
 API examples and scope limits belong in the linked docs and bundled skill.

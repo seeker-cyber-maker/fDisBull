@@ -81,3 +81,32 @@ def test_full_windows_base_requires_verified_pe32_and_exact_bytes(tmp_path):
         module.full_windows_base(manifest, tmp_path)
     with pytest.raises(ValueError, match='full Windows runtime'):
         module.full_windows_base({}, tmp_path)
+
+
+def test_firmware_inputs_exclude_qemu_nsis_bitmap_and_pass_kit_destination_guard(tmp_path):
+    builder_spec = importlib.util.spec_from_file_location(
+        'chatkit', Path(__file__).parents[1] / 'scripts/build_chat_offline_kit.py'
+    )
+    builder = importlib.util.module_from_spec(builder_spec)
+    builder_spec.loader.exec_module(builder)
+
+    firmware_dir = tmp_path / 'native-evidence/pe/firmware'
+    firmware_dir.mkdir(parents=True)
+    entries = []
+    for name in ('bios-256k.bin', 'vgabios-stdvga.bin', 'kvmvapic.bin', 'qemu-nsis.bmp'):
+        p = firmware_dir / name
+        p.write_bytes(b'firmware-data')
+        entries.append({'path': f'native-evidence/pe/firmware/{name}', **module.identity(p)})
+    staged = module.firmware_inputs({'firmware': entries}, tmp_path)
+    destinations = [item['destination'] for item in staged]
+    assert 'native/qemu/share/qemu/qemu-nsis.bmp' not in destinations
+    assert destinations == [
+        'native/qemu/share/qemu/bios-256k.bin',
+        'native/qemu/share/qemu/vgabios-stdvga.bin',
+        'native/qemu/share/qemu/kvmvapic.bin',
+    ]
+    for dest in destinations:
+        assert str(builder.destination(dest)) == dest
+    with pytest.raises(ValueError, match='required QEMU runtime firmware'):
+        module.firmware_inputs({'firmware': [entries[0]]}, tmp_path)
+

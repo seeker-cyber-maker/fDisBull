@@ -40,7 +40,68 @@ run and phase records. It refuses resuming on a different worker boot, source
 or receipt. It records image-index and actual Linux AMD64 platform digests
 separately. Local and Boat execution never acquire invented GitLab job IDs.
 
+### Automatic stop for the whole CI session
+
+For a complete run, use `scripts/ci/boat-session.py` from the authenticated Mac.
+This is the outer lifecycle controller; `boat-linux.py` remains the low-level
+phase executor. The session controller always selects `all`, including the final
+qualification check, and stops once after the whole command finishes or fails.
+Do not put a VM-stop hook around each individual phase.
+The low-level `all` command requires the session context supplied by this
+controller, to catch accidental unattended launches without automatic shutdown.
+
+The worker must already be running by an explicitly authorized action. The
+controller never starts/resumes a VM, extends its running window, changes its
+size or billing, deletes data, or forces a stop. The worker is currently held
+stopped; adding this launcher does not authorize another run.
+
 ```sh
+# On the Mac, only when another CI run is authorized and the worker is ready:
+python3 scripts/ci/boat-session.py \
+  --worker bx_EXPLICIT_WORKER \
+  --source /home/user/fdisbull-ci/source-COMMIT \
+  --output /home/user/fdisbull-ci/runs/COMMIT-01 \
+  --worker-receipt /home/user/fdisbull-ci/controls/worker-COMMIT.json \
+  --commit FULL_40_CHARACTER_COMMIT \
+  --receipt /Volumes/CODEX/Codex_Projects/fDisBull-targets-private/CI-SESSION.json \
+  -- --dosbox-upstream-archive /home/user/fdisbull-ci/inputs/dosbox-x-upstream.tar \
+     --dosbox-upstream-sha256 VERIFIED_SHA256
+```
+
+Pass the retained OS/QEMU inputs and capability requirements after `--` as for
+the low-level executor. The session controller does not relax storage admission
+or create missing source/worker/input receipts. Run it as one finite background
+controller with a durable log when leaving the interactive chat; no model or
+agent needs to poll its progress. The Mac must remain online. Its interruption
+handler tries to finalize the owned run before stopping; a killed controller
+or loss of connectivity is not a proven shutdown. Boat's existing provider
+auto-stop window remains the independent backstop, and is never extended here.
+
+Before execution, the controller verifies snapshots are enabled and
+delete-on-stop is disabled. It refuses excluded/cache result paths, symlink
+escapes, unreviewed snapshot ignore files (including old ignore filenames),
+and other running Docker workloads. Logs, packages, native exports and partial
+results stay under the persistent `/home/user` run directory. On termination,
+the finalizer waits for the recorded CI process to exit, confirms Docker jobs
+are stopped and flushes evidence to disk. It retains every file and container.
+
+After finalization it requests a normal `boat stop`, then reads back the
+stopped state, snapshot availability and fresh completed/verified snapshot
+timestamps. The local lifecycle receipt records the CI outcome, preservation,
+and shutdown separately. A successful stop does not turn failed CI into a pass.
+The existing notifier reports whole-CI failure; an unconfirmed shutdown also
+attempts a signed `ci-shutdown` alert to Dot. If results cannot be finalized or
+retention becomes unsafe, the controller refuses a destructive stop and reports
+the failure instead of sacrificing evidence. It never retries CI automatically.
+
+Boat's automatic stopped snapshot keeps the disk, not process memory. Its
+documented retention is at least 14 days; it is not an indefinite archive.
+Longer-lived saved snapshots and external result archives are separate actions.
+See [stop semantics](https://docs.boat.dev/snapshots/stop) and
+[snapshot contents](https://docs.boat.dev/snapshots/whats-saved).
+
+```sh
+# Low-level phase commands are for deliberate diagnostics, not unattended runs:
 python3 scripts/ci/boat-linux.py --help
 python3 scripts/ci/boat-linux.py \
   --source /home/user/fdisbull/source \

@@ -111,6 +111,30 @@ def full_windows_base(manifest, root):
     return path
 
 
+EXCLUDED_QEMU_INSTALLER_ASSETS = frozenset({'qemu-nsis.bmp'})
+
+
+def firmware_inputs(manifest, root):
+    """Stage QEMU runtime firmware while excluding the upstream Windows NSIS splash bitmap."""
+    firmware_root = Path(root) / 'native-evidence/pe/firmware'
+    items = []
+    seen = set()
+    for entry in manifest['firmware']:
+        p = Path(root) / entry['path']
+        relative = p.relative_to(firmware_root).as_posix()
+        if relative in EXCLUDED_QEMU_INSTALLER_ASSETS:
+            continue
+        seen.add(relative)
+        items.append({
+            'source': str(p.resolve(strict=True)),
+            'destination': 'native/qemu/share/qemu/' + relative,
+            'role': 'firmware',
+        })
+    if not {'bios-256k.bin', 'vgabios-stdvga.bin'} <= seen:
+        raise ValueError('required QEMU runtime firmware missing from chat kit inputs')
+    return items
+
+
 def main():
     if sys.platform != 'linux' or sys.version_info[:3] != (3, 13, 5):
         raise ValueError('Linux CPython 3.13.5 required')
@@ -181,10 +205,7 @@ def main():
               item(ROOT/'native-evidence/layers/backend-identity.json','receipts/dosbox.json','dosbox_receipt'),
               item(ROOT/'native-evidence/pe/backend-identity.json','receipts/qemu.json','qemu_receipt'),
               item(ROOT/'native-evidence/pe/runtime-packages.txt','receipts/wine-packages.txt','wine_receipt')]
-    for entry in manifest['firmware']:
-        p = ROOT / entry['path']
-        relative = p.relative_to(ROOT / 'native-evidence/pe/firmware').as_posix()
-        inputs.append(item(p, 'native/qemu/share/qemu/' + relative, 'firmware'))
+    inputs.extend(firmware_inputs(manifest, ROOT))
     notices = sorted(Path('/usr/share/doc').glob('*/copyright'))
     if not notices:
         raise ValueError('system copyright notices unavailable')
