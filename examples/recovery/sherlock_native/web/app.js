@@ -11,7 +11,6 @@
   const SYMBOLS=[['🙂','😎','👩','👨','🧑','🧔'],['🏠','🏡','🏢','🏰','⛺','🏛'],['A','B','C','D','E','F'],['🍐','🍒','🍎','🍓','🍊','🍌'],['⛵','✈','🚗','🚂','🚲','🚀'],['⚀','⚁','⚂','⚃','⚄','⚅']];
   const TITLES=['Same column','Different columns','Next to each other','Not neighbors','Left of','Between two neighbors','Not in the middle','Reference picture'];
   const RULES=['A and B belong in the same column.','A and B belong in different columns.','A and B occupy neighboring columns, in either order.','A and B are not in neighboring columns. This clue allows them to share a column.','A is somewhere to the left of B. They do not have to be neighbors.','B is directly between A and C, next to both. The order can be A–B–C or C–B–A.','A and C are exactly two columns apart, in either order. B is not in their middle column.','A is a reference picture. This card adds no relationship constraint.'];
-  const MARKS=['=','≠','↔','↮','<','·','×',''];
   const SAVE_KEY='sherlock-replica-browser-v1';
   let game=null,art=null,artName='Built-in symbols',table=null,tableName='',mode='remove',bank=0;
   let selectedCell=[0,0],selectedClue=-1,pendingProof=null,lastProof=null,hintClock=null;
@@ -46,11 +45,50 @@
       for(let i=0;i<1024;i++){const rgb=A.PALETTE[art.pixels[id*1024+i]];data.data[i*4]=rgb[0];data.data[i*4+1]=rgb[1];data.data[i*4+2]=rgb[2];data.data[i*4+3]=255;}
       ctx.putImageData(data,0,0);
     }
+    for(const canvas of container.querySelectorAll('canvas[data-clue-art]')){
+      const layout=clueLayout(Number(canvas.dataset.clueArt)),ctx=canvas.getContext('2d');if(!ctx)continue;
+      const indices=new Uint8Array(layout.width*layout.height);
+      for(let part=0;part<layout.tiles.length;part++){
+        const left=layout.horizontal?part*32:0,top=layout.horizontal?0:part*32,id=layout.tiles[part];
+        for(let y=0;y<32;y++)for(let x=0;x<32;x++)indices[(top+y)*layout.width+left+x]=art.pixels[id*1024+y*32+x];
+      }
+      // SHI overlays operate on palette indices: (picture AND mask) OR ink.
+      // Alpha blending the marker images would change the original pixels.
+      for(const [left,top,mask,ink] of layout.overlays){
+        for(let y=0;y<32;y++)for(let x=0;x<32;x++){
+          const offset=(top+y)*layout.width+left+x,pixel=y*32+x;
+          indices[offset]=((indices[offset]&art.pixels[mask*1024+pixel])|art.pixels[ink*1024+pixel])&15;
+        }
+      }
+      const data=ctx.createImageData(layout.width,layout.height);
+      for(let i=0;i<indices.length;i++){const rgb=A.PALETTE[indices[i]];data.data[i*4]=rgb[0];data.data[i*4+1]=rgb[1];data.data[i*4+2]=rgb[2];data.data[i*4+3]=255;}
+      ctx.putImageData(data,0,0);
+    }
   }
-  function pictures(clue){
-    if(clue.type===7)return objectHTML(clue.a);
-    if(clue.type===5||clue.type===6)return objectHTML(clue.a)+'<span class="sh-relation-mark">'+MARKS[clue.type]+'</span>'+objectHTML(clue.b)+'<span class="sh-relation-mark">·</span>'+objectHTML(clue.c);
-    return objectHTML(clue.a)+'<span class="sh-relation-mark">'+MARKS[clue.type]+'</span>'+objectHTML(clue.b);
+  function clueLayout(index){
+    // Keep the original card compositor (app/SHClueImages.m) in both banks and
+    // Show why. Reference-only cards inherit orientation from their source slot.
+    const clue=game.puzzle.clues[index],horizontal=S.puzzleClueGroup(game.puzzle,index)===1;
+    const tiles=[clue.a,clue.b,clue.c],overlays=[];
+    if(clue.type===2||clue.type===3)tiles[2]=clue.a;
+    if(clue.type===4){tiles[1]=45;tiles[2]=clue.b;}
+    if(clue.type===7)tiles[1]=tiles[2]=36;
+    if(clue.type===5||clue.type===6)for(let part=0;part<3;part++)overlays.push([part*32,0,39+part*2,40+part*2]);
+    if(clue.type===1)overlays.push([0,16,37,38]);
+    if(clue.type===3||clue.type===6)overlays.push([32,0,37,38]);
+    return {clue,horizontal,tiles:tiles.slice(0,horizontal?3:2),overlays,width:horizontal?96:32,height:horizontal?32:64};
+  }
+  function pictures(index){
+    const layout=clueLayout(index),clue=layout.clue;
+    const labels=layout.tiles.filter(id=>id<36).map(id=>ROWS[Math.floor(id/6)]+' '+(id%6+1)).join(', ');
+    let html='<span class="sh-clue-pictures '+(layout.horizontal?'sh-horizontal':'sh-vertical')+'" role="img" aria-label="'+esc(TITLES[clue.type]+': '+labels+'. '+RULES[clue.type])+'">';
+    if(art)html+='<canvas data-clue-art="'+index+'" width="'+layout.width+'" height="'+layout.height+'" aria-hidden="true"></canvas>';
+    else {
+      html+=layout.tiles.map(id=>id<36?objectHTML(id):'<span class="sh-object sh-clue-filler" aria-hidden="true">'+(id===45?'•••':'')+'</span>').join('');
+      if(clue.type===5||clue.type===6)html+='<span class="sh-clue-arrow" aria-hidden="true"></span>';
+      if(clue.type===1||clue.type===3||clue.type===6)html+='<span class="sh-clue-not" aria-hidden="true"></span>';
+    }
+    return html+'</span>';
   }
   function clockText(value){
     let seconds=BigInt(value)/1000n;const h=seconds/3600n,m=(seconds/60n)%60n,s=seconds%60n;
@@ -110,7 +148,7 @@
         const index=slots[slot];
         if(index<0){html+='<div class="sh-clue-card sh-blank" aria-label="Empty slot '+(slot+1)+'"><span class="sh-clue-caption">'+(slot+1)+'</span></div>';continue;}
         const clue=game.puzzle.clues[index];
-        html+='<button type="button" class="sh-clue-card'+(selectedClue===index?' sh-active':'')+'" data-clue="'+index+'" data-focus="clue-'+index+'" aria-label="Clue '+(index+1)+', '+TITLES[clue.type]+', slot '+(slot+1)+'"><span class="sh-clue-pictures">'+pictures(clue)+'</span><span class="sh-clue-caption">'+(index+1)+' · '+TITLES[clue.type]+'</span></button>';
+        html+='<button type="button" class="sh-clue-card'+(selectedClue===index?' sh-active':'')+'" data-clue="'+index+'" data-focus="clue-'+index+'" aria-label="Clue '+(index+1)+', '+TITLES[clue.type]+', slot '+(slot+1)+'">'+pictures(index)+'<span class="sh-clue-caption">'+(index+1)+' · '+TITLES[clue.type]+'</span></button>';
       }
     }
     $('sh-clues').innerHTML=html||'<p class="sh-instruction">This clue bank is empty.</p>';
@@ -256,7 +294,7 @@
     let html='<div class="sh-hint-target-line">'+objectHTML(hint.row*6+hint.item)+'<strong>'+(hint.kind===1?'Eliminate':'Choose')+' '+ROWS[hint.row]+' '+(hint.item+1)+' · column '+(hint.column+1)+'</strong></div>';
     if(!whyOpen)html+='<p>'+esc(hint.explanation)+'</p><p>Accepting applies this move and adds <strong>30 seconds</strong>. The clock display is frozen while the hint is open; elapsed time continues.</p>';
     else {
-      if(count){whyPage=Math.min(whyPage,count-1);const entry=support[whyPage],clue=entry.clue;html+='<div class="sh-support-card"><span class="sh-clue-pictures">'+pictures(clue)+'</span><div><strong>Clue '+(entry.index+1)+' · '+TITLES[clue.type]+'</strong><p>'+esc(RULES[clue.type])+'</p></div></div><p>Supporting card '+(whyPage+1)+' of '+count+'.</p>';}
+      if(count){whyPage=Math.min(whyPage,count-1);const entry=support[whyPage],clue=entry.clue;html+='<div class="sh-support-card">'+pictures(entry.index)+'<div><strong>Clue '+(entry.index+1)+' · '+TITLES[clue.type]+'</strong><p>'+esc(RULES[clue.type])+'</p></div></div><p>Supporting card '+(whyPage+1)+' of '+count+'.</p>';}
       else html+='<p>This deduction needs the row-permutation rule and current candidate marks; no relationship card is needed.</p>';
       html+='<p>The current marks and givens have a valid completion. The opposite of this move has none.</p><p class="sh-instruction">Earlier candidate edits are assumptions. This check does not certify that those earlier edits were correct.</p>';
       if(!pendingProof.report.reduction_complete)html+='<p class="sh-instruction">The move is proved. Support reduction reached its budget before finishing.</p>';
