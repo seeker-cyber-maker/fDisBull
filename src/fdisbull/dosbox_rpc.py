@@ -10,6 +10,7 @@ import sys
 import tempfile
 import threading
 import time
+import weakref
 
 
 class DebuggerError(ValueError):
@@ -41,12 +42,24 @@ class DOSBoxRPC:
         self.sequence = 0
         self.lock = threading.Lock()
         self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-dosbox-')
+        temp_finalizer = getattr(self.temporary, '_finalizer', None)
+        if temp_finalizer is not None:
+            temp_finalizer.detach()
+        self._cleanup_state = {
+            'reader': None,
+            'writer': None,
+            'process': None,
+            'temporary': self.temporary,
+        }
+        self._finalizer = weakref.finalize(self, self._finalize_unclosed, self._cleanup_state)
         directory = Path(self.temporary.name)
         descriptors = []
         try:
             child_read, self.writer = os.pipe()
+            self._cleanup_state['writer'] = self.writer
             descriptors.append(child_read)
             self.reader, child_write = os.pipe()
+            self._cleanup_state['reader'] = self.reader
             descriptors.append(child_write)
             config = directory / 'agent.env'
             config.write_text(
@@ -57,22 +70,34 @@ class DOSBoxRPC:
             config.chmod(0o600)
             environment = {k:v for k,v in os.environ.items() if not k.upper().startswith('DOSBOX_')}
             environment['XDG_CONFIG_HOME'] = str(directory / 'config')
+            # Owned sessions must never block on a host quit-confirmation dialog.
             arguments = [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
+                         '-set', 'dosbox quit warning=false',
                          '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
             if window:
                 arguments.append('-agent-window')
             else:
-                # Owned headless sessions must never wait for a host quit dialog.
-                arguments.extend(['-set', 'dosbox quit warning=false'])
-                # MIDI can bypass SDL's audio driver on macOS. Disable both
-                # host output paths while retaining the emulated sound devices.
+                # Default no-pop-ups mode: force dummy SDL video/audio and software
+                # surface rendering so neither patched nor stock DOSBox-X can open a
+                # desktop window, menu bar, cursor grab, or audio output device.
+                environment['SDL_VIDEODRIVER'] = 'dummy'
                 environment['SDL_AUDIODRIVER'] = 'dummy'
-                arguments.extend(['-set', 'mixer nosound=true', '-set', 'midi mididevice=none'])
+                environment['SDL_RENDER_DRIVER'] = 'software'
+                arguments.extend([
+                    '--nogui', '--nomenu', '--noconsole', '--fastlaunch',
+                    '-set', 'sdl videodriver=dummy',
+                    '-set', 'sdl output=surface',
+                    '-set', 'sdl showmenu=false',
+                    '-set', 'sdl usesystemcursor=false',
+                    '-set', 'mixer nosound=true',
+                    '-set', 'midi mididevice=none',
+                ])
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
                     arguments,
                     cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(child_read,child_write))
+                self._cleanup_state['process'] = self.process
             if on_spawn is not None:on_spawn(self.process)
             os.close(child_read); descriptors.remove(child_read)
             os.close(child_write); descriptors.remove(child_write)
@@ -161,12 +186,52 @@ class DOSBoxRPC:
             except InterruptedError:
                 continue
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    @staticmethod
+    def _finalize_unclosed(state):
+        for name in ('reader', 'writer'):
+            fd = state.get(name)
+            if fd is not None:
+                state[name] = None
+                try:
+                    os.close(fd)
+                except BaseException:
+                    pass
+        process = state.get('process')
+        if process is not None:
+            state['process'] = None
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                process.wait(timeout=2)
+            except BaseException:
+                pass
+        temporary = state.get('temporary')
+        if temporary is not None:
+            state['temporary'] = None
+            try:
+                temporary.cleanup()
+            except BaseException:
+                pass
+
     def _close_pipes(self):
         failure = None
+        state = getattr(self, '_cleanup_state', None)
         for name in ('reader','writer'):
             fd = getattr(self,name,None)
             if fd is not None:
                 setattr(self,name,None)
+                if state is not None:
+                    state[name] = None
                 try:
                     os.close(fd)
                 except BaseException as error:
@@ -176,6 +241,10 @@ class DOSBoxRPC:
             raise failure
 
     def close(self):
+        finalizer = getattr(self, '_finalizer', None)
+        if finalizer is not None:
+            finalizer.detach()
+        state = getattr(self, '_cleanup_state', None)
         failure = None
         try:
             self._close_pipes()
@@ -190,6 +259,8 @@ class DOSBoxRPC:
                     except subprocess.TimeoutExpired:
                         self.process.kill()
                 self.process.wait(timeout=2)
+                if state is not None:
+                    state['process'] = None
         except BaseException as error:
             if failure is None:
                 failure = error
@@ -202,5 +273,7 @@ class DOSBoxRPC:
                         failure = error
                 else:
                     self.temporary = None
+                    if state is not None:
+                        state['temporary'] = None
         if failure is not None:
             raise failure

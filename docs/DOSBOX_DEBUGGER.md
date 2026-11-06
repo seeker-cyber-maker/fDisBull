@@ -29,10 +29,19 @@ A prepared local project can retain analyzed routines, actual-game sessions, scr
 
 ## Dot-mode
 
-Headless is the default. Its launch profile disables host quit-warning dialogs
-with `dosbox quit warning=false` and disables SDL/mixer/MIDI sound output. This
-keeps an owned shutdown from waiting for a host confirmation dialog. It does
-not turn native cleanup failures into successful shutdowns. See the
+Headless no-pop-ups mode is on by default without the agent having to set
+environment variables or extra flags. Its launch profile sets
+`SDL_VIDEODRIVER=dummy`, `SDL_AUDIODRIVER=dummy` and
+`SDL_RENDER_DRIVER=software`, passes `--nogui`, `--nomenu`, `--noconsole` and
+`--fastlaunch`, forces `sdl videodriver=dummy`, `sdl output=surface`,
+`sdl showmenu=false` and `sdl usesystemcursor=false`, disables host
+quit-warning dialogs with `dosbox quit warning=false` across owned sessions,
+and disables SDL/mixer/MIDI sound output. `DOSBoxRPC` also registers a
+finalizer that terminates and reaps the emulator process before deleting its
+temporary directory if a caller exits without calling `.close()`. This keeps an
+owned session from opening desktop windows or waiting for a host confirmation
+dialog, and prevents orphaned child processes on normal interpreter exit. It
+does not turn native cleanup failures into successful shutdowns. See the
 [source running-park verification and native crash investigation](VERIFICATION-DINOPARK-SOURCE-SHUTDOWN-2026-11-03.md).
 
 To request a **view-only** native window for the same
