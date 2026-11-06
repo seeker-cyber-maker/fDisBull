@@ -69,7 +69,7 @@ def parse_cue(text: str) -> dict:
                 files_used.add(current_file)
                 track = None
             elif command == 'TRACK':
-                if len(tokens) != 3 or current_file is None or not re.fullmatch(r'\d{2}', tokens[1]):
+                if len(tokens) != 3 or current_file is None or not re.fullmatch(r'[0-9]{1,2}', tokens[1]):
                     raise ValueError("invalid TRACK")
                 number = int(tokens[1])
                 mode = tokens[2].upper()
@@ -80,9 +80,9 @@ def parse_cue(text: str) -> dict:
                 track = {"number": number, "mode": mode, "file": current_file, "sector_size": _MODES[mode], "indices": {}, "pregap_sectors": 0, "postgap_sectors": 0}
                 tracks.append(track)
             elif command == 'INDEX':
-                if track is None or len(tokens) != 3 or tokens[1] not in ('00', '01'):
+                if track is None or len(tokens) != 3 or tokens[1] not in ('0', '1', '00', '01'):
                     raise ValueError("unsupported or invalid INDEX")
-                index = tokens[1]
+                index = tokens[1].zfill(2)
                 if index in track['indices'] or (index == '00' and '01' in track['indices']) or track.get('_postgap'):
                     raise ValueError("duplicate or out-of-order INDEX")
                 track['indices'][index] = _frames(tokens[2])
