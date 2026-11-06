@@ -28,7 +28,7 @@ def agi(tmp_path, code=bytes.fromhex('0301070c020d0200')):
 
 def test_builtin_module_catalog_and_explicit_registration():
     registry = builtin_registry()
-    assert {row['identity'] for row in registry.catalog()} == {AGI, Z, 'fdisbull.westwood.emc2'}
+    assert {row['identity'] for row in registry.catalog()} == {AGI, Z, 'fdisbull.westwood.emc2', 'fdisbull.mads.conversation'}
     with pytest.raises(ValueError, match='already registered'):
         registry.register(AGI2917Module())
     with pytest.raises(ValueError, match='trusted'):
@@ -198,7 +198,7 @@ def test_cli_json_methods_are_projectless_and_do_not_inherit_default(tmp_path, c
                  '--profile','2.917','--state-file',str(state)]) == 0
     assert json.loads(capsys.readouterr().out)['result']['qualification'] == 'state_projection_only'
     assert main(['decoder-modules']) == 0
-    assert len(json.loads(capsys.readouterr().out)['result']['modules']) == 3
+    assert len(json.loads(capsys.readouterr().out)['result']['modules']) == 4
 
 
 def test_direct_cli_runs_without_site_packages(tmp_path):
