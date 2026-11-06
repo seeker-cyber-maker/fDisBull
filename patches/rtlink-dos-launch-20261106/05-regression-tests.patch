@@ -1,0 +1,239 @@
+diff --git a/tests/test_dos_media_launch.py b/tests/test_dos_media_launch.py
+new file mode 100644
+index 0000000..078e27a
+--- /dev/null
++++ b/tests/test_dos_media_launch.py
+@@ -0,0 +1,99 @@
++"""Authored arguments/disc cases; optional actual DOSBox round trip."""
++import base64
++from hashlib import sha256
++import os
++from pathlib import Path
++import pytest
++from fdisbull.dos_media_launch import validate_arguments, describe_cd, stage_cd
++from fdisbull.cue import parse_cue
++from fdisbull.disc import inspect_disc_path
++from test_iso9660 import image
++
++
++@pytest.mark.parametrize('bad', ['-p',[None],[''],['a b'],['x\ny'],['x\0y'],['é'],['a&b'],['a"b'],['x']*33,['x'*126]])
++def test_arguments_refuse_ambiguity(bad):
++    with pytest.raises(ValueError):validate_arguments(bad)
++
++
++def test_arguments_are_copied():
++    v=['-p'];r=validate_arguments(v);v[0]='changed';assert r==['-p']
++    assert validate_arguments(None)==[]
++
++
++def disc(tmp_path, suffix='.ins'):
++    blocks=image();blocks[25][:4]=b'TEST'
++    payload=b''.join(blocks);iso=tmp_path/'data.bin';iso.write_bytes(payload)
++    cue=tmp_path/('disc'+suffix)
++    cue.write_text('FILE "data.bin" BINARY\n TRACK 1 MODE1/2048\n INDEX 1 00:00:00\n')
++    return cue,iso
++
++
++def test_ins_content_with_single_digit_track_and_index(tmp_path):
++    cue,_=disc(tmp_path)
++    r=inspect_disc_path(cue)
++    assert r['valid'] and r['complete'] and r['format']=='CUE/BIN disc'
++    media=describe_cd(cue)
++    stage=tmp_path/'stage';stage.mkdir();normalized=stage_cd(media,stage)
++    assert normalized.suffix=='.cue'
++    assert 'TRACK 01 MODE1/2048' in normalized.read_text()
++    assert (stage/'disc-track.bin').resolve()==(tmp_path/'data.bin').resolve()
++    assert not media['runtime_mount_verified']
++
++
++def test_cue_single_and_double_digits_cannot_duplicate_index():
++    r=parse_cue('FILE "a.bin" BINARY\n TRACK 1 MODE1/2048\n INDEX 1 00:00:00\n INDEX 01 00:00:00')
++    assert not r['valid'] and 'duplicate' in r['errors'][0]
++
++
++def test_ins_is_not_assumed_to_be_a_disc(tmp_path):
++    p=tmp_path/'unrelated.ins';p.write_bytes(b'MZ'+bytes(100))
++    assert not inspect_disc_path(p)['valid']
++    with pytest.raises(ValueError):describe_cd(p)
++
++
++def test_cd_drift_and_external_reference_refuse(tmp_path):
++    cue,iso=disc(tmp_path);m=describe_cd(cue)
++    iso.write_bytes(iso.read_bytes()+bytes(2048))
++    stage=tmp_path/'stage';stage.mkdir()
++    with pytest.raises(ValueError,match='changed'):stage_cd(m,stage)
++    assert not list(stage.iterdir())
++    cue.write_text('FILE "../outside.bin" BINARY\n TRACK 1 MODE1/2048\n INDEX 1 00:00:00')
++    with pytest.raises(ValueError):describe_cd(cue)
++
++
++def test_non_dos_backend_refuses_dos_options(tmp_path):
++    from fdisbull.project import Project
++    p=tmp_path/'ARGS.COM';p.write_bytes(bytes.fromhex('ebfe'))
++    with Project.create(tmp_path/'a.fdb',p,image='com') as project:
++        with pytest.raises(ValueError,match='native DOSBox'):
++            project.debugger('/missing',tmp_path,backend='scummvm-agi',arguments=['-p'])
++
++
++@pytest.mark.parametrize('use_cue',[False,True])
++def test_real_dos_arguments_and_readonly_cd(tmp_path,use_cue):
++    from fdisbull.project import Project
++    exe=os.environ.get('FDISBULL_DOSBOX')
++    if not exe:pytest.skip('Select a real DOSBox agent with FDISBULL_DOSBOX')
++    cue,iso=disc(tmp_path)
++    if not use_cue:
++        renamed=tmp_path/'disc.iso';iso.rename(renamed);media=renamed
++    else:media=cue
++    original=sha256(media.read_bytes()).hexdigest()
++    code=bytes.fromhex('ba4001b8003dcd2189c3ba8001b90400b43fcd21a39001ebfe')
++    p=tmp_path/'PROBE.COM';p.write_bytes(code.ljust(64,b'\0')+b'D:\\ONE.BIN\0'+bytes(200))
++    with Project.create(tmp_path/'probe.fdb',p,image='com') as project:
++        with project.debugger(exe,tmp_path,arguments=['-p'],cd_image=media) as debug:
++            process=debug.rpc.process
++            tail=debug.call('memory.read',{'address':{'space':'linear','offset':f'0x{debug.runtime_load*16+0x80:08X}'},'length':5})
++            assert base64.b64decode(tail['data_base64'])==b'\x03 -p\r'
++            debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True)
++            assert debug.memory('1000:0180',length=4)['hex']==b'TEST'.hex()
++            assert debug.memory('1000:0190',length=2)['hex']=='0400'
++            assert debug.metadata['arguments']==['-p']
++            assert debug.metadata['cd_media']['drive']=='D'
++            with pytest.raises(ValueError,match='not yet qualified'):
++                debug.save_state()
++            with pytest.raises(ValueError,match='not yet qualified'):
++                debug._restore_native_checkpoint({'metadata':{}})
++        assert process.poll() is not None
++    assert sha256(media.read_bytes()).hexdigest()==original
+diff --git a/tests/test_rtlink.py b/tests/test_rtlink.py
+new file mode 100644
+index 0000000..7bab332
+--- /dev/null
++++ b/tests/test_rtlink.py
+@@ -0,0 +1,128 @@
++"""Authored MZ/RTLink fixtures; no game bytes or reconstructed executables."""
++from hashlib import sha256
++import json
++from pathlib import Path
++import struct
++import pytest
++from fdisbull.rtlink import (mz_header, inspect_rtlink_bytes, inspect_rtlink,
++                             extract_rtlink, disassemble_rtlink, main)
++
++
++def authored_rtlink():
++    raw = bytearray(768 + 3 * 48)
++    struct.pack_into('<14H', raw, 0, 0x5a4d, 256, 2, 1, 6, 0, 0xffff, 0, 0x100, 0, 0, 0, 30, 0)
++    struct.pack_into('<HH', raw, 30, 0, 4)  # relocated segment begins at file 160
++    raw[96] = 0x90
++    raw[120:126] = b'RTLink'
++    for i in range(3):
++        block = 768 + i * 48
++        struct.pack_into('<H', raw, 208 + i * 32, 0x200 if i < 2 else 0x300)
++        struct.pack_into('<I', raw, 208 + i * 32 + 8, block)
++        struct.pack_into('<H', raw, 208 + i * 32 + 14, i + 2)
++        struct.pack_into('<8H', raw, block, 3, 2, 610, 0, 1, 0, 0, 0)
++        struct.pack_into('<HH', raw, block + 16, 4, 0)
++        raw[block + 32:block + 48] = bytes.fromhex('b83412cb000090909090909090909090')
++    return bytes(raw)
++
++
++def test_table_bounds_addresses_and_hashes():
++    raw = authored_rtlink(); report = inspect_rtlink_bytes(raw)
++    assert report['overlay_count'] == 3 and report['total_relocations'] == 3
++    assert report['index_file_offset'] == 208
++    assert report['reused_load_segment_fields'] == {'512': 2}
++    assert report['source_sha256'] == sha256(raw).hexdigest()
++    assert not report['runtime_mapping_verified'] and not report['flattened_executable_produced']
++    row = report['overlays'][0]
++    assert row['code_file_offset'] == 800 and row['available_code_bytes'] == 16
++    assert row['relocations'][0]['file_offset'] == 804
++    assert row['entrypoints'] == []
++
++
++@pytest.mark.parametrize('last,extent', [(0, 1024), (256, 768)])
++def test_mz_file_extent_includes_header(last,extent):
++    raw=bytearray(authored_rtlink().ljust(1024,b'\0'));struct.pack_into('<H',raw,2,last)
++    assert mz_header(bytes(raw))['declared_file_bytes'] == extent
++
++
++def test_old_relocation_table_owns_0x3c():
++    raw=bytearray(authored_rtlink());struct.pack_into('<H',raw,6,9)
++    # Give all new relocation entries valid zero sites, including offset 0x3c.
++    raw[34:66]=bytes(32)
++    assert not mz_header(bytes(raw))['secondary_header_pointer_available']
++    # Incidental LE bytes in code do not make an LE executable.
++    raw[500:502]=b'LE'
++    assert mz_header(bytes(raw))['secondary_header'] is None
++
++
++@pytest.mark.parametrize('field,value', [(2,512),(4,0),(8,0),(8,0xffff),(24,95),(20,0xffff)])
++def test_bad_mz_refused(field,value):
++    raw=bytearray(authored_rtlink());struct.pack_into('<H',raw,field,value)
++    with pytest.raises(ValueError): inspect_rtlink_bytes(bytes(raw))
++
++
++@pytest.mark.parametrize('mutation', ['pointer','overlap','relocation','header','start','sequence','no-marker','unsupported','ambiguous','truncated'])
++def test_malformed_or_unsupported_table_refused(mutation):
++    raw=bytearray(authored_rtlink())
++    if mutation=='pointer':struct.pack_into('<I',raw,216,0xffffffff)
++    elif mutation=='overlap':struct.pack_into('<I',raw,248,768)
++    elif mutation=='relocation':struct.pack_into('<H',raw,784,15)
++    elif mutation=='header':struct.pack_into('<H',raw,770,4)
++    elif mutation=='start':struct.pack_into('<H',raw,774,1)
++    elif mutation=='sequence':struct.pack_into('<H',raw,286,7)
++    elif mutation=='no-marker':raw[120:126]=b'xxxxxx'
++    elif mutation=='unsupported':struct.pack_into('<H',raw,254,4)
++    elif mutation=='truncated':del raw[-20:]
++    else:
++        struct.pack_into('<H',raw,6,2);struct.pack_into('<HH',raw,34,0,20)
++        raw[464:592]=raw[208:336]
++    with pytest.raises(ValueError):inspect_rtlink_bytes(bytes(raw))
++
++
++def test_terminal_partial_paragraph_is_not_fabricated(tmp_path):
++    raw=authored_rtlink()[:-4];p=tmp_path/'authored.exe';p.write_bytes(raw)
++    r=extract_rtlink(p,tmp_path/'out')
++    assert r['unavailable_terminal_bytes']==4
++    assert (tmp_path/'out/overlay-0004.raw').read_bytes()==raw[-12:]
++    assert r['overlays'][-1]['declared_code_bytes']==16
++    assert r['overlays'][-1]['available_code_bytes']==12
++
++
++def test_private_extract_identity_no_overwrite_and_no_relocation(tmp_path):
++    raw=authored_rtlink();p=tmp_path/'authored.exe';p.write_bytes(raw)
++    with pytest.raises(ValueError,match='identity'):
++        extract_rtlink(p,tmp_path/'bad',expected_sha256='0'*64)
++    assert not (tmp_path/'bad').exists()
++    r=extract_rtlink(p,tmp_path/'out',expected_sha256=sha256(raw).hexdigest())
++    assert len(r['files'])==4
++    for f in r['files']:
++        output=(tmp_path/'out'/f['path']).read_bytes()
++        assert output==raw[f['source_offset']:f['source_offset']+f['bytes']]
++        assert sha256(output).hexdigest()==f['sha256']
++        assert not f['relocations_applied']
++    assert p.read_bytes()==raw
++    with pytest.raises(ValueError,match='exists'):extract_rtlink(p,tmp_path/'out')
++    link=tmp_path/'linked.exe';link.symlink_to(p)
++    with pytest.raises(ValueError,match='symlink'):inspect_rtlink(link)
++
++
++def test_bounded_disassembly_and_cli(tmp_path,capsys):
++    p=tmp_path/'authored.exe';p.write_bytes(authored_rtlink())
++    r=disassemble_rtlink(p,2,max_instructions=1)
++    assert len(r['instructions'])==1 and r['instructions'][0]['source_file_offset']==800
++    assert r['instructions'][0]['text']=='mov ax,1234h'
++    assert r['reachable']=='unknown'
++    assert main(['disasm',str(p),'--overlay','2','--max-instructions','1'])==0
++    assert json.loads(capsys.readouterr().out)['ok']
++    for opts in ({'overlay_id':1},{'overlay_id':True},{'overlay_id':5},
++                 {'overlay_id':2,'max_bytes':0},{'overlay_id':2,'offset':16}):
++        with pytest.raises(ValueError):disassemble_rtlink(p,**opts)
++
++
++def test_projectless_json_routes(tmp_path):
++    from fdisbull.cli import respond
++    p=tmp_path/'authored.exe';p.write_bytes(authored_rtlink())
++    for method,extra in [('rtlink-inspect',{}),('rtlink-disasm',{'overlay_id':2,'max_instructions':2}),
++                         ('rtlink-extract',{'output':str(tmp_path/'export')})]:
++        r=respond({'method':method,'params':{'path':str(p),**extra}},default_project=str(tmp_path/'unused.fdb'))
++        assert r['ok'],r
++    assert not (tmp_path/'unused.fdb').exists()
