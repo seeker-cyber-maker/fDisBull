@@ -1,0 +1,24 @@
+/* Deterministic packaging only: the game itself is plain JavaScript. */
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import crypto from 'node:crypto';
+const here=path.dirname(fileURLToPath(import.meta.url));
+const output=path.resolve(process.argv[2]||path.join(here,'dist'));
+const files=['engine.js','state.js','proof.js','assets.js','protocol.js','app.js','style.css','index.html'];
+for(const name of files)if(!fs.existsSync(path.join(here,name)))throw new Error('Missing browser source: '+name);
+fs.mkdirSync(output,{recursive:true});
+for(const name of files)fs.copyFileSync(path.join(here,name),path.join(output,name));
+const html=fs.readFileSync(path.join(here,'index.html'),'utf8');
+const body=html.split('<!-- SHERLOCK_APP_START -->')[1]?.split('<!-- SHERLOCK_APP_END -->')[0];
+if(!body)throw new Error('Browser root markers are missing.');
+const css=fs.readFileSync(path.join(here,'style.css'),'utf8').replace(/^body\{[^\n]+\}\n/m,'');
+const scripts=files.filter(x=>x.endsWith('.js')).map(name=>'<script>\n'+fs.readFileSync(path.join(here,name),'utf8').replace(/<\/script/gi,'<\\/script')+'\n</script>').join('\n');
+const fragment='<style>\n'+css+'\n</style>\n'+body+'\n'+scripts+'\n';
+if(Buffer.byteLength(fragment)>256*1024)throw new Error('The Space embed exceeds 256 KiB.');
+fs.writeFileSync(path.join(output,'space-embed.html'),fragment);
+const standalone='<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sherlock Replica Lab</title><style>body{margin:0;background:#111b26}</style></head><body>\n'+fragment+'\n</body></html>\n';
+fs.writeFileSync(path.join(output,'sherlock-browser.html'),standalone);
+const manifest={format:'sherlock-browser-build-1',browser_version:1,native_reference:'ee62716e53f84c3f02814db4d7ff3a8884f2f152',embed_bytes:Buffer.byteLength(fragment),files:files.map(name=>{const data=fs.readFileSync(path.join(output,name));return{name,bytes:data.length,sha256:crypto.createHash('sha256').update(data).digest('hex')};})};
+fs.writeFileSync(path.join(output,'build-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
+console.log(JSON.stringify({output,embed_bytes:manifest.embed_bytes,standalone_bytes:Buffer.byteLength(standalone),source_files:files.length}));

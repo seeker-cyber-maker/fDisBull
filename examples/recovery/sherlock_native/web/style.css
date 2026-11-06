@@ -1,0 +1,115 @@
+/* All game styling is scoped so the same surface can run inside a Space. */
+body{margin:0;background:#111b26}
+#sherlock-app{--sh-bg:#f4f1e8;--sh-panel:#fffdf7;--sh-ink:#203039;--sh-muted:#596770;--sh-border:#c7cfc9;--sh-teal:#125b63;--sh-teal-light:#dfeceb;--sh-gold:#c08b37;--sh-board:#163b43;position:relative;box-sizing:border-box;width:100%;max-width:1320px;margin:0 auto;padding:20px;background:var(--sh-bg);color:var(--sh-ink);font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light;isolation:isolate}
+#sherlock-app *,#sherlock-app *::before,#sherlock-app *::after{box-sizing:border-box}
+#sherlock-app [hidden]{display:none!important}
+#sherlock-app h1,#sherlock-app h2,#sherlock-app p{margin:0}
+#sherlock-app button,#sherlock-app input,#sherlock-app select,#sherlock-app textarea{font:inherit;color:inherit}
+#sherlock-app button{cursor:pointer;border:1px solid var(--sh-border);border-radius:5px;background:var(--sh-panel);padding:7px 11px;line-height:1.3;min-height:34px;touch-action:manipulation}
+#sherlock-app button:hover:not(:disabled){background:#e9ede5;border-color:#8c9c98}
+#sherlock-app button:focus-visible,#sherlock-app input:focus-visible,#sherlock-app select:focus-visible,#sherlock-app textarea:focus-visible{outline:3px solid #b76c18;outline-offset:2px}
+#sherlock-app button:disabled{opacity:.48;cursor:default}
+#sherlock-app .sh-fixed .sh-chosen:disabled{opacity:1}
+#sherlock-app .sh-workspace{position:relative}
+#sherlock-app .sh-primary,#sherlock-app button[aria-pressed=true]{background:var(--sh-teal);border-color:var(--sh-teal);color:#fff}
+#sherlock-app .sh-primary:hover:not(:disabled),#sherlock-app button[aria-pressed=true]:hover:not(:disabled){background:#0a444b}
+#sherlock-app input,#sherlock-app select,#sherlock-app textarea{border:1px solid var(--sh-border);border-radius:4px;background:#fff;padding:7px 9px;min-height:34px;max-width:100%}
+#sherlock-app label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600}
+#sherlock-app label span{font-weight:400}
+#sherlock-app .sh-header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding-bottom:16px;border-bottom:2px solid var(--sh-teal)}
+#sherlock-app .sh-brand{display:flex;align-items:center;gap:11px}
+#sherlock-app .sh-emblem{display:grid;place-items:center;width:45px;height:45px;border:2px solid var(--sh-gold);color:#f8ebcc;background:var(--sh-board);font:32px Georgia,serif}
+#sherlock-app h1{font:600 25px/1.1 Georgia,"Times New Roman",serif;letter-spacing:3px}
+#sherlock-app .sh-subtitle{display:block;margin-top:4px;color:var(--sh-muted);font-size:12px;letter-spacing:.35px}
+#sherlock-app .sh-header-actions,#sherlock-app .sh-inline-actions,#sherlock-app .sh-controls,#sherlock-app .sh-modes,#sherlock-app .sh-dialog-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+#sherlock-app .sh-new-game{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:14px 0}
+#sherlock-app .sh-new-game label:nth-child(2){flex:1;min-width:140px;max-width:260px}
+#sherlock-app .sh-new-game input{width:100%;font-variant-numeric:tabular-nums}
+#sherlock-app .sh-gamebar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--sh-board);color:#f7f6e9;padding:11px 14px;border-radius:5px}
+#sherlock-app .sh-meta{display:block;color:#b9d3d2;font-size:12px;margin-top:2px}
+#sherlock-app .sh-score{display:flex;gap:14px;align-items:center;font-variant-numeric:tabular-nums}
+#sherlock-app #sh-clock{font:500 24px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace}
+#sherlock-app .sh-badge{font-size:12px;border:1px solid #7caaa9;border-radius:3px;padding:3px 7px}
+#sherlock-app .sh-toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 0}
+#sherlock-app .sh-workspace{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(330px,1fr);gap:18px;align-items:start}
+#sherlock-app .sh-board-shell{position:relative;border-radius:5px;background:var(--sh-board);padding:8px}
+#sherlock-app .sh-board{display:grid;grid-template-columns:22px repeat(6,minmax(0,1fr));gap:4px}
+#sherlock-app .sh-col-label,#sherlock-app .sh-row-label{display:flex;align-items:center;justify-content:center;color:#dbefeb;font-size:12px;font-weight:600;min-height:18px}
+#sherlock-app .sh-row-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;letter-spacing:.3px}
+#sherlock-app .sh-cell{position:relative;min-width:0;aspect-ratio:1.06;background:#e5e0cf;border:2px solid #809c98;border-radius:3px;padding:3px;display:flex;align-items:center;justify-content:center}
+#sherlock-app .sh-cell.sh-selected{border-color:#ffca57;box-shadow:0 0 0 1px #ffca57}
+#sherlock-app .sh-cell.sh-fixed{border-color:#8fb99f;background:#d7e7d9}
+#sherlock-app .sh-cell.sh-empty{background:#ecd2cd;border-color:#af5c53}
+#sherlock-app .sh-cell.sh-hint-target{outline:3px solid #ffe399;outline-offset:1px}
+#sherlock-app .sh-candidates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;width:100%;height:100%}
+#sherlock-app .sh-candidate{display:grid;place-items:center;padding:0;min-height:0;min-width:0;border:0;border-radius:2px;background:#f9f7ee;overflow:hidden;line-height:1}
+#sherlock-app .sh-candidate:hover:not(:disabled){background:#fff4bf}
+#sherlock-app .sh-candidate.sh-removed{opacity:.17;background:transparent}
+#sherlock-app .sh-candidate.sh-removed:hover:not(:disabled){opacity:.7}
+#sherlock-app .sh-object{display:inline-flex;justify-content:center;align-items:center;flex-shrink:0;position:relative;width:29px;height:29px;vertical-align:middle}
+#sherlock-app .sh-object canvas{display:block;width:100%;height:100%;image-rendering:pixelated;background:#000}
+#sherlock-app .sh-symbol{font:24px/1 "Apple Color Emoji","Segoe UI Emoji",system-ui,sans-serif}
+#sherlock-app .sh-object-code{position:absolute;right:0;bottom:-1px;font:9px/1.1 ui-monospace,monospace;color:#17363e;background:#f7f3df;border-radius:2px;padding:0 1px}
+#sherlock-app .sh-candidate .sh-object{width:100%;height:100%;max-width:34px;max-height:34px}
+#sherlock-app .sh-candidate .sh-symbol{font-size:clamp(14px,2.2vw,25px)}
+#sherlock-app .sh-chosen{width:100%;height:100%;min-height:0;padding:2px;border:0;background:transparent;display:grid;place-items:center}
+#sherlock-app .sh-chosen .sh-object{width:76%;height:auto;aspect-ratio:1}
+#sherlock-app .sh-chosen .sh-symbol{font-size:clamp(27px,5vw,50px)}
+#sherlock-app .sh-chosen .sh-object-code{font-size:11px}
+#sherlock-app .sh-mobile-select{display:none;position:absolute;inset:0;width:100%;height:100%;opacity:0}
+#sherlock-app .sh-cell-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px}
+#sherlock-app #sh-cell-label{font-weight:600;font-size:12px}
+#sherlock-app .sh-cell-picker{display:flex;gap:4px}
+#sherlock-app .sh-cell-picker button{width:42px;height:42px;padding:3px;min-height:42px}
+#sherlock-app .sh-cell-picker button.sh-removed{background:#e7e0d6;opacity:.5}
+#sherlock-app .sh-cell-picker button.sh-picked{border:2px solid var(--sh-teal)}
+#sherlock-app .sh-instruction{font-size:12px;color:var(--sh-muted);margin-top:9px;line-height:1.5}
+#sherlock-app .sh-clue-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 8px}
+#sherlock-app h2{font-size:16px;line-height:1.3;font-weight:600}
+#sherlock-app .sh-clue-heading>div{display:flex;gap:4px}
+#sherlock-app .sh-clue-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#sherlock-app .sh-clue-card{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 3px;background:var(--sh-panel);min-height:70px;border-radius:3px}
+#sherlock-app .sh-clue-card.sh-active{outline:2px solid var(--sh-gold);outline-offset:0;background:#fff4d8}
+#sherlock-app .sh-clue-card.sh-blank{border:1px dashed #bdc8c1;background:#e9e9df;min-height:32px;opacity:.65;cursor:default}
+#sherlock-app .sh-clue-pictures{display:flex;align-items:center;justify-content:center;gap:3px;min-width:0}
+#sherlock-app .sh-relation-mark{color:var(--sh-teal);font:bold 15px/1 ui-monospace,monospace}
+#sherlock-app .sh-clue-card .sh-object{width:25px;height:25px}
+#sherlock-app .sh-clue-card .sh-symbol{font-size:22px}
+#sherlock-app .sh-clue-caption{font-size:10px;letter-spacing:.15px;color:var(--sh-muted);max-width:100%;text-align:center}
+#sherlock-app .sh-clue-separator{grid-column:1/-1;font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--sh-muted);margin:5px 0 0}
+#sherlock-app .sh-inspector{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;background:#e3ece6;border-left:3px solid var(--sh-teal);padding:12px 14px;margin-top:14px}
+#sherlock-app .sh-inspector p{margin-top:5px;max-width:760px}
+#sherlock-app .sh-inspector select{min-width:65px}
+#sherlock-app .sh-notice{margin:14px 0;padding:9px 12px;background:#e8ebe3;border-left:3px solid #8a9b88;min-height:39px;overflow-wrap:anywhere}
+#sherlock-app .sh-notice.sh-error{border-color:#a64e40;background:#f4e0d9;color:#772d23}
+#sherlock-app .sh-notice.sh-success{border-color:#39744c;background:#dfeade}
+#sherlock-app .sh-details{border-top:1px solid var(--sh-border);padding:11px 0}
+#sherlock-app summary{cursor:pointer;font-weight:600;min-height:25px;line-height:25px}
+#sherlock-app .sh-details[open] summary{margin-bottom:12px}
+#sherlock-app .sh-file-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:12px}
+#sherlock-app .sh-file-grid input{width:100%;padding:5px;font-size:12px}
+#sherlock-app .sh-file-grid span{color:var(--sh-muted);font-size:11px;overflow-wrap:anywhere}
+#sherlock-app .sh-json-label{margin:12px 0}
+#sherlock-app textarea{width:100%;resize:vertical;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+#sherlock-app #sh-diagnostic{white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;margin:10px 0 0;max-width:100%}
+#sherlock-app .sh-footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--sh-border);padding-top:12px;color:var(--sh-muted);font-size:11px}
+#sherlock-app .sh-pause-cover{position:absolute;inset:0;background:var(--sh-board);color:#e9f5ef;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;z-index:2}
+#sherlock-app .sh-pause-cover strong{font:28px Georgia,serif}
+#sherlock-app .sh-pause-cover button{color:var(--sh-ink)}
+#sherlock-app .sh-dialog{position:absolute;inset:0;z-index:20;background:#092229b8;display:flex;align-items:flex-start;justify-content:center;padding:40px 18px}
+#sherlock-app .sh-dialog-box{position:sticky;top:20px;width:100%;max-width:560px;background:var(--sh-panel);border:2px solid var(--sh-gold);border-radius:6px;box-shadow:0 15px 60px #09222966;padding:22px;overflow-wrap:anywhere}
+#sherlock-app .sh-dialog-box h2{font:600 23px/1.3 Georgia,serif;margin-bottom:12px}
+#sherlock-app .sh-dialog-box p{margin:10px 0}
+#sherlock-app .sh-dialog-box ul,#sherlock-app .sh-dialog-box ol{padding-left:23px;margin:10px 0}
+#sherlock-app .sh-dialog-box li{margin:7px 0}
+#sherlock-app .sh-dialog-actions{justify-content:flex-end;margin-top:18px}
+#sherlock-app .sh-hint-target-line{display:flex;gap:10px;align-items:center;background:var(--sh-teal-light);padding:10px;margin:10px 0}
+#sherlock-app .sh-hint-target-line .sh-object{width:42px;height:42px}
+#sherlock-app .sh-support-card{display:flex;gap:10px;align-items:center;margin:10px 0;padding-bottom:10px;border-bottom:1px solid var(--sh-border)}
+#sherlock-app .sh-support-card p{font-size:12px;margin:3px 0}
+#sherlock-app .sh-proof-page{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+#sherlock-app .sh-bug-note{width:100%;margin-top:8px}
+@media(max-width:1050px){#sherlock-app .sh-workspace{grid-template-columns:minmax(0,1.35fr) minmax(290px,1fr);gap:12px}#sherlock-app .sh-clue-card .sh-object{width:22px;height:22px}#sherlock-app .sh-clue-caption{font-size:10px}}
+@media(max-width:800px){#sherlock-app{padding:14px}#sherlock-app .sh-workspace{grid-template-columns:1fr}#sherlock-app .sh-clue-grid{grid-template-columns:repeat(6,minmax(0,1fr))}#sherlock-app .sh-clue-pane{margin-top:4px}#sherlock-app .sh-candidate .sh-symbol{font-size:25px}#sherlock-app .sh-file-grid{grid-template-columns:1fr}#sherlock-app .sh-clue-card .sh-object{width:25px;height:25px}}
+@media(max-width:560px){#sherlock-app{padding:10px}#sherlock-app .sh-header{gap:12px}#sherlock-app .sh-header-actions{width:100%}#sherlock-app .sh-header-actions button{flex:1;font-size:12px}#sherlock-app .sh-new-game{gap:8px}#sherlock-app .sh-new-game label{flex:1;min-width:125px}#sherlock-app .sh-new-game label:nth-child(2){max-width:none;min-width:125px}#sherlock-app .sh-new-game button{flex:1}#sherlock-app .sh-gamebar{padding:9px 10px}#sherlock-app .sh-score{width:100%;justify-content:space-between}#sherlock-app .sh-toolbar>div{width:100%}#sherlock-app .sh-modes button{flex:1}#sherlock-app .sh-controls button{flex:1}#sherlock-app .sh-board-shell{padding:4px}#sherlock-app .sh-board{grid-template-columns:15px repeat(6,minmax(0,1fr));gap:2px}#sherlock-app .sh-cell{padding:2px;border-width:1px;aspect-ratio:.83}#sherlock-app .sh-candidates{gap:1px}#sherlock-app .sh-candidate .sh-symbol{font-size:14px}#sherlock-app .sh-candidate .sh-object-code{display:none}#sherlock-app .sh-mobile-select{display:block}#sherlock-app .sh-chosen .sh-symbol{font-size:30px}#sherlock-app .sh-cell-tools{justify-content:center}#sherlock-app #sh-cell-label{width:100%;text-align:center}#sherlock-app .sh-cell-picker button{width:44px;height:44px;min-height:44px}#sherlock-app .sh-clue-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#sherlock-app .sh-clue-card{min-height:72px}#sherlock-app .sh-clue-card .sh-object{width:24px;height:24px}#sherlock-app .sh-dialog{padding:20px 8px}#sherlock-app .sh-dialog-box{padding:16px}#sherlock-app input,#sherlock-app select,#sherlock-app textarea{font-size:16px}#sherlock-app .sh-inline-actions button{font-size:12px;min-height:38px}}
+@media(prefers-reduced-motion:no-preference){#sherlock-app button{transition:background-color .12s ease}}
