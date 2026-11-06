@@ -1,0 +1,236 @@
+diff --git a/docs/RTLINK.md b/docs/RTLINK.md
+new file mode 100644
+index 0000000..bdabfc2
+--- /dev/null
++++ b/docs/RTLINK.md
+@@ -0,0 +1,109 @@
++# RTLink/Plus overlay analysis and DOS launch support
++
++## Scope
++
++`fdisbull.rtlink` implements a bounded reader for the embedded RTLink/Plus v2
++layout observed in the supplied Dragonsphere SPHERE.EXE. It provides the
++projectless CLI/JSON methods `rtlink-inspect`, `rtlink-extract` and
++`rtlink-disasm`, and a Python API. It neither executes inputs nor invokes an
++external RTLink tool. It is not a universal RTLink decoder.
++
++The detailed agent guide is
++[src/fdisbull/skills/fdisbull-investigate/references/dos-formats.md](../src/fdisbull/skills/fdisbull-investigate/references/dos-formats.md).
++It separates COM/MZ headers, modern executable stubs, CPU modes, overlays,
++packers, game-resource formats, guest interpreters and launch requirements.
++
++## Data contract
++
++The resident MZ image is validated independently. A zero-offset resident
++relocation identifies a candidate segment; its index starts 48 bytes into
++that segment. This profile uses 32-byte rows, sequential IDs beginning at 2,
++a DWORD block file offset at row+8 and an ID at row+14. A zero ID terminates
++the sequence. Unsupported or ambiguous index candidates refuse.
++
++The embedded block's first words supply total paragraphs, header paragraphs,
++an opaque word, relocation start and relocation count. This implementation
++admits relocation start zero, with offset/segment pairs beginning at block+16.
++It validates header capacity, file extents, disk overlap and every relocated
++word against **available** payload bytes. Unknown index/header semantics are
++not used to infer gameplay behavior or executable entrypoints.
++
++Files ending inside a final declared paragraph can expose fewer payload bytes
++than the paragraph allocation. Up to 15 such terminal bytes are reported as
++unavailable, not supplied as zeros and not declared valid instructions. Larger
++truncations or relocations into the absent span refuse. Other overlays must
++have their complete declared span. This reporting is not proof that an
++unavailable byte is harmless padding.
++
++Each overlay has a stable source hash, ID, index offset, physical block/code
++range, payload hash, relocation records and unresolved entrypoint/code-data
++status. Repeated load-segment fields are retained, not merged. Static source
++coordinates do not establish runtime selectors, relocation bases or generations.
++
++## Operations
++
++```sh
++fdisbull rtlink-inspect /private/SPHERE.EXE
++fdisbull rtlink-disasm /private/SPHERE.EXE --overlay-id 2 --max-instructions 32
++fdisbull rtlink-extract /private/SPHERE.EXE /private/new-regions \
++  --expected-sha256 <exact-source-sha256>
++```
++
++Extraction writes the original resident load image and each available overlay
++payload separately, with a JSON manifest. No relocation is applied, no thunk
++is patched, and no new executable is emitted. Existing destinations and source
++symlinks refuse. Files are private original-derived payloads and must stay out
++of public Git, reports and tool packages. The original remains unchanged.
++
++Disassembly uses the existing iced-x86 16-bit decoder on a caller-selected
++region, under byte/instruction budgets. It stops on invalid decode or budget.
++The offset is **overlay-relative**, not a DOS address. Linear candidate decoding
++does not establish reachability or distinguish embedded data from instructions.
++The commands are discoverable through `methods`, and the capability catalog
++labels the feature partial/experimental. They are not a new CPU module or a
++replacement for the existing x86 processor.
++
++## Launch fixes
++
++The DOS debugger no longer discards explicit argument tokens. CLI `--arguments`
++accepts a JSON list, and `debug-launch` accepts the same `arguments` field. The
++narrow initial profile refuses whitespace, quotation and shell operators in
++tokens, enforces a DOS-tail budget, and rejects these options on other backends.
++
++`--cd-image` / `cd_image` admits one validated Mode-1 track from CUE/INS or a
++cooked ISO. The process gets an owned descriptor and a single authored
++`imgmount d ... -t iso` command. It does not read target-provided autoexec
++commands or ambient DOSBox configuration. CD source hashes/identities are
++recorded and checked before launch. C remains the selected game directory.
++This uses the existing native backend without patching its executable.
++
++The CUE parser accepts one- or two-digit TRACK and INDEX values, normalizes
++INDEX values before duplicate checks, and retains its path/traversal/mode
++restrictions. `disc-inspect` treats `.INS` as a descriptor candidate, which must
++pass the same content validation as `.cue`. Unrelated INS input is rejected.
++
++This is not generic arbitrary-drive mounting, a batch interpreter or an audio
++CD player. CD-mounted native checkpoint/rewind serialization is not qualified
++and is refused. In-game save/load and direct execution controls are separate.
++
++## Verification and provenance
++
++Synthetic tests build authored MZ and overlay containers, exercise rejection
++paths, compare exported bytes and verify bounded disassembly. Authored ISO
++fixtures and optional real DOSBox tests inspect the PSP argument tail, read
++`TEST` from D:\ONE.BIN, and verify child cleanup. Game-backed observations are
++separate and use private supplied files; no game bytes enter tests or this repo.
++
++Reference consulted: dreammaster/tools `rtlink_decode/variation2.cpp`, branch
++`rtlink_decode`, Git blob `d6dfccff3c143d04fc169bdf2606b99105413b34`:
++https://github.com/dreammaster/tools/blob/rtlink_decode/rtlink_decode/variation2.cpp
++The upstream source is GPL-2.0-or-later. No upstream C++ source or binaries are
++bundled. This Python implementation is newly authored, but its format layout
++and discovery rule were informed by that implementation. Review attribution
++and any derivative-work obligations with the project's licensing decision
++before public release; this document is not licensing clearance.
++
++The complete upstream tool also recognizes other layouts and creates a patched
++flat disassembly view. This module deliberately does not offer those unqualified
++paths. Future work: additional variant readers, independent loader witnesses,
++live overlay-generation mapping and resolved cross-overlay transfer evidence.
+diff --git a/src/fdisbull/capabilities.py b/src/fdisbull/capabilities.py
+index fcb2307..9e0787e 100644
+--- a/src/fdisbull/capabilities.py
++++ b/src/fdisbull/capabilities.py
+@@ -66,6 +66,11 @@ def _entry(identifier, implementation, architectures, methods, providers, requir
+ 
+ def _catalog():
+     return [
++        _entry('analysis.rtlink-overlays', 'partial', ['x86-16'],
++               ['cli:rtlink-inspect', 'cli:rtlink-extract', 'cli:rtlink-disasm'],
++               ['rtlink.py'], ['iced-x86'],
++               'Embedded RTLink/Plus v2 index and relocation validation, private unrelocated region export and bounded candidate disassembly. Other variants/external OVL, flattened runnable output and runtime bank identity are unsupported.',
++               maturity='experimental'),
+         _entry('inspect.file-formats', 'partial', ['container-dependent'],
+                ['cli:format-modules', 'cli:file-identify', 'cli:intake-inventory'], ['format_registry.py', 'format_media.py', 'intake.py', 'inspection.py', 'image_views.py'], [],
+                'Versioned SQLite header facts and bounded signature/architecture/media probes. Recognition, structural validation, decoder availability and native execution are separate.'),
+diff --git a/src/fdisbull/cli.py b/src/fdisbull/cli.py
+index a2ecb26..051e7a1 100644
+--- a/src/fdisbull/cli.py
++++ b/src/fdisbull/cli.py
+@@ -31,6 +31,7 @@ AGENT_SKILL_GUIDES = {
+     "references/file-formats.md": "Identify file headers through SQLite format modules and frame native SMK2 with explicit decoder/runtime gates",
+     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
+     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
++    "references/dos-formats.md": "Distinguish DOS images, extended stubs, RTLink overlays and original launch/media requirements",
+     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
+     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
+     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
+@@ -180,7 +181,7 @@ METHODS = {
+     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
+     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
+     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
+-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
++    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play,arguments,cd_image]",
+     "debug-status": "Live debugger status and address mapping; run",
+     "debug-registers": "Live CPU registers with project address mapping; run",
+     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
+@@ -337,7 +338,10 @@ METHODS = {
+     "nes-multicart-inspect": "Inspect NES cartridge mapper and bank geometry without assuming a game count; path",
+     "nes-multicart-build": "Package two compatible authored NROM cartridges behind a bank-switching menu; inputs,output,authored_compatible",
+     "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
+-    "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
++    "disc-inspect": "Parse bounded CUE/INS/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
++    "rtlink-inspect": "Validate embedded RTLink/Plus v2 overlay index and relocation metadata; path",
++    "rtlink-extract": "Export private, separate unrelocated overlay regions; path,output,[expected_sha256]",
++    "rtlink-disasm": "Decode candidate x86-16 instructions in one source-bound overlay; path,overlay_id,[offset,max_instructions,max_bytes]",
+     "info": "Parsed container summary; [version]",
+     "header": "Parsed header fields; [version]",
+     "sections": "Disk and virtual section layout; [version,limit,offset]",
+@@ -727,6 +731,10 @@ def invoke(method, params, debugger=None):
+     if method == "kq1-bow-evaluate":
+         from .court_adapter import evaluate_bow
+         return evaluate_bow(**p)
++    if method in ('rtlink-inspect', 'rtlink-extract', 'rtlink-disasm'):
++        from .rtlink import inspect_rtlink, extract_rtlink, disassemble_rtlink
++        return {'rtlink-inspect': inspect_rtlink, 'rtlink-extract': extract_rtlink,
++                'rtlink-disasm': disassemble_rtlink}[method](**params)
+     if method=='disc-inspect':
+         from .disc import inspect_disc_path
+         return inspect_disc_path(**p)
+@@ -1257,7 +1265,7 @@ def respond(request, default_project=None, debugger=None):
+         standalone = standalone or request["method"] in {
+             'console-udc',
+             'console-udc-targets',
+-            'disc-inspect',
++            'disc-inspect', 'rtlink-inspect', 'rtlink-extract', 'rtlink-disasm',
+             'genesis-replay-build',
+             'genesis-replay-export',
+             'genesis-replay-inspect',
+@@ -1848,6 +1856,17 @@ def parser():
+     c.add_argument('--mode',choices=['linear','word-scan'],default='linear')
+     c.add_argument('--ghidra-home');c.add_argument('--saturn-recomp-root')
+     c.add_argument('--timeout',type=float,default=60.0)
++    for name in ('rtlink-inspect', 'rtlink-extract', 'rtlink-disasm'):
++        c = sub.add_parser(name, help=METHODS[name])
++        c.add_argument('path')
++        if name == 'rtlink-extract':
++            c.add_argument('output')
++            c.add_argument('--expected-sha256')
++        elif name == 'rtlink-disasm':
++            c.add_argument('--overlay-id', type=int, required=True)
++            c.add_argument('--offset', type=lambda s: int(s, 0), default=0)
++            c.add_argument('--max-instructions', type=int, default=64)
++            c.add_argument('--max-bytes', type=int, default=4096)
+     c=sub.add_parser('disc-inspect',help=METHODS['disc-inspect'])
+     c.add_argument('path')
+     c.add_argument('--mode',choices=['MODE1/2048','MODE1/2352'])
+@@ -1870,6 +1889,8 @@ def parser():
+     c.add_argument("project")
+     c.add_argument("--executable", required=True)
+     c.add_argument("--game-dir", required=True)
++    c.add_argument("--arguments", type=json.loads, help='DOS argument token JSON array, for example ["-p"]')
++    c.add_argument("--cd-image", help="Native DOSBox only: validated local CUE/INS or cooked ISO mounted as read-only D:")
+     c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
+     c.add_argument("--version", type=int)
+     c.add_argument(
+diff --git a/src/fdisbull/cue.py b/src/fdisbull/cue.py
+index f73115b..e26b66d 100644
+--- a/src/fdisbull/cue.py
++++ b/src/fdisbull/cue.py
+@@ -69,7 +69,7 @@ def parse_cue(text: str) -> dict:
+                 files_used.add(current_file)
+                 track = None
+             elif command == 'TRACK':
+-                if len(tokens) != 3 or current_file is None or not re.fullmatch(r'\d{2}', tokens[1]):
++                if len(tokens) != 3 or current_file is None or not re.fullmatch(r'\d{1,2}', tokens[1]):
+                     raise ValueError("invalid TRACK")
+                 number = int(tokens[1])
+                 mode = tokens[2].upper()
+@@ -80,9 +80,9 @@ def parse_cue(text: str) -> dict:
+                 track = {"number": number, "mode": mode, "file": current_file, "sector_size": _MODES[mode], "indices": {}, "pregap_sectors": 0, "postgap_sectors": 0}
+                 tracks.append(track)
+             elif command == 'INDEX':
+-                if track is None or len(tokens) != 3 or tokens[1] not in ('00', '01'):
++                if track is None or len(tokens) != 3 or tokens[1] not in ('0', '1', '00', '01'):
+                     raise ValueError("unsupported or invalid INDEX")
+-                index = tokens[1]
++                index = tokens[1].zfill(2)
+                 if index in track['indices'] or (index == '00' and '01' in track['indices']) or track.get('_postgap'):
+                     raise ValueError("duplicate or out-of-order INDEX")
+                 track['indices'][index] = _frames(tokens[2])
