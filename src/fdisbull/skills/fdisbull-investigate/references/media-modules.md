@@ -12,6 +12,7 @@ capability contract; successful parsing establishes structure, not behavior.
 - [AGI v2 resource version 1](#agi-v2-resource-version-1)
 - [Existing readers and decoders](#existing-readers-and-decoders)
 - [Westwood Kyra-family media and EMC2](#westwood-kyra-family-media-and-emc2)
+- [MADS conversations and containers](#mads-conversations-and-containers)
 - [Extend and qualify a module](#extend-and-qualify-a-module)
 
 ## Classify the next obstacle
@@ -187,6 +188,52 @@ zero-fill. Duplicate PAK names require an exact indexed member selector. For
 CPS graphics lacking their own palette, export indexed bytes but do not guess
 color; source-embedded 320x200 palettes permit a derived PNG preview. Archive
 member extraction and media decoding are distinct steps.
+
+## MADS conversations and containers
+
+Use `decoder-modules` to confirm `fdisbull.mads.conversation` is installed.
+This is a static conversation processor, not a playable MADS engine or a live
+ScummVM debugger. It uses the same decoder registry as AGI and Westwood EMC2.
+
+### Choose the correct layer
+
+1. Inspect original DOS executables with the native loader. `SPHERE.EXE` is a
+   separate x86/RTLink investigation; do not send it to the CNV processor.
+2. Preserve the launch recipe, working directory, arguments and mounted CD.
+   Local IDX files can be indexes for HAG resources on that disc.
+3. Inspect HAG resources, then select the actual `CONVnnn.CNV` entry. This reader
+   supports MADSCONCAT 1.0 and MADSPACK 2.0 stored/FAB data. Unknown variants refuse.
+4. Inspect the CNV's dialog table and choose `function_index` (the dialog index).
+   Pair CND metadata separately when imported variables or initial flags matter.
+
+```sh
+python -m fdisbull.mads_processor inspect /private/GLOBAL.HAG --kind hag
+python -m fdisbull.mads_processor inspect /private/GLOBAL.HAG --member CONV001.CNV
+fdisbull request '{"method":"module-analyze","params":{"module":"fdisbull.mads.conversation","path":"/private/GLOBAL.HAG","member":"CONV001.CNV","function_index":3,"max_instructions":80}}'
+```
+
+The command is projectless. It does not require ScummVM, Capstone or a running
+emulator. The stock `module-analyze` positional CLI works on a loose CNV for
+its first dialog. JSON/Python supports explicit archive member and dialog selection.
+
+### Evidence rules
+
+Retain the source hash, HAG occurrence/index, compression section, selected dialog
+and exact decoded instruction spans. A decompressed section-6 byte offset is not
+an EXE offset or a native breakpoint address. GOTO targets must be actual instruction
+boundaries in the selected dialog. A different dialog or operand is unresolved,
+not automatically another entry point.
+
+Conditional operation IDs and variable references are retained without evaluation.
+Do not turn old upstream enum names into verified original-game semantics. Unknown
+instructions fail; DIALOG_END retains an opaque engine edge. A bounded stop is not
+complete coverage. `complete` is scoped to static edges, never gameplay equivalence.
+CND pointer-looking fields and runtime workspace are not live host state.
+
+Keep CNV/CND/HAG payloads, decoded text, instruction bytes and private state out of
+Git. Publish authored scripts and aggregate/hashing receipts only. Read the full
+repository guide `docs/MADS_PROCESSOR.md` for API contracts, limits and provenance.
+The next semantic gate is a native interpreter trace, not another parse count.
 
 ## Extend and qualify a module
 

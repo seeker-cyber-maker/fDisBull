@@ -214,6 +214,8 @@ def builtin_registry() -> DecoderRegistry:
     registry.register(AGI2917Module())
     registry.register(ZMachineV3Module())
     registry.register(WestwoodEMC2Module())
+    from .mads_processor import MADSConversationModule
+    registry.register(MADSConversationModule())
     return registry
 
 
