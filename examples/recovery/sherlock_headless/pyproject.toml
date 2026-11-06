@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sherlock-headless-benchmark"
+version = "0.1.0"
+description = "Headless relational logic puzzles with deterministic generation and an agent answer verifier"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+sherlock-bench = "sherlock_benchmark.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sherlock_benchmark*"]

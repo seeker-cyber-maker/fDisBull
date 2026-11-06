@@ -5,6 +5,13 @@ owner's private Sherlock 1.50 reconstruction. The portable C code contains a
 shared answer verifier, exact bounded solver and deterministic native puzzle
 generator. It has no emulator, Python or external solver runtime dependency.
 
+For agent evaluation entirely in Python, see the separate
+[headless benchmark](../sherlock_headless/README.md). It implements the documented
+Sherlock 7 relation profile on 3–8 rows/columns, provides candidate sessions and
+strict JSON submissions, and keeps generation seeds out of public challenges.
+Its versioned generator and schema are separate from this six-by-six DOS-era
+replica and its native puzzle identities.
+
 ## Build and use the CLI
 
 ```sh
