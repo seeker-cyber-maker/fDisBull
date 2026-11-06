@@ -152,3 +152,43 @@ def test_player_discovery_excludes_nested_build_artifacts(tmp_path):
         (tmp_path/directory/'__init__.py').write_text('')
     discovered=find_namespace_packages(where=str(tmp_path),include=config['include'],exclude=config.get('exclude',[]))
     assert discovered==['fdisbull_player']
+
+
+def test_offline_kit_reuses_unchanged_backend_from_earlier_commit(tmp_path):
+    from argparse import Namespace
+    import hashlib
+    import json
+    import tarfile
+    wheel_dir=tmp_path/'wheels';wheel_dir.mkdir();wheelhouse(wheel_dir)
+    backend=tmp_path/'dosbox';backend.write_bytes(b'test backend')
+    lib=tmp_path/'libSDL2_net.so.0';lib.write_bytes(b'test library')
+    source=tmp_path/'source.tar'
+    with tarfile.open(source,'w') as tar:
+        notice=tmp_path/'notice';notice.write_text('test source')
+        tar.add(notice,arcname='notice')
+    manifest=tmp_path/'patch.json';manifest.write_text(json.dumps({'patch_sha256':'patch','baseline_commit':'upstream'}))
+    receipt=tmp_path/'receipt.json';receipt.write_text(json.dumps({
+        'source_commit':'1'*40,
+        'backend_sha256':hashlib.sha256(backend.read_bytes()).hexdigest(),
+        'patch_sha256':'patch',
+        'upstream_commit':'upstream',
+    }))
+    license_file=tmp_path/'license';license_file.write_text('test license')
+    archive,_=kit.build(Namespace(
+        source_commit='2'*40,
+        python_tag='cp313',
+        wheelhouse=str(wheel_dir),
+        backend=str(backend),
+        sdl_lib=[str(lib)],
+        source_companion=str(source),
+        backend_receipt=str(receipt),
+        patch_manifest=str(manifest),
+        dosbox_license=str(license_file),
+        sdl_license=str(license_file),
+        output=str(tmp_path/'out'),
+    ))
+    with tarfile.open(archive) as tar:
+        prefix=f'fdisbull-{kit.VERSION}-linux-x86_64-offline/'
+        manifest_data=json.load(tar.extractfile(prefix+'manifest.json'))
+    assert manifest_data['source_commit']=='2'*40
+    assert manifest_data['backend_source_commit']=='1'*40

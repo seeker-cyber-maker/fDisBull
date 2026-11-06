@@ -242,11 +242,14 @@ def build(args):
     if not tarfile.is_tarfile(args.source_companion):
         raise ValueError("source companion must be a tar archive")
     receipt = json.loads(Path(args.backend_receipt).read_text())
-    if receipt.get("source_commit") != args.source_commit or receipt.get(
-        "backend_sha256"
-    ) != digest(backend):
+    backend_commit = receipt.get("source_commit")
+    if (
+        not isinstance(backend_commit, str)
+        or not re.fullmatch(r"[0-9a-f]{40}", backend_commit)
+        or receipt.get("backend_sha256") != digest(backend)
+    ):
         raise ValueError(
-            "backend receipt does not match source commit and backend bytes"
+            "backend receipt does not match valid source commit and backend bytes"
         )
     manifest_data = json.loads(Path(args.patch_manifest).read_text())
     if receipt.get("patch_sha256") != manifest_data.get("patch_sha256") or receipt.get(
@@ -299,6 +302,7 @@ def build(args):
         shutil.copyfile(args.source_companion, companion)
         manifest = {
             "source_commit": args.source_commit,
+            "backend_source_commit": backend_commit,
             "python": "3.13",
             "platform": "linux-x86_64",
             "source_companion": companion.name,

@@ -26,7 +26,14 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 FORMAT = "fdisbull-offline-dependencies-1"
+CHAT_RELEASE_FORMAT = "fdisbull-chat-release-1"
 DEFAULT_EXTRAS = ("proof",)
+PROFILES: dict[str, tuple[str, ...]] = {
+    "dos": ("proof",),
+    "windows": ("managed", "udc"),
+    "all": ("proof", "managed", "udc", "source", "console", "screenshot"),
+}
+WINDOWS_TRANSITIVE_REQUIREMENTS = ("pefile==2024.8.26",)
 TARGET = {
     "python_tag": "cp313",
     "python": "3.13",
@@ -71,15 +78,45 @@ def requirement_name(requirement: str) -> str:
     return normalize(match.group(1))
 
 
-def load_requirements(project_root: Path, extras: tuple[str, ...]) -> list[str]:
+def resolve_extras(
+    profile: str = "dos",
+    extra: list[str] | tuple[str, ...] = (),
+    no_extras: bool = False,
+) -> tuple[str, ...]:
+    if profile not in PROFILES:
+        raise ValueError(f"unknown dependency profile: {profile}")
+    if no_extras:
+        return ()
+    if extra:
+        return tuple(extra)
+    return PROFILES[profile]
+
+
+def load_requirements(
+    project_root: Path,
+    extras: tuple[str, ...] = DEFAULT_EXTRAS,
+    *,
+    profile: str = "dos",
+) -> list[str]:
+    if profile not in PROFILES:
+        raise ValueError(f"unknown dependency profile: {profile}")
     project = tomllib.loads((project_root / "pyproject.toml").read_text())
     data = project["project"]
     definitions = data.get("optional-dependencies", {})
-    requirements = list(data.get("dependencies", []))
+    requirements = (
+        [] if profile == "windows" else list(data.get("dependencies", []))
+    )
     for extra in extras:
         if extra not in definitions:
             raise ValueError(f"unknown optional dependency group: {extra}")
         requirements.extend(definitions[extra])
+    if "managed" in extras:
+        existing_names = {
+            requirement_name(canonical_requirement(item)) for item in requirements
+        }
+        for transitive in WINDOWS_TRANSITIVE_REQUIREMENTS:
+            if requirement_name(canonical_requirement(transitive)) not in existing_names:
+                requirements.append(transitive)
     if not requirements:
         raise ValueError("project declares no dependencies")
     canonical = sorted({canonical_requirement(item) for item in requirements})
@@ -180,16 +217,49 @@ def inspect_wheel(path: Path) -> dict:
     }
 
 
-def collect_wheels(wheels: list[Path]) -> dict[str, dict]:
+def collect_wheels(
+    wheels: list[Path],
+    *,
+    required_names: set[str] | None = None,
+    ignore_app_wheels: bool = False,
+) -> dict[str, dict]:
     found: dict[str, dict] = {}
     for wheel in sorted(wheels):
+        if ignore_app_wheels and normalize(wheel.name.split("-", 1)[0]) in {
+            "fdisbull",
+            "fdisbull-player",
+        }:
+            continue
         entry = inspect_wheel(wheel)
+        if required_names is not None and entry["name"] not in required_names:
+            continue
         if entry["name"] in found:
             raise ValueError(f"duplicate wheel for {entry['name']}")
         found[entry["name"]] = entry
+    if required_names is not None:
+        missing = sorted(required_names - set(found))
+        if missing:
+            raise ValueError(
+                f"wheelhouse missing required wheels: {', '.join(missing)}"
+            )
     if not found:
         raise ValueError("no compatible wheels were found")
     return dict(sorted(found.items()))
+
+
+def _pip_command(python: str) -> list[str]:
+    probe = subprocess.run(
+        [python, "-m", "pip", "--version"],
+        capture_output=True,
+        text=True,
+    )
+    if probe.returncode == 0:
+        return [python, "-m", "pip"]
+    for candidate in ("pip3", "pip"):
+        found = shutil.which(candidate)
+        if found:
+            return [found]
+    raise ValueError(f"pip is not available for {python}")
 
 
 def download_wheels(
@@ -198,12 +268,39 @@ def download_wheels(
     destination.mkdir(parents=True, exist_ok=True)
     requirement_file = destination / "constraints.txt"
     requirement_file.write_text("\n".join(requirements) + "\n")
+    cross_flags: list[str] = []
+    if (
+        sys.platform != "linux"
+        or platform.machine() != "x86_64"
+        or sys.version_info[:2] != (3, 13)
+    ):
+        cross_flags = [
+            "--platform",
+            "manylinux_2_28_x86_64",
+            "--platform",
+            "manylinux_2_27_x86_64",
+            "--platform",
+            "manylinux_2_17_x86_64",
+            "--platform",
+            "manylinux2014_x86_64",
+            "--platform",
+            "linux_x86_64",
+            "--python-version",
+            TARGET["python"],
+            "--implementation",
+            "cp",
+            "--abi",
+            TARGET["python_tag"],
+            "--abi",
+            "abi3",
+            "--abi",
+            "none",
+        ]
     command = [
-        python,
-        "-m",
-        "pip",
+        *_pip_command(python),
         "download",
         "--only-binary=:all:",
+        *cross_flags,
         "--dest",
         str(destination),
         "--requirement",
@@ -214,7 +311,24 @@ def download_wheels(
     return sorted(destination.glob(f"*{WHEEL_SUFFIX}"))
 
 
-def _install_script() -> str:
+def _install_script(profile: str = "dos") -> str:
+    if profile == "windows":
+        return """#!/bin/sh
+set -eu
+unset PYTHONPATH PYTHONHOME
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ "$#" -ne 1 ]; then echo "Usage: $0 VENV_PATH" >&2; exit 2; fi
+DEST=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$1")
+cd "$HERE"
+sha256sum -c SHA256SUMS
+python3 -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13 required"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
+if [ ! -x "$DEST/bin/python" ]; then
+  if [ -e "$DEST" ] || [ -L "$DEST" ]; then echo "Destination exists and is not a virtualenv" >&2; exit 1; fi
+  python3 -m venv "$DEST"
+fi
+"$DEST/bin/python" -m pip install --no-index --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
+"$DEST/bin/python" -c 'import dncil, dnfile, pefile, unicorn; print("Offline Windows dependencies installed; PE/.NET and Unicorn checks passed")'
+"""
     return """#!/bin/sh
 set -eu
 unset PYTHONPATH PYTHONHOME
@@ -281,11 +395,13 @@ def write_bundle(
     *,
     target: dict[str, str] = TARGET,
     root_name: str | None = None,
+    profile: str = "dos",
 ) -> dict:
     spec_fingerprint = fingerprint(requirements, extras, target)
+    suffix = "" if profile == "dos" else f"-{profile}"
     root_name = (
         root_name
-        or f"fdisbull-{target['python_tag']}-{target['platform']}-dependencies-{spec_fingerprint[:12]}"
+        or f"fdisbull-{target['python_tag']}-{target['platform']}{suffix}-dependencies-{spec_fingerprint[:12]}"
     )
     with tempfile.TemporaryDirectory(prefix="fdisbull-dependencies-") as temporary:
         root = Path(temporary) / root_name
@@ -303,6 +419,8 @@ def write_bundle(
             "entrypoint": "install.sh",
             "requirements_file": "requirements.txt",
         }
+        if profile != "dos":
+            manifest["profile"] = profile
         (root / "manifest.json").write_text(
             json.dumps(manifest, indent=2, sort_keys=True) + "\n"
         )
@@ -314,7 +432,7 @@ def write_bundle(
         )
         (root / "README.txt").write_text(_readme(requirements, extras, target))
         installer = root / "install.sh"
-        installer.write_text(_install_script())
+        installer.write_text(_install_script(profile))
         installer.chmod(0o755)
         files = sorted(path for path in root.rglob("*") if path.is_file())
         (root / "SHA256SUMS").write_text(
@@ -512,16 +630,23 @@ def compare_specs(
     }
 
 
-def _resolve_output(output: Path, project_root: Path) -> Path:
+def _resolve_output(
+    output: Path, project_root: Path, *, profile: str = "dos"
+) -> Path:
     if output.name.endswith(".tar.gz") or output.suffix == ".tgz":
         return output
     version = tomllib.loads((project_root / "pyproject.toml").read_text())["project"][
         "version"
     ]
-    return output / f"fdisbull-{version}-linux-x86_64-dependencies.tar.gz"
+    if profile == "dos":
+        return output / f"fdisbull-{version}-linux-x86_64-dependencies.tar.gz"
+    return output / f"fdisbull-{version}-linux-x86_64-{profile}-dependencies.tar.gz"
 
 
-def _host_ok(python: str) -> None:
+def _host_ok(python: str, *, allow_cross: bool = True) -> None:
+    if allow_cross:
+        _pip_command(python)
+        return
     if sys.version_info[:2] != (3, 13):
         raise ValueError("offline dependency builds require Python 3.13")
     if sys.platform != "linux" or platform.machine() != "x86_64":
@@ -542,10 +667,14 @@ def _host_ok(python: str) -> None:
 
 def build(args: argparse.Namespace) -> dict:
     project_root = args.project_root.resolve()
-    extras = () if args.no_extras else tuple(args.extra or DEFAULT_EXTRAS)
-    requirements = load_requirements(project_root, extras)
+    profile = getattr(args, "profile", "dos") or "dos"
+    extras = resolve_extras(
+        profile, getattr(args, "extra", []), getattr(args, "no_extras", False)
+    )
+    requirements = load_requirements(project_root, extras, profile=profile)
+    required_names = {requirement_name(item) for item in requirements}
     target = dict(TARGET)
-    output = _resolve_output(args.output, project_root)
+    output = _resolve_output(args.output, project_root, profile=profile)
     if args.previous:
         previous = load_bundle(args.previous)
         difference = compare_specs(previous, requirements, extras, target)
@@ -566,6 +695,7 @@ def build(args: argparse.Namespace) -> dict:
             )
             return {
                 "status": "reused",
+                "profile": profile,
                 "archive": str(output),
                 "sha256": archive_hash,
                 "fingerprint": previous["manifest"]["fingerprint"],
@@ -584,28 +714,43 @@ def build(args: argparse.Namespace) -> dict:
         wheel_paths = sorted(args.wheelhouse.resolve().glob(f"*{WHEEL_SUFFIX}"))
         if not wheel_paths:
             raise ValueError(f"wheelhouse has no wheels: {args.wheelhouse}")
-        wheels = collect_wheels(wheel_paths)
+        wheels = collect_wheels(
+            wheel_paths, required_names=required_names, ignore_app_wheels=True
+        )
         sources = {
             entry["name"]: path
             for entry in wheels.values()
             for path in [Path(args.wheelhouse.resolve()) / entry["filename"]]
         }
         result = write_bundle(
-            requirements, extras, wheels, sources, output, target=target
+            requirements,
+            extras,
+            wheels,
+            sources,
+            output,
+            target=target,
+            profile=profile,
         )
     else:
         _host_ok(args.python)
         with tempfile.TemporaryDirectory(prefix="fdisbull-wheels-") as temporary:
             wheel_paths = download_wheels(requirements, Path(temporary), args.python)
-            wheels = collect_wheels(wheel_paths)
+            wheels = collect_wheels(wheel_paths, required_names=required_names)
             sources = {
                 entry["name"]: path
                 for entry in wheels.values()
                 for path in [Path(temporary) / entry["filename"]]
             }
             result = write_bundle(
-                requirements, extras, wheels, sources, output, target=target
+                requirements,
+                extras,
+                wheels,
+                sources,
+                output,
+                target=target,
+                profile=profile,
             )
+    result["profile"] = profile
     result["diff"] = difference
     result["requirements"] = requirements
     return result
@@ -613,16 +758,222 @@ def build(args: argparse.Namespace) -> dict:
 
 def check(args: argparse.Namespace) -> dict:
     project_root = args.project_root.resolve()
-    extras = () if args.no_extras else tuple(args.extra or DEFAULT_EXTRAS)
-    requirements = load_requirements(project_root, extras)
+    profile = getattr(args, "profile", "dos") or "dos"
+    extras = resolve_extras(
+        profile, getattr(args, "extra", []), getattr(args, "no_extras", False)
+    )
+    requirements = load_requirements(project_root, extras, profile=profile)
     previous = load_bundle(args.previous)
     difference = compare_specs(previous, requirements, extras)
     return {
         "status": "reuse" if not difference["changed"] else "rebuild",
+        "profile": profile,
         "fingerprint": fingerprint(requirements, extras),
         "previous_fingerprint": previous["manifest"]["fingerprint"],
         "previous": str(previous["path"]),
         "diff": difference,
+    }
+
+
+def _inspect_app_wheel(path: Path, expected_version: str) -> dict:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f"wheel must be a regular file: {path}")
+    _compatible_wheel(path.name)
+    try:
+        with zipfile.ZipFile(path) as archive:
+            metadata = [
+                name
+                for name in archive.namelist()
+                if name.endswith(".dist-info/METADATA") and name.count("/") == 1
+            ]
+            if len(metadata) != 1:
+                raise ValueError(f"wheel must contain one METADATA: {path.name}")
+            message = BytesParser(policy=default).parsebytes(archive.read(metadata[0]))
+    except zipfile.BadZipFile as exc:
+        raise ValueError(f"invalid wheel archive: {path.name}") from exc
+    name = normalize(str(message.get("Name", "")))
+    version = str(message.get("Version", ""))
+    filename_parts = path.name[: -len(WHEEL_SUFFIX)].split("-")
+    if normalize(filename_parts[0]) != name or filename_parts[1] != version:
+        raise ValueError(f"wheel filename and metadata disagree: {path.name}")
+    if name not in {"fdisbull", "fdisbull-player"}:
+        raise ValueError(f"not an application wheel: {path.name}")
+    if version != expected_version:
+        raise ValueError(
+            f"application wheel version {version} does not match {expected_version}: {path.name}"
+        )
+    return {
+        "name": name,
+        "version": version,
+        "filename": path.name,
+        "sha256": digest(path),
+        "size": path.stat().st_size,
+    }
+
+
+def _chat_release_installer(version: str) -> str:
+    return f"""#!/bin/sh
+set -eu
+unset PYTHONPATH PYTHONHOME
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+usage() {{
+  echo "Usage: $0 [--python /path/to/python3.13] --dos-deps /path/to/dos-deps.tar.gz [--windows-deps /path/to/windows-deps.tar.gz] VENV_PATH" >&2
+}}
+PYTHON_BIN=python3
+DOS_DEPS=
+WIN_DEPS=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --python)
+      [ "$#" -ge 2 ] || {{ usage; exit 2; }}
+      PYTHON_BIN=$2
+      shift 2
+      ;;
+    --dos-deps)
+      [ "$#" -ge 2 ] || {{ usage; exit 2; }}
+      DOS_DEPS=$2
+      shift 2
+      ;;
+    --windows-deps)
+      [ "$#" -ge 2 ] || {{ usage; exit 2; }}
+      WIN_DEPS=$2
+      shift 2
+      ;;
+    -*)
+      usage
+      exit 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+if [ "$#" -ne 1 ] || [ -z "$DOS_DEPS" ]; then usage; exit 2; fi
+DEST=$("$PYTHON_BIN" -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$1")
+cd "$HERE"
+sha256sum -c SHA256SUMS
+"$PYTHON_BIN" -c 'import platform,sys; assert sys.version_info[:2] == (3,13), "Python 3.13 required"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
+WORK=$(mktemp -d "${{TMPDIR:-/tmp}}/fdisbull-chat-install.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
+extract_pack() {{
+  PACK_PATH=$1
+  PACK_DIR=$2
+  if [ -d "$PACK_PATH" ]; then
+    echo "$PACK_PATH"
+  else
+    mkdir -p "$PACK_DIR"
+    tar -xzf "$PACK_PATH" -C "$PACK_DIR"
+    find "$PACK_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1
+  fi
+}}
+DOS_ROOT=$(extract_pack "$DOS_DEPS" "$WORK/dos")
+(cd "$DOS_ROOT" && sha256sum -c SHA256SUMS)
+if [ ! -x "$DEST/bin/python" ]; then
+  if [ -e "$DEST" ] || [ -L "$DEST" ]; then echo "Destination exists and is not a virtualenv" >&2; exit 1; fi
+  "$PYTHON_BIN" -m venv "$DEST"
+fi
+"$DEST/bin/python" -m pip install --no-index --find-links "$DOS_ROOT/wheels" --require-hashes -r "$DOS_ROOT/requirements.txt"
+if [ -n "$WIN_DEPS" ]; then
+  WIN_ROOT=$(extract_pack "$WIN_DEPS" "$WORK/win")
+  (cd "$WIN_ROOT" && sha256sum -c SHA256SUMS)
+  "$DEST/bin/python" -m pip install --no-index --find-links "$WIN_ROOT/wheels" --require-hashes -r "$WIN_ROOT/requirements.txt"
+fi
+"$DEST/bin/python" -m pip install --no-index --no-deps --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
+"$DEST/bin/python" -c 'import importlib.metadata as m, fdisbull, fdisbull_player, z3; assert m.version("fdisbull") == "{version}" and m.version("fdisbull-player") == "{version}"; print("fDisBull {version} chat release installed")'
+"""
+
+
+def build_chat_release(args: argparse.Namespace) -> dict:
+    project_root = args.project_root.resolve()
+    version = tomllib.loads((project_root / "pyproject.toml").read_text())["project"][
+        "version"
+    ]
+    wheel_paths = sorted(args.wheelhouse.resolve().glob(f"*{WHEEL_SUFFIX}"))
+    found: dict[str, dict] = {}
+    sources: dict[str, Path] = {}
+    for path in wheel_paths:
+        prefix = normalize(path.name.split("-", 1)[0])
+        if prefix not in {"fdisbull", "fdisbull-player"}:
+            continue
+        entry = _inspect_app_wheel(path, version)
+        if entry["name"] in found:
+            raise ValueError(f"duplicate application wheel for {entry['name']}")
+        found[entry["name"]] = entry
+        sources[entry["name"]] = path
+    if set(found) != {"fdisbull", "fdisbull-player"}:
+        raise ValueError(
+            "wheelhouse must contain both fdisbull and fdisbull-player wheels for current version"
+        )
+    output = args.output.resolve()
+    if not (output.name.endswith(".tar.gz") or output.suffix == ".tgz"):
+        output = output / f"fdisbull-{version}-chat-release.tar.gz"
+    root_name = f"fdisbull-{version}-chat-release"
+    with tempfile.TemporaryDirectory(prefix="fdisbull-chat-release-") as temporary:
+        root = Path(temporary) / root_name
+        (root / "wheels").mkdir(parents=True)
+        for name, entry in sorted(found.items()):
+            shutil.copyfile(sources[name], root / "wheels" / entry["filename"])
+        tool_entry = None
+        if getattr(args, "tool_zip", None):
+            tool_path = args.tool_zip.resolve()
+            if not tool_path.is_file() or tool_path.is_symlink():
+                raise ValueError(f"tool_zip must be a regular file: {tool_path}")
+            shutil.copyfile(tool_path, root / tool_path.name)
+            tool_entry = {
+                "filename": tool_path.name,
+                "sha256": digest(tool_path),
+                "size": tool_path.stat().st_size,
+            }
+        manifest = {
+            "format": CHAT_RELEASE_FORMAT,
+            "version": version,
+            "source_commit": getattr(args, "source_commit", None) or "",
+            "target": dict(sorted(TARGET.items())),
+            "wheels": dict(sorted(found.items())),
+            "entrypoint": "install.sh",
+            "requirements_file": "requirements.txt",
+        }
+        if tool_entry:
+            manifest["tool_zip"] = tool_entry
+        (root / "manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        )
+        (root / "requirements.txt").write_text(
+            "".join(
+                f"{entry['name']}=={entry['version']} --hash=sha256:{entry['sha256']}\n"
+                for entry in sorted(found.values(), key=lambda x: x["name"])
+            )
+        )
+        (root / "README.txt").write_text(
+            f"fDisBull {version} lightweight Chat release pack\n"
+            "===============================================\n\n"
+            "Contains only the version-specific fdisbull and fdisbull-player wheels\n"
+            "(and optional tool source archive). Install on top of the reusable\n"
+            "DOS dependency bundle (and optional Windows dependency bundle):\n\n"
+            "  ./install.sh --dos-deps /path/to/dos-dependencies.tar.gz \\\n"
+            "    [--windows-deps /path/to/windows-dependencies.tar.gz] /tmp/fdisbull-venv\n"
+        )
+        installer = root / "install.sh"
+        installer.write_text(_chat_release_installer(version))
+        installer.chmod(0o755)
+        files = sorted(path for path in root.rglob("*") if path.is_file())
+        (root / "SHA256SUMS").write_text(
+            "".join(
+                f"{digest(path)}  {path.relative_to(root).as_posix()}\n"
+                for path in files
+            )
+        )
+        _write_archive(root, output)
+    archive_hash = digest(output)
+    checksum = output.with_name(output.name + ".sha256")
+    checksum.write_text(f"{archive_hash}  {output.name}\n")
+    return {
+        "status": "built",
+        "version": version,
+        "archive": str(output),
+        "sha256": archive_hash,
+        "checksum": str(checksum),
+        "wheels": found,
     }
 
 
@@ -645,10 +996,16 @@ def main() -> None:
         "--wheelhouse", type=Path, help="use existing wheels instead of downloading"
     )
     build_parser.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        default="dos",
+        help="dependency profile: dos (default), windows, or all",
+    )
+    build_parser.add_argument(
         "--extra",
         action="append",
         default=[],
-        help=f"optional group (default: {', '.join(DEFAULT_EXTRAS)})",
+        help=f"optional group (default for dos: {', '.join(DEFAULT_EXTRAS)})",
     )
     build_parser.add_argument("--no-extras", action="store_true")
     build_parser.add_argument("--python", default=sys.executable)
@@ -663,6 +1020,12 @@ def main() -> None:
     )
     check_parser.add_argument("--project-root", type=Path, default=ROOT)
     check_parser.add_argument("--previous", type=Path, required=True)
+    check_parser.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        default="dos",
+        help="dependency profile: dos (default), windows, or all",
+    )
     check_parser.add_argument("--extra", action="append", default=[])
     check_parser.add_argument("--no-extras", action="store_true")
     check_parser.add_argument(
@@ -671,6 +1034,16 @@ def main() -> None:
         help="exit non-zero unless the previous bundle is reusable",
     )
     check_parser.set_defaults(handler=check)
+    release_parser = subparsers.add_parser(
+        "chat-release",
+        help="build the lightweight per-release chat application pack that layers onto reusable dependency bundles",
+    )
+    release_parser.add_argument("--project-root", type=Path, default=ROOT)
+    release_parser.add_argument("--wheelhouse", type=Path, required=True)
+    release_parser.add_argument("--output", type=Path, required=True)
+    release_parser.add_argument("--tool-zip", type=Path)
+    release_parser.add_argument("--source-commit", default="")
+    release_parser.set_defaults(handler=build_chat_release)
     args = parser.parse_args()
     try:
         result = args.handler(args)
