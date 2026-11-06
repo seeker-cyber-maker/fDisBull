@@ -1,0 +1,208 @@
+diff --git a/src/fdisbull/skills/fdisbull-investigate/SKILL.md b/src/fdisbull/skills/fdisbull-investigate/SKILL.md
+index ef43817..d9a8862 100644
+--- a/src/fdisbull/skills/fdisbull-investigate/SKILL.md
++++ b/src/fdisbull/skills/fdisbull-investigate/SKILL.md
+@@ -88,6 +88,7 @@ bundle:
+ 
+ | Current decision or surface | Selective reference |
+ | --- | --- |
++| Distinguish DOS COM/MZ, NE/LE/LX/PE stubs, overlays, extenders and launch/media problems | [references/dos-formats.md](references/dos-formats.md) |
+ | Decide what to investigate next, map dependencies or handle a capability failure | [references/analysis-approach.md](references/analysis-approach.md) |
+ | Choose commands across static analysis, native debugging, rewind/deltas, scenes, Z/player or UDC | [references/workflows.md](references/workflows.md) |
+ | Design causal controls, screen for guest interpreters, coordinate parallel workers or set standing probes | [references/methodology.md](references/methodology.md) |
+diff --git a/src/fdisbull/skills/fdisbull-investigate/references/dos-formats.md b/src/fdisbull/skills/fdisbull-investigate/references/dos-formats.md
+new file mode 100644
+index 0000000..85b0549
+--- /dev/null
++++ b/src/fdisbull/skills/fdisbull-investigate/references/dos-formats.md
+@@ -0,0 +1,177 @@
++# DOS executable formats, overlays and launch diagnosis
++
++Use this reference before suggesting an extender, modifying a DOS executable,
++selecting COM mode, or treating a game-resource suffix as an architecture.
++Start with the exact installed version, method catalog and source identity.
++A different kit with the same version label need not contain these commands.
++
++## First distinguish the layers
++
++An installer format, executable format, CPU mode, linker/overlay scheme,
++resource container and game scripting engine answer different questions.
++For example: GOG Inno wrapper -> DOS MZ -> x86 real mode -> RTLink overlay
++manager -> MADS resources. A ScummVM engine classification is not an original
++executable loader classification. Neither a studio name nor a similar filename
++establishes a shared interpreter ABI.
++
++Before any repair, record the actual path, file size, SHA-256, first 64 bytes,
++loader result and launcher recipe. A report that an EXE lacks MZ must state
++which bytes were inspected. Check whether the agent opened the wrapper, an
++archive member, a decompressed image, a text listing, or the wrong directory.
++Do not add DOS/4GW because a scan failed to find an expected signature.
++
++## COM: explicit headerless loading
++
++A DOS COM image normally starts at offset 0100h in the PSP segment. It has no
++MZ relocation table. A `.COM` suffix does not establish that loading contract;
++other systems and renamed files can use the same suffix. An unknown headerless
++file might be data, a device driver, an overlay or packed code. In fDisBull,
++`--image com` is an explicit profile selection, not an automatic fallback.
++PSP memory and initial stack space are not bytes recovered from the file.
++
++## MZ: header, resident image and appended material
++
++An old DOS MZ header has 28 defined bytes, followed by relocation entries and
++optional header padding. Validate the entire structure, not just `MZ` at zero.
++The important fields are little-endian words:
++
++| Offset | Meaning |
++| --- | --- |
++| 02h / 04h | Bytes in final page / count of 512-byte pages |
++| 06h / 08h | Relocation count / header size in 16-byte paragraphs |
++| 0Ah / 0Ch | Minimum / maximum additional allocation in paragraphs |
++| 0Eh / 10h | Initial relative SS / SP |
++| 14h / 16h | Initial IP / relative CS |
++| 18h / 1Ah | Relocation-table file offset / DOS overlay number |
++
++Let `H = header_paragraphs * 16`. If the final-page length is nonzero, the
++DOS-declared file extent is `(page_count - 1) * 512 + final_page_length`;
++otherwise it is `page_count * 512`. This extent **includes the header**.
++The resident image occupies `[H, declared_extent)`, not the entire file.
++Initial file-backed entry is `H + initial_CS * 16 + initial_IP`.
++Each relocation record is an offset/segment pair naming a word in the loaded
++image. The runtime loader adds its actual load segment to that word.
++
++An appended tail may contain overlays, resources, debug records, a packer's
++payload or unrelated data. A valid resident image does not classify its tail.
++Preserve the tail and record separate ranges. The MZ overlay-number field is
++not a complete inventory of a linker's proprietary overlay blocks.
++
++### The 003Ch trap
++
++Modern extended headers use a pointer at file offset 003Ch. In an old MZ file,
++that position can instead belong to a relocation table beginning at 001Eh.
++Do not reinterpret relocation bytes as `e_lfanew`. First establish that the
++header actually admits the pointer, validate its range, then validate the
++pointed-to signature and all required tables. An incidental `LE`, `LX`, `NE`
++or `PE` string anywhere in the file is not a format verdict.
++
++## NE, LE, LX and PE: a stub is not the whole executable
++
++NE is a segmented executable format with segment, resource and relocation
++structures. LE/LX use object/page/fixup machinery and can appear with DOS
++extenders or other operating environments. PE has its own COFF/optional-header
++and section structure. Validate the selected format using the existing loader;
++do not change CPU mode merely because the first bytes are MZ.
++
++A 16-bit stub may prepare or reject an execution environment before entering
++another image. Static recognition, mapping support and live execution are
++separate gates. An extender such as DOS/4GW is an execution component, not a
++universal repair blob. Establish the required loader through valid structures,
++original configuration, imports/strings and preferably an observed launch.
++Use the delivered runtime or a documented compatible replacement, never a
++fabricated stub. Packed executables need unpacking evidence, not an arbitrary
++change of disassembler bitness.
++
++## Overlays are not DOS extenders
++
++An overlay manager loads selected code/data blocks into reusable memory regions.
++Multiple different file ranges can occupy the same segment at different times.
++A static offset, even with a segment, is insufficient to identify those bytes.
++Record `(source hash, overlay ID, overlay-relative offset)` for static work.
++A runtime identity additionally needs observed load address, relocated bytes,
++run identity and overlay generation. Preserve unresolved loader calls and
++cross-overlay transfers rather than inventing a single flat address space.
++
++The RTLink commands currently admit the observed **embedded v2** profile:
++
++```text
++fdisbull rtlink-inspect /private/SPHERE.EXE
++fdisbull rtlink-disasm /private/SPHERE.EXE --overlay-id 2 --offset 0 --max-instructions 32
++fdisbull rtlink-extract /private/SPHERE.EXE /private/new-rtlink-export --expected-sha256 <source-sha256>
++```
++
++The inspector checks the resident relocation-derived index, sequential IDs,
++block extents, paragraph/header sizes and per-overlay relocation word bounds.
++Extraction writes separate, unrelocated `.raw` regions and a source-bound
++manifest. These are **private game-derived data**, not distributable fixtures
++and not runnable reconstructed programs. A terminal partial paragraph is
++reported as unavailable; missing bytes are not zero-filled. Linear disassembly
++is candidate decoding, not proof that every decoded byte executes. External
++OVL files and other RTLink variations remain unsupported.
++
++## Reproduce the launch contract before diagnosing the CPU
++
++Read the delivered BAT files and DOSBox configuration. Record the launcher,
++argument tokens, working directory, environment changes, drive letters and
++resource search paths. The launcher and the main engine may be different
++executables. A program can start successfully and then exit because it cannot
++find a CD, archive, index file or configuration. That is not proof of a missing
++extender. Do not recursively disassemble every helper EXE as the game.
++
++The native DOSBox route now accepts explicit argument tokens and one read-only
++Mode-1 CD. Other backends reject these options instead of ignoring them:
++
++```text
++fdisbull debug /private/mainmenu.fdb --executable /tools/dosbox-x --game-dir /private/game/DRAGON --arguments '["-p"]' --cd-image /private/game/GAME.INS
++```
++
++`arguments` is a list of printable ASCII tokens, without whitespace, quotes or
++shell operators. This first profile does not offer arbitrary shell commands or
++space-containing argument quoting. The native PSP tail budget includes the
++leading separator. The source image remains the project-bound EXE/COM, not a
++BAT file. Batch environment changes still need separate explicit handling;
++do not claim that passing `-p` reproduces every possible batch operation.
++
++The CD launcher admits one Mode-1 track with INDEX 01 at zero, no audio tracks
++or generated gaps. It creates an owned canonical `.cue` and a link to the
++fingerprinted image, then issues only its own `imgmount` command. C remains the
++selected game directory. Source metadata/hashes are retained; a D: mapping is
++not reported runtime-verified until a guest witness accesses it. Native machine
++checkpoint capture/restore with this new CD attachment is deliberately refused
++pending media-identity and restore qualification. In-game save/load is distinct.
++
++A GOG `.INS` can be CUE text. `disc-inspect` validates its content and referenced
++files, including legitimate single-digit TRACK/INDEX numbers. It does not run
++the file, trust its host association, or turn arbitrary `.INS` files into discs.
++For raw `.GOG`/`.BIN`, select the measured sector mode; ISO filesystem sectors
++are not necessarily the physical stored-sector size. Preserve audio separately
++when reducing mixed-mode discs; this launch profile does not admit them.
++
++## Stop guessing: decision order and counterchecks
++
++1. Verify exact source identity and structured format admission. Preserve a
++   refusal verbatim with the file offset and missing structure.
++2. Reproduce the original launcher's arguments, directories and media. Run one
++   bounded observation; distinguish entry, menu, input readiness and gameplay.
++3. If native startup is valid but code disappears or changes, investigate
++   overlays, dynamic loading, self-modification or a guest VM at that boundary.
++4. Change the smallest justified tool seam. Test authored bad headers, invalid
++   ranges, stale identities and unsupported backends as well as the real target.
++
++Do not fix a hypothesis by editing the original bytes. Do not equate a header
++parse, successful code decode, screenshot or one menu transition with full-game
++compatibility. Native-original evidence and ScummVM replacement behavior remain
++separately attributed.
++
++## Primary format references
++
++- Microsoft Press, *The MS-DOS Encyclopedia*, Section II (PCjs archival copy):
++  https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section2/
++- Microsoft Press, segmented NE format, Appendix K:
++  https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/appendix-k/
++- Microsoft PE specification:
++  https://learn.microsoft.com/en-us/windows/win32/debug/pe-format
++- RTLink v2 reference implementation, dreammaster/tools, `rtlink_decode` branch,
++  `rtlink_decode/variation2.cpp`, blob `d6dfccff3c143d04fc169bdf2606b99105413b34`.
++  The upstream tool is a disassembly aid, not a runnable-file repair.
+diff --git a/src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md b/src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md
+index 1569d4c..629209c 100644
+--- a/src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md
++++ b/src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md
+@@ -22,6 +22,8 @@ shipped APIs and reusable format contracts, read [media-modules.md](media-module
+ 
+ ## Keep each layer's identity
+ 
++For DOS intake or a suspected missing extender, first read [dos-formats.md](dos-formats.md). It covers legacy headers, RTLink overlays, address domains and original launch prerequisites.
++
+ Record the supplied container and relevant members: names, sizes, hashes,
+ edition/language, reader version, extraction options and transformations.
+ For multipart installers, retain the identity of every participating part.
