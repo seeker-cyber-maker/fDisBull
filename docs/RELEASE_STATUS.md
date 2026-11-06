@@ -1,21 +1,23 @@
 # Release records and qualification
 
-## 0.33.0 local candidate (not published)
+## 0.33.0 tagged (local release)
 
-The `0.33.0` source is a local macOS release-candidate cut. It starts from
-the unpublished 0.32.0 candidate, carries the published 0.31.1 lineage, merges
-the reviewed `4a487e4` integration and then the newer `7e43e32` integration
-stack, then merges current `main` and the CHimpREC writer PR `!67`, and adds the Boat CI handoff, built-in GOG
-Inno reader, Westwood media modules, experimental ScummVM Kyra/GLK Z-code and
-AGI-to-UIL pilots, shared scene fingerprint rules, and the reviewed
-research/skill integration work.
+The `0.33.0` source is tagged `v0.33.0` at
+`bdd096f963f2c125e70e7f52ae944b662dd89f6f`. It starts from the unpublished
+0.32.0 candidate, carries the published 0.31.1 lineage, merges the reviewed
+`4a487e4` integration and then the newer `7e43e32` integration stack, then
+merges current `main` and the CHimpREC writer PR `!67`, and adds the Boat CI
+handoff, built-in GOG Inno reader, Westwood media modules, experimental ScummVM
+Kyra/GLK Z-code and AGI-to-UIL pilots, shared scene fingerprint rules, and the
+reviewed research/skill integration work.
 
-This candidate has not been tagged, uploaded or installed. Hosted Linux
-ordinary/native CI and installed-wheel PE/DOS/boot acceptance remain pending.
-Local results and inherited failures are recorded in the
-[0.33.0 evidence](evidence/0.33.0-release/README.md) and the
-[release notes](RELEASE-0.33.0.md). The older `0.33.0rc1` packet is retained
-separately as `evidence/0.33.0rc1-release/`.
+The exact-source Boat Linux core gate passed: ordinary, stable, layers and
+unified, with `legacy-dos-only` qualification. The optional chat offline
+consumer is unqualified. The tag is active in the local shared prefix at
+`releases/0.33.0-bdd096f`; no GitLab Release, package upload or hosted CI claim
+has been made. See the [0.33.0 evidence](evidence/0.33.0-release/README.md) and
+[release notes](RELEASE-0.33.0.md). The older `0.33.0rc1` packet remains at
+`evidence/0.33.0rc1-release/`.
 
 ## 0.32.0 source scope and publication record
 

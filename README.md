@@ -9,7 +9,7 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**0.33.0 local release-candidate feature line:** recover captured Windows imports, identify more media
+**0.33.0 tagged local release feature line:** recover captured Windows imports, identify more media
 formats, investigate Win32 and protected-mode DOS programs, and inspect AGI or
 Gob scenes through experimental ScummVM backends. Exact lossless frame options
 and a direct pixel-buffer API support repeated visual probes; headless DOSBox-X

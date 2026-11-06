@@ -1,9 +1,10 @@
-# fDisBull 0.33.0 local candidate evidence
+# fDisBull 0.33.0 release evidence
 
-This packet covers a **local macOS release-candidate cut**, not publication or
-hosted qualification. The source version is `0.33.0`; the candidate has not
-been tagged or uploaded. It was installed into a local shared prefix for
-verification and the active local selector currently resolves to that prefix.
+This packet covers the **tagged local 0.33.0 release**, not a GitLab publication
+or hosted CI claim. The source version is `0.33.0`; tag `v0.33.0` points at
+`bdd096f963f2c125e70e7f52ae944b662dd89f6f`. The final tag is installed in the
+local shared prefix. The earlier `0.33.0-c18afda` candidate evidence below is
+retained as history and is not a result for the tagged source.
 
 ## Source lineage
 
@@ -30,8 +31,10 @@ verification and the active local selector currently resolves to that prefix.
   archives were rebuilt from this commit. The native DOSBox backend and its
   source companion retain their functional-source receipt at
   `1004bda484b0405e35247432447deb0e9c7d12de`.
+- Tagged source:
+  `bdd096f963f2c125e70e7f52ae944b662dd89f6f`.
 
-## Local macOS verification (2026-11-05)
+## Earlier local macOS verification for `0.33.0-c18afda` (2026-11-05)
 
 Environment: macOS arm64, CPython 3.13.18 from the freshly installed local
 prefix, optional `z3-solver==5.3.2.0`, `dnfile==0.18.0` and `dncil==1.0.2`.
@@ -47,9 +50,10 @@ the installed interpreter could exercise it.
 - `compileall` passed for `src/fdisbull`, `player/fdisbull_player`, `scripts`
   and `examples`.
 
-## Artifacts
+## Earlier artifacts for `0.33.0-c18afda`
 
-Built with `uv build` and `scripts/build_release.py` from the candidate source:
+These are the historical candidate artifacts, not the tagged source artifacts.
+Built with `uv build` and `scripts/build_release.py` from that candidate:
 
 | Artifact | Entries | Check |
 | --- | --- | --- |
@@ -87,24 +91,44 @@ skill text retrievals passed; this is not a methodology-following test. See `off
 `backend-receipt.json` and `offline-build.log`. No full required-native CI or
 GitLab release qualification is claimed.
 
+## Final tagged source and core qualification
+
+`bdd096f963f2c125e70e7f52ae944b662dd89f6f` passed the exact-source Boat Linux
+core gate. Ordinary JUnit: 12,970 cases, 0 failures/errors, 410 skipped; 26
+required contracts also passed. Stable native: 2,355 cases with no failures,
+errors or skips. Layers native: 2,673 cases with no failures, errors or skips.
+Unified PE/DOS: 188 + 17 cases with no failures, errors or skips.
+`check_ci_qualification.py --legacy-dos-only` produced
+`boat-core-qualification.json` in this directory.
+
+The tagged source artifacts are:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| core wheel | `89ff609d9186f34950ae1ce0854381930ebfbb8ed247704f54606b4945cb70e2` |
+| sdist | `f4e9bddbba63f01e39f87f9cbc027d63afebad02b4ca232b77d10a0dfae1f097` |
+| player wheel | `a09a48dea4442a8888bd1be9436d2c68e0cdaf53693459e24883339df376c460` |
+| tool ZIP | `250a686383c166d92110cef17d9271699499bef1253d47547ce2c98d0036134d` |
+
+The optional chat offline consumer was not qualified. Its preparation rejects
+the retained QEMU installer bitmap `qemu-nsis.bmp` under the kit's
+private-payload rule; the core gate does not depend on that consumer.
+
 ## Local shared-prefix installation
 
-The candidate is active at
-`/Users/Shared/fDisBull/releases/0.33.0-c18afda` (selector
-`releases/0.33.0-c18afda`) with source identity
-`95b8520449a2ed388798a6b2cf10053e67c7d923`. The payload verifier passed with
-`active_default: true` and 4,562 entries. The installed-prefix smoke included
-`pip check`, version, authored MZ create/reopen, both bundled skill text
-retrievals, player help and a passing DOSBox doctor. `check_local_install.py`
-reported PASSED. The guarded rollback plan targets
-`releases/0.32.0-c80bff0-prototype`; applying it remains a caller action.
+The tagged source is active at
+`/Users/Shared/fDisBull/releases/0.33.0-bdd096f` (selector
+`releases/0.33.0-bdd096f`) with source identity
+`bdd096f963f2c125e70e7f52ae944b662dd89f6f`. The payload verifier passed with
+`active_default: true` and 4,563 entries. `check_local_install.py` reported
+PASSED. The installed-prefix smoke included `pip check`, version, both bundled
+skill text retrievals, player help and a passing DOSBox doctor. The guarded
+rollback plan targets `releases/0.33.0-c18afda`.
 
 ## Limits
 
-- No tag, GitLab release, package upload or public release.
-- Local shared-prefix installation and activation are performed; the
-  candidate remains a local release candidate.
+- `v0.33.0` is tagged; no GitLab Release, package upload or hosted CI claim.
+- Local shared-prefix installation and activation are performed for the tag.
+- The optional chat offline consumer remains unqualified.
 - No original game payload, save, emulator state or private FDB payload.
 - Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
-- Hosted Linux ordinary/native CI and installed-wheel PE/DOS/boot acceptance
-  remain pending.

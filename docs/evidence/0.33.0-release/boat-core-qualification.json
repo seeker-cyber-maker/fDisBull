@@ -1,0 +1,230 @@
+{
+  "schema": "fdisbull-ci-qualification-1",
+  "status": "legacy-dos-only",
+  "source_commit": "bdd096f963f2c125e70e7f52ae944b662dd89f6f",
+  "required_jobs": {
+    "test-and-package": {
+      "local_job_id": "51bb8e63-4055-443e-a5ab-9e7b22780986",
+      "receipt": {
+        "path": "artifacts/receipts/ordinary.json",
+        "sha256": "b99a8c1cbb706b78332996df8e9659c9eeb2feb66c9265d74ac8cb46bd3157ee",
+        "size": 1645
+      },
+      "test_counts": [
+        {
+          "tests": 12970,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 410
+        },
+        {
+          "tests": 26,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "dist/fdisbull-0.33.0-py3-none-any.whl",
+          "sha256": "89ff609d9186f34950ae1ce0854381930ebfbb8ed247704f54606b4945cb70e2",
+          "size": 2134830
+        },
+        {
+          "path": "dist/fdisbull_player-0.33.0-py3-none-any.whl",
+          "sha256": "a09a48dea4442a8888bd1be9436d2c68e0cdaf53693459e24883339df376c460",
+          "size": 86673
+        },
+        {
+          "path": "dist/fdisbull-0.33.0.tar.gz",
+          "sha256": "f4e9bddbba63f01e39f87f9cbc027d63afebad02b4ca232b77d10a0dfae1f097",
+          "size": 6029544
+        },
+        {
+          "path": "dist/fdisbull-0.33.0-tool.zip",
+          "sha256": "250a686383c166d92110cef17d9271699499bef1253d47547ce2c98d0036134d",
+          "size": 7310523
+        }
+      ],
+      "process_receipt": {
+        "path": "artifacts/receipts/local-process-ordinary.json",
+        "sha256": "e454624ab1a574261ca7ea00283ec4bd1305eef8b918b150787f1cc1da080477",
+        "size": 1173
+      }
+    },
+    "native-debugger-stable": {
+      "local_job_id": "1f8e299b-5e81-450d-bfb9-c00f33f92cf3",
+      "receipt": {
+        "path": "artifacts/receipts/native-stable.json",
+        "sha256": "45c6516e93559f60d2fab3fc7232fb3786fb181dcbbf7eb40f97aa0e68b4af24",
+        "size": 5619
+      },
+      "test_counts": [
+        {
+          "tests": 2355,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "artifacts": [
+        {
+          "path": ".native/backends/stable/dosbox-x",
+          "sha256": "dfa0e773c49d5f11ba90d13c6e4e43d048c14ba6320401e2690d7c3a228a56c5",
+          "size": 142527448
+        }
+      ],
+      "process_receipt": {
+        "path": "artifacts/receipts/local-process-stable.json",
+        "sha256": "f41b54044914e32d47131903f1c4feea95bcab89fb5bfff51430b86bcca9541c",
+        "size": 1177
+      }
+    },
+    "native-debugger-layers": {
+      "local_job_id": "4453f097-34b4-443d-94a0-bb2eac4c6f05",
+      "receipt": {
+        "path": "artifacts/receipts/native-layers.json",
+        "sha256": "f8358f82b44d410e0e0c3ce25beb9f56a48c62f478595095e86f61a61f473a4e",
+        "size": 6629
+      },
+      "test_counts": [
+        {
+          "tests": 2673,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "artifacts": [
+        {
+          "path": ".native/backends/layers/dosbox-x",
+          "sha256": "db3a66d65928d4119833a33dba31f1c9762a4db1b45d5e29ae4d04c591b72d9e",
+          "size": 142991296
+        },
+        {
+          "path": ".native/offline/output/fdisbull-0.33.0-linux-x86_64-offline.tar.gz",
+          "sha256": "dbeb00bf65020a2c276c67acbc6d2e5a20bc1d074cd2d743f9de78e95c8af367",
+          "size": 105080364
+        },
+        {
+          "path": ".native/offline/output/fdisbull-0.33.0-linux-x86_64-source-companion.tar",
+          "sha256": "ba2287299e2ab55b93f1ac64579567a2e23826be149a170b565cb60893c8200f",
+          "size": 107130880
+        }
+      ],
+      "process_receipt": {
+        "path": "artifacts/receipts/local-process-layers.json",
+        "sha256": "6da1bd53e03a5b3b87a30a860dbc4db64a7e45285f891a31694c5647635cbc5e",
+        "size": 1176
+      }
+    },
+    "native-unified": {
+      "local_job_id": "11d7f1f9-f5dc-4dd0-87d4-9bb97594a6e1",
+      "receipt": {
+        "path": "artifacts/receipts/native-unified.json",
+        "sha256": "764336823fefddbb77db75a82a4a2f6cbc85eaf886761eaa0b0a28c98a71700f",
+        "size": 36971
+      },
+      "test_counts": [
+        {
+          "tests": 188,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 17,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "artifacts": [
+        {
+          "path": ".native/pe/packages/fdisbull-0.33.0-py3-none-any.whl",
+          "sha256": "89ff609d9186f34950ae1ce0854381930ebfbb8ed247704f54606b4945cb70e2",
+          "size": 2134830
+        },
+        {
+          "path": ".native/pe/qemu-9.2.4/build/qemu-system-x86_64",
+          "sha256": "989efcfb0cf3de16ffaf6bd3417ccc97d07d320271738bfe54f3e2f0e941d739",
+          "size": 78803856
+        },
+        {
+          "path": ".native/pe/linux-amd64",
+          "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+          "size": 8222656
+        },
+        {
+          "path": ".native/pe/runtime.cpio.gz",
+          "sha256": "21b20cf56afbb07f0f6749dddba5a0a1fce0cd80f542db85e5b9da794bdf68b5",
+          "size": 495076729
+        },
+        {
+          "path": ".native/pe/oracle.exe",
+          "sha256": "e79bcba3e6ef70675835958d3ca5d97d5fd5a997c47f0fa803dc33b0f188e144",
+          "size": 146188
+        },
+        {
+          "path": ".native/backends/layers/dosbox-x",
+          "sha256": "db3a66d65928d4119833a33dba31f1c9762a4db1b45d5e29ae4d04c591b72d9e",
+          "size": 142991296
+        },
+        {
+          "path": ".native/pe/dos-runtime.cpio.gz",
+          "sha256": "ad99ee2a5f1fdb24897d327b3107974ad0ea012538019f05442639b491de22f8",
+          "size": 547463259
+        }
+      ],
+      "process_receipt": {
+        "path": "artifacts/receipts/local-process-unified.json",
+        "sha256": "79942d6de9baae6d83859836c053aaae54e84278efa55df1e64fd9e7c0cb64f0",
+        "size": 1170
+      },
+      "preparation": {
+        "build_job_id": "90f34cf1-1df9-4f86-8b60-8cb4096526a6",
+        "prepared_manifest": {
+          "path": "native-evidence/pe/prepared-inputs.json",
+          "sha256": "67f11839fa12ab0d54e1724f3ab75a1a6018f23aa846a93d50a9d479e7e4f260",
+          "size": 34368
+        },
+        "windows_native_cases": [
+          "test_real_pe32_original_process_shared_input_scenes_and_dot_mode",
+          "test_real_original_ne_entry_registers_memory_and_completed_instructions",
+          "test_real_win16_original_ne_gui_keyboard_named_scene_and_dot_mode",
+          "test_real_win16_bounded_operation_campaign"
+        ],
+        "process": {
+          "path": "native-evidence/pe/preparation-process.json",
+          "sha256": "4235928056f8d95c8ef1c78b0c62d7b4ef807a120384998b902d299d70f72384",
+          "size": 1186
+        },
+        "source-postcheck": {
+          "path": "native-evidence/pe/preparation-source-postcheck.json",
+          "sha256": "2c566ec94149247d0a6d1957847a21f466aff867999f0768a64d56a07588ab68",
+          "size": 199
+        },
+        "completed": {
+          "path": "native-evidence/pe/preparation-completed.json",
+          "sha256": "5632a6cf674671023cf991982af004e7b585e0f71e34d5252838de3fd5384a21",
+          "size": 431
+        }
+      }
+    }
+  },
+  "package_inventory": {
+    "path": "artifacts/receipts/package-payloads.json",
+    "sha256": "62f6609f611e5b3ae155f7d072b2fafad0b93ca8e8569c4fdc7442264019a085",
+    "size": 976
+  },
+  "release_authorized": false,
+  "execution_origin": "boat-linux",
+  "local_run_id": "7a3795fe-b99f-4b83-a222-49715ddde22e",
+  "boat_sandbox_id": "bx_5asjcc78",
+  "boat_worker_receipt": {
+    "path": "artifacts/receipts/boat-worker.json",
+    "sha256": "71ccb8d7ed49c2b09a276ae2b5b54c1aeba82fd41f197b30ae3f760682cfdd36",
+    "size": 233
+  }
+}
+

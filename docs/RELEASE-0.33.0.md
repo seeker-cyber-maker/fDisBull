@@ -1,10 +1,11 @@
-# 0.33.0 local release candidate
+# 0.33.0 release
 
-Status: **local candidate, not tagged or published**. The source version is
-`0.33.0`. This cut carries the unpublished 0.32.0 source line, the reviewed
-`4a487e4` integration and the newer `7e43e32` integration stack. It does not
-create a tag, GitLab Release or hosted-qualification claim. The candidate is
-installed and active only in the local macOS shared prefix described below.
+Status: **tagged `v0.33.0` and active in the local macOS shared prefix; no
+GitLab Release or package upload**. The tag points at
+`bdd096f963f2c125e70e7f52ae944b662dd89f6f`. The source version is `0.33.0`.
+This cut carries the unpublished 0.32.0 source line, the reviewed `4a487e4`
+integration and the newer `7e43e32` integration stack. The exact-source core
+Boat Linux gate passed; the optional chat offline consumer remains unqualified.
 
 ## Lineage
 
@@ -84,9 +85,9 @@ A Python 3.12 host must use an isolated 3.13 runtime for the binary kit; a
 source install can use 3.12 subject to the separately declared dependency
 environment.
 
-The 0.33 offline kit was assembled locally from the verified Boat-built backend
-and installed/tested on Boat Linux x86-64 with CPython
-3.13.14. Its installer checks Python 3.13, Linux x86-64, `sha256sum`, `ldd` and
+The earlier `0.33.0-c18afda` offline kit was assembled locally from the
+verified Boat-built backend and installed/tested on Boat Linux x86-64 with
+CPython 3.13.14. Its installer checks Python 3.13, Linux x86-64, `sha256sum`, `ldd` and
 all missing backend libraries before the payload checksum sweep. It accepts
 `--python /absolute/path/to/python3.13` (which takes precedence over
 `FDISBULL_PYTHON`) and discovers `python3.13`/a 3.13 `python3` otherwise. The
@@ -106,46 +107,45 @@ published artifact.
 
 ## Qualification at this cut
 
-Local macOS verification is recorded in
-[the candidate evidence](evidence/0.33.0-release/README.md). The installed
-prefix full suite reported **10,248 passed, 2 failed, 359 skipped, 23 errors and
-2,322 subtests passed** in 291.74 seconds. The same failure classes reproduce
-on the 0.32 candidate `c80bff0`; they are the inherited macOS Mach-O/GCC fixture
-limits. Focused packaging/distribution tests passed **932**; the GOG contract
-suite now has **26** cases. The candidate is active at
-`/Users/Shared/fDisBull/releases/0.33.0-c18afda` with source identity
-`95b8520`; `check_local_install.py` passed and rollback to
-`0.32.0-c80bff0-prototype` is planned but not applied. A Boat Linux ordinary run
-on the exact source reached the full suite: **10,272 passed, 6 failed, 370
-skipped, 2,322 subtests passed**. All six failures were X11 `BadMatch` focus
-errors from a sandbox display without a usable window manager; the headless
-retry attempted to remove that display dependency but timed out at 3,600
-seconds without a receipt. The package build and payload checks in that run
-passed. Hosted Linux ordinary/native CI and installed-wheel PE/DOS/boot
-acceptance are **not** part of this local cut.
+The final source is `bdd096f963f2c125e70e7f52ae944b662dd89f6f`. Its active
+local prefix is `/Users/Shared/fDisBull/releases/0.33.0-bdd096f` (selector
+`releases/0.33.0-bdd096f`); `check_local_install.py` reports PASSED with 4,563
+payload entries. The payload verifier, `pip check`, version, both bundled
+skill retrievals, player help, DOSBox doctor and the local prefix smokes
+passed. The guarded rollback targets `releases/0.33.0-c18afda`.
+
+The exact-source Boat Linux core gate passed:
+
+- ordinary: 12,970 JUnit cases (410 skipped) and 26 required contracts, no
+  failures/errors;
+- stable native: 2,355 cases, no failures/errors/skips;
+- layers native: 2,673 cases, no failures/errors/skips;
+- unified PE/DOS: 188 + 17 cases, no failures/errors/skips.
+
+`check_ci_qualification.py --legacy-dos-only` produced
+`docs/evidence/0.33.0-release/boat-core-qualification.json` for this source.
+The optional chat offline consumer was **not qualified**: chat preparation
+rejects the retained QEMU installer bitmap `qemu-nsis.bmp` under the kit's
+private-payload rule. The earlier macOS candidate results remain historical
+evidence for `0.33.0-c18afda` and `95b8520`, not results for this final source.
 
 ### Artifact bytes
 
 | Artifact | SHA-256 |
 | --- | --- |
-| core wheel | `80b4a873a1d17f1c6613cc9ba83cf2761a993e774570ef6eb268325cad617ee9` |
-| sdist | `8db547c639f293b4dfde52f1506f3e7b5d4bf1c5d67dcf49332f99bb536b6f0b` |
-| player wheel | `d52b7ae86d87bc6a6775762c7418f1e68bc9891a00d9ff71ce6fa525f0a70240` |
-| tool ZIP | `ef251fb003146d8dd7166283d47825c72ac17d97a375fd04251394b453d22225` |
-| offline kit | `f15257d75245f0698948d5e54999f283b841572636f1ff0a531637902decb179` |
-| outer kit ZIP | `f809e36b09a0cc55f6d9e2c99e6343d80f74f9aaabf7f13844c12c186b48b4be` |
+| core wheel | `89ff609d9186f34950ae1ce0854381930ebfbb8ed247704f54606b4945cb70e2` |
+| sdist | `f4e9bddbba63f01e39f87f9cbc027d63afebad02b4ca232b77d10a0dfae1f097` |
+| player wheel | `a09a48dea4442a8888bd1be9436d2c68e0cdaf53693459e24883339df376c460` |
+| tool ZIP | `250a686383c166d92110cef17d9271699499bef1253d47547ce2c98d0036134d` |
 
-The outer wrapper is packaging-only. Its inner kit was rebuilt after the prior
-acceptance, so the new outer kit has **no new Linux acceptance result**; its
-`evidence/offline-acceptance.json` explicitly records `not_run` and the prior
-tested kit hash. The prior acceptance claim refers only to kit
-`2a279eb865cafc29d8a75432d75a340163ed17fd55878f01468aa90d2e7803ac`.
+The earlier `0.33.0-c18afda` offline kit and outer kit were not rebuilt from
+this final source; their prior acceptance is not a result for `bdd096f`.
 
 ## Exclusions and publication gates
 
-- No tag, GitLab release or package upload is made by this candidate. A local
-  shared-prefix installation is performed; it is not a publication or a system
-  qualification claim.
+- `v0.33.0` is tagged at `bdd096f` and active in the local shared prefix. No
+  GitLab Release, package upload or hosted CI claim is made; the offline chat
+  consumer is explicitly unqualified.
 - No original game payload, save, emulator state or private FDB payload is
   included.
 - Open follow-up MRs `!96`, `!97`, `!98` and `!99` are outside this cut.
