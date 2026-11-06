@@ -1,0 +1,235 @@
+diff --git a/src/fdisbull/debugger.py b/src/fdisbull/debugger.py
+index 5e3adea..e43aa87 100644
+--- a/src/fdisbull/debugger.py
++++ b/src/fdisbull/debugger.py
+@@ -77,7 +77,12 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
+ 
+     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
+                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
+-                 spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None):
++                 spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
++                 arguments=None, cd_image=None):
++        from .dos_media_launch import validate_arguments
++        arguments = validate_arguments(arguments)
++        if (arguments or cd_image is not None) and (backend not in (None, 'dosbox') or self.meta['format'] not in ('MZ', 'COM')):
++            raise ValueError('arguments and cd_image currently require the native DOSBox backend')
+         if dot_mode is not None:
+             if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
+             if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
+@@ -148,7 +153,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
+         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
+             raise ValueError('Unexpected DOS backend or Wine-only launch options')
+         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
+-                            spatial_mode=spatial_mode, fair_play=fair_play)
++                            spatial_mode=spatial_mode, fair_play=fair_play, arguments=arguments, cd_image=cd_image)
+ 
+     def debug_runs(self, version=None):
+         v = self.version(version)['id']
+@@ -310,7 +315,10 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
+ 
+     """One explicitly owned emulator; closing the project also closes sessions."""
+     def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None,
+-                 spatial_mode=None, fair_play=False):
++                 spatial_mode=None, fair_play=False, arguments=None, cd_image=None):
++        from .dos_media_launch import validate_arguments
++        self.arguments = validate_arguments(arguments)
++        self.cd_image = cd_image
+         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
+         validate_mode(spatial_mode, fair_play)
+         self._spatial_mode, self._fair_play = spatial_mode, fair_play
+@@ -343,12 +351,15 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
+                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
+                          'runtime_profile':'real-normal-com-v1' if project.meta['format']=='COM' else 'real-normal-v1','game_dir':str(self.game_dir),'target':target,
+                          'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment'],
+-                         'window_requested':window,'native_hooks_available':self.native_hooks_available}
++                         'window_requested':window,'native_hooks_available':self.native_hooks_available,
++                         'arguments':self.arguments}
+         try:
+             self._prepare_launch_target(target, source_data)
+             self.rpc = self._open_rpc(executable,self.game_dir)
+             self.metadata.update(self._transport_metadata())
+-            result = self.rpc.call('session.start',{'target':{'command':target,'arguments':[]},
++            if self.cd_image is not None:
++                self.metadata['cd_media'] = self.rpc.cd_media
++            result = self.rpc.call('session.start',{'target':{'command':target,'arguments':self.arguments},
+                 'mounts':[{'drive':'C','host_path':str(self.game_dir)}],'break_at':'entry'})
+             self.session_id = result['session_id']
+             regs = self.call('state.get_registers')
+@@ -402,7 +413,11 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
+     def __exit__(self, *args):
+         self.close()
+ 
+-    def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,window=self.window,on_spawn=self._spawn_callback)
++    def _open_rpc(self,executable,game_dir):
++        options = {'window': self.window, 'on_spawn': self._spawn_callback}
++        if self.cd_image is not None:
++            options['cd_image'] = self.cd_image
++        return DOSBoxRPC(executable,game_dir,**options)
+     def _transport_metadata(self):return {}
+ 
+     def _prepare_launch_target(self, target, data):
+@@ -755,6 +770,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
+     @timeline_locked
+     def _capture_native_checkpoint(self, *, max_bytes=None):
+         """Capture a complete private payload, independent of durable artifacts."""
++        if getattr(self, 'cd_image', None) is not None:
++            raise ValueError('CD-mounted native checkpoints are not yet qualified; use a fresh launch')
+         if max_bytes is not None:
+             bounded(max_bytes,'max_bytes',1,256*1024*1024)
+         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
+@@ -819,6 +836,8 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
+     @timeline_locked
+     def _restore_native_checkpoint(self, checkpoint):
+         """Restore and verify a full native payload, including frame input ownership."""
++        if getattr(self, 'cd_image', None) is not None or checkpoint.get('metadata', {}).get('cd_media'):
++            raise ValueError('CD-mounted native checkpoints are not yet qualified; use a fresh launch')
+         metadata = checkpoint['metadata']; data = checkpoint['data']
+         if hashlib.sha256(data).hexdigest()!=checkpoint['sha256']:
+             raise ValueError('Stored state hash mismatch')
+diff --git a/src/fdisbull/disc.py b/src/fdisbull/disc.py
+index 08bb4f0..debf2df 100644
+--- a/src/fdisbull/disc.py
++++ b/src/fdisbull/disc.py
+@@ -57,7 +57,7 @@ def inspect_disc_path(path, *, mode=None, max_entries=10000,
+               'valid': False, 'complete': False, 'loadable': False,
+               'validation_scope': 'supported CUE layout and primary ISO metadata; file contents, EDC/ECC, audio and execution unverified',
+               'warnings': [], 'data_tracks': []}
+-    if path.suffix.lower() == '.cue':
++    if path.suffix.lower() in ('.cue', '.ins'):
+         if mode is not None:
+             raise ValueError('CUE declares track modes; mode override is not allowed')
+         from .cue import inspect_cue_path
+diff --git a/src/fdisbull/dos_media_launch.py b/src/fdisbull/dos_media_launch.py
+new file mode 100644
+index 0000000..6e74b91
+--- /dev/null
++++ b/src/fdisbull/dos_media_launch.py
+@@ -0,0 +1,91 @@
++"""Validated launch arguments and owned read-only CD mounting for native DOSBox.
++
++Only caller-selected media is exposed. No host shell, ambient configuration,
++mount command supplied by a target, or installer is executed.
++"""
++from __future__ import annotations
++from hashlib import sha256
++import os
++from pathlib import Path
++import stat
++
++
++def validate_arguments(arguments):
++    if arguments is None:
++        return []
++    if not isinstance(arguments, list) or len(arguments) > 32:
++        raise ValueError('arguments must be a list of at most 32 DOS argument tokens')
++    for token in arguments:
++        if (not isinstance(token, str) or not token or
++                any(ord(c) < 33 or ord(c) > 126 or c in '\"<>|&' for c in token)):
++            raise ValueError('DOS argument tokens must be nonempty printable ASCII without whitespace, quotes or shell operators')
++    if len(' '.join(arguments)) > 125:
++        raise ValueError('DOS arguments exceed the 126-byte command-tail budget')
++    return list(arguments)
++
++
++def _identity(path):
++    s = Path(path).stat()
++    if not stat.S_ISREG(s.st_mode):
++        raise ValueError('CD input must be a regular file')
++    return (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
++
++
++def _digest(path):
++    from hashlib import file_digest
++    with Path(path).open('rb') as stream:
++        return file_digest(stream, 'sha256').hexdigest()
++
++
++def describe_cd(path):
++    from .disc import inspect_disc_path
++    from .cue import inspect_cue_path
++    source = Path(path).expanduser().resolve(strict=True)
++    if source.suffix.lower() not in ('.cue', '.ins', '.iso'):
++        raise ValueError('cd_image requires CUE/INS or a cooked ISO; raw data needs an explicit descriptor')
++    if _identity(source)[2] > 2 * 1024**3:
++        raise ValueError('CD input exceeds 2 GiB')
++    if source.suffix.lower() in ('.cue', '.ins'):
++        layout = inspect_cue_path(source)
++        if not layout['valid'] or not layout['complete']:
++            raise ValueError('Invalid CD descriptor: ' + '; '.join(layout.get('errors', [])))
++        tracks = layout['tracks']
++        # Keep this first native launch implementation narrower than the reader.
++        if len(tracks) != 1 or tracks[0]['mode'] not in ('MODE1/2352', 'MODE1/2048'):
++            raise ValueError('CD launch currently supports one Mode-1 track, not audio or mixed-mode layouts')
++        if tracks[0]['file_index01_sector'] != 0 or tracks[0]['pregap_sectors'] or tracks[0]['postgap_sectors']:
++            raise ValueError('CD launch currently requires INDEX 01 at zero and no generated gaps')
++        mode = tracks[0]['mode']
++        image = Path(tracks[0]['file_path'])
++    else:
++        image, mode = source, 'MODE1/2048'
++    paths = list(dict.fromkeys((source, image)))
++    if sum(_identity(p)[2] for p in paths) > 2 * 1024**3:
++        raise ValueError('CD media exceeds 2 GiB')
++    identities = {str(p): _identity(p) for p in paths}
++    report = inspect_disc_path(source, mode=mode if source.suffix.lower() == '.iso' else None)
++    if report.get('valid') is not True or report.get('complete') is not True or report.get('all_entry_extents_available') is not True:
++        raise ValueError('CD must contain validated primary ISO metadata')
++    sources = [{'path': str(p), 'identity': list(identities[str(p)]), 'sha256': _digest(p)} for p in paths]
++    if any(_identity(p) != identities[str(p)] for p in paths):
++        raise ValueError('CD source changed during validation')
++    return {'drive': 'D', 'kind': 'readonly-cdrom', 'image_path': str(image), 'mode': mode,
++            'sources': sources, 'runtime_mount_verified': False,
++            'scope': 'one Mode-1 track; metadata validated, target access requires a runtime witness'}
++
++
++def stage_cd(media, directory):
++    """Generate a fixed-name CUE and owned link; never interpolate target commands."""
++    for source in media['sources']:
++        if list(_identity(source['path'])) != source['identity']:
++            raise ValueError('CD source changed before process launch')
++    root = Path(directory)
++    # Directory comes from our TemporaryDirectory. The link references only the
++    # source selected and fingerprinted above. DOSBox opens it as a CD image.
++    os.symlink(media['image_path'], root / 'disc-track.bin')
++    cue = root / 'disc.cue'
++    if any(c in str(cue) for c in '\r\n\0\"'):
++        raise ValueError('Owned CD path is not representable in DOSBox configuration')
++    with cue.open('x', encoding='ascii') as stream:
++        stream.write(f'FILE "disc-track.bin" BINARY\n TRACK 01 {media["mode"]}\n INDEX 01 00:00:00\n')
++    return cue
+diff --git a/src/fdisbull/dosbox_rpc.py b/src/fdisbull/dosbox_rpc.py
+index d6bba89..f9780c5 100644
+--- a/src/fdisbull/dosbox_rpc.py
++++ b/src/fdisbull/dosbox_rpc.py
+@@ -19,7 +19,7 @@ class DebuggerError(ValueError):
+ class DOSBoxRPC:
+     limit = 8 * 1024 * 1024
+ 
+-    def __init__(self, executable, game_dir, *, window=False, on_spawn=None):
++    def __init__(self, executable, game_dir, *, window=False, on_spawn=None, cd_image=None):
+         if type(window) is not bool:
+             raise ValueError('window must be boolean')
+         if window:
+@@ -36,6 +36,10 @@ class DOSBoxRPC:
+             raise DebuggerError('Expected an executable DOSBox agent and a game directory')
+         if any(c in str(executable) + str(game_dir) for c in '\r\n\0'):
+             raise DebuggerError('Paths cannot contain configuration line breaks or NUL')
++        self.cd_media = None
++        if cd_image is not None:
++            from .dos_media_launch import describe_cd
++            self.cd_media = describe_cd(cd_image)
+         self.process = None
+         self.reader = self.writer = None
+         self.sequence = 0
+@@ -59,6 +63,12 @@ class DOSBoxRPC:
+             environment['XDG_CONFIG_HOME'] = str(directory / 'config')
+             arguments = [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
+                          '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
++            if self.cd_media is not None:
++                from .dos_media_launch import stage_cd
++                cue = stage_cd(self.cd_media, directory)
++                # Only our authored mount line is admitted; no user's autoexec/config is read.
++                arguments.remove('--noautoexec')
++                arguments.extend(['-c', f'imgmount d "{cue}" -t iso'])
+             if window:
+                 arguments.append('-agent-window')
+             else:
