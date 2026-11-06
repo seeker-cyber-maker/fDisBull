@@ -1,16 +1,20 @@
-"""Shipped, non-executing media adapters; reports never contain source bytes."""
+"""Shipped non-executing media adapters; reports omit complete member payloads."""
 from __future__ import annotations
 
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 
 MAX_SOURCE = 64 * 1024 * 1024
 MAX_OUTPUT = MAX_SOURCE
 SPEC = 'references/media-modules.md'
+KINT_SPEC = 'references/kint6-sherlock7.md'
+PNG_ADAPTERS = ('sherlock7-images', 'kint6-user-buttons', 'kint6-user-overlays')
+INSPECT_ADAPTERS = ('mz-envelope', 'agi-v2', 'kint6-ke') + PNG_ADAPTERS
 
 
 def media_modules():
@@ -43,6 +47,22 @@ def media_modules():
                  api='fdisbull.agi_picture.decode_picture', methods=[], dependencies=[],
                  variants='Prepared AGI 2.915/2.917 EGA picture stream',
                  limits='2 MiB payload; fixed 160x168 planes; 20 million work units; not runtime walkability'),
+            dict(name='kint6-ke', layer='executable-container',
+                 api='fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='KINT 6 little-endian .KE with a 512-byte header and exact declared CODE size',
+                 limits='64 MiB source; virtual ZERO/STACK/HEAP declarations only; no execution, allocation or inferred code/data split',
+                 specification=KINT_SPEC),
+            *[dict(name=name, layer='asset-decoding',
+                   api='fdisbull.sherlock7_media.decode_png_atlas / fdisbull.media.inspect_media / extract_media',
+                   methods=['media-inspect', 'media-extract'], dependencies=['Pillow'],
+                   variants=variant,
+                   limits='Explicit profile; 64 MiB input/output, 16 MiPixel decoded; raw RGBA crops with pixel provenance; no UI-sheet inference or renderer equivalence',
+                   specification=KINT_SPEC)
+              for name, variant in zip(PNG_ADAPTERS, (
+                  'Sherlock 7 PNG: 8 by 10 cells, 64 tiles and documented control/overlay regions',
+                  'KINT 6 user buttons: two 12 by 5 unit columns, 1..251 rows',
+                  'KINT 6 user overlays: two 12 by 5 unit columns, 1..251 rows'))],
         ],
         'input_executed': False,
         'extension': 'Add bounded adapter, authored tests, indexed specification and catalog entry; no dynamic plugins are loaded',
@@ -71,8 +91,12 @@ def _identity(data):
 
 
 def _prepare(path, adapter, volume_root, number):
-    if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2'):
+    if not isinstance(adapter, str) or adapter not in INSPECT_ADAPTERS:
         raise ValueError('Unsupported adapter; discover media-modules first')
+    if adapter == 'kint6-ke' or adapter in PNG_ADAPTERS:
+        if volume_root is not None or number is not None:
+            raise ValueError('KINT/Sherlock adapters do not accept AGI resource parameters')
+        return _prepare_kint(path, adapter)
     inputs = []
     if adapter == 'mz-envelope':
         if volume_root is not None or number is not None:
@@ -126,23 +150,61 @@ def _prepare(path, adapter, volume_root, number):
     return result, {name: payload for name, _, payload in members}
 
 
+def _prepare_kint(path, adapter):
+    data = _snapshot(path, MAX_SOURCE)
+    common = dict(format='fdisbull-media-members-1', adapter=adapter, adapter_version=1,
+                  inputs=[dict(role='container', **_identity(data))],
+                  input_executed=False, specification=KINT_SPEC)
+    if adapter == 'kint6-ke':
+        from .kint6_format import inspect_ke_bytes
+        container = inspect_ke_bytes(data)
+        header_size = container['header_bytes']
+        members = [('header', 0, data[:header_size]), ('body', header_size, data[header_size:])]
+        common.update(container=container, qualification='structural-only',
+                      members=[dict(name=name, input_role='container', offset=offset,
+                                    guest_offset=offset, **_identity(payload))
+                               for name, offset, payload in members],
+                      unknowns=['The body intermixes instructions and initialized data; no boundary is inferred.',
+                                'ZERO, STACK and HEAP exist only at runtime and are not extracted.',
+                                'Header revision/extension bytes do not establish a verified minimum runtime version.'])
+        return common, {name: payload for name, _, payload in members}
+    from .sherlock7_media import decode_png_atlas
+    atlas, payloads = decode_png_atlas(data, profile=adapter)
+    result = dict(atlas, **common)
+    # A decoded rectangle cannot be mapped to a contiguous compressed-file range.
+    result['members'] = [dict(item, input_role='container', offset=None,
+                              **_identity(payloads[item['name']])) for item in atlas['members']]
+    return result, payloads
+
+
 def inspect_media(path, *, adapter, volume_root=None, number=None):
-    """Inventory immutable member ranges with source and member digests."""
+    """Inventory byte ranges or decoded pixel rectangles with source digests."""
     result, _ = _prepare(path, adapter, volume_root, number)
     return result
 
 
 def extract_media(path, output, *, adapter, member, volume_root=None, number=None,
                   max_output_bytes=MAX_OUTPUT):
-    """Copy one bounded member to a fresh private directory outside Git."""
+    """Extract one member (or all PNG crops) to a new private directory."""
     if type(max_output_bytes) is not int or not 1 <= max_output_bytes <= MAX_OUTPUT:
         raise ValueError('max_output_bytes must be 1..67108864')
     result, payloads = _prepare(path, adapter, volume_root, number)
-    if not isinstance(member, str) or member not in payloads:
+    bulk = member == 'all' and adapter in PNG_ADAPTERS
+    if not isinstance(member, str) or (not bulk and member not in payloads):
         raise ValueError('Unknown member; inspect this source first')
-    payload = payloads[member]
-    if len(payload) > max_output_bytes:
-        raise ValueError('Member exceeds output budget')
+    names = list(payloads) if bulk else [member]
+    if sum(len(payloads[name]) for name in names) > max_output_bytes:
+        raise ValueError('Selected members exceed output budget')
+    filenames = {}
+    for name in names:
+        if adapter in PNG_ADAPTERS:
+            if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}(?:\.png)?', name):
+                raise ValueError('Decoder returned an unsafe member name')
+            filenames[name] = name if name.endswith('.png') else name + '.png'
+        else:
+            filenames[name] = 'payload.bin'
+    if len(set(filenames.values())) != len(filenames):
+        raise ValueError('Decoder returned duplicate output filenames')
     from .output_artifacts import _private_directory
     destination = Path(os.path.abspath(os.path.expanduser(os.fspath(output))))
     if not destination.parent.is_dir():
@@ -152,11 +214,14 @@ def extract_media(path, output, *, adapter, member, volume_root=None, number=Non
     destination.mkdir(mode=0o700)  # Exclusive; existing paths and links refused.
     try:
         _private_directory(destination)
-        with (destination / 'payload.bin').open('xb') as stream:
-            os.chmod(stream.fileno(), 0o600)
-            stream.write(payload)
-        selected = next(item for item in result['members'] if item['name'] == member)
-        result.update(output=str(destination), extracted=dict(selected, path='payload.bin'),
+        extracted = []
+        for name in names:
+            with (destination / filenames[name]).open('xb') as stream:
+                os.chmod(stream.fileno(), 0o600)
+                stream.write(payloads[name])
+            selected = next(item for item in result['members'] if item['name'] == name)
+            extracted.append(dict(selected, path=filenames[name]))
+        result.update(output=str(destination), extracted=extracted if bulk else extracted[0],
                       manifest='media-manifest.json')
         with (destination / 'media-manifest.json').open('x', encoding='utf-8') as stream:
             os.chmod(stream.fileno(), 0o600)

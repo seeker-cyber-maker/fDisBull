@@ -11,6 +11,7 @@ capability contract; successful parsing establishes structure, not behavior.
 - [MZ envelope version 1](#mz-envelope-version-1)
 - [AGI v2 resource version 1](#agi-v2-resource-version-1)
 - [Existing readers and decoders](#existing-readers-and-decoders)
+- [KINT 6 and Sherlock 7](#kint-6-and-sherlock-7)
 - [Extend and qualify a module](#extend-and-qualify-a-module)
 
 ## Classify the next obstacle
@@ -60,26 +61,29 @@ fallback guesses. The catalog routes GOG and picture work to existing APIs
 rather than wrapping or rebuilding those readers.
 
 `fdisbull-media-members-1` inventories adapter/version, input roles/sizes/SHA-256,
-and member names/input roles/absolute offsets/sizes/SHA-256. It contains no raw
-payload, preview, hex or base64. Extraction adds the selected member's mapping
-to fixed output `payload.bin` and `media-manifest.json`. The manifest remains
-structural-only; it does not supply addresses, source mappings or semantic claims.
+and member names/input roles/offsets/sizes/SHA-256. Decoded PNG members use
+`offset: null` and an explicit pixel rectangle. It does not inline complete
+member payloads or previews. PNG profiles expose fixed control-color values;
+KINT exposes selected header fields, including raw reserved extension bytes.
+MZ/AGI extraction adds the selected member's mapping to fixed output
+`payload.bin` and `media-manifest.json`. Their manifest remains structural-only;
+it does not supply runtime addresses, source mappings or semantic claims.
 For AGI, both directory and volume identities and the resource number are retained.
 
 Sources stay unchanged. `media-extract` requires an existing private parent owned by
 the caller (0700), creates an exclusive 0700 destination and 0600 files, refuses
 Git/worktree ancestry and symlink output paths, and accepts only listed member
 names. Never publish payloads or private originals, including modified game
-assets. Reports contain hashes and sizes only, but still review provenance before
-publication. No new FDB writes are made: parser output does not bypass the
+assets. Reports contain structural/pixel metadata rather than complete payloads;
+review that metadata and provenance before publication. No new FDB writes are made: parser output does not bypass the
 external-target storage boundary or grant permission to bind/import bytes.
 
-Both adapters cap each source volume/container at 64 MiB. `max_output_bytes`
+MZ and AGI adapters cap each source volume/container at 64 MiB. `max_output_bytes`
 limits the selected payload to 1..64 MiB before creating output (default 64 MiB).
 The CLI uses `--max-payload-bytes` for this limit. The global
 `--max-output-bytes` before the command controls the JSON reply budget instead;
 it never changes the extracted payload limit.
-These adapters perform no decompression and have fixed/small member counts.
+The MZ and AGI adapters perform no decompression and have fixed/small member counts.
 Filesystem operations assume the caller controls the private parent; this is
 not a sandbox against a hostile concurrent process running as the same user.
 
@@ -139,6 +143,17 @@ has the declared length (0..65535); empty resources are structurally permitted.
 No header bytes enter the emitted payload. AGI v3 combined directories,
 compressed headers, LZW and alternate codecs are unsupported; the caller must
 select the v2 variant from evidence rather than treat acceptance as detection.
+
+## KINT 6 and Sherlock 7
+
+Use `kint6-ke` for original header/body ranges and virtual memory declarations,
+and `fdisbull.kint6` through `module-analyze` for guest instruction facts.
+Use `sherlock7-images`, `kint6-user-buttons` and `kint6-user-overlays` for
+documented PNG atlas layouts. They preserve RGBA pixels, report color keys
+separately and support one named crop or `--member all`. PNG payload names,
+aggregate limits and pixel provenance extend the byte-container contract above.
+Read [KINT 6 and Sherlock 7](kint6-sherlock7.md) for the complete specification,
+commands, research provenance and explicit runtime/version gaps.
 
 ## Existing readers and decoders
 

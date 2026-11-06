@@ -93,6 +93,7 @@ bundle:
 | Design causal controls, screen for guest interpreters, coordinate parallel workers or set standing probes | [references/methodology.md](references/methodology.md) |
 | Qualify containers (MZ/COM/LE/NE/PE/ELF/AIL, Mach-O ARM64, Cortex-M, ROM/disc), reversible macOS UI or media reduction | [references/formats-and-media.md](references/formats-and-media.md) |
 | Discover `media-modules`, inspect MZ tails or AGI v2 volumes, audit AVI captures, or build a bounded missing reader | [references/media-modules.md](references/media-modules.md) |
+| Inspect KINT 6 `.KE` guest instructions or decode Sherlock 7 PNG tile/button/overlay atlases | [references/kint6-sherlock7.md](references/kint6-sherlock7.md) |
 | Index edition-pinned source snapshots (`source-*`), search concepts and verify period build-to-byte maps | [references/source-and-concepts.md](references/source-and-concepts.md) |
 | Plan research-led progression, source-reconstruction reuse or normal-play milestone checklists | [references/recovery-research.md](references/recovery-research.md) |
 | Prove or falsify a stored-value, writer, signedness or trigger claim against a pinned decoded binary | [references/binary-claim-verification.md](references/binary-claim-verification.md) |

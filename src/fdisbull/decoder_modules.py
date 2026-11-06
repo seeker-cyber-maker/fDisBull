@@ -187,10 +187,25 @@ class ZMachineV3Module:
                              provenance)
 
 
+class KINT6Module:
+    info = DecoderModuleInfo('fdisbull.kint6', '1', 'kint6-ke',
+                             ('decode', 'static_successors'))
+
+    def open(self, source) -> DecoderInput:
+        from .kint6_processor import KINT6Processor
+        processor = KINT6Processor.from_file(source)
+        provenance = dict(kind='kint6-ke',
+                          program_sha256=sha256(processor.program).hexdigest(), **processor.image_info)
+        return capture_input(self.info, processor, processor.program,
+                             Location(processor.info.address_space, provenance['entry_offset']),
+                             provenance)
+
+
 def builtin_registry() -> DecoderRegistry:
     registry = DecoderRegistry()
     registry.register(AGI2917Module())
     registry.register(ZMachineV3Module())
+    registry.register(KINT6Module())
     return registry
 
 

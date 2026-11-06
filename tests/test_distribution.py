@@ -705,9 +705,28 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
 ) if path not in REQUIRED_SOURCE_FILES)
 DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
 
+KINT_SOURCE_FILES = (
+    'src/fdisbull/kint6_format.py', 'src/fdisbull/kint6_processor.py',
+    'src/fdisbull/sherlock7_media.py',
+    'src/fdisbull/skills/fdisbull-investigate/references/kint6-sherlock7.md',
+    'tests/test_kint6_format.py', 'tests/test_kint6_processor.py', 'tests/test_sherlock7_media.py',
+    'tests/test_sherlock7_modules.py', 'docs/SHERLOCK7_MEDIA.md',
+    'tests/kint6_vectors.json', 'tests/test_kint6_vectors.py',
+)
+REQUIRED_SOURCE_FILES += KINT_SOURCE_FILES
+
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:
         for required in files:output.writestr('fdisbull-test/'+required,'')
+
+
+@pytest.mark.parametrize('required', KINT_SOURCE_FILES)
+def test_distribution_requires_kint_modules_and_specification(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-missing-kint.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
 
 
 @pytest.mark.parametrize('required', ROM_ASM_RESOURCES)

@@ -613,6 +613,17 @@ REQUIRED_SOURCE_EVIDENCE |= {
 }
 REQUIRED_KNOWLEDGE_RESOURCES |= {"media.py", "capabilities.py", "capture_audit.py",
                                  "skills/fdisbull-investigate/references/media-modules.md"}
+REQUIRED_KINT_RESOURCES = {
+    "kint6_format.py", "kint6_processor.py", "sherlock7_media.py",
+    "skills/fdisbull-investigate/references/kint6-sherlock7.md",
+}
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_KINT_RESOURCES
+REQUIRED_TEST_HELPERS |= {
+    "tests/test_kint6_format.py", "tests/test_kint6_processor.py", "tests/test_sherlock7_media.py",
+    "tests/test_sherlock7_modules.py",
+    "tests/kint6_vectors.json", "tests/test_kint6_vectors.py",
+}
+REQUIRED_SOURCE_EVIDENCE.add("docs/SHERLOCK7_MEDIA.md")
 REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
                             "data/FdisbullGhidraArm64.txt", "macos_capture.py", "macos_session.py",
                             "data/FdisbullMacCapture.swift"}

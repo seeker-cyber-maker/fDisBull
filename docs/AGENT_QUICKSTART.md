@@ -177,7 +177,11 @@ directory outside Git. Both return source/member hashes without inline target
 bytes and never execute inputs. Existing `gog-list/gog-unpack` and AGI picture
 APIs remain available through the catalog. Read the packaged specification with
 `fdisbull agent-skill --reference references/media-modules.md` before recovering
-missing tooling or extending an adapter. This does not unpack compressed DOS
+missing tooling or extending an adapter. For KINT `.KE` header/body ranges and
+Sherlock 7 PNG tile/button/overlay sheets, read
+`fdisbull agent-skill --reference references/kint6-sherlock7.md`.
+The PNG profiles support named crops or `--member all`, retain pixel rectangles
+and raw RGBA hashes, and share the private-output policy. This does not unpack compressed DOS
 executables or establish the purpose of their trailing bytes.
 
 For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
@@ -448,7 +452,7 @@ mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
 For direct guest inputs, `fdisbull decoder-modules` lists the explicitly
-registered AGI and Z-machine front ends. `module-analyze` reads their source
+registered AGI, Z-machine and KINT 6 front ends. `module-analyze` reads their source
 instructions without a native project; `module-lift` provides the first narrow
 AGI state projection into shared UDL/UIL. See [decoder modules](DECODER_MODULES.md)
 for commands, source identities, required state witnesses and unsupported cases.

@@ -62,6 +62,7 @@ SOURCE_PATTERNS = (
     ("tests", "dosbox_zip_empty_write.cpp"),
     ("tests", "ida_rpc_vectors.json"),
     ("tests", "rom_asm_sh2_vectors.json"),
+    ("tests", "kint6_vectors.json"),
     ("docs", "*.md"),
     ("docs/evidence/spatial-2026-10-29", "verification.json"),
     ("docs/evidence/zork-2026-10-29", "verification.json"),

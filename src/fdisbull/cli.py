@@ -28,6 +28,7 @@ AGENT_SKILL_GUIDES = {
     "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",
     "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
     "references/media-modules.md": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
+    "references/kint6-sherlock7.md": "Inspect KINT 6 .KE guest code and decode Sherlock 7 PNG atlases with explicit version and pixel boundaries",
     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
@@ -80,7 +81,7 @@ METHODS = {
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
-    "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
+    "media-extract": "Extract a member (or all PNG crops) to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
     "output-info": "Inspect an immutable private output artifact; artifact",
@@ -1958,15 +1959,16 @@ def parser():
     )
     c.add_argument("--ffmpeg", default="ffmpeg")
     c.add_argument("--ffprobe", default="ffprobe")
+    from .media import INSPECT_ADAPTERS
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        c.add_argument("--adapter", required=True, choices=("mz-envelope", "agi-v2"))
+        c.add_argument("--adapter", required=True, choices=INSPECT_ADAPTERS)
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         if name == "media-extract":
             c.add_argument("output")
-            c.add_argument("--member", required=True)
+            c.add_argument("--member", required=True, help="Inspected member name; PNG atlas adapters also accept all")
             c.add_argument(
                 "--max-payload-bytes",
                 dest="media_max_output_bytes",
@@ -2148,7 +2150,8 @@ def parser():
             c.add_argument("--address", type=lambda s: int(s, 0))
         else:
             c.add_argument("--state-file", required=True)
-            c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
+            c.add_argument("--entry-offset", type=lambda s: int(s, 0),
+                           help="Optional module-specific entry; omit to use the module's own default")
             c.add_argument("--stop-offset", dest="stop_offsets", action="append", type=lambda s: int(s, 0))
             c.add_argument("--stop-point", dest="stop_points", action="append", help="LOGIC:OFFSET component boundary")
             c.add_argument("--callee-entry", dest="callee_entries", action="append", help="LOGIC:OFFSET cached scan-entry witness")

@@ -1,7 +1,7 @@
 # Direct source decoder modules
 
 Interpreted game code is an input in its own instruction language. The DOS
-interpreter executable is a different input. AGI logic and Z-machine story
+interpreter executable is a different input. AGI logic, Z-machine story and KINT
 instructions can be inspected without an x86 disassembly or native project.
 ASM-backed recovery remains useful when the guest language is unknown or when
 investigating the interpreter itself.
@@ -24,12 +24,13 @@ module or opened processor descriptors are refused. No input file can name a
 Python import, and installed packages are not scanned for executable plugins.
 Registered code runs with the application's privileges; this is not isolation.
 
-Two independent built-ins are registered:
+Three independent built-ins are registered:
 
 | Identity | Input | Available operations |
 | --- | --- | --- |
 | `fdisbull.agi.2.917.subset` | Explicit uncompressed AGI v2 LOGDIR/VOL resources | Partial instruction facts/static successors; scalar conditions, acyclic branches and captured direct calls to UDL/UIL |
 | `fdisbull.zmachine.v3` | Structurally/checksum-qualified raw v3 story, independent of filename | Existing Z-machine processor facts/static successors; this module has no semantic lifter |
+| `fdisbull.kint6` | Bounded KINT 6 `.KE` image, including its 512-byte header | Instruction facts/static successors, exact guest/file offsets and virtual segment metadata; no execution or lifter |
 
 The `2.917` profile is a caller selection, not detection of a target's interpreter
 revision. Unsupported opcodes retain unknown successors; a budget stop, malformed
@@ -57,6 +58,7 @@ fdisbull decoder-modules
 fdisbull module-analyze fdisbull.agi.2.917.subset /private/game/LOGDIR \
   --volume-dir /private/game --logic 1 --profile 2.917 --max-instructions 40
 fdisbull module-analyze fdisbull.zmachine.v3 /private/story --max-instructions 40
+fdisbull module-analyze fdisbull.kint6 /private/MAIN.KE --max-instructions 100
 fdisbull module-lift fdisbull.agi.2.917.subset /private/game/LOGDIR \
   --volume-dir /private/game --logic 1 --profile 2.917 \
   --state-file /private/touched-state.json
@@ -92,6 +94,24 @@ instruction decoding, semantic lifting, execution and UDC emission have
 separate contracts. A container variant should reuse the matching decoder.
 For byte programs, source metadata must include the actual `program_sha256`;
 an inconsistent source/program pair is rejected when constructed.
+
+## KINT 6 and Sherlock 7
+
+The `fdisbull.kint6` opener uses the shared `.KE` validator, captures source
+bytes once, and identifies guest locations by image SHA-256. Its initial event
+entry is byte offset `0x200`; the CPU storage in the header is not an entry-point
+declaration. CODE contains both initialized instructions and data, including
+the header. ZERO, STACK and HEAP are virtual declarations only.
+
+The processor is based on documented KINT 6 encodings checked against the
+publisher's 6.3.0 reference kit. Sherlock 7's help requires a newer runtime;
+unknown version extensions and runtime effects stay unqualified. The adapter
+does not provide a semantic lifter or execute the native host. See
+[Sherlock 7 media](SHERLOCK7_MEDIA.md) and the installed specification:
+
+```text
+fdisbull agent-skill --reference references/kint6-sherlock7.md
+```
 
 ## AGI scalar components and logic calls
 

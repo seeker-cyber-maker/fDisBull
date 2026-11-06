@@ -251,12 +251,16 @@ notice-paused actions reconcile cleanly without silently replaying side effects.
   rooms and exits into the strict [`(z-world ...)` graph language](docs/Z_WORLD_LANGUAGE.md),
   and project exact-coordinate [Syndicate spatial Z scenes](docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md).
 
-## Direct guest interpreters: AGI and Z-machine
+## Direct guest interpreters: AGI, Z-machine and KINT
 
 [Direct decoder modules](docs/DECODER_MODULES.md) (`decoder-modules`,
 `module-analyze`, `module-lift`) inspect interpreted game scripts in their own
 languages without creating an x86 disassembly project:
 
+- **KINT 6 / Sherlock 7:** inspects `.KE` guest instructions and virtual segment
+  declarations, and decodes documented [PNG tile/button/overlay atlases](docs/SHERLOCK7_MEDIA.md).
+  Static analysis and pixel extraction are available; execution and semantic
+  lifting remain separate work.
 - **Sierra AGI v2 (2.917):** combines the static [logic decoder](docs/AGI_LOGIC.md)
   (`agi-logic`), two-stage projectless [scene and resource census](docs/AGI_SCENE_CENSUS.md)
   (`agi-scenes`), compact `fdisbull-il-2` control-flow lifting, typed
