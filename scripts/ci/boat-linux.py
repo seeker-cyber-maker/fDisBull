@@ -35,6 +35,8 @@ for name in ('JOBS', 'PREPARE_JOB', 'IMAGES', 'EXPECTED_BYTES', 'CHAT_ARCHIVE', 
 
 
 def read_worker(path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f'Boat worker receipt not found at {path}; provisioning must write it from the Boat host')
     data = read_regular_json(path)
     if (set(data) != {'schema', 'execution_origin', 'boat_sandbox_id', 'type', 'architecture', 'host_boot_id', 'observed_at'}
         or data.get('schema') != 'fdisbull-boat-worker-v1' or data.get('execution_origin') != 'boat-linux'

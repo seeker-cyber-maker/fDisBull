@@ -34,10 +34,18 @@ AGENT_SKILL_GUIDES = {
     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
+    "references/task-framing.md": "Natural-language handoff contract, report levels and tool-use defaults",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
+AGENT_SKILL_GUIDES_FDISBULL = {
+    "SKILL.md": "Router: pick the child skill and load only its entrypoint plus needed reference",
+}
 AGENT_SKILLS = {
+    "fdisbull": {
+        "purpose": "Route to the correct child skill without loading unrelated guidance",
+        "guides": AGENT_SKILL_GUIDES_FDISBULL,
+    },
     DEFAULT_AGENT_SKILL: {
         "purpose": "Investigate programs, qualify evidence and recover game behavior",
         "guides": AGENT_SKILL_GUIDES,
