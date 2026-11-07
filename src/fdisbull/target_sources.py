@@ -210,11 +210,11 @@ class TargetSourcesMixin:
                             if fmt == 'raw':
                                 start = old.execute('SELECT start FROM regions WHERE version=? ORDER BY start LIMIT 1', (version,)).fetchone()
                                 options.update(arch=metadata['arch'], bits=metadata['bits'], base=int(start[0],16))
-                            elif fmt in ('COM','MZ','LE','NE','PE'):
+                            elif fmt in ('COM','MZ','SYS','LE','NE','PE'):
                                 options['image'] = fmt.lower()
                                 if fmt == 'COM':
                                     options['module'] = False
-                                if fmt in ('COM','MZ'):
+                                if fmt in ('COM','MZ','SYS'):
                                     options['load_segment'] = loader.get('dos', {}).get('load_segment', 0x1000)
                             if loader.get('slice_arch'):
                                 options['slice_arch'] = loader['slice_arch']

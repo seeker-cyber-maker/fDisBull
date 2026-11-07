@@ -240,6 +240,8 @@ budget stop or unsupported operation as such, with the next useful action.
 | AGI resource and scene recovery | [AGI scenes](references/agi-scenes.md) |
 | Typed UIL, generated backings and alternate implementations | [common UIL](references/common-uil.md), [UDL/UIL/UDC](references/udl-uil-udc.md), [sweding](references/sweding.md) |
 | Bounded equivalence and counterexamples | [proofs](references/proofs.md) |
+| Analyze DOS device roots, mixed LE driver objects, or a QEMM-configured full machine | [references/dos-drivers-and-qemm.md](references/dos-drivers-and-qemm.md) |
+| Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [references/desqview-and-memory-search.md](references/desqview-and-memory-search.md) |
 
 For a human-readable review of established findings, use the companion
 `write-gamefaqs-guide` skill. Report what was actually observed, what remains a

@@ -315,6 +315,13 @@ one-stop `macos-observe` LLDB launch. Read
 static/runtime address separation and the still-unimplemented app-level UIL
 export.
 
+DOS `.SYS` device headers, mixed-width LE driver objects and QEMM-configured
+full-machine observation have a separate
+[driver workflow](DOS_DRIVERS_AND_QEMM.md). Use `--image sys` for Strategy/
+Interrupt roots, `le-driver-inspect` for object inventory, and `qemm-profile`
+for actual boot-image configuration evidence. None establishes resident
+installation or native game compatibility by itself.
+
 Miles AIL 2 driver libraries (often `.ADV`) are recognized by validated bytes
 and expose named exports and a bounded descriptor candidate. They import
 automatically or with `--image ail`; addresses remain module-relative and no

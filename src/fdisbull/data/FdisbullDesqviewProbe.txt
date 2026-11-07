@@ -1,0 +1,156 @@
+/* Authored 16-bit DOS COM companion.  No original DESQview instructions.
+ * Presence is checked through the documented invalid-date signature before
+ * any DESQview call.  Only metadata queries run inside BEGINC/ENDC; PAUSE,
+ * debugger waiting and DOS file I/O run outside the critical section.
+ * Version minor bytes are decimal integers, not BCD.
+ */
+.intel_syntax noprefix
+.code16
+.arch i286
+.section .text
+.global _start, report, report_ready, release_request, output_mode
+.equ REPORT_SIZE, 64
+_start:
+    push cs
+    pop ds
+    mov ax, 0x2b01
+    mov cx, 0x4445
+    mov dx, 0x5351
+    int 0x21
+    mov BYTE PTR cs:[report + 14], al
+    cmp al, 0xff
+    je absent
+    mov WORD PTR cs:[report + 12], bx
+    cmp bh, 2
+    jb unsupported
+    or WORD PTR cs:[report + 34], 1
+    call ticks_start
+pause_next:
+    mov ax, WORD PTR cs:[report + 32]
+    cmp ax, WORD PTR cs:[report + 30]
+    jae query_metadata
+    mov ax, 0x1000
+    int 0x15
+    inc WORD PTR cs:[report + 32]
+    jmp pause_next
+query_metadata:
+    mov ax, 0x101b
+    int 0x15
+    inc WORD PTR cs:[report + 60]
+    mov ax, WORD PTR cs:[report + 12]
+    cmp ax, 0x0214
+    jb no_mapping_api
+    cmp ax, 0x021a
+    jb older_mapping_api
+    mov ax, 0xde17
+    jmp mapping_query
+older_mapping_api:
+    mov ax, 0x1117
+mapping_query:
+    mov WORD PTR cs:[report + 16], ax
+    xor bx, bx
+    int 0x15
+    mov WORD PTR cs:[report + 18], bx
+    or WORD PTR cs:[report + 34], 2
+no_mapping_api:
+    mov ax, 0xde07
+    int 0x15
+    mov WORD PTR cs:[report + 20], ax
+    or WORD PTR cs:[report + 34], 4
+    mov ax, 0x1024
+    xor bx, bx
+    int 0x15
+    mov WORD PTR cs:[report + 22], es
+    mov WORD PTR cs:[report + 24], di
+    mov WORD PTR cs:[report + 26], cx
+    mov BYTE PTR cs:[report + 28], dl
+    or WORD PTR cs:[report + 34], 8
+    mov ax, 0x101c
+    int 0x15
+    dec WORD PTR cs:[report + 60]
+    or WORD PTR cs:[report + 34], 32
+    call ticks_finish
+    mov WORD PTR cs:[report + 10], 0
+    jmp complete
+absent:
+    mov WORD PTR cs:[report + 10], 1
+    jmp complete
+unsupported:
+    mov WORD PTR cs:[report + 10], 2
+complete:
+    or WORD PTR cs:[report + 34], 16
+    push cs
+    pop ds
+    cmp BYTE PTR [output_mode], 0
+    jne write_file
+    push cs
+    pop es
+    mov di, OFFSET report
+    mov cx, REPORT_SIZE
+report_ready:
+    cmp BYTE PTR cs:[release_request], 0
+    jne exit_success
+    jmp report_ready
+write_file:
+    xor cx, cx
+    mov dx, OFFSET file_name
+    mov ah, 0x3c
+    int 0x21
+    jc exit_failure
+    mov bx, ax
+    mov dx, OFFSET report
+    mov cx, REPORT_SIZE
+    mov ah, 0x40
+    int 0x21
+    jc close_failed_write
+    cmp ax, REPORT_SIZE
+    jne close_failed_write
+    mov ah, 0x3e
+    int 0x21
+    jc exit_failure
+exit_success:
+    mov ax, 0x4c00
+    int 0x21
+    jmp exit_success
+close_failed_write:
+    mov ah, 0x3e
+    int 0x21
+exit_failure:
+    mov ax, 0x4c03
+    int 0x21
+    jmp exit_failure
+ticks_start:
+    pushf
+    cli
+    push es
+    mov ax, 0x40
+    mov es, ax
+    mov ax, WORD PTR es:[0x6c]
+    mov WORD PTR cs:[report + 52], ax
+    mov ax, WORD PTR es:[0x6e]
+    mov WORD PTR cs:[report + 54], ax
+    pop es
+    popf
+    ret
+ticks_finish:
+    pushf
+    cli
+    push es
+    mov ax, 0x40
+    mov es, ax
+    mov ax, WORD PTR es:[0x6c]
+    mov WORD PTR cs:[report + 56], ax
+    mov ax, WORD PTR es:[0x6e]
+    mov WORD PTR cs:[report + 58], ax
+    pop es
+    popf
+    ret
+file_name: .asciz "FDVAPI.BIN"
+output_mode: .byte 0
+release_request: .byte 0
+.balign 2
+report:
+    .ascii "FDVAPI01"
+    .word REPORT_SIZE, 0xffff, 0
+    .byte 0xff, 0
+    .space 48, 0

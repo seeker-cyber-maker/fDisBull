@@ -35,6 +35,8 @@ AGENT_SKILL_GUIDES = {
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
     "references/task-framing.md": "Natural-language handoff contract, report levels and tool-use defaults",
+    "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
+    "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -188,7 +190,31 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
+    "le-driver-disasm": "Bounded object-relative LE driver view; path,object_number,[offset,max_instructions,abi]",
+    "qemm-config": "Preview or validate an unconditional QEMM CONFIG.SYS without editing files; [config_file,config_sys,qemm_path,options,validate_only]",
+    "qemm-profile": "Bind a QEMM guest profile to CONFIG.SYS and driver bytes in a caller-owned FAT12/16 boot image; boot_image,[config_sys,driver_path]",
+    "qpi-probe": "Export an authored read-only DOS QPI observation helper; output,[mode]",
+    "qpi-report": "Read a bounded guest-produced QPI report; path,[include_pages]",
+    "debug-memory-translation": "Observe an x86 machine linear-to-physical page walk at the current stop; run,address,[context]",
+    "debug-memory-snapshot": "Capture an immutable paused DOS memory range with run/task/mapping identity; run,address,length,[space,task_id,name,context]",
+    "debug-memory-apply": "Apply one owned memory edit plan with fresh context/expected-byte guards and readback; run,plan,[context]",
+    "memory-snapshot-info": "Inspect a retained private memory snapshot and capture provenance; snapshot",
+    "memory-search-start": "Search a retained snapshot using unknown, exact or range values; snapshot,[width,signed,byteorder,stride,mode,value,minimum,maximum,bias,max_candidates]",
+    "memory-search-refine": "Narrow only existing candidates against a compatible new snapshot; search,snapshot,mode,[value,delta,max_candidates]",
+    "memory-search-results": "Page retained memory candidates with current/previous scalar values; search,[offset,limit]",
+    "memory-edit-plan": "Plan a conditional guarded candidate edit without writing; search,offset,value,[condition,compare_value]",
+    "memory-rule-create": "Create a finite conditional edit/freeze rule for an owned candidate; search,offset,value,[condition,compare_value,max_applications,max_ticks,name]",
+    "memory-rule-info": "Read a stored memory rule and its durable execution budgets/progress; rule",
+    "debug-memory-rule-tick": "Observe and conditionally edit one rule candidate at a qualified stop; run,rule,[context]",
+    "debug-memory-rule-run": "Execute finite rule ticks with DOSBox guest-time intervals; run,rule,ticks,[interval_ms,timeout_ms]",
+    "desqview-profile": "Pin a caller-owned DOS boot image and selected DESQview MZ/modules; boot_image,[program,modules,qemm,startup]",
+    "desqview-probe": "Emit an authored presence-gated cooperative DESQview COM helper; output,[mode,yields,nonce]",
+    "desqview-report": "Parse an exact guest-produced DESQview report without inferring freshness; path",
+    "desqview-module-inspect": "Inspect raw DVdx or caller-described older DESQview modules; path,[expected_type,expected_version]",
+    "debug-desqview-observe": "Read a stopped DESQview report, optionally verifying authored helper/nonce/ready PC; run,address,[space,probe_base,expected_nonce,context]",
+    "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
@@ -625,6 +651,13 @@ def invoke(method, params, debugger=None):
 
         operation = disassemble_story if method == "zmachine-disasm" else analyze_story
         return operation(**p)
+    if method in ("le-driver-inspect", "le-driver-disasm", "qemm-config", "qemm-profile", "qpi-probe", "qpi-report"):
+        from .qemm_tools import invoke as qemm_invoke
+
+        return qemm_invoke(method, p)
+    if method in ('desqview-profile','desqview-probe','desqview-report','desqview-module-inspect'):
+        from .desqview_runtime import invoke as desqview_invoke
+        return desqview_invoke(method, p)
     from .project import Project, number
 
     for field in ("base", "entry"):
@@ -927,6 +960,9 @@ def invoke(method, params, debugger=None):
         with Project.create(project, binary, **p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('memory-snapshot-info', 'memory-search-start', 'memory-search-refine',
+                      'memory-search-results', 'memory-edit-plan', 'memory-rule-create', 'memory-rule-info'):
+            return getattr(db, method.replace('-', '_'))(**p)
         if method in (
             "code-backings",
             "code-blocks",
@@ -1255,6 +1291,16 @@ def respond(request, default_project=None, debugger=None):
                 "module-lift",
                 "zmachine-disasm",
                 "zmachine-analyze",
+                "le-driver-inspect",
+                "le-driver-disasm",
+                "qemm-config",
+                "qemm-profile",
+                "qpi-probe",
+                "qpi-report",
+                "desqview-profile",
+                "desqview-probe",
+                "desqview-report",
+                "desqview-module-inspect",
                 "output-info",
                 "output-read",
                 "output-select",
@@ -1750,6 +1796,7 @@ def parser():
     c = sub.add_parser("dos-services", help=METHODS["dos-services"])
     c.add_argument("--vector", type=lambda s: int(s, 0))
     c.add_argument("--ax", type=lambda s: int(s, 0))
+    c.add_argument("--registers", type=json.loads, default={})
     c = sub.add_parser("omf-catalog", help=METHODS["omf-catalog"])
     c.add_argument("path")
     c.add_argument("--abi", default="x86_16_cdecl_near")
@@ -1873,6 +1920,79 @@ def parser():
     c.add_argument("--initramfs")
     c.add_argument("--output")
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
+    for name in ("le-driver-inspect", "le-driver-disasm"):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument("path")
+        if name == "le-driver-disasm":
+            c.add_argument("object_number", type=lambda s: int(s, 0))
+            c.add_argument("--offset", type=lambda s: int(s, 0), default=0)
+            c.add_argument("--max-instructions", type=int, default=32)
+            c.add_argument("--abi", choices=["unknown", "windows-vxd"], default="unknown")
+    c = sub.add_parser("qemm-config", help=METHODS["qemm-config"])
+    c.add_argument("--config-file")
+    c.add_argument("--qemm-path", default=r"C:\QEMM\QEMM386.SYS")
+    c.add_argument("--options", default="RAM")
+    c.add_argument("--validate-only", action="store_true")
+    c = sub.add_parser("qemm-profile", help=METHODS["qemm-profile"])
+    c.add_argument("boot_image")
+    c.add_argument("--config-sys", help="Optional host file to compare with the image's CONFIG.SYS")
+    c.add_argument("--driver-path", help="Optional host file to compare with the image's QEMM386.SYS")
+    c = sub.add_parser("qpi-probe", help=METHODS["qpi-probe"])
+    c.add_argument("output")
+    c.add_argument("--mode", choices=["breakpoint", "file"], default="breakpoint")
+    c = sub.add_parser("qpi-report", help=METHODS["qpi-report"])
+    c.add_argument("path")
+    c.add_argument("--include-pages", action="store_true")
+    c = sub.add_parser('desqview-profile', help=METHODS['desqview-profile'])
+    c.add_argument('boot_image')
+    c.add_argument('--program', default=r'\DV\DV.EXE')
+    c.add_argument('--module', dest='modules', action='append')
+    c.add_argument('--qemm', action='store_true')
+    c.add_argument('--startup')
+    c = sub.add_parser('desqview-probe', help=METHODS['desqview-probe'])
+    c.add_argument('output')
+    c.add_argument('--mode', choices=['file','breakpoint'], default='file')
+    c.add_argument('--yields', type=int, default=0)
+    c.add_argument('--nonce')
+    c = sub.add_parser('desqview-report', help=METHODS['desqview-report'])
+    c.add_argument('path')
+    c = sub.add_parser('desqview-module-inspect', help=METHODS['desqview-module-inspect'])
+    c.add_argument('path')
+    c.add_argument('--expected-type')
+    c.add_argument('--expected-version', type=lambda value: int(value,0))
+    for name in ('memory-snapshot-info','memory-search-start','memory-search-refine','memory-search-results','memory-edit-plan','memory-rule-create','memory-rule-info'):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument('project')
+        c.add_argument('snapshot' if name in ('memory-snapshot-info','memory-search-start') else 'rule' if name == 'memory-rule-info' else 'search')
+        if name == 'memory-search-refine':
+            c.add_argument('snapshot')
+            c.add_argument('--mode', required=True, choices=['equal','not_equal','changed','unchanged','increased','decreased','delta'])
+            c.add_argument('--value', type=int)
+            c.add_argument('--delta', type=int)
+            c.add_argument('--max-candidates', type=int, default=1048576)
+        elif name == 'memory-search-start':
+            c.add_argument('--mode', choices=['unknown','equal','range'], default='unknown')
+            c.add_argument('--width', type=int, choices=[1,2,4,8], default=1)
+            c.add_argument('--signed', action='store_true')
+            c.add_argument('--byteorder', choices=['little','big'], default='little')
+            c.add_argument('--stride', type=int, default=1)
+            c.add_argument('--bias', type=int, default=0)
+            c.add_argument('--value', type=int)
+            c.add_argument('--minimum', type=int)
+            c.add_argument('--maximum', type=int)
+            c.add_argument('--max-candidates', type=int, default=1048576)
+        elif name == 'memory-search-results':
+            c.add_argument('--offset', type=int, default=0)
+            c.add_argument('--limit', type=int, default=64)
+        elif name in ('memory-edit-plan','memory-rule-create'):
+            c.add_argument('--offset', type=int, required=True)
+            c.add_argument('--value', type=int, required=True)
+            c.add_argument('--condition', choices=['equal','not_equal','greater','greater_equal','less','less_equal','always'], default='always' if name == 'memory-rule-create' else 'equal')
+            c.add_argument('--compare-value', type=int)
+            if name == 'memory-rule-create':
+                c.add_argument('--max-applications', type=int, default=128)
+                c.add_argument('--max-ticks', type=int, default=4096)
+                c.add_argument('--name', default='memory-rule')
     c = sub.add_parser(
         "debug",
         help="Launch a project execution backend and accept live debugger JSON commands on stdin",
@@ -1882,6 +2002,8 @@ def parser():
     c.add_argument("--game-dir", required=True)
     c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
+    c.add_argument("--guest-profile", choices=["qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
+                   help="Admit and pin a QEMM/DESQview raw DOS boot image (qemu-machine only; JSON accepts an explicit prepared profile)")
     c.add_argument(
         "--backend",
         choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
@@ -2091,7 +2213,7 @@ def parser():
         if name == "inspect":
             c.add_argument("--slice-arch", choices=["x86", "x86_64", "arm64"])
             c.add_argument(
-                "--image", choices=["auto", "pe", "le", "ne", "mz", "com", "ail"]
+                "--image", choices=["auto", "pe", "le", "ne", "mz", "sys", "com", "ail"]
             )
     c = sub.add_parser("ghidra-arm64", help=METHODS["ghidra-arm64"])
     c.add_argument("project")
@@ -2176,7 +2298,7 @@ def parser():
     c.add_argument("--load-segment", type=lambda s: int(s, 0), default=0x1000)
     c.add_argument(
         "--image",
-        choices=["auto", "pe", "le", "ne", "mz", "com", "ail"],
+        choices=["auto", "pe", "le", "ne", "mz", "sys", "com", "ail"],
         help="select PE, DOS/4GW LE, Win16 NE, MZ, declared DOS COM or AIL driver",
     )
     c.add_argument(
@@ -2192,7 +2314,7 @@ def parser():
     c = sub.add_parser("analyze-module", help=METHODS["analyze-module"])
     c.add_argument("path")
     c.add_argument("project")
-    c.add_argument("--image", choices=["auto", "pe", "le", "ne", "mz", "ail"])
+    c.add_argument("--image", choices=["auto", "pe", "le", "ne", "mz", "sys", "ail"])
     c.add_argument("--slice-arch", choices=["x86", "x86_64", "arm64"])
     c.add_argument("--export")
     c.add_argument("--entry", type=lambda s: int(s, 0))

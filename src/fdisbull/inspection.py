@@ -48,6 +48,15 @@ def _identify_header(data: bytes) -> dict:
             h['warnings'].append(str(exc))
         return h
 
+    if not data.startswith(b'MZ'):
+        from .dos_driver import probe_sys
+        driver = probe_sys(data)
+        if driver is not None:
+            h.update(format='DOS SYS', family='DOS', bits=16, arch='x86', endian='little',
+                     valid=True, header_count=driver['header_count'],
+                     source=driver['recognition'], validation_scope='device headers and file-backed offsets; loadability is separate')
+            return h
+
     if data.startswith(b'LE'):
         h.update(format='LE', family='DOS', bits=32, arch='x86', endian='little')
         h['valid'] = need(196, 'truncated LE header')
@@ -232,9 +241,11 @@ def _identify_header(data: bytes) -> dict:
 def identify_header(data: bytes) -> dict:
     """Identify the container and expose selectable embedded image views."""
     header=_identify_header(data)
-    if data.startswith((b'MZ', b'LE')):
+    if data.startswith((b'MZ', b'LE')) or header['format'] == 'DOS SYS':
         from .image_views import image_views
         header['image_views']=image_views(data)
+        if any(view['image'] == 'sys' and view['available'] for view in header['image_views']):
+            header['preferred_image'] = 'sys'
     if header['format']=='Mach-O fat' and header['valid']:
         from .macho_slices import macho_slices
         try:header['slices']=macho_slices(data)
@@ -272,10 +283,21 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','le','ne','mz','com','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com or ail')
+    if image not in (None,'pe','le','ne','mz','com','sys','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com, sys or ail')
+    from .dos_driver import probe_sys, load_sys
+    if image is None and probe_sys(data) is not None:
+        image = 'sys'
     if image=='ail' and header['format']!='AIL':raise ValueError('requested AIL image is not present')
     container_header=None
-    if image=='com':
+    if image=='sys':
+        if slice_arch is not None:raise ValueError('slice_arch cannot select a DOS SYS image')
+        selected=load_sys(data)
+        container_header=header
+        header=dict(format='DOS SYS',family='DOS',valid=True,bits=16,arch='x86',endian='little',
+                    header_offset=selected.metadata['dos']['header_size'],warnings=[],
+                    source='validated DOS SYS image selection',
+                    header_count=len(selected.metadata['dos_driver']['headers']))
+    elif image=='com':
         if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
         from .dos import load_com
         load_com(data,_allow_child_signature=_com_child)
@@ -323,13 +345,32 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
 
     result = {"header": header, "sections": [], "imports": [], "exports": [],
               "strings": [], "warnings": list(header["warnings"])}
-    if data.startswith((b'MZ', b'LE')):
+    if data.startswith((b'MZ', b'LE')) or header['format'] == 'DOS SYS':
         from .image_views import image_views
         result['image_views']=image_views(data)
     if container_header is not None:result['container_header']=container_header
     result['selected_image']=image or ('ail' if header['format']=='AIL' else 'pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'ne' if header['format']=='NE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['format'] == 'DOS SYS':
+        selected = load_sys(data)
+        dos = selected.metadata['dos']
+        header.update(load_segment=dos['load_segment'], entrypoint=selected.entry,
+                      entry_cs=dos['entry_cs'], entry_ip=dos['entry_ip'],
+                      load_model=selected.metadata['mapping'])
+        result['dos'] = dos
+        result['dos_driver'] = selected.metadata['dos_driver']
+        result['file_mappings'] = selected.metadata['file_mappings']
+        result['relocations'] = dos['relocations'][:MAX_ITEMS]
+        result['sections'] = [dict(name='DOS driver load module (unclassified)',
+            virtual_address=dos['image_base'], virtual_size=dos['allocation_size'],
+            file_offset=dos['header_size'], file_size=dos['module_size'],
+            permissions='rwx; possible code/data, not classification')]
+        warnings.append('Driver Strategy and Interrupt are independent far-call roots; caller registers, request packets and DOS allocation remain unobserved.')
+        if 'embedded_le' in result['dos_driver']:
+            warnings.append('Embedded LE objects are inventoried separately; protected-mode code and driver services are not loaded by the SYS view.')
+        result['strings'] = _strings(data,[(dos['header_size'],dos['module_size'],dos['image_base'])],warnings)
+        return result
     if header['family'] in ('console ROM', 'console disc'):
         from .roms import inspect_rom
         result['rom'] = inspect_rom(data)
@@ -395,6 +436,10 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
                         for item in metadata['file_mappings']]
         except ValueError as exc:
             warnings.append(f'LE memory mapping unavailable: {exc}')
+            from .dos_driver import embedded_le_inventory
+            inventory = embedded_le_inventory(data)
+            if inventory is not None:
+                result['le_inventory'] = inventory
         result['strings'] = _strings(data, mappings, warnings)
         return result
     if header['format'] == 'DOS COM':

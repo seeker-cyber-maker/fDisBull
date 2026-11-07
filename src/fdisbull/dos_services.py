@@ -22,6 +22,7 @@ _DOS = {
     0x1a: _entry('set_dta', {'ds:dx': 'disk_transfer_area'}, {}),
     0x25: _entry('set_interrupt_vector', {'al': 'vector', 'ds:dx': 'handler'}, {}),
     0x2a: _entry('get_date', {}, {'cx': 'year','dh': 'month','dl': 'day','al': 'weekday'}),
+    0x2b: _entry('set_date', {'cx': 'year', 'dh': 'month', 'dl': 'day'}, {'al': '00h=success, FFh=invalid date'}),
     0x2c: _entry('get_time', {}, {'ch':'hour','cl':'minute','dh':'second','dl':'hundredths'}),
     0x2f: _entry('get_dta', {}, {'es:bx':'disk_transfer_area'}),
     0x30: _entry('get_version', {}, {'al':'major','ah':'minor','bx':'version_specific','cx':'version_specific'}),
@@ -72,6 +73,10 @@ def _register(name, registers):
 def describe_interrupt(vector, registers=None):
     """Describe only a known selector; ambiguous/missing selectors stay unknown."""
     registers=registers or {}
+    from .desqview import describe_interrupt as describe_desqview
+    desqview = describe_desqview(vector, registers)
+    if desqview is not None:
+        return desqview
     if vector==0x66:
         from .audio_services import DIGPAK, MIDPAK, REFERENCE, SAMPLE_DESCRIPTOR
         function=_register('ax',registers)
@@ -133,5 +138,7 @@ def service_catalog():
     entries.append(describe_interrupt(0x20))
     from .audio_services import DIGPAK, MIDPAK
     entries.extend(describe_interrupt(0x66,{'ax':function}) for function in (*DIGPAK,*MIDPAK))
+    from .desqview import service_catalog as desqview_catalog
+    entries.extend(desqview_catalog())
     return dict(format='fdisbull-dos-services-1',entries=deepcopy(entries),
-                scope='Explicit DOS/BIOS/DIGPAK/MIDPAK documented subset; no automatic interrupt-handler verification')
+                scope='Explicit DOS/BIOS/DIGPAK/MIDPAK/DESQview documented subset; no automatic interrupt-handler verification')

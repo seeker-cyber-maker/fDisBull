@@ -181,10 +181,11 @@ class DOSViewsMixin:
 
     def _dos_disassembly(self, address=None, lines=50, version=None, cs=None):
         count = _bounded(lines, "lines", 1, 500)
-        a, selector = self._dos_parse_address(self.meta["entry"] if address is None else address, cs)
-        explicit = selector is not None
         with self.transaction():
             v = self.version(version)
+            selected = self._dos_metadata(v['id'])['selected_entry'] if self.meta['format']=='SYS' else self.meta['entry']
+            a, selector = self._dos_parse_address(selected if address is None else address, cs)
+            explicit = selector is not None
             chosen_context = _context(selector) if explicit else None
             start = a
             warnings = []

@@ -61,7 +61,7 @@ def load_com(data: bytes, *, load_segment: int = 0x1000, entry: int | None = Non
 
 
 def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None,
-            allow_secondary: bool = False) -> Image:
+            allow_secondary: bool = False, _driver: bool = False) -> Image:
     """Load a classic MZ module at a chosen DOS load segment.
 
     Canonical addresses are ``segment * 16 + offset``; addresses requiring A20
@@ -81,9 +81,14 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
     An explicit ``allow_secondary=True`` selects the declared DOS load image
     even when the retained file also has a PE/NE/LE/LX secondary header. Default
     loading still rejects that ambiguity; all MZ validation remains unchanged.
+    The private ``_driver`` mapping route requires an explicit, header-derived
+    entry. It validates the same bytes/relocations/allocation, without requiring
+    a PSP or using the process CS:IP/SS:SP as device-call register facts.
     """
     if not isinstance(allow_secondary, bool):
         raise ValueError("allow_secondary must be a boolean")
+    if not isinstance(_driver, bool) or _driver and entry is None:
+        raise ValueError('private MZ driver mapping requires an explicit entry')
     if not isinstance(data, bytes):
         raise ValueError("MZ source must be immutable bytes")
     if len(data) < 28:
@@ -92,8 +97,9 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
         raise ValueError("MZ source exceeds the 64 MiB limit")
     if data[:2] != b"MZ":
         raise ValueError("classic MZ signature required")
-    if isinstance(load_segment, bool) or not isinstance(load_segment, int) or not 0x10 <= load_segment <= 0xFFFF:
-        raise ValueError("load_segment must be a 16-bit segment at least 0x10 to leave room for the PSP")
+    minimum_segment = 0 if _driver else 0x10
+    if isinstance(load_segment, bool) or not isinstance(load_segment, int) or not minimum_segment <= load_segment <= 0xFFFF:
+        raise ValueError("load_segment must be a 16-bit segment" + (" at least 0x10 to leave room for the PSP" if not _driver else ''))
     header = dict(zip(_HEADER_NAMES, struct.unpack_from("<14H", data)))
     if header["e_cp"] == 0:
         raise ValueError("MZ page count must be nonzero")
@@ -146,7 +152,7 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
     stack_ss = (load_segment + header["e_ss"]) & 0xFFFF
     header_entry = entry_cs * 16 + header["e_ip"]
     stack_linear = stack_ss * 16 + header["e_sp"]
-    if header_entry >= _REAL_MODE_LIMIT or stack_linear > _REAL_MODE_LIMIT:
+    if not _driver and (header_entry >= _REAL_MODE_LIMIT or stack_linear > _REAL_MODE_LIMIT):
         raise ValueError("MZ register state exceeds the supported 1 MiB address space; A20 wrapping is not supported")
     selected_entry = header_entry if entry is None else entry
     if (isinstance(selected_entry, bool) or not isinstance(selected_entry, int)
@@ -168,7 +174,12 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
     # Preserve the header's actual startup registers independently of a user
     # analysis-entry override. Reuse a supported segment candidate; a physical
     # address alone cannot establish an arbitrary new code segment.
-    if 0 <= selected_entry - entry_cs * 16 <= 0xFFFF:
+    if _driver:
+        if not 0 <= selected_entry - image_base <= 0xffff:
+            raise ValueError('MZ driver entry must fit the header common-segment window')
+        selected_entry_cs = load_segment
+        selected_entry_cs_source = 'DOS device-header common segment'
+    elif 0 <= selected_entry - entry_cs * 16 <= 0xFFFF:
         selected_entry_cs = entry_cs
         selected_entry_cs_source = "header CS window"
     else:

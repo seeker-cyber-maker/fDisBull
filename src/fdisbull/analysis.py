@@ -33,7 +33,7 @@ class AnalysisMixin:
     def _init_information(self, image, version=1):
         from .inspection import inspect_binary
         document = inspect_binary(image.source_bytes,slice_arch=image.metadata.get('slice_arch'),image=image.metadata.get('selected_image'))
-        if image.format in ('MZ', 'COM'):
+        if image.format in ('MZ', 'COM', 'SYS'):
             document=self._dos_document_for_image(image,document)
         if image.metadata.get('managed'):
             document['header']['managed']=image.metadata['managed']
@@ -52,7 +52,7 @@ class AnalysisMixin:
         self._fresh_facts(version)
         if image.arch == 'thumb':
             self._thumb_reset(version)
-        if image.format in ('MZ', 'COM'):
+        if image.format in ('MZ', 'COM', 'SYS'):
             self._dos_init(image,version)
 
     def _index_symbols(self, version, document):
@@ -111,11 +111,11 @@ class AnalysisMixin:
                 if self.meta['format'] == 'NE':
                     for name in ('sections', 'imports', 'exports', 'libraries'):
                         counts[name] = len(self.meta['loader_metadata']['ne'][name])
-                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','cortex_m') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','cortex_m','dos_driver') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
             if topic == 'linkage':
                 return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
             if topic == 'header':
-                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'warnings':doc.get('warnings',[])}
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','dos_driver') if key in doc},'warnings':doc.get('warnings',[])}
             if topic not in ('sections','imports','exports','strings','libraries','relocations'):
                 raise ValueError('unknown information topic')
             records = doc.get(topic, [])
@@ -255,7 +255,7 @@ class AnalysisMixin:
         self.db.execute("UPDATE investigations SET state='done',detail=NULL WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
 
     def analyze(self, version=None, start=None, max_instructions=10000,cs=None,ds=None,es=None,ss=None):
-        if self.meta["format"] in ('MZ', 'COM'):
+        if self.meta["format"] in ('MZ', 'COM', 'SYS'):
             return self._dos_analyze(version,start,max_instructions,cs,ds,es,ss)
         if self.meta['format']=='PE':
             from .managed import managed_kind
@@ -399,7 +399,7 @@ class AnalysisMixin:
 
     def _reset_analysis(self, version):
         self._reset_derived(version)
-        if self.meta["format"] in ('MZ', 'COM'):
+        if self.meta["format"] in ('MZ', 'COM', 'SYS'):
             return self._dos_reset(version)
         for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','memory_refs','analysis_facts_revision'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))

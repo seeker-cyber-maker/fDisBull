@@ -1,0 +1,195 @@
+/* Authored fDisBull DOS COM probe, GNU as syntax, 386 or later.
+ * Read-only Quarterdeck QPI calls: 03h, 00h, 1e00h, 1f00h.
+ * Does not install a manager, change PTEs, or hook interrupts/ports.
+ * Rebuild with scripts/build_qpi_probe.py. Load address is PSP:0100.
+ */
+.intel_syntax noprefix
+.code16
+.section .text
+.global _start, output_mode, report, report_ready, release_request
+.equ REPORT_SIZE, 1120
+_start:
+    cld
+    push cs
+    pop ds
+    push cs
+    pop es
+    mov dx, OFFSET device_name
+    mov ax, 0x3d00
+    int 0x21
+    jc open_failed
+    mov bx, ax
+    mov dx, OFFSET report_entry
+    mov cx, 4
+    mov ax, 0x4402
+    int 0x21
+    pushf
+    push ax
+    mov ah, 0x3e
+    int 0x21
+    pop ax
+    popf
+    jc ioctl_failed
+    cmp ax, 4
+    jne short_ioctl
+    mov ax, WORD PTR [report_entry]
+    or ax, WORD PTR [report_entry + 2]
+    jz null_entry
+    or WORD PTR [report_flags], 1
+    mov ax, 0x0300
+    call qpi_call
+    jc version_failed
+    mov WORD PTR [report_version_ax], ax
+    mov WORD PTR [report_version_bx], bx
+    or WORD PTR [report_flags], 2
+    xor ax, ax
+    call qpi_call
+    jc status_failed
+    cmp al, 3
+    ja status_failed
+    mov BYTE PTR [report_enabled], al
+    or WORD PTR [report_flags], 4
+    mov ax, 0x1e00
+    call qpi_call
+    jc info_failed
+    mov BYTE PTR [report_stealth], cl
+    mov BYTE PTR [report_suspend], ch
+    mov BYTE PTR [report_disk_kib], dl
+    mov BYTE PTR [report_disk_flags], bh
+    or WORD PTR [report_flags], 8
+next_page:
+    mov cx, WORD PTR [report_count]
+    mov ax, 0x1f00
+    call qpi_call
+    jc pte_failed
+    mov bx, WORD PTR [report_count]
+    shl bx, 2
+    mov DWORD PTR [report_pages + bx], edx
+    inc WORD PTR [report_count]
+    cmp WORD PTR [report_count], 272
+    jb next_page
+    or WORD PTR [report_flags], 16
+    xor ax, ax
+    jmp finish
+open_failed:
+    mov ax, 1
+    jmp finish
+ioctl_failed:
+    mov ax, 2
+    jmp finish
+short_ioctl:
+    mov ax, 3
+    jmp finish
+null_entry:
+    mov ax, 8
+    jmp finish
+version_failed:
+    mov ax, 4
+    jmp finish
+status_failed:
+    mov ax, 5
+    jmp finish
+info_failed:
+    mov ax, 6
+    jmp finish
+pte_failed:
+    mov ax, 7
+finish:
+    mov WORD PTR [report_status], ax
+    cmp BYTE PTR [output_mode], 0
+    jne write_file
+    push cs
+    pop es
+    mov di, OFFSET report
+    mov cx, REPORT_SIZE
+    /* A guest INT3 can be handled by DOS/QEMM instead of QEMU's debugger.
+     * Keep ES:DI/CX stable until the observer sets release_request to 1.
+     * The host can pause its bounded run or set a breakpoint at report_ready. */
+report_ready:
+    cmp BYTE PTR [release_request], 1
+    jne report_ready
+    jmp exit_status
+write_file:
+    mov dx, OFFSET output_name
+    xor cx, cx
+    mov ax, 0x3c00
+    int 0x21
+    jc file_failed
+    mov bx, ax
+    mov dx, OFFSET report
+    mov cx, REPORT_SIZE
+    mov ah, 0x40
+    int 0x21
+    pushf
+    push ax
+    mov ah, 0x3e
+    int 0x21
+    jc file_close_failed
+    pop ax
+    popf
+    jc file_failed
+    cmp ax, REPORT_SIZE
+    jne file_failed
+    jmp exit_status
+file_close_failed:
+    pop ax
+    popf
+    jmp file_failed
+exit_status:
+    xor ax, ax
+    cmp WORD PTR [report_status], 0
+    je exit_dos
+    inc ax
+exit_dos:
+    mov ah, 0x4c
+    int 0x21
+file_failed:
+    mov ax, 0x4c02
+    int 0x21
+qpi_call:
+    push ds
+    push es
+    /* CS: indirect far call m16:16. Keep the documented raw encoding
+     * explicit so assembler near/far operand-size heuristics cannot vary. */
+    .byte 0x2e, 0xff, 0x1e
+    .word report_entry
+    pop es
+    pop ds
+    ret
+device_name:
+    .asciz "QEMM386$"
+output_name:
+    .asciz "FDQPI.BIN"
+output_mode:
+    .byte 0
+release_request:
+    .byte 0
+.balign 2
+report:
+    .ascii "FDQPI001"
+    .word REPORT_SIZE
+report_status:
+    .word 0xffff
+report_version_ax:
+    .word 0
+report_version_bx:
+    .word 0
+report_entry:
+    .long 0
+report_enabled:
+    .byte 0xff
+report_stealth:
+    .byte 0xff
+report_count:
+    .word 0
+report_flags:
+    .word 0
+report_suspend:
+    .byte 0
+report_disk_kib:
+    .byte 0
+report_disk_flags:
+    .byte 0
+    .zero 3
+report_pages:
+    .zero 1088

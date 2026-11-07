@@ -31,10 +31,30 @@ def ctx(cs):
 
 class DOSMixin(DOSViewsMixin):
     def _label(self,version,address):
-        return self._dos_label(version,address) if self.meta['format'] in ('MZ', 'COM') else super()._label(version,address)
+        return self._dos_label(version,address) if self.meta['format'] in ('MZ', 'COM', 'SYS') else super()._label(version,address)
 
     def _presentation(self,version,address):
-        return self._dos_presentation(version,address) if self.meta['format'] in ('MZ', 'COM') else super()._presentation(version,address)
+        return self._dos_presentation(version,address) if self.meta['format'] in ('MZ', 'COM', 'SYS') else super()._presentation(version,address)
+
+    def _dos_entry_roots(self, metadata):
+        """Retain independent driver calls instead of fabricating process state."""
+        if 'entry_roots' in metadata:
+            return metadata['entry_roots']
+        registers = dict(ds=metadata['psp_segment'], es=metadata['psp_segment'], ss=metadata['stack_ss'])
+        if metadata['sp'] is not None:
+            registers['sp'] = metadata['sp']
+        return [dict(address=metadata.get('selected_entry', self.meta['entry']),
+                     cs=metadata.get('selected_entry_cs', metadata['entry_cs']),
+                     name='entry', source=self.meta['format']+' entry',
+                     initial_registers=registers)]
+
+    def _dos_initialize_roots(self, version, metadata):
+        for root in self._dos_entry_roots(metadata):
+            self._dos_note_segment(version,root['cs'],'code',{'kind':root['source']})
+            self._dos_enqueue(version,root['cs'],root['address'],root['initial_registers'],root['source'])
+            self._dos_function(version,root['cs'],root['address'],root['name'],root['source'])
+        if isinstance(metadata['stack_ss'],int):
+            self._dos_note_segment(version,metadata['stack_ss'],'stack',{'kind':self.meta['format']+' initial SS'})
 
     def _dos_prepare(self,version):
         self._dos_cached_v=version
@@ -46,8 +66,12 @@ class DOSMixin(DOSViewsMixin):
         self._dos_startup_addresses=set()
         from .dos_decoder import decode_dos
         metadata=self._dos_cached_meta
+        # Device calls have separate caller-owned state. A straight-line
+        # prefix in one handler cannot establish every other handler's DS.
+        if 'entry_roots' in metadata:
+            return
         entry_cs=metadata.get('selected_entry_cs',metadata['entry_cs'])
-        address=self.meta['entry']
+        address=metadata.get('selected_entry',self.meta['entry'])
         state=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'])
         if metadata['sp'] is not None: state['sp']=metadata['sp']
         for _ in range(128):
@@ -69,7 +93,7 @@ class DOSMixin(DOSViewsMixin):
         return self._dos_cached_meta
 
     def _mapping(self,version,address):
-        if self.meta['format'] not in ('MZ', 'COM'):
+        if self.meta['format'] not in ('MZ', 'COM', 'SYS'):
             return super()._mapping(version,address)
         if getattr(self,'_dos_cached_v',None)!=version:
             self._dos_prepare(version)
@@ -91,18 +115,7 @@ class DOSMixin(DOSViewsMixin):
                     continue
                 bound=min([end,base+65536]+[n for n in bases if n>base])
                 self.db.execute('INSERT OR IGNORE INTO dos_segments VALUES (?,?,?,?,?,?)',(version,item['segment'],key(base),key(bound) if bound<0x100000 else f'{bound:016x}',json.dumps(['candidate']),json.dumps(item['sources'][:16])))
-            cs=metadata.get('selected_entry_cs',metadata['entry_cs'])
-            if not 0<=image.entry-cs*16<=65535:
-                candidates_cs=[item['segment'] for item in candidates if 0<=image.entry-item['segment']*16<=65535]
-                if not candidates_cs:
-                    raise ValueError('entry override has no available DOS CS context')
-                cs=max(candidates_cs)
-            self._dos_note_segment(version,cs,'code',{'kind':image.format+' entry'})
-            self._dos_note_segment(version,metadata['stack_ss'],'stack',{'kind':image.format+' initial SS'})
-            regs={'ds':metadata['psp_segment'],'es':metadata['psp_segment'],'ss':metadata['stack_ss']}
-            if metadata['sp'] is not None: regs['sp']=metadata['sp']
-            self._dos_enqueue(version,cs,image.entry,regs,image.format+' entry')
-            self._dos_function(version,cs,image.entry,'entry',image.format+' entry')
+            self._dos_initialize_roots(version,metadata)
             self.db.execute('INSERT OR REPLACE INTO analysis_state VALUES (?,0,0)',(version,))
             self._dos_catalog(version)
 
@@ -289,7 +302,7 @@ class DOSMixin(DOSViewsMixin):
                 self._dos_reset(v)
             preferred_work=None
             if start is not None or any(x is not None for x in (cs,ds,es,ss)):
-                address,selector=self._dos_parse_address(start if start is not None else self.meta['entry'],cs)
+                address,selector=self._dos_parse_address(start if start is not None else metadata.get('selected_entry',self.meta['entry']),cs)
                 if start is None and selector is None:
                     selector=metadata.get('selected_entry_cs',metadata['entry_cs'])
                 if selector is None:
@@ -334,6 +347,12 @@ class DOSMixin(DOSViewsMixin):
                         if ins is None or any(a<int(b[0],16)+b[1] and a+(ins['size'] if ins else 1)>int(b[0],16) for b in blocked):
                             self.db.execute("UPDATE work SET state='invalid',detail='invalid bytes, CS boundary or explicit data definition' WHERE version=? AND context=? AND address=?",(v,context,key(a)))
                             continue
+                        if 'entry_roots' in metadata:
+                            from .dos_driver import execution_boundary
+                            boundary=execution_boundary(raw,ins['ip'])
+                            if boundary is not None:
+                                ins.update(flow='stop',target=None,target_cs=None)
+                                ins['unresolved'].append(boundary)
                         inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,context,key(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],ins['flow'],key(ins['target']) if ins['target'] is not None and ins['target']<0x100000 else None))
                         decoded+=inserted.rowcount
                         self._memory_facts(v,context,a,bytes.fromhex(ins['bytes']),selector,state)
@@ -394,7 +413,8 @@ class DOSMixin(DOSViewsMixin):
                         if ins['flow'] in ('next','call','conditional','indirect_call'):
                             caller=dict(after)
                             if ins['flow'] in ('call','indirect_call'):
-                                caller={name:value for name,value in caller.items() if name in ('ds','ss','sp','bp')}
+                                caller=({} if 'entry_roots' in metadata else
+                                        {name:value for name,value in caller.items() if name in ('ds','ss','sp','bp')})
                             evidence=('permitted call-return fallthrough; return is assumed' if ins['flow'] in ('call','indirect_call') else '16-bit conditional CS/IP fallthrough' if ins['flow']=='conditional' else '16-bit straight-line CS/IP fallthrough')
                             if 0<=ins['next_address']<0x100000:
                                 self._dos_edge(v,context,a,ins['next_address'],selector,'fallthrough',evidence)
@@ -427,8 +447,9 @@ class DOSMixin(DOSViewsMixin):
                     for seed in seeds:
                         # Explicit roots restored by a policy refresh keep
                         # their identity, not stale inferred segment values.
-                        state={} if seed['reason']=='user seed' else {'ss':metadata['stack_ss']}
-                        if seed['reason']!='user seed':
+                        process_state=seed['reason']!='user seed' and 'entry_roots' not in metadata
+                        state={'ss':metadata['stack_ss']} if process_state else {}
+                        if process_state:
                             if metadata.get('primary_data_segment') is not None:
                                 state['ds']=metadata['primary_data_segment']
                             elif len(data_segments)==1:
@@ -447,7 +468,16 @@ class DOSMixin(DOSViewsMixin):
             state=self.db.execute('SELECT entry_complete,seeds_admitted FROM analysis_state WHERE version=?',(v,)).fetchone()
             stable=not(pending_code+pending_data+pending_seeds+pending_scans) and bool(state[1])
             after=sum(self.db.execute(f'SELECT count(*) FROM {t} WHERE version=?',(v,)).fetchone()[0] for t in fact_tables)
-            return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=after-before,pending=pending_code+pending_data+pending_seeds+pending_scans+(0 if state[1] else 1),pending_code=pending_code,pending_data=pending_data,pending_seeds=pending_seeds,pending_segment_scans=pending_scans,entry_complete=bool(state[0]),stable=stable,budget_exhausted=not stable and attempted>=budget,assumptions=['Static minimum allocation; no PSP memory fabricated.','Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.','Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.','Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit.'])
+            assumptions=(['Independent driver entry roots; caller registers, stack and request storage are unknown.',
+                          'Driver call fallthrough does not assume a C calling convention or preserved registers.',
+                          'Deferred driver candidates start with unknown register state; provenance is retained.',
+                          'Execution-mode/context transitions stop real-mode traversal; their successor state is unmodeled.']
+                         if 'entry_roots' in metadata else
+                         ['Static minimum allocation; no PSP memory fabricated.',
+                          'Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.',
+                          'Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.'])
+            assumptions.append('Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit.')
+            return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=after-before,pending=pending_code+pending_data+pending_seeds+pending_scans+(0 if state[1] else 1),pending_code=pending_code,pending_data=pending_data,pending_seeds=pending_seeds,pending_segment_scans=pending_scans,entry_complete=bool(state[0]),stable=stable,budget_exhausted=not stable and attempted>=budget,assumptions=assumptions)
 
     def _dos_reset(self,v):
         self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(f'dos_pointer_revision_{v}',json.dumps(DOS_POINTER_REVISION)))
@@ -466,13 +496,7 @@ class DOSMixin(DOSViewsMixin):
         for row in self.db.execute('SELECT selector FROM dos_segments WHERE version=?',(v,)).fetchall():
             sources=original_candidates.get(row[0],[{'kind':'prior inferred selector; roles require revalidation'}])
             self.db.execute('UPDATE dos_segments SET roles=?,sources=? WHERE version=? AND selector=?',(json.dumps(['candidate']),json.dumps(sources),v,row[0]))
-        cs=metadata.get('selected_entry_cs',metadata['entry_cs'])
-        self._dos_note_segment(v,cs,'code',{'kind':self.meta['format']+' selected entry'})
-        self._dos_note_segment(v,metadata['stack_ss'],'stack',{'kind':self.meta['format']+' initial SS'})
-        registers=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'])
-        if metadata['sp'] is not None: registers['sp']=metadata['sp']
-        self._dos_enqueue(v,cs,self.meta['entry'],registers,self.meta['format']+' entry')
-        self._dos_function(v,cs,self.meta['entry'],'entry',self.meta['format']+' entry')
+        self._dos_initialize_roots(v,metadata)
         self._dos_catalog(v)
         for row in self.db.execute('SELECT address,representation FROM definitions WHERE version=?',(v,)).fetchall():
             a=int(row[0],16)
@@ -489,6 +513,9 @@ class DOSMixin(DOSViewsMixin):
         document['header'].update(dos_header=metadata['header_fields'],relocation_count=len(metadata['relocations']),load_segment=metadata['load_segment'],entrypoint=image.entry,entry_cs=metadata['entry_cs'],entry_ip=metadata['entry_ip'],selected_entry_cs=metadata.get('selected_entry_cs',metadata['entry_cs']),selected_entry_ip=image.entry-16*metadata.get('selected_entry_cs',metadata['entry_cs']))
         document['sections']=[dict(name='DOS load module (unclassified)',virtual_address=metadata['image_base'],virtual_size=metadata['allocation_size'],file_offset=metadata['header_size'],file_size=metadata['module_size'],permissions='rwx; possible code/data, not classification')]
         document['file_mappings']=image.metadata['file_mappings']
+        if image.format=='SYS':
+            document['dos_driver']=image.metadata['dos_driver']
+            document['relocations']=metadata['relocations']
         document['warnings']=[s for s in document.get('warnings',[]) if 'structural metadata unavailable' not in s]
         document['warnings'].append(image.format+' has no explicit code/data section permissions; segment roles and bounds are inferred from references.')
         if image.format=='COM':
@@ -511,13 +538,17 @@ class DOSMixin(DOSViewsMixin):
             word=int.from_bytes(module[offset:offset+2],'little')
             module[offset:offset+2]=((word-metadata['load_segment'])&65535).to_bytes(2,'little')
         source=source_bytes[:metadata['header_size']]+bytes(module)+source_bytes[metadata['declared_file_size']:]
-        image=(load_com(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],_allow_child_signature=True) if self.meta['format']=='COM'
-               else load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],allow_secondary=metadata.get('secondary_format') is not None))
-        image.metadata['dos']['selected_entry_cs']=metadata.get('selected_entry_cs',metadata['entry_cs'])
-        image.metadata['dos']['selected_entry_ip']=self.meta['entry']-16*image.metadata['dos']['selected_entry_cs']
-        image.metadata['dos']['selected_entry_cs_source']='inherited selected entry context from parent version'
+        if self.meta['format']=='SYS':
+            from .dos_driver import load_sys
+            image=load_sys(source,load_segment=metadata['load_segment'],entry=metadata.get('entry_override'))
+        else:
+            image=(load_com(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],_allow_child_signature=True) if self.meta['format']=='COM'
+                   else load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],allow_secondary=metadata.get('secondary_format') is not None))
+            image.metadata['dos']['selected_entry_cs']=metadata.get('selected_entry_cs',metadata['entry_cs'])
+            image.metadata['dos']['selected_entry_ip']=self.meta['entry']-16*image.metadata['dos']['selected_entry_cs']
+            image.metadata['dos']['selected_entry_cs_source']='inherited selected entry context from parent version'
         image=replace(image,regions=patched)
-        document=self._dos_document_for_image(image,inspect_binary(source,image='com' if self.meta['format']=='COM' else 'mz' if metadata.get('secondary_format') else None,_com_child=self.meta['format']=='COM'))
+        document=self._dos_document_for_image(image,inspect_binary(source,image='sys' if self.meta['format']=='SYS' else 'com' if self.meta['format']=='COM' else 'mz',_com_child=self.meta['format']=='COM'))
         if self.meta['format']=='COM' and source[:2] in (b'MZ',b'ZM'):
             document['warnings'].append('Edited child now begins with an MZ signature; stored COM mapping is inherited, not a claim that DOS would load the edited file as COM.')
         if patched[0].data[metadata['module_size']:]!=bytes(metadata['allocation_size']-metadata['module_size']):

@@ -106,14 +106,14 @@ def _pattern_matches(chain, arch):
 class BoundaryMixin:
     def _boundary_address(self, address, cs):
         from .project import number
-        if self.meta['format'] in ('MZ', 'COM'):
+        if self.meta['format'] in ('MZ', 'COM', 'SYS'):
             return self._dos_parse_address(address, cs)
         if cs is not None:
             raise ValueError('CS selection applies only to DOS projects')
         return self._address(address), None
 
     def _boundary_presentation(self, version, address, context=None):
-        if self.meta['format'] in ('MZ', 'COM'):
+        if self.meta['format'] in ('MZ', 'COM', 'SYS'):
             return self._dos_presentation(version, address, context)
         return self._presentation(version, address)
 
@@ -201,7 +201,7 @@ class BoundaryMixin:
             function_entries = {(row['context'], int(row['address'], 16)) for row in self.db.execute('SELECT context,address FROM functions WHERE version=?', (v,))}
             cache, evidence, seen = {}, [], set()
             warnings = []
-            dos = self.meta['format'] in ('MZ', 'COM')
+            dos = self.meta['format'] in ('MZ', 'COM', 'SYS')
             ne_processor = None
             if self.meta['format'] == 'NE':
                 from .ne_processor import NEProcessor

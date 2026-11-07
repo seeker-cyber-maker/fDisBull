@@ -26,7 +26,7 @@ class MembershipMixin:
         max_work = integer(max_work, 'max_work', 1, 20000000)
         with self.transaction():
             v = self.version(version)['id']
-            dos = self.meta['format'] in ('MZ', 'COM')
+            dos = self.meta['format'] in ('MZ', 'COM', 'SYS')
             total = self.db.execute("SELECT COUNT(*) FROM instructions WHERE version=? AND context NOT LIKE 'cil:%'", (v,)).fetchone()[0]
             rows = list(self.db.execute("SELECT * FROM instructions WHERE version=? AND context NOT LIKE 'cil:%' ORDER BY context,address LIMIT ?", (v, max_instructions)))
             nodes = []

@@ -134,7 +134,7 @@ class SnippetLinksMixin:
 
     def _snippet_context(self, context):
         context = self.context if context is None else _text(context, 'context')
-        if self.meta['format'] in ('MZ', 'COM'):
+        if self.meta['format'] in ('MZ', 'COM', 'SYS'):
             if not re.fullmatch(r'x86:16:little(?::cs=[0-9a-fA-F]{4})?', context):raise ValueError('invalid DOS snippet context')
         elif context != self.context:raise ValueError('snippet context does not match project image architecture/view')
         return context
@@ -148,7 +148,7 @@ class SnippetLinksMixin:
             if self.digest(regions) != v['sha256']:raise ValueError('stored byte-version digest mismatch')
             original = self._snippet_source(); original_sha = self.meta['source_sha256']
             mappings = self._document(v['id']).get('file_mappings', [])
-            if self.meta['format'] in ('MZ', 'COM'):
+            if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                 selectors = {self._dos_parse_address(part['address'])[1] for part in spans if type(part) is dict and 'address' in part}
                 selectors.discard(None)
                 if len(selectors) > 1:raise ValueError('capture requires one exact DOS decode context')
@@ -163,7 +163,7 @@ class SnippetLinksMixin:
                 if total > MAX_BYTES:raise ValueError('snippet exceeds the 16 MiB captured-byte limit')
                 if set(requested) == {'address', 'size'}:
                     a = self._address(requested['address'])
-                    if self.meta['format'] in ('MZ', 'COM'):
+                    if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                         a, selector = self._dos_parse_address(requested['address'])
                         if selector is not None:
                             inferred = f'x86:16:little:cs={selector:04x}'
@@ -285,14 +285,14 @@ class SnippetLinksMixin:
         if set(source) != {'source_sha256', 'version', 'version_sha256', 'image_format', 'image_view', 'arch', 'bits', 'endian'}:raise ValueError('invalid portable source fields')
         _text(source.get('image_format'), 'image format', 32); _text(source.get('arch'), 'architecture', 32)
         _integer(source.get('bits'), 'architecture bits', 1, 128)
-        if source.get('endian') != 'little' or source.get('image_view') is not None and source['image_view'] not in ('mz', 'com', 'pe', 'le', 'ne'):raise ValueError('invalid source image view/endian')
-        expected_view = {'MZ': 'mz', 'COM': 'com', 'PE': 'pe', 'NE': 'ne', 'LE': 'le'}.get(source['image_format'])
+        if source.get('endian') != 'little' or source.get('image_view') is not None and source['image_view'] not in ('mz', 'com', 'sys', 'pe', 'le', 'ne'):raise ValueError('invalid source image view/endian')
+        expected_view = {'MZ': 'mz', 'COM': 'com', 'SYS': 'sys', 'PE': 'pe', 'NE': 'ne', 'LE': 'le'}.get(source['image_format'])
         if source['image_view'] is not None and source['image_view'] != expected_view:raise ValueError('source format/view mismatch')
         if type(document['boundary']) is not dict or document['boundary'].get('status') != 'authored':raise ValueError('snippet boundaries must remain authored declarations')
         base_context = f"{source['arch']}:{source['bits']}:little"
         if source['image_format'] == 'NE':
             if source['arch'] != 'x86' or source['bits'] != 16 or source['image_view'] != 'ne' or document['context'] != base_context + ':ne':raise ValueError('invalid portable NE decode context')
-        elif source['image_format'] in ('MZ', 'COM'):
+        elif source['image_format'] in ('MZ', 'COM', 'SYS'):
             if source['arch'] != 'x86' or source['bits'] != 16 or not re.fullmatch(r'x86:16:little(?::cs=[0-9a-fA-F]{4})?', document['context']):raise ValueError('invalid portable DOS decode context')
         elif document['context'] != base_context:raise ValueError('portable context does not match source architecture')
         parts = document.get('spans')
@@ -308,7 +308,7 @@ class SnippetLinksMixin:
             if part['space'] == 'mapped':
                 _integer(part.get('address'), 'mapped address')
                 if part['address'] + part['size'] > 1 << 64:raise ValueError('portable mapped extent exceeds address bounds')
-                if source['image_format'] in ('MZ', 'COM') and ':cs=' in document['context']:
+                if source['image_format'] in ('MZ', 'COM', 'SYS') and ':cs=' in document['context']:
                     cs = int(document['context'].rsplit('=', 1)[1], 16)
                     if not 0 <= part['address'] - cs * 16 < 65536 or part['address'] - cs * 16 + part['size'] > 65536:raise ValueError('portable DOS span exceeds CS bounds')
                 if source['image_format'] == 'NE':
