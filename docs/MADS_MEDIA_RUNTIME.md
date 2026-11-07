@@ -46,10 +46,12 @@ JSON/Python APIs include these explicit adapters:
 `mads-depth`, `mads-background`, `mads-depth-map`, `mads-mask`, `mads-font`,
 `mads-dsr`, `mads-animation`.
 
-Use `fdisbull request` for the shared JSON route. The legacy positional CLI's
-hardcoded adapter choices are not changed in this contribution; a dedicated
-installed module CLI provides the new selectors without replacing the large
-shared command dispatcher:
+The ordinary `fdisbull media-inspect` and `media-extract` commands derive their
+adapter choices from the same catalog as JSON/Python. They expose `--source-member`
+or `--source-index`, `--map-path` with `--map-member` or `--map-index`,
+`--expected-size`, `--width` and `--height`. Mutually exclusive selectors fail
+before opening an input. `source_member` is the original resource; `member` is
+the decoded output. The dedicated installed module CLI also remains available:
 
 ```sh
 python -m fdisbull.mads_media_adapters catalog
@@ -67,7 +69,8 @@ python -m fdisbull.mads_media_adapters extract /private/scene.SS \
 unique case-insensitive name. `member` selects the **decoded output**, not the
 source archive entry. Both archive identity and selected resource identity
 remain in the report. Duplicate names must be selected by integer index in
-JSON/Python. The corpus harness separately compares all matching companion bytes:
+JSON/Python, or with `--source-index` / `--map-index` in the CLI. The corpus
+harness separately compares all matching companion bytes:
 identical duplicates retain all indices in the receipt; conflicting duplicates
 refuse instead of being silently selected. No name from a resource opens a filesystem path automatically.
 
@@ -222,3 +225,31 @@ integration or distribution. No ScummVM runtime or game assets are bundled.
   https://github.com/madler/zlib/tree/v1.3.1/contrib/blast
   DCL tables/format notes informed an explicitly altered Python implementation;
   the upstream notice is retained in codec_dcl.py. DCL is not PKZIP method 6.
+
+## Integration audit (7 November 2026)
+
+`codec_profiles.py` links signature recognition for FAB, MADSCONCAT and MADSPACK
+to these independent media adapters through `file-identify` / `format-modules`.
+Recognition never decompresses. PKWARE DCL has no distinctive magic, so it is
+cataloged but not automatically guessed from its two option bytes. An SS/CNV/FF
+filename does not turn a generic MADSPACK container into a qualified subtype.
+
+The reusable corpus validator is installed as `fdisbull.mads_validation`:
+
+```sh
+python -m fdisbull.mads_validation --resources /private/resources \
+  --synthetic-model --output /private/new-receipt.json
+```
+
+Tests import this installed module, not a pruned `examples/` path. The example
+is only a thin convenience wrapper. Immutable CNV/CND parsing is reused across
+dialogs, with the same explicit initial checkpoint restored before every dialog.
+A regression compares resulting state digests with fresh-runtime construction.
+This improves the validation harness, not the interpreted program's semantics.
+
+The codecs remain individually importable in a Python `-S` process without any
+MADS or processor imports. Media set/PNG/WAV APIs do not import the conversation
+runtime or ScummVM. No shared native installation or binary is required.
+
+The audit does not remove any engine-completeness restrictions above. Public
+integration must run the final combined tree and its installed artifacts.
