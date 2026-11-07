@@ -36,6 +36,7 @@ AGENT_SKILL_GUIDES = {
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
     "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
+    "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -199,6 +200,10 @@ METHODS = {
     "memory-edit-plan": "Plan a conditional guarded candidate edit without writing; search,offset,value,[condition,compare_value]",
     "memory-rule-create": "Create a finite conditional edit/freeze rule for an owned candidate; search,offset,value,[condition,compare_value,max_applications,max_ticks,name]",
     "memory-rule-info": "Read a stored memory rule and its durable execution budgets/progress; rule",
+    "event-search-start": "Start an immutable code-site or register-value search from a closed trace window; trace,[feature,registers,predicate,label,regions]",
+    "event-search-refine": "Intersect or subtract another qualified trace window; search,trace,[mode,predicate,label]",
+    "event-search-results": "Verify and page retained event candidates with bounded witnesses; search,[offset,limit]",
+    "event-trace-query": "Find historical predicate matches without changing the live stop; trace,predicate,[regions,offset,limit]",
     "debug-memory-rule-tick": "Observe and conditionally edit one rule candidate at a qualified stop; run,rule,[context]",
     "debug-memory-rule-run": "Execute finite rule ticks with DOSBox guest-time intervals; run,rule,ticks,[interval_ms,timeout_ms]",
     "desqview-profile": "Pin a caller-owned DOS boot image and selected DESQview MZ/modules; boot_image,[program,modules,qemm,startup]",
@@ -235,6 +240,7 @@ METHODS = {
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
     "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",
+    "debug-trace-until": "Stop at a current instruction predicate in qualified real-mode DOS; run,until,[regions,max_steps,timeout_ms,name,action,label]",
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
@@ -953,7 +959,8 @@ def invoke(method, params, debugger=None):
             return db.status()
     with Project(project) as db:
         if method in ('memory-snapshot-info', 'memory-search-start', 'memory-search-refine',
-                      'memory-search-results', 'memory-edit-plan', 'memory-rule-create', 'memory-rule-info'):
+                      'memory-search-results', 'memory-edit-plan', 'memory-rule-create', 'memory-rule-info',
+                      'event-search-start', 'event-search-refine', 'event-search-results', 'event-trace-query'):
             return getattr(db, method.replace('-', '_'))(**p)
         if method in (
             "code-backings",
@@ -1364,6 +1371,9 @@ def respond(request, default_project=None, debugger=None):
         from .udc_layers import LayerQualificationError
         if isinstance(e, LayerQualificationError):
             value["error"]["qualification"] = e.receipt
+        from .execution_trace import ExecutionTraceError
+        if isinstance(e, ExecutionTraceError):
+            value["error"]["result"] = e.result
     return (policy or OutputPolicy()).bound(value)
 
 
@@ -1985,6 +1995,25 @@ def parser():
                 c.add_argument('--max-applications', type=int, default=128)
                 c.add_argument('--max-ticks', type=int, default=4096)
                 c.add_argument('--name', default='memory-rule')
+    for name in ('event-search-start','event-search-refine','event-search-results','event-trace-query'):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument('project')
+        c.add_argument('trace' if name in ('event-search-start','event-trace-query') else 'search')
+        if name == 'event-search-refine':
+            c.add_argument('trace')
+            c.add_argument('--mode', choices=['retain','exclude'], default='retain')
+        if name in ('event-search-start','event-search-refine','event-trace-query'):
+            c.add_argument('--predicate', type=json.loads, required=name=='event-trace-query')
+        if name in ('event-search-start','event-trace-query'):
+            c.add_argument('--regions', type=json.loads)
+        if name in ('event-search-start','event-search-refine'):
+            c.add_argument('--label', default='trial')
+        if name == 'event-search-start':
+            c.add_argument('--feature', choices=['site','register-value'], default='site')
+            c.add_argument('--register', dest='registers', action='append')
+        if name in ('event-search-results','event-trace-query'):
+            c.add_argument('--offset', type=int, default=0)
+            c.add_argument('--limit', type=int, default=64)
     c = sub.add_parser(
         "debug",
         help="Launch a project execution backend and accept live debugger JSON commands on stdin",
