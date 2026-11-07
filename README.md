@@ -51,6 +51,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
 | Inspect DESQview modules, observe its cooperative APIs, or narrow changing memory values | [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
+| Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
 | Give an agent named controls, game-unit room maps and explicit spatial policies | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |

@@ -33,6 +33,7 @@ OPERATIONS = {
     'wait':'wait',
     'screenshot-hooks':'screenshot_hooks',
     'step':'step', 'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
+    'trace-until':'trace_until',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
     'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
@@ -122,6 +123,8 @@ def validate_script(script, *, session=None):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
+                    if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu'):
+                        raise ValueError('Live trace-until requires the DOSBox boundary adapter')
                     if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine'):
                         raise ValueError('Unsupported operation for this backend: '+op)
                     if op == 'memory-rule-run' and (backend or actual) == 'qemu-machine':
@@ -140,6 +143,20 @@ def validate_script(script, *, session=None):
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
                     else:signature.bind(**params)
+                    if op=='trace-until':
+                        # This first adapter admits literal predicates/actions.
+                        # Validate the entire descriptor before an earlier step
+                        # can mutate the guest; result references are refused.
+                        from .execution_trace import validate_trace_until
+                        def literal(value):
+                            if isinstance(value,str) and value.startswith('$'):
+                                raise ValueError('trace-until script parameters must be literal')
+                            if isinstance(value,dict):
+                                for child in value.values():literal(child)
+                            elif isinstance(value,list):
+                                for child in value:literal(child)
+                        literal(params)
+                        validate_trace_until(**params)
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
@@ -319,12 +336,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
 
     for index, step in enumerate(steps):
         record = {'index':index,'op':step['op']}
+        prior_input_touched = keyboard_touched
         try:
             remaining = int((deadline-time.monotonic())*1000)
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -335,16 +353,23 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             else:
                 # Record intended input before dispatch so an uncertain failure
                 # follows the same terminal cleanup as legacy keyboard input.
+                prior_input_touched = keyboard_touched
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
+                        or (step['op']=='trace-until' and params.get('action') is not None)
                         or (step['op']=='frame-inputs' and params['edges'])
                         or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):
                     keyboard_touched=True
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if (step['op']=='trace-until' and result.get('action',{}).get('dispatch')
+                        in ('not_requested','not_dispatched','skipped_initial_match')):
+                    keyboard_touched = prior_input_touched
             record['result'] = result
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
                 raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
+            if step['op']=='trace-until' and not (result.get('complete') and result.get('matched') and result.get('exact_stop')):
+                raise ValueError('Trace predicate did not match at the current stop: '+result.get('outcome','incomplete'))
             if step['op'] in ('macro','move') and not result.get('ok'):
                 raise ValueError('Semantic input did not complete')
             if step['op']=='run':
@@ -365,6 +390,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             failure = {'index':index,'op':step['op'],'type':type(error).__name__,'message':str(error)}
             record.update(ok=False,error=failure)
             if hasattr(error,'result'):record['result']=error.result
+            if (step['op']=='trace-until' and isinstance(getattr(error,'result',None),dict)
+                    and error.result.get('action',{}).get('dispatch')
+                    in ('not_requested','not_dispatched','skipped_initial_match')):
+                keyboard_touched = prior_input_touched
         records.append(record)
         if failure:
             break
