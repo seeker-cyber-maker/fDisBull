@@ -33,7 +33,7 @@ def test_catalogue_is_compact_and_default_selection_is_backward_compatible(capsy
     catalogue=invoke('agent-skill',{'list':True})
     assert catalogue['format']=='fdisbull-skill-catalog-1'
     assert catalogue['default_skill']=='fdisbull-investigate'
-    assert {item['name'] for item in catalogue['skills']}=={'fdisbull-investigate','write-gamefaqs-guide'}
+    assert {item['name'] for item in catalogue['skills']}=={'fdisbull','fdisbull-investigate','write-gamefaqs-guide'}
     assert all(set(item)=={'name','purpose','entrypoint'} and item['purpose'].strip()
                and item['entrypoint']=='SKILL.md' for item in catalogue['skills'])
     assert len(json.dumps(catalogue).encode())<2048
