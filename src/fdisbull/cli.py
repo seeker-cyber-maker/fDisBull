@@ -2042,9 +2042,9 @@ def parser():
         map_choice = c.add_mutually_exclusive_group()
         map_choice.add_argument("--map-member", help="Unique companion HAG member name")
         map_choice.add_argument("--map-index", type=int, help="Exact companion HAG directory index")
-        c.add_argument("--expected-size", type=int, help="Required explicit output size for raw compression streams")
-        c.add_argument("--width", type=int)
-        c.add_argument("--height", type=int)
+        c.add_argument("--expected-size", type=int, help="Decoded length required by raw FAB")
+        c.add_argument("--width", type=int, help="Explicit mask width")
+        c.add_argument("--height", type=int, help="Explicit mask height")
         if name == "media-inspect":
             c.add_argument("--index-path", help="Explicit TFTD VID companion IDX for structural cross-check")
         if name == "media-extract":
@@ -3078,10 +3078,10 @@ def _dispatch(args):
             print(json.dumps({'complete':False,'status':'refused','reason':str(error)}),flush=True)
             return 1
     if command in ("media-inspect", "media-extract"):
-        for selector in ("source", "map"):
-            index = args.pop(selector + "_index", None)
+        for index_option, member_option in (("source_index", "source_member"), ("map_index", "map_member")):
+            index = args.pop(index_option, None)
             if index is not None:
-                args[selector + "_member"] = index
+                args[member_option] = index
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
     if command == "smk-frame":
