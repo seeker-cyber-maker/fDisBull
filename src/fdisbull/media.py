@@ -15,9 +15,10 @@ SPEC = 'references/media-modules.md'
 
 def media_modules():
     """Discover implemented entry points, dependencies and explicit limits."""
+    from .mads_media_adapters import catalog
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
-        'modules': [
+        'modules': catalog() + [
             dict(name='flic', layer='container-inspection',
                  api='fdisbull.flic.inspect_flic', methods=['media-inspect'], dependencies=[],
                  variants='Standard FLI/FLC, Bullfrog compact12 and bounded TFTD VID/IDX',
@@ -105,7 +106,14 @@ def _identity(data):
     return dict(size=len(data), sha256=hashlib.sha256(data).hexdigest())
 
 
-def _prepare(path, adapter, volume_root, number):
+def _prepare(path, adapter, volume_root, number, **options):
+    from .mads_media_adapters import NAMES, prepare
+    if isinstance(adapter, str) and adapter in NAMES:
+        if volume_root is not None:
+            raise ValueError('Independent media adapters do not accept volume_root')
+        return prepare(path, adapter, number=number, **options)
+    if options:
+        raise ValueError('Extra parameters apply only to independent media adapters')
     if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2',
           'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2'):
         raise ValueError('Unsupported adapter; discover media-modules first')
@@ -216,8 +224,15 @@ def _prepare(path, adapter, volume_root, number):
     return result, {name: payload for name, _, payload in members}
 
 
-def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=None):
+def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=None, **options):
     """Inventory immutable member ranges with source and member digests."""
+    from .mads_media_adapters import NAMES
+    if isinstance(adapter, str) and adapter in NAMES:
+        if index_path is not None:
+            raise ValueError('Use map_path, not index_path, for a MADS tile map')
+        return _prepare(path, adapter, volume_root, number, **options)[0]
+    if options:
+        raise ValueError('Extra parameters apply only to independent media adapters')
     if adapter == 'flic':
         if volume_root is not None or number is not None:
             raise ValueError('FLIC does not accept AGI resource parameters')
@@ -235,11 +250,11 @@ def inspect_media(path, *, adapter, volume_root=None, number=None, index_path=No
 
 
 def extract_media(path, output, *, adapter, member, volume_root=None, number=None,
-                  max_output_bytes=MAX_OUTPUT):
+                  max_output_bytes=MAX_OUTPUT, **options):
     """Copy one bounded member to a fresh private directory outside Git."""
     if type(max_output_bytes) is not int or not 1 <= max_output_bytes <= MAX_OUTPUT:
         raise ValueError('max_output_bytes must be 1..67108864')
-    result, payloads = _prepare(path, adapter, volume_root, number)
+    result, payloads = _prepare(path, adapter, volume_root, number, **options)
     if not isinstance(member, str) or member not in payloads:
         raise ValueError('Unknown member; inspect this source first')
     payload = payloads[member]
