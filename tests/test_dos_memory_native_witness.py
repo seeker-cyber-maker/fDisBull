@@ -172,6 +172,16 @@ def test_authored_bootstrap_build_is_pinned_and_one_changed_byte_is_rejected(tmp
 
 @pytest.mark.parametrize('kind', ['case_collision', 'directory', 'symlink'])
 def test_snapshot_never_silently_ignores_or_aliases_directory_entries(tmp_path, kind):
+    if kind == 'case_collision':
+        # macOS APFS tmp dirs are case-insensitive: TARGET aliases target
+        import tempfile, os
+        probe = tmp_path / 'probe_case'
+        probe.write_bytes(b'x')
+        probe2 = tmp_path / 'PROBE_CASE'
+        probe2.write_bytes(b'y')
+        only_one = len([p for p in tmp_path.iterdir() if p.name.casefold() == 'probe_case']) == 1
+        if only_one:
+            pytest.skip('case-insensitive tmp filesystem; case_collision cannot be constructed')
     (tmp_path / 'target').write_bytes(b'authored')
     if kind == 'case_collision':
         (tmp_path / 'TARGET').write_bytes(b'other')
