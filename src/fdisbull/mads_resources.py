@@ -1,7 +1,7 @@
-"""Bounded MADS containers: HAG, MADSPACK 2.0 and FAB.
+"""Bounded MADS containers: HAG, MADSPACK 1.0/2.0, FAB and DCL.
 
 Read-only format recovery, not a game engine. ScummVM v2.8.1's MADS readers
-were consulted as format references; see docs/MADS_PROCESSOR.md for provenance.
+were consulted as format references; see docs/MADS_MEDIA_RUNTIME.md for provenance.
 Original resources and decompressed bytes are private target data.
 """
 from __future__ import annotations
@@ -57,61 +57,8 @@ class Cursor:
         return int.from_bytes(self.take(2), 'little', signed=True)
 
 
-def decode_fab(data: bytes, expected_size: int) -> tuple[bytes, int]:
-    """Return decoded bytes and consumed input; never silently discard a tail.
-
-    The six-byte prefix carries a 10..13-bit backwards window and the first
-    control word. Its last bit prefetches the NEXT control word before the
-    command's data bytes. Back-references copy sequentially, including overlap.
-    """
-    require(type(data) is bytes and 6 <= len(data) <= MAX_RESOURCE, 'invalid FAB input size')
-    bounded_int(expected_size, 'FAB output size', 0, MAX_EXPANDED)
-    require(data[:3] == b'FAB' and 10 <= data[3] <= 13, 'unsupported FAB header/window')
-    reader = Cursor(data, 6)
-    control = int.from_bytes(data[4:6], 'little')
-    remaining = 16
-    shift = 16 - data[3]
-    output = bytearray()
-
-    def bit():
-        nonlocal control, remaining
-        remaining -= 1
-        if remaining == 0:
-            control = (reader.u16() << 1) | (control & 1)
-            remaining = 16
-        value = control & 1
-        control >>= 1
-        return value
-
-    # Every command consumes input bits/data; keep an independent work ceiling.
-    for _ in range(8 * len(data) + 1):
-        if bit():
-            require(len(output) < expected_size, 'FAB literal exceeds declared output')
-            output.append(reader.u8())
-            continue
-        if bit() == 0:
-            count = 2 + (bit() << 1) + bit()
-            distance = 256 - reader.u8()
-        else:
-            low, high = reader.u8(), reader.u8()
-            distance = (1 << data[3]) - ((high >> shift) * 256 + low)
-            count = high & ((1 << shift) - 1)
-            if count == 0:
-                extended = reader.u8()
-                if extended == 0:
-                    require(len(output) == expected_size, 'FAB output length mismatch')
-                    return bytes(output), reader.at
-                if extended == 1:
-                    continue
-                # Match the source format's byte-sized extended copy count.
-                count = (extended + 1) & 0xff
-            else:
-                count += 2
-        require(1 <= distance <= len(output), 'FAB reference precedes decoded output')
-        require(len(output) + count <= expected_size, 'FAB copy exceeds declared output')
-        for _ in range(count):
-            output.append(output[-distance])
-    raise ValueError('FAB command budget exhausted without terminator')
+# Compatibility re-export; the codec is reusable without MADS containers.
+from .codec_fab import decode_fab
 
 
 @dataclass(frozen=True)
@@ -136,17 +83,19 @@ class MadsPack:
     source: bytes
     sections: tuple[PackSection, ...]
     end: int
+    version: str = "2.0"
 
     @classmethod
     def read(cls, source):
         raw = snapshot(source)
-        require(len(raw) >= 176 and raw[:14] == b'MADSPACK 2.0\x1a\x00', 'not MADSPACK 2.0')
+        require(len(raw) >= 176 and raw[:14] in (b'MADSPACK 1.0\x1a\x00', b'MADSPACK 2.0\x1a\x00'), 'not MADSPACK 1.0/2.0')
+        version = raw[9:12].decode('ascii')
         count = struct.unpack_from('<H', raw, 14)[0]
         require(1 <= count <= 16, 'MADSPACK section count outside fixed directory')
         at, expanded, sections = 176, 0, []
         for index in range(count):
             kind, priority, size, packed = struct.unpack_from('<BBII', raw, 16 + 10*index)
-            require(kind in (0, 1), 'unknown MADSPACK compression')
+            require(kind in (0, 1, 3), 'unknown MADSPACK compression')
             expanded += size
             require(expanded <= MAX_EXPANDED and packed <= len(raw)-at,
                     'MADSPACK expansion or source extent exceeds bounds')
@@ -154,16 +103,22 @@ class MadsPack:
             if kind == 0:
                 require(size == packed, 'stored MADSPACK sizes disagree')
                 decoded, consumed = stored, packed
+            elif kind == 3 or (kind == 1 and version == '1.0'):
+                from .codec_dcl import decode_dcl
+                decoded, consumed = decode_dcl(stored, size)
             else:
                 decoded, consumed = decode_fab(stored, size)
             sections.append(PackSection(index, kind, priority, at, packed, consumed, decoded))
             at += packed
-        return cls(raw, tuple(sections), at)
+        return cls(raw, tuple(sections), at, version)
 
     def metadata(self):
-        return dict(format='madspack-2.0', source_sha256=sha256(self.source).hexdigest(),
+        return dict(format='madspack-' + self.version, source_sha256=sha256(self.source).hexdigest(),
                     size=len(self.source), opaque_tail_bytes=len(self.source)-self.end,
-                    sections=[part.metadata() for part in self.sections], execution=False)
+                    sections=[dict(part.metadata(), codec=(
+                        'raw' if part.compression == 0 else 'pkware-dcl' if
+                        part.compression == 3 or self.version == '1.0' else 'fab'))
+                        for part in self.sections], execution=False)
 
 
 @dataclass(frozen=True)
