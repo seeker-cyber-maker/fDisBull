@@ -135,9 +135,13 @@ def main(argv=None):
     parser.add_argument('path', nargs='?')
     parser.add_argument('--adapter', choices=NAMES)
     parser.add_argument('--number', type=int)
-    parser.add_argument('--source-member')
+    source_choice = parser.add_mutually_exclusive_group()
+    source_choice.add_argument('--source-member')
+    source_choice.add_argument('--source-index', type=int)
     parser.add_argument('--map-path')
-    parser.add_argument('--map-member')
+    map_choice = parser.add_mutually_exclusive_group()
+    map_choice.add_argument('--map-member')
+    map_choice.add_argument('--map-index', type=int)
     parser.add_argument('--expected-size', type=int)
     parser.add_argument('--width', type=int)
     parser.add_argument('--height', type=int)
@@ -145,6 +149,10 @@ def main(argv=None):
     parser.add_argument('--member')
     parser.add_argument('--max-output-bytes', type=int, default=64*1024*1024)
     args = parser.parse_args(argv)
+    if args.source_index is not None:
+        args.source_member = args.source_index
+    if args.map_index is not None:
+        args.map_member = args.map_index
     try:
         if args.operation == 'catalog': result = catalog()
         else:
