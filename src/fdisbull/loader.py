@@ -79,7 +79,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
                base: int | None = None, entry: int | None = None, load_segment: int = 0x1000,
                module: bool = False, slice_arch: str | None = None, image: str | None = None,
                profile: str | None = None, vector_count: int | None = None) -> Image:
-    """Load classic MZ, Win16 NE, DOS/4GW LE, ELF, PE, Mach-O, COM or raw code.
+    """Load DOS SYS/MZ, Win16 NE, DOS/4GW LE, ELF, PE, Mach-O, COM or raw code.
 
     Native flat mappings use preferred image addresses (PIE load bias is not
     applied). NE uses logical segment/offset keys without assigning selectors. Raw mode requires ``arch`` and defaults to 64 bits. DLLs
@@ -87,7 +87,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','le','ne','mz','com','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com or ail')
+    if image not in (None,'pe','le','ne','mz','com','sys','ail'):raise ValueError('image must be auto, pe, le, ne, mz, com, sys or ail')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -146,6 +146,13 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         if bits is not None or base or load_segment != 0x1000 or slice_arch is not None:
             raise ValueError('AIL uses module-relative offsets; bits/base/load_segment/slice overrides are not supported')
         return load_ail(data, entry=entry)
+    from .dos_driver import load_sys, probe_sys
+    if image == 'sys' or image is None and probe_sys(data) is not None:
+        if slice_arch is not None or bits is not None or base:
+            raise ValueError('DOS SYS uses load_segment; bits/base/slice overrides are unsupported')
+        loaded = load_sys(data, load_segment=load_segment, entry=entry)
+        loaded.metadata['filename'] = path.name
+        return loaded
     if image=='com':
         if slice_arch is not None or bits is not None or base or module:
             raise ValueError('COM uses load_segment and cannot use raw, module or slice options')
@@ -182,7 +189,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             from .dos import load_mz
             return load_mz(data,load_segment=load_segment,entry=entry)
     if load_segment!=0x1000:
-        raise ValueError('load_segment applies only to DOS MZ or explicitly selected COM')
+        raise ValueError('load_segment applies only to DOS MZ/SYS or explicitly selected COM')
     if bits is not None or base:
         raise ValueError("bits and base overrides require an explicit raw architecture")
     original_data=data

@@ -49,6 +49,12 @@ def _builtins():
     """Small descriptive records; parsing stays in explicitly shipped Python."""
     native = []
     specs = [
+        ('dos-sys', 'DOS SYS device driver', [], 'little',
+         [_field('next_header', 0, 'far16', 'Common-segment link; FFFF:FFFF terminates the header chain'),
+          _field('attributes', 4, 'u16le', 'Bit 15 distinguishes character and block devices'),
+          _field('strategy', 6, 'u16le', 'Independent file-backed entry offset in the header segment'),
+          _field('interrupt', 8, 'u16le', 'Independent request-handler entry offset'),
+          _field('name_or_units', 10, 'bytes[8]', 'Character name or block-unit count and reserved bytes')]),
         ('dos-mz', 'DOS MZ', [_magic(0, b'MZ')], 'little',
          [_field('last_page_bytes', 2, 'u16le', 'DOS load-image end'),
           _field('pages', 4, 'u16le', '512-byte pages'),
@@ -640,7 +646,7 @@ def _iso(prefix, reader):
     return result
 
 
-_BINARY_IDS = {'DOS MZ':'dos-mz','PE':'pe','PE32':'pe','PE32+':'pe','NE':'ne','LE':'le','LX':'lx',
+_BINARY_IDS = {'DOS SYS':'dos-sys','DOS MZ':'dos-mz','PE':'pe','PE32':'pe','PE32+':'pe','NE':'ne','LE':'le','LX':'lx',
     'ELF':'elf','Mach-O':'macho','Mach-O fat':'macho-fat','AIL':'ail','iNES':'nes-ines','NES 2.0':'nes-ines',
     'SNES ROM':'snes-rom','sega-genesis':'sega-genesis','sega-sms':'sega-sms',
     'Sega CD disc':'sega-disc','Sega Saturn disc':'sega-disc'}
@@ -701,10 +707,19 @@ def _large_native_header(prefix,reader):
 def _native(prefix, reader, max_binary_bytes):
     native = prefix.startswith(_NATIVE_MAGIC)
     from .ail import ail_signature
+    from .dos_driver import probe_sys
     from .roms import probe_rom
+    driver = None if native else probe_sys(prefix)
     candidate = None if native else probe_rom(prefix)
-    if not native and candidate is None and not ail_signature(prefix): return None, None
+    if not native and candidate is None and driver is None and not ail_signature(prefix): return None, None
     if reader.size>max_binary_bytes:
+        if driver is not None:
+            result = _result('dos-sys','DOS SYS header candidate','executable',
+                metadata={'complete_binary_read':False,'header_count':driver['header_count']},
+                warnings=['Device headers fit the read prefix; source exceeds full binary-reader budget and loadability is unvalidated'])
+            result.update(header_valid=None,status='recognized-unsupported-size',
+                          architecture=dict(arch='x86',bits=16,endian='little',platform='DOS'))
+            return result,None
         if candidate is not None:
             result = _result(_BINARY_IDS.get(candidate['format'],'sega-disc'),candidate['format'],'console-media',metadata={'bounded_probe':candidate},warnings=['Source exceeds full-reader budget; prefix candidate is not full-file validation'])
             result['header_valid'] = None

@@ -49,6 +49,7 @@ OPERATIONS = {
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
     'registers':'registers', 'memory':'memory', 'write-memory':'write_memory','write-registers':'write_registers', 'status':'status',
+    'memory-translation':'memory_translation', 'qemm-observe':'qemm_observe',
 }
 
 
@@ -58,7 +59,7 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine')
     if backend is not None and backend not in supported_backends:
         raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
@@ -75,6 +76,9 @@ def validate_script(script, *, session=None):
         elif backend=='wine-ne':
             from .win16_debugger import Win16DebugSession
             owner=Win16DebugSession
+        elif backend=='qemu-machine':
+            from .qemu_machine import MachineDebugSession
+            owner=MachineDebugSession
         elif backend=='scummvm-kyra':
             from .scummvm_kyra import ScummVMKyraSession
             owner=ScummVMKyraSession

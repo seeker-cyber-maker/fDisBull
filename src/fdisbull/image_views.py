@@ -100,6 +100,10 @@ def _le_view(data: bytes, offset: int) -> dict:
                     load_model=metadata['load_model'])
     except ValueError as error:
         view['error'] = str(error)
+        from .dos_driver import embedded_le_inventory
+        inventory = embedded_le_inventory(data)
+        if inventory is not None:
+            view['object_inventory'] = inventory
     return view
 
 
@@ -118,6 +122,24 @@ def _ne_view(data: bytes, offset: int) -> dict:
     return view
 
 
+def _sys_view(data: bytes, candidate: dict) -> dict:
+    view = dict(image='sys', format='SYS', arch='x86', bits=16, endian='little',
+                header_offset=candidate['header_size'], available=False, loadable=False,
+                valid=False, error=None, load_segment=0x1000,
+                validation_scope='bounded DOS device-header chain, file-backed roots and DOS module mapping')
+    try:
+        from .dos_driver import load_sys
+        loaded = load_sys(data)
+        view.update(available=True, loadable=True, valid=True, entrypoint=loaded.entry,
+                    container=candidate['container'], header_count=candidate['header_count'],
+                    entry_roots=[dict(address=root['address'], cs=root['cs'], ip=root['ip'],
+                                      role=root['role'], source=root['source'])
+                                 for root in loaded.metadata['dos']['entry_roots']])
+    except ValueError as error:
+        view['error'] = str(error)
+    return view
+
+
 def image_views(data:bytes)->list[dict]:
     """Return recognized DOS/PE/LE/NE selectors without replacing or executing bytes.
 
@@ -128,9 +150,11 @@ def image_views(data:bytes)->list[dict]:
     inventories belong to their own format adapters.
     """
     data=_source(data)
+    from .dos_driver import probe_sys
+    driver = probe_sys(data)
     if data.startswith(b'LE'):
         return [_le_view(data, 0)]
-    if not data.startswith(b'MZ'):return []
+    if not data.startswith(b'MZ'):return [_sys_view(data, driver)] if driver else []
     secondary=secondary_header(data)
     mz=dict(image='mz',format='MZ',header_offset=0,arch='x86',bits=16,endian='little',
             available=False,loadable=False,valid=False,error=None,load_segment=0x1000,
@@ -149,6 +173,7 @@ def image_views(data:bytes)->list[dict]:
     except ValueError as error:
         mz['error']=str(error)
     views=[mz]
+    if driver:views.append(_sys_view(data, driver))
     if secondary and secondary['format']=='PE':views.append(_pe_view(data,secondary['header_offset']))
     if secondary and secondary['format']=='LE':views.append(_le_view(data,secondary['header_offset']))
     if secondary and secondary['format']=='NE':views.append(_ne_view(data,secondary['header_offset']))

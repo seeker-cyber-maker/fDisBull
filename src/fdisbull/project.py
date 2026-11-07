@@ -120,6 +120,11 @@ class Project(
     DOSMixin,
     AnalysisMixin,
 ):
+    def _entry_address(self, version):
+        if self.meta['format'] == 'SYS':
+            return self._document(version)['dos']['selected_entry']
+        return super()._entry_address(version)
+
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -306,9 +311,9 @@ class Project(
                                 bits=image.bits,
                                 base=image.regions[0].start,
                             )
-                        elif image.format == "COM":
+                        elif image.format in ("COM", "SYS"):
                             loader_options.update(
-                                image="com",
+                                image=image.format.lower(),
                                 load_segment=image.metadata["dos"]["load_segment"],
                             )
                         if image.metadata.get("slice_arch"):
@@ -319,6 +324,13 @@ class Project(
                                 base=image.metadata["cortex_m"]["base"],
                                 vector_count=image.metadata["cortex_m"]["vector_count"],
                             )
+                    if image.format == 'SYS':
+                        # Freeze the chosen structural view, but do not turn
+                        # its current Strategy field into an explicit override.
+                        loader_options = dict(loader_options, image='sys',
+                                              load_segment=image.metadata['dos']['load_segment'])
+                        if image.metadata['dos']['entry_override'] is None:
+                            loader_options.pop('entry', None)
                     if loader_options.get("profile") == "cortex-m":
                         # The validated reset vector owns entry identity, including
                         # in later authored reset-vector versions.
@@ -463,9 +475,12 @@ class Project(
                 )
             ]
             metadata = dict(self.meta)
-            if self.meta["format"] in ("MZ", "COM"):
+            if self.meta["format"] in ("MZ", "COM", "SYS"):
                 loader = dict(metadata["loader_metadata"])
-                dos = dict(loader["dos"])
+                selected = self._document(v['id']) if self.meta['format'] == 'SYS' else {}
+                dos = dict(selected.get('dos',loader["dos"]))
+                if 'dos_driver' in selected:
+                    loader['dos_driver'] = selected['dos_driver']
                 dos["relocation_count"] = len(dos.pop("relocations", []))
                 dos["segment_candidate_count"] = len(dos.pop("segment_candidates", []))
                 loader["dos"] = dos
@@ -535,7 +550,7 @@ class Project(
             ).fetchone()[0]
             seed_states = {}
             pending_scans = 0
-            if self.meta["format"] in ("MZ", "COM"):
+            if self.meta["format"] in ("MZ", "COM", "SYS"):
                 seed_states = dict(
                     self.db.execute(
                         "SELECT state,count(*) FROM dos_seeds WHERE version=? GROUP BY state",
@@ -614,19 +629,19 @@ class Project(
             return parse_address(value)
         return (
             self._dos_parse_address(value)[0]
-            if self.meta["format"] in ("MZ", "COM")
+            if self.meta["format"] in ("MZ", "COM", "SYS")
             else number(value)
         )
 
     def segments(self, version=None):
-        if self.meta["format"] not in ("MZ", "COM"):
+        if self.meta["format"] not in ("MZ", "COM", "SYS"):
             raise ValueError(
                 "DOS segment inventory requires a DOS project; use sections for other formats"
             )
         return self._dos_segments(version)
 
     def code_regions(self, version=None):
-        if self.meta["format"] not in ("MZ", "COM"):
+        if self.meta["format"] not in ("MZ", "COM", "SYS"):
             raise ValueError("DOS code-region inventory requires a DOS project")
         return self._dos_regions(version)
 
@@ -634,7 +649,7 @@ class Project(
         return [dict(r) for r in self.db.execute("SELECT * FROM versions ORDER BY id")]
 
     def functions(self, version=None, limit=200, offset=0):
-        if self.meta["format"] in ("MZ", "COM"):
+        if self.meta["format"] in ("MZ", "COM", "SYS"):
             return self._dos_functions(version, limit, offset)
         v = self.version(version)["id"]
         limit = integer(limit, "limit", 1, 10000)
@@ -683,7 +698,7 @@ class Project(
             }
 
     def _stored_xrefs(self, address, direction="to", version=None, limit=200, cs=None):
-        if self.meta["format"] in ("MZ", "COM"):
+        if self.meta["format"] in ("MZ", "COM", "SYS"):
             return self._dos_xrefs(address, direction, version, limit, cs)
         if direction not in ("to", "from"):
             raise ValueError("direction must be to or from")
@@ -723,7 +738,7 @@ class Project(
         return result
 
     def _stored_disassembly(self, address=None, lines=50, version=None, cs=None):
-        if self.meta["format"] in ("MZ", "COM"):
+        if self.meta["format"] in ("MZ", "COM", "SYS"):
             return self._dos_disassembly(address, lines, version, cs)
         count = integer(lines, "lines", 1, 500)
         if cs is not None:
@@ -935,7 +950,7 @@ class Project(
                 "SELECT document,source_bytes FROM binary_info WHERE version=?",
                 (parent,),
             ).fetchone()
-            if info and self.meta["format"] in ("MZ", "COM"):
+            if info and self.meta["format"] in ("MZ", "COM", "SYS"):
                 self._dos_patch_document(parent, v, bytes(info[1]), patched)
             elif info and self.meta["format"] in ("LE", "NE"):
                 # Internal LE fixups can overwrite encoded file bytes during

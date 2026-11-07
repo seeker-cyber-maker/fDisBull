@@ -4,9 +4,11 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+from copy import deepcopy
 import os
 from pathlib import Path
 import re
+import shutil
 import socket
 import subprocess
 import tempfile
@@ -24,7 +26,8 @@ def file_hash(path):
 
 class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
-                 paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None):
+                 paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
+                 cpu_model='max', boot_image_sha256=None, boot_device='ide'):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.lock=threading.RLock()
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
@@ -33,6 +36,13 @@ class QemuMachine:
             if on_spawn is not None and not callable(on_spawn):raise ValueError('Expected an internal process ownership callback')
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
+            if cpu_model not in ('max', '486'):
+                raise ValueError('Unsupported machine CPU profile')
+            if boot_device not in ('ide', 'floppy') or boot_device == 'floppy' and boot_image is None:
+                raise ValueError('Unsupported machine boot device')
+            if boot_image_sha256 is not None and (boot_image is None or not isinstance(boot_image_sha256,str)
+                    or re.fullmatch(r'[0-9a-f]{64}',boot_image_sha256) is None):
+                raise ValueError('A pinned boot image requires its SHA-256 identity')
             if (boot_image is None)==(kernel is None) or (kernel is None)!=(initramfs is None):
                 raise ValueError('Choose a boot image or a kernel/initramfs pair')
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}
@@ -44,16 +54,30 @@ class QemuMachine:
             if not match or tuple(map(int,match.groups()))<(9,1):raise DebuggerError('Machine debugging requires QEMU >= 9.1')
             self.inputs={name:dict(path=str(path),sha256=file_hash(path)) for name,path in paths.items()}
             self.inputs['qemu']['version']=version
-            command=[str(paths['qemu']),'-accel','tcg,thread=multi','-machine','pc' if boot_image else 'q35','-cpu','max',
+            self.machine_configuration=dict(cpu=cpu_model,memory_mib=memory_mib,cpus=cpus,network='none',
+                                            disk='private-verified-copy-and-snapshot' if boot_image_sha256 else 'temporary-snapshot' if boot_image else None,
+                                            boot_device=boot_device if boot_image else None)
+            selected_boot=paths.get('boot_image')
+            if boot_image_sha256 is not None:
+                if self.inputs['boot_image']['sha256']!=boot_image_sha256:
+                    raise ValueError('Boot image changed after guest profile admission')
+                # A caller may subsequently edit its source image. The owned
+                # run uses a private byte-verified copy and a disposable overlay.
+                selected_boot=root/'boot-image.raw'
+                shutil.copyfile(paths['boot_image'],selected_boot)
+                if file_hash(selected_boot)!=boot_image_sha256:
+                    raise ValueError('Boot image changed while creating its private runtime copy')
+            command=[str(paths['qemu']),'-accel','tcg,thread=multi','-machine','pc' if boot_image else 'q35','-cpu',cpu_model,
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
                      '-serial',f'file:{self.log_path}','-serial',f'unix:{self.rpc_path},server=on,wait=off',
                      '-qmp',f'unix:{root/"qmp.sock"},server=on,wait=off',
                      '-chardev',f'socket,path={self.gdb_path},server=on,wait=off,id=fdisbullgdb','-gdb','chardev:fdisbullgdb']
             if boot_image:
-                if ',' in str(paths['boot_image']):raise ValueError('Boot image paths cannot contain commas')
-                # IDE disks need a writable view. QEMU's temporary snapshot
+                if ',' in str(selected_boot):raise ValueError('Boot image paths cannot contain commas')
+                # DOS disks need a writable view. QEMU's temporary snapshot
                 # overlay keeps the selected source disk unchanged.
-                command+=['-drive',f'file={paths["boot_image"]},format=raw,if=ide,snapshot=on','-boot','order=c']
+                command+=['-drive',f'file={selected_boot},format=raw,if={boot_device},snapshot=on',
+                          '-boot','order=a' if boot_device=='floppy' else 'order=c']
             else:
                 command+=['-kernel',str(paths['kernel']),'-initrd',str(paths['initramfs']),'-append',
                           'console=ttyS0,115200 rdinit=/init rootfstype=ramfs loglevel=4 panic=1 random.trust_cpu=on']
@@ -120,6 +144,8 @@ class MachineContext:
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,code_layers=False,
+            memory_translation='observed non-PAE 386 4-KiB pages; paused machine only',
+            qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
 
     def bind(self,project,run_id):
@@ -155,14 +181,76 @@ class MachineContext:
     def registers(self):
         remote=self._stopped();values=remote.registers()
         text=self.vm.qmp.call('human-monitor-command',{'command-line':'info registers'})
-        control={name:hex(int(value,16)) for name,value in re.findall(r'\b(CR0|CR2|CR3|CR4|EFER)=([0-9a-fA-F]+)',text)}
-        cs=re.search(r'\bCS\s*=\s*[0-9a-fA-F]+\s+([0-9a-fA-F]+)',text)
-        rip=int(values.get('rip',values.get('eip','0x0')),16)
-        pc=hex(int(cs.group(1),16)+rip) if cs else None
-        mode='unknown'
-        if 'CR0' in control:mode='real' if not int(control['CR0'],16)&1 else 'long' if int(control.get('EFER','0'),16)&0x400 else 'protected'
-        return dict(context='machine',architecture=remote.architecture,cpu_mode=mode,registers=values,control=control,
-                    instruction_pointer=hex(rip),linear_pc=pc,address_context='selected QEMU vCPU; virtual memory uses its page tables')
+        from .dos_memory import machine_address_state
+        observed=machine_address_state(values,text)
+        observed['address_state']['machine_vcpus']=getattr(self.vm,'machine_configuration',{}).get('cpus')
+        return dict(context='machine',architecture=remote.architecture,registers=values,**observed,
+                    address_context='selected QEMU vCPU; virtual memory uses its page tables')
+
+    @machine_operation
+    def memory_translation(self,address):
+        """Observe a linear-to-physical mapping without binding or modifying RAM."""
+        from .dos_memory import translate_386_page
+        remote=self._stopped()
+        registers=self.registers()
+        result=translate_386_page(address,registers['address_state'],
+                                  lambda location,length:remote.memory(location,length,space='physical'))
+        result.update(context='machine',cpu_mode=registers['cpu_mode'],
+                      address_state=registers['address_state'])
+        if self.project:self._event('machine-memory-translation',result)
+        return result
+
+    @machine_operation
+    def qemm_observe(self,address,*,length=1120):
+        """Retain a QPI helper report already present in stopped guest memory.
+
+        Reading a report does not execute its producer or establish freshness.
+        The retained state is explicitly guest-reported, never a qualification
+        of QEMM execution or current page ownership.
+        """
+        from .qpi import parse_qpi_report, REPORT_SIZE
+        from .debugger import stamp
+        profile=getattr(self,'guest_profile',None)
+        if profile is None or self.project is None or not hasattr(self,'metadata'):
+            raise ValueError('QEMM observation requires a project-bound QEMM guest profile')
+        if type(length) is not int or length!=REPORT_SIZE:
+            raise ValueError(f'QPI observation requires exactly {REPORT_SIZE} bytes')
+        value=int(address,0) if isinstance(address,str) else address
+        if type(value) is not int or not 0<=value<=0x100000000-length:
+            raise ValueError('QPI report requires a bounded 32-bit virtual address')
+        remote=self._stopped()
+        registers=self.registers()
+        data=remote.memory(value,length,space='virtual')
+        report=parse_qpi_report(data)
+        active=report['qemm']['active']
+        observed='guest-reported-active' if active is True else 'guest-reported-inactive' if active is False else 'unknown'
+        identity=dict(run=self.run_id,boot_image_sha256=profile['boot_image']['sha256'],
+                      profile_sha256=profile['profile_sha256'],
+                      emulator_sha256=self.vm.inputs['qemu']['sha256'])
+        observation=dict(observed=observed,captured_at=stamp(),report_sha256=report['sha256'],
+                         complete=report['probe_status']['complete'],probe_status=report['probe_status'],
+                         active=active,version=report['qemm']['version'],
+                         address=hex(value),space='virtual',length=length,identity=identity,
+                         guest_api_called=False,freshness='not_established',
+                         native_execution_validation='not_established_by_report',
+                         scope='QPI report bytes read at this paused machine stop; producer and report age are unverified')
+        artifact=self._artifact('qpi-report.bin','qpi-report',data,
+                                deepcopy(dict(observation=observation,registers=registers,report=report)))
+        observation['artifact']=artifact['artifact']
+        result=dict(context='machine',observation=observation,registers=registers,report=report,
+                    artifact={key:item for key,item in artifact.items() if key!='metadata'})
+        self._event('qemm-observe',result)
+        metadata=deepcopy(self.metadata)
+        metadata['qemm_observation']=observation
+        manager=metadata['guest_profile']['memory_manager']
+        manager.update(observed=observed,report_sha256=report['sha256'],
+                       report_complete=report['probe_status']['complete'],
+                       observation_scope=observation['scope'])
+        with self.project.transaction(True):
+            self.project.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?',(json.dumps(metadata),self.run_id))
+        self.metadata=metadata
+        self.guest_profile=metadata['guest_profile']
+        return result
 
     @machine_operation
     def memory(self,address,*,length=16,space='physical'):
@@ -261,25 +349,33 @@ class MachineContext:
         from iced_x86 import Decoder
         if type(count) is not int or not 1<=count<=10000:raise ValueError('Machine trace count must be 1..10000')
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine trace timeout must be 1..600000')
-        if bits not in (16,32,64):raise ValueError('Machine traces require explicit instruction bitness')
+        if bits not in (None,16,32,64):raise ValueError('Machine traces require observed or explicit instruction bitness')
         deadline=time.monotonic()+timeout_ms/1000;events=[];state=None
         while len(events)<count:
             before=self.registers()
-            if before['cpu_mode']=='real' and bits!=16 or before['cpu_mode']=='long' and bits!=64:
+            observed_bits=before.get('address_state',{}).get('code_bits')
+            decode_bits=observed_bits if bits is None else bits
+            if decode_bits not in (16,32,64):raise ValueError('Machine instruction width was not observed; declare bits explicitly')
+            if observed_bits is not None and decode_bits!=observed_bits:
+                raise ValueError('Trace bitness differs from observed machine code-segment width')
+            if observed_bits is None and (before['cpu_mode']=='v86' and decode_bits!=16 or before['cpu_mode']=='real' and decode_bits!=16 or before['cpu_mode']=='long' and decode_bits!=64):
                 raise ValueError('Trace bitness differs from observed machine CPU mode')
             if before['linear_pc'] is None:raise ValueError('Selected machine CPU has no established linear PC')
             pc=int(before['linear_pc'],16);data=bytes.fromhex(self.memory(pc,length=15,space='virtual')['hex'])
-            instruction=Decoder(bits,data,ip=pc).decode()
+            instruction=Decoder(decode_bits,data,ip=pc).decode()
             if instruction.is_invalid:raise DebuggerError('Invalid machine instruction')
             remaining=int((deadline-time.monotonic())*1000)
             if remaining<=0:break
             state=self.step(timeout_ms=remaining)
             if state['outcome']!='step':break
-            events.append(dict(address=hex(pc),bytes=data[:instruction.len].hex(),registers=before,phase='before',completion='confirmed native step'))
+            events.append(dict(address=hex(pc),bytes=data[:instruction.len].hex(),registers=before,
+                               cpu_mode=before['cpu_mode'],code_bits=decode_bits,
+                               phase='before',completion='confirmed native step'))
         if len(events)<count and time.monotonic()>=deadline and (state is None or state['outcome']=='step'):
             state=dict(context='machine',outcome='timeout',timed_out=True,session=dict(state='stopped',stop_reason=dict(kind='timeout',origin='trace-deadline')))
         result=dict(context='machine',events=events,complete=len(events)==count,requested_count=count,session=state,
-                    semantics='completed steps on selected vCPU; QEMU default stepping masks IRQs/timers; full machine stopped between calls',bits=bits)
+                    semantics='completed steps on selected vCPU; QEMU default stepping masks IRQs/timers; full machine stopped between calls',
+                    bits=bits,bitness_source='observed per instruction' if bits is None else 'explicit and checked against observed width')
         from .debug_semantics import normalize_trace,contract
         normalize_trace('qemu-machine',events,version=self.version['id'] if hasattr(self,'version') else None)
         result['observation_contract']=contract('qemu-machine')
@@ -299,7 +395,7 @@ class MachineContext:
 
 class MachineDebugSession(MachineContext):
     """Project-bound raw boot image using the same saved-artifact interfaces."""
-    def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000):
+    def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000,guest_profile=None):
         import uuid
         from .debugger import stamp
         selected=project.version(version);image=Path(boot_image).expanduser().resolve(strict=True)
@@ -307,11 +403,23 @@ class MachineDebugSession(MachineContext):
             raise ValueError('Machine boot launch requires an original unpatched raw x86 project')
         if not image.is_file() or image.stat().st_size>64*1024*1024 or file_hash(image)!=project.meta['source_sha256']:
             raise ValueError('Boot image differs from the selected raw project')
-        vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=128,cpus=1,timeout_ms=boot_timeout_ms)
+        self.guest_profile=None
+        options={}
+        if guest_profile is not None:
+            from .qemm_runtime import admit_qemm_profile
+            self.guest_profile=admit_qemm_profile(guest_profile,image)
+            options=dict(cpu_model=self.guest_profile['machine']['cpu'],
+                         boot_image_sha256=self.guest_profile['boot_image']['sha256'],
+                         boot_device=self.guest_profile['machine']['boot_device'])
+        memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128
+        vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,**options)
         super().__init__(vm)
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
+        self.capabilities['qemm_observation']=self.guest_profile is not None
         self.metadata=dict(backend='qemu-machine',source_sha256=project.meta['source_sha256'],version_sha256=selected['sha256'],
                            runtime_inputs=vm.inputs,context='machine',address_mapping='explicit physical/selected-vCPU virtual addresses',capabilities=self.capabilities)
+        if self.guest_profile is not None:
+            self.metadata.update(guest_profile=self.guest_profile,machine_configuration=vm.machine_configuration)
         try:
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -326,10 +434,11 @@ class MachineDebugSession(MachineContext):
         if name!='machine':raise ValueError('This session owns only the machine context')
         return self
     def trace(self,name='machine-trace.json',*,count=128,timeout_ms=10000,bits=None):
-        return super().trace(name,count=count,timeout_ms=timeout_ms,bits=self.project.bits if bits is None else bits)
+        selected_bits=self.project.bits if bits is None and self.guest_profile is None else bits
+        return super().trace(name,count=count,timeout_ms=timeout_ms,bits=selected_bits)
     @property
     def script_operations(self):
-        return {'run','registers','memory','breakpoint','delete-breakpoint','trace','screenshot','assert','status','write-memory','write-registers'}
+        return {'step','run','registers','memory','memory-translation','qemm-observe','breakpoint','delete-breakpoint','trace','screenshot','assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession
         return DebugSession.script(self,*args,**kwargs)

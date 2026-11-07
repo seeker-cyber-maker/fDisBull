@@ -172,6 +172,12 @@ observations. In source, see `docs/MACOS_REVERSIBLE_CAPTURE.md` and the bounded
 
 ## Win16 NE, DOS/4GW LE, DOS audio drivers and Cortex-M flash
 
+For DOS `.SYS` device headers, mixed-width LE drivers/VxDs, and observations
+inside a QEMM-configured full-machine guest, use
+[DOS drivers and QEMM](dos-drivers-and-qemm.md). Driver entry points, process
+entries, object-relative code views and actual resident installation are
+separate contracts.
+
 Supported Windows16 NE images can be imported directly with automatic selection
 or `--image ne`. Use explicit logical addresses such as `ne:4:0x547c`; a segment
 index is neither a live selector nor a DOS paragraph. Source bytes and raw

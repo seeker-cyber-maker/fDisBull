@@ -116,7 +116,7 @@ class CFGMixin:
             highlights = []
         if not isinstance(highlights, (list, tuple)) or len(highlights) > 100:
             raise ValueError('highlights must be a list of at most 100 addresses or address objects')
-        dos = self.meta['format'] in ('MZ', 'COM')
+        dos = self.meta['format'] in ('MZ', 'COM', 'SYS')
 
         def parse(value, selector=None):
             if dos:

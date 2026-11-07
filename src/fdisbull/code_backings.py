@@ -192,7 +192,7 @@ class CodeBackingsMixin:
                 address, selector = item['address'], item.get('cs', cs)
             else:
                 address, selector = item, cs
-            if self.meta['format'] in ('MZ', 'COM'):
+            if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                 a, selector = self._dos_parse_address(address, selector)
             else:
                 a = number(address)
@@ -222,7 +222,7 @@ class CodeBackingsMixin:
                 # substitute for evidence that another path targets an operand.
                 if graph['context'] is not None:
                     target_key = f'{int(graph["address"], 16):016x}'
-                    if self.meta['format'] in ('MZ', 'COM'):
+                    if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                         incoming_rows = self.db.execute(
                             "SELECT source,source_context,kind,evidence FROM dos_edges WHERE version=? AND target_context=? AND target=? AND kind IN ('branch','resolved_branch','fallthrough','call','resolved_call') LIMIT 1025",
                             (v, graph['context'], target_key)).fetchall()

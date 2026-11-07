@@ -37,7 +37,7 @@ class AdvancedMixin:
         if self.meta['format'] == 'NE':
             raise ValueError('NE advanced IR/ABI analysis requires a selector-aware model; use native static analysis queries')
         v=self.version(version)['id']
-        if self.meta['format'] in ('MZ', 'COM'):
+        if self.meta['format'] in ('MZ', 'COM', 'SYS'):
             a,selector=self._dos_parse_address(address,cs)
             if selector is None:
                 contexts=[r[0] for r in self.db.execute('SELECT context FROM instructions WHERE version=? AND address=?',(v,_key(a)))]
@@ -73,7 +73,7 @@ class AdvancedMixin:
             v,context,a=self._advanced_identity(address,cs,version)
             job=self.db.execute('SELECT * FROM advanced_jobs WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
             result=self.db.execute('SELECT document FROM advanced_results WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
-            label=self._dos_label(v,a,context) if self.meta['format'] in ('MZ', 'COM') else self._label(v,a)
+            label=self._dos_label(v,a,context) if self.meta['format'] in ('MZ', 'COM', 'SYS') else self._label(v,a)
             document=json.loads(result[0]) if result else None
             if document is not None and job is not None and job['state']=='done':
                 document['name']=label
@@ -240,7 +240,7 @@ class AdvancedMixin:
             r=next((r for r in regions if r.start<=a<r.start+len(r.data)),None)
             return bool(r and (r.executable or any(x<=a<x+s and t=='code' for x,s,t in definitions)) and not any(x<=a<x+s and t!='code' for x,s,t in definitions))
         initial={}
-        if self.meta['format'] in ('MZ', 'COM'):
+        if self.meta['format'] in ('MZ', 'COM', 'SYS'):
             row=self.db.execute('SELECT registers FROM dos_states WHERE version=? AND context=? AND address=?',(v,context,_key(address))).fetchone()
             if row:initial={k:value for k,value in json.loads(row[0]).items() if type(value) is int and k in ('ds','es','ss','fs','gs','sp','bp')}
         previous=self.db.execute('SELECT document FROM function_summaries WHERE version=? AND context=? AND address=?',(v,context,_key(address))).fetchone()
@@ -299,7 +299,7 @@ class AdvancedMixin:
             r=next((r for r in regions if r.start<=target<r.start+len(r.data)),None)
             decoded=instruction_semantics(r.data[target-r.start:target-r.start+16],target,self.arch,self.bits,cs=selector) if r else {}
             blocked=not decoded.get('valid') or any(t!='code' and target<x+s and target+decoded.get('size',1)>x for x,s,t in definitions)
-            if self.meta['format'] in ('MZ', 'COM') and (selector is None or not 0<=target-selector*16<=65535):blocked=True
+            if self.meta['format'] in ('MZ', 'COM', 'SYS') and (selector is None or not 0<=target-selector*16<=65535):blocked=True
             if blocked:
                 candidate.update(admitted=False,rejection='invalid_native_target_or_explicit_representation')
                 continue
@@ -364,7 +364,7 @@ class AdvancedMixin:
                 instantiated=instantiate_effects(summary,observed,state)
                 for effect in instantiated['effects']:
                     effect.update(call_site=call['address'],context=call['context'],callee=hex(callee),callee_context=callee_context,callee_kind=kind,summary_name=summary['name'],summary_source=summary['source'],binding_evidence=bindings_by_source.get(call['source'],[]),conditions=instantiated['conditions']+(['Declared import binding is unchanged and resolves to the named contract.'] if summary['source'].get('kind')=='import' else []),abi=call_abi,arguments=observed['argument_values'])
-                    if self.meta['format'] in ('MZ', 'COM'):
+                    if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                         effect.update(resolved=False,address=None,end_exclusive=None,address_space='near_offset_unresolved_segment')
                         # These are useful offset facts, but none is a physical
                         # DOS byte range until a pointer segment is established.
@@ -410,7 +410,7 @@ class AdvancedMixin:
                 self._invalidate_derived(v,reason='advanced memory-state analysis enabled')
                 legacy_retracted=self.db.execute("DELETE FROM xrefs WHERE version=? AND kind IN ('resolved_call','resolved_branch') AND evidence='indirect operand + stored pointer value'",(v,)).rowcount
                 self.db.execute("DELETE FROM functions WHERE version=? AND source='resolved indirect call'",(v,))
-                if self.meta['format'] in ('MZ', 'COM'):
+                if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                     # DOS's earlier path-specific register/pointer resolver used
                     # call/branch edge names. Retain its bytes and operand
                     # observations, but require normalized reaching-state proof

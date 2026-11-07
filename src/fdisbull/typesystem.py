@@ -236,7 +236,7 @@ class TypeSystemMixin(TypeCatalogMixin):
                 if abi.get('argument_order')=='left_to_right':abi['callee_cleanup']=offset
             prototype=dict(arguments=[dict(name=arg['name'],type=arg['type']['name']) for arg in layout['arguments']],
                            declared_function_type=type_name,layout_snapshot=layout)
-            label=self._dos_label(v,a,context) if self.meta['format'] in ('MZ', 'COM') else self._label(v,a)
+            label=self._dos_label(v,a,context) if self.meta['format'] in ('MZ', 'COM', 'SYS') else self._label(v,a)
             return self.set_summary(address,label,version=v,cs=cs,prototype=prototype,abi=abi,author=author)
 
     def apply_type(self,address,type_name,name=None,version=None,author='agent'):

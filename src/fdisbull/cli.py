@@ -34,6 +34,7 @@ AGENT_SKILL_GUIDES = {
     "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
+    "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -180,7 +181,15 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
+    "le-driver-disasm": "Bounded object-relative LE driver view; path,object_number,[offset,max_instructions,abi]",
+    "qemm-config": "Preview or validate an unconditional QEMM CONFIG.SYS without editing files; [config_file,config_sys,qemm_path,options,validate_only]",
+    "qemm-profile": "Bind a QEMM guest profile to CONFIG.SYS and driver bytes in a caller-owned FAT12/16 boot image; boot_image,[config_sys,driver_path]",
+    "qpi-probe": "Export an authored read-only DOS QPI observation helper; output,[mode]",
+    "qpi-report": "Read a bounded guest-produced QPI report; path,[include_pages]",
+    "debug-memory-translation": "Observe an x86 machine linear-to-physical page walk at the current stop; run,address,[context]",
+    "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
@@ -617,6 +626,10 @@ def invoke(method, params, debugger=None):
 
         operation = disassemble_story if method == "zmachine-disasm" else analyze_story
         return operation(**p)
+    if method in ("le-driver-inspect", "le-driver-disasm", "qemm-config", "qemm-profile", "qpi-probe", "qpi-report"):
+        from .qemm_tools import invoke as qemm_invoke
+
+        return qemm_invoke(method, p)
     from .project import Project, number
 
     for field in ("base", "entry"):
@@ -1247,6 +1260,12 @@ def respond(request, default_project=None, debugger=None):
                 "module-lift",
                 "zmachine-disasm",
                 "zmachine-analyze",
+                "le-driver-inspect",
+                "le-driver-disasm",
+                "qemm-config",
+                "qemm-profile",
+                "qpi-probe",
+                "qpi-report",
                 "output-info",
                 "output-read",
                 "output-select",
@@ -1865,6 +1884,29 @@ def parser():
     c.add_argument("--initramfs")
     c.add_argument("--output")
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
+    for name in ("le-driver-inspect", "le-driver-disasm"):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument("path")
+        if name == "le-driver-disasm":
+            c.add_argument("object_number", type=lambda s: int(s, 0))
+            c.add_argument("--offset", type=lambda s: int(s, 0), default=0)
+            c.add_argument("--max-instructions", type=int, default=32)
+            c.add_argument("--abi", choices=["unknown", "windows-vxd"], default="unknown")
+    c = sub.add_parser("qemm-config", help=METHODS["qemm-config"])
+    c.add_argument("--config-file")
+    c.add_argument("--qemm-path", default=r"C:\QEMM\QEMM386.SYS")
+    c.add_argument("--options", default="RAM")
+    c.add_argument("--validate-only", action="store_true")
+    c = sub.add_parser("qemm-profile", help=METHODS["qemm-profile"])
+    c.add_argument("boot_image")
+    c.add_argument("--config-sys", help="Optional host file to compare with the image's CONFIG.SYS")
+    c.add_argument("--driver-path", help="Optional host file to compare with the image's QEMM386.SYS")
+    c = sub.add_parser("qpi-probe", help=METHODS["qpi-probe"])
+    c.add_argument("output")
+    c.add_argument("--mode", choices=["breakpoint", "file"], default="breakpoint")
+    c = sub.add_parser("qpi-report", help=METHODS["qpi-report"])
+    c.add_argument("path")
+    c.add_argument("--include-pages", action="store_true")
     c = sub.add_parser(
         "debug",
         help="Launch a project execution backend and accept live debugger JSON commands on stdin",
@@ -1874,6 +1916,8 @@ def parser():
     c.add_argument("--game-dir", required=True)
     c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
+    c.add_argument("--guest-profile", choices=["qemm", "qemm-386-v1"],
+                   help="Admit and pin a QEMM-configured raw DOS boot image (qemu-machine only)")
     c.add_argument(
         "--backend",
         choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
@@ -2073,7 +2117,7 @@ def parser():
         if name == "inspect":
             c.add_argument("--slice-arch", choices=["x86", "x86_64", "arm64"])
             c.add_argument(
-                "--image", choices=["auto", "pe", "le", "ne", "mz", "com", "ail"]
+                "--image", choices=["auto", "pe", "le", "ne", "mz", "sys", "com", "ail"]
             )
     c = sub.add_parser("ghidra-arm64", help=METHODS["ghidra-arm64"])
     c.add_argument("project")
@@ -2158,7 +2202,7 @@ def parser():
     c.add_argument("--load-segment", type=lambda s: int(s, 0), default=0x1000)
     c.add_argument(
         "--image",
-        choices=["auto", "pe", "le", "ne", "mz", "com", "ail"],
+        choices=["auto", "pe", "le", "ne", "mz", "sys", "com", "ail"],
         help="select PE, DOS/4GW LE, Win16 NE, MZ, declared DOS COM or AIL driver",
     )
     c.add_argument(
@@ -2174,7 +2218,7 @@ def parser():
     c = sub.add_parser("analyze-module", help=METHODS["analyze-module"])
     c.add_argument("path")
     c.add_argument("project")
-    c.add_argument("--image", choices=["auto", "pe", "le", "ne", "mz", "ail"])
+    c.add_argument("--image", choices=["auto", "pe", "le", "ne", "mz", "sys", "ail"])
     c.add_argument("--slice-arch", choices=["x86", "x86_64", "arm64"])
     c.add_argument("--export")
     c.add_argument("--entry", type=lambda s: int(s, 0))

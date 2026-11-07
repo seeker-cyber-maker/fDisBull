@@ -67,7 +67,7 @@ class FileReferencesMixin:
             attached = self._external_file(v, file)
             if offset+(count-1)*stride+width > attached['size']:
                 raise ValueError('file reference exceeds attached file bytes')
-            if self.meta['format'] in ('MZ', 'COM'):
+            if self.meta['format'] in ('MZ', 'COM', 'SYS'):
                 a, selector = self._dos_parse_address(address, cs)
                 rows = self.db.execute('SELECT context,bytes FROM instructions WHERE version=? AND address=?',
                                        (v, key(a))).fetchall()
