@@ -26,6 +26,9 @@ from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
 from .input_macros import MacroProjectMixin, MacroSessionMixin, MACRO_DDL
 from .runtime_observations import RuntimeObservationMixin
+from .memory_search_runtime import MemorySearchProjectMixin, MemorySearchSessionMixin
+from .memory_rules import MemoryRuleProjectMixin, MemoryRuleSessionMixin
+from .desqview_runtime import DesqviewSessionMixin
 from .movement import MovementSessionMixin
 from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSessionMixin
 from .assisted_travel import AssistedTravelSessionMixin
@@ -68,7 +71,7 @@ DEBUG_DDL += SCREENSHOT_HOOK_DDL
 DEBUG_DDL += MACRO_DDL
 
 
-class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(MemoryRuleProjectMixin, MemorySearchProjectMixin, SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None):
         if self.meta['format'] == 'NE':
             raise ValueError('NE static projects cannot launch through the raw machine backend')
@@ -313,7 +316,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin, FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     native_hooks_available = True
     @property
     def script_operations(self):
@@ -1233,6 +1236,9 @@ class DebugWorkspace:
         if method=='debug-run-async':
             return self._start_async(session,params)
         methods = {'debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
+                   'debug-memory-snapshot':'memory_snapshot','debug-memory-apply':'memory_apply',
+                   'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
+                   'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
                    'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',

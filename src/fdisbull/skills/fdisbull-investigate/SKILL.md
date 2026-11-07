@@ -100,6 +100,7 @@ bundle:
 | Design causal controls, screen for guest interpreters, coordinate parallel workers or set standing probes | [references/methodology.md](references/methodology.md) |
 | Qualify containers (MZ/COM/LE/NE/PE/ELF/AIL, Mach-O ARM64, Cortex-M, ROM/disc), reversible macOS UI or media reduction | [references/formats-and-media.md](references/formats-and-media.md) |
 | Analyze DOS device roots, mixed LE driver objects, or a QEMM-configured full machine | [references/dos-drivers-and-qemm.md](references/dos-drivers-and-qemm.md) |
+| Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [references/desqview-and-memory-search.md](references/desqview-and-memory-search.md) |
 | Discover `media-modules`, inspect MZ tails or AGI v2 volumes, audit AVI captures, or build a bounded missing reader | [references/media-modules.md](references/media-modules.md) |
 | Identify architecture/container/media headers through the persistent format catalog or frame native SMK2 movies | [references/file-formats.md](references/file-formats.md) |
 | Index edition-pinned source snapshots (`source-*`), search concepts and verify period build-to-byte maps | [references/source-and-concepts.md](references/source-and-concepts.md) |

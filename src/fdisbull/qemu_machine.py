@@ -18,6 +18,9 @@ from functools import wraps
 
 from .dosbox_rpc import DebuggerError
 from .qemu_control import QemuControl
+from .memory_search_runtime import MemorySearchSessionMixin
+from .memory_rules import MemoryRuleSessionMixin
+from .desqview_runtime import DesqviewSessionMixin
 
 
 def file_hash(path):
@@ -136,7 +139,7 @@ def machine_operation(function):
     return invoke
 
 
-class MachineContext:
+class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
 
@@ -211,7 +214,8 @@ class MachineContext:
         from .qpi import parse_qpi_report, REPORT_SIZE
         from .debugger import stamp
         profile=getattr(self,'guest_profile',None)
-        if profile is None or self.project is None or not hasattr(self,'metadata'):
+        if (profile is None or profile.get('memory_manager',{}).get('configured') != 'qemm'
+                or self.project is None or not hasattr(self,'metadata')):
             raise ValueError('QEMM observation requires a project-bound QEMM guest profile')
         if type(length) is not int or length!=REPORT_SIZE:
             raise ValueError(f'QPI observation requires exactly {REPORT_SIZE} bytes')
@@ -407,7 +411,11 @@ class MachineDebugSession(MachineContext):
         options={}
         if guest_profile is not None:
             from .qemm_runtime import admit_qemm_profile
-            self.guest_profile=admit_qemm_profile(guest_profile,image)
+            from .desqview_runtime import admit_profile as admit_desqview_profile, PROFILE as DESQVIEW_PROFILE
+            selected_profile = guest_profile if isinstance(guest_profile,str) else guest_profile.get('profile') if isinstance(guest_profile,dict) else None
+            self.guest_profile = (admit_desqview_profile(guest_profile,image)
+                                  if selected_profile in ('desqview',DESQVIEW_PROFILE)
+                                  else admit_qemm_profile(guest_profile,image))
             options=dict(cpu_model=self.guest_profile['machine']['cpu'],
                          boot_image_sha256=self.guest_profile['boot_image']['sha256'],
                          boot_device=self.guest_profile['machine']['boot_device'])
@@ -415,7 +423,9 @@ class MachineDebugSession(MachineContext):
         vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,**options)
         super().__init__(vm)
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
-        self.capabilities['qemm_observation']=self.guest_profile is not None
+        self.capabilities['qemm_observation']=self.guest_profile is not None and self.guest_profile['memory_manager']['configured']=='qemm'
+        self.capabilities['desqview_observation']=True
+        self.capabilities['memory_search']='paused snapshots; explicit task identity and per-range page mappings'
         self.metadata=dict(backend='qemu-machine',source_sha256=project.meta['source_sha256'],version_sha256=selected['sha256'],
                            runtime_inputs=vm.inputs,context='machine',address_mapping='explicit physical/selected-vCPU virtual addresses',capabilities=self.capabilities)
         if self.guest_profile is not None:
@@ -438,7 +448,9 @@ class MachineDebugSession(MachineContext):
         return super().trace(name,count=count,timeout_ms=timeout_ms,bits=selected_bits)
     @property
     def script_operations(self):
-        return {'step','run','registers','memory','memory-translation','qemm-observe','breakpoint','delete-breakpoint','trace','screenshot','assert','status','write-memory','write-registers'}
+        return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
+                'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
+                'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession
         return DebugSession.script(self,*args,**kwargs)

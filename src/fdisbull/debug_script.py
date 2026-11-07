@@ -50,6 +50,9 @@ OPERATIONS = {
     'hooks':'hooks', 'delete-hook':'delete_hook',
     'registers':'registers', 'memory':'memory', 'write-memory':'write_memory','write-registers':'write_registers', 'status':'status',
     'memory-translation':'memory_translation', 'qemm-observe':'qemm_observe',
+    'memory-snapshot':'memory_snapshot', 'memory-apply':'memory_apply',
+    'memory-rule-tick':'memory_rule_tick', 'memory-rule-run':'memory_rule_run',
+    'desqview-observe':'desqview_observe',
 }
 
 
@@ -119,6 +122,10 @@ def validate_script(script, *, session=None):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
+                    if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine'):
+                        raise ValueError('Unsupported operation for this backend: '+op)
+                    if op == 'memory-rule-run' and (backend or actual) == 'qemu-machine':
+                        raise ValueError('Periodic memory rules require DOSBox guest-time control')
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary
