@@ -2029,12 +2029,22 @@ def parser():
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
-        choices = ("mz-envelope", "agi-v2", "westwood-pak", "westwood-cps", "westwood-wsa", "westwood-emc2")
-        if name == "media-inspect":
-            choices = choices + ("smacker", "flic")
+        from .media import media_modules
+        choices = tuple(item["name"] for item in media_modules()["modules"]
+                        if name in item["methods"])
         c.add_argument("--adapter", required=True, choices=choices)
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
+        source_choice = c.add_mutually_exclusive_group()
+        source_choice.add_argument("--source-member", help="Unique HAG resource name")
+        source_choice.add_argument("--source-index", type=int, help="Exact HAG directory index for duplicate names")
+        c.add_argument("--map-path", help="Explicit companion MM source")
+        map_choice = c.add_mutually_exclusive_group()
+        map_choice.add_argument("--map-member", help="Unique companion HAG member name")
+        map_choice.add_argument("--map-index", type=int, help="Exact companion HAG directory index")
+        c.add_argument("--expected-size", type=int, help="Required explicit output size for raw compression streams")
+        c.add_argument("--width", type=int)
+        c.add_argument("--height", type=int)
         if name == "media-inspect":
             c.add_argument("--index-path", help="Explicit TFTD VID companion IDX for structural cross-check")
         if name == "media-extract":
@@ -3067,6 +3077,11 @@ def _dispatch(args):
         except (ValueError,OSError,KeyError,TypeError) as error:
             print(json.dumps({'complete':False,'status':'refused','reason':str(error)}),flush=True)
             return 1
+    if command in ("media-inspect", "media-extract"):
+        for selector in ("source", "map"):
+            index = args.pop(selector + "_index", None)
+            if index is not None:
+                args[selector + "_member"] = index
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
     if command == "smk-frame":
