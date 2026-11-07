@@ -295,11 +295,12 @@ python -m fdisbull.mads_media_adapters inspect /private/SCENE.SS --adapter mads-
 python -m fdisbull.mads_media_adapters extract /private/SCENE.SS --adapter mads-sprite --number 0 --member preview-png --output /private/new-image
 ```
 
-The older positional `fdisbull media-inspect --adapter` choices are unchanged;
-use `fdisbull request` or the module CLI for these adapters. `source_member`
-selects a resource in a HAG; `member` selects its decoded output. Duplicate HAG
-names need an integer source index in JSON/Python. Backgrounds require an
-explicit `map_path` and optional `map_member`. Raw FAB requires `expected_size`;
+The ordinary CLI derives adapter choices from the shared catalog. Use
+`fdisbull media-inspect` / `media-extract`, `fdisbull request`, or the module CLI.
+`source_member` selects a resource in a HAG; `member` selects its decoded output.
+Duplicate HAG names require an integer source index (CLI: `--source-index`).
+Backgrounds require an explicit `map_path` and optional `map_member` or CLI
+`--map-index`. Raw FAB requires `expected_size`;
 DCL can infer its terminated output up to the declared budget. MADSPACK 1.0
 compression ID 1 is DCL, whereas 2.0 ID 1 is FAB. Do not guess from a suffix.
 
@@ -322,3 +323,21 @@ media, decoded fonts, instruction payloads, model checkpoints and source-bound
 private traces remain outside the repository and delivery archives. Do not
 reuse a prior test count when recovered source is absent. Verify source and
 tests are physically present in the final package and test the installed wheel.
+
+
+### Independent codec discovery and installed validation
+
+`file-identify` routes FAB, MADSCONCAT and MADSPACK headers to their separate
+readers without decompressing during identification. DCL is cataloged but has
+no reliable magic; two plausible option bytes must not be treated as detection.
+MADSPACK is a container, not automatically conversation code or a sprite.
+
+`fdisbull.codec_fab.decode_fab` and `fdisbull.codec_dcl.decode_dcl` import only
+the standard library and can be reused without any MADS modules. Resource/media
+readers depend on those codecs, never on the conversation processor or ScummVM.
+
+Use `python -m fdisbull.mads_validation --resources /private/resources
+--synthetic-model --output /private/new-receipt.json` for an installed corpus
+check. Model inputs are explicitly synthetic; replay is not native equivalence.
+The helper is packaged under `src/fdisbull`, not a pruned example dependency.
+The example path remains a convenience wrapper only.
