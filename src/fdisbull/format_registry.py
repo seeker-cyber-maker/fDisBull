@@ -160,7 +160,8 @@ def _builtins():
     ]
     from .format_media import definitions
     resources = json.loads((Path(__file__).parent/'data'/'intake_resource_profiles.json').read_text())
-    return native + media + definitions(_definition, _field, _magic) + resources
+    from .codec_profiles import definitions as codec_definitions
+    return native + media + definitions(_definition, _field, _magic) + codec_definitions(_definition, _field, _magic) + resources
 
 
 def _module_records():
@@ -197,13 +198,21 @@ def _catalog_links(definitions,modules):
         if definition['category']=='executable':links.append('native-images')
         if definition['category']=='console-media':links.append('console-headers')
         links += {'dos-mz':['mz-envelope'],'riff-avi':['avi-capture'],
-            'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic']}.get(ident,[])
+            'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic'],
+            'fab':['fab'],'pkware-dcl':['pkware-dcl'],'mads-hag':['mads-hag'],'mads-pack':['mads-pack']}.get(ident,[])
         if definition['category']=='image':links.append('pillow-images')
         for module in links:
             if module in available:yield ident,definition['revision'],module,1
 
 
 def _decoder_role(identifier):
+    if identifier in ('fab', 'pkware-dcl'):
+        return 'compression-decoder'
+    if identifier in ('mads-hag', 'mads-pack'):
+        return 'container-reader'
+    if identifier in ('mads-sprite', 'mads-tiles', 'mads-depth', 'mads-background',
+                      'mads-depth-map', 'mads-mask', 'mads-font', 'mads-dsr', 'mads-animation'):
+        return 'media-decoder'
     return {'format-headers':'recognition-only','native-images':'image-loader',
         'console-headers':'recognition-only','iso-primary':'container-reader',
         'pillow-images':'pixel-reader','agi-picture':'pixel-reader',
@@ -442,6 +451,9 @@ def _smacker(prefix, reader):
 
 
 def _media(prefix, reader):
+    from .codec_profiles import probe as codec_probe
+    identified = codec_probe(prefix, reader.size, _result)
+    if identified is not None: return identified
     from .format_media import probe
     extra = probe(prefix, reader)
     if extra is not None: return extra
