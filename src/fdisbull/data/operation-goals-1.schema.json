@@ -1,0 +1,529 @@
+{
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "fdisbull-operation-goals-1"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operation"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/knowledge"
+      },
+      "minItems": 0,
+      "maxItems": 128
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "correspondences": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/correspondence"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "format",
+    "blocks",
+    "operations",
+    "knowledge",
+    "findings",
+    "correspondences"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fdisbull:schema:operation-goals-1",
+  "title": "fDisBull operation recovery goals, version 1",
+  "$comment": "Structural schema. Python validator additionally checks references, nominal type wiring, unique IDs and dependency cycles. This is not an executable common UIL profile.",
+  "$defs": {
+    "port": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "udl_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        },
+        "region_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        },
+        "signature": {
+          "enum": [
+            "unknown",
+            "declared"
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "resolution": {
+          "enum": [
+            "opaque",
+            "partial",
+            "resolved"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "candidate",
+            "observed",
+            "bounded"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000-\\u001f]+$"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "needs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "udl_ref",
+        "region_ref",
+        "signature",
+        "inputs",
+        "outputs",
+        "resolution",
+        "scope",
+        "evidence",
+        "needs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "signature": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "inputs": {
+                "maxItems": 0
+              },
+              "outputs": {
+                "maxItems": 0
+              },
+              "resolution": {
+                "enum": [
+                  "opaque",
+                  "partial"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "kind": {
+          "enum": [
+            "block",
+            "operation"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "inputs": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "maxProperties": 64,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(input:[A-Za-z][A-Za-z0-9_.-]{0,63}|step:[A-Za-z][A-Za-z0-9_.-]{0,63}:[A-Za-z][A-Za-z0-9_.-]{0,63})$"
+          }
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "ref",
+        "inputs",
+        "after"
+      ],
+      "additionalProperties": false
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "results": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "maxProperties": 64,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(input:[A-Za-z][A-Za-z0-9_.-]{0,63}|step:[A-Za-z][A-Za-z0-9_.-]{0,63}:[A-Za-z][A-Za-z0-9_.-]{0,63})$"
+          }
+        },
+        "scope": {
+          "enum": [
+            "candidate",
+            "observed",
+            "bounded"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000-\\u001f]+$"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "id",
+        "inputs",
+        "outputs",
+        "steps",
+        "results",
+        "scope",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "knowledge": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        },
+        "needs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "scope": {
+          "enum": [
+            "candidate",
+            "observed",
+            "bounded"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000-\\u001f]+$"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "needs",
+        "scope",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "knowledge",
+            "block-result"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "scope": {
+          "enum": [
+            "candidate",
+            "observed",
+            "bounded"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000-\\u001f]+$"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "kind",
+        "ref",
+        "scope",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "record",
+            "buffer",
+            "file-range",
+            "opaque-region"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "encoding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f]+$"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "correspondence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+        },
+        "logical": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+            },
+            "port": {
+              "type": "string",
+              "pattern": "^(input|output):[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f]+$"
+            },
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[^\\u0000-\\u001f]+$"
+            }
+          },
+          "required": [
+            "operation",
+            "port",
+            "field",
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stage"
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "scope": {
+          "enum": [
+            "candidate",
+            "observed",
+            "bounded"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000-\\u001f]+$"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "id",
+        "logical",
+        "stages",
+        "scope",
+        "evidence"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -24,7 +24,9 @@ the working executable IR, earlier semantics and reference checks throughout.
 
 ## Define the required result
 
-Write a bounded scene contract before exploring code. A scene is a context for
+For exploratory work, start with the next useful scene fact or action; its
+contract can grow as facts arrive. Before accepting an executable replacement,
+write the bounded contract its consumer needs. A scene is a context for
 entities, actions, conditions and effects; it need not be a screenshot or one
 routine. Different scenes can share a handler, and one scene can use several.
 Require the following elements when they matter to the requested consumer:
@@ -42,7 +44,7 @@ Require the following elements when they matter to the requested consumer:
 | Turns, events and RNG | Action completion, scheduler and random-call boundaries | Whether, when and how often these effects occur, including failed actions. |
 | Suspension and persistence | Nested input, save/checkpoint and residual joins | Required live state, resume behavior and partial effects; no lost continuation. |
 
-Create one obligation per required field or behavior, not one task per source
+For that acceptance contract, create one obligation per required field or behavior, not one task per source
 instruction. Record: stable obligation ID; candidate value/rule; evidence and
 dependencies; alternatives; result status; cheapest next discriminator; stopping
 condition. Use private notes or existing evidence fields, not invented runtime
@@ -56,10 +58,12 @@ are different results.
 
 ## Choose the most direct evidence
 
-Use this order for each obligation. Advance only when the preceding source
-cannot settle it; retain a contradiction instead of resolving it by priority.
+Choose the cheapest available method that can settle the next question. The
+methods below are alternatives, not a mandatory order: a quick runtime
+observation need not wait for parsing, slicing or constraint solving. Reuse a
+settled result; retain a contradiction instead of resolving it by priority.
 
-| Order | Method | Stop or escalate when |
+| Option | Method | Stop or escalate when |
 | --- | --- | --- |
 | 1 | Reuse an exact-version definition with its source witnesses and current dependency checks. | Its assumptions or dependencies changed, or it does not cover the requirement. |
 | 2 | Parse a bounded object, scene, grammar, resource or transition table using a qualified layout. | Bounds, reference type, default semantics or layout interpretation remain unqualified. |
@@ -69,7 +73,8 @@ cannot settle it; retain a contradiction instead of resolving it by priority.
 | 6 | Restore a qualified state and take one targeted observation that distinguishes the remaining alternatives. | The observation cannot establish the wider rule; retain its path-specific scope. |
 
 Use strings, guides and related source editions to locate candidates and suggest
-labels. Require selected-source evidence for operational meaning. Do not begin
+labels. Retain useful guesses explicitly; check selected-source interpretation
+when using it as operational meaning. Do not begin
 with exhaustive control-flow recovery, a whole-game walkthrough, or every caller
 of a shared interpreter when a table and its consumer answer the question.
 Conversely, a promising table is insufficient without its interpretation.
@@ -354,6 +359,10 @@ cold-discovery measurement or demonstrated speedup.
 
 ## Validate accuracy before comparing cost
 
+This section evaluates executable substitutions or a recovery method's claimed
+coverage. Select the cases needed for that claim; it is not the admission cost
+of a useful label, positive pickup observation or initial text harness.
+
 Validate structure and meaning separately. Check record extents, typed references
 and unique associations; then check selector polarity, effect ordering and
 residual boundaries against source operations. Use an independent consumer-side
@@ -376,7 +385,8 @@ execution witness when it can distinguish the two paths. Broaden execution
 only for a remaining risk or required gate. A skill-only edit needs skill delivery
 and method-use checks, not an automatic full-game replay.
 
-Forward-test a method revision on frozen raw cases. Give fresh agents the task,
+When evaluating a substantial method revision, forward-test on frozen raw cases.
+Give fresh agents the task,
 relevant guide, permitted source/profile evidence and budgets. Withhold recovered
 UIL, expected assertions, previous answers and the hidden oracle. Include a
 duplicate-label graph, mutable selector, unknown writer, stack-argument case,

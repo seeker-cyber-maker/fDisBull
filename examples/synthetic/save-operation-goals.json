@@ -1,0 +1,512 @@
+{
+  "format": "fdisbull-operation-goals-1",
+  "blocks": [
+    {
+      "id": "encode-globals",
+      "udl_ref": "udl:synthetic.encode-globals",
+      "region_ref": "region:synthetic.encode-globals",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "state",
+          "type": "state:campaign"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "record",
+          "type": "bytes:global-record"
+        }
+      ],
+      "resolution": "partial",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:encode-globals"
+      ],
+      "needs": [
+        "globals-layout"
+      ]
+    },
+    {
+      "id": "encode-actors",
+      "udl_ref": "udl:synthetic.encode-actors",
+      "region_ref": "region:synthetic.encode-actors",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "state",
+          "type": "state:campaign"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "record",
+          "type": "bytes:actor-records"
+        }
+      ],
+      "resolution": "opaque",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:encode-actors"
+      ],
+      "needs": [
+        "actors-stride",
+        "actors-layout"
+      ]
+    },
+    {
+      "id": "write-globals",
+      "udl_ref": "udl:synthetic.write-globals",
+      "region_ref": "region:synthetic.write-globals",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "record",
+          "type": "bytes:global-record"
+        },
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "receipt",
+          "type": "write-receipt"
+        }
+      ],
+      "resolution": "resolved",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:write-globals"
+      ],
+      "needs": []
+    },
+    {
+      "id": "write-actors",
+      "udl_ref": "udl:synthetic.write-actors",
+      "region_ref": "region:synthetic.write-actors",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "record",
+          "type": "bytes:actor-records"
+        },
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "receipt",
+          "type": "write-receipt"
+        }
+      ],
+      "resolution": "resolved",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:write-actors"
+      ],
+      "needs": []
+    },
+    {
+      "id": "preserve-opaque",
+      "udl_ref": "udl:synthetic.preserve-opaque",
+      "region_ref": "region:synthetic.preserve-opaque",
+      "signature": "unknown",
+      "inputs": [],
+      "outputs": [],
+      "resolution": "opaque",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:preserve-opaque"
+      ],
+      "needs": [
+        "opaque-footprint"
+      ]
+    },
+    {
+      "id": "complete-save",
+      "udl_ref": "udl:synthetic.complete-save",
+      "region_ref": "region:synthetic.complete-save",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "globals",
+          "type": "write-receipt"
+        },
+        {
+          "id": "actors",
+          "type": "write-receipt"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "receipt",
+          "type": "save-receipt"
+        }
+      ],
+      "resolution": "partial",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:complete-save"
+      ],
+      "needs": [
+        "completion-boundary"
+      ]
+    },
+    {
+      "id": "choose-slot",
+      "udl_ref": "udl:synthetic.choose-slot",
+      "region_ref": "region:synthetic.choose-slot",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "context",
+          "type": "ui:save-dialog"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "resolution": "partial",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:choose-slot"
+      ],
+      "needs": [
+        "ui-slot-selection"
+      ]
+    },
+    {
+      "id": "submit-request",
+      "udl_ref": "udl:synthetic.submit-request",
+      "region_ref": "region:synthetic.submit-request",
+      "signature": "declared",
+      "inputs": [
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "resolution": "partial",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:submit-request"
+      ],
+      "needs": [
+        "ui-submission"
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "id": "SaveGame",
+      "inputs": [
+        {
+          "id": "state",
+          "type": "state:campaign"
+        },
+        {
+          "id": "slot",
+          "type": "slot-ref"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "receipt",
+          "type": "save-receipt"
+        }
+      ],
+      "steps": [
+        {
+          "id": "globals",
+          "kind": "block",
+          "ref": "encode-globals",
+          "inputs": {
+            "state": "input:state"
+          },
+          "after": []
+        },
+        {
+          "id": "actors",
+          "kind": "block",
+          "ref": "encode-actors",
+          "inputs": {
+            "state": "input:state"
+          },
+          "after": []
+        },
+        {
+          "id": "global-write",
+          "kind": "block",
+          "ref": "write-globals",
+          "inputs": {
+            "record": "step:globals:record",
+            "slot": "input:slot"
+          },
+          "after": []
+        },
+        {
+          "id": "actor-write",
+          "kind": "block",
+          "ref": "write-actors",
+          "inputs": {
+            "record": "step:actors:record",
+            "slot": "input:slot"
+          },
+          "after": []
+        },
+        {
+          "id": "opaque",
+          "kind": "block",
+          "ref": "preserve-opaque",
+          "inputs": {},
+          "after": [
+            "actors"
+          ]
+        },
+        {
+          "id": "complete",
+          "kind": "block",
+          "ref": "complete-save",
+          "inputs": {
+            "globals": "step:global-write:receipt",
+            "actors": "step:actor-write:receipt"
+          },
+          "after": [
+            "opaque"
+          ]
+        }
+      ],
+      "results": {
+        "receipt": "step:complete:receipt"
+      },
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:definition.SaveGame"
+      ]
+    },
+    {
+      "id": "SaveViaUI",
+      "inputs": [
+        {
+          "id": "context",
+          "type": "ui:save-dialog"
+        },
+        {
+          "id": "state",
+          "type": "state:campaign"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "receipt",
+          "type": "save-receipt"
+        }
+      ],
+      "steps": [
+        {
+          "id": "choose",
+          "kind": "block",
+          "ref": "choose-slot",
+          "inputs": {
+            "context": "input:context"
+          },
+          "after": []
+        },
+        {
+          "id": "submit",
+          "kind": "block",
+          "ref": "submit-request",
+          "inputs": {
+            "slot": "step:choose:slot"
+          },
+          "after": []
+        },
+        {
+          "id": "save",
+          "kind": "operation",
+          "ref": "SaveGame",
+          "inputs": {
+            "state": "input:state",
+            "slot": "step:submit:slot"
+          },
+          "after": []
+        }
+      ],
+      "results": {
+        "receipt": "step:save:receipt"
+      },
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:definition.SaveViaUI"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "globals-layout",
+      "question": "Identify the global-record field encodings.",
+      "needs": [],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.globals-layout"
+      ]
+    },
+    {
+      "id": "actors-stride",
+      "question": "Determine actor record boundaries.",
+      "needs": [],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.actors-stride"
+      ]
+    },
+    {
+      "id": "actors-layout",
+      "question": "Map actor fields under the candidate stride.",
+      "needs": [
+        "actors-stride"
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.actors-layout"
+      ]
+    },
+    {
+      "id": "native-file-family",
+      "question": "Identify which file operations belong to the encompassing save.",
+      "needs": [],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.native-file-family"
+      ]
+    },
+    {
+      "id": "completion-boundary",
+      "question": "Identify the saved-state completion boundary.",
+      "needs": [
+        "native-file-family"
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.completion-boundary"
+      ]
+    },
+    {
+      "id": "opaque-footprint",
+      "question": "Locate/preserve the opaque component footprint.",
+      "needs": [
+        "native-file-family"
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.opaque-footprint"
+      ]
+    },
+    {
+      "id": "ui-slot-selection",
+      "question": "Identify slot selection independently of submission.",
+      "needs": [],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.ui-slot-selection"
+      ]
+    },
+    {
+      "id": "ui-submission",
+      "question": "Identify the request submission event.",
+      "needs": [
+        "ui-slot-selection"
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:question.ui-submission"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "kind": "knowledge",
+      "ref": "actors-stride",
+      "scope": "observed",
+      "evidence": [
+        "synthetic:repeating-records"
+      ]
+    },
+    {
+      "kind": "knowledge",
+      "ref": "globals-layout",
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:global-encoding-hypothesis"
+      ]
+    }
+  ],
+  "correspondences": [
+    {
+      "id": "balance-encoding",
+      "logical": {
+        "operation": "SaveGame",
+        "port": "input:state",
+        "field": "field:balance",
+        "type": "u32"
+      },
+      "stages": [
+        {
+          "kind": "record",
+          "ref": "record:globals",
+          "offset": 0,
+          "length": 4,
+          "encoding": "little-endian-u32"
+        },
+        {
+          "kind": "buffer",
+          "ref": "buffer:globals",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "kind": "file-range",
+          "ref": "resource:global-state",
+          "offset": 0,
+          "length": 4
+        }
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:balance-probe-hypothesis"
+      ]
+    },
+    {
+      "id": "opaque-preservation",
+      "logical": {
+        "operation": "SaveGame",
+        "port": "input:state",
+        "field": "field:unclassified",
+        "type": "bytes"
+      },
+      "stages": [
+        {
+          "kind": "opaque-region",
+          "ref": "region:synthetic.preserve-opaque"
+        }
+      ],
+      "scope": "candidate",
+      "evidence": [
+        "synthetic:unclassified-region"
+      ]
+    }
+  ]
+}

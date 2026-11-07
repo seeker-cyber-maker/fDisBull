@@ -1,10 +1,12 @@
 # Verify a claim against the original binary
 
-Use this reference when the question is about the original executable itself:
-that a value is stored a certain way, that a routine writes a field, or that a
-behavior changes on some trigger. Community stories, manuals, reconstructions and
-comments are evidence of a claim, not proof of it. Prove or falsify each part from
-the retained bytes, and keep the decoded-image boundary explicit.
+Use this addendum for a disputed mechanism, an exhaustive writer/absence claim,
+or a cross-edition conclusion. Finding a useful value, candidate label or one
+writer does not require this whole procedure: retain the positive observation
+and continue. Guides and names can seed hypotheses immediately. Check only the
+parts that affect the requested conclusion, keeping the decoded-image boundary
+explicit. The all-field/all-reference controls below apply to exhaustive claims,
+not to every reversible prediction.
 
 ## Contents
 
@@ -34,8 +36,9 @@ not let a true premise carry a false mechanism.
 
 ## Pin the artifact
 
-- Hash the input and record edition, size and container facts. Keep original
-  bytes and decoded images private and outside Git; retain hashes as identities.
+- Reuse the tool's input identity, edition, size and container facts. Keep private
+  original bytes and decoded images outside Git; eligible fixtures follow the
+  main skill's target exception. Retain hashes as identities.
 - If the executable is packed, decode it with a bounded, format-scoped decoder
   that preserves trailing overlays, and record source and output hashes plus the
   decoder identity. Unpacking is a transform; it does not prove runtime memory or
@@ -80,7 +83,9 @@ Do not find a table by assuming the claim is true.
 
 ## Cross-check editions
 
-Repeat the parse and scan on every retained edition. Identical layout and
+For a cross-edition claim, repeat the needed parse/scan on the editions in scope.
+A selected-edition question does not require scanning other retained copies.
+Identical layout and
 identical writers strengthen the result; a divergent edition limits the claim to
 the editions actually checked. Do not generalize to ports, remakes or later
 games.

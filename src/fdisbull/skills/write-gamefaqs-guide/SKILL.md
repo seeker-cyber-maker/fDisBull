@@ -23,8 +23,11 @@ valuable when their evidence and limits are explicit.
 
 Do not upload original or modified game binaries, game assets, story images,
 saves, emulator states, or raw game-containing FDBs/archives to GitLab, GitHub,
-local hubs or tool packages (outside any narrow repository-authorized freeware
-fixture directory). Semantic UIL/game representations are allowed pending
+local hubs or tool packages, except for repository-authorized freeware and
+homegrown targets. That exception includes new targets, binaries, assets, source
+and generated variants, with license/provenance notices preserved; eligible
+fixtures still stay out of tool-only distributions. Commercial/private saves,
+states and object stores remain private. Semantic UIL/game representations are allowed pending
 sanitation; complete originals embedded in memory arrays, hex caches or nested
 archives are excluded. Review contents, not names. New FDBs retain exact
 size/SHA-256 identities and loader provenance with payloads in a private
@@ -65,6 +68,17 @@ This writing skill consumes its findings; it does not add a game interpreter,
 walkthrough generator, native runner or automatic truth validator.
 
 ## 1. Establish the writing contract
+
+Choose the intended audience and report level: `overview` for a nontechnical
+observer, `practical` for someone following the route or testing the harness, or
+`technical` for inspecting implementation details. Default an unspecified human
+observer to `overview`; reuse an existing preference. Length is a separate choice.
+Lead with purpose, supported findings, actual observations when available,
+meaning, uncertainty and the next useful decision. Explain code screenshots and
+keep supporting details available by
+reference. Changing report level never changes claim strength or evidence scope.
+Use human feedback on terminology, remembered behavior or priorities to refine
+the existing dossier, keeping attributed reports distinct from observed results.
 
 Identify the game, platform, release, language, mod/patch and relevant settings
 from supplied evidence. Reuse existing artifact identities. If an identity is
@@ -131,6 +145,14 @@ runs (zero hits in examined play never prove dead code); keep finalized AVI
 `capture-audit` frame hashes and video timestamps distinct from guest ticks; and
 distinguish console ROM/disc/multicart header metadata from verified unique
 playable games.
+
+For native save/load findings, preserve the component meaning: selecting a UI
+command, entering an original routine, returning through its continuation,
+writing a file, updating live state and refreshing a displayed value are
+separate observations. A prefix transfer does not establish a whole-save
+operation. Keep prepared harness use, independent binding recovery and assisted
+continuations distinct. Compare timings only with named start/stop clocks and
+the same completion criteria; report incomplete required questions visibly.
 
 ## 3. Write from gameplay meaning
 

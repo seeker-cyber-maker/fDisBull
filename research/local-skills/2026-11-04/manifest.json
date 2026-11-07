@@ -1,0 +1,380 @@
+{
+  "format": "fdisbull-local-skill-snapshots-1",
+  "captured_date": "2026-11-04",
+  "purpose": "Reviewable sources used during this research; not automatically installed or promoted",
+  "bundled_skills": [
+    {
+      "name": "fdisbull-investigate",
+      "path": "src/fdisbull/skills/fdisbull-investigate",
+      "role": "maintained project skill",
+      "files": {
+        "SKILL.md": "445313336a541fa7b7ff031de5961daf4fe0a4a23c64d1cda68de393aa5bc715",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
+        "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
+        "references/common-uil.md": "be142b607e4880ea7e89b40f1db68a522075788f5b758d771893a566a3d682dd",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "7dbd9037d0fef36e93cda17f46143a05a16b28f4b3f30bc5b71b4088ba7df7e5",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "1ab9e7b5eea8433ac89b2fe3923dd427c41a9bd6098b294a271cfda9d09ed219",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/task-framing.md": "7763ba5d11b9c6aedf1557768e6bbef6799fce75672041345a4737b2938fc7fd",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    },
+    {
+      "name": "write-gamefaqs-guide",
+      "path": "src/fdisbull/skills/write-gamefaqs-guide",
+      "role": "maintained project skill",
+      "files": {
+        "SKILL.md": "c1d91a91ccd5201d4c56eb89fee1d03e53779ac1b6daa0956ed84cfc844d3bfb",
+        "references/engine-source-examples.md": "86576e46facb85a2db58604a5c47ca94e3589c129a31b0ee0d63772257ca1ca1",
+        "references/evidence-and-provenance.md": "316606bd635386561484a87ce6c72b9661fb6bdfb7aded5e1cd82f5bbdf06070",
+        "references/formats-and-engine-reuse.md": "312c17a5efa93c70494bf6e6861531238a90aa95671a99573676a89429facdae",
+        "references/guide-structure.md": "ad95071ed3f2c9bc8f86044f53efa1393ff8360533fd6073d24b33fe5931ffcc",
+        "references/routes-and-discoveries.md": "31de6d47c76e5b9b80d8ae8a3433462e33f2c912f6d8cf91373af5b6bc9d3429",
+        "references/source-examples.md": "59b9afa1b94200694b489076d5357fce179fa8a9dc22f851b21899271b54a74c",
+        "references/technical-mechanics.md": "22ff90f94d539f2e66bfb1eb3e1eaa78a4b5a1754baa02c475110f6135f05802"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "name": "reverse-engineer-anything",
+      "local_origin": "~/.agents/skills/reverse-engineer-anything",
+      "role": "comparison methodology; does not bundle the REA server",
+      "files": {
+        "LICENSE.upstream": "798f9e4d18e49b30bf2f12696c8ced73dc4e1413da375a333d01281543a1ea8b",
+        "SKILL.md": "fbcd39d6abe803cf7aa49c1880815bc8e22ba2af87a23681944f687bb7629eb1",
+        "references/android-applications.md": "67a9237d76a5b736640c6404f5e1fe01d83369848142feb7e11d78f4a5e62732",
+        "references/connection-and-recovery.md": "a33760c84ae100f6ffd27d666e515956c5014ac33a6ee2414807833ae666a2b1",
+        "references/evidence-workflows.md": "2bdee98a843d018cf850c706111bb74c459ba8640da00799e9208122e4d5ab80",
+        "references/javascript-applications.md": "aaa78502a3e95268f6269e75f373908045291fedf6ddd106001555ed06bb2bf6",
+        "references/native-and-artifacts.md": "18b8828aec6476be03ca92bdb9506c47cc9ef8c1415c37d33e4af2f8c55cf8f9",
+        "references/runtime-observation.md": "fea85e2005a8fd1c86a946eeede24c20e57592a1deb36576b45216e9854803c8"
+      },
+      "upstream": "https://github.com/morluto/rea",
+      "license_notice": {
+        "path": "reverse-engineer-anything/LICENSE.upstream",
+        "source": "https://raw.githubusercontent.com/morluto/rea/main/LICENSE",
+        "note": "Fetched current upstream notice; local skill has its own version metadata and is not asserted byte-identical to current upstream main."
+      }
+    },
+    {
+      "name": "fetch-youtube-evidence",
+      "local_origin": "~/.codex/skills/fetch-youtube-evidence",
+      "role": "video metadata/caption evidence acquisition",
+      "files": {
+        "SKILL.md": "7f7c113ec098bf2ae9418313471a09184d19c97d6fdcb8aedfa716ef79b331e1",
+        "agents/openai.yaml": "fd8d0d7f231a3aff58562aff16c1d05ae6a7f693bb66323227bb2d784a0797e6",
+        "references/geo-and-salience-steering.md": "ee616f62f39b7f206e919fb19054b9abd0b21a424d922cb89f34e26a053488ce",
+        "references/source-boundary-cases.md": "5bef2017fc08ba2cc914ede9aa64a033b75a549af354d944a120df3320bac2a1",
+        "scripts/fetch_youtube_batch_evidence.py": "748ac8655aa0a2723481aab9465cffc6f69ae5dba80e8ed080cd6ab95d6fffea",
+        "scripts/fetch_youtube_catalog_metadata.py": "ceab6b3690a49950782e3446ebe4988d9f4480b499868a419eebb46b1e1feed1",
+        "scripts/fetch_youtube_evidence.py": "7159c817b68d53dad2e5393041271da1e55049945f00817a97048c7f0383b8f0",
+        "scripts/import_browser_transcript.py": "bc214478f0b0486f2671e7e81f816c3a672e22ee5f3408eef19f45b20130b743",
+        "tests/test_evidence_reuse.py": "a63b91df2fc5f5161028e54e7b6d2693ed3f269bc24edc2b187a266e232f54a5"
+      }
+    },
+    {
+      "name": "dos-target-media-rip",
+      "local_origin": "~/.codex/skills/dos-target-media-rip",
+      "role": "private DOS target preparation",
+      "files": {
+        "SKILL.md": "b98d27ea13da07a5b00bcafe608ae43b7e40fb65ef243637d2809e70e78676ec",
+        "references/catalog-intake.md": "f230136563e6e05404a7455ac8bc7244d2df88e77895bc4ff453553852c0dd1d",
+        "references/disc-audio.md": "3ee122c6ffc27ca674328b7f14202f76002c8d478d5fca7adf8d7bb17b34501f",
+        "references/imd-itk-ltk.md": "1ac5bd8b358de5554b45e569be7b3175644ed0eb1997c42cf8b8ee1b30a1ca5e",
+        "references/mve-slb.md": "e21e9cf21ba5c6bf93dacc294670f9319d08e45fb39e821a8ce6f0c5b4a77c70",
+        "references/smacker.md": "0411e803c23e1b0722001e45740b339d116f0ee0f2abe532424e9d9dd7e46bbf",
+        "scripts/disc_data_track.py": "7f2e54be1d90f050e9d4daafc57d85912424822dddfb27c4e93528fe3238a110"
+      }
+    },
+    {
+      "name": "skill-creator",
+      "local_origin": "~/.codex/skills/.system/skill-creator",
+      "role": "meta-tooling used to maintain the project skill",
+      "files": {
+        "SKILL.md": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66",
+        "agents/openai.yaml": "d07d21b93fcf3d4dc8d9a3399c05fc226a49a333a96d3e1c68b451b8dd9eade6",
+        "assets/skill-creator-small.svg": "6591bf8ea9bb9435890dbdea299e0d2bd05f3aa893a335d26e4c535e93c8e7fb",
+        "assets/skill-creator.png": "a4024b0306ddb05847e1012879d37aaf1e658205199da596f5145ed7a88d9162",
+        "license.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "references/openai_yaml.md": "ffac39318e408108141d40f820968e59f70434a891694f9bf1d25be8237b150c",
+        "scripts/generate_openai_yaml.py": "816df12072d74faf924d802a6599a139997e1441e90bfe4869ec304f2e5e2851",
+        "scripts/init_skill.py": "bf0656a5f9d8d8cdecf0245eaf27e1df8e0e9b6d40ccdda814eb8e3d5f6992c8",
+        "scripts/quick_validate.py": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c"
+      }
+    }
+  ],
+  "historical_test_snapshots": [
+    {
+      "id": "money-old",
+      "path": "tested/money-old",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "money-revised",
+      "path": "tested/money-revised",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "87bf711368e8c731b2aafa320bd314c45c9a9d97d3fa711d1372721bc6bb8aa1",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "ea036804fe60691f6b24e69eddfc1aa8802de194ed1d2fec7daf53cc3346fb90",
+        "references/binary-claim-verification.md": "3bb06d69104335d21dce8d07259313466a0395cf8a4786ee6583627649a4441e",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "a333145da14b3648e7db9987e214b17e9bd6f2d60b8a76a9e61357f9f800110b",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "03a4c418f6defca850abdb34379aa6c8c68d0532da8a28d8edbf266de103d306",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    },
+    {
+      "id": "crossover-before",
+      "path": "tested/crossover-before",
+      "role": "Exact archived skill source, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "live-old",
+      "path": "tested/live-old",
+      "role": "Exact archived live HUD crossover skill, not current instructions",
+      "files": {
+        "SKILL.md": "172d2462fbf6357aeed9d017d5dda42f8634129caafcfa29b59b08484a60655b",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+        "references/binary-claim-verification.md": "d41c2ff5b29eaf8f4da6ded81adef85dd9e594ef72eca339caf39110f3ff0820",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "1d62644d3d83a833f9e71233ace8f6f4b1e26966a06779cbc257291630433330",
+        "references/media-modules.md": "04cf3140111b4279bd527fa2706d2c28456a2487148f5d058021ec21713a8f19",
+        "references/methodology.md": "3601893cf4e149b836668f5c1d5be4a7fbcee79c967b1371ba6b9afac30ec582",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "988440e167b76eb471c88ba708caf521e1591173cd235faa9d6926cb3e15a09c",
+        "references/recovery-research.md": "fea4ab5b83128175723bc124c27245e2fba74c280ba9adcbe28e9e7d77df9b3c",
+        "references/runtime-navigation.md": "9cf88000d562f572fa6700bca90c644a6103e5b41866e7a1bd642d4efeb1e980",
+        "references/scene-recovery.md": "f835278a17a71da9463f9e4ec317f29c656a8ff481b34eb956d7da685ed62ff5",
+        "references/scenes.md": "27bd5ba660d7b2a69e0144dd7afff494031878094a9048bd6d801a44242b4be1",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "ddb5e3f7d8ebc2cc8b38eff463e70ab28c966f2a5e2f4cb35ca0e67d5a1ae8a7"
+      }
+    },
+    {
+      "id": "live-revised",
+      "path": "tested/live-revised",
+      "role": "Exact archived live HUD crossover skill, not current instructions",
+      "files": {
+        "SKILL.md": "fc03c05b016330e49a82d6568c51197c27eb5cd1771467bf27c3a4ee973fd604",
+        "references/agi-scenes.md": "b2b5f108e086ff64980f8c491ca75b48b9eee966f4c94f6f666407644bb97a37",
+        "references/analysis-approach.md": "f05a18599ba2079c8aca2df3c057b0c7d34cfd8c4aa6c06cb50ac5f142e3ebf2",
+        "references/binary-claim-verification.md": "3bfac677f792759ff2bbff8524df75093865ad9bbfe301fd3be621daa8e2203c",
+        "references/common-uil.md": "7c4845e0f32378b7678d8a1e96408b9d49d0d8b0d4bad6ae05e1e7b2804675cc",
+        "references/formats-and-media.md": "4943a644cfa4c75f294fa02b1fb88fd16d4681a3dfd3d87ebaf8c0f468b221fa",
+        "references/media-modules.md": "86fba0476a8a1e59facd9ea3deaa949447bc18a646d9e9d3bdacc2b0c8e896dd",
+        "references/methodology.md": "a333145da14b3648e7db9987e214b17e9bd6f2d60b8a76a9e61357f9f800110b",
+        "references/proofs.md": "f0d0998628cbb54061b5a129c565bc28f00d467e983ce22a16c77868008ef09e",
+        "references/reconstruction.md": "49293f96bd747abcd72cf5e29132dfbc2cdc011c5565bb86d8216afa06932224",
+        "references/recovery-research.md": "0bc8eeb6b9950e967ce8c83f0589be824bd9e48ce1dc5af6ff8e1f65ea6399f5",
+        "references/runtime-navigation.md": "8f3c5f25d59ff63706a3d26137010b464d3adf4f2ffc2f374f1045bd51ddf088",
+        "references/scene-recovery.md": "e3e3df123af9e3072f000d9ba6a14b235fc5b96eaf8ce2f38f4004d5c39f79b4",
+        "references/scenes.md": "4e32cc4ced2dc477d92809a3262ea11a1ed932e73145778e313ca6eff6298191",
+        "references/semantic-contracts.md": "cbc1cea3f10822ac20b864f7deb88f6d8b7dc5499fd713da3be74615cee835a8",
+        "references/source-and-concepts.md": "6b31bcf3ff31e5ab576d28bb605f6069a7dbbbd767cf0a5dd15e856adf80c833",
+        "references/sweding.md": "ee993bb2d3eec4c40718fc7aa6a019348cc3ea9cbc18be0f359400857733c190",
+        "references/udl-uil-udc.md": "39e7b3872d2eae9a87e9c0f789e666fb3fbd4faeed96ab9e36fb99aac6a3bb89",
+        "references/workflows.md": "80c53f91d089028f84e38b6ed9aa7f5a71b3562adb321a121ed05c6968505ede"
+      }
+    }
+  ],
+  "reviewed_local_inputs": [
+    {
+      "name": "brainstorming",
+      "local_origin": "~/.omp/agent/skills/brainstorming",
+      "path": "omp/brainstorming",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "bba47904a7f6bbee3bf8a107ebbe84e65d392be683bbb898ded736b29e415f90",
+        "scripts/frame-template.html": "fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
+        "scripts/helper.js": "e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
+        "scripts/server.cjs": "ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
+        "scripts/start-server.sh": "3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
+        "scripts/stop-server.sh": "f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
+        "spec-document-reviewer-prompt.md": "12cb5ed58aef41b8da6fbb505547c71ca3f5658c83b66ca6e556c936308b3189",
+        "visual-companion.md": "a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae"
+      }
+    },
+    {
+      "name": "debug-decision-tree-ai",
+      "local_origin": "~/.omp/agent/skills/debug-decision-tree-ai",
+      "path": "omp/debug-decision-tree-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "9084b1d6994965e233aba57faa528a0af41c0ca175594d8b7a92be78b3f91f32"
+      }
+    },
+    {
+      "name": "debug-ready-ai",
+      "local_origin": "~/.omp/agent/skills/debug-ready-ai",
+      "path": "omp/debug-ready-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "9d0939b4099ec3e70f784cffe9afc59cd6f2c27c1395c6086f2db2e0b0321946",
+        "references/macos-lldb-omp-issues.md": "3116a144b96bb06eb8d538ca0910c5f07edd62580c4c1a773dfc3e7c25d809e8",
+        "references/offline-binary-analysis-tools.md": "8f282496612129507d1d625fd382bd0f954851ce7deccc0572f79ee5ab51c7e9",
+        "references/untrusted-analysis-artifacts.md": "e6727f61f477d98a035e61b2642dc82bef0b426cf6742ed152786dbb6738495e"
+      }
+    },
+    {
+      "name": "explain-button-ai",
+      "local_origin": "~/.omp/agent/skills/explain-button-ai",
+      "path": "omp/explain-button-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "cd4e8fc94a5022ed5bbeef1cd603cdbed30ddf648b6eca5bf3e2c8d4380445fb"
+      }
+    },
+    {
+      "name": "find-string-ai",
+      "local_origin": "~/.omp/agent/skills/find-string-ai",
+      "path": "omp/find-string-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "1478ee44943dec1ea232fcf8a038a5a9dba396995f24977cec21140394743a5c",
+        "scripts/find_string_ai.py": "40c22f9d45ab2170f10633e4b4a5621da16ee2a5412887d41a2d6ee1e7551d54"
+      }
+    },
+    {
+      "name": "skill-creator",
+      "local_origin": "~/.omp/agent/skills/skill-creator",
+      "path": "omp/skill-creator",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "LICENSE.txt": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "SKILL.md": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+        "agents/analyzer.md": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a",
+        "agents/comparator.md": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e",
+        "agents/grader.md": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a",
+        "assets/eval_review.html": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452",
+        "eval-viewer/generate_review.py": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb",
+        "eval-viewer/viewer.html": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa",
+        "references/schemas.md": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f",
+        "scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "scripts/aggregate_benchmark.py": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa",
+        "scripts/generate_report.py": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453",
+        "scripts/improve_description.py": "87d864570220b699fac52da309d2d6efdb060647bfebc74f768128e646accf80",
+        "scripts/package_skill.py": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f",
+        "scripts/quick_validate.py": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365",
+        "scripts/run_eval.py": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f",
+        "scripts/run_loop.py": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21",
+        "scripts/utils.py": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1"
+      }
+    },
+    {
+      "name": "systematic-debugging",
+      "local_origin": "~/.omp/agent/skills/systematic-debugging",
+      "path": "omp/systematic-debugging",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "CREATION-LOG.md": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+        "SKILL.md": "4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+        "condition-based-waiting-example.ts": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        "condition-based-waiting.md": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        "defense-in-depth.md": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        "find-polluter.sh": "6462747eae9b175ac145b78bcfaeab755654a75e32637f08eb633f065a9e1d7c",
+        "root-cause-tracing.md": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+        "test-academic.md": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+        "test-pressure-1.md": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+        "test-pressure-2.md": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+        "test-pressure-3.md": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708"
+      }
+    },
+    {
+      "name": "tell-story-ai",
+      "local_origin": "~/.omp/agent/skills/tell-story-ai",
+      "path": "omp/tell-story-ai",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "c1b05fdadaea1d15e1b9b03e7e21e7281ffa54101d9dad4061e690324d189c4d"
+      }
+    },
+    {
+      "name": "write-a-skill",
+      "local_origin": "~/.omp/agent/skills/write-a-skill",
+      "path": "omp/write-a-skill",
+      "role": "User-supplied candidate source reviewed for selective integration; not activated",
+      "review": "docs/SKILL_INTEGRATION.md",
+      "files": {
+        "SKILL.md": "be8f20e66309258034b82a7db5040b03798aa40546f9d387662c2bd86be23123"
+      }
+    }
+  ]
+}

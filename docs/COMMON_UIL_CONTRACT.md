@@ -201,6 +201,156 @@ automatically cut arbitrary native control flow, establish unknown liveness,
 remove overlapping instruction interpretations, or infer an entire game rule.
 Original files remain retained by their private project/source backings.
 
+## Semantic operation cascades and persistence
+
+A recovered operation should retain the smaller operations that give it meaning.
+For saving, distinguish activating a control, selecting a slot, submitting a
+request, serializing state and completing the file effects. A click that opens
+a chooser establishes that interaction; it does not establish a completed save.
+The observed target determines the order: some implementations write state
+before committing the slot's title or index metadata. Record those dependencies
+rather than imposing one universal menu sequence.
+
+The following is an authoring outline, not executable v1 program syntax:
+
+```text
+activate Save control -> select slot -> submit save request
+                                        |
+                                        v
+persist(slot, logical state)
+  +-- serialize global state
+  |     +-- encode logical fields -> record -> buffer -> file writes
+  +-- serialize actor collection
+  |     +-- encode each actor -> records -> buffer -> file writes
+  +-- write slot metadata, where the original operation does so
+  +-- report completion and the next usable state
+```
+
+Use typed local functions or imports for recovered computational children and
+ordered control for their dependencies. A transparent group provides an
+expandable view of existing children; its label cannot replace their behavior.
+The component-description graph can expose the cascade and its unresolved
+requirements. Replacing the input recipe with an original native call or another
+eligible implementation preserves the semantic operation and its child
+correspondences. A single-file writer remains a child when the parent save
+requires several files.
+
+Conserve the meaning as well as the encoded information. Retain a correspondence
+from each identified logical port/field to its record, encoding, buffer and
+file range. For example:
+
+| Logical meaning | Computational child | Source/adapter correspondence |
+| --- | --- | --- |
+| A `u32` state field, displayed as a balance | Encode four bytes in declared byte order | Record and buffer offsets, then the exact output-file range |
+| An actor's stable identity and typed fields | Encode one actor record | Collection index/identity and record boundaries |
+| Unclassified or reserved fields | Preserve an opaque typed byte sequence | Retained original range and ordering; semantic interpretation remains unknown |
+
+UIL retains typed indexed inputs, outputs and child behavior. Display names and
+resource locators belong to presentation; original addresses, file offsets,
+encoding evidence and links between the stages belong to implementation
+source-map/adapter evidence. Reuse the authored logical field reference across
+these mappings; each function still owns its own variable indices and copy
+semantics. A candidate meaning can guide
+a controlled probe while its raw encoding and earlier interpretation remain
+recoverable. Do not promote a guessed field name to a proven schema or discard
+unclassified bytes to make the model look complete.
+
+Track completion at the boundary needed by the consumer: selection, submitted
+request, encoded buffer, completed file write, adopted loaded state and refreshed
+view are distinct results. A completed child can unlock its reader or a record
+analysis before the parent save is fully recovered. A load counterpart should
+retain its file-to-record-to-logical-field correspondences too; it need not be
+assumed to be an exact inverse for every byte or to redraw a scene itself.
+
+The current common profile can express admitted pure encoding computations,
+typed calls and expandable groups. Its admitted host effects below do **not**
+include filesystem save/load. A native Z capture supplies original-backed
+execution evidence; it does not automatically generate this semantic graph or
+grant a new file-effect opcode. Keep unresolved persistence effects in the
+authoring/source correspondence until an appropriate host capability is admitted.
+
+## Formal operation and recovery-goal definitions
+
+`fdisbull-operation-goals-1` is the separate, data-only companion for this
+authoring work. Its [JSON Schema](../src/fdisbull/data/operation-goals-1.schema.json)
+defines the syntax; `operation_goals.py` validates references, typed wiring and
+dependency graphs, then plans recovery work backward from a requested operation.
+These definitions can compose known UDL blocks while their analysis remains
+partial. They do not add fields to `fdisbull-common-uil-1` or make unresolved
+operations executable.
+
+| Declaration | Required meaning |
+| --- | --- |
+| `blocks` | Stable local ID, known `udl_ref` and `region_ref`, nominal input/output ports, `signature` (`declared` or `unknown`), analysis `resolution` (`opaque`, `partial`, `resolved`), knowledge `needs`, evidence and scope. An unknown signature has no invented ports. |
+| `operations` | Typed inputs/outputs, child `steps` referencing blocks or other operations, input bindings, explicit ordering via `after`, and output `results`. |
+| `knowledge` | A bounded recovery question and its prerequisite knowledge IDs. This describes missing information rather than pretending to provide a binary block. |
+| `findings` | Available knowledge or block-result references with `candidate`, `observed` or `bounded` scope. Availability does not upgrade an operation's assurance. |
+| `correspondences` | A logical operation/port/field reference and its ordered record, buffer, file-range or opaque-region stages, with encoding/range information where known. |
+
+IDs are stable identifiers; ports have nominal type references. Input bindings
+use `input:<port>` or `step:<step>:<output-port>`. All declared child inputs and
+parent outputs must be bound with matching types. Binding a step output also
+creates its data dependency; `after` adds other execution-order dependencies.
+The validator rejects unknown references, duplicate IDs/ports, incomplete
+bindings and cycles in operation composition, local steps or knowledge needs.
+Matching a nominal type does not admit it to an executable UIL profile or infer
+an original ABI.
+
+The [synthetic save definition](../examples/synthetic/save-operation-goals.json)
+separates `SaveGame(state, slot)` from `SaveViaUI(context, state)`. The latter
+selects a slot, submits a request and invokes the former. A programmatic
+realization can supply the semantic inputs directly; the save goal does not
+universally require a click or chooser. `SaveGame` composes global/actor
+encoders, file-writing children, an explicitly opaque component and completion.
+Their original UDL and region identities survive even when the role or signature
+is unresolved.
+
+```python
+from fdisbull.operation_goals import load_operation_goals, plan_operation, queue_frontier
+
+definition = load_operation_goals("save-operation-goals.json")
+plan = plan_operation(definition, "SaveGame", available=[])
+frontier = queue_frontier(plan)
+```
+
+The example's immediate frontier includes actor-layout research, recovery of the
+global encoder and identification of the encompassing file family. The existing
+actor-stride finding helps its dependent question immediately. The UI remains a
+separate branch. Execution order is preserved in the definition, but recovery
+work waits only for its declared knowledge prerequisites; it need not wait for a
+previous screen or serializer to execute.
+
+The planner deduplicates shared blocks and knowledge, retains known opaque
+regions and source correspondences, and returns ready/blocked work plus parent
+coverage. New findings or externally available result facts can raise coverage
+without changing block identities, original analysis statuses or candidate
+semantic labels. Even `all_component_results_available` means only that the
+declared component results are available, not that the parent is proved or has
+run successfully. Unselected block IDs remain reported; the definition is never
+rewritten or pruned by planning.
+
+Give an I/O child the outputs its consumers actually require. A native return,
+successful path/open, transferred bytes, adopted live state and refreshed display
+can be distinct results. A returned reader that takes an open-error branch has
+not produced a loaded-state result. Preserve that return and error as useful
+findings while leaving the dependent save/load goal unresolved. Request only the
+effect observation that changes the next decision; saving need not redraw a
+scene, and an individual file primitive need not qualify the whole save family.
+
+Fact/task identities use structural block/question namespaces and their knowledge
+dependencies. Updating findings, evidence, scope or analysis progress does not
+rename them. Changing a relevant signature, source reference or knowledge
+dependency retires the affected result identity; changing an unrelated UI
+definition preserves the save's recovery work. Recomposition can reuse unchanged
+child results while changing the whole definition digest. `queue_frontier` returns
+`facts` suitable for publication and `tasks` suitable for the small dependency
+queue. Add the task declarations before publishing facts. Recovery tasks have no
+automatic executable operation: a caller can select/delegate them or bind an
+appropriate action. There are no background workers, automatic source synthesis
+or filesystem effects. `operation_goal_schema()` exposes the bundled schema;
+the Python validator also enforces the cross-reference and dependency rules that
+JSON Schema alone cannot express.
+
 ## Orchestration, shims and effects
 
 `fdisbull-uil-orchestration-1` binds the program digest, exact import-to-

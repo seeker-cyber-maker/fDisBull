@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fetch YouTube Evidence"
+  short_description: "Fast, hash-bound YouTube transcript evidence"
+  default_prompt: "Use $fetch-youtube-evidence to retrieve auditable YouTube metadata and captions quickly, then answer my exact question with timestamped provenance."
