@@ -66,6 +66,15 @@ def _entry(identifier, implementation, architectures, methods, providers, requir
 
 def _catalog():
     return [
+        _entry('analysis.structure-discovery', 'partial', ['x86-16','x86-32','agi','z-machine','mos6502','w65c816'],
+               ['cli:structure-scan','cli:structure-info','cli:structure-intents','cli:structure-compose',
+                'cli:structure-trace','cli:structure-compare','cli:structure-episode'],
+               ['structure_discovery.py','structure_inputs.py','structure_patterns.py','structure_native.py',
+                'structure_vm.py','structure_tables.py','structure_events.py','structure_console.py',
+                'structure_68000.py','structure_wad.py',
+                'structure_6502.py','structure_65816.py','structure_handoffs.py','structure_intents.py'],
+               ['capstone','iced-x86'],
+               'Read-only candidates from extracted directories, WAD linked-map records, NES/SNES/Genesis ROMs and console ZIPs; scoped mappings, CPU widths, source/phase boundaries. Existing block-contract analysis sidecars, not executable UIL or asynchronous scheduling.'),
         _entry('inspect.file-formats', 'partial', ['container-dependent'],
                ['cli:format-modules', 'cli:file-identify', 'cli:intake-inventory'], ['format_registry.py', 'format_media.py', 'intake.py', 'inspection.py', 'image_views.py'], [],
                'Versioned SQLite header facts and bounded signature/architecture/media probes. Recognition, structural validation, decoder availability and native execution are separate.'),
