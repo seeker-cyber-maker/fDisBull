@@ -296,6 +296,13 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "structure-scan": "Read-only directory/ROM/console-ZIP leads; game_dir,output,[max_instructions,max_native,candidate_functions,max_console_views,console_profile]",
+    "structure-intents": "Page non-executable intent drafts from discovery; report,[offset,limit]",
+    "structure-compose": "Validate existing contracts and implementation-specific phase dependencies; spec",
+    "structure-trace": "Audit retained invocation/phase observations; spec,trace",
+    "structure-compare": "Compare exact contract outputs and ordered effects; expected,actual",
+    "structure-episode": "Classify selected local/navigation observations; episode",
+    "structure-info": "Inspect a retained discovery lead or bounded page; report,[lead_id,pattern,offset,limit]",
     "agi-scenes": "Read-only AGI scene census, not executable UIL; game_dir, profile, [stage,include_ir,include_text,max_updates,max_instructions,max_code_bytes]",
     "kq1-bow-intents": "Export one source-bound court intent with UDL and retained IR; game_dir,output,[uil,udl]",
     "kq1-bow-evaluate": "Evaluate court intent rules and engine requests; package,state or state_file,[event,event_file]; no native guest",
@@ -718,6 +725,29 @@ def invoke(method, params, debugger=None):
         from .agi import inspect_logic
 
         return inspect_logic(**p)
+    if method == "structure-scan":
+        from .structure_discovery import scan_to_directory
+        return scan_to_directory(**p)
+    if method == "structure-intents":
+        from .structure_intents import draft_file
+        return draft_file(**p)
+    if method == "structure-compose":
+        from .structure_intents import composition_file
+        return composition_file(**p)
+    if method == "structure-trace":
+        from .structure_intents import audit_files
+        return audit_files(**p)
+    if method == "structure-compare":
+        from .structure_intents import compare_files
+        return compare_files(**p)
+    if method == "structure-episode":
+        from .structure_intents import read_json
+        from .structure_events import classify_episode
+        if set(p)!={"episode"}:raise ValueError("expected episode file")
+        return classify_episode(read_json(p["episode"]))
+    if method == "structure-info":
+        from .structure_discovery import read_findings
+        return read_findings(**p)
     if method == "agi-scenes":
         from .agi_scenes import inspect_scenes
         return inspect_scenes(**p)
@@ -1284,7 +1314,7 @@ def respond(request, default_project=None, debugger=None):
             'shadowrun-system-inspect',
             'shadowrun-systems',
         }
-        standalone = standalone or request["method"] in {"agi-scenes", "kq1-bow-intents", "kq1-bow-evaluate"}
+        standalone = standalone or request["method"] in {"structure-scan", "structure-info", "structure-intents", "structure-compose", "structure-trace", "structure-compare", "structure-episode", "agi-scenes", "kq1-bow-intents", "kq1-bow-evaluate"}
         if default_project is not None and isinstance(params, dict) and not standalone:
             params = {"project": default_project, **params}
         result = invoke(request["method"], params, debugger)
@@ -2180,6 +2210,29 @@ def parser():
     c.add_argument("logic", type=int)
     c.add_argument("--profile", required=True, choices=["2.917"])
     c.add_argument("--max-instructions", type=int, default=1000)
+    c = sub.add_parser("structure-scan", help=METHODS["structure-scan"])
+    c.add_argument("game_dir")
+    c.add_argument("--output", required=True)
+    c.add_argument("--max-instructions", type=int, default=30000)
+    c.add_argument("--max-native", type=int, default=8)
+    c.add_argument("--candidate-functions", action="store_true")
+    c.add_argument("--max-file-bytes", type=int, default=32*1024*1024)
+    c.add_argument("--max-console-views", type=int, default=8)
+    c.add_argument("--console-profile")
+    c = sub.add_parser("structure-intents", help=METHODS["structure-intents"])
+    c.add_argument("report")
+    c.add_argument("--offset",type=int,default=0)
+    c.add_argument("--limit",type=int,default=5)
+    for command, fields in (("structure-compose",("spec",)),("structure-trace",("spec","trace")),
+                            ("structure-compare",("expected","actual")),("structure-episode",("episode",))):
+        c = sub.add_parser(command,help=METHODS[command])
+        for field in fields:c.add_argument(field)
+    c = sub.add_parser("structure-info", help=METHODS["structure-info"])
+    c.add_argument("report")
+    c.add_argument("--lead-id")
+    c.add_argument("--pattern")
+    c.add_argument("--offset", type=int, default=0)
+    c.add_argument("--limit", type=int, default=5)
     c = sub.add_parser("agi-scenes", help=METHODS["agi-scenes"])
     c.add_argument("game_dir")
     c.add_argument("--profile", required=True, choices=["2.917"])
