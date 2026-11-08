@@ -45,7 +45,7 @@ def prepare_dos_profile(boot_image, *, cpu='486', memory_mib=32):
                 runtime_validation='not_run',
                 limitations=[
                     'Sector layout and signature are admission checks, not proof that DOS boots.',
-                    'One TCG vCPU; no DOS process loader or automatic COM/MZ entry mapping.',
+                    'One TCG vCPU; raw disk offsets do not identify a DOS process. COM/MZ projects require dos_boot_image.',
                     'QEMM and DESQview use their separate pinned guest profiles and live observations.',
                     'Snapshot-on disk writes are private to this run; closing discards them.',
                     'Native state restore, execution layers and frame-timed input are separate migration slices.',
@@ -85,7 +85,7 @@ class QemuDOSSession(MachineDebugSession):
         selected = project.version(version)
         if project.meta['format'] != 'raw' or project.meta['arch'] != 'x86' or selected['parent'] is not None:
             raise ValueError('Native DOS launch requires an original unpatched raw x86 boot image; '
-                             'COM/MZ process launch remains on backend=dosbox')
+                             'use Project.debugger with dos_boot_image for COM/MZ process launch')
         super().__init__(project, executable, boot_image=boot_image, version=version,
                          boot_timeout_ms=boot_timeout_ms, guest_profile='dos' if guest_profile is None else guest_profile,
                          transport=transport, firmware=firmware, _on_spawn=_on_spawn)

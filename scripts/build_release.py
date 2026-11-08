@@ -58,6 +58,7 @@ SOURCE_PATTERNS = (
     ("src/fdisbull/ida_guest", "*.sh"),
     ("src/fdisbull/ida_guest", "SDK-LICENSE.txt"),
     ("src/fdisbull/dos_guest", "*.sh"),
+    ("src/fdisbull/dos_guest", "*.asm"),
     ("src/fdisbull/ghidra_scripts", "*.java"),
     ("src/fdisbull/game_sources", "*.c"),
     ("src/fdisbull/game_sources", "*.m"),

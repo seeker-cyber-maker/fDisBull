@@ -1,7 +1,7 @@
 # Native QEMU DOS migration
 
-`qemu-dos` starts the DOSBox-X migration with an explicit, native QEMU PC
-backend. It boots a caller-owned disk directly. `dosbox` remains the default
+`qemu-dos` supplies an explicit, native QEMU PC backend. It boots a caller-owned
+disk and can launch an original COM/MZ project through real DOS. `dosbox` remains the default
 for DOS programs, and both DOSBox choices remain selectable after the migration.
 
 The first slice supplies owned startup/shutdown, private disk isolation,
@@ -12,9 +12,13 @@ native machine context. The [capability inventory](DOSBOX_QEMU_CAPABILITY_INVENT
 tracks every existing DOSBox protocol method and public debugger route, plus
 capabilities that a method count misses.
 
-This is an alternative for testing now. It is not yet a replacement for the
-DOSBox COM/MZ process launcher, frame/input machinery, checkpoints or execution
-layers. The default-switch gate remains blocked until the outstanding slices
+The second slice adds verified DOS process entry, PSP/source identity,
+termination versus TSR residency and driver-chain observations. The maintained
+[migration plan and handoff log](DOS_QEMU_HANDOFF.md) records decisions,
+expected difficulties, findings and dated validation.
+
+This is an alternative for testing now. Frame/input machinery, checkpoints and
+execution layers remain later slices. The default-switch gate remains blocked until the outstanding slices
 and compatibility campaigns are qualified. No command here changes the default.
 
 ## Select the execution environment
@@ -23,7 +27,7 @@ and compatibility campaigns are qualified. No command here changes the default.
 | --- | --- | --- |
 | `dosbox` | The existing patched DOSBox-X | Existing DOS program project; retained default and fallback |
 | `dosbox-qemu` | DOSBox-X inside a prepared Linux/QEMU guest | Existing DOS project plus Linux kernel/initramfs; retained fallback |
-| `qemu-dos` | DOS or an authored boot program directly on QEMU's virtual PC | Original raw disk project; single TCG vCPU, explicit physical/virtual addresses |
+| `qemu-dos` | DOS or an authored boot program directly on QEMU's virtual PC | Original raw disk, or original COM/MZ plus a separate DOS boot disk; single TCG vCPU and explicit physical/virtual controls |
 | `qemu-machine` | Generic existing QEMU machine context | Original raw disk; existing QEMM/DESQview profiles remain supported |
 
 Selecting QEMU never silently launches DOSBox. After a failed or uncertain
@@ -116,6 +120,84 @@ that the manager loaded or that scheduling works. See
 [DOS drivers and QEMM](DOS_DRIVERS_AND_QEMM.md) and
 [DESQview and memory search](DESQVIEW_AND_MEMORY_SEARCH.md).
 
+## Launch an original COM or MZ through DOS
+
+The executable and boot disk are separate inputs. The project binds the
+original executable; `--dos-boot-image` selects the DOS installation. Supply
+`mcopy` from mtools and a FAT12/FAT16 image with a returning startup batch.
+`FDAUTO.BAT` is the default; select `AUTOEXEC.BAT` explicitly for a disk that
+uses that name. A partitioned FAT12/FAT16 disk is also admitted within the
+64 MiB profile limit.
+
+```sh
+fdisbull import /private/game/TARGET.COM /private/target.fdb --image com
+fdisbull debug /private/target.fdb --backend qemu-dos \
+  --executable /path/to/qemu-system-x86_64 --game-dir /private/game \
+  --dos-boot-image /private/DOS.img --dos-mcopy /path/to/mcopy \
+  --dos-startup-batch FDAUTO.BAT --dos-arguments ' ALPHA.TXT /Q' \
+  --qemu-firmware /path/to/qemu/share/qemu --qemu-transport pipe
+```
+
+For a classic MZ EXE, import it normally and use the same debugger options.
+JSON `debug-launch` accepts `dos_boot_image`, `dos_mcopy`, `dos_startup_batch`
+and `dos_arguments`. The source filename in `game_dir` must still match the
+project's original SHA-256. Patched project versions and secondary-format
+executable stubs are refused by this initial process path.
+
+Staging copies the selected disk, preserves its configuration and existing
+startup bytes, adds the source and an authored loader, and appends the loader
+invocation. Existing shell setup executes first. Assets and drivers must
+already be present on the image; this route does not import the rest of
+`game_dir`. A nonreturning batch, name conflict, changed source, full disk or
+loader error fails the launch. Source disk and executable remain unchanged.
+COM2 is reserved for the loader's observation protocol.
+
+The launcher uses DOS EXEC load-only, validates the stopped helper report,
+PSP, parent, command tail, MCB ownership and full loaded module, then stops at
+the child's first instruction. MZ mapping derives from the actual returned
+entry, including high-load placement; declared relocations are applied in
+order. DOS's exact initial-AX and COM return-zero writes are recorded in
+`source_mapping.loader_writes` wherever they overlap file-backed bytes.
+Overlay bytes and uninitialized allocation are not misrepresented as loaded
+source bytes. Entry DS/ES, SS:SP and initial AX are retained.
+
+Use the returned run ID in that retained debugger server:
+
+```json
+{"method":"debug-dos-process","params":{"run":"RETURNED_RUN"}}
+{"method":"debug-run","params":{"run":"RETURNED_RUN","timeout_ms":5000}}
+{"method":"debug-dos-process","params":{"run":"RETURNED_RUN"}}
+```
+
+`debug-dos-process` reports the selected PSP, source map, allocation,
+environment segment, FCBs, entry registers, device-header chain and lifecycle.
+All register/memory/breakpoint controls still address the native machine.
+Use the map's runtime addresses explicitly; a static project address is not
+automatically a runtime breakpoint. The map verifies the initial load, not
+continuous byte equality after self-modification or subsequent overlay loads.
+
+The reserved parent-return breakpoint separates selected-process completion
+from a nested child's exit. A verified DOS return becomes `guest_exit` or
+`guest_tsr`; the machine remains owned and stopped. DOS's termination category
+does not identify which exit instruction ran. TSR results include observed
+retained allocations and before/after interrupt vectors; live source ranges
+are clipped to retained allocations. Exit, residency and machine close advance
+the capture epoch so old memory-edit plans cannot silently cross lifetimes.
+An invalid return report closes the machine and invalidates the binding without
+inventing a successful termination. The protocol corroborates guest state;
+it is not authentication against a guest that controls its own memory.
+
+Process entry currently requires observed real mode. QEMM, DESQview, DPMI and
+V86 process combinations need separate qualification. Existing raw-machine
+profiles and report readers remain available. A validated device-chain header
+or an authored SYS initialization marker establishes only that observation,
+not successful arbitrary driver I/O.
+
+Startup uses one host-time budget across staging and control setup. Execution
+timeout recovery may use the existing five-second GDB interrupt allowance;
+parent-return observation has its own five-second bounded budget. These are
+host control budgets, not DOS cycle or guest-time guarantees.
+
 ## What the first slice does and does not qualify
 
 The native tests use independent authored boot and DOS-service fixtures. They
@@ -167,6 +249,14 @@ The independent FreeDOS case additionally accepts
 skip. The test edits a private copy to install its authored probe; no vendor
 image or runtime state belongs in Git or the wheel. A build without stored
 display support cannot pass the complete graphics/native acceptance lane.
+
+For the process slice, run `tests/test_qemu_dos_process_native.py` and
+`tests/test_qemu_dos_process_lifecycle.py` with those same required inputs and
+`NASM=/path/to/nasm`. NASM assembles independent test programs; production uses
+the packaged authored helper and needs no assembler. The helper's readable
+source/template equality is checked by `tests/test_dos_process_helper.py`
+with `FDISBULL_NASM=/path/to/nasm` and
+`FDISBULL_REQUIRE_DOS_HELPER_ASSEMBLY=1`.
 
 Rehearse the retained path with a separate original DOS program project:
 

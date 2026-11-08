@@ -15,20 +15,26 @@ class QemuControl:
     def __init__(self,path,process,deadline,*,channel=None):
         self.socket=channel if channel is not None else socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
         self.buffer=bytearray();self.sequence=0;self.lock=threading.Lock()
+        self.operation_deadline=deadline
         try:
             if channel is None:
                 while True:
+                    remaining=deadline-time.monotonic()
+                    if remaining<=0:raise TimeoutError('QMP initialization deadline expired')
+                    self.socket.settimeout(remaining)
                     try:self.socket.connect(str(path));break
                     except (FileNotFoundError,ConnectionRefusedError):
                         if process.poll() is not None or time.monotonic()>=deadline:raise DebuggerError('QMP socket did not open')
-                        time.sleep(.05)
+                        time.sleep(min(.05,max(0,deadline-time.monotonic())))
             self.greeting=self._read(deadline)
             if 'QMP' not in self.greeting:raise DebuggerError('Invalid QMP greeting')
             self.call('qmp_capabilities',timeout_ms=max(1,int((deadline-time.monotonic())*1000)))
+            self.operation_deadline=None
         except BaseException:
             self.close();raise
 
     def _read(self,deadline):
+        if time.monotonic()>=deadline:raise TimeoutError('QMP deadline expired')
         while b'\n' not in self.buffer:
             remaining=deadline-time.monotonic()
             if remaining<=0:raise TimeoutError('QMP deadline expired')
@@ -45,14 +51,21 @@ class QemuControl:
     def call(self,method,arguments=None,timeout_ms=30000):
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('QMP timeout must be 1..600000 ms')
         deadline=time.monotonic()+timeout_ms/1000
-        if not self.lock.acquire(timeout=timeout_ms/1000):raise TimeoutError('QMP is busy')
+        shared=getattr(self,'operation_deadline',None)
+        if shared is not None:deadline=min(deadline,shared)
+        remaining=deadline-time.monotonic()
+        if remaining<=0:raise TimeoutError('QMP operation deadline expired before dispatch')
+        if not self.lock.acquire(timeout=remaining):raise TimeoutError('QMP is busy')
         dispatched=False;completed=False
         try:
             self.sequence+=1;request={'execute':method,'id':self.sequence}
             if arguments is not None:request['arguments']=arguments
-            self.socket.settimeout(max(.001,deadline-time.monotonic()))
+            wire=json.dumps(request,separators=(',',':')).encode()+b'\n'
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('QMP operation deadline expired before dispatch')
+            self.socket.settimeout(remaining)
             dispatched=True
-            self.socket.sendall(json.dumps(request,separators=(',',':')).encode()+b'\n')
+            self.socket.sendall(wire)
             while True:
                 reply=self._read(deadline)
                 if 'event' in reply:continue

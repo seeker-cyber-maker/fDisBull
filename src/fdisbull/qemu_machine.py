@@ -46,6 +46,7 @@ class QemuMachine:
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
+        self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
         self.lock=threading.RLock()
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
@@ -55,6 +56,11 @@ class QemuMachine:
             if transport not in ('unix','pipe'):raise ValueError('QEMU transport must be unix or pipe')
             if transport=='pipe' and os.name!='posix':raise ValueError('QEMU pipe transport requires a POSIX host')
             if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine timeout must be 1..600000 ms')
+            deadline=time.monotonic()+timeout_ms/1000
+            def remaining():
+                value=deadline-time.monotonic()
+                if value<=0:raise TimeoutError('QEMU control startup deadline expired')
+                return value
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             if cpu_model not in ('max', '486'):
@@ -70,7 +76,7 @@ class QemuMachine:
             paths.update({name:Path(path).expanduser().resolve(strict=True) for name,path in [('kernel',kernel),('initramfs',initramfs),('boot_image',boot_image)] if path is not None})
             if any(not p.is_file() for p in paths.values()) or not os.access(paths['qemu'],os.X_OK):raise ValueError('Expected regular QEMU and machine input files')
             # Cold executable startup can be slow under native/translated CI.
-            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=30).splitlines()[0]
+            version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=min(30,remaining())).splitlines()[0]
             match=re.search(r'QEMU emulator version (\d+)\.(\d+)',version)
             if not match or tuple(map(int,match.groups()))<(9,1):raise DebuggerError('Machine debugging requires QEMU >= 9.1')
             self.inputs={name:dict(path=str(path),sha256=file_hash(path)) for name,path in paths.items()}
@@ -122,7 +128,7 @@ class QemuMachine:
             # or hostcalls; those require their own later migration slice.
             environment={key:value for key,value in os.environ.items()
                          if not key.startswith(('FDB_HOSTCALL_','FDB_LAYER_'))}
-            deadline=time.monotonic()+timeout_ms/1000
+            remaining()
             with (root/'qemu.log').open('wb') as log:
                 self.process=subprocess.Popen(command,cwd=root,stdin=subprocess.PIPE if transport=='pipe' else subprocess.DEVNULL,
                                               stdout=subprocess.PIPE if transport=='pipe' else log,stderr=log,bufsize=0,env=environment)
@@ -132,9 +138,9 @@ class QemuMachine:
                 self.qmp=QemuControl(None,self.process,deadline,channel=channel)
             else:
                 self.qmp=QemuControl(root/'qmp.sock',self.process,deadline)
-            remaining=int((deadline-time.monotonic())*1000)
-            if remaining<=0:raise TimeoutError('QEMU control startup deadline expired')
-            self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=remaining))
+            self.qmp.operation_deadline=deadline
+            self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
+            self.qmp.operation_deadline=None
             self.context=MachineContext(self)
         except BaseException as error:
             log=root/'qemu.log';diagnostic=log.read_text(errors='replace')[-4096:] if log.exists() else ''
@@ -151,7 +157,8 @@ class QemuMachine:
         stream=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
         try:
             while True:
-                try:stream.connect(str(self.rpc_path));return stream
+                try:
+                    stream.connect(str(self.rpc_path));self._channels.append(stream);return stream
                 except (FileNotFoundError,ConnectionRefusedError):
                     if self.process.poll() is not None or time.monotonic()>=deadline:raise DebuggerError('QEMU serial channel did not open')
                     time.sleep(.02)
@@ -160,25 +167,36 @@ class QemuMachine:
     def debugger(self):
         if self.gdb is None:
             from .gdb_rpc import GDBRemote
+            deadline=time.monotonic()+10
+            if self.operation_deadline is not None:deadline=min(deadline,self.operation_deadline)
+            if time.monotonic()>=deadline:raise TimeoutError('QEMU debugger startup deadline expired')
             if self.transport=='pipe':
                 channel=open_fifo_pair(self.gdb_path,self.process);self._channels.append(channel)
-                self.gdb=GDBRemote(None,self.process,time.monotonic()+10,channel=channel)
-            else:self.gdb=GDBRemote(self.gdb_path,self.process,time.monotonic()+10)
+                self.gdb=GDBRemote(None,self.process,deadline,channel=channel)
+            else:self.gdb=GDBRemote(self.gdb_path,self.process,deadline)
+            self.gdb.operation_deadline=self.operation_deadline
         return self.gdb
 
     def close(self):
-        if self.gdb is not None:self.gdb.close();self.gdb=None
-        if self.qmp is not None:self.qmp.close();self.qmp=None
-        for channel in self._channels:channel.close()
-        self._channels.clear()
-        if self.process is not None:
-            for stream in (self.process.stdin,self.process.stdout):
-                if stream is not None:stream.close()
-        if self.process is not None and self.process.poll() is None:
-            self.process.terminate()
-            try:self.process.wait(timeout=3)
-            except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
-        if self.temporary is not None:self.temporary.cleanup();self.temporary=None
+        try:
+            if self.gdb is not None:self.gdb.close();self.gdb=None
+            if self.qmp is not None:self.qmp.close();self.qmp=None
+            for channel in self._channels:channel.close()
+            self._channels.clear()
+            if self.process is not None:
+                for stream in (self.process.stdin,self.process.stdout):
+                    if stream is not None:stream.close()
+            if self.process is not None and self.process.poll() is None:
+                self.process.terminate()
+                try:self.process.wait(timeout=3)
+                except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
+            if self.temporary is not None:self.temporary.cleanup();self.temporary=None
+        finally:
+            observer=self.close_observer
+            self.close_observer=None
+            if observer is not None:
+                try:observer()
+                except Exception as error:self.close_observer_error=type(error).__name__
 
 
 def machine_operation(function):

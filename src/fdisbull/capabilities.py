@@ -119,7 +119,7 @@ def _catalog():
                maturity='experimental', required_host={'system': 'Darwin'}),
         _entry('debug.dos', 'partial', ['x86-16'], ['cli:debug', 'cli:doctor', 'cli:dos-migration'],
                ['debugger.py', 'dosbox_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'dos-backend'],
-               'DOSBox remains default: input, guarded RAM, states and real-mode layers. Native qemu-dos is experimental; inspect dos-migration for capability gaps.'),
+               'DOSBox remains default. Native qemu-dos has experimental COM/MZ and TSR observations via debug-dos-process; dos-migration tracks remaining parity.'),
         _entry('debug.qemm-guest', 'partial', ['x86-16', 'x86-32'],
                ['cli:qemm-config', 'cli:qemm-profile', 'cli:debug --backend qemu-machine --guest-profile qemm',
                 'json:debug-memory-translation', 'json:debug-qemm-observe'],

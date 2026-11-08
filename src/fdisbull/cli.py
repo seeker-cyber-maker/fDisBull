@@ -184,7 +184,7 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
     "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",
     "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
@@ -216,6 +216,7 @@ METHODS = {
     "debug-desqview-observe": "Read a stopped DESQview report, optionally verifying authored helper/nonce/ready PC; run,address,[space,probe_base,expected_nonce,context]",
     "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
     "debug-status": "Live debugger status and address mapping; run",
+    "debug-dos-process": "Read observed native DOS PSP, source mapping, driver registration and exit/residency evidence; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
     "debug-layer-info": "Inspect an immutable layer definition; layer",
@@ -2051,6 +2052,10 @@ def parser():
     c.add_argument("--qemu-transport", choices=["unix", "pipe"],
                    help="Native QEMU control transport; pipe needs no Unix sockets")
     c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
+    c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
+    c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
+    c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")
+    c.add_argument("--dos-arguments", help="Exact CP437 command-tail string for the DOS program, including any leading space")
     c.add_argument(
         "--backend",
         choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",

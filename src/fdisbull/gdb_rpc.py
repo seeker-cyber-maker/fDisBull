@@ -17,14 +17,20 @@ class GDBRemote:
         self.socket=channel if channel is not None else socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
         self.lock=threading.RLock();self.console=[];self.register_description=[];self._buffer=b'';self._cursor=0
         self._packet_state=None
+        # Initialization shares its caller's budget. The machine owner may set
+        # another absolute deadline around later multi-command operations.
+        self.operation_deadline=deadline
         try:
             if channel is None:
                 while True:
+                    remaining=deadline-time.monotonic()
+                    if remaining<=0:raise TimeoutError('GDB initialization deadline expired')
+                    self.socket.settimeout(remaining)
                     try:self.socket.connect(str(path));break
                     except (FileNotFoundError,ConnectionRefusedError):
                         if process.poll() is not None or time.monotonic()>=deadline:
                             raise DebuggerError('QEMU GDB socket did not open')
-                        time.sleep(.02)
+                        time.sleep(min(.02,max(0,deadline-time.monotonic())))
             self.features=self.request('qSupported:qXfer:features:read+;multiprocess+',
                                        timeout_ms=max(1,int((deadline-time.monotonic())*1000))).decode('ascii')
             sizes=[item.split('=',1)[1] for item in self.features.split(';') if item.startswith('PacketSize=')]
@@ -33,8 +39,14 @@ class GDBRemote:
             except ValueError as error:raise DebuggerError('Invalid GDB packet-size limit') from error
             if self.packet_size<64:raise DebuggerError('GDB packet-size limit is too small')
             self._load_registers(deadline=deadline)
+            self.operation_deadline=None
         except BaseException:
             self.close();raise
+
+    def _operation_end(self,timeout_ms):
+        deadline=time.monotonic()+timeout_ms/1000
+        shared=getattr(self,'operation_deadline',None)
+        return deadline if shared is None else min(deadline,shared)
 
     def _byte(self,deadline):
         remaining=deadline-time.monotonic()
@@ -100,8 +112,11 @@ class GDBRemote:
         for value in raw:
             if value in b'$#}*':encoded.extend((ord('}'),value^0x20))
             else:encoded.append(value)
-        self.socket.settimeout(max(.001,deadline-time.monotonic()))
-        self.socket.sendall(b'$'+encoded+b'#'+f'{sum(encoded)%256:02x}'.encode())
+        packet=b'$'+encoded+b'#'+f'{sum(encoded)%256:02x}'.encode()
+        remaining=deadline-time.monotonic()
+        if remaining<=0:raise TimeoutError('GDB operation deadline expired before dispatch')
+        self.socket.settimeout(remaining)
+        self.socket.sendall(packet)
 
     @contextmanager
     def _locked(self,deadline):
@@ -112,7 +127,7 @@ class GDBRemote:
         finally:self.lock.release()
 
     def request(self,command,timeout_ms=10000):
-        deadline=time.monotonic()+timeout_ms/1000
+        deadline=self._operation_end(timeout_ms)
         with self._locked(deadline):
             try:
                 self._send(command,deadline);reply=self._packet(deadline)
@@ -121,15 +136,20 @@ class GDBRemote:
             except BaseException:self.close();raise
 
     def execute(self,command,timeout_ms):
-        """Continue/step once; interrupt on expiry without replaying execution."""
-        deadline=time.monotonic()+timeout_ms/1000
+        """Continue/step once, with at most five extra seconds to interrupt/stop."""
+        deadline=self._operation_end(timeout_ms)
         with self._locked(deadline):
             try:
                 self._send(command,deadline)
                 try:return self._packet(deadline),False
                 except (TimeoutError,socket.timeout):
+                    # Execution was dispatched once. Recovery may exceed the
+                    # operation budget only to interrupt and observe that same
+                    # stop reply; it cannot authorize another execution request.
+                    recovery_deadline=time.monotonic()+5
+                    self.socket.settimeout(5)
                     self.socket.sendall(b'\x03')
-                    return self._packet(time.monotonic()+5),True
+                    return self._packet(recovery_deadline),True
             except BaseException:self.close();raise
 
     def _xml(self,name,*,deadline=None):
@@ -201,7 +221,7 @@ class GDBRemote:
         packet_size=getattr(self,'packet_size',4096)
         read_size=(packet_size-4)//2
         write_size=(packet_size-32)//2
-        deadline=time.monotonic()+timeout_ms/1000
+        deadline=self._operation_end(timeout_ms)
         def exchange(command):
             remaining=int((deadline-time.monotonic())*1000)
             if remaining<=0:raise TimeoutError('GDB memory-transfer deadline expired')
@@ -235,8 +255,13 @@ class GDBRemote:
                 if self.socket is not None and original!=mode:
                     # One bounded recovery exchange restores protocol mode; a
                     # transfer timeout never grants every chunk a fresh budget.
-                    if self.request(b'Qqemu.PhyMemMode:'+original,timeout_ms=5000)!=b'OK':
-                        self.close();raise DebuggerError('Could not restore memory space')
+                    # An inherited deadline also bounds this recovery. If it
+                    # has expired, close instead of leaving a reusable channel
+                    # whose selected address space differs from the caller's.
+                    try:
+                        if self.request(b'Qqemu.PhyMemMode:'+original,timeout_ms=5000)!=b'OK':
+                            raise DebuggerError('Could not restore memory space')
+                    except BaseException:self.close();raise
 
     def close(self):
         if self.socket is not None:self.socket.close();self.socket=None

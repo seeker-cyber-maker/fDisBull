@@ -143,8 +143,15 @@ class MemorySearchProjectMixin:
 def _locked(function):
     @wraps(function)
     def operation(self, *args, **kwargs):
+        if hasattr(self, 'vm'):
+            # These mixins also call QMP/GDB directly while holding the machine
+            # lock. Use the same transport-failure cleanup as ordinary machine
+            # controls, including the owning process's close observer. Import
+            # lazily because MachineContext itself inherits these mixins.
+            from .qemu_machine import machine_operation
+            return machine_operation(function)(self, *args, **kwargs)
         from .debug_timeline import FrameTimelineSessionMixin
-        gate = self.vm.lock if hasattr(self, 'vm') else FrameTimelineSessionMixin._timeline_gate(self)
+        gate = FrameTimelineSessionMixin._timeline_gate(self)
         with gate:
             return function(self, *args, **kwargs)
     return operation

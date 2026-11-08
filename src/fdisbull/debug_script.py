@@ -96,6 +96,10 @@ def validate_script(script, *, session=None):
             from .scummvm_debugger import ScummVMAGISession
             owner=ScummVMAGISession
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    if (backend or actual) == 'qemu-dos':
+        # DOS return/residency leave the owned machine alive. Preserve the
+        # separate 'exited' outcome for native machine termination.
+        outcomes|={'guest_exit','guest_tsr'}
     if (backend or actual) in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:

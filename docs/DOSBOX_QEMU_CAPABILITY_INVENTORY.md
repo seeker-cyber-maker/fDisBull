@@ -21,6 +21,15 @@ page-mapping observation and QEMM/DESQview report ingestion also exist. The
 project-bound launcher accepts an original raw x86 boot image. It does not
 launch a project COM/MZ at its DOS entry point.
 
+The subsequent process slice now provides that path through
+`QemuDOSProcessSession`: an original COM/MZ project, a separately identified
+DOS boot disk, preserved startup/configuration, real EXEC loading, verified
+PSP/MCB/source bytes and native entry. `debug-dos-process` reports lifecycle;
+verified parent return distinguishes selected-process exit and TSR residency.
+This is partial native availability, with real-mode entry and explicit machine
+address controls. It does not promote driver/task/V86 or whole-game parity.
+See the maintained [handoff log](DOS_QEMU_HANDOFF.md) for dated execution evidence.
+
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
 `dos-cpu` context and outer `machine` context are different CPUs. Passing its
@@ -63,7 +72,7 @@ that last check is not runtime qualification.
 | RPC methods | Slice | Existing native seam and remaining distinction |
 | --- | --- | --- |
 | `agent.capabilities` | Core | Machine capability metadata exists; advertise only implemented, admitted operations and distinguish availability from qualification |
-| `session.start` | DOS process | Raw-machine launch exists; target loading, relocation, PSP binding and an actual DOS entry stop need a DOS adapter |
+| `session.start` | DOS process | Native COM/MZ adapter now uses actual DOS EXEC, verifies PSP/MCB, ordered relocations and exact loader writes, then stops at entry; protected/V86 and full DOSBox launch parity remain unqualified |
 | `session.status`, `session.stop` | Core / DOS process | Machine status/cleanup exist; machine stop or process reaping is not selected DOS process termination |
 | `execution.continue`, `execution.pause`, `execution.step`, `execution.wait` | Core | QMP/GDB control exists; bounded machine run is not the DOS asynchronous-operation schema or guest-time run contract |
 | `execution.timing` | Clock, media and input | No native DOS guest-clock adapter at the baseline; host-time timeout is not emulated milliseconds |
@@ -83,6 +92,13 @@ The raw transport remains an owned, bounded channel. Its failure policy—close
 on uncertain dispatched I/O rather than replay—must survive the migration.
 See [`dosbox_rpc.py`](../src/fdisbull/dosbox_rpc.py) and
 [`qemu_machine.py`](../src/fdisbull/qemu_machine.py).
+
+The process adapter preserves this policy across memory-search/report mixins
+and persistence failures. A shared startup deadline covers staging and native
+control; process identity is invalidated when a machine fails closed. Process
+exit does not itself terminate the emulator. DOS's resident category is kept
+separate from an inferred exit opcode, and retained source ranges come from
+the observed allocation-chain intersection.
 
 ## Complete public debugger route ledger
 

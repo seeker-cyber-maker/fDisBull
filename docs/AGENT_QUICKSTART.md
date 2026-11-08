@@ -82,7 +82,10 @@ does not establish original Windows 3.x or whole-game compatibility.
 ## Discover commands and bundled skills
 
 For the DOSBox-X migration, read [native QEMU DOS](DOS_QEMU_MIGRATION.md) and
-run `fdisbull dos-migration`. `qemu-dos` is the explicit native raw-disk lane;
+run `fdisbull dos-migration`. `qemu-dos` supports raw disks and original COM/MZ
+projects with a separate `--dos-boot-image`; `debug-dos-process` reports the
+observed PSP, source map and exit/TSR lifecycle. Read the maintained
+[handoff log](DOS_QEMU_HANDOFF.md) before continuing a migration slice.
 `dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
 and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.

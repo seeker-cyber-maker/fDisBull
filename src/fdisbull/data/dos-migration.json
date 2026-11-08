@@ -44,11 +44,12 @@
         "tests/test_qemu_dos_native.py",
         "tests/test_qemu_machine.py",
         "tests/test_qemu_pipe.py",
-        "tests/test_runtime_code.py"
+        "tests/test_runtime_code.py",
+        "tests/test_qemu_operation_deadlines.py"
       ],
       "scope_limits": [
         "Machine context is available; this does not establish DOS source-address mapping, legacy reply schema, guest process lifecycle or drop-in parity.",
-        "MachineContext.run is host-time bounded and returns machine stops. It does not accept guest_ms/fast_forward/stop_on_hook or establish DOS guest_exit/guest_tsr.",
+        "Raw MachineContext.run is host-time bounded and returns machine stops. The COM/MZ process session separately verifies parent return for guest_exit/guest_tsr; neither path supplies guest_ms/fast_forward/stop_on_hook semantics.",
         "Raw native QEMU exposes one machine context. dosbox-qemu exposes a DOS CPU plus its surrounding Linux machine; those are different CPUs and cannot be renamed into one native DOS context.",
         "The legacy public DOS route intentionally refuses direct writes (use RAM layers, runtime bindings or edited checkpoints); machine context already permits explicit guarded edits. Preserve legacy refusal and expose new context semantics explicitly.",
         "qemu-machine has its own explicit bounded script grammar and operation set. The full legacy DOS script vocabulary is not supported merely because script() exists."
@@ -76,10 +77,18 @@
         "tests/test_protected_runtime_native.py",
         "tests/test_qemu_dos_native.py",
         "tests/test_qemm_runtime.py",
-        "tests/test_qemu_machine.py"
+        "tests/test_qemu_machine.py",
+        "tests/test_dos_process_helper.py",
+        "tests/test_dos_process_image.py",
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_dos_process_native.py",
+        "tests/test_qemu_dos_process_lifecycle.py"
       ],
       "scope_limits": [
-        "Native raw-machine observations exist, but COM/MZ loading and selected-DOS-process identity require a DOS adapter; a helper report is not whole-driver or scheduler qualification."
+        "Original COM/MZ projects launch through real DOS EXEC with a separate private boot disk. Observed PSP/MCB, ordered MZ relocations, exact loader stack writes and native entry establish the initial source map; controls retain machine addresses.",
+        "Nonce-bound parent return and DOS AH=4Dh distinguish selected process exit/residency. Resident mappings intersect observed retained allocations; machine close and uncertain observations invalidate live ownership and capture epochs.",
+        "Entry requires observed real mode. Patched versions, secondary executable stubs, DPMI/V86 process mapping and real QEMM/DESQview scheduler/driver combinations remain unqualified.",
+        "Device-header registration and an authored SYS initialization marker qualify only those observations, not arbitrary device I/O. Game assets/drivers must already be present in the image; existing startup/configuration bytes are preserved."
       ]
     },
     {
@@ -443,8 +452,8 @@
       "method": "session.start",
       "slice": "dos-process",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "Project.debugger(backend=qemu-dos, dos_boot_image=...) -> QemuDOSProcessSession; original real-mode COM/MZ only",
       "qualification": "unqualified"
     },
     {
@@ -1300,12 +1309,16 @@
       "id": "private-target-and-entry",
       "slice": "dos-process",
       "surface": "LaunchAlias, source SHA-256/relocation checks, PSP/COM entry, staged asset allowlist, no original-source writes",
-      "status": "pending",
+      "status": "partial",
       "tests": [
         "tests/test_debugger.py",
         "tests/test_dos_qemu.py",
-        "tests/test_dos_launch.py"
-      ]
+        "tests/test_dos_launch.py",
+        "tests/test_dos_process_image.py",
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_dos_process_native.py"
+      ],
+      "native_route": "QemuDOSProcessSession; separate source/boot/prepared-disk identities and verified actual DOS entry"
     },
     {
       "id": "protected-v86-memory",
@@ -1322,10 +1335,13 @@
       "id": "process-and-resident-completion",
       "slice": "dos-process",
       "surface": "Selected DOS PSP after termination cleanup, parent/child identity, guest_tsr vs guest_exit vs emulator shutdown",
-      "status": "pending",
+      "status": "partial",
       "tests": [
-        "tests/test_debug_semantics.py"
-      ]
+        "tests/test_debug_semantics.py",
+        "tests/test_qemu_dos_process_native.py",
+        "tests/test_qemu_dos_process_lifecycle.py"
+      ],
+      "native_route": "debug-dos-process / QemuDOSProcessSession.dos_process_info; verified parent return and observed retained MCB/IVT state"
     },
     {
       "id": "remote-tool-consumers",

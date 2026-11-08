@@ -86,7 +86,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
-                 guest_profile=None, qemu_transport=None, qemu_firmware=None):
+                 guest_profile=None, qemu_transport=None, qemu_firmware=None,
+                 dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None):
+        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments)
+        if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
+            raise ValueError('DOS process boot/staging options require backend=qemu-dos')
         if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
             raise ValueError('guest_profile requires a native QEMU full-system backend')
         if (qemu_transport is not None or qemu_firmware is not None) and backend not in ('qemu-machine','qemu-dos'):
@@ -150,6 +154,16 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                          boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
                          transport=qemu_transport or 'unix',firmware=qemu_firmware,_on_spawn=_on_spawn)
             if backend=='qemu-dos':
+                if self.meta['format'] in ('COM', 'MZ'):
+                    if dos_boot_image is None:
+                        raise ValueError('Native DOS COM/MZ launch requires a separate dos_boot_image')
+                    from .qemu_dos_process import QemuDOSProcessSession
+                    options['boot_image'] = dos_boot_image
+                    return QemuDOSProcessSession(self, executable, game_dir,
+                        mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
+                        arguments='' if dos_arguments is None else dos_arguments, **options)
+                if any(value is not None for value in dos_process_options):
+                    raise ValueError('DOS process options require a COM/MZ project; raw boot uses its own source disk')
                 from .qemu_dos import QemuDOSSession
                 return QemuDOSSession(self,executable,**options)
             return self.machine(executable,**options)
@@ -1253,7 +1267,7 @@ class DebugWorkspace:
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
-                   'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-status':'status','debug-dos-process':'dos_process_info','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',

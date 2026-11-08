@@ -12,15 +12,16 @@ after the migration; an uncertain operation never triggers an implicit fallback.
 | --- | --- |
 | `dosbox` | Retained patched DOSBox-X; existing COM/MZ project route |
 | `dosbox-qemu` | DOSBox-X inside a prepared Linux/QEMU guest |
-| `qemu-dos` | Native QEMU PC boot from an original raw disk project |
+| `qemu-dos` | Native QEMU PC; original raw disk or original COM/MZ plus a separate DOS boot disk |
 | `qemu-machine` | Existing generic raw machine and QEMM/DESQview contexts |
 
 Native QEMU currently supplies machine controls, physical/virtual memory,
 guarded edits, break/watchpoints, completed-step trace artifacts, stored PNGs
 when the QEMU build supports them, and stopped memory snapshot/search/edit/rule
-operations. It does not yet supply source-bound COM/MZ launch, selected-PSP
-exit/TSR tracking, frame-timed input, native checkpoints, fetch layers, event
-predicate tracing or DOSBox scene parity. Periodic memory rules need the later
+operations. The process slice adds real DOS EXEC loading, verified PSP/source
+entry and selected-process exit/TSR observations. Frame-timed input, native
+checkpoints, fetch layers, event predicates and scene parity remain later
+slices. Periodic memory rules need the later
 guest-clock slice; explicit stopped rule ticks are available.
 
 ## Check an installation without a game
@@ -95,3 +96,47 @@ workflows; compatibility and fallback campaigns. QEMM, DESQview, Windows and
 real games each require actual runtime evidence beyond the authored snippets.
 Custom hostcalls, asynchronous providers and UDL/UIL joins remain a later slice;
 the native launcher does not activate the earlier experiment's opcode hooks.
+
+## Launch an original DOS process
+
+For an original COM/MZ project, select `qemu-dos` with a separate
+`dos_boot_image`, `dos_mcopy`, `dos_startup_batch` (default `FDAUTO.BAT`) and
+`dos_arguments` (literal CP437 command tail, at most 126 bytes).
+
+```sh
+fdisbull import /private/game/TARGET.COM /private/target.fdb --image com
+fdisbull debug /private/target.fdb --backend qemu-dos \
+  --executable /path/to/qemu-system-x86_64 --game-dir /private/game \
+  --dos-boot-image /private/DOS.img --dos-mcopy /path/to/mcopy \
+  --dos-startup-batch FDAUTO.BAT --dos-arguments ' ALPHA.TXT /Q' \
+  --qemu-firmware /path/to/qemu/share/qemu --qemu-transport pipe
+```
+
+The startup batch must already exist and return. Staging preserves its original
+bytes and CONFIG files, appends an authored loader invocation, and uses private
+disk copies. Required drivers/assets must already be on the FAT12/FAT16 boot
+image; no host directory is mounted. COM2 is reserved for the loader protocol.
+Conflicting names, changed source/disk, patched project versions, secondary
+executable formats and inconsistent observations are refused.
+
+`debug-dos-process` returns the real PSP/parent, MCB allocation, entry registers,
+initial source map, environment segment, tail/FCBs, driver-chain observations
+and process lifecycle. Read `source_mapping.runtime_base` and `delta` before
+placing native breakpoints: machine controls do not translate static addresses.
+The entire file-backed module is verified after ordered MZ relocations and
+the exact DOS startup stack writes recorded in `loader_writes`. Initial load
+verification is not continuous proof after self-modification or overlay loads.
+
+The internal parent-return breakpoint yields `guest_exit` or `guest_tsr` only
+after a matching helper report and DOS return category. Nested child completion
+does not complete the selected process. Resident results retain observed
+allocations and vector changes, without inferring which TSR instruction ran or
+claiming vector-change causation. Exit/residency changes the capture epoch;
+machine close invalidates live ranges. A failed observation is not a DOS exit.
+The machine remains stopped and owned after a verified return.
+
+Entry requires observed real mode. QEMM, DESQview, DPMI and V86 combinations
+remain separate qualification campaigns. A registered device header or the
+authored SYS initialization test does not establish arbitrary device I/O.
+Source tests require real QEMU/FreeDOS and independent authored COM/MZ/TSR
+witnesses; production uses the packaged helper without requiring NASM.
