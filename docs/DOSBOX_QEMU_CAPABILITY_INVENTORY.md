@@ -47,8 +47,30 @@ completed renderer publications. A separate explicit PC-speaker profile captures
 bounded PCM output with callback timestamps. These operations have Python,
 retained JSON and saved-script routes. A renderer ID is not a guest frame;
 concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
-completed guest frames, broader sound devices, timed input and pixel/INT33 mouse
-semantics remain open. Timing auto-sync is deferred.
+completed guest frames, broader sound devices, legacy timed press/text and
+pixel/INT33 mouse semantics remain open. Timing auto-sync is deferred.
+
+The optional input API 1 extension now schedules one owned keyboard/relative
+PS/2 batch on `QEMU_CLOCK_VIRTUAL`. Its patch applies after the current clock
+and media patches. `input_schedule(delta_ns)` passively arms the pending batch;
+`input_schedule_observe()` reads its retained receipt. One later explicit
+bounded `run()` or `clock_advance()` owns the attempt. The first stop cancels an
+unfired timer and requires explicit reschedule or `input_cancel_pending()`;
+pending stops and reached/equal clock-budget deadlines win regardless of timer
+insertion order. Dispatched holds still need an explicit release. No transition
+is replayed after an uncertain result.
+
+`virtual_input_schedule` is advertised only for the admitted virtual profile
+and discovered native commands. `timed_input`, `guest_time_control` and
+`completed_guest_frames` remain false. A dispatch timestamp proves PS/2 handler
+callbacks and their final sync, while FIFO acceptance, guest consumption and
+frame recognition remain unknown. This new seam does not qualify the legacy
+`guest_ms`, timed press/type, frame-edge or pixel/INT33 contracts. Native bounds
+are 256 events per batch, one edge per ordinary mouse button, relative values
+-32767..32767, delay 1..60,000,000,000 ns and 4096 successful tokens per process.
+Reset/profile loss invalidates the scheduler; migration stays blocked after
+the first successful arm. See the [workflow guide](DOS_QEMU_MIGRATION.md#schedule-one-physical-input-batch-on-virtual-time)
+and [native patch contract](../native/qemu-input/README.md).
 
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
@@ -61,6 +83,11 @@ routes intentionally refuse direct DOS writes. Counting names alone is
 insufficient: inherited methods can still reject the selected backend, and
 apparently similar operations can have different timing, state or address
 semantics.
+
+Together with the nine non-method surfaces, **all 127 default-switch
+qualification rows remain open**. The new QEMU-only routes below do not change
+that frozen DOSBox inventory or promote a compatibility campaign. DOSBox remains
+the default and both DOSBox selectors remain available.
 
 ## Dependency-ordered slices
 
@@ -101,9 +128,9 @@ that last check is not runtime qualification.
 | `breakpoints.create`, `breakpoints.delete`, `breakpoints.list` | Core / Trace and events | QEMU TCG execution/data controls exist; preserve byte-free breakpoints, access kind, length, bounded count and cause/resume semantics |
 | `trace.start`, `trace.read`, `trace.stop` | Trace and events | Stopped-boundary machine/source traces exist; ordinary debug stops do not prove retirement, and no equivalent streaming before-fetch trace cursor is supplied |
 | `video.screenshot`, `video.probe` | Clock, media and input | Stopped QMP surface/CPU/clock bracket and PNG exist; they do not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
-| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports the owned Python queue/leases and QMP receipts; timed press/text remain refused. Native BIOS/IRQ witnesses separately prove selected consumption cases |
-| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases and single dispatch exist; stale leases invalidate on close. Frame-bound timing/replay remains unqualified |
-| `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases and IRQ12 consumption witnesses exist; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
+| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports the owned Python queue/leases and immediate or scheduled dispatch receipts; legacy timed press/text remain refused. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
+| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate dispatch or explicit virtual-time batch scheduling; stale leases invalidate on close. Callback time is not frame-edge timing, consumption or replay parity |
+| `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases support immediate or scheduled dispatch, with independent IRQ12 witnesses; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
 | `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
 | `state.save`, `state.load` | Checkpoints | Raw `MachineContext` advertises `save_states=False`; DOSBox `.sav` data cannot be interpreted as a QEMU VM checkpoint |
 | `layers.configure` | Layers and hooks | Raw `MachineContext` advertises `code_layers=False`; a RAM write or changed PC is not a fetch-only layer |
@@ -136,7 +163,7 @@ dispatch are outside this router dictionary.
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Inherited on `MachineContext` but explicitly refuses QEMU; requires qualified guest-time slices |
 | Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Initial real-mode module only; no queued input or overlay rebinding |
-| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Pending guest-clock, device and ownership contracts |
+| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes have partial native support; the separate QEMU scheduling API does not implement legacy waits, timed press/type, clicks or frame contracts |
 | Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |
 | Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Pending fetch-view and hook adapter; screenshots with preparation hooks also depend on this slice |
@@ -147,6 +174,14 @@ dispatch are outside this router dictionary.
 | Scenes | `debug-scene-check`, `debug-scene-assert`, `debug-scene-click`, `debug-scene-act`, `debug-scene-wait`, `debug-scene-navigation` | Reusable host algorithms, pending native frame/input dependencies |
 | Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Reusable host algorithms, pending source/control/budget adapter and observed native effects |
 | Higher workflows and policy | `debug-workflow-observe`, `debug-workflow-act`, `debug-text-observe`, `debug-text-act`, `debug-assisted-travel`, `debug-spatial-policy`, `debug-spatial-action` | Pending coherent lower-level composition; preserve physical/assisted/story/fair-play distinctions |
+
+The QEMU-only scheduling routes are `debug-input-schedule` and
+`debug-input-schedule-observe`; cancellation/resolution uses
+`debug-input-cancel-pending`. Their Python names are `input_schedule(delta_ns)`,
+`input_schedule_observe()` and `input_cancel_pending()`. Saved scripts use
+`input-schedule`, `input-schedule-observe` and `input-cancel-pending`, with the
+same capability admission and one shared host deadline. They are additional
+native surfaces, not new names in the 83-route legacy DOSBox qualification set.
 
 ### Surfaces a method count does not cover
 
@@ -192,10 +227,20 @@ automatically start hosted CI.
 | Mode, mapping, QEMM/DESQview and searched RAM | `tests/test_dos_memory.py`, `tests/test_qemm_runtime.py`, `tests/test_desqview_runtime.py`, `tests/test_desqview_memory_native.py`, `tests/test_memory_search_runtime.py`, `tests/test_memory_rules.py` |
 | Traces and event predicates | `tests/test_execution_trace.py`, `tests/test_execution_event_native.py`, `tests/test_protected_mode_trace.py` |
 | Guest time, completed frames and input | `tests/test_debug_wait.py`, `tests/test_keyboard.py`, `tests/test_frame_capture_native.py`, `tests/test_frame_coherence.py`, `tests/test_screenshot_codecs.py`, `tests/test_protected_runtime_native.py` |
+| Native one-shot virtual input, ownership and callback receipts | `tests/test_qemu_input_schedule.py`, `tests/test_qemu_input_schedule_native.py` |
 | Layers and code views | `tests/test_code_layers.py`, `tests/test_code_overlap_native.py`, `tests/test_runtime_code.py`, `tests/test_screenshot_hooks.py` |
 | Checkpoints and histories | `tests/test_anchor_stone_cli.py`, `tests/test_rewind_native.py`, `tests/test_cpu_deltas_native.py`, `tests/test_delta_policies.py`, `tests/test_debug_timeline_deltas.py`, `tests/test_frame_timeline_native.py`, `tests/test_debug_experiments.py` |
 | Scenes and workflow consumers | `tests/test_scene_domain_integration.py`, `tests/test_scene_readiness.py`, `tests/test_input_macros.py`, `tests/test_movement.py`, `tests/test_spatial_native.py`, `tests/test_progressive_scenes.py`, `tests/test_player_live.py` |
 | Backend fallback, wrappers and Windows | `tests/test_dos_qemu.py`, `tests/test_ida_dosbox.py`, `tests/test_doctor.py`, `tests/test_dosbox_window.py`, `tests/test_windows_native.py`, `tests/test_win16_native.py` |
+
+The scheduling host witnesses target hostile receipts, token/batch ownership,
+terminal freeze, UTF-8 reason bounds, owned clock-budget cutoffs, early-stop
+resolution and deadline/cleanup failures. Native witnesses use independent
+IRQ1/IRQ12 state, an otherwise halted guest, retained renderer output, actual
+DOS exit/TSR and retained JSON/scripts. They distinguish callback dispatch from
+guest consumption and test source isolation and historical receipt reopening.
+These file references do not assert a passing run; exact results and remaining
+scope belong in the [handoff log](DOS_QEMU_HANDOFF.md).
 
 Native tests have explicit environment inputs and may otherwise skip. For
 example, existing raw-machine acceptance uses `FDISBULL_MACHINE_QEMU` with

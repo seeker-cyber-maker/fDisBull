@@ -79,11 +79,17 @@ class QemuPhysicalInputMixin:
         if project is not None and project.db.in_transaction:
             raise ValueError('Physical input requires a project outside a caller-owned transaction')
 
-    def _input_prepare(self):
+    def _input_schedule_bound(self):
+        state = getattr(self.vm, '_physical_input', None)
+        return bool(state and state['valid'] and (state.get('schedule') or {}).get('bound'))
+
+    def _input_prepare(self, *, allow_schedule=False):
         self._input_no_transaction()
         state = self._input_storage()
         if not state['valid'] or self.vm.qmp is None:
             raise ValueError('Physical input ownership is invalid or the VM is closed')
+        if not allow_schedule and self._input_schedule_bound():
+            raise ValueError('Resolve the scheduled input batch before queueing another physical edge')
         if 'input-send-event' not in getattr(self.vm, 'qmp_commands', ()):
             raise ValueError('Selected QEMU does not provide input-send-event')
         native = self.vm.qmp.call('query-status')
@@ -240,12 +246,15 @@ class QemuPhysicalInputMixin:
                     valid=state['valid'], invalid_reason=state['invalid_reason'],
                     pending_edges=len(state['pending']), pending=deepcopy(state['pending']),
                     leases=deepcopy(state['leases']), last_delivery=deepcopy(state['last_delivery']),
+                    schedule=deepcopy(state.get('schedule_receipt')),
                     invalidated_edges=state['invalidated_edges'], invalidated_leases=state['invalidated_leases'],
                     guest_consumed=None, physical_state='not observed',
-                    semantics='Owned Python scheduling and QMP receipts only; no guest consumption, guest-time, pixel-position or completed-frame claim')
+                    semantics='Owned queue and last validated receipts; scheduled dispatch reports virtual time separately, never device acceptance, guest consumption, pixel position or frame completion')
 
     def input_cancel_pending(self):
-        state = self._input_prepare()
+        state = self._input_prepare(allow_schedule=True)
+        cancel_native = getattr(self, '_input_schedule_before_cancel', None)
+        scheduled = cancel_native() if cancel_native is not None else None
         count = len(state['pending'])
         cancelled, retained = [], []
         for token, lease in list(state['leases'].items()):
@@ -256,11 +265,30 @@ class QemuPhysicalInputMixin:
                 lease['release'] = None
                 retained.append(token)
         state['pending'].clear()
+        if state.get('schedule') is not None:
+            state['schedule']['bound'] = False
+            state['schedule_receipt']['requires_resolution'] = False
+        if scheduled is not None:
+            scheduled['requires_resolution'] = False
         result = self._input_receipt('cancelled_unsent', cancelled_edges=count,
                                     cancelled_leases=cancelled, retained_dispatched_holds=retained,
                                     claim='Only unsent transitions cancelled; accepted holds still require an explicit release.')
+        if scheduled is not None:
+            result['schedule'] = scheduled
         self._input_persist('input.cancel_pending', result)
         return result
+
+    def _input_mark_dispatched(self, state, records, delivery):
+        """Commit one confirmed dispatch into the existing lease ledger."""
+        for record in records:
+            if record['lease'] is None:
+                continue
+            lease = state['leases'][record['lease']]
+            if record['event']['data']['down']:
+                lease['make'] = delivery
+            else:
+                del state['leases'][record['lease']]
+        state['pending'].clear()
 
     def _input_after_continue(self, deadline):
         """Try once after GDB continue; never resume or retry an input batch.
@@ -274,6 +302,8 @@ class QemuPhysicalInputMixin:
         state = self._input_storage()
         if not state['valid']:
             raise ValueError('Physical input ownership is invalid')
+        if self._input_schedule_bound():
+            raise ValueError('Native scheduled input cannot use immediate QMP dispatch')
         records = deepcopy(state['pending'])
         if not records:
             return self._input_receipt('not_dispatched', reason='No pending physical input', edge_count=0)
@@ -325,15 +355,7 @@ class QemuPhysicalInputMixin:
             finally:
                 self.vm.close()
             raise
-        for record in records:
-            if record['lease'] is None:
-                continue
-            lease = state['leases'][record['lease']]
-            if record['event']['data']['down']:
-                lease['make'] = 'qmp_accepted'
-            else:
-                del state['leases'][record['lease']]
-        state['pending'].clear()
+        self._input_mark_dispatched(state, records, 'qmp_accepted')
         receipt = self._input_receipt('qmp_accepted', edge_count=len(records),
                                       sequences=[item['sequence'] for item in records],
                                       pending_edges=0,

@@ -23,6 +23,7 @@ PLAYER = "player/fdisbull_player/"
 SOURCE_SUPPORT = (
     "native/qemu-clock/",
     "native/qemu-media/",
+    "native/qemu-input/",
     "tests/",
     "scripts/",
     ".github/workflows/",

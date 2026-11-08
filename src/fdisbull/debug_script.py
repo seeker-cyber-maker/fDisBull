@@ -28,6 +28,7 @@ OPERATIONS = {
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
+    'input-schedule':'input_schedule','input-schedule-observe':'input_schedule_observe',
     'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
@@ -261,6 +262,14 @@ def validate_script(script, *, session=None):
                                 bounded(value,key,*limits)
                         if session is not None and not getattr(session,'capabilities',{}).get('virtual_clock_budget'):
                             raise ValueError('clock-advance requires the explicit QEMU virtual clock profile')
+                    if op in ('input-schedule','input-schedule-observe'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_input_schedule'):
+                            raise ValueError('Input scheduling requires the native input extension and virtual clock')
+                        if op=='input-schedule':
+                            value=params['delta_ns']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_input_schedule import validate_input_delay
+                                validate_input_delay(value)
                     if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
                         if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
                             raise ValueError('Audio operations require the explicit QEMU pc-speaker audio profile')
@@ -323,7 +332,8 @@ def validate_script(script, *, session=None):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
         guarded={'keyboard.key-down','keyboard.key-up','mouse.move-relative','mouse.button-down',
-                 'mouse.button-up','input-cancel-pending','clock-observe','clock-advance','capture-surface','screenshot',
+                 'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
+                 'clock-observe','clock-advance','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
                  'display-start','display-observe','display-stop','capture-display'}
         project=getattr(session,'project',None)
@@ -433,7 +443,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # follows the same terminal cleanup as legacy keyboard input.
                 prior_input_touched = keyboard_touched
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
-                        or step['op'].startswith('mouse.') or step['op']=='input-cancel-pending'
+                        or step['op'].startswith('mouse.') or step['op'] in ('input-cancel-pending','input-schedule')
                         or (step['op']=='trace-until' and params.get('action') is not None)
                         or (step['op']=='frame-inputs' and params['edges'])
                         or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):

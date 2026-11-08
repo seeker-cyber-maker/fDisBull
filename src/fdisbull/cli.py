@@ -200,6 +200,8 @@ METHODS = {
     "debug-mouse-button-down": "Queue a physical mouse make and own its lease; run,button",
     "debug-mouse-button-up": "Queue the matching physical mouse release; run,lease",
     "debug-input-state": "Observe owned QEMU pending edges and held leases; run (not guest consumption)",
+    "debug-input-schedule": "Arm the pending physical batch at a native virtual delay without running; run,delta_ns",
+    "debug-input-schedule-observe": "Read the owned native input dispatch/cancellation receipt; run (not guest consumption)",
     "debug-input-cancel-pending": "Cancel only unsent QEMU edges; run (accepted holds remain owned)",
     "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
     "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",

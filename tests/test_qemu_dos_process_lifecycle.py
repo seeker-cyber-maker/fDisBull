@@ -20,7 +20,7 @@ from test_qemu_dos_process_native import (
 
 def reject_event(project, operation):
     """Reject one actual SQLite INSERT without replacing the persistence API."""
-    assert operation in ('dos-process-entry', 'machine-run')
+    assert operation in ('dos-process-entry', 'machine-run', 'dos-process-return')
     with project.transaction(True):
         project.db.execute(f"""
             CREATE TRIGGER reject_lifecycle_event
@@ -129,24 +129,32 @@ def test_native_memory_snapshot_transport_failure_invalidates_process(
                 (debug.run_id,)).fetchone()
 
 
+@pytest.mark.parametrize('operation', ['machine-run', 'dos-process-return'])
 def test_native_run_event_failure_invalidates_unobserved_completion(
-        tmp_path, process_runtime, process_disk):
+        tmp_path, process_runtime, process_disk, operation):
     _, project = create_project(tmp_path, com_exit(37))
     with project:
         with project.debugger(
                 process_runtime['executable'], tmp_path,
                 **launch_options(process_runtime, process_disk)) as debug:
             active = process_record(debug)
-            reject_event(project, 'machine-run')
-            with pytest.raises(sqlite3.IntegrityError, match='authored lifecycle publication failure'):
+            reject_event(project, operation)
+            with pytest.raises(sqlite3.IntegrityError, match='authored lifecycle publication failure') as raised:
                 debug.run(timeout_ms=3000)
             # DOS may already have exited, but its return has not been
             # independently admitted. Do not turn a journal error into a
             # successful guest-exit record or retain the old live mapping.
-            assert_invalidated(project, debug, active)
+            if operation == 'machine-run':
+                assert_invalidated(project, debug, active)
+            else:
+                assert debug.vm.process.poll() is not None
+                result = raised.value.result
+                assert result['outcome'] == 'breakpoint'
+                assert result['session']['stop_reason']['native_reply'].startswith('T05')
+                assert result['session']['stop_reason']['breakpoint_ids']
             assert not project.db.execute(
-                "SELECT 1 FROM debug_events WHERE run=? AND operation='machine-run'",
-                (debug.run_id,)).fetchone()
+                "SELECT 1 FROM debug_events WHERE run=? AND operation=?",
+                (debug.run_id, operation)).fetchone()
 
 
 @pytest.mark.parametrize('resident', [False, True], ids=['normal-exit', 'resident'])

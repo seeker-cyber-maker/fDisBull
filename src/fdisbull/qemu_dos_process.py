@@ -554,9 +554,11 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                 self._set_deadline(min(bound for bound in deadlines if bound is not None))
                 try:
                     return self._observe_return(result)
-                except BaseException:
+                except BaseException as error:
                     # The foreground process may already be gone. An invalid
                     # report cannot safely be retried or relabeled a success.
+                    if getattr(error, 'result', None) is None:
+                        error.result = result
                     self.vm.close()
                     raise
                 finally:

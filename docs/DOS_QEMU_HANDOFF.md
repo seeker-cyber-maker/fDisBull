@@ -58,16 +58,19 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
   instruction and native virtual-clock observations, token-bound native timer
   budgets, retained synchronous renderer publications, bounded PC-speaker PCM
-  windows, and stopped media/CPU/clock brackets, alongside the earlier
+  windows, one-shot native virtual-time input scheduling, and stopped
+  media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  timed/frame-edge input, coordinate mapping and clock-to-source-trace joins
+  legacy timed helpers and frame-edge input, coordinate mapping and clock-to-source-trace joins
   before claiming those behaviors or depending on them in checkpoints and
   histories. Renderer completion and capture-callback delivery are now explicit
-  narrower boundaries. Timing auto-sync is deferred at the user's direction;
+  narrower boundaries. Scheduled input now records PS/2 callbacks and sync at
+  native virtual time; device acceptance and guest consumption need independent
+  observations. Timing auto-sync is deferred at the user's direction;
   legacy guest_ms, timed helpers and DOSBox timing parity remain separate
   qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
@@ -77,6 +80,146 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-08: native virtual-time input continuation
+
+Continued from published head `5085371a57629d3102b1b3d51860b5af227249b8`
+on the same source branch and draft MR !117. This increment schedules one
+owned physical-input batch against the explicit native clock. Timing
+auto-sync remains deferred: there is no host pacing, adaptive controller,
+automatic resampling, repeated continue or guest-frame timing claim.
+
+### Public behavior and ownership
+
+The optional [input extension](../native/qemu-input/README.md) applies after
+the exact existing clock and media patches to QEMU 10.0.13. With the explicit
+`virtual` clock profile, `virtual_input_schedule` reports the three required
+native API-1 commands. Queue keyboard or relative PS/2 mouse edges, call
+`input_schedule(delta_ns)`, then choose an explicit bounded `run()` or
+`clock_advance()`. Arming and observing never execute the guest.
+
+The Python methods also have retained JSON routes `debug-input-schedule` and
+`debug-input-schedule-observe`, and saved-script operations `input-schedule`
+and `input-schedule-observe`. Existing queue/lease methods and
+`input_cancel_pending()` own cancellation. Whole-script capability, literal
+delay and transaction checks run before earlier mutations.
+
+Each receipt records the unique token, owned epoch and batch sequence IDs,
+requested start/deadline, actual terminal and dispatch times, observation time,
+lateness and cancellation reason. `dispatched` means **the selected PS/2
+handler callbacks and final sync completed**. It does not prove device FIFO
+acceptance, guest consumption, a held-key action, or a completed frame. Full or
+disabled PS/2 queues can ignore events, and remote mouse mode can retain
+motion. These limits are explicit in returned receipts.
+
+The pending batch remains immutable while bound. A validated dispatch commits
+lease transitions once; repeated observation cannot commit or replay them.
+The first actual stop cancels an unfired timer. Its unsent batch then requires
+an explicit reschedule or cancellation before another run. Rescheduling uses
+a fresh token and a fresh relative deadline. Cancelling a queued release
+preserves the previously dispatched hold; it emits no synthetic key-up.
+Stepping, traces and unbounded resume remain refused while input is pending.
+The ordinary immediate-input path is retained, and legacy `timed_input`
+capability remains false.
+
+### Native ordering and failure boundaries
+
+The native scheduler uses an ordinary `QEMU_CLOCK_VIRTUAL` timer so it also
+participates in fixed-icount idle warping and can wake a halted CPU. It avoids
+the legacy delayed-key helper. Under the big QEMU lock, it preflights the
+entire batch before arming and before dispatch: exact realized PS/2 devices,
+handler identities/callbacks, qcode mappings, an empty legacy keyboard queue,
+no unsynchronized handler events, and every prefix of mouse accumulator
+arithmetic. Only then are callbacks invoked and synced.
+
+A pending debugger/native stop wins. A reached active clock-budget deadline
+also wins, including equal input and budget deadlines regardless of insertion
+order. A merely halted CPU remains eligible. Successful dispatch does not stop
+the VM; the original budget, breakpoint, exception or DOS completion remains
+the caller's stop. No uncertain attempt is retried.
+
+One batch admits 1..256 events, with at most one edge per mouse button. Delays
+are 1..60,000,000,000 ns without signed clock overflow. Tokens cannot be reused;
+4096 successful arms exhaust the bounded process-lifetime history. Reset or
+loss of the admitted clock profile/epoch invalidates the scheduler. Its first
+successful arm blocks migration for the process lifetime; checkpoint/restore
+and replay formats are not supplied by this slice.
+
+Independent host review produced failing witnesses for shared-deadline loss
+during post-stop QMP reads, dispatch receipts at the owned budget cutoff, a
+failed script leaving newly armed pre-existing input live, and malformed UTF-8
+reason bounds. The fixes keep one host/script deadline through scheduled
+execution and reconciliation, bind the current budget token/epoch before
+committing leases, close failed mutating scripts, and enforce the 256-byte
+reason limit. A first owned cancellation must match the observed stop time;
+later passive observations retain the frozen terminal time.
+
+Additional failing witnesses exposed loss of already known stop evidence when
+clock cleanup, DOS-return journaling or late persistence failed. Those paths
+now retain `error.result`, including any validated input receipt, before
+closing. Original native stop bytes survive even when register readback fails;
+in that case classification is explicitly incomplete. Ordinary unscheduled
+GDB timeout/interrupt recovery retains its previous behavior.
+
+### Verification
+
+| Lane | Result |
+| --- | --- |
+| Affected source, stock QEMU/FreeDOS, lifecycle, trace contracts, I/O, deadlines, inventory and payload checker | 328 passed, zero skips, 56.49 seconds |
+| Final focused scheduled-input and clock host boundary checks | 80 passed, zero skips, 2.01 seconds |
+| Frozen isolated installed wheel: stock QEMU and public boundaries, serial | 317 passed, zero skips, 56.87 seconds |
+| Frozen isolated installed wheel: native scheduled input, clock and media, serial | 28 passed, zero skips, 25.60 seconds |
+| Wheel/source/installed payload identity | All 635 package files match exactly |
+
+Selections overlap and are not a count of unique tests. The final installed
+lanes use the complete frozen host implementation, including the outer cleanup
+evidence fixes. Their native selection contains nine new input, eleven clock,
+five audio and three renderer cases. The 51 scheduled-input host cases are
+included in the source and installed stock selections.
+
+The nine new native cases independently observe keyboard make/break bytes
+`1e 9e`, PS/2 movement/button packets `09 05 00` and `08 00 00`, IRQ1 wake-up
+from `HLT`, an earlier breakpoint, equal/later input versus budget deadlines,
+explicit rescheduling and cancellation without replay, wrong-token refusal,
+reset invalidation, DOS exit/TSR, retained JSON and saved-script execution, and
+reopened dispatch metadata. A renderer join checks a later publication in the
+same epoch and an independently programmed pixel; it makes no frame or input
+causation claim. The unchanged clock/media cases run alongside them.
+
+Evidence is local Linux over pipe transport, using disposable owned VMs and
+the explicit test-only FreeDOS 1.4 `SWITCHES=/F` baseline. Original authored
+program and prepared boot-image hashes are checked. This run does not resolve
+the earlier parallel startup failures, large-MZ startup timeout or retained
+DOSBox idle timeout recorded below. No retry or production timeout increase
+was introduced. Deliberate failing review witnesses and an initial test-command
+filename error are retained separately from passing results.
+
+Pinned identities:
+
+- Input patch SHA-256:
+  `11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb`.
+- Required unchanged clock patch SHA-256:
+  `2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b`.
+- Required unchanged media patch SHA-256:
+  `ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6`.
+- Tested native executable SHA-256:
+  `5b8b6c5df2602a34ea284a3efa7048bfacf68b3a1b83f2b9e793cac9c10480cb`.
+- Tested wheel SHA-256: `5d09079d3c63f3220fdacd791787c3623606ffa05dceaf1e4677f68b972463c6`.
+
+The input patch adds seven changed/new source paths. Applying the complete
+clock → media → input chain to the pinned official archive reproduces all
+18 unique affected paths exactly, with zero patch fuzz. The private build
+completed in 36.087 seconds; its prior tested media executable and original
+receipt are retained. Patch source manifests pin the archive, dependencies and
+each stage's bytes. Source-distribution and tool-source recipes include all
+three patch packages; the Python wheel contains no emulator or DOS disk.
+
+All 127 migration/default-switch entries remain unqualified and DOSBox remains
+the default. Guest-frame/VBlank completion, legacy timed helpers, INT33/pixel
+mapping, SB16/FM, clock-to-source-trace causality, checkpoints, histories,
+QEMM/real-game compatibility, Windows and macOS remain open. Timing auto-sync
+is deferred. No hosted pipeline, release, merge, shared installation or
+credential change was performed. The configured Mac mirrors are unavailable.
 
 ## 2026-11-08: native renderer and PC-speaker continuation
 

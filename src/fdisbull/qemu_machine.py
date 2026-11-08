@@ -24,6 +24,7 @@ from .desqview_runtime import DesqviewSessionMixin
 from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine_clock_arguments,
                          validate_clock_budget, admit_virtual_clock)
 from .qemu_input import QemuPhysicalInputMixin
+from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
@@ -321,7 +322,9 @@ def machine_clock_operation(function):
             result=function(self,delta_ns,timeout_ms=timeout_ms)
             if time.monotonic()>=bound:
                 vm.close()
-                raise TimeoutError('Native clock execution exceeded its host deadline')
+                error=TimeoutError('Native clock execution exceeded its host deadline')
+                error.result=result
+                raise error
             return result
         except BaseException:
             channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
@@ -338,7 +341,69 @@ def machine_clock_operation(function):
     return invoke
 
 
-class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin,
+def machine_run_operation(function):
+    """Keep scheduled execution and its receipt within one host deadline.
+
+    Ordinary GDB execution keeps its established timeout/interrupt recovery.
+    A native input schedule also needs a bounded post-stop QMP reconciliation;
+    its deadline starts before lock admission and cannot reset between reads.
+    """
+    @wraps(function)
+    def invoke(self, *, timeout_ms=10000):
+        from .operation_budget import request_deadline
+        bound=request_deadline(self,timeout_ms)
+        vm=self.vm
+        limits=[bound,getattr(vm,'operation_deadline',None),
+                *[getattr(channel,'operation_deadline',None) for channel in
+                  (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
+        bound=min(value for value in limits if value is not None)
+        wait=min(10,bound-time.monotonic())
+        if wait<=0:raise TimeoutError('Native run host deadline expired before admission')
+        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        previous_vm=getattr(vm,'operation_deadline',None)
+        previous_channels=[]
+        installed=False
+        try:
+            guard=getattr(vm,'operation_guard',None)
+            if guard is not None:guard(function.__name__)
+            # Read ownership under the lock: another caller may have armed a
+            # schedule while this request waited for admission.
+            if not self._input_schedule_bound():
+                return function(self,timeout_ms=timeout_ms)
+            for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
+                if channel is not None:
+                    previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
+            limits=[bound,previous_vm,*[previous for _,previous in previous_channels]]
+            bound=min(value for value in limits if value is not None)
+            if time.monotonic()>=bound:
+                raise TimeoutError('Native run host deadline expired before dispatch')
+            vm.operation_deadline=bound
+            for channel,_ in previous_channels:channel.operation_deadline=bound
+            installed=True
+            result=function(self,timeout_ms=timeout_ms)
+            if time.monotonic()>=bound:
+                vm.close()
+                error=TimeoutError('Scheduled native run exceeded its host deadline')
+                error.result=result
+                raise error
+            return result
+        except BaseException:
+            channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
+            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+                   for channel in channels):vm.close()
+            raise
+        finally:
+            if installed:
+                vm.operation_deadline=previous_vm
+                for channel,previous in previous_channels:channel.operation_deadline=previous
+                current=getattr(vm,'gdb',None)
+                if current is not None and not any(current is channel for channel,_ in previous_channels):
+                    current.operation_deadline=previous_vm
+            vm.lock.release()
+    return invoke
+
+
+class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -363,7 +428,9 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
     mouse_button_down=machine_io_operation(QemuPhysicalInputMixin.mouse_button_down)
     mouse_button_up=machine_io_operation(QemuPhysicalInputMixin.mouse_button_up)
     input_state=machine_io_operation(QemuPhysicalInputMixin.input_state)
-    input_cancel_pending=machine_io_operation(QemuPhysicalInputMixin.input_cancel_pending)
+    input_cancel_pending=machine_io_operation(QemuPhysicalInputMixin.input_cancel_pending,close_on_timeout=True)
+    input_schedule=machine_io_operation(QemuScheduledInputMixin.input_schedule,close_on_timeout=True)
+    input_schedule_observe=machine_io_operation(QemuScheduledInputMixin.input_schedule_observe,close_on_timeout=True)
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
@@ -376,6 +443,7 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='pc-speaker',
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_clock_budget=virtual,
+            virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
                                'explicit instruction progress profile; no guest milliseconds'),
             physical_input='input-send-event' in getattr(vm,'qmp_commands',()),
@@ -560,11 +628,16 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
             raise ValueError('Queued physical input requires run() before stepping or tracing')
         if self._input_pending() and self.project is not None and self.project.db.in_transaction:
             raise ValueError('Physical input execution requires a project outside a caller-owned transaction')
+        self._input_schedule_preflight()
 
     def _execute(self,command,timeout_ms):
         self._execution_preflight(command,timeout_ms)
         remote=self._stopped();delivery=None
-        if self._input_pending():
+        scheduled=self._input_schedule_bound()
+        if scheduled:
+            try:reply,timed_out=remote.execute(command,timeout_ms)
+            except BaseException:self.vm.close();raise
+        elif self._input_pending():
             def dispatch(deadline):
                 nonlocal delivery
                 delivery=self._input_after_continue(deadline)
@@ -572,31 +645,40 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
         else:reply,timed_out=remote.execute(command,timeout_ms)
         if reply[:1] not in (b'T',b'S',b'W',b'X'):self.vm.close();raise DebuggerError('Invalid machine stop reply')
         self.vm.machine_stopped=True;native=reply.decode('ascii')
-        regs=self.registers() if reply[:1] in (b'T',b'S') else None
-        pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
-        watch=re.search(r'(?:^|;)(?:watch|rwatch|awatch):([0-9a-fA-F]+)',native)
-        signal=int(native[1:3],16)
-        # A native pause/virtual timer uses SIGINT; a matching PC alone cannot
-        # turn that interruption into a breakpoint or a DOS parent-return trap.
-        ids=[key for key,bp in self.breakpoints.items() if
-             signal==5 and bp['access']=='x' and bp['address']==pc or
-             watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
-        kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'stopped' if signal==2 else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
+        # Preserve the original stop even if register observation or native
+        # input reconciliation fails. Classification becomes richer only when
+        # the corresponding reads complete successfully.
+        kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'stopped'
         result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
-                    address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
-        from .debug_semantics import normalize_stop
-        result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
-        if delivery is not None:result['input_delivery']=delivery
-        if self.project:
-            try:self._event('machine-'+('step' if command=='s' else 'run'),result)
-            except BaseException:
-                if delivery is not None:self.vm.close()
-                raise
+                    address=None,breakpoint_ids=[],native_reply=native,classification_complete=False)),registers=None)
+        try:
+            regs=self.registers() if reply[:1] in (b'T',b'S') else None
+            pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
+            watch=re.search(r'(?:^|;)(?:watch|rwatch|awatch):([0-9a-fA-F]+)',native)
+            signal=int(native[1:3],16)
+            # A native pause/virtual timer uses SIGINT; a matching PC alone cannot
+            # turn that interruption into a breakpoint or a DOS parent-return trap.
+            ids=[key for key,bp in self.breakpoints.items() if
+                 signal==5 and bp['access']=='x' and bp['address']==pc or
+                 watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
+            kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'stopped' if signal==2 else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
+            result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
+                        address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
+            from .debug_semantics import normalize_stop
+            result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
+            if scheduled:delivery=self._input_schedule_after_stop()
+            if delivery is not None:result['input_delivery']=delivery
+            if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
+        except BaseException as error:
+            if scheduled or delivery is not None:
+                error.result=result
+                self.vm.close()
+            raise
         return result
 
     @machine_operation
     def step(self,*,timeout_ms=10000):return self._execute('s',timeout_ms)
-    @machine_operation
+    @machine_run_operation
     def run(self,*,timeout_ms=10000):return self._execute('c',timeout_ms)
 
     def _event(self,operation,value):
@@ -732,6 +814,7 @@ class MachineDebugSession(MachineContext):
                 'audio-start','audio-observe','audio-stop','capture-audio',
                 'display-start','display-observe','display-stop','capture-display',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
+                'input-schedule','input-schedule-observe',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession

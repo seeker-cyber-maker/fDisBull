@@ -154,15 +154,21 @@
         "tests/test_qemu_audio.py",
         "tests/test_qemu_audio_native.py",
         "tests/test_qemu_display.py",
-        "tests/test_qemu_display_native.py"
+        "tests/test_qemu_display_native.py",
+        "tests/test_qemu_input_schedule.py",
+        "tests/test_qemu_input_schedule_native.py"
       ],
       "scope_limits": [
         "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
         "clock_advance uses one native timer and one GDB continue under a single host deadline. Token-bound requested/fired/stopped timestamps preserve early debugger/process stops and unknown input consumption; uncertain arm/cleanup closes the machine. No exact arbitrary-nanosecond cutoff, cycle accuracy, generic guest_ms, completed-frame or DOSBox timing parity claim.",
         "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for the declared clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
-        "Owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",
+        "By default, owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Legacy timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",
+        "Optional native input API1 on the explicit virtual profile adds input_schedule(delta_ns) and input_schedule_observe(), with debug-input-schedule/debug-input-schedule-observe retained JSON and input-schedule/input-schedule-observe script routes. The QEMU10.0.13 input patch applies after the current clock and media patches. virtual_input_schedule requires discovered native commands; timed_input, guest_time_control and completed_guest_frames stay false.",
+        "Scheduled arm/query are passive. The caller explicitly chooses one bounded run or clock_advance; the native virtual timer dispatches one token-owned batch through selected PS/2 callbacks and one final sync. The receipt binds requested start/deadline, actual dispatch/terminal time, lateness, sequence/count and epoch. Device FIFO acceptance, guest consumption, release and frame recognition remain unknown; no legacy guest_ms or exact cycle/frame-press parity.",
+        "The first actual stop cancels an unfired input timer and preserves the original breakpoint/watchpoint or DOS exit/TSR. Pending stops and equal/reached owned clock-budget deadlines win independently of timer insertion order. Pending edges require explicit input_schedule reschedule under a new token or input_cancel_pending disarm/discard before another run or queue mutation; no automatic continuation or replay. Scheduled runs and scripts bound post-stop reconciliation and evidence persistence by their host deadline.",
+        "Native scheduling admits 1..256 events, delay 1..60000000000 ns without signed overflow, relative X/Y values -32767..32767 and one edge per left/middle/right mouse button. Existing input ownership is bounded to 64 leases. Token history permits 4096 successful arms per process. Reset, epoch/profile loss or unsupported runstates invalidate the scheduler; migration stays blocked after its first successful arm. Terminal receipts freeze; uncertain native or evidence results close the VM. Timing auto-sync, host pacing and adaptive correction remain deferred.",
         "capture_surface and screenshot retain PNG bytes, unique observation identity and a stopped selected-CPU/clock bracket. They do not establish a last-completed guest frame, freshness, scanline/IRQ phase, audio timing or UI readiness.",
-        "Held leases belong to the owned machine and invalidate on close. Cancellation only discards unsent transitions; accepted holds still need explicit release. Unknown delivery or failed input evidence closes the VM without replay.",
+        "Held leases belong to the owned machine and invalidate on close. Cancellation only discards unsent transitions after proving native disarm; dispatched holds still need explicit release. Cancelling a queued release retains that hold. Unknown delivery or failed input evidence closes the VM without replay.",
         "Periodic memory rules and scene/frame workflows still require qualified guest-time control. No host timer is relabeled as a guest-time scheduler.",
         "The optional native media extension retains completed synchronous renderer updates under explicit virtual observation cadence, with immutable RGB pixels, token/update identity, publication time, age and stale-update refusal. A completed renderer update can contain partial guest drawing; completed_guest_frame and guest_frame_id remain unknown. No VBlank or full guest-mode-epoch parity.",
         "Explicit qemu_audio=pc-speaker configures only the PC speaker with a none audiodev. Bounded 32000-Hz mono u8 callback output has sample ranges and delivery timestamps, overflow accounting and stopped WAV exports. Inactive intervals are not synthesized; PCM duration is not elapsed guest time or device queue drain. Other sound devices and audible playback are unqualified.",
@@ -380,7 +386,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_key_down(); owned Python queue dispatched once during bounded run",
+      "native_route": "MachineContext.keyboard_key_down(); owned queue dispatched once during bounded run, immediately by default or explicitly armed with input_schedule(delta_ns)",
       "qualification": "unqualified"
     },
     {
@@ -404,7 +410,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_state()/input_state(); owned queue and receipts, no native guest state",
+      "native_route": "MachineContext.keyboard_state()/input_state()/input_schedule_observe(); owned queue, leases and retained dispatch receipts, no native guest state",
       "qualification": "unqualified"
     },
     {
@@ -420,7 +426,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_key_up(); matching lease; release accepted is not guest-consumed",
+      "native_route": "MachineContext.keyboard_key_up(); matching lease and explicit immediate or scheduled release dispatch, with guest consumption unknown",
       "qualification": "unqualified"
     },
     {
@@ -428,7 +434,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.mouse_button_down/up(); owned physical PS/2 leases; no INT33 semantics",
+      "native_route": "MachineContext.mouse_button_down/up(); owned physical PS/2 leases with immediate or scheduled dispatch; one edge per button in a scheduled batch, no INT33 semantics",
       "qualification": "unqualified"
     },
     {
@@ -444,7 +450,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.mouse_move_relative(); relative controller deltas, no pixel mapping",
+      "native_route": "MachineContext.mouse_move_relative(); relative controller deltas with immediate or scheduled dispatch, no pixel mapping or device-queue acceptance claim",
       "qualification": "unqualified"
     },
     {
@@ -808,7 +814,7 @@
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_key_down(); owned machine input queue/leases; no guest-consumption claim",
+      "native_route": "MachineContext.keyboard_key_down(); owned queue/leases with immediate or explicit input_schedule dispatch; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -826,7 +832,7 @@
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_state(); owned machine input queue/leases; no guest-consumption claim",
+      "native_route": "MachineContext.keyboard_state()/input_state(); owned queue/leases and retained immediate or scheduled receipts; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -844,7 +850,7 @@
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineContext.keyboard_key_up(); owned machine input queue/leases; no guest-consumption claim",
+      "native_route": "MachineContext.keyboard_key_up(); explicit matching-lease release through immediate or scheduled dispatch; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {

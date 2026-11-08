@@ -20,12 +20,14 @@ expected difficulties, findings and dated validation.
 The third slice connects that verified process to stopped-boundary traces,
 register/PC/region predicates and persistent execution-event searches. Its
 source identity survives ordinary MZ relocation and later process closure.
-Overlays, mode changes and queued-input timing remain explicit boundaries.
+Overlays, mode changes and input-to-source-trace causality remain explicit
+boundaries.
 
 The fourth slice now supplies owned physical keyboard/PS/2 input, explicit
 instruction and native virtual-clock profiles, and stopped display captures
 with CPU/clock brackets. The optional virtual profile adds native timer budgets,
-retained completed renderer updates and bounded PC-speaker PCM capture.
+retained completed renderer updates, bounded PC-speaker PCM capture and optional
+virtual-time dispatch of one owned physical-input batch.
 Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. Timing auto-sync is deferred.
 
@@ -278,9 +280,9 @@ or the process-specific `trace-until` method.
 
 ### Queue explicit controller edges
 
-The native API queues input in Python while the VM is stopped. `run()` sends
-one GDB continue, checks QEMU's run state, sends at most one QMP input batch,
-and consumes that same GDB stop packet. This preserves breakpoints/watchpoints
+The native API queues input in Python while the VM is stopped. By default,
+`run()` sends one GDB continue, checks QEMU's run state, sends at most one QMP
+input batch, and consumes that same GDB stop packet. This preserves breakpoints/watchpoints
 and their reasons. It does not start another run when an early stop wins.
 
 ```python
@@ -293,9 +295,9 @@ print(result['input_delivery'])
 debug.delete_breakpoint(point['breakpoint_id'])
 ```
 
-The delivery receipt is `qmp_accepted` or `not_dispatched`; `guest_consumed`
-remains `None`. An early breakpoint may leave the batch pending, or QEMU may
-accept it before the guest consumes anything. Inspect guest RAM/registers or
+That immediate delivery receipt is `qmp_accepted` or `not_dispatched`;
+`guest_consumed` remains `None`. An early breakpoint may leave the batch pending,
+or QEMU may accept it before the guest consumes anything. Inspect guest RAM/registers or
 driver state to establish consumption. A failed/uncertain QMP acknowledgment
 closes the owned VM and invalidates its input without replay.
 
@@ -426,8 +428,125 @@ or failed execution evidence closes the owned VM. The timer and its deferred
 stop request must both be absent before another operation is admitted.
 
 This first extension blocks migration after budget use. Native checkpoints,
-completed-frame/audio fences, timed input helpers, periodic memory rules and
-scene scheduling still need their own integration and qualification.
+completed-frame/audio fences, legacy timed press/text helpers, periodic memory
+rules and scene scheduling still need their own integration and qualification.
+
+### Schedule one physical-input batch on virtual time
+
+The optional [input extension](../native/qemu-input/README.md) adds
+`input_schedule(delta_ns)` and `input_schedule_observe()`. Build its QEMU 10.0.13
+patch **after the current clock and media patches**, and select the explicit
+`qemu_clock='virtual'` profile described above. The raw machine factory uses
+`clock_profile='virtual'`. Check `capabilities['virtual_input_schedule']` before
+using this path. Stock QEMU and the standard/instruction profiles retain the
+existing immediate-input path; they do not acquire this capability.
+
+Queue the desired keyboard or relative PS/2 mouse edges while stopped, then
+arm their one token-owned batch. Arm and observation are passive: they neither
+send input nor execute the guest. The caller next chooses one bounded
+`run(timeout_ms=...)` or `clock_advance(delta_ns, timeout_ms=...)`. The latter
+adds a separate native stop budget; choose an input deadline earlier than its
+budget deadline when dispatch is wanted.
+
+```python
+# debug uses the clock + media + input build and is stopped at a known wait.
+lease = debug.keyboard.key_down('a')['lease']
+armed = debug.input_schedule(5_000_000)
+assert debug.input_schedule_observe()['state'] == 'armed'
+result = debug.clock_advance(20_000_000, timeout_ms=3000)
+delivery = result['input_delivery']
+print(result['outcome'], delivery['state'], delivery['dispatch_ns'])
+```
+
+The timer dispatches through the selected native PS/2 handlers and one final
+sync. The receipt format is `fdisbull-qemu-scheduled-input-1`; inspect its
+`token`, `state`, `edge_count`, `sequences`, `start_ns`, `deadline_ns`,
+`terminal_ns` and `dispatch_ns`. `lateness_ns` is the actual dispatch time minus
+the requested deadline, not a host-delay estimate. `input_state()['schedule']`
+and `input_schedule_observe()` retain the latest receipt; terminal native evidence
+freezes while later observation time may advance.
+
+`dispatched` proves only that all selected event callbacks and their final sync
+returned. `device_queue_accepted` and `guest_consumed` remain `None`. A disabled
+PS/2 device or a full FIFO may ignore input, and mouse output can include earlier
+accumulated motion. Establish consumption, release and later drawing with
+independent guest memory, IRQ/driver or display evidence. This is not a frame
+boundary, exact CPU-cycle timing, a timed press, or a completed guest-frame ID.
+
+The first actual VM stop cancels an unfired timer. A breakpoint, watchpoint or
+DOS exit/TSR keeps its original stop result; the scheduler never continues to
+reach its deadline. A pending stop or an equal/already-reached owned clock-budget
+deadline wins over input, independent of timer insertion order. In that case
+`state='cancelled'`, `dispatch_ns=None` and `requires_resolution=True`: the
+Python edges remain pending, and another run or queue mutation is refused until
+the caller explicitly chooses one of these actions:
+
+- Call `input_schedule(new_delta_ns)` to reschedule the same pending batch from
+  the current stopped time under a new token, then choose another bounded run.
+- Call `input_cancel_pending()` to prove native disarm and discard only the
+  unsent transitions. This also works before the first run.
+
+After `dispatched`, an owned hold still needs `keyboard.key_up(lease)` or
+`mouse_button_up(lease)` and an explicit run to dispatch that release. The
+release can have its own `input_schedule(...)`. Cancelling a queued release
+retains the previously dispatched hold; cancellation never synthesizes a
+release. A second edge for the same mouse button in one scheduled batch is
+refused because one final mouse sync cannot represent both press and release.
+
+| Python | Retained JSON method | Saved-script operation |
+| --- | --- | --- |
+| `input_schedule(delta_ns)` | `debug-input-schedule` | `input-schedule` |
+| `input_schedule_observe()` | `debug-input-schedule-observe` | `input-schedule-observe` |
+| `input_cancel_pending()` | `debug-input-cancel-pending` | `input-cancel-pending` |
+
+For an already queued batch in the retained server:
+
+```json
+{"method":"debug-input-schedule","params":{"run":"RETURNED_RUN","delta_ns":5000000}}
+{"method":"debug-clock-advance","params":{"run":"RETURNED_RUN","delta_ns":20000000,"timeout_ms":3000}}
+{"method":"debug-input-schedule-observe","params":{"run":"RETURNED_RUN"}}
+```
+
+A saved script can queue, arm and inspect one attempt:
+
+```json
+{
+  "format": "fdisbull-script-1",
+  "backend": "qemu-dos",
+  "steps": [
+    {"op": "keyboard.key-down", "key": "a", "as": "held"},
+    {"op": "input-schedule", "delta_ns": 5000000},
+    {"op": "clock-advance", "delta_ns": 20000000, "timeout_ms": 3000},
+    {"op": "input-schedule-observe", "as": "delivery"}
+  ]
+}
+```
+
+Inspect the script result before choosing reschedule, cancellation or release;
+the example leaves a dispatched hold owned. Script capability/argument checks
+precede earlier mutations, and scheduled execution shares the host deadline
+through stop reconciliation and persistence. Failure after a script arms a
+batch closes the owned VM, including when its pending edges came from an earlier
+call. Saved receipts survive project reopening as history; they do not reconnect
+a timer or live input owner.
+
+Native API 1 accepts one batch of 1..256 events, with a delay of
+1..60,000,000,000 ns without signed-clock overflow. Relative X/Y values remain
+bounded to -32767..32767; only left/middle/right buttons are admitted, at most
+one edge per button. The machine still has at most 64 active input leases.
+An armed or interrupted batch cannot be appended to. Process-lifetime token
+history permits 4096 successful arms; exhaustion requires a fresh VM. The
+callback revalidates handler identity, the legacy input queue, earlier unsynced
+events and safe mouse arithmetic before emitting any event.
+
+Reset, epoch/profile loss or an unsupported runstate invalidates the scheduler;
+migration stays blocked for the process lifetime after its first successful
+arm. Uncertain arm, cancellation, dispatch, deadline reconciliation or evidence
+persistence closes the VM without replay. `timed_input=False`,
+`guest_time_control=False` and `completed_guest_frames=False` remain explicit:
+legacy `guest_ms`, timed press/type, frame presses and pixel/INT33 semantics are
+not supplied. Timing auto-sync, host pacing and adaptive correction remain
+deferred by the user.
 
 ### Capture a stopped display surface
 
@@ -545,8 +664,8 @@ Stored-surface PNG capture is distinct from the DOSBox completed-frame contract.
 
 Native event searches cover the verified initial real-mode DOS module, not a
 whole-program execution history, arbitrary driver mapping or unpacked original
-entry discovery. Periodic memory rules also remain blocked until
-the guest-clock slice is implemented; explicit stopped `memory-rule-tick` is
+entry discovery. Periodic memory rules also remain blocked until their native
+clock integration is qualified; explicit stopped `memory-rule-tick` is
 available.
 
 Hostcalls and UDL/UIL block services remain a later slice. The earlier lab's
@@ -598,6 +717,18 @@ pre/post-draw pixels, early-stop races, clock domains, stale leases, public
 JSON/scripts and terminal failure cleanup. `tests/test_qemu_clock.py`,
 `tests/test_qemu_input.py`, `tests/test_qemu_surface.py` and
 `tests/test_qemu_io_public.py` cover malformed receipts and public preflight.
+
+The scheduling slice adds `tests/test_qemu_input_schedule.py` for hostile
+receipts, ownership, public preflight, shared deadlines and terminal failure
+cleanup, plus `tests/test_qemu_input_schedule_native.py` for actual timer
+callbacks and independent guest IRQ1/IRQ12 observations. The native witnesses
+also cover HLT wakeup, earlier stops, equal/later budget cutoffs, held release,
+reset, DOS exit/TSR, renderer output, retained JSON/scripts and reopened evidence.
+Use `FDISBULL_QEMU_CLOCK` for the separately prepared clock + media + input
+executable and `FDISBULL_REQUIRE_QEMU_CLOCK=1`, with the required DOS boot image,
+mcopy, firmware and NASM inputs described above. This selection never replaces
+the stock `FDISBULL_QEMU_DOS` lane. The handoff records actual results; these
+witness references do not close any of the 127 default-switch qualifications.
 
 Rehearse the retained path with a separate original DOS program project:
 

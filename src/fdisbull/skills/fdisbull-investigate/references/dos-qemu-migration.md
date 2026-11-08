@@ -21,11 +21,12 @@ when the QEMU build supports them, and stopped memory snapshot/search/edit/rule
 operations. The process slice adds real DOS EXEC loading, verified PSP/source
 entry and selected-process exit/TSR observations. Source-bound trace predicates
 and persistent event searches cover the initial verified real-mode module.
-Owned keyboard and relative PS/2 mouse input, explicit instruction-count
-observation and stopped surface/CPU/clock captures are now available.
+Owned keyboard and relative PS/2 mouse input, optional native virtual-time batch
+scheduling, explicit instruction-count observation and stopped surface/CPU/clock
+captures are now available.
 Frame-timed input, native checkpoints, fetch layers and scene parity remain later
-slices. Periodic memory rules need the later
-guest-clock slice; explicit stopped rule ticks are available.
+slices. Periodic memory rules still need their native clock integration and
+qualification; explicit stopped rule ticks are available.
 
 ## Check an installation without a game
 
@@ -39,7 +40,7 @@ fdisbull doctor --backend qemu-dos --executable /path/to/qemu-system-x86_64 \
 
 Doctor executes authored boot code. Inspect its scope and individual checks:
 it does not boot DOS or qualify drivers, checkpoints, games or timing parity.
-QEMU 9.1+ is required. No custom QEMU patch is required. A minimal QEMU build
+The core doctor requires QEMU 9.1+ and no custom patch. A minimal QEMU build
 may lack stored-display capture; that capability is observed at startup.
 
 `pipe` uses private POSIX process streams/FIFOs without a network listener.
@@ -184,8 +185,8 @@ too. `mouse_move_relative(dx,dy)` queues relative controller deltas;
 physical button. These are machine devices, including after a DOS child exits.
 Relative motion does not identify pixels or supply a DOS INT33 mouse driver.
 
-`run(timeout_ms=...)` sends one GDB continue and at most one QMP input batch,
-then reads the same native stop. Inspect `input_delivery.delivery`: either
+By default, `run(timeout_ms=...)` sends one GDB continue and at most one QMP input
+batch, then reads the same native stop. Inspect `input_delivery.delivery`: either
 `qmp_accepted` or `not_dispatched`. An early breakpoint can retain pending
 input or follow acceptance before any guest consumption. `guest_consumed`
 stays `None`; establish consumption with independent guest RAM/register/driver
@@ -269,6 +270,78 @@ mouse packets, separate consumption/draw points and PNG pixels under QEMU
 10.0.13/FreeDOS1.4. This does not qualify real games, QEMM/DESQview, Windows,
 broader sound devices, a completed guest-frame fence or legacy guest-time
 scheduling parity. Keep those gates distinct from the native observations below.
+
+## Schedule one physical-input batch
+
+Use the pinned QEMU 10.0.13 build with the current clock, media and input patches,
+in that order; source/build instructions are in `native/qemu-input/`. Select
+`qemu_clock='virtual'` (`clock_profile='virtual'` for `Project.machine`) and
+require `capabilities['virtual_input_schedule']`. This optional native API 1
+does not change the stock/default immediate-input path. `timed_input=False`,
+`guest_time_control=False` and `completed_guest_frames=False` remain explicit.
+
+Queue physical edges while stopped, then call `input_schedule(delta_ns)`.
+Arming copies one owned batch and emits no input or guest execution.
+`input_schedule_observe()` is passive too. The next explicit bounded `run()`
+or `clock_advance()` owns one attempt; do not loop or resume to force delivery.
+
+```python
+lease = debug.keyboard.key_down('a')['lease']
+armed = debug.input_schedule(5_000_000)
+result = debug.clock_advance(20_000_000, timeout_ms=3000)
+delivery = result['input_delivery']
+print(result['outcome'], delivery['state'], delivery['dispatch_ns'])
+```
+
+The `fdisbull-qemu-scheduled-input-1` receipt binds token, run/session/epoch,
+edge sequence/count, requested start/deadline and actual terminal/dispatch
+times. `lateness_ns` is actual dispatch time minus its requested deadline.
+`dispatched` means the selected PS/2 handler callbacks and final sync returned;
+`device_queue_accepted` and `guest_consumed` stay `None`. Disabled/full devices
+can ignore events. Validate consumption, release and later drawing with
+independent guest evidence. A callback timestamp is not a frame boundary or an
+exact CPU-cycle guarantee. Terminal native fields freeze across later reads.
+
+The first actual stop cancels an unfired timer, preserving the original
+break/watchpoint or DOS exit/TSR result. Pending stops and equal/already-expired
+owned clock-budget deadlines win independently of timer insertion order. Choose
+an earlier input deadline when combining it with `clock_advance()`. A cancelled
+receipt has `dispatch_ns=None` and `requires_resolution=True`; its Python edges
+remain pending. Before another run or queue edit, explicitly reschedule them
+with `input_schedule(new_delta_ns)` from the current stop, or discard them with
+`input_cancel_pending()`. Cancellation proves disarm before forgetting edges.
+
+A dispatched hold still needs `keyboard.key_up(lease)` or
+`mouse_button_up(lease)` and another explicit dispatch, optionally scheduled.
+Cancelling its queued release retains the hold; cancellation never emits a
+release. While a batch is bound, new edges and step/trace/unbounded resume are
+refused. `input_state()['schedule']` reports the retained receipt and resolution
+requirement alongside the existing queue and leases.
+
+The retained JSON methods are `debug-input-schedule` with `run` and `delta_ns`,
+`debug-input-schedule-observe` with `run`, and `debug-input-cancel-pending` for
+resolution. Saved scripts use `input-schedule`, `input-schedule-observe` and
+`input-cancel-pending`. Their full preflight and native I/O share the script's
+host deadline, including post-stop reconciliation. A failed script that armed
+a batch closes the VM even if its pending edges came from an earlier call.
+Reopened receipt artifacts are historical evidence, not a live timer owner.
+
+Bounds are 1..256 events, delay 1..60,000,000,000 ns, relative X/Y values
+-32767..32767, and at most one edge for each left/middle/right mouse button in
+a batch. Do not schedule both mouse down and up at one timestamp: one sync
+would collapse them into the final button state. The existing 64-lease bound
+remains. Native token history allows 4096 successful arms per process; a fresh
+VM is required afterward. Reset, epoch/profile loss and unsupported runstates
+invalidate the scheduler. Migration stays blocked after the first successful
+arm. Uncertain
+mutation, callback, deadline or evidence results close the VM without replay.
+
+The new host/native witnesses are `tests/test_qemu_input_schedule.py` and
+`tests/test_qemu_input_schedule_native.py`; test paths are not passing receipts.
+All 127 default-switch qualifications remain open and DOSBox stays the default.
+Legacy `guest_ms`, timed press/type, frame presses, pixel/INT33 semantics and
+whole-game timing remain unqualified. Timing auto-sync, host pacing and adaptive
+correction remain explicitly deferred by the user.
 
 ## Observe renderer publications and PC-speaker output
 

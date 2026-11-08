@@ -238,6 +238,8 @@ class MachineClockMixin:
         if before['virtual_ns'] > (1 << 63) - 1 - delta_ns:
             raise ValueError('Native virtual clock deadline would overflow signed nanoseconds')
         token = uuid.uuid4().hex
+        previous_budget = getattr(vm, '_active_clock_budget', None)
+        result = None
         try:
             armed = _native_clock(vm, vm.qmp.call('x-fdisbull-arm-clock-budget',
                                                 {'delta-ns': delta_ns, 'token': token}))
@@ -247,6 +249,7 @@ class MachineClockMixin:
                     or armed.get('budget-fired-ns') is not None
                     or armed.get('budget-stopped-ns') is not None):
                 _invalid(vm, 'Native clock arm differs from the requested budget')
+            vm._active_clock_budget = deepcopy(armed)
             # Dynamic dispatch retains DOS exit/TSR and physical input semantics.
             result = self._execute('c', timeout_ms)
             if vm.qmp is None:
@@ -275,8 +278,12 @@ class MachineClockMixin:
             if self.project is not None:
                 self._event('machine-clock-advance', result)
             return result
-        except BaseException:
+        except BaseException as error:
             # Arm may have been accepted even when its reply was lost. Closing
             # is the only safe alternative to a positively identified disarm.
+            if result is not None and getattr(error, 'result', None) is None:
+                error.result = result
             vm.close()
             raise
+        finally:
+            vm._active_clock_budget = previous_budget
