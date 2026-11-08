@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from tests.test_agi_control import loaded, lift
+from test_agi_control import loaded, lift
 from fdisbull.agi_effects import CONTRACT, object_state
 from fdisbull.interaction_il import execute_il
 

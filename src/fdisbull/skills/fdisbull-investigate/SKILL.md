@@ -243,20 +243,8 @@ budget stop or unsupported operation as such, with the next useful action.
 | Analyze DOS device roots, mixed LE driver objects, or a QEMM-configured full machine | [references/dos-drivers-and-qemm.md](references/dos-drivers-and-qemm.md) |
 | Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [references/desqview-and-memory-search.md](references/desqview-and-memory-search.md) |
 | Compare action traces for code/register candidates or stop at a bounded instruction predicate | [references/execution-event-search.md](references/execution-event-search.md) |
-| Discover `media-modules`, inspect MZ tails or AGI v2 volumes, audit AVI captures, or build a bounded missing reader | [references/media-modules.md](references/media-modules.md) |
 | Identify architecture/container/media headers through the persistent format catalog or frame native SMK2 movies | [references/file-formats.md](references/file-formats.md) |
-| Index edition-pinned source snapshots (`source-*`), search concepts and verify period build-to-byte maps | [references/source-and-concepts.md](references/source-and-concepts.md) |
-| Plan research-led progression, source-reconstruction reuse or normal-play milestone checklists | [references/recovery-research.md](references/recovery-research.md) |
-| Prove or falsify a stored-value, writer, signedness or trigger claim against a pinned decoded binary | [references/binary-claim-verification.md](references/binary-claim-verification.md) |
-| Author versioned screen scenes, pixel masks, `visible`/`ready`/`enabled` predicates and coordinate-domain audits | [references/scenes.md](references/scenes.md) |
-| Qualify game-unit spatial maps, actor footprints, bounded routes and Physical / Assisted / Story / Fair-play policies | [references/runtime-navigation.md](references/runtime-navigation.md) |
-| Census DOS AGI 2.917 resources (`agi-scenes` `outline`/`resolve`) and close admission, completion and modal acknowledgements | [references/agi-scenes.md](references/agi-scenes.md) |
-| Recover address-free UIL scenes from required elements, live guards and explicit residual IR | [references/scene-recovery.md](references/scene-recovery.md) |
-| Specify complete interaction intent contracts across guards, effects, events, timing, persistence and projection loss | [references/semantic-contracts.md](references/semantic-contracts.md) |
-| Compose typed indexed `fdisbull-common-uil-1` (`uil-*`), semantic catalogs, Python/JS/native links and AppKit/X11/Win32 desktop shells | [references/common-uil.md](references/common-uil.md) |
-| Use original-backed DOS UDC, overlapping code backings, memory UIL (browser/macOS/desktop/Win16), Zork/AGI lifts or console UDC/replay | [references/udl-uil-udc.md](references/udl-uil-udc.md) |
-| Build bounded Z3 equivalence or transition checks (`proof-check`, `udl-verify`) and interpret counterexamples or vacuity | [references/proofs.md](references/proofs.md) |
-| Recreate an operation across alternative implementations, audio/media backings or mixed-language hosts ("sweding") | [the sweding guide](references/sweding.md) |
+| Recreate an operation across alternative implementations, audio/media backings or mixed-language hosts ("sweding") | |
 
 
 For a human-readable review of established findings, use the companion

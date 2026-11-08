@@ -4,7 +4,7 @@ from copy import deepcopy
 import pytest
 
 from fdisbull.interaction_il import validate_il
-from tests.test_agi_control import loaded, lift
+from test_agi_control import loaded, lift
 
 
 def symbolic_program(z3, program):

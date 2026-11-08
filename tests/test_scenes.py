@@ -358,6 +358,10 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/media-modules.md",
         "references/file-formats.md",
         "references/binary-claim-verification.md",
+        "references/desqview-and-memory-search.md",
+        "references/dos-drivers-and-qemm.md",
+        "references/execution-event-search.md",
+        "references/task-framing.md",
     }
     local_links = {
         target

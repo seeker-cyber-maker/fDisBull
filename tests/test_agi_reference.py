@@ -1,7 +1,7 @@
 """Keep the independently authored source model inspectable and exercised."""
 from fdisbull.interaction_il import execute_il
-from tests.agi_scalar_reference import oracle, oracle_selftest
-from tests.test_agi_control import loaded, lift, source_trace
+from agi_scalar_reference import oracle, oracle_selftest
+from test_agi_control import loaded, lift, source_trace
 
 
 def test_reference_authored_semantic_controls():

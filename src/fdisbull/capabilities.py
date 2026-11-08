@@ -11,6 +11,7 @@ import platform
 import shutil
 
 from . import __version__
+from . import runtime_identity
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent
 _PYTHON = {'iced-x86': ('iced_x86', 'iced-x86'), 'capstone': ('capstone', 'capstone'),
@@ -283,6 +284,8 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
         'package': {'runtime_version': __version__, 'distribution_version': distribution_version,
                     'imported_from': str(_PACKAGE_ROOT), 'source_revision': None,
                     'release_status': 'not_determined',
+                    'primary_version': runtime_identity.release_version(),
+                    'candidate_number': runtime_identity.candidate_number(),
                     'provider_fingerprint': hashlib.sha256(json.dumps(sources, sort_keys=True,
                                                           separators=(',', ':')).encode()).hexdigest(),
                     'identity_scope': 'Provider hashes only; no build/release certification.'},

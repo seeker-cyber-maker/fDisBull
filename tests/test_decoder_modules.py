@@ -13,8 +13,8 @@ from fdisbull.decoder_modules import (AGI2917Module, DecoderInput, DecoderModule
                                      DecoderRegistry, analyze_input, builtin_registry, capture_input, lift_input)
 from fdisbull.interaction_il import execute_il
 from fdisbull.processor import DecodedInstruction, Location, NativeProcessor, ProcessorInfo, Successor
-from tests.test_agi import fixture
-from tests.test_zmachine_processor import image
+from test_agi import fixture
+from test_zmachine_processor import image
 
 
 AGI = 'fdisbull.agi.2.917.subset'

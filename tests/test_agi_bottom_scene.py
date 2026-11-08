@@ -6,7 +6,7 @@ import pytest
 
 from examples.agi import build_bottom_scene as exporter
 from fdisbull.il_scenes import ILSceneBackend
-from tests.test_agi_clip_scene import fixture as clip_fixture
+from test_agi_clip_scene import fixture as clip_fixture
 from fdisbull_player import Player
 
 

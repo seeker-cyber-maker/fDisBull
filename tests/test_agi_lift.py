@@ -6,7 +6,7 @@ import pytest
 from fdisbull.agi import load_logic
 from fdisbull.agi_lift import lift_logic
 from fdisbull.interaction_il import execute_il
-from tests.test_agi import fixture
+from test_agi import fixture
 
 
 def loaded(tmp_path, code):

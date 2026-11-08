@@ -10,9 +10,9 @@ import sys
 import time
 
 import pytest
-from tests.test_mads_media_runtime import (sprite, tiles, tile_map, dsr, font, animation,
+from test_mads_media_runtime import (sprite, tiles, tile_map, dsr, font, animation,
     dcl_literals, assignment)
-from tests.test_mads_processor import literal_fab, pack, hag, cnv, cnd
+from test_mads_processor import literal_fab, pack, hag, cnv, cnd
 from fdisbull.mads_media_adapters import NAMES
 from fdisbull.media import media_modules
 from fdisbull.cli import main, parser

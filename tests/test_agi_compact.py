@@ -8,7 +8,7 @@ from fdisbull.agi_compact import lift_compact
 from fdisbull.cli import respond, main
 from fdisbull.decoder_modules import builtin_registry, lift_input
 from fdisbull.interaction_il import execute_il
-from tests.test_agi_control import loaded, lift, conditional, source_trace
+from test_agi_control import loaded, lift, conditional, source_trace
 
 
 def compact(program,state,**options):
@@ -157,7 +157,7 @@ def test_shared_callee_depth_is_checked_again_in_a_deeper_call_chain(tmp_path):
 def test_v1_only_proof_and_scene_consumers_refuse_graphs(tmp_path):
     from fdisbull.udl_blocks import lift_asm_block,verify_block
     from fdisbull.il_scenes import ILSceneBackend
-    from tests.test_il_scenes import definition
+    from test_il_scenes import definition
     document=compact(loaded(tmp_path,{0:bytes.fromhex('03010000')}),{'$agi_v1':0})['uil']
     native=lift_asm_block(bytes.fromhex('b80000'),{'ax':'$agi_v1'},inputs=[],outputs=['ax'])
     with pytest.raises(ValueError,match='tree IL v1'):

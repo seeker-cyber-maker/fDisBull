@@ -12,7 +12,7 @@ import wave
 import zlib
 
 import pytest
-from tests.test_mads_processor import pack, literal_fab, hag, cnv, cnd, expr
+from test_mads_processor import pack, literal_fab, hag, cnv, cnd, expr
 from fdisbull.codec_dcl import decode_dcl, _codes, _LITERAL_RUNS, _LENGTH_RUNS
 from fdisbull.codec_fab import decode_fab
 from fdisbull.mads_media import (IndexedImage, AudioSample, decode_sprite_pixels,
@@ -339,7 +339,7 @@ def test_corpus_harness_records_identical_duplicates_and_refuses_conflicts(same)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     from fdisbull.mads_resources import HagArchive
-    from tests.test_mads_processor import hag
+    from test_mads_processor import hag
     archive = HagArchive.read(hag([('X.MM', b'abc'), ('X.MM', b'abc' if same else b'xyz')]))
     records = []
     if same:

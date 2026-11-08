@@ -9,7 +9,7 @@ import sys
 import pytest
 
 from scripts.verify_agi_compact_graph import verify
-from tests.test_agi_control import loaded, lift
+from test_agi_control import loaded, lift
 
 
 def fixture(tmp_path):

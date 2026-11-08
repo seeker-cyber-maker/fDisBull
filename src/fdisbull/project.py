@@ -302,6 +302,12 @@ class Project(
                     project._init_information(image)
                     from . import __version__
 
+                    from .runtime_identity import release_version
+
+                    # Lasting analysis artifacts record the primary version
+                    # line only; RC numbers stay in tool diagnostics.
+                    analysis_version = release_version() or __version__
+
                     if loader_options is None:
                         # Existing internal module imports have a known selected image.
                         loader_options = {"module": True, "entry": image.entry}
@@ -345,7 +351,7 @@ class Project(
                         "loader_options": loader_options,
                         "loader": {
                             "name": "fdisbull.load_image",
-                            "version": __version__,
+                            "version": analysis_version,
                         },
                         "schema": SCHEMA,
                     }

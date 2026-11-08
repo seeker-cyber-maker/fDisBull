@@ -142,9 +142,15 @@ class TargetSourcesMixin:
             self._seed_image(self.db, image, child, self.context)
             self._init_information(image, child)
             from . import __version__
+
+            from .runtime_identity import release_version
+
+            # Durable analysis provenance records the primary version line;
+            # RC numbers stay in tool diagnostics.
+            analysis_version = release_version() or __version__
             record = {'identity': candidate, 'format': image.format, 'arch': image.arch, 'bits': image.bits,
                       'loader_options': document['loader_options'],
-                      'loader': {'name':'fdisbull.load_image','version':__version__},
+                      'loader': {'name':'fdisbull.load_image','version':analysis_version},
                       'schema': 9, 'approval': expected, 'base_version': v['id']}
             self.db.execute('INSERT INTO target_sources VALUES (?,?)', (child, json.dumps(record)))
             return {'version': child, 'parent': v['id'], 'identity': candidate, 'attached': True, 'layer': True, 'executed': False}

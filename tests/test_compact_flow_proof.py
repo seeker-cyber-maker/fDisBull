@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 
 z3 = pytest.importorskip('z3')
-from tests.test_agi_control import loaded, lift
+from test_agi_control import loaded, lift
 
 
 def symbolic_paths(document, initial):
