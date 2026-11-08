@@ -1466,6 +1466,17 @@ def parser():
         "--output-artifact-dir", help="Private output-artifact directory outside Git"
     )
     sub = root.add_subparsers(dest="command", required=True)
+    c = sub.add_parser(
+        "z-controller",
+        help="Retain one native guest and reload explicitly trusted local Z actions",
+    )
+    c.add_argument("project", help="Existing private fDisBull project")
+    c.add_argument("--executable", required=True, help="Prepared native debugger backend")
+    c.add_argument("--game-dir", required=True, help="Private writable target directory")
+    c.add_argument("--actions", required=True, help="Trusted Python ACTIONS module; executes local code")
+    c.add_argument("--root", help="Private action workspace; defaults to the actions directory")
+    c.add_argument("--version-id", type=int, help="Selected project version")
+    c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"], default="assisted")
     for name in ("output-info", "output-read", "output-select", "output-export"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("artifact")
@@ -3201,6 +3212,27 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == "z-controller":
+        from .z_controller import serve as serve_z_controller
+
+        options = {"spatial_mode": args["spatial_mode"]}
+        if args["version_id"] is not None:
+            options["version"] = args["version_id"]
+        try:
+            return serve_z_controller(
+                args["project"],
+                args["executable"],
+                args["game_dir"],
+                args["actions"],
+                root=args["root"],
+                debugger_options=options,
+                input_stream=sys.stdin,
+                output_stream=sys.stdout,
+                error_stream=sys.stderr,
+            )
+        except (ValueError, OSError, RuntimeError) as error:
+            emit({"ok": False, "error": str(error)})
+            return 1
     if command.startswith("uil-"):
         try:
             from .uil_api import invoke_common

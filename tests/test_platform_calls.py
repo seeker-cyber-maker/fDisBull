@@ -16,6 +16,8 @@ def linux_call_files(tmp_path_factory):
     gcc = shutil.which('gcc')
     if gcc is None:
         pytest.skip('gcc required for real Linux ELF calls')
+    if subprocess.run([gcc, '--version'], capture_output=True, text=True).stdout.lower().find('apple') >= 0:
+        pytest.skip('GNU/Linux ELF compiler unavailable')
     root = tmp_path_factory.mktemp('linux-calls')
     source = root / 'calls.c'
     # Explicit prototypes avoid fortified string.h wrappers lowering the calls

@@ -72,7 +72,7 @@ def _put(root, q):
 
 def test_concurrent_dedup(tmp_path):
     root=str(tmp_path/'store'); OutputArtifactStore(root)
-    ctx=multiprocessing.get_context('spawn');q=ctx.Queue()
+    ctx=multiprocessing.get_context('fork' if hasattr(os, 'fork') else 'spawn');q=ctx.Queue()
     procs=[ctx.Process(target=_put,args=(root,q)) for _ in range(4)]
     for p in procs:p.start()
     results=[q.get(timeout=15) for _ in procs]

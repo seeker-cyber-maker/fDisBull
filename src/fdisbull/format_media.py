@@ -21,9 +21,6 @@ def definitions(make, field, magic):
         ('pcx','PC Paintbrush PCX','image',[magic(0,b'\x0a')],
          [field('version',1,'u8','Version 0..5'),field('encoding',2,'u8','Raw or RLE'),field('bits_per_plane',3,'u8','1,2,4,8'),field('bounds',4,'4*u16le','Inclusive xmin/ymin/xmax/ymax'),field('planes',65,'u8','Planes'),field('bytes_per_line',66,'u16le','Padded scanline per plane')], 'little',
          'Compound 128-byte header probe only; palette/RLE/pixels require a separate reader.', 'https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/pcx.c'),
-        ('madspack','MADSPACK 2.0 packed resources','resource-container',[magic(0,b'MADSPACK 2.0\x1a')],
-         [field('signature',0,'bytes','Self-identifying packed resource header')], 'little',
-         'Marker only; block directory, compression and PIK/SS image consumers need recovery. A .MOV filename is not QuickTime evidence.', 'docs/TARGET_COLLECTION_INTAKE.md'),
         ('dinopark-picture','DinoPark UNCP picture container','image-container',[magic(0,b'UNCP')],
          [field('first_frame',4,'u32le','First offset implies (first-4)/4 directory entries'),field('frame_offsets',4,'u32le[]','Absolute frame offsets')], 'little',
          'Directory/first-frame geometry only; full row decoding, palette/rendering and rewriting are separate. This is not Civilization PIC or FLI.', 'docs/TARGET_COLLECTION_INTAKE.md'),
@@ -67,9 +64,6 @@ def probe(prefix, reader):
         if xmax>=xmin and ymax>=ymin and 1<=planes<=4 and stride>0 and stride*8>=(xmax-xmin+1)*prefix[3]:
             return _result('pcx','PC Paintbrush PCX','image',metadata=dict(width=xmax-xmin+1,height=ymax-ymin+1,
                 bits_per_plane=prefix[3],planes=planes,bytes_per_line=stride,encoding=prefix[2]))
-    if prefix.startswith(b'MADSPACK 2.0\x1a'):
-        return _result('madspack','MADSPACK 2.0','resource-container',metadata=dict(signature_bytes=len(b'MADSPACK 2.0\x1a')),
-            warnings=['Packed blocks/consumer-specific image semantics require recovery; no decompression or rewriting'])
     if prefix[:4]==b'UNCP':
         valid=len(prefix)>=8;meta={}
         if valid:

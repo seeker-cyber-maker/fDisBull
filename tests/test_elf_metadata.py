@@ -17,6 +17,9 @@ def elf_files(tmp_path_factory):
     gcc = shutil.which('gcc')
     if gcc is None:
         pytest.skip('gcc required for actual ELF shared-library and PIE fixtures')
+    if shutil.which('ld') is None or subprocess.run([gcc, '--version'], capture_output=True, text=True).stdout.lower().find('apple') >= 0:
+        # Apple Clang accepts gcc name but cannot emit ELF artifacts used by these tests.
+        pytest.skip('GNU/Linux ELF compiler unavailable')
     root = tmp_path_factory.mktemp('elf-metadata')
     source = root / 'meta.c'
     source.write_text('''#include <stdio.h>

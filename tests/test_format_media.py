@@ -17,7 +17,6 @@ def found(tmp_path, raw, name='file'):
     (b'FORM'+struct.pack('>I',4)+b'ILBM','iff'),
     (b'CAT '+struct.pack('>I',4)+b'XMID','iff'),
     (b'MThd'+struct.pack('>I3H',6,0,1,96),'midi'),
-    (b'MADSPACK 2.0\x1a\0','madspack'),
     (b'Creative Voice File\x1a'+struct.pack('<3H',26,0x114,(~0x114+0x1234)&65535),'voc'),
 ])
 def test_strong_header_profiles_do_not_claim_decoding(tmp_path,raw,ident):

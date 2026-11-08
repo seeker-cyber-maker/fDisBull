@@ -107,6 +107,8 @@ def test_actual_elf_exports_and_unresolved_imports_are_honest(tmp_path):
     gcc = shutil.which('gcc')
     if not gcc:
         pytest.skip('gcc unavailable for ELF metadata fixture')
+    if subprocess.run([gcc, '--version'], capture_output=True, text=True).stdout.lower().find('apple') >= 0:
+        pytest.skip('GNU/Linux ELF compiler unavailable')
     source = tmp_path / 'fixture.c'
     source.write_text('#include <stdio.h>\nint helper(void){return puts("EvidenceString");}\nint main(void){return helper();}\n')
     binary = tmp_path / 'fixture'

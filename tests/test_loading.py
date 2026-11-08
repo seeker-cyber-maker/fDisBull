@@ -38,6 +38,8 @@ def test_real_elf_retains_entry_and_named_function(tmp_path):
     compiler = shutil.which("gcc")
     if compiler is None:
         pytest.skip("gcc is required to build the ELF fixture")
+    if subprocess.run([compiler, '--version'], capture_output=True, text=True).stdout.lower().find('apple') >= 0:
+        pytest.skip('GNU/Linux ELF compiler unavailable')
     assembly = tmp_path / "sample.s"
     assembly.write_text(".text\n.global _start\n.type _start,@function\n_start:\n call helper\n ret\n.type helper,@function\nhelper:\n mov $42,%eax\n ret\n")
     executable = tmp_path / "sample.elf"

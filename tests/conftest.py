@@ -1,8 +1,13 @@
 """Keep explicit native acceptance from succeeding through missing-backend skips."""
 import os
+import sys
 from pathlib import Path
 
 import pytest
+
+TESTS = Path(__file__).resolve().parent
+if str(TESTS) not in sys.path:
+    sys.path.insert(0, str(TESTS))
 
 
 def pytest_addoption(parser):
