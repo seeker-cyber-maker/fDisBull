@@ -427,3 +427,14 @@ project history is preserved in [historical snapshots](docs/PROJECT_HISTORY.md).
 
 No first-party distribution license has been selected. Public visibility does
 not grant an open-source license. See [third-party provenance](docs/THIRD_PARTY.md).
+
+
+### Structural investigation candidates
+
+`structure-scan` finds source-backed investigation avenues in extracted DOS/VM
+resources, NES/SNES ROMs and bounded console-ROM ZIPs. It keeps processor width,
+bank mapping, input/operation relationships and unresolved continuations explicit.
+Intent drafts and declared composition/trace checks support independent component
+reconstruction without presenting a structural match as a playable game.
+See [console and intent discovery](docs/STRUCTURE_CONSOLE_INTENTS.md) for the
+admitted profiles, agent commands and remaining execution boundaries.
