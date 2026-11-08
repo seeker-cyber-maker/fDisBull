@@ -244,7 +244,7 @@ METHODS = {
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
     "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",
-    "debug-trace-until": "Stop at a current instruction predicate in qualified real-mode DOS; run,until,[regions,max_steps,timeout_ms,name,action,label]",
+    "debug-trace-until": "Stop at a qualified real-mode DOS boundary (native QEMU requires a COM/MZ process; action is DOSBox-only); run,until,[regions,max_steps,timeout_ms,name,action,label]",
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",

@@ -25,7 +25,7 @@ MAX_PREDICATE_NODES = 64
 MAX_PREDICATE_DEPTH = 8
 MAX_ROW_SAMPLES = 8
 _ADDRESS_MAX = (1 << 64) - 1
-_DOS = {'dosbox', 'dosbox-qemu'}
+_DOS = {'dosbox', 'dosbox-qemu', 'qemu-dos'}
 _PE = {'wine-qemu', 'ida-wine-qemu'}
 _COMPARISONS = {'equals', 'not_equals', 'lt', 'le', 'gt', 'ge'}
 _MNEMONICS = {value: name.lower() for name, value in vars(Mnemonic).items()
@@ -391,6 +391,36 @@ def _pc(raw, backend, mode):
             raise ValueError('Unsupported trace PC address space')
     else:
         pc['linear'] = pc['offset'] = _number(address, 'PC')
+    if backend == 'qemu-dos':
+        segmented = raw.get('segmented_address')
+        if segmented is not None:
+            if type(segmented) is not dict or segmented.get('space') != 'segmented':
+                raise ValueError('Native DOS trace requires an explicit segmented PC')
+            segment = _number(segmented.get('segment'), 'PC segment', 0xffff)
+            offset = _number(segmented.get('offset'), 'PC offset', 0xffffffff)
+            if pc['segment'] is not None and (pc['segment'], pc['offset']) != (segment, offset):
+                raise ValueError('Native DOS trace has contradictory segmented PCs')
+            pc['segment'], pc['offset'] = segment, offset
+        if pc['segment'] is None:
+            raise ValueError('Native DOS trace lacks its observed CS:IP')
+        cache = (raw.get('address_context') or {}).get('cs')
+        if cache is not None:
+            if type(cache) is not dict:
+                raise ValueError('Native DOS observed CS cache must be an object')
+            if _number(cache.get('selector'), 'CS cache selector', 0xffff) != pc['segment']:
+                raise ValueError('Native DOS CS cache differs from the observed segment')
+            base = _number(cache.get('base'), 'CS cache base')
+            expected = base + pc['offset']
+            if mode == 'real' and base != pc['segment'] * 16:
+                raise ValueError('Native DOS source trace has a changed real-mode CS base')
+        elif mode == 'real':
+            expected = pc['segment'] * 16 + pc['offset']
+        else:
+            expected = None
+        if expected is not None:
+            if pc['linear'] is not None and pc['linear'] != expected:
+                raise ValueError('Native DOS linear PC differs from its observed CS:IP')
+            pc['linear'] = expected
     project = raw.get('project_address')
     if project is not None and (backend in _PE or backend in _DOS and mode == 'real' and pc['segment'] is not None):
         pc['project'] = _number(project, 'project PC')
@@ -407,6 +437,15 @@ def normalize_trace(document, *, regions=None):
     identity = _identity({'source_sha256': mapping.get('source_sha256'), 'version_sha256': mapping.get('version_sha256'),
                           'version': document.get('version'), 'backend': contract.get('backend')})
     backend = identity['backend']
+    if backend == 'qemu-dos':
+        from .qemu_trace_identity import CAPTURE_FORMAT, SOURCE_SCOPE
+        capture = document.get('native_process_capture')
+        if (type(capture) is not dict or capture.get('format') != CAPTURE_FORMAT
+                or capture.get('source_scope') != SOURCE_SCOPE):
+            raise ValueError('Native DOS events require a source-bound process capture')
+        epoch = _text(document.get('capture_epoch'), 'native capture epoch', 128)
+        if capture.get('capture_epoch', epoch) != epoch:
+            raise ValueError('Native DOS capture epoch fields disagree')
     run = document.get('run'); run = run.get('run') if type(run) is dict else run
     run = _text(run, 'trace run', 128)
     raw_events = document.get('events')
@@ -495,8 +534,15 @@ def normalize_trace(document, *, regions=None):
         if source_identity.get('project_address') is not None and pc['project'] is not None:
             if _number(source_identity['project_address'], 'identity project PC') != pc['project']:
                 raise ValueError('Event project address identity mismatch')
+        if backend == 'qemu-dos' and ((source_identity.get('project_address') is None)
+                                    != (pc['project'] is None)):
+            raise ValueError('Native DOS source PC claims must agree')
         if source_identity.get('runtime_address') is not None:
-            claimed_pc = _pc({'address': source_identity['runtime_address']}, backend, mode)
+            claimed = {'address': source_identity['runtime_address']}
+            if backend == 'qemu-dos':
+                claimed = dict(address=raw['address'], segmented_address=source_identity['runtime_address'],
+                               address_context=raw.get('address_context'))
+            claimed_pc = _pc(claimed, backend, mode)
             if any(claimed_pc[name] != pc[name] for name in ('linear', 'segment', 'offset')):
                 raise ValueError('Event runtime address identity mismatch')
         source_context = None
@@ -511,6 +557,12 @@ def normalize_trace(document, *, regions=None):
                          - _number(mapping['static_load_segment'], 'static load segment', 0xffff)) * 16
                 if pc['linear'] - delta != pc['project']:
                     raise ValueError('Trace project mapping identity mismatch')
+            if backend == 'qemu-dos':
+                native_mapping = mapping.get('process', {}).get('source_mapping', {})
+                static = _number(native_mapping.get('static_base'), 'native static image base')
+                runtime = _number(native_mapping.get('runtime_base'), 'native runtime image base')
+                if pc['project'] != pc['linear'] - runtime + static:
+                    raise ValueError('Native DOS project mapping identity mismatch')
         elif backend in _PE and pc['project'] is not None:
             source_context = 'flat'
             if source_identity.get('context', 'flat') != 'flat':
@@ -531,10 +583,20 @@ def normalize_trace(document, *, regions=None):
                     mnemonic = _MNEMONICS.get(instruction.mnemonic)
                     digest = hashlib.sha256(bytes.fromhex(code)[:size]).hexdigest()
         site = None
-        if (source_context is not None and digest and observation.get('registers_stage') == 'before-instruction'
+        site_digest = digest
+        if backend == 'qemu-dos':
+            # The owned storage adapter independently reconstructs this claim
+            # from original bytes, ordered fixups and the initial entry receipt.
+            # Keep the observed runtime digest on the event for inspection.
+            site_digest = source_identity.get('source_instruction_sha256')
+            if site_digest is not None:
+                _digest(site_digest, 'native source instruction sha256')
+                if source_context is None or not digest or bits != 16:
+                    raise ValueError('Native DOS source instruction has no qualified source PC')
+        if (source_context is not None and site_digest and observation.get('registers_stage') == 'before-instruction'
                 and (backend not in _PE or bits in (32, 64))):
             site = {'space': 'project', 'address': pc['project'], 'context': source_context,
-                    'cpu_mode': mode, 'code_bits': bits, 'instruction_sha256': digest}
+                    'cpu_mode': mode, 'code_bits': bits, 'instruction_sha256': site_digest}
         matching_regions = [r for r in regions if pc[r['space']] is not None and r['start'] <= pc[r['space']] < r['end']]
         # Project regions take precedence over linear labels when both were supplied.
         region = next((r for r in matching_regions if r['space'] == 'project'), next(iter(matching_regions), None))

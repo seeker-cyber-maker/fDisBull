@@ -109,9 +109,12 @@ def test_native_dos_selection_nonzero_segment_edits_trace_frame_and_reopen(tmp_p
     with Project(tmp_path / 'boot.fdb') as reopened:
         trace_path = tmp_path / 'trace.json'
         reopened.debug_export(trace['artifact'], trace_path)
-        events = json.loads(trace_path.read_text())['events']
+        document = json.loads(trace_path.read_text())
+        events = document['events']
         assert [event['bytes'] for event in events] == symbols['trace_bytes']
-        assert all(event['completion'] == 'confirmed native step' for event in events)
+        assert all(event['completion'] == 'native step stop; instruction completion unknown' for event in events)
+        assert all(event['observation']['instruction_completed'] is None for event in events)
+        assert document['single_step_policy']['status'] == 'observed'
         assert int(events[0]['address'], 16) == symbols['loop']
         picture = tmp_path / 'frame.png'
         reopened.debug_export(frame['artifact'], picture)

@@ -53,9 +53,11 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Draft integration MR: [!117](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117).
 - Stack parent: `agent/execution-event-search-284eb73c` / [!113](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/113).
 - Restored baseline: `3b7ffedd848736174ad055b506bbbe44567ea6a2`.
-- Latest implemented slice: DOS process and resident-driver identity for
-  original real-mode COM/MZ entry. Broader driver/task qualification stays open.
-- Next slice: source-bound traces and execution-event searches.
+- Latest implemented slice: source-bound traces, predicates and persistent
+  execution-event searches for the initial real-mode COM/MZ module. Broader
+  driver/task, overlay and protected/V86 qualification stays open.
+- Next slice: clock, media and input; establish guest-time and input-consumption
+  contracts before composing click-to-event trials or Python media services.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
@@ -82,7 +84,156 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 7. State which real driver configurations and protected-mode cases remain
    unverified. Do not mark the entire slice complete from synthetic fixtures.
 
+## Slice 3 acceptance plan
+
+1. Preserve actual linear and segmented PCs and compare each observed source
+   instruction with the original bytes after DOS relocation and startup writes.
+2. Keep runtime byte hashes separate from canonical project-site hashes; compare
+   independently launched COM/MZ programs at genuinely different load addresses.
+3. Reuse existing register, address, mnemonic and transition predicates. Preserve
+   user break/watchpoints, enforce one operation deadline, and refuse queued
+   input before an earlier script step can mutate the guest.
+4. Keep fault/REP stop intervals distinct from retired instructions and record
+   the actual QEMU single-step mask without changing it.
+5. Admit saved traces only against their unique ordered initial-entry receipt,
+   source/version bytes, capture epoch and artifact receipt. Verify reopen and
+   history queries after exit; reject contradictory or incomplete evidence.
+6. Stop source binding at self-modification, allocation/epoch or mode changes.
+   An unbound final runtime match remains an open source window and cannot
+   narrow source-event absence. Live overlay rebinding needs a later contract.
+7. Run finite affected-source, actual QEMU, retained DOSBox and isolated-wheel
+   checks. Leave the default-switch gate closed for unqualified surfaces.
+
 ## Work log
+
+### 2026-11-08 — trace/event implementation and qualification handoff
+
+Implemented the next vertical path in `QemuDOSProcessSession`: source-bound
+`trace`, stopped-boundary `trace_until`, the existing public JSON/script
+routes, and persistent execution-event queries/searches. Raw machine tracing
+remains separate. DOSBox remains the default and both fallback selectors stay
+available; no automatic replay, default promotion or retirement was enabled.
+
+Each capture retains observed runtime bytes/registers, linear and segmented
+PCs, the actual read-only stepping policy, initial PSP/allocation and capture
+epoch. Source-site identity is independently derived from original bytes,
+ordered MZ fixups and exact DOS startup writes. Storage checks the original
+entry receipt before the artifact receipt, immutable launch evidence and every
+claimed source instruction. Normal lifecycle changes do not erase authentic
+historical captures. Changed bytes, module/allocation/epoch departure or an
+unsupported mode stop binding; no live overlay/task identity is inferred.
+
+Native witnesses showed an MZ entry moving from `0x23520` to `0x28840` while
+its source entry remained `0x10020`. The observed `MOV` bytes changed from
+`b85723` to `b88928`; both identify canonical project bytes `b80710`.
+Independent command-tail A/B trials retain shared code sites while narrowing
+register values, including after VM close and project reopening. Memory
+sentinels verify predicate stops before the following instruction's effects.
+Foreign execution/data breakpoints, self-modification, CR0 mode transition,
+changed allocation ownership and unbound INT 21h endpoints have witnesses.
+
+Corrections discovered during the slice:
+
+- A normal GDB step reply does not establish instruction retirement. Native
+  divide-fault and partial REP witnesses invalidate the previous unconditional
+  completion wording. QEMU trace annotations now retain unknown completion;
+  DOSBox and PE contracts remain unchanged. The actual policy is observed
+  through `qqemu.sstepbits` and `qqemu.sstep`, never set by production code.
+- `GDBRemote.request` treated every reply beginning with `E` as an error, which
+  rejected QEMU's valid `ENABLE=...` bit inventory. Error recognition now uses
+  the standard `Exx` and `E.errtext` forms, preserving terminal handling for
+  genuine errors and failed transport.
+- Caller-owned transactions could roll back evidence after the CPU advanced.
+  Direct captures and containing scripts now refuse before native dispatch or
+  earlier script mutations. An actual transaction witness confirms unchanged
+  registers and zero new commands/artifacts/events.
+- A lost dispatched reply left a stale pre-step `current_stop`. The result now
+  clears that field before dispatch; preceding observations remain in events,
+  and uncertain control closes the machine without replay. Actual SQLite
+  artifact/journal rejection retains the observed result for inspection.
+- The existing doctor still required the old unconditional completion flag.
+  Its independent counter effect already passed. It now verifies observed
+  stopped-boundary semantics and the actual policy when reopening evidence.
+
+Primary protocol references are [QEMU's GDB stepping documentation](https://www.qemu.org/docs/master/system/gdb.html#changing-single-stepping-behaviour)
+and [GDB standard replies](https://www.sourceware.org/gdb/current/onlinedocs/gdb.html/Standard-Replies.html).
+Native conclusions here use the actual installed QEMU 10.0.13, separately from
+those current documentation pages.
+
+Fresh local checks are recorded below. Lanes overlap and are not additive;
+initial failures and focused corrections are retained rather than rewritten
+as a clean first run.
+
+| Lane | Observed result |
+| --- | --- |
+| Affected source/API/storage/policy/migration/helper/memory/skill checks | 613 passed; 10 explicitly runtime-gated skips |
+| Additional GDB/machine/Windows host-control checks | 85 passed; 8 separately gated native skips |
+| Native process/trace/core/doctor plus helper lane, required inputs enabled | 125 passed, one doctor assertion failed; no skips. Corrected doctor suite then passed all 7 checks. |
+| Retained DOSBox debugger/exit/TSR/state/runtime-code/event/DESQview-memory lane | 42 passed, zero skips |
+| Installed wheel outside checkout, source import path disabled | 64 passed, two initial failures; zero skips. Doctor was the same stale assertion and its corrected installed suite passed all 7 checks. The large-MZ startup timeout is detailed below. |
+| Large-MZ installed follow-up, unchanged 15-second limit | Two independent fresh VMs passed: testcase durations 3.655 s and 4.501 s |
+| Installed investigation skill | 24 references and 75 local Markdown links passed |
+
+The first ordinary source run also exposed three authored machine-peer fixtures
+that lacked the new read-only query. Their explicit unsupported reply now
+tests preservation of unknown policy; the final source count above includes
+the correction. The first new native trace run had two fixture expectations
+corrected: physical key names are lowercase, and canonical MZ bytes include
+the project's static relocation. Those were not production defects.
+
+**Remaining reliability observation:** the installed 80 KiB MZ case once
+expired after 15.055 seconds waiting for the loader's first READY report,
+before full-module/chunk validation. The same source case passed in 3.345
+seconds. No debug run/event/artifact was committed by the failed launch. Two
+fresh installed runs passed at the original budget, without a live-operation
+retry or increased timeout. Available evidence does not distinguish boot
+delay, loader stall or transport behavior; workload contention is unproven.
+Keep this occurrence in the compatibility campaign rather than calling its
+cause fixed. Private receipts retain the original failure and both follow-ups.
+
+The final private integration wheel is `fdisbull-0.33.0-py3-none-any.whl`,
+SHA-256 `feb1725140a2fc9a6b4e7cced84edebd929ef30c7bf52f30a8840ea9a4763712`.
+All 629 core package files match current source bytes, with no extra core files.
+The installed run imports the private environment's `site-packages`, uses
+`pytest -c /dev/null --import-mode=importlib` outside the checkout, and puts only
+the test directory on `PYTHONPATH`. This is not a release, hosted CI result or
+shared installation. Vendor files, runtime databases/states and raw receipts
+remain outside Git. The draft MR retains its existing stack parent.
+
+Next slice: define native guest-time budgets, coherent frame observations and
+keyboard/mouse dispatch/consumption before combining actions with event trials.
+Keep host wall time, virtual CPU/PIT progress and media duration distinct.
+QEMM/DESQview task scheduling, protected/V86 source maps, live overlays, games,
+Windows, macOS, checkpoints and layers/UDL/UIL services remain unqualified.
+The full migration ledger still contains 35 RPC, 83 public and 9 supplemental
+surfaces; none can disappear from the default-switch gate.
+
+### 2026-11-08 — trace/event slice started from the published DOS process slice
+
+Resumed `d9f5a9caa418b2f0101f83e327c20e9caa66d07d` and verified that
+the GitLab draft and source branch still identify that commit. The private
+QEMU/FreeDOS runtime and test environment survived this handoff. Existing
+results below remain historical until the changed integration is qualified.
+
+Acceptance target: connect the native DOS process to the existing source-bound
+trace, predicate and event-search paths. Preserve observed runtime bytes and
+derive relocation-independent instruction identity from the original module;
+historical traces must remain usable after process exit and project reopening.
+Bind captures to the original verified process-entry epoch. Stop on unsupported
+mode, ownership or source changes instead of silently rebinding an overlay.
+
+Independent native probes reproduced two errors in the old completion wording:
+a divide fault returned a normal GDB stop at its handler without completing the
+faulting instruction, and a REP string operation returned after only one
+iteration. The new slice records stopped boundaries and the actual QEMU
+single-step policy; a stop reply alone does not establish retirement. Queued
+input and natural-time IRQ/media behavior remain the next clock/input slice.
+
+The Mac mirror path remains absent here. A Mac-side fast-forward fetch into the
+bare hub can synchronize the published branch without a cloud mount. Direct
+access needs a configured network route and SSH authentication; this executor
+also lacks `/dev/fuse`, so installing SSHFS alone would not enable a mount.
+No Mac settings, credentials or mounts were changed.
 
 ### 2026-11-08 — restored baseline and started the next slice
 
@@ -273,11 +424,12 @@ reserved. Checkpoints, guest-time media/input and layers/host services remain
 later slices. The default-switch gate remains blocked and both DOSBox selectors
 are retained.
 
-Next handoff: start the trace/events slice from the verified initial source map
+Next step recorded for that handoff: start the trace/events slice from the verified initial source map
 and capture epoch. Define which trace addresses remain machine addresses and
 which can be bound to the original source. Add event predicates for register,
 entry/new-region and completed-versus-attempted execution; stop source-bound
 searches at exit, residency, mapping change or unknown ownership. Qualify IRQ,
 fault, REP, nested EXEC, relocation and self-modification boundaries before
-connecting higher-level action/event search. Preserve the raw completed-step
-trace and retained DOSBox event path for comparison.
+connecting higher-level action/event search. Preserve the raw machine trace
+and retained DOSBox event path for comparison; the following slice corrects
+the earlier unconditional completed-step terminology.

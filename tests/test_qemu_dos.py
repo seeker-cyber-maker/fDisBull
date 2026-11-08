@@ -155,7 +155,7 @@ def test_script_admission_uses_native_machine_contract():
     assert validate_script(script, session=session) == steps
     assert validate_script({'format': script['format'], 'steps': steps}, session=session) == steps
     for step, error in (({'op': 'memory-rule-run'}, 'guest-time'),
-                        ({'op': 'trace-until'}, 'DOSBox boundary'),
+                        ({'op': 'trace-until'}, 'Unsupported operation'),
                         ({'op': 'save-state'}, 'Unsupported operation')):
         with pytest.raises(ValueError, match=error):
             validate_script(dict(script, steps=[step]), session=session)

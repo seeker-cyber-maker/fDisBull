@@ -18,7 +18,7 @@ MAX_BYTES = 16 * 1024 * 1024
 MAX_HISTORY = 128
 MAX_CAPTURE_RECEIPTS = 4096
 FORMAT = 'fdisbull-event-search-artifact-1'
-_BACKENDS = frozenset(('dosbox', 'dosbox-qemu', 'wine-qemu', 'ida-wine-qemu'))
+_BACKENDS = frozenset(('dosbox', 'dosbox-qemu', 'qemu-dos', 'wine-qemu', 'ida-wine-qemu'))
 _MUTABLE_MAPPING = frozenset(('execution_origin', 'checkpoint_intervention',
     'delta_experiment', 'timeline_experiment', 'qemu_pid', 'restored_from',
     'capabilities', 'window_requested', 'dot_mode'))
@@ -204,6 +204,143 @@ def _historical_pe_mapping(project, row, captured, current, metadata):
     return _json(_mapping_identity(project, state_mapping)) == _json(current)
 
 
+def _native_step_policy(policy):
+    """Validate the retained meanings of an observed QEMU stepping mask."""
+    if (type(policy) is not dict or policy.get('format') != 'fdisbull-qemu-step-policy-1'
+            or policy.get('status') != 'observed' or policy.get('changed') is not False):
+        raise ValueError('Native DOS trace lacks its observed read-only step policy')
+    bits, mask = policy.get('bits'), policy.get('mask')
+    if type(bits) is not dict or not 3 <= len(bits) <= 8:
+        raise ValueError('Native DOS trace step-control bits are malformed')
+    _integer(mask, 'native step-control mask', 0, 0xffffffff)
+    occupied = 0
+    for name, value in bits.items():
+        if type(name) is not str or re.fullmatch('[A-Z][A-Z0-9_]{0,31}', name) is None:
+            raise ValueError('Native DOS trace step-control name is malformed')
+        _integer(value, 'native step-control bit', 1, 0xffffffff)
+        if value & (value - 1) or occupied & value:
+            raise ValueError('Native DOS trace step-control bits overlap')
+        occupied |= value
+    if not {'ENABLE', 'NOIRQ', 'NOTIMER'} <= bits.keys():
+        raise ValueError('Native DOS trace step-control meanings are incomplete')
+    known = bits['ENABLE'] | bits['NOIRQ'] | bits['NOTIMER']
+    if (mask & ~known or policy.get('unknown_mask') != 0
+            or policy.get('enabled') is not True or not mask & bits['ENABLE']):
+        raise ValueError('Native DOS trace requires a known enabled step-control mask')
+    for name, field in (('NOIRQ', 'interrupts_masked'), ('NOTIMER', 'timers_masked')):
+        if type(policy.get(field)) is not bool or policy[field] != bool(mask & bits[name]):
+            raise ValueError('Native DOS trace step-control observation contradicts its mask')
+
+
+def _native_binding(project, row, document, metadata):
+    """Bind immutable capture identity to the original, ordered entry receipt.
+
+    The live run can have exited, become resident, or closed since capture.
+    Its immutable initial entry and load must still match, while later epochs,
+    live ranges, status and termination metadata are expected to change.
+    """
+    from .qemu_trace_identity import CAPTURE_FORMAT, SOURCE_SCOPE, load_trace_binding
+
+    captured = load_trace_binding(project, row['version'], document['mapping'])
+    captured_process = document['mapping']['process']
+    if (captured_process.get('state') != 'active' or captured_process.get('machine_closed')
+            or captured_process['source_mapping'].get('live') is not True
+            or captured_process['source_mapping'].get('status') != 'initial-load-verified'):
+        raise ValueError('Native DOS trace must capture an active verified initial process')
+    current = load_trace_binding(project, row['version'], metadata)
+    if _json(captured['identity']) != _json(current['identity']):
+        raise ValueError('Native DOS trace differs from the immutable run launch identity')
+    entries = project.db.execute('''SELECT sequence,fdb_length(evidence) AS size
+        FROM debug_events WHERE run=? AND operation='dos-process-entry'
+        ORDER BY sequence LIMIT 2''', (row['run'],)).fetchall()
+    if len(entries) != 1:
+        raise ValueError('Native DOS trace requires its unique original process-entry receipt')
+    entry = entries[0]
+    if type(entry['size']) is not int or not 0 < entry['size'] <= MAX_BYTES:
+        raise ValueError('Native DOS process-entry receipt exceeds its size budget')
+    if entry['sequence'] >= _capture_sequence(project, row):
+        raise ValueError('Native DOS process-entry receipt must precede trace capture')
+    receipt = _document(project.db.execute('SELECT evidence FROM debug_events WHERE sequence=?',
+                                          (entry['sequence'],)).fetchone()[0])
+    process = receipt.get('process')
+    if (type(process) is not dict or process.get('state') != 'active'
+            or type(process.get('source_mapping')) is not dict
+            or process['source_mapping'].get('status') != 'initial-load-verified'
+            or process['source_mapping'].get('live') is not True):
+        raise ValueError('Native DOS process-entry receipt is not a verified active initial load')
+    original_metadata = dict(metadata, process=process)
+    original = load_trace_binding(project, row['version'], original_metadata)
+    if _json(original['identity']) != _json(captured['identity']):
+        raise ValueError('Native DOS trace mapping differs from its original process-entry receipt')
+    epoch = original['capture_epoch']
+    if (epoch != row['run'] + ':process:1' or captured['capture_epoch'] != epoch
+            or document.get('capture_epoch') != epoch):
+        raise ValueError('Native DOS trace capture epoch differs from its original process entry')
+    capture = document.get('native_process_capture')
+    if (type(capture) is not dict or capture.get('format') != CAPTURE_FORMAT
+            or capture.get('source_scope') != SOURCE_SCOPE
+            or capture.get('capture_epoch', epoch) != epoch):
+        raise ValueError('Native DOS trace requires a source-bound process capture')
+    _native_step_policy(capture.get('step_policy'))
+    return captured
+
+
+def _native_events(document, compiled, binding):
+    """Reconstruct every claimed source instruction; never trust a flag/hash."""
+    from .qemu_trace_identity import qualify_instruction
+
+    for index, (raw, event) in enumerate(zip(document['events'], compiled['events'])):
+        identity = raw.get('identity')
+        if (type(identity) is not dict or identity.get('source_version') != compiled['identity']['version']
+                or identity.get('runtime_address') is None or type(raw.get('registers')) is not dict
+                or type(raw.get('task_id')) is not int
+                or raw['task_id'] != binding['identity']['psp_segment']
+                or raw.get('mapping_id') != binding['capture_epoch']):
+            raise ValueError('Native DOS observation differs from its captured process/epoch identity')
+        completed = event['observation'].get('instruction_completed')
+        if completed is not None and completed is not False:
+            raise ValueError('Native DOS step evidence cannot certify instruction retirement')
+        claimed = raw.get('project_address')
+        digest = identity.get('source_instruction_sha256')
+        if claimed is None:
+            if identity.get('project_address') is not None or digest is not None or identity.get('context') is not None:
+                raise ValueError('Unqualified native DOS observation claims a source instruction')
+            if event['site'] is not None or compiled['window']['closed']:
+                raise ValueError('A native source boundary cannot close a source search window')
+            if index != len(compiled['events']) - 1:
+                raise ValueError('Native DOS capture continued beyond an unqualified source boundary')
+            continue
+        if (raw.get('cpu_mode') != 'real' or raw.get('code_bits') != 16
+                or event['observation'].get('registers_stage') != 'before-instruction'
+                or event['observation'].get('flags_materialized') is not True):
+            raise ValueError('Native DOS source claim requires stopped 16-bit real-mode registers')
+        context = event['execution_context']['address_context']
+        if (type(context) is not dict or context.get('cpu_mode') != 'real'
+                or context.get('code_bits') != 16 or context.get('paging_enabled') is not False
+                or type(context.get('cr0')) is not int or context['cr0'] & 0x80000001):
+            raise ValueError('Native DOS source claim requires observed unpaged real-mode control state')
+        cs = context.get('cs')
+        if (type(cs) is not dict or cs.get('selector') != event['pc']['segment']
+                or cs.get('base') != event['pc']['segment'] * 16
+                or type(cs.get('attributes')) is not int or cs['attributes'] & 0x600000
+                or type(cs.get('limit')) is not int
+                or cs['limit'] < event['pc']['offset'] + (event['size'] or 1) - 1):
+            raise ValueError('Native DOS source claim differs from its observed CS descriptor cache')
+        code = bytes.fromhex(raw.get('execution_bytes', raw.get('bytes', '')))
+        qualification = qualify_instruction(binding, event['pc']['linear'], code,
+            segment=event['pc']['segment'], offset=event['pc']['offset'])
+        if not qualification['qualified']:
+            raise ValueError('Native DOS source instruction failed byte qualification: ' + qualification['reason'])
+        if (event['pc']['project'] != qualification['project_address']
+                or identity.get('context') != qualification['context']
+                or digest != qualification['source_instruction_sha256']
+                or event['site'] is None
+                or event['site']['instruction_sha256'] != qualification['source_instruction_sha256']):
+            raise ValueError('Native DOS claimed source instruction differs from original project bytes')
+        if 'bytes' in raw and 'execution_bytes' in raw and raw['bytes'] != raw['execution_bytes']:
+            raise ValueError('Native DOS observed instruction byte fields disagree')
+
+
 def _regions(mapped, supplied):
     if supplied is None:
         supplied = []
@@ -260,11 +397,15 @@ def _trace(project, identifier, *, regions=None):
         raise ValueError('Trace source or version differs from its owning project run')
     _digest(metadata['source_sha256'])
     _digest(metadata['version_sha256'])
-    captured_mapping = _mapping_identity(project, mapping)
-    current_mapping = _mapping_identity(project, metadata)
-    if (_json(captured_mapping) != _json(current_mapping)
-            and not _historical_pe_mapping(project, row, captured_mapping, current_mapping, metadata)):
-        raise ValueError('Trace mapping differs from the retained run launch identity')
+    native_binding = None
+    if _backend(project, metadata) == 'qemu-dos':
+        native_binding = _native_binding(project, row, document, metadata)
+    else:
+        captured_mapping = _mapping_identity(project, mapping)
+        current_mapping = _mapping_identity(project, metadata)
+        if (_json(captured_mapping) != _json(current_mapping)
+                and not _historical_pe_mapping(project, row, captured_mapping, current_mapping, metadata)):
+            raise ValueError('Trace mapping differs from the retained run launch identity')
     mapped = [(region.start, region.start + len(region.data), region.name)
               for region in project.regions(row['version']) if region.data]
     compiled = kernel.normalize_trace(document, regions=_regions(mapped, regions))
@@ -272,6 +413,8 @@ def _trace(project, identifier, *, regions=None):
                     version=row['version'], backend=_backend(project, metadata))
     if (_json(compiled['identity']) != _json(expected) or compiled['run'] != row['run']):
         raise ValueError('Normalized trace identity differs from its owning run')
+    if native_binding is not None:
+        _native_events(document, compiled, native_binding)
     _qualify_image(compiled, mapped)
     compiled['artifact'] = dict(id=row['id'], sha256=row['sha256'])
     return row, compiled

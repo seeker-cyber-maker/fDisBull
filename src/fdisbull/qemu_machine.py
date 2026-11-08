@@ -434,10 +434,12 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
     @machine_operation
     def trace(self,name='machine-trace.json',*,count=128,timeout_ms=10000,bits=None):
         from iced_x86 import Decoder
+        from .qemu_step_policy import observe_step_policy
         if type(count) is not int or not 1<=count<=10000:raise ValueError('Machine trace count must be 1..10000')
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine trace timeout must be 1..600000')
         if bits not in (None,16,32,64):raise ValueError('Machine traces require observed or explicit instruction bitness')
         deadline=time.monotonic()+timeout_ms/1000;events=[];state=None
+        step_policy=observe_step_policy(self._stopped(),timeout_ms=min(timeout_ms,1000))
         while len(events)<count:
             before=self.registers()
             observed_bits=before.get('address_state',{}).get('code_bits')
@@ -457,11 +459,12 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
             if state['outcome']!='step':break
             events.append(dict(address=hex(pc),bytes=data[:instruction.len].hex(),registers=before,
                                cpu_mode=before['cpu_mode'],code_bits=decode_bits,
-                               phase='before',completion='confirmed native step'))
+                               phase='before',completion='native step stop; instruction completion unknown'))
         if len(events)<count and time.monotonic()>=deadline and (state is None or state['outcome']=='step'):
             state=dict(context='machine',outcome='timeout',timed_out=True,session=dict(state='stopped',stop_reason=dict(kind='timeout',origin='trace-deadline')))
         result=dict(context='machine',events=events,complete=len(events)==count,requested_count=count,session=state,
-                    semantics='completed steps on selected vCPU; QEMU default stepping masks IRQs/timers; full machine stopped between calls',
+                    semantics='before-step registers on selected vCPU; native stops do not certify instruction completion; full machine stopped between calls',
+                    single_step_policy=step_policy,
                     bits=bits,bitness_source='observed per instruction' if bits is None else 'explicit and checked against observed width')
         from .debug_semantics import normalize_trace,contract
         normalize_trace('qemu-machine',events,version=self.version['id'] if hasattr(self,'version') else None)

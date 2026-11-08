@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import re
 import socket
 import threading
 import time
@@ -131,7 +132,10 @@ class GDBRemote:
         with self._locked(deadline):
             try:
                 self._send(command,deadline);reply=self._packet(deadline)
-                if reply.startswith(b'E'):raise DebuggerError('QEMU GDB operation failed: '+reply.decode(errors='replace'))
+                # Standard errors are Exx or E.errtext. A successful query
+                # may start with E, such as qqemu.sstepbits -> ENABLE=1,... .
+                if re.fullmatch(rb'E[0-9a-fA-F]{2}',reply) or reply.startswith(b'E.'):
+                    raise DebuggerError('QEMU GDB operation failed: '+reply.decode(errors='replace'))
                 return reply
             except BaseException:self.close();raise
 

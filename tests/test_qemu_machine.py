@@ -150,7 +150,9 @@ def test_real_project_boot_breakpoint_registers_memory_trace_screenshot_restart_
     with Project(database) as reopened:
         output=tmp_path/'saved-trace.json';reopened.debug_export(trace['artifact'],output)
         saved=json.loads(output.read_text());assert [e['bytes'] for e in saved['events']]==['ff060050','90','ebf9']
-        assert all(e['completion']=='confirmed native step' for e in saved['events'])
+        assert all(e['completion']=='native step stop; instruction completion unknown' for e in saved['events'])
+        assert all(e['observation']['instruction_completed'] is None for e in saved['events'])
+        assert saved['single_step_policy']['status']=='observed'
         picture=tmp_path/'saved.png';reopened.debug_export(frame['artifact'],picture)
         assert picture.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
         assert reopened.debug_runs(version=1)['runs'][0]['state']=='exited'

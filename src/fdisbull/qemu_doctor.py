@@ -126,9 +126,9 @@ def doctor_qemu(*, executable, output=None, boot_timeout_ms=30000,
                         artifact = debug.trace('trace.json', count=3, timeout_ms=5000)
                         _require(artifact['metadata']['complete'], 'Authored trace is incomplete')
                         _require(debug.memory(0x5000, length=2)['hex'] == '2a00',
-                                 'The traced INC did not complete')
+                                 'The authored INC effect was not observed')
                         artifacts['trace.json'] = artifact['artifact']
-                    step('bounded completed-step trace', trace)
+                    step('bounded stopped-boundary trace', trace)
 
                     def watch():
                         point = debug.breakpoint(0x5000, access='w', length=2)
@@ -163,8 +163,14 @@ def doctor_qemu(*, executable, output=None, boot_timeout_ms=30000,
                     trace = json.loads(((destination or root) / 'trace.json').read_text())
                     _require([event['bytes'] for event in trace['events']] == ['ff060050', '90', 'ebf9'],
                              'Stored trace is not the authored instruction sequence')
-                    _require(all(event['observation']['instruction_completed'] is True for event in trace['events']),
-                             'Stored trace does not establish completed instructions')
+                    _require(all(event['observation']['instruction_completed'] is None
+                                 and event['observation']['registers_stage'] == 'before-instruction'
+                                 for event in trace['events']),
+                             'Stored trace does not preserve stopped-boundary semantics')
+                    policy = trace.get('single_step_policy', {})
+                    _require(policy.get('status') == 'observed' and policy.get('enabled') is True
+                             and policy.get('unknown_mask') == 0 and policy.get('changed') is False,
+                             'Stored trace lacks its observed QEMU stepping policy')
                     if 'frame.png' in artifacts:
                         from PIL import Image
                         with Image.open((destination or root) / 'frame.png') as image:

@@ -23,6 +23,7 @@ from .dos_launch import guest_name
 from .dosbox_rpc import DebuggerError
 from .qemu_dos import QemuDOSSession
 from .qemu_machine import MachineContext, MachineDebugSession, QemuMachine, machine_operation
+from .qemu_dos_trace import QemuDOSSourceTraceMixin
 
 
 def _sha(data):
@@ -149,7 +150,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -284,6 +285,9 @@ class QemuDOSProcessSession(MachineDebugSession):
                 dos_process_launch='original real-mode COM/MZ through DOS EXEC load-only',
                 dos_process_exit='nonce-bound helper callback and DOS return status; machine remains owned',
                 dos_driver_observation='validated device-header chain; successful device I/O unqualified',
+                source_trace='stopped boundaries in the initial verified real-mode DOS module',
+                execution_event_search=True,
+                trace_until='source-bound register/PC/region predicates; queued input unqualified',
                 desqview_observation=True,
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
@@ -535,7 +539,9 @@ class QemuDOSProcessSession(MachineDebugSession):
             ids = result['session']['stop_reason']['breakpoint_ids']
             if self._return_breakpoint in ids:
                 previous_deadline = self._deadline
-                self._set_deadline(time.monotonic()+5)
+                callback_deadline = time.monotonic()+5
+                self._set_deadline(callback_deadline if previous_deadline is None
+                                   else min(previous_deadline, callback_deadline))
                 try:
                     return self._observe_return(result)
                 except BaseException:
@@ -566,6 +572,10 @@ class QemuDOSProcessSession(MachineDebugSession):
         result = MachineDebugSession.status(self)
         result['process'] = deepcopy(self._process)
         return result
+
+    @property
+    def script_operations(self):
+        return super().script_operations | {'trace-until'}
 
     def close(self):
         if self.closed:

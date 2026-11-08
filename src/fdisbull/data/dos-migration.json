@@ -100,16 +100,25 @@
         "dos-process"
       ],
       "gate": "Compare explicit trace semantics, instruction/context/mode identity, callback-safe boundaries, new-page/new-region/register predicates, IRQ/fault/REP cases, and action causality.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_debug_semantics.py",
         "tests/test_execution_event_native.py",
         "tests/test_execution_trace.py",
         "tests/test_protected_mode_trace.py",
-        "tests/test_qemu_machine.py"
+        "tests/test_qemu_machine.py",
+        "tests/test_qemu_dos_trace_native.py",
+        "tests/test_qemu_dos_trace_contract.py",
+        "tests/test_qemu_trace_semantics_native.py",
+        "tests/test_qemu_step_policy.py",
+        "tests/test_gdb_standard_replies.py",
+        "tests/test_qemu_trace_identity.py"
       ],
       "scope_limits": [
-        "QEMU records completed single steps with IRQ/timer stepping limits; DOSBox records before-fetch boundaries. Do not identify those schemas or silently omit callbacks, faults or unfinished instructions."
+        "QEMU records stopped native intervals with the observed read-only IRQ/timer stepping policy. Faults and partial REP can return normal debug stops; architectural retirement remains unknown.",
+        "Original real-mode COM/MZ captures verify instruction bytes, PSP/MCB ownership and the initial epoch. Canonical source sites account for ordered MZ relocations and exact loader writes; persistent event searches rederive identity from original source and ordered entry/artifact receipts.",
+        "Unsupported source bytes, module departures, allocation/epoch or mode changes stop the source binding. An unbound final observation cannot close a source window or narrow absence. Live overlay rebinding, protected/V86 tasks, queued input and whole-program timing remain unqualified.",
+        "Raw machine traces remain separately available and do not acquire a DOS process source map. Streaming fetch capture/cursors are not supplied by bounded stopped observations."
       ]
     },
     {
@@ -517,7 +526,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.trace() (completed-step batch, not streaming fetch capture)",
+      "native_route": "MachineContext.trace() or QemuDOSProcessSession.trace() (bounded stopped observations; not streaming fetch capture)",
       "qualification": "unqualified"
     },
     {
@@ -1227,7 +1236,7 @@
       "slice": "trace-events",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.trace",
+      "native_route": "MachineDebugSession.trace (raw) / QemuDOSProcessSession.trace (verified original DOS module)",
       "qualification": "unqualified"
     },
     {
@@ -1235,8 +1244,8 @@
       "operation": "trace_until",
       "slice": "trace-events",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.trace_until; initial real-mode COM/MZ module, no queued action input",
       "qualification": "unqualified"
     },
     {

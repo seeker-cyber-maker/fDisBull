@@ -17,6 +17,11 @@ termination versus TSR residency and driver-chain observations. The maintained
 [migration plan and handoff log](DOS_QEMU_HANDOFF.md) records decisions,
 expected difficulties, findings and dated validation.
 
+The third slice connects that verified process to stopped-boundary traces,
+register/PC/region predicates and persistent execution-event searches. Its
+source identity survives ordinary MZ relocation and later process closure.
+Overlays, mode changes and queued-input timing remain explicit boundaries.
+
 This is an alternative for testing now. Frame/input machinery, checkpoints and
 execution layers remain later slices. The default-switch gate remains blocked until the outstanding slices
 and compatibility campaigns are qualified. No command here changes the default.
@@ -195,8 +200,69 @@ not successful arbitrary driver I/O.
 
 Startup uses one host-time budget across staging and control setup. Execution
 timeout recovery may use the existing five-second GDB interrupt allowance;
-parent-return observation has its own five-second bounded budget. These are
+parent-return observation has a five-second bounded budget, capped by an
+enclosing source-trace deadline when present. These are
 host control budgets, not DOS cycle or guest-time guarantees.
+
+## Trace the verified DOS process
+
+After original COM/MZ launch stops at its real DOS entry, the existing public
+routes can inspect register values and code transitions:
+
+```json
+{"method":"debug-trace","params":{"run":"RETURNED_RUN","name":"entry.json","count":8,"timeout_ms":10000}}
+{"method":"debug-trace-until","params":{"run":"RETURNED_RUN","until":{"kind":"register","register":"ax","equals":7},"max_steps":100,"timeout_ms":10000,"name":"ax-seven.json"}}
+```
+
+The operations are sequential examples: the first advances the process before
+the second starts. Use a fresh launch for independent trials. `trace(count=N)`
+preserves N attempted stop intervals and N preceding snapshots when successful;
+`trace-until(max_steps=N)` records the initial boundary and up to N endpoints.
+Budgets count debugger stop intervals, not retired instructions. Predicates
+reuse the existing unsigned register comparisons, masked register values,
+`pc-range` in project/linear/segmented coordinates, decoded mnemonic,
+`region-change`, `nonsequential`, and bounded `all`/`any` combinations.
+
+Every source observation includes actual instruction bytes, full registers,
+observed real-mode addressing, selected PSP and the original capture epoch.
+Its linear `address` remains available; `segmented_address` records CS:IP and
+`identity.project_address` supplies the verified static coordinate. The
+runtime instruction hash remains distinct from the canonical source-site hash.
+The latter uses the original project's relocation base and exact DOS startup
+writes, allowing a normal relocated MZ operand to identify the same site in
+independent launches. A changed opcode/decode, relocation crossing an
+instruction boundary, unsupported wrapping or an unverified byte sequence
+cannot acquire a source-site identity.
+
+QEMU's actual `qqemu.sstepbits` and `qqemu.sstep` replies are retained without
+changing the policy. A successful debugger stop does not certify completion:
+a fault can stop in its handler and REP can stop after a partial iteration.
+`instruction_completed` therefore remains unknown after an attempt. IRQ/timer
+masking is reported from the observed mask; this tracing mode does not certify
+natural DOS timing or a scheduled task's identity.
+
+The collector checks the selected allocation through the MCB chain and the PSP
+parent at each boundary. It checks each decoded instruction against the
+verified load, allowing ordinary data writes elsewhere. Leaving the module,
+self-modification, a changed allocation, process epoch, hidden segment mapping
+or CPU mode stops source capture. It does not silently adopt a new overlay.
+User break/watchpoints remain owned by their caller and stop the capture;
+the internal parent-return breakpoint retains its lifecycle role.
+
+Saved artifacts work with `event-trace-query`, `event-search-start`,
+`event-search-refine` and `event-search-results`, including after exit, session
+close and project reopening. Storage rederives original/runtime/canonical bytes
+and checks the ordered original entry receipt, artifact receipt, epoch and
+instruction identity. A current closed-process state cannot invalidate an
+authentic historical capture, and a current live state cannot invent one.
+Only closed, qualified observation windows can narrow an event search. A final
+unbound boundary may satisfy an explicit runtime predicate, but its open source
+window cannot prove absence of a source event or contribute a false site.
+
+Queued `action` input is refused before any execution, including saved-script
+preflight, until the clock/media/input slice qualifies dispatch and consumption.
+Raw-disk sessions retain machine traces and do not gain a COM/MZ source binding
+or the process-specific `trace-until` method.
 
 ## What the first slice does and does not qualify
 
@@ -213,10 +279,9 @@ Windows thread. Runs are bounded by host time; instruction stepping follows
 QEMU's debugger semantics and does not establish original-machine cycle timing.
 Stored-surface PNG capture is distinct from the DOSBox completed-frame contract.
 
-The existing whole-program event-search adapter still requires its qualified
-DOSBox/PE mappings. `qemu-dos` can retain completed-step machine traces, but it
-does not claim `trace-until`, action causality, original-entry discovery or
-source-bound event narrowing. Periodic memory rules also remain blocked until
+Native event searches cover the verified initial real-mode DOS module, not a
+whole-program execution history, arbitrary driver mapping or unpacked original
+entry discovery. Periodic memory rules also remain blocked until
 the guest-clock slice is implemented; explicit stopped `memory-rule-tick` is
 available.
 
@@ -257,6 +322,11 @@ the packaged authored helper and needs no assembler. The helper's readable
 source/template equality is checked by `tests/test_dos_process_helper.py`
 with `FDISBULL_NASM=/path/to/nasm` and
 `FDISBULL_REQUIRE_DOS_HELPER_ASSEMBLY=1`.
+
+The trace slice adds `tests/test_qemu_dos_trace_native.py` and
+`tests/test_qemu_trace_semantics_native.py` with the same required native
+inputs. Source/persistence and protocol checks are separate from these actual
+guest witnesses. Consult the handoff log for the exact run results and scope.
 
 Rehearse the retained path with a separate original DOS program project:
 

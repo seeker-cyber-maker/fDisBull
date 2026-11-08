@@ -16,11 +16,12 @@ after the migration; an uncertain operation never triggers an implicit fallback.
 | `qemu-machine` | Existing generic raw machine and QEMM/DESQview contexts |
 
 Native QEMU currently supplies machine controls, physical/virtual memory,
-guarded edits, break/watchpoints, completed-step trace artifacts, stored PNGs
+guarded edits, break/watchpoints, stopped-boundary trace artifacts, stored PNGs
 when the QEMU build supports them, and stopped memory snapshot/search/edit/rule
 operations. The process slice adds real DOS EXEC loading, verified PSP/source
-entry and selected-process exit/TSR observations. Frame-timed input, native
-checkpoints, fetch layers, event predicates and scene parity remain later
+entry and selected-process exit/TSR observations. Source-bound trace predicates
+and persistent event searches cover the initial verified real-mode module.
+Frame-timed input, native checkpoints, fetch layers and scene parity remain later
 slices. Periodic memory rules need the later
 guest-clock slice; explicit stopped rule ticks are available.
 
@@ -140,3 +141,31 @@ remain separate qualification campaigns. A registered device header or the
 authored SYS initialization test does not establish arbitrary device I/O.
 Source tests require real QEMU/FreeDOS and independent authored COM/MZ/TSR
 witnesses; production uses the packaged helper without requiring NASM.
+
+## Capture register and execution events
+
+On a live COM/MZ process, `debug-trace` preserves the existing bounded-count
+artifact route. `debug-trace-until` accepts the shared register, PC-range,
+mnemonic, region-change and nonsequential predicates. For example:
+
+```json
+{"method":"debug-trace-until","params":{"run":"RETURNED_RUN","until":{"kind":"register","register":"ax","equals":7},"max_steps":100,"timeout_ms":10000,"name":"ax-seven.json"}}
+```
+
+Budgets count stopped QEMU debugger intervals. A stop can follow a fault or
+partial REP progress; it does not certify instruction retirement. Artifacts
+retain actual IRQ/timer stepping policy, full register observations, linear
+and segmented PCs, verified source sites and the initial capture epoch.
+Source-site hashes account for DOS relocation separately from observed byte
+hashes, so independent launches can be compared at the same project site.
+
+Use the returned `trace_artifact` with `event-trace-query`, `event-search-start`
+and `event-search-refine`. Ordered entry/artifact receipts and source bytes are
+rechecked after session close or project reopening. Only a closed qualified
+window can narrow candidates. Self-modification, source/module departure,
+allocation/epoch or mode changes stop the source binding; unbound boundaries
+never acquire a source site. Inspect `source_window_closed`, `outcome` and
+`error`, even if an explicit runtime predicate matched the final boundary.
+
+Queued `action` input is refused before mutation until the clock/input slice.
+Raw-disk machine tracing remains separate and supplies no process source map.

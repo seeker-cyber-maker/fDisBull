@@ -15,7 +15,7 @@ not authorize deletion of the DOSBox fallback.
 
 [`QemuMachine` and `MachineContext`](../src/fdisbull/qemu_machine.py) already
 own an offline QEMU machine and provide stopped register/RAM access, guarded
-edits, execution breakpoints, data watchpoints, bounded run/step, completed-step
+edits, execution breakpoints, data watchpoints, bounded run/step, stopped-boundary
 traces and stored-display PNG capture. Native machine memory searches,
 page-mapping observation and QEMM/DESQview report ingestion also exist. The
 project-bound launcher accepts an original raw x86 boot image. It does not
@@ -29,6 +29,14 @@ verified parent return distinguishes selected-process exit and TSR residency.
 This is partial native availability, with real-mode entry and explicit machine
 address controls. It does not promote driver/task/V86 or whole-game parity.
 See the maintained [handoff log](DOS_QEMU_HANDOFF.md) for dated execution evidence.
+
+The trace slice adds source-bound stopped observations and `trace-until` to
+the original COM/MZ process adapter, plus persistent event-search integration.
+Runtime bytes and canonical relocated source sites are kept distinct. Native
+fault/REP witnesses corrected the earlier unconditional completion wording:
+ordinary GDB stops do not prove instruction retirement. Initial-module and
+epoch qualification is partial availability; live overlays, protected/V86
+process mapping, queued input and whole-game timing remain unqualified.
 
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
@@ -115,7 +123,7 @@ dispatch are outside this router dictionary.
 | Explicit direct-write refusals | `debug-write-memory`, `debug-write-registers` | Legacy DOS deliberately refuses these routes; preserve that contract while native machine writes remain explicitly guarded |
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Inherited on `MachineContext` but explicitly refuses QEMU; requires qualified guest-time slices |
-| Trace and predicates | `debug-trace`, `debug-trace-until` | Machine completed-step trace exists; DOS predicate adapter remains pending |
+| Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Initial real-mode module only; no queued input or overlay rebinding |
 | Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Pending guest-clock, device and ownership contracts |
 | Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |

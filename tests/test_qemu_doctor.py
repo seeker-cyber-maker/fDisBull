@@ -68,3 +68,8 @@ def test_real_installed_native_qemu_doctor_exports_only_evidence(tmp_path):
     assert {path.name for path in output.iterdir()} == expected
     assert all(artifact['retained'] for artifact in report['artifacts'].values())
     assert json.loads((output / 'receipt.json').read_text()) == report
+    trace = json.loads((output / 'trace.json').read_text())
+    assert all(event['observation']['instruction_completed'] is None
+               for event in trace['events'])
+    assert trace['single_step_policy']['status'] == 'observed'
+    assert trace['single_step_policy']['changed'] is False

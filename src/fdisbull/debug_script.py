@@ -84,8 +84,8 @@ def validate_script(script, *, session=None):
             from .qemu_machine import MachineDebugSession
             owner=MachineDebugSession
         elif backend=='qemu-dos':
-            from .qemu_dos import QemuDOSSession
-            owner=QemuDOSSession
+            from .qemu_dos_process import QemuDOSProcessSession
+            owner=QemuDOSProcessSession
         elif backend=='scummvm-kyra':
             from .scummvm_kyra import ScummVMKyraSession
             owner=ScummVMKyraSession
@@ -130,8 +130,8 @@ def validate_script(script, *, session=None):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu'):
-                        raise ValueError('Live trace-until requires the DOSBox boundary adapter')
+                    if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu','qemu-dos'):
+                        raise ValueError('Live trace-until requires a qualified DOS boundary adapter')
                     if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for this backend: '+op)
                     if op == 'memory-rule-run' and (backend or actual) in ('qemu-machine','qemu-dos'):
@@ -164,6 +164,8 @@ def validate_script(script, *, session=None):
                                 for child in value:literal(child)
                         literal(params)
                         validate_trace_until(**params)
+                        if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
+                            raise ValueError('Native DOS queued input awaits the clock/input migration slice')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
@@ -261,6 +263,11 @@ def validate_script(script, *, session=None):
     visit(script['steps'])
     if not expanded:
         raise ValueError('Script must contain at least one operation')
+    if (session is not None
+            and getattr(session, 'metadata', {}).get('runtime_profile') == 'dos-exec-load-only-v1'
+            and any(step['op'] in ('trace', 'trace-until') for step in expanded)
+            and session.project.db.in_transaction):
+        raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     return expanded
 
 
