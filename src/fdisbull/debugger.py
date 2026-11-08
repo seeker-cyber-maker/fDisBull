@@ -75,30 +75,33 @@ DEBUG_DDL += MACRO_DDL
 
 class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemorySearchProjectMixin, SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None,
-                transport='unix', firmware=None, clock_profile='standard', _on_spawn=None):
+                transport='unix', firmware=None, clock_profile='standard', audio_profile='off', _on_spawn=None):
         if self.meta['format'] == 'NE':
             raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,
                                    boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
-                                   transport=transport,firmware=firmware,clock_profile=clock_profile,_on_spawn=_on_spawn)
+                                   transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,_on_spawn=_on_spawn)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
-                 guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None,
+                 guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None,
                  dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None):
         dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
             raise ValueError('DOS process boot/staging options require backend=qemu-dos')
         if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
             raise ValueError('guest_profile requires a native QEMU full-system backend')
-        if any(value is not None for value in (qemu_transport,qemu_firmware,qemu_clock)) and backend not in ('qemu-machine','qemu-dos'):
-            raise ValueError('qemu_transport, qemu_firmware and qemu_clock require a native QEMU backend')
+        if any(value is not None for value in (qemu_transport,qemu_firmware,qemu_clock,qemu_audio)) and backend not in ('qemu-machine','qemu-dos'):
+            raise ValueError('qemu_transport, qemu_firmware, qemu_clock and qemu_audio require a native QEMU backend')
         if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
             raise ValueError('qemu_transport must be unix or pipe')
         if qemu_clock is not None and qemu_clock not in ('standard','instruction','virtual'):
             raise ValueError('qemu_clock must be standard, instruction or virtual')
+        if qemu_audio is not None:
+            from .qemu_audio import machine_audio_configuration
+            machine_audio_configuration(qemu_audio,qemu_clock or 'standard')
         if dot_mode is not None:
             if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
             if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
@@ -155,7 +158,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             options=dict(boot_image=Path(game_dir)/self.meta['filename'],version=version,
                          boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
                          transport=qemu_transport or 'unix',firmware=qemu_firmware,
-                         clock_profile='standard' if qemu_clock is None else qemu_clock,_on_spawn=_on_spawn)
+                         clock_profile='standard' if qemu_clock is None else qemu_clock,
+                         audio_profile='off' if qemu_audio is None else qemu_audio,_on_spawn=_on_spawn)
             if backend=='qemu-dos':
                 if self.meta['format'] in ('COM', 'MZ'):
                     if dos_boot_image is None:
@@ -1307,6 +1311,10 @@ class DebugWorkspace:
                         'debug-runtime-memory':'runtime_memory','debug-write-runtime-memory':'write_runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         methods.update({'debug-clock-observe':'clock_observe','debug-clock-advance':'clock_advance',
                         'debug-capture-surface':'capture_surface',
+                        'debug-audio-start':'audio_start','debug-audio-observe':'audio_observe',
+                        'debug-audio-stop':'audio_stop','debug-capture-audio':'capture_audio',
+                        'debug-display-start':'display_start','debug-display-observe':'display_observe',
+                        'debug-display-stop':'display_stop','debug-capture-display':'capture_display',
                         'debug-mouse-move-relative':'mouse_move_relative','debug-mouse-button-down':'mouse_button_down',
                         'debug-mouse-button-up':'mouse_button_up','debug-input-state':'input_state',
                         'debug-input-cancel-pending':'input_cancel_pending'})

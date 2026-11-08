@@ -24,8 +24,10 @@ Overlays, mode changes and queued-input timing remain explicit boundaries.
 
 The fourth slice now supplies owned physical keyboard/PS/2 input, explicit
 instruction and native virtual-clock profiles, and stopped display captures
-with CPU/clock brackets. The optional virtual profile adds native timer budgets;
-completed frames, audio and legacy timing parity remain open gates.
+with CPU/clock brackets. The optional virtual profile adds native timer budgets,
+retained completed renderer updates and bounded PC-speaker PCM capture.
+Completed guest frames, broader sound devices and legacy timing parity remain
+open gates. Timing auto-sync is deferred.
 
 This is an alternative for testing now. Checkpoints and execution layers remain
 later slices. The default-switch gate remains blocked until the outstanding slices
@@ -456,6 +458,75 @@ Primary implementation references are QEMU's
 and [QMP input, screendump and replay commands](https://www.qemu.org/docs/master/interop/qemu-qmp-ref.html).
 Those moving upstream manuals describe a newer development version; the
 handoff records the actual installed version used for native acceptance.
+
+### Retain completed renderer updates and audio output
+
+The optional [media extension](../native/qemu-media/README.md) adds explicit
+observation windows to the native virtual-clock runtime. Its patch applies
+after the current clock patch. The default runtime remains unchanged. Enable
+the PC-speaker device only when requested:
+
+```python
+with project.debugger(qemu, game_directory, backend='qemu-dos',
+                      dos_boot_image=dos_disk, dos_mcopy=mcopy,
+                      qemu_transport='pipe', qemu_firmware=firmware,
+                      qemu_clock='virtual', qemu_audio='pc-speaker') as debug:
+    # At the caller-selected stopped point; start never runs the program.
+    display = debug.display_start(period_ns=20_000_000)
+    audio = debug.audio_start(max_frames=320_000)
+    result = debug.clock_advance(100_000_000, timeout_ms=5000)
+    # An earlier debugger/process stop can precede any media production.
+    observed = debug.display_observe()
+    if observed['updates']:
+        image = debug.capture_display('observed.png', after_update=0)
+    debug.audio_stop()
+    sound = debug.capture_audio('observed.wav')
+    debug.display_stop()
+```
+
+These calls also have retained JSON routes `debug-display-start`,
+`debug-display-observe`, `debug-display-stop`, `debug-capture-display`,
+`debug-audio-start`, `debug-audio-observe`, `debug-audio-stop` and
+`debug-capture-audio`. Saved scripts use the same names without `debug-`.
+The raw `project.machine()` route accepts `audio_profile='pc-speaker'` with
+`clock_profile='virtual'`. Audio defaults to `off`.
+
+Renderer publications own an immutable RGB copy taken after the synchronous
+standard VGA renderer returns. Native virtual timers provide the explicitly
+chosen observation cadence; the period is not a guest refresh rate. Only the
+latest publication is retained, identified by its window token and update ID,
+with dimensions, publication time and observed age. `capture_display()` reads
+those pixels without refreshing. `after_update` refuses stale IDs in the same
+window and never waits or continues automatically. Capture stays bounded to
+16 MiB of RGB. A later `capture_surface()` refresh does not alter these owned
+pixels.
+
+A completed renderer update can itself show half-finished guest drawing.
+`completed_renderer_update=True` is therefore separate from
+`completed_guest_frame=None` and `guest_frame_id=None`. The observer does not
+provide VGA scanout, VBlank, a full guest mode epoch or application readiness.
+The native witness explicitly demonstrates a half-drawn published image.
+
+Audio capture observes complete PCM frames from QEMU's mixer callback. The
+explicit PC-speaker profile uses the `none` host driver and 32,000 Hz, mono,
+unsigned 8-bit samples. The WAV receipt retains contiguous sample ranges and
+their callback delivery times, plus stopped clock brackets. Device buffers
+can contain earlier generated samples; callback time is not each sample's
+onset. Inactive intervals produce no synthetic silence. WAV sample duration
+must not be interpreted as elapsed guest time or device queue completion.
+
+Capacity is 1..1,920,000 frames and at most 8192 callback records. Overflow is
+reported with a dropped-frame count and refuses a misleading complete WAV.
+Stop the old window and explicitly start another. Stop is idempotent, retains
+the captured prefix and does not flush the mixer. New windows start empty.
+Sound Blaster, FM/OPL and other devices remain separate qualification work.
+
+Both windows bind to the owned machine and native clock epoch. Reset or
+incompatible state invalidates them; migration after use is blocked. Passive
+queries and exports do not execute the guest. Shared script deadlines include
+lock admission and persistence; an uncertain start/stop closes the machine.
+The caller advances execution through existing controls. Timing auto-sync,
+host pacing, adaptive correction and resampling control are deferred.
 
 ## What the first slice does and does not qualify
 

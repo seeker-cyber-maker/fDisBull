@@ -25,6 +25,8 @@ from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine
                          validate_clock_budget, admit_virtual_clock)
 from .qemu_input import QemuPhysicalInputMixin
 from .qemu_surface import QemuSurfaceMixin
+from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
+from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
 
 
 def file_hash(path):
@@ -48,7 +50,7 @@ class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
-                 clock_profile='standard'):
+                 clock_profile='standard', audio_profile='off'):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
@@ -68,6 +70,9 @@ class QemuMachine:
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             selected_clock=machine_clock_configuration(clock_profile,cpus)
+            selected_audio=machine_audio_configuration(audio_profile,clock_profile)
+            if audio_profile!='off' and (boot_image is None or not paused or restore):
+                raise ValueError('Audio capture requires a paused fresh PC boot machine')
             if clock_profile=='virtual' and (not paused or restore):
                 raise ValueError('The virtual clock profile requires a paused fresh machine')
             if cpu_model not in ('max', '486'):
@@ -93,6 +98,7 @@ class QemuMachine:
                                             disk='private-verified-copy-and-snapshot' if boot_image else None,
                                             boot_device=boot_device if boot_image else None,control_transport=transport,
                                             clock_profile=selected_clock,
+                                            audio_profile=selected_audio,
                                             firmware='explicit-directory' if firmware is not None else 'QEMU default search path; not pinned',
                                             hostcalls='not configured; experimental FDB_HOSTCALL_/FDB_LAYER_ selectors removed')
             selected_boot=paths.get('boot_image')
@@ -106,9 +112,13 @@ class QemuMachine:
                 shutil.copyfile(paths['boot_image'],selected_boot)
                 if file_hash(selected_boot)!=self.inputs['boot_image']['sha256']:
                     raise ValueError('Boot image changed while creating its private runtime copy')
-            command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine','pc' if boot_image else 'q35','-cpu',cpu_model,
+            machine='pc' if boot_image else 'q35'
+            if audio_profile=='pc-speaker':machine+=',pcspk-audiodev=fdisbull-pc'
+            command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine',machine,'-cpu',cpu_model,
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
                      '-serial',f'file:{self.log_path}']
+            if audio_profile=='pc-speaker':
+                command+=['-audiodev','none,id=fdisbull-pc,timer-period=10000,out.frequency=32000,out.channels=1,out.format=u8']
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -150,6 +160,8 @@ class QemuMachine:
             self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
             if clock_profile=='virtual':
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
+            if audio_profile=='pc-speaker':
+                self.machine_configuration['native_audio_admission']=admit_audio(self)
             self.qmp.operation_deadline=None
             self.context=MachineContext(self)
         except BaseException as error:
@@ -233,7 +245,7 @@ def machine_operation(function,*,script_budget=False):
     return invoke
 
 
-def machine_io_operation(function):
+def machine_io_operation(function, *, close_on_timeout=False):
     """Carry a saved script's one deadline through composed native I/O.
 
     These operations do not continue the guest. GDB execution retains its
@@ -259,6 +271,7 @@ def machine_io_operation(function):
         try:
             result=function(self,*args,**kwargs)
             if time.monotonic()>=bound:
+                if close_on_timeout:vm.close()
                 raise TimeoutError('Native machine I/O exceeded the saved script deadline')
             return result
         finally:
@@ -325,7 +338,7 @@ def machine_clock_operation(function):
     return invoke
 
 
-class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin,
+class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -335,6 +348,14 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
     clock_observe=machine_io_operation(MachineClockMixin.clock_observe)
     clock_advance=machine_clock_operation(MachineClockMixin.clock_advance)
     capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
+    audio_start=machine_io_operation(QemuAudioMixin.audio_start,close_on_timeout=True)
+    audio_observe=machine_io_operation(QemuAudioMixin.audio_observe)
+    audio_stop=machine_io_operation(QemuAudioMixin.audio_stop,close_on_timeout=True)
+    capture_audio=machine_io_operation(QemuAudioMixin.capture_audio)
+    display_start=machine_io_operation(QemuDisplayMixin.display_start,close_on_timeout=True)
+    display_observe=machine_io_operation(QemuDisplayMixin.display_observe)
+    display_stop=machine_io_operation(QemuDisplayMixin.display_stop,close_on_timeout=True)
+    capture_display=machine_io_operation(QemuDisplayMixin.capture_display)
     keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
     keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
     keyboard_state=machine_io_operation(QemuPhysicalInputMixin.keyboard_state)
@@ -352,6 +373,8 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
+            audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='pc-speaker',
+            renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_clock_budget=virtual,
             clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
                                'explicit instruction progress profile; no guest milliseconds'),
@@ -650,11 +673,12 @@ class MachineDebugSession(MachineContext):
                 else admit_qemm_profile(guest_profile,image))
 
     def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000,guest_profile=None,
-                 transport='unix',firmware=None,clock_profile='standard',_on_spawn=None):
+                 transport='unix',firmware=None,clock_profile='standard',audio_profile='off',_on_spawn=None):
         import uuid
         from .debugger import stamp
         selected=project.version(version);image=Path(boot_image).expanduser().resolve(strict=True)
         machine_clock_configuration(clock_profile,1)
+        machine_audio_configuration(audio_profile,clock_profile)
         if project.meta['format']!='raw' or project.meta['arch']!='x86' or selected['parent'] is not None:
             raise ValueError('Machine boot launch requires an original unpatched raw x86 project')
         if not image.is_file() or image.stat().st_size>64*1024*1024 or file_hash(image)!=project.meta['source_sha256']:
@@ -673,7 +697,7 @@ class MachineDebugSession(MachineContext):
                            boot_device=self.guest_profile['machine']['boot_device'])
         memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128
         vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,
-                       transport=transport,firmware=firmware,clock_profile=clock_profile,on_spawn=_on_spawn,**options)
+                       transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,on_spawn=_on_spawn,**options)
         super().__init__(vm)
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
         self.capabilities['qemm_observation']=self.guest_profile is not None and self.guest_profile['memory_manager']['configured']=='qemm'
@@ -705,6 +729,8 @@ class MachineDebugSession(MachineContext):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
+                'audio-start','audio-observe','audio-stop','capture-audio',
+                'display-start','display-observe','display-stop','capture-display',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):

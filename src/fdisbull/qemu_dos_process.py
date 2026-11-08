@@ -162,7 +162,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
     def __init__(self, project, executable, game_dir, *, boot_image, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
-                 firmware=None, clock_profile='standard', _on_spawn=None):
+                 firmware=None, clock_profile='standard', audio_profile='off', _on_spawn=None):
         from .dos_process_helper import build_loader
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
@@ -188,6 +188,8 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             raise ValueError('DOS process startup timeout must be 1..600000 ms')
         from .qemu_clock import machine_clock_configuration
         machine_clock_configuration(clock_profile, 1)
+        from .qemu_audio import machine_audio_configuration
+        machine_audio_configuration(audio_profile, clock_profile)
         if not isinstance(arguments, str):
             raise ValueError('DOS arguments must be a CP437 command-tail string')
         try:
@@ -234,7 +236,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                 cpu_model=profile['machine']['cpu'], memory_mib=profile['machine']['memory_mib'],
                 cpus=1, boot_device=profile['machine']['boot_device'],
                 timeout_ms=self._remaining(), transport=transport, firmware=firmware,
-                clock_profile=clock_profile, on_spawn=_on_spawn)
+                clock_profile=clock_profile, audio_profile=audio_profile, on_spawn=_on_spawn)
             MachineContext.__init__(self, vm)
             self.rpc = vm
             vm.context = self

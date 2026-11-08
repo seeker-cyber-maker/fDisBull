@@ -57,16 +57,19 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Restored baseline: `3b7ffedd848736174ad055b506bbbe44567ea6a2`.
 - Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
   instruction and native virtual-clock observations, token-bound native timer
-  budgets, and stopped PNG/CPU/clock brackets, alongside the earlier
+  budgets, retained synchronous renderer publications, bounded PC-speaker PCM
+  windows, and stopped media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
-- Next gate: establish completed frame/audio boundaries and their clock/input
-  joins before clock-dependent checkpoints, frame histories, click-to-event
-  causality or Python media synchronization. The explicit API1 virtual-clock
-  path is available; legacy guest_ms, timed helpers and DOSBox timing parity
-  remain separate qualifications. The full slice remains open.
+- Next gate: qualify guest frame/VBlank semantics, additional audio devices,
+  timed/frame-edge input, coordinate mapping and clock-to-source-trace joins
+  before claiming those behaviors or depending on them in checkpoints and
+  histories. Renderer completion and capture-callback delivery are now explicit
+  narrower boundaries. Timing auto-sync is deferred at the user's direction;
+  legacy guest_ms, timed helpers and DOSBox timing parity remain separate
+  qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
@@ -74,6 +77,148 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-08: native renderer and PC-speaker continuation
+
+Continued from published head `0edf5a81496e780b1a1f89bd6bd1289dc1e47326`
+on the existing branch and draft MR !117. The user explicitly deferred timing
+auto-sync. This increment adds independently controlled media observations on
+the already admitted native virtual clock; it adds no host pacing, adaptive
+clock controller, automatic resampling or synchronization loop.
+
+### Public paths and actual completion boundaries
+
+The optional [native media extension](../native/qemu-media/README.md) applies
+after the exact current clock patch to QEMU 10.0.13. Renderer operations are
+`display_start(period_ns=...)`, `display_observe()`, `display_stop()` and
+`capture_display(name=..., after_update=...)`. They are available through
+Python, retained JSON (`debug-` names with hyphens) and saved scripts. A new
+window is empty. Its explicit virtual timer invokes the admitted standard VGA
+renderer synchronously, copies all RGB rows while holding QEMU's big lock, and
+only then publishes an ID and virtual timestamp. It retains the latest copy,
+bounded to 16 MiB and 8192 pixels per dimension. The observation period is not
+a claimed guest frame rate. Missed observations are skipped without catch-up
+execution or host-time synchronization.
+
+This proves **completed renderer updates**, not completed guest application
+frames or VBlank. The authored witness deliberately pauses halfway through a
+draw. A stopped `capture_surface()` sees the changed VRAM while the previously
+published renderer copy remains unchanged; a subsequent explicit clock advance
+can publish that same incomplete guest drawing. Receipts retain
+`completed_guest_frame=None` and `guest_frame_id=None`. Publication age is
+observable, and `after_update` rejects an unchanged window-local publication
+without waiting or running the guest. Graphics-to-text dimension changes are
+covered; this does not establish complete mode-transition or frame epochs.
+
+Select `qemu_clock='virtual', qemu_audio='pc-speaker'` explicitly at launch to
+enable `audio_start(max_frames=...)`, `audio_observe()`, `audio_stop()` and
+`capture_audio(name=...)`, with equivalent JSON and script paths. The profile
+uses QEMU's `none` audio driver, a 10 ms audio timer and 32,000 Hz mono unsigned
+8-bit PCM. It configures only the PC speaker; Sound Blaster and OPL/FM remain
+unqualified. The default audio profile is still `off`.
+
+Native capture callbacks retain whole PCM frames, contiguous indices and their
+actual virtual delivery timestamps. They do not establish precise sample onset
+or that device queues were drained. Buffers can contain samples generated
+before registration. Inactive periods do not create synthetic silence, so the
+WAV's sample duration is distinct from elapsed guest time. Windows retain a
+bounded prefix, at most 1,920,000 frames and 8192 callback records; overflow
+counts rejected frames and refuses a complete WAV export. Stop detaches the
+callback without flushing, advancing or resuming the guest.
+
+Both observers own unique tokens and the current native clock epoch. Stop is
+idempotent, retained fields freeze after stop, and a new window cannot adopt
+earlier samples or pixels. The host rejects unsolicited windows, changed
+retained bytes, malformed sizes/counters and inconsistent epochs. Exports
+validate exact payload lengths, preserve pixel/PCM hashes and bracket reads
+with an unchanged stopped clock. Reset invalidates both observers. Their first
+use blocks migration for the process lifetime; no checkpoint/restore contract
+is implied. All operations share the machine lock and saved script deadline.
+An uncertain mutation or a start/stop receipt that overruns closes the owner.
+
+### Clock defect exposed by media work
+
+A new strict native witness found that an ordinary GDB continue, with no clock
+budget armed, could still advance virtual time by roughly 54.9 ms on an
+authored one-NOP path. The stopped-CPU flag was set before the main loop consumed
+the debugger request, allowing an idle warp to the next ordinary device timer.
+The earlier guard covered armed budgets only.
+
+The clock patch now suppresses idle warping whenever an explicitly admitted
+fixed-icount native-clock machine has a stopping/stopped CPU, regardless of
+whether a budget is armed. It still allows a merely halted CPU to reach native
+device deadlines. The new regression requires fewer than 100 counted
+instructions and less than 100,000 ns across the short path; both pass without
+relaxation. Existing CLI/HLT, PIT IRQ, early breakpoint/watchpoint, cancellation,
+exit and TSR witnesses also pass. The original failing clock receipt remains
+private. This correction does not diagnose unrelated historical host timeouts.
+
+Independent boundary review also prompted stricter unsolicited-token refusal,
+stopped-receipt freezing, exact P6/PCM length checks and retained-byte identity
+checks. The first display pixel assertion assumed a BIOS palette value that
+varied from the observed value. Its fixture now programs its own VGA DAC before
+drawing and asserts exact full-scale colors; production rendering was not
+changed to accommodate the fixture.
+
+### Verification and remaining startup uncertainty
+
+| Lane | Result |
+| --- | --- |
+| Affected source, stock QEMU/FreeDOS, lifecycle, I/O, deadlines, inventory and payload checker | 276 passed, zero skips, 121.92 seconds |
+| Final public media/routes and hostile boundaries | 138 passed, zero skips, 19.91 seconds |
+| Native media and clock, final source | 19 passed, zero skips, 63.36 seconds |
+| Isolated installed wheel: stock/native I/O and public boundaries, serial | 154 passed, zero skips, 43.18 seconds |
+| Isolated installed wheel: native media and clock, serial | 19 passed, zero skips, 85.46 seconds |
+| Wheel/source/installed payload identity | All 634 package files match exactly |
+
+Selections overlap and are not a count of unique tests. The native selection
+includes five audio, three renderer and eleven clock cases. It covers a
+programmed PIT speaker tone with an independently calculated frequency,
+inactive output without synthetic silence, overflow, concurrent audio/display
+clock and epoch observations, wrong-token refusal, reset invalidation,
+publication freshness, partial drawing, dimension changes, passive exports,
+saved scripts and reopened artifact metadata. Evidence is local Linux over
+pipe transport with owned disposable VMs and the explicit test-only FreeDOS
+1.4 `SWITCHES=/F` baseline. Original source and boot-image bytes are preserved.
+
+The initial installed suites ran concurrently and are retained as failures:
+**153 passed, 1 failed** in the stock/public selection and **18 passed, 1
+failed** in native media/clock. Both failures exhausted the existing startup
+deadline before a media operation: one while awaiting the QMP greeting, the
+other while awaiting the DOS loader report in fixture setup. The latter did
+not reach its reset operation. Serial reruns used the same wheel, binaries and
+deadlines and produced the passing results above. Resource contention is a
+possible explanation, not an established cause. Parallel startup reliability
+therefore remains unresolved; no automatic retry or larger production budget
+was introduced. Earlier unexplained large-MZ startup and retained-DOSBox idle
+timeouts remain separate observations without an assigned common cause.
+
+Pinned identities:
+
+- Official QEMU source archive SHA-256:
+  `4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa`.
+- Updated clock patch SHA-256:
+  `2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b`.
+- Media patch SHA-256:
+  `ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6`.
+- Tested native executable SHA-256:
+  `2c60e112a1ea4e48a44f6250a0a1f4b209b78d3fa425f55105dde7662c43918e`.
+- Tested wheel SHA-256:
+  `7732b3472ef950cfeaa42c31408d0f4d98601e043ee209b48ab3c0221c3fec96`.
+
+Applying both patches in order to pristine official-archive files reproduces
+all 14 affected source paths exactly. Manifests pin every stage and the media
+patch's clock-patch dependency. Source-distribution and tool-source recipes
+retain both patches, manifests and READMEs; the Python wheel contains no native
+emulator. Private build, failure and successful test receipts remain outside
+Git. The prior tested clock executable and its original receipt are preserved.
+
+All 127 migration/default-switch entries remain unqualified. Guest-frame and
+VBlank completion, SB16/FM, timed/frame-edge input, pixel/INT33 mapping,
+clock-to-source-trace causality, legacy guest_ms, checkpoints, histories,
+real-game/QEMM compatibility, Windows and macOS qualification remain open.
+Timing auto-sync is explicitly deferred. No release, hosted CI, merge, shared
+installation or credential change was performed; Mac mirrors remain unavailable.
 
 ## 2026-11-08: native virtual-clock continuation
 

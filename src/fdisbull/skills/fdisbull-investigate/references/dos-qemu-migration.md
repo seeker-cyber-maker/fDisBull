@@ -267,5 +267,47 @@ A changed stopped bracket closes the VM and refuses it.
 The independent native witness checks BIOS AX, IRQ1 make/break bytes, IRQ12
 mouse packets, separate consumption/draw points and PNG pixels under QEMU
 10.0.13/FreeDOS1.4. This does not qualify real games, QEMM/DESQview, Windows,
-audio, a completed-frame fence or legacy guest-time scheduling parity. Keep those
-gates open before building checkpoints, frame histories or Python media joins.
+broader sound devices, a completed guest-frame fence or legacy guest-time
+scheduling parity. Keep those gates distinct from the native observations below.
+
+## Observe renderer publications and PC-speaker output
+
+Use the current clock patch plus `native/qemu-media/` for these optional native
+API1 operations. Select `qemu_clock='virtual'`; add `qemu_audio='pc-speaker'`
+only for PC-speaker capture. The raw machine factory takes `clock_profile` and
+`audio_profile` instead. This profile uses QEMU's timer-driven `none` audiodev,
+32,000 Hz mono unsigned 8-bit PCM, and no host playback. Other sound devices
+remain unqualified. Timing auto-sync is explicitly deferred.
+
+Start windows at a caller-selected stopped point with
+`display_start(period_ns=20_000_000)` and `audio_start(max_frames=320_000)`.
+Advance once with the existing `clock_advance()` or another bounded execution
+control. Preserve an earlier breakpoint, watchpoint or process completion;
+do not automatically continue to manufacture media output.
+
+Inspect `display_observe()` before `capture_display(name, after_update=...)`.
+It reports the latest completed synchronous renderer update, its window token,
+ID, publication virtual time and age. No update exists until a real observer
+callback runs. `after_update` is local to the current window and refuses stale
+publications without waiting. Export reads a private RGB copy; it never calls
+the renderer. A later ordinary screenshot can show different current VRAM
+without changing those retained pixels. A published image can still contain
+partial guest drawing: keep `completed_guest_frame` and `guest_frame_id`
+unknown. The observation period is not a VGA refresh rate or VBlank interval.
+
+Inspect `audio_observe()` and save exact retained output with
+`capture_audio(name)`. Callback sample ranges are contiguous within the WAV,
+but their delivery timestamps are not precise sample onset times. Inactive
+intervals are not filled with silence. Sample duration does not measure elapsed
+guest time or certify queue drain. Overflow reports dropped frames and refuses
+export; stop and explicitly start a new bounded window.
+
+Use `display_stop()` and `audio_stop()` to disarm/detach while retaining data.
+Both are idempotent for the current token and never run, refresh or flush.
+New windows start empty. Reset/epoch changes invalidate the live windows;
+these observers cannot be restored from saved run metadata. Native migration
+is blocked after use. All eight operations have `debug-` JSON routes and
+same-name hyphenated script operations, such as `display-start` and
+`capture-audio`. Script admission and one shared host deadline apply before
+earlier input/media mutations. Keep explicit output observations separate from
+later automatic synchronization, checkpoint and frame-history work.

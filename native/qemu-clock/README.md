@@ -86,11 +86,17 @@ or replace a system QEMU. The authored patch introduces six source changes:
 - `system/runstate.c`: consume the private stop request; invalidate on reset
   and unsupported runstate transitions.
 - `accel/tcg/icount-common.c`: register the supported fixed-icount configuration
-  and suppress further idle warping while a budget stop is pending.
+  and suppress further idle warping while an admitted native-clock machine
+  has a pending native stop or stopping/stopped CPU.
 
 The unarmed extension does not advance the clock, schedule a timer, or stop the
 guest. Configuration registration and an empty pending-stop check do not enable
-the feature. A query initializes an inactive timer and a state observer only.
+the feature. A query initializes an inactive timer and a state observer. After
+native-clock admission, a debugger stop suppresses idle warping even without an
+armed clock budget. Otherwise a one-NOP GDB continue can jump to the next
+ordinary PIT, audio or display timer before the main loop finalizes its stop.
+Merely halted CPUs remain eligible for ordinary virtual timer advances. The
+optional [media extension](../qemu-media/README.md) requires this broader guard.
 
 ## QMP contract
 
@@ -186,10 +192,11 @@ an exact arbitrary-nanosecond cutoff. Fixed shift 7 has a 128 ns instruction
 quantum, and QEMU may process other due device timers at the same boundary.
 The receipt preserves requested, fired and stopped times for direct comparison.
 The extension suppresses additional HLT idle warping while its stop is pending.
-While a budget is armed, it also suppresses warping when a CPU has a debugger
-stop pending or is already stopped. QEMU can otherwise reach its main-loop
-idle-warp check before consuming a debug request, artificially moving an early
-break/watchpoint's clock to the budget deadline. A merely halted CPU remains
+After native-clock admission, it also suppresses warping when a CPU has a
+debugger stop pending or is already stopped, with or without an armed budget.
+QEMU can otherwise reach its main-loop idle-warp check before consuming a
+debug request, artificially moving an early break/watchpoint's clock to a
+budget or ordinary device deadline. A merely halted CPU remains
 eligible for native idle warping. The early-stop witnesses require the actual
 short instruction interval and then run past the cancelled deadline to check
 that no deferred stop survived.

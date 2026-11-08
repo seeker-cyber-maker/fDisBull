@@ -1,4 +1,3 @@
-diff --git a/accel/tcg/icount-common.c b/accel/tcg/icount-common.c
 --- a/accel/tcg/icount-common.c
 +++ b/accel/tcg/icount-common.c
 @@ -28,6 +28,7 @@
@@ -26,8 +25,6 @@ diff --git a/accel/tcg/icount-common.c b/accel/tcg/icount-common.c
          return true;
      }
  
-diff --git a/include/system/fdisbull-clock.h b/include/system/fdisbull-clock.h
-new file mode 100644
 --- /dev/null
 +++ b/include/system/fdisbull-clock.h
 @@ -0,0 +1,14 @@
@@ -45,7 +42,6 @@ new file mode 100644
 +void fdisbull_clock_on_reset(void);
 +
 +#endif
-diff --git a/qapi/run-state.json b/qapi/run-state.json
 --- a/qapi/run-state.json
 +++ b/qapi/run-state.json
 @@ -131,6 +131,102 @@
@@ -151,11 +147,9 @@ diff --git a/qapi/run-state.json b/qapi/run-state.json
  
  ##
  # @SHUTDOWN:
-diff --git a/system/fdisbull-clock.c b/system/fdisbull-clock.c
-new file mode 100644
 --- /dev/null
 +++ b/system/fdisbull-clock.c
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,331 @@
 +/*
 + * Experimental fDisBull native virtual-clock extension, protocol version 1.
 + *
@@ -246,11 +240,13 @@ new file mode 100644
 +    }
 +    /*
 +     * A debugger trap stops the CPU before the main loop changes runstate.
-+     * main_loop_wait() can try an idle warp in that interval.  While our
-+     * timer is armed, do not turn that debugger stop into a jump to the
-+     * budget deadline.  A merely halted CPU must still be allowed to warp.
++     * main_loop_wait() can try an idle warp in that interval.  After the
++     * native clock has been admitted, do not turn any debugger stop into
++     * a jump to a clock, audio, display or ordinary PIT timer.  This also
++     * applies to a normal GDB continue without an armed clock budget.
++     * A merely halted CPU must still be allowed to warp.
 +     */
-+    if (clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED) {
++    if (clock_state.initialized && clock_state.icount_profile) {
 +        CPU_FOREACH(cpu) {
 +            if (cpu->stop || cpu->stopped) {
 +                return true;
@@ -485,7 +481,6 @@ new file mode 100644
 +    }
 +    return fdisbull_clock_info();
 +}
-diff --git a/system/meson.build b/system/meson.build
 --- a/system/meson.build
 +++ b/system/meson.build
 @@ -14,6 +14,7 @@
@@ -496,7 +491,6 @@ diff --git a/system/meson.build b/system/meson.build
    'globals.c',
    'memory_mapping.c',
    'qdev-monitor.c',
-diff --git a/system/runstate.c b/system/runstate.c
 --- a/system/runstate.c
 +++ b/system/runstate.c
 @@ -52,6 +52,7 @@

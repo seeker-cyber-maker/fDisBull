@@ -179,6 +179,17 @@ def test_native_busy_clock_observes_paused_time_and_fresh_budget_tokens(clock_wi
         assert capture['completed_guest_frame'] is None
 
 
+def test_native_unbudgeted_debug_stop_cannot_idle_warp_to_a_device_timer(clock_witness):
+    with clock_witness(busy_clock) as (_, debug, symbols):
+        before = observation(debug)
+        park(debug, symbols['first_write_ip'])
+        after = observation(debug)
+        # The authored CLI path is one NOP between these two stops. There is
+        # no HLT or IRQ execution authorizing a jump to an unrelated timer.
+        assert 0 <= after['counter']['value'] - before['counter']['value'] < 100
+        assert 0 <= after['virtual_ns'] - before['virtual_ns'] < 100_000
+
+
 def test_native_cli_hlt_advances_virtual_clock_without_guest_instructions(clock_witness):
     with clock_witness(halted_clock) as (_, debug, symbols):
         before = observation(debug)

@@ -42,8 +42,13 @@ The clock/input slice now adds an explicit fixed-icount profile, machine-owned
 keyboard and relative PS/2 mouse leases, a bounded Python queue dispatched once
 during GDB continue, and stopped PNG/CPU/clock brackets. Independent DOS BIOS
 and IRQ witnesses distinguish acceptance, consumption and later drawing.
-Generic guest milliseconds, completed frames, timed input, pixel/INT33 mouse
-semantics and audio remain open. A new surface capture ID is not a guest frame.
+The optional virtual-clock extension now has native timer budgets and retained
+completed renderer publications. A separate explicit PC-speaker profile captures
+bounded PCM output with callback timestamps. These operations have Python,
+retained JSON and saved-script routes. A renderer ID is not a guest frame;
+concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
+completed guest frames, broader sound devices, timed input and pixel/INT33 mouse
+semantics remain open. Timing auto-sync is deferred.
 
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its

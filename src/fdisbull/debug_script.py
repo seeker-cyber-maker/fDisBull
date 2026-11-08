@@ -29,6 +29,8 @@ OPERATIONS = {
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
     'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
+    'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
+    'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
@@ -259,6 +261,22 @@ def validate_script(script, *, session=None):
                                 bounded(value,key,*limits)
                         if session is not None and not getattr(session,'capabilities',{}).get('virtual_clock_budget'):
                             raise ValueError('clock-advance requires the explicit QEMU virtual clock profile')
+                    if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
+                            raise ValueError('Audio operations require the explicit QEMU pc-speaker audio profile')
+                        if op=='audio-start' and 'max_frames' in params:
+                            value=params['max_frames']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_audio import validate_audio_capacity
+                                validate_audio_capacity(value)
+                    if op in ('display-start','display-observe','display-stop','capture-display'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('renderer_capture'):
+                            raise ValueError('Renderer operations require the native display extension and virtual clock')
+                        from .qemu_display import validate_display_period, validate_after_update
+                        for key,validator in (('period_ns',validate_display_period),('after_update',validate_after_update)):
+                            if key in params:
+                                value=params[key]
+                                if not (isinstance(value,str) and value.startswith('$')):validator(value)
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
@@ -282,7 +300,7 @@ def validate_script(script, *, session=None):
                         if not (isinstance(lease,str) and lease.startswith('$')):
                             if type(lease) is not str or not 1<=len(lease)<=128:
                                 raise ValueError('Expected an owned unused physical input lease')
-                    if op=='capture-surface' and 'name' in params:
+                    if op in ('capture-surface','capture-audio','capture-display') and 'name' in params:
                         name=params['name']
                         if not (isinstance(name,str) and name.startswith('$')):
                             from .external_files import _file_name
@@ -305,7 +323,9 @@ def validate_script(script, *, session=None):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
         guarded={'keyboard.key-down','keyboard.key-up','mouse.move-relative','mouse.button-down',
-                 'mouse.button-up','input-cancel-pending','clock-observe','clock-advance','capture-surface','screenshot'}
+                 'mouse.button-up','input-cancel-pending','clock-observe','clock-advance','capture-surface','screenshot',
+                 'audio-start','audio-observe','audio-stop','capture-audio',
+                 'display-start','display-observe','display-stop','capture-display'}
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)

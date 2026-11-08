@@ -184,10 +184,18 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
+    "debug-audio-start": "Start a bounded native PC-speaker PCM capture window without running; run,[max_frames]",
+    "debug-audio-observe": "Observe native retained PCM frames and callback timestamps; run",
+    "debug-audio-stop": "Stop native audio capture without flushing or advancing the machine; run",
+    "debug-capture-audio": "Save retained native PCM as WAV with stopped clock brackets; run,[name]",
+    "debug-display-start": "Start native completed-renderer observation at an explicit virtual cadence; run,[period_ns]",
+    "debug-display-observe": "Observe the latest retained renderer publication and its age; run",
+    "debug-display-stop": "Stop renderer observation without refreshing or advancing the machine; run",
+    "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
     "debug-mouse-move-relative": "Queue owned physical PS/2 movement; run,dx,dy (dispatches during bounded QEMU run)",
     "debug-mouse-button-down": "Queue a physical mouse make and own its lease; run,button",
     "debug-mouse-button-up": "Queue the matching physical mouse release; run,lease",
@@ -2062,6 +2070,8 @@ def parser():
     c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
     c.add_argument("--qemu-clock", choices=["standard", "instruction", "virtual"],
                    help="Explicit native clock profile; virtual requires the fDisBull QEMU clock extension")
+    c.add_argument("--qemu-audio", choices=["off", "pc-speaker"],
+                   help="Explicit native audio profile; pc-speaker requires virtual clock and audio extension")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")

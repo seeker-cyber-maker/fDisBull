@@ -3,7 +3,7 @@
   "api_version": 1,
   "upstream_tag_url": "https://qemu.googlesource.com/qemu/+/refs/tags/v10.0.13/",
   "patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
-  "patch_sha256": "d28b9bff0be0d996084ecb52387ac7292064ab1edde2d233fa6c1156b33e96ad",
+  "patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
   "files": [
     {
       "path": "accel/tcg/icount-common.c",
@@ -23,7 +23,7 @@
     {
       "path": "system/fdisbull-clock.c",
       "base_sha256": null,
-      "patched_sha256": "6cfdef56d0a7820ead84aa2091e45fde204cc7a4f9d2e11e76a7c55a02afa84c"
+      "patched_sha256": "59e71fd207410998ffbcbb579760b2d1a3d6edb1790ccfe96287504dbf2d36c1"
     },
     {
       "path": "system/meson.build",
@@ -36,7 +36,7 @@
       "patched_sha256": "4f2087cba96bf1dfdb48a20c2ba7094d9230bf169880f72ee22eb7bd8301fa8f"
     }
   ],
-  "patch_roundtrip": "passed against official archive baseline files; patched SHA256 values match current source including early-debug-stop warp guard",
+  "patch_roundtrip": "Passed against official archive baseline members; includes debugger-stop idle-warp suppression after native clock admission, with or without an armed budget",
   "schema_validation": "QAPISchema(qapi/qapi-schema.json) passed",
   "native_build_and_runtime": "reported separately by private build and native witness receipts",
   "source_archive": {
