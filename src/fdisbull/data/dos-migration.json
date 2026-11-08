@@ -160,7 +160,10 @@
         "tests/test_execution_clock.py",
         "tests/test_source_clock_script_deadline.py",
         "tests/test_qemu_dos_trace_clock.py",
-        "tests/test_qemu_dos_clock_trace_native.py"
+        "tests/test_qemu_dos_clock_trace_native.py",
+        "tests/test_qemu_retrace.py",
+        "tests/test_qemu_retrace_public.py",
+        "tests/test_qemu_retrace_native.py"
       ],
       "scope_limits": [
         "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
@@ -181,7 +184,12 @@
         "The optional native media extension retains completed synchronous renderer updates under explicit virtual observation cadence, with immutable RGB pixels, token/update identity, publication time, age and stale-update refusal. A completed renderer update can contain partial guest drawing; completed_guest_frame and guest_frame_id remain unknown. No VBlank or full guest-mode-epoch parity.",
         "Explicit qemu_audio=pc-speaker configures only the PC speaker with a none audiodev. Bounded 32000-Hz mono u8 callback output has sample ranges and delivery timestamps, overflow accounting and stopped WAV exports. Inactive intervals are not synthesized; PCM duration is not elapsed guest time or device queue drain. Other sound devices and audible playback are unqualified.",
         "Media windows require locally owned tokens and a valid native clock epoch. After stop, retained evidence freezes; reset invalidates and migration after use is blocked. Reads and exports never run or flush the guest. Timing auto-sync, host pacing and adaptive correction are explicitly deferred.",
-        "After native clock admission, idle warping is suppressed for stopping/stopped CPUs even without an armed budget. An authored one-NOP ordinary GDB continue exposed an approximately 55-ms false jump to the PIT timer before this correction; genuinely halted CPUs remain eligible for virtual timer advances."
+        "After native clock admission, idle warping is suppressed for stopping/stopped CPUs even without an armed budget. An authored one-NOP ordinary GDB continue exposed an approximately 55-ms false jump to the PIT timer before this correction; genuinely halted CPUs remain eligible for virtual timer advances.",
+        "The optional retrace API1 patch follows the exact clock/media/input chain. Explicit qemu_retrace=precise with virtual clock selects standard PCI VGA and qemu-vga-precise-fdisbull-v1. retrace_observe, debug-retrace-observe and script retrace-observe are passive stopped reads; the default standard retrace profile retains ordinary QEMU behavior.",
+        "Retrace receipts bind run, host/native clock epochs, exact device/console/head, raw and cached model timing, stable stopped brackets and a monotone timing_generation. Write-time CR10/VBE coherence and generation hooks expose A-to-B-to-A transitions between observations. Generation is timing provenance, not a complete video-mode, palette, pixel-format or application identity.",
+        "Only initialized legacy VGA with VBE disabled and supported positive nonwrapped timing has phase evidence. Uninitialized/VBE/invalid timing returns an explicit unsupported reason without inventing a phase. The model vertical-retrace interval is not the entire vertical blank interval; synthesized status bits do not establish visible scanout, frame completion, input consumption or hardware-cycle accuracy.",
+        "Retrace queries do not read the guest status port, reset the attribute flip-flop, refresh pixels, advance clocks or wait for an edge. Admission pins the device and blocks migration. Reset or malformed/contradictory native evidence invalidates ownership. A current retrace sample cannot assign phase or generation to an older renderer publication.",
+        "Retrace host deadlines include lock admission, clock brackets and persistence; script capability/literal-timeout preflight precedes earlier writes. A late journal can commit before timeout failure; error.result retains the observation. Edge scheduling, automatic waits, timing auto-sync and default promotion remain unqualified."
       ]
     },
     {
@@ -370,7 +378,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.clock_observe(); stock instruction counter or opt-in API1 native QEMU_CLOCK_VIRTUAL; clock_advance(delta_ns) preserves actual requested/fired/stopped times and early stops; no legacy guest_ms or exact-cutoff parity",
+      "native_route": "MachineContext.clock_observe(); stock instruction counter or opt-in API1 native QEMU_CLOCK_VIRTUAL; clock_advance(delta_ns) preserves actual requested/fired/stopped times and early stops; no legacy guest_ms or exact-cutoff parity; explicit precise retrace_observe() retains native VGA model phase and timing generation, no completed-frame or automatic synchronization claim",
       "qualification": "unqualified"
     },
     {

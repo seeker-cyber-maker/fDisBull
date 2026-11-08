@@ -24,6 +24,7 @@ SOURCE_SUPPORT = (
     "native/qemu-clock/",
     "native/qemu-media/",
     "native/qemu-input/",
+    "native/qemu-retrace/",
     "tests/",
     "scripts/",
     ".github/workflows/",

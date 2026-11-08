@@ -59,7 +59,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   instruction and native virtual-clock observations, token-bound native timer
   budgets, retained synchronous renderer publications, bounded PC-speaker PCM
   windows, one-shot native virtual-time input scheduling, timestamped source
-  observations and temporal event queries, and stopped
+  observations and temporal event queries, explicit precise VGA retrace-model
+  observations with timing generations, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
@@ -73,6 +74,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   native virtual time; device acceptance and guest consumption need independent
   observations. Source traces now retain clock-qualified stopped boundaries
   and temporal queries, with no natural-instruction-timing or causal claim.
+  The new retrace model records write-time changes and supported stopped phase;
+  it does not provide the full VBlank interval, frame completion or an edge wait.
   Timing auto-sync is deferred at the user's direction;
   legacy guest_ms, timed helpers and DOSBox timing parity remain separate
   qualifications. The full slice remains open.
@@ -83,6 +86,147 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-08: passive precise VGA retrace observations
+
+Re-read GitLab after the requested publication retry: MR !117 and its source
+branch already pointed to `652394fd313a0c33e7b8c30bf9b138928b0d2773`, with
+the previous source-clock handoff present. No uncertain write was replayed.
+Continued from that published tree on the same source branch, stacked target
+and draft MR. This increment adds an explicit stopped observation of QEMU's
+precise VGA timing model; timing auto-sync remains deferred.
+
+### Public behavior and model boundary
+
+Select `qemu_clock='virtual', qemu_retrace='precise'` for a fresh paused PC
+boot with the new [retrace extension](../native/qemu-retrace/README.md).
+`retrace_observe(timeout_ms=...)`, JSON `debug-retrace-observe` and saved-script
+`retrace-observe` reach the same machine-owned operation. The CLI exposes
+`--qemu-retrace standard|precise`; `standard` remains the default. Raw factory
+arguments use `clock_profile` and `retrace_profile`.
+
+Each receipt records run and both clock epochs, native virtual nanoseconds,
+exact primary VGA identity, model `qemu-vga-precise-fdisbull-v1`, raw timing
+registers, cached timing parameters and a monotone timing generation. A stable
+before/native/after clock bracket encloses the observation, followed by one
+persisted `machine-retrace-observe` event. Supported phases include the modeled
+position and retrace status bits. Uninitialized timing, enabled VBE and invalid
+or wrapped legacy intervals return explicit unsupported evidence without
+closing a sound owner. API availability and current phase eligibility remain
+separate; some ordinary text modes have an unsupported interval.
+
+The native opt-in is `-vga std,retrace=precise -global
+VGA.x-fdisbull-retrace=on`. It requires the admitted virtual clock, one stopped
+TCG CPU and the exact primary PCI `VGA` device at console/head zero. First
+admission pins that device and prevents migration for the process lifetime.
+It adds no serialization or cold-restore contract.
+
+The property enables coherent timing updates at completed guest writes,
+including CR10 and VBE/effective-SR1 transitions omitted by upstream refresh
+paths. Generation advances when the returned raw/cache/initialization state
+changes, so separate A-to-B-to-A writes cannot disappear between queries.
+Already initialized no-op writes do not advance it. Ordinary VGA and ordinary
+precise VGA without the property preserve their previous calculation and
+status-read behavior.
+
+Querying checks the expected cache without repairing it. It does not execute
+the guest, advance virtual time, arm a timer, render, wait for an edge or read
+guest status port `3DAh`. In particular it preserves the attribute-controller
+flip-flop. The model retains QEMU's integer arithmetic and inclusive endpoints;
+this is not a qualification of physical VGA accuracy or the full VBlank
+interval. Timing generations exclude palette, page contents and other changes
+that can affect pixels. A retained renderer publication remains separate and
+can predate the timing observation.
+
+### Failure and deadline boundaries
+
+Strict host validation independently reconstructs the register-to-cache model
+and phase arithmetic. Malformed receipts, changed timing under an unchanged
+generation, backwards generations/time, device replacement and epoch loss
+fail closed. Native queries also reject unsafe runstates, pending stops and
+armed or fired clock budgets without consuming the budget.
+
+One absolute observation deadline begins before lock admission and intersects
+existing script, session, VM, QMP and GDB limits. Each previous limit is
+restored separately. Whole-script capability, literal timeout and caller-owned
+transaction checks precede earlier writes. A synchronous evidence write can
+finish before a late timeout is reported; `error.result` retains the observed
+receipt when available. Neither a timeout nor missing evidence authorizes
+automatic replay.
+
+### Verification and runtime recovery
+
+The former thread's scratch tool paths were gone. A separate private Python
+3.13.5 environment and verified NASM/mtools inputs restored finite Linux
+qualification without changing a shared installation. The DOS baseline was a
+surviving, hash-pinned, already prepared FreeDOS image from the earlier clock
+tests, not a recovered original distribution image. Firmware was extracted
+from the verified official QEMU archive. Private runtime inputs stayed outside
+the checkout.
+
+All four authored patches applied to the verified QEMU 10.0.13 source with
+zero fuzz and zero offset. All 25 final changed native source paths matched
+the separate source used for the successful fresh build. Independent native
+and integrated public-surface reviews found no concrete blocker.
+
+| Lane | Result |
+| --- | --- |
+| Focused host retrace contract and hostile receipts | 78 passed, zero skips |
+| Public launch, CLI, JSON and script routes | 23 passed, zero skips |
+| Affected source stock/public/process/script/deadline/inventory/package selection | 928 passed, 5 skipped, 109.16 seconds |
+| New source native retrace witnesses | 8 passed, zero skips, 9.20 seconds |
+| Combined source native source-clock/input/clock/audio/display/retrace selection | 46 passed, zero skips, 38.03 seconds |
+| Isolated installed wheel: applicable stock/public regression selection | 917 passed, 5 skipped, 113.54 seconds |
+| Isolated installed wheel: combined native selection | 46 passed, zero skips, 40.22 seconds |
+| Isolated installed wheel: retained native DOSBox predicate/hook/reopen witness | 1 passed, zero skips, 1.35 seconds |
+| Core source/wheel/installed payload identity | All 637 package files match |
+| Source distribution and tool-source ZIP | All 1570 tracked payload files and all 22 authored changed paths match; tool-only distribution checks pass |
+
+Selections overlap and are not a unique total. The combined native selection
+contains ten source-clock, nine input, eleven clock-budget, five audio, three
+display and eight retrace cases. The retrace witnesses compare against actual
+guest `3DAh` reads, prove passive stopped/flip-flop behavior, cover CR10 and
+unobserved A-to-B-to-A writes, validate VBE/invalid transitions, preserve
+separate source/clock/renderer provenance through reopen, retain ordinary DOS
+use and refuse armed budgets or lost epochs. Runtime lanes ran serially;
+tested core, witness and native input bytes remained unchanged.
+
+Five optional raw-machine boot/watchpoint/foreground tests were skipped in
+each stock selection because `FDISBULL_MACHINE_QEMU` was not supplied. Unix socket creation is
+restricted in this executor; the required native qualification uses pipes.
+The skipped tests are not passing evidence. A frozen previous-wheel gap check
+first failed on the absent `qemu_retrace` constructor argument; the new public
+selection passes. No final test failure or timeout was hidden by a retry.
+
+- Tested wheel SHA-256:
+  `ca0038152f6ca6ea47fb4ca9d6aa836270f33481fd8fda0553519b1e0cfb67db`.
+- New native QEMU SHA-256:
+  `5d202d2ec57d596351381d7fc1df67211c4d0727ad667119183d41b450c96565`.
+- Retrace patch SHA-256:
+  `9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c`.
+- Retained DOSBox-X SHA-256:
+  `795df754019b5e9876d68067cb8d91314b001f28c9c6964502dd57ef21adf79d`.
+
+Private command, JUnit, payload and publication receipts use the
+`takeover-validation/retrace-*` prefix. Native source/build/recovery proofs
+remain under the separate `retrace-runtime` directory. Only authored source,
+tests, patches, manifests and this engineering log enter Git.
+
+### Remaining slice-4 gates
+
+A later bounded gate can qualify retrace-edge barriers or an explicit
+association with renderer publications. Neither is implemented here. Guest
+frame completion, full VBlank semantics, natural instruction timing, input
+consumption, frame-edge input, additional audio devices, legacy timed helpers
+and timing auto-sync remain separate work. All 127 default-promotion entries
+remain unqualified; DOSBox stays the default and both fallback selectors stay
+available.
+
+These are local Linux/pipe integration results, not hosted CI, a release or
+QEMM/V86, real-game, Windows or macOS qualification. The earlier parallel
+startup, large-MZ and DOSBox idle-trial timeout observations remain unresolved.
+The configured macOS mirrors remain unavailable. No merge, release, shared
+installation, runner or credential change is implied.
 
 ## 2026-11-08: clock-qualified source observations and queries
 

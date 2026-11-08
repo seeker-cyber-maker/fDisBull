@@ -50,6 +50,16 @@ concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
 completed guest frames, broader sound devices, legacy timed press/text and
 pixel/INT33 mouse semantics remain open. Timing auto-sync is deferred.
 
+The optional retrace API 1 extension adds passive `retrace_observe()` under
+`qemu_clock='virtual', qemu_retrace='precise'`. It pins the selected standard
+PCI VGA model and reports its stopped virtual phase with a timing generation
+that records guest-write changes, including unobserved A-to-B-to-A transitions.
+Unsupported legacy timing or VBE returns an explicit reason without a phase.
+The generation is not a full video-mode identity; vertical retrace is not the
+whole vertical blank interval, a renderer publication or a completed guest frame.
+No frame-step, frame-edge input, wait or timing auto-sync parity is implied.
+The native profile is opt-in; all default-promotion qualifications remain open.
+
 The optional input API 1 extension now schedules one owned keyboard/relative
 PS/2 batch on `QEMU_CLOCK_VIRTUAL`. Its patch applies after the current clock
 and media patches. `input_schedule(delta_ns)` passively arms the pending batch;

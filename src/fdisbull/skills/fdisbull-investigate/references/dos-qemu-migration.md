@@ -408,6 +408,45 @@ Legacy `guest_ms`, timed press/type, frame presses, pixel/INT33 semantics and
 whole-game timing remain unqualified. Timing auto-sync, host pacing and adaptive
 correction remain explicitly deferred by the user.
 
+## Observe the explicit VGA retrace model
+
+Select `qemu_clock='virtual', qemu_retrace='precise'` (CLI `--qemu-clock virtual
+--qemu-retrace precise`); the raw machine factory uses `clock_profile` and
+`retrace_profile`. The default retrace profile is `standard`. The precise
+profile requires the exact native clock/media/input/retrace patch chain, one
+TCG CPU, a fresh paused PC and standard PCI VGA. Inspect `retrace_observation`
+before planning `retrace_observe(timeout_ms=1000)`, retained JSON
+`debug-retrace-observe`, or saved-script `retrace-observe`.
+
+The receipt shares the run and host/native clock epochs with other observations
+and adds model, exact device/console/head and `timing_generation`. It retains
+raw timing inputs, cached integer timing and stable before/after clock samples.
+The native query is passive: it neither reads the VGA status port nor resets the
+attribute flip-flop, advances execution, refreshes pixels or waits for an edge.
+Admission pins the device and blocks migration. Reset invalidates ownership.
+
+Always check `phase_supported`. An uninitialized cache, enabled VBE, or timing
+outside the declared initialized legacy, nonwrapped model subset returns
+`False` with `unsupported_reason` and no phase. This is normal evidence, not a
+reason to retry execution. Malformed or contradictory receipts close the owner.
+When supported, `phase['vertical-retrace']` and the synthesized status bits
+describe QEMU's selected integer model only. They do not qualify the full
+vertical blank interval, visible scanout, hardware timing or completed frames.
+
+The opt-in model fixes write-time cache updates for CR10 and VBE/effective
+sequencer transitions. Generation changes at guest-write boundaries, so A-to-B
+and B-to-A changes cannot hide behind equal final registers. Compare timing
+only within the same device, run, both clock epochs and generation. This is not
+a complete palette/address/pixel-format mode identity. A current phase cannot
+be retrospectively attached to older retained renderer pixels.
+
+One absolute timeout covers lock admission through evidence persistence;
+scripts reject an unsupported profile or invalid literal timeout before earlier
+writes. A journal can commit before a late timeout is detected, so inspect
+`error.result` for retained observation evidence. Do not infer rollback or
+replay. There is no new edge scheduler, automatic wait or host-time pacing.
+Timing auto-sync remains deferred, and all 127 default-switch gates stay open.
+
 ## Observe renderer publications and PC-speaker output
 
 Use the current clock patch plus `native/qemu-media/` for these optional native

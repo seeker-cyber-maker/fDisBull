@@ -27,7 +27,8 @@ The fourth slice now supplies owned physical keyboard/PS/2 input, explicit
 instruction and native virtual-clock profiles, and stopped display captures
 with CPU/clock brackets. The optional virtual profile adds native timer budgets,
 retained completed renderer updates, bounded PC-speaker PCM capture and optional
-virtual-time dispatch of one owned physical-input batch.
+virtual-time dispatch of one owned physical-input batch. An explicit precise
+VGA profile also provides stopped retrace-model observations and timing generations.
 Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. Timing auto-sync is deferred.
 
@@ -630,6 +631,72 @@ persistence closes the VM without replay. `timed_input=False`,
 legacy `guest_ms`, timed press/type, frame presses and pixel/INT33 semantics are
 not supplied. Timing auto-sync, host pacing and adaptive correction remain
 deferred by the user.
+
+### Observe the declared VGA retrace model
+
+Select `qemu_clock='virtual', qemu_retrace='precise'` in Python or retained
+JSON launch, or `--qemu-clock virtual --qemu-retrace precise` on the CLI.
+`Project.machine` takes `clock_profile='virtual', retrace_profile='precise'`.
+The default retrace profile is `standard`. The precise profile requires the
+[optional native retrace extension](../native/qemu-retrace/README.md) after
+the exact clock, media and input patches, a fresh paused PC boot and one TCG
+CPU. It selects standard PCI VGA with QEMU's precise retrace algorithm and
+the explicit `qemu-vga-precise-fdisbull-v1` model.
+
+`capabilities['retrace_observation']` admits the observation API; it does not
+promise that the current guest timing is supported. Firmware has not programmed
+valid timing at launch, and later modes can leave the supported subset.
+
+| Python | Retained JSON method | Saved-script operation |
+| --- | --- | --- |
+| `retrace_observe(timeout_ms=1000)` | `debug-retrace-observe` | `retrace-observe` |
+
+```python
+observation = debug.retrace_observe(timeout_ms=1000)
+if observation['phase_supported']:
+    vertical_retrace = observation['phase']['vertical-retrace']
+    generation = observation['timing_generation']
+else:
+    reason = observation['unsupported_reason']
+```
+
+A `fdisbull-retrace-observation-1` receipt binds the run, host/native clock
+epochs, canonical VGA device, console/head, model and monotone timing generation.
+It retains the raw model inputs, cached integer timing, observed virtual
+nanoseconds, phase when supported, and stable before/after clock samples.
+The native query neither reads the guest VGA status port nor resets its
+attribute-controller flip-flop. It does not run a CPU, wait for an edge, refresh
+pixels or change the clock. Admission pins the device and blocks migration;
+reset or ownership loss requires a fresh machine.
+
+The opt-in model updates cached timing at actual guest register-write boundaries,
+including vertical-retrace start (`CR10`) and VBE/effective sequencer changes.
+Its generation records relevant changes even when a guest changes A to B and
+back to A between host observations. Equal final registers therefore do not
+imply an unchanged timing history. Ordinary unselected QEMU behavior is retained.
+
+Phase support is deliberately limited to the model's initialized legacy VGA
+timing with VBE disabled, positive integer periods and nonwrapped in-range
+horizontal and vertical retrace intervals. An uninitialized cache, enabled
+VBE, or unsupported timing returns `phase_supported=False` and an explicit
+reason, with no invented phase; this is a valid observation and keeps the
+machine available. Malformed evidence, device/epoch replacement, regressing
+generation/time or changed timing under the same generation closes the owner.
+
+`vertical-retrace` describes the selected QEMU model's sync interval, not the
+entire vertical blank interval. Its synthesized status bits do not establish
+visible scanout, completed guest drawing, input consumption or hardware-cycle
+accuracy. The generation describes timing inputs and eligibility, not all
+palette, address, pixel-format or application-mode changes. A current receipt
+cannot assign retrace phase or generation to an older renderer publication.
+Retained display captures still use their own renderer window/update identity.
+
+Each request has one absolute host deadline from lock admission through clock
+brackets and event persistence. Script capability and literal timeout checks
+precede earlier mutations. A late synchronous journal write can have committed
+before the deadline check fails; `error.result` retains the observed receipt.
+An uncertain native read closes the machine without retry or replay. No edge
+scheduler, automatic wait, host pacing or timing auto-sync is introduced.
 
 ### Capture a stopped display surface
 

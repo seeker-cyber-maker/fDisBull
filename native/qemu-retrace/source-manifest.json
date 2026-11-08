@@ -1,0 +1,75 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "model": "qemu-vga-precise-fdisbull-v1",
+  "device_property": "VGA.x-fdisbull-retrace",
+  "patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "files": [
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_sha256": "9c497f5f7ea5fd0a72399c4b242b58f32edee391907c941e2f40b9e0c719f03e",
+      "patched_sha256": "c7a498f082a8e87b1862cee481f5ee0e22f5b4120fcf0e132cc617773622d6b3"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_sha256": "8e761f7d06b8f807bd65b2f9f6a8823b96e8d237f3df7690f76a2a7a9774a95d",
+      "patched_sha256": "1c13b40ded1f472d21198fcb3eea5d1c743efbabe4bcd84074d417b32baad9d3"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_sha256": "7c551c5e8ec24c717295d61aee240038fbd9702367d9d0dfd397a7d7fae38d31",
+      "patched_sha256": "5c4481d0497544572618d21588cd62036e15d43981a66b62be396dfa97a101f4"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_sha256": "d66139874b5e310d5fe6ae592567cbd833bb22553ea3ca291f7fe33899c0c244",
+      "patched_sha256": "1fc930ed72cd7a5043d845d44a75635c49fe4b1799d7ce60588eb626b64862b7"
+    },
+    {
+      "path": "qapi/fdisbull-retrace.json",
+      "base_sha256": null,
+      "patched_sha256": "6e5bd199619a378df7bb19262b3e7bbd1dbbb96678ac017adc8f703067176484"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "32c72a6e415de90fb567f6583bbf2bc39784300632a84bd9a7887a86fe469087",
+      "patched_sha256": "c2c41381635043acbd5cf66379035ac006593f35e631874e5b762a5320cdb0c0"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "504d782590c63fbac4e5740e09017ba96e6c3789e9fb424c654cbfd39deef60c",
+      "patched_sha256": "d39ece8055aec71bff62e3d0dc9f32f2411673d85711843cf36ff978aa90ec23"
+    },
+    {
+      "path": "system/fdisbull-retrace.c",
+      "base_sha256": null,
+      "patched_sha256": "009ad797b0cac1701c1ebba97213c96b176fb92f0d7455fa9a4fcd70194e8cfe"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_sha256": null,
+      "patched_sha256": "65c11ed1e2d05dacf5b319c1d59a59e0674b7362df76231cff2fe66242fa310c"
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "0031a00842d1922978b80fd19195713223eb3ea4c9928e1d241ccc86a0691766",
+      "patched_sha256": "fe3656d5d4bd5bc5033c1fa97e1ae036fa61e9ab3087ce9ef9adec73f37516dd"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed forward and reverse against the exact clock/media/input source base; all ten output files match the implementation source",
+  "schema_validation": "QAPISchema(qapi/qapi-schema.json) passed",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

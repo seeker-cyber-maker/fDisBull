@@ -28,6 +28,8 @@ from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMAND
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
+from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
+                           machine_retrace_arguments, admit_retrace)
 
 
 def file_hash(path):
@@ -51,7 +53,7 @@ class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
-                 clock_profile='standard', audio_profile='off'):
+                 clock_profile='standard', audio_profile='off', retrace_profile='standard'):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
@@ -72,6 +74,9 @@ class QemuMachine:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             selected_clock=machine_clock_configuration(clock_profile,cpus)
             selected_audio=machine_audio_configuration(audio_profile,clock_profile)
+            selected_retrace=machine_retrace_configuration(retrace_profile,clock_profile)
+            if retrace_profile!='standard' and (boot_image is None or not paused or restore):
+                raise ValueError('Precise retrace observation requires a paused fresh PC boot machine')
             if audio_profile!='off' and (boot_image is None or not paused or restore):
                 raise ValueError('Audio capture requires a paused fresh PC boot machine')
             if clock_profile=='virtual' and (not paused or restore):
@@ -100,6 +105,7 @@ class QemuMachine:
                                             boot_device=boot_device if boot_image else None,control_transport=transport,
                                             clock_profile=selected_clock,
                                             audio_profile=selected_audio,
+                                            retrace_profile=selected_retrace,
                                             firmware='explicit-directory' if firmware is not None else 'QEMU default search path; not pinned',
                                             hostcalls='not configured; experimental FDB_HOSTCALL_/FDB_LAYER_ selectors removed')
             selected_boot=paths.get('boot_image')
@@ -118,6 +124,7 @@ class QemuMachine:
             command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine',machine,'-cpu',cpu_model,
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
                      '-serial',f'file:{self.log_path}']
+            command+=machine_retrace_arguments(retrace_profile)
             if audio_profile=='pc-speaker':
                 command+=['-audiodev','none,id=fdisbull-pc,timer-period=10000,out.frequency=32000,out.channels=1,out.format=u8']
             if transport=='pipe':
@@ -163,6 +170,8 @@ class QemuMachine:
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
             if audio_profile=='pc-speaker':
                 self.machine_configuration['native_audio_admission']=admit_audio(self)
+            if retrace_profile=='precise':
+                self.machine_configuration['native_retrace_admission']=admit_retrace(self)
             self.qmp.operation_deadline=None
             self.context=MachineContext(self)
         except BaseException as error:
@@ -403,8 +412,8 @@ def machine_run_operation(function):
     return invoke
 
 
-def machine_trace_operation(function):
-    """Bound source observation, execution and persistence from lock admission.
+def machine_trace_operation(function, *, label='Source trace'):
+    """Bound trace or passive observation and persistence from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
     intentionally owns all channels during launch; a composed trace must not
@@ -426,7 +435,7 @@ def machine_trace_operation(function):
                       (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
         bound=min(value for value in limits() if value is not None)
         wait=min(10,bound-time.monotonic())
-        if wait<=0:raise TimeoutError('Source trace host deadline expired before admission')
+        if wait<=0:raise TimeoutError(label+' host deadline expired before admission')
         if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
         previous_session=getattr(self,'_deadline',None)
         previous_vm=getattr(vm,'operation_deadline',None)
@@ -437,7 +446,7 @@ def machine_trace_operation(function):
             if guard is not None:guard(function.__name__)
             bound=min(value for value in limits() if value is not None)
             if time.monotonic()>=bound:
-                raise TimeoutError('Source trace host deadline expired before dispatch')
+                raise TimeoutError(label+' host deadline expired before dispatch')
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
                     previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
@@ -447,7 +456,7 @@ def machine_trace_operation(function):
             installed=True
             result=function(self,*args,**kwargs)
             if time.monotonic()>=bound:
-                error=TimeoutError('Source trace exceeded its host deadline')
+                error=TimeoutError(label+' exceeded its host deadline')
                 error.result=result
                 raise error
             return result
@@ -468,7 +477,7 @@ def machine_trace_operation(function):
     return invoke
 
 
-class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin,
+class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin, QemuRetraceMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -486,6 +495,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     display_observe=machine_io_operation(QemuDisplayMixin.display_observe)
     display_stop=machine_io_operation(QemuDisplayMixin.display_stop,close_on_timeout=True)
     capture_display=machine_io_operation(QemuDisplayMixin.capture_display)
+    retrace_observe=machine_trace_operation(QemuRetraceMixin.retrace_observe,label='Retrace observation')
     keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
     keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
     keyboard_state=machine_io_operation(QemuPhysicalInputMixin.keyboard_state)
@@ -507,6 +517,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             completed_guest_frames=False,guest_time_control=False,
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='pc-speaker',
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
+            retrace_observation=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                                 and RETRACE_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             virtual_clock_budget=virtual,
             virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
@@ -822,12 +834,13 @@ class MachineDebugSession(MachineContext):
                 else admit_qemm_profile(guest_profile,image))
 
     def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000,guest_profile=None,
-                 transport='unix',firmware=None,clock_profile='standard',audio_profile='off',_on_spawn=None):
+                 transport='unix',firmware=None,clock_profile='standard',audio_profile='off',retrace_profile='standard',_on_spawn=None):
         import uuid
         from .debugger import stamp
         selected=project.version(version);image=Path(boot_image).expanduser().resolve(strict=True)
         machine_clock_configuration(clock_profile,1)
         machine_audio_configuration(audio_profile,clock_profile)
+        machine_retrace_configuration(retrace_profile,clock_profile)
         if project.meta['format']!='raw' or project.meta['arch']!='x86' or selected['parent'] is not None:
             raise ValueError('Machine boot launch requires an original unpatched raw x86 project')
         if not image.is_file() or image.stat().st_size>64*1024*1024 or file_hash(image)!=project.meta['source_sha256']:
@@ -846,7 +859,8 @@ class MachineDebugSession(MachineContext):
                            boot_device=self.guest_profile['machine']['boot_device'])
         memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128
         vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,
-                       transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,on_spawn=_on_spawn,**options)
+                       transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,
+                       retrace_profile=retrace_profile,on_spawn=_on_spawn,**options)
         super().__init__(vm)
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
         self.capabilities['qemm_observation']=self.guest_profile is not None and self.guest_profile['memory_manager']['configured']=='qemm'
@@ -880,6 +894,7 @@ class MachineDebugSession(MachineContext):
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
                 'audio-start','audio-observe','audio-stop','capture-audio',
                 'display-start','display-observe','display-stop','capture-display',
+                'retrace-observe',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
                 'input-schedule','input-schedule-observe',
                 'assert','status','write-memory','write-registers'}
