@@ -15,6 +15,7 @@ the working executable IR, earlier semantics and reference checks throughout.
 
 - [Define the required result](#define-the-required-result)
 - [Choose the most direct evidence](#choose-the-most-direct-evidence)
+- [Get a cold structural shortlist](#get-a-cold-structural-shortlist)
 - [Apply the qualified Zork recipe](#apply-the-qualified-zork-recipe)
 - [Resolve values and eliminate transport](#resolve-values-and-eliminate-transport)
 - [Close the semantic and residual boundary](#close-the-semantic-and-residual-boundary)
@@ -86,6 +87,83 @@ alone did not establish intent. The nearby examination branch showed that the
 flag dismisses an initial hint, separately from the door's open state. Recover
 that bounded meaning; keep the rest of the examination action residual. If no
 consumer establishes meaning, retain the write as an explicit low-level effect.
+
+## Get a cold structural shortlist
+
+For unfamiliar extracted inputs, use `fdisbull structure-scan INPUT --output NEW_PRIVATE_DIR`
+before attempting a title-specific scraper. This bounded read-only pilot returns
+ranked investigation venues with exact lead IDs. Inspect only the relevant
+findings with `fdisbull structure-info REPORT --pattern PATTERN --limit 5` or
+`--lead-id ID`. These commands require no game title, offsets, strides or labels.
+Use existing intake/extraction first; installers are not game code.
+
+The shared matcher consumes connected facts from format/processor producers:
+load -> bit test -> branch, dictionary-backed predicate -> branch -> effect,
+same-entity predicate -> guarded mutation, and indexed value -> decision.
+Data regularity adds candidate padded-record populations and same-base pointer
+label tables. Names/genre are interpretation leads, never proof of field meaning.
+The pilot includes existing AGI IR, bounded Z3/Z5 catalogue/core-layout producers,
+and unrelocated DOS native source slices. Check each producer's coverage and
+limitations. This is not a complete scene extractor, VM executor or general
+interprocedural semantic lifter. A Z5 layout result does not register a Z5 lifter.
+
+Treat the output as a shortlist of questions:
+
+1. Select a lead relevant to the objective, inspect its connected source bindings,
+   and distinguish format acceptance, structural inference and runtime evidence.
+2. Follow the cheapest named discriminator, usually a small indexed consumer,
+   guard alternative, or one matching/near-miss input from a qualified state.
+3. Apply a qualified reader/consumer to compatible peers. Keep per-edition
+   layout or calling-convention facts in profiles; put reusable recognition in
+   the producer/matcher. Do not add branches on game names to the shared pass.
+4. Preserve failed interpretations, unmatched inputs, unknown calls, budget
+   stops, inactive rows and ambiguous strides. A record count is not occupancy;
+   a vocabulary is not a grammar; bitwise use is not an equipment permission.
+5. Attach the result to the existing investigation/scene dossier. Do not make a
+   new mandatory queue or turn a heuristic rank into a probability of truth.
+
+Known guard traps: a predicate's full condition can contain NOT/OR and additional
+state; AGI `said` can claim the pending input. A `TEST r,r` is only a zero test,
+not a selective mask. Copying a file into staging memory does not establish
+state adoption. Keep the consumer and observation boundary explicit.
+
+Keep full scan reports private: they can contain decoded dictionaries, labels
+and source-derived object properties. The scan reads originals without executing
+them, writes to a new directory outside input/Git, and retains source identities.
+Use installed command discovery to confirm availability; documentation on an
+unmerged branch is not evidence that another agent's runtime includes this pass.
+
+## Probe event-driven controls in low-noise contexts
+
+Prefer an accessible startup menu for an initial control experiment, but verify
+that it actually waits: attract loops, fades, cursors, timers and music can still
+run. Fast-forward is a way to reach a boundary, not a readiness proof. Keep a
+full private reference, then use the existing sparse text/scanline scene guards
+before each input. Do not redefine the generic recognizer for a particular game.
+
+The structural scan now includes `selector-controls-operation`: a connected
+scalar comparison and branch reaches a short-arm call, write or return. Inspect
+its bindings and follow the selector producer. Neither a call nor a jump proves
+a scene switch. Unknown callees, joins and delayed consumers remain unresolved.
+Use the proposed context to focus a small original trace rather than expanding
+all routines indiscriminately. Shared code often handles many controls through
+parameters; qualify that handler and enumerate compatible bindings.
+
+Record idle → fresh guarded input → bounded observation burst. Classify **state
+effects** and **context/navigation effects** independently. A name or setting
+can change without leaving a prompt; confirmation can normalize/commit state and
+leave it. Both are useful Z actions. Requested destination, displayed context
+and readiness are separate. A modal/page change need not change the engine's
+room ID, and returning to the same screen can hide an intermediate transition.
+A new unrecognized view is unknown, not local/no effect. A blank label is not
+proof a control is disabled. Never retry a possibly completed effect blindly.
+
+Use `python -m fdisbull.structure_events EPISODE.json` for read-only classification
+of retained, source/run/epoch-bound observations. Missing fields stay unknown;
+preceding idle variability is exposed, not claimed to be a matched counterfactual.
+This pilot does not discover arbitrary callbacks/queues/waits automatically or
+register new playable actions. Propagate qualified matching and probe methods;
+retain game-specific geometry and semantic bindings as target data.
 
 ## Apply the qualified Zork recipe
 
@@ -404,3 +482,60 @@ obligation; do not rediscover its stack-carried target or surrounding dispatcher
 State which steps were executed, which are proposed improvements, and what
 would reopen a settled definition. Use the supported export and partial-effect
 contracts in [udl-uil-udc.md](udl-uil-udc.md) when producing a runnable package.
+
+## Console and hierarchical event follow-up
+
+Start with `structure-scan` on an extracted directory, ROM, or bounded console-ROM
+ZIP, then retrieve a few `structure-info` leads. `structure-intents` supplies
+non-executable component drafts; do not rename a raw selector as a button event
+until its producer and current context are qualified.
+
+Treat NES mappings and SNES E/M/X/data-bank context as decoding prerequisites.
+Unknown mapper continuations, peripheral types, instruction widths, callee effects
+and graphics-service completion are investigation frontiers, not missing values
+to fill with a convenient default. Bank changes and semantic scene changes are
+different. Preserve exact combined-input comparisons, press/hold/release behavior
+and repeat timers. A quiet intro can still update animation, audio, RNG or demos.
+
+Use the same producer/consumer questions across targets. A shared storage expression
+suggests where to look; it does not prove a queue, latch or committed state. Recover
+producer values, consume/clear behavior, context lifetime and ordinary-input reachability
+before propagating a rule. Signals do not automatically count occurrences.
+
+Recover hierarchical object-addressed intent contracts independently of machine
+function boundaries. A qualified parent can be replaced without preserving its
+original decomposition. Only the selected implementation's invoked children run;
+never trigger descendants of a bypassed parent independently. Joins belong to
+required dependencies/phases, not every closing brace. Keep sound-start acceptance,
+completion, state commitment, frame presentation and input readiness distinct.
+
+The read-only `structure-compose`, `structure-trace`, `structure-compare` and
+`structure-episode` commands check declared composition, retained invocation/epoch
+observations, exact macro outputs/effects, and selected local/navigation axes.
+They do not execute providers, park a guest, implement a scheduler, authenticate
+caller evidence or promote a draft to executable UIL. Use existing block contracts.
+A stale post-restore completion cannot authorize current-state changes; cancellation
+and uncertainty require effect reconciliation, not blind provider fallback.
+
+Swede at the smallest useful independently testable boundary and test the parent
+composition too. Separate original-to-contract, contract-to-provider and composition
+failures. A byte-layout adapter is required while original consumers remain; a fully
+converted composition may use different storage. Preserve the declared observable
+result and subsequent behavior, not accidental source machinery.
+
+### Linked map resources and cartridge code are separate evidence sources
+
+A classic IWAD/PWAD can provide a whole batch of linked map-record drafts through
+`structure-scan`, while a Genesis cartridge contributes 68000 code-pattern leads
+through the same entry point. These are format/processor adapters, not title
+selectors. Reuse the unchanged connected-pattern rules and qualify consumers
+before assigning intent. Preserve duplicate resource identities and initial
+spawn definitions independently from active runtime entities. A sector is not
+automatically a room; a two-sided boundary is not automatically traversable;
+a special/tag association does not establish its event handler or effects.
+
+Nested DOS MZ/LE source views must retain the outer executable and each child's
+offset origin. Inspecting only a DOS extender stub is not inspecting the game's
+protected-mode code. Conversely, locating a valid embedded image does not prove
+its wrapper executed. Keep selector/mode and unapplied-fixup boundaries explicit.
+A checksum-valid console image is not necessarily unmodified or authentic.
