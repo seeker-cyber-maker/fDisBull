@@ -33,6 +33,9 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("native/qemu-clock", "*.md"),
+    ("native/qemu-clock", "*.json"),
+    ("native/qemu-clock", "*.patch"),
     ("src/fdisbull/native_runtime", "*.c"),
     ("src/fdisbull/native_runtime", "*.h"),
     ("src/fdisbull/native_runtime", "*.m"),

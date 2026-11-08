@@ -21,7 +21,8 @@ from .qemu_transport import PipeChannel, create_fifo_pair, open_fifo_pair
 from .memory_search_runtime import MemorySearchSessionMixin
 from .memory_rules import MemoryRuleSessionMixin
 from .desqview_runtime import DesqviewSessionMixin
-from .qemu_clock import MachineClockMixin, machine_clock_configuration, machine_clock_arguments
+from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine_clock_arguments,
+                         validate_clock_budget, admit_virtual_clock)
 from .qemu_input import QemuPhysicalInputMixin
 from .qemu_surface import QemuSurfaceMixin
 
@@ -67,6 +68,8 @@ class QemuMachine:
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
             selected_clock=machine_clock_configuration(clock_profile,cpus)
+            if clock_profile=='virtual' and (not paused or restore):
+                raise ValueError('The virtual clock profile requires a paused fresh machine')
             if cpu_model not in ('max', '486'):
                 raise ValueError('Unsupported machine CPU profile')
             if boot_device not in ('ide', 'floppy') or boot_device == 'floppy' and boot_image is None:
@@ -145,6 +148,8 @@ class QemuMachine:
                 self.qmp=QemuControl(root/'qmp.sock',self.process,deadline)
             self.qmp.operation_deadline=deadline
             self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
+            if clock_profile=='virtual':
+                self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
             self.qmp.operation_deadline=None
             self.context=MachineContext(self)
         except BaseException as error:
@@ -266,6 +271,60 @@ def machine_io_operation(function):
     return machine_operation(invoke,script_budget=True)
 
 
+def machine_clock_operation(function):
+    """One host budget includes lock admission, native execution and cleanup.
+
+    GDB retains its existing bounded interrupt recovery. That recovery cannot
+    extend this operation's observation budget: an exhausted or uncertain
+    native budget closes the machine instead of leaking a timer to a later run.
+    """
+    @wraps(function)
+    def invoke(self,delta_ns,*,timeout_ms=1000):
+        validate_clock_budget(delta_ns,timeout_ms)
+        from .operation_budget import request_deadline
+        bound=request_deadline(self,timeout_ms)
+        vm=self.vm
+        admission_limits=[bound,getattr(vm,'operation_deadline',None),
+                          *[getattr(channel,'operation_deadline',None) for channel in
+                            (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
+        bound=min(value for value in admission_limits if value is not None)
+        wait=min(10,bound-time.monotonic())
+        if wait<=0:raise TimeoutError('Native clock host deadline expired before admission')
+        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        previous_vm=getattr(vm,'operation_deadline',None)
+        previous_channels=[]
+        try:
+            guard=getattr(vm,'operation_guard',None)
+            if guard is not None:guard(function.__name__)
+            for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
+                if channel is not None:
+                    previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
+            limits=[bound,previous_vm,*[previous for _,previous in previous_channels]]
+            bound=min(value for value in limits if value is not None)
+            if time.monotonic()>=bound:
+                raise TimeoutError('Native clock host deadline expired before dispatch')
+            vm.operation_deadline=bound
+            for channel,_ in previous_channels:channel.operation_deadline=bound
+            result=function(self,delta_ns,timeout_ms=timeout_ms)
+            if time.monotonic()>=bound:
+                vm.close()
+                raise TimeoutError('Native clock execution exceeded its host deadline')
+            return result
+        except BaseException:
+            channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
+            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+                   for channel in channels):vm.close()
+            raise
+        finally:
+            vm.operation_deadline=previous_vm
+            for channel,previous in previous_channels:channel.operation_deadline=previous
+            current=getattr(vm,'gdb',None)
+            if current is not None and not any(current is channel for channel,_ in previous_channels):
+                current.operation_deadline=previous_vm
+            vm.lock.release()
+    return invoke
+
+
 class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
@@ -274,6 +333,7 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
     # The shared machine lock covers complete queue transitions and observation
     # brackets, including callers using the raw context of another backend.
     clock_observe=machine_io_operation(MachineClockMixin.clock_observe)
+    clock_advance=machine_clock_operation(MachineClockMixin.clock_advance)
     capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
     keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
     keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
@@ -286,12 +346,15 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
+        virtual=getattr(vm,'machine_configuration',{}).get('clock_profile',{}).get('profile')=='virtual'
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,code_layers=False,
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
-            clock_observation='explicit instruction progress profile; no guest milliseconds',
+            virtual_clock_budget=virtual,
+            clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
+                               'explicit instruction progress profile; no guest milliseconds'),
             physical_input='input-send-event' in getattr(vm,'qmp_commands',()),
             input_dispatch='one batch during owned GDB continue; guest consumption unverified',
             timed_input=False,absolute_mouse=False,
@@ -489,9 +552,13 @@ class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin
         regs=self.registers() if reply[:1] in (b'T',b'S') else None
         pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
         watch=re.search(r'(?:^|;)(?:watch|rwatch|awatch):([0-9a-fA-F]+)',native)
-        ids=[key for key,bp in self.breakpoints.items() if bp['access']=='x' and bp['address']==pc or watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
         signal=int(native[1:3],16)
-        kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
+        # A native pause/virtual timer uses SIGINT; a matching PC alone cannot
+        # turn that interruption into a breakpoint or a DOS parent-return trap.
+        ids=[key for key,bp in self.breakpoints.items() if
+             signal==5 and bp['access']=='x' and bp['address']==pc or
+             watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
+        kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'stopped' if signal==2 else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
         result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
                     address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
         from .debug_semantics import normalize_stop
@@ -637,7 +704,7 @@ class MachineDebugSession(MachineContext):
     def script_operations(self):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
-                'clock-observe','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
+                'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):

@@ -51,7 +51,8 @@ class QemuSurfaceMixin:
             self.vm.close()
             raise DebuggerError('Selected CPU changed across the stopped display capture')
         if (before_clock['epoch'] != after_clock['epoch']
-                or before_clock['counter'] != after_clock['counter']):
+                or before_clock['counter'] != after_clock['counter']
+                or before_clock.get('virtual_ns') != after_clock.get('virtual_ns')):
             self.vm.close()
             raise DebuggerError('Observed machine clock changed across the stopped display capture')
         data = output.getvalue()
@@ -63,7 +64,9 @@ class QemuSurfaceMixin:
             completed_guest_frame=None, guest_frame_id=None,
             clocks=dict(before=before_clock, after=after_clock),
             registers=deepcopy(before_cpu), selected_cpu_unchanged=True,
-            clock_stability=('instruction_counter_unchanged' if
+            clock_stability=('virtual_clock_and_instruction_counter_unchanged' if
+                             before_clock.get('virtual_ns') is not None else
+                             'instruction_counter_unchanged' if
                              before_clock['counter']['state']=='observed' else 'not_observable'),
             scope=('Observed with all vCPUs stopped under the owned machine lock; '
                    'selected CPU and clock bracket. No completed guest frame, '

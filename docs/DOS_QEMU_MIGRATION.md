@@ -22,9 +22,10 @@ register/PC/region predicates and persistent execution-event searches. Its
 source identity survives ordinary MZ relocation and later process closure.
 Overlays, mode changes and queued-input timing remain explicit boundaries.
 
-The fourth slice now supplies owned physical keyboard/PS/2 input, an explicit
-instruction-progress clock profile and stopped display captures with CPU/clock
-brackets. Guest-time scheduling, completed frames and audio remain open gates.
+The fourth slice now supplies owned physical keyboard/PS/2 input, explicit
+instruction and native virtual-clock profiles, and stopped display captures
+with CPU/clock brackets. The optional virtual profile adds native timer budgets;
+completed frames, audio and legacy timing parity remain open gates.
 
 This is an alternative for testing now. Checkpoints and execution layers remain
 later slices. The default-switch gate remains blocked until the outstanding slices
@@ -366,6 +367,66 @@ original timeout, stopped-state diagnosis and controlled comparison. See the
 FreeDOS [SWITCHES reference](https://help.fdos.org/en/hhstndrd/cnfigsys/switches.htm)
 when deliberately preparing a separate test image.
 
+### Continue with a native virtual timer
+
+Select `qemu_clock='virtual'` in Python/JSON, `--qemu-clock virtual` on the CLI,
+or `clock_profile='virtual'` in `Project.machine`. This profile requires the
+explicit [QEMU 10.0.13 clock extension](../native/qemu-clock/README.md), with
+one TCG CPU and the same fixed `shift=7,align=off,sleep=off` settings. A stock
+executable is rejected while the new machine is still paused. The `standard`
+and `instruction` profiles continue to work with stock QEMU.
+
+The extension reads `qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)` directly.
+`clock_observe()['virtual_ns']` therefore includes QEMU's idle-time advances.
+The instruction counter remains a separate value, and `guest_ms` remains
+`None`: this is a declared QEMU clock domain, not the legacy DOSBox scheduler.
+The native epoch, executable identity and admission receipt remain attached
+to the owned machine. A reset, unsupported restore/runstate, changed epoch
+or regressing clock invalidates the observation.
+
+```python
+with project.debugger(qemu_with_clock_extension, game_dir,
+        backend='qemu-dos', dos_boot_image=dos_image, dos_mcopy=mcopy,
+        qemu_clock='virtual') as debug:
+    before = debug.clock_observe()
+    result = debug.clock_advance(20_000_000, timeout_ms=3000)
+    budget = result['clock_budget']
+    # Inspect both the actual native stop and the timer receipt.
+    print(result['outcome'], budget['deadline_reached'], budget['elapsed_ns'])
+```
+
+The matching JSON method is `debug-clock-advance` with `run`, `delta_ns` and
+optional `timeout_ms`. Saved scripts use `clock-advance` and may assert
+`$advance.clock_budget.deadline_reached` explicitly. Each call accepts an
+integer duration from 1 ns to 60 seconds, arms one native virtual timer and
+issues exactly one ordinary GDB continue. Earlier breakpoints, watchpoints,
+DOS exit/TSR and physical-input receipts remain visible. There is no automatic
+continuation to consume the rest of the duration. A successful input dispatch
+still does not certify consumption by a guest driver.
+
+The receipt separates `start_ns`, `deadline_ns`, `fired_ns`, `stopped_ns`,
+`elapsed_ns` and `overshoot_ns`. `deadline_reached` means the native timer
+fired; it does not establish that the timer was the only concurrent stop
+cause. An earlier stop has no firing time or overshoot. QEMU rounds busy
+execution to instruction quanta, and other due callbacks can share a
+boundary, so this API does not promise an exact arbitrary-nanosecond cutoff
+or cycle accuracy. The extension's own pause produces GDB SIGINT; genuine
+debugger traps retain SIGTRAP, preventing a timer stop at a matching PC from
+being relabelled as a breakpoint or DOS return.
+
+The host deadline starts before machine-lock admission and covers startup of
+the debugger channel, observation, arm, continue, register/process readback,
+token-bound cleanup and evidence persistence. It also respects any shorter
+script or channel deadline. GDB retains its existing bounded interrupt
+recovery, but that allowance cannot authorize another run or fresh clock
+cleanup. An uncertain arm, unconfirmed disarm, expired post-execution budget
+or failed execution evidence closes the owned VM. The timer and its deferred
+stop request must both be absent before another operation is admitted.
+
+This first extension blocks migration after budget use. Native checkpoints,
+completed-frame/audio fences, timed input helpers, periodic memory rules and
+scene scheduling still need their own integration and qualification.
+
 ### Capture a stopped display surface
 
 `capture_surface(name)` / `debug-capture-surface` / script `capture-surface`
@@ -378,8 +439,9 @@ The metadata source is `qemu_display_surface`; `completed_guest_frame` and
 `guest_frame_id` are `None`. A capture can show a half-drawn guest scene. A new
 capture ID does not establish a new guest frame or input consumption. Standard
 clock capture reports `clock_stability='not_observable'`; the instruction
-profile can establish only an unchanged observed instruction counter. A
-changed stopped CPU/counter bracket closes the VM and refuses the capture.
+profile can establish only an unchanged observed instruction counter. The
+virtual profile checks both the direct virtual clock and instruction counter.
+A changed stopped CPU/clock bracket closes the VM and refuses the capture.
 Existing DOSBox frame-coherence consumers cannot accept this surface as a
 `last_completed_guest_frame`.
 

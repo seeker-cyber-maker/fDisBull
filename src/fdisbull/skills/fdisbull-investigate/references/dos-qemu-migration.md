@@ -219,9 +219,34 @@ Select `qemu_clock='instruction'` in Python/JSON launch or
 `clock_observe()` records `query-replay.icount` only for the explicit profile,
 with a machine epoch, sequence and a separately labelled host timestamp.
 Without that profile the counter is explicitly unsupported. `guest_ms` and
-`virtual_ns` are always `None`: idle timer warps mean `count * 128` is not all
+`virtual_ns` are `None` in the stock profiles: idle timer warps mean `count * 128` is not all
 elapsed guest time. This is neither cycle accuracy nor exact live count/time
 stopping. The instruction profile changes timing and must be chosen explicitly.
+
+The optional `qemu_clock='virtual'` profile requires the fDisBull API1 clock
+extension on QEMU10.0.13; stock QEMU is rejected before guest execution. It
+uses the same single-CPU fixed-icount settings, observes
+`QEMU_CLOCK_VIRTUAL` directly as `virtual_ns`, and keeps `guest_ms=None`.
+Use `clock_advance(delta_ns, timeout_ms=1000)`, JSON `debug-clock-advance`,
+or script `clock-advance`. Integer durations are 1..60,000,000,000 ns.
+
+Each budget arms one virtual timer and issues one GDB continue, retaining
+earlier break/watchpoints, DOS exit/TSR and physical-input delivery evidence.
+Inspect the original `outcome` and `clock_budget` together. The latter records
+the token, requested duration, start/deadline/fired/stopped times, elapsed time
+and overshoot. `deadline_reached` says the timer fired; an early stop has no
+firing time. Do not infer consumption, a completed frame, cycle accuracy or
+an exact arbitrary-nanosecond cutoff. The extension's own pause is SIGINT;
+real debugger traps stay SIGTRAP. A timer at a matching PC cannot fabricate
+an execution breakpoint or a DOS parent-return event.
+
+The host budget covers lock admission through final readback, cleanup and
+persistence, intersecting existing script/channel limits. Unknown arm/cleanup
+or expired post-execution observation closes the VM without replay. Cleanup
+must prove both the timer and deferred stop request are gone. Reset/restore
+invalidate the native epoch; migration after budget use is blocked. The
+source repository's `native/qemu-clock/` contains the pinned patch and build
+contract; the Python wheel alone does not provide a patched emulator.
 
 Host startup budgets also differ from guest boot delays. The I/O witnesses
 explicitly use FreeDOS `SWITCHES=/F` to omit its F5/F8 delay for both profiles;
@@ -236,10 +261,11 @@ uses the same path. Metadata is `source='qemu_display_surface'` with
 `completed_guest_frame=None` and `guest_frame_id=None`. It can contain a
 half-drawn screen; a capture ID proves no new frame or UI readiness. Standard
 clock stability remains `not_observable`; instruction-profile stability is only
-the observed counter. A changed stopped bracket closes the VM and refuses it.
+the observed counter. The virtual profile checks its direct clock as well.
+A changed stopped bracket closes the VM and refuses it.
 
 The independent native witness checks BIOS AX, IRQ1 make/break bytes, IRQ12
 mouse packets, separate consumption/draw points and PNG pixels under QEMU
 10.0.13/FreeDOS1.4. This does not qualify real games, QEMM/DESQview, Windows,
-audio, a completed-frame fence or generic guest-time scheduling. Keep those
+audio, a completed-frame fence or legacy guest-time scheduling parity. Keep those
 gates open before building checkpoints, frame histories or Python media joins.

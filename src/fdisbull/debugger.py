@@ -97,8 +97,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('qemu_transport, qemu_firmware and qemu_clock require a native QEMU backend')
         if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
             raise ValueError('qemu_transport must be unix or pipe')
-        if qemu_clock is not None and qemu_clock not in ('standard','instruction'):
-            raise ValueError('qemu_clock must be standard or instruction')
+        if qemu_clock is not None and qemu_clock not in ('standard','instruction','virtual'):
+            raise ValueError('qemu_clock must be standard, instruction or virtual')
         if dot_mode is not None:
             if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
             if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
@@ -1305,7 +1305,8 @@ class DebugWorkspace:
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
                         'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
                         'debug-runtime-memory':'runtime_memory','debug-write-runtime-memory':'write_runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
-        methods.update({'debug-clock-observe':'clock_observe','debug-capture-surface':'capture_surface',
+        methods.update({'debug-clock-observe':'clock_observe','debug-clock-advance':'clock_advance',
+                        'debug-capture-surface':'capture_surface',
                         'debug-mouse-move-relative':'mouse_move_relative','debug-mouse-button-down':'mouse_button_down',
                         'debug-mouse-button-up':'mouse_button_up','debug-input-state':'input_state',
                         'debug-input-cancel-pending':'input_cancel_pending'})

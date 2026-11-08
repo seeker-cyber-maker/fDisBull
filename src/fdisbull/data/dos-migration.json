@@ -148,11 +148,14 @@
         "tests/test_qemu_io_native.py",
         "tests/test_qemu_io_public.py",
         "tests/test_qemu_io_deadlines.py",
-        "tests/test_qemu_input_checkpoint_guard.py"
+        "tests/test_qemu_input_checkpoint_guard.py",
+        "tests/test_qemu_clock_budget.py",
+        "tests/test_qemu_clock_budget_native.py"
       ],
       "scope_limits": [
-        "Explicit standard and instruction clock profiles preserve host time, machine instruction progress and unavailable guest milliseconds as distinct values. Fixed shift7 icount does not include idle timer warps; no exact live guest-time budget is supplied.",
-        "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for both clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
+        "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
+        "clock_advance uses one native timer and one GDB continue under a single host deadline. Token-bound requested/fired/stopped timestamps preserve early debugger/process stops and unknown input consumption; uncertain arm/cleanup closes the machine. No exact arbitrary-nanosecond cutoff, cycle accuracy, generic guest_ms, completed-frame or DOSBox timing parity claim.",
+        "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for the declared clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
         "Owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",
         "capture_surface and screenshot retain PNG bytes, unique observation identity and a stopped selected-CPU/clock bracket. They do not establish a last-completed guest frame, freshness, scanline/IRQ phase, audio timing or UI readiness.",
         "Held leases belong to the owned machine and invalidate on close. Cancellation only discards unsent transitions; accepted holds still need explicit release. Unknown delivery or failed input evidence closes the VM without replay.",
@@ -345,7 +348,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.clock_observe(); explicit instruction-profile counter only; no guest_ms/virtual_ns or exact budgets",
+      "native_route": "MachineContext.clock_observe(); stock instruction counter or opt-in API1 native QEMU_CLOCK_VIRTUAL; clock_advance(delta_ns) preserves actual requested/fired/stopped times and early stops; no legacy guest_ms or exact-cutoff parity",
       "qualification": "unqualified"
     },
     {

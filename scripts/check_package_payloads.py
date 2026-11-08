@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = "src/fdisbull/"
 PLAYER = "player/fdisbull_player/"
 SOURCE_SUPPORT = (
+    "native/qemu-clock/",
     "tests/",
     "scripts/",
     ".github/workflows/",

@@ -28,7 +28,7 @@ OPERATIONS = {
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
-    'clock-observe':'clock_observe','capture-surface':'capture_surface',
+    'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
@@ -250,6 +250,15 @@ def validate_script(script, *, session=None):
                             value=params.get(key)
                             if value is not None and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits)
+                    if op=='clock-advance':
+                        from .qemu_clock import MAX_CLOCK_BUDGET_NS
+                        for key,limits in (('delta_ns',(1,MAX_CLOCK_BUDGET_NS)),
+                                           ('timeout_ms',(1,600000))):
+                            value=params.get(key)
+                            if key in params and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_clock_budget'):
+                            raise ValueError('clock-advance requires the explicit QEMU virtual clock profile')
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
@@ -296,7 +305,7 @@ def validate_script(script, *, session=None):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
         guarded={'keyboard.key-down','keyboard.key-up','mouse.move-relative','mouse.button-down',
-                 'mouse.button-up','input-cancel-pending','clock-observe','capture-surface','screenshot'}
+                 'mouse.button-up','input-cancel-pending','clock-observe','clock-advance','capture-surface','screenshot'}
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)
@@ -391,7 +400,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','clock-advance','trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)

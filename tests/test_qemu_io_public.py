@@ -104,7 +104,8 @@ def test_native_clock_option_cannot_be_ignored_by_another_backend(com_project, t
         com_project.debugger('/not-started', tmp_path, backend=backend, qemu_clock='standard')
 
 
-@pytest.mark.parametrize('profile,expected', [(None, 'standard'), ('instruction', 'instruction')])
+@pytest.mark.parametrize('profile,expected', [(None, 'standard'), ('instruction', 'instruction'),
+                                            ('virtual', 'virtual')])
 @pytest.mark.parametrize('route', ['raw-dos', 'com-dos', 'raw-machine', 'machine-python'])
 def test_clock_profile_reaches_raw_and_com_factories(
         raw_project, com_project, tmp_path, monkeypatch, profile, expected, route):
@@ -133,13 +134,14 @@ def test_clock_profile_reaches_raw_and_com_factories(
         assert captured[0][1]['boot_image'] == tmp_path / 'separate-dos.img'
 
 
-def test_cli_clock_choice_reaches_debug_server_launch(monkeypatch, raw_project):
+@pytest.mark.parametrize('profile', ['instruction', 'virtual'])
+def test_cli_clock_choice_reaches_debug_server_launch(monkeypatch, raw_project, profile):
     from fdisbull import cli
     calls = []
     monkeypatch.setattr(cli, 'serve', lambda project, launch: calls.append((project, launch)) or 0)
     assert main(['debug', str(raw_project.path), '--executable', '/qemu', '--game-dir', '.',
-                 '--backend', 'qemu-dos', '--qemu-clock', 'instruction']) == 0
-    assert calls[0][1]['qemu_clock'] == 'instruction'
+                 '--backend', 'qemu-dos', '--qemu-clock', profile]) == 0
+    assert calls[0][1]['qemu_clock'] == profile
     assert calls[0][1]['backend'] == 'qemu-dos'
     with pytest.raises(SystemExit) as error:
         parser().parse_args(['debug', str(raw_project.path), '--executable', '/qemu',

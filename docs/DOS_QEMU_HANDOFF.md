@@ -56,15 +56,17 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Stack parent: `agent/execution-event-search-284eb73c` / [!113](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/113).
 - Restored baseline: `3b7ffedd848736174ad055b506bbbe44567ea6a2`.
 - Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
-  instruction-clock observations and stopped PNG/CPU/clock brackets, alongside
-  the earlier source-bound real-mode COM/MZ traces and event searches.
+  instruction and native virtual-clock observations, token-bound native timer
+  budgets, and stopped PNG/CPU/clock brackets, alongside the earlier
+  source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
-- Next gate: finish slice 4's generic virtual-clock read/advance and completed
-  frame/audio boundaries before clock-dependent checkpoints, frame histories,
-  click-to-event causality or Python media synchronization. These remain open;
-  the available input/surface path does not qualify the full slice.
+- Next gate: establish completed frame/audio boundaries and their clock/input
+  joins before clock-dependent checkpoints, frame histories, click-to-event
+  causality or Python media synchronization. The explicit API1 virtual-clock
+  path is available; legacy guest_ms, timed helpers and DOSBox timing parity
+  remain separate qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
@@ -72,6 +74,140 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-08: native virtual-clock continuation
+
+Continued from published takeover head
+`16bafd40dd89a23f5bfc31130aae1a495e272c74` on the existing branch and MR !117.
+The source now provides the explicit `qemu_clock='virtual'` profile and
+`clock_advance(delta_ns, timeout_ms=1000)` through Python, retained JSON
+(`debug-clock-advance`) and saved scripts (`clock-advance`). The default and
+stock `standard`/`instruction` profiles remain available.
+
+### Native boundary and ownership
+
+The separately built QEMU 10.0.13 extension lives as authored source changes
+under [native/qemu-clock](../native/qemu-clock/README.md). It adds ordinary
+in-band QMP query/arm/cancel commands with API version 1. Observation reads
+`qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)` directly, including idle timer advances;
+`query-replay.icount` remains a separate counter. The admitted budget profile
+is exactly one TCG CPU with fixed `shift=7,align=off,sleep=off`, without replay.
+An incompatible executable is refused before a new paused guest can execute.
+
+One call arms one ordinary native virtual timer and issues one existing GDB
+continue. It keeps the original breakpoint, watchpoint, DOS exit/TSR and
+physical-input result. Its token-bound receipt distinguishes start, requested
+deadline, actual firing, stopped time, elapsed time and overshoot. No exact
+arbitrary-nanosecond cutoff or cycle accuracy is claimed. A timer firing can
+coexist with another native stop, and accepted input still does not imply
+guest consumption.
+
+The vCPU timer callback records time, stops the current CPU and queues a
+private stop request. The main loop consumes it outside timer dispatch;
+existing debugger requests take precedence. The native stop observer disarms
+the timer, latches stopped time and consumes that private request. Cancellation
+must identify the same token and confirm no pending request. Unknown arm,
+execution, cleanup or evidence persistence closes the owner without replay.
+Reset and unsupported state transitions invalidate the native epoch. The
+first budget installs a process-lifetime migration blocker; this adds no
+checkpoint compatibility.
+
+The extension's own stop uses `RUN_STATE_PAUSED`/GDB SIGINT. Genuine debug
+traps retain SIGTRAP. Host breakpoint matching now requires trap evidence,
+preventing a timer pause at a breakpoint address from inventing a breakpoint
+or invoking the reserved DOS parent-return handler.
+
+One absolute host deadline covers lock admission, existing shorter VM/channel
+or script limits, debugger initialization, arm, continue, register/process
+readback, cleanup and evidence persistence. DOS completion callbacks now
+retain those incoming bounds. GDB's existing five-second interrupt recovery
+cannot authorize a new run or fresh clock cleanup after expiry. A surface
+capture in the virtual profile checks both the direct clock and the separate
+instruction counter while retaining `completed_guest_frame=None`.
+
+### Problems found and corrected
+
+Independent review found two host-boundary issues before publication: native
+channel deadlines were initially applied only after lock acquisition, and a
+PC match alone could assign a breakpoint ID to a timer stop. The corrected
+admission and signal checks have dedicated deterministic regressions.
+
+The first actual native run was **6 passed, 2 failed**, zero skips. Busy,
+CLI/HLT and PIT IRQ witnesses passed, but early break/watchpoints latched a
+clock equal to the armed deadline without firing the budget timer. Exact
+QEMU source inspection established why: `cpu_handle_guest_debug()` sets the
+CPU's stopped flag and queues a debug request; `main_loop_wait()` can attempt
+an idle warp before `main_loop_should_exit()` consumes that request. An armed
+budget timer consequently became the warp destination.
+
+The final patch suppresses that warp while its own stop is pending, or while
+a budget is armed and a CPU has `stop`/`stopped` set. A merely halted CPU can
+still advance through native device deadlines. The original failing tests
+remain strict: the early authored writer must stop before the requested
+deadline, its virtual interval must equal its short observed instruction
+interval, and a later ordinary run must pass the cancelled deadline without
+a phantom stop. Both cases pass on the corrected binary.
+
+An added reset probe initially encountered the production `-no-reboot`
+policy, which terminates QEMU on reset. The probe now explicitly selects
+QMP `set-action(reboot=reset)` only for that test, then verifies an actual
+native reset invalidates the epoch and closes host ownership. Production
+launch options were not changed to accommodate the probe.
+
+### Verification and reproducible inputs
+
+| Lane | Result |
+| --- | --- |
+| Affected source, stock QEMU/FreeDOS, I/O, DOS lifecycle, deadlines and inventory | 205 passed, zero skips, 98.96 seconds |
+| Final public-route and hostile clock-boundary checks | 68 passed, zero skips, 6.22 seconds |
+| Corrected native virtual-clock suite | 10 passed, zero skips, 34.91 seconds |
+| Isolated wheel: public routes, deadline/surface checks, doctor and stock native I/O | 103 passed, zero skips, 50.44 seconds |
+| Isolated wheel: corrected native virtual-clock suite | 10 passed, zero skips, 37.83 seconds |
+| Package-payload checker tests | 5 passed, zero skips |
+| Wheel/source identity | All 632 package files match exactly |
+
+The lanes overlap and must not be summed as unique tests. The final native
+suite covers paused stability; repeat budgets; busy execution; CLI/HLT idle
+time independent of icount; programmed PIT/IRQ wakeups; early execution/data
+stops; physical-input receipt preservation; cancellation before execution,
+wrong-token refusal and idempotent acknowledgement; reset invalidation;
+normal DOS exit/TSR; public JSON and persisted scripts; and a stopped virtual
+clock/surface bracket. All tests use owned disposable VMs and preserve source
+executable/disk bytes. This is local Linux/pipe evidence on an explicitly
+prepared FreeDOS 1.4 baseline with `SWITCHES=/F`.
+
+Pinned authored/native identities:
+
+- QEMU official source archive SHA-256:
+  `4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa`.
+- Final source patch SHA-256:
+  `d28b9bff0be0d996084ecb52387ac7292064ab1edde2d233fa6c1156b33e96ad`.
+- Corrected QEMU executable SHA-256:
+  `7e4692ce38bcbab38809c48fb8a8fa9a386fa3b46c76b3207b9cc2318e4747c9`.
+- Tested Python wheel SHA-256:
+  `e9716f31c8c62e7224196979bd2018e7bbc27999d5c87b533a36f44cd0867131`.
+
+The six upstream/patched file hashes and archive identity are in the native
+source manifest. Patch application against pristine official-archive files
+produced all six expected hashes. The private build used verified Debian
+dependency archives, a bounded six-job build and no global installation.
+The initial build took 150 seconds; the corrective incremental build took
+11 seconds. The native README contains the source verification/build recipe.
+Source-distribution and tool-source package recipes now retain the patch and
+manifest; Python wheels contain no emulator binary.
+
+Private build/initial failure/final test receipts remain under
+`clock-runtime/` and `takeover-validation/` in this takeover workspace. They
+are not published with vendor images or runtime databases. Source and the
+sanitized engineering findings belong in Git. Hosted CI, release tagging,
+merging and shared installation were not performed. Mac mirrors remain
+unavailable here.
+
+Completed-frame ownership, audio timing, timed/frame-edge input, pixel/INT33
+mapping, clock-to-source-trace causality, checkpoints and later workflows
+remain open. The 127 migration/default-switch entries stay unqualified. The
+earlier unexplained large-MZ startup and retained-DOSBox idle timeouts remain
+recorded separately; this work does not claim to have diagnosed them.
 
 ## Slice 2 acceptance plan
 

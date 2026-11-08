@@ -544,9 +544,12 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             ids = result['session']['stop_reason']['breakpoint_ids']
             if self._return_breakpoint in ids:
                 previous_deadline = self._deadline
-                callback_deadline = time.monotonic()+5
-                self._set_deadline(callback_deadline if previous_deadline is None
-                                   else min(previous_deadline, callback_deadline))
+                previous_vm = self.vm.operation_deadline
+                previous_channels = [(channel, channel.operation_deadline)
+                                     for channel in (self.vm.qmp, self.vm.gdb) if channel is not None]
+                deadlines = [time.monotonic()+5, previous_deadline, previous_vm,
+                             *[bound for _, bound in previous_channels]]
+                self._set_deadline(min(bound for bound in deadlines if bound is not None))
                 try:
                     return self._observe_return(result)
                 except BaseException:
@@ -556,6 +559,9 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                     raise
                 finally:
                     self._set_deadline(previous_deadline)
+                    self.vm.operation_deadline = previous_vm
+                    for channel, bound in previous_channels:
+                        channel.operation_deadline = bound
         if not self._launching:
             result['process'] = deepcopy(self._process)
         return result

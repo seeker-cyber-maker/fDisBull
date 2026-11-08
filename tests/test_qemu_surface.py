@@ -77,3 +77,21 @@ def test_surface_transaction_refusal_precedes_native_requests(tmp_path):
     with pytest.raises(ValueError, match='caller-owned transaction'):
         capture.capture_surface()
     assert capture.calls == capture.artifacts == [] and not capture.closed
+
+
+def test_virtual_time_change_refuses_capture_even_when_instruction_count_is_unchanged(tmp_path):
+    capture = Capture(tmp_path)
+    for clock, virtual_ns in zip(capture.clocks, (10, 11)):
+        clock['virtual_ns'] = virtual_ns
+    with pytest.raises(DebuggerError, match='clock changed'):
+        capture.capture_surface()
+    assert capture.closed and capture.artifacts == []
+
+
+def test_virtual_surface_keeps_both_stopped_clock_domains(tmp_path):
+    capture = Capture(tmp_path)
+    for clock in capture.clocks:
+        clock['virtual_ns'] = 19
+    result = capture.capture_surface()
+    assert result['metadata']['clock_stability'] == 'virtual_clock_and_instruction_counter_unchanged'
+    assert result['metadata']['completed_guest_frame'] is None
