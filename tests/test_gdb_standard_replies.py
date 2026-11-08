@@ -66,3 +66,36 @@ def test_transport_failure_still_closes_without_retry(reply, error):
     with pytest.raises(error):
         remote.request('qqemu.sstepbits')
     assert remote.socket is None and wire.closed and len(wire.requests) == 1
+
+
+def test_live_input_callback_preserves_the_original_watchpoint_stop():
+    remote, wire = remote_with(b'+' + packet(b'T05watch:1234;thread:p01.01;'))
+    calls = []
+
+    def input_callback(deadline):
+        assert wire.requests == [packet(b'c')]
+        calls.append(deadline)
+
+    reply, expired = remote.execute('c', 1000, after_send=input_callback)
+    assert reply == b'T05watch:1234;thread:p01.01;' and not expired
+    assert len(calls) == 1 and wire.requests == [packet(b'c')]
+    assert not wire.closed
+
+
+def test_uncertain_live_input_callback_closes_without_replaying_continue():
+    remote, wire = remote_with(packet(b'T05thread:01;'))
+
+    def unknown_delivery(deadline):
+        raise TimeoutError('QMP acknowledgement lost after input dispatch')
+
+    with pytest.raises(TimeoutError, match='acknowledgement lost'):
+        remote.execute('c', 1000, after_send=unknown_delivery)
+    assert remote.socket is None and wire.closed
+    assert wire.requests == [packet(b'c')]
+
+
+def test_live_input_callback_is_rejected_for_single_step_before_dispatch():
+    remote, wire = remote_with()
+    with pytest.raises(ValueError, match='continue'):
+        remote.execute('s', 1000, after_send=lambda deadline: None)
+    assert wire.requests == [] and not wire.closed

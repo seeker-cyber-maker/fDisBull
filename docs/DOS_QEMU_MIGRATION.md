@@ -22,8 +22,12 @@ register/PC/region predicates and persistent execution-event searches. Its
 source identity survives ordinary MZ relocation and later process closure.
 Overlays, mode changes and queued-input timing remain explicit boundaries.
 
-This is an alternative for testing now. Frame/input machinery, checkpoints and
-execution layers remain later slices. The default-switch gate remains blocked until the outstanding slices
+The fourth slice now supplies owned physical keyboard/PS/2 input, an explicit
+instruction-progress clock profile and stopped display captures with CPU/clock
+brackets. Guest-time scheduling, completed frames and audio remain open gates.
+
+This is an alternative for testing now. Checkpoints and execution layers remain
+later slices. The default-switch gate remains blocked until the outstanding slices
 and compatibility campaigns are qualified. No command here changes the default.
 
 ## Select the execution environment
@@ -259,10 +263,137 @@ Only closed, qualified observation windows can narrow an event search. A final
 unbound boundary may satisfy an explicit runtime predicate, but its open source
 window cannot prove absence of a source event or contribute a false site.
 
-Queued `action` input is refused before any execution, including saved-script
-preflight, until the clock/media/input slice qualifies dispatch and consumption.
+Queued `action` input inside `trace-until` remains refused before execution,
+including saved-script preflight. Use a bounded natural run to dispatch physical
+input, stop at an explicit machine breakpoint, and start a separate source
+trace. That earlier run is an unobserved interval, not a contiguous trace or
+proof that the input caused a particular instruction.
 Raw-disk sessions retain machine traces and do not gain a COM/MZ source binding
 or the process-specific `trace-until` method.
+
+## Physical input, clocks and display observations
+
+### Queue explicit controller edges
+
+The native API queues input in Python while the VM is stopped. `run()` sends
+one GDB continue, checks QEMU's run state, sends at most one QMP input batch,
+and consumes that same GDB stop packet. This preserves breakpoints/watchpoints
+and their reasons. It does not start another run when an early stop wins.
+
+```python
+# debug is a live qemu-dos session stopped at a known waiting loop.
+lease = debug.keyboard.key_down('a')['lease']
+debug.keyboard.key_up(lease)
+point = debug.breakpoint(known_runtime_consumption_address)
+result = debug.run(timeout_ms=5000)
+print(result['input_delivery'])
+debug.delete_breakpoint(point['breakpoint_id'])
+```
+
+The delivery receipt is `qmp_accepted` or `not_dispatched`; `guest_consumed`
+remains `None`. An early breakpoint may leave the batch pending, or QEMU may
+accept it before the guest consumes anything. Inspect guest RAM/registers or
+driver state to establish consumption. A failed/uncertain QMP acknowledgment
+closes the owned VM and invalidates its input without replay.
+
+`keyboard_key_down/up` and the `keyboard` namespace use machine-owned leases.
+Aliases such as `esc` and `escape` share ownership. The corresponding mouse
+methods are `mouse_move_relative(dx, dy)`, `mouse_button_down(button)` and
+`mouse_button_up(lease)`. Motion is relative controller movement, not a pixel
+coordinate. Buttons are `left`, `middle` and `right`. The authored native
+mouse witness handles IRQ12 directly; a real game still needs its own
+admitted mouse driver or hardware consumer. This does not emulate DOSBox's
+built-in INT33 driver.
+
+`input_state()` reports the owned queue, leases and last delivery. It does not
+read the guest's key state or mouse cursor. `input_cancel_pending()` discards
+only unsent transitions; an already accepted hold remains owned and needs an
+explicit release. Closing the VM invalidates its leases without claiming that
+guest release code ran. Ownership is machine-scoped, including after a DOS
+child returns to its parent. Limits are 256 pending edges, 64 active leases,
+and relative axis deltas within -32767..32767.
+
+Pending input blocks `step()`, traces and unbounded `resume()` before execution;
+use a bounded `run()` or cancel it. Timed presses/text, pixel clicks and
+frame-edge input are refused until their clock/driver/frame contracts exist.
+Queueing make and break together specifies ordering, not a held duration.
+
+The retained JSON server exposes `debug-keyboard-down/up/state`,
+`debug-mouse-move-relative`, `debug-mouse-button-down/up`, `debug-input-state`
+and `debug-input-cancel-pending`. Native saved scripts use
+`keyboard.key-down/up/state`, `mouse.move-relative`, `mouse.button-down/up`,
+`input-state` and `input-cancel-pending`; aliases can pass returned leases to
+later steps. Failed scripts that touched physical input close the owned VM.
+All static input/transaction checks precede earlier script mutations.
+The new I/O operations share the script's one host-time deadline, including
+lock admission and nested QMP/GDB reads. Existing Windows native snapshots
+refuse pending or held machine input before migration because their current
+sidecar does not restore these leases; the refusal preserves the live owner.
+
+### Observe a declared clock
+
+The default `qemu_clock='standard'` preserves the ordinary TCG launch. Its
+`clock_observe()` explicitly reports the instruction counter as unsupported.
+Select `qemu_clock='instruction'` in `Project.debugger` or `debug-launch`,
+`--qemu-clock instruction` on the CLI, or `clock_profile='instruction'` in
+`Project.machine` to enable the single-vCPU fixed-shift profile:
+
+```text
+-accel tcg,thread=single -icount shift=7,align=off,sleep=off
+```
+
+`clock_observe()` / `debug-clock-observe` / script `clock-observe` then records
+the actual `query-replay.icount` value, a machine epoch, an observation sequence
+and a separately labelled host monotonic timestamp. No record/replay mode is
+enabled. Malformed or regressing counters invalidate the owned machine.
+
+The counter covers firmware, DOS, interrupts and application execution. It is
+not a process clock, a retirement proof or cycle-accurate emulation. In this
+profile QEMU can jump its virtual clock to a timer deadline while the CPU is
+halted. Consequently `icount * 128` does **not** measure all elapsed guest
+nanoseconds. Both `virtual_ns` and `guest_ms` remain `None`. `run(timeout_ms=...)`
+retains a host-time budget and a bounded interrupt-recovery allowance; it does
+not acquire exact instruction-count or guest-time stopping. The instruction
+profile changes timing and must be explicitly chosen for comparisons.
+
+Guest boot delays can also outlast a host startup budget under instruction
+counting. The I/O witnesses use an explicit FreeDOS configuration containing
+`SWITCHES=/F` to skip its F5/F8 boot-key delay, for both clock profiles. This
+choice is confined to those tests. Production preserves the caller's CONFIG
+and startup batch; it never inserts that switch, increases the deadline or
+changes profile automatically. The [handoff](DOS_QEMU_HANDOFF.md) retains the
+original timeout, stopped-state diagnosis and controlled comparison. See the
+FreeDOS [SWITCHES reference](https://help.fdos.org/en/hhstndrd/cnfigsys/switches.htm)
+when deliberately preparing a separate test image.
+
+### Capture a stopped display surface
+
+`capture_surface(name)` / `debug-capture-surface` / script `capture-surface`
+stores PNG bytes with a unique capture ID, run identity, dimensions, SHA-256,
+selected-CPU registers and before/after clock observations. The entire bracket
+holds the owned machine lock with QEMU stopped. `screenshot()` uses the same
+capture path and retains optional grid annotation.
+
+The metadata source is `qemu_display_surface`; `completed_guest_frame` and
+`guest_frame_id` are `None`. A capture can show a half-drawn guest scene. A new
+capture ID does not establish a new guest frame or input consumption. Standard
+clock capture reports `clock_stability='not_observable'`; the instruction
+profile can establish only an unchanged observed instruction counter. A
+changed stopped CPU/counter bracket closes the VM and refuses the capture.
+Existing DOSBox frame-coherence consumers cannot accept this surface as a
+`last_completed_guest_frame`.
+
+Native evidence for this path uses QEMU 10.0.13 and FreeDOS 1.4, with independent
+authored BIOS/IRQ programs. It separates queued input, QMP acceptance, BIOS or
+IRQ consumption, and the program's later VGA drawing boundary. It does not
+qualify arbitrary DOS drivers, QEMM/DESQview, Windows, audio or a real game.
+
+Primary implementation references are QEMU's
+[instruction-counting design](https://www.qemu.org/docs/master/devel/tcg-icount.html),
+[icount invocation options](https://www.qemu.org/docs/master/system/invocation.html),
+and [QMP input, screendump and replay commands](https://www.qemu.org/docs/master/interop/qemu-qmp-ref.html).
+Those moving upstream manuals describe a newer development version; the
+handoff records the actual installed version used for native acceptance.
 
 ## What the first slice does and does not qualify
 
@@ -327,6 +458,13 @@ The trace slice adds `tests/test_qemu_dos_trace_native.py` and
 `tests/test_qemu_trace_semantics_native.py` with the same required native
 inputs. Source/persistence and protocol checks are separate from these actual
 guest witnesses. Consult the handoff log for the exact run results and scope.
+
+The clock/input slice adds `tests/test_qemu_io_native.py` using the same required
+QEMU/FreeDOS/mcopy/NASM inputs. It covers physical consumption and release,
+pre/post-draw pixels, early-stop races, clock domains, stale leases, public
+JSON/scripts and terminal failure cleanup. `tests/test_qemu_clock.py`,
+`tests/test_qemu_input.py`, `tests/test_qemu_surface.py` and
+`tests/test_qemu_io_public.py` cover malformed receipts and public preflight.
 
 Rehearse the retained path with a separate original DOS program project:
 

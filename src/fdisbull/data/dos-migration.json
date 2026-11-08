@@ -117,7 +117,7 @@
       "scope_limits": [
         "QEMU records stopped native intervals with the observed read-only IRQ/timer stepping policy. Faults and partial REP can return normal debug stops; architectural retirement remains unknown.",
         "Original real-mode COM/MZ captures verify instruction bytes, PSP/MCB ownership and the initial epoch. Canonical source sites account for ordered MZ relocations and exact loader writes; persistent event searches rederive identity from original source and ordered entry/artifact receipts.",
-        "Unsupported source bytes, module departures, allocation/epoch or mode changes stop the source binding. An unbound final observation cannot close a source window or narrow absence. Live overlay rebinding, protected/V86 tasks, queued input and whole-program timing remain unqualified.",
+        "Unsupported source bytes, module departures, allocation/epoch or mode changes stop the source binding. An unbound final observation cannot close a source window or narrow absence. Live overlay rebinding, protected/V86 tasks, input-to-source-trace causality and whole-program timing remain unqualified.",
         "Raw machine traces remain separately available and do not acquire a DOS process source map. Streaming fetch capture/cursors are not supplied by bounded stopped observations."
       ]
     },
@@ -130,7 +130,7 @@
         "dos-process"
       ],
       "gate": "Guest-time bounded runs, last-completed-frame ownership, stale-frame refusal, keyboard make/break and held leases, mouse-driver consumption/release, frame-edge input and device timing.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_debug_wait.py",
         "tests/test_dosbox_window.py",
@@ -141,11 +141,22 @@
         "tests/test_frames.py",
         "tests/test_keyboard.py",
         "tests/test_protected_runtime_native.py",
-        "tests/test_screenshot_codecs.py"
+        "tests/test_screenshot_codecs.py",
+        "tests/test_qemu_clock.py",
+        "tests/test_qemu_input.py",
+        "tests/test_qemu_surface.py",
+        "tests/test_qemu_io_native.py",
+        "tests/test_qemu_io_public.py",
+        "tests/test_qemu_io_deadlines.py",
+        "tests/test_qemu_input_checkpoint_guard.py"
       ],
       "scope_limits": [
-        "PNG screendump does not establish last-completed-guest-frame identity, guest milliseconds, scanline/IRQ phase, held-key ownership or built-in INT33 behavior. Host-time timeout is not guest-time advance.",
-        "This method is inherited by MachineContext but explicitly refuses machine/QEMU execution. Its scheduler requires qualified guest-time run slices; a periodic host timer is not an equivalent replacement."
+        "Explicit standard and instruction clock profiles preserve host time, machine instruction progress and unavailable guest milliseconds as distinct values. Fixed shift7 icount does not include idle timer warps; no exact live guest-time budget is supplied.",
+        "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for both clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
+        "Owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",
+        "capture_surface and screenshot retain PNG bytes, unique observation identity and a stopped selected-CPU/clock bracket. They do not establish a last-completed guest frame, freshness, scanline/IRQ phase, audio timing or UI readiness.",
+        "Held leases belong to the owned machine and invalidate on close. Cancellation only discards unsent transitions; accepted holds still need explicit release. Unknown delivery or failed input evidence closes the VM without replay.",
+        "Periodic memory rules and scene/frame workflows still require qualified guest-time control. No host timer is relabeled as a guest-time scheduler."
       ]
     },
     {
@@ -333,8 +344,8 @@
       "method": "execution.timing",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.clock_observe(); explicit instruction-profile counter only; no guest_ms/virtual_ns or exact budgets",
       "qualification": "unqualified"
     },
     {
@@ -357,8 +368,8 @@
       "method": "input.keyboard.down",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_down(); owned Python queue dispatched once during bounded run",
       "qualification": "unqualified"
     },
     {
@@ -381,8 +392,8 @@
       "method": "input.keyboard.state",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_state()/input_state(); owned queue and receipts, no native guest state",
       "qualification": "unqualified"
     },
     {
@@ -397,16 +408,16 @@
       "method": "input.keyboard.up",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_up(); matching lease; release accepted is not guest-consumed",
       "qualification": "unqualified"
     },
     {
       "method": "input.mouse.button",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.mouse_button_down/up(); owned physical PS/2 leases; no INT33 semantics",
       "qualification": "unqualified"
     },
     {
@@ -421,16 +432,16 @@
       "method": "input.mouse.move",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.mouse_move_relative(); relative controller deltas, no pixel mapping",
       "qualification": "unqualified"
     },
     {
       "method": "input.mouse.state",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.input_state(); owned queue/leases only, no guest cursor state",
       "qualification": "unqualified"
     },
     {
@@ -550,7 +561,7 @@
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.screenshot() / QMP screendump (stored display surface only)",
+      "native_route": "MachineContext.capture_surface()/screenshot(); stopped CPU/clock bracket and PNG, not a completed guest frame",
       "qualification": "unqualified"
     }
   ],
@@ -785,8 +796,8 @@
       "operation": "keyboard_key_down",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_down(); owned machine input queue/leases; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -803,8 +814,8 @@
       "operation": "keyboard_state",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_state(); owned machine input queue/leases; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -821,8 +832,8 @@
       "operation": "keyboard_key_up",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_up(); owned machine input queue/leases; no guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -1101,7 +1112,7 @@
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.screenshot",
+      "native_route": "MachineContext.screenshot()/capture_surface(); stopped display observation, no completed-frame identity",
       "qualification": "unqualified"
     },
     {

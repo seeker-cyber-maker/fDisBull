@@ -41,6 +41,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 | Overlays and self-modification | A source-bound address can later hold different code. Bind mappings and observations to source identity and execution epoch; do not retain stale certainty. |
 | Partial control operations | A timeout can occur after a command took effect. Bound operations, record their disposition and close an uncertain control channel; do not automatically retry memory writes or process starts. |
 | Multiple clocks and host effects | CPU progress, PIT/IRQ timing, audio duration and Python wall time do not advance together. Later host services need an explicit clock and ownership contract, including cancellation and desynchronization policy. |
+| Paused input and cross-channel ordering | Stock QEMU rejects paused physical input, and a successful paused send-key did not deliver in the native witness. Queue in the owner, dispatch at most once during GDB continue, and retain the original stop; acceptance is not consumption. |
+| Instruction counting and idle time | Fixed icount can observe machine progress, but HLT timer warps advance virtual time separately. Never multiply the counter into a generic guest clock or promise an exact live count stop from replay-only commands. |
 | Layer selection and translation caches | Changing executable overlays must invalidate translated blocks while preserving required data views and priority rules. Parallel timing-only execution must not duplicate visible effects. |
 | Checkpoint portability | QEMU and DOSBox state formats are unrelated. QEMU snapshots also depend on executable, machine and device identities. Require native cold-restore tests rather than treating saved metadata as restored state. |
 | Windows and additional architectures | SMP, threads, interrupts, memory ordering and architecture-specific traps make a DOS-only global stop insufficient. Keep machine, OS/process and target contracts separate. |
@@ -53,11 +55,16 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Draft integration MR: [!117](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117).
 - Stack parent: `agent/execution-event-search-284eb73c` / [!113](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/113).
 - Restored baseline: `3b7ffedd848736174ad055b506bbbe44567ea6a2`.
-- Latest implemented slice: source-bound traces, predicates and persistent
-  execution-event searches for the initial real-mode COM/MZ module. Broader
-  driver/task, overlay and protected/V86 qualification stays open.
-- Next slice: clock, media and input; establish guest-time and input-consumption
-  contracts before composing click-to-event trials or Python media services.
+- Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
+  instruction-clock observations and stopped PNG/CPU/clock brackets, alongside
+  the earlier source-bound real-mode COM/MZ traces and event searches.
+- Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
+  `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
+  existing branch, originating handoff marker and stacked MR target are retained.
+- Next gate: finish slice 4's generic virtual-clock read/advance and completed
+  frame/audio boundaries before clock-dependent checkpoints, frame histories,
+  click-to-event causality or Python media synchronization. These remain open;
+  the available input/surface path does not qualify the full slice.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
@@ -105,6 +112,245 @@ witness, not a passing result. Record partial and unverified behavior explicitly
    checks. Leave the default-switch gate closed for unqualified surfaces.
 
 ## Work log
+
+### 2026-11-08 — takeover, unpublished slice recovery and screenshot deadline
+
+The user requested takeover of the "Investigate QEMM Driver" agent. Live
+GitLab readback found MR !117 and its source branch still at
+`ed1746e2525e9239be174a80c873167e52929eeb`, while the previous clean local
+checkout held the newer slice-4 commit
+`6434474b0318bf9ee6d7d3d1b2ea094a3a81629d`. Its publication receipt was only
+`prepared`; the current MR description and notes did not include that commit.
+This was a publication gap, not missing implementation. The recovered delta
+contains 29 authored Python, JSON and Markdown paths and no binary payloads.
+An isolated checkout preserves the original checkout unchanged.
+
+Review of the recovered slice found one additional deadline defect. The legacy
+`screenshot()` wrapper still used the ordinary machine-operation lock even
+though its nested `capture_surface()` had the new I/O deadline handling. An
+already-expired script therefore attempted a new 10-second lock wait, and a
+50 ms screenshot script could spend 10 seconds waiting for that lock before
+its inner operation rejected the expired budget. Both deterministic regression
+cases failed against the recovered implementation (11 other deadline checks
+passed). The wrapper now uses the same `machine_io_operation` as the direct
+surface path. Expired calls refuse before lock admission; contended calls use
+only the remaining script budget; nested QMP/GDB bounds are restored normally.
+
+Fresh source checks after the fix:
+
+```sh
+python -m pytest -q tests/test_qemu_clock.py tests/test_qemu_input.py \
+  tests/test_qemu_surface.py tests/test_qemu_io_deadlines.py \
+  tests/test_qemu_input_checkpoint_guard.py tests/test_qemu_io_public.py \
+  tests/test_qemu_operation_deadlines.py tests/test_gdb_standard_replies.py \
+  tests/test_dos_migration.py
+```
+
+Result: **141 passed, zero skips**. The narrower 93-check follow-up is included
+in this selection and is not an additional unique-test count. A separate
+read-only review found no concrete issue in the two-file deadline correction;
+that review did not run tests.
+
+The native lane used the previously pinned QEMU 10.0.13, firmware, FreeDOS 1.4,
+mtools and NASM, with `FDISBULL_REQUIRE_QEMU_DOS=1` and
+`FDISBULL_REQUIRE_QEMU_DOS_OS=1`:
+
+```sh
+python -m pytest -q tests/test_qemu_io_native.py
+```
+
+Result: **9 passed, zero skips, 31.01 seconds**. These fresh witnesses exercise
+physical keyboard/mouse consumption, a distinct guest draw boundary, paused
+and running clock observations, source traces after an explicit stop, persisted
+evidence reopen and terminal VM cleanup. Original budgets and the scoped
+`SWITCHES=/F` I/O baseline were retained. Earlier reported large-MZ and retained
+DOSBox timeout observations remain unresolved; this run does not erase them.
+
+An isolated wheel install outside the checkout then passed the same 9 native
+I/O witnesses, all 7 doctor checks and all 13 I/O deadline checks: **29 passed,
+zero skips, 38.70 seconds**. The import path was checked before this run to
+exclude a source-tree fallback. The wheel SHA-256 is
+`b5574934b839deb87d2298ec6c9db5f746e1490511c65fc1a8127dbf6cdef8d9`;
+all 632 `fdisbull/` package files are byte-identical to the candidate source,
+with no missing or extra package paths. These package tests repeat selected
+source cases and are not an additional unique-test total. This was a private
+test installation, not a shared installation or release.
+
+The migration inventory still reports DOSBox as default, both explicit fallback
+selectors retained, automatic replay disabled and all 127 parity surfaces
+unqualified. No new guest-time, completed-frame, audio, checkpoint or hostcall
+claim is made by this recovery. The next engineering gate remains the explicit
+native virtual-clock interface and independent busy/HLT/IRQ/media witnesses,
+before clock-dependent checkpoint/history work. The configured Mac mirrors are
+still not accessible from this executor.
+
+Publication must fast-forward the same branch, retain the original MR marker
+and target, and skip provider CI. The exact published head and final packaging
+readback belong in the MR description; do not treat the earlier `prepared`
+receipt as evidence that its source was already remote.
+
+### 2026-11-08 — clock, physical input and stopped display path
+
+Started from the read-back GitLab head
+`ed1746e2525e9239be174a80c873167e52929eeb` on the existing branch/MR. The
+user requested continuation. No new source branch, backend default change,
+runner, credentials or hosted CI was needed.
+
+The implementation supplies three distinct observations. Physical edges are
+queued in Python under a machine-owned lease, accepted once by QMP during an
+owned GDB continue, and independently consumed by guest BIOS/IRQ code in the
+native witnesses. QMP acceptance always leaves `guest_consumed=None`.
+Display capture then records the actual stored surface and a stopped CPU/clock
+bracket; it does not infer that the guest finished a frame.
+
+#### Decisions and observed constraints
+
+| Investigation | Actual result and implementation decision |
+| --- | --- |
+| Paused physical input | QEMU 10.0.13 rejected `input-send-event` with `VM not running`. Paused `send-key` returned success but an authored port-60h consumer read no scancodes after execution. Production uses neither as a paused native queue. |
+| Input and debugger stops | A single GDB `c`, one optional QMP batch and the same GDB stop packet preserve the actual breakpoint/watchpoint reason. An early stop may leave the queue pending or occur after QMP acceptance but before consumption. There is no automatic retry or second continue. |
+| Generic clock commands | The installed command inventory provided no generic QMP clock reader; HMP `info clocks`/`info timers` were unknown. Qtest memory reads worked alongside TCG, but `clock_step` was unknown; the installed executable did not offer the qtest accelerator. These were not used as an execution clock. |
+| Plain instruction counting | `query-replay.icount` progressed with `mode=none` under explicit `-accel tcg,thread=single -icount shift=7,align=off,sleep=off`; recording was unnecessary. The standard launch's zero counter was not a valid progress observation and is reported unsupported. |
+| Idle clock warp | In an independent HLT/IRQ witness, icount advanced 6,190,945 to 6,363,605 while BIOS ticks advanced 14 to 429. The instruction delta times 128 ns cannot represent all that guest time. `virtual_ns` and `guest_ms` therefore remain null. |
+| Exact count stopping | `replay-break` refused ordinary execution and record mode; it requires replay. The public live run keeps a host-time budget, not an exact icount/guest-ms promise. |
+| Display surface | Paused screendump produces pixels but no last-completed guest frame identity. Captures use independent observation IDs, not invented frame/mode ordinals. |
+| Python media services | No custom opcode, QEMU plugin, time authority or Python renderer is loaded. PNG capture is available; OGG playback, virtual-clock ownership and UDL/UIL join synchronization remain later work. |
+
+`qemu_clock='instruction'` is an explicit launch option in Python/JSON and
+`--qemu-clock instruction` in the CLI; raw `Project.machine` uses
+`clock_profile`. The selected descriptor is retained in immutable machine
+configuration. It requires one vCPU. Observation epochs/sequences detect a
+changed profile or regressing native counter and close that machine.
+
+Keyboard key-down/up and relative mouse/button methods have bounded queues,
+machine-scoped leases, duplicate/cross-device/stale-lease guards and explicit
+cancellation. Limits are 256 pending edges and 64 leases. Cancelling only
+removes unsent transitions; an accepted hold remains owned until an explicit
+release or VM close. Machine ownership survives selected DOS-child return and
+is never relabelled as process ownership. A failed script that touched input
+closes and reaps its VM. Uncertain transport or persistence never replays input.
+
+`capture_surface` and `screenshot` store PNG, source/run/hash/dimensions,
+selected CPU state and a before/after clock bracket. Standard clock stability
+is `not_observable`; the instruction profile can establish only unchanged
+icount. Source is `qemu_display_surface`, and completed-frame identity remains
+unknown. Contradictory stopped CPU/clock observations close the owner.
+
+Public Python, retained JSON and saved-script paths expose these operations.
+The source trace starts separately after a natural run reaches an explicit
+breakpoint; it does not absorb that untraced interval. The older `trace-until`
+queued action remains refused pending causal/IRQ-aware trace admission.
+
+#### Review corrections retained in the implementation
+
+- A native regression caught queued-input step refusal inside the DOS lifecycle
+  failure handler. Preflight now runs before that handler; a rejected step or
+  trace leaves the live process, registers and queue intact.
+- Whole-script preflight now rejects malformed literal mouse releases, timed
+  QEMU keyboard requests and incompatible caller transactions before earlier
+  steps can mutate the guest. Existing prototype-only script validation remains
+  usable without a launched VM.
+- A delayed-clock reproduction exceeded a 10 ms script budget and previously
+  returned success after about 41 ms. New native I/O operations now intersect
+  the script deadline with VM/QMP/GDB bounds, bound lock admission, check return
+  time and restore previous channel limits, including a lazily initialized GDB.
+- Shared Windows snapshots could otherwise capture an accepted machine-level
+  hold while serializing only Wine's separate input leases. Both the public
+  state path and the lower capture seam now refuse outstanding machine leases
+  or queued edges before migration; a benign refusal keeps the owner usable.
+
+#### Validation and remaining gate
+
+The local lanes used the previously pinned private QEMU 10.0.13, FreeDOS 1.4,
+mtools 4.0.48 and NASM 2.16.03 runtime. Vendor images and raw runtime receipts
+are excluded from Git. The independent new COM fixtures are authored source.
+Selections overlap; their counts must not be added into a unique-test total.
+
+| Local lane | Result and scope |
+| --- | --- |
+| Affected source/API regression selection | 417 passed, 60 runtime-gated skips. This includes public routes, scripts, input leases, clocks, surfaces, migration inventory and shared Windows host contracts. |
+| Additional control and packaging contracts | 124 passed, 4 runtime-gated skips, including deadline propagation, physical-input snapshot guards and bundled-skill checks. |
+| New native input/display/clock witnesses | 9 passed, zero skips, including independent guest BIOS/IRQ consumers, saved evidence reopen, JSON/scripts and the separate post-stop source trace. |
+| Existing native DOS process/trace/core selection | 124 passed and 2 message-matching failures. The refusal behavior was unchanged; the corrected wording retained `queued input`, and both affected native cases passed at their original budgets. |
+| Retained DOSBox native selection | 51 passed and 1 host-timeout failure. A fresh, unchanged-budget follow-up of that case passed; the timing observation remains unresolved, as detailed below. |
+| Installed wheel outside checkout | 164 passed and 2 initial failures, zero skips. One was an instruction-profile first-READY timeout; bounded follow-ups diagnosed FreeDOS's boot-key wait, below. The other was a source-layout assumption in the dependency-free doctor test; after making that test portable, its complete installed selection passed all 7 checks. |
+| Final controlled I/O configuration | All 9 source native cases passed in 37.40 seconds. With the final wheel installed outside the checkout, all 9 I/O cases and 7 doctor checks passed together: 16 passed, zero skips, in 52.53 seconds. Original startup and operation budgets were retained. |
+| Final packaged ledger check | All 6 source-derived migration coverage/default/fallback checks passed after the final scope notes. |
+| Installed bundled-skill validation | All 24 references and 75 local Markdown links passed with the isolated installed interpreter. |
+
+The wheel contained exactly the expected 632 `fdisbull/` package files,
+byte-identical to the corresponding candidate source, with no extra or missing
+package paths. The final private wheel SHA-256 is
+`12a7da006287df9f3acdc98271e73110b7bcd2fe57c0f56057e36e98e0c98bfe`.
+The doctor correction copies only the actual source or installed
+package into an isolated directory before invoking Python with `-S`; it no
+longer assumes that the test's parent directory contains a `src/` checkout.
+
+The retained DOSBox case
+`test_native_click_trials_keep_shared_handler_register_value` reached its
+10-second host budget before the idle trial's 500-step budget. A fresh follow-up
+passed without changing the code, budget or assertion. This does not establish
+a fix or a cause, and the initial failure remains part of the evidence. The
+QEMU changes do not change that DOSBox execution path.
+
+#### Diagnosed instruction-profile startup wait
+
+The installed clock case exceeded its original 15,000 ms startup budget before
+the loader's first READY report. A bounded fresh instruction-profile follow-up
+reproduced it with zero report bytes; its paired standard-profile boot completed
+in 4,599.865 ms and passed the pause/run clock checks. GDB is not initialized
+before READY, so the new GDB input callback was not on this failure path.
+
+One further instruction boot retained the same budget and captured the stopped
+screen, registers and low memory before cleanup, without additional execution.
+It showed FreeDOS kernel 2043's F5/F8 startup line. The firmware interrupt entry
+matched the pinned SeaBIOS bytes and decoded as INT 16h/AH=01 keyboard status.
+The recovered DOS caller actively polled that status while comparing elapsed
+BIOS ticks against its configured two-second delay: start `0xd8fc`, current
+`0xd918`, **28 elapsed ticks against a 36-tick target**. Eight ticks remained
+when the host budget expired. This identifies the active guest wait; it does
+not establish a deadlock, failed serial channel or generic host contention.
+
+The discriminating control changed only a new test baseline's configuration,
+prepending the documented `SWITCHES=/F` to omit FreeDOS's boot-key delay. The
+original configuration remained its exact suffix and the startup batch stayed
+unchanged. One fresh installed instruction-profile boot, with no retry and the
+same 15,000 ms limit, completed in **4,134.816 ms** (READY in 2,214.098 ms).
+Its real witness, 80 ms host pause and 300 ms bounded run passed: BIOS ticks
+`1043932 -> 1043932 -> 1043942`, and icount
+`9936878 -> 9936878 -> 13972803`. Guest milliseconds and virtual nanoseconds
+remained unknown. Every diagnostic/control VM was reaped and original inputs
+remained unchanged.
+
+The I/O witnesses therefore use an explicit, scoped `SWITCHES=/F` baseline for
+both profiles. The broad process fixture and production staging are unchanged;
+the tool never inserts this switch into a caller's CONFIG or extends its host
+budget. The original failed starts remain evidence that guest boot delays can
+outlast a host deadline under instruction counting. These tests qualify
+post-boot I/O on the declared configuration, not arbitrary startup performance.
+FreeDOS documents the switch in its
+[SWITCHES reference](https://help.fdos.org/en/hhstndrd/cnfigsys/switches.htm).
+The earlier large-MZ timeout lacks this stopped evidence and retains its
+separate unresolved status; this diagnosis is not retroactively assigned to it.
+
+The new native witnesses directly observed BIOS key AX `1e61`, IRQ1 make/break
+`1e 9e`, PS/2 movement/left-press `09 05 00` and release `08 00 00`. Before the
+BIOS witness's draw point the key was consumed but its sentinel pixel stayed
+black; the later draw point turned it red. Mouse press/release pixels became
+green/black. Paused BIOS ticks and instruction counts stayed unchanged.
+
+Slice 4 remains **in progress**. The legacy inventory still accounts for
+35 RPC methods, 83 public DOS routes and 9 extra surfaces; partial routes do
+not change its 127 unqualified-surface default-switch gate. Generic guest-time
+budgets, completed frames, audio, frame-edge input, pixel/INT33 mouse mapping,
+real drivers/games and Windows timing remain unqualified. Keep DOSBox default
+and both fallback selectors. The macOS mirrors remain unavailable here.
+
+Next work: select an explicit native virtual-clock observation/control seam
+and a guest drawing/audio completion contract, then prove those with independent
+busy/HLT/IRQ/media witnesses before implementing clock-dependent checkpoint and
+history consumers. The available stock-QEMU path is already usable for explicit
+input-to-breakpoint analysis with separate post-stop source traces.
 
 ### 2026-11-08 — trace/event implementation and qualification handoff
 

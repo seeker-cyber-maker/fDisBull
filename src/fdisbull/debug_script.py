@@ -26,6 +26,9 @@ OPERATIONS = {
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
+    'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
+    'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
+    'clock-observe':'clock_observe','capture-surface':'capture_surface',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
@@ -165,7 +168,7 @@ def validate_script(script, *, session=None):
                         literal(params)
                         validate_trace_until(**params)
                         if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
-                            raise ValueError('Native DOS queued input awaits the clock/input migration slice')
+                            raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
@@ -207,6 +210,8 @@ def validate_script(script, *, session=None):
                             if all(type(value) is int for value in sizes) and sum(sizes[:2])>sizes[2]:
                                 raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
+                        if (backend or actual) in ('qemu-machine','qemu-dos'):
+                            raise ValueError('Timed native QEMU input requires a qualified guest clock; use owned physical edges')
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
                         # must not hide a malformed static hold, gap or modifier.
@@ -251,7 +256,28 @@ def validate_script(script, *, session=None):
                         validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
                     if op=='keyboard.key-down':
                         from .keyboard_input import KEYS
-                        if params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
+                        if not isinstance(params['key'],str) or params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
+                    if op=='mouse.move-relative':
+                        values=[]
+                        for axis in ('dx','dy'):
+                            value=params[axis]
+                            if isinstance(value,str) and value.startswith('$'):continue
+                            bounded(value,axis,-32767,32767);values.append(value)
+                        if len(values)==2 and values==[0,0]:raise ValueError('Relative mouse movement requires a nonzero delta')
+                    if op=='mouse.button-down':
+                        if params['button'] not in ('left','middle','right'):
+                            raise ValueError('Unknown physical mouse button')
+                    if (op in ('mouse.button-up','keyboard.key-up')
+                            and (backend or actual) in ('qemu-machine','qemu-dos')):
+                        lease=params['lease']
+                        if not (isinstance(lease,str) and lease.startswith('$')):
+                            if type(lease) is not str or not 1<=len(lease)<=128:
+                                raise ValueError('Expected an owned unused physical input lease')
+                    if op=='capture-surface' and 'name' in params:
+                        name=params['name']
+                        if not (isinstance(name,str) and name.startswith('$')):
+                            from .external_files import _file_name
+                            _file_name(name)
                     if op=='screenshot-hooks' and params.get('configuration') is not None:
                         from .screenshot_hooks import validate_configuration
                         validate_configuration(params['configuration'])
@@ -268,6 +294,15 @@ def validate_script(script, *, session=None):
             and any(step['op'] in ('trace', 'trace-until') for step in expanded)
             and session.project.db.in_transaction):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
+    if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
+        guarded={'keyboard.key-down','keyboard.key-up','mouse.move-relative','mouse.button-down',
+                 'mouse.button-up','input-cancel-pending','clock-observe','capture-surface','screenshot'}
+        project=getattr(session,'project',None)
+        if project is not None and project.db.in_transaction:
+            pending=(any(step['op']=='run' for step in expanded)
+                     and getattr(session,'_input_pending',lambda:False)())
+            if pending or any(step['op'] in guarded for step in expanded):
+                raise ValueError('Native QEMU input/media observation requires a project outside a caller-owned transaction')
     return expanded
 
 
@@ -369,6 +404,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # follows the same terminal cleanup as legacy keyboard input.
                 prior_input_touched = keyboard_touched
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
+                        or step['op'].startswith('mouse.') or step['op']=='input-cancel-pending'
                         or (step['op']=='trace-until' and params.get('action') is not None)
                         or (step['op']=='frame-inputs' and params['edges'])
                         or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):

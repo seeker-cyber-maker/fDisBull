@@ -133,6 +133,8 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
 
     if session.project.db.in_transaction:
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
+    if session._input_pending():
+        raise ValueError('Queued physical input requires run() before stepping or tracing')
     started = time.monotonic()
     metadata = deepcopy(session.metadata)
     binding = load_trace_binding(session.project, session.version['id'], metadata)
@@ -298,6 +300,6 @@ class QemuDOSSourceTraceMixin:
         until, regions, action = validate_trace_until(until, regions=regions,
             max_steps=max_steps, timeout_ms=timeout_ms, name=name, action=action, label=label)
         if action is not None:
-            raise ValueError('Native DOS queued input awaits the clock/input migration slice')
+            raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
         return _collect(self, name=name, timeout_ms=timeout_ms, max_steps=max_steps,
                         until=until, regions=regions, label=label)

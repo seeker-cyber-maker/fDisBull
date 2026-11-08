@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -35,7 +36,13 @@ def test_qemu_doctor_invalid_admission_never_spawns(tmp_path, options):
 
 
 def test_native_doctor_cli_can_report_failure_without_decoder_dependencies(tmp_path):
-    environment = {**os.environ, 'PYTHONPATH': str(Path(__file__).resolve().parents[1] / 'src')}
+    import fdisbull
+    # Isolate only the package from either source or an installed wheel. -S
+    # disables dependency discovery without assuming this test has a src tree.
+    isolated = tmp_path / 'without-dependencies'
+    shutil.copytree(Path(fdisbull.__file__).parent, isolated / 'fdisbull',
+                    ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+    environment = {**os.environ, 'PYTHONPATH': str(isolated)}
     result = subprocess.run([sys.executable, '-S', '-m', 'fdisbull', 'doctor',
                              '--backend', 'qemu-dos', '--executable', str(tmp_path / 'missing'),
                              '--qemu-transport', 'pipe'], env=environment,

@@ -36,7 +36,14 @@ Runtime bytes and canonical relocated source sites are kept distinct. Native
 fault/REP witnesses corrected the earlier unconditional completion wording:
 ordinary GDB stops do not prove instruction retirement. Initial-module and
 epoch qualification is partial availability; live overlays, protected/V86
-process mapping, queued input and whole-game timing remain unqualified.
+process mapping, input-to-source-trace causality and whole-game timing remain unqualified.
+
+The clock/input slice now adds an explicit fixed-icount profile, machine-owned
+keyboard and relative PS/2 mouse leases, a bounded Python queue dispatched once
+during GDB continue, and stopped PNG/CPU/clock brackets. Independent DOS BIOS
+and IRQ witnesses distinguish acceptance, consumption and later drawing.
+Generic guest milliseconds, completed frames, timed input, pixel/INT33 mouse
+semantics and audio remain open. A new surface capture ID is not a guest frame.
 
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
@@ -83,15 +90,15 @@ that last check is not runtime qualification.
 | `session.start` | DOS process | Native COM/MZ adapter now uses actual DOS EXEC, verifies PSP/MCB, ordered relocations and exact loader writes, then stops at entry; protected/V86 and full DOSBox launch parity remain unqualified |
 | `session.status`, `session.stop` | Core / DOS process | Machine status/cleanup exist; machine stop or process reaping is not selected DOS process termination |
 | `execution.continue`, `execution.pause`, `execution.step`, `execution.wait` | Core | QMP/GDB control exists; bounded machine run is not the DOS asynchronous-operation schema or guest-time run contract |
-| `execution.timing` | Clock, media and input | No native DOS guest-clock adapter at the baseline; host-time timeout is not emulated milliseconds |
+| `execution.timing` | Clock, media and input | Explicit `clock_observe` reports machine icount only under the selected instruction profile; host timestamps, instruction progress and unavailable guest milliseconds remain distinct |
 | `state.get_registers`, `state.set_register` | Core | GDB register inspection/guarded writes exist; expose CPU mode, segment bases, widths and selected-vCPU identity, without inventing DOS source coordinates |
 | `memory.read`, `memory.write` | Core / DOS process | Physical and selected-vCPU virtual memory plus guarded writes exist; DOS segmented/static addresses and task/allocation identity need separate admission |
 | `breakpoints.create`, `breakpoints.delete`, `breakpoints.list` | Core / Trace and events | QEMU TCG execution/data controls exist; preserve byte-free breakpoints, access kind, length, bounded count and cause/resume semantics |
-| `trace.start`, `trace.read`, `trace.stop` | Trace and events | Completed-step machine traces exist; no equivalent streaming before-fetch trace cursor or callback-safe DOS boundary adapter |
-| `video.screenshot`, `video.probe` | Clock, media and input | QMP screendump provides a stored surface; it does not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
-| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | Requires a real controller input adapter, bounded queue, US-layout admission and observed consumption; sending a host key event is insufficient |
-| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Preserve owned held-key leases, exact make/break ordering, stale-lease invalidation and frame-bound input replay |
-| `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | DOSBox uses its built-in INT33 driver; QEMU needs an admitted guest driver/device path, pixel/range mapping, release timing and pending-input evidence |
+| `trace.start`, `trace.read`, `trace.stop` | Trace and events | Stopped-boundary machine/source traces exist; ordinary debug stops do not prove retirement, and no equivalent streaming before-fetch trace cursor is supplied |
+| `video.screenshot`, `video.probe` | Clock, media and input | Stopped QMP surface/CPU/clock bracket and PNG exist; they do not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
+| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports the owned Python queue/leases and QMP receipts; timed press/text remain refused. Native BIOS/IRQ witnesses separately prove selected consumption cases |
+| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases and single dispatch exist; stale leases invalidate on close. Frame-bound timing/replay remains unqualified |
+| `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases and IRQ12 consumption witnesses exist; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
 | `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
 | `state.save`, `state.load` | Checkpoints | Raw `MachineContext` advertises `save_states=False`; DOSBox `.sav` data cannot be interpreted as a QEMU VM checkpoint |
 | `layers.configure` | Layers and hooks | Raw `MachineContext` advertises `code_layers=False`; a RAM write or changed PC is not a fetch-only layer |

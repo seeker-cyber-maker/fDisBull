@@ -139,12 +139,21 @@ class GDBRemote:
                 return reply
             except BaseException:self.close();raise
 
-    def execute(self,command,timeout_ms):
-        """Continue/step once, with at most five extra seconds to interrupt/stop."""
+    def execute(self,command,timeout_ms,*,after_send=None):
+        """Execute once and retain its stop packet, including after live input.
+
+        The optional continue-only callback owns a separate control channel.
+        Sending ``c`` does not establish that the CPU has started; the callback
+        must observe admission and must not issue a second execution request.
+        Recovery has at most five extra seconds to interrupt this same run.
+        """
+        if after_send is not None and (command != 'c' or not callable(after_send)):
+            raise ValueError('A live control callback requires one GDB continue')
         deadline=self._operation_end(timeout_ms)
         with self._locked(deadline):
             try:
                 self._send(command,deadline)
+                if after_send is not None:after_send(deadline)
                 try:return self._packet(deadline),False
                 except (TimeoutError,socket.timeout):
                     # Execution was dispatched once. Recovery may exceed the

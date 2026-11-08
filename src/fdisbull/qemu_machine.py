@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 from copy import deepcopy
 import os
@@ -22,6 +21,9 @@ from .qemu_transport import PipeChannel, create_fifo_pair, open_fifo_pair
 from .memory_search_runtime import MemorySearchSessionMixin
 from .memory_rules import MemoryRuleSessionMixin
 from .desqview_runtime import DesqviewSessionMixin
+from .qemu_clock import MachineClockMixin, machine_clock_configuration, machine_clock_arguments
+from .qemu_input import QemuPhysicalInputMixin
+from .qemu_surface import QemuSurfaceMixin
 
 
 def file_hash(path):
@@ -44,7 +46,8 @@ def firmware_identity(directory):
 class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
-                 cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None):
+                 cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
+                 clock_profile='standard'):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
@@ -63,6 +66,7 @@ class QemuMachine:
                 return value
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
+            selected_clock=machine_clock_configuration(clock_profile,cpus)
             if cpu_model not in ('max', '486'):
                 raise ValueError('Unsupported machine CPU profile')
             if boot_device not in ('ide', 'floppy') or boot_device == 'floppy' and boot_image is None:
@@ -85,6 +89,7 @@ class QemuMachine:
             self.machine_configuration=dict(cpu=cpu_model,memory_mib=memory_mib,cpus=cpus,network='none',accelerator='tcg',
                                             disk='private-verified-copy-and-snapshot' if boot_image else None,
                                             boot_device=boot_device if boot_image else None,control_transport=transport,
+                                            clock_profile=selected_clock,
                                             firmware='explicit-directory' if firmware is not None else 'QEMU default search path; not pinned',
                                             hostcalls='not configured; experimental FDB_HOSTCALL_/FDB_LAYER_ selectors removed')
             selected_boot=paths.get('boot_image')
@@ -98,7 +103,7 @@ class QemuMachine:
                 shutil.copyfile(paths['boot_image'],selected_boot)
                 if file_hash(selected_boot)!=self.inputs['boot_image']['sha256']:
                     raise ValueError('Boot image changed while creating its private runtime copy')
-            command=[str(paths['qemu']),'-accel','tcg,thread=multi','-machine','pc' if boot_image else 'q35','-cpu',cpu_model,
+            command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine','pc' if boot_image else 'q35','-cpu',cpu_model,
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
                      '-serial',f'file:{self.log_path}']
             if transport=='pipe':
@@ -179,6 +184,9 @@ class QemuMachine:
 
     def close(self):
         try:
+            context=getattr(self,'context',None)
+            invalidate=getattr(context,'_input_on_close',None)
+            if invalidate is not None:invalidate()
             if self.gdb is not None:self.gdb.close();self.gdb=None
             if self.qmp is not None:self.qmp.close();self.qmp=None
             for channel in self._channels:channel.close()
@@ -199,10 +207,13 @@ class QemuMachine:
                 except Exception as error:self.close_observer_error=type(error).__name__
 
 
-def machine_operation(function):
+def machine_operation(function,*,script_budget=False):
     @wraps(function)
     def invoke(self,*args,**kwargs):
-        if not self.vm.lock.acquire(timeout=10):raise TimeoutError('Machine context is busy')
+        limit=getattr(self,'_rpc_deadline',None) if script_budget else None
+        wait=10 if limit is None else min(10,limit-time.monotonic())
+        if wait<=0:raise TimeoutError('Native machine I/O script deadline expired before admission')
+        if not self.vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
         try:
             guard=getattr(self.vm,'operation_guard',None)
             if guard is not None:guard(function.__name__)
@@ -217,15 +228,73 @@ def machine_operation(function):
     return invoke
 
 
-class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
+def machine_io_operation(function):
+    """Carry a saved script's one deadline through composed native I/O.
+
+    These operations do not continue the guest. GDB execution retains its
+    separate bounded stop-recovery contract. Restoring each previous bound
+    avoids leaking a finished script deadline into the next caller's operation.
+    """
+    @wraps(function)
+    def invoke(self,*args,**kwargs):
+        incoming=getattr(self,'_rpc_deadline',None)
+        if incoming is None:return function(self,*args,**kwargs)
+        if time.monotonic()>=incoming:
+            raise TimeoutError('Native machine I/O script deadline expired before admission')
+        vm=self.vm
+        previous_vm=getattr(vm,'operation_deadline',None)
+        bound=incoming if previous_vm is None else min(incoming,previous_vm)
+        previous_channels=[]
+        for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
+            if channel is not None:
+                previous=getattr(channel,'operation_deadline',None)
+                previous_channels.append((channel,previous))
+                channel.operation_deadline=bound if previous is None else min(bound,previous)
+        vm.operation_deadline=bound
+        try:
+            result=function(self,*args,**kwargs)
+            if time.monotonic()>=bound:
+                raise TimeoutError('Native machine I/O exceeded the saved script deadline')
+            return result
+        finally:
+            vm.operation_deadline=previous_vm
+            for channel,previous in previous_channels:channel.operation_deadline=previous
+            # A stopped observation may lazily initialize GDB under the bound.
+            current=getattr(vm,'gdb',None)
+            if current is not None and not any(current is channel for channel,_ in previous_channels):
+                current.operation_deadline=previous_vm
+    return machine_operation(invoke,script_budget=True)
+
+
+class MachineContext(QemuPhysicalInputMixin, MachineClockMixin, QemuSurfaceMixin,
+                     DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
+
+    # The shared machine lock covers complete queue transitions and observation
+    # brackets, including callers using the raw context of another backend.
+    clock_observe=machine_io_operation(MachineClockMixin.clock_observe)
+    capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
+    keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
+    keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
+    keyboard_state=machine_io_operation(QemuPhysicalInputMixin.keyboard_state)
+    mouse_move_relative=machine_io_operation(QemuPhysicalInputMixin.mouse_move_relative)
+    mouse_button_down=machine_io_operation(QemuPhysicalInputMixin.mouse_button_down)
+    mouse_button_up=machine_io_operation(QemuPhysicalInputMixin.mouse_button_up)
+    input_state=machine_io_operation(QemuPhysicalInputMixin.input_state)
+    input_cancel_pending=machine_io_operation(QemuPhysicalInputMixin.input_cancel_pending)
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,code_layers=False,
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
+            surface_capture='screendump' in getattr(vm,'qmp_commands',()),
+            completed_guest_frames=False,guest_time_control=False,
+            clock_observation='explicit instruction progress profile; no guest milliseconds',
+            physical_input='input-send-event' in getattr(vm,'qmp_commands',()),
+            input_dispatch='one batch during owned GDB continue; guest consumption unverified',
+            timed_input=False,absolute_mouse=False,
             memory_translation='observed non-PAE 386 4-KiB pages; paused machine only',
             qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
@@ -248,6 +317,7 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
 
     @machine_operation
     def resume(self):
+        if self._input_pending():raise ValueError('Queued physical input requires a bounded run, not resume')
         if self.breakpoints:raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
         # FIFOs do not produce a new GDB connection event when a client opens
         # them again. Keep the completed protocol session alive across QMP
@@ -398,9 +468,22 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
         del self.breakpoints[breakpoint_id]
         return dict(deleted=True,context='machine')
 
-    def _execute(self,command,timeout_ms):
+    def _execution_preflight(self,command,timeout_ms):
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine timeout must be 1..600000 ms')
-        remote=self._stopped();reply,timed_out=remote.execute(command,timeout_ms)
+        if command!='c' and self._input_pending():
+            raise ValueError('Queued physical input requires run() before stepping or tracing')
+        if self._input_pending() and self.project is not None and self.project.db.in_transaction:
+            raise ValueError('Physical input execution requires a project outside a caller-owned transaction')
+
+    def _execute(self,command,timeout_ms):
+        self._execution_preflight(command,timeout_ms)
+        remote=self._stopped();delivery=None
+        if self._input_pending():
+            def dispatch(deadline):
+                nonlocal delivery
+                delivery=self._input_after_continue(deadline)
+            reply,timed_out=remote.execute(command,timeout_ms,after_send=dispatch)
+        else:reply,timed_out=remote.execute(command,timeout_ms)
         if reply[:1] not in (b'T',b'S',b'W',b'X'):self.vm.close();raise DebuggerError('Invalid machine stop reply')
         self.vm.machine_stopped=True;native=reply.decode('ascii')
         regs=self.registers() if reply[:1] in (b'T',b'S') else None
@@ -413,7 +496,12 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
                     address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
         from .debug_semantics import normalize_stop
         result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
-        if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
+        if delivery is not None:result['input_delivery']=delivery
+        if self.project:
+            try:self._event('machine-'+('step' if command=='s' else 'run'),result)
+            except BaseException:
+                if delivery is not None:self.vm.close()
+                raise
         return result
 
     @machine_operation
@@ -435,6 +523,7 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
     def trace(self,name='machine-trace.json',*,count=128,timeout_ms=10000,bits=None):
         from iced_x86 import Decoder
         from .qemu_step_policy import observe_step_policy
+        if self._input_pending():raise ValueError('Queued physical input requires run() before stepping or tracing')
         if type(count) is not int or not 1<=count<=10000:raise ValueError('Machine trace count must be 1..10000')
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine trace timeout must be 1..600000')
         if bits not in (None,16,32,64):raise ValueError('Machine traces require observed or explicit instruction bitness')
@@ -471,17 +560,12 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
         result['observation_contract']=contract('qemu-machine')
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),dict(event_count=len(events),complete=result['complete'],context='machine'))
 
-    @machine_operation
+    @machine_io_operation
     def screenshot(self,name='machine.png',*,grid=False,grid_step=8):
-        from PIL import Image
-        if not self.capabilities['screenshot']:
-            raise ValueError('Selected QEMU executable does not provide screendump; use a QEMU build with display-surface support')
-        self._stopped()
-        path=Path(self.vm.temporary.name)/'screen.ppm';path.unlink(missing_ok=True)
-        self.vm.qmp.call('screendump',{'filename':str(path)})
-        with Image.open(path) as image:
-            output=io.BytesIO();image.save(output,format='PNG');size=image.size
-        data=output.getvalue();artifact=self._artifact(name,'screenshot',data,dict(context='machine',width=size[0],height=size[1],sha256=hashlib.sha256(data).hexdigest(),capture='QEMU stored display surface'))
+        from .screenshot_grid import validate_step
+        if type(grid) is not bool:raise ValueError('grid must be boolean')
+        if grid:validate_step(grid_step)
+        artifact=self.capture_surface(name)
         return self.project.debug_grid(artifact['artifact'],name=name+'.grid.png',step=grid_step) if grid else artifact
 
 
@@ -499,10 +583,11 @@ class MachineDebugSession(MachineContext):
                 else admit_qemm_profile(guest_profile,image))
 
     def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000,guest_profile=None,
-                 transport='unix',firmware=None,_on_spawn=None):
+                 transport='unix',firmware=None,clock_profile='standard',_on_spawn=None):
         import uuid
         from .debugger import stamp
         selected=project.version(version);image=Path(boot_image).expanduser().resolve(strict=True)
+        machine_clock_configuration(clock_profile,1)
         if project.meta['format']!='raw' or project.meta['arch']!='x86' or selected['parent'] is not None:
             raise ValueError('Machine boot launch requires an original unpatched raw x86 project')
         if not image.is_file() or image.stat().st_size>64*1024*1024 or file_hash(image)!=project.meta['source_sha256']:
@@ -521,14 +606,15 @@ class MachineDebugSession(MachineContext):
                            boot_device=self.guest_profile['machine']['boot_device'])
         memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128
         vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,
-                       transport=transport,firmware=firmware,on_spawn=_on_spawn,**options)
+                       transport=transport,firmware=firmware,clock_profile=clock_profile,on_spawn=_on_spawn,**options)
         super().__init__(vm)
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
         self.capabilities['qemm_observation']=self.guest_profile is not None and self.guest_profile['memory_manager']['configured']=='qemm'
         self.capabilities['desqview_observation']=True
         self.capabilities['memory_search']='paused snapshots; explicit task identity and per-range page mappings'
         self.metadata=dict(backend=self.backend_id,source_sha256=project.meta['source_sha256'],version_sha256=selected['sha256'],
-                           runtime_inputs=vm.inputs,context='machine',address_mapping='explicit physical/selected-vCPU virtual addresses',capabilities=self.capabilities)
+                           runtime_inputs=vm.inputs,machine_configuration=vm.machine_configuration,
+                           context='machine',address_mapping='explicit physical/selected-vCPU virtual addresses',capabilities=self.capabilities)
         if self.guest_profile is not None:
             self.metadata.update(guest_profile=self.guest_profile,machine_configuration=vm.machine_configuration)
         try:
@@ -551,6 +637,8 @@ class MachineDebugSession(MachineContext):
     def script_operations(self):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
+                'clock-observe','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
+                'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession

@@ -184,7 +184,14 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction count is not guest milliseconds)",
+    "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
+    "debug-mouse-move-relative": "Queue owned physical PS/2 movement; run,dx,dy (dispatches during bounded QEMU run)",
+    "debug-mouse-button-down": "Queue a physical mouse make and own its lease; run,button",
+    "debug-mouse-button-up": "Queue the matching physical mouse release; run,lease",
+    "debug-input-state": "Observe owned QEMU pending edges and held leases; run (not guest consumption)",
+    "debug-input-cancel-pending": "Cancel only unsent QEMU edges; run (accepted holds remain owned)",
     "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
     "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",
     "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
@@ -2052,6 +2059,8 @@ def parser():
     c.add_argument("--qemu-transport", choices=["unix", "pipe"],
                    help="Native QEMU control transport; pipe needs no Unix sockets")
     c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
+    c.add_argument("--qemu-clock", choices=["standard", "instruction"],
+                   help="Explicit native clock profile; instruction reports QEMU counts, not guest milliseconds")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")

@@ -162,7 +162,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
     def __init__(self, project, executable, game_dir, *, boot_image, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
-                 firmware=None, _on_spawn=None):
+                 firmware=None, clock_profile='standard', _on_spawn=None):
         from .dos_process_helper import build_loader
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
@@ -186,6 +186,8 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             raise ValueError('Native DOS process launch does not qualify secondary executable stubs')
         if type(boot_timeout_ms) is not int or not 1 <= boot_timeout_ms <= 600000:
             raise ValueError('DOS process startup timeout must be 1..600000 ms')
+        from .qemu_clock import machine_clock_configuration
+        machine_clock_configuration(clock_profile, 1)
         if not isinstance(arguments, str):
             raise ValueError('DOS arguments must be a CP437 command-tail string')
         try:
@@ -231,7 +233,8 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                 boot_image_sha256=staged['prepared_boot_image']['sha256'], paused=True,
                 cpu_model=profile['machine']['cpu'], memory_mib=profile['machine']['memory_mib'],
                 cpus=1, boot_device=profile['machine']['boot_device'],
-                timeout_ms=self._remaining(), transport=transport, firmware=firmware, on_spawn=_on_spawn)
+                timeout_ms=self._remaining(), transport=transport, firmware=firmware,
+                clock_profile=clock_profile, on_spawn=_on_spawn)
             MachineContext.__init__(self, vm)
             self.rpc = vm
             vm.context = self
@@ -523,8 +526,10 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
         return result
 
     def _execute(self, command, timeout_ms):
-        if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
-            raise ValueError('Machine timeout must be 1..600000 ms')
+        # A rejected queued-input/transaction request has not executed the
+        # guest. Preserve its live process and queue for an explicit run or
+        # cancellation; only failures after dispatch enter terminal cleanup.
+        self._execution_preflight(command, timeout_ms)
         try:
             result = MachineContext._execute(self, command, timeout_ms)
         except BaseException:

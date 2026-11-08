@@ -248,3 +248,20 @@ def test_execution_has_one_extra_recovery_window_but_never_replays(clock, recove
         assert clock.now == pytest.approx(105.04)
         assert remote.socket is None and wire.closed
     assert wire.requests == [b'c'] and wire.interrupts == [5]
+
+
+def test_live_control_callback_consumes_the_same_execution_budget(clock):
+    remote, wire = client('gdb', clock)
+    remote.operation_deadline = clock.now + .04
+    called = []
+
+    def dispatch(deadline):
+        assert wire.requests == [b'c']
+        called.append(deadline)
+        clock.advance(.04)
+
+    reply, expired = remote.execute('c', 2000, after_send=dispatch)
+    assert reply == b'T05thread:01;' and expired
+    assert called == [pytest.approx(100.04)]
+    assert wire.requests == [b'c'] and wire.interrupts == [5]
+    assert clock.now == pytest.approx(100.04)
