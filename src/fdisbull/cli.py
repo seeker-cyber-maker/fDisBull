@@ -180,6 +180,7 @@ METHODS = {
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
+    "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
     "runtime-version-info": "Inspect temporal capture/edit provenance for a byte version; [version]",
     "debug-controls": "Inspect owned breakpoint/watch/hook definitions for experiment capture; run",
@@ -359,20 +360,20 @@ METHODS = {
     "genesis-replay-export": "Capture semantic UIL and a locked NES or Genesis build in a new private bundle; path,output,[target,cc65_root,m68k_root,variant,procedures]",
     "genesis-replay-inspect": "Check private replay payload integrity without executing tools or trusting qualification claims; path",
     "genesis-replay-build": "Replay a registered bundle with exact original ROM and explicit trusted target compiler; path,output,rom_path,[target,cc65_root,m68k_root]",
-    'shadowrun-systems': 'List recovered Shadowrun procedural components and whole-game gaps; no parameters',
-    'shadowrun-play-build': 'Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output',
-    'shadowrun-ai-profiles': 'List source-bound Shadowrun actor/combat profiles and their limits',
-    'shadowrun-ai-build': 'Build a private Shadowrun AI NES or native macOS ARM64 profile; path,rom_path,capture,output,[cc65_root,profile,preset,target]',
-    'shadowrun-snes-build': 'Build the private prepared SNES opening scene as a native ARM64 movement study; rom_path,ram,save_ram,output',
-    'shadowrun-city-export': 'Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output',
-    'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
-    'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
-    'shadowrun-system-build-check': 'Compile finite scalar UIL cases to a headless NES check cartridge; path,rom_path,procedure,cases_path,cc65_root,output',
-    'shadowrun-opening-profiles': 'List the bounded Shadowrun Genesis opening and Stoker projection profile; no parameters',
-    'shadowrun-opening-export': 'Export a source-bound Shadowrun opening GameIL and private capture/atlas bundle; rom_path,snapshot,atlas,output',
-    'shadowrun-opening-inspect': 'Verify a private Shadowrun opening bundle integrity without executing tools; path',
-    'shadowrun-opening-build': 'Build a registered Shadowrun opening bundle for NES with exact ROM and explicit cc65 root; path,rom_path,cc65_root,output',
-    'shadowrun-opening-animation-build': 'Build the separate right-only animated NES probe; path,rom_path,capture,cc65_root,output',
+    "shadowrun-systems": "List recovered Shadowrun procedural components and whole-game gaps; no parameters",
+    "shadowrun-play-build": "Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output",
+    "shadowrun-ai-profiles": "List source-bound Shadowrun actor/combat profiles and their limits",
+    "shadowrun-ai-build": "Build a private Shadowrun AI NES or native macOS ARM64 profile; path,rom_path,capture,output,[cc65_root,profile,preset,target]",
+    "shadowrun-snes-build": "Build the private prepared SNES opening scene as a native ARM64 movement study; rom_path,ram,save_ram,output",
+    "shadowrun-city-export": "Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output",
+    "shadowrun-system-export": "Export one registered source-bound component as UIL; rom_path,system,output",
+    "shadowrun-system-inspect": "Validate a private Shadowrun component bundle; path",
+    "shadowrun-system-build-check": "Compile finite scalar UIL cases to a headless NES check cartridge; path,rom_path,procedure,cases_path,cc65_root,output",
+    "shadowrun-opening-profiles": "List the bounded Shadowrun Genesis opening and Stoker projection profile; no parameters",
+    "shadowrun-opening-export": "Export a source-bound Shadowrun opening GameIL and private capture/atlas bundle; rom_path,snapshot,atlas,output",
+    "shadowrun-opening-inspect": "Verify a private Shadowrun opening bundle integrity without executing tools; path",
+    "shadowrun-opening-build": "Build a registered Shadowrun opening bundle for NES with exact ROM and explicit cc65 root; path,rom_path,cc65_root,output",
+    "shadowrun-opening-animation-build": "Build the separate right-only animated NES probe; path,rom_path,capture,cc65_root,output",
     "nes-multicart-profiles": "List bounded NES packaging UDC profiles and compatibility requirements",
     "nes-multicart-inspect": "Inspect NES cartridge mapper and bank geometry without assuming a game count; path",
     "nes-multicart-build": "Package two compatible authored NROM cartridges behind a bank-switching menu; inputs,output,authored_compatible",
@@ -409,8 +410,10 @@ METHODS = {
 }
 
 from .udc_api import METHODS as BLOCK_METHODS
+
 METHODS.update(BLOCK_METHODS)
 from .source_api import METHODS as SOURCE_METHODS
+
 METHODS.update(SOURCE_METHODS)
 METHODS["source-info"] = (
     "Recorded target size/SHA-256, loader provenance and current availability; [version]; "
@@ -435,6 +438,7 @@ def invoke(method, params, debugger=None):
     p = dict(params)
     if source_catalog_request(method, p):
         from .source_api import invoke as source_invoke
+
         return source_invoke(method, p)
     if method.startswith("uil-"):
         from .uil_api import invoke_common
@@ -606,35 +610,50 @@ def invoke(method, params, debugger=None):
         from .doctor import doctor
 
         return doctor(**p)
+    if method == "preflight":
+        from .preflight import preflight
+
+        return preflight(**p)
     if method == "capabilities":
         from .capabilities import capabilities
 
         return capabilities(**p)
     if method in ("macos-snapshot", "macos-session", "macos-session-recover"):
         from .macos_capture import NativeCapture
+
         native = NativeCapture()
         if method == "macos-snapshot":
             if set(p) != {"bundle_id"} or not isinstance(p["bundle_id"], str):
                 raise ValueError("macos-snapshot requires only bundle_id")
             return native("snapshot", **p)
         from .macos_session import run_session, recover_session
-        return (run_session if method == "macos-session" else recover_session)(native=native, **p)
+
+        return (run_session if method == "macos-session" else recover_session)(
+            native=native, **p
+        )
     if method in ("decoder-modules", "module-analyze", "module-lift"):
         from .decoder_modules import analyze_input, builtin_registry, lift_input
+
         registry = builtin_registry()
         if method == "decoder-modules":
             if p:
                 raise ValueError("decoder-modules takes no parameters")
-            return {"format": "fdisbull-decoder-modules-1", "modules": registry.catalog(),
-                    "registration": "explicit trusted in-process objects; no automatic imports"}
+            return {
+                "format": "fdisbull-decoder-modules-1",
+                "modules": registry.catalog(),
+                "registration": "explicit trusted in-process objects; no automatic imports",
+            }
         identity, path = p.pop("module"), p.pop("path")
         limit = p.pop("max_instructions", 40 if method == "module-analyze" else 128)
         if method == "module-analyze":
             address = p.pop("address", None)
             if p.get("function_index") is None:
                 p.pop("function_index", None)
-            return analyze_input(registry.open(identity, path, **p),
-                                 address=address, max_instructions=limit)
+            return analyze_input(
+                registry.open(identity, path, **p),
+                address=address,
+                max_instructions=limit,
+            )
         state_file = p.pop("state_file", None)
         if state_file is not None:
             if "initial_state" in p:
@@ -646,23 +665,44 @@ def invoke(method, params, debugger=None):
             p["initial_state"] = json.loads(raw)
         initial_state = p.pop("initial_state")
         call_depth = p.pop("max_call_depth", None)
-        control_flow, allow_opaque = p.pop("control_flow", None), p.pop("allow_opaque", None)
+        control_flow, allow_opaque = (
+            p.pop("control_flow", None),
+            p.pop("allow_opaque", None),
+        )
         effect_profile = p.pop("effect_profile", None)
-        return lift_input(registry.open(identity, path, **p),
-                          initial_state=initial_state, max_instructions=limit,
-                          max_call_depth=call_depth, control_flow=control_flow,
-                          allow_opaque=allow_opaque, effect_profile=effect_profile)
+        return lift_input(
+            registry.open(identity, path, **p),
+            initial_state=initial_state,
+            max_instructions=limit,
+            max_call_depth=call_depth,
+            control_flow=control_flow,
+            allow_opaque=allow_opaque,
+            effect_profile=effect_profile,
+        )
     if method in ("zmachine-disasm", "zmachine-analyze"):
         from .zmachine_analysis import analyze_story, disassemble_story
 
         operation = disassemble_story if method == "zmachine-disasm" else analyze_story
         return operation(**p)
-    if method in ("le-driver-inspect", "le-driver-disasm", "qemm-config", "qemm-profile", "qpi-probe", "qpi-report"):
+    if method in (
+        "le-driver-inspect",
+        "le-driver-disasm",
+        "qemm-config",
+        "qemm-profile",
+        "qpi-probe",
+        "qpi-report",
+    ):
         from .qemm_tools import invoke as qemm_invoke
 
         return qemm_invoke(method, p)
-    if method in ('desqview-profile','desqview-probe','desqview-report','desqview-module-inspect'):
+    if method in (
+        "desqview-profile",
+        "desqview-probe",
+        "desqview-report",
+        "desqview-module-inspect",
+    ):
         from .desqview_runtime import invoke as desqview_invoke
+
         return desqview_invoke(method, p)
     from .project import Project, number
 
@@ -769,97 +809,131 @@ def invoke(method, params, debugger=None):
         return inspect_logic(**p)
     if method == "agi-scenes":
         from .agi_scenes import inspect_scenes
+
         return inspect_scenes(**p)
     if method == "kq1-bow-intents":
         from .kq1_bow import export_bow
+
         return export_bow(**p)
     if method == "kq1-bow-evaluate":
         from .court_adapter import evaluate_bow
+
         return evaluate_bow(**p)
-    if method=='disc-inspect':
+    if method == "disc-inspect":
         from .disc import inspect_disc_path
+
         return inspect_disc_path(**p)
-    if method=='console-udc':
+    if method == "console-udc":
         from .console_udc import compile_console_path
+
         return compile_console_path(**p)
-    if method=='rom-game-lift':
+    if method == "rom-game-lift":
         from .udl_miniplanets_full import lift_game_path
+
         return lift_game_path(**p)
-    if method.startswith('nes-multicart-'):
+    if method.startswith("nes-multicart-"):
         from . import nes_multicart
-        if method=='nes-multicart-profiles':
-            if p:raise ValueError('nes-multicart-profiles accepts no parameters')
+
+        if method == "nes-multicart-profiles":
+            if p:
+                raise ValueError("nes-multicart-profiles accepts no parameters")
             return nes_multicart.multicart_profiles()
-        handler={'nes-multicart-inspect':nes_multicart.inspect_multicart_path,
-                 'nes-multicart-build':nes_multicart.build_multicart}.get(method)
-        if handler is not None:return handler(**p)
-    if method.startswith('genesis-replay-'):
+        handler = {
+            "nes-multicart-inspect": nes_multicart.inspect_multicart_path,
+            "nes-multicart-build": nes_multicart.build_multicart,
+        }.get(method)
+        if handler is not None:
+            return handler(**p)
+    if method.startswith("genesis-replay-"):
         from . import udc_genesis
-        if method=='genesis-replay-profiles':
-            if p:raise ValueError('genesis-replay-profiles accepts no parameters')
+
+        if method == "genesis-replay-profiles":
+            if p:
+                raise ValueError("genesis-replay-profiles accepts no parameters")
             return udc_genesis.translation_profiles()
-        handler={'genesis-replay-source':udc_genesis.inspect_translation_source,
-                 'genesis-replay-export':udc_genesis.write_translation,
-                 'genesis-replay-inspect':udc_genesis.inspect_translation_bundle,
-                 'genesis-replay-build':udc_genesis.replay_translation}.get(method)
-        if handler is not None:return handler(**p)
-    if method=='shadowrun-snes-build':
+        handler = {
+            "genesis-replay-source": udc_genesis.inspect_translation_source,
+            "genesis-replay-export": udc_genesis.write_translation,
+            "genesis-replay-inspect": udc_genesis.inspect_translation_bundle,
+            "genesis-replay-build": udc_genesis.replay_translation,
+        }.get(method)
+        if handler is not None:
+            return handler(**p)
+    if method == "shadowrun-snes-build":
         from .shadowrun_snes_macos import build
+
         return build(**p)
-    if method.startswith('shadowrun-ai-'):
+    if method.startswith("shadowrun-ai-"):
         from . import shadowrun_ai
-        if method=='shadowrun-ai-profiles':
-            if p:raise ValueError('shadowrun-ai-profiles accepts no parameters')
+
+        if method == "shadowrun-ai-profiles":
+            if p:
+                raise ValueError("shadowrun-ai-profiles accepts no parameters")
             return shadowrun_ai.profiles()
-        if method=='shadowrun-ai-build':return shadowrun_ai.build(**p)
-    if method=='shadowrun-play-build':
+        if method == "shadowrun-ai-build":
+            return shadowrun_ai.build(**p)
+    if method == "shadowrun-play-build":
         from .shadowrun_nes_play import build_play
-        path=p.pop('path')
-        return build_play(path,**p)
-    if method=='shadowrun-city-export':
+
+        path = p.pop("path")
+        return build_play(path, **p)
+    if method == "shadowrun-city-export":
         from .shadowrun_city_view import export_city
+
         return export_city(**p)
-    if method=='shadowrun-systems' or method.startswith('shadowrun-system-'):
+    if method == "shadowrun-systems" or method.startswith("shadowrun-system-"):
         from . import shadowrun_systems
-        if method=='shadowrun-systems':
-            if p:raise ValueError('shadowrun-systems accepts no parameters')
+
+        if method == "shadowrun-systems":
+            if p:
+                raise ValueError("shadowrun-systems accepts no parameters")
             return shadowrun_systems.catalog()
-        if method=='shadowrun-system-export':return shadowrun_systems.export_system(**p)
-        if method=='shadowrun-system-inspect':
-            path=p.pop('path')
-            if p:raise ValueError('shadowrun-system-inspect accepts only path')
+        if method == "shadowrun-system-export":
+            return shadowrun_systems.export_system(**p)
+        if method == "shadowrun-system-inspect":
+            path = p.pop("path")
+            if p:
+                raise ValueError("shadowrun-system-inspect accepts only path")
             return shadowrun_systems.inspect_system(path)
-        if method=='shadowrun-system-build-check':
-            path=p.pop('path')
-            return shadowrun_systems.build_system_check(path,**p)
-    if method.startswith('shadowrun-opening-'):
+        if method == "shadowrun-system-build-check":
+            path = p.pop("path")
+            return shadowrun_systems.build_system_check(path, **p)
+    if method.startswith("shadowrun-opening-"):
         from . import shadowrun_replay
-        if method=='shadowrun-opening-profiles':
-            if p:raise ValueError('shadowrun-opening-profiles accepts no parameters')
+
+        if method == "shadowrun-opening-profiles":
+            if p:
+                raise ValueError("shadowrun-opening-profiles accepts no parameters")
             return shadowrun_replay.profiles()
-        if method=='shadowrun-opening-export':
+        if method == "shadowrun-opening-export":
             return shadowrun_replay.export_opening(**p)
-        if method=='shadowrun-opening-inspect':
-            path=p.pop('path')
-            if p:raise ValueError('shadowrun-opening-inspect accepts only path')
+        if method == "shadowrun-opening-inspect":
+            path = p.pop("path")
+            if p:
+                raise ValueError("shadowrun-opening-inspect accepts only path")
             return shadowrun_replay.inspect_opening(path)
-        if method=='shadowrun-opening-build':
-            path=p.pop('path')
-            return shadowrun_replay.build_opening(path,**p)
-        if method=='shadowrun-opening-animation-build':
-            path=p.pop('path')
-            return shadowrun_replay.build_animated_opening(path,**p)
-    if method=='console-udc-targets':
+        if method == "shadowrun-opening-build":
+            path = p.pop("path")
+            return shadowrun_replay.build_opening(path, **p)
+        if method == "shadowrun-opening-animation-build":
+            path = p.pop("path")
+            return shadowrun_replay.build_animated_opening(path, **p)
+    if method == "console-udc-targets":
         from .console_udc import console_targets
-        if p:raise ValueError('console-udc-targets accepts no parameters')
+
+        if p:
+            raise ValueError("console-udc-targets accepts no parameters")
         return console_targets()
-    if method=='rom-disasm':
+    if method == "rom-disasm":
         from .rom_asm import disassemble_rom_path
+
         return disassemble_rom_path(**p)
-    if method=='rom-inspect':
+    if method == "rom-inspect":
         from .roms import inspect_rom_path
-        path=p.pop('path')
-        if p:raise ValueError('rom-inspect accepts only path')
+
+        path = p.pop("path")
+        if p:
+            raise ValueError("rom-inspect accepts only path")
         return inspect_rom_path(path)
     if method in ("identify", "inspect"):
         from .inspection import identify_header, inspect_binary
@@ -966,10 +1040,20 @@ def invoke(method, params, debugger=None):
         with Project.create(project, binary, **p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('memory-snapshot-info', 'memory-search-start', 'memory-search-refine',
-                      'memory-search-results', 'memory-edit-plan', 'memory-rule-create', 'memory-rule-info',
-                      'event-search-start', 'event-search-refine', 'event-search-results', 'event-trace-query'):
-            return getattr(db, method.replace('-', '_'))(**p)
+        if method in (
+            "memory-snapshot-info",
+            "memory-search-start",
+            "memory-search-refine",
+            "memory-search-results",
+            "memory-edit-plan",
+            "memory-rule-create",
+            "memory-rule-info",
+            "event-search-start",
+            "event-search-refine",
+            "event-search-results",
+            "event-trace-query",
+        ):
+            return getattr(db, method.replace("-", "_"))(**p)
         if method in (
             "code-backings",
             "code-blocks",
@@ -994,7 +1078,8 @@ def invoke(method, params, debugger=None):
             return getattr(db, method.replace("-", "_"))(**p)
         if method in BLOCK_METHODS:
             from .udc_api import invoke as invoke_block
-            return invoke_block(db,method,p)
+
+            return invoke_block(db, method, p)
         if method in ("source-info", "source-candidate", "bind-source"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
@@ -1318,36 +1403,40 @@ def respond(request, default_project=None, debugger=None):
             and "path" in params
         )
         standalone = standalone or request["method"] in {
-            'console-udc',
-            'console-udc-targets',
-            'disc-inspect',
-            'genesis-replay-build',
-            'genesis-replay-export',
-            'genesis-replay-inspect',
-            'genesis-replay-profiles',
-            'genesis-replay-source',
-            'nes-multicart-build',
-            'nes-multicart-inspect',
-            'nes-multicart-profiles',
-            'rom-disasm',
-            'rom-game-lift',
-            'rom-inspect',
-            'shadowrun-ai-build',
-            'shadowrun-ai-profiles',
-            'shadowrun-city-export',
-            'shadowrun-opening-animation-build',
-            'shadowrun-opening-build',
-            'shadowrun-opening-export',
-            'shadowrun-opening-inspect',
-            'shadowrun-opening-profiles',
-            'shadowrun-play-build',
-            'shadowrun-snes-build',
-            'shadowrun-system-build-check',
-            'shadowrun-system-export',
-            'shadowrun-system-inspect',
-            'shadowrun-systems',
+            "console-udc",
+            "console-udc-targets",
+            "disc-inspect",
+            "genesis-replay-build",
+            "genesis-replay-export",
+            "genesis-replay-inspect",
+            "genesis-replay-profiles",
+            "genesis-replay-source",
+            "nes-multicart-build",
+            "nes-multicart-inspect",
+            "nes-multicart-profiles",
+            "rom-disasm",
+            "rom-game-lift",
+            "rom-inspect",
+            "shadowrun-ai-build",
+            "shadowrun-ai-profiles",
+            "shadowrun-city-export",
+            "shadowrun-opening-animation-build",
+            "shadowrun-opening-build",
+            "shadowrun-opening-export",
+            "shadowrun-opening-inspect",
+            "shadowrun-opening-profiles",
+            "shadowrun-play-build",
+            "shadowrun-snes-build",
+            "shadowrun-system-build-check",
+            "shadowrun-system-export",
+            "shadowrun-system-inspect",
+            "shadowrun-systems",
         }
-        standalone = standalone or request["method"] in {"agi-scenes", "kq1-bow-intents", "kq1-bow-evaluate"}
+        standalone = standalone or request["method"] in {
+            "agi-scenes",
+            "kq1-bow-intents",
+            "kq1-bow-evaluate",
+        }
         if default_project is not None and isinstance(params, dict) and not standalone:
             params = {"project": default_project, **params}
         result = invoke(request["method"], params, debugger)
@@ -1377,9 +1466,11 @@ def respond(request, default_project=None, debugger=None):
             "error": {"type": type(e).__name__, "message": str(e)},
         }
         from .udc_layers import LayerQualificationError
+
         if isinstance(e, LayerQualificationError):
             value["error"]["qualification"] = e.receipt
         from .execution_trace import ExecutionTraceError
+
         if isinstance(e, ExecutionTraceError):
             value["error"]["result"] = e.result
     return (policy or OutputPolicy()).bound(value)
@@ -1451,12 +1542,32 @@ def serve(default_project=None, debug_launch=None):
         debugger.close()
 
 
+class _VersionJsonAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=0, **kwargs):
+        super().__init__(option_strings, dest, nargs=nargs, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        from .runtime_identity import identity
+
+        print(
+            json.dumps(
+                identity(), sort_keys=True, separators=(",", ":"), allow_nan=False
+            )
+        )
+        parser.exit()
+
+
 def parser():
     root = argparse.ArgumentParser(
         prog="fdisbull",
         description="Agent-first disassembly with SQLite persistence and headless image export",
     )
     root.add_argument("--version", action="version", version=__version__)
+    root.add_argument(
+        "--version-json",
+        action=_VersionJsonAction,
+        help="Print the full runtime identity as one JSON object and exit",
+    )
     root.add_argument(
         "--max-output-bytes",
         type=int,
@@ -1471,12 +1582,24 @@ def parser():
         help="Retain one native guest and reload explicitly trusted local Z actions",
     )
     c.add_argument("project", help="Existing private fDisBull project")
-    c.add_argument("--executable", required=True, help="Prepared native debugger backend")
-    c.add_argument("--game-dir", required=True, help="Private writable target directory")
-    c.add_argument("--actions", required=True, help="Trusted Python ACTIONS module; executes local code")
-    c.add_argument("--root", help="Private action workspace; defaults to the actions directory")
+    c.add_argument(
+        "--executable", required=True, help="Prepared native debugger backend"
+    )
+    c.add_argument(
+        "--game-dir", required=True, help="Private writable target directory"
+    )
+    c.add_argument(
+        "--actions",
+        required=True,
+        help="Trusted Python ACTIONS module; executes local code",
+    )
+    c.add_argument(
+        "--root", help="Private action workspace; defaults to the actions directory"
+    )
     c.add_argument("--version-id", type=int, help="Selected project version")
-    c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"], default="assisted")
+    c.add_argument(
+        "--spatial-mode", choices=["physical", "assisted", "story"], default="assisted"
+    )
     for name in ("output-info", "output-read", "output-select", "output-export"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("artifact")
@@ -1583,9 +1706,14 @@ def parser():
             default=[],
         )
         if name == "il-run":
-            c.add_argument("--effect-context", help="Private explicit object/resource model context")
+            c.add_argument(
+                "--effect-context",
+                help="Private explicit object/resource model context",
+            )
             c.add_argument("--checkpoint", help="Private suspended model invocation")
-            c.add_argument("--host-result", help="Matching explicit host completion result")
+            c.add_argument(
+                "--host-result", help="Matching explicit host completion result"
+            )
             c.add_argument("--max-steps", type=int, default=1024)
             c.add_argument("--max-call-depth", type=int, default=8)
     c = sub.add_parser(
@@ -1791,7 +1919,11 @@ def parser():
             c.add_argument("definition_file")
             c.add_argument("--parent")
             c.add_argument("--author", default="agent")
-        elif name in ("debug-scene-info", "debug-scene-domain-audit", "debug-scene-overlay"):
+        elif name in (
+            "debug-scene-info",
+            "debug-scene-domain-audit",
+            "debug-scene-overlay",
+        ):
             c.add_argument("scene")
             if name == "debug-scene-domain-audit":
                 c.add_argument("--max-checks", type=int, default=4096)
@@ -1830,108 +1962,201 @@ def parser():
     c = sub.add_parser("macos-session", help=METHODS["macos-session"])
     c.add_argument("bundle_id")
     c.add_argument("output")
-    c.add_argument("--live", action="store_true", help="Explicitly permit the selected status-menu action and declared preference changes")
+    c.add_argument(
+        "--live",
+        action="store_true",
+        help="Explicitly permit the selected status-menu action and declared preference changes",
+    )
     c.add_argument("--status-index", type=int)
     c.add_argument("--display-id", type=int)
-    c.add_argument("--rect", type=json.loads, help="Global CoreGraphics logical rectangle as JSON {x,y,width,height}")
+    c.add_argument(
+        "--rect",
+        type=json.loads,
+        help="Global CoreGraphics logical rectangle as JSON {x,y,width,height}",
+    )
     c.add_argument("--keys", action="append", default=[])
-    c.add_argument("--preference-changes", type=json.loads, help="Explicit key-to-binary-plist values as JSON; null removes a key")
+    c.add_argument(
+        "--preference-changes",
+        type=json.loads,
+        help="Explicit key-to-binary-plist values as JSON; null removes a key",
+    )
     c.add_argument("--max-seconds", type=float, default=30)
     c = sub.add_parser("macos-session-recover", help=METHODS["macos-session-recover"])
     c.add_argument("output")
-    c=sub.add_parser('rom-inspect',help=METHODS['rom-inspect'])
-    c.add_argument('path')
-    sub.add_parser('console-udc-targets',help=METHODS['console-udc-targets'])
-    c=sub.add_parser('console-udc',help=METHODS['console-udc'])
-    c.add_argument('path')
-    c.add_argument('--target',choices=['nes','genesis'],required=True)
-    c.add_argument('--output',required=True)
-    c.add_argument('--display-variable')
-    c.add_argument('--scene',dest='scene_path',help='optional NES level scene JSON')
-    c.add_argument('--region',dest='region_path',help='original immutable ROM region for a procedural game profile')
-    c.add_argument('--cc65-root',help='prepared external cc65 toolchain for the banked procedural game profile')
-    c.add_argument('--m68k-root',help='prepared external m68k-elf toolchain for the full Genesis procedural profile')
-    c=sub.add_parser('rom-game-lift',help=METHODS['rom-game-lift'])
-    c.add_argument('path');c.add_argument('--output',required=True)
-    c.add_argument('--variant',choices=['efficient','baseline'],default='efficient')
-    sub.add_parser('genesis-replay-profiles',help=METHODS['genesis-replay-profiles'])
-    for name in ('genesis-replay-source','genesis-replay-inspect'):
-        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('path')
-    c=sub.add_parser('genesis-replay-export',help=METHODS['genesis-replay-export'])
-    c.add_argument('path');c.add_argument('--output',required=True)
-    c.add_argument('--target',choices=['nes','genesis'],default='nes')
-    c.add_argument('--cc65-root');c.add_argument('--m68k-root')
-    c.add_argument('--variant',choices=['efficient','baseline'],default='efficient')
-    c.add_argument('--procedures',type=json.loads,help='JSON map of reviewed procedure names to baseline/efficient')
-    c=sub.add_parser('genesis-replay-build',help=METHODS['genesis-replay-build'])
-    c.add_argument('path');c.add_argument('--output',required=True)
-    c.add_argument('--rom',dest='rom_path',required=True)
-    c.add_argument('--target',choices=['nes','genesis'],default='nes')
-    c.add_argument('--cc65-root');c.add_argument('--m68k-root')
-    sub.add_parser('shadowrun-systems',help=METHODS['shadowrun-systems'])
-    c=sub.add_parser('shadowrun-play-build',help=METHODS['shadowrun-play-build'])
-    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
-    c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
-    sub.add_parser('shadowrun-ai-profiles',help=METHODS['shadowrun-ai-profiles'])
-    c=sub.add_parser('shadowrun-snes-build',help=METHODS['shadowrun-snes-build'])
-    c.add_argument('--rom',dest='rom_path',required=True)
-    c.add_argument('--ram',required=True);c.add_argument('--save-ram',required=True)
-    c.add_argument('--output',required=True)
-    c=sub.add_parser('shadowrun-ai-build',help=METHODS['shadowrun-ai-build'])
-    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
-    c.add_argument('--cc65-root');c.add_argument('--output',required=True)
-    c.add_argument('--profile',choices=['assisted-arena','captured-courtyard'],default='assisted-arena')
-    c.add_argument('--preset',choices=['stationary','moving','courtyard'])
-    c.add_argument('--target',choices=['nes','macos-arm64'])
-    c=sub.add_parser('shadowrun-city-export',help=METHODS['shadowrun-city-export'])
-    c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--output',required=True)
-    c.add_argument('--profile',choices=['static','assisted-arena'],default='static')
-    c.add_argument('--preset',choices=['stationary','moving'],default='stationary')
-    c=sub.add_parser('shadowrun-z',help='Serve a prepared Shadowrun model through the text-player protocol')
-    c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--policy',choices=['physical','assisted'],default='physical')
-    c.add_argument('--profile',choices=['static','assisted-arena'],default='static')
-    c.add_argument('--preset',choices=['stationary','moving'],default='stationary')
-    c=sub.add_parser('shadowrun-system-export',help=METHODS['shadowrun-system-export'])
-    c.add_argument('rom_path');c.add_argument('--system',required=True);c.add_argument('--output',required=True)
-    c=sub.add_parser('shadowrun-system-inspect',help=METHODS['shadowrun-system-inspect'])
-    c.add_argument('path')
-    c=sub.add_parser('shadowrun-system-build-check',help=METHODS['shadowrun-system-build-check'])
-    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--procedure',required=True)
-    c.add_argument('--cases',dest='cases_path',required=True);c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
-    sub.add_parser('shadowrun-opening-profiles',help=METHODS['shadowrun-opening-profiles'])
-    c=sub.add_parser('shadowrun-opening-export',help=METHODS['shadowrun-opening-export'])
-    c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--atlas',required=True);c.add_argument('--output',required=True)
-    c=sub.add_parser('shadowrun-opening-inspect',help=METHODS['shadowrun-opening-inspect'])
-    c.add_argument('path')
-    c=sub.add_parser('shadowrun-opening-build',help=METHODS['shadowrun-opening-build'])
-    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
-    c=sub.add_parser('shadowrun-opening-animation-build',help=METHODS['shadowrun-opening-animation-build'])
-    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
-    c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
-    sub.add_parser('nes-multicart-profiles',help=METHODS['nes-multicart-profiles'])
-    c=sub.add_parser('nes-multicart-inspect',help=METHODS['nes-multicart-inspect'])
-    c.add_argument('path')
-    c=sub.add_parser('nes-multicart-build',help=METHODS['nes-multicart-build'])
-    c.add_argument('inputs',nargs='+')
-    c.add_argument('--output',required=True)
-    c.add_argument('--authored-compatible',action='store_true',
-                   help='assert these authored NROM games use no PRG-ROM writes or cartridge RAM')
-    c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
-    c.add_argument('path')
-    c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')
-    c.add_argument('--backend',choices=['capstone','ghidra','saturn-recomp'],default='capstone')
-    c.add_argument('--offset',type=lambda s:int(s,0),default=0)
-    c.add_argument('--length',type=lambda s:int(s,0))
-    c.add_argument('--max-instructions',type=int,default=256)
-    c.add_argument('--mode',choices=['linear','word-scan'],default='linear')
-    c.add_argument('--ghidra-home');c.add_argument('--saturn-recomp-root')
-    c.add_argument('--timeout',type=float,default=60.0)
-    c=sub.add_parser('disc-inspect',help=METHODS['disc-inspect'])
-    c.add_argument('path')
-    c.add_argument('--mode',choices=['MODE1/2048','MODE1/2352'])
-    c.add_argument('--max-entries',type=int,default=10000)
-    c.add_argument('--max-directory-bytes',type=int,default=8*1024*1024)
-    c.add_argument('--max-depth',type=int,default=32)
+    c = sub.add_parser("rom-inspect", help=METHODS["rom-inspect"])
+    c.add_argument("path")
+    sub.add_parser("console-udc-targets", help=METHODS["console-udc-targets"])
+    c = sub.add_parser("console-udc", help=METHODS["console-udc"])
+    c.add_argument("path")
+    c.add_argument("--target", choices=["nes", "genesis"], required=True)
+    c.add_argument("--output", required=True)
+    c.add_argument("--display-variable")
+    c.add_argument("--scene", dest="scene_path", help="optional NES level scene JSON")
+    c.add_argument(
+        "--region",
+        dest="region_path",
+        help="original immutable ROM region for a procedural game profile",
+    )
+    c.add_argument(
+        "--cc65-root",
+        help="prepared external cc65 toolchain for the banked procedural game profile",
+    )
+    c.add_argument(
+        "--m68k-root",
+        help="prepared external m68k-elf toolchain for the full Genesis procedural profile",
+    )
+    c = sub.add_parser("rom-game-lift", help=METHODS["rom-game-lift"])
+    c.add_argument("path")
+    c.add_argument("--output", required=True)
+    c.add_argument("--variant", choices=["efficient", "baseline"], default="efficient")
+    sub.add_parser("genesis-replay-profiles", help=METHODS["genesis-replay-profiles"])
+    for name in ("genesis-replay-source", "genesis-replay-inspect"):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument("path")
+    c = sub.add_parser("genesis-replay-export", help=METHODS["genesis-replay-export"])
+    c.add_argument("path")
+    c.add_argument("--output", required=True)
+    c.add_argument("--target", choices=["nes", "genesis"], default="nes")
+    c.add_argument("--cc65-root")
+    c.add_argument("--m68k-root")
+    c.add_argument("--variant", choices=["efficient", "baseline"], default="efficient")
+    c.add_argument(
+        "--procedures",
+        type=json.loads,
+        help="JSON map of reviewed procedure names to baseline/efficient",
+    )
+    c = sub.add_parser("genesis-replay-build", help=METHODS["genesis-replay-build"])
+    c.add_argument("path")
+    c.add_argument("--output", required=True)
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--target", choices=["nes", "genesis"], default="nes")
+    c.add_argument("--cc65-root")
+    c.add_argument("--m68k-root")
+    sub.add_parser("shadowrun-systems", help=METHODS["shadowrun-systems"])
+    c = sub.add_parser("shadowrun-play-build", help=METHODS["shadowrun-play-build"])
+    c.add_argument("path")
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--capture", required=True)
+    c.add_argument("--cc65-root", required=True)
+    c.add_argument("--output", required=True)
+    sub.add_parser("shadowrun-ai-profiles", help=METHODS["shadowrun-ai-profiles"])
+    c = sub.add_parser("shadowrun-snes-build", help=METHODS["shadowrun-snes-build"])
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--ram", required=True)
+    c.add_argument("--save-ram", required=True)
+    c.add_argument("--output", required=True)
+    c = sub.add_parser("shadowrun-ai-build", help=METHODS["shadowrun-ai-build"])
+    c.add_argument("path")
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--capture", required=True)
+    c.add_argument("--cc65-root")
+    c.add_argument("--output", required=True)
+    c.add_argument(
+        "--profile",
+        choices=["assisted-arena", "captured-courtyard"],
+        default="assisted-arena",
+    )
+    c.add_argument("--preset", choices=["stationary", "moving", "courtyard"])
+    c.add_argument("--target", choices=["nes", "macos-arm64"])
+    c = sub.add_parser("shadowrun-city-export", help=METHODS["shadowrun-city-export"])
+    c.add_argument("rom_path")
+    c.add_argument("--snapshot", required=True)
+    c.add_argument("--output", required=True)
+    c.add_argument("--profile", choices=["static", "assisted-arena"], default="static")
+    c.add_argument("--preset", choices=["stationary", "moving"], default="stationary")
+    c = sub.add_parser(
+        "shadowrun-z",
+        help="Serve a prepared Shadowrun model through the text-player protocol",
+    )
+    c.add_argument("rom_path")
+    c.add_argument("--snapshot", required=True)
+    c.add_argument("--policy", choices=["physical", "assisted"], default="physical")
+    c.add_argument("--profile", choices=["static", "assisted-arena"], default="static")
+    c.add_argument("--preset", choices=["stationary", "moving"], default="stationary")
+    c = sub.add_parser(
+        "shadowrun-system-export", help=METHODS["shadowrun-system-export"]
+    )
+    c.add_argument("rom_path")
+    c.add_argument("--system", required=True)
+    c.add_argument("--output", required=True)
+    c = sub.add_parser(
+        "shadowrun-system-inspect", help=METHODS["shadowrun-system-inspect"]
+    )
+    c.add_argument("path")
+    c = sub.add_parser(
+        "shadowrun-system-build-check", help=METHODS["shadowrun-system-build-check"]
+    )
+    c.add_argument("path")
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--procedure", required=True)
+    c.add_argument("--cases", dest="cases_path", required=True)
+    c.add_argument("--cc65-root", required=True)
+    c.add_argument("--output", required=True)
+    sub.add_parser(
+        "shadowrun-opening-profiles", help=METHODS["shadowrun-opening-profiles"]
+    )
+    c = sub.add_parser(
+        "shadowrun-opening-export", help=METHODS["shadowrun-opening-export"]
+    )
+    c.add_argument("rom_path")
+    c.add_argument("--snapshot", required=True)
+    c.add_argument("--atlas", required=True)
+    c.add_argument("--output", required=True)
+    c = sub.add_parser(
+        "shadowrun-opening-inspect", help=METHODS["shadowrun-opening-inspect"]
+    )
+    c.add_argument("path")
+    c = sub.add_parser(
+        "shadowrun-opening-build", help=METHODS["shadowrun-opening-build"]
+    )
+    c.add_argument("path")
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--cc65-root", required=True)
+    c.add_argument("--output", required=True)
+    c = sub.add_parser(
+        "shadowrun-opening-animation-build",
+        help=METHODS["shadowrun-opening-animation-build"],
+    )
+    c.add_argument("path")
+    c.add_argument("--rom", dest="rom_path", required=True)
+    c.add_argument("--capture", required=True)
+    c.add_argument("--cc65-root", required=True)
+    c.add_argument("--output", required=True)
+    sub.add_parser("nes-multicart-profiles", help=METHODS["nes-multicart-profiles"])
+    c = sub.add_parser("nes-multicart-inspect", help=METHODS["nes-multicart-inspect"])
+    c.add_argument("path")
+    c = sub.add_parser("nes-multicart-build", help=METHODS["nes-multicart-build"])
+    c.add_argument("inputs", nargs="+")
+    c.add_argument("--output", required=True)
+    c.add_argument(
+        "--authored-compatible",
+        action="store_true",
+        help="assert these authored NROM games use no PRG-ROM writes or cartridge RAM",
+    )
+    c = sub.add_parser("rom-disasm", help=METHODS["rom-disasm"])
+    c.add_argument("path")
+    c.add_argument(
+        "--base-address",
+        type=lambda s: int(s, 0),
+        required=True,
+        help="explicit address mapping source file offset zero",
+    )
+    c.add_argument(
+        "--backend", choices=["capstone", "ghidra", "saturn-recomp"], default="capstone"
+    )
+    c.add_argument("--offset", type=lambda s: int(s, 0), default=0)
+    c.add_argument("--length", type=lambda s: int(s, 0))
+    c.add_argument("--max-instructions", type=int, default=256)
+    c.add_argument("--mode", choices=["linear", "word-scan"], default="linear")
+    c.add_argument("--ghidra-home")
+    c.add_argument("--saturn-recomp-root")
+    c.add_argument("--timeout", type=float, default=60.0)
+    c = sub.add_parser("disc-inspect", help=METHODS["disc-inspect"])
+    c.add_argument("path")
+    c.add_argument("--mode", choices=["MODE1/2048", "MODE1/2352"])
+    c.add_argument("--max-entries", type=int, default=10000)
+    c.add_argument("--max-directory-bytes", type=int, default=8 * 1024 * 1024)
+    c.add_argument("--max-depth", type=int, default=32)
     c = sub.add_parser("doctor", help=METHODS["doctor"])
     c.add_argument(
         "--backend", choices=["dosbox", "dosbox-qemu", "wine-qemu"], required=True
@@ -1941,6 +2166,9 @@ def parser():
     c.add_argument("--initramfs")
     c.add_argument("--output")
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
+    c = sub.add_parser("preflight", help=METHODS["preflight"])
+    c.add_argument("--expectations", required=True)
+    c.add_argument("--output")
     for name in ("le-driver-inspect", "le-driver-disasm"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
@@ -1948,7 +2176,9 @@ def parser():
             c.add_argument("object_number", type=lambda s: int(s, 0))
             c.add_argument("--offset", type=lambda s: int(s, 0), default=0)
             c.add_argument("--max-instructions", type=int, default=32)
-            c.add_argument("--abi", choices=["unknown", "windows-vxd"], default="unknown")
+            c.add_argument(
+                "--abi", choices=["unknown", "windows-vxd"], default="unknown"
+            )
     c = sub.add_parser("qemm-config", help=METHODS["qemm-config"])
     c.add_argument("--config-file")
     c.add_argument("--qemm-path", default=r"C:\QEMM\QEMM386.SYS")
@@ -1956,83 +2186,141 @@ def parser():
     c.add_argument("--validate-only", action="store_true")
     c = sub.add_parser("qemm-profile", help=METHODS["qemm-profile"])
     c.add_argument("boot_image")
-    c.add_argument("--config-sys", help="Optional host file to compare with the image's CONFIG.SYS")
-    c.add_argument("--driver-path", help="Optional host file to compare with the image's QEMM386.SYS")
+    c.add_argument(
+        "--config-sys", help="Optional host file to compare with the image's CONFIG.SYS"
+    )
+    c.add_argument(
+        "--driver-path",
+        help="Optional host file to compare with the image's QEMM386.SYS",
+    )
     c = sub.add_parser("qpi-probe", help=METHODS["qpi-probe"])
     c.add_argument("output")
     c.add_argument("--mode", choices=["breakpoint", "file"], default="breakpoint")
     c = sub.add_parser("qpi-report", help=METHODS["qpi-report"])
     c.add_argument("path")
     c.add_argument("--include-pages", action="store_true")
-    c = sub.add_parser('desqview-profile', help=METHODS['desqview-profile'])
-    c.add_argument('boot_image')
-    c.add_argument('--program', default=r'\DV\DV.EXE')
-    c.add_argument('--module', dest='modules', action='append')
-    c.add_argument('--qemm', action='store_true')
-    c.add_argument('--startup')
-    c = sub.add_parser('desqview-probe', help=METHODS['desqview-probe'])
-    c.add_argument('output')
-    c.add_argument('--mode', choices=['file','breakpoint'], default='file')
-    c.add_argument('--yields', type=int, default=0)
-    c.add_argument('--nonce')
-    c = sub.add_parser('desqview-report', help=METHODS['desqview-report'])
-    c.add_argument('path')
-    c = sub.add_parser('desqview-module-inspect', help=METHODS['desqview-module-inspect'])
-    c.add_argument('path')
-    c.add_argument('--expected-type')
-    c.add_argument('--expected-version', type=lambda value: int(value,0))
-    for name in ('memory-snapshot-info','memory-search-start','memory-search-refine','memory-search-results','memory-edit-plan','memory-rule-create','memory-rule-info'):
+    c = sub.add_parser("desqview-profile", help=METHODS["desqview-profile"])
+    c.add_argument("boot_image")
+    c.add_argument("--program", default=r"\DV\DV.EXE")
+    c.add_argument("--module", dest="modules", action="append")
+    c.add_argument("--qemm", action="store_true")
+    c.add_argument("--startup")
+    c = sub.add_parser("desqview-probe", help=METHODS["desqview-probe"])
+    c.add_argument("output")
+    c.add_argument("--mode", choices=["file", "breakpoint"], default="file")
+    c.add_argument("--yields", type=int, default=0)
+    c.add_argument("--nonce")
+    c = sub.add_parser("desqview-report", help=METHODS["desqview-report"])
+    c.add_argument("path")
+    c = sub.add_parser(
+        "desqview-module-inspect", help=METHODS["desqview-module-inspect"]
+    )
+    c.add_argument("path")
+    c.add_argument("--expected-type")
+    c.add_argument("--expected-version", type=lambda value: int(value, 0))
+    for name in (
+        "memory-snapshot-info",
+        "memory-search-start",
+        "memory-search-refine",
+        "memory-search-results",
+        "memory-edit-plan",
+        "memory-rule-create",
+        "memory-rule-info",
+    ):
         c = sub.add_parser(name, help=METHODS[name])
-        c.add_argument('project')
-        c.add_argument('snapshot' if name in ('memory-snapshot-info','memory-search-start') else 'rule' if name == 'memory-rule-info' else 'search')
-        if name == 'memory-search-refine':
-            c.add_argument('snapshot')
-            c.add_argument('--mode', required=True, choices=['equal','not_equal','changed','unchanged','increased','decreased','delta'])
-            c.add_argument('--value', type=int)
-            c.add_argument('--delta', type=int)
-            c.add_argument('--max-candidates', type=int, default=1048576)
-        elif name == 'memory-search-start':
-            c.add_argument('--mode', choices=['unknown','equal','range'], default='unknown')
-            c.add_argument('--width', type=int, choices=[1,2,4,8], default=1)
-            c.add_argument('--signed', action='store_true')
-            c.add_argument('--byteorder', choices=['little','big'], default='little')
-            c.add_argument('--stride', type=int, default=1)
-            c.add_argument('--bias', type=int, default=0)
-            c.add_argument('--value', type=int)
-            c.add_argument('--minimum', type=int)
-            c.add_argument('--maximum', type=int)
-            c.add_argument('--max-candidates', type=int, default=1048576)
-        elif name == 'memory-search-results':
-            c.add_argument('--offset', type=int, default=0)
-            c.add_argument('--limit', type=int, default=64)
-        elif name in ('memory-edit-plan','memory-rule-create'):
-            c.add_argument('--offset', type=int, required=True)
-            c.add_argument('--value', type=int, required=True)
-            c.add_argument('--condition', choices=['equal','not_equal','greater','greater_equal','less','less_equal','always'], default='always' if name == 'memory-rule-create' else 'equal')
-            c.add_argument('--compare-value', type=int)
-            if name == 'memory-rule-create':
-                c.add_argument('--max-applications', type=int, default=128)
-                c.add_argument('--max-ticks', type=int, default=4096)
-                c.add_argument('--name', default='memory-rule')
-    for name in ('event-search-start','event-search-refine','event-search-results','event-trace-query'):
+        c.add_argument("project")
+        c.add_argument(
+            "snapshot"
+            if name in ("memory-snapshot-info", "memory-search-start")
+            else "rule"
+            if name == "memory-rule-info"
+            else "search"
+        )
+        if name == "memory-search-refine":
+            c.add_argument("snapshot")
+            c.add_argument(
+                "--mode",
+                required=True,
+                choices=[
+                    "equal",
+                    "not_equal",
+                    "changed",
+                    "unchanged",
+                    "increased",
+                    "decreased",
+                    "delta",
+                ],
+            )
+            c.add_argument("--value", type=int)
+            c.add_argument("--delta", type=int)
+            c.add_argument("--max-candidates", type=int, default=1048576)
+        elif name == "memory-search-start":
+            c.add_argument(
+                "--mode", choices=["unknown", "equal", "range"], default="unknown"
+            )
+            c.add_argument("--width", type=int, choices=[1, 2, 4, 8], default=1)
+            c.add_argument("--signed", action="store_true")
+            c.add_argument("--byteorder", choices=["little", "big"], default="little")
+            c.add_argument("--stride", type=int, default=1)
+            c.add_argument("--bias", type=int, default=0)
+            c.add_argument("--value", type=int)
+            c.add_argument("--minimum", type=int)
+            c.add_argument("--maximum", type=int)
+            c.add_argument("--max-candidates", type=int, default=1048576)
+        elif name == "memory-search-results":
+            c.add_argument("--offset", type=int, default=0)
+            c.add_argument("--limit", type=int, default=64)
+        elif name in ("memory-edit-plan", "memory-rule-create"):
+            c.add_argument("--offset", type=int, required=True)
+            c.add_argument("--value", type=int, required=True)
+            c.add_argument(
+                "--condition",
+                choices=[
+                    "equal",
+                    "not_equal",
+                    "greater",
+                    "greater_equal",
+                    "less",
+                    "less_equal",
+                    "always",
+                ],
+                default="always" if name == "memory-rule-create" else "equal",
+            )
+            c.add_argument("--compare-value", type=int)
+            if name == "memory-rule-create":
+                c.add_argument("--max-applications", type=int, default=128)
+                c.add_argument("--max-ticks", type=int, default=4096)
+                c.add_argument("--name", default="memory-rule")
+    for name in (
+        "event-search-start",
+        "event-search-refine",
+        "event-search-results",
+        "event-trace-query",
+    ):
         c = sub.add_parser(name, help=METHODS[name])
-        c.add_argument('project')
-        c.add_argument('trace' if name in ('event-search-start','event-trace-query') else 'search')
-        if name == 'event-search-refine':
-            c.add_argument('trace')
-            c.add_argument('--mode', choices=['retain','exclude'], default='retain')
-        if name in ('event-search-start','event-search-refine','event-trace-query'):
-            c.add_argument('--predicate', type=json.loads, required=name=='event-trace-query')
-        if name in ('event-search-start','event-trace-query'):
-            c.add_argument('--regions', type=json.loads)
-        if name in ('event-search-start','event-search-refine'):
-            c.add_argument('--label', default='trial')
-        if name == 'event-search-start':
-            c.add_argument('--feature', choices=['site','register-value'], default='site')
-            c.add_argument('--register', dest='registers', action='append')
-        if name in ('event-search-results','event-trace-query'):
-            c.add_argument('--offset', type=int, default=0)
-            c.add_argument('--limit', type=int, default=64)
+        c.add_argument("project")
+        c.add_argument(
+            "trace" if name in ("event-search-start", "event-trace-query") else "search"
+        )
+        if name == "event-search-refine":
+            c.add_argument("trace")
+            c.add_argument("--mode", choices=["retain", "exclude"], default="retain")
+        if name in ("event-search-start", "event-search-refine", "event-trace-query"):
+            c.add_argument(
+                "--predicate", type=json.loads, required=name == "event-trace-query"
+            )
+        if name in ("event-search-start", "event-trace-query"):
+            c.add_argument("--regions", type=json.loads)
+        if name in ("event-search-start", "event-search-refine"):
+            c.add_argument("--label", default="trial")
+        if name == "event-search-start":
+            c.add_argument(
+                "--feature", choices=["site", "register-value"], default="site"
+            )
+            c.add_argument("--register", dest="registers", action="append")
+        if name in ("event-search-results", "event-trace-query"):
+            c.add_argument("--offset", type=int, default=0)
+            c.add_argument("--limit", type=int, default=64)
     c = sub.add_parser(
         "debug",
         help="Launch a project execution backend and accept live debugger JSON commands on stdin",
@@ -2040,17 +2328,37 @@ def parser():
     c.add_argument("project")
     c.add_argument("--executable", required=True)
     c.add_argument("--game-dir", required=True)
-    c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
+    c.add_argument(
+        "--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB"
+    )
     c.add_argument("--version", type=int)
-    c.add_argument("--guest-profile", choices=["qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
-                   help="Admit and pin a QEMM/DESQview raw DOS boot image (qemu-machine only; JSON accepts an explicit prepared profile)")
+    c.add_argument(
+        "--guest-profile",
+        choices=["qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
+        help="Admit and pin a QEMM/DESQview raw DOS boot image (qemu-machine only; JSON accepts an explicit prepared profile)",
+    )
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
-                 "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
+        choices=[
+            "dosbox",
+            "dosbox-qemu",
+            "wine-qemu",
+            "ida-wine-qemu",
+            "qemu-machine",
+            "wine-ne",
+            "scummvm-agi",
+            "scummvm-gob",
+            "scummvm-kyra",
+        ],
     )
-    c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")
-    c.add_argument("--language", help="Explicit Gob language code, for example us (English US) or it")
+    c.add_argument(
+        "--game-id",
+        help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol",
+    )
+    c.add_argument(
+        "--language",
+        help="Explicit Gob language code, for example us (English US) or it",
+    )
     c.add_argument("--platform", help="Explicit Gob game platform, for example dos")
     c.add_argument(
         "--remote-server",
@@ -2092,7 +2400,11 @@ def parser():
     ):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("project")
-        if name in ("debug-state-info", "debug-anchor-stone-info", "debug-experiment-info"):
+        if name in (
+            "debug-state-info",
+            "debug-anchor-stone-info",
+            "debug-experiment-info",
+        ):
             c.add_argument("artifact")
         elif name == "debug-trace-view":
             c.add_argument("artifact")
@@ -2140,9 +2452,15 @@ def parser():
                 c.add_argument("script", type=json.loads, help="JSON script object")
     sub.add_parser("media-modules", help=METHODS["media-modules"])
     c = sub.add_parser("format-modules", help=METHODS["format-modules"])
-    c.add_argument("--catalog", dest="catalog_path", help="Persist/reopen metadata-only SQLite format catalog")
+    c.add_argument(
+        "--catalog",
+        dest="catalog_path",
+        help="Persist/reopen metadata-only SQLite format catalog",
+    )
     c = sub.add_parser("intake-inventory", help=METHODS["intake-inventory"])
-    c.add_argument("paths", nargs="+", help="Explicit game/collection file or directory roots")
+    c.add_argument(
+        "paths", nargs="+", help="Explicit game/collection file or directory roots"
+    )
     c.add_argument("--catalog", dest="catalog_path")
     c.add_argument("--max-files", type=int, default=10000)
     c.add_argument("--max-read-bytes", type=int, default=256 * 1024 * 1024)
@@ -2154,9 +2472,21 @@ def parser():
     c.add_argument("--max-read-bytes", type=int)
     c = sub.add_parser("smk-frame", help=METHODS["smk-frame"])
     c.add_argument("path")
-    c.add_argument("output", help="New directory beneath an existing private parent outside Git")
-    c.add_argument("--keep-frames", type=int, default=32, help="Retain this many opening and ending images")
-    c.add_argument("--max-movie-bytes", dest="smk_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument(
+        "output", help="New directory beneath an existing private parent outside Git"
+    )
+    c.add_argument(
+        "--keep-frames",
+        type=int,
+        default=32,
+        help="Retain this many opening and ending images",
+    )
+    c.add_argument(
+        "--max-movie-bytes",
+        dest="smk_max_output_bytes",
+        type=int,
+        default=64 * 1024 * 1024,
+    )
     c.add_argument("--ffmpeg", default="ffmpeg")
     c.add_argument("--ffprobe", default="ffprobe")
     c.add_argument("--timeout", type=float, default=120)
@@ -2200,23 +2530,38 @@ def parser():
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
         from .media import media_modules
-        choices = tuple(item["name"] for item in media_modules()["modules"]
-                        if name in item["methods"])
+
+        choices = tuple(
+            item["name"]
+            for item in media_modules()["modules"]
+            if name in item["methods"]
+        )
         c.add_argument("--adapter", required=True, choices=choices)
         c.add_argument("--volume-root")
         c.add_argument("--number", type=int)
         source_choice = c.add_mutually_exclusive_group()
         source_choice.add_argument("--source-member", help="Unique HAG resource name")
-        source_choice.add_argument("--source-index", type=int, help="Exact HAG directory index for duplicate names")
+        source_choice.add_argument(
+            "--source-index",
+            type=int,
+            help="Exact HAG directory index for duplicate names",
+        )
         c.add_argument("--map-path", help="Explicit companion MM source")
         map_choice = c.add_mutually_exclusive_group()
         map_choice.add_argument("--map-member", help="Unique companion HAG member name")
-        map_choice.add_argument("--map-index", type=int, help="Exact companion HAG directory index")
-        c.add_argument("--expected-size", type=int, help="Decoded length required by raw FAB")
+        map_choice.add_argument(
+            "--map-index", type=int, help="Exact companion HAG directory index"
+        )
+        c.add_argument(
+            "--expected-size", type=int, help="Decoded length required by raw FAB"
+        )
         c.add_argument("--width", type=int, help="Explicit mask width")
         c.add_argument("--height", type=int, help="Explicit mask height")
         if name == "media-inspect":
-            c.add_argument("--index-path", help="Explicit TFTD VID companion IDX for structural cross-check")
+            c.add_argument(
+                "--index-path",
+                help="Explicit TFTD VID companion IDX for structural cross-check",
+            )
         if name == "media-extract":
             c.add_argument("output")
             c.add_argument("--member", required=True)
@@ -2387,7 +2732,9 @@ def parser():
     c.add_argument("package")
     c.add_argument("--state-file", required=True)
     c.add_argument("--event-file")
-    c = sub.add_parser("debug-spatial-domain-audit", help=METHODS["debug-spatial-domain-audit"])
+    c = sub.add_parser(
+        "debug-spatial-domain-audit", help=METHODS["debug-spatial-domain-audit"]
+    )
     c.add_argument("project")
     c.add_argument("revision")
     c.add_argument("--version", type=int)
@@ -2400,21 +2747,49 @@ def parser():
         c.add_argument("--volume-dir")
         c.add_argument("--logic", type=int)
         c.add_argument("--profile", choices=["2.917", "kyrandia1-dos", "lol1-dos"])
-        c.add_argument("--max-instructions", type=int, default=40 if name == "module-analyze" else 128)
+        c.add_argument(
+            "--max-instructions",
+            type=int,
+            default=40 if name == "module-analyze" else 128,
+        )
         if name == "module-analyze":
             c.add_argument("--address", type=lambda s: int(s, 0))
             c.add_argument("--function-index", type=int)
         else:
             c.add_argument("--state-file", required=True)
             c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
-            c.add_argument("--stop-offset", dest="stop_offsets", action="append", type=lambda s: int(s, 0))
-            c.add_argument("--stop-point", dest="stop_points", action="append", help="LOGIC:OFFSET component boundary")
-            c.add_argument("--callee-entry", dest="callee_entries", action="append", help="LOGIC:OFFSET cached scan-entry witness")
+            c.add_argument(
+                "--stop-offset",
+                dest="stop_offsets",
+                action="append",
+                type=lambda s: int(s, 0),
+            )
+            c.add_argument(
+                "--stop-point",
+                dest="stop_points",
+                action="append",
+                help="LOGIC:OFFSET component boundary",
+            )
+            c.add_argument(
+                "--callee-entry",
+                dest="callee_entries",
+                action="append",
+                help="LOGIC:OFFSET cached scan-entry witness",
+            )
             c.add_argument("--max-call-depth", type=int)
             c.add_argument("--control-flow", choices=["tree", "compact"])
-            c.add_argument("--allow-opaque", action="store_const", const=True, default=None,
-                           help="Retain known unmodeled actions in a non-executable compact graph")
-            c.add_argument("--effect-profile", choices=["agi-2.917"], help="Explicit object/resource effect contract")
+            c.add_argument(
+                "--allow-opaque",
+                action="store_const",
+                const=True,
+                default=None,
+                help="Retain known unmodeled actions in a non-executable compact graph",
+            )
+            c.add_argument(
+                "--effect-profile",
+                choices=["agi-2.917"],
+                help="Explicit object/resource effect contract",
+            )
     c = sub.add_parser("zmachine-disasm", help=METHODS["zmachine-disasm"])
     c.add_argument("path")
     c.add_argument("--address", type=lambda s: int(s, 0))
@@ -3086,9 +3461,15 @@ def _language_command(command, args):
                         capabilities=args["capability"],
                         max_steps=args["max_steps"],
                         max_call_depth=args["max_call_depth"],
-                        effect_context=read_json(args["effect_context"]) if args["effect_context"] else None,
-                        checkpoint=read_json(args["checkpoint"]) if args["checkpoint"] else None,
-                        host_result=read_json(args["host_result"]) if args["host_result"] else None,
+                        effect_context=read_json(args["effect_context"])
+                        if args["effect_context"]
+                        else None,
+                        checkpoint=read_json(args["checkpoint"])
+                        if args["checkpoint"]
+                        else None,
+                        host_result=read_json(args["host_result"])
+                        if args["host_result"]
+                        else None,
                     )
                 )
                 emit(result)
@@ -3257,19 +3638,36 @@ def _dispatch(args):
         ) as error:
             emit({"status": "refused", "error": str(error)})
             return 1
-    if command == 'shadowrun-z':
+    if command == "shadowrun-z":
         from .shadowrun_city_view import open_runtime
         from .shadowrun_z import ShadowrunZBackend
         from .text_projection import serve_stream
+
         try:
-            backend=ShadowrunZBackend(open_runtime(args['rom_path'],snapshot=args['snapshot'],profile=args['profile'],preset=args['preset']),policy=args['policy'])
-            serve_stream(backend,sys.stdin,sys.stdout)
+            backend = ShadowrunZBackend(
+                open_runtime(
+                    args["rom_path"],
+                    snapshot=args["snapshot"],
+                    profile=args["profile"],
+                    preset=args["preset"],
+                ),
+                policy=args["policy"],
+            )
+            serve_stream(backend, sys.stdin, sys.stdout)
             return 0
-        except (ValueError,OSError,KeyError,TypeError) as error:
-            print(json.dumps({'complete':False,'status':'refused','reason':str(error)}),flush=True)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            print(
+                json.dumps(
+                    {"complete": False, "status": "refused", "reason": str(error)}
+                ),
+                flush=True,
+            )
             return 1
     if command in ("media-inspect", "media-extract"):
-        for index_option, member_option in (("source_index", "source_member"), ("map_index", "map_member")):
+        for index_option, member_option in (
+            ("source_index", "source_member"),
+            ("map_index", "map_member"),
+        ):
             index = args.pop(index_option, None)
             if index is not None:
                 args[member_option] = index
@@ -3342,14 +3740,26 @@ def _dispatch(args):
         }
     result = respond(request)
     emit(result)
+    if command == "preflight" and result["ok"]:
+        body = result["result"]
+        if body["status"] != "ready":
+            return 1
     if command in ("doctor", "capture-audit") and result["ok"]:
         body = result["result"]
-        status = body["execution"]["status"] if body.get("format") == "fdisbull-output-ref-1" else body["status"]
+        status = (
+            body["execution"]["status"]
+            if body.get("format") == "fdisbull-output-ref-1"
+            else body["status"]
+        )
         if status != "passed":
             return 1
     if command in ("macos-session", "macos-session-recover") and result["ok"]:
         body = result["result"]
-        status = body["execution"]["status"] if body.get("format") == "fdisbull-output-ref-1" else body["status"]
+        status = (
+            body["execution"]["status"]
+            if body.get("format") == "fdisbull-output-ref-1"
+            else body["status"]
+        )
         if status != "confirmed":
             return 1
     return 0 if result["ok"] else 1
