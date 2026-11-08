@@ -1,5 +1,7 @@
 # PR delivery and remaining work
 
+> **Historical (GitHub-era) record.** This page documents the 0.25/0.26 GitHub-era intake pinned on 2026-10-30 UTC and the legacy PR #1–#29 dispositions. GitLab is the current review surface; the current consolidation and disposition record lives in [PR_BACKLOG_CONSOLIDATION.md](PR_BACKLOG_CONSOLIDATION.md).
+
 The 0.25.0 requirements audit is retained with candidate updates called out
 explicitly. The 0.26 development intake was pinned on 2026-10-30 UTC; it is not
 a published release or a main-branch merge. A PR's lifecycle and

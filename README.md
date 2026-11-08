@@ -22,6 +22,11 @@ trial-safe GitLab CI. See the [0.30.0 release notes](docs/RELEASE-0.30.0.md),
 [feature history](docs/FEATURE_HISTORY.md) for qualification scope, package
 hashes and remaining platform gates.
 
+Follow-up tags are tracked in [release status](docs/RELEASE_STATUS.md):
+`v0.31.0`/`v0.31.1` are published GitLab Releases; `v0.33.0`, `v0.34.0` and
+`v0.34.1` are tags whose Release objects, package links and per-release note
+files are still pending.
+
 > **This tool is not currently suitable for malware analysis or security work.**
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.

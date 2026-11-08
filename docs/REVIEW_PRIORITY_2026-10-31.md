@@ -1,5 +1,7 @@
 # Independent review verification, 2026-10-31
 
+> **Historical snapshot.** GitHub PR #55–#65-era verification evidence, retained as proof of that review. Lifecycle authority for MRs and releases is now GitLab; see the [consolidation record](PR_BACKLOG_CONSOLIDATION.md).
+
 This is a source and authored-fixture verification of a supplied third-party
 review. The review is evidence to check, not authority. Remote branch objects
 and pull-request metadata were refreshed for this investigation. No original

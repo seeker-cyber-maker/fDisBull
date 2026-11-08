@@ -1,3 +1,32 @@
+# Release status checked on 2026-11-07 (America/New_York)
+
+## Tag and release-object parity audit
+
+The audit found these tags on both GitLab and the local hub:
+`v0.31.0`, `v0.31.1`, `v0.33.0`, `v0.34.0` and `v0.34.1`. GitLab Release
+objects were present for `v0.29.0`, `v0.30.0`, `v0.31.0` and `v0.31.1`.
+No corresponding Release objects or Release-object package links were present
+for `v0.33.0`, `v0.34.0` or `v0.34.1` at this audit. The repository has no
+`docs/RELEASE-*.md` files for `0.31.0`, `0.31.1`, `0.33.0`, `0.34.0` or
+`0.34.1`.
+
+The `v0.32.0` tag is absent. Its candidate MR, !78, was closed as superseded
+after its `c80` head was found in the `release/0.33.0` and `release/0.34.0`
+lineages; the remaining !95/!96/!99 stack retains the source branch.
+
+The current `main` ref is 175 commits behind `release/0.33.0` and 219 commits
+behind `release/0.34.0`; neither comparison contains a file deletion. The
+0.33 release-to-main vehicle remains MR !100. No MR for the `release/0.34.0`
+line to `main` was present at this audit.
+
+Cache-only `scripts/ci_status.py` returned no recorded receipt for the exact
+`v0.34.1` tag commit
+`4932cf4cf32e87b3d618e33d99361da87bc0dd18`. This entry makes no CI,
+package or installation qualification claim; the CI owner's dated receipt or
+an authorized refresh is required before adding one.
+
+---
+
 # Release status checked on 2026-11-03 (America/New_York)
 
 ## 0.30.0 release published on GitLab; local shared installation active
