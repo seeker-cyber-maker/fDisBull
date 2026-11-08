@@ -35,6 +35,7 @@ AGENT_SKILL_GUIDES = {
     "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
     "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
+    "references/dos-qemu-migration.md": "Select native QEMU DOS, check core execution, track migration slices and retain DOSBox fallback",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
     "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
 }
@@ -171,7 +172,7 @@ METHODS = {
     "dos-services": "List DOS/BIOS/audio contracts or describe a vector with pre-call registers",
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
-    "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
+    "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms,qemu_transport,qemu_firmware]",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
     "runtime-version-info": "Inspect temporal capture/edit provenance for a byte version; [version]",
     "debug-controls": "Inspect owned breakpoint/watch/hook definitions for experiment capture; run",
@@ -183,7 +184,9 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
+    "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",
     "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
     "le-driver-disasm": "Bounded object-relative LE driver view; path,object_number,[offset,max_instructions,abi]",
     "qemm-config": "Preview or validate an unconditional QEMM CONFIG.SYS without editing files; [config_file,config_sys,qemm_path,options,validate_only]",
@@ -602,6 +605,14 @@ def invoke(method, params, debugger=None):
         from .capabilities import capabilities
 
         return capabilities(**p)
+    if method == "dos-profile":
+        from .qemu_dos import prepare_dos_profile
+
+        return prepare_dos_profile(**p)
+    if method == "dos-migration":
+        from .dos_migration import migration_status
+
+        return migration_status(**p)
     if method in ("macos-snapshot", "macos-session", "macos-session-recover"):
         from .macos_capture import NativeCapture
         native = NativeCapture()
@@ -1267,6 +1278,8 @@ def respond(request, default_project=None, debugger=None):
                 "macos-session",
                 "macos-session-recover",
                 "capabilities",
+                "dos-profile",
+                "dos-migration",
                 "media-modules",
                 "format-modules",
                 "intake-inventory",
@@ -1806,6 +1819,14 @@ def parser():
     c.add_argument("--analyze-headless")
     c.add_argument("--lldb")
     c.add_argument("--java")
+    c = sub.add_parser("dos-profile", help=METHODS["dos-profile"])
+    c.add_argument("boot_image")
+    c.add_argument("--cpu", choices=["486", "max"], default="486")
+    c.add_argument("--memory-mib", type=int, default=32)
+    c = sub.add_parser("dos-migration", help=METHODS["dos-migration"])
+    c.add_argument("--details", action="store_true")
+    c.add_argument("--surface")
+    c.add_argument("--slice")
     c = sub.add_parser("macos-snapshot", help=METHODS["macos-snapshot"])
     c.add_argument("bundle_id")
     c = sub.add_parser("macos-session", help=METHODS["macos-session"])
@@ -1915,13 +1936,15 @@ def parser():
     c.add_argument('--max-depth',type=int,default=32)
     c = sub.add_parser("doctor", help=METHODS["doctor"])
     c.add_argument(
-        "--backend", choices=["dosbox", "dosbox-qemu", "wine-qemu"], required=True
+        "--backend", choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu"], required=True
     )
     c.add_argument("--executable", required=True)
     c.add_argument("--kernel")
     c.add_argument("--initramfs")
     c.add_argument("--output")
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
+    c.add_argument("--qemu-transport", choices=["unix", "pipe"])
+    c.add_argument("--qemu-firmware")
     for name in ("le-driver-inspect", "le-driver-disasm"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
@@ -2023,11 +2046,14 @@ def parser():
     c.add_argument("--game-dir", required=True)
     c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
-    c.add_argument("--guest-profile", choices=["qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
-                   help="Admit and pin a QEMM/DESQview raw DOS boot image (qemu-machine only; JSON accepts an explicit prepared profile)")
+    c.add_argument("--guest-profile", choices=["dos", "dos-pc-v1", "qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
+                   help="Admit and pin a DOS/QEMM/DESQview boot image (native QEMU only; dos profile uses qemu-dos)")
+    c.add_argument("--qemu-transport", choices=["unix", "pipe"],
+                   help="Native QEMU control transport; pipe needs no Unix sockets")
+    c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
+        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
                  "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
     c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")

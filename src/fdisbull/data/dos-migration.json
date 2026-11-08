@@ -1,0 +1,1413 @@
+{
+  "format": "fdisbull-dosbox-qemu-migration-inventory-1",
+  "inventory_base": "089c1841c415eb2b5cdfa90d03b6291a07f73919",
+  "default_backend": "dosbox",
+  "native_backend": "qemu-dos",
+  "retained_fallback_backends": [
+    "dosbox",
+    "dosbox-qemu"
+  ],
+  "policy": {
+    "automatic_runtime_fallback": false,
+    "dosbox_retirement_allowed": false,
+    "all_inventory_rows_required_before_default_switch": true,
+    "requirements": [
+      "Explicit non-silent backend selection",
+      "Per-surface native acceptance and DOSBox regression evidence",
+      "Qualified same-input observable comparisons, with declared semantic differences",
+      "Real OS/driver/game compatibility evidence beyond bare-metal fixtures",
+      "Cold restore/restart and fallback rehearsal; never load a DOSBox native state as QEMU state",
+      "Retain DOSBox selectable after QEMU becomes the default"
+    ]
+  },
+  "status_legend": {
+    "partial": "Native machinery or reused host code exists with material semantic/API gaps; no parity claim",
+    "pending": "No native equivalent in the audited starting revision",
+    "retained_host_code": "Independent host/static code remains; rerun affected integration witnesses",
+    "planned_addition_not_legacy_capability": "Discussed addition, not an existing capability that a method inventory can certify"
+  },
+  "qualification_notice": "Source inventory and test references are not evidence of runtime parity. Qualification is explicit per surface and compatibility campaign.",
+  "slices": [
+    {
+      "id": "core",
+      "order": 0,
+      "title": "Owned QEMU lifecycle and CPU controls",
+      "depends_on": [],
+      "gate": "Explicit backend selection, bounded transport, process cleanup, stopped inspection, physical/virtual RAM, guarded registers/RAM, native breakpoint/watchpoint and stored capture; retain DOSBox choices.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_debugger.py",
+        "tests/test_dos_migration.py",
+        "tests/test_qemu_doctor.py",
+        "tests/test_qemu_dos.py",
+        "tests/test_qemu_dos_native.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_qemu_pipe.py",
+        "tests/test_runtime_code.py"
+      ],
+      "scope_limits": [
+        "Machine context is available; this does not establish DOS source-address mapping, legacy reply schema, guest process lifecycle or drop-in parity.",
+        "MachineContext.run is host-time bounded and returns machine stops. It does not accept guest_ms/fast_forward/stop_on_hook or establish DOS guest_exit/guest_tsr.",
+        "Raw native QEMU exposes one machine context. dosbox-qemu exposes a DOS CPU plus its surrounding Linux machine; those are different CPUs and cannot be renamed into one native DOS context.",
+        "The legacy public DOS route intentionally refuses direct writes (use RAM layers, runtime bindings or edited checkpoints); machine context already permits explicit guarded edits. Preserve legacy refusal and expose new context semantics explicitly.",
+        "qemu-machine has its own explicit bounded script grammar and operation set. The full legacy DOS script vocabulary is not supported merely because script() exists."
+      ]
+    },
+    {
+      "id": "dos-process",
+      "order": 1,
+      "title": "Actual DOS boot, source-bound programs and resident drivers",
+      "depends_on": [
+        "core"
+      ],
+      "gate": "Boot a real DOS image; admit supplied COM/MZ bytes; observe relocation/PSP/entry, child/parent termination and TSR distinction; pin guest profile and observed task/page mappings.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_debugger.py",
+        "tests/test_desqview_memory_native.py",
+        "tests/test_desqview_runtime.py",
+        "tests/test_dos_launch.py",
+        "tests/test_dos_memory.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_memory_rules.py",
+        "tests/test_memory_search_runtime.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemu_dos_native.py",
+        "tests/test_qemm_runtime.py",
+        "tests/test_qemu_machine.py"
+      ],
+      "scope_limits": [
+        "Native raw-machine observations exist, but COM/MZ loading and selected-DOS-process identity require a DOS adapter; a helper report is not whole-driver or scheduler qualification."
+      ]
+    },
+    {
+      "id": "trace-events",
+      "order": 2,
+      "title": "Observed execution traces and event searches",
+      "depends_on": [
+        "core",
+        "dos-process"
+      ],
+      "gate": "Compare explicit trace semantics, instruction/context/mode identity, callback-safe boundaries, new-page/new-region/register predicates, IRQ/fault/REP cases, and action causality.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_execution_event_native.py",
+        "tests/test_execution_trace.py",
+        "tests/test_protected_mode_trace.py",
+        "tests/test_qemu_machine.py"
+      ],
+      "scope_limits": [
+        "QEMU records completed single steps with IRQ/timer stepping limits; DOSBox records before-fetch boundaries. Do not identify those schemas or silently omit callbacks, faults or unfinished instructions."
+      ]
+    },
+    {
+      "id": "clock-media-input",
+      "order": 3,
+      "title": "Guest clock, coherent media and physical input",
+      "depends_on": [
+        "core",
+        "dos-process"
+      ],
+      "gate": "Guest-time bounded runs, last-completed-frame ownership, stale-frame refusal, keyboard make/break and held leases, mouse-driver consumption/release, frame-edge input and device timing.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_debug_wait.py",
+        "tests/test_dosbox_window.py",
+        "tests/test_dosbox_window_native_contract.py",
+        "tests/test_frame_capture_native.py",
+        "tests/test_frame_coherence.py",
+        "tests/test_frame_timeline_native.py",
+        "tests/test_frames.py",
+        "tests/test_keyboard.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_screenshot_codecs.py"
+      ],
+      "scope_limits": [
+        "PNG screendump does not establish last-completed-guest-frame identity, guest milliseconds, scanline/IRQ phase, held-key ownership or built-in INT33 behavior. Host-time timeout is not guest-time advance.",
+        "This method is inherited by MachineContext but explicitly refuses machine/QEMU execution. Its scheduler requires qualified guest-time run slices; a periodic host timer is not an equivalent replacement."
+      ]
+    },
+    {
+      "id": "checkpoints",
+      "order": 4,
+      "title": "Native checkpoints, Anchor Stones and restore epochs",
+      "depends_on": [
+        "dos-process",
+        "clock-media-input"
+      ],
+      "gate": "Whole CPU/device/clock/disk state, explicit mutable-file policy, cold-session restore, exact source/backend/profile identity, pending input policy, epoch invalidation, and close on uncertain restore.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_anchor_stone_cli.py",
+        "tests/test_debugger.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_protected_runtime.py",
+        "tests/test_protected_runtime_native.py"
+      ],
+      "scope_limits": [
+        "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter."
+      ]
+    },
+    {
+      "id": "layers-hooks",
+      "order": 5,
+      "title": "RAM/fetch layers, live code views, hooks and block services",
+      "depends_on": [
+        "dos-process",
+        "trace-events"
+      ],
+      "gate": "Distinct RAM/fetch visibility, guarded all-or-nothing transitions, active precedence, translated-block invalidation, self-modifying code, callback context, declared host-effect authority and region-join contracts.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_code_layers.py",
+        "tests/test_code_overlap_native.py",
+        "tests/test_common_uil.py",
+        "tests/test_protected_mode_native.py",
+        "tests/test_runtime_code.py",
+        "tests/test_screenshot_hooks.py",
+        "tests/test_udc_layers.py"
+      ],
+      "scope_limits": [
+        "MachineContext advertises code_layers=False. A QEMU RAM write or PC redirect is not a fetch-only overlay; translated-block cache coherence and underlying-RAM self-modification guards require qualification."
+      ]
+    },
+    {
+      "id": "histories",
+      "order": 6,
+      "title": "Checkpoint rewind, CPU/RAM deltas, frame history and trials",
+      "depends_on": [
+        "checkpoints",
+        "layers-hooks",
+        "clock-media-input",
+        "trace-events"
+      ],
+      "gate": "Unrecorded-mutation invalidation, partial-state freeze/recovery, file identity, bounded storage, full-frame/key restore, dependency-aware history and incomplete-trial refusal.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_cpu_deltas.py",
+        "tests/test_cpu_deltas_native.py",
+        "tests/test_debug_experiments.py",
+        "tests/test_debug_rewind.py",
+        "tests/test_debug_timeline.py",
+        "tests/test_debug_timeline_deltas.py",
+        "tests/test_delta_policies.py",
+        "tests/test_frame_timeline_native.py",
+        "tests/test_rewind_native.py"
+      ],
+      "scope_limits": [
+        "History consumers depend on separately qualified checkpoint, trace, input and layer contracts. CPU/RAM projection undo is partial and must preserve the frozen-state guard; epochs and disk/file policy cannot be inferred."
+      ]
+    },
+    {
+      "id": "workflows",
+      "order": 7,
+      "title": "Scenes, scripts, player workflows and analysis consumers",
+      "depends_on": [
+        "clock-media-input",
+        "histories",
+        "layers-hooks"
+      ],
+      "gate": "Coherent observation bundles, named actions, exact input ownership, scripts/budgets, frame/domain/readiness guards, spatial/fair-play policy and actual scene progression.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_capabilities.py",
+        "tests/test_ida_dosbox.py",
+        "tests/test_input_macros.py",
+        "tests/test_movement.py",
+        "tests/test_player_live.py",
+        "tests/test_progressive_scenes.py",
+        "tests/test_scene_domain_integration.py",
+        "tests/test_scene_readiness.py",
+        "tests/test_scenes.py",
+        "tests/test_spatial_modes.py",
+        "tests/test_spatial_native.py"
+      ],
+      "scope_limits": [
+        "Host algorithms can be reused after their input/frame/state/control dependencies are qualified. Registering a method or importing a mixin does not supply those dependencies."
+      ]
+    },
+    {
+      "id": "qualification",
+      "order": 8,
+      "title": "Compatibility matrix, comparison and retained fallback",
+      "depends_on": [
+        "core",
+        "dos-process",
+        "trace-events",
+        "clock-media-input",
+        "checkpoints",
+        "layers-hooks",
+        "histories",
+        "workflows"
+      ],
+      "gate": "Real DOS/QEMM/DESQview/game cases and separate Windows regression; compare qualified observables and preserve DOSBox selectable after any default switch.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_desqview_memory_native.py",
+        "tests/test_qemm_runtime.py",
+        "tests/test_win16_native.py",
+        "tests/test_windows_native.py"
+      ],
+      "scope_limits": []
+    }
+  ],
+  "rpc_methods": [
+    {
+      "method": "agent.capabilities",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.capabilities / status()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.create",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.breakpoint()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.delete",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.delete_breakpoint()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.list",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.breakpoints (no matching RPC wrapper)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.continue",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.run() / resume()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.pause",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.pause()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.step",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.step()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.timing",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.wait",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.run(timeout_ms=...) / GDBRemote.execute()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "frame.step",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.down",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.frame_edges",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.press",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.state",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.type",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.up",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.button",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.click",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.move",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.state",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "layers.configure",
+      "slice": "layers-hooks",
+      "legacy_profile": "layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "memory.read",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.memory(space=physical|virtual)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "memory.write",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.write_memory(space=physical|virtual, expected_hex=...)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.start",
+      "slice": "dos-process",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.status",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.status()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.stop",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "QemuMachine.close(); not selected DOS process termination",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.get_registers",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.registers()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.load",
+      "slice": "checkpoints",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.save",
+      "slice": "checkpoints",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.set_register",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.write_registers()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.read",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Stored machine trace artifact (no streaming cursor equivalent)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.start",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.trace() (completed-step batch, not streaming fetch capture)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.stop",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Machine trace call ends at count, stop, or deadline (no persistent trace control)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "video.probe",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "video.screenshot",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.screenshot() / QMP screendump (stored display surface only)",
+      "qualification": "unqualified"
+    }
+  ],
+  "public_methods": [
+    {
+      "method": "debug-assisted-travel",
+      "operation": "assisted_travel",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-bind-runtime-memory",
+      "operation": "bind_runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-branch",
+      "operation": "branch",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-breakpoint",
+      "operation": "breakpoint",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.breakpoint",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-capture-code",
+      "operation": "capture_code",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-cave",
+      "operation": "cave",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-click",
+      "operation": "click",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-click-frame",
+      "operation": "click_frame",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-code",
+      "operation": "code",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-compare-experiment",
+      "operation": "compare_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-contexts",
+      "operation": "contexts",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.contexts",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-controls",
+      "operation": "controls",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delete-breakpoint",
+      "operation": "delete_breakpoint",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.delete_breakpoint",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delete-hook",
+      "operation": "delete_hook",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-record",
+      "operation": "cpu_delta_record",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-recover",
+      "operation": "cpu_delta_recover",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-rewind",
+      "operation": "cpu_delta_rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-start",
+      "operation": "cpu_delta_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-status",
+      "operation": "cpu_delta_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-desqview-observe",
+      "operation": "desqview_observe",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.desqview_observe",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-advance",
+      "operation": "advance_frames",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-inputs",
+      "operation": "frame_inputs",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-probe",
+      "operation": "frame_probe",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-hook",
+      "operation": "hook",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-hooks",
+      "operation": "hooks",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-down",
+      "operation": "keyboard_key_down",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-press",
+      "operation": "keyboard_press",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-state",
+      "operation": "keyboard_state",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-type",
+      "operation": "keyboard_type",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-up",
+      "operation": "keyboard_key_up",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-enable",
+      "operation": "layer_enable",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-patch",
+      "operation": "layer_patch",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-stack",
+      "operation": "layers",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-load-anchor-stone",
+      "operation": "load_anchor_stone",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-load-state",
+      "operation": "load_state",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-macro",
+      "operation": "macro",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory",
+      "operation": "memory",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-apply",
+      "operation": "memory_apply",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_apply",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-rule-run",
+      "operation": "memory_rule_run",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-rule-tick",
+      "operation": "memory_rule_tick",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_rule_tick",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-snapshot",
+      "operation": "memory_snapshot",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_snapshot",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-move",
+      "operation": "move",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-proof-check",
+      "operation": "proof_check",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-registers",
+      "operation": "registers",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.registers",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-restore-experiment",
+      "operation": "restore_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind",
+      "operation": "rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-record",
+      "operation": "rewind_record",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-start",
+      "operation": "rewind_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-status",
+      "operation": "rewind_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-run",
+      "operation": "run",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.run",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-runtime-memory",
+      "operation": "runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-anchor-stone",
+      "operation": "save_anchor_stone",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-experiment",
+      "operation": "save_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-state",
+      "operation": "save_state",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-act",
+      "operation": "scene_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-assert",
+      "operation": "scene_assert",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-check",
+      "operation": "scene_check",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-click",
+      "operation": "scene_click",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-navigation",
+      "operation": "scene_navigation",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-wait",
+      "operation": "scene_wait",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-screenshot",
+      "operation": "screenshot",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.screenshot",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-screenshot-hooks",
+      "operation": "screenshot_hooks",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-script",
+      "operation": "script",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.script",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-spatial-action",
+      "operation": "spatial_action",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-spatial-policy",
+      "operation": "spatial_policy",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-status",
+      "operation": "status",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.status",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-text-act",
+      "operation": "text_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-text-observe",
+      "operation": "text_observe",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-advance",
+      "operation": "timeline_advance",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-image",
+      "operation": "timeline_image",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-pin",
+      "operation": "timeline_pin",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-rewind",
+      "operation": "timeline_rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-start",
+      "operation": "timeline_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-status",
+      "operation": "timeline_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-stop",
+      "operation": "timeline_stop",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-trace",
+      "operation": "trace",
+      "slice": "trace-events",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.trace",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-trace-until",
+      "operation": "trace_until",
+      "slice": "trace-events",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-wait",
+      "operation": "wait",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-workflow-act",
+      "operation": "workflow_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-workflow-observe",
+      "operation": "workflow_observe",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-memory",
+      "operation": "write_memory",
+      "slice": "core",
+      "legacy_status": "explicitly_refused",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.write_memory",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-registers",
+      "operation": "write_registers",
+      "slice": "core",
+      "legacy_status": "explicitly_refused",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.write_registers",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-runtime-memory",
+      "operation": "write_runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    }
+  ],
+  "extra_surfaces": [
+    {
+      "id": "python-frame-rgba",
+      "slice": "clock-media-input",
+      "surface": "DebugSession.frame_rgba / RGBAFrame buffer",
+      "status": "pending",
+      "tests": [
+        "tests/test_frames.py",
+        "tests/test_screenshot_codecs.py"
+      ]
+    },
+    {
+      "id": "private-target-and-entry",
+      "slice": "dos-process",
+      "surface": "LaunchAlias, source SHA-256/relocation checks, PSP/COM entry, staged asset allowlist, no original-source writes",
+      "status": "pending",
+      "tests": [
+        "tests/test_debugger.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_dos_launch.py"
+      ]
+    },
+    {
+      "id": "protected-v86-memory",
+      "slice": "dos-process",
+      "surface": "Observed CR0/CR3/CR4/A20/segment widths; explicit physical RAM; mapped-page identity and task lifetime",
+      "status": "partial",
+      "tests": [
+        "tests/test_dos_memory.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemm_runtime.py"
+      ]
+    },
+    {
+      "id": "process-and-resident-completion",
+      "slice": "dos-process",
+      "surface": "Selected DOS PSP after termination cleanup, parent/child identity, guest_tsr vs guest_exit vs emulator shutdown",
+      "status": "pending",
+      "tests": [
+        "tests/test_debug_semantics.py"
+      ]
+    },
+    {
+      "id": "remote-tool-consumers",
+      "slice": "workflows",
+      "surface": "JSON serve/debug, IDA endpoint, runtime doctor, capabilities report, replay examples, packaged skill and offline runtime setup",
+      "status": "pending",
+      "tests": [
+        "tests/test_ida_dosbox.py",
+        "tests/test_capabilities.py"
+      ]
+    },
+    {
+      "id": "native-display-window",
+      "slice": "clock-media-input",
+      "surface": "Explicit dot-mode spectator request and host-input filtering; no silent headless substitution",
+      "status": "pending",
+      "tests": [
+        "tests/test_dosbox_window.py",
+        "tests/test_dosbox_window_native_contract.py"
+      ]
+    },
+    {
+      "id": "static-analysis-and-artifacts",
+      "slice": "core",
+      "surface": "Project/source versions, disassembly, driver readers, offline bindiff, immutable artifact export/restart isolation",
+      "status": "retained_host_code",
+      "tests": [
+        "tests/test_qemu_machine.py",
+        "tests/test_runtime_code.py"
+      ]
+    },
+    {
+      "id": "hardware-and-driver-compatibility",
+      "slice": "qualification",
+      "surface": "Real DOS BIOS/devices, QEMM/EMM386 EMS/XMS/A20/paging, DESQview task scheduling and I/O, actual games; Windows separate",
+      "status": "pending",
+      "tests": [
+        "tests/test_qemm_runtime.py",
+        "tests/test_desqview_memory_native.py",
+        "tests/test_windows_native.py",
+        "tests/test_win16_native.py"
+      ]
+    },
+    {
+      "id": "udl-uil-block-services",
+      "slice": "layers-hooks",
+      "surface": "Planned region implementations, mask/priority/epoch, optional original execution, pending Python services, joins and effect authority; existing lab evidence is not production qualification",
+      "status": "planned_addition_not_legacy_capability",
+      "tests": [
+        "tests/test_udc_layers.py",
+        "tests/test_common_uil.py"
+      ]
+    }
+  ],
+  "required_campaigns": [
+    {
+      "id": "native-dos-program-and-tsr",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "qemm-and-protected-v86",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "desqview-task-switching",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "real-game-comparison",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "windows-shared-core-regression",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "cold-restore-and-epoch",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "dosbox-fallback-rehearsal",
+      "qualification": "unqualified"
+    }
+  ]
+}

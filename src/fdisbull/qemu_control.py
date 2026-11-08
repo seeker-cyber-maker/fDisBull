@@ -12,15 +12,16 @@ from .dosbox_rpc import DebuggerError
 
 
 class QemuControl:
-    def __init__(self,path,process,deadline):
-        self.socket=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
+    def __init__(self,path,process,deadline,*,channel=None):
+        self.socket=channel if channel is not None else socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
         self.buffer=bytearray();self.sequence=0;self.lock=threading.Lock()
         try:
-            while True:
-                try:self.socket.connect(str(path));break
-                except (FileNotFoundError,ConnectionRefusedError):
-                    if process.poll() is not None or time.monotonic()>=deadline:raise DebuggerError('QMP socket did not open')
-                    time.sleep(.05)
+            if channel is None:
+                while True:
+                    try:self.socket.connect(str(path));break
+                    except (FileNotFoundError,ConnectionRefusedError):
+                        if process.poll() is not None or time.monotonic()>=deadline:raise DebuggerError('QMP socket did not open')
+                        time.sleep(.05)
             self.greeting=self._read(deadline)
             if 'QMP' not in self.greeting:raise DebuggerError('Invalid QMP greeting')
             self.call('qmp_capabilities',timeout_ms=max(1,int((deadline-time.monotonic())*1000)))
@@ -42,19 +43,30 @@ class QemuControl:
         return value
 
     def call(self,method,arguments=None,timeout_ms=30000):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('QMP timeout must be 1..600000 ms')
         deadline=time.monotonic()+timeout_ms/1000
         if not self.lock.acquire(timeout=timeout_ms/1000):raise TimeoutError('QMP is busy')
+        dispatched=False;completed=False
         try:
             self.sequence+=1;request={'execute':method,'id':self.sequence}
             if arguments is not None:request['arguments']=arguments
             self.socket.settimeout(max(.001,deadline-time.monotonic()))
+            dispatched=True
             self.socket.sendall(json.dumps(request,separators=(',',':')).encode()+b'\n')
             while True:
                 reply=self._read(deadline)
                 if 'event' in reply:continue
                 if reply.get('id')!=self.sequence:raise DebuggerError('Wrong QMP reply identity')
+                if ('error' in reply)==('return' in reply):raise DebuggerError('Invalid QMP result envelope')
+                completed=True
                 if 'error' in reply:raise DebuggerError('QMP '+method+': '+json.dumps(reply['error']))
                 return reply['return']
+        except BaseException:
+            # A dispatched cont/stop/edit may already have taken effect. Close
+            # an uncertain channel, allowing its machine owner to terminate;
+            # never retry or consume a late response as another command's reply.
+            if dispatched and not completed:self.close()
+            raise
         finally:self.lock.release()
 
     def save(self,path,timeout_ms=240000):

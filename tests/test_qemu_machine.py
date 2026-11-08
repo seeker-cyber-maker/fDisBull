@@ -34,7 +34,7 @@ def test_moderately_slow_qemu_identity_allows_machine_start(tmp_path,monkeypatch
     executable,image=authored_qemu_identity(tmp_path,delay=6)
     # The subprocess identity probe is real; no emulator or QMP is needed to
     # check whether successful identity dispatch reaches machine startup.
-    monkeypatch.setattr(qemu_machine,'QemuControl',lambda *args:SimpleNamespace(close=lambda:None))
+    monkeypatch.setattr(qemu_machine,'QemuControl',lambda *args:SimpleNamespace(close=lambda:None,call=lambda method,**options:[]))
     spawned=[]
     machine=qemu_machine.QemuMachine(executable,boot_image=image,on_spawn=spawned.append)
     try:

@@ -190,7 +190,10 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   and mouse delivery, stored screenshots, and selected-PSP `guest_exit` versus
   `guest_tsr` termination tracking. Headless operation is the default;
   `--dot-mode` opens a watch-only window on compatible builds. A separate
-  Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
+  Linux/QEMU path retains DOSBox inside a guest. The experimental
+  [native QEMU DOS alternative](docs/DOS_QEMU_MIGRATION.md) boots a DOS disk
+  directly and starts the staged migration; DOSBox remains the default and a
+  selectable fallback.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
   retaining explicit CPU-mode and address-space limits. Agent headless launches

@@ -89,10 +89,15 @@ Configuration evidence starts with `memory_manager.observed = unknown`.
 Import the disk as an explicit raw project solely for machine/source identity:
 
 ```sh
-fdisbull import /private/boot.img /private/machine.fdb --arch x86 --bits 16 --base 0 --entry 0
+fdisbull import /private/boot.img /private/machine.fdb --arch x86 --bits 32 --base 0 --entry 0
 fdisbull debug /private/machine.fdb --executable /path/to/qemu-system-x86_64 \
   --game-dir /private --backend qemu-machine --guest-profile qemm
 ```
+
+The raw disk's 32-bit file-address view accommodates the whole image; observed
+CPU mode and code-segment width determine actual instruction decoding. For
+the explicit native DOS migration lane and pipe transport, read
+[DOS/QEMU migration](dos-qemu-migration.md).
 
 The machine begins paused. Use the returned run ID in subsequent JSON-line
 requests. Plan program launch in the private image's DOS startup files or use

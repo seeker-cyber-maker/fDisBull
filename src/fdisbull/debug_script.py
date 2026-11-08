@@ -63,7 +63,7 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine','qemu-dos')
     if backend is not None and backend not in supported_backends:
         raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
@@ -83,6 +83,9 @@ def validate_script(script, *, session=None):
         elif backend=='qemu-machine':
             from .qemu_machine import MachineDebugSession
             owner=MachineDebugSession
+        elif backend=='qemu-dos':
+            from .qemu_dos import QemuDOSSession
+            owner=QemuDOSSession
         elif backend=='scummvm-kyra':
             from .scummvm_kyra import ScummVMKyraSession
             owner=ScummVMKyraSession
@@ -125,9 +128,9 @@ def validate_script(script, *, session=None):
                 elif op in OPERATIONS:
                     if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu'):
                         raise ValueError('Live trace-until requires the DOSBox boundary adapter')
-                    if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine'):
+                    if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for this backend: '+op)
-                    if op == 'memory-rule-run' and (backend or actual) == 'qemu-machine':
+                    if op == 'memory-rule-run' and (backend or actual) in ('qemu-machine','qemu-dos'):
                         raise ValueError('Periodic memory rules require DOSBox guest-time control')
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
@@ -378,8 +381,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
-            if step['op']=='step' and not result.get('completed'):
-                raise ValueError('Engine step stopped before the requested instruction boundary count')
+            if step['op']=='step':
+                native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
+                complete = (result.get('outcome')=='step' and result.get('timed_out') is False
+                            if native_machine else result.get('completed'))
+                if not complete:
+                    raise ValueError('Step stopped before the requested instruction boundary')
             if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
                 raise ValueError('Engine did not reach the requested cycle boundary')
             if _after_step is not None:_after_step(step,result)

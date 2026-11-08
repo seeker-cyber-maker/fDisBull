@@ -81,6 +81,12 @@ does not establish original Windows 3.x or whole-game compatibility.
 
 ## Discover commands and bundled skills
 
+For the DOSBox-X migration, read [native QEMU DOS](DOS_QEMU_MIGRATION.md) and
+run `fdisbull dos-migration`. `qemu-dos` is the explicit native raw-disk lane;
+`dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
+and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
+fixture; actual DOS, driver and game qualification are separate gates.
+
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
 Keep guarded live RAM edits separate from edited-checkpoint interventions;

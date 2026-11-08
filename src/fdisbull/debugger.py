@@ -74,19 +74,25 @@ DEBUG_DDL += MACRO_DDL
 
 
 class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemorySearchProjectMixin, SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
-    def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None):
+    def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None,
+                transport='unix', firmware=None, _on_spawn=None):
         if self.meta['format'] == 'NE':
             raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,
-                                   boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile)
+                                   boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
+                                   transport=transport,firmware=firmware,_on_spawn=_on_spawn)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
-                 guest_profile=None):
-        if guest_profile is not None and backend != 'qemu-machine':
-            raise ValueError('guest_profile requires the qemu-machine full-system backend')
+                 guest_profile=None, qemu_transport=None, qemu_firmware=None):
+        if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
+            raise ValueError('guest_profile requires a native QEMU full-system backend')
+        if (qemu_transport is not None or qemu_firmware is not None) and backend not in ('qemu-machine','qemu-dos'):
+            raise ValueError('qemu_transport and qemu_firmware require a native QEMU backend')
+        if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
+            raise ValueError('qemu_transport must be unix or pipe')
         if dot_mode is not None:
             if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
             if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
@@ -137,11 +143,16 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('window must be boolean')
         if window and backend not in (None,'dosbox','wine-qemu'):
             raise ValueError('dot-mode requires native DOSBox or a Windows spectator backend')
-        if backend=='qemu-machine':
+        if backend in ('qemu-machine','qemu-dos'):
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')
-            return self.machine(executable,boot_image=Path(game_dir)/self.meta['filename'],version=version,
-                                boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile)
+            options=dict(boot_image=Path(game_dir)/self.meta['filename'],version=version,
+                         boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
+                         transport=qemu_transport or 'unix',firmware=qemu_firmware,_on_spawn=_on_spawn)
+            if backend=='qemu-dos':
+                from .qemu_dos import QemuDOSSession
+                return QemuDOSSession(self,executable,**options)
+            return self.machine(executable,**options)
         if backend=='dosbox-qemu':
             if kernel is None or initramfs is None or state is not None or remote_server is not None:
                 raise ValueError('DOSBox/QEMU launch requires kernel and prepared initramfs; load native states after launch')
@@ -1291,7 +1302,11 @@ class DebugWorkspace:
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
         operation=getattr(selected,methods[method],None)
-        if operation is None:raise ValueError('Operation is unavailable in the selected execution context')
+        if operation is None:
+            if getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                from .dos_migration import unavailable_operation
+                raise ValueError(unavailable_operation(method))
+            raise ValueError('Operation is unavailable in the selected execution context')
         return operation(**params)
 
     def close(self):
