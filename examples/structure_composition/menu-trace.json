@@ -1,0 +1,119 @@
+{
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "run": "authored",
+  "clock": {
+    "domain": "logical",
+    "unit": "tick"
+  },
+  "initial_epoch": 0,
+  "events": [
+    {
+      "kind": "begin",
+      "epoch": 0,
+      "tick": 0,
+      "evidence": "authored-witness",
+      "invocation": "parent",
+      "contract": "confirm",
+      "implementation": "confirm.original",
+      "parent": null,
+      "slot": null
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 1,
+      "evidence": "authored-witness",
+      "invocation": "parent",
+      "phase": "accepted"
+    },
+    {
+      "kind": "begin",
+      "epoch": 0,
+      "tick": 2,
+      "evidence": "authored-witness",
+      "invocation": "c",
+      "contract": "commit",
+      "implementation": "commit.original",
+      "parent": "parent",
+      "slot": "commit"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 3,
+      "evidence": "authored-witness",
+      "invocation": "c",
+      "phase": "accepted"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 4,
+      "evidence": "authored-witness",
+      "invocation": "c",
+      "phase": "committed"
+    },
+    {
+      "kind": "begin",
+      "epoch": 0,
+      "tick": 5,
+      "evidence": "authored-witness",
+      "invocation": "s",
+      "contract": "sound",
+      "implementation": "sound.original",
+      "parent": "parent",
+      "slot": "sound"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 6,
+      "evidence": "authored-witness",
+      "invocation": "s",
+      "phase": "accepted"
+    },
+    {
+      "kind": "begin",
+      "epoch": 0,
+      "tick": 7,
+      "evidence": "authored-witness",
+      "invocation": "view",
+      "contract": "scene",
+      "implementation": "scene.original",
+      "parent": "parent",
+      "slot": "scene"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 8,
+      "evidence": "authored-witness",
+      "invocation": "view",
+      "phase": "accepted"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 9,
+      "evidence": "authored-witness",
+      "invocation": "view",
+      "phase": "ready"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 10,
+      "evidence": "authored-witness",
+      "invocation": "parent",
+      "phase": "complete"
+    },
+    {
+      "kind": "phase",
+      "epoch": 0,
+      "tick": 11,
+      "evidence": "authored-witness",
+      "invocation": "s",
+      "phase": "finished"
+    }
+  ]
+}
