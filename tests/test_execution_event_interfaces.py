@@ -162,7 +162,7 @@ def test_trace_script_backend_refusal_precedes_earlier_input(tmp_path):
     session.metadata["backend"] = "wine-qemu"
     script = route({"op": "click", "x": 1, "y": 2},
                    {"op": "trace-until", "until": PREDICATE})
-    with pytest.raises(ValueError, match="DOSBox"):
+    with pytest.raises(ValueError, match="qualified DOS boundary adapter"):
         execute_script(session, script)
     assert session.calls == [] and session.artifacts == []
 

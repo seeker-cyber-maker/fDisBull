@@ -170,6 +170,14 @@ def validate_script(script, *, session=None):
                                 for child in value:literal(child)
                         literal(params)
                         validate_trace_until(**params)
+                        from .execution_clock import clock_predicates
+                        if clock_predicates(params['until']):
+                            if (backend or actual) != 'qemu-dos':
+                                raise ValueError('Live virtual-time-range requires the native qemu-dos virtual clock profile')
+                            if session is not None:
+                                from .qemu_clock import _configuration
+                                if _configuration(session.vm)['profile'] != 'virtual':
+                                    raise ValueError('Live virtual-time-range requires the QEMU virtual clock profile')
                         if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
                             raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
@@ -348,7 +356,17 @@ def validate_script(script, *, session=None):
 @rpc_budget
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
+    started = time.monotonic()
+    deadline = min(started+timeout_ms/1000, session._rpc_deadline)
     steps = validate_script(script, session=session) # Reject malformed later steps before any guest mutation.
+    # Check literal clock identities against the live native epoch before an
+    # earlier script step can write or continue. Recheck at trace admission as
+    # well: an earlier execution may have invalidated the process or clock.
+    for step in steps:
+        if step['op'] == 'trace-until':
+            from .execution_clock import clock_predicates
+            if clock_predicates(step['until']):
+                session._trace_clock_preflight(step['until'])
     for step in steps:
         if step['op']=='delta-rewind' and 'policy' in step:
             from .debug_cpu_deltas import validate_policy
@@ -404,8 +422,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             # unknown while allowing the script's full recovery operation.
     frame_restore_attempted = False
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+    if time.monotonic() >= deadline:
+        raise TimeoutError('Script host-time budget expired before route publication')
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
-    started = time.monotonic(); deadline = started+timeout_ms/1000
     results = dict(bindings or {}); records = []; failure = None
     owned_before=set(getattr(session,'_keyboard_leases',{}));keyboard_touched=False
 

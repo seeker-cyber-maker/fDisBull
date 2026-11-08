@@ -156,10 +156,18 @@
         "tests/test_qemu_display.py",
         "tests/test_qemu_display_native.py",
         "tests/test_qemu_input_schedule.py",
-        "tests/test_qemu_input_schedule_native.py"
+        "tests/test_qemu_input_schedule_native.py",
+        "tests/test_execution_clock.py",
+        "tests/test_source_clock_script_deadline.py",
+        "tests/test_qemu_dos_trace_clock.py",
+        "tests/test_qemu_dos_clock_trace_native.py"
       ],
       "scope_limits": [
         "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
+        "Virtual-profile initial real-mode COM/MZ source traces advertise source_trace_clock and retain optional fdisbull-source-clock-1 brackets. Before/after native time, counter and epoch must remain identical across ownership/register/instruction observation. This uses the existing native clock extension, not a new QEMU patch or automatic timing synchronization.",
+        "virtual-time-range predicates require exact run, host epoch and native epoch plus half-open integer start_ns/end_ns bounds. Live and saved-script requests check every clock leaf before execution and earlier script mutations. Literal identities come from an earlier request; trace-until result interpolation remains unsupported. A time predicate observes debugger boundaries rather than an exact native timer cutoff.",
+        "Stored query rows and search witnesses retain validated source clocks; optional endpoint_clock preserves a count trace's final boundary without adding an N+1 event. Reopened artifacts bind native admission and source lineage, enforce homogeneous stable brackets and monotonic time/counter/sequence order. Candidate source identity remains independent of timestamps. Missing or foreign clocks are unknown offline; malformed clocks are rejected for every query.",
+        "Source-clock joins establish observation order within one run and both epochs, not input causation, natural instruction latency, guest consumption or completed guest frames. Equal nanoseconds do not establish callback order; observed GDB IRQ/timer policy remains in force. An unbound final time match leaves source_window_closed false. Source-trace host bounds include lock admission and persistence; late or failed storage retains known stop evidence and any artifact IDs in error.result without replay.",
         "clock_advance uses one native timer and one GDB continue under a single host deadline. Token-bound requested/fired/stopped timestamps preserve early debugger/process stops and unknown input consumption; uncertain arm/cleanup closes the machine. No exact arbitrary-nanosecond cutoff, cycle accuracy, generic guest_ms, completed-frame or DOSBox timing parity claim.",
         "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for the declared clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
         "By default, owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Legacy timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",

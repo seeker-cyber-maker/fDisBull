@@ -189,9 +189,13 @@ def test_native_deadline_is_incomplete_and_leaves_owned_machine_stopped_or_reape
         active = process_record(debug)
         static = number(active['source_mapping']['static_base'])
         started = time.monotonic()
-        result = debug.trace_until({'kind': 'pc-range', 'space': 'project',
-                                   'start': static + 1000, 'end': static + 1001},
-                                  max_steps=9999, timeout_ms=150)
+        try:
+            result = debug.trace_until({'kind': 'pc-range', 'space': 'project',
+                                       'start': static + 1000, 'end': static + 1001},
+                                      max_steps=9999, timeout_ms=150)
+        except ExecutionTraceError as error:
+            result = error.result
+            assert result['persistence_error']['type'] == 'TimeoutError'
         elapsed = time.monotonic() - started
         assert result['outcome'] == 'timeout', result
         assert not result['matched'] and not result['exact_stop'] and not result['complete']
@@ -204,10 +208,19 @@ def test_native_deadline_is_incomplete_and_leaves_owned_machine_stopped_or_reape
             assert debug.vm.qmp.operation_deadline is None
         else:
             assert debug.dos_process_info()['source_mapping']['live'] is False
-        saved = document(project, result['trace_artifact'], tmp_path)
-        assert saved['collector']['outcome'] == 'timeout'
-        assert saved['window']['closed'] is False
-        assert all(event['observation']['instruction_completed'] is not True for event in saved['events'])
+        # The native timeout can leave enough of the original host allowance
+        # to save a partial window, or expiry can occur before/after its write.
+        # A late post-check preserves any actual artifact ID; neither outcome
+        # permits a complete window or a retry of the executed instructions.
+        if 'trace_artifact' in result:
+            saved = document(project, result['trace_artifact'], tmp_path)
+            assert saved['collector']['outcome'] == 'timeout'
+            assert saved['window']['closed'] is False
+            assert all(event['observation']['instruction_completed'] is not True for event in saved['events'])
+        else:
+            assert result['persistence_error']['type'] == 'TimeoutError'
+            assert not project.db.execute("SELECT 1 FROM debug_artifacts WHERE run=? AND kind='trace'",
+                                          (debug.run_id,)).fetchone()
 
 
 def test_native_lost_step_reply_is_not_replayed_and_invalidates_live_process(
@@ -330,3 +343,46 @@ def test_native_persistence_failure_retains_observed_stop_without_replaying(
     if failure == 'journal':
         with Project(tmp_path / 'program.fdb') as reopened:
             assert document(reopened, result['trace_artifact'], tmp_path) == saved
+
+
+@pytest.mark.parametrize('publication', ['artifact', 'journal'])
+def test_native_slow_persistence_cannot_report_success_after_trace_deadline(
+        tmp_path, process_runtime, process_disk, publication):
+    _, project = create_project(tmp_path, LOOP)
+    with project, project.debugger(process_runtime['executable'], tmp_path,
+            **launch_options(process_runtime, process_disk)) as debug:
+        process_record(debug)
+        entered = []
+
+        def slow_publication():
+            entered.append(time.monotonic())
+            time.sleep(1.05)
+            return 1
+
+        project.db.create_function('slow_trace_publication', 0, slow_publication)
+        table, condition = ('debug_artifacts', "NEW.kind = 'trace'") if publication == 'artifact' else (
+            'debug_events', "NEW.operation = 'trace-until'")
+        with project.transaction(True):
+            project.db.execute(f"""
+                CREATE TRIGGER delay_trace_publication BEFORE INSERT ON {table}
+                WHEN {condition}
+                BEGIN SELECT slow_trace_publication(); END
+            """)
+        with pytest.raises(ExecutionTraceError) as caught:
+            debug.trace_until(AX_TWO, max_steps=4, timeout_ms=1000)
+        result = caught.value.result
+        assert len(entered) == 1
+        assert result['persistence_error']['type'] == 'TimeoutError'
+        assert result['outcome'] == 'predicate' and result['matched'] and result['exact_stop']
+        assert result['steps'] == result['attempted_steps'] == 2
+        assert live_word(debug.registers(), 'rax', 'eax', 'ax') == 2
+        assert debug.status()['state'] == 'stopped'
+        assert debug._deadline is debug.vm.operation_deadline is None
+        assert debug.vm.qmp.operation_deadline is debug.vm.gdb.operation_deadline is None
+        assert not project.db.in_transaction
+        saved = document(project, result['trace_artifact'], tmp_path)
+        assert saved['collector']['current_stop'] == result['current_stop']
+        journals = project.db.execute(
+            "SELECT count(*) FROM debug_events WHERE run=? AND operation='trace-until'",
+            (debug.run_id,)).fetchone()[0]
+        assert journals == (1 if publication == 'journal' else 0)

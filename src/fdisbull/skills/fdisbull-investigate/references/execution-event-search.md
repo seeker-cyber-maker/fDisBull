@@ -5,6 +5,7 @@
 - [Choose the question and window](#choose-the-question-and-window)
 - [Capture a live window](#capture-a-live-window)
 - [Define predicates and regions](#define-predicates-and-regions)
+- [Join native source clocks](#join-native-source-clocks)
 - [Query an existing trace](#query-an-existing-trace)
 - [Narrow A against controls](#narrow-a-against-controls)
 - [Follow the candidate and preserve scope](#follow-the-candidate-and-preserve-scope)
@@ -22,6 +23,11 @@ The initial live `debug-trace-until` backend is owned, stopped real-mode
 DOSBox. Retrospective queries/searches also accept supported existing PE traces;
 they do not add live Windows support. Source version, runtime code bytes,
 CPU mode and qualified address context belong to each candidate's identity.
+
+The native `qemu-dos` process adapter also supports initial real-mode COM/MZ
+source boundaries. Its virtual profile adds clock-qualified source observations;
+see [native QEMU migration](dos-qemu-migration.md#relate-source-boundaries-to-virtual-time)
+for its distinct debugger-step and input contracts.
 
 Reuse an existing named scene action or known input route to establish the
 starting situation. Keep the action label, input receipt, observation window
@@ -229,6 +235,41 @@ optional `name` is display text. Identity is the stable `id`, address space
 and numerical bounds. A region change compares the event with the initial
 event's region; an unmapped endpoint is unknown. Search refinement retains the
 original region definitions.
+
+## Join native source clocks
+
+The optional `virtual-time-range` predicate has exact fields `kind`, `run`,
+`epoch`, `native_epoch`, `start_ns` and `end_ns`. Its integer interval is
+half-open, with `0 <= start_ns < end_ns <= 2**63`. Obtain the run, 32-hex host
+epoch and positive native epoch from the same session's `clock_observe()`;
+the native epoch is `virtual_clock.native.epoch`. This predicate is admitted
+live only by the initial native DOS process adapter under its explicit virtual
+profile, and can be combined with other predicates through `all` / `any`.
+
+Qualified event rows and search samples retain a `fdisbull-source-clock-1`
+object with native nanoseconds, a separate instruction counter and unchanged
+before/after samples around the full stopped source read. A count trace's
+final `endpoint_clock` is returned separately by the query API. It does not
+add an event, match or candidate beyond the trace's N preceding snapshots.
+Candidate source-site keys remain independent of clocks.
+
+Missing clock evidence or another run/epoch is unknown offline. Malformed
+clocks reject the artifact regardless of the chosen predicate. Live requests
+check every nested clock leaf before stepping; saved scripts check literal
+identities before earlier writes, then recheck at trace admission. `$` result
+references inside trace-until parameters remain unsupported. Clockless
+historical traces and search artifacts remain readable.
+
+A time predicate can match an observed unbound final boundary; its source site
+remains unknown and `source_window_closed=False` prevents search narrowing.
+A future interval may also be skipped between debugger stops. This predicate
+does not install a timer cutoff. Use finite `max_steps` and `timeout_ms`.
+
+Within one run and both epochs, these observations can be ordered with input
+dispatch or media publication receipts. Equal timestamps do not identify
+callback order. Temporal joins do not prove input consumption, input causation,
+completed guest frames or natural instruction latency; the observed IRQ/timer
+stepping policy still applies. No automatic synchronization is introduced.
 
 ## Query an existing trace
 

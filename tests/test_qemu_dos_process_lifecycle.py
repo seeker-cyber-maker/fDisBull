@@ -130,7 +130,7 @@ def test_native_memory_snapshot_transport_failure_invalidates_process(
 
 
 @pytest.mark.parametrize('operation', ['machine-run', 'dos-process-return'])
-def test_native_run_event_failure_invalidates_unobserved_completion(
+def test_native_run_event_failure_invalidates_owner_and_retains_observed_completion(
         tmp_path, process_runtime, process_disk, operation):
     _, project = create_project(tmp_path, com_exit(37))
     with project:
@@ -141,17 +141,21 @@ def test_native_run_event_failure_invalidates_unobserved_completion(
             reject_event(project, operation)
             with pytest.raises(sqlite3.IntegrityError, match='authored lifecycle publication failure') as raised:
                 debug.run(timeout_ms=3000)
-            # DOS may already have exited, but its return has not been
-            # independently admitted. Do not turn a journal error into a
-            # successful guest-exit record or retain the old live mapping.
+            # A machine-run journal failure precedes DOS-return admission.
+            # A later DOS journal failure follows that independent admission:
+            # keep the observed classification in the exception, while the
+            # failed operation still closes ownership and writes no success.
             if operation == 'machine-run':
                 assert_invalidated(project, debug, active)
             else:
                 assert debug.vm.process.poll() is not None
                 result = raised.value.result
-                assert result['outcome'] == 'breakpoint'
-                assert result['session']['stop_reason']['native_reply'].startswith('T05')
-                assert result['session']['stop_reason']['breakpoint_ids']
+                assert result['outcome'] == 'guest_exit'
+                assert result['process']['termination']['code'] == 37
+                assert result['process']['source_mapping']['live'] is False
+                assert result['native_machine_stop']['kind'] == 'breakpoint'
+                assert result['native_machine_stop']['native_reply'].startswith('T05')
+                assert result['native_machine_stop']['breakpoint_ids']
             assert not project.db.execute(
                 "SELECT 1 FROM debug_events WHERE run=? AND operation=?",
                 (debug.run_id, operation)).fetchone()

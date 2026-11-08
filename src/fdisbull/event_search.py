@@ -413,6 +413,17 @@ def _trace(project, identifier, *, regions=None):
                     version=row['version'], backend=_backend(project, metadata))
     if (_json(compiled['identity']) != _json(expected) or compiled['run'] != row['run']):
         raise ValueError('Normalized trace identity differs from its owning run')
+    clock = next((event['clock'] for event in compiled['events'] if 'clock' in event),
+                 compiled.get('collector', {}).get('current_stop', {}).get('clock'))
+    if clock is not None:
+        from .execution_clock import validate_clock_admission
+
+        validate_clock_admission(metadata, backend=expected['backend'], native_epoch=clock['native_epoch'])
+        fields = ('cpus', 'clock_profile', 'native_clock_admission')
+        captured = mapping['machine_configuration']
+        owned = metadata['machine_configuration']
+        if _json({key: captured[key] for key in fields}) != _json({key: owned[key] for key in fields}):
+            raise ValueError('Trace clock admission differs from its owning run')
     if native_binding is not None:
         _native_events(document, compiled, native_binding)
     _qualify_image(compiled, mapped)
@@ -592,7 +603,7 @@ class EventSearchProjectMixin:
                         rows.append(dict(deepcopy(event), trace_artifact=trace,
                                          evaluation=evaluation))
                     matches += 1
-            return dict(trace_artifact=trace, trace_sha256=row['sha256'], run=row['run'],
+            result = dict(trace_artifact=trace, trace_sha256=row['sha256'], run=row['run'],
                 identity=compiled['identity'], predicate=checked, regions=compiled['regions'],
                 window=compiled['window'], complete=compiled['window']['closed'],
                 scanned_events=len(compiled['events']), matched_count=matches,
@@ -600,3 +611,7 @@ class EventSearchProjectMixin:
                 unknown_examples=unknown_examples, offset=offset, limit=limit, rows=rows,
                 next_offset=offset + len(rows) if offset + len(rows) < matches else None,
                 scope='Retrospective observations only; no claim the live target stopped at a returned match')
+            endpoint = compiled.get('collector', {}).get('current_stop', {}).get('clock')
+            if endpoint is not None:
+                result['endpoint_clock'] = deepcopy(endpoint)
+            return result

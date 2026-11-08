@@ -14,7 +14,46 @@ import time
 from .execution_trace import (ExecutionTraceError, MAX_BOUNDARY_BYTES,
                               MAX_TRACE_BYTES, _encoded, _needs_region,
                               validate_trace_until)
-from .qemu_machine import machine_operation
+from .qemu_machine import machine_trace_operation
+
+
+def _clock_preflight(session, predicate):
+    """Refuse a foreign clock before a live predicate can execute anything."""
+    from .execution_clock import clock_predicates
+    from .qemu_clock import _configuration
+    leaves = clock_predicates(predicate)
+    if not leaves:
+        return
+    if _configuration(session.vm)['profile'] != 'virtual':
+        raise ValueError('Live virtual-time-range requires the QEMU virtual clock profile')
+    observed = session._clock_snapshot()
+    identity = dict(run=session.run_id, epoch=observed['epoch'],
+                    native_epoch=observed['virtual_clock']['native']['epoch'])
+    if any(any(leaf[key] != value for key, value in identity.items()) for leaf in leaves):
+        raise ValueError('Live virtual-time-range differs from the owned run or clock epoch')
+
+
+def _clock_sample(session):
+    observed = session._clock_snapshot()
+    return dict(run=observed['run'], epoch=observed['epoch'],
+                sequence=observed['sequence'], virtual_ns=observed['virtual_ns'],
+                icount=observed['counter']['value'],
+                native_epoch=observed['virtual_clock']['native']['epoch'])
+
+
+def _clock_bracket(session, before, after):
+    from .execution_clock import validate_clock
+    from .qemu_clock import _invalid
+    fields = ('sequence', 'virtual_ns', 'icount', 'native_epoch')
+    if any(before[key] != after[key] for key in ('run', 'epoch')):
+        _invalid(session.vm, 'Source clock epoch changed during the stopped observation')
+    clock = dict(format='fdisbull-source-clock-1', domain='QEMU_CLOCK_VIRTUAL',
+        **{key: before[key] for key in ('run', 'epoch', 'native_epoch', 'virtual_ns', 'icount')},
+        before={key: before[key] for key in fields}, after={key: after[key] for key in fields})
+    try:
+        return validate_clock(clock, run=session.run_id)
+    except ValueError as error:
+        _invalid(session.vm, 'Source clock bracket is not stable: ' + str(error))
 
 
 def _require_active(session, binding):
@@ -45,9 +84,11 @@ def _ownership(session, binding):
         raise ValueError('DOS PSP or parent identity changed during the source capture')
 
 
-def _observe(session, binding, sequence):
+def _observe(session, binding, sequence, *, clocked=False):
     from iced_x86 import Decoder
     from .qemu_trace_identity import qualify_instruction
+    session._remaining()
+    before = _clock_sample(session) if clocked else None
     _ownership(session, binding)
     registers = session.registers()
     state = registers['address_state']
@@ -88,10 +129,14 @@ def _observe(session, binding, sequence):
                  observation=dict(registers_stage='before-instruction',
                                   instruction_completed=False, flags_materialized=True,
                                   evidence='stopped native snapshot; no retirement claim'))
+    stopped = dict(registers=registers, address=address, source_qualification=qualification)
+    if clocked:
+        event['clock'] = _clock_bracket(session, before, _clock_sample(session))
+        stopped['clock'] = deepcopy(event['clock'])
+    session._remaining()
     if len(_encoded(event)) > MAX_BOUNDARY_BYTES:
         raise ValueError('Stopped boundary exceeds its 8 KiB observation budget')
-    return event, dict(registers=registers, address=address,
-                       source_qualification=qualification)
+    return event, stopped
 
 
 def _document(session, metadata, events, policy, **fields):
@@ -130,11 +175,15 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     from .execution_events import evaluate_predicate, validate_regions
     from .qemu_step_policy import observe_step_policy
     from .qemu_trace_identity import load_trace_binding
+    from .qemu_clock import _configuration
 
     if session.project.db.in_transaction:
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session._input_pending():
         raise ValueError('Queued physical input requires run() before stepping or tracing')
+    session._remaining()
+    clocked = _configuration(session.vm)['profile'] == 'virtual'
+    _clock_preflight(session, until)
     started = time.monotonic()
     metadata = deepcopy(session.metadata)
     binding = load_trace_binding(session.project, session.version['id'], metadata)
@@ -155,9 +204,6 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     events = []
     policy = None
     interrupted = None
-    previous_deadline = session._deadline
-    deadline = started + timeout_ms / 1000
-    session._set_deadline(deadline if previous_deadline is None else min(deadline, previous_deadline))
     try:
         remote = session._stopped()
         policy = observe_step_policy(remote, timeout_ms=session._remaining())
@@ -167,7 +213,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
         header_bytes = len(_encoded(_document(session, metadata, [], policy)))
         if header_bytes + MAX_BOUNDARY_BYTES > MAX_TRACE_BYTES:
             raise ValueError('Source trace metadata exceeds its artifact budget')
-        raw, result['current_stop'] = _observe(session, binding, 1)
+        raw, result['current_stop'] = _observe(session, binding, 1, clocked=clocked)
         events.append(raw)
         event_bytes = len(_encoded(raw)) + 1
         current = _compiled(session, metadata, raw, policy, regions)
@@ -209,7 +255,8 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
                               foreign_stop=deepcopy(native))
                 break
             result['steps'] += 1
-            following, result['current_stop'] = _observe(session, binding, len(events) + 1)
+            following, result['current_stop'] = _observe(session, binding, len(events) + 1,
+                                                         clocked=clocked)
             if count is not None and result['steps'] == count:
                 # trace(count=N) retains its N attempts / N pre-step snapshots
                 # interface; inspect its final endpoint without adding N+1.
@@ -222,6 +269,10 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
             events.append(following)
             event_bytes += len(_encoded(following)) + 1
     except BaseException as error:
+        # A step or DOS-return journal can fail after observing a real stop.
+        # Keep that receipt, even when the later source/clock read is missing.
+        if result['current_stop'] is None and isinstance(getattr(error, 'result', None), dict):
+            result['current_stop'] = deepcopy(error.result)
         if not isinstance(error, Exception):
             interrupted = error
         result.update(outcome='cancelled' if interrupted is not None else
@@ -237,8 +288,6 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
                 or getattr(qmp, 'socket', True) is None
                 or gdb is not None and gdb.socket is None)):
             session.vm.close()
-    finally:
-        session._set_deadline(previous_deadline)
 
     all_qualified = bool(events) and all(event['source_qualification']['qualified'] for event in events)
     closed_window = result['outcome'] in ('predicate', 'step_budget', 'count') and all_qualified
@@ -258,6 +307,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
         action=deepcopy(result['action']))
     document['collector']['until'] = until
     try:
+        session._remaining()
         data = _encoded(document)
         if len(data) > MAX_TRACE_BYTES:
             raise ValueError('Aggregate execution trace exceeds its 16 MiB artifact budget')
@@ -265,7 +315,9 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
             event_count=len(events), complete=document['complete'], context='dos-process',
             window=window, label=label, capture_kind=document['capture_kind'], outcome=result['outcome']))
         result.update(trace_artifact=artifact['artifact'], trace=artifact, observation_count=len(events))
+        session._remaining()
         session._event('trace-until' if until else 'dos-process-trace', result)
+        session._remaining()
     except Exception as error:
         result['persistence_error'] = dict(type=type(error).__name__, message=str(error))
         if interrupted is not None:
@@ -281,7 +333,11 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
 class QemuDOSSourceTraceMixin:
     """The process adapter's bounded trace API; raw machines remain separate."""
 
-    @machine_operation
+    @machine_trace_operation
+    def _trace_clock_preflight(self, until, *, timeout_ms=10000):
+        _clock_preflight(self, until)
+
+    @machine_trace_operation
     def trace(self, name='machine-trace.json', *, count=128, timeout_ms=10000, bits=None):
         from .external_files import _file_name
         _file_name(name)
@@ -294,7 +350,7 @@ class QemuDOSSourceTraceMixin:
         return _collect(self, name=name, count=count, max_steps=count,
                         timeout_ms=timeout_ms)['trace']
 
-    @machine_operation
+    @machine_trace_operation
     def trace_until(self, until, *, regions=None, max_steps=1000, timeout_ms=10000,
                     name='trace-until.json', action=None, label='trial'):
         until, regions, action = validate_trace_until(until, regions=regions,

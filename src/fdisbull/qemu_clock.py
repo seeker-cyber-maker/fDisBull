@@ -158,7 +158,13 @@ def admit_virtual_clock(vm):
 class MachineClockMixin:
     """The public machine context wraps this method in ``machine_operation``."""
 
-    def clock_observe(self):
+    def _clock_snapshot(self):
+        """Read the shared clock epoch under the caller's machine lock.
+
+        Source collectors use this same validator without adding a separate
+        persistent event for every side of their stopped observation bracket.
+        This internal operation never continues the guest.
+        """
         project = getattr(self, 'project', None)
         if project is not None and project.db.in_transaction:
             raise ValueError('Machine clock observation requires a project outside a caller-owned transaction')
@@ -215,7 +221,11 @@ class MachineClockMixin:
         if native_clock is not None:
             result.update(virtual_clock=dict(domain='QEMU_CLOCK_VIRTUAL',
                 source='x-fdisbull-query-clock.virtual-ns', native=native_clock))
-        if project is not None:
+        return result
+
+    def clock_observe(self):
+        result = self._clock_snapshot()
+        if getattr(self, 'project', None) is not None:
             self._event('machine-clock-observe', result)
         return result
 

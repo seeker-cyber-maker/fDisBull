@@ -14,6 +14,8 @@ import re
 
 from iced_x86 import Decoder, Mnemonic
 
+from .execution_clock import validate_clock, validate_clock_predicate, validate_trace_clocks
+
 
 MAX_EVENTS = 10_000
 MAX_SAMPLES = 10_000
@@ -148,6 +150,8 @@ def validate_predicate(predicate):
                     raise ValueError('Boolean predicate requires a nonempty bounded list')
                 return {operator: [visit(c, depth + 1) for c in children]}
         kind = value.get('kind')
+        if kind == 'virtual-time-range':
+            return validate_clock_predicate(value)
         if kind in ('register', 'any-register'):
             field = 'register' if kind == 'register' else 'registers'
             names = [_register(value.get(field))] if kind == 'register' else _registers(value.get(field))
@@ -222,6 +226,13 @@ def _evaluate(predicate, event, initial, previous):
             matched = (False if False in values else None if None in values else True) if operator == 'all' else (True if True in values else None if None in values else False)
             return {'matched': matched, 'unknown': sorted({s for r in results for s in r['unknown']})}
     kind = predicate['kind']
+    if kind == 'virtual-time-range':
+        if 'clock' not in event:
+            return answer(None, 'Qualified virtual clock unavailable')
+        clock = validate_clock(event['clock'])
+        if any(clock[field] != predicate[field] for field in ('run', 'epoch', 'native_epoch')):
+            return answer(None, 'Virtual clock identity differs from predicate')
+        return answer(predicate['start_ns'] <= clock['virtual_ns'] < predicate['end_ns'])
     if kind in ('register', 'any-register'):
         names = [predicate['register']] if kind == 'register' else predicate['registers']
         operator = next(k for k in _COMPARISONS if k in predicate)
@@ -451,6 +462,7 @@ def normalize_trace(document, *, regions=None):
     raw_events = document.get('events')
     if type(raw_events) is not list or len(raw_events) > MAX_EVENTS:
         raise ValueError('Trace event budget exceeded or events are missing')
+    clocks, endpoint_clock = validate_trace_clocks(document, run=run, backend=backend, mapping=mapping)
     regions = validate_regions(regions)
     events, registers, last_sequence, last_context, gaps = [], {}, None, None, 0
     explicit_sequence = None
@@ -605,6 +617,8 @@ def normalize_trace(document, *, regions=None):
                        'instruction_sha256': digest, 'region': deepcopy(region),
                        'observation': deepcopy(observation), 'cpu_mode': mode, 'code_bits': bits,
                        'execution_context': context, 'contiguous': contiguous})
+        if clocks[index] is not None:
+            events[-1]['clock'] = clocks[index]
         last_sequence, last_context, explicit_sequence = sequence, context, has_sequence
     explicit = document.get('window')
     requested = document.get('requested_count')
@@ -621,11 +635,14 @@ def normalize_trace(document, *, regions=None):
         reason = 'requested event window captured' if closed else 'incomplete trace window'
     if gaps:
         closed, reason = False, 'sequence gaps in captured window'
-    return {'format': 'fdisbull-execution-events-1', 'identity': identity, 'run': run,
-            'regions': regions, 'events': events,
-            'window': {'closed': bool(closed), 'reason': reason, 'requested_count': requested,
-                       'event_count': len(events), 'sequence_gaps': gaps},
-            'unqualified_events': sum(e['site'] is None for e in events)}
+    compiled = {'format': 'fdisbull-execution-events-1', 'identity': identity, 'run': run,
+                'regions': regions, 'events': events,
+                'window': {'closed': bool(closed), 'reason': reason, 'requested_count': requested,
+                           'event_count': len(events), 'sequence_gaps': gaps},
+                'unqualified_events': sum(e['site'] is None for e in events)}
+    if endpoint_clock is not None:
+        compiled['collector'] = {'current_stop': {'clock': endpoint_clock}}
+    return compiled
 
 
 def _artifact(compiled):
@@ -645,6 +662,7 @@ def _check_compiled(compiled):
     _artifact(compiled)
     if type(compiled.get('events')) is not list or len(compiled['events']) > MAX_EVENTS:
         raise ValueError('Compiled event budget exceeded')
+    validate_trace_clocks(compiled, run=compiled['run'], backend=compiled['identity']['backend'])
     if type(compiled.get('window')) is not dict or compiled['window'].get('closed') is not True:
         raise ValueError('Narrowing requires a closed bounded trace window')
     validate_regions(compiled.get('regions'))
@@ -703,6 +721,8 @@ def _add_trial(state, compiled, observed, unknown, mode, label, predicate):
                 break
             event = compiled['events'][index]
             sample = {'artifact': artifact, 'run': compiled['run'], 'index': index, 'sequence': event['sequence']}
+            if 'clock' in event:
+                sample['clock'] = validate_clock(event['clock'], run=compiled['run'])
             digest = _hash(sample)
             if digest not in sample_lookup:
                 if len(state['samples']) >= MAX_SAMPLES:
@@ -796,11 +816,18 @@ def validate_search(state):
         for sample in row['samples']:
             _number(sample, 'sample index', len(state['samples']) - 1)
     for sample in state['samples']:
-        if type(sample) is not dict or set(sample) != {'artifact', 'run', 'index', 'sequence'}:
+        fields = {'artifact', 'run', 'index', 'sequence'}
+        if type(sample) is dict and 'clock' in sample:
+            fields.add('clock')
+        if type(sample) is not dict or set(sample) != fields:
             raise ValueError('Invalid witness sample')
         _artifact({'artifact': sample['artifact']}); _text(sample['run'], 'sample run', 128)
         _number(sample['index'], 'sample event index', MAX_EVENTS - 1)
         _number(sample['sequence'], 'sample event sequence')
+        if 'clock' in sample:
+            if state['identity']['backend'] != 'qemu-dos':
+                raise ValueError('Source clock witness requires the native DOS backend')
+            validate_clock(sample['clock'], run=sample['run'])
     for index, trial in enumerate(state['history']):
         fields = {'mode', 'label', 'predicate', 'artifact', 'run', 'window', 'event_count',
                   'unqualified_events', 'unknown_observations', 'observed_count', 'candidate_count'}

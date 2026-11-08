@@ -403,6 +403,71 @@ def machine_run_operation(function):
     return invoke
 
 
+def machine_trace_operation(function):
+    """Bound source observation, execution and persistence from lock admission.
+
+    Save each incoming bound separately. The DOS loader's ``_set_deadline``
+    intentionally owns all channels during launch; a composed trace must not
+    use it to widen an existing script, machine or transport deadline.
+    """
+    import inspect
+    signature=inspect.signature(function)
+
+    @wraps(function)
+    def invoke(self,*args,**kwargs):
+        from .operation_budget import request_deadline
+        arguments=signature.bind(self,*args,**kwargs)
+        arguments.apply_defaults()
+        bound=request_deadline(self,arguments.arguments['timeout_ms'])
+        vm=self.vm
+        def limits():
+            return [bound,getattr(self,'_deadline',None),getattr(vm,'operation_deadline',None),
+                    *[getattr(channel,'operation_deadline',None) for channel in
+                      (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
+        bound=min(value for value in limits() if value is not None)
+        wait=min(10,bound-time.monotonic())
+        if wait<=0:raise TimeoutError('Source trace host deadline expired before admission')
+        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        previous_session=getattr(self,'_deadline',None)
+        previous_vm=getattr(vm,'operation_deadline',None)
+        previous_channels=[]
+        installed=False
+        try:
+            guard=getattr(vm,'operation_guard',None)
+            if guard is not None:guard(function.__name__)
+            bound=min(value for value in limits() if value is not None)
+            if time.monotonic()>=bound:
+                raise TimeoutError('Source trace host deadline expired before dispatch')
+            for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
+                if channel is not None:
+                    previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
+                    channel.operation_deadline=bound
+            self._deadline=bound
+            vm.operation_deadline=bound
+            installed=True
+            result=function(self,*args,**kwargs)
+            if time.monotonic()>=bound:
+                error=TimeoutError('Source trace exceeded its host deadline')
+                error.result=result
+                raise error
+            return result
+        except BaseException:
+            channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
+            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+                   for channel in channels):vm.close()
+            raise
+        finally:
+            if installed:
+                self._deadline=previous_session
+                vm.operation_deadline=previous_vm
+                for channel,previous in previous_channels:channel.operation_deadline=previous
+                current=getattr(vm,'gdb',None)
+                if current is not None and not any(current is channel for channel,_ in previous_channels):
+                    current.operation_deadline=previous_vm
+            vm.lock.release()
+    return invoke
+
+
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
@@ -670,8 +735,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             if delivery is not None:result['input_delivery']=delivery
             if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
         except BaseException as error:
+            # Even an ordinary unscheduled step has already produced a native
+            # stop. Later register reads or journal failures must not erase it.
+            if getattr(error,'result',None) is None:error.result=result
             if scheduled or delivery is not None:
-                error.result=result
                 self.vm.close()
             raise
         return result

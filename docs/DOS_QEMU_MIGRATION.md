@@ -276,6 +276,89 @@ proof that the input caused a particular instruction.
 Raw-disk sessions retain machine traces and do not gain a COM/MZ source binding
 or the process-specific `trace-until` method.
 
+### Join source observations to virtual time
+
+With the explicit `qemu_clock='virtual'` process profile,
+`capabilities['source_trace_clock']` is true and source traces automatically
+retain an optional `clock` on each stopped event. Standard and instruction
+profiles retain their existing clockless source traces. This host-side path
+uses the existing native clock extension; it introduces no new QEMU patch.
+
+Each `fdisbull-source-clock-1` record identifies `QEMU_CLOCK_VIRTUAL`, the owned
+`run`, host observation `epoch`, native `native_epoch`, `virtual_ns` and the
+separate `icount`. Its compact `before` and `after` samples surround the whole
+ownership/register/instruction observation. Both must report identical native
+time, counter and epoch, with increasing observation sequences. An unstable
+bracket is rejected and invalidates the owner. Trace samples share the epoch
+and sequence used by `clock_observe()` without creating two additional journal
+events for every source row.
+
+Use the exact observed identity with a half-open `virtual-time-range` predicate:
+
+```python
+anchor = debug.clock_observe()
+trace = debug.trace('timed-source.json', count=4, timeout_ms=3000)
+last = debug.clock_observe()
+interval = {
+    'kind': 'virtual-time-range',
+    'run': anchor['run'],
+    'epoch': anchor['epoch'],
+    'native_epoch': anchor['virtual_clock']['native']['epoch'],
+    'start_ns': anchor['virtual_ns'],
+    'end_ns': last['virtual_ns'] + 1,
+}
+rows = project.event_trace_query(trace['artifact'], predicate=interval)
+```
+
+Use this example at a verified source boundary whose next four stop intervals
+remain in the module. Time bounds are integers with
+`0 <= start_ns < end_ns <= 2**63`; the end is excluded. Query rows and search
+witness samples retain the validated clock. The optional `endpoint_clock` in
+a query reports the final stopped endpoint separately: `trace(count=N)` still
+stores N preceding events, and its Nth endpoint remains in the artifact's
+`collector.current_stop.clock`. That endpoint is not an additional matched row
+or source candidate.
+
+The same predicate works in `debug-trace-until` and saved `trace-until` script
+operations. Every clock leaf, including a nested `all`/`any` branch, must match
+the current run and clock epoch before execution. Saved scripts check those
+identities before any earlier mutation and recheck when the trace begins.
+Trace-until parameters remain literal: obtain an identity from an earlier
+request; `$receipt` interpolation inside its predicate is unsupported. A live
+time predicate finds an observed debugger boundary in the interval. It does
+not install a clock budget or promise to stop at the interval's first
+nanosecond. Keep `max_steps` and `timeout_ms` finite.
+
+On reopen, storage checks source lineage, exact virtual-profile admission,
+native epoch, stable brackets and monotonically ordered event clocks. Missing
+clocks and foreign identities are unknown in retrospective predicates; old
+clockless artifacts remain readable. Malformed clock evidence is rejected
+even for a register-only query. Candidate code-site identities remain
+independent of time so source comparison across runs still works.
+
+A time predicate can match a clock-qualified final boundary outside the source
+binding. Its source site stays unknown and `source_window_closed=False`
+prevents search narrowing, as with existing explicit runtime predicates.
+
+Within the same run and both epochs, these timestamps can be compared with
+input `dispatch_ns`, renderer `published_ns` and audio callback times. The
+comparison establishes temporal ordering of observations. Equal nanoseconds
+do not establish callback order. It does not fill an untraced interval, prove
+input consumption or causation, identify a completed guest frame, or establish
+natural instruction latency. The recorded GDB IRQ/timer step policy still
+applies, and `icount * 128` is never substituted for elapsed virtual time.
+Timing auto-sync remains deferred.
+
+One absolute host deadline now covers source-trace lock admission, observations,
+stepping and persistence, intersecting existing script, session and channel
+bounds. A late synchronous storage operation can already have written an
+artifact or journal entry; the post-check reports failure and preserves the
+known stop and available IDs in `ExecutionTraceError.result`. If the deadline
+expires before publication, the partial result can have no trace artifact.
+Inspect that result rather than retrying execution. Existing bounded native
+interrupt recovery can outlast admission, but cannot authorize a fresh clock
+read or successful publication after expiry.
+
 ## Physical input, clocks and display observations
 
 ### Queue explicit controller edges

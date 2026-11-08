@@ -58,19 +58,22 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
   instruction and native virtual-clock observations, token-bound native timer
   budgets, retained synchronous renderer publications, bounded PC-speaker PCM
-  windows, one-shot native virtual-time input scheduling, and stopped
+  windows, one-shot native virtual-time input scheduling, timestamped source
+  observations and temporal event queries, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  legacy timed helpers and frame-edge input, coordinate mapping and clock-to-source-trace joins
+  legacy timed helpers and frame-edge input, coordinate mapping and input-to-source causality
   before claiming those behaviors or depending on them in checkpoints and
   histories. Renderer completion and capture-callback delivery are now explicit
   narrower boundaries. Scheduled input now records PS/2 callbacks and sync at
   native virtual time; device acceptance and guest consumption need independent
-  observations. Timing auto-sync is deferred at the user's direction;
+  observations. Source traces now retain clock-qualified stopped boundaries
+  and temporal queries, with no natural-instruction-timing or causal claim.
+  Timing auto-sync is deferred at the user's direction;
   legacy guest_ms, timed helpers and DOSBox timing parity remain separate
   qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
@@ -80,6 +83,134 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-08: clock-qualified source observations and queries
+
+Continued from published head `341847d48f55c877b4db645c3c98a9c72beeafe8`
+on the same branch, stack target and draft MR !117. This increment joins the
+existing native virtual clock to the initial real-mode COM/MZ source collector
+and its persistent event-query/search path. It changes host code only; the
+previously built clock/media/input QEMU remains the native runtime.
+
+### Public behavior
+
+The explicit virtual process profile advertises `source_trace_clock`. Each
+source event automatically carries a versioned `fdisbull-source-clock-1`
+object identifying `QEMU_CLOCK_VIRTUAL`, run, host clock epoch, native epoch,
+virtual nanoseconds and the separate instruction counter. Compact before/after
+samples enclose MCB/PSP ownership checks, register/address observation and
+instruction/source-byte qualification. Native time, counter and epoch must
+remain unchanged throughout that bracket. The sampler shares the existing
+clock-observation epoch and sequence without creating two extra journal events
+per source row. Standard/instruction profiles and raw machine traces remain
+clockless.
+
+`virtual-time-range` is available through existing direct, JSON and saved-script
+trace/query routes. It requires exact run and both clock epochs, with integer
+half-open `start_ns`/`end_ns` bounds. Every live clock leaf is checked before
+execution, even within Boolean branches; a saved script checks all literal
+clock identities before earlier writes and rechecks at trace admission.
+Trace-until result references remain unsupported, so obtain literal identities
+from an earlier request. Live range matching observes debugger boundaries and
+does not install an exact timer cutoff.
+
+Saved query rows and search witnesses retain the clock. Storage validates
+native-profile admission against the owning run, the source/entry lineage,
+homogeneous stable brackets, monotonic time/counters and ordered observation
+sequences. Invalid clock fields cannot be bypassed with a register-only query.
+Missing clocks or a different identity are unknown retrospectively, and old
+clockless artifacts remain compatible. Candidate source-site keys do not
+include time, preserving cross-run comparison.
+
+`trace(count=N)` retains its N preceding snapshots; the final observed endpoint
+clock remains in `collector.current_stop.clock` and is exposed separately as
+optional query `endpoint_clock`. It is not an N+1 event or search candidate.
+A time predicate may match a final unbound runtime observation, as existing
+explicit runtime predicates can; its source site stays unknown and its open
+source window cannot narrow candidates.
+
+### Failure and deadline boundaries
+
+One absolute source-trace deadline starts before lock admission and intersects
+the existing script, session, VM and channel bounds. Observation, stepping and
+persistence use that same bound, then restore each previous limit separately.
+A synchronous storage call may finish late, but cannot return successful trace
+publication after the post-check. `ExecutionTraceError.result` preserves the
+observed stop and any artifact IDs; an expired request before publication can
+have no artifact. Native interrupt recovery retains its bounded cleanup role
+without authorizing a new observation or publication after expiry.
+
+Independent review added failing witnesses for an unscheduled step losing its
+known GDB stop after register/journal failure, DOS return classification lost
+on journal failure, and saved-script preflight/publication resetting the script
+loop allowance. Their corrections preserve already verified stop evidence and
+keep script admission on its original deadline. No execution or input is
+replayed to reconstruct missing evidence.
+
+### Evidence scope and next gate
+
+An independent authored guest joins source timestamps to a real PS/2 make-byte
+observation and retained red renderer pixel. These are separate observations
+on one clock. Ordering alone does not prove input causation or consumption,
+and equal nanoseconds do not establish callback order. Native counter values
+are never converted into elapsed virtual time. Recorded GDB IRQ/timer masking
+still applies; debugger-stepped intervals do not establish natural instruction
+latency or architectural retirement.
+
+The VGA seam review found that default QEMU retrace status toggles on reads,
+while its opt-in precise mode derives a phase from virtual time without a
+retrace event. A later bounded retrace primitive needs an explicit timing
+model/admission and generation changes; a renderer snapshot does not establish
+guest drawing completion. That work remains separate from the source-clock
+join. Timing auto-sync, host pacing and adaptive correction stay deferred at
+the user's direction. All default-promotion rows remain unqualified and DOSBox
+remains the default.
+
+### Verification
+
+| Lane | Result |
+| --- | --- |
+| Final affected source: stock QEMU/FreeDOS, source traces, lifecycle, query/search, scripts, deadlines, inventory and package checker | 809 passed, zero skips, 114.28 seconds |
+| Source native source-clock/input/clock/audio/display witnesses | 38 passed, zero skips, 30.77 seconds |
+| Isolated installed wheel: applicable stock/public regression selection | 798 passed, zero skips, 103.51 seconds |
+| Isolated installed wheel: source-clock/input/clock/audio/display witnesses | 38 passed, zero skips, 35.06 seconds |
+| Isolated installed wheel: retained native DOSBox predicate/hook/reopen witness | 1 passed, zero skips, 1.33 seconds |
+| Core source/wheel/installed payload identity | All 636 package files match |
+| Source distribution and tool-source ZIP | All 1562 tracked payload files and all 23 authored changed paths match; tool-only distribution checks pass |
+
+Selections overlap and are not a unique total. The 36 new hostile host-clock
+cases are included in the source and installed stock selections. The native
+selection has ten source-clock cases, nine input cases, eleven clock-budget
+cases, five audio cases and three display cases. Runtime lanes execute
+serially with required-runtime gates; native inputs and tested package bytes
+remain unchanged.
+
+Retained failing baselines matter: three native stop/journal witnesses and
+two deterministic script-deadline witnesses first reproduced the implementation
+defects above, then passed after correction. The first expanded source lane
+was 807 passed / 2 failed because older tests still expected the discarded DOS
+classification and the pre-native-adapter refusal text. The first installed
+stock lane was 797 passed / 1 failed because its timeout assertion incorrectly
+required the artifact to be absent; a late post-check had correctly retained
+the actual artifact ID. Those tests now inspect the precise supported evidence.
+Production code and timeout limits were not changed to satisfy the last
+assertion. The final lanes above use the corrected tests.
+
+- Tested wheel SHA-256:
+  `323ab20264e568333faf249c2162c028a7b6407e618d69f4da944cfb27f9feeb`.
+- Reused native QEMU SHA-256:
+  `5b8b6c5df2602a34ea284a3efa7048bfacf68b3a1b83f2b9e793cac9c10480cb`.
+- Retained DOSBox-X SHA-256:
+  `795df754019b5e9876d68067cb8d91314b001f28c9c6964502dd57ef21adf79d`.
+
+Private receipts use the `takeover-validation/source-clock-*` prefix in this
+takeover workspace. They retain baseline failures, final command/input hashes,
+JUnit results, package identities and publication guards. No runtime executable,
+DOS image, FDB, original target bytes or private raw log is committed.
+Local Linux/pipe evidence does not establish hosted CI, macOS mirrors,
+QEMM/V86 task tracing, real-game parity or a release qualification. The earlier
+parallel-startup, large-MZ and DOSBox idle-trial timeout observations remain
+unresolved; the new retained DOSBox check does not explain those failures.
 
 ## 2026-11-08: native virtual-time input continuation
 

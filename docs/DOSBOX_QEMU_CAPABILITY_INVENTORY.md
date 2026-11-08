@@ -72,6 +72,17 @@ Reset/profile loss invalidates the scheduler; migration stays blocked after
 the first successful arm. See the [workflow guide](DOS_QEMU_MIGRATION.md#schedule-one-physical-input-batch-on-virtual-time)
 and [native patch contract](../native/qemu-input/README.md).
 
+Virtual-profile COM/MZ source traces now retain stable stopped clock brackets
+under `source_trace_clock`. A `virtual-time-range` predicate binds the exact run,
+host epoch and native epoch with half-open nanosecond bounds. Retrospective
+query rows, final endpoint clocks and search witnesses preserve that evidence
+across project reopening; candidate source-site identities remain independent
+of time. Live and saved-script requests refuse foreign or unsupported clocks
+before execution. This joins source observations to input/media timestamps;
+input causation, natural stepped-instruction latency, legacy guest milliseconds
+and completed guest frames remain unqualified. No default-promotion row is
+qualified by this narrower clock evidence.
+
 [`dosbox-qemu`](../src/fdisbull/dos_qemu.py) is a different backend: it runs
 DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
 `dos-cpu` context and outer `machine` context are different CPUs. Passing its
@@ -162,7 +173,7 @@ dispatch are outside this router dictionary.
 | Explicit direct-write refusals | `debug-write-memory`, `debug-write-registers` | Legacy DOS deliberately refuses these routes; preserve that contract while native machine writes remain explicitly guarded |
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Inherited on `MachineContext` but explicitly refuses QEMU; requires qualified guest-time slices |
-| Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Initial real-mode module only; no queued input or overlay rebinding |
+| Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. Initial real-mode module only; no queued input or overlay rebinding |
 | Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes have partial native support; the separate QEMU scheduling API does not implement legacy waits, timed press/type, clicks or frame contracts |
 | Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |

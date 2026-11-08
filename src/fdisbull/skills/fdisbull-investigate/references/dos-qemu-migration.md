@@ -176,6 +176,71 @@ explicit breakpoint; the prior run is an unobserved interval, not contiguous
 source-trace evidence or proof of input causation.
 Raw-disk machine tracing remains separate and supplies no process source map.
 
+### Relate source boundaries to virtual time
+
+An initial COM/MZ process launched with `qemu_clock='virtual'` advertises
+`source_trace_clock`. Its source trace events automatically retain a
+`fdisbull-source-clock-1` clock with `domain='QEMU_CLOCK_VIRTUAL'`, the owned
+`run`, host `epoch`, native `native_epoch`, `virtual_ns`, separate `icount`,
+and compact `before`/`after` samples. The complete ownership, register and
+instruction read must be bracketed by unchanged native time/counter/epoch.
+The sequences share `clock_observe()`'s epoch; sampling does not add a separate
+clock journal event for each side. Standard/instruction-profile source traces
+and raw machine traces remain clockless.
+
+Use a predicate with exact fields:
+
+```python
+observed = debug.clock_observe()
+interval = {
+    'kind': 'virtual-time-range', 'run': observed['run'],
+    'epoch': observed['epoch'],
+    'native_epoch': observed['virtual_clock']['native']['epoch'],
+    'start_ns': observed['virtual_ns'],
+    'end_ns': observed['virtual_ns'] + 1,
+}
+captured = debug.trace_until(interval, max_steps=0, timeout_ms=3000)
+rows = project.event_trace_query(captured['trace_artifact'], predicate=interval)
+```
+
+This example observes the current stopped boundary without executing it. Bounds
+are integer nanoseconds, `0 <= start_ns < end_ns <= 2**63`, with an excluded
+end. A future live range is tested at each debugger stop, so it can be skipped;
+it does not install a clock timer. Always bound steps and host time.
+
+Query rows and search witness samples retain clocks after project reopen.
+An optional query `endpoint_clock` preserves the final count endpoint from
+`collector.current_stop.clock`, without adding an N+1 event to `trace(count=N)`.
+Candidate site identities remain independent of time. Missing clocks or
+foreign identities are unknown offline; malformed brackets are rejected even
+when the query concerns only a register. Historical clockless records remain
+supported.
+
+A time predicate may match the observed final boundary after leaving the
+source binding. Its source site stays unknown and its open source window
+cannot narrow an event search.
+
+Live and saved-script predicates must match the current run and both epochs.
+Every nested clock leaf is checked before execution, including before earlier
+script writes. Saved trace-until parameters remain literal: use identity from
+an earlier request, not `$` interpolation from a step in the same script.
+An unstable native clock closes ownership while preserving any already known
+stop in the result.
+
+Compare these timestamps with input `dispatch_ns`, renderer `published_ns` or
+audio callback timestamps only within the same run and both epochs. Ordering
+does not prove input consumption or causation, completed guest frames or
+natural instruction latency. Equal timestamps do not establish callback order.
+The actual GDB IRQ/timer step policy still applies, and instruction count is
+never converted into elapsed virtual time. Timing auto-sync remains deferred.
+
+One host deadline now includes trace lock admission, observations, stepping
+and persistence, intersecting script/session/native-channel bounds. If it
+expires before publication, `ExecutionTraceError.result` can contain the
+partial stop with no artifact. A slow synchronous write may already have
+committed an artifact or journal; its post-check still reports failure and
+preserves any available IDs. Inspect the result instead of replaying the trace.
+
 ## Queue input and observe clocks/surfaces
 
 While stopped, queue `keyboard_key_down(key)` and use its returned `lease` with
