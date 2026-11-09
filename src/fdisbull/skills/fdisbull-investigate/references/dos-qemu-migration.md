@@ -409,6 +409,36 @@ Legacy `guest_ms`, timed press/type, frame presses, pixel/INT33 semantics and
 whole-game timing remain unqualified. The separate host clock-sync controller
 preserves input's first-stop semantics and never re-arms a cancelled batch.
 
+## Schedule input at a modeled retrace edge
+
+For input tied to this model, apply the optional fifth patch in
+`native/qemu-input-retrace/` after the unchanged clock/media/input/retrace
+chain. Require `retrace_input_schedule`, queue physical edges while stopped,
+then call `input_schedule_retrace(edge='enter'|'exit', timeout_ms=1000)`.
+JSON uses `debug-input-schedule-retrace`; scripts use `input-schedule-retrace`.
+Arming is passive and selects the strictly next absolute occurrence. The
+caller must choose a bounded execution beyond the target: a coincident clock
+deadline, including a `retrace_wait` to the same edge, cancels before delivery.
+
+Immediately before the existing PS/2 batch callbacks, the native timer checks
+the pinned VGA identity, timing generation and original target window. A
+timing change, including hidden ABA writes, cancels as
+`retrace-timing-changed`; arrival at or beyond the exclusive window end
+cancels as `retrace-missed-window`. These cancellations do not add a VM stop,
+and pending edges remain bound for explicit rescheduling or cancellation.
+An undelivered release keeps its prior dispatched hold. No automatic re-arm
+or synthetic release is allowed.
+
+The normal scheduled-input receipt gains `retrace` with format
+`fdisbull-retrace-input-1`, original observation, target/window and historical
+native arm/check snapshots. Inspect `dispatch_phase_verified` as well as
+`state`; success requires callback, dispatch and terminal timestamps to join
+inside the original window. Later observations must not relabel that evidence.
+Failed scripts close an armed owner even for batches queued before the script.
+Older four-patch builds lack this capability and retain ordinary delta
+scheduling. This boundary does not qualify arbitrary guest consumption, full
+VBlank, completed frames or legacy frame-edge helpers.
+
 ## Observe the explicit VGA retrace model
 
 Select `qemu_clock='virtual', qemu_retrace='precise'` (CLI `--qemu-clock virtual

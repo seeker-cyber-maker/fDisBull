@@ -89,6 +89,10 @@ observed PSP, source map and exit/TSR lifecycle. Read the maintained
 `dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
 and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.
+The [timing guide](DOS_QEMU_TIMING.md) covers explicit host clock auto-sync,
+modeled retrace waits and generation-checked input at the next retrace edge.
+Inspect each capability before using it; a retrace input arm still needs an
+explicit bounded execution beyond its target.
 
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).

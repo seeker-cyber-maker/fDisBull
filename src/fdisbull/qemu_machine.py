@@ -25,7 +25,7 @@ from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine
                          validate_clock_budget, admit_virtual_clock, VIRTUAL_CLOCK_COMMANDS)
 from .qemu_clock_sync import QemuClockSyncMixin
 from .qemu_input import QemuPhysicalInputMixin
-from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS
+from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS, INPUT_RETRACE_COMMANDS
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
@@ -464,6 +464,11 @@ def machine_trace_operation(function, *, label='Source trace'):
                     # Keep a live synchronization mapping from remaining active
                     # after that failure, while retaining its observed receipt.
                     self._clock_sync_outer_expired(result,error)
+                elif function.__name__=='input_schedule_retrace':
+                    # The passive arm may already be accepted and journaled.
+                    # An expired return must not leave a usable live timer.
+                    self._input_invalidate('Retrace input arm exceeded its host deadline; batch must not be replayed')
+                    vm.close()
                 raise error
             return result
         except BaseException:
@@ -518,6 +523,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     input_cancel_pending=machine_io_operation(QemuPhysicalInputMixin.input_cancel_pending,close_on_timeout=True)
     input_schedule=machine_io_operation(QemuScheduledInputMixin.input_schedule,close_on_timeout=True)
     input_schedule_observe=machine_io_operation(QemuScheduledInputMixin.input_schedule_observe,close_on_timeout=True)
+    input_schedule_retrace=machine_trace_operation(QemuScheduledInputMixin.input_schedule_retrace,label='Retrace input scheduling')
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
@@ -536,6 +542,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             virtual_clock_budget=virtual,
             host_clock_sync=virtual and VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
+            retrace_input_schedule=(virtual
+                and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                and INPUT_RETRACE_COMMANDS | INPUT_SCHEDULE_COMMANDS | RETRACE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
+                    <= getattr(vm,'qmp_commands',frozenset())),
             clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
                                'explicit instruction progress profile; no guest milliseconds'),
             physical_input='input-send-event' in getattr(vm,'qmp_commands',()),
@@ -764,6 +774,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         except BaseException as error:
             # Even an ordinary unscheduled step has already produced a native
             # stop. Later register reads or journal failures must not erase it.
+            if getattr(error,'input_schedule_native',None) is not None:
+                result['input_schedule_native']=deepcopy(error.input_schedule_native)
+            if getattr(error,'input_schedule_retrace_before',None) is not None:
+                result['input_schedule_retrace_before']=deepcopy(error.input_schedule_retrace_before)
             if getattr(error,'result',None) is None:error.result=result
             if scheduled or delivery is not None:
                 self.vm.close()
@@ -912,7 +926,7 @@ class MachineDebugSession(MachineContext):
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
-                'input-schedule','input-schedule-observe',
+                'input-schedule','input-schedule-observe','input-schedule-retrace',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession

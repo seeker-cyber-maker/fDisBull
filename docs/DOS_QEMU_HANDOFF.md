@@ -61,6 +61,7 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   windows, one-shot native virtual-time input scheduling, timestamped source
   observations and temporal event queries, explicit precise VGA retrace-model
   observations with timing generations, one-shot precise retrace waits,
+  generation-checked native input at a strictly next modeled retrace edge,
   cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
@@ -75,7 +76,11 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   native virtual time; device acceptance and guest consumption need independent
   observations. Source traces now retain clock-qualified stopped boundaries
   and temporal queries, with no natural-instruction-timing or causal claim.
-  The retrace wait now verifies one strictly next modeled transition. The
+  The retrace wait now verifies one strictly next modeled transition. Retrace
+  input now checks that same admitted model and the original absolute window
+  immediately before PS/2 callbacks; timing changes or missed windows cancel
+  for explicit resolution. This boundary does not qualify full VBlank or
+  guest-frame input. The
   user authorized timing auto-sync in the latest continuation; the host
   controller now makes one bounded correction at an explicit cooperation
   point. Full VBlank, frame completion, legacy guest_ms, timed helpers and
@@ -88,6 +93,164 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: generation-checked input at a modeled retrace edge
+
+This continuation starts from
+`67a6c40d91de383f3986bc1902932a0a7dca16c2` on the existing source branch and
+draft MR !117. The user requested continued implementation and another GitLab
+publication attempt. The preceding clock auto-sync/wait commit and description
+were already present when read back. The stacked target remains
+`agent/execution-event-search-284eb73c` at
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`.
+
+### Public and native boundary
+
+`input_schedule_retrace(edge='enter'|'exit', timeout_ms=1000)`, JSON
+`debug-input-schedule-retrace` and saved-script `input-schedule-retrace` arm
+the existing pending physical batch without executing the guest. Admission
+requires explicit virtual/precise profiles, all existing native clock/input/
+retrace commands and the new `x-fdisbull-arm-input-retrace` command. The
+`retrace_input_schedule` capability is separate from ordinary delta scheduling.
+
+The optional fifth [native patch](../native/qemu-input-retrace/README.md)
+applies after the unchanged exact clock, media, input and retrace layers.
+It reuses the existing one-shot timer, event-batch preflight, PS/2 callbacks,
+final sync, bounds and token history. Native code checks all expected stopped
+identity fields and independently computes the strictly next target and its
+exclusive absolute window. Unsupported timing or no transition refuses before
+accepting an arm. Caller-supplied deadlines are not accepted as phase evidence.
+
+At the callback, existing invalidation, pending-stop and reached/equal-budget
+checks run first. Only then does a private BQL-held helper snapshot the already
+pinned VGA model. It performs no new admission, guest I/O, rendering or timing
+repair. The public passive retrace query retains its stopped/no-active-budget
+guard; builds without standard VGA have an explicit helper error stub.
+
+A higher generation, including hidden A-to-B-to-A changes or newly enabled
+VBE, cancels as `retrace-timing-changed`. An unchanged coherent generation
+sampled at or beyond the original window cancels as `retrace-missed-window`.
+Both leave pending input bound for explicit reschedule/cancel and do not add
+a VM stop. Identity/cache/epoch loss remains fatal. The caller must allow its
+bounded execution beyond the target to permit delivery: an equal clock
+deadline, including a retrace wait to that edge, cancels before callbacks in
+either timer insertion order. A cancelled release retains its prior hold.
+
+The base `fdisbull-qemu-scheduled-input-1` receipt gains a
+`fdisbull-retrace-input-1` member with the full stopped observation, exact
+target/window and frozen native arm/check snapshots. Success requires
+`checked.virtual-ns == dispatch-ns == terminal-ns` inside that original window.
+The pure snapshot validator does not move the live retrace frontier backward.
+Later observations cannot relabel a historical check. Existing
+`input.schedule-arm/result/observe` events retain the exact native receipt.
+The [timing guide](DOS_QEMU_TIMING.md#schedule-input-at-the-next-modeled-retrace-edge)
+documents the caller workflow and explicit resolution rules.
+
+### Defects and witness corrections retained
+
+The initial method/catalog witnesses failed as expected before implementation.
+Focused adversaries then found and fixed four ownership/evidence boundaries:
+
+- A successful arm could expire in the public wrapper's final return check
+  while leaving a usable timer. That narrow path now invalidates input and
+  closes the VM, retaining the accepted receipt on the timeout.
+- A resolved script timeout could be normalized by the remaining-budget clamp
+  before strict validation. Resolved options now validate before clamping;
+  literal options still validate in whole-script preflight.
+- A dispatched receipt could carry a reserved retrace cancellation reason.
+  State/reason consistency now rejects that contradictory evidence.
+- Malformed/native-failed callback receipts and journal failures could lose
+  available phase evidence. Errors now preserve raw native/before evidence
+  alongside the original GDB stop; direct observe failures retain the already
+  built receipt. No uncertain result is replayed or accepted into the ledger.
+
+Two initial host assertions were corrected to compare the unchanged pending/
+lease ledger rather than observation metadata. The first new native run had
+12 passes and one witness error: it expected `stopped` after explicitly
+cancelling the clock budget. The corrected witness first verifies the actual
+stopped receipt and firing chronology, then proves cleanup changes only the
+budget state to `cancelled` and leaves input evidence identical. The fresh
+combined source and installed native selections below include all 13 cases.
+No native implementation changes were needed after its first build.
+
+### Exact native reproduction and build
+
+The original QEMU 10.0.13 archive remains pinned at SHA256
+`4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa`.
+The final fifth patch is
+`5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80`.
+Its six changed members and four exact dependencies are recorded in the
+new source manifest; the combined chain identifies 26 final native paths.
+
+The first full-archive extraction stopped at an unrelated absolute EDK2 link
+under the strict data filter. That failure is retained. Reproduction then
+selected the 92 required regular source/QAPI/parser inputs from the same
+verified archive, without extracting unrelated ROM/submodule links. All five
+layers applied with exact intermediate/output hashes. The final patch omits
+blank context prefixes so ordinary repository whitespace checks remain useful;
+that formatting-only revision was reapplied/reversed with zero fuzz or offset,
+matching all six output members and restoring all 25 prior native members.
+The full QAPI schema parsed successfully on the reconstructed source.
+
+The isolated x86_64 TCG/Pixman build configured in 16.668 seconds and compiled
+in 110.166 seconds, with unchanged native source hashes. Its executable SHA256
+is `744270aeecfbe1a05da6b170b7c1be3a634476444f4cf7ef3f583cb3c16819b7`.
+The retained four-patch executable
+`5d202d2ec57d596351381d7fc1df67211c4d0727ad667119183d41b450c96565`
+was explicitly exercised in both native selections: it refuses the new
+capability while ordinary delta scheduling remains usable. Runtime media,
+firmware, mcopy and the three-patch DOS compatibility binary retain their
+previous recorded identities. Material growth phases admitted their bounded
+growth estimate plus a 20 GiB free-space reserve.
+
+### Local qualification
+
+These are finite local Linux results, with overlapping selections:
+
+| Selection | Result |
+| --- | --- |
+| Focused retrace-input and existing scheduling/retrace contracts | 272 passed; 0 skipped |
+| Public routes, script admission and ownership | 22 passed; 0 skipped |
+| Affected source regressions | 1,190 passed; 5 skipped |
+| Combined source native selection | 73 passed; 0 skipped |
+| Fresh installed-wheel regressions | 1,179 passed; 5 skipped |
+| Fresh installed-wheel combined native selection | 73 passed; 0 skipped |
+| Retained DOSBox native witness | 1 passed; 0 skipped |
+
+The focused selection contains 81 new retrace-input cases plus 51 ordinary
+input-schedule, 78 passive-retrace and 62 retrace-wait cases. The two broader
+lanes each skip the same five optional raw machine-session checks because
+`FDISBULL_MACHINE_QEMU` is unset. Those skips are not native passes. Required
+native lanes have zero skips and each contains all 13 new cases, including the
+explicit retained-binary compatibility branch.
+
+New native witnesses cover busy/HLT and enter/exit combinations, actual IRQ1
+scancode and status-port reads inside the same absolute window, ABA and VBE
+cancellation, original early breakpoints, both equal-deadline insertion orders,
+cancelled release ownership, ordinary-arm descriptor clearing, retained JSON/
+scripts/reopened evidence and five stale native expectations. Missed-window
+adversaries qualify host receipt rejection; no artificially induced native
+missed-window claim is made. Guest status bit 3 is checked only while the
+dispatch-to-fence interval remains in the original occurrence.
+
+The private fresh wheel is SHA256
+`0d63772ae777196586dc5ad8c04cd78df00d367059e410b085151a15735f65ef`.
+All 638 core payload files and 616 copied test/support files are matched to
+source before installed validation. The source-archive gates compare 1,583
+tracked payload files and all 23 authored paths, including the fifth patch,
+manifest, documentation and bundled reference. Complete source/package/tree
+verification and publication receipts remain private under
+`takeover-validation/retrace-input-*` and `retrace-input-runtime`; authored
+source and this engineering log are retained in GitLab.
+
+The qualified boundary is native modeled-phase PS/2 callback/sync timing.
+Device FIFO acceptance, arbitrary guest consumption, full VBlank, completed
+guest frames, legacy timed-helper/DOSBox parity, broader audio, real QEMM/
+games and checkpoint/layer/history semantics remain separate work. The host
+auto-sync controller remains explicit and cooperative. All 127 default-
+promotion entries stay open; DOSBox remains the default with both retained
+selectors. No hosted CI, merge, release or shared installation was performed.
+The configured macOS mirrors remain unavailable in this Linux workspace.
 
 ## 2026-11-09: cooperative clock auto-sync and bounded retrace waits
 

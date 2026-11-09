@@ -8,17 +8,22 @@ device FIFO acceptance, guest consumption, or a completed application frame.
 from __future__ import annotations
 
 from copy import deepcopy
+import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
+from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
 from .qemu_input import MAX_PENDING_EDGES
+from .qemu_retrace import RETRACE_COMMANDS, validate_retrace_snapshot
 
 
 INPUT_SCHEDULE_COMMANDS = frozenset({
     'x-fdisbull-arm-input', 'x-fdisbull-query-input', 'x-fdisbull-cancel-input',
 })
+INPUT_RETRACE_COMMANDS = frozenset({'x-fdisbull-arm-input-retrace'})
 MAX_INPUT_DELAY_NS = 60_000_000_000
 FORMAT = 'fdisbull-qemu-scheduled-input-1'
+_RETRACE_CANCELLATIONS = frozenset({'retrace-timing-changed', 'retrace-missed-window'})
 
 
 def validate_input_delay(delta_ns):
@@ -26,10 +31,106 @@ def validate_input_delay(delta_ns):
         raise ValueError('Input delta_ns must be an integer in 1..60000000000')
 
 
+def validate_retrace_input_parameters(*, edge='enter', timeout_ms=1000):
+    """Validate literals before touching a native timer or pending lease."""
+    if type(edge) is not str or edge not in ('enter', 'exit'):
+        raise ValueError('Retrace input edge must be enter or exit')
+    if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
+        raise ValueError('Retrace input timeout_ms must be an integer in 1..600000')
+
+
+def _retrace_input_window(armed, edge):
+    if not armed['phase-supported']:
+        raise ValueError('Retrace input phase is unsupported: ' + armed['unsupported-reason'])
+    timing = armed['timing']
+    tick, horizontal = timing['ticks-per-char'], timing['htotal']
+    period = tick * timing['total-chars']
+    entry = tick * horizontal * timing['vstart']
+    exit_ = tick * horizontal * (timing['vend'] + 1)
+    if entry == 0 and exit_ == period:
+        raise ValueError('Retrace input requires a real transition, not a whole-period interval')
+    now = armed['virtual-ns']
+    phase = entry if edge == 'enter' else exit_ % period
+    delta = (phase - now) % period or period
+    validate_input_delay(delta)
+    width = exit_ - entry if edge == 'enter' else period - (exit_ - entry)
+    target = now + delta
+    if target > (1 << 63) - 1 or target + width > (1 << 63) - 1:
+        raise ValueError('Retrace input target or window would overflow signed nanoseconds')
+    return target, target + width
+
+
+def _retrace_input_remaining(owner):
+    deadline = getattr(owner.vm, 'operation_deadline', None)
+    if deadline is None:
+        raise ValueError('Retrace input scheduling requires a bounded owned operation')
+    if time.monotonic() >= deadline:
+        raise TimeoutError('Retrace input scheduling host deadline expired')
+
+
 def _invalid(owner, message):
     owner._input_invalidate(message)
     owner.vm.close()
     raise DebuggerError(message)
+
+
+def _native_retrace_schedule(owner, value, expected):
+    """Validate frozen arm/callback evidence without advancing live retrace state.
+
+    Only validated callback cancellations may precede the final owned VM stop.
+    A later current VGA observation cannot validate or relabel that callback.
+    """
+    planned = expected.get('retrace') if expected is not None else None
+    if planned is None:
+        if 'retrace' in value or value.get('reason') in _RETRACE_CANCELLATIONS:
+            _invalid(owner, 'Ordinary native input invented retrace scheduling evidence')
+        return False
+    descriptor = value.get('retrace')
+    try:
+        keys = {'edge', 'target-ns', 'window-end-ns', 'armed'}
+        if (type(descriptor) is not dict or not keys <= descriptor.keys()
+                or set(descriptor) - keys - {'checked'}
+                or type(descriptor['edge']) is not str or descriptor['edge'] != planned['edge']
+                or any(type(descriptor[key]) is not int or not 0 <= descriptor[key] < 1 << 63
+                       for key in ('target-ns', 'window-end-ns'))):
+            raise ValueError('Invalid native retrace-input descriptor fields')
+        armed = validate_retrace_snapshot(descriptor['armed'], epoch=value['epoch'],
+            virtual_ns=value['start-ns'], previous=planned['before']['native'])
+        if armed != planned['before']['native']:
+            raise ValueError('Native retrace-input arm differs from its exact stopped observation')
+        target, end = _retrace_input_window(armed, descriptor['edge'])
+        if (descriptor['target-ns'] != target or descriptor['window-end-ns'] != end
+                or target != planned['target_ns'] or end != planned['window_end_ns']
+                or value['deadline-ns'] != target):
+            raise ValueError('Native retrace-input target or window differs from its owned occurrence')
+        if value.get('reason') in _RETRACE_CANCELLATIONS and value['state'] != 'cancelled':
+            raise ValueError('Native retrace-input cancellation reason contradicts its state')
+        semantic_cancel = (value['state'] == 'cancelled'
+                           and value.get('reason') in _RETRACE_CANCELLATIONS)
+        needs_check = value['state'] == 'dispatched' or semantic_cancel
+        if value['state'] != 'failed' and ('checked' in descriptor) != needs_check:
+            raise ValueError('Native retrace-input callback snapshot presence is invalid')
+        checked = None
+        if 'checked' in descriptor:
+            checked = validate_retrace_snapshot(descriptor['checked'], epoch=value['epoch'],
+                virtual_ns=value['terminal-ns'], previous=armed)
+        if needs_check:
+            if checked['virtual-ns'] < target:
+                raise ValueError('Native retrace-input callback preceded its target')
+            same_generation = checked['timing-generation'] == armed['timing-generation']
+            if value['state'] == 'dispatched':
+                if (not same_generation or not checked['phase-supported']
+                        or checked['virtual-ns'] != value['dispatch-ns']
+                        or not target <= value['dispatch-ns'] < end):
+                    raise ValueError('Native input dispatch lacks its original retrace-window boundary')
+            elif value['reason'] == 'retrace-timing-changed':
+                if checked['timing-generation'] <= armed['timing-generation']:
+                    raise ValueError('Native retrace timing-change cancellation has no newer generation')
+            elif not same_generation or checked['virtual-ns'] < end:
+                raise ValueError('Native retrace missed-window cancellation has no matching missed occurrence')
+        return semantic_cancel
+    except (ValueError, KeyError, TypeError) as error:
+        _invalid(owner, str(error))
 
 
 def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_stop=False):
@@ -47,7 +148,8 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
         _invalid(owner, 'Invalid native scheduled-input receipt')
     optional = ('token', 'start-ns', 'deadline-ns', 'terminal-ns', 'dispatch-ns', 'reason')
     if value['state'] == 'idle':
-        if expected is not None or value['event-count'] or any(key in value for key in optional):
+        if (expected is not None or value['event-count'] or 'retrace' in value
+                or any(key in value for key in optional)):
             _invalid(owner, 'Idle native input unexpectedly owns a schedule')
         return deepcopy(value)
     if (expected is None or value.get('token') != expected['token']
@@ -75,6 +177,15 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
             _invalid(owner, 'Native input dispatch preceded its requested deadline')
     elif 'dispatch-ns' in value:
         _invalid(owner, 'Undispatched native input invented a dispatch time')
+    semantic_cancel = _native_retrace_schedule(owner, value, expected)
+    if expected.get('retrace') is not None:
+        exact = required | {'token', 'start-ns', 'deadline-ns', 'retrace'}
+        if terminal:
+            exact |= {'terminal-ns', 'reason'}
+        if value['state'] == 'dispatched':
+            exact.add('dispatch-ns')
+        if set(value) != exact:
+            _invalid(owner, 'Native retrace-input receipt has unexpected fields')
     # This is the budget owned by this execution, never a retained historical
     # receipt from an earlier run. Check it before any lease transition.
     if owned_budget is not None:
@@ -87,8 +198,10 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
         if (value['state'] == 'dispatched'
                 and value['dispatch-ns'] >= owned_budget['budget-deadline-ns']):
             _invalid(owner, 'Native input dispatch reached the owned clock budget cutoff')
+        if semantic_cancel and value['terminal-ns'] >= owned_budget['budget-deadline-ns']:
+            _invalid(owner, 'Native retrace callback reached the owned clock budget cutoff')
     if (after_stop and expected['bound'] and value['state'] == 'cancelled'
-            and value['terminal-ns'] != value['virtual-ns']):
+            and not semantic_cancel and value['terminal-ns'] != value['virtual-ns']):
         _invalid(owner, 'Native input cancellation differs from its first owned stop time')
     prior = expected.get('native')
     if prior is not None:
@@ -114,7 +227,7 @@ class QemuScheduledInputMixin:
 
     def _input_schedule_receipt(self, native, clock, schedule):
         dispatched = native.get('dispatch-ns')
-        return dict(format=FORMAT, context='machine', run=self.run_id,
+        result = dict(format=FORMAT, context='machine', run=self.run_id,
                     session_id=self._input_storage()['session_id'], epoch=clock['epoch'],
                     token=native.get('token'), state=native['state'],
                     clock_domain='QEMU_CLOCK_VIRTUAL', observed_ns=native['virtual-ns'],
@@ -127,17 +240,40 @@ class QemuScheduledInputMixin:
                     guest_consumed=None, device_queue_accepted=None,
                     clock=deepcopy(clock), native=deepcopy(native),
                     claim='Native PS/2 callbacks and final sync only; device acceptance, guest consumption, frame completion and host-time synchronization are not established.')
+        if schedule is not None and schedule.get('retrace') is not None:
+            planned = schedule['retrace']
+            descriptor = native['retrace']
+            result['retrace'] = dict(format='fdisbull-retrace-input-1', edge=planned['edge'],
+                target_ns=planned['target_ns'], window_end_ns=planned['window_end_ns'],
+                before=deepcopy(planned['before']), native_arm=deepcopy(descriptor['armed']),
+                native_check=deepcopy(descriptor.get('checked')),
+                dispatch_phase_verified=native['state'] == 'dispatched',
+                claim='Native modeled-phase PS/2 callbacks and final sync only; device acceptance, '
+                      'guest consumption, guest-frame completion and the full VBlank interval remain unknown.')
+        return result
 
     def _input_schedule_read(self, clock, *, owned_budget=None, after_stop=False):
         state = self._input_storage()
         schedule = state.get('schedule')
+        received = None
         try:
-            native = _native_schedule(self, self.vm.qmp.call('x-fdisbull-query-input'), clock, schedule,
+            received = self.vm.qmp.call('x-fdisbull-query-input')
+            native = _native_schedule(self, received, clock, schedule,
                                       owned_budget=owned_budget, after_stop=after_stop)
             if schedule is not None:
                 self._input_schedule_accept(native, clock)
             return native
-        except BaseException:
+        except BaseException as error:
+            planned = schedule.get('retrace') if schedule is not None else None
+            if planned is not None or type(received) is dict and 'retrace' in received:
+                error.input_schedule_native = deepcopy(received)
+                error.input_schedule_retrace_before = deepcopy(planned['before']) if planned else None
+                # The execution owner will join these attributes to its already
+                # observed GDB stop. Do not replace that stop's error.result here.
+                if not after_stop and getattr(error, 'result', None) is None:
+                    error.result = dict(native=deepcopy(received),
+                        retrace_before=deepcopy(error.input_schedule_retrace_before),
+                        validation_failed=True)
             self._input_invalidate('Native input observation failed; schedule must not be replayed')
             self.vm.close()
             raise
@@ -171,10 +307,18 @@ class QemuScheduledInputMixin:
         clock = self._input_schedule_context()
         native = self._input_schedule_read(clock,
             owned_budget=getattr(self.vm, '_active_clock_budget', None), after_stop=True)
-        if native['state'] not in ('dispatched', 'cancelled'):
-            _invalid(self, 'Native input timer survived the owned execution stop')
         result = self._input_storage()['schedule_receipt']
-        self._input_persist('input.schedule-result', result)
+        try:
+            if native['state'] not in ('dispatched', 'cancelled'):
+                _invalid(self, 'Native input timer survived the owned execution stop')
+            self._input_persist('input.schedule-result', result)
+        except BaseException as error:
+            if 'retrace' in result:
+                # The native callback is already validated even if journaling
+                # fails. Preserve it beside the execution owner's actual stop.
+                error.input_schedule_native = deepcopy(native)
+                error.input_schedule_retrace_before = deepcopy(result['retrace']['before'])
+            raise
         return deepcopy(result)
 
     def input_schedule(self, delta_ns):
@@ -215,11 +359,81 @@ class QemuScheduledInputMixin:
             self.vm.close()
             raise
 
+    def input_schedule_retrace(self, *, edge='enter', timeout_ms=1000):
+        """Passively arm one pending batch for one declared retrace occurrence."""
+        validate_retrace_input_parameters(edge=edge, timeout_ms=timeout_ms)
+        self._input_no_transaction()
+        configuration = self.vm.machine_configuration
+        commands = INPUT_SCHEDULE_COMMANDS | INPUT_RETRACE_COMMANDS | RETRACE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
+        if (configuration.get('clock_profile', {}).get('profile') != 'virtual'
+                or configuration.get('retrace_profile', {}).get('profile') != 'precise'
+                or not commands <= getattr(self.vm, 'qmp_commands', frozenset())):
+            raise ValueError('Retrace input scheduling requires the native input/retrace extensions and explicit virtual/precise profiles')
+        state = self._input_storage()
+        if not state['pending']:
+            raise ValueError('Queue physical input before scheduling a retrace batch')
+        buttons = [record['event']['data']['button'] for record in state['pending']
+                   if record['event']['type'] == 'btn']
+        if len(buttons) != len(set(buttons)):
+            raise ValueError('Schedule at most one edge per mouse button in a batch')
+        _retrace_input_remaining(self)
+        clock = self._input_schedule_context()
+        prior = self._input_schedule_read(clock)
+        if prior['state'] == 'armed':
+            raise ValueError('Cancel the current native input schedule before arming another')
+        if not state['pending']:
+            raise ValueError('The prior scheduled batch was already dispatched; queue new physical input')
+        before = self.retrace_observe(timeout_ms=timeout_ms)
+        try:
+            target, window_end = _retrace_input_window(before['native'], edge)
+        except ValueError as error:
+            # Supported observations can still contain a full-period interval.
+            # This known refusal has not touched the native timer or the queue.
+            error.result = dict(edge=edge, before=deepcopy(before), armed=False)
+            raise
+        clock = before['clocks']['after']
+        schedule = dict(token=uuid.uuid4().hex, start_ns=clock['virtual_ns'], deadline_ns=target,
+            records=deepcopy(state['pending']), bound=True,
+            retrace=dict(edge=edge, target_ns=target, window_end_ns=window_end,
+                         before=deepcopy(before)))
+        received = result = None
+        # Once the arm is sent, a lost/late reply or failed evidence write is
+        # uncertain ownership. Close without replaying or synthesizing releases.
+        try:
+            _retrace_input_remaining(self)
+            received = self.vm.qmp.call('x-fdisbull-arm-input-retrace', {
+                'token': schedule['token'], 'events': [record['event'] for record in schedule['records']],
+                'edge': edge, 'expected-epoch': before['native_epoch'],
+                'expected-device': before['device'], 'expected-model': before['model'],
+                'expected-generation': before['timing_generation'],
+                'expected-virtual-ns': before['observed_ns']})
+            native = _native_schedule(self, received, clock, schedule)
+            if native['state'] != 'armed':
+                _invalid(self, 'Native retrace-input arm did not leave a passive scheduled batch')
+            state['schedule'] = schedule
+            result = self._input_schedule_accept(native, clock)
+            _retrace_input_remaining(self)
+            self._input_persist('input.schedule-arm', result)
+            _retrace_input_remaining(self)
+            return deepcopy(result)
+        except BaseException as error:
+            if getattr(error, 'result', None) is None:
+                error.result = (deepcopy(result) if result is not None else
+                    dict(edge=edge, before=deepcopy(before), native=deepcopy(received), armed=None))
+            self._input_invalidate('Native retrace-input arm outcome is uncertain; batch must not be replayed')
+            self.vm.close()
+            raise
+
     def input_schedule_observe(self):
         clock = self._input_schedule_context()
         native = self._input_schedule_read(clock)
         result = self._input_schedule_receipt(native, clock, self._input_storage().get('schedule'))
-        self._input_persist('input.schedule-observe', result)
+        try:
+            self._input_persist('input.schedule-observe', result)
+        except BaseException as error:
+            if 'retrace' in result and getattr(error, 'result', None) is None:
+                error.result = deepcopy(result)
+            raise
         return result
 
     def _input_schedule_before_cancel(self):

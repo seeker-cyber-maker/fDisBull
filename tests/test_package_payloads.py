@@ -19,6 +19,7 @@ def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
         "player/fdisbull_player/__init__.py": b"player",
         "tests/new-support.mjs": b"test",
         "scripts/new-support.c": b"support",
+        "native/qemu-input-retrace/private-api.patch": b"retrace input extension",
     }
     for name, data in source.items():
         path = tmp_path / name

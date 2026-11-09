@@ -1328,7 +1328,8 @@ class DebugWorkspace:
                         'debug-mouse-move-relative':'mouse_move_relative','debug-mouse-button-down':'mouse_button_down',
                         'debug-mouse-button-up':'mouse_button_up','debug-input-state':'input_state',
                         'debug-input-cancel-pending':'input_cancel_pending',
-                        'debug-input-schedule':'input_schedule','debug-input-schedule-observe':'input_schedule_observe'})
+                        'debug-input-schedule':'input_schedule','debug-input-schedule-observe':'input_schedule_observe',
+                        'debug-input-schedule-retrace':'input_schedule_retrace'})
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})

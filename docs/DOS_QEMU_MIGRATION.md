@@ -585,6 +585,7 @@ refused because one final mouse sync cannot represent both press and release.
 | --- | --- | --- |
 | `input_schedule(delta_ns)` | `debug-input-schedule` | `input-schedule` |
 | `input_schedule_observe()` | `debug-input-schedule-observe` | `input-schedule-observe` |
+| `input_schedule_retrace(edge='enter', timeout_ms=1000)` | `debug-input-schedule-retrace` | `input-schedule-retrace` |
 | `input_cancel_pending()` | `debug-input-cancel-pending` | `input-cancel-pending` |
 
 For an already queued batch in the retained server:
@@ -635,6 +636,17 @@ persistence closes the VM without replay. `timed_input=False`,
 legacy `guest_ms`, timed press/type, frame presses and pixel/INT33 semantics are
 not supplied. The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
 preserves these first-stop, explicit-resolution and unknown-consumption rules.
+
+### Schedule input at a modeled retrace edge
+
+The separate fifth [native retrace-input patch](../native/qemu-input-retrace/README.md)
+combines this model with the existing input timer. Under
+`retrace_input_schedule`, `input_schedule_retrace()` passively arms the pending
+batch for the strictly next entry or exit. Its callback validates the original
+device/generation and absolute window before delivery. Timing changes or a
+missed window cancel for explicit resolution. Execution must be explicitly
+allowed beyond the target; an equal clock-budget deadline wins over input.
+See [the workflow and receipt contract](DOS_QEMU_TIMING.md#schedule-input-at-the-next-modeled-retrace-edge).
 
 ### Observe the declared VGA retrace model
 

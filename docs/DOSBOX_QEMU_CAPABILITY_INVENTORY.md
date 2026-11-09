@@ -96,6 +96,17 @@ Reset/profile loss invalidates the scheduler; migration stays blocked after
 the first successful arm. See the [workflow guide](DOS_QEMU_MIGRATION.md#schedule-one-physical-input-batch-on-virtual-time)
 and [native patch contract](../native/qemu-input/README.md).
 
+The optional fifth [retrace-input patch](../native/qemu-input-retrace/README.md)
+adds `retrace_input_schedule` and `input_schedule_retrace(edge='enter'|'exit')`.
+It arms the same pending batch for the strictly next modeled transition and
+checks the pinned timing generation/window in the native callback. Timing
+changes, including unseen ABA writes, or a missed window cancel before delivery
+and require explicit resolution. Stops and equal clock deadlines retain
+precedence. The immutable callback snapshot qualifies native PS/2 callback
+phase only; guest consumption, full VBlank, completed frames and legacy
+frame-edge parity remain open. The ordinary delta scheduler and older native
+patch chains retain their existing capability boundary.
+
 Virtual-profile COM/MZ source traces now retain stable stopped clock brackets
 under `source_trace_clock`. A `virtual-time-range` predicate binds the exact run,
 host epoch and native epoch with half-open nanosecond bounds. Retrospective
@@ -164,7 +175,7 @@ that last check is not runtime qualification.
 | `trace.start`, `trace.read`, `trace.stop` | Trace and events | Stopped-boundary machine/source traces exist; ordinary debug stops do not prove retirement, and no equivalent streaming before-fetch trace cursor is supplied |
 | `video.screenshot`, `video.probe` | Clock, media and input | Stopped QMP surface/CPU/clock bracket and PNG exist; they do not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
 | `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports the owned Python queue/leases and immediate or scheduled dispatch receipts; legacy timed press/text remain refused. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
-| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate dispatch or explicit virtual-time batch scheduling; stale leases invalidate on close. Callback time is not frame-edge timing, consumption or replay parity |
+| `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate, explicit virtual-delay or generation-checked modeled-retrace scheduling; stale leases invalidate on close. A modeled callback phase does not qualify guest-frame edges, consumption or replay parity |
 | `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases support immediate or scheduled dispatch, with independent IRQ12 witnesses; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
 | `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
 | `state.save`, `state.load` | Checkpoints | Raw `MachineContext` advertises `save_states=False`; DOSBox `.sav` data cannot be interpreted as a QEMU VM checkpoint |

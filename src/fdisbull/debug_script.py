@@ -29,6 +29,7 @@ OPERATIONS = {
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
     'input-schedule':'input_schedule','input-schedule-observe':'input_schedule_observe',
+    'input-schedule-retrace':'input_schedule_retrace',
     'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
@@ -282,6 +283,14 @@ def validate_script(script, *, session=None):
                             if not (isinstance(value,str) and value.startswith('$')):
                                 from .qemu_input_schedule import validate_input_delay
                                 validate_input_delay(value)
+                    if op=='input-schedule-retrace':
+                        if session is not None and not getattr(session,'capabilities',{}).get('retrace_input_schedule'):
+                            raise ValueError('Retrace input scheduling requires the native extension and explicit precise retrace profile')
+                        from .qemu_input_schedule import validate_retrace_input_parameters
+                        literal={key:value for key,value in params.items()
+                                 if key in ('edge','timeout_ms')
+                                 and not (isinstance(value,str) and value.startswith('$'))}
+                        validate_retrace_input_parameters(**literal)
                     if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
                         if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
                             raise ValueError('Audio operations require the explicit QEMU pc-speaker audio profile')
@@ -368,6 +377,7 @@ def validate_script(script, *, session=None):
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
         guarded={'keyboard.key-down','keyboard.key-up','mouse.move-relative','mouse.button-down',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
+                 'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
                  'display-start','display-observe','display-stop','capture-display','retrace-observe',
@@ -477,7 +487,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
+            if step['op']=='input-schedule-retrace':
+                # Validate resolved options before the budget clamp can turn
+                # an invalid supplied timeout into a valid remaining integer.
+                from .qemu_input_schedule import validate_retrace_input_parameters
+                validate_retrace_input_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
+                             'input-schedule-retrace',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
@@ -492,7 +508,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # follows the same terminal cleanup as legacy keyboard input.
                 prior_input_touched = keyboard_touched
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
-                        or step['op'].startswith('mouse.') or step['op'] in ('input-cancel-pending','input-schedule')
+                        or step['op'].startswith('mouse.') or step['op'] in ('input-cancel-pending','input-schedule','input-schedule-retrace')
                         or (step['op']=='trace-until' and params.get('action') is not None)
                         or (step['op']=='frame-inputs' and params['edges'])
                         or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):

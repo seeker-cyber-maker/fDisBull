@@ -190,6 +190,59 @@ VGA accuracy. The native model's documented approximations remain in force.
 
 ## JSON, scripts and retained evidence
 
+### Schedule input at the next modeled retrace edge
+
+The optional fifth [native retrace-input patch](../native/qemu-input-retrace/README.md)
+adds `input_schedule_retrace(edge='enter'|'exit', timeout_ms=1000)`. It requires
+the virtual clock, precise VGA profile and `retrace_input_schedule` capability.
+Queue physical input while stopped, then arm the existing batch. Arming is
+passive and selects the strictly next edge, including when already at that
+phase. Unsupported timing or no transition refuses before accepting an arm
+and preserves the pending edges.
+
+The caller chooses the following bounded execution. Its clock deadline must
+extend beyond the input target: a stop at the exact target cancels delivery.
+In particular, a `retrace_wait` to that edge preserves stop precedence. Use
+the returned `target_ns` and existing `start_ns` to choose a suitable explicit
+budget; no arm performs an implicit continue.
+
+```python
+# The machine is stopped in a known eligible mode, with all five patches.
+lease = debug.keyboard.key_down('a')['lease']
+armed = debug.input_schedule_retrace(edge='enter', timeout_ms=1000)
+delay = armed['retrace']['target_ns'] - armed['start_ns']
+# Explicitly allow one millisecond beyond the target for this attempt.
+execution = debug.clock_advance(delay + 1_000_000, timeout_ms=3000)
+delivery = execution['input_delivery']
+print(delivery['state'], delivery['retrace']['dispatch_phase_verified'])
+```
+
+The native callback checks the pinned device and timing generation immediately
+before dispatch. A hidden A-to-B-to-A change cancels as
+`retrace-timing-changed`; an unchanged model reached too late cancels as
+`retrace-missed-window`. Neither retargets or requests a new stop. The final
+execution receipt preserves the caller's original stop. Pending edges then
+require explicit rescheduling or `input_cancel_pending()`; a dispatched hold
+still requires a separate release.
+
+The base `fdisbull-qemu-scheduled-input-1` receipt adds a
+`fdisbull-retrace-input-1` member containing the absolute target/window, full
+stopped `before` observation and immutable native arm/check snapshots.
+`dispatch_phase_verified=True` requires the actual PS/2 callbacks and final
+sync to join the callback snapshot inside that original window. It does not
+establish device acceptance, arbitrary guest consumption, full VBlank or a
+completed frame. A later retrace query cannot relabel the historical check.
+
+Use JSON `debug-input-schedule-retrace` or saved-script
+`input-schedule-retrace` with the same options. Whole-script capability,
+signature, literal-option and transaction checks precede earlier writes.
+The operation shares the remaining script deadline through lock admission,
+observations, arm and persistence. Failed scripts close live ownership after
+an arm, including a batch queued before the script. Existing
+`input.schedule-arm/result/observe` journal names retain these receipts.
+
+### Clock synchronization and retrace waits
+
 The JSON routes are `debug-retrace-wait` and
 `debug-clock-sync-start`, `debug-clock-sync-observe`, `debug-clock-sync-step`,
 `debug-clock-sync-stop`. They take the existing owned `project` and `run`
