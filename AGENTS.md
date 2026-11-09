@@ -1,25 +1,41 @@
 # fDisBull for agents
 
-fDisBull gives an agent persistent program analysis, headless native debugging,
-named scene actions, explicit spatial policies, a separate text player, and
-bounded source-to-UIL experiments. The analysis project stores discoveries and
-evidence between turns. An emulator process is owned by its live server/context;
+fDisBull gives an agent persistent program analysis, projectless media and
+format readers, headless native debugging (with no-pop-up defaults), persistent
+memory and execution-event searches, named scene actions, explicit spatial
+policies, a separate text player, and bounded source-to-UIL (`UDL` → `UIL` →
+`UDC`) experiments. Every discovery, struct, watch hit, trace, Anchor Stone and
+scene revision is stored in SQLite (`.fdb`) across turns, while JSON replies stay
+bounded (64 KiB inline by default with private artifact handles) to protect
+your context window. An emulator process is owned by its live server/context;
 saved run history does not reconnect it after exit.
 
 ## Start with the user's task
 
-- Reuse the established executable, project and live session. For first use or
-  an unfamiliar operation, consult [the quickstart](docs/AGENT_QUICKSTART.md)
-  and `fdisbull agent-skill --reference SKILL.md`, then only the needed reference.
-  The bundled skill is available from an installed wheel without a project.
-- For a human-readable review of established game knowledge, read
-  `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`.
-  Use `agent-skill --list` to discover both bundled skills. Keep attributed
-  external findings distinct from recovered and observed game behavior.
-- Use `fdisbull --help` or `fdisbull methods` when an interface is unknown.
-  Check capabilities after a relevant environment change or capability failure;
+- Reuse the established executable, project and live session. Verify runtime
+  identity or required capabilities once on entry with `fdisbull --version-json`,
+  `fdisbull preflight --expectations <manifest>` or `fdisbull capabilities`;
   do not repeat discovery or diagnostics before known working operations.
-- Static analysis needs no running emulator. Debugging original DOS/PE64 code
+- Three self-contained skills ship inside the installed wheel and work without
+  opening a project (`fdisbull agent-skill --list` and `--index`):
+  - `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`):
+    top-level router skill and task-framing guide (`references/TASK_FRAMING_GUIDE.md`)
+    for selecting the cheapest deterministic static, media, scene or live route.
+  - `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`):
+    evidence-driven reverse engineering, probe selection, memory/event searches,
+    scene/UIL recovery and verification gates (consult [the quickstart](docs/AGENT_QUICKSTART.md)
+    and then only the needed reference).
+  - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`
+    (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused
+    code and format specs into an attributed, human-readable guide. Keep
+    attributed external findings distinct from recovered and observed game behavior.
+- Use `fdisbull --help` or `fdisbull methods` when an interface is unknown.
+  Prefer built-in deterministic readers and search surfaces (`media-modules`,
+  `media-inspect`, `media-extract` including native Inno 5.6.2 and MADS;
+  `dos-sys-inspect`, `desqview-module-inspect`; `debug-search-*` scalar memory
+  narrowing; `debug-event-search-*` and `debug-trace-until` execution-event
+  isolation; `frame_rgba()` in-memory frame buffers) over ad-hoc scripts.
+- Static analysis needs no running emulator. Debugging original DOS/Windows code
   needs the matching separately prepared backend and the user's own inputs.
   The standalone player consumes an authored projection or compatible endpoint;
   it does not automatically recover an entire game's scripts.
@@ -94,10 +110,10 @@ payload, version, commit and selector all verify.
 
 ## Repository mirrors and CI coordination (GitLab 30-day trial + local Git parity)
 
-- **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete.** Never push to, fetch from, or poll GitHub (`origin` push URL is locked to `RETIRED_GITHUB_DO_NOT_PUSH`).
+- **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is reinstated and active as a peer mirror.** GitLab and local-hub remain the release and CI authority; use GitHub for public mirror visibility and reproduce CI state from the recorded Boat.dev/GitLab receipts rather than triggering GitHub Actions from this mirror.
 - **Local Git and GitLab (`gitlab` -> `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`) are equal representations.** Because GitLab is under a 30-day evaluation trial, agents must update **both** the local Git repository (`local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git` and local branches/tags in `/Volumes/CODEX/Codex_Projects/fDisBull`) and GitLab (`gitlab`), using `python scripts/sync_mirrors.py` or pushing to the `dual` remote (`git push -o ci.skip dual <branch>`).
 - Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before starting or observing hosted checks.
-- **CI cost controls**: routine pushes, MRs and tags admit no automatic provider pipelines. The default is finite local Linux work with explicit local identities and storage admission. An explicitly requested web/API GitLab pipeline requires a separately authorized `fdisbull-local-linux` runner; its heavy qualification starts only after the blocking manual gate. No hosted runner fallback, runner registration or credential creation is implied.
+- **CI cost controls**: routine pushes, MRs and tags admit no automatic provider pipelines. The default is finite local Linux work with explicit local identities and storage admission. An explicitly requested web/API GitLab pipeline requires a separately authorized `fdisbull-local-linux` runner; its heavy qualification starts only after the blocking manual gate. Always pass `-o ci.skip` when mirroring non-main branches to GitLab.
 - **Package/release gate**: require the exact-source ordinary, stable, layers and unified results, including the tested package hashes, and preserve missing or failed evidence as incomplete. A local pass is not a hosted result. Release tagging still requires ordinary and required-native Linux CI on the exact SHA; publication and installation need separate authorization. Do not invent pipeline or job IDs for local work.
 - Name one CI owner for the repository; other agents consume that owner's dated receipt. Use `scripts/ci_status.py` in cache-only mode by default:
   ```sh

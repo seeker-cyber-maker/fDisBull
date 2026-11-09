@@ -1,30 +1,42 @@
 # fDisBull
 
-Give an agent a program to explore—and a place to keep what it learns.
-**fDisBull** connects multi-architecture disassembly, headless native debugging,
-scene-aware controls, spatial policies, a standalone text player and bounded
-semantic reconstruction (`UDL` → `UIL` → `UDC`). Find the instruction behind a
-changing value, rewind a native frame timeline, drive a qualified scene through
-named actions, or retarget a verified interaction block to a new desktop,
-browser or console shell. Come back next session with every discovery and piece
-of evidence preserved in your SQLite project.
+Give a human or an AI agent a program to explore—and a durable place to keep
+everything it learns. **fDisBull** unifies multi-architecture disassembly,
+native archive/media unpacking, headless native debugging, scene-aware controls,
+spatial policies, a zero-dependency text player and bounded semantic
+reconstruction (`UDL` → `UIL` → `UDC`).
 
-**0.34.1 tagged local release feature line (`v0.34.1`):** adds deterministic
-capability preflight and build/version identity (`--version-json`, `preflight`),
-a top-level `fdisbull` router skill alongside `fdisbull-investigate` and
+- **For people:** investigate classic DOS, Windows, macOS, embedded or console
+  programs without losing progress to ephemeral terminal logs or manual GUI
+  clicks. Rewind a native frame timeline, jump to an Anchor Stone, inspect
+  recovered structs and source maps, play text projections, or retarget a
+  Z3-verified logic block to a new desktop, browser or console shell—with every
+  discovery and piece of evidence preserved in a single SQLite project (`.fdb`).
+- **For AI agents (Claude, Codex, ChatGPT, Gemini):** operate a deterministic,
+  headless reverse-engineering and runtime harness with **zero GUI pop-ups**,
+  **context-window-safe JSON replies** (64 KiB inline by default with automatic
+  private artifact handles), **persistent cross-turn SQLite memory** so new
+  turns or subagents resume without re-probing, **400+ structured CLI/JSON
+  methods** (`fdisbull methods`), instant capability preflight
+  (`fdisbull preflight`, `fdisbull --version-json`), and **three self-contained
+  skills bundled inside the wheel** (`fdisbull`, `fdisbull-investigate`,
+  `write-gamefaqs-guide`) that work before opening a project.
+
+**Release line (`0.34.1` / `v0.34.1`):** provides deterministic capability
+preflight and build/version identity (`--version-json`, `preflight`, `doctor`),
+the top-level `fdisbull` router skill alongside `fdisbull-investigate` and
 `write-gamefaqs-guide`, the
-[methodology determinism review and A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
+[7-stage methodology determinism review and A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
 built-in Inno Setup 5.6.2 GOG archive reading without external `innoextract`,
 independent [MADS media and conversation modules](docs/MADS_MEDIA_RUNTIME.md)
-([conversation processor](docs/MADS_PROCESSOR.md)),
+([conversation processor](docs/MADS_PROCESSOR.md)), Westwood/format media
+intake, captured Windows PE import recovery ([CHimpREC](docs/CHIMPREC.md)),
 [DOS device-driver and QEMM guest analysis](docs/DOS_DRIVERS_AND_QEMM.md),
 [DESQview module inspection and persistent guarded memory searches](docs/DESQVIEW_AND_MEMORY_SEARCH.md),
 [execution-event searches with trace predicates](docs/EXECUTION_EVENT_SEARCH.md),
-and signed UDC contracts. This line carries forward the
-[0.33.0 scope and limits](docs/RELEASE-0.33.0.md)—captured Windows PE import
-recovery (`CHimpREC`), context-aware media intake, Win32 and protected-mode DOS
-debugging, exact lossless frame codecs and `frame_rgba()`, headless DOSBox-X
-no-pop-up defaults, and experimental ScummVM AGI/Gob/Kyra/GLK backends. See
+Win32 and protected-mode DOS debugging, exact lossless frame codecs and in-memory
+`frame_rgba()` buffers, headless DOSBox-X no-pop-up defaults, experimental
+ScummVM AGI/Gob/Kyra/GLK backends, and signed UDC contracts. See
 [release records](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md). The
 [GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
