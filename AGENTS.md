@@ -1,14 +1,27 @@
 # fDisBull for agents
 
-fDisBull gives an agent persistent program analysis, projectless media and
-format readers, headless native debugging (with no-pop-up defaults), persistent
-memory and execution-event searches, named scene actions, explicit spatial
-policies, a separate text player, and bounded source-to-UIL (`UDL` → `UIL` →
-`UDC`) experiments. Every discovery, struct, watch hit, trace, Anchor Stone and
-scene revision is stored in SQLite (`.fdb`) across turns, while JSON replies stay
-bounded (64 KiB inline by default with private artifact handles) to protect
-your context window. An emulator process is owned by its live server/context;
-saved run history does not reconnect it after exit.
+**Designed by a human, refined by agents, and operated by agents.**
+
+fDisBull owns the mechanical middle of reverse engineering, live headless
+debugging, state discovery, and semantic reconstruction (`UDL` → `UIL` → `UDC`)
+across 400+ deterministic CLI/JSON methods (`fdisbull methods`), leaving you
+only a small number of bounded judgment points along a
+[7-stage automated pipeline](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md).
+To keep your token usage low and your context window clean:
+
+- **Direct output is capped at 64 KiB inline (`fdisbull-output-ref-1`):** larger
+  replies are stored automatically as immutable private files (`out-<sha256>`)
+  and queried surgically via `output-select` (JSON Pointer), `output-read`
+  (byte range) or `output-info`—never dump full artifacts into context.
+- **Long reports and discoveries live in searchable SQLite and vectorized DBs:**
+  instructions, CFGs, xrefs, structural types, watch hits, Anchor Stones,
+  dependency queues (`work-queue`, `operation-goal`) and Z scenes persist in the
+  project database (`.fdb`), while source snapshots and logical concepts are
+  indexed in the SQLite FTS5 + vector embedding catalog (`source-*`,
+  `fdisbull-source-catalog-1`).
+- **Live emulators are owned by their server/context:** saved run history does
+  not reconnect a guest after exit, and headless launches suppress GUI pop-ups
+  by default.
 
 ## Start with the user's task
 

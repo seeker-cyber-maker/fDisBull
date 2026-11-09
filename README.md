@@ -1,32 +1,69 @@
 # fDisBull
 
-Give a human or an AI agent a program to explore—and a durable place to keep
-everything it learns. **fDisBull** unifies multi-architecture disassembly,
-native archive/media unpacking, headless native debugging, scene-aware controls,
-spatial policies, a zero-dependency text player and bounded semantic
-reconstruction (`UDL` → `UIL` → `UDC`).
+**Designed by a human, refined by agents, and operated by agents.**
 
-- **For people:** investigate classic DOS, Windows, macOS, embedded or console
-  programs without losing progress to ephemeral terminal logs or manual GUI
-  clicks. Rewind a native frame timeline, jump to an Anchor Stone, inspect
-  recovered structs and source maps, play text projections, or retarget a
-  Z3-verified logic block to a new desktop, browser or console shell—with every
-  discovery and piece of evidence preserved in a single SQLite project (`.fdb`).
-- **For AI agents (Claude, Codex, ChatGPT, Gemini):** operate a deterministic,
-  headless reverse-engineering and runtime harness with **zero GUI pop-ups**,
-  **context-window-safe JSON replies** (64 KiB inline by default with automatic
-  private artifact handles), **persistent cross-turn SQLite memory** so new
-  turns or subagents resume without re-probing, **400+ structured CLI/JSON
-  methods** (`fdisbull methods`), instant capability preflight
-  (`fdisbull preflight`, `fdisbull --version-json`), and **three self-contained
-  skills bundled inside the wheel** (`fdisbull`, `fdisbull-investigate`,
-  `write-gamefaqs-guide`) that work before opening a project.
+**fDisBull** (`0.34.1` / `v0.34.1`) is an agent-first reverse-engineering,
+headless native-debugging, scene-automation, and semantic-reconstruction
+(`UDL` → `UIL` → `UDC`) pipeline. It is not a human GUI disassembler—with over
+400 structured CLI/JSON methods, no human is meant to operate its low-level
+surfaces by hand. Instead, **the tool owns the mechanical middle** of binary and
+media inspection, live emulator control, memory/event narrowing, state-binding,
+and Z3-checked code generation, leaving the agent only **a few bounded judgment
+decisions** along an automated seven-stage pipeline while giving the human
+clear milestone reports, visual evidence, and explicit approval gates.
 
-**Release line (`0.34.1` / `v0.34.1`):** provides deterministic capability
-preflight and build/version identity (`--version-json`, `preflight`, `doctor`),
-the top-level `fdisbull` router skill alongside `fdisbull-investigate` and
-`write-gamefaqs-guide`, the
-[7-stage methodology determinism review and A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
+## Built to minimize token usage and survive long investigations
+
+Reverse-engineering fails in LLM context windows when tools dump megabytes of
+disassembly, memory, or trace logs into the prompt. fDisBull keeps model context
+small and durable across turns and subagents:
+
+- **Hard 64 KiB inline output ceiling (`fdisbull-output-ref-1`):** every core
+  CLI/JSON reply is capped at 65,536 bytes inline by default
+  ([bounded output](docs/OUTPUT_LIMITS.md)). Larger reports, traces, or state
+  dumps are automatically written to immutable private files (`out-<sha256>`)
+  and queried surgically by JSON Pointer (`output-select`), byte-range slice
+  (`output-read`), or metadata (`output-info`) without re-running the operation
+  or flooding the prompt.
+- **Persistent SQLite project (`.fdb`) & vectorized source/concept DB
+  (`fdisbull-source-catalog-1`):** decoded instructions, CFGs, cross-references,
+  structural types, watch hits, Anchor Stones, and Z scene revisions persist in
+  SQLite across sessions. Companion source trees and recovered concepts live in a
+  dedicated SQLite catalog ([source & concept search](docs/SOURCE_CONCEPT_SEARCH.md))
+  indexed with **SQLite FTS5** (`card_fts` Porter/Unicode61 lexical search),
+  **normalized embedding vectors** (`embeddings`), and explicit `concept_links`
+  so agents pull only the exact function, struct, or concept card needed.
+- **Selective `<2 KiB` skill routing (`fdisbull-skill-catalog-1`):** three
+  self-contained skills ship inside the wheel (`fdisbull`,
+  `fdisbull-investigate`, `write-gamefaqs-guide`). Agents query the compact
+  catalog (`fdisbull agent-skill --list`) and guide index (`--index`), loading
+  only the single reference file required for the active stage.
+- **Zero-GUI headless execution & sparse visual probes:** debuggers run
+  headlessly with no pop-up windows by default. Agents check `visible`/`ready`/
+  `enabled` predicates via sparse pixel masks or in-memory `frame_rgba()`
+  buffers, rendering disassembly/CFG/frame PNGs directly from stored state when
+  human-facing evidence is needed.
+
+## The 7-stage automated agent pipeline
+
+fDisBull automates the mechanical work at every stage and isolates the exact
+decision left to the agent ([methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md)):
+
+| Stage | Automated by fDisBull (deterministic surfaces) | Only decision left to the agent |
+| --- | --- | --- |
+| **0. Setup & identity** | `preflight --expectations`, `capabilities`, `doctor`, `--version-json` | *None* (fully deterministic) |
+| **1. Intake & triage** | `identify`, `media-inspect`, `media-extract` (native Inno 5.6.2 GOG, MADS, Westwood, ROM/ISO), `intake-inventory`, `capture-audit` | Target & deliverable framing (`references/task-framing.md`) |
+| **2. Static structure** | `auto-analyze`, `function-patterns`, `xrefs`, `call-effects`, `define-type` → `apply-type` → `typed-data`, `code-regions`, `dos-sys-inspect`, `desqview-module-inspect`, `chimprec` | Which candidate function or record to confirm first |
+| **3. Live observation** | `memory-search-start/refine/results` (guarded scalar narrowing), `execution-event-search` & `debug-trace-until` predicates, `serializer-discovery` (emits `next_step`) | Which discriminating probe to run next |
+| **4. State binding & Z harness** | `serializer-candidates`, `debug-save-scene`, `z-controller`, `capture-action` → reusable named verbs, Anchor Stones & frame/CPU/RAM delta rewind | Semantic label of a verified field or control |
+| **5. Dependency & goal queue** | `operation-goal` (computes ready vs. blocked recovery sets from facts), `work-queue`, `run-work`, `record-frontier` | Ordering ready questions across workers |
+| **6. Claim qualification** | `proof-check` (bounded Z3 equivalence), `udl-verify`, `memory-accesses`, watchpoints | Sufficiency of evidence for exploratory claims |
+| **7. Meaning & delivery** | Common indexed UIL (`uil-*`), multi-target UDC synthesis (DOS, PE, ELF, macOS ARM64, Wasm/WebGPU, NES, Genesis), human-readable guides & receipts | Meaning integration & user-approved `bind-source` gates |
+
+**Current release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
+preflight and build identity (`--version-json`, `preflight`), the top-level
+`fdisbull` skill router, the
+[7-stage methodology determinism review and Dragster A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
 built-in Inno Setup 5.6.2 GOG archive reading without external `innoextract`,
 independent [MADS media and conversation modules](docs/MADS_MEDIA_RUNTIME.md)
 ([conversation processor](docs/MADS_PROCESSOR.md)), Westwood/format media
@@ -34,14 +71,13 @@ intake, captured Windows PE import recovery ([CHimpREC](docs/CHIMPREC.md)),
 [DOS device-driver and QEMM guest analysis](docs/DOS_DRIVERS_AND_QEMM.md),
 [DESQview module inspection and persistent guarded memory searches](docs/DESQVIEW_AND_MEMORY_SEARCH.md),
 [execution-event searches with trace predicates](docs/EXECUTION_EVENT_SEARCH.md),
-Win32 and protected-mode DOS debugging, exact lossless frame codecs and in-memory
-`frame_rgba()` buffers, headless DOSBox-X no-pop-up defaults, experimental
-ScummVM AGI/Gob/Kyra/GLK backends, and signed UDC contracts. See
-[release records](docs/RELEASE_STATUS.md) and
-[feature history](docs/FEATURE_HISTORY.md). The
-[GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
-hold the exact published source, qualification receipts and package hashes;
-the version text here does not establish remote publication or system installation.
+Win32 and protected-mode DOS debugging, exact lossless frame codecs and
+`frame_rgba()`, headless DOSBox-X no-pop-up defaults, experimental ScummVM
+AGI/Gob/Kyra/GLK backends, and signed UDC contracts. See
+[release records](docs/RELEASE_STATUS.md),
+[feature history](docs/FEATURE_HISTORY.md), and the
+[GitLab release inventory](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
+for exact published source identities, qualification receipts and package hashes.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >

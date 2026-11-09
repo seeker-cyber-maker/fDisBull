@@ -1,11 +1,23 @@
 # Visiting fDisBull with Claude and Coding Agents
 
 **fDisBull** (`0.34.1`) is an agent-first reverse-engineering, native-debugging,
-scene-control and semantic-reconstruction (`UDL` → `UIL` → `UDC`) toolkit.
-Instead of losing disassembly notes, debugger state or UI coordinates across
-turns, you work against a persistent SQLite project (`.fdb`) with headless
-no-pop-up execution, 64 KiB bounded JSON replies (backed by private artifact
-handles), and 400+ deterministic CLI/JSON methods.
+scene-automation and semantic-reconstruction (`UDL` → `UIL` → `UDC`) pipeline—designed
+by a human, refined by agents, and operated by agents. The tool automates the
+mechanical middle across 400+ deterministic CLI/JSON methods (`fdisbull methods`),
+leaving you only a handful of bounded decisions along a
+[7-stage pipeline](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md) while
+protecting your token budget:
+
+- **64 KiB bounded inline output (`fdisbull-output-ref-1`):** oversized replies
+  are saved automatically as private `out-<sha256>` artifacts; inspect them
+  surgically with `fdisbull output-select <id> <json-pointer>` or `output-read`
+  instead of reading megabytes into context.
+- **Searchable SQLite project (`.fdb`) & vectorized source/concept DB
+  (`source-*`):** disassembly, CFGs, types, watch hits, `operation-goal`
+  coverage, `work-queue` state, and FTS5 + vector-indexed source/concept cards
+  stay in SQLite so turns and subagents query only what they need.
+- **Selective `<2 KiB` skill loading:** use `agent-skill --list` and `--index`
+  to load only the single reference file required for the active stage.
 
 Read [AGENTS.md](AGENTS.md) for the shared project contract,
 [CI coordination](docs/CI_COORDINATION.md) for mirror synchronization and
