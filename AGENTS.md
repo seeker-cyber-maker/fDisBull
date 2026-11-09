@@ -32,12 +32,13 @@ To keep your token usage low and your context window clean:
 - Three self-contained skills ship inside the installed wheel and work without
   opening a project (`fdisbull agent-skill --list` and `--index`):
   - `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`):
-    top-level router skill and task-framing guide (`references/TASK_FRAMING_GUIDE.md`)
-    for selecting the cheapest deterministic static, media, scene or live route.
+    top-level router skill for choosing between investigation (`fdisbull-investigate`)
+    and guide writing (`write-gamefaqs-guide`).
   - `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`):
-    evidence-driven reverse engineering, probe selection, memory/event searches,
-    scene/UIL recovery and verification gates (consult [the quickstart](docs/AGENT_QUICKSTART.md)
-    and then only the needed reference).
+    evidence-driven reverse engineering, deliverable framing (`references/task-framing.md`),
+    probe selection, memory/event searches, scene/UIL recovery and verification
+    gates (consult [the quickstart](docs/AGENT_QUICKSTART.md) and then only the
+    needed reference).
   - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`
     (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused
     code and format specs into an attributed, human-readable guide. Keep

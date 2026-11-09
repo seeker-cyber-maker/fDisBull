@@ -60,6 +60,32 @@ decision left to the agent ([methodology determinism review](docs/METHODOLOGY_DE
 | **6. Claim qualification** | `proof-check` (bounded Z3 equivalence), `udl-verify`, `memory-accesses`, watchpoints | Sufficiency of evidence for exploratory claims |
 | **7. Meaning & delivery** | Common indexed UIL (`uil-*`), multi-target UDC synthesis (DOS, PE, ELF, macOS ARM64, Wasm/WebGPU, NES, Genesis), human-readable guides & receipts | Meaning integration & user-approved `bind-source` gates |
 
+## Core use cases (what humans ask for → what agents run)
+
+Because fDisBull separates **deliverable depth** (`references/task-framing.md`)
+from mechanical execution, a human can ask for anything from a single formula
+explanation to a full cross-platform port, and the agent stops at the cheapest
+stage that proves the answer:
+
+1. **Explain an undocumented mechanic, formula, bug, or hidden branch (Reverse Engineering → Human Guide)**
+   - **Human goal:** *"How does this DOS/Windows/console game actually compute combat odds, why does this dialog option soft-lock, or what hidden debug flags exist?"*
+   - **Agent execution:** Unpacks the installer or disc natively (`media-extract`), imports the executable into `.fdb`, searches FTS5/vectorized source and concept cards (`source-search`, `concept-search`), narrows live memory or instruction triggers with guarded scalar/event searches (`memory-search-*`, `execution-event-search`, `debug-trace-until`), and compiles an attributed technical walkthrough or FAQ via `write-gamefaqs-guide`.
+2. **Turn a closed legacy game or desktop app into a scriptable headless test & AI-play harness (`Z` Controller)**
+   - **Human goal:** *"Let agents jump straight into specific scenarios, run 100 balance/RNG experiments, or play a classic DOS/Win16 title over a structured text/JSON API without clicking through startup menus every time."*
+   - **Agent execution:** Captures menus and HUD controls once as named `Z` verbs (`capture-action`, `z-controller`), isolates the save/load serializer (`serializer-discovery`, `debug-save-scene`), plants Anchor Stones with deterministic CPU/RAM/frame delta rewind (`delta-experiment`), and exposes either a fair-play physical session (`text-host --fair-play`) or an assisted inspection harness.
+3. **Unpack, audit, and compare legacy installers, packed Windows PEs, and multi-edition collections**
+   - **Human goal:** *"Inventory this folder of GOG installers, floppy/CD images, ROMs, and TAS captures on macOS/Linux without Wine, rebuild imports from a captured packed PE, and show how editions differ."*
+   - **Agent execution:** Runs `intake-inventory`, `capture-audit`, and `media-inspect`/`media-extract` (built-in Inno Setup 5.6.2 GOG reader, MADS `.HAG`/`.MAD`, Westwood `.PAK`, CUE/ISO, NES/SNES/Genesis/Saturn headers), or recovers an import table from a caller-supplied process dump via `chimprec`, recording every hash, edition diff, and asset map in `.fdb`.
+4. **Lift verified subsystems into portable `UIL` and recompile across platforms (`UDC` Porting & Modernization)**
+   - **Human goal:** *"Extract the rules engine, serializer, or full playable loop of a 16/32-bit x86, ARM64, AGI, Z-machine, or MADS title and build a verified native macOS ARM64, Linux, Windows, WebAssembly/WebGPU, or NES/Genesis target."*
+   - **Agent execution:** Lifts native blocks or guest bytecode into `UDL` → typed indexed `UIL` (`uil-*`), proves mathematical block equivalence with Z3 (`proof-check`, `udl-verify`), tracks unresolved serializer/UI children in `operation-goal` and `work-queue`, and emits a signed native or browser build through `UDC`.
+5. **Inspect and repack adventure scripts, dialog trees, and cinematic resources in place**
+   - **Human goal:** *"Map every conversation branch and room script in a MADS, Sierra AGI, or Z-machine adventure, or generate a compact playable cutscene variant."*
+   - **Agent execution:** Decodes guest conversation bytecode, vocabulary tables, and scene scripts (`mads-inspect`, `mads-compile`, `mads-compact`, `agi-*`, `zmachine-*`) directly into structured JSON and UIL while keeping commercial originals isolated in the private local object store.
+6. **Run multi-agent parallel reverse engineering overnight without context-window blowup**
+   - **Human goal:** *"Have a coordinator and worker subagents map out an entire binary's subsystems in parallel without duplicating probes or burning millions of tokens on raw dumps."*
+   - **Agent execution:** A single controller owns the live headless guest while parallel workers pull bounded, non-overlapping questions from the persistent dependency queue (`work-queue`, `run-work`), inspect shared `.fdb` facts and 64 KiB-capped `out-<sha256>` slices (`output-select`), and commit verified types, xrefs, and concepts back to SQLite.
+
 **Current release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
 preflight and build identity (`--version-json`, `preflight`), the top-level
 `fdisbull` skill router, the
@@ -123,8 +149,8 @@ Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the
 [skill integration guide](docs/SKILL_INTEGRATION.md). Three bundled skills ship
 inside the installed package and work without opening a project:
 
-- `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`): top-level router skill and task-framing guide (`references/TASK_FRAMING_GUIDE.md`) for choosing the cheapest deterministic static, media, scene or live-debugger route.
-- `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, probe selection, scene/UIL recovery, source-concept mapping and verification gates.
+- `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`): top-level router skill for choosing between investigation (`fdisbull-investigate`) and human-readable guide authoring (`write-gamefaqs-guide`).
+- `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, task-framing (`references/task-framing.md`), probe selection, scene/UIL recovery, source-concept mapping and verification gates.
 - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md` (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused code and format specs into an attributed, human-readable guide.
 
 Use `fdisbull agent-skill --list` and `--index` for selective discovery. Core

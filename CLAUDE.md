@@ -42,8 +42,8 @@ fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
-- `fdisbull` (`--skill fdisbull`) is the top-level router skill and task-framing guide (`references/TASK_FRAMING_GUIDE.md`).
-- `fdisbull-investigate` (default) supplies evidence-driven static analysis, media/archive extraction (`media-*`), persistent scalar memory searches (`debug-search-*`), execution-event searches (`debug-event-search-*`, `debug-trace-until`), scenes, spatial policies and `references/udl-uil-udc.md` for block recovery and bounded compiler experiments.
+- `fdisbull` (`--skill fdisbull`) is the top-level router skill for choosing between investigation (`fdisbull-investigate`) and human-readable guide authoring (`write-gamefaqs-guide`).
+- `fdisbull-investigate` (default) supplies deliverable framing (`references/task-framing.md`), evidence-driven static analysis, media/archive extraction (`media-*`), persistent scalar memory searches (`debug-search-*`), execution-event searches (`debug-event-search-*`, `debug-trace-until`), scenes, spatial policies and `references/udl-uil-udc.md` for block recovery and bounded compiler experiments.
 - `write-gamefaqs-guide` turns verified mechanics, routes, bugs and format specs into an attributed, human-readable guide.
 
 Use the [README](README.md) when explaining the product to a person. Use the
