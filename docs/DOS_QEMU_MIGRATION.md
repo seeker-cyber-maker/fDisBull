@@ -516,8 +516,9 @@ or failed execution evidence closes the owned VM. The timer and its deferred
 stop request must both be absent before another operation is admitted.
 
 This first extension blocks migration after budget use. Native checkpoints,
-completed-frame/audio fences, legacy timed press/text helpers, periodic memory
-rules and scene scheduling still need their own integration and qualification.
+completed-frame/audio fences, timed text, periodic memory rules and scene
+scheduling still need their own integration and qualification. The optional
+keyboard-press extension below implements a separately admitted single chord.
 
 ### Schedule one physical-input batch on virtual time
 
@@ -633,9 +634,27 @@ migration stays blocked for the process lifetime after its first successful
 arm. Uncertain arm, cancellation, dispatch, deadline reconciliation or evidence
 persistence closes the VM without replay. `timed_input=False`,
 `guest_time_control=False` and `completed_guest_frames=False` remain explicit:
-legacy `guest_ms`, timed press/type, frame presses and pixel/INT33 semantics are
-not supplied. The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
+legacy `guest_ms`, timed text, frame presses and pixel/INT33 semantics are
+not supplied by this batch scheduler. The separate press extension supplies
+one timed chord through the existing keyboard route. The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
 preserves these first-stop, explicit-resolution and unknown-consumption rules.
+
+### Queue one timed keyboard chord
+
+The optional sixth [native keyboard-press patch](../native/qemu-keyboard-press/README.md)
+adds `virtual_keyboard_press` on the explicit virtual profile. The existing
+`keyboard_press` / `keyboard.press`, `debug-keyboard-press` and saved-script
+`keyboard.press` routes passively arm one chord with zero to three modifiers.
+Native callbacks space modifier edges by 2 ms and hold the main key for the
+requested 1..1000 ms, deriving every next deadline from the preceding actual
+callback. `gap_ms` is validated and recorded but has no effect for one press.
+
+The first stop cancels the undelivered suffix. Receipts retain the delivered
+prefix and owned held leases; cancelling the suffix never releases those holds.
+A partially delivered chord cannot be replayed or converted into a batch.
+Explicitly cancel pending steps, then explicitly release retained leases.
+See [the workflow and recovery contract](DOS_QEMU_TIMING.md#queue-one-timed-keyboard-press).
+Text entry, timed clicks and full DOSBox input parity remain unqualified.
 
 ### Schedule input at a modeled retrace edge
 

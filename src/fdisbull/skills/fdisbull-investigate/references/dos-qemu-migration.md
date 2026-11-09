@@ -263,7 +263,8 @@ step/trace/unbounded resume before execution.
 discards only unsent transitions; accepted holds still require explicit
 release. Closing invalidates leases without pretending release code ran.
 Limits: 256 pending edges, 64 leases and relative deltas -32767..32767.
-Timed press/type, pixel clicks and frame-edge timing remain unsupported.
+Timed text, pixel clicks and frame-edge timing remain unsupported. The separate
+`virtual_keyboard_press` capability below supplies one timed native chord.
 Make and break in one batch specify order, not a hold duration.
 
 JSON routes are `debug-keyboard-down/up/state`, `debug-mouse-move-relative`,
@@ -438,6 +439,36 @@ Failed scripts close an armed owner even for batches queued before the script.
 Older four-patch builds lack this capability and retain ordinary delta
 scheduling. This boundary does not qualify arbitrary guest consumption, full
 VBlank, completed frames or legacy frame-edge helpers.
+
+## Queue one timed keyboard press
+
+With `virtual_keyboard_press`, use the existing `keyboard.press(key,
+modifiers=(), hold_ms=40, gap_ms=40)`, JSON `debug-keyboard-press` or script
+`keyboard.press`. Select the explicit virtual clock and the six-patch native
+build. Arming requires a stopped machine with an empty queue and no owned
+leases; it does not run the guest. Choose one later bounded run/clock advance
+or explicit clock-sync step to drive callbacks.
+
+Modifiers make in caller order, then the main key makes/breaks and modifiers
+break in reverse order. Every make and modifier break waits 2 ms; main break
+waits hold_ms from the actual main make. Each deadline is relative to the actual
+preceding callback, preserving the hold after lateness. Timing options are
+strict integers 1..1000. gap_ms is recorded but has no effect on one press.
+
+Read the retained schedule's native press steps and dispatched-count. A
+cancelled press can have delivered makes despite top-level dispatch_ns=None.
+Top-level lateness_ns is None for a press; each public press step reports its
+own lateness_ns against its assigned deadline, or None before delivery.
+First-stop cancellation latches the unsent suffix; another run or batch/retrace
+reschedule is refused. Explicit input_cancel_pending discards the suffix and
+keeps dispatched holds; inspect leases and explicitly key_up each retained
+keyboard lease with a separately chosen execution. No automatic release/replay.
+
+The direct arm has a 1000 ms host bound and inherits tighter script/transport
+bounds. Uncertain outcomes or evidence failures close the VM with the available
+native/stop evidence retained. Native callbacks do not establish guest FIFO
+acceptance or consumption. Text, timed clicks and completed frames remain
+unqualified; timed_input, guest_time_control and completed_guest_frames stay false.
 
 ## Observe the explicit VGA retrace model
 

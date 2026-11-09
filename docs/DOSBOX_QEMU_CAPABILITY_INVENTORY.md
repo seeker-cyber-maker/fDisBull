@@ -47,7 +47,7 @@ completed renderer publications. A separate explicit PC-speaker profile captures
 bounded PCM output with callback timestamps. These operations have Python,
 retained JSON and saved-script routes. A renderer ID is not a guest frame;
 concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
-completed guest frames, broader sound devices, legacy timed press/text and
+completed guest frames, broader sound devices, timed text/clicks and
 pixel/INT33 mouse semantics remain open. The separate opt-in
 [host clock controller](DOS_QEMU_TIMING.md) now maps native virtual time to
 host elapsed time at explicit cooperation points.
@@ -106,6 +106,15 @@ precedence. The immutable callback snapshot qualifies native PS/2 callback
 phase only; guest consumption, full VBlank, completed frames and legacy
 frame-edge parity remain open. The ordinary delta scheduler and older native
 patch chains retain their existing capability boundary.
+
+The optional sixth [keyboard-press patch](../native/qemu-keyboard-press/README.md)
+adds `virtual_keyboard_press` through the existing press API, JSON and script
+routes. One passive chord has 2..8 edges, 2 ms modifier spacing and a main hold
+of 1..1000 ms. Every next native deadline derives from the preceding actual
+callback. First-stop cancellation retains the proven prefix and any held leases;
+explicit suffix cancellation and explicit release are required before recovery.
+No partial replay or conversion to ordinary/retrace batch scheduling is admitted.
+Text/click helpers remain open, and the general `timed_input` flag stays false.
 
 Virtual-profile COM/MZ source traces now retain stable stopped clock brackets
 under `source_trace_clock`. A `virtual-time-range` predicate binds the exact run,
@@ -174,7 +183,7 @@ that last check is not runtime qualification.
 | `breakpoints.create`, `breakpoints.delete`, `breakpoints.list` | Core / Trace and events | QEMU TCG execution/data controls exist; preserve byte-free breakpoints, access kind, length, bounded count and cause/resume semantics |
 | `trace.start`, `trace.read`, `trace.stop` | Trace and events | Stopped-boundary machine/source traces exist; ordinary debug stops do not prove retirement, and no equivalent streaming before-fetch trace cursor is supplied |
 | `video.screenshot`, `video.probe` | Clock, media and input | Stopped QMP surface/CPU/clock bracket and PNG exist; they do not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
-| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports the owned Python queue/leases and immediate or scheduled dispatch receipts; legacy timed press/text remain refused. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
+| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports owned queue/leases and immediate or scheduled receipts. The optional virtual keyboard-press extension queues one native timed chord and retains a partial delivered prefix on cancellation; text remains refused. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
 | `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate, explicit virtual-delay or generation-checked modeled-retrace scheduling; stale leases invalidate on close. A modeled callback phase does not qualify guest-frame edges, consumption or replay parity |
 | `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases support immediate or scheduled dispatch, with independent IRQ12 witnesses; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
 | `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
@@ -209,7 +218,7 @@ dispatch are outside this router dictionary.
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Inherited on `MachineContext` but explicitly refuses QEMU; requires qualified guest-time slices |
 | Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. Initial real-mode module only; no queued input or overlay rebinding |
-| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes have partial native support; the separate QEMU scheduling API does not implement legacy waits, timed press/type, clicks or frame contracts |
+| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and an opt-in native single-chord press have partial support; legacy waits, timed text/clicks and frame contracts remain open |
 | Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |
 | Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Pending fetch-view and hook adapter; screenshots with preparation hooks also depend on this slice |

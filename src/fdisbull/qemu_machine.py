@@ -26,6 +26,7 @@ from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine
 from .qemu_clock_sync import QemuClockSyncMixin
 from .qemu_input import QemuPhysicalInputMixin
 from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS, INPUT_RETRACE_COMMANDS
+from .qemu_keyboard_press import KEYBOARD_PRESS_COMMANDS
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
@@ -413,7 +414,7 @@ def machine_run_operation(function):
     return invoke
 
 
-def machine_trace_operation(function, *, label='Source trace'):
+def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None):
     """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
@@ -428,7 +429,7 @@ def machine_trace_operation(function, *, label='Source trace'):
         from .operation_budget import request_deadline
         arguments=signature.bind(self,*args,**kwargs)
         arguments.apply_defaults()
-        bound=request_deadline(self,arguments.arguments['timeout_ms'])
+        bound=request_deadline(self,arguments.arguments.get('timeout_ms',default_timeout_ms))
         vm=self.vm
         def limits():
             return [bound,getattr(self,'_deadline',None),getattr(vm,'operation_deadline',None),
@@ -464,10 +465,10 @@ def machine_trace_operation(function, *, label='Source trace'):
                     # Keep a live synchronization mapping from remaining active
                     # after that failure, while retaining its observed receipt.
                     self._clock_sync_outer_expired(result,error)
-                elif function.__name__=='input_schedule_retrace':
+                elif function.__name__ in ('input_schedule_retrace','keyboard_press'):
                     # The passive arm may already be accepted and journaled.
                     # An expired return must not leave a usable live timer.
-                    self._input_invalidate('Retrace input arm exceeded its host deadline; batch must not be replayed')
+                    self._input_invalidate(label+' arm exceeded its host deadline; input must not be replayed')
                     vm.close()
                 raise error
             return result
@@ -516,6 +517,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
     keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
     keyboard_state=machine_io_operation(QemuPhysicalInputMixin.keyboard_state)
+    keyboard_press=machine_trace_operation(QemuPhysicalInputMixin.keyboard_press,
+        label='Timed keyboard press',default_timeout_ms=1000)
     mouse_move_relative=machine_io_operation(QemuPhysicalInputMixin.mouse_move_relative)
     mouse_button_down=machine_io_operation(QemuPhysicalInputMixin.mouse_button_down)
     mouse_button_up=machine_io_operation(QemuPhysicalInputMixin.mouse_button_up)
@@ -542,6 +545,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             virtual_clock_budget=virtual,
             host_clock_sync=virtual and VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
+            virtual_keyboard_press=(virtual and KEYBOARD_PRESS_COMMANDS | INPUT_SCHEDULE_COMMANDS
+                | VIRTUAL_CLOCK_COMMANDS | {'input-send-event'} <= getattr(vm,'qmp_commands',frozenset())),
             retrace_input_schedule=(virtual
                 and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                 and INPUT_RETRACE_COMMANDS | INPUT_SCHEDULE_COMMANDS | RETRACE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
@@ -920,7 +925,7 @@ class MachineDebugSession(MachineContext):
     def script_operations(self):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
-                'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state',
+                'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press',
                 'audio-start','audio-observe','audio-stop','capture-audio',
                 'display-start','display-observe','display-stop','capture-display',
                 'retrace-observe',

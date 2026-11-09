@@ -241,6 +241,62 @@ observations, arm and persistence. Failed scripts close live ownership after
 an arm, including a batch queued before the script. Existing
 `input.schedule-arm/result/observe` journal names retain these receipts.
 
+### Queue one timed keyboard press
+
+With all six optional native patches and `virtual_keyboard_press`, the existing
+`keyboard_press(key, modifiers=(), hold_ms=40, gap_ms=40)` queues one chord.
+Use `qemu_clock='virtual'`; a precise retrace profile is unnecessary for a press.
+The machine must be stopped, with an empty owned input queue and no held leases.
+
+```python
+armed = debug.keyboard.press('a', modifiers=['shift'], hold_ms=17, gap_ms=40)
+# Arming is passive. This explicit budget allows the four edges and later IRQs.
+execution = debug.clock_advance(30_000_000, timeout_ms=1000)
+state = debug.keyboard.state()
+receipt = state['schedule']
+```
+
+Modifier makes follow caller order, then the main make, main break and reverse
+modifier breaks. Each make and modifier break waits 2 ms; main break waits
+`hold_ms` from the actual main make. Every next deadline derives from the
+preceding **actual callback**, so lateness cannot shorten the hold. Both timing
+options are strict integers 1..1000. `gap_ms` is retained but has no effect on
+one press, matching the retained DOSBox single-press contract; it applies only
+to successive characters in that backend's text operation.
+
+The existing JSON method is `debug-keyboard-press` with `run`, `key` and the
+same optional arguments. Saved scripts use `keyboard.press`; whole-script
+validation checks literals, capability and caller transactions before earlier
+mutations. Resolved options are checked before native arming. The direct Python
+arm has a 1000 ms host bound including lock admission and respects any tighter
+script or transport bound. A failed script after arming closes the VM.
+
+The scheduled-input receipt adds `press`, whose native `steps` retain each
+key/direction, relative delay, assigned deadline and actual callback time.
+`native['press']['dispatched-count']` identifies the delivered prefix.
+Each public press step reports its own `lateness_ns` against its assigned
+deadline. The batch-level `lateness_ns` is `None` for a press because its
+first deadline and final release describe different edges.
+A top-level `state='cancelled'` with `dispatch_ns=None` can still have delivered
+makes: always inspect the prefix and the current owned leases. A successful
+`state='dispatched'` means all chord callbacks and syncs completed, including
+releases; device acceptance and guest consumption remain unknown.
+
+A pending stop or a reached/equal clock-budget deadline wins before **each**
+edge. An early stop cancels the suffix and latches explicit resolution. It does
+not automatically release held keys, restart the chord or execute its suffix.
+Call `input_cancel_pending()` to discard the unsent steps, then explicitly
+release each retained keyboard lease with `keyboard.key_up(lease)` and a
+separately chosen execution. Ordinary/retrace rescheduling of a bound press is
+refused. After full completion, a new press can be admitted normally.
+
+The separate host clock controller can supply that explicitly requested bounded
+execution through `clock_sync_step()`. Its fixed mapping, drift latch and
+first-stop policy still apply; input never advances the clock or rebases the
+mapping by itself. `keyboard.type` and timed mouse clicks remain unavailable,
+and `timed_input`, `guest_time_control` and `completed_guest_frames` stay false.
+See the [native press contract](../native/qemu-keyboard-press/README.md).
+
 ### Clock synchronization and retrace waits
 
 The JSON routes are `debug-retrace-wait` and

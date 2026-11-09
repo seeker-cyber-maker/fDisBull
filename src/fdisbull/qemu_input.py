@@ -61,7 +61,7 @@ def _not_running(error):
 
 
 class QemuPhysicalInputMixin:
-    """Explicit edges only; timed presses and text await guest-clock control."""
+    """Owned physical edges and finite native virtual-clock keyboard chords."""
 
     def _input_storage(self):
         state = getattr(self.vm, '_physical_input', None)
@@ -208,7 +208,8 @@ class QemuPhysicalInputMixin:
         return self.input_state()
 
     def keyboard_press(self, key, *, modifiers=(), hold_ms=40, gap_ms=40):
-        raise ValueError('Timed keyboard presses require qualified guest-time control; use key_down/key_up with bounded input execution')
+        from .qemu_keyboard_press import keyboard_press
+        return keyboard_press(self, key, modifiers=modifiers, hold_ms=hold_ms, gap_ms=gap_ms)
 
     def keyboard_type(self, text, *, hold_ms=40, gap_ms=40):
         raise ValueError('Timed keyboard text requires qualified guest-time control; use explicit physical key edges')
@@ -289,6 +290,28 @@ class QemuPhysicalInputMixin:
             else:
                 del state['leases'][record['lease']]
         state['pending'].clear()
+
+    def _input_mark_prefix_dispatched(self, state, records, delivery):
+        """Commit a validated finite-press prefix without discarding its suffix."""
+        if state['pending'][:len(records)] != records:
+            raise DebuggerError('Owned timed keyboard pending prefix changed')
+        # Check the complete update against a private ledger before publishing
+        # any make/break transition. No partial host commit can hide an error.
+        leases = deepcopy(state['leases'])
+        for record in records:
+            lease = leases.get(record['lease'])
+            if lease is None or lease['device'] != 'keyboard':
+                raise DebuggerError('Owned timed keyboard lease disappeared')
+            if record['event']['data']['down']:
+                if lease['make'] != 'python_pending':
+                    raise DebuggerError('Owned timed keyboard make was already dispatched')
+                lease['make'] = delivery
+            else:
+                if lease['make'] != delivery or lease['release'] != 'python_pending':
+                    raise DebuggerError('Owned timed keyboard break has no dispatched make')
+                del leases[record['lease']]
+        state['leases'] = leases
+        del state['pending'][:len(records)]
 
     def _input_after_continue(self, deadline):
         """Try once after GDB continue; never resume or retry an input batch.

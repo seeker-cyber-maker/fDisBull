@@ -167,7 +167,13 @@
         "tests/test_qemu_clock_sync.py",
         "tests/test_qemu_retrace_wait.py",
         "tests/test_qemu_timing_public.py",
-        "tests/test_qemu_timing_native.py"
+        "tests/test_qemu_timing_native.py",
+        "tests/test_qemu_input_retrace.py",
+        "tests/test_qemu_input_retrace_public.py",
+        "tests/test_qemu_input_retrace_native.py",
+        "tests/test_qemu_keyboard_press.py",
+        "tests/test_qemu_keyboard_press_public.py",
+        "tests/test_qemu_keyboard_press_native.py"
       ],
       "scope_limits": [
         "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
@@ -177,7 +183,7 @@
         "Source-clock joins establish observation order within one run and both epochs, not input causation, natural instruction latency, guest consumption or completed guest frames. Equal nanoseconds do not establish callback order; observed GDB IRQ/timer policy remains in force. An unbound final time match leaves source_window_closed false. Source-trace host bounds include lock admission and persistence; late or failed storage retains known stop evidence and any artifact IDs in error.result without replay.",
         "clock_advance uses one native timer and one GDB continue under a single host deadline. Token-bound requested/fired/stopped timestamps preserve early debugger/process stops and unknown input consumption; uncertain arm/cleanup closes the machine. No exact arbitrary-nanosecond cutoff, cycle accuracy, generic guest_ms, completed-frame or DOSBox timing parity claim.",
         "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for the declared clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
-        "By default, owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Legacy timed presses, frame-edge input, pixel clicks and INT33 driver parity remain unsupported.",
+        "By default, owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Timed text, frame-edge input, pixel clicks and INT33 driver parity remain unsupported; the optional native press extension supplies a single chord.",
         "Optional native input API1 on the explicit virtual profile adds input_schedule(delta_ns) and input_schedule_observe(), with debug-input-schedule/debug-input-schedule-observe retained JSON and input-schedule/input-schedule-observe script routes. The QEMU10.0.13 input patch applies after the current clock and media patches. virtual_input_schedule requires discovered native commands; timed_input, guest_time_control and completed_guest_frames stay false.",
         "Scheduled arm/query are passive. The caller explicitly chooses one bounded run or clock_advance; the native virtual timer dispatches one token-owned batch through selected PS/2 callbacks and one final sync. The receipt binds requested start/deadline, actual dispatch/terminal time, lateness, sequence/count and epoch. Device FIFO acceptance, guest consumption, release and frame recognition remain unknown; no legacy guest_ms or exact cycle/frame-press parity.",
         "The first actual stop cancels an unfired input timer and preserves the original breakpoint/watchpoint or DOS exit/TSR. Pending stops and equal/reached owned clock-budget deadlines win independently of timer insertion order. Pending edges require explicit input_schedule reschedule under a new token or input_cancel_pending disarm/discard before another run or queue mutation; no automatic continuation or replay. Scheduled runs and scripts bound post-stop reconciliation and evidence persistence by their host deadline.",
@@ -197,7 +203,10 @@
         "Explicit retrace_wait(edge=enter|exit), debug-retrace-wait and script retrace-wait plan one strictly next transition from the admitted precise model and execute at most one native clock budget. Success requires the same run/epochs/device/model/timing generation, an ordinary owned timer stop and the exact absolute target interval. Unsupported or full-period timing does not execute; timing changes, missed windows and earlier/coincident stops retain their evidence without retry.",
         "clock_sync_start/observe/step/stop, retained debug-clock-sync-* JSON routes and clock-sync-* script operations expose a separate opt-in fixed 1:1 host/native mapping. Persistent anchors count all monotonic host elapsed time since start and subtract actual native progress including prior overshoot. One step freezes one target, makes at most one bounded guest catch-up or stopped host sleep, and retains actual residual drift.",
         "host_clock_sync requires the explicit virtual profile and native clock commands. It is inactive by default. Excess lag/lead, nonordinary stops, timeout or uncertain persistence latch a mapping until explicit stop/start; stop is passive between calls, not asynchronous cancellation. Script capability/signature/literal/transaction preflight and a single intersected host deadline cover admission, observations, correction, cleanup and persistence; error.result retains known execution evidence.",
-        "There is no background pacing, implicit rebase, repeated correction loop, icount-rate change, media resampling or completed-frame claim. VGA timing changes do not rebase host anchors; clock epoch/profile loss invalidates live ownership. Reopened event history does not restore a VM or mapping. All 127 default-promotion qualifications remain open."
+        "There is no background pacing, implicit rebase, repeated correction loop, icount-rate change, media resampling or completed-frame claim. VGA timing changes do not rebase host anchors; clock epoch/profile loss invalidates live ownership. Reopened event history does not restore a VM or mapping. All 127 default-promotion qualifications remain open.",
+        "The optional fifth input-retrace patch adds input_schedule_retrace(edge=enter|exit), debug-input-schedule-retrace and input-schedule-retrace under retrace_input_schedule. It pins the exact stopped epoch/device/model/generation, computes the strictly next target/window, then freezes the native callback check. Changed timing including ABA or a missed occurrence cancels without dispatch; stop/equal-budget precedence remains. This is modeled retrace input, not full VBlank, guest-frame or consumption parity.",
+        "The optional sixth keyboard-press patch adds virtual_keyboard_press to the existing keyboard_press/GuestKeyboard.press, debug-keyboard-press and keyboard.press script routes. One stopped empty-queue/no-held-lease admission passively arms a 2..8-edge chord: caller-order modifier makes, main make/break, reverse modifier breaks. Every make and modifier break waits 2 ms; main break waits hold_ms from the actual main make. All next deadlines derive from actual preceding callbacks. Strict hold_ms/gap_ms are 1..1000; gap_ms is retained without effect for a single press, matching retained DOSBox.",
+        "Timed press receipts preserve the immutable plan, assigned deadlines and actual delivered prefix. Every edge honors pending stops and reached/equal clock budgets. First-stop cancellation latches the suffix and keeps dispatched holds; input_cancel_pending discards only unsent steps and callers explicitly release retained leases. Another run or ordinary/retrace reschedule cannot replay a bound partial chord. Malformed, uncertain or expired native/evidence outcomes close without replay. Arm has one 1000 ms host bound and honors tighter incoming bounds. Text/click helpers and general timed_input, guest_time_control, completed_guest_frames remain unavailable; native callback evidence is not generic guest consumption."
       ]
     },
     {
@@ -425,8 +434,8 @@
       "method": "input.keyboard.press",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_press(); optional virtual_keyboard_press native chord with callback-relative timing, delivered-prefix receipts and explicit held-lease recovery; no generic guest-consumption claim",
       "qualification": "unqualified"
     },
     {
@@ -846,8 +855,8 @@
       "operation": "keyboard_press",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_press()/GuestKeyboard.press(); optional virtual_keyboard_press passive chord and explicit bounded execution; partial cancellation retains delivered prefix and held leases",
       "qualification": "unqualified"
     },
     {

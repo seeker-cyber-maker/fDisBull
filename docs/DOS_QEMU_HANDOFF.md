@@ -62,6 +62,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   observations and temporal event queries, explicit precise VGA retrace-model
   observations with timing generations, one-shot precise retrace waits,
   generation-checked native input at a strictly next modeled retrace edge,
+  callback-relative native single-chord keyboard presses with delivered-prefix
+  receipts and explicit held-lease recovery,
   cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
@@ -69,7 +71,7 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  legacy timed helpers and frame-edge input, coordinate mapping and input-to-source causality
+  timed text/click helpers and frame-edge input, coordinate mapping and input-to-source causality
   before claiming those behaviors or depending on them in checkpoints and
   histories. Renderer completion and capture-callback delivery are now explicit
   narrower boundaries. Scheduled input now records PS/2 callbacks and sync at
@@ -83,7 +85,10 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   guest-frame input. The
   user authorized timing auto-sync in the latest continuation; the host
   controller now makes one bounded correction at an explicit cooperation
-  point. Full VBlank, frame completion, legacy guest_ms, timed helpers and
+  point. The native press extension now supplies the existing single-chord
+  press route; early stops retain a delivered prefix and held leases rather
+  than silently replaying or releasing input. Full VBlank, frame completion,
+  legacy guest_ms, remaining timed helpers and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
@@ -93,6 +98,167 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: callback-relative native keyboard presses
+
+Continued from `b6011c68042918942a1d52ff0d8c17ff42343501` on the same source
+branch and draft MR117, retaining target
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. This increment supplies the existing
+single-chord press workflow through native QEMU. Timed text/clicks, frame
+semantics and the remaining migration stages are separate gates.
+
+### Existing public workflow, passive native timing
+
+`keyboard_press(key, modifiers=(), hold_ms=40, gap_ms=40)`,
+`GuestKeyboard.press`, JSON `debug-keyboard-press` and script `keyboard.press`
+now share the optional `virtual_keyboard_press` capability. It requires the
+explicit virtual clock, existing clock/input command set and the new
+`x-fdisbull-arm-keyboard-press` command. A precise retrace profile is unnecessary.
+Older native binaries retain their existing capabilities and refuse this route.
+
+One stopped admission requires an empty owned queue and no active owned leases.
+It prepares a chord of two through eight edges without executing the guest:
+caller-order modifier makes, main make, main break, reverse modifier breaks.
+The first edge and every later make/modifier break waits 2 ms; the main break
+waits hold_ms from the actual main make. Each next deadline derives from the
+preceding actual callback, so late dispatch cannot shorten the requested hold
+or collapse later release spacing. Strict hold_ms/gap_ms bounds are 1..1000.
+gap_ms is validated and retained without effect for a single press, matching
+the retained DOSBox contract; it belongs to that backend's separate text queue.
+
+The caller chooses one later bounded run, clock advance or cooperative
+clock-sync step. Input never runs or rebases the clock itself. The native
+acceptance witness drives a halted chord with exactly one explicit
+clock_sync_step while preserving the controller's fixed host/native anchors.
+
+### Prefix evidence and explicit recovery
+
+The sixth native patch adds an optional press descriptor to the existing input
+API1 receipt and retains the existing query/cancel commands. It copies and
+pins each one-key batch before committing the arm/token. The descriptor binds
+the key/modifiers/timing, immutable step order, each assigned deadline, actual
+callback/sync timestamps and a delivered-prefix count. Only the immediate next
+deadline is assigned; later edges are not placed on a predicted absolute grid.
+Ordinary/retrace accepted arms clear press metadata, and press arms clear
+retrace metadata. Shared bounds, token history and migration restrictions remain.
+
+Every edge preserves pending debugger/native-stop and reached/equal
+clock-budget precedence. The first actual stop cancels the undispatched suffix;
+completion itself does not stop the VM. Both actual timer insertion orders are
+witnessed for the first make. The release witness covers both command-arm
+orders, while accurately retaining that its timer is created only after make,
+so its clock budget is already queued in both cases.
+
+The host validates the full plan, callback-relative recurrence, prefix
+monotonicity/freeze, epoch/token, terminal times and every edge's owned-budget
+cutoff before changing leases. It applies only a newly proven prefix to a
+private lease ledger. Top-level dispatch_ns is absent for cancellation even
+when makes were delivered; inspect press.dispatched_count and leases.
+Top-level lateness_ns is None for a chord; each public step reports its own
+lateness against its assigned deadline. This avoids counting the requested
+hold duration as lateness.
+
+A cancelled press remains bound and cannot run again or be converted into
+ordinary/retrace scheduling. Explicit input_cancel_pending discards unsent
+steps while retaining dispatched holds and clearing their pending releases.
+Callers then explicitly key_up each retained lease and choose its execution.
+There is no automatic suffix replay or synthetic cleanup release.
+
+Literal/capability/transaction script checks precede earlier script mutations;
+resolved values are revalidated before arming. One 1000 ms direct-arm host bound
+covers lock admission, I/O and persistence, intersecting tighter incoming
+bounds. Pre-arm admission expiry leaves a valid owner available. Accepted or
+uncertain late arms, malformed/native-failed evidence and failed persistence
+retain available native/stop evidence and close without replay. Failed scripts
+that touched input close the owner. Terminal native step evidence stays frozen.
+
+### Native witnesses, compatibility and retained corrections
+
+The original press refusal and script-grammar failure were retained before
+implementation. The new focused host selection has 75 press cases and the
+existing physical/ordinary/retrace input checks: 228 passed, zero skips. Public
+routing/admission/deadline checks add 26 cases, also exercised in the full lanes.
+
+All 16 new native cases passed on the first feature run and again in the source
+and installed combined selections. Busy/HLT × plain/shift/full chords inspect
+actual IRQ1/scancode bytes and an independent delay recurrence. The busy full
+chord demonstrates a late main-break callback followed by a deadline based on
+that actual time. Other witnesses retain original breakpoints before/after
+make, demonstrate held-lease cancellation/release, verify equal cutoffs, refuse
+the older five-patch executable, preserve JSON/script/journal/reopened evidence,
+compose with clock auto-sync and reject invalid native command arguments
+without consuming their token. The fixed gap value of 1000 ms does not create a
+tail timer: each admitted chord completes well before that interval.
+
+Three early host-test assertions attempted a public state read after their
+intentionally expired deadline; they were corrected to inspect retained private
+invalidation state. Compatibility checks exposed a minimal unsupported owner's
+missing configuration producing AttributeError; the guard now returns the
+established unsupported guest-time ValueError. The first broad source lane had
+1302 passed, one failure and five optional skips: the operation correctly
+refused before an earlier script step, but its error text lacked the retained
+"guest clock" wording. The wording was restored, that regression passed, and
+the full final source lane passed afterward. All failed receipts remain retained.
+No native implementation change or rebuild was needed after its first build.
+
+The first installed combined native attempt retained 88 passes and one failure
+in the unchanged retrace-input budget-first witness. Its initial stopped
+retrace bracket completed six QMP calls, then locally refused the final clock
+query because the shared host deadline had expired, before any input or clock
+arm. The request's default allowance is 1000 ms, intersected with incoming
+bounds; the failed log does not establish where time was consumed or whether
+an inherited bound shortened it. An observation-only isolated repeat passed
+with the same wheel, binary and production bounds. Independent comparison
+found no change to the observation path or its effective default. The one
+finite full installed-native repeat passed all 89 cases without changing code
+or increasing timeouts. The original failure and isolated timing records remain
+retained; no root cause is assigned from the successful follow-up.
+
+### Exact reproduction and local qualification
+
+The unchanged five prior patches and new sixth patch reproduced from the
+pinned official QEMU 10.0.13 archive using 92 required regular source/QAPI/parser
+inputs. Forward/reverse application had zero fuzz/offset; both changed native
+members matched the built source and reverse restored all 26 prior native
+members. QAPI schema validation and generation passed. The private x86_64
+TCG/Pixman build configured in 15.751 s and compiled in 90.197 s, with no source
+change during either phase. Runtime inputs, databases and vendor media remain
+outside Git.
+
+- Sixth patch SHA256: `0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0`.
+- Native executable SHA256: `b09fa87715cd0c7826fcd03ce8537b9b95ae2e209f15c677ffbc579ad261a78a`.
+- Private wheel SHA256: `2498503d9580c0fac926b60cc01aa05cc0eeb3b2ab719f4efc321722840928bd`.
+
+| Local selection | Result | Elapsed |
+| --- | --- | --- |
+| Affected source regressions | 1303 passed; 5 skipped | 159.977 s |
+| Combined source native selection | 89 passed; 0 skipped | 72.562 s |
+| Fresh installed-wheel regressions | 1292 passed; 5 skipped | 127.405 s |
+| Fresh installed-wheel native selection | 89 passed; 0 skipped | 319.924 s |
+| Retained DOSBox chord and trace witnesses | 2 passed; 0 skipped | 17.354 s |
+
+Selections overlap. The five skips in each broader lane are the existing
+optional raw-machine session cases with FDISBULL_MACHINE_QEMU unset; they are
+not counted as native passes. Both required native lanes include all 89 cases
+with zero skips. The retained DOSBox lane exercises actual timed chords,
+pending-input checkpoint restoration, and the earlier source predicate/hook
+boundary. This does not establish native QEMU checkpoint support.
+
+The wheel's 639 core members and 619 copied test/support members are verified
+against source, with installed import-origin checks outside the checkout.
+Final source artifacts bind 1590 tracked payload files and all 21 authored paths;
+their hashes and the exact tested tree are retained in the MR publication
+receipt. Package payload/distribution checks are mandatory before publication.
+
+The source ledger now includes the previously implemented fifth-layer witness
+set as well as this press increment. Its press routes change from pending to
+partial; all 127 promotion qualifications remain open. DOSBox remains default
+and both selectors remain available. Native callback completion still leaves
+FIFO acceptance, arbitrary guest consumption and completed drawing unknown.
+Text/click helpers, renderer/frame/VBlank semantics, coordinate mapping,
+input-to-source causality, broader audio, real QEMM/DESQview/game campaigns and
+checkpoint/history dependencies remain open. No hosted CI, merge, release or
+shared installation is claimed; the configured Mac mirrors remain unavailable.
 
 ## 2026-11-09: generation-checked input at a modeled retrace edge
 

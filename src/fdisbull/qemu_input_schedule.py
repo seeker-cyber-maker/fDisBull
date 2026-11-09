@@ -14,6 +14,7 @@ import uuid
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
 from .qemu_input import MAX_PENDING_EDGES
+from .qemu_keyboard_press import press_receipt, validate_native_press
 from .qemu_retrace import RETRACE_COMMANDS, validate_retrace_snapshot
 
 
@@ -72,6 +73,11 @@ def _invalid(owner, message):
     owner._input_invalidate(message)
     owner.vm.close()
     raise DebuggerError(message)
+
+
+def _pending_records(schedule):
+    return (schedule['records'][schedule['applied_count']:]
+            if 'press' in schedule else schedule['records'])
 
 
 def _native_retrace_schedule(owner, value, expected):
@@ -148,7 +154,7 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
         _invalid(owner, 'Invalid native scheduled-input receipt')
     optional = ('token', 'start-ns', 'deadline-ns', 'terminal-ns', 'dispatch-ns', 'reason')
     if value['state'] == 'idle':
-        if (expected is not None or value['event-count'] or 'retrace' in value
+        if (expected is not None or value['event-count'] or 'retrace' in value or 'press' in value
                 or any(key in value for key in optional)):
             _invalid(owner, 'Idle native input unexpectedly owns a schedule')
         return deepcopy(value)
@@ -177,15 +183,21 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
             _invalid(owner, 'Native input dispatch preceded its requested deadline')
     elif 'dispatch-ns' in value:
         _invalid(owner, 'Undispatched native input invented a dispatch time')
+    try:
+        validate_native_press(value, expected)
+    except (ValueError, KeyError, TypeError) as error:
+        _invalid(owner, str(error))
     semantic_cancel = _native_retrace_schedule(owner, value, expected)
-    if expected.get('retrace') is not None:
-        exact = required | {'token', 'start-ns', 'deadline-ns', 'retrace'}
+    if expected.get('retrace') is not None or expected.get('press') is not None:
+        mode = 'press' if 'press' in expected else 'retrace'
+        exact = required | {'token', 'start-ns', 'deadline-ns', mode}
         if terminal:
             exact |= {'terminal-ns', 'reason'}
         if value['state'] == 'dispatched':
             exact.add('dispatch-ns')
         if set(value) != exact:
-            _invalid(owner, 'Native retrace-input receipt has unexpected fields')
+            _invalid(owner, 'Native retrace-input receipt has unexpected fields' if mode == 'retrace'
+                     else 'Native timed keyboard receipt has unexpected fields')
     # This is the budget owned by this execution, never a retained historical
     # receipt from an earlier run. Check it before any lease transition.
     if owned_budget is not None:
@@ -200,6 +212,9 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
             _invalid(owner, 'Native input dispatch reached the owned clock budget cutoff')
         if semantic_cancel and value['terminal-ns'] >= owned_budget['budget-deadline-ns']:
             _invalid(owner, 'Native retrace callback reached the owned clock budget cutoff')
+        if 'press' in expected and any(step.get('dispatch-ns', -1) >= owned_budget['budget-deadline-ns']
+                                      for step in value['press']['steps']):
+            _invalid(owner, 'Native timed keyboard edge reached the owned clock budget cutoff')
     if (after_stop and expected['bound'] and value['state'] == 'cancelled'
             and not semantic_cancel and value['terminal-ns'] != value['virtual-ns']):
         _invalid(owner, 'Native input cancellation differs from its first owned stop time')
@@ -233,7 +248,8 @@ class QemuScheduledInputMixin:
                     clock_domain='QEMU_CLOCK_VIRTUAL', observed_ns=native['virtual-ns'],
                     start_ns=native.get('start-ns'), deadline_ns=native.get('deadline-ns'),
                     terminal_ns=native.get('terminal-ns'), dispatch_ns=dispatched,
-                    lateness_ns=(dispatched - native['deadline-ns'] if dispatched is not None else None),
+                    lateness_ns=(dispatched - native['deadline-ns']
+                                 if dispatched is not None and not (schedule and 'press' in schedule) else None),
                     reason=native.get('reason'), edge_count=native['event-count'],
                     sequences=[record['sequence'] for record in schedule['records']] if schedule else [],
                     requires_resolution=bool(schedule and schedule['bound'] and native['state'] == 'cancelled'),
@@ -250,6 +266,8 @@ class QemuScheduledInputMixin:
                 dispatch_phase_verified=native['state'] == 'dispatched',
                 claim='Native modeled-phase PS/2 callbacks and final sync only; device acceptance, '
                       'guest consumption, guest-frame completion and the full VBlank interval remain unknown.')
+        if schedule is not None and schedule.get('press') is not None:
+            result['press'] = press_receipt(native, schedule)
         return result
 
     def _input_schedule_read(self, clock, *, owned_budget=None, after_stop=False):
@@ -265,15 +283,20 @@ class QemuScheduledInputMixin:
             return native
         except BaseException as error:
             planned = schedule.get('retrace') if schedule is not None else None
-            if planned is not None or type(received) is dict and 'retrace' in received:
+            press = schedule.get('press') if schedule is not None else None
+            if (planned is not None or press is not None
+                    or type(received) is dict and ('retrace' in received or 'press' in received)):
                 error.input_schedule_native = deepcopy(received)
-                error.input_schedule_retrace_before = deepcopy(planned['before']) if planned else None
+                if planned is not None:
+                    error.input_schedule_retrace_before = deepcopy(planned['before'])
                 # The execution owner will join these attributes to its already
                 # observed GDB stop. Do not replace that stop's error.result here.
                 if not after_stop and getattr(error, 'result', None) is None:
-                    error.result = dict(native=deepcopy(received),
-                        retrace_before=deepcopy(error.input_schedule_retrace_before),
-                        validation_failed=True)
+                    error.result = dict(native=deepcopy(received), validation_failed=True)
+                    if planned is not None:
+                        error.result['retrace_before'] = deepcopy(planned['before'])
+                    if press is not None:
+                        error.result['press_plan'] = deepcopy(press)
             self._input_invalidate('Native input observation failed; schedule must not be replayed')
             self.vm.close()
             raise
@@ -282,9 +305,18 @@ class QemuScheduledInputMixin:
         state = self._input_storage()
         schedule = state['schedule']
         if schedule['bound']:
-            if state['pending'] != schedule['records']:
+            if state['pending'] != _pending_records(schedule):
                 _invalid(self, 'Owned pending input changed beneath its native schedule')
-            if native['state'] == 'dispatched':
+            if 'press' in schedule:
+                count = native['press']['dispatched-count']
+                if count < schedule['applied_count']:
+                    _invalid(self, 'Owned timed keyboard applied prefix regressed')
+                self._input_mark_prefix_dispatched(state,
+                    schedule['records'][schedule['applied_count']:count], 'native_dispatched')
+                schedule['applied_count'] = count
+                if native['state'] == 'dispatched':
+                    schedule['bound'] = False
+            elif native['state'] == 'dispatched':
                 self._input_mark_dispatched(state, schedule['records'], 'native_dispatched')
                 schedule['bound'] = False
         schedule['native'] = deepcopy(native)
@@ -298,7 +330,7 @@ class QemuScheduledInputMixin:
         state = self._input_storage()
         schedule = state.get('schedule')
         if schedule is not None and schedule['bound']:
-            if state['pending'] != schedule['records']:
+            if state['pending'] != _pending_records(schedule):
                 _invalid(self, 'Owned pending input changed beneath its native schedule')
             if schedule['native']['state'] != 'armed':
                 raise ValueError('Interrupted scheduled input requires explicit reschedule or cancel before another run')
@@ -313,11 +345,12 @@ class QemuScheduledInputMixin:
                 _invalid(self, 'Native input timer survived the owned execution stop')
             self._input_persist('input.schedule-result', result)
         except BaseException as error:
-            if 'retrace' in result:
+            if 'retrace' in result or 'press' in result:
                 # The native callback is already validated even if journaling
                 # fails. Preserve it beside the execution owner's actual stop.
                 error.input_schedule_native = deepcopy(native)
-                error.input_schedule_retrace_before = deepcopy(result['retrace']['before'])
+                if 'retrace' in result:
+                    error.input_schedule_retrace_before = deepcopy(result['retrace']['before'])
             raise
         return deepcopy(result)
 
@@ -325,6 +358,8 @@ class QemuScheduledInputMixin:
         """Arm the current pending batch; the caller explicitly runs the VM."""
         validate_input_delay(delta_ns)
         state = self._input_storage()
+        if self._input_schedule_bound() and 'press' in state['schedule']:
+            raise ValueError('Timed keyboard press requires explicit input_cancel_pending; its suffix cannot be rescheduled')
         if not state['pending']:
             raise ValueError('Queue physical input before scheduling a native batch')
         # One mouse sync represents its final button state, so two transitions
@@ -370,6 +405,8 @@ class QemuScheduledInputMixin:
                 or not commands <= getattr(self.vm, 'qmp_commands', frozenset())):
             raise ValueError('Retrace input scheduling requires the native input/retrace extensions and explicit virtual/precise profiles')
         state = self._input_storage()
+        if self._input_schedule_bound() and 'press' in state['schedule']:
+            raise ValueError('Timed keyboard press requires explicit input_cancel_pending; its suffix cannot be rescheduled')
         if not state['pending']:
             raise ValueError('Queue physical input before scheduling a retrace batch')
         buttons = [record['event']['data']['button'] for record in state['pending']
@@ -431,7 +468,7 @@ class QemuScheduledInputMixin:
         try:
             self._input_persist('input.schedule-observe', result)
         except BaseException as error:
-            if 'retrace' in result and getattr(error, 'result', None) is None:
+            if ('retrace' in result or 'press' in result) and getattr(error, 'result', None) is None:
                 error.result = deepcopy(result)
             raise
         return result
@@ -445,13 +482,17 @@ class QemuScheduledInputMixin:
         clock = self._input_schedule_context()
         native = self._input_schedule_read(clock)
         if native['state'] == 'armed':
+            received = None
             try:
-                native = _native_schedule(self, self.vm.qmp.call('x-fdisbull-cancel-input',
-                    {'token': schedule['token']}), clock, schedule)
+                received = self.vm.qmp.call('x-fdisbull-cancel-input', {'token': schedule['token']})
+                native = _native_schedule(self, received, clock, schedule)
                 if native['state'] != 'cancelled' or native['terminal-ns'] != clock['virtual_ns']:
                     _invalid(self, 'Native input cancellation did not establish an undispatched terminal batch')
                 self._input_schedule_accept(native, clock)
-            except BaseException:
+            except BaseException as error:
+                if 'press' in schedule and getattr(error, 'result', None) is None:
+                    error.result = dict(native=deepcopy(received), press_plan=deepcopy(schedule['press']),
+                                        validation_failed=True)
                 self._input_invalidate('Native input cancellation is uncertain; close without replay')
                 self.vm.close()
                 raise
