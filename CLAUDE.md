@@ -18,6 +18,11 @@ protecting your token budget:
   stay in SQLite so turns and subagents query only what they need.
 - **Selective `<2 KiB` skill loading:** use `agent-skill --list` and `--index`
   to load only the single reference file required for the active stage.
+- **Self-building `Z` harness, block-level QA & behavioral patch diffing:** bind
+  each discovered UI control/state into `Z` immediately, target isolated code
+  blocks with Anchor Stone / CPU-RAM delta rewind instead of restarting the
+  process, and diff pre/post-patch runtime behavior across layers with export to
+  Python, JS, C, assembly or Z3 via `UDL` → `UIL`.
 
 Read [AGENTS.md](AGENTS.md) for the shared project contract,
 [CI coordination](docs/CI_COORDINATION.md) for mirror synchronization and

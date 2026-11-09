@@ -58,13 +58,18 @@ To keep your token usage low and your context window clean:
   record it when reporting how a result was obtained. Live player mode can save
   between model turns; verify the checkpoint receipt before claiming persistence.
 
-For repeated game work, grow a reusable Z harness from the startup menus and
-global controls onward. Expose each learned control as a named action immediately,
-compose useful routes, automate navigation, add compatible placement and scene
-presets, then
-replace repeated UI work with programmatic actions as those become available.
-Use the cheapest acquired capability for the next test. A Z/UIL harness does
-not require a UDC build; source/model/output qualification applies when the
+For repeated game work, grow a rapid self-building `Z` harness from the startup
+menus and global controls onward. Expose each learned control as a named `Z`
+action immediately, compose useful routes, automate navigation, add compatible
+placement and scene presets, then replace repeated UI work with programmatic
+actions as those become available. For rapid QA and patch/edition comparisons,
+target isolated code blocks rather than re-running the whole process: rewind
+live debugged state via Anchor Stones (`debug-rewind-*`, `debug-delta-*`,
+`debug-timeline-*`), compare baseline vs. patched code layers in live
+experiments, and export pre/post-patch behavioral diffs through `UDL` → `UIL`
+into any supported language (Python, JS, C, ASM, or Z3 proofs). Use the
+cheapest acquired capability for the next test. A Z/UIL harness does not
+require a UDC build; source/model/output qualification applies when the
 requested deliverable includes a replacement or target implementation.
 
 Keep one bounded question per worker and batch compatible tests in one scene

@@ -70,19 +70,25 @@ stage that proves the answer:
 1. **Explain an undocumented mechanic, formula, bug, or hidden branch (Reverse Engineering → Human Guide)**
    - **Human goal:** *"How does this DOS/Windows/console game actually compute combat odds, why does this dialog option soft-lock, or what hidden debug flags exist?"*
    - **Agent execution:** Unpacks the installer or disc natively (`media-extract`), imports the executable into `.fdb`, searches FTS5/vectorized source and concept cards (`source-search`, `concept-search`), narrows live memory or instruction triggers with guarded scalar/event searches (`memory-search-*`, `execution-event-search`, `debug-trace-until`), and compiles an attributed technical walkthrough or FAQ via `write-gamefaqs-guide`.
-2. **Turn a closed legacy game or desktop app into a scriptable headless test & AI-play harness (`Z` Controller)**
+2. **Rapidly self-build an automation & AI-play harness through the `Z` representation (`Z` Controller)**
    - **Human goal:** *"Let agents jump straight into specific scenarios, run 100 balance/RNG experiments, or play a classic DOS/Win16 title over a structured text/JSON API without clicking through startup menus every time."*
-   - **Agent execution:** Captures menus and HUD controls once as named `Z` verbs (`capture-action`, `z-controller`), isolates the save/load serializer (`serializer-discovery`, `debug-save-scene`), plants Anchor Stones with deterministic CPU/RAM/frame delta rewind (`delta-experiment`), and exposes either a fair-play physical session (`text-host --fair-play`) or an assisted inspection harness.
-3. **Unpack, audit, and compare legacy installers, packed Windows PEs, and multi-edition collections**
+   - **Agent execution:** The harness builds itself incrementally in the `Z` representation ([Z scenes](docs/Z_SCENES.md), [progressive scenes](docs/PROGRESSIVE_SCENES.md)) as the agent explores: each newly learned menu button, HUD control, room transition, or state field is immediately bound as a named `Z` verb (`capture-action`, `z-controller`) and composable route, while `serializer-discovery` and `debug-save-scene` unlock direct state loading—progressively replacing slow UI clicking with instant programmatic actions in either fair-play (`text-host --fair-play`) or assisted mode.
+3. **Rapid QA on isolated code blocks with live debug-state rewind (Block-Targeted QA vs. Whole-Process Replay)**
+   - **Human goal:** *"Test or fuzz a specific calculation, branch, or handler across dozens of edge-case inputs in seconds without restarting the process or replaying minutes of gameplay."*
+   - **Agent execution:** Pins the live machine context right before the target routine with an [Anchor Stone](docs/ANCHOR_STONES.md), steps backward across recorded fetches ([`debug-rewind-*`](docs/DEBUGGER_REWIND.md)), or rewinds [CPU/RAM deltas](docs/CPU_RAM_DELTAS.md) (`debug-delta-*`) and [frame/input timelines](docs/FRAME_INPUT_TIMELINE.md) (`debug-timeline-*`, including partial-RNG preservation) to re-run only the target basic block or function in place. Agents can also lift that block into an isolated [UDL/UIL block layer](docs/UDL_BLOCK_LAYERS.md) (`udl-verify`, `proof-check`, CPU block checks) to test or prove inputs without running the surrounding process at all.
+4. **Patch analysis, live behavioral diffing, and multi-language pre/post-patch export**
+   - **Human goal:** *"Compare two game versions, an official patch, or an experimental hotfix—show me not just which bytes changed, but how the runtime behavior changed, and export the pre/post-patch logic in Python, JS, C, or assembly for review."*
+   - **Agent execution:** Captures each binary version or non-destructive [code layer](docs/CODE_LAYERS.md) in `.fdb`, replays identical inputs from a shared Anchor Stone in [saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md), and diffs the **live behavioral outcomes** (register trajectories, memory writes, RNG branches, and rendered frames)—not just static instructions. It then lifts both the pre-patch and post-patch blocks into [common UIL](docs/COMMON_UIL_CONTRACT.md) (`uil-*`) to export side-by-side behavioral diffs in any supported language (**Python**, **JavaScript**, **Clang C**, **x86/ARM64/6502/68000 assembly**, or **Z3 equivalence counterexamples**).
+5. **Unpack, audit, and compare legacy installers, packed Windows PEs, and multi-edition collections**
    - **Human goal:** *"Inventory this folder of GOG installers, floppy/CD images, ROMs, and TAS captures on macOS/Linux without Wine, rebuild imports from a captured packed PE, and show how editions differ."*
    - **Agent execution:** Runs `intake-inventory`, `capture-audit`, and `media-inspect`/`media-extract` (built-in Inno Setup 5.6.2 GOG reader, MADS `.HAG`/`.MAD`, Westwood `.PAK`, CUE/ISO, NES/SNES/Genesis/Saturn headers), or recovers an import table from a caller-supplied process dump via `chimprec`, recording every hash, edition diff, and asset map in `.fdb`.
-4. **Lift verified subsystems into portable `UIL` and recompile across platforms (`UDC` Porting & Modernization)**
+6. **Lift verified subsystems into portable `UIL` and recompile across platforms (`UDC` Porting & Modernization)**
    - **Human goal:** *"Extract the rules engine, serializer, or full playable loop of a 16/32-bit x86, ARM64, AGI, Z-machine, or MADS title and build a verified native macOS ARM64, Linux, Windows, WebAssembly/WebGPU, or NES/Genesis target."*
    - **Agent execution:** Lifts native blocks or guest bytecode into `UDL` → typed indexed `UIL` (`uil-*`), proves mathematical block equivalence with Z3 (`proof-check`, `udl-verify`), tracks unresolved serializer/UI children in `operation-goal` and `work-queue`, and emits a signed native or browser build through `UDC`.
-5. **Inspect and repack adventure scripts, dialog trees, and cinematic resources in place**
+7. **Inspect and repack adventure scripts, dialog trees, and cinematic resources in place**
    - **Human goal:** *"Map every conversation branch and room script in a MADS, Sierra AGI, or Z-machine adventure, or generate a compact playable cutscene variant."*
    - **Agent execution:** Decodes guest conversation bytecode, vocabulary tables, and scene scripts (`mads-inspect`, `mads-compile`, `mads-compact`, `agi-*`, `zmachine-*`) directly into structured JSON and UIL while keeping commercial originals isolated in the private local object store.
-6. **Run multi-agent parallel reverse engineering overnight without context-window blowup**
+8. **Run multi-agent parallel reverse engineering overnight without context-window blowup**
    - **Human goal:** *"Have a coordinator and worker subagents map out an entire binary's subsystems in parallel without duplicating probes or burning millions of tokens on raw dumps."*
    - **Agent execution:** A single controller owns the live headless guest while parallel workers pull bounded, non-overlapping questions from the persistent dependency queue (`work-queue`, `run-work`), inspect shared `.fdb` facts and 64 KiB-capped `out-<sha256>` slices (`output-select`), and commit verified types, xrefs, and concepts back to SQLite.
 
@@ -336,11 +342,15 @@ measure specific paused scenes, rather than promising a universal speedup.
 
 Explore runtime hypotheses without losing your baseline:
 
-- **Code layers and saved experiments:** apply reversible RAM edits or DOS
-  instruction-fetch overlays, capture runtime code alongside earlier byte
-  versions, and compare baseline versus single-layer runs. See
+- **Code layers, patch analysis and live behavioral diffing:** apply reversible
+  RAM edits or DOS instruction-fetch overlays, capture runtime code alongside
+  earlier byte versions, compare baseline versus patched or single-layer runs
+  from a shared Anchor Stone, and lift pre/post-patch blocks through `UDL` →
+  `UIL` to export behavioral (not just byte/instruction) differences into
+  Python, JavaScript, C, assembly or Z3 proofs. See
   [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERIMENTS.md),
-  [debugger scripts](docs/DEBUGGER_SCRIPTS.md) and [runtime code](docs/RUNTIME_CODE.md).
+  [debugger scripts](docs/DEBUGGER_SCRIPTS.md), [block layers](docs/UDL_BLOCK_LAYERS.md)
+  and [runtime code](docs/RUNTIME_CODE.md).
 - **Anchor Stones and next-fetch rewind:** full native saved states—called
   [Anchor Stones](docs/ANCHOR_STONES.md), a nod to TiGa's *Blob to General*—let
   sessions jump directly to a verified machine context, while bounded
