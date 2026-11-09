@@ -9,8 +9,9 @@ the Python package does not install an emulator or host audio driver.
 The boundary is a completed synchronous **renderer update**, and complete PCM
 frames delivered by QEMU's **audio capture callback**. Neither establishes a
 completed guest application frame, VBlank, device queue drain, input consumption,
-audible playback or cycle parity. Timing auto-sync is deferred. The observers
-never resume the guest or pace it against host time.
+audible playback or cycle parity. The observers never resume the guest or pace
+it against host time. The separate [host clock-sync controller](../../docs/DOS_QEMU_TIMING.md)
+does not change media sampling rates, renderer cadence or playback qualification.
 
 ## Reproduce the patch
 

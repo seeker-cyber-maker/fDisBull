@@ -13,7 +13,8 @@ and one final input sync** at a native `QEMU_CLOCK_VIRTUAL` timestamp. A
 unknown. Full or disabled device queues can ignore events; a mouse in remote
 mode can retain motion without emitting a packet. This boundary does not
 establish a completed guest frame, game action, timed-key parity or host-time
-synchronization. Timing auto-sync is deferred.
+synchronization. The separate [host clock-sync controller](../../docs/DOS_QEMU_TIMING.md)
+preserves this scheduler's first-stop cancellation and never replays its batch.
 
 ## Reproduce the patch
 

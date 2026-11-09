@@ -232,7 +232,8 @@ audio callback timestamps only within the same run and both epochs. Ordering
 does not prove input consumption or causation, completed guest frames or
 natural instruction latency. Equal timestamps do not establish callback order.
 The actual GDB IRQ/timer step policy still applies, and instruction count is
-never converted into elapsed virtual time. Timing auto-sync remains deferred.
+never converted into elapsed virtual time. Host auto-sync is a separate,
+explicit mapping; it does not reinterpret source-event timestamps.
 
 One host deadline now includes trace lock admission, observations, stepping
 and persistence, intersecting script/session/native-channel bounds. If it
@@ -405,8 +406,8 @@ The new host/native witnesses are `tests/test_qemu_input_schedule.py` and
 `tests/test_qemu_input_schedule_native.py`; test paths are not passing receipts.
 All 127 default-switch qualifications remain open and DOSBox stays the default.
 Legacy `guest_ms`, timed press/type, frame presses, pixel/INT33 semantics and
-whole-game timing remain unqualified. Timing auto-sync, host pacing and adaptive
-correction remain explicitly deferred by the user.
+whole-game timing remain unqualified. The separate host clock-sync controller
+preserves input's first-stop semantics and never re-arms a cancelled batch.
 
 ## Observe the explicit VGA retrace model
 
@@ -444,8 +445,54 @@ One absolute timeout covers lock admission through evidence persistence;
 scripts reject an unsupported profile or invalid literal timeout before earlier
 writes. A journal can commit before a late timeout is detected, so inspect
 `error.result` for retained observation evidence. Do not infer rollback or
-replay. There is no new edge scheduler, automatic wait or host-time pacing.
-Timing auto-sync remains deferred, and all 127 default-switch gates stay open.
+replay. Use the separate explicit operations below for bounded edge waiting
+or host auto-sync. All 127 default-switch gates remain open.
+
+## Synchronize at an explicit cooperation point
+
+Check `host_clock_sync` on the explicit virtual profile. Use
+`clock_sync_start(tolerance_ns=1_000_000, max_lag_ns=250_000_000,
+max_wait_ns=250_000_000, timeout_ms=1000)` to establish a passive fixed 1:1
+mapping between native virtual time and host `time.monotonic_ns`. This policy
+counts all host elapsed time since start, including Python work, control and
+persistence overhead, debugging pauses and caller idle time. Stop the mapping
+before an intentional long inspection pause.
+
+At each explicit `clock_sync_step(timeout_ms=1000)`, retain the original
+anchors and automatically choose one action: no correction within tolerance,
+one native clock budget when behind, or one host-only wait while the guest is
+stopped when ahead. Actual intervening guest progress and timer overshoot are
+accounted for. The target is frozen for the call; there is no moving-target
+loop, background execution or implicit correction in other methods.
+
+Inspect the receipt's state, outcome, complete `execution`, actual wait and
+residual drift. Reaching the frozen target does not promise zero drift at
+return. Excess lag/wait latches `desynchronized` without execution/wait;
+early or coincident native stops latch `interrupted` without continuing.
+Scheduled input retains its first-stop cancellation and explicit resolution.
+Use `clock_sync_observe()` for passive state/drift evidence and
+`clock_sync_stop()` to stop future corrections between calls. A fresh mapping
+requires explicit stop/start; saved history never restores live ownership.
+
+With `retrace_wait` capability, call `retrace_wait(edge='enter'|'exit',
+timeout_ms=1000)` to attempt the strictly next modeled vertical edge once.
+Check `synchronized`, not only the final phase bit. The exact absolute target
+window, clock/device identity and timing generation must all survive. A later
+cycle in the same phase does not qualify. Unsupported timing or a whole-period
+retrace returns unsupported/no-transition without execution. Timing changes,
+missed windows and original debugger/DOS stops stay explicit; never retry them
+automatically.
+
+JSON routes are `debug-clock-sync-start/observe/step/stop` and
+`debug-retrace-wait`; script operations omit `debug-`. Whole-script capability,
+signature, literal-option and transaction checks precede earlier mutations.
+Each operation shares one deadline from lock admission through persistence.
+Inspect `error.result` after a late or failed evidence write. No claim is made
+for continuous real-time fidelity, full VBlank, guest-frame completion, device
+resampling, input consumption or hardware-cycle parity. VGA changes do not
+rebase the host mapping. Start/observe/stop are passive; step and retrace-wait
+are explicit execution controls. In-flight cancellation uses the existing
+deadline/terminal-close path, not a concurrent stop command.
 
 ## Observe renderer publications and PC-speaker output
 
@@ -454,7 +501,8 @@ API1 operations. Select `qemu_clock='virtual'`; add `qemu_audio='pc-speaker'`
 only for PC-speaker capture. The raw machine factory takes `clock_profile` and
 `audio_profile` instead. This profile uses QEMU's timer-driven `none` audiodev,
 32,000 Hz mono unsigned 8-bit PCM, and no host playback. Other sound devices
-remain unqualified. Timing auto-sync is explicitly deferred.
+remain unqualified. Host clock auto-sync is separate from media capture and
+does not change its sampling rate, renderer cadence or playback qualification.
 
 Start windows at a caller-selected stopped point with
 `display_start(period_ns=20_000_000)` and `audio_start(max_frames=320_000)`.

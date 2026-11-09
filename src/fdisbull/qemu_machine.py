@@ -22,7 +22,8 @@ from .memory_search_runtime import MemorySearchSessionMixin
 from .memory_rules import MemoryRuleSessionMixin
 from .desqview_runtime import DesqviewSessionMixin
 from .qemu_clock import (MachineClockMixin, machine_clock_configuration, machine_clock_arguments,
-                         validate_clock_budget, admit_virtual_clock)
+                         validate_clock_budget, admit_virtual_clock, VIRTUAL_CLOCK_COMMANDS)
+from .qemu_clock_sync import QemuClockSyncMixin
 from .qemu_input import QemuPhysicalInputMixin
 from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS
 from .qemu_surface import QemuSurfaceMixin
@@ -413,7 +414,7 @@ def machine_run_operation(function):
 
 
 def machine_trace_operation(function, *, label='Source trace'):
-    """Bound trace or passive observation and persistence from lock admission.
+    """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
     intentionally owns all channels during launch; a composed trace must not
@@ -458,6 +459,11 @@ def machine_trace_operation(function, *, label='Source trace'):
             if time.monotonic()>=bound:
                 error=TimeoutError(label+' exceeded its host deadline')
                 error.result=result
+                if function.__name__.startswith('clock_sync_'):
+                    # The final check can expire after the method's own check.
+                    # Keep a live synchronization mapping from remaining active
+                    # after that failure, while retaining its observed receipt.
+                    self._clock_sync_outer_expired(result,error)
                 raise error
             return result
         except BaseException:
@@ -477,7 +483,8 @@ def machine_trace_operation(function, *, label='Source trace'):
     return invoke
 
 
-class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin, QemuRetraceMixin,
+class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin, QemuRetraceMixin,
                      DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -496,6 +503,11 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     display_stop=machine_io_operation(QemuDisplayMixin.display_stop,close_on_timeout=True)
     capture_display=machine_io_operation(QemuDisplayMixin.capture_display)
     retrace_observe=machine_trace_operation(QemuRetraceMixin.retrace_observe,label='Retrace observation')
+    retrace_wait=machine_trace_operation(QemuRetraceMixin.retrace_wait,label='Retrace wait')
+    clock_sync_start=machine_trace_operation(QemuClockSyncMixin.clock_sync_start,label='Host clock synchronization')
+    clock_sync_observe=machine_trace_operation(QemuClockSyncMixin.clock_sync_observe,label='Host clock synchronization')
+    clock_sync_step=machine_trace_operation(QemuClockSyncMixin.clock_sync_step,label='Host clock synchronization')
+    clock_sync_stop=machine_trace_operation(QemuClockSyncMixin.clock_sync_stop,label='Host clock synchronization')
     keyboard_key_down=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_down)
     keyboard_key_up=machine_io_operation(QemuPhysicalInputMixin.keyboard_key_up)
     keyboard_state=machine_io_operation(QemuPhysicalInputMixin.keyboard_state)
@@ -519,7 +531,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             retrace_observation=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                                  and RETRACE_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
+            retrace_wait=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                          and RETRACE_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             virtual_clock_budget=virtual,
+            host_clock_sync=virtual and VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             clock_observation=('native QEMU virtual nanoseconds and separate instruction count' if virtual else
                                'explicit instruction progress profile; no guest milliseconds'),
@@ -895,6 +910,7 @@ class MachineDebugSession(MachineContext):
                 'audio-start','audio-observe','audio-stop','capture-audio',
                 'display-start','display-observe','display-stop','capture-display',
                 'retrace-observe',
+                'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
                 'input-schedule','input-schedule-observe',
                 'assert','status','write-memory','write-registers'}

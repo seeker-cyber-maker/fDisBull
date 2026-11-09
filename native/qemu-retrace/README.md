@@ -21,8 +21,10 @@ existing behavior.
 
 The public operation is `retrace_observe(timeout_ms=...)`; its native command
 is `x-fdisbull-query-retrace` with no arguments. It does not resume the guest,
-run a renderer, arm a timer, wait for an edge or read a guest I/O port. Timing
-auto-sync remains deferred. A modeled retrace phase does not establish the
+run a renderer, arm a timer, wait for an edge or read a guest I/O port. The
+separate [timing controls](../../docs/DOS_QEMU_TIMING.md) compose this query with
+one native clock budget for `retrace_wait`, or maintain explicit host clock
+auto-sync. Neither changes this passive query. A modeled retrace phase does not establish the
 whole VBlank interval, visible scanout, guest application frame completion,
 input readiness, display publication or cycle parity.
 

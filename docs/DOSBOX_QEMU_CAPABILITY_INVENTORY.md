@@ -48,7 +48,9 @@ bounded PCM output with callback timestamps. These operations have Python,
 retained JSON and saved-script routes. A renderer ID is not a guest frame;
 concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
 completed guest frames, broader sound devices, legacy timed press/text and
-pixel/INT33 mouse semantics remain open. Timing auto-sync is deferred.
+pixel/INT33 mouse semantics remain open. The separate opt-in
+[host clock controller](DOS_QEMU_TIMING.md) now maps native virtual time to
+host elapsed time at explicit cooperation points.
 
 The optional retrace API 1 extension adds passive `retrace_observe()` under
 `qemu_clock='virtual', qemu_retrace='precise'`. It pins the selected standard
@@ -57,8 +59,20 @@ that records guest-write changes, including unobserved A-to-B-to-A transitions.
 Unsupported legacy timing or VBE returns an explicit reason without a phase.
 The generation is not a full video-mode identity; vertical retrace is not the
 whole vertical blank interval, a renderer publication or a completed guest frame.
-No frame-step, frame-edge input, wait or timing auto-sync parity is implied.
-The native profile is opt-in; all default-promotion qualifications remain open.
+The separate `retrace_wait()` composes this model with one native timer budget
+and validates the exact next transition window. It refuses unsupported timing
+and preserves timing changes, missed edges and earlier/coincident stops without
+retry. No full-frame or frame-edge input parity is implied. The native profile
+is opt-in; all default-promotion qualifications remain open.
+
+`clock_sync_start/observe/step/stop` bind a fixed 1:1 mapping with persistent
+host/native anchors. All host elapsed time since start counts; actual guest
+progress and prior overshoot are subtracted. One explicit step chooses at most
+one bounded native catch-up or host-only sleep. Excess drift or another observed
+stop latches the mapping until explicit stop/start. JSON and saved scripts use
+the same capability, parameter, transaction and deadline checks. There is no
+background controller, automatic rebase, input replay or media resampling.
+See the [timing contract](DOS_QEMU_TIMING.md) for receipt and state semantics.
 
 The optional input API 1 extension now schedules one owned keyboard/relative
 PS/2 batch on `QEMU_CLOCK_VIRTUAL`. Its patch applies after the current clock
@@ -143,7 +157,7 @@ that last check is not runtime qualification.
 | `session.start` | DOS process | Native COM/MZ adapter now uses actual DOS EXEC, verifies PSP/MCB, ordered relocations and exact loader writes, then stops at entry; protected/V86 and full DOSBox launch parity remain unqualified |
 | `session.status`, `session.stop` | Core / DOS process | Machine status/cleanup exist; machine stop or process reaping is not selected DOS process termination |
 | `execution.continue`, `execution.pause`, `execution.step`, `execution.wait` | Core | QMP/GDB control exists; bounded machine run is not the DOS asynchronous-operation schema or guest-time run contract |
-| `execution.timing` | Clock, media and input | `clock_observe` separates machine icount, host time and opt-in API1 native virtual nanoseconds. `clock_advance` retains requested/fired/stopped times and earlier native stops; legacy guest_ms and exact-cutoff parity remain unqualified |
+| `execution.timing` | Clock, media and input | `clock_observe` separates machine icount, host time and opt-in API1 native virtual nanoseconds. `clock_advance` retains requested/fired/stopped times and earlier native stops; opt-in `clock_sync_*` preserves a fixed 1:1 host mapping and `retrace_wait` verifies one modeled transition. Legacy guest_ms and exact-cutoff parity remain unqualified |
 | `state.get_registers`, `state.set_register` | Core | GDB register inspection/guarded writes exist; expose CPU mode, segment bases, widths and selected-vCPU identity, without inventing DOS source coordinates |
 | `memory.read`, `memory.write` | Core / DOS process | Physical and selected-vCPU virtual memory plus guarded writes exist; DOS segmented/static addresses and task/allocation identity need separate admission |
 | `breakpoints.create`, `breakpoints.delete`, `breakpoints.list` | Core / Trace and events | QEMU TCG execution/data controls exist; preserve byte-free breakpoints, access kind, length, bounded count and cause/resume semantics |

@@ -33,6 +33,9 @@ OPERATIONS = {
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
     'retrace-observe':'retrace_observe',
+    'retrace-wait':'retrace_wait',
+    'clock-sync-start':'clock_sync_start','clock-sync-observe':'clock_sync_observe',
+    'clock-sync-step':'clock_sync_step','clock-sync-stop':'clock_sync_stop',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
@@ -302,6 +305,22 @@ def validate_script(script, *, session=None):
                             value=params['timeout_ms']
                             if not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,'timeout_ms',1,600000)
+                    if op=='retrace-wait':
+                        if session is not None and not getattr(session,'capabilities',{}).get('retrace_wait'):
+                            raise ValueError('retrace-wait requires the explicit native precise retrace profile')
+                        from .qemu_retrace import validate_retrace_wait_parameters
+                        literal={key:value for key,value in params.items()
+                                 if not (isinstance(value,str) and value.startswith('$'))}
+                        validate_retrace_wait_parameters(**literal)
+                    if op in ('clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('host_clock_sync'):
+                            raise ValueError('Host clock synchronization requires the explicit QEMU virtual clock profile')
+                        # Validate every literal before earlier mutations. A start
+                        # in this same script may establish the live mapping later.
+                        from .qemu_clock_sync import validate_clock_sync_options
+                        literal={key:value for key,value in params.items()
+                                 if not (isinstance(value,str) and value.startswith('$'))}
+                        validate_clock_sync_options(**literal)
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
@@ -351,7 +370,8 @@ def validate_script(script, *, session=None):
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'clock-observe','clock-advance','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
-                 'display-start','display-observe','display-stop','capture-display','retrace-observe'}
+                 'display-start','display-observe','display-stop','capture-display','retrace-observe',
+                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)
@@ -457,7 +477,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','clock-advance','retrace-observe','trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
+                             'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
+                             'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)

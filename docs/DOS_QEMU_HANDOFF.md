@@ -60,7 +60,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   budgets, retained synchronous renderer publications, bounded PC-speaker PCM
   windows, one-shot native virtual-time input scheduling, timestamped source
   observations and temporal event queries, explicit precise VGA retrace-model
-  observations with timing generations, and stopped
+  observations with timing generations, one-shot precise retrace waits,
+  cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
@@ -74,10 +75,11 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   native virtual time; device acceptance and guest consumption need independent
   observations. Source traces now retain clock-qualified stopped boundaries
   and temporal queries, with no natural-instruction-timing or causal claim.
-  The new retrace model records write-time changes and supported stopped phase;
-  it does not provide the full VBlank interval, frame completion or an edge wait.
-  Timing auto-sync is deferred at the user's direction;
-  legacy guest_ms, timed helpers and DOSBox timing parity remain separate
+  The retrace wait now verifies one strictly next modeled transition. The
+  user authorized timing auto-sync in the latest continuation; the host
+  controller now makes one bounded correction at an explicit cooperation
+  point. Full VBlank, frame completion, legacy guest_ms, timed helpers and
+  DOSBox timing parity remain separate
   qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
@@ -86,6 +88,169 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: cooperative clock auto-sync and bounded retrace waits
+
+The latest continuation explicitly authorizes timing auto-sync, superseding
+the deferral recorded in earlier dated entries. This increment starts from
+`5d15ff9acb3ab0d87d1c829f3ec8fd505da69c69` on the same source branch and draft
+MR !117, with the same originating marker and target
+`agent/execution-event-search-284eb73c` at
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`.
+
+### Host mapping and correction policy
+
+The [timing contract](DOS_QEMU_TIMING.md) defines the Python, retained JSON
+and saved-script interfaces. `clock_sync_start/observe/step/stop` require the
+explicit native virtual-clock profile and discovered native clock commands.
+The capability is `host_clock_sync`; starting a mapping remains explicit.
+
+One mapping binds a fresh token, run, host/native epochs, selected clock profile,
+configuration and original virtual/host anchors. Its fixed 1:1 target is
+`V0 + (H - H0)`, with drift `actual_virtual - target`. All monotonic host
+elapsed time since start counts, including Python/helper work, I/O, persistence,
+debugging and caller idle. Actual intervening native progress and previous
+timer overshoot are subtracted through the current virtual observation.
+The controller never silently changes anchors to erase accumulated debt.
+
+Each explicit step freezes one target and makes at most one correction.
+Within tolerance, it does nothing. Bounded lag uses one native clock advance;
+bounded lead uses one host sleep while the guest remains stopped. Excessive
+lag or lead latches desynchronization without correction. The final receipt
+reports actual residual drift against the original mapping; reaching a frozen
+target does not promise zero drift after control and persistence overhead.
+There is no background execution, repeated correction loop, icount-rate change,
+media resampling or implicit pacing in ordinary debugger operations.
+
+Early or coincident debugger/process stops, exceptions and timeouts preserve
+the original execution receipt and interrupt the mapping. A fired timer does
+not override another observed stop cause. The shared stop predicate accepts
+an active, unterminated DOS process descriptor while refusing terminal or
+uncertain lifecycle evidence. It retains breakpoint/watchpoint attribution,
+the original GDB reply and normalized machine stop classification.
+
+Explicit stop/start chooses a new origin after a latched condition. Stop is
+passive between calls, not asynchronous cancellation of a call holding the
+machine lock. Scheduled input retains its first-stop cancellation and explicit
+resolution rules. A sync step can deliver caller-queued transitions; it does
+not invent a release, re-arm or replay. Saved event history does not reconnect
+a VM or restore a live mapping.
+
+### One precise retrace occurrence
+
+`retrace_wait(edge='enter'|'exit')`, JSON `debug-retrace-wait` and script
+`retrace-wait` require the additional explicit precise VGA profile. They use
+one before observation, one native clock budget and one after observation.
+The target is the strictly next modeled transition, including when the current
+sample lies exactly at that phase. A full-period retrace has no transition
+and returns unsupported without execution.
+
+Success requires the same run, both epochs, device, model and timing generation;
+the exact owned timer/stop join; no conflicting observed cause; and the actual
+stop within the planned absolute entry or exit interval. A matching phase in
+a later cycle cannot qualify. A hidden A-to-B-to-A timing change invalidates
+the planned occurrence even when the raw registers return to their old values.
+Unsupported timing, timing changes, missed windows and other stops remain
+distinct outcomes. No result triggers another continue or a new target.
+
+The two controls remain separate. VGA timing changes do not rebase host anchors.
+A modeled retrace transition establishes neither full VBlank nor completed
+guest drawing, renderer publication, input consumption or physical VGA accuracy.
+
+### Admission, deadlines and failure evidence
+
+Whole-script capability, signature, literal-option and transaction checks run
+before earlier script mutations. A script may start and step a new mapping in
+the same request. One absolute host deadline covers lock admission, native
+observations, correction, cleanup and synchronous persistence while preserving
+each incoming session, machine and channel bound. The wrapper's final expiry
+check also latches the matching mapping and retains its result.
+
+Epoch/profile loss and contradictory native evidence preserve the existing
+invalidation/closure policy. Failed or late storage can follow completed guest
+execution; `error.result` retains known samples, the original native stop and
+any available evidence. There is no inferred rollback. Host waiting validates
+the subsequent sample against the actual wait endpoint, preventing a regressed
+timestamp from claiming a wait longer than its surrounding measured interval.
+
+The initial absent-method/public-route witnesses and adverse host cases are
+retained. They exposed transaction admission, profile-loss state, exact budget
+joins, unexpected guest progress during host waiting and final wrapper expiry.
+An active DOS process descriptor initially caused ordinary timer stops to be
+misclassified; the shared predicate and its failure/pass witness correct that.
+The independent wait-end review retained a concrete pre-fix receipt with a
+20 ms wait inside a reported 10 ms interval, then verified invalidation after
+the fix.
+
+The first 14-case native run passed 13 cases. Its remaining saved-script
+comparison failed because raw stored DOS addresses are integers while the JSON
+response formats them as hex strings; all timing values matched. The corrected
+witness compares the full publicly formatted report and separately requires
+exact raw artifact-to-journal equality. The host-wait witness now records one
+real positive bounded sleep, its actual timestamps, no native continue, and
+unchanged native time/counters. Its 300 ms setup lead is checked explicitly.
+
+### Final local verification
+
+| Selection | Result |
+| --- | --- |
+| Focused host clock-sync contract, including wait-end regression | 57 passed, zero skips |
+| Retrace wait and existing passive retrace contract | 140 passed, zero skips: 62 new wait cases plus 78 existing cases |
+| Public routes, whole-script preflight and shared stop classification | 40 passed, zero skips |
+| Affected source regression selection | 1,087 passed, 5 optional skips |
+| Combined source native clock/source-clock/input/audio/display/retrace/timing selection | 60 passed, zero skips |
+| Fresh isolated installed-wheel affected regression selection | 1,076 passed, 5 optional skips |
+| Fresh isolated installed-wheel combined native selection | 60 passed, zero skips |
+| Retained DOSBox native predicate/first-effect/hook witness | 1 passed, zero skips |
+
+Selections overlap. The five optional skips in each broader regression lane
+require `FDISBULL_MACHINE_QEMU` for separate real machine-session checks; they
+are not native timing passes. The combined native selections include all
+14 new timing cases, with mandatory native admission and no skips. The installed
+regression selection excludes 11 repository-only inventory/package tests that
+passed in the source lane. Installed collection asserts the fresh private prefix
+and cannot silently import the checkout.
+
+The fresh wheel matches all 638 core payload files. Its SHA-256 is
+`f065776953cb0a6ba76a5d96468773d8da54d873df25c009a8ae1d5886f037e1`.
+The source distribution and tool ZIP are compared against all 1,576 tracked
+payload files and all 21 authored paths, including this handoff and the new
+timing guide. Distribution checks retain the tool-only boundary. Before/after
+hashes freeze the 1,265 source-lane inputs, 638 installed core files and 612
+copied test/support files. No live runtime input, database, emulator state or
+game bytes are added to the authored patch.
+
+Logs, JUnit, command manifests, input hashes, failure receipts, wheel and archive
+checks remain under the private `takeover-validation/autosync-*` prefix;
+`autosync-runtime` contains the finite validation/publication drivers. Native
+source/build and retained backend provenance remain in the preceding runtime
+directories. Each material phase admits 2 GiB expected growth above a 20 GiB
+free reserve. The final authored tree is checked against these exact runtime
+and package identities before commit and GitLab readback.
+
+### Native runtime and qualification boundary
+
+This increment adds no QEMU patch. It reuses the exact QEMU 10.0.13 clock,
+media, input and retrace chain already qualified in the previous entry. The
+four-patch reproduction receipt still matches all 25 final native source
+paths, with zero patch offset/fuzz. The binary SHA-256 is
+`5d202d2ec57d596351381d7fc1df67211c4d0727ad667119183d41b450c96565`.
+The existing prepared FreeDOS baseline and firmware remain private runtime
+inputs; the Linux native fixtures use bounded pipe transports.
+
+The new native witnesses cover busy and CLI/HLT retrace waits, actual CR10 ABA
+writes, an earlier breakpoint, busy/HLT/PIT catch-up, cumulative native progress,
+host-only waiting, excessive lag, scheduled-input cancellation, real DOS exit,
+SQLite journal failure, JSON/script routing, reopened evidence and refusal under
+the default standard clock profile. They do not simulate native execution.
+
+All 127 default-promotion entries remain unqualified. DOSBox remains the default
+and both retained selectors stay available. Legacy timed helpers, full guest
+frames/VBlank, frame-edge input, audio drain/playback alignment, additional sound
+devices, QEMM/real-game compatibility, checkpoints, layers and histories remain
+separate work. Windows/macOS are unverified. The macOS `/Volumes/...` mirrors
+are unavailable here; this Linux checkout and GitLab are the publication targets.
+No hosted CI, release, shared installation or merge is implied.
 
 ## 2026-11-08: passive precise VGA retrace observations
 

@@ -1,8 +1,9 @@
-"""Passive observations of one explicitly selected QEMU VGA timing model.
+"""Observations and explicit waits for one selected QEMU VGA timing model.
 
 Retrace phase is independent of renderer publication and guest drawing. These
-reads neither wait for an edge nor update pixels, read the guest status port,
-advance execution, or synchronize the machine with host time.
+passive reads do not update pixels, read the guest status port or advance
+execution. An explicit wait composes a single native clock budget with two
+stopped observations; neither operation synchronizes the machine with host time.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import json
 import time
 
 from .dosbox_rpc import DebuggerError
+from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
 
 
 RETRACE_COMMANDS = frozenset({'x-fdisbull-query-retrace'})
@@ -201,15 +203,126 @@ def admit_retrace(vm):
     return value
 
 
-def _remaining(owner):
+def validate_retrace_wait_parameters(*, edge='enter', timeout_ms=1000):
+    """Validate literals without observing or changing an owned machine."""
+    if type(edge) is not str or edge not in ('enter', 'exit'):
+        raise ValueError('Retrace edge must be enter or exit')
+    if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
+        raise ValueError('Retrace wait host timeout must be 1..600000 ms')
+
+
+def _remaining(owner, *, label='Retrace observation'):
     deadline = getattr(owner.vm, 'operation_deadline', None)
     if deadline is None:
-        raise ValueError('Retrace observation requires a bounded owned operation')
+        raise ValueError(label + ' requires a bounded owned operation')
     if time.monotonic() >= deadline:
-        raise TimeoutError('Retrace observation host deadline expired')
+        raise TimeoutError(label + ' host deadline expired')
 
 
 class QemuRetraceMixin:
+    def retrace_wait(self, *, edge='enter', timeout_ms=1000):
+        """Continue once toward the strictly next modeled vertical edge.
+
+        The public context owns one lock and absolute host deadline across
+        both stopped observations and the native clock budget. A generation
+        change invalidates the planned occurrence even when the final register
+        tuple has returned to its original value. No stop causes a retry.
+        """
+        validate_retrace_wait_parameters(edge=edge, timeout_ms=timeout_ms)
+        if self.project is None or self.project.db.in_transaction:
+            raise ValueError('Retrace wait requires a project outside a caller-owned transaction')
+        _configuration(self.vm)
+        _remaining(self, label='Retrace wait')
+        result = dict(format='fdisbull-retrace-wait-1', context='machine', run=self.run_id,
+            edge=edge, outcome='error', synchronized=False, unsupported_reason=None,
+            clock_domain='QEMU_CLOCK_VIRTUAL', target_ns=None, window_end_ns=None,
+            before=None, after=None, execution=None,
+            completed_renderer_update=None, completed_guest_frame=None, guest_frame_id=None,
+            scope=('One native clock budget toward the strictly next vertical retrace '
+                   'transition of the admitted QEMU VGA integer timing model. Success '
+                   'requires an unchanged timing generation and an ordinary timer stop '
+                   'inside that absolute occurrence. Renderer completion, completed guest '
+                   'drawing, physical scanout and host-time synchronization remain unknown.'))
+        stage = 'before'
+        try:
+            before = self.retrace_observe(timeout_ms=timeout_ms)
+            result['before'] = before
+            _remaining(self, label='Retrace wait')
+            if not before['phase_supported']:
+                result.update(outcome='unsupported', unsupported_reason=before['unsupported_reason'])
+            else:
+                timing = before['timing']
+                tick, horizontal = timing['ticks-per-char'], timing['htotal']
+                period = tick * timing['total-chars']
+                entry = tick * horizontal * timing['vstart']
+                exit_ = tick * horizontal * (timing['vend'] + 1)
+                width = exit_ - entry
+                if entry == 0 and exit_ == period:
+                    result.update(outcome='unsupported', unsupported_reason='no-transition')
+                else:
+                    now = before['observed_ns']
+                    phase = entry if edge == 'enter' else exit_ % period
+                    delta = (phase - now) % period or period
+                    window = width if edge == 'enter' else period - width
+                    validate_clock_budget(delta, timeout_ms)
+                    if now > _MAX_NS - delta:
+                        raise ValueError('Retrace target would overflow signed nanoseconds')
+                    target = result['target_ns'] = now + delta
+                    if target > _MAX_NS - window:
+                        raise ValueError('Retrace window would overflow signed nanoseconds')
+                    result['window_end_ns'] = target + window
+                    stage = 'execution'
+                    execution = self.clock_advance(delta, timeout_ms=timeout_ms)
+                    result['execution'] = execution
+                    _remaining(self, label='Retrace wait')
+                    stage = 'after'
+                    after = self.retrace_observe(timeout_ms=timeout_ms)
+                    result['after'] = after
+                    budget = execution['clock_budget']
+                    identity = ('run', 'epoch', 'native_epoch', 'model', 'device',
+                                'device_type', 'console', 'head')
+                    if (any(before[key] != after[key] for key in identity)
+                            or budget['epoch'] != before['epoch']
+                            or budget['native_arm']['epoch'] != before['native_epoch']
+                            or budget['native']['epoch'] != before['native_epoch']
+                            or budget['start_ns'] != now
+                            or budget['requested_delta_ns'] != delta
+                            or budget['deadline_ns'] != target
+                            or budget['stopped_ns'] != after['observed_ns']):
+                        _invalid(self.vm, 'Retrace wait lost its owned clock or device identity')
+                    if before['timing_generation'] != after['timing_generation']:
+                        result['outcome'] = 'timing-changed'
+                    elif not clock_timer_stop_is_ordinary(execution):
+                        result['outcome'] = 'interrupted'
+                    elif not target <= after['observed_ns'] < result['window_end_ns']:
+                        result['outcome'] = 'missed-edge'
+                    else:
+                        result.update(outcome='synchronized', synchronized=True)
+            stage = 'journal'
+            _remaining(self, label='Retrace wait')
+            self._event('machine-retrace-wait', result)
+            _remaining(self, label='Retrace wait')
+        except BaseException as error:
+            # A child may have observed a real native stop or complete phase
+            # receipt before its cleanup/journal failed. Keep that evidence
+            # inside the composed result rather than replacing it with a plan.
+            known = getattr(error, 'result', None)
+            if known is not None and known is not result:
+                if (stage in ('before', 'after') and isinstance(known, dict)
+                        and known.get('format') == 'fdisbull-retrace-observation-1'):
+                    result[stage] = known
+                elif (result['execution'] is None and isinstance(known, dict)
+                        and (isinstance(known.get('session'), dict)
+                             and isinstance(known['session'].get('stop_reason'), dict)
+                             or 'native_machine_stop' in known)):
+                    result['execution'] = known
+                elif known is not result['execution']:
+                    result['failure_evidence'] = known
+            result.update(outcome='error', synchronized=False, failure_stage=stage)
+            error.result = result
+            raise
+        return result
+
     def retrace_observe(self, *, timeout_ms=1000):
         """Return one stable stopped phase receipt; never wait for an edge."""
         if self.project is None or self.project.db.in_transaction:

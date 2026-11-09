@@ -29,8 +29,11 @@ with CPU/clock brackets. The optional virtual profile adds native timer budgets,
 retained completed renderer updates, bounded PC-speaker PCM capture and optional
 virtual-time dispatch of one owned physical-input batch. An explicit precise
 VGA profile also provides stopped retrace-model observations and timing generations.
+An opt-in host controller now synchronizes the native clock at explicit cooperation
+points, while a separate bounded wait verifies the next modeled retrace transition.
 Completed guest frames, broader sound devices and legacy timing parity remain
-open gates. Timing auto-sync is deferred.
+open gates. See [native timing synchronization](DOS_QEMU_TIMING.md) for the
+mapping, stop policy and exact limits.
 
 This is an alternative for testing now. Checkpoints and execution layers remain
 later slices. The default-switch gate remains blocked until the outstanding slices
@@ -348,7 +351,8 @@ do not establish callback order. It does not fill an untraced interval, prove
 input consumption or causation, identify a completed guest frame, or establish
 natural instruction latency. The recorded GDB IRQ/timer step policy still
 applies, and `icount * 128` is never substituted for elapsed virtual time.
-Timing auto-sync remains deferred.
+The separate [host clock controller](DOS_QEMU_TIMING.md) uses the same native
+clock without changing source-observation or causality claims.
 
 One absolute host deadline now covers source-trace lock admission, observations,
 stepping and persistence, intersecting existing script, session and channel
@@ -629,8 +633,8 @@ arm. Uncertain arm, cancellation, dispatch, deadline reconciliation or evidence
 persistence closes the VM without replay. `timed_input=False`,
 `guest_time_control=False` and `completed_guest_frames=False` remain explicit:
 legacy `guest_ms`, timed press/type, frame presses and pixel/INT33 semantics are
-not supplied. Timing auto-sync, host pacing and adaptive correction remain
-deferred by the user.
+not supplied. The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
+preserves these first-stop, explicit-resolution and unknown-consumption rules.
 
 ### Observe the declared VGA retrace model
 
@@ -695,8 +699,39 @@ Each request has one absolute host deadline from lock admission through clock
 brackets and event persistence. Script capability and literal timeout checks
 precede earlier mutations. A late synchronous journal write can have committed
 before the deadline check fails; `error.result` retains the observed receipt.
-An uncertain native read closes the machine without retry or replay. No edge
-scheduler, automatic wait, host pacing or timing auto-sync is introduced.
+An uncertain native read closes the machine without retry or replay. This
+observation stays passive. The separate bounded wait below composes it with
+one explicit native budget.
+
+### Synchronize host time or wait for a retrace transition
+
+The explicit virtual-clock profile advertises `host_clock_sync`. Use
+`clock_sync_start()` to bind persistent host/native anchors,
+`clock_sync_observe()` to inspect drift, `clock_sync_step()` to choose one
+bounded correction, and `clock_sync_stop()` to stop future corrections.
+The fixed 1:1 mapping counts all host elapsed time since start, including
+helper work, debugger pauses and caller idle time. Actual native progress
+and previous overshoot are subtracted through the current virtual sample.
+
+One step freezes its target. A bounded deficit uses one native advance;
+a bounded lead uses one host sleep while the guest stays stopped. Excessive
+drift latches desynchronization. Earlier or coincident debugger/process stops
+are retained and interrupt the mapping. Explicit stop/start chooses a new
+origin; no operation silently rebases, chases a moving target or replays input.
+Normal execution methods do not implicitly run this controller.
+
+With the additional precise profile, `retrace_wait(edge='enter'|'exit')`
+plans the strictly next modeled transition and uses one native clock budget.
+Success requires unchanged run/epochs/device/model/timing generation,
+an ordinary timer stop and the exact absolute entry or exit window.
+Unsupported timing, a changed model, a missed window and another observed
+stop remain distinct outcomes. No retry establishes a later edge as the
+original target. This does not establish full VBlank or completed guest frames.
+
+Both controls have retained JSON and saved-script routes, capability and
+literal-parameter preflight, a single host deadline, and persisted evidence
+that survives reopening as history. The complete APIs, parameters, state
+transitions and examples are in [native timing synchronization](DOS_QEMU_TIMING.md).
 
 ### Capture a stopped display surface
 
@@ -794,8 +829,9 @@ Both windows bind to the owned machine and native clock epoch. Reset or
 incompatible state invalidates them; migration after use is blocked. Passive
 queries and exports do not execute the guest. Shared script deadlines include
 lock admission and persistence; an uncertain start/stop closes the machine.
-The caller advances execution through existing controls. Timing auto-sync,
-host pacing, adaptive correction and resampling control are deferred.
+The caller advances execution through existing controls or an explicit
+[host clock-sync step](DOS_QEMU_TIMING.md). That controller does not qualify
+audio resampling, device queue drain or playback alignment.
 
 ## What the first slice does and does not qualify
 

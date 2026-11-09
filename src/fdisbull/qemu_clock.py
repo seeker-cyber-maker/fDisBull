@@ -103,6 +103,56 @@ def validate_clock_budget(delta_ns, timeout_ms):
         raise ValueError('Clock host timeout must be 1..600000 ms')
 
 
+def clock_timer_stop_is_ordinary(execution):
+    """Qualify a timer completion without concealing a coincident stop cause.
+
+    A fired budget alone does not establish that execution stopped only for
+    that budget. Composed timing controls also retain the original GDB signal,
+    machine classification and any later DOS lifecycle classification. This
+    predicate never changes those receipts or promotes an uncertain stop.
+    """
+    if (type(execution) is not dict or execution.get('outcome') != 'stopped'
+            or execution.get('timed_out') is not False
+            or any(key in execution for key in ('native_machine_stop', 'guest_exit', 'guest_tsr'))):
+        return False
+    # The DOS adapter attaches its still-active process descriptor to every
+    # ordinary stop. Only a terminal/uncertain lifecycle changes attribution.
+    if 'process' in execution:
+        process = execution['process']
+        if (type(process) is not dict or process.get('state') != 'active'
+                or process.get('termination') is not None
+                or process.get('machine_closed', False) is not False):
+            return False
+    budget, session = execution.get('clock_budget'), execution.get('session')
+    if (type(budget) is not dict or budget.get('deadline_reached') is not True
+            or type(session) is not dict or session.get('state') != 'stopped'):
+        return False
+    reason = session.get('stop_reason')
+    if (type(reason) is not dict or reason.get('kind') != 'stopped'
+            or reason.get('breakpoint_ids') != []
+            or reason.get('classification_complete', True) is not True
+            or any(key in reason for key in ('guest_exit', 'guest_tsr', 'data_access'))):
+        return False
+    reply = reason.get('native_reply')
+    if type(reply) is not str or reply[:3] not in ('T02', 'S02'):
+        return False
+    if reply.startswith('S') and len(reply) != 3:
+        return False
+    fields = {field.split(':', 1)[0] for field in reply[3:].split(';') if field}
+    if fields & {'watch', 'rwatch', 'awatch', 'swbreak', 'hwbreak'}:
+        return False
+    if 'stop' in execution:
+        normalized = execution['stop']
+        if (type(normalized) is not dict or normalized.get('trigger') != 'stopped'
+                or normalized.get('native_kind') != 'stopped'
+                or normalized.get('context') != 'machine'
+                or normalized.get('instruction_completed') is not None
+                or normalized.get('causing_instruction') is not None
+                or 'guest_exit' in normalized):
+            return False
+    return True
+
+
 def _native_clock(vm, value):
     """Validate an in-band receipt before trusting its clock or stop state."""
     def integer(item, maximum=(1 << 63) - 1):
