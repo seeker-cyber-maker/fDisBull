@@ -15,15 +15,16 @@ ENABLE_VBE = 2
 REENTER_MODE13 = 3
 
 
-def retrace_keyboard(directory, nasm, *, halted=False):
+def retrace_keyboard(directory, nasm, *, halted=False, capacity=16):
     """Own IRQ1 and all PIC masks inside a disposable mode-13h machine.
 
     Commands run only after the explicit continue. An IRQ fence follows the
     actual scancode/status stores, before EOI and IRET. The halted variant has
     no unmasked timer interrupt; only a keyboard IRQ can advance its wake count.
     """
+    assert type(capacity) is int and 1 <= capacity <= 256
     code = assemble(directory, 'retrace-input-hlt' if halted else 'retrace-input-busy',
-                    f'%define HALTED {int(halted)}\n' + r'''
+                    f'%define HALTED {int(halted)}\n%define CAPACITY {capacity}\n' + r'''
 bits 16
 org 100h
     nop
@@ -169,7 +170,7 @@ keyboard_irq:
     jnz keyboard_eoi
     in al,60h
     mov bx,[key_count]
-    cmp bx,16
+    cmp bx,CAPACITY
     jae keyboard_full
     mov [key_bytes+bx],al
     mov dx,3dah
@@ -196,8 +197,8 @@ original_cr10: db 0
 command: db 0
 timing_raw: times 11 db 0
 key_count: dw 0
-key_bytes: times 16 db 0
-status_bytes: times 16 db 0
+key_bytes: times CAPACITY db 0
+status_bytes: times CAPACITY db 0
 wakes: dw 0
 dropped_keys: dw 0
     db 'RIN1'

@@ -227,10 +227,11 @@ def validate_script(script, *, session=None):
                                 raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
                         if (backend or actual) in ('qemu-machine','qemu-dos'):
-                            if op=='keyboard.type':
-                                raise ValueError('Timed native QEMU text remains unsupported; use a qualified keyboard press or owned physical edges')
-                            if session is not None and not getattr(session,'capabilities',{}).get('virtual_keyboard_press'):
-                                raise ValueError('Timed keyboard press requires the native press extension and a qualified guest clock (explicit virtual profile)')
+                            capability = ('virtual_keyboard_type' if op=='keyboard.type'
+                                          else 'virtual_keyboard_press')
+                            if session is not None and not getattr(session,'capabilities',{}).get(capability):
+                                operation = 'text' if op=='keyboard.type' else 'press'
+                                raise ValueError('Timed keyboard '+operation+' requires its native extension and a qualified guest clock (explicit virtual profile)')
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
                         # must not hide a malformed static hold, gap or modifier.
@@ -378,7 +379,7 @@ def validate_script(script, *, session=None):
             and session.project.db.in_transaction):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
-        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','mouse.move-relative','mouse.button-down',
+        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.button-down',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
@@ -499,6 +500,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
                 from .qemu_keyboard_press import validate_keyboard_press_parameters
                 validate_keyboard_press_parameters(**params)
+            if (step['op']=='keyboard.type'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                from .qemu_keyboard_type import validate_keyboard_type_parameters
+                validate_keyboard_type_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
                              'input-schedule-retrace',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',

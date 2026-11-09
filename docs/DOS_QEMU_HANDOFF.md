@@ -62,8 +62,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   observations and temporal event queries, explicit precise VGA retrace-model
   observations with timing generations, one-shot precise retrace waits,
   generation-checked native input at a strictly next modeled retrace edge,
-  callback-relative native single-chord keyboard presses with delivered-prefix
-  receipts and explicit held-lease recovery,
+  callback-relative native single-chord keyboard presses and bounded US-layout
+  text with delivered-prefix receipts and explicit held-lease recovery,
   cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
@@ -71,7 +71,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  timed text/click helpers and frame-edge input, coordinate mapping and input-to-source causality
+  timed click helpers, guest text consumption/layout, frame-edge input,
+  coordinate mapping and input-to-source causality
   before claiming those behaviors or depending on them in checkpoints and
   histories. Renderer completion and capture-callback delivery are now explicit
   narrower boundaries. Scheduled input now records PS/2 callbacks and sync at
@@ -87,7 +88,10 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   controller now makes one bounded correction at an explicit cooperation
   point. The native press extension now supplies the existing single-chord
   press route; early stops retain a delivered prefix and held leases rather
-  than silently replaying or releasing input. Full VBlank, frame completion,
+  than silently replaying or releasing input. The seventh native extension now
+  supplies 1..64 US-layout characters with callback-relative holds/gaps and
+  separate future lease reservations, preserving the same explicit recovery.
+  Full VBlank, frame completion,
   legacy guest_ms, remaining timed helpers and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
@@ -98,6 +102,235 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: callback-relative native keyboard text
+
+Continued from `16d115769c027e02427c24fa60b1b12496c8be47` on the same source
+branch and draft MR !117, retaining target
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. The published source was recovered
+after the temporary workspace reset, and the private native and Python runtimes
+were restored afresh. This increment implements the existing bounded text
+workflow; it does not close the remaining migration or promotion gates.
+
+### Existing text workflow and native timing
+
+`keyboard_type(text, *, hold_ms=40, gap_ms=40)`, `GuestKeyboard.type`, JSON
+`debug-keyboard-type` and script `keyboard.type` share the optional
+`virtual_keyboard_type` capability. It requires the explicit virtual clock,
+existing native clock/input commands and `x-fdisbull-arm-keyboard-type`.
+A precise retrace profile is unnecessary. The restored six-patch executable
+still supports native press, refuses native type and does not execute while
+refusing it.
+
+One stopped admission requires an empty owned queue and no active owned leases.
+The native command validates and prepares the entire sequence before consuming
+its token: 1..64 US-layout ASCII characters, comprising printable ASCII plus
+CR, LF and Tab; strict integer hold/gap values of 1..1000 ms, excluding booleans.
+CR and LF each produce Enter without folding. Each uppercase or shifted
+punctuation character gets its own Shift chord. The mapping assumes an
+unmodified US layout and does not infer the guest's layout or Caps Lock state.
+Invalid text, including embedded NUL and a non-ASCII suffix after a valid
+prefix, is rejected atomically.
+
+The seventh optional native patch prepares 2..256 edges. Per character the
+order is optional Shift make, main make, main break and optional Shift break.
+The first edge and other make/modifier-break edges wait 2 ms; the main break
+waits hold_ms after the actual main make. Starting with the second character,
+its first edge waits gap_ms + 2 ms after the preceding character's actual final
+release callback. Every next deadline derives from the preceding callback,
+so late dispatch cannot shorten a hold or collapse the gap. There is no
+trailing-gap timer. Arming is passive: the caller explicitly chooses a bounded
+run, clock advance or cooperative clock-sync step. Input does not sleep, run,
+rebase or split the sequence itself. At maximum timing, 64 shifted characters have a nominal duration of
+127,384 ms, exceeding the 60-second clock-advance limit. A shorter budget
+cancels the suffix; no implicit splitting or resumption occurs.
+
+### Prefix evidence, ownership and failure handling
+
+The existing input API1 receipt gains an optional `typing` descriptor,
+mutually exclusive with press/retrace metadata. It binds text, timing, the
+full plan and its delivered-prefix count. Public `typing` uses
+`fdisbull-keyboard-type-1` within the existing scheduled-input format; each
+step includes its character index, key, unique lease, delay, assigned deadline,
+actual dispatch and lateness. Delivered deadlines remain frozen, and only the immediate next unsent
+deadline is assigned.
+Top-level dispatch is present only for complete delivery, and top-level
+lateness remains None. Terminal evidence stays frozen across later observation.
+
+The host reconciles a complete newly proven prefix privately before changing
+leases. Repeated letters and repeated Shift uses have distinct lifetimes;
+future reservations do not appear as held keys. The 256-edge plan can reserve
+128 distinct lifetimes while holding at most two keys. The general limit of
+64 active leases is unchanged. Cancellation reports discarded future reservations
+separately from retained active holds.
+Native stop/breakpoint and reached/equal budget precedence remain intact;
+the first actual stop cancels the undispatched suffix, while completion itself
+does not stop the guest. A cancelled sequence cannot run again or be converted
+into another input schedule. Explicit `input_cancel_pending` discards unsent
+reservations, preserves delivered holds and clears their pending releases;
+the caller then explicitly releases held leases and chooses execution. No
+suffix replay or synthetic cleanup release occurs.
+
+Literal, capability and transaction script checks precede earlier mutations;
+resolved arguments are checked again before native arm. One direct-arm
+1000 ms host bound covers lock admission, I/O and persistence and intersects
+tighter incoming bounds. Pre-arm expiry leaves a valid owner. Accepted or
+uncertain late arms, malformed/native-failed evidence and persistence failures
+preserve available evidence and close without replay. Existing journals and
+reopened artifacts retain typing evidence and clear stale descriptors when
+switching among press, type, ordinary and retrace input.
+
+### Fresh runtime provenance and fixture compatibility
+
+The official QEMU 10.0.13 archive was restored with pinned SHA256
+`4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa`.
+Safe extraction excluded its unsafe absolute EDK2 X11 include link. All six
+existing patches applied sequentially with zero fuzz/offset and the full
+26-member source manifest matched before the new layer was applied. The
+private build used Meson 1.7.0, Ninja 1.11.1, GLib 2.84.4 and Pixman 0.44.0;
+19 official Debian packages were verified and extracted privately, with no
+system installation. Firmware, NASM 2.16.03 and mtools 4.0.48 were restored
+and inventoried. The restoration receipt records 949 private dependency files,
+75 firmware files and exact tool/input hashes.
+
+Official FreeDOS 1.4 media was verified against its published checksum. Its
+original boot image still matches
+`552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc`.
+The documented preparation recipe produced a fresh baseline with SHA256
+`ad852960ff1fd1355c28ac6295924c90ae88a0e23d66586f6c0ad6dff173a0af`;
+DOS directory timestamps differ from the lost prepared image, so this is
+new runtime provenance rather than a claim to reproduce that old image hash.
+The retained DOSBox executable was recovered from the offline kit with its
+previous SHA256
+`795df754019b5e9876d68067cb8d91314b001f28c9c6964502dd57ef21adf79d`.
+
+The Python validation environment was created afresh from the managed
+Python 3.12.14 interpreter, with system site packages disabled and the
+repository's `[test]` dependencies plus `build` installed privately. The source
+native run imported this checkout's `src` and `tests`; fresh installed-wheel results
+are recorded separately below. The fresh six-patch QEMU binary is
+`8abd9cc2bf2148d9b53043a7b611df8a0bd06fca63b27e63d0a78aae48d0b05c`;
+the seven-patch candidate is
+`07322555c94ac7acfb6e5fcf0fcc6af42c4742fe169095854fa8f86bf68b9368`.
+
+The IRQ1 fixture now accepts an explicit capacity up to 256. Its default stays
+16, and both default binaries and symbol offsets are byte-compatible with the
+previous fixture: busy is 371 bytes with SHA256
+`c361ed48c890ee7459cb5eecb2eb4409142226c3755d0dc8aff0d1076391c9b5`;
+HLT is 376 bytes with SHA256
+`6f97d5d4e4a5ad10e96a6353ce3aa057a1ba7e398240cfa4816473b1f1e5cbd8`.
+Only the new typing witnesses request capacity 256.
+
+### Retained failures and current qualification
+
+The pre-change host refusal and public script-grammar gap were captured before
+implementation. The first complete public selection then retained 45 passes
+and 12 failures: eleven exposed the missing `keyboard.type` entry in
+`MachineDebugSession.script_operations`, and one exposed accepted-arm cleanup
+when the outer deadline expired. Adding the script operation and including
+`keyboard_type` in the existing accepted-arm deadline cleanup fixed these
+paths; the owner now closes while retaining the accepted receipt. The failed
+receipts remain retained. The focused host selection subsequently passed all
+323 cases, and the complete press/type public selection passed all 57.
+
+All 20 new native cases passed on their first feature run, with unchanged
+source/runtime inputs: 15.634 s in pytest (16.459 s for the complete lane).
+The independent US-map/scancode and callback-delay oracles cover busy/HLT
+execution with repeated lowercase, uppercase/shifted punctuation and
+CR/LF/Tab/space/tilde; passive arm; no trailing gap; and the 64-uppercase
+maximum of 256 edges with 128 distinct key lifetimes. That maximum witness
+uses hold/gap 1 ms, yielding a nominal 511 ms sequence.
+
+Further witnesses preserve original breakpoints before the first make and
+after the first Shift IRQ, prove suffix cancellation and explicit held-lease
+recovery, stop between characters without leaving holds, and enforce equal
+budget cutoffs at the first make, release and next-character edge. Both
+command-arm orders are covered at each cutoff. **Only the first-make cases
+exercise both actual timer insertion orders**: the release and later-character
+timers are created by preceding callbacks, after the budget timer is already
+queued in either command order. Other cases verify the older six-patch
+capability refusal while press works, JSON/script/journal/reopen evidence,
+one explicit clock-sync step driving halted text, and invalid direct-native
+arguments leaving the owner token reusable. The native matrix covers selected
+ASCII groups; complete character mapping is covered by host contracts, not
+claimed as a native test of every printable character.
+
+| Local selection or artifact gate | Result |
+| --- | --- |
+| Focused type/press/physical/ordinary/retrace host contracts | 323 passed; zero skips |
+| Public press/type routing, script and deadline contracts | 57 passed; zero skips |
+| New native typing witnesses, first feature run | 20 passed; zero skips; 15.634 s |
+| Broad affected source regressions | 2,177 passed; 9 prerequisite skips; 134.715 s |
+| Combined source native selection | 109 passed; zero skips; 69.644 s |
+| Fresh installed-wheel host regressions | 1,254 passed; 9 prerequisite skips; 2 metadata nodes deselected; 107.541 s |
+| Fresh installed-wheel combined native selection | 109 passed; zero skips; 70.885 s |
+| Retained DOSBox chord, text/script/restore and event-predicate witnesses from the installed wheel | 3 passed; zero skips; 4.262 s |
+| Seventh-patch reproduction, schema/generation and native compilation | Zero-fuzz/offset roundtrip; all 26 native members matched/restored; all three selected native builds passed |
+| Fresh core wheel, private installation and copied tests | 640 core members match source/wheel/install; 622 copied test/support files match source; isolated CLI and import-origin checks passed |
+
+Selections overlap and must not be added into a unique-test total. Each lane
+retained exclusive command/log/XML receipts and unchanged before/after hashes
+of its selected inputs. Runtime lanes also pinned their selectors, executables,
+media and private libraries.
+Material growth admitted 3 GiB plus a 20 GiB reserve; builds and runtime lanes
+ran serially with finite timeouts and no automatic retry loop.
+
+The nine stock skips are five separately selected raw-machine checks and four
+legacy Linux-hosted DOS/QEMU shim checks whose kernel/initramfs inputs were not
+selected. The first source driver's allowlist omitted that latter prerequisite
+message: pytest had zero failures/errors, but the driver retained a failed
+classification result. A separate review records the four known missing-input
+skips without rerunning or counting them as passes. The installed lane explicitly
+allowed both prerequisite messages. It excluded only the checkout-only package
+and distribution-policy files and two source-only inventory/discovery nodes;
+those checks ran in the source lane. Installed tests ran outside the checkout,
+with explicit rootdir, importlib mode and an empty pytest config. Origin guards
+verified 129 loaded host modules and 114 loaded native-lane modules from the
+fresh target installation. The driver rootdir correction changed no product code.
+
+The seventh patch SHA256 is
+`d680d253af93b60d3101ef74c1243e19e887b1cabdf0df194fdec0aafed23cc5`.
+The core wheel SHA256 is
+`14fd94d362c967e189197fc9dfb4cbdf06916da0927f7f835366dacc18331675`
+(2,400,520 bytes, 645 total members). The seven-patch binary supplies the clock
+selector; the six-patch binary supplies standard DOS and the type legacy
+witness. A separately built five-patch binary supplies the press legacy
+witness. The optional four-patch retrace-legacy secondary VM was not restored
+or newly witnessed in this workspace.
+
+After this entry is frozen, publication is gated on fresh sdist/tool ZIP
+privacy and exact-payload comparisons, all 23 authored changed paths including
+this handoff, and reconciliation of the tested source/wheel bytes with the final
+Git tree. Final source archive hashes and publication identities are recorded
+in the draft MR after those gates. This bounded slice does not claim the full
+release package-smoke route, separate player-wheel installation, extracted-source
+installation, hosted CI or a release. Current guides and the bundled investigation
+reference describe typing; earlier dated handoff entries remain unchanged.
+
+### Historical observation and remaining boundaries
+
+Preserve the preceding press entry's first installed combined native attempt:
+88 passes and one failure in the unchanged retrace budget-first witness.
+Its initial passive observation completed six QMP calls, then refused the
+final clock query locally because the shared host deadline had expired,
+before input or clock arm. The effective default was 1000 ms intersected
+with incoming bounds; the failed observation did not establish where time
+was consumed or whether an inherited bound shortened it. The unchanged
+isolated follow-up and full 89-case repeat passed, and independent comparison
+found no changed observation path or effective default. No cause was
+established and no timeout fix/increase was made. The new typing results do
+not resolve that historical unknown. The published handoff retains this
+record; this fresh workspace does not assert recovery of every old raw log.
+
+DOSBox remains the default and both selectors remain available. All 127
+promotion qualifications remain open. Native callback delivery does not
+prove arbitrary guest consumption, keyboard layout or completed drawing.
+Timed clicks, coordinate mapping, frame/VBlank semantics, input-to-source
+causality, wider audio, real QEMM/DESQview/game campaigns and checkpoint/history
+dependencies remain outside this slice. General `timed_input`,
+`guest_time_control` and `completed_guest_frames` stay false. No hosted CI,
+merge, release or shared installation is claimed; configured Mac mirrors
+remain unavailable.
 
 ## 2026-11-09: callback-relative native keyboard presses
 

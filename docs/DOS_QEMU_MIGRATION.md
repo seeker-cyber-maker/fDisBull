@@ -516,9 +516,10 @@ or failed execution evidence closes the owned VM. The timer and its deferred
 stop request must both be absent before another operation is admitted.
 
 This first extension blocks migration after budget use. Native checkpoints,
-completed-frame/audio fences, timed text, periodic memory rules and scene
+completed-frame/audio fences, periodic memory rules and scene
 scheduling still need their own integration and qualification. The optional
-keyboard-press extension below implements a separately admitted single chord.
+keyboard extensions below implement separately admitted single chords and
+bounded US-layout text, with guest consumption and layout still unqualified.
 
 ### Schedule one physical-input batch on virtual time
 
@@ -635,8 +636,9 @@ arm. Uncertain arm, cancellation, dispatch, deadline reconciliation or evidence
 persistence closes the VM without replay. `timed_input=False`,
 `guest_time_control=False` and `completed_guest_frames=False` remain explicit:
 legacy `guest_ms`, timed text, frame presses and pixel/INT33 semantics are
-not supplied by this batch scheduler. The separate press extension supplies
-one timed chord through the existing keyboard route. The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
+not supplied by this batch scheduler. Separate keyboard extensions supply
+one timed chord or bounded US-layout text through the existing routes.
+The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
 preserves these first-stop, explicit-resolution and unknown-consumption rules.
 
 ### Queue one timed keyboard chord
@@ -654,7 +656,25 @@ prefix and owned held leases; cancelling the suffix never releases those holds.
 A partially delivered chord cannot be replayed or converted into a batch.
 Explicitly cancel pending steps, then explicitly release retained leases.
 See [the workflow and recovery contract](DOS_QEMU_TIMING.md#queue-one-timed-keyboard-press).
-Text entry, timed clicks and full DOSBox input parity remain unqualified.
+Timed clicks and full DOSBox input parity remain unqualified.
+
+### Queue bounded US-layout text
+
+The optional seventh [native keyboard-type patch](../native/qemu-keyboard-type/README.md)
+adds `virtual_keyboard_type`. Use the existing `keyboard_type` / `keyboard.type`,
+JSON `debug-keyboard-type` or script `keyboard.type` with 1..64 printable ASCII
+characters, Enter (CR or LF) and Tab. CRLF produces two Enter chords. Uppercase
+and shifted punctuation use a fresh Shift chord for each character. The caller
+must establish the guest's US layout and lock state independently.
+
+The whole string validates before one passive stopped arm. Later characters
+start `gap_ms + 2 ms` after the preceding final release, using actual callback
+times; there is no trailing gap. Receipts preserve each character index, unique
+key lifetime, assigned deadline and delivered prefix. An early stop cancels the
+suffix and retains delivered holds for explicit cancellation and release.
+Future reservations do not occupy active held-key slots. Legal maximum timing
+can exceed the 60-second clock-advance bound; execution is never split or
+resumed automatically. See the [text workflow](DOS_QEMU_TIMING.md#queue-bounded-us-layout-text).
 
 ### Schedule input at a modeled retrace edge
 

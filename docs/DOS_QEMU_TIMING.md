@@ -261,8 +261,8 @@ modifier breaks. Each make and modifier break waits 2 ms; main break waits
 `hold_ms` from the actual main make. Every next deadline derives from the
 preceding **actual callback**, so lateness cannot shorten the hold. Both timing
 options are strict integers 1..1000. `gap_ms` is retained but has no effect on
-one press, matching the retained DOSBox single-press contract; it applies only
-to successive characters in that backend's text operation.
+one press, matching the retained DOSBox single-press contract; it applies to
+successive characters in the separate text operation below.
 
 The existing JSON method is `debug-keyboard-press` with `run`, `key` and the
 same optional arguments. Saved scripts use `keyboard.press`; whole-script
@@ -293,9 +293,63 @@ refused. After full completion, a new press can be admitted normally.
 The separate host clock controller can supply that explicitly requested bounded
 execution through `clock_sync_step()`. Its fixed mapping, drift latch and
 first-stop policy still apply; input never advances the clock or rebases the
-mapping by itself. `keyboard.type` and timed mouse clicks remain unavailable,
-and `timed_input`, `guest_time_control` and `completed_guest_frames` stay false.
+mapping by itself. Timed mouse clicks remain unavailable, and `timed_input`,
+`guest_time_control` and `completed_guest_frames` stay false.
 See the [native press contract](../native/qemu-keyboard-press/README.md).
+
+### Queue bounded US-layout text
+
+With the seventh native patch and `virtual_keyboard_type`, use
+`keyboard_type(text, hold_ms=40, gap_ms=40)` or `keyboard.type` to passively arm
+one finite text plan. The explicit virtual-clock profile, stopped machine,
+empty owned queue and absence of held leases are required. The complete input
+validates before arming: 1..64 printable US-layout ASCII characters plus CR,
+LF and Tab. CR and LF each produce an Enter chord; they are not combined.
+Uppercase letters and shifted punctuation get a separate Shift chord each.
+The operation does not inspect or change the guest keyboard layout or Caps Lock.
+
+```python
+armed = debug.keyboard.type('aA!', hold_ms=7, gap_ms=11)
+# The nominal plan is 57 ms. This caller-chosen budget also allows IRQ handling.
+execution = debug.clock_advance(70_000_000, timeout_ms=1000)
+typing = execution['input_delivery']['typing']
+print(typing['dispatched_count'], typing['undispatched_count'])
+```
+
+The first character starts after 2 ms. Every later character's first edge waits
+`gap_ms + 2 ms` from the preceding character's final release callback. Other
+makes and Shift releases wait 2 ms; main-key releases wait `hold_ms`. Every next
+deadline uses the actual preceding callback, and there is no trailing gap timer.
+Both timing options are strict integers from 1 through 1000.
+
+The receipt's `typing` member has format `fdisbull-keyboard-type-1`. Inspect its
+immutable text plan, delivered prefix and per-edge `character_index`, `lease`,
+deadline, dispatch and lateness. Repeated keys receive distinct lease lifetimes.
+At most 256 edges and 128 future lifetimes are reserved; reservations remain
+separate from active held keys and do not raise the 64-active-lease limit.
+Only validated delivered makes enter the held-key ledger, and matching breaks
+remove them. The entire newly observed prefix validates before ledger mutation.
+
+An early stop can leave a held Shift or main key even though top-level
+`dispatch_ns` is `None`. Another run, press, type or batch/retrace reschedule is
+refused until `input_cancel_pending()` discards the suffix and future
+reservations. Then explicitly release retained leases and choose their
+execution, as for a single press. Neither cancellation nor auto-sync replays
+or releases input automatically. A successful full dispatch empties its leases.
+
+Use JSON `debug-keyboard-type` or script `keyboard.type` with the same options.
+Whole-script checks precede earlier mutations, resolved values are revalidated,
+and one 1000 ms direct-arm host allowance includes lock admission and evidence
+persistence while respecting tighter incoming bounds. Accepted/uncertain late
+arms and malformed or unpersisted evidence close the VM without replay.
+
+The existing clock-sync controller can drive a short plan at one explicit
+cooperation point. For long text, choose an appropriate bounded execution:
+64 shifted characters with 1000 ms holds and gaps have a nominal duration of
+127,384 ms, longer than one `clock_advance` allowance. A shorter budget cancels
+the suffix; the helper never divides the string into hidden runs. Callback
+evidence remains separate from guest text consumption and completed frames.
+See the [native text contract](../native/qemu-keyboard-type/README.md).
 
 ### Clock synchronization and retrace waits
 

@@ -263,8 +263,9 @@ step/trace/unbounded resume before execution.
 discards only unsent transitions; accepted holds still require explicit
 release. Closing invalidates leases without pretending release code ran.
 Limits: 256 pending edges, 64 leases and relative deltas -32767..32767.
-Timed text, pixel clicks and frame-edge timing remain unsupported. The separate
-`virtual_keyboard_press` capability below supplies one timed native chord.
+Pixel clicks and frame-edge timing remain unsupported. The separate
+`virtual_keyboard_press` and `virtual_keyboard_type` capabilities below supply
+one timed native chord or bounded US-layout text.
 Make and break in one batch specify order, not a hold duration.
 
 JSON routes are `debug-keyboard-down/up/state`, `debug-mouse-move-relative`,
@@ -467,8 +468,40 @@ keyboard lease with a separately chosen execution. No automatic release/replay.
 The direct arm has a 1000 ms host bound and inherits tighter script/transport
 bounds. Uncertain outcomes or evidence failures close the VM with the available
 native/stop evidence retained. Native callbacks do not establish guest FIFO
-acceptance or consumption. Text, timed clicks and completed frames remain
+acceptance or consumption. Timed clicks and completed frames remain
 unqualified; timed_input, guest_time_control and completed_guest_frames stay false.
+
+## Queue bounded US-layout text
+
+Inspect `virtual_keyboard_type` before calling the existing
+`keyboard.type(text, hold_ms=40, gap_ms=40)`, JSON `debug-keyboard-type` or
+script `keyboard.type`. It requires the seventh optional native patch and
+explicit virtual-clock profile. Admit one stopped plan with an empty owned
+queue and no held leases. Validate the entire string: 1..64 printable US-layout
+ASCII characters, CR, LF or Tab. CRLF means two Enter chords. Uppercase and
+shifted punctuation use fresh Shift chords; establish the guest layout and
+lock state separately.
+
+The first edge waits 2 ms. Each later character starts `gap_ms + 2 ms` after
+the preceding character's actual final release. Other makes and Shift breaks
+wait 2 ms; main breaks wait hold_ms. Every deadline uses the actual preceding
+callback; there is no trailing gap. Choose a later bounded run/clock advance
+or explicit clock-sync step yourself. Long legal text can exceed the 60-second
+clock-advance bound; the helper never splits it into hidden runs.
+
+Inspect the `typing` receipt's delivered prefix and per-edge character_index,
+lease, deadline, dispatch and lateness. Each repeated key has a new lifetime.
+Future reservations remain separate from active held-key leases: 64 shifted
+characters need 256 edges and 128 lifetimes but hold at most two keys at once.
+Only fully validated delivered makes enter the active ledger.
+
+The first stop cancels the suffix. Another run or reschedule refuses until
+explicit `input_cancel_pending()` discards unsent steps and future reservations.
+Inspect `retained_dispatched_holds`, then explicitly key_up each remaining
+lease with separately chosen execution. Cancellation never releases or replays.
+The same 1000 ms direct-arm host allowance, inherited deadlines, script
+preflight and close-on-uncertainty behavior apply as for a press. Native
+callback evidence does not establish guest text consumption or completed frames.
 
 ## Observe the explicit VGA retrace model
 

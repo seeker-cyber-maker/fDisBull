@@ -91,10 +91,12 @@ and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.
 The [timing guide](DOS_QEMU_TIMING.md) covers explicit host clock auto-sync,
 modeled retrace waits, generation-checked input at the next retrace edge and
-native single-chord `keyboard.press` under `virtual_keyboard_press`.
+native single-chord `keyboard.press` under `virtual_keyboard_press`, and
+bounded US-layout `keyboard.type` under `virtual_keyboard_type`.
 Inspect each capability before using it. Input arms remain passive and need
 explicit bounded execution; an interrupted press retains its delivered prefix
-and any held leases for explicit recovery.
+and any held leases for explicit recovery. Text entry uses the same recovery
+policy, with separate lifetimes for repeated keys and gaps between characters.
 
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).

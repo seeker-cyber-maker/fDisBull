@@ -47,8 +47,8 @@ completed renderer publications. A separate explicit PC-speaker profile captures
 bounded PCM output with callback timestamps. These operations have Python,
 retained JSON and saved-script routes. A renderer ID is not a guest frame;
 concatenated PCM duration is not elapsed guest time. Generic guest milliseconds,
-completed guest frames, broader sound devices, timed text/clicks and
-pixel/INT33 mouse semantics remain open. The separate opt-in
+completed guest frames, broader sound devices, timed clicks, guest text
+consumption/layout and pixel/INT33 mouse semantics remain open. The separate opt-in
 [host clock controller](DOS_QEMU_TIMING.md) now maps native virtual time to
 host elapsed time at explicit cooperation points.
 
@@ -114,7 +114,18 @@ of 1..1000 ms. Every next native deadline derives from the preceding actual
 callback. First-stop cancellation retains the proven prefix and any held leases;
 explicit suffix cancellation and explicit release are required before recovery.
 No partial replay or conversion to ordinary/retrace batch scheduling is admitted.
-Text/click helpers remain open, and the general `timed_input` flag stays false.
+The general `timed_input` flag stays false; timed clicks remain open.
+
+The optional seventh [keyboard-type patch](../native/qemu-keyboard-type/README.md)
+adds `virtual_keyboard_type` through the existing text API, JSON and script
+routes. One passive plan accepts 1..64 printable US-layout ASCII characters,
+CR, LF and Tab. Each character gets its own key/Shift lifetimes. The first
+edge of every later character waits `gap_ms + 2 ms` from the preceding final
+release; there is no trailing gap timer. Future lease reservations stay outside
+the active held-key ledger, so the 256-edge and 64-active-lease bounds remain.
+The same per-edge stop precedence, delivered-prefix evidence and explicit
+suffix cancellation/release policy apply. Guest layout, lock state and generic
+text consumption remain unqualified.
 
 Virtual-profile COM/MZ source traces now retain stable stopped clock brackets
 under `source_trace_clock`. A `virtual-time-range` predicate binds the exact run,
@@ -183,7 +194,7 @@ that last check is not runtime qualification.
 | `breakpoints.create`, `breakpoints.delete`, `breakpoints.list` | Core / Trace and events | QEMU TCG execution/data controls exist; preserve byte-free breakpoints, access kind, length, bounded count and cause/resume semantics |
 | `trace.start`, `trace.read`, `trace.stop` | Trace and events | Stopped-boundary machine/source traces exist; ordinary debug stops do not prove retirement, and no equivalent streaming before-fetch trace cursor is supplied |
 | `video.screenshot`, `video.probe` | Clock, media and input | Stopped QMP surface/CPU/clock bracket and PNG exist; they do not establish the DOSBox last-completed-frame, scanline, mode, guest-tick or revision contract |
-| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports owned queue/leases and immediate or scheduled receipts. The optional virtual keyboard-press extension queues one native timed chord and retains a partial delivered prefix on cancellation; text remains refused. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
+| `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports owned queue/leases and immediate or scheduled receipts. Optional virtual keyboard extensions arm one timed chord or 1..64 US-layout characters, retaining a delivered prefix and held leases on cancellation. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
 | `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate, explicit virtual-delay or generation-checked modeled-retrace scheduling; stale leases invalidate on close. A modeled callback phase does not qualify guest-frame edges, consumption or replay parity |
 | `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases support immediate or scheduled dispatch, with independent IRQ12 witnesses; DOSBox INT33, pixel/range mapping, timed clicks and guest cursor state still need qualification |
 | `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
@@ -218,7 +229,7 @@ dispatch are outside this router dictionary.
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Inherited on `MachineContext` but explicitly refuses QEMU; requires qualified guest-time slices |
 | Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. Initial real-mode module only; no queued input or overlay rebinding |
-| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and an opt-in native single-chord press have partial support; legacy waits, timed text/clicks and frame contracts remain open |
+| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and opt-in native timed chords/text have partial support; legacy waits, timed clicks, guest layout and frame contracts remain open |
 | Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |
 | Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Pending fetch-view and hook adapter; screenshots with preparation hooks also depend on this slice |

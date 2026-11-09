@@ -34,7 +34,9 @@ cannot also appear among them. `hold_ms` and `gap_ms` are strict integers from
 This is the retained DOSBox single-press ordering. `gap_ms` is validated and
 recorded but does not affect one press: the retained implementation applies
 that option only between characters in its separate text operation. There is
-no trailing gap timer. Native QEMU text entry remains unsupported.
+no trailing gap timer. The optional seventh
+[keyboard-type patch](../qemu-keyboard-type/README.md) supplies a separately
+admitted bounded US-layout text sequence.
 
 Each deadline is computed from the **actual preceding callback time**. A late
 make therefore cannot shorten the requested hold, and a late break cannot
@@ -108,8 +110,8 @@ separately inspect IRQ1/scancode memory; they do not establish generic game
 consumption or completed drawing.
 
 `timed_input`, `guest_time_control` and `completed_guest_frames` remain false.
-Text, timed mouse clicks, frame-edge input and generic DOSBox timing parity
-still need their own qualification. Migration remains blocked after native
+Guest text consumption and layout, timed mouse clicks, frame-edge input and
+generic DOSBox timing parity still need their own qualification. Migration remains blocked after native
 input use, and reset/profile loss invalidates the scheduler.
 
 See the [timing workflow](../../docs/DOS_QEMU_TIMING.md#queue-one-timed-keyboard-press)

@@ -1,0 +1,534 @@
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -6,11 +6,11 @@
+ # @FdisbullInputState:
+ #
+ # @idle: No schedule has been armed.
+-# @armed: One owned batch or finite press is waiting for its next deadline.
++# @armed: One owned batch or finite keyboard sequence awaits its next deadline.
+ # @dispatched: All selected PS/2 handler callbacks and final sync completed.
+-# @cancelled: The undispatched batch or press suffix was disarmed.  A press
++# @cancelled: The undispatched batch or keyboard suffix was disarmed.  A sequence
+ #     can retain an already dispatched prefix.
+-# @failed: Revalidation or scheduling failed; close the VM.  A press can
++# @failed: Revalidation or scheduling failed; close the VM.  A sequence can
+ #     retain an already dispatched prefix.
+ #
+ # Since: 10.0
+@@ -64,7 +64,7 @@
+ #     delivered prefix.
+ #
+ # The key, direction and delay never change.  Each deadline and dispatch time
+-# is added once.  All fields freeze when the press becomes terminal.
++# is added once.  All fields freeze when the keyboard sequence becomes terminal.
+ #
+ # Since: 10.0
+ ##
+@@ -94,6 +94,34 @@
+ { 'struct': 'FdisbullInputPress',
+   'data': { 'key': 'QKeyCode', 'modifiers': ['QKeyCode'],
+             'hold-ms': 'int', 'gap-ms': 'int',
++            'steps': ['FdisbullInputPressStep'],
++            'dispatched-count': 'uint64' } }
++
++##
++# @FdisbullInputType:
++#
++# @text: One through 64 printable US-layout ASCII characters, CR, LF or Tab.
++#     CR and LF each map to Enter; no CRLF folding or guest-layout discovery.
++# @hold-ms: Main-key hold after each actual make callback, 1..1000 milliseconds.
++# @gap-ms: Extra delay between characters, 1..1000 milliseconds.  A later
++#     character's first make waits gap-ms plus 2 ms after the previous
++#     character's final release.  There is no trailing gap timer.
++# @steps: Immutable 2..256-edge plan.  Uppercase and shifted punctuation use
++#     separate Shift make/main make/main break/Shift break chords.  Other
++#     characters have one main make/break pair.  Each make and Shift break
++#     waits 2 ms; each main break waits hold-ms.  Every next deadline derives
++#     from actual preceding callback completion, with the inter-character
++#     gap added to each later character's first make.
++# @dispatched-count: Number of completed handler/sync steps in the prefix.
++#
++# Cancellation retains exact prefix evidence without replay or cleanup
++# releases.  Text is a physical US-layout mapping; callbacks do not establish
++# device acceptance, guest text consumption or the guest's Caps Lock state.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputType',
++  'data': { 'text': 'str', 'hold-ms': 'int', 'gap-ms': 'int',
+             'steps': ['FdisbullInputPressStep'],
+             'dispatched-count': 'uint64' } }
+
+@@ -113,11 +141,13 @@
+ # @reason: Terminal reason of at most 256 bytes; absent while idle or armed.
+ # @retrace: Immutable modeled-retrace binding, present only for a retrace arm.
+ # @press: Finite timed keyboard plan and actual prefix, present only for a
+-#     keyboard-press arm.  Mutually exclusive with retrace.
++#     keyboard-press arm.  Mutually exclusive with retrace and typing.
++# @typing: Finite timed text plan and actual prefix, present only for a
++#     keyboard-type arm.  Mutually exclusive with press and retrace.
+ #
+ # Terminal fields are retained unchanged until a new token is accepted.
+ # Top-level dispatch-ns is present only when every planned event completed;
+-# a cancelled press exposes its delivered prefix through press instead.
++# a cancelled sequence exposes its delivered prefix through press or typing.
+ # Dispatch does not establish PS/2 queue acceptance, guest consumption, or
+ # physical release of an earlier held input.  A full or disabled device can
+ # ignore an event even though its handler callback completed.
+@@ -130,7 +160,8 @@
+             'event-count': 'uint64', '*token': 'str', '*start-ns': 'int',
+             '*deadline-ns': 'int', '*terminal-ns': 'int',
+             '*dispatch-ns': 'int', '*reason': 'str',
+-            '*retrace': 'FdisbullInputRetrace', '*press': 'FdisbullInputPress' } }
++            '*retrace': 'FdisbullInputRetrace', '*press': 'FdisbullInputPress',
++            '*typing': 'FdisbullInputType' } }
+
+ ##
+ # @x-fdisbull-query-input:
+@@ -238,7 +269,7 @@
+ # is no implicit continue, stop, suffix replay or synthetic cleanup release.
+ #
+ # This command shares the existing scheduler, migration restriction and token
+-# history.  It clears an old retrace descriptor; another accepted arm clears
++# history.  It clears old retrace/type descriptors; another accepted arm clears
+ # this press descriptor.  Physical held-key ownership remains the caller's
+ # responsibility, including explicit resolution of a cancelled partial press.
+ #
+@@ -251,6 +282,40 @@
+   'returns': 'FdisbullInputInfo' }
+
+ ##
++# @x-fdisbull-arm-keyboard-type:
++#
++# @token: Unused owner token of 1..128 bytes, shared with other input arms.
++# @text: One through 64 printable US-layout ASCII characters, CR, LF or Tab.
++# @hold-ms: Each main-key hold from its actual make, 1..1000 milliseconds.
++# @gap-ms: Extra inter-character delay, 1..1000 milliseconds.
++#
++# Passively arm one finite text sequence on the valid stopped native clock
++# profile.  Validate the entire text and signed nominal horizon, then prepare
++# every separately owned one-event PS/2 batch before accepting the token.
++# The first edge waits 2 ms after arm.  Each later character's first edge
++# waits gap-ms plus 2 ms after the actual final release of its predecessor.
++# Remaining make/Shift-break edges wait 2 ms and main breaks wait hold-ms.
++# No deadline grid is predicted, and no trailing gap is scheduled.
++#
++# Every edge retains the existing epoch/profile, pending-stop, reached/equal
++# clock-budget and pinned-handler checks.  The first actual VM stop cancels
++# the suffix; completion does not stop the VM.  A long admitted text can
++# outlast one clock budget.  There is no implicit continuation or subdivision
++# into several runs.  Partial sequences require explicit caller recovery.
++#
++# Shares query/cancel, migration restriction and token history with other
++# input modes.  Clears old press/retrace descriptors only on successful arm.
++# Does not infer guest layout, neutralize held keys or Caps Lock, synthesize
++# cleanup releases, replay callbacks or establish guest consumption.
++#
++# Returns: Armed receipt with only its first step deadline established.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-keyboard-type',
++  'data': { 'token': 'str', 'text': 'str', 'hold-ms': 'int', 'gap-ms': 'int' },
++  'returns': 'FdisbullInputInfo' }
++
++##
+ # @x-fdisbull-cancel-input:
+ #
+ # @token: Current owner token.
+diff --git a/system/fdisbull-input.c b/system/fdisbull-input.c
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -3,7 +3,7 @@
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  *
+  * All live accesses are serialized by BQL.  The virtual timer dispatches an
+- * owned batch or finite press through the selected PS/2 input handlers.  It
++ * owned batch or finite keyboard sequence through selected PS/2 handlers.  It
+  * never resumes or stops the VM, synthesizes cleanup releases, or claims that
+  * the guest consumed input.
+  */
+@@ -29,6 +29,8 @@
+ #define INPUT_MAX_USED_TOKENS 4096
+ #define INPUT_MAX_REASON_BYTES 256
+ #define INPUT_MAX_PRESS_STEPS 8
++#define INPUT_MAX_TYPE_CHARS 64
++#define INPUT_MAX_TYPE_STEPS (4 * INPUT_MAX_TYPE_CHARS)
+ #define INPUT_PRESS_EDGE_DELAY_NS INT64_C(2000000)
+
+ static struct {
+@@ -42,8 +44,9 @@
+     FdisbullInputBatch *batch;
+     FdisbullInputRetrace *retrace;
+     FdisbullInputPress *press;
+-    FdisbullInputPressStepList *press_next;
+-    FdisbullInputBatch *press_batches[INPUT_MAX_PRESS_STEPS];
++    FdisbullInputType *typing;
++    FdisbullInputPressStepList *keyboard_next;
++    FdisbullInputBatch *keyboard_batches[INPUT_MAX_TYPE_STEPS];
+     char *token;
+     char *reason;
+     uint64_t event_count;
+@@ -65,15 +68,15 @@
+            state == RUN_STATE_DEBUG;
+ }
+
+-static void input_press_free_batches(void)
++static void input_keyboard_free_batches(void)
+ {
+     unsigned i;
+
+-    for (i = 0; i < INPUT_MAX_PRESS_STEPS; i++) {
+-        qemu_input_fdisbull_free(input_schedule.press_batches[i]);
+-        input_schedule.press_batches[i] = NULL;
+-    }
+-    input_schedule.press_next = NULL;
++    for (i = 0; i < INPUT_MAX_TYPE_STEPS; i++) {
++        qemu_input_fdisbull_free(input_schedule.keyboard_batches[i]);
++        input_schedule.keyboard_batches[i] = NULL;
++    }
++    input_schedule.keyboard_next = NULL;
+ }
+
+ static void input_finish(FdisbullInputState state, const char *reason)
+@@ -94,7 +97,7 @@
+     input_schedule.reason = g_strndup(reason, INPUT_MAX_REASON_BYTES);
+     qemu_input_fdisbull_free(input_schedule.batch);
+     input_schedule.batch = NULL;
+-    input_press_free_batches();
++    input_keyboard_free_batches();
+ }
+
+ static void input_invalidate(const char *reason)
+@@ -211,6 +214,9 @@
+     if (input_schedule.press) {
+         info->press = QAPI_CLONE(FdisbullInputPress, input_schedule.press);
+     }
++    if (input_schedule.typing) {
++        info->typing = QAPI_CLONE(FdisbullInputType, input_schedule.typing);
++    }
+     return info;
+ }
+
+@@ -305,26 +311,30 @@
+     return true;
+ }
+
+-static void input_press_dispatch(int64_t now)
+-{
+-    FdisbullInputPress *press = input_schedule.press;
+-    FdisbullInputPressStepList *node = input_schedule.press_next;
++static void input_keyboard_dispatch(int64_t now)
++{
++    FdisbullInputPressStepList *node = input_schedule.keyboard_next;
+     FdisbullInputPressStep *step;
+-    uint64_t index = press->dispatched_count;
++    uint64_t *dispatched_count = input_schedule.press ?
++        &input_schedule.press->dispatched_count :
++        &input_schedule.typing->dispatched_count;
++    uint64_t index = *dispatched_count;
++    unsigned limit = input_schedule.press ? INPUT_MAX_PRESS_STEPS :
++                                           INPUT_MAX_TYPE_STEPS;
+     int64_t actual;
+     Error *err = NULL;
+
+     if (!node || index >= input_schedule.event_count ||
+-        index >= INPUT_MAX_PRESS_STEPS || !input_schedule.press_batches[index]) {
+-        input_finish(FDISBULL_INPUT_STATE_FAILED,
+-                     "keyboard press lost its next owned step");
++        index >= limit || !input_schedule.keyboard_batches[index]) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "keyboard sequence lost its next owned step");
+         return;
+     }
+     step = node->value;
+     if (!step->has_deadline_ns || step->has_dispatch_ns ||
+         now < step->deadline_ns) {
+         input_finish(FDISBULL_INPUT_STATE_FAILED,
+-                     "keyboard press timer preceded its current deadline");
++                     "keyboard sequence timer preceded its current deadline");
+         return;
+     }
+     /*
+@@ -334,12 +344,13 @@
+      */
+     if (node->next && now > INT64_MAX - node->next->value->delay_ns) {
+         input_finish(FDISBULL_INPUT_STATE_FAILED,
+-                     "keyboard press next deadline would overflow");
+-        return;
+-    }
+-    if (!qemu_input_fdisbull_dispatch(input_schedule.press_batches[index], &err)) {
+-        input_finish(FDISBULL_INPUT_STATE_FAILED,
+-                     err ? error_get_pretty(err) : "keyboard press dispatch failed");
++                     "keyboard sequence next deadline would overflow");
++        return;
++    }
++    if (!qemu_input_fdisbull_dispatch(input_schedule.keyboard_batches[index],
++                                     &err)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     err ? error_get_pretty(err) : "keyboard dispatch failed");
+         error_free(err);
+         return;
+     }
+@@ -347,19 +358,19 @@
+     actual = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+     step->has_dispatch_ns = true;
+     step->dispatch_ns = actual;
+-    press->dispatched_count++;
+-    qemu_input_fdisbull_free(input_schedule.press_batches[index]);
+-    input_schedule.press_batches[index] = NULL;
++    (*dispatched_count)++;
++    qemu_input_fdisbull_free(input_schedule.keyboard_batches[index]);
++    input_schedule.keyboard_batches[index] = NULL;
+     if (actual != now) {
+         input_finish(FDISBULL_INPUT_STATE_FAILED,
+-                     "virtual time changed inside synchronous press callback");
++                     "virtual time changed inside synchronous key callback");
+         return;
+     }
+     if (!node->next) {
+         input_finish(FDISBULL_INPUT_STATE_DISPATCHED, "dispatch-complete");
+         return;
+     }
+-    input_schedule.press_next = node->next;
++    input_schedule.keyboard_next = node->next;
+     step = node->next->value;
+     step->has_deadline_ns = true;
+     step->deadline_ns = actual + step->delay_ns;
+@@ -402,8 +413,8 @@
+                      "virtual input timer fired before its deadline");
+         return;
+     }
+-    if (input_schedule.press) {
+-        input_press_dispatch(clock->virtual_ns);
++    if (input_schedule.press || input_schedule.typing) {
++        input_keyboard_dispatch(clock->virtual_ns);
+         return;
+     }
+     if (!input_retrace_check(clock->virtual_ns)) {
+@@ -501,8 +512,9 @@
+     qapi_free_FdisbullInputRetrace(input_schedule.retrace);
+     input_schedule.retrace = retrace ? QAPI_CLONE(FdisbullInputRetrace, retrace)
+                                      : NULL;
+-    input_press_free_batches();
++    input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
++    g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
+     input_arm_commit(token, now, deadline_ns, qemu_input_fdisbull_count(batch));
+     return input_info();
+ }
+@@ -621,8 +633,8 @@
+                      retrace, errp);
+ }
+
+-static FdisbullInputBatch *input_press_prepare_step(QKeyCode code, bool down,
+-                                                    Error **errp)
++static FdisbullInputBatch *input_keyboard_prepare_step(QKeyCode code, bool down,
++                                                       Error **errp)
+ {
+     KeyValue key = { .type = KEY_VALUE_KIND_QCODE,
+                      .u.qcode = { .data = code } };
+@@ -702,7 +714,7 @@
+             step->has_deadline_ns = true;
+             step->deadline_ns = now + step->delay_ns;
+         }
+-        batches[i] = input_press_prepare_step(step->key, step->down, errp);
++        batches[i] = input_keyboard_prepare_step(step->key, step->down, errp);
+         if (!batches[i]) {
+             goto fail;
+         }
+@@ -713,16 +725,17 @@
+
+     input_schedule.batch = NULL;
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
+-    input_press_free_batches();
++    input_keyboard_free_batches();
++    g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
+     qapi_free_FdisbullInputPress(input_schedule.press);
+     input_schedule.press = g_steal_pointer(&press);
+-    input_schedule.press_next = input_schedule.press->steps;
++    input_schedule.keyboard_next = input_schedule.press->steps;
+     for (i = 0; i < count; i++) {
+-        input_schedule.press_batches[i] = batches[i];
++        input_schedule.keyboard_batches[i] = batches[i];
+         batches[i] = NULL;
+     }
+     input_arm_commit(token, now,
+-                     input_schedule.press_next->value->deadline_ns, count);
++                     input_schedule.keyboard_next->value->deadline_ns, count);
+     return input_info();
+
+ fail:
+@@ -732,6 +745,172 @@
+     return NULL;
+ }
+
++/* Match the retained physical US-layout text mapping, without guest inference. */
++static bool input_type_key(unsigned char ch, QKeyCode *key, bool *shift)
++{
++    static const QKeyCode letters[] = {
++        Q_KEY_CODE_A, Q_KEY_CODE_B, Q_KEY_CODE_C, Q_KEY_CODE_D,
++        Q_KEY_CODE_E, Q_KEY_CODE_F, Q_KEY_CODE_G, Q_KEY_CODE_H,
++        Q_KEY_CODE_I, Q_KEY_CODE_J, Q_KEY_CODE_K, Q_KEY_CODE_L,
++        Q_KEY_CODE_M, Q_KEY_CODE_N, Q_KEY_CODE_O, Q_KEY_CODE_P,
++        Q_KEY_CODE_Q, Q_KEY_CODE_R, Q_KEY_CODE_S, Q_KEY_CODE_T,
++        Q_KEY_CODE_U, Q_KEY_CODE_V, Q_KEY_CODE_W, Q_KEY_CODE_X,
++        Q_KEY_CODE_Y, Q_KEY_CODE_Z,
++    };
++    static const QKeyCode digits[] = {
++        Q_KEY_CODE_0, Q_KEY_CODE_1, Q_KEY_CODE_2, Q_KEY_CODE_3,
++        Q_KEY_CODE_4, Q_KEY_CODE_5, Q_KEY_CODE_6, Q_KEY_CODE_7,
++        Q_KEY_CODE_8, Q_KEY_CODE_9,
++    };
++    static const char shifted[] = "!@#$%^&*()_+{}|:\"<>?~";
++    static const char unshifted[] = "1234567890-=[]\\;',./`";
++    const char *found;
++
++    G_STATIC_ASSERT(sizeof(shifted) == sizeof(unshifted));
++    if (!((ch >= ' ' && ch <= '~') || ch == '\r' || ch == '\n' ||
++          ch == '\t')) {
++        return false;
++    }
++    *shift = false;
++    if (ch >= 'A' && ch <= 'Z') {
++        ch += 'a' - 'A';
++        *shift = true;
++    } else if ((found = strchr(shifted, ch))) {
++        ch = unshifted[found - shifted];
++        *shift = true;
++    }
++    if (ch >= 'a' && ch <= 'z') {
++        *key = letters[ch - 'a'];
++        return true;
++    }
++    if (ch >= '0' && ch <= '9') {
++        *key = digits[ch - '0'];
++        return true;
++    }
++    switch (ch) {
++    case ' ':  *key = Q_KEY_CODE_SPC; break;
++    case '\r':
++    case '\n': *key = Q_KEY_CODE_RET; break;
++    case '\t': *key = Q_KEY_CODE_TAB; break;
++    case '-':  *key = Q_KEY_CODE_MINUS; break;
++    case '=':  *key = Q_KEY_CODE_EQUAL; break;
++    case '[':  *key = Q_KEY_CODE_BRACKET_LEFT; break;
++    case ']':  *key = Q_KEY_CODE_BRACKET_RIGHT; break;
++    case ';':  *key = Q_KEY_CODE_SEMICOLON; break;
++    case '\'': *key = Q_KEY_CODE_APOSTROPHE; break;
++    case '`':  *key = Q_KEY_CODE_GRAVE_ACCENT; break;
++    case '\\': *key = Q_KEY_CODE_BACKSLASH; break;
++    case ',':  *key = Q_KEY_CODE_COMMA; break;
++    case '.':  *key = Q_KEY_CODE_DOT; break;
++    case '/':  *key = Q_KEY_CODE_SLASH; break;
++    default: return false;
++    }
++    return true;
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_arm_keyboard_type(
++    const char *token, const char *text, int64_t hold_ms, int64_t gap_ms,
++    Error **errp)
++{
++    g_autoptr(FdisbullInputType) typing = NULL;
++    FdisbullInputBatch *batches[INPUT_MAX_TYPE_STEPS] = { 0 };
++    FdisbullInputPressStepList **tail;
++    QKeyCode keys[INPUT_MAX_TYPE_CHARS];
++    bool shifts[INPUT_MAX_TYPE_CHARS];
++    size_t length;
++    unsigned count = 0, i, edge;
++    int64_t now, horizon = 0;
++
++    if (!input_arm_guard(token, errp)) {
++        return NULL;
++    }
++    if (hold_ms < 1 || hold_ms > 1000 || gap_ms < 1 || gap_ms > 1000) {
++        error_setg(errp, "Keyboard type hold-ms and gap-ms must be 1..1000");
++        return NULL;
++    }
++    length = strnlen(text, INPUT_MAX_TYPE_CHARS + 1);
++    if (!length || length > INPUT_MAX_TYPE_CHARS) {
++        error_setg(errp, "Keyboard type requires 1..64 US-layout ASCII characters");
++        return NULL;
++    }
++    /* Validate all characters before preparing devices or publishing a plan. */
++    for (i = 0; i < length; i++) {
++        if (!input_type_key((unsigned char)text[i], &keys[i], &shifts[i])) {
++            error_setg(errp, "Keyboard type supports printable US-layout ASCII, "
++                       "Enter and Tab only");
++            return NULL;
++        }
++        horizon += (shifts[i] ? 3 : 1) * INPUT_PRESS_EDGE_DELAY_NS +
++                   hold_ms * SCALE_MS + (i ? gap_ms * SCALE_MS : 0);
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (now < 0 || now > INT64_MAX - horizon) {
++        error_setg(errp, "Keyboard type nominal horizon exceeds signed time");
++        return NULL;
++    }
++    typing = g_new0(FdisbullInputType, 1);
++    typing->text = g_strdup(text);
++    typing->hold_ms = hold_ms;
++    typing->gap_ms = gap_ms;
++    tail = &typing->steps;
++    for (i = 0; i < length; i++) {
++        unsigned main_make = shifts[i] ? 1 : 0;
++        unsigned edges = shifts[i] ? 4 : 2;
++
++        for (edge = 0; edge < edges; edge++) {
++            FdisbullInputPressStepList *node =
++                g_new0(FdisbullInputPressStepList, 1);
++            FdisbullInputPressStep *step = g_new0(FdisbullInputPressStep, 1);
++
++            *tail = node;
++            node->value = step;
++            tail = &node->next;
++            step->key = edge == main_make || edge == main_make + 1 ?
++                        keys[i] : Q_KEY_CODE_SHIFT;
++            step->down = edge <= main_make;
++            step->delay_ns = edge == main_make + 1 ? hold_ms * SCALE_MS :
++                                                   INPUT_PRESS_EDGE_DELAY_NS;
++            if (i && edge == 0) {
++                step->delay_ns += gap_ms * SCALE_MS;
++            }
++            if (count == 0) {
++                step->has_deadline_ns = true;
++                step->deadline_ns = now + step->delay_ns;
++            }
++            batches[count] = input_keyboard_prepare_step(step->key,
++                                                         step->down, errp);
++            if (!batches[count]) {
++                goto fail;
++            }
++            count++;
++        }
++    }
++    if (!input_block_migration(errp)) {
++        goto fail;
++    }
++
++    input_schedule.batch = NULL;
++    g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
++    input_keyboard_free_batches();
++    g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
++    qapi_free_FdisbullInputType(input_schedule.typing);
++    input_schedule.typing = g_steal_pointer(&typing);
++    input_schedule.keyboard_next = input_schedule.typing->steps;
++    for (i = 0; i < count; i++) {
++        input_schedule.keyboard_batches[i] = batches[i];
++        batches[i] = NULL;
++    }
++    input_arm_commit(token, now,
++                     input_schedule.keyboard_next->value->deadline_ns, count);
++    return input_info();
++
++fail:
++    for (i = 0; i < INPUT_MAX_TYPE_STEPS; i++) {
++        qemu_input_fdisbull_free(batches[i]);
++    }
++    return NULL;
++}
++
+ FdisbullInputInfo *qmp_x_fdisbull_cancel_input(const char *token, Error **errp)
+ {
+     if (!input_guard(errp)) {

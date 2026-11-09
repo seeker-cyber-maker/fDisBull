@@ -61,7 +61,7 @@ def _not_running(error):
 
 
 class QemuPhysicalInputMixin:
-    """Owned physical edges and finite native virtual-clock keyboard chords."""
+    """Owned physical edges and finite native virtual-clock keyboard plans."""
 
     def _input_storage(self):
         state = getattr(self.vm, '_physical_input', None)
@@ -126,6 +126,8 @@ class QemuPhysicalInputMixin:
         state['invalidated_leases'] += len(state['leases'])
         state['pending'].clear()
         state['leases'].clear()
+        if state.get('schedule') is not None:
+            state['schedule'].get('lease_reservations', {}).clear()
 
     def _input_on_close(self):
         # Called by the VM owner before tearing down its transports. Closing a
@@ -212,7 +214,8 @@ class QemuPhysicalInputMixin:
         return keyboard_press(self, key, modifiers=modifiers, hold_ms=hold_ms, gap_ms=gap_ms)
 
     def keyboard_type(self, text, *, hold_ms=40, gap_ms=40):
-        raise ValueError('Timed keyboard text requires qualified guest-time control; use explicit physical key edges')
+        from .qemu_keyboard_type import keyboard_type
+        return keyboard_type(self, text, hold_ms=hold_ms, gap_ms=gap_ms)
 
     def mouse_move_relative(self, dx, dy):
         if (type(dx) is not int or type(dy) is not int
@@ -269,6 +272,10 @@ class QemuPhysicalInputMixin:
         if state.get('schedule') is not None:
             state['schedule']['bound'] = False
             state['schedule_receipt']['requires_resolution'] = False
+        reservations = (state.get('schedule') or {}).get('lease_reservations')
+        cancelled_reservations = list(reservations) if reservations is not None else None
+        if reservations is not None:
+            reservations.clear()
         if scheduled is not None:
             scheduled['requires_resolution'] = False
         result = self._input_receipt('cancelled_unsent', cancelled_edges=count,
@@ -276,6 +283,8 @@ class QemuPhysicalInputMixin:
                                     claim='Only unsent transitions cancelled; accepted holds still require an explicit release.')
         if scheduled is not None:
             result['schedule'] = scheduled
+        if cancelled_reservations is not None:
+            result['cancelled_reserved_leases'] = cancelled_reservations
         self._input_persist('input.cancel_pending', result)
         return result
 
@@ -311,6 +320,43 @@ class QemuPhysicalInputMixin:
                     raise DebuggerError('Owned timed keyboard break has no dispatched make')
                 del leases[record['lease']]
         state['leases'] = leases
+        del state['pending'][:len(records)]
+
+    def _input_mark_text_prefix_dispatched(self, state, schedule, records, delivery):
+        """Atomically activate future makes and consume only their paired breaks.
+
+        A 64-character text can reserve 128 distinct lifetimes but holds at most
+        two keys at once. Future reservations never occupy active lease slots.
+        The entire newly validated prefix is reconciled privately before commit.
+        """
+        if state['pending'][:len(records)] != records:
+            raise DebuggerError('Owned timed text pending prefix changed')
+        leases = deepcopy(state['leases'])
+        reservations = deepcopy(schedule['lease_reservations'])
+        if len(reservations) > MAX_PENDING_EDGES // 2:
+            raise DebuggerError('Owned timed text reservations exceed the bounded plan')
+        for record in records:
+            token = record['lease']
+            event = record['event']['data']
+            if event['down']:
+                reserved = reservations.pop(token, None)
+                if (reserved is None or set(reserved) != {'device', 'key'}
+                        or reserved['device'] != 'keyboard' or token in leases
+                        or _QCODE.get(reserved['key'], reserved['key']) != event['key']['data']
+                        or any(lease['device'] == 'keyboard' and lease['key'] == reserved['key']
+                               for lease in leases.values())
+                        or len(leases) >= MAX_LEASES):
+                    raise DebuggerError('Owned timed text make has no unique reserved lifetime')
+                leases[token] = dict(reserved, make=delivery, release='python_pending')
+            else:
+                lease = leases.get(token)
+                if (lease is None or lease['device'] != 'keyboard'
+                        or _QCODE.get(lease['key'], lease['key']) != event['key']['data']
+                        or lease['make'] != delivery or lease['release'] != 'python_pending'):
+                    raise DebuggerError('Owned timed text break has no dispatched make')
+                del leases[token]
+        state['leases'] = leases
+        schedule['lease_reservations'] = reservations
         del state['pending'][:len(records)]
 
     def _input_after_continue(self, deadline):
