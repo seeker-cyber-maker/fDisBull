@@ -32,9 +32,17 @@ them into the existing task/dossier without stopping unrelated ready work.
 
 Use a known command directly. Consult `<command> --help` for unfamiliar arguments;
 use `capabilities` or `methods` for an unknown capability or changed setup.
-Keep one explicit executable/environment. Read only the needed reference with
-`fdisbull agent-skill --reference <path>`; do not load the whole bundle. A saved
-run record does not reconnect a live emulator after its owner exits.
+Before a multi-step task on an unfamiliar or freshly updated install, run
+`fdisbull preflight --expectations manifest.json` against a small manifest of the
+capabilities the task depends on (`skill`, `module`, `dependency` entries): it
+reports ready/missing per expectation without launching any backend or creating
+an FDB, so a missing decoder or stale skill reference surfaces before work starts.
+A version string alone proves nothing about an install; `--version-json` reports
+the full runtime identity (runtime vs distribution version, provider fingerprint)
+when provenance matters. Keep one explicit executable/environment. Read only the
+needed reference with `fdisbull agent-skill --reference <path>`; do not load the
+whole bundle. A saved run record does not reconnect a live emulator after its
+owner exits.
 
 Start with a guide, meaningful string, HUD value, resource table or existing
 source when one is available. Guides supply testable hypotheses and a working

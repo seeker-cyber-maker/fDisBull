@@ -9,13 +9,18 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**0.33.0 tagged local release feature line:** recover captured Windows imports, identify more media
-formats, investigate Win32 and protected-mode DOS programs, and inspect AGI or
-Gob scenes through experimental ScummVM backends. Exact lossless frame options
-and a direct pixel-buffer API support repeated visual probes; headless DOSBox-X
-shutdown suppresses the recurring quit dialog. This line carries the 0.31.1
-features and packaging repairs forward. See the
-[0.33.0 scope and limits](docs/RELEASE-0.33.0.md),
+**0.34.1 feature line:** investigate Coktel *MADS* media end to end — FAB and PKWARE
+DCL decompression, MADSPACK/HAG resource layers, indexed sprite/depth/mask planes and
+DSR PCM audio, plus a bounded conversation runtime with breakpoints and replay. Get
+DESQview-aware on real DOS installs: recognize its modules and interrupt calls, pin a
+boot-image profile, run a cooperative guest probe, then hunt changing values with
+persistent guarded memory searches. Compare execution instead of guessing: intersect
+and subtract observed instruction sites and register values across runs, or stop the
+guest the instant a declared instruction/register predicate fires. Qualify your
+toolchain first with a projectless `preflight` report and a single `--version-json`
+runtime identity. This line carries the 0.33.0 features — captured Windows-import
+recovery, Win32/Win16 and protected-mode DOS debugging, experimental ScummVM AGI/Gob
+backends, lossless frame options, the built-in GOG Inno reader — forward. See the
 [release records](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md). The
 [GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
@@ -52,6 +57,8 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
 | Inspect DESQview modules, observe its cooperative APIs, or narrow changing memory values | [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
 | Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
+| Decode Coktel MADS resources, sprites and conversations, or replay a bounded dialog | [MADS media runtime](docs/MADS_MEDIA_RUNTIME.md) |
+| Verify this install can do a job before starting it | [Capability preflight](#check-a-capability) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
 | Give an agent named controls, game-unit room maps and explicit spatial policies | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -62,9 +69,10 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Compile shared UIL or source-bound *Miniplanets* / *Shadowrun* profiles to NES, Genesis or macOS ARM64 | [Console intake and synthesis](#console-intake-and-synthesis) |
 
 Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
-[agent quickstart](docs/AGENT_QUICKSTART.md). Two bundled skills ship inside the
+[agent quickstart](docs/AGENT_QUICKSTART.md). Three bundled skills ship inside the
 installed package and work without opening a project:
 
+- `fdisbull agent-skill --reference SKILL.md` (`fdisbull`): the router — pick the right child skill for a vague request instead of loading everything.
 - `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, probe selection, scene/UIL recovery and verification gates.
 - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md` (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused code and format specs into an attributed, human-readable guide.
 
@@ -82,6 +90,7 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install . ./player
 fdisbull capabilities
+fdisbull preflight --expectations preflight.json
 fdisbull inspect /path/to/program
 fdisbull import /path/to/program analysis.fdb
 fdisbull analyze analysis.fdb --max-instructions 10000
@@ -132,6 +141,14 @@ profiles:
   Ghidra and `saturn-recomp`), mode-explicit SNES 65C816 decoding, and
   reusable [media adapters](docs/AGENT_QUICKSTART.md#reuse-media-readers)
   (`media-modules`, `media-inspect`, `media-extract`).
+- **Coktel MADS media & conversations:** the independent
+  [MADS runtime](docs/MADS_MEDIA_RUNTIME.md) decodes FAB and PKWARE DCL
+  compression, MADSPACK 1.0/2.0 and HAG resource trees, indexed
+  sprite/tile/depth/mask planes, DSR PCM audio and AA records to PNG/WAV —
+  plus a bounded conversation model over the CNV instruction decoder with
+  explicit external variables/RNG, breakpoints and deterministic replay. It is
+  an analysis toolkit, not a playable MADS engine; parser success, replay and
+  export round trips stay separate claims.
 
 The [format catalog](docs/FILE_FORMAT_REGISTRY.md) distinguishes a recognized
 header from an implemented decoder. Collection intake retains edition and
@@ -160,6 +177,28 @@ logical concepts, and verifies build-to-resident-byte mappings across releases�
 in [verified CivD source maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md), the nine-way
 [shared-food & strategy-Z study](docs/CIVD_SHARED_FOOD_AND_Z.md), and the
 cross-platform [Colonization DOS/Win16 comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md).
+
+## Check a capability before you bet on it
+
+A version number is not a capability report. Before committing an afternoon to an
+install — or after any environment change — ask the copy you actually have:
+
+```bash
+fdisbull capabilities                # full catalog: per-feature scope, maturity, providers
+fdisbull preflight --expectations manifest.json   # ready/missing for exactly what you need
+fdisbull --version-json              # runtime vs distribution version, build identity
+```
+
+`preflight` checks a small manifest of `skill`, `module` and `dependency` expectations
+against the imported install and reports ready/missing per item — without launching a
+backend, creating a project or touching a target. It catches the classic failure mode
+(a stale skill reference, a missing optional extra) before the work starts, not after
+an hour of debugging. `capabilities` gives the same honesty in the other direction:
+per-feature implementation scope and maturity, so an `implemented` decoder never gets
+mistaken for universal input support. Durable analysis provenance records the primary
+version line automatically. See [capability discovery](docs/CAPABILITIES.md) and
+[runtime doctor](docs/RUNTIME_DOCTOR.md) for the boundaries between discovery,
+preflight and actual acceptance testing.
 
 ## Debug the original program
 
@@ -196,6 +235,21 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   retaining explicit CPU-mode and address-space limits. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
+- **DESQview-aware debugging:** [DESQview support](docs/DESQVIEW_AND_MEMORY_SEARCH.md)
+  recognizes the documented subset of DESQview interrupt calls, inspects its
+  raw module formats, pins a hash-verified boot-image profile, and runs a
+  small cooperative guest probe to confirm live DESQview presence. Layered on
+  top: persistent scalar [memory searches](docs/DESQVIEW_AND_MEMORY_SEARCH.md)
+  across stopped snapshots — unknown/exact/range starts, change, order and
+  delta refinements — with retained candidates, guarded one-shot edits and
+  finite conditional edit rules.
+- **Execution-event searches:** [event searching](docs/EXECUTION_EVENT_SEARCH.md)
+  answers "which instructions do these two actions share?" and "does the same
+  handler see a different register for B?" by intersecting and subtracting
+  observed instruction sites and register values across stored traces, plus a
+  bounded live runner that stops when a declared instruction/register
+  predicate fires. Original traces stay as evidence; the search narrows
+  candidates without inventing function boundaries.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
@@ -356,8 +410,9 @@ modeled register boundaries with [bounded Z3 proofs](docs/BOUNDED_PROOFS.md):
   MZ/COM binaries from immutable project backings ([DOS UDC](docs/UDC_DOS.md),
   [UDC testing](docs/UDC_TESTING.md)), captures overlapping multi-entry x86
   encodings ([code backings](docs/CODE_BACKINGS.md), [native UDL/UDC](docs/NATIVE_UDL_UDC.md)),
-  and swaps pinned implementations across PE64, [Linux ELF64 and Clang C](docs/UDC_LINUX_AND_C.md),
-  or guarded [Wasm/WebGPU browser shells](docs/UDC_BROWSER_SHELL.md)
+  and swaps pinned implementations across PE64, [Linux ELF64 and Clang C](docs/UDC_LINUX_AND_C.md)
+  (module returns keep their signed byte semantics), or guarded
+  [Wasm/WebGPU browser shells](docs/UDC_BROWSER_SHELL.md)
   ([block layers](docs/UDL_BLOCK_LAYERS.md)).
 - **Multi-target bounded-memory UDC:** retargets the same word-arena memory UIL,
   contiguous cuts and selectable RNG regions—demonstrated on the recovered Snake
@@ -408,7 +463,9 @@ and consult [release status](docs/RELEASE_STATUS.md), the
 [0.29.0 notes](docs/RELEASE-0.29.0.md),
 [PR backlog](docs/PR_BACKLOG.md), [offline dependencies](docs/OFFLINE_DEPENDENCIES.md)
 and [system installation](docs/SYSTEM_INSTALLATION.md) for current qualification
-receipts and platform limits.
+receipts and platform limits. The bundled skills mirror every new workflow as it
+lands — the router plus investigation/guide skills ship in the wheel, and
+`fdisbull agent-skill --list` shows the installed set.
 
 For local development checks:
 
