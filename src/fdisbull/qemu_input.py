@@ -61,7 +61,7 @@ def _not_running(error):
 
 
 class QemuPhysicalInputMixin:
-    """Owned physical edges and finite native virtual-clock keyboard plans."""
+    """Owned physical edges and finite native virtual-clock input plans."""
 
     def _input_storage(self):
         state = getattr(self.vm, '_physical_input', None)
@@ -243,6 +243,10 @@ class QemuPhysicalInputMixin:
     def mouse_button_up(self, lease):
         return self._input_up('mouse', lease)
 
+    def mouse_button_click(self, button='left', *, hold_ms=80):
+        from .qemu_mouse_click import mouse_button_click
+        return mouse_button_click(self, button, hold_ms=hold_ms)
+
     def input_state(self):
         state = self._input_storage()
         return dict(format=FORMAT, context='machine', scope='owned VM input devices',
@@ -357,6 +361,33 @@ class QemuPhysicalInputMixin:
                 del leases[token]
         state['leases'] = leases
         schedule['lease_reservations'] = reservations
+        del state['pending'][:len(records)]
+
+    def _input_mark_click_prefix_dispatched(self, state, records, delivery):
+        """Commit a validated mouse prefix against one private paired ledger."""
+        if state['pending'][:len(records)] != records:
+            raise DebuggerError('Owned timed mouse pending prefix changed')
+        leases = deepcopy(state['leases'])
+        for record in records:
+            event = record['event']
+            data = event.get('data') if type(event) is dict else None
+            lease = leases.get(record['lease'])
+            if (lease is None or lease['device'] != 'mouse'
+                    or type(event) is not dict or set(event) != {'type', 'data'}
+                    or event['type'] != 'btn' or type(data) is not dict
+                    or set(data) != {'button', 'down'} or type(data['down']) is not bool
+                    or type(data['button']) is not str or data['button'] not in _BUTTONS
+                    or data['button'] != lease['button']):
+                raise DebuggerError('Owned timed mouse edge has no matching mouse lease')
+            if data['down']:
+                if lease['make'] != 'python_pending' or lease['release'] != 'python_pending':
+                    raise DebuggerError('Owned timed mouse make lost its pending paired release')
+                lease['make'] = delivery
+            else:
+                if lease['make'] != delivery or lease['release'] != 'python_pending':
+                    raise DebuggerError('Owned timed mouse break has no dispatched make')
+                del leases[record['lease']]
+        state['leases'] = leases
         del state['pending'][:len(records)]
 
     def _input_after_continue(self, deadline):

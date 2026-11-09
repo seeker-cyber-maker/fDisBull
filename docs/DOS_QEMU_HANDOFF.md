@@ -62,8 +62,9 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   observations and temporal event queries, explicit precise VGA retrace-model
   observations with timing generations, one-shot precise retrace waits,
   generation-checked native input at a strictly next modeled retrace edge,
-  callback-relative native single-chord keyboard presses and bounded US-layout
-  text with delivered-prefix receipts and explicit held-lease recovery,
+  callback-relative native single-chord keyboard presses, bounded US-layout
+  text and physical mouse-button pairs with delivered-prefix receipts and
+  explicit held-lease recovery,
   cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
@@ -71,7 +72,7 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  timed click helpers, guest text consumption/layout, frame-edge input,
+  coordinate/frame-bound clicks, guest text consumption/layout, frame-edge input,
   coordinate mapping and input-to-source causality
   before claiming those behaviors or depending on them in checkpoints and
   histories. Renderer completion and capture-callback delivery are now explicit
@@ -91,8 +92,11 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   than silently replaying or releasing input. The seventh native extension now
   supplies 1..64 US-layout characters with callback-relative holds/gaps and
   separate future lease reservations, preserving the same explicit recovery.
-  Full VBlank, frame completion,
-  legacy guest_ms, remaining timed helpers and
+  The eighth extension adds a separately synchronized physical button down/up
+  pair without requesting movement; a late down retains the whole requested
+  hold. Its callback evidence is separate from pointer position, packet
+  acceptance and arbitrary guest consumption. Full VBlank, frame completion,
+  legacy guest_ms, coordinate/frame clicks and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
@@ -102,6 +106,172 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: callback-relative native mouse button clicks
+
+Continued from `54c4df083d44d6070722fa1298eebbca6ef85d68` on the same source
+branch and draft MR !117, retaining target
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. This eighth optional native
+extension adds a physical button pair to slice 4. The published seven-layer
+source and its private runtime were already available and were hash-checked
+before the incremental build. No earlier native patch changed.
+
+### Public contract and timing
+
+The QEMU-only API is `mouse_button_click(button='left', *, hold_ms=80)`, JSON
+`debug-mouse-button-click` and saved-script `mouse.button-click`, advertised by
+`virtual_mouse_click`. It requires the explicit virtual-clock profile, native
+clock/input commands, `input-send-event` and `x-fdisbull-arm-mouse-click`.
+Precise retrace is unnecessary. No `GuestMouse` facade or legacy `DebugSession`
+stub is introduced. The existing `click(x, y)`, `debug-click`, `click`/
+`click-frame` and `input.mouse.click` retain their coordinate/frame contracts
+and remain unavailable through native QEMU.
+
+Accept exact `left`, `middle` or `right` strings and strict integer holds of
+1..1000 ms. Complete values and signatures validate before deadline/lock
+admission or I/O. A stopped arm requires an empty owned queue, no owned held
+leases, no bound schedule and no caller-owned project transaction. Whole-script
+capability, literal and transaction checks precede earlier effects; resolved
+values are validated again before arm.
+
+One accepted plan has exactly two separately prepared and pinned one-button
+batches, each with its own sync. Down is due 2 ms after arm. The actual down
+callback/sync completion establishes the release deadline `hold_ms` later,
+so late down delivery cannot shorten the hold. There is no movement request,
+trailing timer, implicit run/sleep/resume, rebase, subdivision or replay. The
+caller chooses bounded execution through `run`, `clock_advance` or one explicit
+`clock_sync_step`. Completing both edges does not itself stop the VM.
+
+Input API1 adds a mutually exclusive `click` descriptor beside `press`,
+`typing` and `retrace`. Accepted arms clear incompatible descriptors; refused
+arms preserve the preceding evidence and proposed token. Public evidence keeps
+`fdisbull-qemu-scheduled-input-1` with `fdisbull-mouse-click-1`: button, hold,
+delivered/undelivered counts, a shared paired lease, immutable step identity,
+assigned deadlines, actual callbacks and per-edge lateness. Public `edge_count`
+and native `event-count` stay two. The first deadline remains fixed; top-level
+lateness is `None`, and top-level dispatch exists only after full completion,
+equal to the final callback and terminal time. Terminal evidence freezes.
+
+### Stops, ownership and bounded failure
+
+Native epoch/profile, pending-stop, equal/reached budget and pinned-handler
+checks precede each edge. The first actual stop cancels the undispatched suffix.
+The host validates the full native plan, prefix and owned cutoff before
+committing a candidate mouse ledger; the keyboard-specific reconciliation
+helper is unchanged. An interrupted down remains an owned hold. A bound partial
+click refuses further execution, new input and ordinary/retrace rescheduling.
+
+`input_cancel_pending()` discards only the unsent suffix, retains delivered
+holds and clears their pending releases. The caller explicitly calls
+`mouse_button_up(lease)` and chooses release execution. No cleanup release or
+suffix replay is synthesized. Arm/prefix/result journals survive project
+reopening as evidence; reopening does not restore the live owner.
+
+Direct arm has one 1000 ms host allowance across lock admission, native I/O and
+persistence, intersected with tighter incoming bounds. A pre-arm expiry leaves
+a valid stopped owner. Accepted or uncertain late arms, malformed/native failed
+evidence and persistence failures retain available evidence and close ownership
+without replay. The wrapper also closes a late accepted result after its final
+outer check. Input-touch script failure retains the existing close behavior.
+
+### Fresh local verification
+
+| Local lane | Result |
+| --- | --- |
+| Focused host/public integration | 210 passed; 0 skipped |
+| New native IRQ12 click matrix | 16 passed; 0 skipped |
+| Source host regressions | 2328 passed; 9 skipped |
+| Source combined native | 125 passed; 0 skipped |
+| Fresh installed host regressions | 1405 passed; 9 skipped |
+| Fresh installed combined native | 125 passed; 0 skipped |
+| Installed retained DOSBox | 5 passed; 0 skipped |
+
+The source and installed host lanes retain the nine declared optional machine
+prerequisite skips. The installed lane excludes two checkout-only files and
+deselects two source-only nodes; those are exercised in the source lane. All
+native and retained DOSBox cases execute with zero skips. These are finite
+local Linux receipts, with unchanged recorded inputs and explicit time/storage
+bounds. They are not hosted pipeline results.
+
+The 16-case click matrix independently compares complete IRQ12 packets after
+an authored guest reset, stream-mode setup and polled zero-state check:
+left `09 00 00`, right `0a 00 00`, middle `0c 00 00`, followed by release
+`08 00 00`. It exercises busy/HLT loops, the original stop before down and after
+a complete down packet, explicit recovery, both equal-budget command-arm orders,
+seven-layer refusal with ordinary mouse input retained, JSON/script/journal/
+reopen and descriptor transitions, and one HLT clock-sync step with the default
+80 ms hold. Only the down boundary covers both actual timer insertion orders;
+the release timer is created after an already armed budget. Strict native
+argument/token checks and inclusive hold bounds are also exercised.
+
+The native tests observe guest packets only in that deliberately initialized
+fixture. Existing accumulators or external button state can affect arbitrary
+packets; disabled/remote devices and FIFO capacity are not normalized. Callback
+completion does not establish arbitrary FIFO acceptance, INT33 semantics,
+cursor position, application click recognition or frame completion. Dynamic
+handler replacement between edges is checked by the existing pinned-handler
+code path but is not exercised by this click-specific native matrix.
+
+The retained installed DOSBox witnesses cover keyboard chord/text and restore,
+protected/paged mouse queue versus actual program consumption and explicit
+release, scene action/outcome/restart, and an execution-event stop before effect.
+The old seven-layer QEMU refuses only the new helper while retaining keyboard
+press/type and ordinary scheduled mouse input.
+
+### Reproduction, packages and retained observations
+
+The eighth patch is
+`23f38d65391587b0be11af021fc3858872475d25a03719844b486719eee154d9`.
+Forward/reverse application used zero fuzz/offset and restored all 26 prior
+native members; full QAPI schema/generation produced the expected command and
+432 generated files. The dedicated mouse dispatcher leaves the keyboard
+dispatcher byte-identical. Root application and compilation independently
+verified the 26-member layer state and all seven prerequisite patch hashes.
+The incremental candidate build completed in 3.812 seconds with binary SHA-256
+`daac51e3d63d24dad8e39b8df5d1c6c843411d962fa1d37527fa25a11dbf50f5`.
+The seven-layer refusal witness is
+`07322555c94ac7acfb6e5fcf0fcc6af42c4742fe169095854fa8f86bf68b9368`.
+Six- and five-layer binaries remain selected for the existing keyboard legacy
+checks. The prior section records the unchanged private toolchain, firmware,
+FreeDOS prepared image and retained DOSBox provenance.
+
+The fresh private wheel has 641 exact core files, with 626
+byte-identical copied test/support files. Installed lanes use that target
+outside the checkout and assert import origins. The source selectors now include
+the eighth patch, manifest and contract. The final source-distribution/tool-ZIP
+gate compares 1605 authored payload entries and every one of this
+slice's 26 changed files, including this final handoff, before publication.
+No private runtime, vendor media, project database or original game bytes enter
+the source artifacts. No shared installation or release is performed.
+
+Retained evidence includes the intended initial missing public-route and host
+method failures. The first focused host attempt had one pass and 108 fixture
+setup errors because its target store was beneath Git-managed `/workspace`;
+correcting that private store location to a protected `/tmp` directory and
+expanding the selection to include the public tests yielded 147 passes. Independent review then identified invalid direct values reaching
+lock admission. Four busy/expired admission regressions failed for the intended
+reason before the pure mouse validator was moved ahead of admission; the fresh
+210-case integrated lane passed afterward. The first broad source lane had no
+assertion failures (2311 passed) but lacked runtime variables for 17 embedded
+native cases; its 26 skips were rejected by the wrapper. A fresh full lane with
+the declared runtime executes those cases and retains only the nine allowed
+machine/kernel prerequisites. No native or package result is
+inferred from those initial failures. Older unresolved observations remain
+verbatim in the historical log below.
+
+Private evidence lives under `mouse-click-runtime`, `mouse-click-native-work`
+and `mouse-click-validation`. Each test lane records commands, exit/XML/log
+results and before/after source/runtime hashes; material growth requires a
+3 GiB allowance above a 20 GiB free-space reserve. Source/package verification
+and publication compare the exact final tree rather than a nearby revision.
+The configured Mac mirrors remain unavailable in this Linux workspace.
+
+`timed_input`, `absolute_mouse`, `guest_time_control` and
+`completed_guest_frames` stay false. DOSBox remains the default and all 127
+promotion qualifications remain open. Next work remains coordinate/frame clicks,
+INT33 mapping and arbitrary consumption, full VBlank/frame semantics, additional
+audio devices, real QEMM/DESQview/game campaigns, then dependent checkpoint and
+history contracts. The full migration slice is still partial.
 
 ## 2026-11-09: callback-relative native keyboard text
 

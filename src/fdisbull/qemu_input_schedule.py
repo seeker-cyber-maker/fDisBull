@@ -16,6 +16,7 @@ from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
 from .qemu_input import MAX_PENDING_EDGES
 from .qemu_keyboard_press import press_receipt, validate_native_press
 from .qemu_keyboard_type import typing_receipt, validate_native_typing
+from .qemu_mouse_click import click_receipt, validate_native_click
 from .qemu_retrace import RETRACE_COMMANDS, validate_retrace_snapshot
 
 
@@ -77,7 +78,12 @@ def _invalid(owner, message):
 
 
 def _timed_mode(schedule):
-    return next((mode for mode in ('press', 'typing') if schedule and mode in schedule), None)
+    return next((mode for mode in ('press', 'typing', 'click') if schedule and mode in schedule), None)
+
+
+def _timed_label(schedule):
+    mode = _timed_mode(schedule)
+    return 'mouse click' if mode == 'click' else 'keyboard text' if mode == 'typing' else 'keyboard press'
 
 
 def _pending_records(schedule):
@@ -191,6 +197,7 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
     try:
         validate_native_press(value, expected)
         validate_native_typing(value, expected)
+        validate_native_click(value, expected)
     except (ValueError, KeyError, TypeError) as error:
         _invalid(owner, str(error))
     semantic_cancel = _native_retrace_schedule(owner, value, expected)
@@ -204,6 +211,7 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
             exact.add('dispatch-ns')
         if set(value) != exact:
             _invalid(owner, 'Native retrace-input receipt has unexpected fields' if mode == 'retrace'
+                     else 'Native timed mouse receipt has unexpected fields' if mode == 'click'
                      else 'Native timed keyboard receipt has unexpected fields')
     # This is the budget owned by this execution, never a retained historical
     # receipt from an earlier run. Check it before any lease transition.
@@ -221,7 +229,8 @@ def _native_schedule(owner, value, clock, expected, *, owned_budget=None, after_
             _invalid(owner, 'Native retrace callback reached the owned clock budget cutoff')
         if timed_mode and any(step.get('dispatch-ns', -1) >= owned_budget['budget-deadline-ns']
                               for step in value[timed_mode]['steps']):
-            _invalid(owner, 'Native timed keyboard edge reached the owned clock budget cutoff')
+            _invalid(owner, 'Native timed mouse edge reached the owned clock budget cutoff' if timed_mode == 'click'
+                     else 'Native timed keyboard edge reached the owned clock budget cutoff')
     if (after_stop and expected['bound'] and value['state'] == 'cancelled'
             and not semantic_cancel and value['terminal-ns'] != value['virtual-ns']):
         _invalid(owner, 'Native input cancellation differs from its first owned stop time')
@@ -277,6 +286,8 @@ class QemuScheduledInputMixin:
             result['press'] = press_receipt(native, schedule)
         if schedule is not None and schedule.get('typing') is not None:
             result['typing'] = typing_receipt(native, schedule)
+        if schedule is not None and schedule.get('click') is not None:
+            result['click'] = click_receipt(native, schedule)
         return result
 
     def _input_schedule_read(self, clock, *, owned_budget=None, after_stop=False):
@@ -320,10 +331,13 @@ class QemuScheduledInputMixin:
             if mode:
                 count = native[mode]['dispatched-count']
                 if count < schedule['applied_count']:
-                    _invalid(self, 'Owned timed keyboard applied prefix regressed')
+                    _invalid(self, 'Owned timed mouse applied prefix regressed' if mode == 'click'
+                             else 'Owned timed keyboard applied prefix regressed')
                 records = schedule['records'][schedule['applied_count']:count]
                 if mode == 'typing':
                     self._input_mark_text_prefix_dispatched(state, schedule, records, 'native_dispatched')
+                elif mode == 'click':
+                    self._input_mark_click_prefix_dispatched(state, records, 'native_dispatched')
                 else:
                     self._input_mark_prefix_dispatched(state, records, 'native_dispatched')
                 schedule['applied_count'] = count
@@ -372,8 +386,8 @@ class QemuScheduledInputMixin:
         validate_input_delay(delta_ns)
         state = self._input_storage()
         if self._input_schedule_bound() and _timed_mode(state['schedule']):
-            kind = 'text' if 'typing' in state['schedule'] else 'press'
-            raise ValueError('Timed keyboard ' + kind + ' requires explicit input_cancel_pending; its suffix cannot be rescheduled')
+            raise ValueError('Timed ' + _timed_label(state['schedule']) +
+                             ' requires explicit input_cancel_pending; its suffix cannot be rescheduled')
         if not state['pending']:
             raise ValueError('Queue physical input before scheduling a native batch')
         # One mouse sync represents its final button state, so two transitions
@@ -420,8 +434,8 @@ class QemuScheduledInputMixin:
             raise ValueError('Retrace input scheduling requires the native input/retrace extensions and explicit virtual/precise profiles')
         state = self._input_storage()
         if self._input_schedule_bound() and _timed_mode(state['schedule']):
-            kind = 'text' if 'typing' in state['schedule'] else 'press'
-            raise ValueError('Timed keyboard ' + kind + ' requires explicit input_cancel_pending; its suffix cannot be rescheduled')
+            raise ValueError('Timed ' + _timed_label(state['schedule']) +
+                             ' requires explicit input_cancel_pending; its suffix cannot be rescheduled')
         if not state['pending']:
             raise ValueError('Queue physical input before scheduling a retrace batch')
         buttons = [record['event']['data']['button'] for record in state['pending']

@@ -110,7 +110,9 @@ separately inspect IRQ1/scancode memory; they do not establish generic game
 consumption or completed drawing.
 
 `timed_input`, `guest_time_control` and `completed_guest_frames` remain false.
-Guest text consumption and layout, timed mouse clicks, frame-edge input and
+The optional eighth [mouse-click extension](../qemu-mouse-click/README.md)
+adds a timed physical button pair without requesting movement. Guest text
+consumption and layout, coordinate/frame-bound clicks, frame-edge input and
 generic DOSBox timing parity still need their own qualification. Migration remains blocked after native
 input use, and reset/profile loss invalidates the scheduler.
 

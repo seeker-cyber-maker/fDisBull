@@ -90,13 +90,21 @@ observed PSP, source map and exit/TSR lifecycle. Read the maintained
 and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.
 The [timing guide](DOS_QEMU_TIMING.md) covers explicit host clock auto-sync,
-modeled retrace waits, generation-checked input at the next retrace edge and
-native single-chord `keyboard.press` under `virtual_keyboard_press`, and
-bounded US-layout `keyboard.type` under `virtual_keyboard_type`.
+modeled retrace waits, generation-checked input at the next retrace edge,
+native single-chord `keyboard.press` under `virtual_keyboard_press`,
+bounded US-layout `keyboard.type` under `virtual_keyboard_type`, and physical
+`mouse_button_click(button='left', *, hold_ms=80)` under `virtual_mouse_click`.
 Inspect each capability before using it. Input arms remain passive and need
 explicit bounded execution; an interrupted press retains its delivered prefix
 and any held leases for explicit recovery. Text entry uses the same recovery
 policy, with separate lifetimes for repeated keys and gaps between characters.
+The eighth native patch adds the mouse pair: down after 2 ms, then a separately
+synchronized release `hold_ms` after the actual down callback. Use JSON
+`debug-mouse-button-click` or script `mouse.button-click`; an explicit
+`clock_sync_step()` can supply one bounded execution attempt. No movement is
+requested, but prior mouse accumulators and external button state can affect
+packets. Coordinate `click(x, y)` and `click-frame` remain unsupported on native
+QEMU; all 127 default-promotion qualifications stay open.
 
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).

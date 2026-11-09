@@ -28,6 +28,7 @@ from .qemu_input import QemuPhysicalInputMixin
 from .qemu_input_schedule import QemuScheduledInputMixin, INPUT_SCHEDULE_COMMANDS, INPUT_RETRACE_COMMANDS
 from .qemu_keyboard_press import KEYBOARD_PRESS_COMMANDS
 from .qemu_keyboard_type import KEYBOARD_TYPE_COMMANDS
+from .qemu_mouse_click import MOUSE_CLICK_COMMANDS, validate_mouse_click_parameters
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
@@ -415,7 +416,8 @@ def machine_run_operation(function):
     return invoke
 
 
-def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None):
+def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None,
+                            parameter_validator=None):
     """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
@@ -430,6 +432,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         from .operation_budget import request_deadline
         arguments=signature.bind(self,*args,**kwargs)
         arguments.apply_defaults()
+        if parameter_validator is not None:
+            parameter_validator(**{key:value for key,value in arguments.arguments.items() if key!='self'})
         bound=request_deadline(self,arguments.arguments.get('timeout_ms',default_timeout_ms))
         vm=self.vm
         def limits():
@@ -466,7 +470,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     # Keep a live synchronization mapping from remaining active
                     # after that failure, while retaining its observed receipt.
                     self._clock_sync_outer_expired(result,error)
-                elif function.__name__ in ('input_schedule_retrace','keyboard_press','keyboard_type'):
+                elif function.__name__ in ('input_schedule_retrace','keyboard_press','keyboard_type','mouse_button_click'):
                     # The passive arm may already be accepted and journaled.
                     # An expired return must not leave a usable live timer.
                     self._input_invalidate(label+' arm exceeded its host deadline; input must not be replayed')
@@ -525,6 +529,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     mouse_move_relative=machine_io_operation(QemuPhysicalInputMixin.mouse_move_relative)
     mouse_button_down=machine_io_operation(QemuPhysicalInputMixin.mouse_button_down)
     mouse_button_up=machine_io_operation(QemuPhysicalInputMixin.mouse_button_up)
+    mouse_button_click=machine_trace_operation(QemuPhysicalInputMixin.mouse_button_click,
+        label='Timed mouse button click',default_timeout_ms=1000,
+        parameter_validator=validate_mouse_click_parameters)
     input_state=machine_io_operation(QemuPhysicalInputMixin.input_state)
     input_cancel_pending=machine_io_operation(QemuPhysicalInputMixin.input_cancel_pending,close_on_timeout=True)
     input_schedule=machine_io_operation(QemuScheduledInputMixin.input_schedule,close_on_timeout=True)
@@ -551,6 +558,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             virtual_keyboard_press=(virtual and KEYBOARD_PRESS_COMMANDS | INPUT_SCHEDULE_COMMANDS
                 | VIRTUAL_CLOCK_COMMANDS | {'input-send-event'} <= getattr(vm,'qmp_commands',frozenset())),
             virtual_keyboard_type=(virtual and KEYBOARD_TYPE_COMMANDS | INPUT_SCHEDULE_COMMANDS
+                | VIRTUAL_CLOCK_COMMANDS | {'input-send-event'} <= getattr(vm,'qmp_commands',frozenset())),
+            virtual_mouse_click=(virtual and MOUSE_CLICK_COMMANDS | INPUT_SCHEDULE_COMMANDS
                 | VIRTUAL_CLOCK_COMMANDS | {'input-send-event'} <= getattr(vm,'qmp_commands',frozenset())),
             retrace_input_schedule=(virtual
                 and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
@@ -935,7 +944,7 @@ class MachineDebugSession(MachineContext):
                 'display-start','display-observe','display-stop','capture-display',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
-                'mouse.move-relative','mouse.button-down','mouse.button-up','input-state','input-cancel-pending',
+                'mouse.move-relative','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',
                 'input-schedule','input-schedule-observe','input-schedule-retrace',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):

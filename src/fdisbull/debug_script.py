@@ -27,6 +27,7 @@ OPERATIONS = {
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
+    'mouse.button-click':'mouse_button_click',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
     'input-schedule':'input_schedule','input-schedule-observe':'input_schedule_observe',
     'input-schedule-retrace':'input_schedule_retrace',
@@ -351,6 +352,16 @@ def validate_script(script, *, session=None):
                     if op=='mouse.button-down':
                         if params['button'] not in ('left','middle','right'):
                             raise ValueError('Unknown physical mouse button')
+                    if op=='mouse.button-click':
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_mouse_click'):
+                            raise ValueError('Timed physical mouse click requires its native extension and explicit virtual clock profile')
+                        from .qemu_mouse_click import validate_mouse_click_parameters
+                        # A result reference in one field cannot hide another
+                        # field's invalid literal before earlier script effects.
+                        samples={'button':'left','hold_ms':80}
+                        checked={key:(samples[key] if isinstance(value,str) and value.startswith('$') else value)
+                                 for key,value in params.items()}
+                        validate_mouse_click_parameters(**checked)
                     if (op in ('mouse.button-up','keyboard.key-up')
                             and (backend or actual) in ('qemu-machine','qemu-dos')):
                         lease=params['lease']
@@ -379,7 +390,7 @@ def validate_script(script, *, session=None):
             and session.project.db.in_transaction):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
-        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.button-down',
+        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.button-down','mouse.button-click',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
@@ -504,6 +515,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
                 from .qemu_keyboard_type import validate_keyboard_type_parameters
                 validate_keyboard_type_parameters(**params)
+            if step['op']=='mouse.button-click':
+                from .qemu_mouse_click import validate_mouse_click_parameters
+                validate_mouse_click_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
                              'input-schedule-retrace',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',

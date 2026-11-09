@@ -264,8 +264,9 @@ discards only unsent transitions; accepted holds still require explicit
 release. Closing invalidates leases without pretending release code ran.
 Limits: 256 pending edges, 64 leases and relative deltas -32767..32767.
 Pixel clicks and frame-edge timing remain unsupported. The separate
-`virtual_keyboard_press` and `virtual_keyboard_type` capabilities below supply
-one timed native chord or bounded US-layout text.
+`virtual_keyboard_press`, `virtual_keyboard_type` and `virtual_mouse_click`
+capabilities below supply one timed native chord, bounded US-layout text or a
+physical mouse-button pair.
 Make and break in one batch specify order, not a hold duration.
 
 JSON routes are `debug-keyboard-down/up/state`, `debug-mouse-move-relative`,
@@ -468,7 +469,7 @@ keyboard lease with a separately chosen execution. No automatic release/replay.
 The direct arm has a 1000 ms host bound and inherits tighter script/transport
 bounds. Uncertain outcomes or evidence failures close the VM with the available
 native/stop evidence retained. Native callbacks do not establish guest FIFO
-acceptance or consumption. Timed clicks and completed frames remain
+acceptance or consumption. Coordinate clicks and completed frames remain
 unqualified; timed_input, guest_time_control and completed_guest_frames stay false.
 
 ## Queue bounded US-layout text
@@ -502,6 +503,70 @@ lease with separately chosen execution. Cancellation never releases or replays.
 The same 1000 ms direct-arm host allowance, inherited deadlines, script
 preflight and close-on-uncertainty behavior apply as for a press. Native
 callback evidence does not establish guest text consumption or completed frames.
+
+## Queue one timed physical mouse click
+
+Inspect `virtual_mouse_click`, then use the QEMU-only
+`mouse_button_click(button='left', *, hold_ms=80)`, JSON
+`debug-mouse-button-click` or script `mouse.button-click`. Require the explicit
+virtual clock, native clock/input commands, `input-send-event` and the eighth
+patch's `x-fdisbull-arm-mouse-click`; precise retrace is unnecessary. Keep all
+seven earlier patches in order. A seven-patch executable refuses the helper
+and retains its existing physical/keyboard operations.
+
+Admit exact left/middle/right strings and strict integer holds of 1..1000 ms.
+Reject booleans, coercions and extra positional arguments. Require a stopped
+owner, empty queue, no owned held leases, no bound schedule and no caller-owned
+project transaction. Arm one down/up pair passively: down after 2 ms, up
+hold_ms after the actual down callback. Each edge owns a separate batch and
+sync; never combine both under one mouse sync. There is no trailing timer.
+Choose a later bounded run, clock advance or explicit clock-sync step yourself.
+
+For a caller-selected sync cooperation point:
+
+```python
+debug.clock_sync_start(max_lag_ns=250_000_000, max_wait_ns=250_000_000)
+armed = debug.mouse_button_click('right', hold_ms=17)
+# Perform the intended bounded host work before choosing this cooperation point.
+correction = debug.clock_sync_step(timeout_ms=1000)
+delivery = debug.input_schedule_observe()
+debug.clock_sync_stop()
+```
+
+Inspect both receipts. A sync step can leave the pair armed without execution,
+finish both callbacks, or stop before a deadline and cancel the suffix. An
+equal/reached budget wins before each edge. Never repeat corrections to hide
+an interruption or rebase the mapping implicitly.
+
+Read the `click` member (`fdisbull-mouse-click-1`) of the ordinary scheduled-input
+receipt. Inspect both step records, shared lease, delivered prefix, individual
+deadlines/dispatch/lateness and immutable terminal evidence. Only the prefix
+and immediate next edge have deadlines. Top-level lateness_ns is None;
+dispatch_ns appears only after both edges and equals final dispatch/terminal.
+Click is mutually exclusive with press, typing and retrace; refused arms keep
+the old receipt and token available. Reopened evidence does not revive ownership.
+
+The first actual stop cancels the suffix and can leave an owned delivered down.
+Another run or new/converted schedule refuses while that click remains bound.
+Call `input_cancel_pending()` to discard the unsent suffix, inspect its
+`retained_dispatched_holds`, and explicitly call `mouse_button_up(lease)` for
+each retained mouse hold. Choose release execution separately. Cancellation
+clears the pending release without releasing or replaying input itself.
+
+Preserve one 1000 ms direct-arm bound across lock admission, I/O and persistence,
+intersecting tighter incoming bounds. Check whole-script capabilities, literals
+and transactions before earlier mutations; revalidate resolved arguments before
+arm. Pre-arm admission failures leave valid ownership. Accepted/uncertain late
+arms, malformed native evidence and persistence failures close without replay.
+
+Request no movement, but do not infer zero-delta packets: prior accumulators
+or external button state can affect packets. Disabled/remote devices and full
+queues do not establish delivery. FIFO acceptance, arbitrary guest consumption,
+cursor position and INT33 remain unknown. There is no GuestMouse facade or
+legacy DebugSession stub. Preserve native refusals for coordinate `click(x, y)`,
+`debug-click`, `click-frame` and `input.mouse.click`. General timed_input,
+absolute_mouse, guest_time_control and completed_guest_frames stay false;
+DOSBox stays the default and all 127 promotion gates remain open.
 
 ## Observe the explicit VGA retrace model
 

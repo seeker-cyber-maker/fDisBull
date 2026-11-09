@@ -205,6 +205,7 @@ METHODS = {
     "debug-mouse-move-relative": "Queue owned physical PS/2 movement; run,dx,dy (dispatches during bounded QEMU run)",
     "debug-mouse-button-down": "Queue a physical mouse make and own its lease; run,button",
     "debug-mouse-button-up": "Queue the matching physical mouse release; run,lease",
+    "debug-mouse-button-click": "Passively arm a native timed physical button click without requested motion; run,[button,hold_ms] (requires virtual_mouse_click; caller chooses execution)",
     "debug-input-state": "Observe owned QEMU pending edges and held leases; run (not guest consumption)",
     "debug-input-schedule": "Arm the pending physical batch at a native virtual delay without running; run,delta_ns",
     "debug-input-schedule-observe": "Read the owned native input dispatch/cancellation receipt; run (not guest consumption)",

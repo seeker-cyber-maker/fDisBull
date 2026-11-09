@@ -293,7 +293,7 @@ refused. After full completion, a new press can be admitted normally.
 The separate host clock controller can supply that explicitly requested bounded
 execution through `clock_sync_step()`. Its fixed mapping, drift latch and
 first-stop policy still apply; input never advances the clock or rebases the
-mapping by itself. Timed mouse clicks remain unavailable, and `timed_input`,
+mapping by itself. Coordinate clicks remain unavailable, and `timed_input`,
 `guest_time_control` and `completed_guest_frames` stay false.
 See the [native press contract](../native/qemu-keyboard-press/README.md).
 
@@ -350,6 +350,115 @@ cooperation point. For long text, choose an appropriate bounded execution:
 the suffix; the helper never divides the string into hidden runs. Callback
 evidence remains separate from guest text consumption and completed frames.
 See the [native text contract](../native/qemu-keyboard-type/README.md).
+
+### Queue one timed physical mouse click
+
+With the eighth native patch and `virtual_mouse_click`, use the QEMU-only
+`mouse_button_click(button='left', *, hold_ms=80)`. The explicit virtual-clock
+profile, native clock/input commands, `input-send-event` and
+`x-fdisbull-arm-mouse-click` are required; precise retrace is unnecessary.
+A seven-patch executable refuses this helper while keeping its separately
+advertised physical input and keyboard operations.
+
+Accept only exact strings `left`, `middle` and `right`, and a strict integer
+`hold_ms` from 1 through 1000. Booleans, coerced values, wheel/side/extra buttons
+and additional positional arguments are rejected. Admission requires a stopped
+owner, empty input queue, no owned held leases, no bound schedule and a project
+outside a caller-owned transaction.
+
+```python
+armed = debug.mouse_button_click('left', hold_ms=17)
+# Arming is passive. This caller-chosen budget permits both edges and later IRQs.
+execution = debug.clock_advance(30_000_000, timeout_ms=1000)
+click = execution['input_delivery']['click']
+print(click['dispatched_count'], click['undispatched_count'])
+```
+
+One arm prepares two separate button batches. Down is due 2 ms after arm; up
+is due `hold_ms` after the actual down callback and sync completion. The release
+deadline does not exist until that callback completes, so a late down cannot
+shorten the requested hold. Each edge has its own sync: a down/up pair under
+one mouse sync could collapse the press. There is no requested movement,
+trailing timer, implicit run/sleep/resume, rebase or replay.
+
+The base receipt remains `fdisbull-qemu-scheduled-input-1`. Its `click` member
+uses `fdisbull-mouse-click-1` and retains the button, hold, dispatched and
+undispatched counts, and exactly two steps. Each step retains its sequence,
+shared paired lease, button, direction, relative delay, assigned deadline,
+actual dispatch and individual lateness. Only the delivered prefix and next
+edge have deadlines. Public `edge_count` stays two (native `event-count` remains
+two), `deadline_ns` stays the first deadline and `lateness_ns` is `None`.
+Top-level `dispatch_ns` exists
+only after full completion and equals the final callback/terminal time.
+
+The `click`, `press`, `typing` and `retrace` descriptors are mutually exclusive.
+Every accepted mode clears incompatible descriptors; refused arms preserve
+the previous receipt and proposed token. Terminal evidence freezes. Existing
+journal routes retain arm, prefix and result evidence across project reopening;
+reopening does not reconnect an input owner or replay a callback.
+
+Pending stops and reached/equal clock-budget deadlines win before each edge.
+The first actual VM stop cancels the remaining suffix; completing both edges
+does not itself stop the VM. A cancelled click can have one delivered down
+despite top-level `dispatch_ns=None`. Inspect its prefix and owned leases.
+While the cancelled click remains bound, another run or new/converted schedule
+is refused. To resolve it explicitly:
+
+```python
+cancelled = debug.input_cancel_pending()
+for lease in cancelled['retained_dispatched_holds']:
+    debug.mouse_button_up(lease)
+# These explicit releases are queued. Choose their bounded execution separately.
+```
+
+Cancellation discards the unsent suffix, retains a delivered hold and clears
+its pending release. It never releases, replays or neutralizes input by itself.
+
+The same click can instead be driven by one explicit host-sync cooperation
+point, with an independently admitted `host_clock_sync` mapping:
+
+```python
+mapping = debug.clock_sync_start(
+    tolerance_ns=1_000_000,
+    max_lag_ns=250_000_000,
+    max_wait_ns=250_000_000,
+)
+armed = debug.mouse_button_click('middle', hold_ms=17)
+# Do the intended bounded host work before this caller-selected cooperation point.
+correction = debug.clock_sync_step(timeout_ms=1000)
+delivery = debug.input_schedule_observe()
+debug.clock_sync_stop()
+```
+
+Inspect both `correction` and `delivery`. A step can observe or wait without
+running the guest, leaving the click armed. If it advances only as far as an
+edge deadline or stops earlier, it cancels the remaining suffix; it does not
+extend its budget to finish the click. A sufficiently long ordinary advance
+can dispatch both edges. No second correction, automatic rebase or cleanup
+release follows. Resolve a cancelled click explicitly before further execution.
+
+JSON uses `debug-mouse-button-click` with `run`, optional `button` and
+`hold_ms`; saved scripts use `mouse.button-click`. Whole-script capability,
+signature, literal and transaction checks precede earlier mutations; resolved
+arguments validate before arm. One 1000 ms direct-arm host bound covers lock
+admission, I/O and evidence persistence and intersects tighter incoming bounds.
+A pre-arm admission failure leaves a valid stopped owner. Accepted/uncertain
+late arms, malformed native evidence and persistence failure close the owner
+with available evidence and no replay; input-touch script failures also close.
+
+No cursor location is selected or established. Pre-existing mouse accumulators
+can be flushed by synchronization, and external button state can affect packet
+bits. Disabled/remote device state and FIFO capacity are not normalized.
+Callback/sync completion does not establish packet acceptance, arbitrary guest
+consumption, INT33 behavior or an application click. Zero-delta packets require
+independent evidence from a controlled initialized fixture.
+
+There is no `GuestMouse` facade or legacy `DebugSession` stub. `click(x, y)`,
+`debug-click`, `click`/`click-frame` and `input.mouse.click` keep their
+coordinate/frame contracts and native refusal. General `timed_input`,
+`absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false;
+DOSBox stays the default and all 127 promotion qualifications remain open.
+See the [native click contract](../native/qemu-mouse-click/README.md).
 
 ### Clock synchronization and retrace waits
 

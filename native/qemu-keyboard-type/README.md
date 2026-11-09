@@ -111,8 +111,10 @@ Authored native tests independently inspect IRQ1/scancode memory; their selected
 guest observations do not qualify arbitrary games or alternate keyboard layouts.
 
 `timed_input`, `guest_time_control` and `completed_guest_frames` remain false.
-Timed mouse clicks, coordinate mapping, frame-edge input, full VBlank/frame
-semantics and broad DOSBox timing parity retain separate gates. Migration after
+The optional eighth [mouse-click extension](../qemu-mouse-click/README.md)
+adds a timed physical button pair without requesting movement. Coordinate and
+frame-bound clicks, frame-edge input, full VBlank/frame semantics and broad
+DOSBox timing parity retain separate gates. Migration after
 input use remains blocked; reset/profile loss invalidates the scheduler.
 
 See the [timing guide](../../docs/DOS_QEMU_TIMING.md) and

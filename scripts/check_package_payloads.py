@@ -28,6 +28,7 @@ SOURCE_SUPPORT = (
     "native/qemu-input-retrace/",
     "native/qemu-keyboard-press/",
     "native/qemu-keyboard-type/",
+    "native/qemu-mouse-click/",
     "tests/",
     "scripts/",
     ".github/workflows/",

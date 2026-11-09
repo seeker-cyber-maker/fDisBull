@@ -1326,7 +1326,8 @@ class DebugWorkspace:
                         'debug-clock-sync-start':'clock_sync_start','debug-clock-sync-observe':'clock_sync_observe',
                         'debug-clock-sync-step':'clock_sync_step','debug-clock-sync-stop':'clock_sync_stop',
                         'debug-mouse-move-relative':'mouse_move_relative','debug-mouse-button-down':'mouse_button_down',
-                        'debug-mouse-button-up':'mouse_button_up','debug-input-state':'input_state',
+                        'debug-mouse-button-up':'mouse_button_up','debug-mouse-button-click':'mouse_button_click',
+                        'debug-input-state':'input_state',
                         'debug-input-cancel-pending':'input_cancel_pending',
                         'debug-input-schedule':'input_schedule','debug-input-schedule-observe':'input_schedule_observe',
                         'debug-input-schedule-retrace':'input_schedule_retrace'})

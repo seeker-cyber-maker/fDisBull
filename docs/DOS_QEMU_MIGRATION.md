@@ -407,9 +407,11 @@ child returns to its parent. Limits are 256 pending edges, 64 active leases,
 and relative axis deltas within -32767..32767.
 
 Pending input blocks `step()`, traces and unbounded `resume()` before execution;
-use a bounded `run()` or cancel it. Timed presses/text, pixel clicks and
-frame-edge input are refused until their clock/driver/frame contracts exist.
-Queueing make and break together specifies ordering, not a held duration.
+use a bounded `run()` or cancel it. Pixel clicks and frame-edge input remain
+refused. Separate virtual-clock extensions below provide timed keyboard
+chords/text and physical button pairs; their capability checks are explicit.
+Queueing make and break together in the ordinary path specifies ordering,
+not a held duration.
 
 The retained JSON server exposes `debug-keyboard-down/up/state`,
 `debug-mouse-move-relative`, `debug-mouse-button-down/up`, `debug-input-state`
@@ -636,8 +638,8 @@ arm. Uncertain arm, cancellation, dispatch, deadline reconciliation or evidence
 persistence closes the VM without replay. `timed_input=False`,
 `guest_time_control=False` and `completed_guest_frames=False` remain explicit:
 legacy `guest_ms`, timed text, frame presses and pixel/INT33 semantics are
-not supplied by this batch scheduler. Separate keyboard extensions supply
-one timed chord or bounded US-layout text through the existing routes.
+not supplied by this batch scheduler. Separate extensions supply one timed
+keyboard chord, bounded US-layout text or a physical mouse-button pair.
 The separate opt-in [host clock controller](DOS_QEMU_TIMING.md)
 preserves these first-stop, explicit-resolution and unknown-consumption rules.
 
@@ -656,7 +658,7 @@ prefix and owned held leases; cancelling the suffix never releases those holds.
 A partially delivered chord cannot be replayed or converted into a batch.
 Explicitly cancel pending steps, then explicitly release retained leases.
 See [the workflow and recovery contract](DOS_QEMU_TIMING.md#queue-one-timed-keyboard-press).
-Timed clicks and full DOSBox input parity remain unqualified.
+Coordinate clicks and full DOSBox input parity remain unqualified.
 
 ### Queue bounded US-layout text
 
@@ -675,6 +677,40 @@ suffix and retains delivered holds for explicit cancellation and release.
 Future reservations do not occupy active held-key slots. Legal maximum timing
 can exceed the 60-second clock-advance bound; execution is never split or
 resumed automatically. See the [text workflow](DOS_QEMU_TIMING.md#queue-bounded-us-layout-text).
+
+### Queue one timed physical mouse click
+
+The optional eighth [native mouse-click patch](../native/qemu-mouse-click/README.md)
+follows the exact seven earlier patches and adds `virtual_mouse_click`. Use
+`mouse_button_click(button='left', *, hold_ms=80)`, JSON
+`debug-mouse-button-click` or script `mouse.button-click`. Require the explicit
+virtual clock and discovered native clock/input/mouse-click commands; precise
+retrace is unnecessary. Seven-patch builds refuse this helper while preserving
+their existing physical input and keyboard capabilities.
+
+Admit only exact left/middle/right names and strict integer holds of 1..1000 ms.
+The owner must be stopped with an empty owned queue, no owned held leases,
+no bound schedule and no caller-owned project transaction. One passive arm
+prepares two separately synchronized batches: down after 2 ms, up `hold_ms`
+after the actual down callback. Choose a later bounded run, clock advance or
+one explicit `clock_sync_step()`; arming never executes, rebases or replays.
+
+The `click` receipt preserves its two-step plan, delivered prefix and individual
+deadlines, dispatch times and lateness. An interruption cancels the suffix and
+can retain a delivered down despite top-level `dispatch_ns=None`. Another run
+or new/converted schedule refuses until `input_cancel_pending()` discards the
+suffix; inspect leases, explicitly call `mouse_button_up(lease)` for a retained
+hold, then choose execution. Cancellation does not synthesize a release.
+
+No movement is requested, but prior native mouse accumulators and external
+button state can affect packets. Disabled/remote devices or full queues do not
+establish delivery. FIFO acceptance, arbitrary guest consumption, cursor
+position and INT33 remain unknown. There is no `GuestMouse` facade or legacy
+`DebugSession` stub; `click(x, y)`, `debug-click`, `click-frame` and
+`input.mouse.click` retain their coordinate/frame contracts and native refusal.
+General timing, absolute mouse, guest-time and completed-frame flags stay false;
+all 127 promotion qualifications stay open. See the
+[click and explicit sync workflow](DOS_QEMU_TIMING.md#queue-one-timed-physical-mouse-click).
 
 ### Schedule input at a modeled retrace edge
 
