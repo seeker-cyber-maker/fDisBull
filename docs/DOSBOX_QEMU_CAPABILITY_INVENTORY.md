@@ -176,6 +176,24 @@ qualification rows remain open**. The new QEMU-only routes below do not change
 that frozen DOSBox inventory or promote a compatibility campaign. DOSBox remains
 the default and both DOSBox selectors remain available.
 
+The ninth optional native extension adds `renderer_probe` through
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
+`debug-display-probe` and script `display-probe`. It samples zero through 256
+ordered RGB coordinates from the existing private retained renderer publication,
+with exact optional window/update guards and unchanged stopped clock brackets.
+It creates no screenshot artifact, refresh, guest execution or input. Both
+expected identity fields are required together because update IDs restart per
+window. Strict arguments validate before admission; script literals validate
+before earlier effects and resolved values validate again. One intersected host
+deadline covers I/O and persistence. Invalid native evidence or failed/late
+persistence closes with available evidence and no retry.
+
+This adds a sparse renderer observation prerequisite. `video.probe` and
+`debug-frame-probe` remain pending: their legacy mode/frame/state identities are
+not supplied by a renderer update. Coordinate clicks, INT33 mapping, application
+readiness and completed guest frames remain separate. Full pixel hashes still
+come from `capture_display()`. All 127 promotion qualifications remain open.
+
 ## Dependency-ordered slices
 
 | Slice | Transfer | Acceptance boundary |
@@ -321,6 +339,7 @@ automatically start hosted CI.
 | Traces and event predicates | `tests/test_execution_trace.py`, `tests/test_execution_event_native.py`, `tests/test_protected_mode_trace.py` |
 | Guest time, completed frames and input | `tests/test_debug_wait.py`, `tests/test_keyboard.py`, `tests/test_frame_capture_native.py`, `tests/test_frame_coherence.py`, `tests/test_screenshot_codecs.py`, `tests/test_protected_runtime_native.py` |
 | Native one-shot virtual input, ownership and callback receipts | `tests/test_qemu_input_schedule.py`, `tests/test_qemu_input_schedule_native.py` |
+| Sparse retained renderer pixels and exact publication identity | `tests/test_qemu_display_probe.py`, `tests/test_qemu_display_probe_public.py`, `tests/test_qemu_display_probe_native.py` |
 | Layers and code views | `tests/test_code_layers.py`, `tests/test_code_overlap_native.py`, `tests/test_runtime_code.py`, `tests/test_screenshot_hooks.py` |
 | Checkpoints and histories | `tests/test_anchor_stone_cli.py`, `tests/test_rewind_native.py`, `tests/test_cpu_deltas_native.py`, `tests/test_delta_policies.py`, `tests/test_debug_timeline_deltas.py`, `tests/test_frame_timeline_native.py`, `tests/test_debug_experiments.py` |
 | Scenes and workflow consumers | `tests/test_scene_domain_integration.py`, `tests/test_scene_readiness.py`, `tests/test_input_macros.py`, `tests/test_movement.py`, `tests/test_spatial_native.py`, `tests/test_progressive_scenes.py`, `tests/test_player_live.py` |

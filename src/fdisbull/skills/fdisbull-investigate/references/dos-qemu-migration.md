@@ -695,3 +695,55 @@ same-name hyphenated script operations, such as `display-start` and
 `capture-audio`. Script admission and one shared host deadline apply before
 earlier input/media mutations. Keep explicit output observations separate from
 later automatic synchronization, checkpoint and frame-history work.
+
+## Probe selected retained renderer pixels
+
+Inspect `renderer_probe` before calling
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
+`debug-display-probe` or script `display-probe`. Require the ninth native
+`x-fdisbull-probe-display` extension and the explicit virtual clock. An older
+eight-layer executable retains ordinary renderer capture and timed mouse input
+but refuses the new helper.
+
+Supply a list of zero through 256 two-coordinate points. Use strict integer
+coordinates in `0..8191`, within the retained publication's width and height;
+booleans are invalid. Preserve order and duplicates. Even an empty list requires
+an existing publication. To check identity, supply both the exact `window` and
+positive uint64 `update_id` returned by `display_observe()`. IDs restart per
+window, so an ID alone is refused. Leave both unset only when selecting the
+latest retained publication under the machine lock is intended.
+
+```python
+publication = debug.display_observe()
+if publication['updates']:
+    result = debug.display_probe([[0, 0]], window=publication['window'],
+                                 update_id=publication['update_id'])
+    rgb = result['pixels'][0]['rgb']
+```
+
+Read `fdisbull-renderer-probe-1` as sparse evidence from one owned RGB copy.
+It retains requested points, ordered `{x, y, rgb}` pixels, publication dimensions,
+time and age, unchanged stopped clock brackets, and the full native response.
+It writes no image artifact and does not render, run, wait, send input or call
+clock auto-sync. Explicit later execution may publish a new image; an earlier
+stop may leave the same one. A current surface can show changed VRAM, palette or
+mode while the retained probe still reports older pixels and dimensions.
+
+Use list points for script references, including individual coordinates or a
+whole point/list. Validate every visible literal before earlier effects and
+fully validate resolved values before sampling. The default 1000 ms host bound
+includes lock admission, I/O, clock brackets and journal persistence, intersected
+with tighter script/caller bounds. Refuse caller-owned transactions. A missing
+publication, stale expectation or outside point leaves the valid stopped owner
+usable. Malformed native evidence, failed persistence or a late result closes
+without replay; inspect any retained `error.result` before reporting failure.
+
+Keep successful `machine-display-probe` journal entries as historical evidence
+after reopening, without claiming restored live ownership. The host compares
+overlapping coordinates only with the immediately preceding probe, bounded to
+256 points. Use `capture_display()` for a full-image hash; a sparse result does
+not contain one. Keep `frame_probe`, `video.probe`, coordinate clicks and scene
+readiness unavailable until their mode/frame/state and mouse mappings are
+qualified. Do not infer cursor position, INT33 semantics, VBlank, input
+consumption or guest drawing completion. All 127 promotion qualifications remain
+open, and DOSBox remains the default.

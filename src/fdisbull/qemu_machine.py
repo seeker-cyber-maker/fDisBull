@@ -31,7 +31,8 @@ from .qemu_keyboard_type import KEYBOARD_TYPE_COMMANDS
 from .qemu_mouse_click import MOUSE_CLICK_COMMANDS, validate_mouse_click_parameters
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
-from .qemu_display import QemuDisplayMixin, DISPLAY_COMMANDS
+from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
+                           validate_display_probe_parameters)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
                            machine_retrace_arguments, admit_retrace)
 
@@ -475,6 +476,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     # An expired return must not leave a usable live timer.
                     self._input_invalidate(label+' arm exceeded its host deadline; input must not be replayed')
                     vm.close()
+                elif function.__name__ == 'display_probe':
+                    vm.close()
                 raise error
             return result
         except BaseException:
@@ -511,6 +514,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     capture_audio=machine_io_operation(QemuAudioMixin.capture_audio)
     display_start=machine_io_operation(QemuDisplayMixin.display_start,close_on_timeout=True)
     display_observe=machine_io_operation(QemuDisplayMixin.display_observe)
+    display_probe=machine_trace_operation(QemuDisplayMixin.display_probe,
+        label='Renderer pixel probe',default_timeout_ms=1000,
+        parameter_validator=validate_display_probe_parameters)
     display_stop=machine_io_operation(QemuDisplayMixin.display_stop,close_on_timeout=True)
     capture_display=machine_io_operation(QemuDisplayMixin.capture_display)
     retrace_observe=machine_trace_operation(QemuRetraceMixin.retrace_observe,label='Retrace observation')
@@ -548,6 +554,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             completed_guest_frames=False,guest_time_control=False,
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='pc-speaker',
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
+            renderer_probe=(virtual and DISPLAY_COMMANDS | DISPLAY_PROBE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
+                            <= getattr(vm,'qmp_commands',frozenset())),
             retrace_observation=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                                  and RETRACE_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             retrace_wait=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
@@ -941,7 +949,7 @@ class MachineDebugSession(MachineContext):
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio',
-                'display-start','display-observe','display-stop','capture-display',
+                'display-start','display-observe','display-stop','capture-display','display-probe',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',

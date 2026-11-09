@@ -11,6 +11,7 @@ recursive-include native/qemu-input-retrace *.md *.json *.patch
 recursive-include native/qemu-keyboard-press *.md *.json *.patch
 recursive-include native/qemu-keyboard-type *.md *.json *.patch
 recursive-include native/qemu-mouse-click *.md *.json *.patch
+recursive-include native/qemu-display-probe *.md *.json *.patch
 recursive-include src/fdisbull/web_runtime *.mjs *.html
 recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt

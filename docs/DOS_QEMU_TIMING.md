@@ -495,6 +495,34 @@ clock and passive-retrace evidence. All timestamps identify their clock domain.
 Synchronization receipts do not replace source-event clocks or claim input
 causation, audio playback alignment or completed guest frames.
 
+## Sample a retained renderer publication
+
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)` reads up
+to 256 ordered RGB pixels under `renderer_probe`. It requires the ninth native
+extension and the explicit virtual clock. Use JSON `debug-display-probe` or script
+`display-probe`. The optional window/update pair checks one exact publication;
+an update ID alone is refused because IDs restart in each window.
+
+```python
+publication = debug.display_observe()
+if publication['updates']:
+    sampled = debug.display_probe([[0, 0]], window=publication['window'],
+                                  update_id=publication['update_id'])
+```
+
+This is passive even while an observation window is active: it reads the latest
+retained RGB copy without refreshing pixels, advancing clocks or calling
+`clock_sync_step()`. A caller may explicitly use one clock-sync step to permit
+later publications, then observe and probe whichever update actually exists.
+An earlier stop can leave the previous publication unchanged. The helper does
+not wait for a fresh image or rebase a stale expectation.
+
+The result retains publication age, exact window/update identity, ordered pixels
+and unchanged stopped clock brackets. Coordinates belong to that retained image;
+they do not establish guest mouse position, mode identity, completed guest frames
+or input readiness. See the [full probe contract](DOS_QEMU_MIGRATION.md#probe-sparse-pixels-from-one-retained-publication)
+for validation, shared deadlines, failure disposition and retained evidence.
+
 ## Technical references
 
 - [QEMU instruction-counting design](https://www.qemu.org/docs/master/devel/tcg-icount.html)

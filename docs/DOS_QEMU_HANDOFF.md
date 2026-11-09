@@ -64,8 +64,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   generation-checked native input at a strictly next modeled retrace edge,
   callback-relative native single-chord keyboard presses, bounded US-layout
   text and physical mouse-button pairs with delivered-prefix receipts and
-  explicit held-lease recovery,
-  cooperative fixed 1:1 host/native clock auto-sync, and stopped
+  explicit held-lease recovery, sparse probes of retained renderer
+  publications, cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
@@ -95,7 +95,10 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   The eighth extension adds a separately synchronized physical button down/up
   pair without requesting movement; a late down retains the whole requested
   hold. Its callback evidence is separate from pointer position, packet
-  acceptance and arbitrary guest consumption. Full VBlank, frame completion,
+  acceptance and arbitrary guest consumption. The ninth extension passively
+  samples one exact retained renderer publication; its pixels and dimensions
+  remain distinct from current VGA state, guest mode identity and cursor
+  mapping. Full VBlank, frame completion,
   legacy guest_ms, coordinate/frame clicks and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
@@ -106,6 +109,231 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: sparse retained-renderer pixel probes
+
+Continued from `fd46fbe8fa4c7819aff3bd19c08415566f8df0db` on
+`agent/qemu-sunset-284eb73c` and the same draft MR !117, retaining target
+`agent/execution-event-search-284eb73c` /
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. The interruption had removed the
+temporary checkout and private runtimes. The published source was restored
+first; the test environment was then recreated from pinned inputs. The earlier
+mouse-button slice and its historical evidence remain intact.
+
+### Public contract and retained image identity
+
+The ninth optional extension adds
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
+`debug-display-probe` and saved-script `display-probe`, advertised separately by
+`renderer_probe`. It requires an owned stopped machine, the explicit virtual
+clock, all existing native clock/display commands, the new
+`x-fdisbull-probe-display` command and a project outside a caller-owned
+transaction. Precise retrace is unnecessary. An eight-layer executable keeps
+`renderer_capture` and its existing input operations while refusing this helper.
+
+Accept a list of zero through 256 two-coordinate points. Coordinates are strict
+integers in `0..8191`, with booleans rejected, and must lie inside the retained
+publication's dimensions. Preserve order and duplicates. Empty points still
+require an existing publication. The optional expected `window` and positive
+uint64 `update_id` must be supplied together and match exactly; with both unset,
+select the latest retained publication under the machine lock. IDs restart in
+each new window, so an ID alone is insufficient. The native request always
+carries the selected owned token and exact update ID.
+
+The result is `fdisbull-renderer-probe-1`, with ordinary renderer publication
+metadata, requested `points`, ordered `pixels` containing `{x, y, rgb}`,
+`pixel_format="RGB24"`, `coordinate_domain="retained_renderer_pixels"`, both
+stopped clock brackets and the full native response. It samples the existing
+private packed RGB copy under BQL. The entire native point list validates
+before allocating the result or reading samples; a bad suffix cannot produce
+a partial successful prefix.
+
+There is no image artifact, temporary PPM, file export, screen refresh, guest
+execution, input, sleep, implicit wait, clock-sync step, retry or fallback.
+VRAM, palette or mode changes can appear in a freshly captured current surface
+while the probe still returns older retained pixels and dimensions. A stopped
+observer retains that image even after the guest leaves its mode. Publication
+time and observed age describe this distinction. Only explicit caller-selected
+execution, including an explicit cooperative clock-sync step, can permit a
+later observer callback; the probe does not wait for or manufacture one.
+
+The host compares the full native display receipt with its stopped prequery,
+checks exact sample count/order/coordinates and RGB byte types/ranges, and
+requires unchanged native epoch, instruction counter and virtual time across
+the clock bracket. Duplicate samples must agree. At most the immediately
+previous probe's 256-point map is cached for overlap contradiction checks;
+this is neither an accumulated image history nor a proof of unseen pixels.
+No full-raster hash is invented. `capture_display()` remains the full-image
+pixel-hash route, and native witnesses compare probe samples with its pixels.
+
+### Admission, bounded failure and historical evidence
+
+Direct signatures and complete values validate before lock/deadline admission.
+Whole-script capability, signature, transaction and visible-literal checks
+precede earlier effects; resolved values validate again before sampling and
+timeout clamping. References may name whole lists, list points or individual
+list coordinates. Tuple points with references are refused during preflight;
+direct integer tuple points remain accepted.
+
+One allowance, default 1000 ms and bounded to `1..600000` ms, covers lock
+admission, native reads, validation, clock brackets and event persistence.
+Tighter caller, script, machine and channel deadlines are preserved and
+restored. Missing publication, stale expectation and outside coordinates refuse
+before native sampling while leaving a valid stopped owner available.
+
+Malformed native evidence, broken read/control channels, failed persistence or
+a late accepted result closes ownership without replay. Available responses
+are attached to `error.result`; an explicit received flag preserves a native
+JSON `null` rather than confusing it with no response. Prequery failure also
+closes, including a completed QMP error with a healthy transport. A journal
+committed before expiry remains historical evidence. Successful
+`machine-display-probe` entries survive project reopening; reopening does not
+restore the observer, live owner or VM.
+
+### Fresh local verification
+
+| Completed local lane | Recorded outcome |
+| --- | --- |
+| Focused host/public/display integration (`focused-host-03`) | 142 passed; 0 skipped |
+| New native renderer-probe matrix (`native-probe-01`) | 7 passed; 0 skipped |
+| Source host regressions (`source-host-01`) | 2561 passed; 5 optional machine-QEMU skips; 0 failures/errors; separately adjudicated |
+| Source combined native (`source-native-01`) | 132 passed; 0 skipped; 124.799 seconds |
+
+| Installed local lane | Recorded outcome |
+| --- | --- |
+| Fresh installed host regressions (`installed-host-01`) | 1638 passed; 5 optional machine-QEMU skips; 2 source-only nodes deselected |
+| Fresh installed combined native (`installed-native-01`) | 132 passed; 0 skipped |
+| Installed retained DOSBox (`installed-retained-01`) | 5 passed; 0 skipped |
+
+The installed host selection contains 50 files, excluding the checkout-only
+`test_distribution.py` and `test_package_payloads.py`, and deselecting the
+source-derived DOS-method census and isolated source discovery nodes. Those
+files and nodes are covered by the source lane. Import receipts verify that
+all loaded fDisBull modules came from the fresh installed target. The retained
+DOSBox cases cover chord/text input and restore, protected/paged mouse queue
+versus guest consumption and explicit release, scene action/outcome/restart,
+and an execution-event stop before effect.
+
+Each completed lane recorded unchanged source and runtime inputs during its
+execution. The first seven-case native run preceded only package-selector,
+ledger/reference and distribution-test updates; the complete native lanes run
+those same seven cases again against the final implementation. The source
+host selection contains 52 files. Its five skips all request
+`FDISBULL_MACHINE_QEMU` for optional raw-machine runtime checks. The wrapper
+initially expected nine skips inherited from a different selection; the four
+kernel/initramfs cases in `tests/test_dos_qemu.py` are absent from this selection
+and are not qualified here. The original rejected wrapper receipt remains
+unchanged. `source-host-01-adjudication.json` binds that receipt, enumerates the
+five actual skips and accepts the test result without rerunning or relabeling
+the original attempt.
+
+The seven native tests use authored DOS programs and actual QEMU/FreeDOS:
+
+| Witness | Established boundary |
+| --- | --- |
+| Partial and completed authored drawing | Probe/export pixel equality, ordered duplicates, empty and 256-point requests; retained black pixels remain distinct from refreshed partial drawing, then explicit execution publishes red/green changes |
+| Palette mutation | A current surface changes red to blue while the older publication remains red; a later explicit publication changes the sampled RGB |
+| Mode change and new window | A stopped publication keeps old dimensions and pixels while the current surface changes; a fresh window restarts at update 1 and refuses the old token and outside points |
+| JSON, saved script and reopen | Both public routes identify the same publication; probes create no screenshot artifact; three journal entries survive reopen without a live debugger |
+| Invalid native requests | Wrong/missing identity, count, coordinate, type and extra-field requests preserve the publication and clock; no partial success |
+| Armed budget and reset epoch | Native sampling refuses an armed budget without changing it, and reset invalidates old publication ownership |
+| Eight-layer runtime | New helper refuses before QMP I/O while ordinary retained display capture and existing timed-mouse capability remain available |
+
+The authored program's drawing fences do not establish a generic guest-frame
+boundary. Renderer completion, current VGA state, guest drawing completion and
+mouse input consumption remain distinct observations.
+
+### Review corrections and retained unsuccessful attempts
+
+The initial missing-public-behavior witness produced three intended failures
+before implementation. Independent read-only review then identified three
+concrete host gaps: initial clock-journal/prequery failures bypassed closure,
+JSON `null` lost available raw evidence, and tuple-contained script references
+passed validation without resolving. The implementation now covers initial
+reads, uses received flags and refuses tuple-contained references in preflight.
+Focused regression cases exercise these conditions. Subsequent source review
+found no remaining concrete mismatch in the reviewed host/public contract,
+documentation, native manifest, package selectors or capability ledger.
+
+Retain the separate environment/build/test failures rather than rewriting them:
+
+- Initial private `pkg-config` flags inspection failed because the extracted
+  GLib development package required `sysprof-capture-4`. Extracting the pinned
+  private `libsysprof-capture-4-dev` dependency made the second inspection pass.
+- The first ninth-layer build stopped during full QAPI generation with
+  `unexpected de-indent (expected at least 4 spaces)`. The command's QAPI
+  documentation lacked a blank `#` separator before `Since` after a multiline
+  `Returns` entry. Only that documentation was corrected; native C stayed unchanged. The corrected patch
+  passed forward/reverse source checks, QAPI generation and native compilation.
+- `focused-host-01` recorded 140 passes and one test failure: the new journal
+  assertion used nonexistent `debug_events.kind` instead of `operation`.
+- `focused-host-02` recorded 141 passes and one test failure: the assertion
+  expected an exact 50 ms script allowance, whereas the existing integer floor
+  yielded 49 ms and then 29/9 ms transport allowances. The assertion now checks
+  that existing bounded behavior; production deadline semantics were retained.
+- `source-host-01` completed without test failures but its wrapper rejected the
+  five-versus-nine skip count. The separate adjudication above retains both
+  that rejection and the actual result.
+
+### Recreated native runtime and package identity
+
+The official QEMU 10.0.13 archive was recovered again: 141,718,608 bytes,
+SHA256 `4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa`.
+The private environment uses Python 3.12.14, Meson 1.7.0, Ninja 1.11.1,
+GLib 2.84.4, Pixman 0.44.0, PCRE2 10.46, FFI 3.4.8, zlib 1.3.1,
+NASM 2.16.03 and mtools 4.0.48, with 21 extracted Debian packages and 75
+firmware files. Builds used private `x86_64-softmmu`, TCG/Pixman and finite
+`ninja -j6`; material growth used 3 GiB estimates plus a 20 GiB reserve.
+No shared/system installation or hosted CI was performed.
+
+All eight earlier patch files retain their bytes. The ninth patch changes only
+`qapi/fdisbull-display.json` and `system/fdisbull-display.c`; it adds no timer,
+event handler or publication state. Its corrected SHA256 is
+`d4dc9a87a9c00e807da66339bc8cf055779de754a937ce727b0baa143300f5aa`.
+Current native outputs and media have these identities; old binary hashes are
+historical evidence and are not substituted for these rebuilt files:
+
+| Input | SHA256 |
+| --- | --- |
+| Nine-layer candidate | `d42afdd33876a3bef38b45dae8787e9a83ad5838c3d82b1dd9ec5f8ce41dc4a2` |
+| Eight-layer probe-legacy witness | `fe840b3513b867020c1af4a80be7662b974b347f3993c55c2101924621edcb00` |
+| Seven-layer mouse-click-legacy witness | `cbba1af399b834a1e2d6215fc46bfbc2dd0431526db9efa725b5e49950493b0c` |
+| Six-layer standard DOS/type-legacy witness | `9f152f65a5c7affd7dbb4a08150bd9e921765b478da2e2603686d20cd55a2b92` |
+| Five-layer press-legacy witness | `806cc8b65ef02a2e361b3efafaec6e08a14585cbd381f800428255a0d825bffa` |
+| Original FreeDOS boot image | `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc` |
+| Current private prepared FreeDOS image | `0c1d6e413102e66059fbf9820d796b5c94e73bf5279e2413f87fd302eb32cdbf` |
+| Retained offline-kit DOSBox-X executable | `795df754019b5e9876d68067cb8d91314b001f28c9c6964502dd57ef21adf79d` |
+
+The fresh private core wheel contains 641 exact core files and has SHA256
+`e49c311a96deb917232ad6af2a40acef268e647daba0f8fc89af94b8d83c6986`.
+The isolated installed lane received 630 exact copied tests/support files plus
+one support script. The tracked source-payload inventory has 1612 entries.
+Wheel build/install, CLI, import-origin and bundled-skill checks completed;
+the final installed/native outcomes and source-archive acceptance are recorded
+with the remaining qualification evidence.
+
+The final source-distribution/tool-ZIP gate compares all 1612 tracked payload
+entries and all 24 changed authored files, including this handoff. Publication
+requires the privacy and exact-byte checks across both wheels, the sdist and
+the tool ZIP, plus final installed-package, copied-test and 1063-input runtime
+identity checks. Separate qualification receipts retain archive hashes and
+actual imported module paths. The source selectors include the new native
+README, manifest and patch. No private runtime, vendor media, project database
+or original game bytes enter those authored source artifacts.
+
+### Remaining boundary and continuation
+
+This slice supplies sparse evidence tied to a retained renderer image. It does
+not implement legacy `frame_probe`/`video.probe`, `click(x, y)`/`click-frame`,
+scene readiness, a full guest-mode epoch, completed guest frames or INT33 mouse
+mapping. Equal image dimensions do not establish equal modes; relative PS/2
+state does not establish guest cursor coordinates. Preserve those unknowns
+when selecting the next coordinate/mode/frame slice. `timed_input`,
+`absolute_mouse`, `guest_time_control` and `completed_guest_frames` stay false.
+DOSBox remains the default and all 127 promotion qualifications remain open.
+Vendor inputs, native binaries, raw logs, runtime databases and emulator states
+remain outside Git/packages. The configured macOS mirrors are unavailable here;
+this local Linux work does not establish their synchronization or hosted CI.
 
 ## 2026-11-09: callback-relative native mouse button clicks
 

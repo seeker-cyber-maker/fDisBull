@@ -1321,6 +1321,7 @@ class DebugWorkspace:
                         'debug-audio-stop':'audio_stop','debug-capture-audio':'capture_audio',
                         'debug-display-start':'display_start','debug-display-observe':'display_observe',
                         'debug-display-stop':'display_stop','debug-capture-display':'capture_display',
+                        'debug-display-probe':'display_probe',
                         'debug-retrace-observe':'retrace_observe',
                         'debug-retrace-wait':'retrace_wait',
                         'debug-clock-sync-start':'clock_sync_start','debug-clock-sync-observe':'clock_sync_observe',

@@ -194,6 +194,7 @@ METHODS = {
     "debug-capture-audio": "Save retained native PCM as WAV with stopped clock brackets; run,[name]",
     "debug-display-start": "Start native completed-renderer observation at an explicit virtual cadence; run,[period_ns]",
     "debug-display-observe": "Observe the latest retained renderer publication and its age; run",
+    "debug-display-probe": "Read ordered RGB samples from one retained renderer publication without refresh; run,points,[window,update_id,timeout_ms] (requires renderer_probe)",
     "debug-display-stop": "Stop renderer observation without refreshing or advancing the machine; run",
     "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
     "debug-retrace-observe": "Observe stopped native precise VGA retrace phase and timing generation; run,[timeout_ms] (guest frame completion unknown)",

@@ -920,6 +920,69 @@ The caller advances execution through existing controls or an explicit
 [host clock-sync step](DOS_QEMU_TIMING.md). That controller does not qualify
 audio resampling, device queue drain or playback alignment.
 
+### Probe sparse pixels from one retained publication
+
+The optional ninth [display-probe extension](../native/qemu-display-probe/README.md)
+adds `renderer_probe` independently of `renderer_capture`. Inspect that capability
+before using `display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`.
+It requires the explicit virtual clock and all native clock/display commands plus
+`x-fdisbull-probe-display`. An eight-layer executable keeps its existing display
+and input operations and refuses the new helper.
+
+```python
+publication = debug.display_observe()
+if publication['updates']:
+    probe = debug.display_probe(
+        [[0, 0], [publication['width'] - 1, publication['height'] - 1]],
+        window=publication['window'], update_id=publication['update_id'],
+        timeout_ms=1000)
+    # Ordered samples use coordinates in this retained renderer image.
+    colors = [pixel['rgb'] for pixel in probe['pixels']]
+```
+
+The point list contains zero through 256 two-coordinate points. Coordinates are
+strict integers in `0..8191`, then checked against the retained dimensions;
+booleans are rejected. Order and duplicates are preserved. An empty list still
+requires a retained publication and returns its identity with no samples.
+Supply both expected `window` and positive uint64 `update_id`, or leave both
+unset to select the current publication under the owned lock. Expectations
+require exact equality: update IDs restart in a new window, so an ID alone is
+not accepted. A stale expectation or outside point refuses before native sampling
+and leaves the valid stopped owner available.
+
+The public result is `fdisbull-renderer-probe-1`. It retains the ordinary renderer
+window metadata, requested `points`, ordered `pixels` with `{x, y, rgb}`, before/
+after clocks and the full native response. `pixel_format` is `RGB24` and
+`coordinate_domain` is `retained_renderer_pixels`. The probe reads the existing
+private native RGB copy. It creates no image file or screenshot artifact and
+does not refresh the display, run the guest, send input, wait, or synchronize
+time. A palette, VRAM or mode change can therefore appear in `capture_surface()`
+while this probe still returns the older retained publication. A stopped observer
+can retain its original dimensions after a guest mode change.
+
+Use JSON `debug-display-probe` or saved-script `display-probe` with the same
+parameters. Script references can supply the identity or individual coordinates;
+every visible literal validates before earlier script effects, and resolved
+values validate again before dispatch. Direct argument/signature validation
+precedes lock admission. One host allowance, default 1000 ms and bounded to
+1..600000 ms, includes admission, native queries, clock brackets and journal
+persistence, intersecting tighter caller/script bounds. Caller-owned project
+transactions are refused. Malformed native evidence, failed persistence or an
+expired accepted result closes ownership without replay; available evidence is
+retained on `error.result`, including a journal that committed before expiry.
+
+Successful `machine-display-probe` events survive project reopening as evidence;
+they do not restore a live observer. At most the previous probe's 256 sampled
+coordinates are cached for overlap contradiction checks. No full-raster hash is
+invented for a sparse read; `capture_display()` remains the full-image hash route.
+
+This operation does not implement legacy `frame_probe`/`video.probe`, whose
+consumers require mode/frame/state identities, or coordinate `click`/`click-frame`.
+It reports no `mode_id`, `frame_id` or `state_revision`. Completed guest drawing,
+VBlank, cursor location, INT33 mapping, application readiness and input consumption
+remain unknown. `completed_guest_frame` and `guest_frame_id` remain `None`; all
+127 default-promotion qualifications remain open.
+
 ## What the first slice does and does not qualify
 
 The native tests use independent authored boot and DOS-service fixtures. They

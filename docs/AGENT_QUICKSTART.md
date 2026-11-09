@@ -106,6 +106,15 @@ requested, but prior mouse accumulators and external button state can affect
 packets. Coordinate `click(x, y)` and `click-frame` remain unsupported on native
 QEMU; all 127 default-promotion qualifications stay open.
 
+For sparse image observations, inspect `renderer_probe` and use
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
+`debug-display-probe` or script `display-probe`. The ninth native extension reads
+up to 256 ordered RGB samples from an existing retained renderer publication.
+The optional window/update pair rejects stale identity without refreshing or
+running the guest. It does not supply the mode/frame/state identities required
+by legacy `frame_probe`, coordinate clicks or scene readiness. See the
+[publication probe contract](DOS_QEMU_MIGRATION.md#probe-sparse-pixels-from-one-retained-publication).
+
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
 Keep guarded live RAM edits separate from edited-checkpoint interventions;

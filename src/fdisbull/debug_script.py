@@ -34,6 +34,7 @@ OPERATIONS = {
     'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
+    'display-probe':'display_probe',
     'retrace-observe':'retrace_observe',
     'retrace-wait':'retrace_wait',
     'clock-sync-start':'clock_sync_start','clock-sync-observe':'clock_sync_observe',
@@ -319,6 +320,11 @@ def validate_script(script, *, session=None):
                             value=params['timeout_ms']
                             if not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,'timeout_ms',1,600000)
+                    if op=='display-probe':
+                        if session is not None and not getattr(session,'capabilities',{}).get('renderer_probe'):
+                            raise ValueError('Renderer probe requires its native extension and virtual clock')
+                        from .qemu_display import validate_display_probe_parameters
+                        validate_display_probe_parameters(**params, allow_references=True)
                     if op=='retrace-wait':
                         if session is not None and not getattr(session,'capabilities',{}).get('retrace_wait'):
                             raise ValueError('retrace-wait requires the explicit native precise retrace profile')
@@ -395,7 +401,7 @@ def validate_script(script, *, session=None):
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
-                 'display-start','display-observe','display-stop','capture-display','retrace-observe',
+                 'display-start','display-observe','display-stop','capture-display','display-probe','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
@@ -518,12 +524,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='mouse.button-click':
                 from .qemu_mouse_click import validate_mouse_click_parameters
                 validate_mouse_click_parameters(**params)
+            if step['op']=='display-probe':
+                from .qemu_display import validate_display_probe_parameters
+                validate_display_probe_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
-                             'input-schedule-retrace',
+                             'input-schedule-retrace','display-probe',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
-                if requested is None:requested=remaining
+                if requested is None:requested=min(1000,remaining) if step['op']=='display-probe' else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if step['op']=='assert':
                 if params['value'] != params['equals']:

@@ -11,6 +11,7 @@ from copy import deepcopy
 import hashlib
 import io
 from pathlib import Path
+import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
@@ -20,6 +21,8 @@ DISPLAY_COMMANDS = frozenset({
     'x-fdisbull-query-display', 'x-fdisbull-start-display',
     'x-fdisbull-stop-display', 'x-fdisbull-export-display',
 })
+DISPLAY_PROBE_COMMANDS = frozenset({'x-fdisbull-probe-display'})
+MAX_DISPLAY_PROBE_POINTS = 256
 MIN_DISPLAY_PERIOD_NS = 1_000_000
 MAX_DISPLAY_PERIOD_NS = 1_000_000_000
 
@@ -32,6 +35,38 @@ def validate_display_period(period_ns):
 def validate_after_update(after_update):
     if after_update is not None and (type(after_update) is not int or not 0 <= after_update < 1 << 64):
         raise ValueError('after_update must be a nonnegative renderer update ID in this window')
+
+
+def validate_display_probe_parameters(points, *, window=None, update_id=None,
+                                      timeout_ms=1000, allow_references=False):
+    """Validate every known value without acquiring ownership or doing I/O."""
+    def reference(value):
+        return allow_references and isinstance(value, str) and value.startswith('$')
+
+    if not reference(points):
+        if not isinstance(points, list) or len(points) > MAX_DISPLAY_PROBE_POINTS:
+            raise ValueError('Renderer probe requires a list of at most 256 points')
+        for point in points:
+            if reference(point):
+                continue
+            if not isinstance(point, (list, tuple)) or len(point) != 2:
+                raise ValueError('Renderer probe points require exactly two coordinates')
+            if isinstance(point, tuple) and any(reference(value) for value in point):
+                raise ValueError('Script renderer probe references require list points')
+            for coordinate in point:
+                if not reference(coordinate) and (type(coordinate) is not int
+                                                  or not 0 <= coordinate <= 8191):
+                    raise ValueError('Renderer probe coordinates must be integers in 0..8191')
+    if (window is None) != (update_id is None):
+        raise ValueError('Renderer probe window and update_id must be supplied together')
+    if window is not None and not reference(window):
+        if type(window) is not str or not 1 <= len(window) <= 128 or '\0' in window:
+            raise ValueError('Renderer probe window must be a nonempty token of at most 128 characters')
+    if update_id is not None and not reference(update_id):
+        if type(update_id) is not int or not 1 <= update_id < 1 << 64:
+            raise ValueError('Renderer probe update_id must be a positive uint64 publication ID')
+    if not reference(timeout_ms) and (type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000):
+        raise ValueError('Renderer probe timeout_ms must be an integer in 1..600000')
 
 
 def _invalid(vm, message):
@@ -132,6 +167,114 @@ class QemuDisplayMixin:
         result = self._display_receipt(self._display_read(clock), clock)
         self._event('machine-display-observe', result)
         return result
+
+    def display_probe(self, points, *, window=None, update_id=None, timeout_ms=1000):
+        """Read ordered RGB samples from one retained renderer publication.
+
+        An optional window/update pair requires that exact publication. With
+        neither supplied, the current retained publication is selected under
+        the machine lock. No refresh, image export or guest execution occurs.
+        """
+        from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
+
+        validate_display_probe_parameters(points, window=window, update_id=update_id,
+                                          timeout_ms=timeout_ms)
+        points = [list(point) for point in points]
+        commands = DISPLAY_COMMANDS | DISPLAY_PROBE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
+        if not commands <= getattr(self.vm, 'qmp_commands', frozenset()):
+            raise ValueError('Renderer probe requires its native extension and virtual clock')
+        if self.project is None or self.project.db.in_transaction:
+            raise ValueError('Renderer probe requires a project outside a caller-owned transaction')
+        if self.vm.machine_configuration.get('clock_profile', {}).get('profile') != 'virtual':
+            raise ValueError('Renderer probe requires the explicit virtual clock profile')
+        self._stopped()
+        before = prequery = None
+        received_prequery = False
+        try:
+            before = self.clock_observe()
+            prequery = self.vm.qmp.call('x-fdisbull-query-display')
+            received_prequery = True
+            prior = _native_display(self.vm, prequery, before,
+                                    token=getattr(self.vm, '_display_token', None))
+        except BaseException as error:
+            # The first clock observation also journals evidence. Its storage
+            # failure must have the same disposition as later probe persistence.
+            self.vm.close()
+            if getattr(error, 'result', None) is None and (before is not None or received_prequery):
+                error.result = dict(format='fdisbull-renderer-probe-error-1', run=self.run_id,
+                    stage='publication-query', requested_points=points, clock=before,
+                    native=deepcopy(prequery), native_received=received_prequery)
+            raise
+        if not prior['updates']:
+            raise ValueError('No completed renderer update is retained; advance the machine explicitly')
+        if window is not None and (window != prior['token'] or update_id != prior['update-id']):
+            raise ValueError('Renderer probe expected a different retained publication')
+        if any(x >= prior['width'] or y >= prior['height'] for x, y in points):
+            raise ValueError('Renderer probe point is outside the retained publication')
+
+        def remaining():
+            deadline = getattr(self.vm, 'operation_deadline', None)
+            if deadline is None or time.monotonic() >= deadline:
+                raise TimeoutError('Renderer pixel probe host deadline expired')
+
+        raw = result = None
+        received_probe = False
+        try:
+            remaining()
+            raw = self.vm.qmp.call('x-fdisbull-probe-display', dict(
+                token=prior['token'], **{'update-id': prior['update-id']},
+                points=[dict(x=x, y=y) for x, y in points]))
+            received_probe = True
+            if not isinstance(raw, dict) or set(raw) != {'display', 'samples'}:
+                _invalid(self.vm, 'Invalid native renderer probe response')
+            native = _native_display(self.vm, raw['display'], before, token=prior['token'])
+            if native != prior:
+                _invalid(self.vm, 'Native renderer changed across its stopped probe')
+            samples = raw['samples']
+            if not isinstance(samples, list) or len(samples) != len(points):
+                _invalid(self.vm, 'Native renderer probe returned an incomplete sample list')
+            pixels, observed = [], {}
+            identity = (prior['token'], prior['update-id'])
+            previous = getattr(self.vm, '_display_probe_samples', None)
+            known = previous['samples'] if previous is not None and previous['identity'] == identity else {}
+            for point, sample in zip(points, samples, strict=True):
+                if (not isinstance(sample, dict) or set(sample) != {'x', 'y', 'r', 'g', 'b'}
+                        or any(type(sample[key]) is not int for key in sample)
+                        or [sample['x'], sample['y']] != point
+                        or any(not 0 <= sample[key] <= 255 for key in ('r', 'g', 'b'))):
+                    _invalid(self.vm, 'Native renderer probe sample identity or RGB is invalid')
+                rgb = [sample[key] for key in ('r', 'g', 'b')]
+                coordinate = tuple(point)
+                if (coordinate in observed and observed[coordinate] != rgb
+                        or coordinate in known and known[coordinate] != rgb):
+                    _invalid(self.vm, 'Native renderer probe pixels changed under one publication ID')
+                observed[coordinate] = rgb
+                pixels.append(dict(x=point[0], y=point[1], rgb=rgb))
+            after = self.clock_observe()
+            if (any(before[key] != after[key] for key in ('run', 'epoch', 'counter', 'virtual_ns'))
+                    or before['virtual_clock']['native']['epoch'] != after['virtual_clock']['native']['epoch']
+                    or before['sequence'] >= after['sequence']):
+                _invalid(self.vm, 'Machine clock changed across the stopped renderer probe')
+            result = self._display_receipt(native, before)
+            result.update(format='fdisbull-renderer-probe-1', source='qemu_completed_renderer_update',
+                          stopped=True, points=points, pixels=pixels, pixel_format='RGB24',
+                          coordinate_domain='retained_renderer_pixels',
+                          clocks=dict(before=before, after=after), native=deepcopy(raw))
+            remaining()
+            self._event('machine-display-probe', result)
+            remaining()
+            # One previous probe, at most 256 coordinates. This detects overlap
+            # contradictions without accumulating an unbounded pixel history.
+            self.vm._display_probe_samples = dict(identity=identity, samples=deepcopy(observed))
+            return result
+        except BaseException as error:
+            self.vm.close()
+            if getattr(error, 'result', None) is None and (received_probe or result is not None):
+                error.result = deepcopy(result) if result is not None else dict(
+                    format='fdisbull-renderer-probe-error-1', run=self.run_id,
+                    stage='pixel-probe', requested_points=points, publication=prior,
+                    native=deepcopy(raw), native_received=received_probe, clock=before)
+            raise
 
     def display_start(self, *, period_ns=16_666_667):
         validate_display_period(period_ns)
