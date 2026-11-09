@@ -9,18 +9,27 @@ named actions, or retarget a verified interaction block to a new desktop,
 browser or console shell. Come back next session with every discovery and piece
 of evidence preserved in your SQLite project.
 
-**0.33.0 tagged local release feature line:** recover captured Windows imports, identify more media
-formats, investigate Win32 and protected-mode DOS programs, and inspect AGI or
-Gob scenes through experimental ScummVM backends. Exact lossless frame options
-and a direct pixel-buffer API support repeated visual probes; headless DOSBox-X
-shutdown suppresses the recurring quit dialog. This line carries the 0.31.1
-features and packaging repairs forward. See the
-[0.33.0 scope and limits](docs/RELEASE-0.33.0.md),
+**0.34.1 tagged local release feature line (`v0.34.1`):** adds deterministic
+capability preflight and build/version identity (`--version-json`, `preflight`),
+a top-level `fdisbull` router skill alongside `fdisbull-investigate` and
+`write-gamefaqs-guide`, the
+[methodology determinism review and A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
+built-in Inno Setup 5.6.2 GOG archive reading without external `innoextract`,
+independent [MADS media and conversation modules](docs/MADS_MEDIA_RUNTIME.md)
+([conversation processor](docs/MADS_PROCESSOR.md)),
+[DOS device-driver and QEMM guest analysis](docs/DOS_DRIVERS_AND_QEMM.md),
+[DESQview module inspection and persistent guarded memory searches](docs/DESQVIEW_AND_MEMORY_SEARCH.md),
+[execution-event searches with trace predicates](docs/EXECUTION_EVENT_SEARCH.md),
+and signed UDC contracts. This line carries forward the
+[0.33.0 scope and limits](docs/RELEASE-0.33.0.md)—captured Windows PE import
+recovery (`CHimpREC`), context-aware media intake, Win32 and protected-mode DOS
+debugging, exact lossless frame codecs and `frame_rgba()`, headless DOSBox-X
+no-pop-up defaults, and experimental ScummVM AGI/Gob/Kyra/GLK backends. See
 [release records](docs/RELEASE_STATUS.md) and
 [feature history](docs/FEATURE_HISTORY.md). The
 [GitLab release records](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases)
 hold the exact published source, qualification receipts and package hashes;
-the version text here does not establish publication or installation.
+the version text here does not establish remote publication or system installation.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
@@ -41,31 +50,33 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 
 | I want to… | Start here |
 | --- | --- |
-| Check this copy's decoders, debuggers, diagnostics and UIL support without running a target | [Capabilities catalog](docs/CAPABILITIES.md) |
+| Verify this copy's version, build identity, decoders, debuggers and preflight expectations without running a target | [Capabilities catalog](docs/CAPABILITIES.md) · [Methodology determinism & preflight](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md) |
 | Understand an x86, ARM64 or Cortex-M executable without running it | [Disassemble, type and search](#disassemble-type-and-search) |
-| Unpack a local GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Unpack a local GOG DOS installer (including Inno 5.6.2 natively) on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Rebuild a caller-captured packed Windows PE or GOG Galaxy UPX wrapper | [CHimpREC captured-image recovery](docs/CHIMPREC.md) · [GOG Galaxy workflow](docs/GOG_UNPACKING.md#galaxy-upx-wrappers) |
-| Identify an unfamiliar executable or media file, or prepare a compact cinematic variant | [Format modules and header catalog](docs/FILE_FORMAT_REGISTRY.md) |
+| Identify an unfamiliar executable or media file, inspect MADS resources/dialogs, or prepare a compact cinematic variant | [Format modules and header catalog](docs/FILE_FORMAT_REGISTRY.md) · [MADS media & conversation model](docs/MADS_MEDIA_RUNTIME.md) |
 | Inventory one game or a collection, compare editions or inspect resource/media formats | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
 | Identify NES, SNES or Sega cartridges, CUE/ISO discs, or disassemble Saturn SH-2 / SNES 65816 | [Console media](docs/CONSOLE_MEDIA_PARSING.md) · [Disc parsing](docs/CUE_ISO_PARSING.md) · [ROM-to-ASM](docs/ROM_ASM.md) |
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
-| Inspect DESQview modules, observe its cooperative APIs, or narrow changing memory values | [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
+| Inspect DOS `.SYS` drivers, QEMM/v86 mappings, DESQview modules, or narrow changing memory values | [DOS drivers & QEMM](docs/DOS_DRIVERS_AND_QEMM.md) · [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
 | Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
 | Give an agent named controls, game-unit room maps and explicit spatial policies | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play shared Z scenes, original-backed *DinoPark Tycoon*, or inspect *Civilization I* / *Zork I* worlds | [Text play and world projections](#text-play-and-world-projections) |
-| Lift Sierra AGI v2 (*King's Quest I*) or Z-machine v3 (*Zork I*) directly in their guest languages | [Direct guest interpreters: AGI and Z-machine](#direct-guest-interpreters-agi-and-z-machine) |
+| Lift Sierra AGI v2 (*King's Quest I*), Z-machine v3 (*Zork I*) or MADS conversations in their guest languages | [Direct guest interpreters: AGI, Z-machine and MADS](#direct-guest-interpreters-agi-z-machine-and-mads) |
 | Compose typed indexed UIL and emit standalone Python/JS, linked native binaries or desktop windows | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Native linking](docs/COMMON_UIL_NATIVE.md) · [Desktop shells](docs/COMMON_UIL_DESKTOP.md) |
 | Verify source blocks with Z3 or retarget bounded-memory UIL across browser, macOS, Windows, Linux and Win16 | [Common UIL and the bounded UDC pipeline](#common-uil-and-the-bounded-udc-pipeline) |
 | Compile shared UIL or source-bound *Miniplanets* / *Shadowrun* profiles to NES, Genesis or macOS ARM64 | [Console intake and synthesis](#console-intake-and-synthesis) |
 
-Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
-[agent quickstart](docs/AGENT_QUICKSTART.md). Two bundled skills ship inside the
-installed package and work without opening a project:
+Agents should start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the
+[agent quickstart](docs/AGENT_QUICKSTART.md) and the
+[skill integration guide](docs/SKILL_INTEGRATION.md). Three bundled skills ship
+inside the installed package and work without opening a project:
 
-- `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, probe selection, scene/UIL recovery and verification gates.
+- `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`): top-level router skill and task-framing guide (`references/TASK_FRAMING_GUIDE.md`) for choosing the cheapest deterministic static, media, scene or live-debugger route.
+- `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`): evidence-driven reverse engineering, probe selection, scene/UIL recovery, source-concept mapping and verification gates.
 - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md` (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused code and format specs into an attributed, human-readable guide.
 
 Use `fdisbull agent-skill --list` and `--index` for selective discovery. Core
@@ -81,7 +92,9 @@ Python **3.12 or later** is required. From a source checkout:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install . ./player
+fdisbull --version-json
 fdisbull capabilities
+fdisbull preflight
 fdisbull inspect /path/to/program
 fdisbull import /path/to/program analysis.fdb
 fdisbull analyze analysis.fdb --max-instructions 10000
@@ -103,8 +116,10 @@ can also be installed on its own. See the [user guide](docs/USER_GUIDE.md),
 Import x86 16/32/64, ARM64 or Armv7-M programs across supported containers and
 profiles:
 
-- **DOS & 16/32-bit Windows:** classic MZ, explicit COM, bounded 32-bit
-  [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
+- **DOS & 16/32-bit Windows:** classic MZ, explicit COM,
+  [DOS `.SYS` device drivers](docs/DOS_DRIVERS_AND_QEMM.md) (`dos-sys-inspect`),
+  [DESQview `.DVR` modules](docs/DESQVIEW_AND_MEMORY_SEARCH.md) (`desqview-module-inspect`),
+  bounded 32-bit [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
   [Win16 NE](docs/NE_LOADING.md) segments with logical `ne:seg:offset` addresses
   and symbolic relocations, OMF library signature catalogs (`omf-catalog`), and
   [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md) (Miles AIL 2 `.ADV` exports
@@ -131,7 +146,11 @@ profiles:
   Saturn SH-2 [ROM disassembly](docs/ROM_ASM.md) (`rom-disasm` across Capstone,
   Ghidra and `saturn-recomp`), mode-explicit SNES 65C816 decoding, and
   reusable [media adapters](docs/AGENT_QUICKSTART.md#reuse-media-readers)
-  (`media-modules`, `media-inspect`, `media-extract`).
+  (`media-modules`, `media-inspect`, `media-extract`), built-in Inno Setup 5.6.2
+  [GOG archive reading](docs/GOG_UNPACKING.md) without external `innoextract`,
+  and independent [MADS media and compression codecs](docs/MADS_MEDIA_RUNTIME.md)
+  (`fab`, `madspack`, `pkware-dcl`, `mads-*` for HAG containers, sprites, tiles,
+  depth/walk masks, fonts, audio and animations).
 
 The [format catalog](docs/FILE_FORMAT_REGISTRY.md) distinguishes a recognized
 header from an implemented decoder. Collection intake retains edition and
@@ -193,7 +212,13 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
-  retaining explicit CPU-mode and address-space limits. Agent headless launches
+  retaining explicit CPU-mode and address-space limits.
+  [QEMM and DESQview profiles](docs/DOS_DRIVERS_AND_QEMM.md) observe v86/page-frame
+  mappings and cooperative API calls, [persistent scalar memory searches](docs/DESQVIEW_AND_MEMORY_SEARCH.md)
+  narrow changing values across stopped snapshots with guarded conditional edit
+  rules, and [execution-event searches](docs/EXECUTION_EVENT_SEARCH.md)
+  (`debug-event-search-*`, `debug-trace-until`) isolate shared or differential
+  instructions and register values across actions. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
@@ -306,7 +331,7 @@ notice-paused actions reconcile cleanly without silently replaying side effects.
   rooms and exits into the strict [`(z-world ...)` graph language](docs/Z_WORLD_LANGUAGE.md),
   and project exact-coordinate [Syndicate spatial Z scenes](docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md).
 
-## Direct guest interpreters: AGI and Z-machine
+## Direct guest interpreters: AGI, Z-machine and MADS
 
 [Direct decoder modules](docs/DECODER_MODULES.md) (`decoder-modules`,
 `module-analyze`, `module-lift`) inspect interpreted game scripts in their own
@@ -335,6 +360,12 @@ languages without creating an x86 disassembly project:
   (`zork-intents`) plus 110-room / 352-exit [address-free scene rules](docs/ZORK_SCENES.md)
   (`zork-scenes`) while keeping unrecovered parser and handler bodies as
   explicit residual IR.
+- **MicroProse MADS conversations (`fdisbull.mads.conversation`):** decodes
+  CNV/CND conversation bytecode from HAG and MADSPACK 2.0 containers through the
+  registered [MADS conversation processor](docs/MADS_PROCESSOR.md) and executes
+  bounded transactional dialog turns with explicit variable imports and
+  deterministic replay ([MADS media and conversation model](docs/MADS_MEDIA_RUNTIME.md)).
+  Native DOS scene binaries and RTLink overlays remain separate x86 targets.
 
 ## Common UIL and the bounded UDC pipeline
 
@@ -398,10 +429,12 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-GitLab (`brewster-jennings-group/fdisbull`) is the remote project authority;
-GitHub is retired. Read
+GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
+release and CI authority; GitHub (`seeker-cyber-maker/fDisBull`) is an active
+public peer mirror. Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
+[methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
 [0.33.0 notes](docs/RELEASE-0.33.0.md), [0.32.0 notes](docs/RELEASE-0.32.0.md),
 [0.31.1 notes](docs/RELEASE-0.31.1.md),
 [0.31.0 notes](docs/RELEASE-0.31.0.md), [0.30.0 notes](docs/RELEASE-0.30.0.md),

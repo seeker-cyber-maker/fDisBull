@@ -1,5 +1,25 @@
 # Release records and qualification
 
+## 0.34.1 and 0.34.0 tagged (local release line)
+
+The `0.34.1` source is tagged `v0.34.1` (`011f1b8c`), building on `v0.34.0`
+(`32f3e4ea`) and `v0.33.0` (`bdd096f9`). It integrates:
+
+- **0.34.0 (`32f3e4ea`):** independent [MADS media and conversation modules](MADS_MEDIA_RUNTIME.md)
+  ([conversation processor](MADS_PROCESSOR.md)), [DOS device-driver and QEMM guest observation](DOS_DRIVERS_AND_QEMM.md),
+  [DESQview module inspection and persistent guarded memory searches](DESQVIEW_AND_MEMORY_SEARCH.md),
+  [execution-event searches and trace predicates](EXECUTION_EVENT_SEARCH.md),
+  built-in Inno Setup 5.6.2 GOG archive reading, and the top-level `fdisbull`
+  router skill (`references/TASK_FRAMING_GUIDE.md`).
+- **0.34.1 (`011f1b8c`):** signed UDC contracts, distribution verification for
+  `references/SOURCE_CONCEPTS.md`, deterministic capability preflight and
+  version/build identity (`--version-json`, `preflight`, `doctor`), and the
+  [methodology determinism review and Dragster A/B plan](METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md).
+
+Remote GitLab Release publication and exact-SHA Linux CI receipts for `0.34.1`
+are tracked separately in the
+[GitLab release inventory](https://gitlab.com/brewster-jennings-group/fdisbull/-/releases).
+
 ## 0.33.0 tagged (local release)
 
 The `0.33.0` source is tagged `v0.33.0` at
