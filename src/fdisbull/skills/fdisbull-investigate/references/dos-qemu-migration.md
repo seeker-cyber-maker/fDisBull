@@ -814,3 +814,81 @@ native evidence and completed clock brackets in `error.result`. Successful
 history, without restoring a live machine. Reset/overflow/restore identity
 rules do not provide checkpoint compatibility. DOSBox stays the default and
 all 127 promotion qualifications remain open.
+
+## Declare pixel displacement for relative mouse motion
+
+Inspect `mapped_mouse_motion` before using the eleventh display-motion
+extension. Call `mouse_move_mapped(dx_pixels, dy_pixels, *, counts_per_pixel,
+window, update_id, configuration_generation, timeout_ms=1000)`, JSON
+`debug-mouse-move-mapped` or saved-script `mouse.move-mapped`. Require explicit
+virtual/precise profiles and all clock, input, display, retrace, configuration
+and display-motion commands. Ten-layer executables keep their existing routes
+and refuse this helper.
+
+The request is a relative displacement with a **caller-declared scale**, no
+observed pointer origin or absolute destination. Image axes are +x right and
++y down. `counts_per_pixel` must be exactly `{'x': [numerator, denominator],
+'y': [numerator, denominator]}`. These are QEMU REL event units per retained-image
+pixel, not raw PS/2 y counts: QEMU negates relative y in the packet accumulator.
+Use strict integer pixel components in −8191..8191, a nonzero pair, nonzero
+signed numerators in −32767..32767, and positive denominators in 1..32767.
+Division must be exact and each result must fit −127..127. There is no rounding,
+clamp, splitting or automatic replay. Each displacement magnitude must also be
+less than the corresponding retained image extent; that is not an endpoint
+inside-image claim. The count bound does not imply packet acceptance or a
+single packet when native device state is unknown.
+
+Explicitly stop a nonempty renderer observer, then call
+`vga_configuration_observe()` and supply its window, update ID and current
+configuration generation. Current and published configurations must match.
+Require an owned project outside caller transactions, an empty physical queue,
+no owned held leases and no bound schedule. This operation never stops the
+observer or refreshes the image for you.
+
+Native admission checks the exact display/configuration identity and arms one
+passive attempt due after 2 ms. Nonzero x and then nonzero y share one final
+sync. Choose execution explicitly with `run`, `clock_advance` or an existing
+`clock_sync_step`; the helper does not start auto-sync. Immediately before any
+motion callback, native code rechecks epoch/device, still-stopped publication,
+dimensions, publication stamp and current generation. A-to-B-to-A changes cancel
+by generation even when raw values return. Changed configuration cancels first
+with `display-motion-configuration-changed`; otherwise changed publication or
+window cancels with `display-motion-publication-changed`. Pending stops and
+equal/reached budgets win before sampling. Contradictory or regressing native
+identity fails ownership.
+
+Inspect the existing `fdisbull-qemu-scheduled-input-1` receipt's `motion`
+descriptor (`fdisbull-mapped-mouse-motion-1`). It preserves the declaration,
+derived `dx`/`dy`, original VGA `before`, frozen `native_arm` and optional
+`native_check`. `binding_verified` is true only after dispatch. A valid cancelled
+attempt retains its pending records: explicitly `input_cancel_pending()` before
+a new request. Neither generic nor retrace scheduling can convert those records
+into unguarded input. Terminal observation never refreshes its callback evidence.
+
+Binding proves neither current raster freshness nor scale validity. Palette,
+VRAM/fonts and application state can change without a configuration-generation
+change; a stopped publication may be old. Keep `guest_pixel_displacement`,
+`guest_pointer_position`, `mapping_verified`, `raster_coherence`, `target_reached`,
+`device_queue_accepted` and `guest_consumed` unknown. No button event is requested,
+but pre-existing external buttons remain unobserved. Never infer INT33 position,
+target reached, pointer readiness or completed drawing from callback completion.
+
+Validate every visible script literal before earlier effects, including one
+known axis when another uses a result reference; validate resolved values before
+budget clamping. One shrinking strict integer 1..600000 ms timeout, default 1000,
+covers locking, observation, arm, journal persistence and return. A known
+pre-arm binding mismatch can leave the stopped owner usable. Uncertain/late arms,
+malformed native evidence and persistence failures preserve available receipts,
+close and forbid replay. Reopened journals restore history, not live authority.
+
+Large script reports can return the existing `fdisbull-output-ref-1` delivery
+marker. Read/export its saved output artifact; never rerun input to obtain a
+larger inline reply.
+
+Qualify controlled packet receipt, application pointer commit and drawing as
+separate observations; a deliberately wrong scale can yield correct relative
+callbacks with a different application displacement. Do not promote those
+fixture facts to arbitrary DOS drivers/games. Legacy coordinate click/frame
+operations and scene consumers remain unqualified. General `timed_input`,
+`absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false.
+DOSBox stays the default; all 127 promotion qualifications remain open.

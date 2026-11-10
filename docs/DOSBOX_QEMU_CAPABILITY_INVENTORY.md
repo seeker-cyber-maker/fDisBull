@@ -340,6 +340,25 @@ completion, BIOS mode identity, INT33 mapping or scene readiness. Native reset,
 overflow and restore invalidation do not supply checkpoint parity. All 127
 promotion qualifications remain open and DOSBox remains the default.
 
+The eleventh optional [display-motion extension](../native/qemu-display-motion/README.md)
+adds `mapped_mouse_motion`: `mouse_move_mapped`, JSON
+`debug-mouse-move-mapped` and script `mouse.move-mapped`. Caller-declared rational
+axis scales convert a bounded image displacement to exact QEMU REL event units.
+The passive 2 ms attempt requires an empty owned queue and an explicitly stopped
+nonempty publication whose current/published VGA generations agree. Native arm
+and callback both check publication/configuration identity. A valid change
+cancels before any motion event; the protected pending plan requires explicit
+cancellation before a fresh request. Existing explicit run, clock advance and
+clock auto-sync remain the execution routes.
+
+This narrowly extends relative movement without supplying an absolute pointer
+or verified driver calibration. Count values fit −127..127, with no rounding or
+splitting; packet acceptance still remains unknown. An authored guest separates
+packet receipt, application pointer commit and drawing, including a deliberately
+wrong scale. Actual pixel travel, pointer position, raster freshness and arbitrary
+INT33 behavior remain unqualified. This adds no promotion row; all 127 remain open.
+See the [mapped motion contract](DOS_QEMU_MIGRATION.md#move-with-a-declared-image-to-relative-scale).
+
 ## Regression witnesses and promotion gates
 
 These are existing candidate tests, not a report that this inventory ran them.
@@ -357,6 +376,7 @@ automatically start hosted CI.
 | Native one-shot virtual input, ownership and callback receipts | `tests/test_qemu_input_schedule.py`, `tests/test_qemu_input_schedule_native.py` |
 | Sparse retained renderer pixels and exact publication identity | `tests/test_qemu_display_probe.py`, `tests/test_qemu_display_probe_public.py`, `tests/test_qemu_display_probe_native.py` |
 | Current VGA configuration and configuration observed at publication | `tests/test_qemu_vga_configuration.py`, `tests/test_qemu_vga_configuration_public.py`, `tests/test_qemu_vga_configuration_native.py` |
+| Declared image displacement and publication/configuration-bound relative callbacks | `tests/test_qemu_mapped_mouse.py`, `tests/test_qemu_mapped_mouse_public.py`, `tests/test_qemu_mapped_mouse_native.py` |
 | Layers and code views | `tests/test_code_layers.py`, `tests/test_code_overlap_native.py`, `tests/test_runtime_code.py`, `tests/test_screenshot_hooks.py` |
 | Checkpoints and histories | `tests/test_anchor_stone_cli.py`, `tests/test_rewind_native.py`, `tests/test_cpu_deltas_native.py`, `tests/test_delta_policies.py`, `tests/test_debug_timeline_deltas.py`, `tests/test_frame_timeline_native.py`, `tests/test_debug_experiments.py` |
 | Scenes and workflow consumers | `tests/test_scene_domain_integration.py`, `tests/test_scene_readiness.py`, `tests/test_input_macros.py`, `tests/test_movement.py`, `tests/test_spatial_native.py`, `tests/test_progressive_scenes.py`, `tests/test_player_live.py` |

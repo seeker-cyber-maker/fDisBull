@@ -1060,6 +1060,119 @@ project reopening as history, without recreating ownership. Generic frame
 probes, coordinate/frame clicks and scenes remain unqualified, and all 127
 default-promotion qualifications remain open.
 
+### Move with a declared image-to-relative scale
+
+The optional eleventh [display-motion extension](../native/qemu-display-motion/README.md)
+adds the separate `mapped_mouse_motion` capability and
+`mouse_move_mapped(dx_pixels, dy_pixels, *, counts_per_pixel, window, update_id,
+configuration_generation, timeout_ms=1000)`. JSON uses
+`debug-mouse-move-mapped`; saved scripts use `mouse.move-mapped`. Require the
+explicit virtual/precise profiles and all native input, clock, display, retrace,
+VGA-configuration and display-motion commands. A ten-layer executable retains
+its earlier operations and refuses this new capability.
+
+This operation converts a caller-declared image-space displacement to relative
+input units. It has no pointer origin or absolute destination. The caller
+supplies a scale for the selected guest driver/application; the operation does
+not discover or verify that scale. Positive image x points right and positive y
+points down. `counts_per_pixel` is exactly an `x`/`y` dictionary, with each value
+a list `[signed_numerator, positive_denominator]`. Its units are **QEMU REL input
+events per retained-image pixel**. QEMU negates relative y when forming the
+PS/2 wire displacement, so these are not raw packet y counts.
+
+For example, after explicitly obtaining a renderer publication and stopping
+its observer, a caller with a declared scale can arm one movement:
+
+```python
+debug.display_stop()
+view = debug.vga_configuration_observe()
+motion = debug.mouse_move_mapped(
+    12, -6,
+    counts_per_pixel={'x': [1, 2], 'y': [1, 3]},
+    window=view['display']['window'],
+    update_id=view['display']['update_id'],
+    configuration_generation=view['current']['configuration_generation'],
+)
+# The exact relative event values are x=6 and y=-2. Arming did not run the VM.
+stop = debug.clock_advance(4_000_000)
+delivery = stop['input_delivery']
+```
+
+Both pixel components must be strict integers in −8191..8191, with a nonzero
+pair. Numerators are nonzero integers in −32767..32767; denominators are integers
+in 1..32767. Every transformed axis must divide exactly and fit −127..127.
+There is no rounding, clipping, splitting or implicit retry. Each declared
+displacement must also be smaller in magnitude than its retained image extent.
+That bounds the displacement, not an endpoint. This count limit does not promise
+one packet: prior accumulators, disabled/remote mode and FIFO capacity remain
+unobserved.
+
+Admission requires an owned project outside caller transactions, an empty
+physical queue, no owned held leases and no other bound schedule. The retained
+window must already be explicitly **stopped and nonempty**. The supplied window,
+update ID and configuration generation must match a fresh observation, and its
+current and published VGA configurations must agree. The operation does not
+stop the observer, refresh pixels or manufacture a publication. A running
+observer can republish as often as every 1 ms, so it cannot serve as this stable
+publication anchor for a callback due 2 ms later.
+
+After host validation, native arm admission atomically checks the exact epoch,
+device/model, current time, publication token/update/time/dimensions and matching
+configuration generation. One passive attempt schedules nonzero x followed by
+nonzero y, then one synchronization callback, after 2 ms. The caller chooses
+`run`, `clock_advance` or an existing `clock_sync_step` to execute it; this helper
+never starts timing auto-sync itself.
+
+Immediately before the first relative callback, native code checks the binding
+again under QEMU's global lock. A configuration-generation increase, including
+A-to-B-to-A, cancels with `display-motion-configuration-changed`. With unchanged
+configuration, a replaced publication/window or resumed observation cancels
+with `display-motion-publication-changed`. Stop requests and equal/reached
+clock budgets take precedence before this check. Identity regression, changed
+raw values under one generation or contradictory publication stamps fail
+ownership. No motion callback starts after a failed binding check.
+
+The top-level receipt remains `fdisbull-qemu-scheduled-input-1`. Its mutually
+exclusive `motion` descriptor uses `fdisbull-mapped-mouse-motion-1`, preserving
+the pixel request, rational scale, derived `dx`/`dy`, original full VGA receipt,
+frozen `native_arm`, optional `native_check` and `binding_verified`. The check is
+absent when an earlier stop/budget wins. Terminal evidence never refreshes on
+query. A valid callback cancellation retains the unsent records and requires
+`input_cancel_pending()` before another attempt. Generic `input_schedule()` and
+`input_schedule_retrace()` cannot remove its binding. A fresh mapped request
+requires a fresh observation and caller expectations.
+
+`binding_verified=True` proves the publication/configuration checks and selected
+native callbacks plus sync completed. It does not prove current-image freshness:
+palette, VRAM, fonts and application state can change without advancing this
+configuration generation, and an old stopped publication has no implicit age
+limit. `guest_pixel_displacement`, `guest_pointer_position`, `mapping_verified`,
+`raster_coherence` and `target_reached` remain `None`, as do top-level
+`device_queue_accepted` and `guest_consumed`. No button events are requested;
+pre-existing guest/device button state can still make a motion act as a drag.
+
+Strict direct signatures and every visible script literal validate before
+locking or earlier script effects, including independently known axis arithmetic
+when another axis is a result reference. Resolved values validate before timeout
+clamping. One shrinking 1..600000 ms host allowance, default 1000, covers
+admission, observations, native arm, validation, persistence and return. A known
+pre-arm binding mismatch leaves a valid stopped owner usable. An uncertain arm,
+malformed evidence, failed persistence or late accepted result closes ownership
+with available evidence and no replay. Journal reopening restores history only.
+
+Large multi-step motion reports can exceed the normal JSON reply budget and
+return an `fdisbull-output-ref-1` artifact reference. Read or export that saved
+response with the existing output routes; delivery compaction is not permission
+to repeat the input operation.
+
+The authored native witness independently separates IRQ12 packet receipt,
+application pointer commit and drawing, with explicit x/y gains and a deliberately
+wrong declared scale. Those controlled observations do not qualify arbitrary
+INT33 drivers or games. Legacy coordinate clicks, frame probes and scene
+consumers retain their existing requirements. Broad `timed_input`,
+`absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false;
+DOSBox remains the default and all 127 promotion qualifications remain open.
+
 ## What the first slice does and does not qualify
 
 The native tests use independent authored boot and DOS-service fixtures. They

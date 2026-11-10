@@ -28,6 +28,7 @@ OPERATIONS = {
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
     'mouse.button-click':'mouse_button_click',
+    'mouse.move-mapped':'mouse_move_mapped',
     'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
     'input-schedule':'input_schedule','input-schedule-observe':'input_schedule_observe',
     'input-schedule-retrace':'input_schedule_retrace',
@@ -374,6 +375,11 @@ def validate_script(script, *, session=None):
                         checked={key:(samples[key] if isinstance(value,str) and value.startswith('$') else value)
                                  for key,value in params.items()}
                         validate_mouse_click_parameters(**checked)
+                    if op=='mouse.move-mapped':
+                        if session is not None and not getattr(session,'capabilities',{}).get('mapped_mouse_motion'):
+                            raise ValueError('Mapped mouse motion requires its native extension and explicit virtual/precise profiles')
+                        from .qemu_mapped_mouse import validate_mapped_mouse_parameters
+                        validate_mapped_mouse_parameters(**params, allow_references=True)
                     if (op in ('mouse.button-up','keyboard.key-up')
                             and (backend or actual) in ('qemu-machine','qemu-dos')):
                         lease=params['lease']
@@ -402,7 +408,7 @@ def validate_script(script, *, session=None):
             and session.project.db.in_transaction):
         raise ValueError('Source tracing requires a project outside a caller-owned transaction')
     if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
-        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.button-down','mouse.button-click',
+        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-click',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
@@ -530,6 +536,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='mouse.button-click':
                 from .qemu_mouse_click import validate_mouse_click_parameters
                 validate_mouse_click_parameters(**params)
+            if step['op']=='mouse.move-mapped':
+                from .qemu_mapped_mouse import validate_mapped_mouse_parameters
+                validate_mapped_mouse_parameters(**params)
             if step['op']=='display-probe':
                 from .qemu_display import validate_display_probe_parameters
                 validate_display_probe_parameters(**params)
@@ -537,11 +546,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 from .qemu_vga_configuration import validate_vga_configuration_parameters
                 validate_vga_configuration_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
-                             'input-schedule-retrace','display-probe','vga-configuration',
+                             'input-schedule-retrace','display-probe','vga-configuration','mouse.move-mapped',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
-                if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration') else remaining
+                if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration','mouse.move-mapped') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if step['op']=='assert':
                 if params['value'] != params['equals']:

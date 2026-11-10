@@ -66,6 +66,7 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   text and physical mouse-button pairs with delivered-prefix receipts and
   explicit held-lease recovery, sparse probes of retained renderer
   publications, current VGA configuration and its publication-time identity,
+  caller-declared relative mouse displacement bound to one stopped publication,
   cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
@@ -102,7 +103,14 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   mapping. The tenth extension observes conservative current configuration
   and the configuration recorded at publication, with write-time generations
   that preserve A-to-B-to-A changes. Equal configuration does not establish
-  raster coherence, guest mode identity or cursor mapping. Full VBlank, frame completion,
+  raster coherence, guest mode identity or cursor mapping. The eleventh
+  extension converts caller-declared image-pixel displacement to exact relative
+  input counts and binds one explicitly stopped publication/configuration.
+  Native arm and callback guards reject stale expectations, cancel valid changes
+  before input and preserve explicit recovery. One caller-selected timing
+  auto-sync step can drive the same passive attempt. Actual pointer position,
+  scale calibration, guest consumption and current raster freshness remain
+  unknown. Full VBlank, frame completion,
   legacy guest_ms, coordinate/frame clicks and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
@@ -113,6 +121,312 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-10: publication-bound declared mouse displacement
+
+Continued from the verified VGA-configuration publication
+`804c507d652312fb160bb027e0cdcfe38ac7ecb6`, retaining `agent/qemu-sunset-284eb73c`, draft MR !117 and target
+`agent/execution-event-search-284eb73c` /
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. The preceding dated entries, their qualifications and
+retained failures remain history; their test counts are not new executions.
+The next gap was the interval between a host-side image-to-relative conversion
+and its eventual native callback. A stopped configuration observation alone
+cannot guard that interval while the guest executes.
+
+### Public contract and declared scale
+
+The optional eleventh native extension adds the separate
+`mapped_mouse_motion` capability and:
+
+```python
+mouse_move_mapped(
+    dx_pixels, dy_pixels, *, counts_per_pixel,
+    window, update_id, configuration_generation, timeout_ms=1000,
+)
+```
+
+JSON uses `debug-mouse-move-mapped`; saved scripts use `mouse.move-mapped`.
+The route requires the existing explicit virtual/precise profiles, all native
+clock/input/display/retrace/configuration commands, and the new
+`x-fdisbull-arm-display-motion` command. Ten-layer executables retain their
+existing operations and refuse this helper. No new launch option, legacy
+DOSBox stub or absolute-pointer facade is introduced. The maintained public
+contract is in [the migration guide](DOS_QEMU_MIGRATION.md#move-with-a-declared-image-to-relative-scale)
+and [native README](../native/qemu-display-motion/README.md).
+
+The request is a relative displacement expressed in retained-image pixels.
+It supplies no pointer origin or absolute destination. `counts_per_pixel` is
+exactly an `x`/`y` dict, each value a two-integer list containing a signed
+nonzero numerator and a positive denominator. Its units are QEMU REL input
+events per retained-image pixel: positive x is right and positive y is down.
+QEMU negates relative y in the PS/2 accumulator, so the declared units are
+distinct from raw wire y counts.
+
+Pixel components are strict integers in -8191..8191 with a nonzero pair.
+Numerator magnitudes and denominators are bounded to 1..32767. Each converted
+axis must divide exactly and fit -127..127; native code independently enforces
+that count bound and a nonzero pair. There is no rounding, clipping, splitting
+or implicit retry. Each displacement magnitude must also be less than the
+corresponding retained image extent. This bounds a displacement, not endpoints
+inside the image. The host freezes the nested declaration before deriving
+counts or making native calls, so the accepted receipt retains the declaration
+that produced those counts.
+
+The scale remains a caller assertion about the selected guest driver or
+application. Successful arithmetic and binding checks cannot verify that
+assertion, guest acceleration, clipping or actual pixel travel. The narrow
+count bound also does not establish one-packet delivery when residual movement,
+device mode or queue capacity is unknown.
+
+### Atomic publication/configuration binding
+
+Admission requires an owned project outside caller transactions, an empty
+physical input queue, no owned held leases and no other bound schedule. The
+retained renderer window must already be explicitly stopped and nonempty.
+The requested window, update ID and configuration generation must match a
+fresh validated observation, whose current and published VGA configurations
+have equal generation and raw values. The operation neither stops the observer
+nor refreshes or manufactures a publication. An active observer can republish
+even unchanged pixels, so it does not provide this stable publication anchor.
+
+Native arm admission compares every expected field atomically: native epoch,
+stopped time, exact VGA device/model, configuration generation, display token,
+update ID, publication timestamp and dimensions. The accepted `motion`
+descriptor retains signed relative counts, the fixed delay and the full
+`armed` display/current/published observation. Before any relative callback,
+an internal BQL-only helper takes a fresh observation of the already admitted
+owner. It supports the running callback without invoking the public stopped
+query, admitting another device, initializing a display timer or rendering.
+The optional `checked` observation is retained once and never refreshed.
+
+Impossible histories are rejected before choosing a cancellation reason.
+These include native identity or generation regression, changed raw values
+under one generation, contradictory current/published time and generation
+ordering, regressed window history, and changed dimensions, publication time
+or full published stamp under one publication identity. A coherent state-only
+observer transition can cancel; it cannot hide a contradictory stamp.
+
+Among otherwise valid binding changes, current configuration generation has
+priority. An increase cancels with
+`display-motion-configuration-changed`, including A-to-B-to-A even when raw
+values return to the original values. With unchanged configuration, a replaced
+window/publication or resumed observer cancels with
+`display-motion-publication-changed`. No relative callback starts after a
+failed binding check. Callback evidence is checked against both the arm and
+already observed VGA/display history without replacing the live observation
+frontiers. Equal virtual timestamps do not order paused QOM changes; equal
+generations and publication identities still require immutable values.
+
+### Passive timing, explicit execution and recovery
+
+The operation arms one attempt due 2 ms of native virtual time after acceptance. Its one owned batch
+contains nonzero x first and nonzero y second, followed by one final sync.
+`event-count` is exactly one or two, and no zero-valued callback or button edge
+is invented. Arming does not execute the guest. The caller selects `run`,
+`clock_advance` or the existing cooperative `clock_sync_step` to execute it.
+The helper does not start timing auto-sync or introduce a background loop.
+
+Native pending-stop and equal/reached clock-budget precedence runs before
+the guard snapshot. An equal deadline wins in either timer insertion order.
+The first actual VM stop consumes an unfired attempt. A clock-sync step can
+supply one bounded execution attempt, but a step that stops too early does not
+automatically continue, rebase or replay motion. Completion does not itself
+stop the guest. See [the timing guide](DOS_QEMU_TIMING.md) for the existing
+single-correction auto-sync and stop/ownership contracts.
+
+A cancelled mapped plan retains its unsent records and protected binding.
+Neither `input_schedule()` nor `input_schedule_retrace()` may convert those
+records into unguarded input. Recovery requires `input_cancel_pending()`
+followed by a fresh mapped request and fresh caller expectations. The operation
+creates no held-button lease; pre-existing guest/device buttons remain unknown.
+All native input modes share query/cancel, token history and migration
+restrictions. The optional `motion`, `retrace`, `press`, `typing` and `click`
+descriptors are mutually exclusive; only an accepted replacement arm clears
+the preceding descriptor.
+
+The top-level receipt remains `fdisbull-qemu-scheduled-input-1`. Its
+`fdisbull-mapped-mouse-motion-1` descriptor retains the pixel request, exact
+ratio declaration, derived REL counts, full pre-arm VGA receipt, immutable
+native arm/check observations and `binding_verified`. That flag is true only
+for validated dispatch. Terminal observations remain frozen through later
+queries and journal reopening; reopening restores evidence, not live ownership.
+
+Direct signatures and visible script literals validate before lock/I/O or
+earlier script effects, including known-axis arithmetic when another axis is
+a reference. Resolved values validate before deadline clamping. One shrinking
+host allowance, default 1000 ms with strict range 1..600000, covers admission,
+observations, arm, validation, journal persistence and final return. Known
+pre-arm binding refusals preserve a valid stopped owner. Uncertain or late
+accepted arms, malformed native evidence and persistence failures close with
+available evidence and no replay. Large JSON/script results may use the
+existing `fdisbull-output-ref-1` delivery marker; read/export the retained
+output artifact rather than repeating input to obtain an inline result.
+
+### Independent guest and host witnesses
+
+The authored COM fixture in `tests/support/qemu_mapped_mouse_fixture.py`
+owns its PS/2 setup and IRQ12 handler. It verifies a separate initial
+zero-motion packet and records bytes actually read by the guest. Its own
+application policy moves two VGA pixels per horizontal count and three per
+vertical count, beginning at a fixture-defined position. Separate gates and
+fences distinguish packet receipt, application pointer commit and drawing.
+The host's declarations account for the actual retained renderer extent;
+the fixture does not consume the production planner's answer as its oracle.
+
+The cases in `tests/test_qemu_mapped_mouse_native.py` independently specify
+signed packet bytes, application positions and pixel markers. They include
+positive, negative and single-axis displacement through explicit run, clock
+advance and clock-sync execution. The deliberately wrong-scale/sign control
+expects valid native binding and different application travel, while
+`mapping_verified` and `target_reached` remain unknown. Other cases retain an
+old stopped raster after a separately observed guest draw, then obtain an
+explicit new publication to distinguish the two images.
+
+Root verified all 15 native cases in `native-motion-03`: 15 passed, zero skips.
+
+Native acceptance cases also cover a page change and unobserved A-to-B-to-A
+between arm and callback without an intervening stop; paused QOM change plus
+publication replacement; ignored writes and excluded palette/VRAM mutations;
+active/stale/replaced publication refusal or cancellation; equal-budget
+precedence in both arm orders; first-stop cancellation and explicit recovery;
+JSON/script/journal reopening; old-ten-layer refusal with lower-level relative
+input retained; and raw native rejection without token consumption. These
+authored cases establish their results only through the execution receipts
+recorded below.
+
+Focused host/public cases independently exercise exact schemas and arithmetic,
+whole-script preflight, partial references, command-set/profile admission,
+shared deadlines, immutable history, cancellation reasons, protected rearm,
+caller-declaration mutation and persistence failures. Routing sentinels qualify
+forwarding or stored evidence, not native guest behavior. Their files are
+`tests/test_qemu_mapped_mouse.py` and
+`tests/test_qemu_mapped_mouse_public.py`.
+Root verified `focused-new-03`: 335 passed, zero skips.
+
+### Source identities and final local evidence
+
+The eleventh patch pins all ten exact prerequisites. Source-only preparation
+verified the 27-member ten-layer source union. Forward/reverse patch
+reproduction passed with zero fuzz/offset: four resulting members matched,
+the three prior members were restored, and the new internal header was removed.
+An independent read-only review found no actionable arm/callback defect.
+Root then applied and compiled this eleventh layer in the private Linux
+x86_64-softmmu TCG/Pixman runtime: all 28 resulting native members and 396
+generated QAPI files were recorded, and compilation completed successfully.
+
+| Identity | SHA256 |
+| --- | --- |
+| Eleventh native patch | `27ca5b889e6be2758b812b7e19936281b4640dddf0b398519c209dd202937ec8` |
+| Eleventh source manifest | `56a32945488f95fdb71704b09414769f402d2aab28a215521213abacdcebaa10` |
+| Eleven-layer executable | `aa5d913b609907585779e71b37f442b50810f52bc5c7e5b1bee7ebfba8f61a3a` |
+
+Root remained the sole build, test, emulator and publication owner. These
+are fresh finite local Linux executions of the final source; overlapping
+selections are not disjoint totals. Each final lane preserved its source and
+private runtime inventory, with no errors or failures.
+
+| Lane | Passed | Skipped | Elapsed seconds |
+| --- | ---: | ---: | ---: |
+| Focused new host/public | 335 | 0 | 28.25 |
+| New native mapped motion | 15 | 0 | 11.35 |
+| Affected source host regression | 3140 | 5 | 201.70 |
+| Source native regression | 162 | 0 | 105.24 |
+| Installed wheel/copied host tests | 2217 | 5 | 179.45 |
+| Installed wheel/copied native tests | 162 | 0 | 105.99 |
+| Installed retained DOSBox witnesses | 5 | 0 | 6.83 |
+
+The five source/installed host skips explicitly require an unconfigured
+`FDISBULL_MACHINE_QEMU` standalone machine witness; they are not native motion
+passes. The installed host selection also deselects the same two pre-existing
+source-tree inspection cases. All new native motion, broader native and
+retained DOSBox selections have zero skips. The retained witnesses cover
+keyboard chords/text and interruption recovery, execution predicates,
+protected/paged mouse consumption and release, and scene/restart behavior.
+
+The fresh private candidate installation used the tested core wheel, an
+isolated interpreter and copied tests. Import-origin checks excluded source
+checkout fallback. No shared prefix or active installation changed.
+All 643 installed runtime payload files and 639 copied test/support
+files match the frozen source. The declared private runtime inventory contains
+1065 hashed inputs, including retained five- through ten-layer executables.
+
+| Tested candidate package | SHA256 |
+| --- | --- |
+| fdisbull-0.33.0-py3-none-any.whl | `b3ddecf79ebcc383d075fc05276c31047aa700625ffee7b2ee429af9b705c27a` |
+| fdisbull_player-0.33.0-py3-none-any.whl | `bad3743bb70dc4b35235db319249d24116cad7b989a38a2b9bbbf37588d3fefc` |
+
+Final source distribution/tool ZIP assembly and four-artifact privacy/payload
+verification use this completed handoff. Their resulting hashes and final
+source/package readback are recorded in the MR publication receipt, avoiding
+self-referential archive hashes inside the source document. Vendor images,
+prepared media, firmware, executables, runtime databases and raw delivery logs
+remain outside the authored source and tool packages. Previous inaccessible
+macOS mirror paths remain unverified; these Linux results do not qualify macOS
+or a hosted pipeline.
+
+### Retained diagnostics and corrections
+
+`native-motion-01` and `native-motion-02` each completed with 14 passes and one
+fixture failure. The first fixture assumed the large script response would be
+inline; the existing default output budget correctly returned an output
+reference. The next attempt reached the output store, which correctly refused
+a private artifact location under `/workspace` Git ancestry. Neither failure
+required widening the product's output budget or weakening its storage guard.
+
+The corrected fixture uses a private `/tmp` artifact/export location and the
+default 65536-byte reply limit. It verifies the stored full RPC response
+identity and hash, and checks that retrieving the saved response does not
+repeat native input execution. `native-motion-03` then passed all 15 cases.
+Both original failure receipts remain retained; these are fixture corrections,
+not guest behavior inferred from a routing sentinel.
+
+Before implementation, `missing-public-01` produced the three intended
+failures for absent Python, JSON and script routes. `review-gaps-01` then
+preserved four failing regressions: mutation of the caller's scale at either
+of two observation points could rewrite the accepted declaration, and a later
+forged callback could contradict a previously observed configuration or
+replacement window. The implementation now copies the declaration before
+conversion/I/O and validates a first terminal callback against established
+observation history without advancing the live caches. Equal-time QOM
+ambiguity and legitimate post-callback observations remain allowed.
+`review-gaps-02` preserved one further failure where a later update ID could
+carry a publication timestamp older than an already known replacement-window
+publication; the history validator now rejects that regression.
+
+`focused-new-01` retained 327 passes and six fixture failures: two changed an
+already admitted profile while expecting a nonterminal refusal, and four
+attempted a wrapped state query under an already expired operation deadline.
+Those fixtures were corrected without weakening the close/deadline behavior.
+`focused-new-02` then passed 335 cases; `focused-new-03` repeats that result
+against the final native-test and bundled-documentation bytes. A pre-start
+launcher invocation also failed because `build.env` did not export
+`VIRTUAL_ENV`; no test or build began in that invocation, and the subsequent
+lane used the verified interpreter's explicit path. Every original failure
+receipt remains retained and is not relabeled as a passing execution.
+
+### Remaining qualification boundaries
+
+The public result keeps `guest_pixel_displacement`, `guest_pointer_position`,
+`mapping_verified`, `raster_coherence` and `target_reached` unknown, along with
+top-level `device_queue_accepted` and `guest_consumed`. A disabled mouse may
+ignore callbacks, remote mode may retain motion without a stream packet, and
+FIFO capacity or existing accumulators can alter emission. External held
+buttons can make motion act as a drag even though no button event is requested.
+
+The guard binds retained publication/configuration identity, not current-image
+freshness. Palette, VRAM/fonts and application state can change without a
+configuration-generation change, and a stopped publication has no implicit
+age limit. The fixture's packet receipt, gains, pointer commit and drawing
+are controlled application facts; they do not establish arbitrary DOS/INT33
+calibration, cursor ownership, target readiness or completed guest frames.
+
+Legacy absolute/coordinate/frame clicks, generic frame consumers and scenes
+remain unqualified. Broad `timed_input`, `absolute_mouse`, `guest_time_control`
+and `completed_guest_frames` remain false. DOSBox remains the default and all
+127 default-promotion qualifications remain open. Checkpoint compatibility,
+arbitrary driver/game campaigns, protected/V86 consumers and cross-platform
+qualification still require their own evidence. No merge, release, shared
+installation or hosted CI is implied by this slice.
 
 ## 2026-11-09: current and published VGA configuration identity
 

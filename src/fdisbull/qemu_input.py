@@ -247,6 +247,13 @@ class QemuPhysicalInputMixin:
         from .qemu_mouse_click import mouse_button_click
         return mouse_button_click(self, button, hold_ms=hold_ms)
 
+    def mouse_move_mapped(self, dx_pixels, dy_pixels, *, counts_per_pixel, window,
+                          update_id, configuration_generation, timeout_ms=1000):
+        from .qemu_mapped_mouse import mouse_move_mapped
+        return mouse_move_mapped(self, dx_pixels, dy_pixels, counts_per_pixel=counts_per_pixel,
+            window=window, update_id=update_id, configuration_generation=configuration_generation,
+            timeout_ms=timeout_ms)
+
     def input_state(self):
         state = self._input_storage()
         return dict(format=FORMAT, context='machine', scope='owned VM input devices',

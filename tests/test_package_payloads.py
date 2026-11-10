@@ -22,6 +22,7 @@ def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
         "native/qemu-input-retrace/private-api.patch": b"retrace input extension",
         "native/qemu-display-probe/private-api.patch": b"sparse retained renderer extension",
         "native/qemu-vga-configuration/private-api.patch": b"VGA configuration identity extension",
+        "native/qemu-display-motion/private-api.patch": b"publication-bound relative motion extension",
     }
     for name, data in source.items():
         path = tmp_path / name
