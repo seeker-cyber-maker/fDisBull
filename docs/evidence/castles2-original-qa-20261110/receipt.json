@@ -1,0 +1,20 @@
+{
+  "format": "fdisbull-castles2-test-receipt-sanitized-1",
+  "tool_version": "0.34.1",
+  "installer_sha256": "d09debb49922e7e5ac83a5c9dc160053cc10599560d9525317a3925dbbadfe56",
+  "exe_sha256": "512efad4a4d771f6c975702cad9a688aeef10f8d81798b8c7260e37c74e87d43",
+  "game_resources": 259,
+  "extraction": "passed",
+  "static_analysis": "partial/budget_exhausted",
+  "doctor": "passed on authored target",
+  "original_game_menu": "passed",
+  "original_save_load": "passed",
+  "save_bytes": 11733,
+  "load_count": 2,
+  "fresh_process_load_count": 1,
+  "save_sha256": "6168dd3752d6fbd7ad43d6279c5b71012d7d14f183fa4cf5affe4fd9f4bfff11",
+  "harness_elapsed_seconds": 15.087,
+  "shutdown": "host-forced, not a guest exit",
+  "no_commercial_assets": true,
+  "qualification": "Observed original game UI/save/load only; no recovered UIL or binary recompilation"
+}
