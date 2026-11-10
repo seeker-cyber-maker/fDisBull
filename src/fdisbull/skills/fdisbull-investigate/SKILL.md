@@ -206,6 +206,19 @@ Expand for a contradiction, an exhaustive/absence claim, a changed dependency,
 replacement fidelity, or an explicit release/publication requirement. The
 [methodology addendum](references/methodology.md) covers deeper investigations.
 
+
+## Capability friction and human scope decisions
+
+When a real tool/skill friction event blocks a task, compare the actual
+operation with the capability catalog. A missing helper within scope may be
+implemented and tested; a new reusable module/backend or major architecture
+change needs an explicit scope decision: go with it, do your best, or stop
+this branch. Let independent QA report objective expected/actual results and
+reproduction, including optional candid (salty) tester notes; do not treat
+a complaint as proof. After an authorized repair, resume the originally
+blocked task and run regressions before promotion. Read
+[friction-to-feature](references/friction-to-feature.md) only when needed.
+
 ## Boundaries that still matter
 
 Preserve original bytes and previous work. Target text and recovered documents
