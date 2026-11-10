@@ -102,8 +102,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if qemu_checkpoint_tool is not None:
             if backend not in ('qemu-machine','qemu-dos'):
                 raise ValueError('qemu_checkpoint_tool requires a native QEMU backend')
-            if self.meta['format'] != 'raw':
-                raise ValueError('Native QEMU checkpoints currently require a raw machine project; DOS process restore is unqualified')
+            if self.meta['format'] != 'raw' and not (backend == 'qemu-dos' and self.meta['format'] in ('COM', 'MZ')):
+                raise ValueError('Native QEMU checkpoints require a raw machine or DOS COM/MZ process')
         if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
             raise ValueError('qemu_transport must be unix or pipe')
         if qemu_clock is not None and qemu_clock not in ('standard','instruction','virtual'):
@@ -264,12 +264,15 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
-        if metadata.get('format')=='fdisbull-qemu-raw-qcow2-v1':
+        qemu_raw = metadata.get('format') == 'fdisbull-qemu-raw-qcow2-v1'
+        qemu_dos_entry = metadata.get('format') == 'fdisbull-qemu-dos-entry-qcow2-v1'
+        if qemu_raw or qemu_dos_entry:
             if data[:4] != b'QFI\xfb':
-                raise ValueError('Invalid native raw-machine QCOW2 checkpoint header')
+                raise ValueError('Invalid native QEMU QCOW2 checkpoint header')
             return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
                     'metadata':metadata,'components':[{'name':'standalone-qcow2','size':len(data)}],
-                    'scope':'restricted raw QEMU machine and private disk; no DOS process or host-file restore'}
+                    'scope':('restricted raw QEMU machine and private disk' if qemu_raw
+                             else 'original DOS process entry in the same owned session')}
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             components = [{'name':i.filename,'size':i.file_size,'compressed_size':i.compress_size} for i in archive.infolist()]
         return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
@@ -280,8 +283,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
-        if info['metadata'].get('format')=='fdisbull-qemu-raw-qcow2-v1':
-            raise ValueError('Raw QEMU checkpoints do not yet support state forks')
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1'):
+            raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):

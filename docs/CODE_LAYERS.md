@@ -2,6 +2,35 @@
 
 This page describes the **DOSBox layers backend**. Version 0.13.0 also supports PE64 RAM/execution layers through Wine/QEMU; see [PE64 usage and limits](WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130). PE execution layers relocate instructions into a private guest allocation and single-step them. The DOS zero-additional-guest-RAM guarantee, virtual caves, segmented addresses and breakpoint action hooks below do not apply to PE64.
 
+## Native QEMU backing layers
+
+The optional [native layer extension](../native/qemu-layers/README.md) enables
+the QEMU layer stack for an owned, stopped TCG machine with one vCPU. Portable
+COM/MZ definitions use their project addresses and the verified unpaged DOS
+module mapping. A runtime definition created with `space='linear'` resolves
+its physical backing when it is created. The layer remains on that backing
+within the same run and epoch. If the guest remaps the window from A to B and
+back to A, the layer is visible again at A. A `space='physical'` definition
+names the backing directly.
+
+RAM transitions validate all expected bytes before writing. Fetch overlays
+change the bytes translated by TCG while ordinary RAM reads use the underlying
+bytes. `debug.code(..., view='execute')` checks the native fetch view against
+the active stack. Captures use the `qemu-code-snapshot` artifact kind. Static
+promotion still requires a qualified source provenance path. Native checkpoints
+require the active stack to be cleared. A layered COM/MZ program that exits or
+becomes resident closes its owned machine because DOS can release or reuse
+the underlying allocation.
+
+Use `debug.hook` with a source address or a linear machine address. The
+QEMU debugger dispatches only an identified owned breakpoint or watchpoint.
+The actions can replace the layer stack, apply checked registers or redirect
+within a verified real-mode DOS source mapping. A repeat execution hook
+steps past its breakpoint within the same host deadline. The existing
+`stop_on_hook` option returns the action receipt at the stop.
+
+The remainder of this page covers the established DOSBox interface.
+
 Code layers are immutable, version-bound experiment definitions with an ordered active stack in each live debugger session. They preserve original static bytes. Runtime captures and the event timeline record when a view changed, which definitions were active, and which bytes the CPU could fetch. This supports self-modifying code investigations and reversible theories without promoting runtime observations into static instruction facts.
 
 Two layer kinds have different visibility:

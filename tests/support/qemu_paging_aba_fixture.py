@@ -6,7 +6,7 @@ import struct
 from support.dos_process_fixture import assemble
 
 
-def paging_aba_boot(directory, nasm):
+def paging_aba_boot(directory, nasm, *, execute=False):
     """Return a boot image and addresses for three stopped A/B/A observations.
 
     The guest independently writes two different physical sentinels, installs
@@ -16,7 +16,16 @@ def paging_aba_boot(directory, nasm):
     after initialization. Marker addresses are linear and physical because
     the boot code remains identity mapped.
     """
-    sector = assemble(directory, 'paging-aba-boot', r'''
+    mode = '%define PAGING_EXEC 1\n' if execute else '%define PAGING_EXEC 0\n'
+    sector = assemble(directory, 'paging-aba-boot', mode + r'''
+%macro observe_window 0
+%if PAGING_EXEC
+    mov eax,0x300000
+    call eax
+%else
+    mov eax,[0x300000]
+%endif
+%endmacro
 bits 16
 org 0x7c00
     jmp short start
@@ -62,8 +71,16 @@ protected:
     stosd
     add eax,0x1000
     loop .identity
+%if PAGING_EXEC
+    ; Each page holds MOV EAX, sentinel; RET.
+    mov dword [0x200000],0x579bdfb8
+    mov word [0x200004],0xc313
+    mov dword [0x201000],0x68ace0b8
+    mov word [0x201004],0xc324
+%else
     mov dword [0x200000],0x13579bdf
     mov dword [0x201000],0x2468ace0
+%endif
     ; Linear 0x300000 is page-table index 768, at PTE 0x11c00.
     mov dword [0x11c00],0x200003
     mov eax,0x10000
@@ -73,19 +90,19 @@ protected:
     mov cr0,eax
     jmp short .paging
 .paging:
-    mov eax,[0x300000]
+    observe_window
     mov [0x6000],eax
 marker_a:
     nop
     mov dword [0x11c00],0x201003
     invlpg [0x300000]
-    mov eax,[0x300000]
+    observe_window
     mov [0x6004],eax
 marker_b:
     nop
     mov dword [0x11c00],0x200003
     invlpg [0x300000]
-    mov eax,[0x300000]
+    observe_window
     mov [0x6008],eax
 marker_a_again:
     nop

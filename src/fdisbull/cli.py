@@ -253,12 +253,12 @@ METHODS = {
     "debug-events": "Read the persisted runtime event timeline; run,[after,limit]",
     "debug-layer-stack": "Inspect or replace the active ordered layer stack; run,[active]",
     "debug-layer-enable": "Enable or disable a saved layer; run,layer,[enabled]",
-    "debug-layer-patch": "Create and optionally activate a guarded RAM/execute patch; run,name,address,expected_hex,data_hex,[kind,activate]",
-    "debug-code": "Decode observed RAM or effective instruction-fetch bytes; run,address,[cs,length,view]",
-    "debug-capture-code": "Save a temporal code view as an immutable project artifact; run,address,[cs,length,view,name]",
+    "debug-layer-patch": "Create and optionally activate a guarded RAM/execute patch; run,name,address,expected_hex,data_hex,[kind,activate,space]",
+    "debug-code": "Decode observed RAM or effective instruction-fetch bytes; run,address,[cs,length,view,space]",
+    "debug-capture-code": "Save a temporal code view as an immutable project artifact; run,address,[cs,length,view,name,space]",
     "debug-branch": "Invert or force an observed 16-bit Jcc using an execution layer; run,name,address,[mode,activate]",
     "debug-cave": "Create an execution-only code cave with normalized far return; run,name,address,code_hex,return_to,[activate]",
-    "debug-hook": "Attach bounded declarative actions to a breakpoint; run,address,actions,[once,max_hits,cs,access,length]",
+    "debug-hook": "Attach bounded actions to a breakpoint or watchpoint; run,address,actions,[once,max_hits,cs,access,length,space]",
     "debug-hooks": "Inspect active breakpoint actions and hit counts; run",
     "debug-delete-hook": "Remove an owned hook and its native breakpoints; run,hook",
     "debug-breakpoint": "Translate execution or data access breakpoint; run,address,[cs,access,length]",
@@ -2088,7 +2088,7 @@ def parser():
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
     c.add_argument("--qemu-checkpoint-tool",
-                   help="Explicit qemu-img executable for restricted raw-machine checkpoints")
+                   help="Explicit qemu-img executable for raw-machine or verified DOS entry checkpoints")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")

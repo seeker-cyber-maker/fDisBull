@@ -35,10 +35,11 @@ Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. See [native timing synchronization](DOS_QEMU_TIMING.md) for the
 mapping, stop policy and exact limits.
 
-A restricted raw-machine checkpoint path is available for the standard profile.
-Full DOS process checkpoints, execution layers and histories remain open. The
-default-switch gate remains blocked until the outstanding surfaces and
-compatibility campaigns are qualified. No command here changes the default.
+The standard profile supports restricted raw-machine checkpoints and an
+entry checkpoint for an original COM/MZ program. The optional native layers
+extension supplies guarded RAM and instruction-fetch views. The default-switch
+gate still requires qualification of the outstanding surfaces and compatibility
+campaigns.
 
 ## Select the execution environment
 
@@ -74,6 +75,21 @@ This does not restore source-bound COM/MZ process identity, host files, or
 clock/input/media extension state. Saved-script state operations and state
 forks are not admitted for this profile. It is not general DOSBox state or
 Anchor Stone parity.
+
+## Checkpoint the verified entry of a COM/MZ program
+
+Use `qemu_checkpoint_tool` with `backend='qemu-dos'`, a private DOS boot
+image and the standard profile above. Save before executing the first
+instruction of the selected COM or MZ. The helper channel must be drained,
+input released and layers, hooks and user breakpoints removed. The debugger
+keeps the private snapshot and recorded source identity with the owned run.
+
+The same live session can restore its entry artifact after running the program
+to ordinary exit or TSR. Restore starts a new QEMU process, reopens the helper
+channel, verifies the original PSP, allocation, relocated bytes and entry
+registers, and installs a fresh DOS parent-return breakpoint. Live memory
+identities change with the new epoch. Mid-program saves, restore into an
+unrelated session, and active clock, media or layer state remain open.
 
 ## Prepare and check the core
 

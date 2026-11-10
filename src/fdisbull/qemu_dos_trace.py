@@ -103,7 +103,9 @@ def _observe(session, binding, sequence, *, clocked=False):
     if (not 0 <= cs <= 0xffff or not 0 <= ip <= 0xffff
             or linear != cs * 16 + ip or not 0 <= linear < 0x100000):
         raise ValueError('Source trace PC is outside its unwrapped real-mode mapping')
-    raw = session._read(linear, min(15, 0x10000 - ip, 0x100000 - linear))
+    length = min(15, 0x10000 - ip, 0x100000 - linear)
+    layer_view = session.code(linear, length=length, space='linear') if getattr(session, '_layer_exec', None) else None
+    raw = bytes.fromhex(layer_view['hex']) if layer_view is not None else session._read(linear, length)
     instruction = Decoder(16, raw, ip=ip).decode()
     if instruction.is_invalid:
         raise ValueError('Stopped DOS bytes do not decode to a complete instruction')
@@ -125,10 +127,12 @@ def _observe(session, binding, sequence, *, clocked=False):
                  cpu_mode='real', code_bits=16, address_context=context,
                  task_id=session._process['psp_segment'], mapping_id=binding['capture_epoch'],
                  project_address=qualification['project_address'], identity=identity,
-                 source_qualification=qualification, active_layers=[],
+                 source_qualification=qualification, active_layers=list(getattr(session, '_layer_active', ())),
                  observation=dict(registers_stage='before-instruction',
                                   instruction_completed=False, flags_materialized=True,
                                   evidence='stopped native snapshot; no retirement claim'))
+    if event['active_layers']:
+        event['layer_generation'] = session._layer_generation
     stopped = dict(registers=registers, address=address, source_qualification=qualification)
     if clocked:
         event['clock'] = _clock_bracket(session, before, _clock_sample(session))

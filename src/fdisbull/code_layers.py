@@ -42,9 +42,25 @@ def encode_chunks(before,after):
             for part in groups(after)]
 
 
+def branch_replacement(raw, mode):
+    if mode not in ('invert', 'taken', 'fallthrough'):
+        raise ValueError('Branch mode must be invert, taken, or fallthrough')
+    if len(raw) == 2 and 0x70 <= raw[0] <= 0x7f:
+        if mode == 'invert':
+            return bytes((raw[0] ^ 1, raw[1]))
+        return bytes((0xeb, raw[1])) if mode == 'taken' else b'\x90\x90'
+    if len(raw) == 4 and raw[0] == 0x0f and 0x80 <= raw[1] <= 0x8f:
+        if mode == 'invert':
+            return bytes((raw[0], raw[1] ^ 1)) + raw[2:]
+        if mode == 'taken':
+            displacement = (int.from_bytes(raw[2:], 'little') + 1) & 0xffff
+            return b'\xe9' + struct.pack('<H', displacement) + b'\x90'
+        return b'\x90' * 4
+    raise ValueError('Branch helper supports unprefixed 16-bit short/near Jcc instructions')
+
+
 class LayerProjectMixin:
     def debug_layer(self,name,*,kind,patches,version=None):
-        from .project import now
         _file_name(name)
         pe=self.meta['format']=='PE' and self.bits==64 and self.meta['arch']=='x86'
         if self.meta['format'] not in ('MZ', 'COM') and not pe or kind not in ('ram','execute'):
@@ -70,14 +86,19 @@ class LayerProjectMixin:
             touched.update(positions)
             if len(touched)>65536:raise ValueError('Layer exceeds 64 KiB')
             normalized.append({'address':hex(address),'expected_hex':before.hex(),'data_hex':after.hex()})
-        document=json.dumps({'kind':kind,'patches':normalized},sort_keys=True,separators=(',',':'))
+        return self._store_debug_layer(name, v, {'kind':kind,'patches':normalized})
+
+    def _store_debug_layer(self, name, version, definition):
+        from .project import now
+        _file_name(name)
+        document=json.dumps(definition,sort_keys=True,separators=(',',':'))
         identifier=uuid.uuid4().hex;digest=hashlib.sha256(document.encode()).hexdigest()
         with self.transaction(True):
-            if self.db.execute('SELECT count(*) FROM debug_layers WHERE version=?',(v,)).fetchone()[0]>=256:
+            if self.db.execute('SELECT count(*) FROM debug_layers WHERE version=?',(version,)).fetchone()[0]>=256:
                 raise ValueError('Project version already has 256 immutable layers')
             self.db.execute('INSERT INTO debug_layers VALUES (?,?,?,?,?,?,?)',
-                            (identifier,v,name,kind,now(),digest,document))
-        return {'layer':identifier,'version':v,'name':name,'kind':kind,'sha256':digest,'patches':normalized}
+                            (identifier,version,name,definition['kind'],now(),digest,document))
+        return {'layer':identifier,'version':version,'name':name,'sha256':digest,**definition}
 
     def debug_layer_info(self,layer):
         row=self.db.execute('SELECT * FROM debug_layers WHERE id=?',(layer,)).fetchone()
@@ -147,6 +168,8 @@ class LayerSessionMixin:
         definitions=[self.project.debug_layer_info(i) for i in active]
         if any(d['version']!=self.version['id'] for d in definitions):
             raise ValueError('Layer belongs to a different static version')
+        if any('native_binding' in d for d in definitions):
+            raise ValueError('QEMU backing layers require their original native session')
         patches=[(d['kind'],p) for d in definitions for p in d['patches']]
         if len(patches)>256:raise ValueError('Active layers exceed 256 patches')
         expected={};ranges=set(self._ram_applied)
@@ -256,12 +279,7 @@ class LayerSessionMixin:
         code=self.code(address,length=8)
         if not code['instructions']:raise ValueError('No decoded runtime branch')
         raw=bytes.fromhex(code['instructions'][0]['bytes'])
-        if len(raw)==2 and 0x70<=raw[0]<=0x7f:
-            replacement=bytes([raw[0]^1,raw[1]]) if mode=='invert' else bytes([0xeb,raw[1]]) if mode=='taken' else b'\x90\x90'
-        elif len(raw)==4 and raw[0]==0x0f and 0x80<=raw[1]<=0x8f:
-            replacement=(bytes([0x0f,raw[1]^1])+raw[2:] if mode=='invert' else
-                b'\xe9'+struct.pack('<H',(int.from_bytes(raw[2:],'little')+1)&65535)+b'\x90' if mode=='taken' else b'\x90'*4)
-        else:raise ValueError('Branch helper supports unprefixed 16-bit short/near Jcc instructions')
+        replacement=branch_replacement(raw,mode)
         linear=int(code['project_address'],16)
         base=bytes(self._ram_base.get(linear+i,b) for i,b in enumerate(bytes.fromhex(self._view(address,length=len(raw))['hex'])))
         return self.layer_patch(name,address,expected_hex=base.hex(),data_hex=replacement.hex(),kind='execute',activate=activate)

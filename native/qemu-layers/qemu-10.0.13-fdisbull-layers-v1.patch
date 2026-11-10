@@ -1,0 +1,728 @@
+--- a/qemu-10.0.13/accel/tcg/cputlb.c
++++ b/qemu-10.0.13/accel/tcg/cputlb.c
+@@ -25,6 +25,9 @@
+ #include "exec/memory.h"
+ #include "exec/cpu_ldst.h"
+ #include "exec/cputlb.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-layers.h"
++#endif
+ #include "exec/tb-flush.h"
+ #include "exec/memory-internal.h"
+ #include "exec/ram_addr.h"
+@@ -1336,6 +1339,14 @@
+     trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+ 
+     if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
++#ifndef CONFIG_USER_ONLY
++        if (fdisbull_layers_note_guest_write(ram_addr, size)) {
++            /* Stop at the first boundary after a layer backing is modified. */
++            bql_lock();
++            cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++            bql_unlock();
++        }
++#endif
+         tb_invalidate_phys_range_fast(ram_addr, size, retaddr);
+     }
+ 
+--- a/qemu-10.0.13/accel/tcg/translator.c
++++ b/qemu-10.0.13/accel/tcg/translator.c
+@@ -12,6 +12,12 @@
+ #include "qemu/error-report.h"
+ #include "exec/exec-all.h"
+ #include "exec/translator.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-layers.h"
++#define fdisbull_code_copy(d, s, n) fdisbull_layers_copy_code((d), (s), (n))
++#else
++#define fdisbull_code_copy(d, s, n) memcpy((d), (s), (n))
++#endif
+ #include "exec/cpu_ldst.h"
+ #include "exec/plugin-gen.h"
+ #include "exec/cpu_ldst.h"
+@@ -265,14 +271,14 @@
+ 
+     if (likely(((base ^ last) & TARGET_PAGE_MASK) == 0)) {
+         /* Entire read is from the first page. */
+-        memcpy(dest, host + (pc - base), len);
++        fdisbull_code_copy(dest, host + (pc - base), len);
+         return true;
+     }
+ 
+     if (unlikely(((base ^ pc) & TARGET_PAGE_MASK) == 0)) {
+         /* Read begins on the first page and extends to the second. */
+         size_t len0 = -(pc | TARGET_PAGE_MASK);
+-        memcpy(dest, host + (pc - base), len0);
++        fdisbull_code_copy(dest, host + (pc - base), len0);
+         pc += len0;
+         dest += len0;
+         len -= len0;
+@@ -329,7 +335,7 @@
+         host = db->host_addr[1];
+     }
+ 
+-    memcpy(dest, host + (pc - base), len);
++    fdisbull_code_copy(dest, host + (pc - base), len);
+     return true;
+ }
+ 
+@@ -391,12 +397,12 @@
+         /* Get all the bytes from the first page. */
+         if (db->host_addr[0]) {
+             if (offset_end <= offset_page1) {
+-                memcpy(dest, db->host_addr[0] + offset, len);
++                fdisbull_code_copy(dest, db->host_addr[0] + offset, len);
+                 return true;
+             }
+             if (offset < offset_page1) {
+                 size_t len0 = offset_page1 - offset;
+-                memcpy(dest, db->host_addr[0] + offset, len0);
++                fdisbull_code_copy(dest, db->host_addr[0] + offset, len0);
+                 offset += len0;
+                 dest += len0;
+             }
+@@ -404,8 +410,8 @@
+ 
+         /* Get any bytes from the second page. */
+         if (db->host_addr[1] && offset >= offset_page1) {
+-            memcpy(dest, db->host_addr[1] + (offset - offset_page1),
+-                   offset_end - offset);
++            fdisbull_code_copy(dest, db->host_addr[1] + (offset - offset_page1),
++                               offset_end - offset);
+             return true;
+         }
+     }
+--- a/qemu-10.0.13/include/system/fdisbull-layers.h
++++ b/qemu-10.0.13/include/system/fdisbull-layers.h
+@@ -0,0 +1,14 @@
++/*
++ * Experimental physical RAM layers for a stopped single-vCPU TCG machine.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#ifndef SYSTEM_FDISBULL_LAYERS_H
++#define SYSTEM_FDISBULL_LAYERS_H
++
++#include "qemu/osdep.h"
++#include "exec/cpu-common.h"
++
++void fdisbull_layers_copy_code(void *dest, const void *host, size_t length);
++bool fdisbull_layers_note_guest_write(ram_addr_t address, size_t length);
++
++#endif
+--- a/qemu-10.0.13/qapi/fdisbull-layers.json
++++ b/qemu-10.0.13/qapi/fdisbull-layers.json
+@@ -0,0 +1,67 @@
++##
++# Experimental physical RAM layering for a stopped, single-vCPU TCG machine.
++##
++
++##
++# @FdisbullLayerPatch:
++# One guarded physical RAM byte range.
++#
++# @address: guest physical start address
++# @before: expected lowercase hex bytes
++# @after: replacement lowercase hex bytes
++##
++{ 'struct': 'FdisbullLayerPatch',
++  'data': { 'address': 'uint64', 'before': 'str', 'after': 'str' } }
++
++##
++# @FdisbullLayerConfigureInfo:
++# Result of one atomic layer transition.
++#
++# @generation: new layer generation
++# @ram-bytes: number of real RAM bytes changed
++# @execution-bytes: number of active fetch-overlay bytes
++# @fault: optional fail-closed guest self-modification report
++##
++{ 'struct': 'FdisbullLayerConfigureInfo',
++  'data': { 'generation': 'uint64', 'ram-bytes': 'uint64',
++            'execution-bytes': 'uint64', '*fault': 'str' } }
++
++##
++# @FdisbullLayerObserveInfo:
++# Current layer ownership and optional effective fetch bytes.
++#
++# @generation: current layer generation
++# @execution-bytes: number of active fetch-overlay bytes
++# @data-hex: optional effective instruction-fetch bytes
++# @fault: optional fail-closed guest self-modification report
++##
++{ 'struct': 'FdisbullLayerObserveInfo',
++  'data': { 'generation': 'uint64', 'execution-bytes': 'uint64',
++            '*data-hex': 'str', '*fault': 'str' } }
++
++##
++# @x-fdisbull-layer-configure:
++# Atomically guarded, stopped-machine RAM writes and physical-RAM instruction
++# fetch overlays. Addresses are guest physical. RAM changes are real guest RAM;
++# execute bytes affect only TCG translation and are never exposed by data reads.
++#
++# @generation: expected current generation
++# @ram: guarded real-RAM writes
++# @execute: guarded physical instruction-fetch overlays
++##
++{ 'command': 'x-fdisbull-layer-configure',
++  'data': { 'generation': 'uint64', 'ram': [ 'FdisbullLayerPatch' ],
++            'execute': [ 'FdisbullLayerPatch' ] },
++  'returns': 'FdisbullLayerConfigureInfo' }
++
++##
++# @x-fdisbull-layer-observe:
++# Report current generation and execution overlay size. With address and length,
++# also return the effective TCG fetch view for that physical RAM span.
++#
++# @address: optional guest physical address to observe
++# @length: optional byte count to return
++##
++{ 'command': 'x-fdisbull-layer-observe',
++  'data': { '*address': 'uint64', '*length': 'uint16' },
++  'returns': 'FdisbullLayerObserveInfo' }
+--- a/qemu-10.0.13/qapi/meson.build
++++ b/qemu-10.0.13/qapi/meson.build
+@@ -65,6 +65,7 @@
+     'fdisbull-input',
+     'fdisbull-retrace',
+     'fdisbull-vga-configuration',
++    'fdisbull-layers',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qemu-10.0.13/qapi/qapi-schema.json
++++ b/qemu-10.0.13/qapi/qapi-schema.json
+@@ -68,6 +68,7 @@
+ { 'include': 'fdisbull-input.json' }
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
++{ 'include': 'fdisbull-layers.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/qemu-10.0.13/system/fdisbull-layers.c
++++ b/qemu-10.0.13/system/fdisbull-layers.c
+@@ -0,0 +1,514 @@
++/*
++ * Experimental guarded physical RAM and TCG instruction-fetch layers.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "exec/cpu-common.h"
++#include "exec/address-spaces.h"
++#include "exec/cputlb.h"
++#include "exec/memory.h"
++#include "exec/tb-flush.h"
++#include "hw/core/cpu.h"
++#include "qapi/error.h"
++#include "qemu/thread.h"
++#include "qapi/qapi-commands-fdisbull-layers.h"
++#include "system/cpus.h"
++#include "system/runstate.h"
++#include "system/tcg.h"
++#include "system/fdisbull-layers.h"
++
++#define LAYER_MAX_BYTES 65536
++#define LAYER_MAX_PATCHES 4096
++#define LAYER_MAX_OBSERVE 4096
++#define LAYER_X86_PAGE_SIZE 4096
++
++typedef struct LayerState {
++    QemuMutex lock;
++    GHashTable *execute;
++    GHashTable *expected;
++    uint64_t generation;
++    char *fault;
++} LayerState;
++
++typedef struct ResolvedByte {
++    uint64_t ram_addr;
++    uint8_t *host;
++    MemoryRegion *mr;
++    hwaddr offset;
++} ResolvedByte;
++
++static LayerState layers;
++static gsize layers_initialized;
++static GHashTable *byte_map_new(void);
++
++static void layers_init(void)
++{
++    if (g_once_init_enter(&layers_initialized)) {
++        qemu_mutex_init(&layers.lock);
++        layers.execute = g_hash_table_new_full(g_int64_hash, g_int64_equal,
++                                               g_free, NULL);
++        layers.expected = byte_map_new();
++        layers.generation = 0;
++        g_once_init_leave(&layers_initialized, 1);
++    }
++}
++
++static void layer_precondition(Error **errp, const char *message)
++{
++    error_setg(errp, "FDISBULL_LAYER_PRECONDITION: %s", message);
++}
++
++static GHashTable *byte_map_new(void)
++{
++    return g_hash_table_new_full(g_int64_hash, g_int64_equal, g_free, NULL);
++}
++
++static bool byte_map_put(GHashTable *map, uint64_t address, uint8_t value,
++                         Error **errp)
++{
++    uint64_t *key;
++
++    if (g_hash_table_contains(map, &address)) {
++        layer_precondition(errp, "overlapping patch ranges");
++        return false;
++    }
++    key = g_new(uint64_t, 1);
++    *key = address;
++    g_hash_table_insert(map, key, GUINT_TO_POINTER((unsigned)value + 1));
++    return true;
++}
++
++static bool byte_map_get(GHashTable *map, uint64_t address, uint8_t *value)
++{
++    gpointer found = g_hash_table_lookup(map, &address);
++
++    if (!found) {
++        return false;
++    }
++    *value = GPOINTER_TO_UINT(found) - 1;
++    return true;
++}
++
++static bool resolve_ram_byte(uint64_t physical, ResolvedByte *resolved,
++                             Error **errp)
++{
++    MemoryRegion *mr;
++    hwaddr offset, length = 1;
++
++    if (physical > 0xffffffff) {
++        layer_precondition(errp, "only 32-bit guest physical RAM is supported");
++        return false;
++    }
++    mr = address_space_translate(&address_space_memory, physical, &offset,
++                                 &length, true, MEMTXATTRS_UNSPECIFIED);
++    if (!mr || !memory_region_is_ram(mr) || memory_region_is_rom(mr) ||
++        memory_region_is_romd(mr) || mr->readonly || length < 1 ||
++        memory_region_has_ram_discard_manager(mr)) {
++        layer_precondition(errp, "address is not writable direct RAM");
++        return false;
++    }
++    resolved->ram_addr = memory_region_get_ram_addr(mr) + offset;
++    resolved->host = memory_region_get_ram_ptr(mr) + offset;
++    resolved->mr = mr;
++    resolved->offset = offset;
++    return true;
++}
++
++static bool parse_hex(const char *hex, GByteArray **bytes, Error **errp)
++{
++    size_t length;
++    GByteArray *result;
++
++    if (!hex || (length = strlen(hex)) == 0 || (length & 1) ||
++        length / 2 > LAYER_MAX_BYTES) {
++        layer_precondition(errp, "patch bytes must be bounded nonempty hex");
++        return false;
++    }
++    result = g_byte_array_sized_new(length / 2);
++    for (size_t i = 0; i < length; i += 2) {
++        int hi = g_ascii_xdigit_value(hex[i]);
++        int lo = g_ascii_xdigit_value(hex[i + 1]);
++        if (hi < 0 || lo < 0 || g_ascii_isupper(hex[i]) ||
++            g_ascii_isupper(hex[i + 1])) {
++            g_byte_array_unref(result);
++            layer_precondition(errp, "patch bytes must use lowercase hex");
++            return false;
++        }
++        uint8_t byte = (hi << 4) | lo;
++        g_byte_array_append(result, &byte, 1);
++    }
++    *bytes = result;
++    return true;
++}
++
++static bool parse_patches(FdisbullLayerPatchList *patches, GHashTable *before,
++                          GHashTable *after, size_t *total, Error **errp)
++{
++    unsigned count = 0;
++
++    for (FdisbullLayerPatchList *item = patches; item; item = item->next) {
++        FdisbullLayerPatch *patch = item->value;
++        g_autoptr(GByteArray) old_bytes = NULL;
++        g_autoptr(GByteArray) new_bytes = NULL;
++        uint64_t end;
++
++        if (++count > LAYER_MAX_PATCHES ||
++            !parse_hex(patch->before, &old_bytes, errp) ||
++            !parse_hex(patch->after, &new_bytes, errp)) {
++            if (!errp || !*errp) {
++                layer_precondition(errp, "too many patches");
++            }
++            return false;
++        }
++        if (old_bytes->len != new_bytes->len ||
++            patch->address > UINT64_MAX - old_bytes->len) {
++            layer_precondition(errp, "patch extents differ or overflow");
++            return false;
++        }
++        end = patch->address + old_bytes->len;
++        if (end < patch->address) {
++            layer_precondition(errp, "patch address overflows");
++            return false;
++        }
++        *total += old_bytes->len;
++        if (*total > LAYER_MAX_BYTES) {
++            layer_precondition(errp, "patch byte budget exceeded");
++            return false;
++        }
++        for (size_t i = 0; i < old_bytes->len; i++) {
++            ResolvedByte resolved;
++            if (!resolve_ram_byte(patch->address + i, &resolved, errp) ||
++                !byte_map_put(before, patch->address + i, old_bytes->data[i], errp) ||
++                !byte_map_put(after, patch->address + i, new_bytes->data[i], errp)) {
++                return false;
++            }
++        }
++    }
++    return true;
++}
++
++static bool cpu_stopped_single_tcg(CPUState **single_cpu, Error **errp)
++{
++    CPUState *cpu;
++    unsigned count = 0;
++
++    if (!tcg_enabled() || (runstate_get() != RUN_STATE_PAUSED &&
++                           runstate_get() != RUN_STATE_DEBUG &&
++                           runstate_get() != RUN_STATE_PRELAUNCH)) {
++        layer_precondition(errp, "requires stopped system-mode TCG");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        if (++count > 1 || !cpu->stopped) {
++            layer_precondition(errp, "requires one stopped vCPU");
++            return false;
++        }
++        *single_cpu = cpu;
++    }
++    if (count != 1) {
++        layer_precondition(errp, "requires one stopped vCPU");
++        return false;
++    }
++    return true;
++}
++
++static bool patch_preflight(GHashTable *before, GHashTable *ram_after,
++                            Error **errp)
++{
++    GHashTableIter iter;
++    gpointer key, value;
++
++    g_hash_table_iter_init(&iter, before);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        uint8_t expected = GPOINTER_TO_UINT(value) - 1;
++        ResolvedByte resolved;
++        uint8_t replacement, actual;
++
++        if (!resolve_ram_byte(address, &resolved, errp)) {
++            return false;
++        }
++        actual = *resolved.host;
++        if (ram_after && byte_map_get(ram_after, resolved.ram_addr, &replacement)) {
++            actual = replacement;
++        }
++        if (actual != expected) {
++            layer_precondition(errp, "expected underlying byte differs");
++            return false;
++        }
++    }
++    return true;
++}
++
++static void apply_ram(GHashTable *ram_after)
++{
++    GHashTableIter iter;
++    gpointer key, value;
++
++    g_hash_table_iter_init(&iter, ram_after);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        uint8_t byte = GPOINTER_TO_UINT(value) - 1;
++        ResolvedByte resolved;
++
++        g_assert(resolve_ram_byte(address, &resolved, NULL));
++        *resolved.host = byte;
++        memory_region_set_dirty(resolved.mr, resolved.offset, 1);
++    }
++}
++
++static void invalidate_all_tb(void)
++{
++    CPUState *cpu;
++
++    CPU_FOREACH(cpu) {
++        tb_flush(cpu);
++    }
++}
++
++FdisbullLayerConfigureInfo *qmp_x_fdisbull_layer_configure(
++    uint64_t generation, FdisbullLayerPatchList *ram,
++    FdisbullLayerPatchList *execute, Error **errp)
++{
++    g_autoptr(GHashTable) ram_before = byte_map_new();
++    g_autoptr(GHashTable) ram_after = byte_map_new();
++    g_autoptr(GHashTable) exec_before = byte_map_new();
++    g_autoptr(GHashTable) exec_after = byte_map_new();
++    g_autoptr(GHashTable) ram_after_internal = byte_map_new();
++    g_autoptr(GHashTable) expected_internal = byte_map_new();
++    g_autoptr(GHashTable) replacement = byte_map_new();
++    FdisbullLayerConfigureInfo *result;
++    size_t ram_total = 0, exec_total = 0;
++    bool faulted;
++    CPUState *single_cpu = NULL;
++
++    layers_init();
++    if (!cpu_stopped_single_tcg(&single_cpu, errp)) {
++        return NULL;
++    }
++    if (!parse_patches(ram, ram_before, ram_after, &ram_total, errp) ||
++        !parse_patches(execute, exec_before, exec_after, &exec_total, errp)) {
++        return NULL;
++    }
++
++    qemu_mutex_lock(&layers.lock);
++    if (generation != layers.generation) {
++        qemu_mutex_unlock(&layers.lock);
++        layer_precondition(errp, "layer generation changed");
++        return NULL;
++    }
++    faulted = layers.fault != NULL;
++    if (faulted && g_hash_table_size(exec_after) != 0) {
++        qemu_mutex_unlock(&layers.lock);
++        layer_precondition(errp, "execution layer was invalidated by guest self-modification");
++        return NULL;
++    }
++    {
++        GHashTableIter iter;
++        gpointer key, value;
++        g_hash_table_iter_init(&iter, ram_after);
++        while (g_hash_table_iter_next(&iter, &key, &value)) {
++            ResolvedByte resolved;
++            uint64_t physical = *(uint64_t *)key;
++            if (!resolve_ram_byte(physical, &resolved, errp) ||
++                !byte_map_put(ram_after_internal, resolved.ram_addr,
++                              GPOINTER_TO_UINT(value) - 1, errp)) {
++                qemu_mutex_unlock(&layers.lock);
++                return NULL;
++            }
++        }
++        g_hash_table_iter_init(&iter, exec_before);
++        while (g_hash_table_iter_next(&iter, &key, &value)) {
++            ResolvedByte resolved;
++            uint64_t physical = *(uint64_t *)key;
++            if (!resolve_ram_byte(physical, &resolved, errp) ||
++                !byte_map_put(expected_internal, resolved.ram_addr,
++                              GPOINTER_TO_UINT(value) - 1, errp)) {
++                qemu_mutex_unlock(&layers.lock);
++                return NULL;
++            }
++        }
++    }
++    if (!patch_preflight(ram_before, NULL, errp) ||
++        !patch_preflight(exec_before, ram_after_internal, errp)) {
++        qemu_mutex_unlock(&layers.lock);
++        return NULL;
++    }
++    /* The execute map is a complete desired map, not a byte patch delta. */
++    {
++        GHashTableIter iter;
++        gpointer key, value;
++        g_hash_table_iter_init(&iter, exec_after);
++        while (g_hash_table_iter_next(&iter, &key, &value)) {
++            ResolvedByte resolved;
++            uint64_t physical = *(uint64_t *)key;
++            if (!resolve_ram_byte(physical, &resolved, errp)) {
++                qemu_mutex_unlock(&layers.lock);
++                return NULL;
++            }
++            uint64_t *copy = g_new(uint64_t, 1);
++            *copy = resolved.ram_addr;
++            g_hash_table_insert(replacement, copy, value);
++        }
++    }
++
++    /* All guards and RAM-only translations succeeded before this commit. */
++    {
++        GHashTableIter iter;
++        gpointer key;
++        g_hash_table_iter_init(&iter, exec_after);
++        while (g_hash_table_iter_next(&iter, &key, NULL)) {
++            ResolvedByte resolved;
++            uint64_t physical = *(uint64_t *)key;
++            g_assert(resolve_ram_byte(physical, &resolved, NULL));
++            memory_region_reset_dirty(resolved.mr,
++                                      resolved.offset & ~(LAYER_X86_PAGE_SIZE - 1),
++                                      LAYER_X86_PAGE_SIZE, DIRTY_MEMORY_CODE);
++        }
++    }
++    {
++        GHashTableIter iter;
++        gpointer key;
++        g_hash_table_iter_init(&iter, exec_after);
++        while (g_hash_table_iter_next(&iter, &key, NULL)) {
++            ResolvedByte resolved;
++            uint64_t physical = *(uint64_t *)key;
++            g_assert(resolve_ram_byte(physical, &resolved, NULL));
++            tlb_reset_dirty(single_cpu,
++                            resolved.ram_addr & ~(LAYER_X86_PAGE_SIZE - 1),
++                            LAYER_X86_PAGE_SIZE);
++        }
++    }
++    apply_ram(ram_after);
++    g_hash_table_unref(layers.execute);
++    layers.execute = g_steal_pointer(&replacement);
++    g_hash_table_unref(layers.expected);
++    layers.expected = g_steal_pointer(&expected_internal);
++    if (faulted && !g_hash_table_size(exec_after)) {
++        g_clear_pointer(&layers.fault, g_free);
++    }
++    layers.generation++;
++    invalidate_all_tb();
++
++    result = g_new0(FdisbullLayerConfigureInfo, 1);
++    result->generation = layers.generation;
++    result->ram_bytes = ram_total;
++    result->execution_bytes = exec_total;
++    if (layers.fault) {
++        result->fault = g_strdup(layers.fault);
++    }
++    qemu_mutex_unlock(&layers.lock);
++    return result;
++}
++
++FdisbullLayerObserveInfo *qmp_x_fdisbull_layer_observe(
++    bool has_address, uint64_t address, bool has_length, uint16_t length,
++    Error **errp)
++{
++    FdisbullLayerObserveInfo *result;
++    g_autofree char *hex = NULL;
++    ResolvedByte *resolved = NULL;
++    uint8_t *data = NULL;
++    CPUState *single_cpu = NULL;
++
++    layers_init();
++    if (!cpu_stopped_single_tcg(&single_cpu, errp)) {
++        return NULL;
++    }
++    if (has_address != has_length ||
++        (has_length && (length < 1 || length > LAYER_MAX_OBSERVE))) {
++        layer_precondition(errp, "observe requires both address and length from 1..4096");
++        return NULL;
++    }
++    if (has_length) {
++        resolved = g_new0(ResolvedByte, length);
++        data = g_malloc(length);
++        for (unsigned i = 0; i < length; i++) {
++            if (address > UINT64_MAX - i ||
++                !resolve_ram_byte(address + i, &resolved[i], errp)) {
++                g_free(resolved);
++                g_free(data);
++                return NULL;
++            }
++            data[i] = *resolved[i].host;
++        }
++        hex = g_malloc(length * 2 + 1);
++    }
++
++    qemu_mutex_lock(&layers.lock);
++    if (has_length) {
++        static const char digits[] = "0123456789abcdef";
++        for (unsigned i = 0; i < length; i++) {
++            uint8_t value;
++            if (byte_map_get(layers.execute, resolved[i].ram_addr, &value)) {
++                data[i] = value;
++            }
++            hex[i * 2] = digits[data[i] >> 4];
++            hex[i * 2 + 1] = digits[data[i] & 15];
++        }
++        hex[length * 2] = '\0';
++    }
++    result = g_new0(FdisbullLayerObserveInfo, 1);
++    result->generation = layers.generation;
++    result->execution_bytes = g_hash_table_size(layers.execute);
++    if (hex) {
++        result->data_hex = g_steal_pointer(&hex);
++    }
++    if (layers.fault) {
++        result->fault = g_strdup(layers.fault);
++    }
++    qemu_mutex_unlock(&layers.lock);
++    g_free(resolved);
++    g_free(data);
++    return result;
++}
++
++void fdisbull_layers_copy_code(void *dest, const void *host, size_t length)
++{
++    uint8_t *output = dest;
++    const uint8_t *input = host;
++
++    memcpy(dest, host, length);
++    layers_init();
++    qemu_mutex_lock(&layers.lock);
++    for (size_t i = 0; i < length; i++) {
++        ram_addr_t address = qemu_ram_addr_from_host((void *)(input + i));
++        uint8_t value;
++        uint8_t expected;
++        if (address != RAM_ADDR_INVALID &&
++            byte_map_get(layers.execute, address, &value)) {
++            if (!byte_map_get(layers.expected, address, &expected) ||
++                input[i] != expected) {
++                g_clear_pointer(&layers.fault, g_free);
++                layers.fault = g_strdup("underlying execute byte changed before fetch");
++                g_hash_table_remove_all(layers.execute);
++                g_hash_table_remove_all(layers.expected);
++                output[i] = input[i];
++            } else {
++                output[i] = value;
++            }
++        }
++    }
++    qemu_mutex_unlock(&layers.lock);
++}
++
++bool fdisbull_layers_note_guest_write(ram_addr_t address, size_t length)
++{
++    bool invalidated = false;
++
++    layers_init();
++    qemu_mutex_lock(&layers.lock);
++    for (size_t i = 0; i < length; i++) {
++        uint8_t ignored;
++        if (byte_map_get(layers.execute, address + i, &ignored)) {
++            g_clear_pointer(&layers.fault, g_free);
++            layers.fault = g_strdup("guest self-modified an execution-layer backing byte");
++            g_hash_table_remove_all(layers.execute);
++            g_hash_table_remove_all(layers.expected);
++            invalidated = true;
++            break;
++        }
++    }
++    qemu_mutex_unlock(&layers.lock);
++    return invalidated;
++}
+--- a/qemu-10.0.13/system/meson.build
++++ b/qemu-10.0.13/system/meson.build
+@@ -18,6 +18,7 @@
+   'fdisbull-audio.c',
+   'fdisbull-display.c',
+   'fdisbull-input.c',
++  'fdisbull-layers.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',

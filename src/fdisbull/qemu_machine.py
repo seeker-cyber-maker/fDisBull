@@ -30,6 +30,8 @@ from .qemu_keyboard_press import KEYBOARD_PRESS_COMMANDS
 from .qemu_keyboard_type import KEYBOARD_TYPE_COMMANDS
 from .qemu_mouse_click import MOUSE_CLICK_COMMANDS, validate_mouse_click_parameters
 from .qemu_mapped_mouse import MAPPED_MOUSE_COMMANDS, validate_mapped_mouse_parameters
+from .qemu_layers import LAYER_COMMANDS, QemuLayerSessionMixin
+from .qemu_hooks import QemuHookSessionMixin
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
@@ -402,7 +404,7 @@ def machine_run_operation(function):
     its deadline starts before lock admission and cannot reset between reads.
     """
     @wraps(function)
-    def invoke(self, *, timeout_ms=10000):
+    def invoke(self, *, timeout_ms=10000, stop_on_hook=False):
         from .operation_budget import request_deadline
         bound=request_deadline(self,timeout_ms)
         vm=self.vm
@@ -421,8 +423,8 @@ def machine_run_operation(function):
             if guard is not None:guard(function.__name__)
             # Read ownership under the lock: another caller may have armed a
             # schedule while this request waited for admission.
-            if not self._input_schedule_bound():
-                return function(self,timeout_ms=timeout_ms)
+            if not self._input_schedule_bound() and not getattr(self, '_qemu_hooks', None):
+                return function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
                     previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
@@ -433,10 +435,10 @@ def machine_run_operation(function):
             vm.operation_deadline=bound
             for channel,_ in previous_channels:channel.operation_deadline=bound
             installed=True
-            result=function(self,timeout_ms=timeout_ms)
+            result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
             if time.monotonic()>=bound:
                 vm.close()
-                error=TimeoutError('Scheduled native run exceeded its host deadline')
+                error=TimeoutError('Scheduled or hooked native run exceeded its host deadline')
                 error.result=result
                 raise error
             return result
@@ -593,7 +595,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
         virtual=getattr(vm,'machine_configuration',{}).get('clock_profile',{}).get('profile')=='virtual'
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
-            execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,code_layers=False,
+            execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,
+            code_layers=(isinstance(self,QemuLayerSessionMixin)
+                         and getattr(vm,'machine_configuration',{}).get('cpus')==1
+                         and LAYER_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
@@ -633,6 +638,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             timed_input=False,absolute_mouse=False,
             memory_translation='observed non-PAE 386 4-KiB pages; paused machine only',
             page_backing_layers='read-only extended RAM backing selection in one stopped VM epoch',
+            breakpoint_hooks=isinstance(self, QemuHookSessionMixin),
             qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
 
@@ -656,6 +662,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     def resume(self):
         if self._input_pending():raise ValueError('Queued physical input requires a bounded run, not resume')
         if self.breakpoints:raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
+        if getattr(self, '_layer_exec', None):self._layer_before_execution()
         # FIFOs do not produce a new GDB connection event when a client opens
         # them again. Keep the completed protocol session alive across QMP
         # continue/stop; there is no outstanding GDB execution request here.
@@ -835,6 +842,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
 
     @machine_operation
     def delete_breakpoint(self,breakpoint_id):
+        if breakpoint_id in getattr(self, '_qemu_hooks', {}) and not getattr(self, '_qemu_hook_internal_delete', False):
+            raise ValueError('Hook-owned breakpoint must be removed with delete_hook')
         record=self.breakpoints[breakpoint_id];remote=self._stopped()
         if remote.request(f'z{record["kind"]},{record["address"]:x},{record["length"]:x}')!=b'OK':raise DebuggerError('Machine breakpoint removal failed')
         del self.breakpoints[breakpoint_id]
@@ -847,6 +856,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         if self._input_pending() and self.project is not None and self.project.db.in_transaction:
             raise ValueError('Physical input execution requires a project outside a caller-owned transaction')
         self._input_schedule_preflight()
+        if getattr(self, '_layer_exec', None):self._layer_before_execution()
 
     def _execute(self,command,timeout_ms):
         self._execution_preflight(command,timeout_ms)
@@ -872,16 +882,24 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         try:
             regs=self.registers() if reply[:1] in (b'T',b'S') else None
             pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
-            watch=re.search(r'(?:^|;)(?:watch|rwatch|awatch):([0-9a-fA-F]+)',native)
+            watch=re.search(r'(?:^|;)(watch|rwatch|awatch):([0-9a-fA-F]+)',native)
+            watch_access = {'watch': 'w', 'rwatch': 'r', 'awatch': 'rw'}[watch.group(1)] if watch else None
             signal=int(native[1:3],16)
             # A native pause/virtual timer uses SIGINT; a matching PC alone cannot
             # turn that interruption into a breakpoint or a DOS parent-return trap.
             ids=[key for key,bp in self.breakpoints.items() if
                  signal==5 and bp['access']=='x' and bp['address']==pc or
-                 watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
+                 watch and bp['access'] == watch_access
+                 and bp['address'] <= int(watch.group(2), 16) < bp['address'] + bp['length']]
             kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'stopped' if signal==2 else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
             result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
                         address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
+            if regs is not None and getattr(self, '_layer_exec', None):
+                layer_state = self._layer_native_observe()
+                if layer_state.get('fault'):
+                    kind = 'stopped'
+                    result.update(outcome=kind, layer_conflict=layer_state)
+                    result['session']['stop_reason'].update(kind=kind, breakpoint_ids=[])
             from .debug_semantics import normalize_stop
             result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
             if scheduled:delivery=self._input_schedule_after_stop()
@@ -905,7 +923,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     @machine_operation
     def step(self,*,timeout_ms=10000):return self._execute('s',timeout_ms)
     @machine_run_operation
-    def run(self,*,timeout_ms=10000):return self._execute('c',timeout_ms)
+    def run(self,*,timeout_ms=10000,stop_on_hook=False):
+        if type(stop_on_hook) is not bool:raise ValueError('stop_on_hook must be boolean')
+        if not getattr(self, '_qemu_hooks', None):return self._execute('c',timeout_ms)
+        return self._run_with_hooks(timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
 
     def _event(self,operation,value):
         from .debugger import stamp
@@ -937,7 +958,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             if observed_bits is None and (before['cpu_mode']=='v86' and decode_bits!=16 or before['cpu_mode']=='real' and decode_bits!=16 or before['cpu_mode']=='long' and decode_bits!=64):
                 raise ValueError('Trace bitness differs from observed machine CPU mode')
             if before['linear_pc'] is None:raise ValueError('Selected machine CPU has no established linear PC')
-            pc=int(before['linear_pc'],16);data=bytes.fromhex(self.memory(pc,length=15,space='virtual')['hex'])
+            pc=int(before['linear_pc'],16)
+            layer_view = self.code(pc, length=15, space='linear') if getattr(self, '_layer_exec', None) else None
+            data=bytes.fromhex((layer_view or self.memory(pc,length=15,space='virtual'))['hex'])
             instruction=Decoder(decode_bits,data,ip=pc).decode()
             if instruction.is_invalid:raise DebuggerError('Invalid machine instruction')
             remaining=int((deadline-time.monotonic())*1000)
@@ -947,6 +970,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             events.append(dict(address=hex(pc),bytes=data[:instruction.len].hex(),registers=before,
                                cpu_mode=before['cpu_mode'],code_bits=decode_bits,
                                phase='before',completion='native step stop; instruction completion unknown'))
+            if getattr(self, '_layer_active', None):
+                events[-1]['layer_generation'] = self._layer_generation
+                events[-1]['active_layers'] = list(self._layer_active)
         if len(events)<count and time.monotonic()>=deadline and (state is None or state['outcome']=='step'):
             state=dict(context='machine',outcome='timeout',timed_out=True,session=dict(state='stopped',stop_reason=dict(kind='timeout',origin='trace-deadline')))
         result=dict(context='machine',events=events,complete=len(events)==count,requested_count=count,session=state,
@@ -967,7 +993,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         return self.project.debug_grid(artifact['artifact'],name=name+'.grid.png',step=grid_step) if grid else artifact
 
 
-class MachineDebugSession(MachineContext):
+class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineContext):
     """Project-bound raw boot image using the same saved-artifact interfaces."""
     backend_id='qemu-machine'
 
@@ -1046,6 +1072,8 @@ class MachineDebugSession(MachineContext):
             raise ValueError('Source-bound DOS processes are not eligible for machine checkpoints')
         if self.breakpoints:
             raise ValueError('Remove machine breakpoints and watchpoints before checkpointing')
+        if getattr(self,'_layer_active',None):
+            raise ValueError('Clear native layers before checkpointing')
         if self.project.db.in_transaction:
             raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
         require_released_machine_input(self.vm)
@@ -1146,6 +1174,7 @@ class MachineDebugSession(MachineContext):
             # identity; retained artifacts remain readable historical evidence.
             import uuid
             self._runtime_epoch=uuid.uuid4().hex
+            self._reset_native_layers()
             result=dict(artifact=artifact,sha256=row['sha256'],registers=actual,
                 checkpoint_epoch=self._checkpoint_epoch,framebuffer='invalidated_until_recaptured',
                 source_binding_restored=False,host_files_restored=False)
@@ -1179,7 +1208,9 @@ class MachineDebugSession(MachineContext):
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',
                 'input-schedule','input-schedule-observe','input-schedule-retrace',
-                'assert','status','write-memory','write-registers'}
+                'assert','status','write-memory','write-registers','hook','hooks','delete-hook'} | (
+                    {'layer-stack','layer-enable','layer-patch','code','capture-code','branch','cave'}
+                    if self.capabilities['code_layers'] else set())
     def script(self,*args,**kwargs):
         from .debugger import DebugSession
         return DebugSession.script(self,*args,**kwargs)

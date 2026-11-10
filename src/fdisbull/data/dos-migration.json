@@ -256,11 +256,12 @@
         "tests/test_protected_runtime.py",
         "tests/test_protected_runtime_native.py",
         "tests/test_qemu_checkpoint.py",
-        "tests/test_qemu_checkpoint_native.py"
+        "tests/test_qemu_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
-        "Explicit standard raw-machine profile: stopped internal QCOW2 snapshot with private guest disk, cold fresh-process restore, CPU readback and a new memory epoch. COM/MZ process identity, instrumented profiles, host files, state forks and histories remain unqualified."
+        "Standard raw machines and same-session verified COM/MZ entry can cold restore from one private QCOW2 disk. Mid-program save, cross-session process restore, instrumented profiles, host files, active layers, state forks and histories remain unqualified."
       ]
     },
     {
@@ -272,7 +273,7 @@
         "trace-events"
       ],
       "gate": "Distinct RAM/fetch visibility, guarded all-or-nothing transitions, active precedence, translated-block invalidation, self-modifying code, callback context, declared host-effect authority and region-join contracts.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_code_layers.py",
         "tests/test_code_overlap_native.py",
@@ -280,10 +281,13 @@
         "tests/test_protected_mode_native.py",
         "tests/test_runtime_code.py",
         "tests/test_screenshot_hooks.py",
-        "tests/test_udc_layers.py"
+        "tests/test_udc_layers.py",
+        "tests/test_qemu_layers_native.py",
+        "tests/test_qemu_hooks_native.py"
       ],
       "scope_limits": [
-        "MachineContext advertises code_layers=False. A QEMU RAM write or PC redirect is not a fetch-only overlay; translated-block cache coherence and underlying-RAM self-modification guards require qualification."
+        "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch. Source definitions require the verified unpaged real-mode DOS module.",
+        "Instruction bytes are selected during TCG translation. Protected-mode source bindings, mixed-device memory, runtime code promotion, screenshot hooks and active layer checkpoint restoration remain open."
       ]
     },
     {
@@ -535,8 +539,8 @@
       "method": "layers.configure",
       "slice": "layers-hooks",
       "legacy_profile": "layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "Native QMP x-fdisbull-layer-configure; guarded direct RAM and TCG fetch map",
       "qualification": "unqualified"
     },
     {
@@ -676,8 +680,8 @@
       "operation": "branch",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.branch; verified 16-bit DOS source address",
       "qualification": "unqualified"
     },
     {
@@ -694,8 +698,8 @@
       "operation": "capture_code",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.capture_code; native capture without static promotion",
       "qualification": "unqualified"
     },
     {
@@ -703,8 +707,8 @@
       "operation": "cave",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.cave; guarded real-mode DOS source extent",
       "qualification": "unqualified"
     },
     {
@@ -730,8 +734,8 @@
       "operation": "code",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.code; verified native RAM and fetch views",
       "qualification": "unqualified"
     },
     {
@@ -775,8 +779,8 @@
       "operation": "delete_hook",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
       "qualification": "unqualified"
     },
     {
@@ -865,8 +869,8 @@
       "operation": "hook",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
       "qualification": "unqualified"
     },
     {
@@ -874,8 +878,8 @@
       "operation": "hooks",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
       "qualification": "unqualified"
     },
     {
@@ -928,8 +932,8 @@
       "operation": "layer_enable",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layer_enable; scoped to one native layer stack",
       "qualification": "unqualified"
     },
     {
@@ -937,8 +941,8 @@
       "operation": "layer_patch",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layer_patch; version-bound source or run/epoch-bound backing",
       "qualification": "unqualified"
     },
     {
@@ -946,8 +950,8 @@
       "operation": "layers",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layers; stopped guarded physical backing stack",
       "qualification": "unqualified"
     },
     {
@@ -956,7 +960,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.load_anchor_stone (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
       "qualification": "unqualified"
     },
     {
@@ -965,7 +969,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.load_state (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
       "qualification": "unqualified"
     },
     {
@@ -1118,7 +1122,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.save_anchor_stone (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
       "qualification": "unqualified"
     },
     {
@@ -1136,7 +1140,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.save_state (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
       "qualification": "unqualified"
     },
     {

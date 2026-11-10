@@ -162,7 +162,8 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
     def __init__(self, project, executable, game_dir, *, boot_image, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
-                 firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard', _on_spawn=None):
+                 firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard',
+                 checkpoint_tool=None, _on_spawn=None):
         from .dos_process_helper import build_loader
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
@@ -219,6 +220,9 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
         self._nonce = nonce
         self._helper = helper
         self._tail = tail
+        self._checkpoint_source = source
+        self._checkpoint_entry_clean = False
+        self._checkpoint_epoch = 0
         self.dos = dos
         self.version = selected
         self.guest_profile = profile
@@ -233,13 +237,14 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                 deadline=self._deadline)
             if staged['original_boot_image']['sha256'] != profile['boot_image']['sha256']:
                 raise ValueError('DOS boot image changed between profile admission and staging')
-            vm = QemuMachine(executable, boot_image=staged['prepared_boot_image']['path'],
+            self._checkpoint_launch = dict(executable=executable, boot_image=staged['prepared_boot_image']['path'],
                 boot_image_sha256=staged['prepared_boot_image']['sha256'], paused=True,
                 cpu_model=profile['machine']['cpu'], memory_mib=profile['machine']['memory_mib'],
                 cpus=1, boot_device=profile['machine']['boot_device'],
                 timeout_ms=self._remaining(), transport=transport, firmware=firmware,
                 clock_profile=clock_profile, audio_profile=audio_profile,
-                retrace_profile=retrace_profile, on_spawn=_on_spawn)
+                retrace_profile=retrace_profile, checkpoint_tool=checkpoint_tool)
+            vm = QemuMachine(**self._checkpoint_launch, on_spawn=_on_spawn)
             MachineContext.__init__(self, vm)
             self.rpc = vm
             vm.context = self
@@ -257,6 +262,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             vm.qmp.call('stop', timeout_ms=self._remaining())
             vm.machine_stopped = True
             self._ready = ready
+            self._ready_bytes = ready_bytes
             self._validate_helper(ready, ready_bytes)
             parked = MachineContext.breakpoint(self, ready['helper_segment']*16 + ready['ready_wait_ip'])
             stopped = MachineContext.run(self, timeout_ms=self._remaining())
@@ -300,6 +306,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
                 desqview_observation=True,
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
+            self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
                 version_sha256=selected['sha256'], runtime_inputs=vm.inputs,
@@ -314,6 +321,7 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             self._published = True
             project._live_debuggers.append(self)
             self._launching = False
+            self._checkpoint_entry_clean = True
             self._set_deadline(None)
         except BaseException:
             try:
@@ -530,6 +538,17 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             self._return_breakpoint = None
             self._persist_process()
             self._event('dos-process-return', result)
+            if getattr(self, '_layer_active', None):
+                # DOS may already have released or transferred the allocation.
+                # Reverting RAM here could overwrite the new owner of a page.
+                self._event('layer-process-ended', {'active': list(self._layer_active),
+                                                    'disposition': 'owner_closed'})
+                self.close()
+                result['process'] = deepcopy(self._process)
+                result['session']['state'] = 'closed'
+            else:
+                for hook in self.hooks()['hooks']:
+                    self.delete_hook(hook['hook'])
         except BaseException as error:
             # The nonce-bound DOS return and process classification are already
             # observed. Cleanup or persistence cannot reduce them to a generic
@@ -539,11 +558,171 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             raise
         return result
 
+    def _process_checkpoint_preflight(self, *, entry):
+        import select
+        from .qemu_input import require_released_machine_input
+        if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
+            raise ValueError('Restricted DOS process checkpoints are not enabled')
+        if self.project.db.in_transaction:
+            raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
+        self._stopped()
+        if getattr(self, '_layer_active', None):
+            raise ValueError('Clear native layers before process checkpointing')
+        if set(self.breakpoints) - ({self._return_breakpoint} if self._return_breakpoint else set()):
+            raise ValueError('Remove user breakpoints and hooks before process checkpointing')
+        require_released_machine_input(self.vm)
+        if self._serial_buffer:
+            raise ValueError('Process checkpoint requires a drained helper channel')
+        channel = self._channel
+        reader = getattr(channel, 'reader', channel)
+        if select.select([reader], [], [], 0)[0]:
+            raise ValueError('Process checkpoint requires a drained helper channel')
+        if entry and (not self._checkpoint_entry_clean or self._process['state'] != 'active'
+                      or self._return_breakpoint not in self.breakpoints):
+            raise ValueError('Process checkpoint requires the original verified entry boundary')
+
+    def _process_checkpoint_verify_entry(self):
+        from .qemu_dos_trace import _ownership
+        self._process_checkpoint_preflight(entry=True)
+        current = self.registers()
+        saved = self._process['entry_registers']
+        for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
+            if current.get(field) != saved.get(field):
+                raise ValueError('Process checkpoint entry CPU changed: ' + field)
+        _ownership(self, {'capture_epoch': self._runtime_epoch})
+        source = self._checkpoint_source.read_bytes()
+        if _sha(source) != self.project.meta['source_sha256']:
+            raise ValueError('Process checkpoint source identity changed')
+        expected, mapping = relocated_source(source, self.dos, self.project.meta['format'], self._ready)
+        recorded = self._process['source_mapping']
+        if (self._process['psp_segment'] != self._ready['child_psp']
+                or self._process['parent_psp_segment'] != self._ready['helper_psp']
+                or any(recorded.get(key) != value for key,value in mapping.items())
+                or recorded.get('source_sha256') != self.project.meta['source_sha256']
+                or recorded.get('expected_module_sha256') != _sha(expected)):
+            raise ValueError('Process checkpoint source identity or mapping changed')
+        tail = self._read(self._ready['child_psp']*16 + 0x80, len(self._tail)+2)
+        if tail != bytes([len(self._tail)]) + self._tail + b'\r':
+            raise ValueError('Process checkpoint command tail changed')
+        if self._read(mapping['runtime_base'], len(expected)) != expected:
+            raise ValueError('Process checkpoint source mapping changed')
+        self._validate_helper(self._ready, self._ready_bytes)
+        if self._read(0, 1024) != self._vectors_before:
+            raise ValueError('Process checkpoint entry vectors changed')
+        return current
+
+    @machine_operation
+    def save_state(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
+        from .external_files import _file_name
+        from .qemu_checkpoint import snapshot_job, validate_qcow_header
+        _file_name(name)
+        if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 128*1024*1024):
+            raise ValueError('Checkpoint byte budget must be 1..134217728')
+        limit = max_bytes or 128*1024*1024
+        registers = self._process_checkpoint_verify_entry()
+        tag = 'fdb-' + uuid.uuid4().hex
+        try:
+            snapshot_job(self.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'])
+            with self.vm.checkpoint_disk.open('rb') as stream:
+                data = stream.read(limit+1)
+            if len(data) > limit:
+                raise ValueError('Checkpoint exceeds its byte budget')
+            validate_qcow_header(data[:104], self.vm.checkpoint_virtual_size)
+            metadata = dict(format='fdisbull-qemu-dos-entry-qcow2-v1', tag=tag, run=self.run_id,
+                source_sha256=self.metadata['source_sha256'], version_sha256=self.metadata['version_sha256'],
+                runtime_inputs=deepcopy(self.vm.inputs), machine_configuration=deepcopy(self.vm.machine_configuration),
+                guest_profile=deepcopy(self.guest_profile), registers=registers, process=deepcopy(self._process),
+                ready_sha256=_sha(self._ready_bytes), helper_sha256=_sha(self._helper),
+                nonce_sha256=_sha(self._nonce), vectors_sha256=_sha(self._vectors_before),
+                checkpoint_scope='same-session original COM/MZ entry; one private DOS disk',
+                host_files_restored=False)
+            return self._artifact(name, 'state', data, metadata)
+        except BaseException:
+            self.close()
+            raise
+
+    def load_state(self, artifact, *, timeout_ms=60000):
+        from .operation_budget import request_deadline
+        from .qemu_checkpoint import snapshot_job
+        deadline = request_deadline(self, timeout_ms)
+        def remaining():
+            value = int((deadline-time.monotonic())*1000)
+            if value <= 0:
+                raise TimeoutError('DOS process checkpoint restore deadline expired')
+            return min(value, 600000)
+        owner = self.vm
+        wait = min(10, max(0, deadline-time.monotonic()))
+        if not owner.lock.acquire(timeout=wait):
+            raise TimeoutError('DOS process checkpoint restore lock timed out')
+        try:
+            if self.vm is not owner:
+                raise ValueError('Machine owner changed before process checkpoint restore')
+            self._process_checkpoint_preflight(entry=False)
+            row = self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?', (artifact,)).fetchone()
+            if row is None or row['kind'] != 'state' or row['version'] != self.version['id'] or row['run'] != self.run_id:
+                raise ValueError('Process checkpoint must belong to this live session and version')
+            data = bytes(row['data']); metadata = json.loads(row['metadata'])
+            expected = dict(format='fdisbull-qemu-dos-entry-qcow2-v1', run=self.run_id,
+                source_sha256=self.metadata['source_sha256'], version_sha256=self.metadata['version_sha256'],
+                runtime_inputs=self.vm.inputs, machine_configuration=self.vm.machine_configuration,
+                guest_profile=self.guest_profile, ready_sha256=_sha(self._ready_bytes),
+                helper_sha256=_sha(self._helper), nonce_sha256=_sha(self._nonce), vectors_sha256=_sha(self._vectors_before))
+            if _sha(data) != row['sha256'] or any(metadata.get(k) != v for k,v in expected.items()):
+                raise ValueError('Process checkpoint identity or hash mismatch')
+            if _sha(self._checkpoint_source.read_bytes()) != self.metadata['source_sha256']:
+                raise ValueError('Process checkpoint source identity changed')
+            remaining(); new = None
+            try:
+                with tempfile.TemporaryDirectory(prefix='fdisbull-process-checkpoint-') as directory:
+                    image = Path(directory)/'state.qcow2'; image.write_bytes(data)
+                    new = QemuMachine(**dict(self._checkpoint_launch, timeout_ms=remaining()), _checkpoint_image=image)
+                if new.inputs != owner.inputs or new.machine_configuration != owner.machine_configuration:
+                    raise DebuggerError('Fresh process checkpoint machine identity differs')
+                new.operation_deadline = deadline; new.qmp.operation_deadline = deadline
+                snapshot_job(new, 'load', tag=metadata['tag'], vmstate='disk0', devices=['disk0'], timeout_ms=remaining())
+                context = MachineContext(new); actual = context.registers()
+                for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
+                    if actual.get(field) != metadata['registers'].get(field):
+                        raise DebuggerError('Restored process CPU differs: ' + field)
+                remaining(); new.lock = owner.lock
+                owner.close_observer = None
+                owner.close()
+                self.vm = self.rpc = new; new.context = self; new.close_observer = self._on_machine_closed
+                self._channel = new.serial(deadline); self._serial_buffer = bytearray()
+                self.breakpoints = {}; self.next_bp = 1
+                self._reset_native_layers()
+                self._process = deepcopy(metadata['process']); self._advance_epoch()
+                self._return_breakpoint = MachineContext.breakpoint(self, self._ready['helper_segment']*16 + self._ready['exit_wait_ip'])['breakpoint_id']
+                self._checkpoint_entry_clean = True
+                self._set_deadline(deadline)
+                self._process_checkpoint_verify_entry()
+                self._checkpoint_epoch += 1
+                self._persist_process()
+                result = dict(artifact=artifact, sha256=row['sha256'], checkpoint_epoch=self._checkpoint_epoch,
+                              capture_epoch=self._runtime_epoch, source_binding_restored=True,
+                              host_files_restored=False, process=deepcopy(self._process))
+                self._event('load-state', result); remaining()
+                self._set_deadline(None)
+                return result
+            except BaseException:
+                if new is not None: new.close()
+                self.close()
+                raise
+        finally:
+            owner.lock.release()
+
+    def resume(self):
+        result = MachineDebugSession.resume(self)
+        self._checkpoint_entry_clean = False
+        return result
+
     def _execute(self, command, timeout_ms):
         # A rejected queued-input/transaction request has not executed the
         # guest. Preserve its live process and queue for an explicit run or
         # cancellation; only failures after dispatch enter terminal cleanup.
         self._execution_preflight(command, timeout_ms)
+        if not self._launching:
+            self._checkpoint_entry_clean = False
         try:
             result = MachineContext._execute(self, command, timeout_ms)
         except BaseException:
