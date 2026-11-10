@@ -60,6 +60,11 @@ def media_modules():
                  methods=['media-inspect', 'media-extract'], dependencies=[],
                  variants='Westwood PAK v2/v3; validated offset/name directory and opaque tails',
                  limits='64 MiB input; bounded member count; duplicate names require index selector; no packer execution'),
+            dict(name='castles2-bob', layer='asset-decoding',
+                 api='fdisbull.castles2_bob.decode_bob; fdisbull.media.inspect_media / extract_media',
+                 methods=['media-inspect', 'media-extract'], dependencies=[],
+                 variants='Castles II CD RGB888 256-colour BOB bitmap; 8-bit indexed raster',
+                 limits='4 MiB pixels, 4096 per dimension, exact 772-byte prefix; no alpha, timing, animation grouping or original-game parity'),
             dict(name='westwood-cps', layer='asset-decoding',
                  api='fdisbull.westwood_media.decode_cps; fdisbull.media.inspect_media / extract_media',
                  methods=['media-inspect', 'media-extract'], dependencies=[],
@@ -115,11 +120,28 @@ def _prepare(path, adapter, volume_root, number, **options):
     if options:
         raise ValueError('Extra parameters apply only to independent media adapters')
     if not isinstance(adapter, str) or adapter not in ('mz-envelope', 'agi-v2',
-          'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2'):
+          'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2',
+          'castles2-bob'):
         raise ValueError('Unsupported adapter; discover media-modules first')
     inputs = []
     metadata = {}
-    if adapter == 'mz-envelope':
+    if adapter == 'castles2-bob':
+        if volume_root is not None or number is not None:
+            raise ValueError('Castles II BOB is standalone and rejects volume arguments')
+        from .castles2_bob import decode_bob, PIXEL_OFFSET
+        data = _snapshot(path, min(MAX_SOURCE, PIXEL_OFFSET + 4 * 1024 * 1024))
+        image = decode_bob(data)
+        inputs.append(dict(role='container', **_identity(data)))
+        members = [('palette-rgb', 4, data[4:PIXEL_OFFSET]),
+                   ('indices', PIXEL_OFFSET, image.pixels),
+                   ('preview-png', None, image.png())]
+        metadata = dict(bob_dimensions={'width': image.width, 'height': image.height},
+                        bob_palette_encoding='RGB888', bob_palette_entries=256,
+                        bob_pixel_encoding='indexed8', bob_pixel_offset=PIXEL_OFFSET)
+        unknowns = ['One static BOB bitmap, not an independently verified animation timeline.',
+                    'No color-key transparency inferred, including for magenta palette entries.',
+                    'PNG is a lossless decoded visualization; original game rendering/compositing is unverified.']
+    elif adapter == 'mz-envelope':
         if volume_root is not None or number is not None:
             raise ValueError('MZ envelope does not accept AGI resource parameters')
         from .dos import load_mz

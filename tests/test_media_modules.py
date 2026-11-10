@@ -21,7 +21,7 @@ def test_catalog_and_public_cli_need_no_project(capsys):
     assert report['ok']
     modules = {item['name']: item for item in report['result']['modules']}
     assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic',
-                            'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2',
+                            'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2', 'castles2-bob',
         'fab', 'pkware-dcl', 'mads-hag', 'mads-pack', 'mads-sprite', 'mads-tiles',
         'mads-depth', 'mads-background', 'mads-depth-map', 'mads-mask', 'mads-font',
         'mads-dsr', 'mads-animation'}

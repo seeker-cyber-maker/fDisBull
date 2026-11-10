@@ -11,6 +11,7 @@ capability contract; successful parsing establishes structure, not behavior.
 - [MZ envelope version 1](#mz-envelope-version-1)
 - [AGI v2 resource version 1](#agi-v2-resource-version-1)
 - [Existing readers and decoders](#existing-readers-and-decoders)
+- [Castles II BOB image adapter](#castles-ii-bob-image-adapter)
 - [Westwood Kyra-family media and EMC2](#westwood-kyra-family-media-and-emc2)
 - [MADS conversations and containers](#mads-conversations-and-containers)
 - [Extend and qualify a module](#extend-and-qualify-a-module)
@@ -234,6 +235,30 @@ Keep CNV/CND/HAG payloads, decoded text, instruction bytes and private state out
 Git. Publish authored scripts and aggregate/hashing receipts only. Read the full
 repository guide `docs/MADS_PROCESSOR.md` for API contracts, limits and provenance.
 The next semantic gate is a native interpreter trace, not another parse count.
+
+## Castles II BOB image adapter
+
+Use the existing inspect/extract API for the explicitly selected original Castles II CD variant:
+
+    fdisbull media-inspect /private/game/ANIM.BOB --adapter castles2-bob
+    fdisbull media-extract /private/game/ANIM.BOB /private/new-bob-output --adapter castles2-bob --member preview-png
+
+The generic extractor writes PNG bytes to "payload.bin"; rename that private
+file to ".png" for viewing. "palette-rgb" and "indices" preserve original
+byte spans at file offsets 4 and 772.
+
+This is a narrow adapter using the existing MADS IndexedImage and PNG encoder,
+not a new graphics framework. Layout is width:u16le, height:u16le,
+256 RGB888 triplets, and width*height row-major u8 indices; source length is
+exactly 772+width*height, with 1..4096 dimensions and <=4 MiB pixels.
+BOB has no magic: never select by ".BOB" suffix alone.
+
+A magenta-looking background at palette index 255 in some portraits does
+not prove transparency. The parser does not infer a color key, alpha,
+in-game blit/compositing, palette cycling or animation timing; C2INTRNN
+files are independent source frames. Keep game bytes and derived PNGs private.
+The 97-file source-specific acceptance and feature-investment record is in
+docs/CASTLES2_BOB_DECISION.md.
 
 ## Extend and qualify a module
 
