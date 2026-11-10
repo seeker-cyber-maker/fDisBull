@@ -747,3 +747,70 @@ readiness unavailable until their mode/frame/state and mouse mappings are
 qualified. Do not infer cursor position, INT33 semantics, VBlank, input
 consumption or guest drawing completion. All 127 promotion qualifications remain
 open, and DOSBox remains the default.
+
+## Observe VGA configuration identity
+
+Inspect `vga_configuration` before calling
+`vga_configuration_observe(*, timeout_ms=1000)`, JSON
+`debug-vga-configuration` or script `vga-configuration`. Require the tenth
+`x-fdisbull-query-vga-configuration` extension, all native clock/display/retrace
+commands, and the existing explicit virtual/precise profiles. A nine-layer
+executable retains its earlier operations and refuses this helper.
+
+```python
+result = debug.vga_configuration_observe()
+current = result['current']
+published = result['published']
+if published is not None:
+    configuration_unchanged = result['configuration_matches']
+```
+
+The `fdisbull-vga-configuration-1` receipt separates current configuration from
+the configuration observed alongside the retained renderer publication. Both
+snapshots retain native epoch, model, device/console/head, observation time,
+positive lifetime generation, bounded raw values and their canonical SHA-256.
+Use the identity fields and generation together. A raw hash identifies values
+only: A-to-B-to-A writes can restore those values while advancing generation
+twice. Same-size page, pitch, panning and pixel-interpretation changes matter.
+Even paused QOM writes can change generation at the same virtual time.
+
+The conservative vector includes legacy/VBE sequencers, graphics and CRTC
+registers, attribute mode/panning/color controls, display enable, miscellaneous
+and feature output, VBE words and derived origin/pitch/bank/size, DAC width and
+framebuffer byte order. It excludes palette contents, VRAM/fonts, ordinary
+selectors and flip-flops, renderer caches and dimensions. Equal configuration
+does not imply equal images or application state. The model is
+`qemu-vga-configuration-fdisbull-v1`; it does not infer a BIOS mode number.
+
+The native observer captures the stamp directly with the retained RGB copy,
+even before the first public configuration query. Stopping preserves it; a new
+empty window returns `published=None` and `configuration_matches=None` without
+resetting the device's generation. The host keeps one current snapshot and the
+last actual publication stamp to reject contradictory or regressing history,
+including across empty windows. Old publications never replace current history
+or receive a stamp copied from current registers.
+
+Interpret `publication_configuration_semantics` as
+`configuration_observed_at_publication`. A transient invalid text layout or
+blanking can preserve older surface pixels. A true `configuration_matches`
+therefore does not establish raster coherence, completed drawing, cursor
+mapping or input readiness. `raster_coherence`, `completed_guest_frame`,
+`guest_frame_id` and `cursor_mapping` stay unknown. Retained dimensions keep
+their original image meaning. Do not unlock frame probes, coordinate clicks or
+scene consumers from this observation alone.
+
+This is a passive stopped read with unchanged clock brackets. It performs no
+guest execution, render, guest I/O/memory read, input, sleep/wait, image export
+or implicit auto-sync. Validate direct signatures and strict integer timeout
+before admission; default 1000 ms, range 1..600000. Scripts preflight visible
+values, capability and transaction ownership before earlier effects and check
+resolved values before clamping. One shrinking host deadline covers locking,
+native queries, validation, journal persistence and final return.
+
+Refuse caller-owned transactions. Malformed, contradictory, control,
+persistence or late-result failures close without replay; inspect available
+native evidence and completed clock brackets in `error.result`. Successful
+`machine-vga-configuration-observe` journal entries survive reopening as
+history, without restoring a live machine. Reset/overflow/restore identity
+rules do not provide checkpoint compatibility. DOSBox stays the default and
+all 127 promotion qualifications remain open.

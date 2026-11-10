@@ -30,6 +30,7 @@ SOURCE_SUPPORT = (
     "native/qemu-keyboard-type/",
     "native/qemu-mouse-click/",
     "native/qemu-display-probe/",
+    "native/qemu-vga-configuration/",
     "tests/",
     "scripts/",
     ".github/workflows/",

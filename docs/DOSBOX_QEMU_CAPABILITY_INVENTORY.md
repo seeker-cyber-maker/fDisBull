@@ -324,6 +324,22 @@ no row to the frozen 127-surface promotion inventory.
   completion, cancellation, duplicate-notification and restore-epoch contracts
   need independent witnesses.
 
+The tenth optional extension adds `vga_configuration` and the stopped
+`vga_configuration_observe` / `debug-vga-configuration` / `vga-configuration`
+routes. It requires the explicit virtual/precise profiles and the native
+clock/display/retrace/configuration command set. A conservative raw vector and
+write-time lifetime generation distinguish current configuration from the
+configuration observed at a retained renderer publication. A-to-B-to-A,
+same-size origin/pitch/panning and byte-order changes can invalidate identity
+without changing dimensions. DAC palette and VRAM contents remain outside the
+configuration vector. See the [configuration contract](DOS_QEMU_MIGRATION.md#observe-current-and-published-vga-configuration).
+
+This separate QEMU observation adds no row to the frozen DOSBox promotion
+inventory. A publication stamp does not prove raster coherence, guest frame
+completion, BIOS mode identity, INT33 mapping or scene readiness. Native reset,
+overflow and restore invalidation do not supply checkpoint parity. All 127
+promotion qualifications remain open and DOSBox remains the default.
+
 ## Regression witnesses and promotion gates
 
 These are existing candidate tests, not a report that this inventory ran them.
@@ -340,6 +356,7 @@ automatically start hosted CI.
 | Guest time, completed frames and input | `tests/test_debug_wait.py`, `tests/test_keyboard.py`, `tests/test_frame_capture_native.py`, `tests/test_frame_coherence.py`, `tests/test_screenshot_codecs.py`, `tests/test_protected_runtime_native.py` |
 | Native one-shot virtual input, ownership and callback receipts | `tests/test_qemu_input_schedule.py`, `tests/test_qemu_input_schedule_native.py` |
 | Sparse retained renderer pixels and exact publication identity | `tests/test_qemu_display_probe.py`, `tests/test_qemu_display_probe_public.py`, `tests/test_qemu_display_probe_native.py` |
+| Current VGA configuration and configuration observed at publication | `tests/test_qemu_vga_configuration.py`, `tests/test_qemu_vga_configuration_public.py`, `tests/test_qemu_vga_configuration_native.py` |
 | Layers and code views | `tests/test_code_layers.py`, `tests/test_code_overlap_native.py`, `tests/test_runtime_code.py`, `tests/test_screenshot_hooks.py` |
 | Checkpoints and histories | `tests/test_anchor_stone_cli.py`, `tests/test_rewind_native.py`, `tests/test_cpu_deltas_native.py`, `tests/test_delta_policies.py`, `tests/test_debug_timeline_deltas.py`, `tests/test_frame_timeline_native.py`, `tests/test_debug_experiments.py` |
 | Scenes and workflow consumers | `tests/test_scene_domain_integration.py`, `tests/test_scene_readiness.py`, `tests/test_input_macros.py`, `tests/test_movement.py`, `tests/test_spatial_native.py`, `tests/test_progressive_scenes.py`, `tests/test_player_live.py` |

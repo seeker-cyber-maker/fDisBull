@@ -195,6 +195,7 @@ METHODS = {
     "debug-display-start": "Start native completed-renderer observation at an explicit virtual cadence; run,[period_ns]",
     "debug-display-observe": "Observe the latest retained renderer publication and its age; run",
     "debug-display-probe": "Read ordered RGB samples from one retained renderer publication without refresh; run,points,[window,update_id,timeout_ms] (requires renderer_probe)",
+    "debug-vga-configuration": "Observe current VGA configuration and its retained publication stamp without rendering; run,[timeout_ms] (requires vga_configuration)",
     "debug-display-stop": "Stop renderer observation without refreshing or advancing the machine; run",
     "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
     "debug-retrace-observe": "Observe stopped native precise VGA retrace phase and timing generation; run,[timeout_ms] (guest frame completion unknown)",

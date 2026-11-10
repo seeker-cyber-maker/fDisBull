@@ -35,6 +35,7 @@ OPERATIONS = {
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
     'display-probe':'display_probe',
+    'vga-configuration':'vga_configuration_observe',
     'retrace-observe':'retrace_observe',
     'retrace-wait':'retrace_wait',
     'clock-sync-start':'clock_sync_start','clock-sync-observe':'clock_sync_observe',
@@ -325,6 +326,11 @@ def validate_script(script, *, session=None):
                             raise ValueError('Renderer probe requires its native extension and virtual clock')
                         from .qemu_display import validate_display_probe_parameters
                         validate_display_probe_parameters(**params, allow_references=True)
+                    if op=='vga-configuration':
+                        if session is not None and not getattr(session,'capabilities',{}).get('vga_configuration'):
+                            raise ValueError('VGA configuration requires its native extension and virtual/precise profiles')
+                        from .qemu_vga_configuration import validate_vga_configuration_parameters
+                        validate_vga_configuration_parameters(**params, allow_references=True)
                     if op=='retrace-wait':
                         if session is not None and not getattr(session,'capabilities',{}).get('retrace_wait'):
                             raise ValueError('retrace-wait requires the explicit native precise retrace profile')
@@ -401,7 +407,7 @@ def validate_script(script, *, session=None):
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
-                 'display-start','display-observe','display-stop','capture-display','display-probe','retrace-observe',
+                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
@@ -527,12 +533,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='display-probe':
                 from .qemu_display import validate_display_probe_parameters
                 validate_display_probe_parameters(**params)
+            if step['op']=='vga-configuration':
+                from .qemu_vga_configuration import validate_vga_configuration_parameters
+                validate_vga_configuration_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
-                             'input-schedule-retrace','display-probe',
+                             'input-schedule-retrace','display-probe','vga-configuration',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
-                if requested is None:requested=min(1000,remaining) if step['op']=='display-probe' else remaining
+                if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if step['op']=='assert':
                 if params['value'] != params['equals']:

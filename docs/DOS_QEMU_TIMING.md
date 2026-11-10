@@ -523,6 +523,34 @@ they do not establish guest mouse position, mode identity, completed guest frame
 or input readiness. See the [full probe contract](DOS_QEMU_MIGRATION.md#probe-sparse-pixels-from-one-retained-publication)
 for validation, shared deadlines, failure disposition and retained evidence.
 
+## Compare configuration at publication
+
+With the tenth native extension and the existing virtual/precise profiles,
+`vga_configuration_observe(*, timeout_ms=1000)` returns current VGA configuration
+and the frozen configuration observed at the retained image's publication.
+Inspect `vga_configuration` first; JSON uses `debug-vga-configuration`, and saved
+scripts use `vga-configuration`.
+
+The query brackets its native snapshot with unchanged stopped clock samples.
+It does not call the renderer, advance time or invoke `clock_sync_step()`.
+An explicit later clock-sync step can allow a publication; the next query
+reports whichever publication actually exists. Stopping an observer retains
+the old stamp. A new empty window has no published stamp, even though the
+device's configuration generation continues through the window change.
+
+Use epoch/device/model/generation for configuration identity. A raw SHA-256
+identifies values only: A-to-B-to-A changes increase the generation despite
+restoring those values. A paused QOM byte-order change can increase generation
+at the same virtual nanosecond. Equal timestamps therefore do not establish
+equal configurations or mutation order.
+
+The stamp means configuration observed at publication. A transient invalid
+renderer configuration can leave older surface pixels in place, so
+`configuration_matches=True` does not prove raster coherence, completed guest
+drawing, cursor mapping or input readiness. Those fields remain unknown.
+See the [configuration contract](DOS_QEMU_MIGRATION.md#observe-current-and-published-vga-configuration)
+for the raw vector, shared deadline, history validation and failure evidence.
+
 ## Technical references
 
 - [QEMU instruction-counting design](https://www.qemu.org/docs/master/devel/tcg-icount.html)

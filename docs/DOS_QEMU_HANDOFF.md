@@ -65,7 +65,8 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   callback-relative native single-chord keyboard presses, bounded US-layout
   text and physical mouse-button pairs with delivered-prefix receipts and
   explicit held-lease recovery, sparse probes of retained renderer
-  publications, cooperative fixed 1:1 host/native clock auto-sync, and stopped
+  publications, current VGA configuration and its publication-time identity,
+  cooperative fixed 1:1 host/native clock auto-sync, and stopped
   media/CPU/clock brackets, alongside the earlier
   source-bound real-mode COM/MZ traces and event searches.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
@@ -98,7 +99,10 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   acceptance and arbitrary guest consumption. The ninth extension passively
   samples one exact retained renderer publication; its pixels and dimensions
   remain distinct from current VGA state, guest mode identity and cursor
-  mapping. Full VBlank, frame completion,
+  mapping. The tenth extension observes conservative current configuration
+  and the configuration recorded at publication, with write-time generations
+  that preserve A-to-B-to-A changes. Equal configuration does not establish
+  raster coherence, guest mode identity or cursor mapping. Full VBlank, frame completion,
   legacy guest_ms, coordinate/frame clicks and
   DOSBox timing parity remain separate
   qualifications. The full slice remains open.
@@ -109,6 +113,243 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   outside Git. Routine publication must not start hosted CI.
 - Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
   this Linux workspace; do not report them synchronized.
+
+## 2026-11-09: current and published VGA configuration identity
+
+Continued from `55c549c3c3bf714ee150c1b29fa93a3cc51fd2e5` on
+`agent/qemu-sunset-284eb73c`, retaining draft MR !117 and target
+`agent/execution-event-search-284eb73c` /
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. The preceding sparse renderer-probe
+slice was already fully published. Its authored history and retained failures
+remain intact. Work began on 2026-11-09; final verification and publication
+continued after midnight UTC on 2026-11-10. The existing private runtime survived
+this interruption and was
+verified before reuse; no previous test result is treated as a new execution.
+
+### Public contract and identity
+
+The optional tenth native extension adds
+`vga_configuration_observe(*, timeout_ms=1000)`, JSON
+`debug-vga-configuration` and saved-script `vga-configuration`, advertised
+separately as `vga_configuration`. It requires an owned stopped machine, the
+existing explicit virtual/precise profiles, all native clock/display/retrace
+commands, the new `x-fdisbull-query-vga-configuration` command, and a project
+outside a caller-owned transaction. Nine-layer executables retain their earlier
+operations and refuse this helper; the default retrace profile does not
+advertise it. No new launch option or legacy DOSBox stub is introduced.
+
+The atomic native response contains existing `display` metadata, current
+configuration, and an optional frozen configuration observed alongside the
+retained renderer publication. API1/model
+`qemu-vga-configuration-fdisbull-v1` identifies the exact VGA device,
+console/head, native clock epoch/time, positive process/device-local uint64
+generation and a bounded raw vector. Public results use
+`fdisbull-vga-configuration-1` and persist
+`machine-vga-configuration-observe` events.
+
+The raw vector conservatively includes both stored sequencer banks, graphics
+and CRTC registers, attribute controls 0x10..0x14, display enable,
+miscellaneous/feature output, ten VBE words, derived origin/pitch/bank/size,
+DAC width and framebuffer byte order. Palette contents, VRAM/fonts, ordinary
+selectors/flip-flops, status/latches, renderer caches and dimensions are excluded.
+The exact fields and native sources are documented in the new patch README.
+
+Generation advances once after each complete mutator whose final vector
+changes. Hooks cover ordinary and protected legacy writes, VBE normalization,
+QEXT and QOM byte order, and initialization/reset. MMIO aliases delegate to the
+same handlers. Reset always advances; overflow never wraps and unsupported
+post-load invalidates identity. A query compares fresh raw state to the
+committed vector and refuses unexplained changes without repairing their
+history. A-to-B-to-A writes advance twice even without an intervening query.
+Window replacement and stopping do not reset generation.
+
+`configuration_sha256` hashes canonical raw JSON only. Equal values or image
+dimensions do not establish equal generation. Current/published identity also
+requires the epoch, exact device, model and consistent raw values. A paused
+QOM change can advance generation at the same virtual nanosecond; equal
+timestamps do not order such changes.
+
+### Publication semantics and bounded history
+
+The native display callback captures its already pinned selected VGA under
+BQL alongside the RGB copy, before publishing the timestamp/update ID. Capture
+does not depend on a previous public configuration or retrace query. A new
+window clears the stamp; stopping retains it. Missing selected publication
+stamps refuse instead of receiving current state retrospectively. Ordinary
+display query/export/probe schemas remain unchanged; unsupported PCI-VGA
+targets have explicit snapshot stubs.
+
+The stamp means `configuration_observed_at_publication`. Transient invalid text
+layouts or blanking can leave older surface pixels in place. Even
+`configuration_matches=True` does not establish raster coherence or a guest
+frame. `raster_coherence`, `completed_guest_frame`, `guest_frame_id` and
+`cursor_mapping` remain unknown. The display dimensions describe the retained
+image; no current dimensions, BIOS mode, INT33 mapping or application readiness
+are inferred.
+
+Host validation retains one current snapshot and the last actual publication
+stamp. Equal generation requires equal raw values; generations and strict time
+order cannot regress or contradict prior observations. Empty windows return
+`published=None` and `configuration_matches=None` while preserving the last
+actual publication frontier for later validation. Historical reads never
+replace current history. A stamp is immutable under one window/update pair.
+
+This observation performs no guest execution, rendering, guest I/O/memory
+read, input, sleep/wait, image export or implicit clock synchronization.
+Direct signature and strict integer timeout validation precede locking/I/O.
+Scripts preflight capabilities, visible values and transaction ownership before
+earlier effects, then validate resolved timeouts before clamping. One shrinking
+deadline, default 1000 ms and range 1..600000, covers admission, native queries,
+unchanged clock brackets, validation, journal persistence and final return.
+Tighter caller/script bounds intersect it. Malformed, contradictory, control,
+persistence and late-result failures close ownership without retry and retain
+available raw evidence and completed clock brackets on `error.result`.
+Reopened journals restore history, not a live machine owner.
+
+### Native and host witnesses
+
+The new staged authored COM fixture reads port-visible sequencer, graphics,
+CRTC, attribute and VBE values independently of the host response. It discovers
+the real PCI VGA device/BAR through guest configuration reads and briefly loads
+a private flat FS descriptor for genuine QEXT/MMIO access, preserving the
+firmware-assigned BAR. Distinct fences delimit each complete guest mutation.
+Original COM bytes and the prepared FreeDOS disk remain hash-unchanged.
+
+All 15 new native cases passed. They cover:
+
+- Passive clock/register/file/artifact invariance and preservation of a pending
+  attribute-controller data phase.
+- Same-extent page origin, pitch, panning and line-compare changes; unobserved
+  A-to-B-to-A with equal raw hash and a generation increase of two.
+- No-op and ignored protected CR0 writes versus writable CR7 bit 4; selector
+  exclusions versus tracked display enable.
+- Palette/VRAM changes that alter actual retained RGB markers while configuration
+  remains equal.
+- VBE 8-bit and 32-bit configurations with equal 320x200 dimensions; guest-read
+  offsets/bank/DAC values and independently expected derived pitch/start/bank.
+- Stopped QOM byte order and guest QEXT writes, including repeated/invalid writes;
+  genuine MMIO VGA/VBE and monochrome/color-port aliases.
+- Publication capture before the first public configuration query, frozen stamps
+  after stop, and an empty replacement window followed by a fresh publication.
+- A one-cell invalid text configuration: publication IDs advance and configuration
+  matches while retained dimensions and two RGB marker samples stay unchanged.
+- Armed-budget refusal without consuming the budget; reset invalidation; old
+  nine-layer/default-profile refusal with existing renderer probing retained.
+- JSON and saved-script dispatch, persisted receipts and reopening without live
+  ownership.
+
+The 244 focused host/public cases passed: 172 protocol/history/deadline cases
+and 72 routing/capability/script cases. Success sentinels in routing tests qualify
+forwarding and persistence only; real native cases separately exercise the
+configuration responses. Host tests use production QMP envelopes and real
+project persistence for exact schemas, bounds, null/malformed responses,
+immutable frontiers, equal-time changes, shrinking deadlines and failures.
+
+### Private runtime and build identities
+
+Fresh reuse checks verified the previous 1063 runtime inputs, all 26 members of
+the nine-layer native source union, 388 generated QAPI files, prior receipt/XML
+and package hashes, and the recorded private Python distribution/RECORD payloads.
+Those are input-identity checks, not new test executions. No shared installation,
+dependency download, new runtime image or credential was required.
+
+The tenth patch applied to the exact nine-layer source with zero fuzz/offset.
+An independent private forward/reverse proof matched all 27 resulting source
+members and restored all 26 preceding members, removing the new schema.
+The root incremental `x86_64-softmmu` TCG/Pixman build regenerated 396 QAPI
+source/header files and compiled successfully in 19.911 seconds. All 27 native
+source identities were rechecked after compilation; older binaries and all
+nine earlier patch bytes remain unchanged.
+
+| Identity | SHA256 |
+| --- | --- |
+| Official QEMU 10.0.13 source archive | `4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa` |
+| Tenth native patch | `960a2cee1ffc95705760d1af314f7081d94db4b7f70c96bbd7b73845451a5ad7` |
+| Tenth source manifest | `35a32909614f1135f2b3edf70096dc735d8024ee0209b96616cd5fad48704ec1` |
+| Ten-layer native executable | `4a8b7bfbdf7815d8ce330d9068ea7b74fd51e44b89eb8ebbfbab6954339f1c71` |
+| Retained nine-layer executable | `d42afdd33876a3bef38b45dae8787e9a83ad5838c3d82b1dd9ec5f8ce41dc4a2` |
+| Prepared FreeDOS 1.4 disk | `0c1d6e413102e66059fbf9820d796b5c94e73bf5279e2413f87fd302eb32cdbf` |
+| Retained DOSBox executable | `795df754019b5e9876d68067cb8d91314b001f28c9c6964502dd57ef21adf79d` |
+
+The immutable runtime inventory now contains 1064 files, including the new
+candidate and all required five-through-nine-layer legacy witnesses. Firmware,
+DOS media, compiled binaries, logs and project databases remain private.
+
+### Fresh finite local verification
+
+Root was the sole build/test owner. Every material phase admitted 3 GiB growth
+with at least 20 GiB reserve. Commands had finite deadlines, separate result
+directories, before/after source and runtime identities, retained output and
+JUnit receipts. No provider pipeline was started.
+
+| Lane | Result | Elapsed |
+| --- | --- | --- |
+| Focused new host/public | 244 passed; 0 skipped | 3.577 s |
+| New native configuration witnesses | 15 passed; 0 skipped | 12.531 s |
+| Source host regression selection | 2805 passed; 5 skipped | 239.394 s |
+| Combined source native selection | 147 passed; 0 skipped | 124.186 s |
+| Fresh installed-wheel host selection | 1882 passed; 5 skipped; 2 deselected | 200.424 s |
+| Fresh installed-wheel native selection | 147 passed; 0 skipped | 126.297 s |
+| Installed retained-DOSBox selection | 5 passed; 0 skipped | 7.650 s |
+
+The focused and new-native cases are also included in the larger source and
+installed selections; these rows are not disjoint test totals.
+
+The five source/installed host skips are the existing raw-machine opt-in cases
+requiring `FDISBULL_MACHINE_QEMU`; none of the required 147 native cases skipped.
+Installed host selection excludes the two source-only gate files and two
+source-only nodes. Installed execution uses a fresh private wheel target,
+copied tests/support and a separate Python environment without system packages;
+import receipts verify that product modules come from that target. Package
+privacy/payload checks keep external inputs out of the delivered tool.
+
+Core wheel SHA256: `3d9a37a708318af646f31c4b73a22060ea1273dfed6dda808238521f846308ad`.
+The installed payload contains 642 exact runtime files and
+635 copied test/support files. Source archive checks additionally
+bind the completed handoff and every changed authored file to the final bytes.
+
+### Retained failures and corrections
+
+Three initial seam assertions failed because the direct method, JSON catalog
+entry and script operation did not yet exist. Independent review then identified
+same-generation publication contradictions and loss of the last publication
+frontier across empty windows. A previous-current cross-check and retention of
+both clock brackets were also required. Four deterministic regressions failed
+before those fixes and passed afterward; the expanded final suite preserves
+their coverage.
+
+The first expanded focused run had 236 passes and eight failures. Its earlier
+write-memory fixture omitted required `expected_hex`, so static preflight
+stopped before reaching the intended invalid-timeout case. The fixture now
+supplies the guard and accepts it in the forwarding sentinel; all 244 cases
+then passed. The same correction ensures bad VGA signature cases cannot pass
+on an unrelated earlier-write signature failure. No product workaround was
+introduced. Original failing receipts and outputs remain unchanged.
+
+### Remaining boundaries and next slice
+
+This supplies conservative configuration identity, not full video-mode or
+renderer-raster identity. Overflow and post-load guards were compiled and source-reviewed, but not
+executed. Non-PCI-VGA stubs have source review only; they were not compiled
+or executed in this standard-VGA build. Reset testing proves owner invalidation, not a successful
+post-reset generation observation. Arbitrary VGA variants and protected/V86
+game/driver campaigns remain unqualified.
+
+Coordinate/frame clicks still need an explicit pixel-to-guest-pointer mapping,
+cursor ownership and stale-publication policy. BIOS/INT33 mode semantics,
+completed guest drawing, VBlank, text consumption, additional audio devices,
+input-to-source causality and DOSBox timing parity remain open. The existing
+clock auto-sync controller remains explicit and cooperative; this passive query
+does not invoke it. General `timed_input`, `absolute_mouse`, `guest_time_control`
+and `completed_guest_frames` stay false.
+
+All 127 default-promotion qualifications remain open and DOSBox remains the
+default. The next bounded slice can establish a declared guest mouse-coordinate
+contract using these independent publication/configuration observations as
+prerequisites. Checkpoints, histories and dependent scene/player consumers
+still require their own acceptance. macOS mirrors are not mounted here; hosted
+CI, merge, release and shared installation are not claimed.
+
 
 ## 2026-11-09: sparse retained-renderer pixel probes
 

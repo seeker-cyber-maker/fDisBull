@@ -983,6 +983,83 @@ VBlank, cursor location, INT33 mapping, application readiness and input consumpt
 remain unknown. `completed_guest_frame` and `guest_frame_id` remain `None`; all
 127 default-promotion qualifications remain open.
 
+### Observe current and published VGA configuration
+
+The optional tenth [VGA configuration extension](../native/qemu-vga-configuration/README.md)
+adds `vga_configuration_observe(*, timeout_ms=1000)`, JSON
+`debug-vga-configuration` and saved-script `vga-configuration`. Check the separate
+`vga_configuration` capability. Use the existing explicit
+`qemu_clock='virtual', qemu_retrace='precise'` profile with all native clock,
+display, retrace and configuration commands. A nine-layer executable retains
+its existing operations and refuses this new one.
+
+```python
+configuration = debug.vga_configuration_observe()
+current = configuration['current']
+published = configuration['published']
+if published is not None:
+    same_configuration = configuration['configuration_matches']
+    publication = configuration['display']
+```
+
+The `fdisbull-vga-configuration-1` receipt atomically separates the current
+configuration from the configuration observed at the retained renderer
+publication. Each snapshot identifies the native epoch, model, exact VGA
+device/console/head, observation time, positive `configuration_generation`,
+bounded `raw` vector and `configuration_sha256`. The hash covers canonical raw
+JSON only; it is neither an image hash nor a mode identifier. A-to-B-to-A changes
+can restore the hash while increasing the generation twice. Equality checks
+therefore compare generations after verifying epoch, device and raw consistency.
+
+The model conservatively tracks the stored legacy and VBE sequencers, graphics
+and CRTC registers, attribute mode/panning/color controls, display enable,
+miscellaneous/feature output, VBE words and derived origin/pitch/bank/size,
+DAC-width interpretation and framebuffer byte order. It excludes palette
+contents, VRAM/fonts, ordinary selectors and flip-flops, renderer caches and
+surface dimensions. The [native contract](../native/qemu-vga-configuration/README.md#exact-tracked-vector)
+lists every field and bound. Equal configuration can accompany different
+pixels; equal dimensions can accompany different configuration.
+
+The lifetime generation advances after complete effective mutators, including
+protected CR7, VBE normalization, QEXT and QOM byte-order changes. No-op and
+ignored writes do not advance it. Reset always advances it; overflow or an
+unsupported restore invalidates identity. Querying an uncommitted raw change
+refuses instead of repairing its missing history. Windows do not reset the
+generation.
+
+Publication capture records the selected VGA directly beside the retained RGB
+copy, even before the first public configuration query. Stopping preserves that
+stamp; starting a new empty window clears its public publication. Without an
+image, `published` and `configuration_matches` are `None`. The host retains only
+one current snapshot and the last actual publication stamp to reject regressing
+or contradictory history across empty windows. Historical reads do not replace
+the current frontier. No stamp is synthesized from current registers.
+
+`publication_configuration_semantics` is
+`configuration_observed_at_publication`. A renderer callback can retain older
+surface pixels during a transient invalid text layout or blanking. Even a true
+`configuration_matches` does not establish that every pixel was drawn under that
+configuration. `raster_coherence`, `completed_guest_frame`, `guest_frame_id` and
+`cursor_mapping` remain `None`. Publication dimensions still describe the
+retained image; the operation does not infer current dimensions, a BIOS mode,
+INT33 coordinates or input readiness.
+
+This is a stopped read: it does not execute, render, read guest I/O/memory,
+sleep, wait, send input, export images or call clock auto-sync. Direct signature
+and timeout validation precede locking/I/O. Scripts preflight capabilities,
+visible literals and transactions before earlier effects, then validate resolved
+values before deadline clamping. The strict integer host allowance is
+1..600000 ms, default 1000, and covers lock admission, native reads, unchanged
+clock brackets, validation, journal persistence and final return. Tighter
+caller/script bounds continue to apply. Caller-owned transactions are refused.
+
+Malformed, contradictory, control, persistence or late-result failures close
+ownership without retry and retain available native evidence and clock brackets
+on `error.result`. Successful `machine-vga-configuration-observe` events survive
+project reopening as history, without recreating ownership. Generic frame
+probes, coordinate/frame clicks and scenes remain unqualified, and all 127
+default-promotion qualifications remain open.
+
 ## What the first slice does and does not qualify
 
 The native tests use independent authored boot and DOS-service fixtures. They
