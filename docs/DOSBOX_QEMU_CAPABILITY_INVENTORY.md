@@ -5,11 +5,11 @@ This inventory records the migration boundary at
 claim that the native QEMU replacements have passed. Each slice needs its own
 native witnesses and DOSBox regression evidence before its status advances.
 
-**Keep `dosbox` and `dosbox-qemu` selectable throughout and after the
-migration.** Unsupported operations must fail before mutation. An uncertain
-native result must not trigger an automatic retry on another backend. Changing
-the default and retiring a backend are separate decisions; this migration does
-not authorize deletion of the DOSBox fallback.
+**Keep `dosbox` and `dosbox-qemu` selectable while proving parity.** Unsupported
+operations must fail before mutation. An uncertain native result must not trigger
+an automatic retry on another backend. Changing the default and removing the
+retained runtime are separate gates. The removal gate stays closed while any
+required behavior is missing, unqualified, or has no recovery path.
 
 ## What exists at the starting revision
 
@@ -29,6 +29,13 @@ verified parent return distinguishes selected-process exit and TSR residency.
 This is partial native availability, with real-mode entry and explicit machine
 address controls. It does not promote driver/task/V86 or whole-game parity.
 See the maintained [handoff log](DOS_QEMU_HANDOFF.md) for dated execution evidence.
+
+The checkpoint slice now has an explicit raw-machine QCOW2 profile. It saves
+the stopped machine and private guest disk and restores them in a fresh QEMU
+process. The authored witnesses compare CPU, RAM and guest-written sectors,
+reopen the project, and check stale memory plan/rule refusal. Source-bound DOS
+process restore, instrumented profiles, state forks and history consumers
+remain unqualified; the checkpoint rows are partial.
 
 The trace slice adds source-bound stopped observations and `trace-until` to
 the original COM/MZ process adapter, plus persistent event-search integration.
@@ -370,6 +377,7 @@ automatically start hosted CI.
 | --- | --- |
 | Machine control, memory, capture, restart and source isolation | `tests/test_qemu_machine.py`, `tests/test_debugger.py`, `tests/test_debug_semantics.py` |
 | DOS entry and process lifecycle | `tests/test_dos_com.py`, `tests/test_dos_launch.py`, `tests/test_dos_guest_exit.py` |
+| Paired original COM game witness | `tests/test_qemu_dos_game_parity_native.py` (Tic-Tac-Toe startup and one physical key, matching loaded COM bytes) |
 | Mode, mapping, QEMM/DESQview and searched RAM | `tests/test_dos_memory.py`, `tests/test_qemm_runtime.py`, `tests/test_desqview_runtime.py`, `tests/test_desqview_memory_native.py`, `tests/test_memory_search_runtime.py`, `tests/test_memory_rules.py` |
 | Traces and event predicates | `tests/test_execution_trace.py`, `tests/test_execution_event_native.py`, `tests/test_protected_mode_trace.py` |
 | Guest time, completed frames and input | `tests/test_debug_wait.py`, `tests/test_keyboard.py`, `tests/test_frame_capture_native.py`, `tests/test_frame_coherence.py`, `tests/test_screenshot_codecs.py`, `tests/test_protected_runtime_native.py` |

@@ -151,6 +151,8 @@ def validate_script(script, *, session=None):
                         raise ValueError('Unsupported operation for this backend: '+op)
                     if op == 'memory-rule-run' and (backend or actual) in ('qemu-machine','qemu-dos'):
                         raise ValueError('Periodic memory rules require DOSBox guest-time control')
+                    if op in ('save-state','load-state') and (backend or actual) in ('qemu-machine','qemu-dos'):
+                        raise ValueError('Unsupported operation for native QEMU scripts: '+op)
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary

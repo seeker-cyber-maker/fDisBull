@@ -17,7 +17,7 @@
       "Qualified same-input observable comparisons, with declared semantic differences",
       "Real OS/driver/game compatibility evidence beyond bare-metal fixtures",
       "Cold restore/restart and fallback rehearsal; never load a DOSBox native state as QEMU state",
-      "Retain DOSBox selectable after QEMU becomes the default"
+      "Retain DOSBox until native parity, recovery rehearsal and a separate removal review pass"
     ]
   },
   "status_legend": {
@@ -45,7 +45,8 @@
         "tests/test_qemu_machine.py",
         "tests/test_qemu_pipe.py",
         "tests/test_runtime_code.py",
-        "tests/test_qemu_operation_deadlines.py"
+        "tests/test_qemu_operation_deadlines.py",
+        "tests/test_qemu_dosbox_parity_native.py"
       ],
       "scope_limits": [
         "Machine context is available; this does not establish DOS source-address mapping, legacy reply schema, guest process lifecycle or drop-in parity.",
@@ -247,16 +248,19 @@
         "clock-media-input"
       ],
       "gate": "Whole CPU/device/clock/disk state, explicit mutable-file policy, cold-session restore, exact source/backend/profile identity, pending input policy, epoch invalidation, and close on uncertain restore.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_anchor_stone_cli.py",
         "tests/test_debugger.py",
         "tests/test_dos_qemu.py",
         "tests/test_protected_runtime.py",
-        "tests/test_protected_runtime_native.py"
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemu_checkpoint.py",
+        "tests/test_qemu_checkpoint_native.py"
       ],
       "scope_limits": [
-        "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter."
+        "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
+        "Explicit standard raw-machine profile: stopped internal QCOW2 snapshot with private guest disk, cold fresh-process restore, CPU readback and a new memory epoch. COM/MZ process identity, instrumented profiles, host files, state forks and histories remain unqualified."
       ]
     },
     {
@@ -352,14 +356,18 @@
         "workflows"
       ],
       "gate": "Real DOS/QEMM/DESQview/game cases and separate Windows regression; compare qualified observables and preserve DOSBox selectable after any default switch.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_desqview_memory_native.py",
+        "tests/test_qemu_dos_game_parity_native.py",
+        "tests/test_qemu_dosbox_parity_native.py",
         "tests/test_qemm_runtime.py",
         "tests/test_win16_native.py",
         "tests/test_windows_native.py"
       ],
-      "scope_limits": []
+      "scope_limits": [
+        "The paired freeware Tic-Tac-Toe witness compares an original COM and one physical key with the same loaded-image result; rendering, later play, real driver/task compatibility and release qualification remain open."
+      ]
     }
   ],
   "rpc_methods": [
@@ -583,16 +591,16 @@
       "method": "state.load",
       "slice": "checkpoints",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.load_state (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {
       "method": "state.save",
       "slice": "checkpoints",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.save_state (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {
@@ -947,8 +955,8 @@
       "operation": "load_anchor_stone",
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.load_anchor_stone (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {
@@ -956,8 +964,8 @@
       "operation": "load_state",
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.load_state (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {
@@ -1109,8 +1117,8 @@
       "operation": "save_anchor_stone",
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.save_anchor_stone (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {
@@ -1127,8 +1135,8 @@
       "operation": "save_state",
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.save_state (explicit standard raw-machine QCOW2 profile only)",
       "qualification": "unqualified"
     },
     {

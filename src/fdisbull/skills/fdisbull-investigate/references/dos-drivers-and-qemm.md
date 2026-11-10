@@ -118,6 +118,13 @@ non-PAE 4 KiB maps; absent pages, unobserved A20, large pages and unsupported
 paging formats stay unknown/unsupported. It does not establish allocation
 ownership, lifetime, a permanent source binding or a complete access verdict.
 
+Add `"length": 4` to a `debug-memory-translation` request to read one range
+within an observed non-PAE page mapped to extended RAM. `backing_layer.id`
+identifies the selected physical page for the current run and VM epoch;
+`data_hex` is checked against QEMU's virtual read. A guest remap can select
+another layer without changing the first page's bytes. The command is read-only
+and does not control the guest mapping or infer the owning task or allocation.
+
 ## Record QEMM's own observations
 
 Generate the authored helper before constructing/admitting the private image:

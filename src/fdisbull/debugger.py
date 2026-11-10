@@ -76,19 +76,21 @@ DEBUG_DDL += MACRO_DDL
 class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemorySearchProjectMixin, SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None,
                 transport='unix', firmware=None, clock_profile='standard', audio_profile='off',
-                retrace_profile='standard', _on_spawn=None):
+                retrace_profile='standard', checkpoint_tool=None, _on_spawn=None):
         if self.meta['format'] == 'NE':
             raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
+        checkpoint_options = {} if checkpoint_tool is None else {'checkpoint_tool': checkpoint_tool}
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,
                                    boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
                                    transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,
-                                   retrace_profile=retrace_profile,_on_spawn=_on_spawn)
+                                   retrace_profile=retrace_profile,_on_spawn=_on_spawn,**checkpoint_options)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
                  guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
+                 qemu_checkpoint_tool=None,
                  dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None):
         dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
@@ -97,6 +99,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('guest_profile requires a native QEMU full-system backend')
         if any(value is not None for value in (qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace)) and backend not in ('qemu-machine','qemu-dos'):
             raise ValueError('qemu_transport, qemu_firmware, qemu_clock, qemu_audio and qemu_retrace require a native QEMU backend')
+        if qemu_checkpoint_tool is not None:
+            if backend not in ('qemu-machine','qemu-dos'):
+                raise ValueError('qemu_checkpoint_tool requires a native QEMU backend')
+            if self.meta['format'] != 'raw':
+                raise ValueError('Native QEMU checkpoints currently require a raw machine project; DOS process restore is unqualified')
         if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
             raise ValueError('qemu_transport must be unix or pipe')
         if qemu_clock is not None and qemu_clock not in ('standard','instruction','virtual'):
@@ -166,6 +173,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                          clock_profile='standard' if qemu_clock is None else qemu_clock,
                          audio_profile='off' if qemu_audio is None else qemu_audio,
                          retrace_profile='standard' if qemu_retrace is None else qemu_retrace,_on_spawn=_on_spawn)
+            if qemu_checkpoint_tool is not None:
+                options['checkpoint_tool'] = qemu_checkpoint_tool
             if backend=='qemu-dos':
                 if self.meta['format'] in ('COM', 'MZ'):
                     if dos_boot_image is None:
@@ -255,6 +264,12 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
+        if metadata.get('format')=='fdisbull-qemu-raw-qcow2-v1':
+            if data[:4] != b'QFI\xfb':
+                raise ValueError('Invalid native raw-machine QCOW2 checkpoint header')
+            return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
+                    'metadata':metadata,'components':[{'name':'standalone-qcow2','size':len(data)}],
+                    'scope':'restricted raw QEMU machine and private disk; no DOS process or host-file restore'}
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             components = [{'name':i.filename,'size':i.file_size,'compressed_size':i.compress_size} for i in archive.infolist()]
         return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
@@ -265,6 +280,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
+        if info['metadata'].get('format')=='fdisbull-qemu-raw-qcow2-v1':
+            raise ValueError('Raw QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):

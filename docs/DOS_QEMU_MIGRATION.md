@@ -2,7 +2,7 @@
 
 `qemu-dos` supplies an explicit, native QEMU PC backend. It boots a caller-owned
 disk and can launch an original COM/MZ project through real DOS. `dosbox` remains the default
-for DOS programs, and both DOSBox choices remain selectable after the migration.
+for DOS programs while replacement capabilities and compatibility are being qualified.
 
 The first slice supplies owned startup/shutdown, private disk isolation,
 capability discovery, stopped CPU/RAM inspection and edits, break/watchpoints,
@@ -35,9 +35,10 @@ Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. See [native timing synchronization](DOS_QEMU_TIMING.md) for the
 mapping, stop policy and exact limits.
 
-This is an alternative for testing now. Checkpoints and execution layers remain
-later slices. The default-switch gate remains blocked until the outstanding slices
-and compatibility campaigns are qualified. No command here changes the default.
+A restricted raw-machine checkpoint path is available for the standard profile.
+Full DOS process checkpoints, execution layers and histories remain open. The
+default-switch gate remains blocked until the outstanding surfaces and
+compatibility campaigns are qualified. No command here changes the default.
 
 ## Select the execution environment
 
@@ -51,6 +52,28 @@ and compatibility campaigns are qualified. No command here changes the default.
 Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
+
+## Save and restore a restricted raw-machine checkpoint
+
+For an original raw boot-disk project, explicitly select a `qemu-img` executable
+with `qemu_checkpoint_tool` in Python/JSON launch or `--qemu-checkpoint-tool`
+in the debug CLI. This mode requires a pinned firmware directory, standard
+clock and retrace profiles, and audio off. Launch makes one private standalone
+QCOW2 disk; writes never change the original boot image.
+
+Stop the machine, remove breakpoints and watchpoints, and resolve pending or
+held input before `debug-save-state` or `debug-save-anchor-stone`. The private
+artifact contains the guest disk and QEMU internal snapshot. `debug-state-info`
+reports its identity without launching an emulator. A compatible raw-machine
+session can use `debug-load-state` or `debug-load-anchor-stone`; restore starts
+a fresh stopped QEMU, checks the saved CPU observation, and invalidates old
+memory edit plans, rule contexts, and framebuffer freshness. Keep this
+byte-retaining state and project outside Git.
+
+This does not restore source-bound COM/MZ process identity, host files, or
+clock/input/media extension state. Saved-script state operations and state
+forks are not admitted for this profile. It is not general DOSBox state or
+Anchor Stone parity.
 
 ## Prepare and check the core
 

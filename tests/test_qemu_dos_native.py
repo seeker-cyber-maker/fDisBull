@@ -55,6 +55,50 @@ def enter_loop(debug, symbols):
     return debug.registers()
 
 
+def test_native_paging_selects_backing_layers_without_copying_pages(tmp_path):
+    from support.qemu_paging_aba_fixture import paging_aba_boot
+
+    executable, options = selected_qemu()
+    nasm = os.environ.get('NASM') or shutil.which('nasm')
+    if not nasm:
+        if os.environ.get('FDISBULL_REQUIRE_QEMU_DOS') == '1':
+            pytest.fail('NASM is required for the authored paging witness')
+        pytest.skip('Supply NASM for the authored paging witness')
+    source = tmp_path / 'paging-aba.img'
+    image, witness = paging_aba_boot(tmp_path, nasm)
+    source.write_bytes(image)
+    linear = witness['linear_address']
+    a, b = witness['backing_a'], witness['backing_b']
+    first = witness['sentinel_a'].to_bytes(4, 'little').hex()
+    second = witness['sentinel_b'].to_bytes(4, 'little').hex()
+    with Project.create(tmp_path / 'paging.fdb', source, arch='x86', bits=32) as project:
+        with project.debugger(executable, tmp_path, **options) as debug:
+            with pytest.raises(ValueError, match='non-PAE 4-KiB page'):
+                debug.memory_translation(linear, length=4)
+            layers = []
+            for marker, observation, backing, expected in zip(
+                    witness['markers'], witness['observation_addresses'], (a, b, a), (first, second, first)):
+                point = debug.breakpoint(marker)
+                stop = debug.run(timeout_ms=10000)
+                assert stop['outcome'] == 'breakpoint', stop
+                assert point['breakpoint_id'] in stop['session']['stop_reason']['breakpoint_ids']
+                debug.delete_breakpoint(point['breakpoint_id'])
+                assert debug.memory(observation, length=4)['hex'] == expected
+                assert debug.memory(a, length=4)['hex'] == first
+                assert debug.memory(b, length=4)['hex'] == second
+                mapping = debug.memory_translation(linear, length=4)
+                layer = mapping['backing_layer']
+                assert layer['linear_page'] == hex(linear) and layer['physical_page'] == hex(backing)
+                assert layer['bytes_verified'] and mapping['data_hex'] == expected
+                assert int(mapping['entries'][-1]['physical_address'], 16) == witness['pte_address']
+                layers.append(layer['id'])
+            assert layers[0] == layers[2] and layers[0] != layers[1]
+            with pytest.raises(ValueError, match='page boundary'):
+                debug.memory_translation(linear + 4095, length=2)
+            assert debug.memory_translation(linear + 1, length=2)['data_hex'] == first[2:6]
+    assert source.read_bytes() == image
+
+
 def test_native_dos_selection_nonzero_segment_edits_trace_frame_and_reopen(tmp_path):
     executable, options = selected_qemu()
     path, symbols, project = create_boot_project(tmp_path)

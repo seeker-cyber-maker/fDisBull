@@ -184,7 +184,7 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
@@ -222,7 +222,7 @@ METHODS = {
     "qemm-profile": "Bind a QEMM guest profile to CONFIG.SYS and driver bytes in a caller-owned FAT12/16 boot image; boot_image,[config_sys,driver_path]",
     "qpi-probe": "Export an authored read-only DOS QPI observation helper; output,[mode]",
     "qpi-report": "Read a bounded guest-produced QPI report; path,[include_pages]",
-    "debug-memory-translation": "Observe an x86 machine linear-to-physical page walk at the current stop; run,address,[context]",
+    "debug-memory-translation": "Observe an x86 page walk or read one verified RAM backing layer at the current stop; run,address,[context,length]",
     "debug-memory-snapshot": "Capture an immutable paused DOS memory range with run/task/mapping identity; run,address,length,[space,task_id,name,context]",
     "debug-memory-apply": "Apply one owned memory edit plan with fresh context/expected-byte guards and readback; run,plan,[context]",
     "memory-snapshot-info": "Inspect a retained private memory snapshot and capture provenance; snapshot",
@@ -2087,6 +2087,8 @@ def parser():
                    help="Explicit native audio profile; pc-speaker requires virtual clock and audio extension")
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
+    c.add_argument("--qemu-checkpoint-tool",
+                   help="Explicit qemu-img executable for restricted raw-machine checkpoints")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")

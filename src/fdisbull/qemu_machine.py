@@ -61,7 +61,8 @@ class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
-                 clock_profile='standard', audio_profile='off', retrace_profile='standard'):
+                 clock_profile='standard', audio_profile='off', retrace_profile='standard',
+                 checkpoint_tool=None, _checkpoint_image=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
@@ -98,7 +99,15 @@ class QemuMachine:
                 raise ValueError('A pinned boot image requires its SHA-256 identity')
             if (boot_image is None)==(kernel is None) or (kernel is None)!=(initramfs is None):
                 raise ValueError('Choose a boot image or a kernel/initramfs pair')
+            if checkpoint_tool is not None and (boot_image is None or not paused or restore or firmware is None
+                    or clock_profile != 'standard' or audio_profile != 'off' or retrace_profile != 'standard'):
+                raise ValueError('Checkpoint mode requires a stopped boot image, pinned firmware and standard profiles')
+            if _checkpoint_image is not None and checkpoint_tool is None:
+                raise ValueError('Checkpoint image requires an admitted checkpoint tool')
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}
+            if checkpoint_tool is not None:
+                paths['checkpoint_tool']=Path(checkpoint_tool).expanduser().resolve(strict=True)
+                if not os.access(paths['checkpoint_tool'],os.X_OK):raise ValueError('Checkpoint tool must be executable')
             paths.update({name:Path(path).expanduser().resolve(strict=True) for name,path in [('kernel',kernel),('initramfs',initramfs),('boot_image',boot_image)] if path is not None})
             if any(not p.is_file() for p in paths.values()) or not os.access(paths['qemu'],os.X_OK):raise ValueError('Expected regular QEMU and machine input files')
             # Cold executable startup can be slow under native/translated CI.
@@ -127,6 +136,27 @@ class QemuMachine:
                 shutil.copyfile(paths['boot_image'],selected_boot)
                 if file_hash(selected_boot)!=self.inputs['boot_image']['sha256']:
                     raise ValueError('Boot image changed while creating its private runtime copy')
+            self.checkpoint_disk=None
+            if checkpoint_tool is not None:
+                from .qemu_checkpoint import validate_qcow_header
+                self.checkpoint_disk=root/'checkpoint.qcow2'
+                self.checkpoint_virtual_size=selected_boot.stat().st_size
+                if _checkpoint_image is None:
+                    subprocess.run([str(paths['checkpoint_tool']),'convert','-f','raw','-O','qcow2',
+                                    '-o','compat=1.1,lazy_refcounts=off',
+                                    str(selected_boot),str(self.checkpoint_disk)],check=True,timeout=remaining(),
+                                   stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+                else:
+                    with Path(_checkpoint_image).open('rb') as stream:
+                        validate_qcow_header(stream.read(104),self.checkpoint_virtual_size)
+                    shutil.copyfile(_checkpoint_image,self.checkpoint_disk)
+                with self.checkpoint_disk.open('rb') as stream:
+                    validate_qcow_header(stream.read(104),self.checkpoint_virtual_size)
+                info=json.loads(subprocess.check_output([str(paths['checkpoint_tool']),'info','-f','qcow2','--output=json',
+                                                       str(self.checkpoint_disk)],timeout=remaining()))
+                if info.get('format')!='qcow2' or info.get('backing-filename') or info.get('full-backing-filename'):
+                    raise ValueError('Checkpoint disk must be standalone qcow2')
+                self.machine_configuration['disk']='private-standalone-qcow2'
             machine='pc' if boot_image else 'q35'
             if audio_profile=='pc-speaker':machine+=',pcspk-audiodev=fdisbull-pc'
             command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine',machine,'-cpu',cpu_model,
@@ -145,7 +175,13 @@ class QemuMachine:
                           '-qmp',f'unix:{root/"qmp.sock"},server=on,wait=off',
                           '-chardev',f'socket,path={self.gdb_path},server=on,wait=off,id=fdisbullgdb','-gdb','chardev:fdisbullgdb']
             if firmware is not None:command+=['-L',self.inputs['firmware']['path']]
-            if boot_image:
+            if self.checkpoint_disk is not None:
+                if ',' in str(self.checkpoint_disk):raise ValueError('Checkpoint image paths cannot contain commas')
+                command+=['-blockdev',f'driver=file,filename={self.checkpoint_disk},node-name=fdbfile',
+                          '-blockdev','driver=qcow2,file=fdbfile,node-name=disk0,lazy-refcounts=off',
+                          '-device',('floppy' if boot_device=='floppy' else 'ide-hd')+',drive=disk0',
+                          '-boot','order=a' if boot_device=='floppy' else 'order=c']
+            elif boot_image:
                 if ',' in str(selected_boot):raise ValueError('Boot image paths cannot contain commas')
                 # DOS disks need a writable view. QEMU's temporary snapshot
                 # overlay keeps the selected source disk unchanged.
@@ -596,6 +632,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             input_dispatch='one batch during owned GDB continue; guest consumption unverified',
             timed_input=False,absolute_mouse=False,
             memory_translation='observed non-PAE 386 4-KiB pages; paused machine only',
+            page_backing_layers='read-only extended RAM backing selection in one stopped VM epoch',
             qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
 
@@ -644,13 +681,48 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                     address_context='selected QEMU vCPU; virtual memory uses its page tables')
 
     @machine_operation
-    def memory_translation(self,address):
-        """Observe a linear-to-physical mapping without binding or modifying RAM."""
+    def memory_translation(self,address,*,length=None):
+        """Observe a page walk, or read one currently selected RAM backing layer."""
         from .dos_memory import translate_386_page
+        if length is not None and (self.project is None or type(length) is not int or not 1<=length<=4096):
+            raise ValueError('A backing layer read requires a project and a length of 1..4096')
         remote=self._stopped()
         registers=self.registers()
-        result=translate_386_page(address,registers['address_state'],
-                                  lambda location,length:remote.memory(location,length,space='physical'))
+        if length is not None:
+            ram_end=min(self.vm.machine_configuration['memory_mib']<<20,0xc0000000)
+        def read_table(location,count):
+            if length is not None and not (location+count<=0xa0000 or 0x100000<=location<=ram_end-count):
+                raise ValueError('Page table is outside the qualified RAM range')
+            return remote.memory(location,count,space='physical')
+        def walk(state):
+            return translate_386_page(address,state,read_table)
+        result=walk(registers['address_state'])
+        if length is not None:
+            if (result['status']!='mapped' or result['page_size']!=4096
+                    or registers['address_state'].get('machine_vcpus')!=1):
+                raise ValueError('A backing layer read requires an observed single-vCPU non-PAE 4-KiB page')
+            linear=int(result['linear_address'],16)
+            physical=int(result['physical_address'],16)
+            page_offset=linear & 4095
+            backing=physical-page_offset
+            if page_offset+length>4096:
+                raise ValueError('A backing layer read cannot cross a page boundary')
+            # The managed PC profile uses contiguous extended RAM in this
+            # conservative region. Do not read firmware or device apertures.
+            if backing<0x100000 or backing+4096>ram_end:
+                raise ValueError('Backing layer is outside the qualified extended RAM range')
+            data=remote.memory(physical,length,space='physical')
+            selected=remote.memory(linear,length,space='virtual')
+            after=self.registers()
+            if (len(data)!=length or data!=selected or after!=registers
+                    or walk(after['address_state'])!=result):
+                raise ValueError('Stopped page walk and native memory read disagree; no backing layer established')
+            epoch=getattr(self,'_runtime_epoch',self.run_id)
+            result.update(data_hex=data.hex(),backing_layer=dict(
+                id=f'{self.run_id}:{epoch}:{backing:08x}', run=self.run_id, epoch=epoch,
+                linear_page=hex(linear-page_offset), physical_page=hex(backing),
+                page_offset=page_offset, length=length, bytes_verified=True,
+                lifetime='physical backing identity within this VM epoch; allocation lifetime unknown'))
         result.update(context='machine',cpu_mode=registers['cpu_mode'],
                       address_state=registers['address_state'])
         if self.project:self._event('machine-memory-translation',result)
@@ -909,7 +981,8 @@ class MachineDebugSession(MachineContext):
                 else admit_qemm_profile(guest_profile,image))
 
     def __init__(self,project,executable,*,boot_image,version=None,boot_timeout_ms=30000,guest_profile=None,
-                 transport='unix',firmware=None,clock_profile='standard',audio_profile='off',retrace_profile='standard',_on_spawn=None):
+                 transport='unix',firmware=None,clock_profile='standard',audio_profile='off',retrace_profile='standard',
+                 checkpoint_tool=None,_on_spawn=None):
         import uuid
         from .debugger import stamp
         selected=project.version(version);image=Path(boot_image).expanduser().resolve(strict=True)
@@ -935,9 +1008,14 @@ class MachineDebugSession(MachineContext):
         memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128
         vm=QemuMachine(executable,boot_image=image,paused=True,memory_mib=memory_mib,cpus=1,timeout_ms=boot_timeout_ms,
                        transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,
-                       retrace_profile=retrace_profile,on_spawn=_on_spawn,**options)
+                       retrace_profile=retrace_profile,checkpoint_tool=checkpoint_tool,on_spawn=_on_spawn,**options)
         super().__init__(vm)
+        self._checkpoint_launch=dict(executable=executable,boot_image=image,paused=True,memory_mib=memory_mib,
+            cpus=1,timeout_ms=boot_timeout_ms,transport=transport,firmware=firmware,clock_profile=clock_profile,
+            audio_profile=audio_profile,retrace_profile=retrace_profile,checkpoint_tool=checkpoint_tool,**options)
+        self._checkpoint_epoch=0
         self.rpc=vm;vm.context=self;self.closed=False;self.version=selected;self.run_id=uuid.uuid4().hex;self.project=project
+        self.capabilities['save_states']=checkpoint_tool is not None
         self.capabilities['qemm_observation']=self.guest_profile is not None and self.guest_profile['memory_manager']['configured']=='qemm'
         self.capabilities['desqview_observation']=True
         self.capabilities['memory_search']='paused snapshots; explicit task identity and per-range page mappings'
@@ -959,6 +1037,134 @@ class MachineDebugSession(MachineContext):
     def context(self,name):
         if name!='machine':raise ValueError('This session owns only the machine context')
         return self
+
+    def _checkpoint_preflight(self):
+        from .qemu_input import require_released_machine_input
+        if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
+            raise ValueError('Restricted native machine checkpoints are not enabled')
+        if self.project.meta['format'] != 'raw' or hasattr(self, '_process'):
+            raise ValueError('Source-bound DOS processes are not eligible for machine checkpoints')
+        if self.breakpoints:
+            raise ValueError('Remove machine breakpoints and watchpoints before checkpointing')
+        if self.project.db.in_transaction:
+            raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
+        require_released_machine_input(self.vm)
+
+    @machine_operation
+    def save_state(self,name='checkpoint.qcow2',*,max_bytes=None):
+        import uuid
+        from .external_files import _file_name
+        from .qemu_checkpoint import snapshot_job, validate_qcow_header
+        _file_name(name)
+        self._checkpoint_preflight()
+        if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 128*1024*1024):
+            raise ValueError('Checkpoint byte budget must be 1..134217728')
+        limit=max_bytes or 128*1024*1024
+        registers=self.registers()
+        tag='fdb-'+uuid.uuid4().hex
+        try:
+            snapshot_job(self.vm,'save',tag=tag,vmstate='disk0',devices=['disk0'])
+            path=self.vm.checkpoint_disk
+            if path.stat().st_size>limit:raise ValueError('Checkpoint exceeds its byte budget')
+            with path.open('rb') as stream:
+                data=stream.read(limit+1)
+            if len(data)>limit:raise ValueError('Checkpoint exceeds its byte budget')
+            validate_qcow_header(data[:104],self.vm.checkpoint_virtual_size)
+            metadata=dict(format='fdisbull-qemu-raw-qcow2-v1',tag=tag,source_sha256=self.metadata['source_sha256'],
+                version_sha256=self.metadata['version_sha256'],backend=self.backend_id,
+                runtime_inputs=deepcopy(self.vm.inputs),machine_configuration=deepcopy(self.vm.machine_configuration),
+                guest_profile=deepcopy(self.guest_profile),registers=registers,
+                checkpoint_scope='restricted raw machine; one standalone writable qcow2 disk',
+                host_files_restored=False,source_binding_restored=False)
+            return self._artifact(name,'state',data,metadata)
+        except BaseException:
+            self.close()
+            raise
+
+    def load_state(self,artifact,*,timeout_ms=60000):
+        from .operation_budget import request_deadline
+        deadline=request_deadline(self,timeout_ms)
+        # The selected VM is replaced after cold restore. Hold and release the
+        # original lock, not self.vm.lock after that replacement.
+        owner=self.vm
+        wait=min(10,deadline-time.monotonic())
+        if wait<=0 or not owner.lock.acquire(timeout=wait):
+            raise TimeoutError('Checkpoint restore deadline expired waiting for the machine')
+        try:
+            if self.vm is not owner:
+                raise ValueError('Machine owner changed before checkpoint restore admission')
+            return self._load_checkpoint_locked(artifact,deadline)
+        finally:
+            owner.lock.release()
+
+    def _load_checkpoint_locked(self,artifact,deadline):
+        from .qemu_checkpoint import snapshot_job
+        def remaining():
+            value=int((deadline-time.monotonic())*1000)
+            if value<=0:raise TimeoutError('Checkpoint restore deadline expired')
+            return min(600000,value)
+        remaining()
+        self._checkpoint_preflight()
+        row=self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
+                                    (artifact,)).fetchone()
+        if row is None or row['kind']!='state' or row['version']!=self.version['id']:
+            raise ValueError('State must belong to the selected project version')
+        metadata=json.loads(row['metadata']);data=bytes(row['data'])
+        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+            raise ValueError('Stored checkpoint hash mismatch')
+        expected=dict(format='fdisbull-qemu-raw-qcow2-v1',source_sha256=self.metadata['source_sha256'],
+                      version_sha256=self.metadata['version_sha256'],backend=self.backend_id,
+                      runtime_inputs=self.vm.inputs,machine_configuration=self.vm.machine_configuration,
+                      guest_profile=self.guest_profile)
+        if any(metadata.get(key)!=value for key,value in expected.items()):
+            raise ValueError('Checkpoint source or machine compatibility mismatch')
+        remaining()
+        old=self.vm;new=None
+        try:
+            with tempfile.TemporaryDirectory(prefix='fdisbull-checkpoint-') as directory:
+                image=Path(directory)/'state.qcow2';image.write_bytes(data)
+                launch=dict(self._checkpoint_launch,timeout_ms=remaining())
+                new=QemuMachine(**launch,_checkpoint_image=image)
+            remaining()
+            if new.inputs != old.inputs or new.machine_configuration != old.machine_configuration:
+                raise DebuggerError('Fresh checkpoint machine differs from saved identity')
+            new.operation_deadline=deadline
+            new.qmp.operation_deadline=deadline
+            snapshot_job(new,'load',tag=metadata['tag'],vmstate='disk0',devices=['disk0'],timeout_ms=remaining())
+            context=MachineContext(new)
+            actual=context.registers();saved=metadata['registers']
+            remaining()
+            for field in ('registers','instruction_pointer','cpu_mode','address_state'):
+                if actual.get(field)!=saved.get(field):
+                    raise DebuggerError('Restored CPU differs from checkpoint: '+field)
+            # Keep the session lock stable across the swap. A caller already
+            # queued on the old owner may only see the fully installed epoch.
+            new.lock=old.lock
+            old.close();self.vm=new;self.rpc=new;new.context=self
+            self.breakpoints={};self.next_bp=1;self._checkpoint_epoch+=1
+            # Memory snapshots, edit plans and rule contexts compare this exact
+            # identity; retained artifacts remain readable historical evidence.
+            import uuid
+            self._runtime_epoch=uuid.uuid4().hex
+            result=dict(artifact=artifact,sha256=row['sha256'],registers=actual,
+                checkpoint_epoch=self._checkpoint_epoch,framebuffer='invalidated_until_recaptured',
+                source_binding_restored=False,host_files_restored=False)
+            remaining()
+            self._event('load-state',result)
+            remaining()
+            new.operation_deadline=None;new.qmp.operation_deadline=None
+            if new.gdb is not None:new.gdb.operation_deadline=None
+            return result
+        except BaseException:
+            if new is not None:new.close()
+            self.close()
+            raise
+
+    def save_anchor_stone(self,name='anchor-stone.qcow2',*,max_bytes=None):
+        return self.save_state(name,max_bytes=max_bytes)
+
+    def load_anchor_stone(self,artifact):
+        return self.load_state(artifact)
     def trace(self,name='machine-trace.json',*,count=128,timeout_ms=10000,bits=None):
         selected_bits=self.project.bits if bits is None and self.guest_profile is None else bits
         return super().trace(name,count=count,timeout_ms=timeout_ms,bits=selected_bits)

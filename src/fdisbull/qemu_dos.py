@@ -81,7 +81,7 @@ class QemuDOSSession(MachineDebugSession):
 
     def __init__(self, project, executable, *, boot_image, version=None, boot_timeout_ms=30000,
                  guest_profile=None, transport='unix', firmware=None, clock_profile='standard', audio_profile='off',
-                 retrace_profile='standard', _on_spawn=None):
+                 retrace_profile='standard', checkpoint_tool=None, _on_spawn=None):
         # Refuse process input before parsing a disk or probing an executable.
         selected = project.version(version)
         if project.meta['format'] != 'raw' or project.meta['arch'] != 'x86' or selected['parent'] is not None:
@@ -90,7 +90,8 @@ class QemuDOSSession(MachineDebugSession):
         super().__init__(project, executable, boot_image=boot_image, version=version,
                          boot_timeout_ms=boot_timeout_ms, guest_profile='dos' if guest_profile is None else guest_profile,
                          transport=transport, firmware=firmware, clock_profile=clock_profile,
-                         audio_profile=audio_profile, retrace_profile=retrace_profile, _on_spawn=_on_spawn)
+                         audio_profile=audio_profile, retrace_profile=retrace_profile,
+                         checkpoint_tool=checkpoint_tool, _on_spawn=_on_spawn)
 
     @staticmethod
     def _admit_guest_profile(profile, image):
