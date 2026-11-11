@@ -55,72 +55,41 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Draft integration MR: [!117](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117).
 - Stack parent: `agent/execution-event-search-284eb73c` / [!113](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/113).
 - Restored baseline: `3b7ffedd848736174ad055b506bbbe44567ea6a2`.
-- Latest implemented path: slice 4 machine-owned keyboard/PS2 input, explicit
-  instruction and native virtual-clock observations, token-bound native timer
-  budgets, retained synchronous renderer publications, bounded PC-speaker PCM
-  windows, one-shot native virtual-time input scheduling, timestamped source
-  observations and temporal event queries, explicit precise VGA retrace-model
-  observations with timing generations, one-shot precise retrace waits,
-  generation-checked native input at a strictly next modeled retrace edge,
-  callback-relative native single-chord keyboard presses, bounded US-layout
-  text and physical mouse-button pairs with delivered-prefix receipts and
-  explicit held-lease recovery, sparse probes of retained renderer
-  publications, current VGA configuration and its publication-time identity,
-  caller-declared relative mouse displacement bound to one stopped publication,
-  cooperative fixed 1:1 host/native clock auto-sync, and stopped
-  media/CPU/clock brackets, alongside the earlier
-  source-bound real-mode COM/MZ traces and event searches.
+- Latest implemented path: the earlier slice-4 source-bound traces, native
+  virtual-clock/input observations, bounded media windows, retrace and
+  renderer probes, declared mouse motion and cooperative clock sync now sit
+  alongside bounded real-mode COM/MZ checkpoints, instrumented checkpoint
+  restore, remapped protected/V86 task ownership, task-private RAM/fetch layers
+  and hooks, native CPU task contexts, and opt-in real-PIC task preemption.
+  The N19 increment adds nested master/slave PIC ownership and partial-EOI
+  checkpoints; its authored source and limits are recorded below.
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
-- Next gate: qualify guest frame/VBlank semantics, additional audio devices,
-  coordinate/frame-bound clicks, guest text consumption/layout, frame-edge input,
-  coordinate mapping and input-to-source causality
-  before claiming those behaviors or depending on them in checkpoints and
-  histories. Renderer completion and capture-callback delivery are now explicit
-  narrower boundaries. Scheduled input now records PS/2 callbacks and sync at
-  native virtual time; device acceptance and guest consumption need independent
-  observations. Source traces now retain clock-qualified stopped boundaries
-  and temporal queries, with no natural-instruction-timing or causal claim.
-  The retrace wait now verifies one strictly next modeled transition. Retrace
-  input now checks that same admitted model and the original absolute window
-  immediately before PS/2 callbacks; timing changes or missed windows cancel
-  for explicit resolution. This boundary does not qualify full VBlank or
-  guest-frame input. The
-  user authorized timing auto-sync in the latest continuation; the host
-  controller now makes one bounded correction at an explicit cooperation
-  point. The native press extension now supplies the existing single-chord
-  press route; early stops retain a delivered prefix and held leases rather
-  than silently replaying or releasing input. The seventh native extension now
-  supplies 1..64 US-layout characters with callback-relative holds/gaps and
-  separate future lease reservations, preserving the same explicit recovery.
-  The eighth extension adds a separately synchronized physical button down/up
-  pair without requesting movement; a late down retains the whole requested
-  hold. Its callback evidence is separate from pointer position, packet
-  acceptance and arbitrary guest consumption. The ninth extension passively
-  samples one exact retained renderer publication; its pixels and dimensions
-  remain distinct from current VGA state, guest mode identity and cursor
-  mapping. The tenth extension observes conservative current configuration
-  and the configuration recorded at publication, with write-time generations
-  that preserve A-to-B-to-A changes. Equal configuration does not establish
-  raster coherence, guest mode identity or cursor mapping. The eleventh
-  extension converts caller-declared image-pixel displacement to exact relative
-  input counts and binds one explicitly stopped publication/configuration.
-  Native arm and callback guards reject stale expectations, cancel valid changes
-  before input and preserve explicit recovery. One caller-selected timing
-  auto-sync step can drive the same passive attempt. Actual pointer position,
-  scale calibration, guest consumption and current raster freshness remain
-  unknown. Full VBlank, frame completion,
-  legacy guest_ms, coordinate/frame clicks and
-  DOSBox timing parity remain separate
-  qualifications. The full slice remains open.
+- Next increment: add the bounded periodic `memory_rule_run` route to the
+  explicit QEMU virtual-clock profile for ordinary, non-task-switched DOS
+  contexts. Keep task-private switching and native-hook contexts behind
+  preflight refusals for this increment. Frame/VBlank semantics, additional
+  audio devices, coordinate/frame-bound clicks, guest text consumption/layout,
+  frame-edge input, pointer calibration and input-to-source causality remain
+  open slice-4 boundaries. This incremental clock/memory-rule work is a
+  prerequisite gap before the dependency-ordered Histories slice; Histories
+  remains pending until its checkpoint, layer, clock/input and trace
+  dependencies are separately admitted.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
   branch. Vendor images, game bytes, runtime databases and emulator states stay
   outside Git. Routine publication must not start hosted CI.
-- Local mirror: the configured macOS `/Volumes/...` mirrors are not mounted in
-  this Linux workspace; do not report them synchronized.
+- Publication snapshot: at the 2026-11-11 readback, the local-hub and GitLab
+  refs for `codex/qemu-dosbox-parity-20261110` both pointed to
+  `4da1a2f2270672593720d57fae1fc782175a3ace`. MR !117 still had source
+  `c2f608b4551041cc12cfe03ca0201236107b4a4f` and target
+  `089c1841c415eb2b5cdfa90d03b6291a07f73919`; the source is an ancestor of the
+  Codex head. The pending integration is a normal fast-forward of the existing
+  source branch, preserving the target and using `ci.skip`. Earlier notes that
+  the Mac mirror path was unavailable describe the prior Linux recovery
+  session, not this readback. No hosted CI was run.
 
 ## 2026-11-10: publication-bound declared mouse displacement
 
@@ -3108,3 +3077,64 @@ ownership, actual drivers/games and the formal parity campaigns remain open.
 No CI, release, installation or mirror publication is part of this local
 continuation. DOSBox remains the default, removal remains forbidden, and all
 127 formal surface qualifications and seven campaign gates remain open.
+
+## Local continuation 2026-11-11: task-private scheduling and cascaded PIC checkpoints
+
+This continuation advances the bounded work recorded in the previous
+checkpoint section. The source head is
+`4da1a2f2270672593720d57fae1fc782175a3ace` (`Add native cascaded and nested PIC
+IRQ checkpoints`). The N19 source-only delta is documented in
+[`native/qemu-task-cascade/README.md`](../native/qemu-task-cascade/README.md)
+and pinned by its source manifest. The earlier statement that scheduler task
+identity remained unknown describes the checkpoint/mode work before the
+subsequent task-context and scheduler increments; it is not the current
+handoff state.
+
+N12–N19 map to the nine canonical slices as follows:
+
+- **1. Core:** Reuses the owned x86 TCG machine and stopped controls. The
+  general core remains in progress; this does not promote a backend.
+- **2. DOS process and drivers:** Extends real COM/MZ process identity with an
+  explicit cooperating FDBTASK1 lifetime and bounded remapped protected/V86
+  ownership. It does not identify a QEMM or DESQview task.
+- **3. Trace and events:** Task-scoped hooks and native interrupt-frame
+  observations carry CPU/task identity through selected boundaries. General
+  retirement, causal input attribution and arbitrary overlays remain open.
+- **4. Clock, media and input:** Exercises real PIT IRQ0, i8042 IRQ1, IF/mask
+  deferral and nested RTC IRQ8. General IRQ timing, completed frames, audio
+  playback and DOSBox timing parity remain unqualified.
+- **5. Checkpoints:** Fresh-process snapshots preserve bounded task CPU
+  contexts, private RAM/fetch state, hooks and consistent nested or partial
+  PIC EOIs. Cross-binary VMState exchange remains unqualified.
+- **6. Layers and block services:** Adds task-private RAM/fetch, same-site
+  hooks, shared-allocation forks, CPU scheduling and PIC frame ownership.
+  Arbitrary vendor schedulers, DMA/private-device views and UDL/UIL host
+  services remain open.
+- **7. Histories:** Pending. The next bounded periodic memory-rule increment
+  remains ahead while its explicit virtual-clock route and layer/task
+  preflight fences are being established.
+- **8. Workflows:** Pending. General scene, script, player and analysis
+  workflow coverage does not follow from the native task witnesses.
+- **9. Qualification:** Targeted local evidence passed; real QEMM/DESQview/game,
+  Windows, full cold-restore and fallback campaigns remain unqualified.
+  DOSBox stays the default and remains selectable.
+
+The N19 native receipt reports 19 focused native cases passed with zero
+failures or skips. The recorded validation at this source revision also
+includes a 66-file local regression (1,046 cases), a 19-file host/public/
+packaging contract set (709 cases), an N18/API2 compatibility set (141 cases),
+and an N17/API1 compatibility set (7 cases); each recorded zero failures and
+skips. These selections overlap and their counts must not be added. The focused evidence includes RTC
+IRQ8 through the slave/master cascade, nested keyboard IRQ1, checkpoints with
+both EOIs pending and with slave EOI complete but master EOI pending, both
+policy-target choices, deferred handoff until the outer frame is fully
+EOI'd, and guards for out-of-order EOI and IRET. These are bounded authored
+FreeDOS/V86 fixtures on one x86 TCG vCPU, not compatibility tests for
+arbitrary DOS software.
+
+The N19 patch applies after the sealed N18/API2 patch; its manifest records
+source hashes, build identity and the 19-case receipt. No private DOS target,
+runtime image, VM state or raw external receipt is included here. This local
+continuation did not run hosted CI. The default-switch gate still has 127
+unqualified surface rows and seven unqualified campaigns. DOSBox remains the
+default, and removal remains forbidden.
