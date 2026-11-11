@@ -131,12 +131,59 @@ This scope includes the private QCOW2 process checkpoint and its admitted
 native controls. It reports `host_files_restored=false` and does not implement
 the planned host-directory or file-layer rollback described above. It is not
 inverse CPU/RAM undo, deterministic replay or a completed-frame history.
-The separate bounded renderer frame history is described below; partial CPU/RAM
-delta recovery and comparative trials remain open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
+The separate bounded selected CPU/RAM undo and renderer frame histories are
+described below; comparative trials remain open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
 retained IRQ branches and separate-process restore with task-private RAM/fetch
 layers and hooks. See the dated handoff and !117 for the exact validation
 receipt. All 127 formal surface qualifications and seven campaigns remain open,
 with DOSBox retained as the default.
+
+## Selected native CPU/RAM undo
+
+For a stopped, source-bound QEMU DOS process, `cpu_delta_start` captures a full
+recovery anchor and starts a per-live-session projection. `cpu_delta_record`
+records observed single-step stops; `cpu_delta_rewind` applies the selected
+inverse and `cpu_delta_status` reports its bounds and frozen state. For example:
+
+```python
+debug.cpu_delta_start(ranges=[{"address": "0x10000", "length": 2}],
+                      registers=["rax", "rip"])
+record = debug.cpu_delta_record(count=1)
+undo = debug.cpu_delta_rewind(count=1)
+assert undo["execution_allowed"] is False
+debug.cpu_delta_recover()  # restore the full anchor before continuing
+```
+
+The corresponding JSON methods are `debug-delta-start`, `debug-delta-record`,
+`debug-delta-rewind`, `debug-delta-status` and `debug-delta-recover`; script
+operations omit `debug-`. An interrupted, context-changed or short script
+record fails that route before subsequent steps. Ranges use source addresses
+and optional `cs`: 1–64 nonempty ranges, at most 65,536 bytes total, uniquely
+backed by owned RAM. Registers may select the 16 exposed GPRs, `rip` and
+`eflags`; the default selects all exposed members. An inverse may change only
+arithmetic flag bits (`0x8d5`) and cannot change `rsp` while native interrupt
+frames are owned. Control, segment and FPU registers are outside the
+projection. Defaults are 16 recorded
+steps and 64 MiB; maxima are 128 steps and 256 MiB, including the anchor and
+recorded provenance, with a 128 MiB per-anchor limit.
+
+Each interval requires stable source, mode, task, RAM view and backing, and
+interrupt-frame ownership. Existing layers, hooks and owned input may be
+admitted, but recording refuses a pending hook or a step beginning at an
+active hook. The inverse freezes execution before a guarded RAM-view overlay
+and register write; a failure of uncertain effect closes the session.
+`allow_partial_resume=True` is refused. This is one guarded RAM overlay followed
+by one guarded register batch, not an atomic CPU-plus-RAM transaction. Recover
+with the full anchor or restore a trusted full checkpoint or reconstructed
+lossless-delta frame point before continuing. Existing histories remain stored,
+but their live edge is invalidated by the partial edit.
+
+This is a selected-state projection: unselected RAM and registers remain
+current, devices and host files are not rolled back, and an observed step stop
+does not prove native instruction retirement. It is not a resumable partial
+machine state or a full-machine rewind. Projection artifacts remain immutable,
+but their live cursor does not reattach after a restart. These bounded operations do not qualify
+the full parity surfaces; DOSBox remains the default.
 
 ## Native renderer frame histories
 

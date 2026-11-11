@@ -32,7 +32,7 @@ _READ_ONLY = frozenset({
     'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory',
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe',
-    'display_observe', 'retrace_observe', 'input_state', 'keyboard_state',
+    'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status',
 })
 
 
@@ -101,7 +101,8 @@ def _history_operation(function):
                 error = TimeoutError('QEMU history operation exceeded its outer deadline')
                 error.result = result
                 if function.__name__ in ('rewind_start', 'rewind_record', 'rewind',
-                        'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs'):
+                        'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs',
+                        'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover'):
                     try:
                         self.close()
                     except Exception:
@@ -159,6 +160,9 @@ class QemuDOSHistoryMixin:
     def _history_before_operation(self, name, args=(), kwargs=None):
         """Invalidate the live edge before an unrecorded external mutation."""
         kwargs = kwargs or {}
+        selected_guard = getattr(self,'_cpu_delta_before_operation',None)
+        if selected_guard is not None:
+            selected_guard(name,args,kwargs)
         readonly = name in _READ_ONLY
         if name in ('layers', 'dos_task_layers'):
             active = kwargs.get('active', args[0] if args else None)

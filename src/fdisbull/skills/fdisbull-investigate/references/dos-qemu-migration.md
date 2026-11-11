@@ -135,12 +135,53 @@ intervening execution.
 
 The admitted checkpoint covers private QCOW2 and native controls, with
 `host_files_restored=false`; planned host-directory/file-layer restoration is
-separate. General frame/input parity, inverse CPU/RAM partial undo and
-comparative trials remain open. Local native witnesses cover ordinary
+separate. General frame/input parity and comparative trials remain open. A
+bounded selected CPU/RAM partial undo is described below. Local native witnesses cover ordinary
 Python/JSON/script step and rewind, retained IRQ branches and separate-process
 restore with task-private RAM/fetch layers and hooks; the dated handoff and
 !117 record the exact validation receipt. The four
 routes are partial and unqualified; DOSBox remains the default.
+
+## Selected native CPU/RAM undo
+
+On a stopped, source-bound QEMU DOS session, use `cpu_delta_start(ranges,
+registers=None, max_steps=16, max_bytes=67108864, timeout_ms=60000)` to capture
+a full recovery anchor and start a per-live-session projection. Then use
+`cpu_delta_record(count=1)`, `cpu_delta_rewind(count=1)`, `cpu_delta_status()`
+and `cpu_delta_recover()`. JSON routes are `debug-delta-start`,
+`debug-delta-record`, `debug-delta-rewind`, `debug-delta-status` and
+`debug-delta-recover`; script operations omit `debug-`. An interrupted,
+context-changed or short script record fails before subsequent steps.
+
+```python
+debug.cpu_delta_start([{"address": "0x10000", "length": 2}],
+                      registers=["rax", "rip"])
+debug.cpu_delta_record(count=1)
+undo = debug.cpu_delta_rewind(count=1)  # execution is now frozen
+debug.cpu_delta_recover()              # full anchor before continuing
+```
+
+Ranges are 1–64 nonempty source-address ranges with optional `cs`, at most
+65,536 bytes total and uniquely backed by owned RAM. Select from the 16 exposed
+GPRs, `rip` and `eflags`; the default selects all. Only arithmetic flag bits
+(`0x8d5`) may change; `rsp` cannot change with owned interrupt frames. Control,
+segment and FPU registers are outside the projection. The maximum is 128 recorded steps and
+256 MiB including anchor and provenance, with 128 MiB per anchor.
+
+Recording requires stable source, mode, task, view, backing and interrupt-frame
+ownership; pending hooks and steps starting at active hooks are refused.
+Admitted existing layers, hooks and owned input retain their ownership. The
+inverse freezes before a guarded RAM-view overlay and register write; uncertain
+failure closes the session. The RAM overlay and register batch are sequential,
+not one atomic CPU-plus-RAM transaction. `allow_partial_resume=True` is refused.
+Restore the full anchor or a trusted full checkpoint or reconstructed
+lossless-delta frame point to continue. Histories remain
+stored, but the partial edit invalidates their live edge. Unselected RAM and
+registers remain current; devices and host files are not rolled back, and a
+native step stop does not prove instruction retirement. This is not full-machine
+rewind or a resumable partial machine state. Immutable projection artifacts
+remain retained, but the live cursor does not reattach after restart. DOSBox
+remains the default.
 
 ## Native renderer frame histories
 
@@ -605,131 +646,29 @@ Older four-patch builds lack this capability and retain ordinary delta
 scheduling. This boundary does not qualify arbitrary guest consumption, full
 VBlank, completed frames or legacy frame-edge helpers.
 
-## Queue one timed keyboard press
+## Timed keyboard and physical mouse helpers
 
-With `virtual_keyboard_press`, use the existing `keyboard.press(key,
-modifiers=(), hold_ms=40, gap_ms=40)`, JSON `debug-keyboard-press` or script
-`keyboard.press`. Select the explicit virtual clock and the six-patch native
-build. Arming requires a stopped machine with an empty queue and no owned
-leases; it does not run the guest. Choose one later bounded run/clock advance
-or explicit clock-sync step to drive callbacks.
+With the explicit virtual clock and the corresponding optional native patches,
+check `virtual_keyboard_press`, `virtual_keyboard_type` or `virtual_mouse_click`
+before using `keyboard.press`, `keyboard.type` or `mouse_button_click`. Their
+JSON routes are `debug-keyboard-press`, `debug-keyboard-type` and
+`debug-mouse-button-click`; script operations are `keyboard.press`,
+`keyboard.type` and `mouse.button-click`. Arming requires a stopped owner,
+empty queue and no held leases; select the later bounded run, clock advance or
+clock-sync step explicitly. Press/type timings and click hold are strict integer
+1..1000 ms. Text accepts 1..64 printable US-layout ASCII characters, CR, LF
+or Tab; verify guest layout and lock state independently. Click accepts only
+left/middle/right and sends down and up in separate batches.
 
-Modifiers make in caller order, then the main key makes/breaks and modifiers
-break in reverse order. Every make and modifier break waits 2 ms; main break
-waits hold_ms from the actual main make. Each deadline is relative to the actual
-preceding callback, preserving the hold after lateness. Timing options are
-strict integers 1..1000. gap_ms is recorded but has no effect on one press.
-
-Read the retained schedule's native press steps and dispatched-count. A
-cancelled press can have delivered makes despite top-level dispatch_ns=None.
-Top-level lateness_ns is None for a press; each public press step reports its
-own lateness_ns against its assigned deadline, or None before delivery.
-First-stop cancellation latches the unsent suffix; another run or batch/retrace
-reschedule is refused. Explicit input_cancel_pending discards the suffix and
-keeps dispatched holds; inspect leases and explicitly key_up each retained
-keyboard lease with a separately chosen execution. No automatic release/replay.
-
-The direct arm has a 1000 ms host bound and inherits tighter script/transport
-bounds. Uncertain outcomes or evidence failures close the VM with the available
-native/stop evidence retained. Native callbacks do not establish guest FIFO
-acceptance or consumption. Coordinate clicks and completed frames remain
-unqualified; timed_input, guest_time_control and completed_guest_frames stay false.
-
-## Queue bounded US-layout text
-
-Inspect `virtual_keyboard_type` before calling the existing
-`keyboard.type(text, hold_ms=40, gap_ms=40)`, JSON `debug-keyboard-type` or
-script `keyboard.type`. It requires the seventh optional native patch and
-explicit virtual-clock profile. Admit one stopped plan with an empty owned
-queue and no held leases. Validate the entire string: 1..64 printable US-layout
-ASCII characters, CR, LF or Tab. CRLF means two Enter chords. Uppercase and
-shifted punctuation use fresh Shift chords; establish the guest layout and
-lock state separately.
-
-The first edge waits 2 ms. Each later character starts `gap_ms + 2 ms` after
-the preceding character's actual final release. Other makes and Shift breaks
-wait 2 ms; main breaks wait hold_ms. Every deadline uses the actual preceding
-callback; there is no trailing gap. Choose a later bounded run/clock advance
-or explicit clock-sync step yourself. Long legal text can exceed the 60-second
-clock-advance bound; the helper never splits it into hidden runs.
-
-Inspect the `typing` receipt's delivered prefix and per-edge character_index,
-lease, deadline, dispatch and lateness. Each repeated key has a new lifetime.
-Future reservations remain separate from active held-key leases: 64 shifted
-characters need 256 edges and 128 lifetimes but hold at most two keys at once.
-Only fully validated delivered makes enter the active ledger.
-
-The first stop cancels the suffix. Another run or reschedule refuses until
-explicit `input_cancel_pending()` discards unsent steps and future reservations.
-Inspect `retained_dispatched_holds`, then explicitly key_up each remaining
-lease with separately chosen execution. Cancellation never releases or replays.
-The same 1000 ms direct-arm host allowance, inherited deadlines, script
-preflight and close-on-uncertainty behavior apply as for a press. Native
-callback evidence does not establish guest text consumption or completed frames.
-
-## Queue one timed physical mouse click
-
-Inspect `virtual_mouse_click`, then use the QEMU-only
-`mouse_button_click(button='left', *, hold_ms=80)`, JSON
-`debug-mouse-button-click` or script `mouse.button-click`. Require the explicit
-virtual clock, native clock/input commands, `input-send-event` and the eighth
-patch's `x-fdisbull-arm-mouse-click`; precise retrace is unnecessary. Keep all
-seven earlier patches in order. A seven-patch executable refuses the helper
-and retains its existing physical/keyboard operations.
-
-Admit exact left/middle/right strings and strict integer holds of 1..1000 ms.
-Reject booleans, coercions and extra positional arguments. Require a stopped
-owner, empty queue, no owned held leases, no bound schedule and no caller-owned
-project transaction. Arm one down/up pair passively: down after 2 ms, up
-hold_ms after the actual down callback. Each edge owns a separate batch and
-sync; never combine both under one mouse sync. There is no trailing timer.
-Choose a later bounded run, clock advance or explicit clock-sync step yourself.
-
-For a caller-selected sync cooperation point:
-
-```python
-debug.clock_sync_start(max_lag_ns=250_000_000, max_wait_ns=250_000_000)
-armed = debug.mouse_button_click('right', hold_ms=17)
-# Perform the intended bounded host work before choosing this cooperation point.
-correction = debug.clock_sync_step(timeout_ms=1000)
-delivery = debug.input_schedule_observe()
-debug.clock_sync_stop()
-```
-
-Inspect both receipts. A sync step can leave the pair armed without execution,
-finish both callbacks, or stop before a deadline and cancel the suffix. An
-equal/reached budget wins before each edge. Never repeat corrections to hide
-an interruption or rebase the mapping implicitly.
-
-Read the `click` member (`fdisbull-mouse-click-1`) of the ordinary scheduled-input
-receipt. Inspect both step records, shared lease, delivered prefix, individual
-deadlines/dispatch/lateness and immutable terminal evidence. Only the prefix
-and immediate next edge have deadlines. Top-level lateness_ns is None;
-dispatch_ns appears only after both edges and equals final dispatch/terminal.
-Click is mutually exclusive with press, typing and retrace; refused arms keep
-the old receipt and token available. Reopened evidence does not revive ownership.
-
-The first actual stop cancels the suffix and can leave an owned delivered down.
-Another run or new/converted schedule refuses while that click remains bound.
-Call `input_cancel_pending()` to discard the unsent suffix, inspect its
-`retained_dispatched_holds`, and explicitly call `mouse_button_up(lease)` for
-each retained mouse hold. Choose release execution separately. Cancellation
-clears the pending release without releasing or replaying input itself.
-
-Preserve one 1000 ms direct-arm bound across lock admission, I/O and persistence,
-intersecting tighter incoming bounds. Check whole-script capabilities, literals
-and transactions before earlier mutations; revalidate resolved arguments before
-arm. Pre-arm admission failures leave valid ownership. Accepted/uncertain late
-arms, malformed native evidence and persistence failures close without replay.
-
-Request no movement, but do not infer zero-delta packets: prior accumulators
-or external button state can affect packets. Disabled/remote devices and full
-queues do not establish delivery. FIFO acceptance, arbitrary guest consumption,
-cursor position and INT33 remain unknown. There is no GuestMouse facade or
-legacy DebugSession stub. Preserve native refusals for coordinate `click(x, y)`,
-`debug-click`, `click-frame` and `input.mouse.click`. General timed_input,
-absolute_mouse, guest_time_control and completed_guest_frames stay false;
-DOSBox stays the default and all 127 promotion gates remain open.
+Inspect the retained press, typing or click steps, delivered prefix, leases and
+individual deadline/lateness evidence. A first stop cancels the unsent suffix;
+call `input_cancel_pending()` and explicitly release any dispatched holds with
+a separately chosen execution. Cancellation does not release or replay edges.
+Accepted uncertain effects close the VM without replay. Callback receipts do
+not prove FIFO acceptance, guest consumption, cursor position, INT33 or a
+completed frame. Coordinate and legacy frame click helpers remain unqualified.
+For exact scheduling, timeout, cancellation and native patch requirements, see
+the full repository guide `docs/DOS_QEMU_MIGRATION.md`.
 
 ## Observe the explicit VGA retrace model
 

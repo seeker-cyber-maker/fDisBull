@@ -3750,3 +3750,85 @@ Histories remains in progress; selected CPU/RAM undo, comparative trials and
 the planned FreeDOS/directory/file layers remain open. All 127 formal
 qualifications and seven campaigns remain open. DOSBox-X remains default and
 retained. All verification is local; no CI is run for this continuation.
+
+
+## Local continuation 2026-11-11: selected CPU/RAM undo
+
+This continuation follows `4392f24b3aaea43ca9d918937fbb8bcb5663ba44` on
+Draft !117. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4214684570)
+records the next bounded part of **slice 7, Histories**. The entire prior
+handoff, FreeDOS/directory-workspace amendment and stack target are preserved.
+
+Source-bound native DOS processes now expose `cpu_delta_start/status/record/rewind/recover`
+through Python, the existing `debug-delta-*` JSON methods and `delta-*` scripts.
+An explicit projection selects 1..64 source RAM ranges totaling at most 64 KiB
+and exposed GPRs/RIP/EFLAGS. Ranges must have unique owned physical backing;
+RAM reads and inverse overlays use the selected task-private view when active.
+Control/segment/FPU registers are outside the projection. Only arithmetic
+EFLAGS bits may change; changing RSP with owned native interrupt frames refuses.
+The target PC must remain within the verified source module and CS context.
+
+A full native recovery anchor precedes recording. Immutable hash-bound JSON
+deltas retain selected before/after fingerprints and the actual observed
+single-step stop under stable source/run/epoch, mode, task, backing, layers,
+frame-key and IRQ ownership. They are observations, not instruction-retirement
+proof, memory-access tracing or deterministic replay. Pending task switches,
+pending hooks and steps starting at active hooks refuse. Known interrupted or
+context-changing stops retain the actual completed prefix and end recording;
+scripts stop before subsequent operations. An observed ownership mismatch
+permanently invalidates the cursor, even if the context later switches back.
+Anchor, delta and inverse-provenance costs share conservative cumulative
+budgets, with the existing project-wide artifact cap still binding.
+
+The inverse validates the complete selected preimage and chain, then freezes
+before the first write. It applies one immutable native RAM overlay and one
+guarded register batch, followed by full selected and unselected-register
+readback plus controller proofs. This is sequential, not an atomic CPU/RAM
+transaction. Unselected RAM/registers and devices remain current; hidden CPU
+state remains unknown. Preservation policies can retain declared selected
+registers/bytes, but `allow_partial_resume=True` refuses, including whole-script
+static preflight. Uncertain dispatch/readback/publication closes the owner.
+After a successful inverse, inspection is allowed; execution, capture, further
+inverse and other mutation remain blocked until verified full recovery.
+
+Recovery loads the validated full anchor or an explicitly selected complete
+checkpoint/frame point. The shared full loader clears the freeze only after
+source/native/control restoration succeeds. Both default full frame points
+and reconstructed lossless-delta frame points use that path. Full recovery
+rotates owner/epoch identities and preserves held keys without make reinjection.
+Existing full/delta history DAGs, branches and stored images remain retained;
+selected operations invalidate only their live edge. Projection artifacts stay
+immutable, but the selected live cursor does not reattach across a restart.
+
+Five new actual QEMU cases passed on unchanged N21. COM and genuinely relocated
+MZ witnesses revert selected RAX/RIP and RAM while excluded RBX/RAM retain
+later values, enforce the freeze, fully recover and execute again. The combined
+private-task witness undoes task A's selected RAM while preserving task B,
+shared backing, active RAM/fetch layers, same-site hooks, held Shift+A keys,
+clock state and a genuine in-flight IRQ. The expected task-manager generation
+advances once for the verified private overlay; all other task/frame/controller
+proofs remain strict. Full recovery continues to the next real task hook.
+Separate witnesses recover frozen state through full and lossless-delta frame
+points. N21 remains `54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a`;
+no native rebuild was needed. Private native states, databases, target inputs
+and media remain outside Git.
+
+The final integrated preservation run passed **2,022 tests across 112 files**,
+with zero failures, errors or skips and unchanged Python source/witness hashes.
+It includes all five new actual CPU/RAM cases, four lossless-delta cases,
+14 frame-key cases, nine renderer-history cases, five checkpoint-history cases
+and the retained native task/scheduler/timer/cascade/nested-IRQ witnesses.
+The retained DOSBox history/delta/timeline/trial selection, now also including
+its native CPU/RAM inverse and recovery tests, passed **323 tests**. Sealed N20
+renderer/checkpoint histories passed **14 tests**, and final payload/skill/
+migration metadata passed **48 tests**. Selections overlap and are not additive.
+External log/JUnit receipts use the `cpu-undo-preservation-final`,
+`cpu-undo-dosbox-final`, `cpu-undo-n20-final`, `cpu-undo-native-final` and
+`cpu-undo-metadata-final` stems. The exact source commit, mirror heads and
+GitLab readback are logged in !117 and `cpu-undo-final-receipt.json` outside Git.
+
+Histories remains in progress. Comparative trials, general completed-frame/input
+parity and the planned FreeDOS/directory/file layers remain open. All **127
+formal surface qualifications and seven campaigns** remain open. DOSBox-X
+remains default and retained until local parity is proved. No CI, release tag,
+release publication or installation change is part of this continuation.

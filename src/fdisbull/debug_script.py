@@ -228,6 +228,9 @@ def validate_script(script, *, session=None):
                     if op=='delta-rewind' and 'policy' in params:
                         from .debug_cpu_deltas import validate_policy
                         validate_policy(params['policy'],allow_references=True)
+                        if ((backend or actual)=='qemu-dos' and isinstance(params['policy'],dict)
+                                and params['policy'].get('allow_partial_resume') is True):
+                            raise ValueError('Native selected CPU/RAM undo does not permit partial resume')
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
                         native_frames = (backend or actual) == 'qemu-dos'
@@ -607,6 +610,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
             if native_key_tracking and step['op']=='frame-inputs':
                 params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
+            if native_frames and step['op'] in ('delta-start','delta-record','delta-rewind','delta-recover'):
+                params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
             if step['op']=='input-schedule-retrace':
                 # Validate resolved options before the budget clamp can turn
                 # an invalid supplied timeout into a valid remaining integer.
@@ -674,6 +679,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 if (not isinstance(result,dict) or result.get('outcome') != 'completed'
                         or result.get('completed_frames') != params.get('frames',1)):
                     raise ValueError('Frame advancement stopped before completing the requested renderer publications')
+            if native_frames and step['op']=='delta-record':
+                if (not isinstance(result,dict) or result.get('outcome') != 'completed'
+                        or result.get('recorded_count') != params.get('count',1)):
+                    raise ValueError('Selected CPU/RAM recording stopped before the requested native intervals')
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
                 raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
             if step['op']=='trace-until' and not (result.get('complete') and result.get('matched') and result.get('exact_stop')):

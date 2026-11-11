@@ -14,6 +14,7 @@ import zipfile
 from .dosbox_rpc import DebuggerError
 from .qemu_checkpoint import snapshot_job, validate_qcow_header
 from .qemu_checkpoint_controls import capture_controls, restore_controls
+from .qemu_cpu_undo_guard import full_load
 
 FORMAT = 'fdisbull-qemu-dos-process-qcow2-v2'
 COMMAND = 'x-fdisbull-dos-checkpoint-status'
@@ -342,6 +343,7 @@ def load_process_state(session, artifact, timeout_ms):
                                   timeout_ms=timeout_ms)
 
 
+@full_load
 def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60000):
     """Restore full checkpoint bytes without persisting a reconstructed copy.
 

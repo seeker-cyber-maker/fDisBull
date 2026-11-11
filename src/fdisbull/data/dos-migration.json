@@ -394,12 +394,18 @@
         "tests/test_qemu_frame_storage.py",
         "tests/test_qemu_frame_deltas.py",
         "tests/test_qemu_frame_deltas_public.py",
-        "tests/test_qemu_frame_deltas_native.py"
+        "tests/test_qemu_frame_deltas_native.py",
+        "tests/test_qemu_cpu_deltas.py",
+        "tests/test_qemu_cpu_undo_runtime.py",
+        "tests/test_qemu_cpu_undo_guard.py",
+        "tests/test_qemu_cpu_deltas_public.py",
+        "tests/test_qemu_cpu_deltas_native.py"
       ],
       "scope_limits": [
         "Native renderer histories retain complete checkpoint/PNG DAG points with default full or opt-in lossless checkpoint delta retention, bounded parent chains, full keyframes/fallback, exact pin reconstruction, retained branches and cold restore. PNGs stay full. The unit is a synchronous renderer publication; completed_guest_frames remains false.",
         "N21 adds atomic stopped frame-key ownership, input journals, scheduled edges and full held-key/device restore under fresh native identities without reinjection. Typematic repeat is unsupported. Ordinary physical input remains a separate lease model; actual capacity and owner guards bind.",
-        "Partial CPU/RAM undo, comparative trials, general completed-frame/input parity and directory/file-aware restore remain unqualified. Delta mode changes retention only, with encoded payload/canonical metadata budgets distinct from reconstructed bytes and live disk growth. DOSBox stays retained pending formal local parity."
+        "Selected native CPU/RAM projections support bounded source ranges, exposed GPRs/RIP/arithmetic flags and observed single-step stops under stable task, layer, hook, frame-key and IRQ ownership. Selected undo freezes before mutation; unselected state stays current and a verified full checkpoint or frame-point restore is required before execution. Native retirement, hidden CPU/device rollback and partial continuation are not claimed. Projection artifacts persist, but the live undo cursor does not reattach after restart.",
+        "Comparative trials, general completed-frame/input parity and directory/file-aware restore remain unqualified. Frame checkpoint delta mode changes retention only, with encoded payload/canonical metadata budgets distinct from reconstructed bytes and live disk growth. DOSBox stays retained pending formal local parity."
       ]
     },
     {
@@ -873,8 +879,8 @@
       "operation": "cpu_delta_record",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_record; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
       "qualification": "unqualified"
     },
     {
@@ -882,8 +888,8 @@
       "operation": "cpu_delta_recover",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_recover; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
       "qualification": "unqualified"
     },
     {
@@ -891,8 +897,8 @@
       "operation": "cpu_delta_rewind",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_rewind; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
       "qualification": "unqualified"
     },
     {
@@ -900,8 +906,8 @@
       "operation": "cpu_delta_start",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_start; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
       "qualification": "unqualified"
     },
     {
@@ -909,8 +915,8 @@
       "operation": "cpu_delta_status",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_status; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
       "qualification": "unqualified"
     },
     {
