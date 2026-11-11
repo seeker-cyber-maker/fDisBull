@@ -94,7 +94,9 @@
         "tests/test_qemu_dos_irq_preemption_native.py",
         "tests/test_qemu_dos_irq_preemption_guards_native.py",
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
-        "tests/test_qemu_dos_irq1_preemption_native.py"
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
       ],
       "scope_limits": [
         "Original COM/MZ projects launch through real DOS EXEC with a separate private boot disk. Observed PSP/MCB, ordered MZ relocations, exact loader stack writes and native entry establish the initial source map; controls retain machine addresses.",
@@ -103,7 +105,8 @@
         "Device-header registration and an authored SYS initialization marker qualify only those observations, not arbitrary device I/O. Game assets/drivers must already be present in the image; existing startup/configuration bytes are preserved.",
         "A cooperating monitor commits an even FDBTASK1 anchor with OUTW port 0xf1db value 0x4446; guest retains CPU/frame scheduling. Local authored same-page A-to-B-to-A-to-B-to-A, invalid-commit, reset and checkpoint witnesses passed on the native x86 TCG build; vendor task scheduling remains unqualified.",
         "Opt-in native cooperative scheduler has a local authored V86 witness for INT60 yield, INT62 block, separate task contexts and CPU-created protected interrupt frames. Same-source/allocation forks only; no vendor scheduler or timer/IRQ preemption qualification.",
-        "Separate opt-in native PIC preemption observes real master PIC acknowledgement and matching guest EOI before switching; bounded authored IRQ0 PIT and IRQ1 i8042 witnesses passed, including IF/PIC-mask deferral. Isolated MOV SS interrupt-shadow behavior with a pending IRQ and general vendor/IRQ timing parity remain unqualified."
+        "Separate opt-in native PIC preemption observes real master PIC acknowledgement and matching guest EOI before switching; bounded authored IRQ0 PIT and IRQ1 i8042 witnesses passed, including IF/PIC-mask deferral. Isolated MOV SS interrupt-shadow behavior with a pending IRQ and general vendor/IRQ timing parity remain unqualified.",
+        "API 3 admits slave PIC IRQs 8–15 and direct master IRQs other than cascade IRQ2, with ordered nested IRQ/frame ownership and slave-before-master EOI; eligible quanta coalesce into one pending handoff until all outstanding EOIs complete. Authored RTC IRQ8/nested keyboard IRQ1 and invalid-order/IRET guards passed locally; extra real empty IRQ1 entries are serviced and accounted for. API 1/2 remain recognized; unsupported PIC modes fail closed."
       ]
     },
     {
@@ -285,14 +288,17 @@
         "tests/test_qemu_dos_irq_preemption_native.py",
         "tests/test_qemu_dos_irq_preemption_guards_native.py",
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
-        "tests/test_qemu_dos_irq1_preemption_native.py"
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
         "Standard raw machines and stopped owned COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Optional native instrumentation sidecars preserve virtual time, retained media and precise retrace under fresh owner identities. Native task-context observation admits bounded remapped protected/V86 RAM when ownership and selected module PC are verified. An authored cooperating-monitor A-to-B-to-A witness and separate Python-process restore cover distinct physical backings, layers and task-scoped hooks. Host files, arbitrary QEMM/DPMI mappings, state forks and histories remain unqualified.",
         "Native VMState version 1 retains the bounded private arena, task identity and tombstones; version-3 host controls retain per-task stacks, shared hook traps, hit counts and pending hooks with fresh private layer IDs. Authored same-page cold restore passed in a separate Python process under standard and virtual/precise-retrace profiles. Dormant generation-zero and selected-B checkpoints also passed; full parity remains unqualified.",
         "Authored native cooperative scheduler cold restore passed in a separate Python process with a dormant protected INT61 frame, distinct CPU/x87 state and task-private RAM/fetch/hooks. Per-task x87 rounding of 1.5 to 1 and 2 and guest watchpoints with identical DR7 controls and different DR0 addresses survived switching and cold restore; an instrumented profile preserves virtual clock, precise retrace, VGA configuration and an audio observer with zero frames and zero drops, providing no PCM or audible playback evidence. General parity remains unqualified.",
-        "Authored IRQ0 checkpoints passed before EOI with PIC in service and after EOI with the interrupted hardware frame dormant, including separate-process restore and quantum-three phase. A combined virtual-clock, precise-retrace, VGA configuration, x87 and audio-observer IRQ checkpoint witness passed across pre- and post-EOI cold restore; both audio windows contained zero frames and zero drops, providing no PCM or audible playback evidence."
+        "Authored IRQ0 checkpoints passed before EOI with PIC in service and after EOI with the interrupted hardware frame dormant, including separate-process restore and quantum-three phase. A combined virtual-clock, precise-retrace, VGA configuration, x87 and audio-observer IRQ checkpoint witness passed across pre- and post-EOI cold restore; both audio windows contained zero frames and zero drops, providing no PCM or audible playback evidence.",
+        "API 3 permits a consistent nested IRQ stack or partially acknowledged cascade (slave EOI completed, master cascade EOI pending) in the native task checkpoint. Authored nested and partial-EOI cold restores passed locally for IRQ8 and IRQ1 policy targets; IRQ1 retains a pending handoff until outer EOI. The guest stops after A resumes, without a DOS-cleanup claim; no general hardware IRQ or vendor qualification follows."
       ]
     },
     {
@@ -325,7 +331,9 @@
         "tests/test_qemu_dos_irq_preemption_native.py",
         "tests/test_qemu_dos_irq_preemption_guards_native.py",
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
-        "tests/test_qemu_dos_irq1_preemption_native.py"
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
       ],
       "scope_limits": [
         "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch; aliases of one physical page share layer effects. Source definitions require the verified DOS module and observed protected/V86 ownership, including bounded remapped RAM with the native task-context extension.",
@@ -1497,9 +1505,11 @@
         "tests/test_qemu_dos_irq_preemption_native.py",
         "tests/test_qemu_dos_irq_preemption_guards_native.py",
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
-        "tests/test_qemu_dos_irq1_preemption_native.py"
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
       ],
-      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; native task-private routes debug-dos-task-switching, debug-dos-task-register, debug-dos-task-layer-patch, debug-dos-task-layers, debug-dos-task-memory and debug-dos-task-retire; QemuDOSProcessSession and native extensions; local authored same-page task-private and cold-restore witnesses passed; experimental native CPU scheduling routes debug-dos-task-scheduler, debug-dos-task-fork, debug-dos-task-context, debug-dos-task-runnable, debug-dos-task-scheduler-observe and debug-dos-task-scheduler-disable include locally passed authored cooperative V86 scheduler/frame and separate-process cold-restore witnesses; broader scheduler qualification remains open; not parity qualified; debug-dos-task-preemption: bounded authored PIT IRQ0/i8042 IRQ1, EOI/frame and checkpoint witnesses passed; combined instrumented IRQ cold restore passed with zero-frame audio observer continuity only"
+      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; native task-private routes debug-dos-task-switching, debug-dos-task-register, debug-dos-task-layer-patch, debug-dos-task-layers, debug-dos-task-memory and debug-dos-task-retire; QemuDOSProcessSession and native extensions; local authored same-page task-private and cold-restore witnesses passed; experimental native CPU scheduling routes debug-dos-task-scheduler, debug-dos-task-fork, debug-dos-task-context, debug-dos-task-runnable, debug-dos-task-scheduler-observe and debug-dos-task-scheduler-disable include locally passed authored cooperative V86 scheduler/frame and separate-process cold-restore witnesses; broader scheduler qualification remains open; not parity qualified; debug-dos-task-preemption: bounded authored PIT IRQ0/i8042 IRQ1, EOI/frame and checkpoint witnesses passed; combined instrumented IRQ cold restore passed with zero-frame audio observer continuity only; API 3 adds ordered nested/cascaded PIC ownership and partial-EOI checkpoints; authored RTC IRQ8/nested IRQ1 witnesses and EOI guards passed locally for both policy targets"
     },
     {
       "id": "process-and-resident-completion",

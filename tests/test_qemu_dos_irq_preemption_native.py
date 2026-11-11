@@ -68,8 +68,11 @@ def _private(debug, task, address, length):
 
 
 def _preemption(debug):
-    value = debug.dos_task_scheduler_observe()['preemption']
-    assert value['model'] == 'qemu-pc-pic-preemption-v1'
+    native = debug.dos_task_scheduler_observe()
+    value = native['preemption']
+    assert native['api-version'] in (2, 3)
+    assert value['model'] == ('qemu-pc-pic-preemption-v2' if native['api-version'] == 3
+                               else 'qemu-pc-pic-preemption-v1')
     assert value['enabled'] is True and value['irq'] == 0 and value['quantum'] == 1
     assert value['quantum-progress'] < value['quantum']
     assert value['pic-irq-base'] == 0x20 and value['pic-mask'] & 1 == 0

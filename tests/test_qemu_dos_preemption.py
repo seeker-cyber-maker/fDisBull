@@ -167,6 +167,8 @@ def test_api2_checkpoint_requires_scheduler_version_and_policy_fences(mismatch):
 @pytest.mark.parametrize('controls_format,scheduler_format', [
     ('fdisbull-qemu-controls-task-4', IRQ_FORMAT),
     (CONTROLS_FORMAT, 'fdisbull-native-dos-scheduler-1'),
+    ('fdisbull-qemu-controls-task-5', 'fdisbull-native-dos-scheduler-3'),
+    ('fdisbull-qemu-controls-task-6', 'fdisbull-native-dos-scheduler-2'),
 ])
 def test_control_format_fence_matches_scheduler_capability(controls_format, scheduler_format):
     session = _Session(); session.version = {'id':1, 'sha256':'v'}
@@ -174,7 +176,7 @@ def test_control_format_fence_matches_scheduler_capability(controls_format, sche
     session._dos_scheduler['format'] = scheduler_format
     controls = dict(format=controls_format,epoch=1,source_sha256='s',version=1,version_sha256='v',
                     task_identity=deepcopy(session.binding))
-    with pytest.raises(ValueError, match='version-5 control fence'):
+    with pytest.raises(ValueError, match='matching versioned control fence'):
         restore_controls(session, controls, 1)
 
 
@@ -319,3 +321,96 @@ def test_live_preemption_counter_frontier_cannot_regress(monkeypatch):
     session.vm.qmp.status['preemption'].update({'ack-count':2,'eoi-count':2,'preemption-count':1})
     with pytest.raises(DebuggerError, match='regress'):
         scheduler._status(session)
+
+
+def _stack_checkpoint(session, *, partial=False, nested=True):
+    from fdisbull.qemu_dos_preemption import STACK_FORMAT, STACK_MODEL
+    saved = _inflight_checkpoint(session)
+    saved['format'] = saved['metadata']['format'] = STACK_FORMAT
+    saved['native']['api-version'] = 3
+    raw = saved['native']['preemption']
+    raw.update(model=STACK_MODEL, irq=8, **{'slave-mask':0,'slave-irr':0,'slave-isr':0 if partial else 1,
+        'slave-irq-base':0x70, 'pic-isr':4, 'ack-count':1,'outstanding-count':1})
+    binding = session.binding
+    outer = {'uuid':binding['monitor_uuid'],'cookie':binding['cookie'],'incarnation':binding['incarnation'],
+        'ack-sequence':1,'frame-sequence':7,'irq':8,'vector':0x70,'master-irq':2,
+        'slave-valid':True,'slave-irq':0,'required-eoi-mask':3,'seen-eoi-mask':2 if partial else 0}
+    frames = saved['contexts'][binding['task_id']]['frames']
+    frames[0].update(vector=0x70, **{'pic-controller':1,'pic-irq':8,'pic-vector':0x70,
+        'pic-master-irq':2,'pic-slave-valid':True,'pic-slave-irq':0,
+        'pic-required-eoi-mask':3,'pic-seen-eoi-mask':outer['seen-eoi-mask']})
+    stack = [outer]
+    if nested:
+        inner = dict(outer, **{'ack-sequence':2,'frame-sequence':8,'irq':1,'vector':9,
+            'master-irq':1,'slave-valid':False,'slave-irq':0,'required-eoi-mask':1,'seen-eoi-mask':0})
+        frames.append(dict(frames[0], sequence=8, vector=9, **{'pic-controller':0,'pic-irq':1,
+            'pic-vector':9,'pic-ack-sequence':2,'pic-master-irq':1,'pic-slave-valid':False,
+            'pic-slave-irq':0,'pic-required-eoi-mask':1,'pic-seen-eoi-mask':0}))
+        stack.append(inner)
+        raw.update(**{'pic-isr':6,'ack-count':2,'outstanding-count':2})
+    top = stack[-1]
+    raw.update({'outstanding-frames':stack,'inflight-irq':top['irq'],'inflight-vector':top['vector'],
+                'inflight-sequence':top['ack-sequence'],'inflight-frame-sequence':top['frame-sequence']})
+    saved['metadata']['preemption']['irq'] = 8
+    depth = len(frames)
+    saved['native']['tasks'][0]['interrupt-depth'] = depth
+    saved['contexts'][binding['task_id']]['interrupt-depth'] = depth
+    return saved
+
+
+@pytest.mark.parametrize('partial', [False,True])
+def test_api3_nested_cascade_checkpoint_accepts_consistent_frames(partial):
+    session = _Session(); saved = _stack_checkpoint(session,partial=partial)
+    validate_scheduler(session,saved,session.binding['process_nonce'],
+                       {'views':[{'binding':deepcopy(session.binding)}]},session._process)
+
+
+@pytest.mark.parametrize('bad', ['duplicate','counter','isr','eoi-order','frame','legacy-fence','projection','owner','model','frame-order'])
+def test_api3_rejects_inconsistent_nested_checkpoint(bad):
+    session = _Session(); saved = _stack_checkpoint(session)
+    raw = saved['native']['preemption']; stack = raw['outstanding-frames']
+    if bad == 'duplicate': stack[1]['ack-sequence'] = stack[0]['ack-sequence']
+    elif bad == 'counter': raw['eoi-count'] = 1
+    elif bad == 'isr': raw['slave-isr'] = 0
+    elif bad == 'eoi-order': stack[0]['seen-eoi-mask'] = 1
+    elif bad == 'frame': saved['contexts'][session.binding['task_id']]['frames'][0]['pic-master-irq'] = 1
+    elif bad == 'legacy-fence': saved['format'] = IRQ_FORMAT
+    elif bad == 'projection': raw['inflight-irq'] = 0
+    elif bad == 'owner': stack[0]['cookie'] += 1
+    elif bad == 'frame-order': saved['contexts'][session.binding['task_id']]['frames'].reverse()
+    else: raw['model'] = IRQ_MODEL
+    with pytest.raises((ValueError, DebuggerError)):
+        validate_scheduler(session,saved,session.binding['process_nonce'],
+                           {'views':[{'binding':deepcopy(session.binding)}]},session._process)
+
+
+def test_api3_pending_with_stable_stack_is_checkpointable():
+    session = _Session(); saved = _stack_checkpoint(session)
+    saved['native']['preemption']['pending'] = True
+    validate_scheduler(session,saved,session.binding['process_nonce'],
+                       {'views':[{'binding':deepcopy(session.binding)}]},session._process)
+
+
+def test_api3_configures_slave_irq_and_verifies_reply(monkeypatch):
+    import fdisbull.qemu_dos_scheduler as scheduler
+    import fdisbull.qemu_dos_task_views as views
+    from fdisbull.qemu_dos_preemption import STACK_MODEL
+    session = _Session()
+    session.vm.qmp_commands = set(session.vm.qmp_commands) | {COMMAND}
+    before = _status_v2(session)
+    before['api-version'] = 3
+    before['preemption'].update(model=STACK_MODEL, **{'slave-mask':0,'slave-irr':0,'slave-isr':0,
+        'slave-irq-base':0x70,'outstanding-count':0,'outstanding-frames':[]})
+    after = deepcopy(before)
+    after['preemption'].update(enabled=True,irq=8)
+    calls = []
+    monkeypatch.setattr(views,'_preflight',lambda *_: None)
+    monkeypatch.setattr(scheduler,'_status',lambda *_, **__: before if not calls else after)
+    def call(command,arguments=None):
+        calls.append((command,arguments)); return deepcopy(after)
+    session.vm.qmp.call = call
+    session._event = lambda *args, **kwargs: None
+    result = QemuDOSSchedulerMixin.dos_task_preemption.__wrapped__(session,irq=8)
+    assert calls == [(COMMAND,{'enabled':True,'irq':8,'quantum':1})]
+    assert result['preemption']['model'] == STACK_MODEL
+    assert session.metadata['native_preemption']['irq'] == 8

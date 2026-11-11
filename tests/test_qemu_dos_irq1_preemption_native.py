@@ -13,8 +13,11 @@ from test_qemu_dos_modes_checkpoint_native import _inputs, _launch
 
 
 def _status(debug):
-    result = debug.dos_task_scheduler_observe()['preemption']
-    assert result['model'] == 'qemu-pc-pic-preemption-v1'
+    native = debug.dos_task_scheduler_observe()
+    result = native['preemption']
+    assert native['api-version'] in (2, 3)
+    assert result['model'] == ('qemu-pc-pic-preemption-v2' if native['api-version'] == 3
+                               else 'qemu-pc-pic-preemption-v1')
     assert result['enabled'] and result['irq'] == 1 and result['quantum'] == 1
     assert result['pic-irq-base'] == 0x20
     assert result['pic-mask'] & 1 and not result['pic-mask'] & 2

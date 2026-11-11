@@ -71,7 +71,15 @@ IRQ remains unqualified. A combined virtual-clock/precise-retrace/audio IRQ
 checkpoint profile passed locally with observer state and token rotation at
 pre- and post-EOI cold restore. Both windows had zero frames and zero drops,
 so there is no PCM or audible-playback evidence. No vendor multitasker or
-general IRQ-timing parity follows. Frame-timed input and
+general IRQ-timing parity follows. API 3 adds slave PIC IRQs 8–15 as well as
+direct master IRQs other than cascade IRQ2, tracking nested frame ownership and
+slave-before-master EOI obligations. Locally passed authored RTC IRQ8/nested
+keyboard IRQ1 witnesses cover cold restore before EOI and after slave EOI,
+including an IRQ1-target pending handoff that switches only after the outer
+master EOI. Additional real empty IRQ1 entries are serviced and accounted for;
+the witness stops after A resumes and does not claim DOS cleanup. API 1
+cooperative and API 2 direct master-PIC runtimes remain recognized; unsupported
+PIC modes still fail closed. Frame-timed input and
 scene parity remain later slices.
 Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.

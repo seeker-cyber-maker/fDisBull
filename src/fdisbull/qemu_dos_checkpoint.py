@@ -384,12 +384,13 @@ def load_process_state(session, artifact, timeout_ms):
         scheduler = bundle.get('native_scheduler')
         validate_scheduler(session,scheduler,bundle['origin']['nonce'],task_views,bundle['process'])
         expected_controls = None if scheduler is None else (
-            'fdisbull-qemu-controls-task-5' if scheduler['format'] == 'fdisbull-native-dos-scheduler-2'
+            'fdisbull-qemu-controls-task-6' if scheduler['format'] == 'fdisbull-native-dos-scheduler-3'
+            else 'fdisbull-qemu-controls-task-5' if scheduler['format'] == 'fdisbull-native-dos-scheduler-2'
             else 'fdisbull-qemu-controls-task-4')
         controls_format = bundle['controls'].get('format')
         if ((scheduler is not None and controls_format != expected_controls)
                 or scheduler is None and controls_format in (
-                    'fdisbull-qemu-controls-task-4','fdisbull-qemu-controls-task-5')):
+                    'fdisbull-qemu-controls-task-4','fdisbull-qemu-controls-task-5','fdisbull-qemu-controls-task-6')):
             raise ValueError('Native scheduler checkpoint requires its matching versioned control fence')
         instrumentation = bundle.get('instrumentation')
         validate(session.vm, instrumentation)

@@ -14,7 +14,7 @@ from .memory_search_runtime import _locked
 from .qemu_dos_task_views import _arguments, _observe, _preflight, _row
 from .qemu_dos_tasks import require_task, task_key
 from .qemu_dos_preemption import (QemuDOSPreemptionMixin, COMMAND as PREEMPTION_COMMAND,
-    FORMAT as IRQ_FORMAT, COUNTERS as IRQ_COUNTERS, policy as preemption_policy,
+    FORMAT as IRQ_FORMAT, STACK_FORMAT, MODEL as IRQ_MODEL, STACK_MODEL, COUNTERS as IRQ_COUNTERS, policy as preemption_policy,
     validate_preemption, validate_checkpoint_preemption, validate_irq_frame)
 
 MODEL = 'qemu-pc-task-scheduler-v1'
@@ -55,7 +55,7 @@ def _number(value, label):
 
 def _validate_native_status(raw):
     if (not isinstance(raw,dict) or raw.get('model') != MODEL
-            or type(raw.get('api-version')) is not int or raw['api-version'] not in (1,2)
+            or type(raw.get('api-version')) is not int or raw['api-version'] not in (1,2,3)
             or not _uint(raw.get('epoch'),1) or not _uint(raw.get('generation'),1)
             or not _uint(raw.get('runqueue-generation')) or type(raw.get('enabled')) is not bool
             or raw.get('yield-vector') != 0x60 or raw.get('block-vector') != 0x62
@@ -63,8 +63,10 @@ def _validate_native_status(raw):
             or type(raw.get('pending-switch')) is not bool
             or not isinstance(raw.get('tasks'),list) or len(raw['tasks']) > 16):
         raise DebuggerError('Invalid native scheduler status receipt')
-    if raw['api-version'] == 2:
+    if raw['api-version'] in (2,3):
         validate_preemption(raw.get('preemption'))
+        if raw['preemption']['model'] != (STACK_MODEL if raw['api-version'] == 3 else IRQ_MODEL):
+            raise DebuggerError('Native IRQ model does not match scheduler API version')
     elif 'preemption' in raw:
         raise DebuggerError('Legacy native scheduler unexpectedly carries IRQ preemption state')
     seen, slots = set(), set()
@@ -86,12 +88,15 @@ def _validate_native_status(raw):
                 or item['retired'] and (item['runnable'] or item['context-valid'] or item['interrupt-depth'])):
             raise DebuggerError('Invalid native CPU slot receipt')
         seen.add(key); slots.add(item['slot'])
-    if raw['api-version'] == 2 and raw['preemption']['inflight']:
+    if raw['api-version'] in (2,3) and raw['preemption']['inflight']:
         irq = raw['preemption']
         owner = (irq['inflight-uuid'],irq['inflight-cookie'],irq['inflight-incarnation'])
         selected = (raw.get('selected-uuid'),raw.get('selected-cookie'),raw.get('selected-incarnation'))
-        if (owner != selected or not any(_key(row)==owner and row['context-valid']
-                and not row['retired'] and row['interrupt-depth'] > 0 for row in raw['tasks'])):
+        outstanding = irq['outstanding-frames'] if raw['api-version'] == 3 else []
+        if (owner != selected or any(_key(item) != selected for item in outstanding)
+                or not any(_key(row)==owner and row['context-valid']
+                    and not row['retired'] and row['interrupt-depth'] >= max(1,len(outstanding))
+                    for row in raw['tasks'])):
             raise DebuggerError('Native in-flight IRQ differs from the selected CPU/frame owner')
     return raw
 
@@ -119,8 +124,8 @@ def _status(session, *, adopt=False):
                   or prior[2] > raw['runqueue-generation']):
         raise DebuggerError('Native scheduler owner or runqueue observation regressed')
     session.vm._dos_scheduler_frontier = (raw['epoch'],raw['generation'],raw['runqueue-generation'])
-    if raw['api-version'] == 2:
-        if (meta.get('format') != IRQ_FORMAT
+    if raw['api-version'] in (2,3):
+        if (meta.get('format') != (STACK_FORMAT if raw['api-version'] == 3 else IRQ_FORMAT)
                 or meta.get('preemption') != preemption_policy(raw['preemption'])):
             raise DebuggerError('Native IRQ preemption differs from its admitted policy')
         counters = tuple(raw['preemption'][key] for key in IRQ_COUNTERS)
@@ -176,7 +181,8 @@ def _context(vm, binding):
                 or any(not _uint(frame.get(name)) for name in ('pre-cs','pre-eip','pre-ss','pre-sp','frame-sp','width','error-code'))
                 or type(frame.get('error-code-present')) is not bool):
             raise DebuggerError('Invalid native interrupt-frame ownership receipt')
-        validate_irq_frame(frame,required=PREEMPTION_COMMAND in vm.qmp_commands)
+        validate_irq_frame(frame,required=PREEMPTION_COMMAND in vm.qmp_commands,
+                           stack='pic-master-irq' in frame)
     return raw
 
 
@@ -239,7 +245,8 @@ def capture_scheduler(session):
     meta = getattr(session,'_dos_scheduler',None)
     if meta is None: return None
     raw = _status(session,adopt=True)
-    if raw['pending-switch'] or raw.get('preemption',{}).get('pending'):
+    if raw['pending-switch'] or (raw.get('preemption',{}).get('pending')
+            and not (raw['api-version'] == 3 and raw['preemption']['outstanding-count'])):
         raise ValueError('Continue the pending native runqueue change before checkpointing')
     contexts = {}
     for task, admission in meta['slots'].items():
@@ -251,13 +258,13 @@ def capture_scheduler(session):
                 raise DebuggerError('Native scheduler CPU/frame state changed during capture')
             contexts[task] = context
     validate_checkpoint_preemption(raw,contexts)
-    return dict(format=IRQ_FORMAT if raw['api-version']==2 else FORMAT,
+    return dict(format=STACK_FORMAT if raw['api-version']==3 else IRQ_FORMAT if raw['api-version']==2 else FORMAT,
                 metadata=deepcopy(meta),native=raw,contexts=contexts)
 
 
 def validate_scheduler(session, saved, origin_nonce, private_views, process):
     if saved is None: return
-    if (not isinstance(saved,dict) or saved.get('format') not in (FORMAT,IRQ_FORMAT)
+    if (not isinstance(saved,dict) or saved.get('format') not in (FORMAT,IRQ_FORMAT,STACK_FORMAT)
             or not COMMANDS <= session.vm.qmp_commands or private_views is None
             or not isinstance(saved.get('metadata'),dict)
             or not isinstance(saved['metadata'].get('slots'),dict)
@@ -286,13 +293,14 @@ def validate_scheduler(session, saved, origin_nonce, private_views, process):
         seen.add(_binding_key(binding))
     native = saved['native']
     _validate_native_status(native)
-    if ((native['api-version'] == 2) != (saved['format'] == IRQ_FORMAT)
-            or native['api-version'] == 2 and (
+    expected_format = {1: FORMAT, 2: IRQ_FORMAT, 3: STACK_FORMAT}[native['api-version']]
+    if (saved['format'] != expected_format or saved['metadata'].get('format', FORMAT) != expected_format
+            or native['api-version'] >= 2 and (
                 PREEMPTION_COMMAND not in session.vm.qmp_commands
-                or saved['metadata'].get('format') != IRQ_FORMAT
                 or saved['metadata'].get('preemption') != preemption_policy(native['preemption']))):
         raise ValueError('Native IRQ checkpoint lacks its capability or version fence')
-    if native['pending-switch'] or native.get('preemption',{}).get('pending'):
+    if native['pending-switch'] or (native.get('preemption',{}).get('pending')
+            and not (native['api-version'] == 3 and native['preemption']['outstanding-count'])):
         raise ValueError('Native scheduler checkpoint contains a pending runqueue change')
     if ({_key(row) for row in native.get('tasks',[])} != seen
             or native.get('enabled') != saved['metadata']['enabled']
@@ -323,7 +331,7 @@ def prime_scheduler(vm, saved, private_views):
     if saved is not None:
         if not COMMANDS <= vm.qmp_commands:
             raise ValueError('Fresh QEMU lacks native scheduler restore support')
-        if saved['format'] == IRQ_FORMAT and PREEMPTION_COMMAND not in vm.qmp_commands:
+        if saved['format'] in (IRQ_FORMAT,STACK_FORMAT) and PREEMPTION_COMMAND not in vm.qmp_commands:
             raise ValueError('Fresh QEMU lacks native IRQ preemption restore support')
         vm.qmp.call('x-fdisbull-task-scheduler-init',
             {'anchor-address':private_views['monitor']['anchor_address'],'prepare-only':True})
@@ -374,7 +382,7 @@ def restore_scheduler(session, saved, proof):
     session._dos_scheduler = deepcopy(saved['metadata'])
     session._dos_scheduler['native_epoch'] = proof['epoch']
     session.metadata['native_scheduler'] = dict(model=MODEL,enabled=proof['enabled'])
-    if proof['api-version'] == 2:
+    if proof['api-version'] in (2,3):
         session.metadata['native_preemption'] = dict(model=proof['preemption']['model'],
             **preemption_policy(proof['preemption']))
     else:
@@ -396,9 +404,9 @@ class QemuDOSSchedulerMixin(QemuDOSPreemptionMixin):
         try:
             raw = _native_status(self.vm)
             if not raw['enabled'] or raw['tasks']: raise DebuggerError('Native scheduler initialization is not empty')
-            self._dos_scheduler = dict(format=IRQ_FORMAT if raw['api-version']==2 else FORMAT,
+            self._dos_scheduler = dict(format=STACK_FORMAT if raw['api-version']==3 else IRQ_FORMAT if raw['api-version']==2 else FORMAT,
                 enabled=True,native_epoch=raw['epoch'],slots={})
-            if raw['api-version'] == 2:
+            if raw['api-version'] in (2,3):
                 if PREEMPTION_COMMAND not in self.vm.qmp_commands:
                     raise DebuggerError('Native IRQ scheduler lacks its control capability')
                 self._dos_scheduler['preemption'] = preemption_policy(raw['preemption'])
@@ -513,12 +521,12 @@ class QemuDOSSchedulerMixin(QemuDOSPreemptionMixin):
         try:
             _validate_native_status(disabled)
             self._dos_scheduler['enabled'] = False
-            if disabled['api-version'] == 2:
+            if disabled['api-version'] in (2,3):
                 self._dos_scheduler['preemption'] = preemption_policy(disabled['preemption'])
             raw = _status(self)
             if raw['enabled']: raise DebuggerError('Native scheduler remained enabled')
             self.metadata['native_scheduler'] = dict(model=MODEL,enabled=False)
-            if raw['api-version'] == 2:
+            if raw['api-version'] in (2,3):
                 self.metadata['native_preemption'] = dict(model=raw['preemption']['model'],
                     **preemption_policy(raw['preemption']))
             self._event('dos-native-scheduler-disable',raw)

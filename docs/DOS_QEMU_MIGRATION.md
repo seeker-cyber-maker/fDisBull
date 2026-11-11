@@ -304,15 +304,45 @@ DOSBox behavior has been qualified.
 
 The optional `dos_task_preemption(irq=0, quantum=1, enabled=True)` control,
 JSON `debug-dos-task-preemption`, requires the native CPU scheduler and its
-PIC preemption extension. It admits a direct master-PIC IRQ from 0 through 7,
-excluding cascade IRQ2, and a quantum of 1 through 65535. Native QEMU observes
-a real PIC acknowledgement and the guest's matching EOI; after the configured
-number of eligible IRQs it selects the next runnable registered task. The guest
-handler remains responsible for servicing the device and issuing EOI. Python
-does not inject an IRQ, acknowledge the PIC or choose the next task.
+PIC preemption extension. Scheduler API 2 admits direct master-PIC IRQs 0
+through 7 except cascade IRQ2. API 3 additionally admits slave-PIC IRQs 8
+through 15; both use a quantum of 1 through 65535.
+Native QEMU observes real PIC acknowledgements and the guest's matching EOIs;
+after the configured number of eligible IRQs it selects the next runnable
+registered task. The guest handler remains responsible for servicing the
+device and issuing EOI. Python does not inject an IRQ, acknowledge the PIC or
+choose the next task.
 `dos_task_scheduler_observe()['preemption']` reports policy, quantum phase,
 acknowledgement/EOI/preemption counters, selected transitions, PIC state and
 in-flight IRQ/frame ownership.
+
+API 3 maintains an ordered stack of acknowledged hardware IRQs
+and the native task/interrupt frame owning each one. A slave IRQ requires its
+slave PIC EOI before the master cascade EOI; a nested higher-priority IRQ has
+its own acknowledgement and EOI obligations. A pending task switch is deferred
+until all outstanding required EOIs have completed, so an outer frame still
+awaiting an EOI cannot be parked. Multiple eligible quanta during that wait
+coalesce into one pending handoff. A stopped checkpoint may preserve a
+consistent nested stack or a partial cascade after the slave EOI and before the
+master EOI. An unowned frame, inconsistent PIC state, incomplete unbacked
+handoff or unsupported PIC mode is refused. PIC polling, auto-EOI and unsupported priority modes do
+not become supported by this interface. Execution remains one TCG vCPU with
+the existing same-source/allocation task-fork and private-page limits.
+
+Local authored FreeDOS/V86 witnesses have passed with real RTC IRQ8 and nested
+i8042 keyboard IRQ1. They cold-restore both a two-frame state before either EOI
+and a state after the slave EOI but before the outer master EOI. With IRQ1 as
+the policy target, a pending handoff survives the partial-EOI restore and runs
+once only after the outer EOI. The guest services and accounts for any additional
+real empty keyboard IRQ instead of discarding it. The witness observes both
+inner and outer IRET and stops after A resumes in V86; it makes no DOS-cleanup
+or vendor-parity claim. Separate local guards exercised nested IRET without
+its required EOI and a master cascade EOI before the slave EOI.
+
+These results are separate from the API 2 direct-master IRQ0/IRQ1 evidence
+below. API 1 cooperative scheduling and API 2 direct-master PIC support remain
+recognized on compatible earlier runtimes; a saved state still requires a
+runtime that admits its actual checkpoint format and features.
 
 Local authored FreeDOS/V86 witnesses have exercised PIT/PIC IRQ0 and actual
 i8042 keyboard IRQ1 without guest software yields. The IRQ0 witness preserves
@@ -333,8 +363,8 @@ retrace, VGA configuration, x87 and an active PC-speaker observer at both the
 pre-EOI and post-EOI cold restores. It retained observer state and rotated its
 token under fresh native clock epochs. Both audio windows contained zero frames
 and zero drops, so this provides no evidence of PCM sample continuity or audible
-playback. These local IRQ cases are bounded authored evidence, not general interrupt timing, vendor
-QEMM/DESQview compatibility or permission to retire DOSBox. Unsupported IRQ,
+playback. These local IRQ cases are bounded authored evidence, not general
+interrupt timing, vendor QEMM/DESQview compatibility or permission to retire DOSBox. Unsupported IRQ,
 paging, frame, pending-switch and ownership states remain subject to explicit
 admission and refusal.
 
