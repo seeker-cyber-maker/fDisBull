@@ -3058,3 +3058,53 @@ fault, REP, nested EXEC, relocation and self-modification boundaries before
 connecting higher-level action/event search. Preserve the raw machine trace
 and retained DOSBox event path for comparison; the following slice corrects
 the earlier unconditional completed-step terminology.
+
+
+## Local continuation 2026-11-11: instrumented checkpoints and bounded modes
+
+The local branch `codex/qemu-dosbox-parity-20261110`, following `a834a55c`,
+adds private COM/MZ checkpoint restore with the virtual clock, PC-speaker
+capture and precise VGA retrace profiles. Native observer state carries
+retained PCM and renderer pixels, publication configuration, timing
+provenance, bounded mixer/backend queues, oscillator position and timer
+state. Restore reads the saved state back under fresh native and host clock
+epochs and fresh observer tokens. RAM/fetch layers, hook actions and hit
+counts, pending hook step-over and breakpoints remain part of the process
+envelope. A separate Python host restores and continues the same artifact.
+
+The stopped selected CPU can also be in protected or V86 mode under the
+identity-backed low-memory ownership contract. Authored witnesses cover a
+loaded GDT with 32-bit code/data/stack caches, identity paging, actual V86
+execution, a remapped page-zero refusal, layer/hook restore and return to DOS.
+Descriptor contents, exact PDE/PTE bits, source RAM, helper, PSP and DOS
+allocation observations are compared across restore. Scheduler task identity
+remains unknown. Arbitrary QEMM/DESQview/DPMI mappings are not qualified.
+
+Fresh macOS local verification: 817 tests passed with zero failures or skips
+in the integrated 49-file regression selection, including retained DOSBox
+cases. Another 23 host contract checks passed after adding explicit refusal
+of instrumented checkpoints on raw boot projects. These counts overlap and
+must not be added. The focused tests also prove immediate re-saving of a
+verified cold-restored process and ordinary-snapshot refusal by restored
+audio-only and display-only blockers without clock-budget/retrace blockers
+masking them. The POSIX socket tests use a short external temporary alias;
+older generic VM tests use a private wrapper that supplies the pinned firmware.
+Feature tests pin the real QEMU executable and firmware directly.
+
+The native delta is in `native/qemu-instrumented-checkpoint/`. Its manifest
+pins all 23 before/after source pairs and the exact 13-patch prerequisite.
+The patch applies in a dry run against that prerequisite; no whole QEMU tree
+or private machine/media state is added to this repository. The tested
+QEMU executable SHA-256 is
+`b24403a451d4a52e3bf21f183c67bc1159ab736f78f8dd6093a7bedd452b3a08`.
+
+Host monotonic synchronization must be stopped, and pending/held/scheduled
+input and outstanding clock budgets must be resolved before checkpointing.
+Unsupported audio graphs/resampling and malformed or uncertain restoration
+fail closed. Raw-machine checkpoints retain standard-profile restrictions.
+New restored-epoch source histories, other audio devices, arbitrary protected
+ownership, actual drivers/games and the formal parity campaigns remain open.
+
+No CI, release, installation or mirror publication is part of this local
+continuation. DOSBox remains the default, removal remains forbidden, and all
+127 formal surface qualifications and seven campaign gates remain open.

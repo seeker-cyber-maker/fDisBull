@@ -109,7 +109,7 @@ def test_native_memory_snapshot_transport_failure_invalidates_process(
             control = debug.vm.qmp
             sequence = control.sequence
 
-            def lost_reply(deadline):
+            def lost_reply(deadline, *reply_budget):
                 raise TimeoutError('authored QMP reply loss after dispatch')
 
             # QemuControl.call still dispatches query-status, then closes its

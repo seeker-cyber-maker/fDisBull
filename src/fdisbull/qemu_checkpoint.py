@@ -40,7 +40,8 @@ def _stopped(status, *, allow_prelaunch=False):
                  or allow_prelaunch and status.get('status') == 'prelaunch'))
 
 
-def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000):
+def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000,
+                 instrumented=False, export_token=None):
     """Run one internal snapshot job while stopped; close on uncertain outcome.
 
     This low-level primitive does not prove that ``devices`` contains every
@@ -49,6 +50,11 @@ def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000):
     """
     if operation not in ('save', 'load'):
         raise ValueError('Snapshot operation must be save or load')
+    if type(instrumented) is not bool or (export_token is not None and not instrumented):
+        raise ValueError('Invalid instrumented snapshot selection')
+    if instrumented and operation == 'save' and (not isinstance(export_token, str)
+            or not 1 <= len(export_token) <= 128):
+        raise ValueError('Instrumented save requires a bounded native export token')
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
         raise ValueError('Snapshot timeout must be 1..600000 ms')
     if (not isinstance(tag, str) or not _NAME.fullmatch(tag)
@@ -72,19 +78,23 @@ def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000):
             raise ValueError('Snapshot requires an owned machine')
         require_released_machine_input(vm)
         status = call('query-status')
-        if not _stopped(status, allow_prelaunch=operation == 'load'):
+        restored = getattr(vm, '_checkpoint_restored_stopped', False) is True
+        if not _stopped(status, allow_prelaunch=operation == 'load' or restored):
             raise ValueError('Snapshot requires a stopped machine')
         job_id = 'fdisbull-snapshot-' + uuid.uuid4().hex
-        command = 'snapshot-' + operation
+        job_type = 'snapshot-' + operation
+        command = 'x-fdisbull-instrumented-' + job_type if instrumented else job_type
         dispatched = True
-        call(command, {'job-id': job_id, 'tag': tag, 'vmstate': vmstate,
-                       'devices': list(devices)})
+        arguments = {'job-id': job_id, 'tag': tag, 'vmstate': vmstate, 'devices': list(devices)}
+        if instrumented and operation == 'save':
+            arguments['token'] = export_token
+        call(command, arguments)
         while True:
             jobs = call('query-jobs')
             if not isinstance(jobs, list):
                 raise DebuggerError('Malformed snapshot job list')
             selected = [job for job in jobs if isinstance(job, dict) and job.get('id') == job_id]
-            if len(selected) != 1 or selected[0].get('type') != command:
+            if len(selected) != 1 or selected[0].get('type') != job_type:
                 raise DebuggerError('Snapshot job identity missing or ambiguous')
             job = selected[0]
             state = job.get('status')
@@ -100,7 +110,7 @@ def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000):
             time.sleep(min(.02, remaining))
         call('job-dismiss', {'id': job_id})
         after = call('query-status')
-        if not _stopped(after, allow_prelaunch=operation == 'load'):
+        if not _stopped(after, allow_prelaunch=operation == 'load' or restored):
             raise DebuggerError('Snapshot did not preserve stopped execution')
         return {'operation': operation, 'job_id': job_id, 'tag': tag,
                 'vmstate': vmstate, 'devices': list(devices), 'status': 'concluded'}

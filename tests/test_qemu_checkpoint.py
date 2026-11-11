@@ -42,6 +42,17 @@ class Machine:
         self.closed = True
 
 
+def test_raw_instrumented_checkpoint_refuses_before_runtime_launch(tmp_path):
+    from fdisbull.project import Project
+
+    image = tmp_path / 'boot.img'
+    image.write_bytes(bytes(510) + b'\x55\xaa')
+    with Project.create(tmp_path / 'raw.fdb', image, arch='x86', bits=16) as project:
+        with pytest.raises(ValueError, match='raw checkpoints require standard profiles'):
+            MachineDebugSession(project, '/not-executed', boot_image=image,
+                                clock_profile='virtual', checkpoint_tool='/not-executed')
+
+
 def test_snapshot_job_waits_for_conclusion_and_dismisses():
     vm = Machine()
     result = snapshot_job(vm, 'save', tag='one', vmstate='disk0', devices=['disk0'])

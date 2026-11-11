@@ -102,8 +102,8 @@ class QemuMachine:
             if (boot_image is None)==(kernel is None) or (kernel is None)!=(initramfs is None):
                 raise ValueError('Choose a boot image or a kernel/initramfs pair')
             if checkpoint_tool is not None and (boot_image is None or not paused or restore or firmware is None
-                    or clock_profile != 'standard' or audio_profile != 'off' or retrace_profile != 'standard'):
-                raise ValueError('Checkpoint mode requires a stopped boot image, pinned firmware and standard profiles')
+                    or clock_profile not in ('standard', 'virtual')):
+                raise ValueError('Checkpoint mode requires a stopped boot image, pinned firmware and standard or virtual clock')
             if _checkpoint_image is not None and checkpoint_tool is None:
                 raise ValueError('Checkpoint image requires an admitted checkpoint tool')
             paths={'qemu':Path(executable).expanduser().resolve(strict=True)}
@@ -212,6 +212,9 @@ class QemuMachine:
                 self.qmp=QemuControl(root/'qmp.sock',self.process,deadline)
             self.qmp.operation_deadline=deadline
             self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
+            if checkpoint_tool is not None and clock_profile == 'virtual':
+                from .qemu_instrumented_checkpoint import require_commands
+                require_commands(self)
             if clock_profile=='virtual':
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
             if audio_profile=='pc-speaker':
@@ -1015,6 +1018,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         machine_clock_configuration(clock_profile,1)
         machine_audio_configuration(audio_profile,clock_profile)
         machine_retrace_configuration(retrace_profile,clock_profile)
+        if checkpoint_tool is not None and clock_profile != 'standard':
+            raise ValueError('Instrumented process checkpoints require an original COM/MZ project; raw checkpoints require standard profiles')
         if project.meta['format']!='raw' or project.meta['arch']!='x86' or selected['parent'] is not None:
             raise ValueError('Machine boot launch requires an original unpatched raw x86 project')
         if not image.is_file() or image.stat().st_size>64*1024*1024 or file_hash(image)!=project.meta['source_sha256']:
@@ -1070,6 +1075,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             raise ValueError('Restricted native machine checkpoints are not enabled')
         if self.project.meta['format'] != 'raw' or hasattr(self, '_process'):
             raise ValueError('Source-bound DOS processes are not eligible for machine checkpoints')
+        if self.vm.machine_configuration.get('clock_profile', {}).get('profile') != 'standard':
+            raise ValueError('Raw machine checkpoints require standard clock profiles')
         if self.breakpoints:
             raise ValueError('Remove machine breakpoints and watchpoints before checkpointing')
         if getattr(self,'_layer_active',None):

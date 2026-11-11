@@ -382,6 +382,17 @@ def test_uncertain_qmp_continue_closes_owned_machine_without_retry():
     assert received == ['cont'] and vm.closed and qmp.socket is None
 
 
+def test_qmp_reply_budget_applies_to_each_already_buffered_line():
+    qmp = QemuControl.__new__(QemuControl)
+    qmp.buffer = bytearray(b'{"n":1}\n{"n":2}\n')
+    deadline = time.monotonic() + 2
+    assert qmp._read(deadline, max_reply_bytes=7) == {'n': 1}
+    assert qmp._read(deadline, max_reply_bytes=7) == {'n': 2}
+    qmp.buffer = bytearray(b'{"value":"' + b'x' * 100 + b'"}\n')
+    with pytest.raises(DebuggerError, match='reply exceeds budget'):
+        qmp._read(deadline, max_reply_bytes=7)
+
+
 def test_known_qmp_command_rejection_does_not_poison_the_channel():
     client, server = channel_pair()
     server.settimeout(2)

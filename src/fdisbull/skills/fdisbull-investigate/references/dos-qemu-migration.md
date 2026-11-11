@@ -24,8 +24,14 @@ and persistent event searches cover the initial verified real-mode module.
 Owned keyboard and relative PS/2 mouse input, optional native virtual-time batch
 scheduling, explicit instruction-count observation and stopped surface/CPU/clock
 captures are now available.
-Frame-timed input, native checkpoints, fetch layers and scene parity remain later
-slices. Periodic memory rules still need their native clock integration and
+Optional native extensions support RAM/fetch layers, hooks and private DOS
+process checkpoints with same-project cold restore. Instrumented checkpoints
+preserve virtual time, retained audio/display windows and precise retrace under
+fresh owner tokens; inspect `docs/DOS_QEMU_MIGRATION.md` in a source checkout
+for the checkpoint contract. Protected/V86 ownership is bounded to observed
+identity-backed low memory with the selected PC inside the verified module.
+Frame-timed input and scene parity remain later slices.
+Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.
 
 ## Check an installation without a game

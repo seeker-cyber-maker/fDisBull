@@ -79,9 +79,9 @@ Anchor Stone parity.
 ## Save a DOS process and restore in another session
 
 Select `qemu_checkpoint_tool` with `backend='qemu-dos'`, a private DOS boot
-image, pinned firmware and the standard profiles. The native
+image and pinned firmware. The native
 [DOS checkpoint extension](../native/qemu-dos-checkpoint/README.md) admits a
-stopped, unpaged real-mode COM/MZ process during execution. It verifies the
+stopped COM/MZ process during execution. It verifies the
 original source and relocation mapping, child and helper allocation ownership,
 the helper report, and an idle COM2 UART with an empty host control channel.
 Release pending or held physical input before saving.
@@ -109,8 +109,49 @@ preserved. The new runtime epoch invalidates previous memory edit plans and
 other live bindings.
 
 Existing entry-only QCOW2 artifacts retain their same-session loading route.
-Instrumented clock, audio and retrace profiles still require their own
-migration support. Checkpoints remain private byte-retaining artifacts.
+Checkpoints remain private byte-retaining artifacts.
+
+### Instrumented clock, audio and retrace checkpoints
+
+The additional [instrumented checkpoint extension](../native/qemu-instrumented-checkpoint/README.md)
+supports the explicit `qemu_clock='virtual'` profile, optionally with
+`qemu_audio='pc-speaker'` and `qemu_retrace='precise'`. The checkpoint includes
+the native observer sidecar with retained PCM and callback ranges, renderer
+pixels and publication configuration, timer phase and retrace provenance.
+Restore verifies the saved virtual time and instruction counter, validates the
+restored observers, and starts a fresh native clock epoch and host observation
+epoch. Active observers continue with fresh tokens; the result's
+`instrumentation.windows` maps their `old` tokens to their `new` tokens.
+Historical receipts retain the former epochs and tokens.
+Source-clock traces retain their original process-entry admission; tracing and
+querying new restored-epoch source histories remains separate qualification.
+
+Stop host clock synchronization and resolve scheduled input before saving or
+loading. Held leases, queued edges, outstanding clock budgets and uncertain
+native ownership are refused. Host monotonic anchors are not restored; start
+a new synchronization mapping explicitly when needed. Generic QEMU migration
+remains blocked after instrumentation use; this route admits only the bounded
+local checkpoint operation. It does not establish audio playback, guest input
+consumption, completed guest frames or DOSBox-X parity.
+
+### Protected and V86 process checkpoints
+
+The stopped selected CPU can be in protected or V86 mode when its instruction
+pointer remains inside the verified DOS module. Ownership reads require
+observed low-memory identity mappings: unpaged execution or supported non-PAE
+4-KiB page tables, with matching native linear and physical reads. Restore
+compares CPU control registers, segment caches, descriptor-table identities,
+mapping evidence, helper, PSP, allocations and source RAM before rebinding
+layers and hooks. Ambiguous task identity, unsupported page formats and
+remapped DOS ownership pages remain outside this bounded route.
+The binding describes the selected CPU's module and DOS allocation; it does
+not identify a QEMM/DESQview scheduler task.
+
+Source layers and source hooks use the same ownership checks in these modes.
+RAM backing and fetch overlays retain their existing semantics; source hook
+redirects still require real mode. These checks support authored mode-switch
+programs and do not qualify a QEMM/DESQview installation or an arbitrary DPMI
+client. DOSBox-X stays available until the separate local parity gates pass.
 
 ## Prepare and check the core
 
@@ -577,8 +618,9 @@ cleanup. An uncertain arm, unconfirmed disarm, expired post-execution budget
 or failed execution evidence closes the owned VM. The timer and its deferred
 stop request must both be absent before another operation is admitted.
 
-This first extension blocks migration after budget use. Native checkpoints,
-completed-frame/audio fences, periodic memory rules and scene
+The clock extension blocks generic migration after budget use. The separately
+admitted instrumented DOS checkpoint route above preserves its bounded native
+state. Completed-frame/audio fences, periodic memory rules and scene
 scheduling still need their own integration and qualification. The optional
 keyboard extensions below implement separately admitted single chords and
 bounded US-layout text, with guest consumption and layout still unqualified.
@@ -973,7 +1015,9 @@ the captured prefix and does not flush the mixer. New windows start empty.
 Sound Blaster, FM/OPL and other devices remain separate qualification work.
 
 Both windows bind to the owned machine and native clock epoch. Reset or
-incompatible state invalidates them; migration after use is blocked. Passive
+incompatible state invalidates them; generic migration after use is blocked.
+The instrumented DOS checkpoint route above explicitly restores retained
+observer state under new ownership. Passive
 queries and exports do not execute the guest. Shared script deadlines include
 lock admission and persistence; an uncertain start/stop closes the machine.
 The caller advances execution through existing controls or an explicit

@@ -1,0 +1,146 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 with the 13-patch fDisBull native prerequisite stack, ending with the native DOS checkpoint-status extension",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-dos-checkpoint/qemu-10.0.13-fdisbull-dos-checkpoint-status-v1.patch",
+  "base_patch_sha256": "b511b18156aa15dd993e4a760bc8b2f20a998e78c023384c8954f5f43422ca11",
+  "patch_file": "qemu-10.0.13-fdisbull-instrumented-checkpoint-v1.patch",
+  "patch_sha256": "45ca495d574d9978f31733a9fe6978ec4b00a1045e4ab50ad99ef6ff5ad468fe",
+  "scope": "Bounded sidecar export/import for stopped, single-vCPU TCG process checkpoints; QEMU internal snapshots retain guest CPU, RAM and device state.",
+  "modified_files": [
+    {
+      "path": "audio/audio.c",
+      "before_sha256": "45834643a632216f6fd87e398f92dec7fcdadb3e1c19315f362255f4afb5bd4d",
+      "after_sha256": "e24c37aa31cb828a97f25533232da4980528eda3709dab84214a38f409db5acf"
+    },
+    {
+      "path": "audio/audio.h",
+      "before_sha256": "8f2e9beaa73c7d234f72089f682e14585341924cdedff722c6501024b67986b3",
+      "after_sha256": "4bd9018fe08327595904a680b664d6fedb531d76b8d353828c38e8c23b322474"
+    },
+    {
+      "path": "hw/audio/pcspk.c",
+      "before_sha256": "6c2c01a63cdecf8a64a7fc88d0e43dc62dfd0c38fea26e1451c8e89fc44b6952",
+      "after_sha256": "af388203aac85a4d02e878305c007cb064a1b43d05daebca91a9e087a0b5ed7a"
+    },
+    {
+      "path": "hw/display/vga-pci.c",
+      "before_sha256": "bbf05a35bdd806762f751cc1545ff4a3940e0c3b69494054ff55feaa82ec0e75",
+      "after_sha256": "ba30974a5b55d8f5607ab4b41cc86f395b818364b8d11a79418db57485afce2b"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "before_sha256": "b8f50ec3f47e86ae651a7e1ab4c58602200057ca4286729dd4af9c165a380bc6",
+      "after_sha256": "6ee47c534ef1735520d729ffd077019c4efd385bd9e87b01971bec3423962d26"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "before_sha256": "f5509684133a2c06ba02945df97e468d78ce7f4379e3960b88b0650dfd07c511",
+      "after_sha256": "109487582c35626640eef6517907b4a3af75db10f9a22a3db300580a9a65d7f4"
+    },
+    {
+      "path": "include/hw/audio/pcspk.h",
+      "before_sha256": "21d3e2d0a39202e3f7d301f142e0ddfdc7f36630dd35d73d424d384c0824220e",
+      "after_sha256": "c88149c4e48f46e3a39e48e19e85f691aae032f74cf33d70c2148fa5da74ee00"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "before_sha256": "06e109c81b070570adf1beb7f01c7254f19d0e3a81ceaa04762d1ee366572330",
+      "after_sha256": "71fd3e00c6fb0ba0ebe1b929cc6a32eef0a289d20c96262b9e733fead038c4a9"
+    },
+    {
+      "path": "include/system/fdisbull-instrumented-checkpoint.h",
+      "before_sha256": null,
+      "after_sha256": "48a9f8855a4ddccaddc0a1d3cb0d9c99e7d918be43b851c13449ded5da29fe48"
+    },
+    {
+      "path": "migration/migration.c",
+      "before_sha256": "d4ca3fb12e0f791af95d10e3b7b86a0c9265d1a76650258875eab9fa861893ab",
+      "after_sha256": "794bbf89c6ede661fac3ce4ef48c18be98b7c89231077655b839e2f3111cb9d2"
+    },
+    {
+      "path": "migration/migration.h",
+      "before_sha256": "4c5bf93f786a707b36b891c558028d9fe1023c84d042eff8b7994793400578cc",
+      "after_sha256": "8b8d03736f137acd3ac2aff862a076928d358ed73cd610524ce4ba518cc1ad76"
+    },
+    {
+      "path": "migration/savevm.c",
+      "before_sha256": "f6cb1d077af9af756339f487eb5c434414d42caab2ec70feaf5d3fdabaccaee0",
+      "after_sha256": "b99df0a17689a7906dcbd4f26d06253911e33a12548221f5aa122626a887b56d"
+    },
+    {
+      "path": "qapi/fdisbull-instrumented-checkpoint.json",
+      "before_sha256": null,
+      "after_sha256": "8c0db0a7757704f1c602005c1cd2946d92ae3f2dbe954b9c73c9b5c192ccac36"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "5f9f776e9999e1235cc38c7e24666d6ab12152449e705ad48cf5f1a2b5067b23",
+      "after_sha256": "6784ad9d7d224117d101ca1e23409b736a64e5c923472bd9080167179ebad944"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "a9bbd9387ede5762e33e68dd70c6e9396a56c7930aab5362c9ddef9571f60910",
+      "after_sha256": "e9b7e2de582ae4e09263ca2fa2cfce168c2229b2b9dfd12e78d0229fe021a49c"
+    },
+    {
+      "path": "system/fdisbull-audio.c",
+      "before_sha256": "93fdb924abf5c83951031d7831fde2cd8d5b5084399da809bfb520d9489d79b5",
+      "after_sha256": "5dfd0b86df43968573873fad66a1e38c510053d36514850b14843fa3e55326a9"
+    },
+    {
+      "path": "system/fdisbull-clock.c",
+      "before_sha256": "59e71fd207410998ffbcbb579760b2d1a3d6edb1790ccfe96287504dbf2d36c1",
+      "after_sha256": "3445d41fc6a1350b778901281f20003e13dc6b48dd93cb40f986724c80f9cfb8"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "before_sha256": "4d7dc4220ec654ed8a397df2e4eeee7e98092f10a93d664fcf8b20e53f69db80",
+      "after_sha256": "827678397a773a912564a3983931d148b556106d1722acc73886061f4c49b101"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "before_sha256": "1592470c37b506b3b66309c12ece55f0a3172fdf6d2c6dc3504f4911be024068",
+      "after_sha256": "c7f5cdd237fe87f494c28196134a7526ef542b387e0f6b11342afb317b7f9fe9"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "before_sha256": null,
+      "after_sha256": "663497c77f49e310b65a11cef310724b2a23146e1b8749fc431b7666715bbbd5"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "before_sha256": "04227deb4f8454554ebace4895f46729aee82d66ce688b58f5abb0f09e61fe53",
+      "after_sha256": "7594ca414d754423840e15215052da9b3b4650da3b03925bcae1cd833f2b6cef"
+    },
+    {
+      "path": "system/fdisbull-retrace.c",
+      "before_sha256": "a8e7ad7b56f08ecdf0c935a9fd74d057c8f6f44750f074392956f47fd42fe2d4",
+      "after_sha256": "52d842553b10e322fa9f5fc099c6a3babf6bd0dee68a5aa2d51ed19d5677a0b6"
+    },
+    {
+      "path": "system/meson.build",
+      "before_sha256": "724a483766c2d251d6d3a8125e373df6e04fb61b42b04c6173ef32a62f4c7605",
+      "after_sha256": "669b41fd21724de948d80c966a1538e7f9f03a2c1e9158907aaa36bb83374694"
+    }
+  ],
+  "qmp_commands": [
+    "x-fdisbull-instrumented-checkpoint-export",
+    "x-fdisbull-instrumented-snapshot-save",
+    "x-fdisbull-instrumented-snapshot-load",
+    "x-fdisbull-instrumented-checkpoint-import",
+    "x-fdisbull-instrumented-checkpoint-status"
+  ],
+  "sidecar_format": "fdisbull-instrumented-qemu-state-1",
+  "limits": [
+    "Only the exact owned fDisBull migration blockers are admitted during the authorized scoped snapshot save; unknown and generic blockers remain effective.",
+    "Host clock synchronization and scheduled native input ownership are not restored.",
+    "Audio is limited to the supported bounded 32 kHz mono PC-speaker mixer/backend state; unsupported graphs or resampling states are refused.",
+    "Successful restore creates a fresh native ownership epoch; this establishes no general DOSBox parity, full audio waveform equivalence, or broad checkpoint portability."
+  ],
+  "reported_native_witnesses": [
+    "tests/test_qemu_instrumented_checkpoint_native.py",
+    "tests/test_qemu_dos_modes_checkpoint_native.py"
+  ]
+}

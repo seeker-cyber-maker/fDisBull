@@ -33,7 +33,7 @@ class QemuControl:
         except BaseException:
             self.close();raise
 
-    def _read(self,deadline):
+    def _read(self,deadline,max_reply_bytes=8*1024*1024):
         if time.monotonic()>=deadline:raise TimeoutError('QMP deadline expired')
         while b'\n' not in self.buffer:
             remaining=deadline-time.monotonic()
@@ -42,14 +42,18 @@ class QemuControl:
             chunk=self.socket.recv(65536)
             if not chunk:raise DebuggerError('QMP channel closed')
             self.buffer.extend(chunk)
-            if len(self.buffer)>8*1024*1024:raise DebuggerError('QMP reply exceeds budget')
+            first_newline=self.buffer.find(b'\n')
+            if (first_newline if first_newline>=0 else len(self.buffer))>max_reply_bytes:
+                raise DebuggerError('QMP reply exceeds budget')
         line,_,rest=self.buffer.partition(b'\n');self.buffer=bytearray(rest)
+        if len(line)>max_reply_bytes:raise DebuggerError('QMP reply exceeds budget')
         value=json.loads(line)
         if not isinstance(value,dict):raise DebuggerError('Invalid QMP reply')
         return value
 
-    def call(self,method,arguments=None,timeout_ms=30000):
+    def call(self,method,arguments=None,timeout_ms=30000,*,max_reply_bytes=8*1024*1024):
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('QMP timeout must be 1..600000 ms')
+        if type(max_reply_bytes) is not int or not 1<=max_reply_bytes<=64*1024*1024:raise ValueError('QMP reply budget must be 1..67108864 bytes')
         deadline=time.monotonic()+timeout_ms/1000
         shared=getattr(self,'operation_deadline',None)
         if shared is not None:deadline=min(deadline,shared)
@@ -67,7 +71,7 @@ class QemuControl:
             dispatched=True
             self.socket.sendall(wire)
             while True:
-                reply=self._read(deadline)
+                reply=self._read(deadline,max_reply_bytes)
                 if 'event' in reply:continue
                 if reply.get('id')!=self.sequence:raise DebuggerError('Wrong QMP reply identity')
                 if ('error' in reply)==('return' in reply):raise DebuggerError('Invalid QMP result envelope')

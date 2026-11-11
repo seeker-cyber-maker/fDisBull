@@ -40,6 +40,11 @@ def _source(session):
 def _compatibility(session):
     inputs = session.vm.inputs
     machine = deepcopy(session.vm.machine_configuration)
+    # Native admissions are observations of one live owner. The immutable
+    # launch profiles and hashed executable/firmware identify compatibility.
+    for key in tuple(machine):
+        if key.startswith('native_') and key.endswith('_admission'):
+            del machine[key]
     profile = session.guest_profile
     return dict(
         inputs={key: {field: value[field] for field in ('sha256', 'version') if field in value}
@@ -53,6 +58,7 @@ def _compatibility(session):
 
 def _preflight(session):
     from .qemu_input import require_released_machine_input
+    from .qemu_instrumented_checkpoint import preflight
     if (session.closed or session.vm.checkpoint_disk is None
             or session._checkpoint_launch['checkpoint_tool'] is None):
         raise ValueError('DOS process checkpoints are not enabled')
@@ -62,6 +68,7 @@ def _preflight(session):
         raise ValueError('Mid-program checkpoints require the native DOS checkpoint extension')
     session._stopped()
     require_released_machine_input(session.vm)
+    preflight(session)
 
 
 def _serial_idle(session, vm=None, channel=None):
@@ -130,14 +137,20 @@ def _verify_process(session, process, origin, vm=None, memory=None):
     context = session if vm is session.vm else vm.context
     registers = context.registers()
     state = registers['address_state']
-    if (registers['cpu_mode'] != 'real' or state.get('paging') is not False
+    if (registers['cpu_mode'] not in ('real', 'protected', 'v86')
             or state.get('register_context_match') is not True or state.get('machine_vcpus') != 1):
-        raise ValueError('DOS process checkpoints require one stopped unpaged real-mode CPU')
+        raise ValueError('DOS process checkpoints require one observed supported CPU context')
+    if registers['cpu_mode'] == 'real' and state.get('paging') is not False:
+        raise ValueError('Real-mode DOS process checkpoints require unpaged execution')
     if (process.get('state') != 'active' or process.get('machine_closed')
             or process['psp_segment'] != ready['child_psp']
             or process['parent_psp_segment'] != ready['helper_psp']):
         raise ValueError('Checkpoint does not identify an active owned DOS process')
-    read = lambda address, length: _read(vm, address, length)
+    space = None
+    if registers['cpu_mode'] != 'real':
+        from .qemu_dos_address_space import DosAddressSpace
+        space = DosAddressSpace(vm, registers)
+    read = (lambda address, length: _read(vm, address, length)) if space is None else space.read
     blocks = observe_mcbs(read, ready['first_mcb_segment'])
     allocation = process['allocation']
     current = next((block for block in blocks if block['mcb_segment'] == allocation['mcb_segment']), None)
@@ -161,6 +174,10 @@ def _verify_process(session, process, origin, vm=None, memory=None):
     start = mapping['runtime_base']
     if not allocation['start'] <= start < start + len(original) <= allocation['end']:
         raise ValueError('Checkpoint source extent is outside its allocation')
+    if space is not None:
+        pc = registers.get('linear_pc')
+        if pc is None or not start <= int(pc, 16) < start + len(original):
+            raise ValueError('Protected DOS ownership requires the selected CPU inside its source module')
     expected_ranges = [dict(runtime_address=start, project_address=mapping['static_base'], length=len(original))]
     if recorded.get('live_ranges') != expected_ranges:
         raise ValueError('Checkpoint source lifetime ranges differ')
@@ -178,6 +195,8 @@ def _verify_process(session, process, origin, vm=None, memory=None):
     observed = dict(module_sha256=_sha(read(start, len(original))),
                     helper_sha256=_sha(read(ready['helper_segment'] * 16 + 0x100, len(helper))),
                     vectors_sha256=_sha(read(0, 1024)))
+    if space is not None:
+        observed['address_space'] = space.evidence()
     if memory is not None and observed != memory:
         raise ValueError('Restored process RAM differs from the captured state')
     return registers, observed, (nonce, raw, tail, vectors, helper, ready)
@@ -213,6 +232,7 @@ def _unarchive(data):
 
 def save_process_state(session, name, max_bytes):
     from .external_files import _file_name
+    from .qemu_instrumented_checkpoint import capture, verify_saved
     import uuid
     _file_name(name)
     if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= MAX_STATE):
@@ -223,16 +243,19 @@ def save_process_state(session, name, max_bytes):
     origin = _origin(session)
     registers, memory, _ = _verify_process(session, session._process, origin)
     controls = capture_controls(session)
+    instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
     bundle = dict(format=FORMAT, tag=tag, source_sha256=session.metadata['source_sha256'],
         version_sha256=session.metadata['version_sha256'], version=session.version['id'],
         runtime=_compatibility(session), runtime_origin=deepcopy(session.vm.inputs),
         process=deepcopy(session._process), origin=origin, registers=registers,
-        memory=memory, controls=controls, serial=serial)
+        memory=memory, controls=controls, serial=serial, instrumentation=instrumentation)
     try:
-        snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'])
+        snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
+                     instrumented=instrumentation is not None, export_token=export_token)
         if _serial_idle(session) != serial:
             raise DebuggerError('Native COM2 state changed while saving the checkpoint')
+        verify_saved(session, instrumentation)
         with session.vm.checkpoint_disk.open('rb') as stream:
             machine = stream.read(limit + 1)
         if len(machine) > limit:
@@ -245,6 +268,10 @@ def save_process_state(session, name, max_bytes):
             version_sha256=bundle['version_sha256'], origin_run=session.run_id,
             sidecar_sha256=_sha(_json(bundle)), checkpoint_scope='stopped DOS process with private disk and debugger controls',
             host_files_restored=False)
+        if instrumentation is not None:
+            metadata['instrumentation'] = dict(sha256=instrumentation['sha256'],
+                clock_profile='virtual', audio_profile=session._checkpoint_launch['audio_profile'],
+                retrace_profile=session._checkpoint_launch['retrace_profile'])
         return session._artifact(name, 'state', data, metadata)
     except BaseException:
         session.close()
@@ -254,6 +281,7 @@ def save_process_state(session, name, max_bytes):
 def load_process_state(session, artifact, timeout_ms):
     from .operation_budget import request_deadline
     from .qemu_machine import MachineContext, QemuMachine
+    from .qemu_instrumented_checkpoint import validate, restore
 
     deadline = request_deadline(session, timeout_ms)
 
@@ -303,6 +331,8 @@ def load_process_state(session, artifact, timeout_ms):
             raise ValueError('Process checkpoint sidecar or runtime identity differs')
         _source(session)
         decoded = _decode_origin(session, bundle['origin'])
+        instrumentation = bundle.get('instrumentation')
+        validate(session.vm, instrumentation)
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
         remaining()
         new = None
@@ -316,7 +346,8 @@ def load_process_state(session, artifact, timeout_ms):
             new.qmp.operation_deadline = deadline
             channel = new.serial(deadline)
             snapshot_job(new, 'load', tag=bundle['tag'], vmstate='disk0', devices=['disk0'],
-                         timeout_ms=remaining())
+                         timeout_ms=remaining(), instrumented=instrumentation is not None)
+            restored_instrumentation = restore(new, instrumentation)
             actual, _, _ = _verify_process(session, bundle['process'], bundle['origin'],
                                            vm=new, memory=bundle['memory'])
             for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
@@ -324,6 +355,10 @@ def load_process_state(session, artifact, timeout_ms):
                     raise DebuggerError('Restored process CPU differs: ' + field)
             if _serial_idle(session, vm=new, channel=channel) != bundle['serial']:
                 raise DebuggerError('Restored native COM2 state differs from the checkpoint')
+            # QEMU retains the fresh owner's prelaunch runstate after a cold
+            # load. The verified CPU/RAM/serial state is already stopped; a
+            # later save must not require an intervening guest continuation.
+            new._checkpoint_restored_stopped = True
             remaining()
             # The session's one lock remains stable for queued callers.
             new.lock = owner.lock
@@ -360,6 +395,8 @@ def load_process_state(session, artifact, timeout_ms):
                           capture_epoch=session._runtime_epoch, source_binding_restored=True,
                           host_files_restored=False, process=deepcopy(session._process),
                           controls=restored_controls)
+            if restored_instrumentation is not None:
+                result['instrumentation'] = restored_instrumentation
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)

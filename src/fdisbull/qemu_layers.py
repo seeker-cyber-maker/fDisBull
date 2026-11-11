@@ -50,10 +50,15 @@ class QemuLayerSessionMixin:
 
         if not getattr(self, '_process', None):
             raise ValueError('Source layer addresses require an active COM/MZ process')
-        if (state['cpu_mode'] != 'real' or state['paging'] is not False
-                or state['code_bits'] != 16 or state['register_context_match'] is not True):
-            raise ValueError('Source layers require the observed unpaged real-mode DOS process')
-        _ownership(self, {'capture_epoch': self._layer_epoch()})
+        if state['cpu_mode'] == 'real':
+            if (state['paging'] is not False or state['code_bits'] != 16
+                    or state['register_context_match'] is not True):
+                raise ValueError('Source layers require an observed real-mode DOS process')
+            _ownership(self, {'capture_epoch': self._layer_epoch()})
+        else:
+            from .qemu_dos_checkpoint import _origin, _verify_process
+            _verify_process(self, self._process, _origin(self))
+            _ownership(self, {'capture_epoch': self._layer_epoch()})
         static, _ = self.project._dos_parse_address(address, cs)
         for extent in self._process['source_mapping']['live_ranges']:
             offset = static - extent['project_address']
