@@ -4,8 +4,6 @@
 workflow:
   name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME)"
   rules:
-    - if: '$CI_COMMIT_MESSAGE =~ /\[(skip ci|ci skip)\]/i'
-      when: never
     - if: '$FDISBULL_DISABLE_CI == "1"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"'
