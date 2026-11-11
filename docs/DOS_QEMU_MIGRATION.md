@@ -248,8 +248,8 @@ vendor qualification or a replacement DOS scheduler.
 A separate opt-in native scheduler runs on top of task-private views. A bounded
 authored real-DOS/V86 witness has passed locally for cooperative scheduling,
 hardware interrupt-frame ownership and cold restoration. This does not
-establish QEMM or DESQview compatibility or interrupt-driven preemption, and
-DOSBox remains the default.
+establish QEMM or DESQview compatibility or general interrupt-preemption
+parity, and DOSBox remains the default.
 
 After binding the initial cooperating identity, enabling task-private views
 and registering the tasks and physical pages, `dos_task_scheduler()` captures
@@ -299,6 +299,44 @@ other real/protected/V86 use still requires the specific admitted mapping and
 frame constraints. A cooperative `INT 60h` round robin is not evidence that
 PIT/IRQ preemption, real vendor multitasking, arbitrary DPMI clients or general
 DOSBox behavior has been qualified.
+
+### Bounded PIC IRQ preemption
+
+The optional `dos_task_preemption(irq=0, quantum=1, enabled=True)` control,
+JSON `debug-dos-task-preemption`, requires the native CPU scheduler and its
+PIC preemption extension. It admits a direct master-PIC IRQ from 0 through 7,
+excluding cascade IRQ2, and a quantum of 1 through 65535. Native QEMU observes
+a real PIC acknowledgement and the guest's matching EOI; after the configured
+number of eligible IRQs it selects the next runnable registered task. The guest
+handler remains responsible for servicing the device and issuing EOI. Python
+does not inject an IRQ, acknowledge the PIC or choose the next task.
+`dos_task_scheduler_observe()['preemption']` reports policy, quantum phase,
+acknowledgement/EOI/preemption counters, selected transitions, PIC state and
+in-flight IRQ/frame ownership.
+
+Local authored FreeDOS/V86 witnesses have exercised PIT/PIC IRQ0 and actual
+i8042 keyboard IRQ1 without guest software yields. The IRQ0 witness preserves
+private RAM and instruction-fetch layers, task-scoped hooks and CPU state; it
+cold-restores in a separate Python process both before EOI with the PIC in
+service and after EOI with the interrupted task's hardware frame dormant.
+It checks the saved IRET PC, stack and flags, the quantum-one single-step EOI
+boundary and quantum-three phase across a fresh QEMU restore. Separate guards
+observe an actually pending IRQ in PIC IRR while IF is clear or IRQ0 is masked.
+For the chained `STI; MOV SS; INC` case, delivery is accepted after `MOV SS`
+or after `INC`; an isolated `MOV SS` delay with an already-pending IRQ has not
+been established by these tests. The IRQ1 witness reads guest keyboard make and
+break bytes and observes the corresponding PIC/EOI task transitions; it ends
+at a stopped boundary and is not a DOS cleanup or keyboard-parity claim.
+
+A further local IRQ checkpoint profile passed with virtual clock, precise
+retrace, VGA configuration, x87 and an active PC-speaker observer at both the
+pre-EOI and post-EOI cold restores. It retained observer state and rotated its
+token under fresh native clock epochs. Both audio windows contained zero frames
+and zero drops, so this provides no evidence of PCM sample continuity or audible
+playback. These local IRQ cases are bounded authored evidence, not general interrupt timing, vendor
+QEMM/DESQview compatibility or permission to retire DOSBox. Unsupported IRQ,
+paging, frame, pending-switch and ownership states remain subject to explicit
+admission and refusal.
 
 ## Prepare and check the core
 

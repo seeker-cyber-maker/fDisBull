@@ -260,6 +260,7 @@ METHODS = {
     "debug-dos-task-runnable": "Change a registered native DOS task's runnable state; run,task,[runnable]",
     "debug-dos-task-scheduler-observe": "Inspect the native DOS task scheduler and run queue; run",
     "debug-dos-task-scheduler-disable": "Disable the native DOS task scheduler at a supported stop; run",
+    "debug-dos-task-preemption": "Configure native PIC timer/IRQ preemption after real guest EOI; run,[enabled,irq,quantum]",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
     "debug-layer-info": "Inspect an immutable layer definition; layer",

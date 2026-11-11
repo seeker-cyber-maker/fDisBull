@@ -13,6 +13,9 @@ from .dosbox_rpc import DebuggerError
 from .memory_search_runtime import _locked
 from .qemu_dos_task_views import _arguments, _observe, _preflight, _row
 from .qemu_dos_tasks import require_task, task_key
+from .qemu_dos_preemption import (QemuDOSPreemptionMixin, COMMAND as PREEMPTION_COMMAND,
+    FORMAT as IRQ_FORMAT, COUNTERS as IRQ_COUNTERS, policy as preemption_policy,
+    validate_preemption, validate_checkpoint_preemption, validate_irq_frame)
 
 MODEL = 'qemu-pc-task-scheduler-v1'
 FORMAT = 'fdisbull-native-dos-scheduler-1'
@@ -52,7 +55,7 @@ def _number(value, label):
 
 def _validate_native_status(raw):
     if (not isinstance(raw,dict) or raw.get('model') != MODEL
-            or type(raw.get('api-version')) is not int or raw['api-version'] != 1
+            or type(raw.get('api-version')) is not int or raw['api-version'] not in (1,2)
             or not _uint(raw.get('epoch'),1) or not _uint(raw.get('generation'),1)
             or not _uint(raw.get('runqueue-generation')) or type(raw.get('enabled')) is not bool
             or raw.get('yield-vector') != 0x60 or raw.get('block-vector') != 0x62
@@ -60,6 +63,10 @@ def _validate_native_status(raw):
             or type(raw.get('pending-switch')) is not bool
             or not isinstance(raw.get('tasks'),list) or len(raw['tasks']) > 16):
         raise DebuggerError('Invalid native scheduler status receipt')
+    if raw['api-version'] == 2:
+        validate_preemption(raw.get('preemption'))
+    elif 'preemption' in raw:
+        raise DebuggerError('Legacy native scheduler unexpectedly carries IRQ preemption state')
     seen, slots = set(), set()
     for item in raw['tasks']:
         key = _key(item)
@@ -79,16 +86,24 @@ def _validate_native_status(raw):
                 or item['retired'] and (item['runnable'] or item['context-valid'] or item['interrupt-depth'])):
             raise DebuggerError('Invalid native CPU slot receipt')
         seen.add(key); slots.add(item['slot'])
+    if raw['api-version'] == 2 and raw['preemption']['inflight']:
+        irq = raw['preemption']
+        owner = (irq['inflight-uuid'],irq['inflight-cookie'],irq['inflight-incarnation'])
+        selected = (raw.get('selected-uuid'),raw.get('selected-cookie'),raw.get('selected-incarnation'))
+        if (owner != selected or not any(_key(row)==owner and row['context-valid']
+                and not row['retired'] and row['interrupt-depth'] > 0 for row in raw['tasks'])):
+            raise DebuggerError('Native in-flight IRQ differs from the selected CPU/frame owner')
     return raw
 
 
 def _native_status(vm):
-    raw = _validate_native_status(vm.qmp.call('x-fdisbull-task-scheduler-observe'))
-    if raw.get('fault'):
+    raw = vm.qmp.call('x-fdisbull-task-scheduler-observe')
+    if (isinstance(raw,dict) and raw.get('model') == MODEL
+            and isinstance(raw.get('fault'),str) and raw['fault']):
         error = DebuggerError('Native CPU scheduler refused execution: '+str(raw['fault']))
         error.native_scheduler = deepcopy(raw)
         raise error
-    return raw
+    return _validate_native_status(raw)
 
 
 def _status(session, *, adopt=False):
@@ -104,6 +119,17 @@ def _status(session, *, adopt=False):
                   or prior[2] > raw['runqueue-generation']):
         raise DebuggerError('Native scheduler owner or runqueue observation regressed')
     session.vm._dos_scheduler_frontier = (raw['epoch'],raw['generation'],raw['runqueue-generation'])
+    if raw['api-version'] == 2:
+        if (meta.get('format') != IRQ_FORMAT
+                or meta.get('preemption') != preemption_policy(raw['preemption'])):
+            raise DebuggerError('Native IRQ preemption differs from its admitted policy')
+        counters = tuple(raw['preemption'][key] for key in IRQ_COUNTERS)
+        prior_irq = getattr(session.vm,'_dos_preemption_frontier',None)
+        if prior_irq and any(a > b for a,b in zip(prior_irq,counters)):
+            raise DebuggerError('Native IRQ preemption counters regressed')
+        session.vm._dos_preemption_frontier = counters
+    elif meta.get('format',FORMAT) != FORMAT or meta.get('preemption'):
+        raise DebuggerError('Native scheduler lost its IRQ preemption capability')
     selected = (raw.get('selected-uuid'),raw.get('selected-cookie'),raw.get('selected-incarnation'))
     binding = next((row['binding'] for row in meta['slots'].values()
                     if _binding_key(row['binding']) == selected),None)
@@ -150,6 +176,7 @@ def _context(vm, binding):
                 or any(not _uint(frame.get(name)) for name in ('pre-cs','pre-eip','pre-ss','pre-sp','frame-sp','width','error-code'))
                 or type(frame.get('error-code-present')) is not bool):
             raise DebuggerError('Invalid native interrupt-frame ownership receipt')
+        validate_irq_frame(frame,required=PREEMPTION_COMMAND in vm.qmp_commands)
     return raw
 
 
@@ -212,7 +239,7 @@ def capture_scheduler(session):
     meta = getattr(session,'_dos_scheduler',None)
     if meta is None: return None
     raw = _status(session,adopt=True)
-    if raw['pending-switch']:
+    if raw['pending-switch'] or raw.get('preemption',{}).get('pending'):
         raise ValueError('Continue the pending native runqueue change before checkpointing')
     contexts = {}
     for task, admission in meta['slots'].items():
@@ -223,12 +250,14 @@ def capture_scheduler(session):
                     or context['interrupt-depth'] != native['interrupt-depth']):
                 raise DebuggerError('Native scheduler CPU/frame state changed during capture')
             contexts[task] = context
-    return dict(format=FORMAT,metadata=deepcopy(meta),native=raw,contexts=contexts)
+    validate_checkpoint_preemption(raw,contexts)
+    return dict(format=IRQ_FORMAT if raw['api-version']==2 else FORMAT,
+                metadata=deepcopy(meta),native=raw,contexts=contexts)
 
 
 def validate_scheduler(session, saved, origin_nonce, private_views, process):
     if saved is None: return
-    if (not isinstance(saved,dict) or saved.get('format') != FORMAT
+    if (not isinstance(saved,dict) or saved.get('format') not in (FORMAT,IRQ_FORMAT)
             or not COMMANDS <= session.vm.qmp_commands or private_views is None
             or not isinstance(saved.get('metadata'),dict)
             or not isinstance(saved['metadata'].get('slots'),dict)
@@ -257,7 +286,13 @@ def validate_scheduler(session, saved, origin_nonce, private_views, process):
         seen.add(_binding_key(binding))
     native = saved['native']
     _validate_native_status(native)
-    if native['pending-switch']:
+    if ((native['api-version'] == 2) != (saved['format'] == IRQ_FORMAT)
+            or native['api-version'] == 2 and (
+                PREEMPTION_COMMAND not in session.vm.qmp_commands
+                or saved['metadata'].get('format') != IRQ_FORMAT
+                or saved['metadata'].get('preemption') != preemption_policy(native['preemption']))):
+        raise ValueError('Native IRQ checkpoint lacks its capability or version fence')
+    if native['pending-switch'] or native.get('preemption',{}).get('pending'):
         raise ValueError('Native scheduler checkpoint contains a pending runqueue change')
     if ({_key(row) for row in native.get('tasks',[])} != seen
             or native.get('enabled') != saved['metadata']['enabled']
@@ -281,12 +316,15 @@ def validate_scheduler(session, saved, origin_nonce, private_views, process):
                 or context.get('context-sha256') != slot.get('context-sha256')
                 or context.get('interrupt-depth') != slot.get('interrupt-depth')):
             raise ValueError('Native CPU context checkpoint differs from its slot digest')
+    validate_checkpoint_preemption(native,saved['contexts'])
 
 
 def prime_scheduler(vm, saved, private_views):
     if saved is not None:
         if not COMMANDS <= vm.qmp_commands:
             raise ValueError('Fresh QEMU lacks native scheduler restore support')
+        if saved['format'] == IRQ_FORMAT and PREEMPTION_COMMAND not in vm.qmp_commands:
+            raise ValueError('Fresh QEMU lacks native IRQ preemption restore support')
         vm.qmp.call('x-fdisbull-task-scheduler-init',
             {'anchor-address':private_views['monitor']['anchor_address'],'prepare-only':True})
 
@@ -331,14 +369,20 @@ def restore_scheduler(session, saved, proof):
     session._dos_scheduler = None
     if saved is None:
         session.metadata.pop('native_scheduler',None)
+        session.metadata.pop('native_preemption',None)
         return
     session._dos_scheduler = deepcopy(saved['metadata'])
     session._dos_scheduler['native_epoch'] = proof['epoch']
     session.metadata['native_scheduler'] = dict(model=MODEL,enabled=proof['enabled'])
+    if proof['api-version'] == 2:
+        session.metadata['native_preemption'] = dict(model=proof['preemption']['model'],
+            **preemption_policy(proof['preemption']))
+    else:
+        session.metadata.pop('native_preemption',None)
     _status(session,adopt=True)
 
 
-class QemuDOSSchedulerMixin:
+class QemuDOSSchedulerMixin(QemuDOSPreemptionMixin):
     @_locked
     def dos_task_scheduler(self):
         from .qemu_dos_checkpoint import _origin,_verify_process
@@ -352,7 +396,12 @@ class QemuDOSSchedulerMixin:
         try:
             raw = _native_status(self.vm)
             if not raw['enabled'] or raw['tasks']: raise DebuggerError('Native scheduler initialization is not empty')
-            self._dos_scheduler = dict(format=FORMAT,enabled=True,native_epoch=raw['epoch'],slots={})
+            self._dos_scheduler = dict(format=IRQ_FORMAT if raw['api-version']==2 else FORMAT,
+                enabled=True,native_epoch=raw['epoch'],slots={})
+            if raw['api-version'] == 2:
+                if PREEMPTION_COMMAND not in self.vm.qmp_commands:
+                    raise DebuggerError('Native IRQ scheduler lacks its control capability')
+                self._dos_scheduler['preemption'] = preemption_policy(raw['preemption'])
             view = _row(self,binding['task_id'])
             _mutate(self,'x-fdisbull-task-slot-capture',dict(_arguments(binding),
                 pages=[{'address':address} for address in view['pages']]))
@@ -460,12 +509,18 @@ class QemuDOSSchedulerMixin:
     def dos_task_scheduler_disable(self):
         _preflight(self)
         _status(self,adopt=True)
-        _mutate(self,'x-fdisbull-task-scheduler-disable')
+        disabled = _mutate(self,'x-fdisbull-task-scheduler-disable')
         try:
+            _validate_native_status(disabled)
             self._dos_scheduler['enabled'] = False
+            if disabled['api-version'] == 2:
+                self._dos_scheduler['preemption'] = preemption_policy(disabled['preemption'])
             raw = _status(self)
             if raw['enabled']: raise DebuggerError('Native scheduler remained enabled')
             self.metadata['native_scheduler'] = dict(model=MODEL,enabled=False)
+            if raw['api-version'] == 2:
+                self.metadata['native_preemption'] = dict(model=raw['preemption']['model'],
+                    **preemption_policy(raw['preemption']))
             self._event('dos-native-scheduler-disable',raw)
             return dict(enabled=False,native=raw)
         except BaseException:

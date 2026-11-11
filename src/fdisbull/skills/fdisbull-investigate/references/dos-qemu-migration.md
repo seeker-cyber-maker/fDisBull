@@ -61,9 +61,18 @@ different DR0 addresses also survived switching and cold restore. It exercised
 single-step yield, idle and guest DOS exit. Its instrumented audio window had
 zero frames and zero dropped frames, establishing observer state and token
 rotation only, with no PCM or audible playback evidence. These are bounded
-results: no PIT/IRQ preemption or vendor scheduler compatibility follows from
-this cooperative interface. Frame-timed input and scene parity remain later
-slices.
+results: general interrupt preemption and vendor compatibility do not follow
+from this cooperative interface. A separate opt-in
+`debug-dos-task-preemption` extension has bounded local authored PIT/PIC IRQ0
+and i8042 IRQ1 evidence, including guest EOI, task-owned frames, quantum-three
+cold restore and IF/PIC-mask deferral. Chained STI/MOV SS delivery may occur
+after MOV SS or its next instruction; isolated MOV SS with an already-pending
+IRQ remains unqualified. A combined virtual-clock/precise-retrace/audio IRQ
+checkpoint profile passed locally with observer state and token rotation at
+pre- and post-EOI cold restore. Both windows had zero frames and zero drops,
+so there is no PCM or audible-playback evidence. No vendor multitasker or
+general IRQ-timing parity follows. Frame-timed input and
+scene parity remain later slices.
 Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.
 

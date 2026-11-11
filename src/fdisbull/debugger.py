@@ -1318,6 +1318,7 @@ class DebugWorkspace:
                    'debug-dos-task-context':'dos_task_context','debug-dos-task-runnable':'dos_task_runnable',
                    'debug-dos-task-scheduler-observe':'dos_task_scheduler_observe',
                    'debug-dos-task-scheduler-disable':'dos_task_scheduler_disable',
+                   'debug-dos-task-preemption':'dos_task_preemption',
                    'debug-status':'status','debug-dos-process':'dos_process_info','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',

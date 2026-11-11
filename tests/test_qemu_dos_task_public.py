@@ -62,6 +62,7 @@ def test_task_private_routes_forward_json_arguments(tmp_path):
         'debug-dos-task-runnable': ('dos_task_runnable', {'task': 'task-b', 'runnable': False}),
         'debug-dos-task-scheduler-observe': ('dos_task_scheduler_observe', {}),
         'debug-dos-task-scheduler-disable': ('dos_task_scheduler_disable', {}),
+        'debug-dos-task-preemption': ('dos_task_preemption', {'enabled': True, 'irq': 0, 'quantum': 3}),
     }
     session = SimpleNamespace(project=SimpleNamespace(path=project), metadata={'backend': 'qemu-dos'})
     for operation, _ in names.values():

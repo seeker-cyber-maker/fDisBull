@@ -27,6 +27,7 @@ from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
 from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
 from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COMMANDS
+from .qemu_dos_preemption import COMMAND as PREEMPTION_COMMAND
 
 
 def _sha(data):
@@ -311,6 +312,7 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
                 native_dos_tasks='x-fdisbull-query-task-context' in vm.qmp_commands,
                 native_task_views=TASK_VIEW_COMMANDS <= vm.qmp_commands,
                 native_cpu_scheduler=SCHEDULER_COMMANDS <= vm.qmp_commands,
+                native_irq_preemption=PREEMPTION_COMMAND in vm.qmp_commands,
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',

@@ -16,7 +16,9 @@ _FORMAT = 'fdisbull-qemu-controls-1'
 _TASK_FORMAT = 'fdisbull-qemu-controls-task-2'
 _TASK_VIEWS_FORMAT = 'fdisbull-qemu-controls-task-3'
 _SCHEDULER_FORMAT = 'fdisbull-qemu-controls-task-4'
-_VIEW_FORMATS = (_TASK_VIEWS_FORMAT,_SCHEDULER_FORMAT)
+_IRQ_FORMAT = 'fdisbull-qemu-controls-task-5'
+_SCHEDULER_FORMATS = (_SCHEDULER_FORMAT,_IRQ_FORMAT)
+_VIEW_FORMATS = (_TASK_VIEWS_FORMAT,*_SCHEDULER_FORMATS)
 _MAX_BYTES = 64 * 1024 * 1024
 _MAX_MAP = 65536
 _MAX_LAYERS = 64
@@ -227,7 +229,9 @@ def capture_controls(session):
                 raise ValueError('Unbound checkpoint cannot carry a task-scoped hook')
             item.pop('task_identity', None)
     scheduler = getattr(session,'_dos_scheduler',None)
-    result = dict(format=_SCHEDULER_FORMAT if scheduler else _TASK_VIEWS_FORMAT if task_views else _TASK_FORMAT if task_binding is not None else _FORMAT,
+    scheduler_format = (_IRQ_FORMAT if scheduler and scheduler.get('format') == 'fdisbull-native-dos-scheduler-2'
+                        else _SCHEDULER_FORMAT)
+    result = dict(format=scheduler_format if scheduler else _TASK_VIEWS_FORMAT if task_views else _TASK_FORMAT if task_binding is not None else _FORMAT,
         run=run, epoch=epoch,
         source_sha256=session.metadata['source_sha256'], version=session.version['id'],
         version_sha256=session.version['sha256'], active=active, definitions=definitions,
@@ -332,8 +336,12 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
         raise ValueError('Task checkpoint controls require a task binding')
     if controls['format'] in _VIEW_FORMATS and not getattr(session, '_dos_task_views', {}):
         raise ValueError('Task-view checkpoint controls require the restored private registry')
-    if controls['format'] == _SCHEDULER_FORMAT and not getattr(session,'_dos_scheduler',None):
+    if controls['format'] in _SCHEDULER_FORMATS and not getattr(session,'_dos_scheduler',None):
         raise ValueError('Native scheduler checkpoint requires verified CPU/frame state')
+    if controls['format'] in _SCHEDULER_FORMATS:
+        irq = session._dos_scheduler.get('format') == 'fdisbull-native-dos-scheduler-2'
+        if irq != (controls['format'] == _IRQ_FORMAT):
+            raise ValueError('Native IRQ scheduler checkpoint lacks its version-5 control fence')
     if controls['format'] == _FORMAT:
         definitions = controls.get('definitions')
         hooks = controls.get('hooks')
