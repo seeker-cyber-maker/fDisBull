@@ -54,6 +54,40 @@ Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
+## Planned bundled FreeDOS and directory layers
+
+The [bundled environment and filesystem plan](DOS_QEMU_HANDOFF.md#planned-bundled-freedos-and-layered-directory-workspace-2026-11-11)
+adds a ready-to-boot, versioned FreeDOS runtime and automatic guest read/write
+access to the host launch directory, with an explicit directory override.
+The proposed system drive is `C:` and the directory workspace is `D:`.
+Capture the caller-selected root before runtime-directory changes and select
+the mapped DOS drive/path before target execution, including relative reads
+and saves; server requests report their explicit or owner-workspace root.
+This is planned work; current launches still use an explicitly supplied boot
+disk and the existing staging contract.
+
+Both proposed modes preserve original host files through copy-on-write file
+layers. Live mode observes guarded current host content and applies writes to
+the session's effective view. Checkpointed mode pins base content and binds each
+Anchor Stone to the matching file-layer generation and file-service state.
+The proposed debugger default is checkpointed mode. Changes are inspectable,
+revertible and exportable without overwriting the original directory.
+
+New guest-created saves have an explicit keep/export option and an opt-in
+policy for selected new-file paths. After a coherent flush/close, this can
+physically create a private host file that survives rewind and session exit.
+Pre-existing executables and surrounding files retain their layer protection.
+Rewind preserves the physical copy while restoring historical guest membership;
+explicit import/refresh makes that save visible in a new child layer revision.
+Exports use guarded creation and do not silently overwrite existing paths.
+
+File-aware restore must synchronize VM state, directory membership, file
+contents and open handles, with a verified consistent base capture despite
+external host writers. Existing checkpoint artifacts retain their documented
+scope below; this plan does not retroactively give them host-file rollback or
+new directory-sharing support. The linked plan records runtime packaging,
+memory buffering/durable storage, branching and required native acceptance.
+
 ## Save and restore a restricted raw-machine checkpoint
 
 For an original raw boot-disk project, explicitly select a `qemu-img` executable

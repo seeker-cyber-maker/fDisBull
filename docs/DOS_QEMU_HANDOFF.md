@@ -12,12 +12,12 @@ is [the capability inventory](DOSBOX_QEMU_CAPABILITY_INVENTORY.md), backed by
 | Slice | Deliverable | Acceptance boundary |
 | --- | --- | --- |
 | 1. Core | Owned QEMU launch/stop, isolated disk, CPU/RAM controls, break/watchpoints, traces, stored display capture | Native execution, bounded failure, source isolation and process cleanup |
-| 2. DOS process and drivers | Real DOS COM/MZ loading, loaded-source and PSP identity, termination versus residency, explicit driver observations | Real DOS loader and independent COM/MZ/TSR witnesses; no fabricated PSP or inferred successful driver load |
+| 2. DOS process and drivers | Real DOS COM/MZ loading, loaded-source and PSP identity, termination versus residency, explicit driver observations; planned bundled FreeDOS and automatic directory workspace | Real DOS loader and independent COM/MZ/TSR witnesses; no fabricated PSP or inferred successful driver load; separately qualify runtime packaging, directory mapping and preservation of original files |
 | 3. Trace and events | Source-bound traces, execution-event searches and entry/transition predicates | Correct mapping across relocation, overlays and mode changes; completed versus attempted execution kept distinct |
 | 4. Clock, media and input | Guest-time control, coherent frames, audio and physical input | Defined clocks and completed-frame evidence; no claim of cycle parity from a screenshot |
-| 5. Checkpoints | Native save/restore, Anchor Stones and restore epochs | Cold reopen, complete machine/device state and explicit compatibility checks |
-| 6. Layers and block services | RAM/fetch layers, priorities, hooks and UDL/UIL host services | Correct fetch/data views, invalidation, effect ownership, synchronization and fallback boundaries |
-| 7. Histories | Rewind, deltas, frame history and comparative trials | Histories remain bound to the right source, machine, epoch and layer selection |
+| 5. Checkpoints | Native save/restore, Anchor Stones and restore epochs; planned filesystem generations and file-service state | Cold reopen, complete machine/device state and explicit compatibility checks; file-aware restore binds the matching base, layers and handles |
+| 6. Layers and block services | RAM/fetch layers, priorities, hooks and UDL/UIL host services; planned copy-on-write file layers | Correct fetch/data and filesystem views, invalidation, effect ownership, synchronization and fallback boundaries |
+| 7. Histories | Rewind, deltas, frame history and comparative trials; planned file-layer branching | Histories remain bound to the right source, machine, epoch, file generation and layer selection |
 | 8. Workflows | Scenes, scripts, player and analysis consumers | Existing public workflows work through the native backend with explicit capability checks |
 | 9. Qualification | Driver/game compatibility matrix, Windows scaling checks and fallback rehearsal | Every required surface has fresh evidence; retained DOSBox remains usable |
 
@@ -39,6 +39,7 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 | Device drivers are not ordinary programs | CONFIG.SYS strategy/interrupt entry points and initialization precede the shell. Reuse explicit boot configurations and inspect driver chains; do not route SYS images through the COM/MZ launcher. |
 | QEMM, DESQview and protected mode | Paging, V86 mode, banked EMS and task switching invalidate simplistic physical-address or process assumptions. Preserve unknown mappings and qualify these combinations separately. |
 | Overlays and self-modification | A source-bound address can later hold different code. Bind mappings and observations to source identity and execution epoch; do not retain stale certainty. |
+| Directory layers and open files | Guest writes, file names, directory searches and open-handle positions belong to one filesystem generation. Preserve original host files and restore the file view together with the VM; a disk-image overlay alone does not capture a host file service. |
 | Partial control operations | A timeout can occur after a command took effect. Bound operations, record their disposition and close an uncertain control channel; do not automatically retry memory writes or process starts. |
 | Multiple clocks and host effects | CPU progress, PIT/IRQ timing, audio duration and Python wall time do not advance together. Later host services need an explicit clock and ownership contract, including cancellation and desynchronization policy. |
 | Paused input and cross-channel ordering | Stock QEMU rejects paused physical input, and a successful paused send-key did not deliver in the native witness. Queue in the owner, dispatch at most once during GDB continue, and retain the original stop; acceptance is not consumption. |
@@ -48,6 +49,188 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 | Windows and additional architectures | SMP, threads, interrupts, memory ordering and architecture-specific traps make a DOS-only global stop insufficient. Keep machine, OS/process and target contracts separate. |
 | Runtime and host variability | Firmware, QEMU feature selection, Unix socket restrictions and macOS behavior vary. Discover capabilities and record exact runtime evidence; a Linux pipe result does not qualify every host. |
 | Workspace resets and publication | Scratch inputs and receipts can disappear between turns. Keep this authored log and source in GitLab, record private runtime provenance without uploading vendor images, and re-establish evidence after reset. |
+
+## Planned bundled FreeDOS and layered directory workspace (2026-11-11)
+
+This user-requested addition is planned work across slices 2, 5, 6 and 7. It
+does not advertise a current capability or broaden the existing checkpoint
+receipts. The current native route already separates a COM/MZ target from its
+caller-supplied DOS boot disk; this addition supplies a reusable bundled runtime
+and an automatic directory workspace above that foundation.
+
+### Bundled runtime and automatic directory access
+
+- Package a small, ready-to-boot FreeDOS system with the required shell,
+  drivers and fDisBull helpers as a versioned runtime component. Pin the
+  distribution/package inputs, build recipe, firmware and output identities;
+  retain license notices and corresponding source requirements. Keep game
+  inputs and session states outside the tool/runtime packages. The
+  [official FreeDOS distribution](https://www.freedos.org/download/) is the
+  upstream input; no runtime image is built by this plan update.
+- Use an immutable system image for `C:` with a private writable disk view per
+  session. Starting the runtime requires no DOS installation per target. Keep
+  the VM owned by the live server/context; retain cold restoration as a
+  separately verified path rather than requiring an always-running service.
+- Capture and resolve the CLI/Python caller's working directory at the launch
+  request boundary, before changing to any private runtime directory, and expose
+  it automatically as the guest workspace, proposed as `D:`. An explicit
+  directory override selects another root. JSON/server requests use an explicit
+  root or the owner's recorded startup workspace; report that choice and never
+  infer a remote caller's working directory. During DOS startup, select the
+  mapped drive and working path before executing the target so relative asset
+  reads and saves use that workspace. Discover its files within declared
+  count/size limits without requiring a manual per-file upload list. Record the
+  resolved root, membership, DOS name mappings, mode and source identities before execution.
+  Never silently omit an unsupported entry or expose parent directories through
+  aliases or symlinks. Define case, 8.3 alias, attribute and timestamp behavior.
+- Supply guest read/write access through a filesystem bridge/redirector or a
+  qualified private FAT-image path. Ordinary DOS reads and directory listings
+  observe the composed workspace; raw BIOS/disk access requires an admitted
+  private block-device view and must not bypass original-file preservation.
+
+### Preserve originals with copy-on-write file layers
+
+Both file modes keep the analyzed executable and surrounding files present at
+admission unchanged on the host. Guest read/write
+access applies to an effective view: immutable or guarded base content plus
+ordered file layers. A write stores changed ranges in the active layer;
+creation, extension, truncation, metadata changes, rename and deletion are also
+layer operations. Deletions use tombstones and rename updates the namespace
+atomically. Subsequent reads, executable loads and directory enumeration must
+see the same composed state. Provide explicit base, effective and difference
+inspection, plus export to a new destination. Applying changes back to original
+paths is a separate, guarded user-authorized operation.
+
+Reuse the existing code-layer principles: stable identities, ordered views,
+base-content guards, paused transitions and retained earlier versions. File
+layers need their own filesystem contract rather than the same-size byte-patch
+schema. A file-layer change does not rewrite already loaded guest RAM or
+silently rebind the analyzed source. Record effective file identity and source
+mapping when DOS loads it; invalidate affected bindings when that view changes.
+
+An active generation may buffer dirty chunks and namespace changes in bounded
+host memory. Seal immutable generations at declared boundaries and branch from
+an earlier generation on the next write after rewind. Share unchanged chunks
+instead of copying the whole directory per checkpoint. Persist sealed payloads
+and journals in the private external object store when cold restoration is
+requested; permit bounded spill for large layers. State the durability boundary
+for volatile writes, flush/close and saved checkpoints. RAM buffering alone
+does not make a saved state durable or establish a rewind performance gain.
+Apply storage admission before runtime-image creation, base capture, spill or
+other material growth; keep these outputs off internal temporary storage.
+
+### Keep newly created saves across rewind
+
+New guest-created saves and output files have a separate persistence option
+from protected pre-existing inputs. Support an explicit keep/export operation
+and an opt-in policy for selected new-file paths or patterns. A selected output
+can be physically saved to a private host destination, including the selected
+target directory, so the user can keep it after rewind or session exit.
+Other new files remain in the ordinary rewindable layer. Deleting and recreating
+an original path does not turn it into a new-file exception; the admission
+inventory and original identity still protect it.
+
+Keep only a completed, flushed/closed output or a separately qualified coherent
+capture. Seal its layer revision, retain exact bytes in the durable private
+store, and atomically create the chosen physical destination without replacing
+an existing file. Check host path containment, case/8.3 aliases and symlinks.
+The keep operation refuses existing destinations; overwrites use the separate
+guarded, user-authorized apply operation. A partial or uncertain export is not
+a kept save. Record guest path, source layer
+generation, size/hash, destination and durable completion. These private saves
+remain outside Git and tool/runtime packages.
+
+Pinned payloads and successful physical exports have a lifetime independent
+of the rewind cursor. Rewind neither deletes them nor silently inserts their
+later bytes into the historical guest view. Restore the saved namespace and
+file generation; make a kept save available there through an explicit import
+or refresh into a stopped session, with collision/open-handle checks and a new
+child layer revision. This is a recorded branch from the restored state.
+An export into the mapped host directory is a new host revision; live mode
+must reconcile it without duplicating the active overlay, and restoration must
+retain its pinned base until a deliberate refresh admits that newer revision.
+Report physical persistence separately from visibility in the current guest.
+
+### Live and checkpointed file modes
+
+| Mode | Base and host changes | Guest writes and restoration |
+| --- | --- | --- |
+| Live layered workspace | New opens or a controlled refresh can observe current host files. Pin each open file's content revision as well as identity; retaining a host file descriptor alone does not freeze its bytes. External changes create a new observed base revision; conflicts require explicit reconciliation and invalidate incompatible history. | Writes immediately affect the session's effective layer and are inspectable/exportable without changing originals. File-aware checkpointing must first retain a consistent exact base, pinned handle revisions and the matching sealed layer generation; otherwise report/refuse that capability. |
+| Checkpointed layered workspace | Freeze directory membership, content and relevant metadata at admission, using a private content-retaining snapshot/store. Hashes alone cannot reconstruct files after the host changes them. | Writes create private layer generations. Anchor Stones and admitted histories restore the pinned base and layer generation together with the VM, including after the original process closes. |
+
+Use checkpointed mode as the proposed debugger default; select live mode
+explicitly. Both modes satisfy automatic guest read/write access while
+preserving original files. Host tools inspect a separate effective working view
+or an export. The keep option above can create physical new saves; writes to
+pre-existing files remain layered. No background merge into original files is
+implied.
+
+### Anchor Stones, rewind and consistency
+
+Pause guest execution, drain in-flight file operations, flush required payloads
+and seal a filesystem generation before committing a file-aware checkpoint.
+Pausing the guest does not stop host writers. Capture the live base using an
+atomic host snapshot or a protocol that verifies stable directory membership,
+metadata and content revisions before and after capture. Refuse a changing or
+unverifiable capture without replaying file mutations. Retain each open handle's
+actual base revision even when a newer host version now has the same path;
+checkpointed-mode admission needs the same consistent-capture guarantee.
+Bind its VM/disk state to runtime identity, base snapshot, layer stack/root,
+namespace generation and any host file-service state. Preserve DOS handle
+identity, offsets, access/sharing modes, locks and directory-search cursors;
+guest-side state alone does not capture a host broker. If the selected bridge
+cannot restore an open-handle case, refuse that checkpoint rather than
+certifying an inconsistent restore. Publish the checkpoint only after every
+component is durable and verified; a failed or partial restore must not resume.
+
+Rewind selects a recorded VM/filesystem boundary and creates a child branch
+when execution continues. Keep later generations as immutable evidence. Merely
+popping a file layer while CPU/RAM and open handles describe its newer state
+is a partial experiment, subject to explicit admission and history invalidation;
+it is not a full rewind. Reordering/disabling layers requires a stopped guest,
+dependency and base guards, and coherent handle/namespace state. Existing
+artifacts retain their current restoration scope until the new format and
+native witnesses qualify the wider contract.
+
+QEMU already supports private disk-image snapshots, but a block overlay does
+not automatically virtualize host directory operations. Its
+[writable virtual FAT mode](https://www.qemu.org/docs/master/system/images.html#virtual-fat-disk-images)
+is documented as beta with restrictions on snapshots, `loadvm` and concurrent
+host writes. It may support a bounded prototype; it does not establish this
+layered directory or checkpoint contract. Compare a DOS redirector/file service
+with a private FAT image plus controlled import/export before selecting the
+implementation. Measure capture, write, seal, restore and branch costs.
+
+### Required implementation and qualification
+
+1. Build and verify the redistributable FreeDOS runtime, source/notice manifest
+   and installed selector independently of game inputs. Keep the current
+   caller-owned boot-disk route available during qualification.
+2. Implement automatic root discovery and the effective read/write file view;
+   witness CLI/Python/server root selection, DOS active drive/path, relative
+   asset reads and saves, binary files, subdirectories, DOS name collisions,
+   resizing, rename/delete and unchanged pre-existing files after close or
+   failure. With new-file persistence selected, verify only the requested
+   output paths are physically created.
+3. Qualify both modes with external host changes, guarded open files, layer
+   enable/disable and branch behavior, explicit export, and bounded storage
+   exhaustion. Record the selected driver/file-API compatibility limits.
+4. Cold-restore an Anchor Stone in a new process with file writes and open-handle
+   state; then rewind and branch across create/write/truncate/rename/delete.
+   Verify CPU/RAM, effective file contents, namespace and handle positions at the
+   same boundary, plus preserved originals and retained later generations.
+   Keep a new save physically, rewind to before its creation, and verify the
+   physical copy survives while historical guest membership remains correct;
+   then explicitly import it into a new branch. Exercise both the manual keep
+   action and opt-in new-file policy, destination collisions, incomplete saves
+   and interrupted exports.
+5. Inject concurrent host changes during base capture, interrupted file
+   operations, failed flush/seal/restore, missing or corrupt layer payloads and
+   base-identity conflicts. Preserve incomplete evidence and refuse unsafe
+   continuation without replaying uncertain writes.
+6. Integrate filesystem generations with source traces, code/RAM layers,
+   scripts and histories; update capability inventory and package/native
+   qualification only for behavior actually demonstrated.
 
 ## Current handoff
 
@@ -78,6 +261,12 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   prerequisite gap before the dependency-ordered Histories slice; Histories
   remains pending until its checkpoint, layer, clock/input and trace
   dependencies are separately admitted.
+- Planned environment/filesystem addition: bundled FreeDOS, automatic current
+  directory access, both live/checkpointed copy-on-write file views and optional
+  physical persistence of new saves are specified above. Runtime packaging,
+  the directory bridge and file-aware
+  checkpoint/history qualification remain pending; this documentation adds no
+  implemented capability or passing result.
 - Defaults and rollback: DOSBox remains the default; both DOSBox selectors stay
   available. Native default promotion and DOSBox removal are blocked.
 - Publication: authored source and this maintained engineering log belong in the
