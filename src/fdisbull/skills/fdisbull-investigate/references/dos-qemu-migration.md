@@ -28,9 +28,17 @@ Optional native extensions support RAM/fetch layers, hooks and private DOS
 process checkpoints with same-project cold restore. Instrumented checkpoints
 preserve virtual time, retained audio/display windows and precise retrace under
 fresh owner tokens; inspect `docs/DOS_QEMU_MIGRATION.md` in a source checkout
-for the checkpoint contract. Protected/V86 ownership is bounded to observed
-identity-backed low memory with the selected PC inside the verified module.
-Frame-timed input and scene parity remain later slices.
+for the checkpoint contract. Protected/V86 ownership can include observed
+remapped RAM under the native task-context extension, with the selected PC in
+the verified module. A stopped cooperating monitor may bind its explicit
+`FDBTASK1` RAM anchor using `debug-dos-task-bind` and observe it using
+`debug-dos-task-observe`; the lifetime combines monitor UUID, cookie,
+incarnation and the DOS process nonce. Architectural CR3/TR observations alone
+do not identify a software task. An authored two-task V86 witness covers a
+cold restore and A → B → A with active layers and task-scoped hooks. Physical
+page aliases share layer effects. This is not vendor QEMM/DESQview compatibility
+or general DPMI qualification. Frame-timed input and scene parity remain later
+slices.
 Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.
 

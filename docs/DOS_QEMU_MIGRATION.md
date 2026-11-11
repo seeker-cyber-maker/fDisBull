@@ -136,22 +136,51 @@ consumption, completed guest frames or DOSBox-X parity.
 
 ### Protected and V86 process checkpoints
 
-The stopped selected CPU can be in protected or V86 mode when its instruction
-pointer remains inside the verified DOS module. Ownership reads require
-observed low-memory identity mappings: unpaged execution or supported non-PAE
-4-KiB page tables, with matching native linear and physical reads. Restore
-compares CPU control registers, segment caches, descriptor-table identities,
-mapping evidence, helper, PSP, allocations and source RAM before rebinding
-layers and hooks. Ambiguous task identity, unsupported page formats and
-remapped DOS ownership pages remain outside this bounded route.
-The binding describes the selected CPU's module and DOS allocation; it does
-not identify a QEMM/DESQview scheduler task.
+A stopped selected CPU may be in protected or V86 mode when its instruction
+pointer remains inside the verified DOS module. The ownership adapter observes
+unpaged memory or supported non-PAE 4-KiB mappings, including DOS module, PSP,
+helper and allocation pages remapped to qualified RAM. For remapped pages it
+requires the [native task-context extension](../native/qemu-task-context/README.md),
+checks the selected CPU context and page tables, and compares native linear and
+physical reads. Restore checks CPU state, descriptor tables, ownership and
+backing evidence before recreating controls. Unsupported paging formats,
+ambiguous mappings and mixed-device memory remain outside this route.
 
-Source layers and source hooks use the same ownership checks in these modes.
-RAM backing and fetch overlays retain their existing semantics; source hook
-redirects still require real mode. These checks support authored mode-switch
-programs and do not qualify a QEMM/DESQview installation or an arbitrary DPMI
-client. DOSBox-X stays available until the separate local parity gates pass.
+A cooperating monitor can provide a separate task lifetime identity. While
+stopped in the owned COM/MZ process, bind a physical RAM address containing its
+`FDBTASK1` anchor and the expected 32-hex monitor UUID:
+
+```json
+{"method":"debug-dos-task-bind","params":{"run":"RETURNED_RUN","anchor_address":"0x150000","expected_monitor":"00112233445566778899aabbccddeeff"}}
+{"method":"debug-dos-task-observe","params":{"run":"RETURNED_RUN"}}
+```
+
+The UUID and address above illustrate an authored monitor, not an automatically
+discovered vendor scheduler. The stable task key also includes the monitor's
+cookie and non-reused incarnation plus the owned DOS process nonce. The
+scheduler generation and native architectural context provide separate
+observations; CR3 or a TSS selector alone does not identify a DOS task. An odd
+scheduler generation or invalid, changing or non-RAM anchor is refused. A
+foreign task that encounters a bound execution hook produces `task-switch`
+without dispatching its action or incrementing its hit count; explicitly run
+again to continue. The task binding and controls can be restored in a fresh
+session with the same project and original inputs.
+
+An authored real-DOS monitor has exercised remapped 32-bit protected-mode
+checkpoints in COM and MZ executables and two independently backed V86 tasks
+using the same virtual PSP and code addresses, including A → B → A and a cold
+restore in a separate Python process with active physical RAM/fetch layers and
+task-scoped hooks. The V86 witness also restores virtual time and precise
+retrace under the instrumented profile. This is evidence for that fixture,
+not vendor compatibility.
+Layers bind physical backing: if multiple tasks map the same physical page,
+they share that page's RAM/fetch layer effects. When a cooperating task is
+bound, its source views, source tracing and hooks require that task; source
+tracing and hook redirects still require real mode. There is no automatic
+inference of QEMM or DESQview task IDs, and these observations do not
+qualify either vendor installation, arbitrary DPMI clients or DOSBox parity.
+DOSBox stays available and remains the default while the separate gates remain
+unqualified.
 
 ## Prepare and check the core
 

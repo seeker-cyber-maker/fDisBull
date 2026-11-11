@@ -1,4 +1,4 @@
-"""Bounded identity-mapped DOS ownership observations for stopped QEMU.
+"""Bounded DOS ownership observations through the selected native page tables.
 
 This admits only the currently observed single CPU address space. It neither
 identifies a scheduler task nor establishes arbitrary protected-mode mappings.
@@ -12,11 +12,15 @@ from .dos_memory import translate_386_page
 
 
 class DosAddressSpace:
-    def __init__(self, vm, registers):
+    def __init__(self, vm, registers, *, task_binding=None):
+        from .qemu_dos_tasks import read_task_context, validate_register_context
         self.vm = vm
         self.remote = vm.debugger()
         self.state = registers['address_state']
         self.mode = registers['cpu_mode']
+        self.task_binding = task_binding
+        self.native_context = read_task_context(vm, task_binding)
+        validate_register_context(self.native_context, registers)
         state = self.state
         if (self.mode not in ('real', 'protected', 'v86') or state.get('machine_vcpus') != 1
                 or state.get('register_context_match') is not True
@@ -50,17 +54,20 @@ class DosAddressSpace:
     def read(self, address, length):
         if type(address) is not int or type(length) is not int or not 1 <= length <= 64*1024*1024:
             raise ValueError('Invalid DOS ownership read')
-        if not 0 <= address < address + length <= 0x100000:
-            raise ValueError('DOS ownership observation requires unwrapped low-memory addresses')
+        if not 0 <= address < address + length <= 0x100000000:
+            raise ValueError('DOS ownership observation requires unwrapped 32-bit linear addresses')
         parts = []
         offset = 0
         while offset < length:
             linear = address + offset
             count = min(length-offset, 4096-(linear & 4095))
             translated = translate_386_page(linear, self.state, self._read_table)
-            if translated['status'] != 'mapped' or int(translated['physical_address'], 16) != linear:
-                raise ValueError('DOS ownership requires identity-mapped low memory')
-            physical = self._read_table(linear, count)
+            if translated['status'] != 'mapped':
+                raise ValueError('DOS ownership requires a qualified RAM mapping: ' + translated['status'])
+            backing = int(translated['physical_address'], 16)
+            if backing != linear and self.native_context is None:
+                raise ValueError('Remapped DOS ownership requires the native task-context extension')
+            physical = self._read_table(backing, count)
             virtual = self.remote.memory(linear, count, space='virtual')
             if physical != virtual or len(physical) != count:
                 raise ValueError('DOS ownership linear and physical reads differ')
@@ -69,7 +76,7 @@ class DosAddressSpace:
                 entries.append(dict(kind=entry['kind'], address=entry['physical_address'],
                                     value=entry['value']))
             page = linear & ~4095
-            item = dict(linear=hex(page), physical=hex(page), entries=entries)
+            item = dict(linear=hex(page), physical=hex(backing & ~4095), entries=entries)
             if page in self.pages and self.pages[page] != item:
                 raise ValueError('DOS ownership mapping changed during capture')
             self.pages[page] = item
@@ -78,10 +85,20 @@ class DosAddressSpace:
         return b''.join(parts)
 
     def evidence(self):
+        from .qemu_dos_tasks import read_task_context, stable_context
         for table in self.tables.values():
             base, length = int(table['base'], 16), int(table['limit'], 16) + 1
             table['sha256'] = hashlib.sha256(self.read(base, length)).hexdigest()
-        return dict(format='fdisbull-dos-identity-address-space-1', mode=self.mode,
+        if read_task_context(self.vm, self.task_binding) != self.native_context:
+            raise ValueError('Native task context changed during DOS ownership observation')
+        result = dict(format='fdisbull-dos-identity-address-space-1', mode=self.mode,
                     ownership_scope='selected CPU, bound module and DOS allocations',
                     task_identity=None, descriptors=self.tables,
                     pages=[self.pages[key] for key in sorted(self.pages)])
+        if self.native_context is not None:
+            result.update(format='fdisbull-dos-remapped-address-space-2',
+                          architectural_context=stable_context(self.native_context))
+        if self.task_binding is not None:
+            result['task_identity'] = dict(self.task_binding)
+            result['ownership_scope'] = 'cooperating monitor task lifetime, module and DOS allocations'
+        return result

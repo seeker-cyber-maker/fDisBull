@@ -70,6 +70,8 @@ def _require_active(session, binding):
 def _ownership(session, binding):
     from .qemu_dos_process import observe_mcbs
     _require_active(session, binding)
+    from .qemu_dos_tasks import require_task
+    require_task(session)
     process = session._process
     # Inspect the chain, not a possibly freed MCB header left in old RAM.
     blocks = observe_mcbs(session._read, session._ready['first_mcb_segment'])

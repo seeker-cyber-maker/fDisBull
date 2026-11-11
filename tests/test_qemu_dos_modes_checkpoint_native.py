@@ -365,10 +365,12 @@ def test_native_protected_loaded_descriptors_checkpoint_and_return(tmp_path, mod
             if mode == 'paged':
                 table = int.from_bytes(bytes.fromhex(debug.memory(base + marker['pt'], length=4)['hex']), 'little')
                 entry = debug.memory(table, length=4)['hex']
-                debug.write_memory(table, '07000900', expected_hex=entry)
-                with pytest.raises(ValueError, match='identity-mapped'):
+                # A remap into ordinary RAM is now supported. A present PTE
+                # pointing at the VGA aperture must still fail before capture.
+                debug.write_memory(table, '07000a00', expected_hex=entry)
+                with pytest.raises(ValueError, match='conventional or extended PC RAM'):
                     debug.save_state()
-                debug.write_memory(table, entry, expected_hex='07000900')
+                debug.write_memory(table, entry, expected_hex='07000a00')
             saved = debug.save_state()
             debug.load_state(saved['artifact'])
             after = debug.registers()

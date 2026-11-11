@@ -1310,6 +1310,7 @@ class DebugWorkspace:
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
+                   'debug-dos-task-bind':'dos_task_bind','debug-dos-task-observe':'dos_task_observe',
                    'debug-status':'status','debug-dos-process':'dos_process_info','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',

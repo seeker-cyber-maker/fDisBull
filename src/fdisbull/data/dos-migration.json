@@ -83,12 +83,14 @@
         "tests/test_dos_process_image.py",
         "tests/test_qemu_dos_process.py",
         "tests/test_qemu_dos_process_native.py",
-        "tests/test_qemu_dos_process_lifecycle.py"
+        "tests/test_qemu_dos_process_lifecycle.py",
+        "tests/test_qemu_dos_tasks.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py"
       ],
       "scope_limits": [
         "Original COM/MZ projects launch through real DOS EXEC with a separate private boot disk. Observed PSP/MCB, ordered MZ relocations, exact loader stack writes and native entry establish the initial source map; controls retain machine addresses.",
         "Nonce-bound parent return and DOS AH=4Dh distinguish selected process exit/residency. Resident mappings intersect observed retained allocations; machine close and uncertain observations invalidate live ownership and capture epochs.",
-        "Entry requires observed real mode. Patched versions, secondary executable stubs, DPMI/V86 process mapping and real QEMM/DESQview scheduler/driver combinations remain unqualified.",
+        "Entry requires observed real mode. Stopped protected/V86 ownership can include bounded remapped RAM under the native architectural-context extension. An explicit FDBTASK1 cooperating monitor supplies task lifetime through UUID, cookie, incarnation and DOS process nonce; this is not an inferred QEMM/DESQview task. Arbitrary DPMI and vendor scheduler/driver combinations remain unqualified.",
         "Device-header registration and an authored SYS initialization marker qualify only those observations, not arbitrary device I/O. Game assets/drivers must already be present in the image; existing startup/configuration bytes are preserved."
       ]
     },
@@ -261,11 +263,12 @@
         "tests/test_qemu_dos_checkpoint_sessions_native.py",
         "tests/test_qemu_checkpoint_host_restart_native.py",
         "tests/test_qemu_instrumented_checkpoint_native.py",
-        "tests/test_qemu_dos_modes_checkpoint_native.py"
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
-        "Standard raw machines and stopped owned COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Optional native instrumentation sidecars preserve virtual time, retained media and precise retrace under fresh owner identities. Protected/V86 process ownership is bounded to observed identity-backed low memory and a selected PC inside the module. Host files, arbitrary QEMM/DPMI mappings, state forks and histories remain unqualified."
+        "Standard raw machines and stopped owned COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Optional native instrumentation sidecars preserve virtual time, retained media and precise retrace under fresh owner identities. Native task-context observation admits bounded remapped protected/V86 RAM when ownership and selected module PC are verified. An authored cooperating-monitor A-to-B-to-A witness and separate Python-process restore cover distinct physical backings, layers and task-scoped hooks. Host files, arbitrary QEMM/DPMI mappings, state forks and histories remain unqualified."
       ]
     },
     {
@@ -288,11 +291,12 @@
         "tests/test_udc_layers.py",
         "tests/test_qemu_layers_native.py",
         "tests/test_qemu_hooks_native.py",
-        "tests/test_qemu_dos_modes_checkpoint_native.py"
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py"
       ],
       "scope_limits": [
-        "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch. Source definitions require the verified DOS module; protected/V86 ownership additionally requires observed identity-backed low memory and the selected PC inside its module.",
-        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including the bounded protected/V86 identity-mapping route. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and screenshot hooks remain open."
+        "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch; aliases of one physical page share layer effects. Source definitions require the verified DOS module and observed protected/V86 ownership, including bounded remapped RAM with the native task-context extension.",
+        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including bounded remapped protected/V86 ownership and explicitly bound cooperating-monitor task identity. Architectural CR3/TR alone does not identify a software task. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and screenshot hooks remain open."
       ]
     },
     {
@@ -1444,8 +1448,13 @@
       "tests": [
         "tests/test_dos_memory.py",
         "tests/test_protected_runtime_native.py",
-        "tests/test_qemm_runtime.py"
-      ]
+        "tests/test_qemm_runtime.py",
+        "tests/test_qemu_dos_tasks.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_task_guards_native.py",
+        "tests/test_qemu_dos_task_public.py"
+      ],
+      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; QemuDOSProcessSession and native task-context extension"
     },
     {
       "id": "process-and-resident-completion",

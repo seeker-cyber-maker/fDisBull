@@ -1,6 +1,7 @@
 """Stopped QEMU layer transitions keyed by physical RAM backing."""
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 import struct
@@ -50,6 +51,8 @@ class QemuLayerSessionMixin:
 
         if not getattr(self, '_process', None):
             raise ValueError('Source layer addresses require an active COM/MZ process')
+        from .qemu_dos_tasks import require_task
+        require_task(self)
         if state['cpu_mode'] == 'real':
             if (state['paging'] is not False or state['code_bits'] != 16
                     or state['register_context_match'] is not True):
@@ -153,6 +156,10 @@ class QemuLayerSessionMixin:
         else:
             if binding['run'] != self.run_id or binding['epoch'] != self._layer_epoch():
                 raise ValueError('Layer backing belongs to a different QEMU run or epoch')
+            if binding.get('task_identity') is not None:
+                from .qemu_dos_tasks import task_key
+                if task_key(binding['task_identity']) != task_key(getattr(self, '_dos_task_binding', None)):
+                    raise ValueError('Layer backing belongs to a different native DOS task lifetime')
             spans = binding['spans']
         return [a for start, count in spans for a in range(start, start + count)]
 
@@ -169,6 +176,9 @@ class QemuLayerSessionMixin:
         if (not isinstance(active, list) or len(active) > 64
                 or any(not isinstance(i, str) for i in active) or len(set(active)) != len(active)):
             raise ValueError('Active stack requires at most 64 unique layer IDs')
+        if active and getattr(self, '_dos_task_binding', None) is not None:
+            from .qemu_dos_tasks import require_task
+            require_task(self)
         definitions = [self.project.debug_layer_info(i) for i in active]
         if any(d['version'] != self.version['id'] for d in definitions):
             raise ValueError('Layer belongs to a different static version')
@@ -258,6 +268,9 @@ class QemuLayerSessionMixin:
     @_locked
     def layer_patch(self, name, address, *, expected_hex, data_hex, kind='ram', activate=True, space=None):
         self._layer_preflight()
+        if getattr(self, '_dos_task_binding', None) is not None:
+            from .qemu_dos_tasks import require_task
+            require_task(self)
         if type(activate) is not bool or kind not in ('ram', 'execute'):
             raise ValueError('Layer requires kind=ram or execute and boolean activate')
         before, after = byte_string(expected_hex), byte_string(data_hex)
@@ -273,6 +286,8 @@ class QemuLayerSessionMixin:
             # This definition owns the selected backing, even when the same
             # guest linear window subsequently selects a different page.
             binding = dict(run=self.run_id, epoch=self._layer_epoch(), space=space, spans=spans)
+            if getattr(self, '_dos_task_binding', None) is not None:
+                binding['task_identity'] = deepcopy(self._dos_task_binding)
             result = self.project._store_debug_layer(name, self.version['id'],
                                                      dict(kind=kind, patches=[patch], native_binding=binding))
         if activate:

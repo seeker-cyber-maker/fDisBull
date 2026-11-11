@@ -19,6 +19,7 @@ FORMAT = 'fdisbull-qemu-dos-process-qcow2-v2'
 COMMAND = 'x-fdisbull-dos-checkpoint-status'
 MAX_STATE = 128 * 1024 * 1024
 MAX_SIDECAR = 64 * 1024 * 1024
+_CURRENT_TASK = object()
 
 
 def _sha(data):
@@ -130,9 +131,17 @@ def _decode_origin(session, origin):
     return nonce, ready_bytes, tail, vectors, helper, ready
 
 
-def _verify_process(session, process, origin, vm=None, memory=None):
+def _verify_process(session, process, origin, vm=None, memory=None, task_binding=_CURRENT_TASK):
     from .qemu_dos_process import observe_mcbs, relocated_source
     vm = session.vm if vm is None else vm
+    task_binding = getattr(session, '_dos_task_binding', None) if task_binding is _CURRENT_TASK else task_binding
+    if task_binding is not None:
+        from .qemu_dos_tasks import observe_task
+        if task_binding.get('process_nonce') != origin.get('nonce'):
+            raise ValueError('Task binding differs from the checkpoint DOS helper lifetime')
+        task = observe_task(session, task_binding, vm=vm)
+        if task['matches_binding'] is not True:
+            raise ValueError('Selected native DOS task differs from the bound task lifetime')
     nonce, raw, tail, vectors, helper, ready = _decode_origin(session, origin)
     context = session if vm is session.vm else vm.context
     registers = context.registers()
@@ -149,7 +158,7 @@ def _verify_process(session, process, origin, vm=None, memory=None):
     space = None
     if registers['cpu_mode'] != 'real':
         from .qemu_dos_address_space import DosAddressSpace
-        space = DosAddressSpace(vm, registers)
+        space = DosAddressSpace(vm, registers, task_binding=task_binding)
     read = (lambda address, length: _read(vm, address, length)) if space is None else space.read
     blocks = observe_mcbs(read, ready['first_mcb_segment'])
     allocation = process['allocation']
@@ -233,6 +242,7 @@ def _unarchive(data):
 def save_process_state(session, name, max_bytes):
     from .external_files import _file_name
     from .qemu_instrumented_checkpoint import capture, verify_saved
+    from .qemu_dos_tasks import capture_task_checkpoint
     import uuid
     _file_name(name)
     if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= MAX_STATE):
@@ -243,19 +253,23 @@ def save_process_state(session, name, max_bytes):
     origin = _origin(session)
     registers, memory, _ = _verify_process(session, session._process, origin)
     controls = capture_controls(session)
+    task_checkpoint = capture_task_checkpoint(session)
     instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
     bundle = dict(format=FORMAT, tag=tag, source_sha256=session.metadata['source_sha256'],
         version_sha256=session.metadata['version_sha256'], version=session.version['id'],
         runtime=_compatibility(session), runtime_origin=deepcopy(session.vm.inputs),
         process=deepcopy(session._process), origin=origin, registers=registers,
-        memory=memory, controls=controls, serial=serial, instrumentation=instrumentation)
+        memory=memory, controls=controls, serial=serial, instrumentation=instrumentation,
+        native_task=task_checkpoint, task_binding=deepcopy(getattr(session, '_dos_task_binding', None)))
     try:
         snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
                      instrumented=instrumentation is not None, export_token=export_token)
         if _serial_idle(session) != serial:
             raise DebuggerError('Native COM2 state changed while saving the checkpoint')
         verify_saved(session, instrumentation)
+        if capture_task_checkpoint(session) != task_checkpoint:
+            raise DebuggerError('Native task context changed while saving checkpoint')
         with session.vm.checkpoint_disk.open('rb') as stream:
             machine = stream.read(limit + 1)
         if len(machine) > limit:
@@ -282,6 +296,7 @@ def load_process_state(session, artifact, timeout_ms):
     from .operation_budget import request_deadline
     from .qemu_machine import MachineContext, QemuMachine
     from .qemu_instrumented_checkpoint import validate, restore
+    from .qemu_dos_tasks import read_task_context, restore_task_checkpoint, task_key
 
     deadline = request_deadline(session, timeout_ms)
 
@@ -331,6 +346,14 @@ def load_process_state(session, artifact, timeout_ms):
             raise ValueError('Process checkpoint sidecar or runtime identity differs')
         _source(session)
         decoded = _decode_origin(session, bundle['origin'])
+        task_binding = bundle.get('task_binding')
+        if task_binding is not None:
+            task_key(task_binding)
+            if task_binding.get('process_nonce') != bundle['origin']['nonce']:
+                raise ValueError('Checkpoint task binding differs from its process helper lifetime')
+        native_task = bundle.get('native_task')
+        if task_binding is not None and native_task is None:
+            raise ValueError('Task-bound checkpoint lacks a native task observation')
         instrumentation = bundle.get('instrumentation')
         validate(session.vm, instrumentation)
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
@@ -345,11 +368,17 @@ def load_process_state(session, artifact, timeout_ms):
             new.operation_deadline = deadline
             new.qmp.operation_deadline = deadline
             channel = new.serial(deadline)
+            # Register the native scalar VMState on this fresh owner before
+            # the incoming snapshot is parsed. No guest instruction executes.
+            if native_task is not None:
+                if read_task_context(new) is None:
+                    raise ValueError('Fresh QEMU lacks the checkpoint task-context extension')
             snapshot_job(new, 'load', tag=bundle['tag'], vmstate='disk0', devices=['disk0'],
                          timeout_ms=remaining(), instrumented=instrumentation is not None)
             restored_instrumentation = restore(new, instrumentation)
+            restored_task = restore_task_checkpoint(new, native_task, task_binding)
             actual, _, _ = _verify_process(session, bundle['process'], bundle['origin'],
-                                           vm=new, memory=bundle['memory'])
+                                           vm=new, memory=bundle['memory'], task_binding=task_binding)
             for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
                 if actual.get(field) != bundle['registers'].get(field):
                     raise DebuggerError('Restored process CPU differs: ' + field)
@@ -376,6 +405,8 @@ def load_process_state(session, artifact, timeout_ms):
             session._reset_native_layers()
             session._qemu_hooks = {}
             session._qemu_hook_pending = None
+            session._dos_task_binding = deepcopy(task_binding)
+            session.metadata['dos_task_binding'] = deepcopy(task_binding)
             session._process = deepcopy(bundle['process'])
             session._advance_epoch()
             session._set_deadline(deadline)
@@ -397,6 +428,9 @@ def load_process_state(session, artifact, timeout_ms):
                           controls=restored_controls)
             if restored_instrumentation is not None:
                 result['instrumentation'] = restored_instrumentation
+            if restored_task is not None:
+                result['native_task'] = restored_task
+                result['task_identity'] = deepcopy(task_binding)
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)

@@ -35,6 +35,10 @@ class QemuHookSessionMixin:
             space = 'source' if getattr(self, '_process', None) else 'linear'
         if space not in ('source', 'linear'):
             raise ValueError('Hooks require source or linear space')
+        task_binding = deepcopy(getattr(self, '_dos_task_binding', None))
+        if task_binding is not None:
+            from .qemu_dos_tasks import require_task
+            require_task(self, binding=task_binding)
         linear, _, _, _ = self._layer_spans(address, length, space, cs)
         checked = deepcopy(actions)
         for action in checked:
@@ -75,7 +79,8 @@ class QemuHookSessionMixin:
                        address=address, cs=cs, space=space, runtime_address=linear,
                        access=access, length=length,
                        epoch=self._layer_epoch(), actions=checked, once=once,
-                       max_hits=max_hits, hits=0, dispatch='paused_rpc', extra_guest_bytes=0)
+                       max_hits=max_hits, hits=0, dispatch='paused_rpc', extra_guest_bytes=0,
+                       task_identity=task_binding)
         if not hasattr(self, '_qemu_hooks'): self._qemu_hooks = {}
         self._qemu_hooks[point['breakpoint_id']] = control
         try:
@@ -118,6 +123,20 @@ class QemuHookSessionMixin:
         expected = 'breakpoint' if control.get('access', 'x') == 'x' else 'watchpoint'
         if result.get('outcome') != expected:
             return None
+        task_binding = control.get('task_identity')
+        if task_binding is not None:
+            from .qemu_dos_tasks import observe_task
+            try:
+                observed = observe_task(self, binding=task_binding)
+            except BaseException as error:
+                self.close()
+                if getattr(error, 'result', None) is None:
+                    error.result = result
+                raise
+            if observed.get('matches_binding') is not True:
+                if observed.get('matches_binding') is not False:
+                    raise ValueError('Hook task identity is not qualified')
+                return dict(task_switch=True, hook=control['hook'], task=observed)
         evidence = dict(hook=control['hook'], hit=control['hits'] + 1,
                         stop=deepcopy(result), actions=[], dispatch='paused_rpc', extra_guest_bytes=0)
         try:
@@ -206,6 +225,12 @@ class QemuHookSessionMixin:
                 raise
             evidence = self._dispatch_qemu_hook(result)
             if evidence is None:
+                result['hook_hits'] = hits
+                return result
+            if evidence.get('task_switch') is True:
+                self._qemu_hook_pending = evidence['hook']
+                result['outcome'] = 'task-switch'
+                result['task'] = evidence['task']
                 result['hook_hits'] = hits
                 return result
             hits.append(evidence)

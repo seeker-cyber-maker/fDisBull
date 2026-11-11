@@ -246,6 +246,8 @@ METHODS = {
     "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-dos-process": "Read observed native DOS PSP, source mapping, driver registration and exit/residency evidence; run",
+    "debug-dos-task-bind": "Bind the current native DOS COM/MZ task to its cooperating monitor anchor; run,anchor_address,expected_monitor",
+    "debug-dos-task-observe": "Observe the current cooperating monitor task against the bound native DOS task; run",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
     "debug-layer-info": "Inspect an immutable layer definition; layer",

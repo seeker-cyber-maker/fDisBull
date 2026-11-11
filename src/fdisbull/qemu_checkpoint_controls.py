@@ -13,6 +13,7 @@ from .code_layers import groups
 from .dosbox_rpc import DebuggerError
 
 _FORMAT = 'fdisbull-qemu-controls-1'
+_TASK_FORMAT = 'fdisbull-qemu-controls-task-2'
 _MAX_BYTES = 64 * 1024 * 1024
 _MAX_MAP = 65536
 _MAX_LAYERS = 64
@@ -67,6 +68,23 @@ def _definitions(session, identifiers):
     return result
 
 
+def _validate_definition_tasks(definitions, task_binding):
+    for definition in definitions.values():
+        binding = definition.get('native_binding')
+        if binding is None:
+            continue
+        layer_task = binding.get('task_identity')
+        if task_binding is None:
+            if 'task_identity' in binding:
+                raise ValueError('Unbound checkpoint cannot carry a task-scoped layer')
+        elif layer_task is None:
+            raise ValueError('Task checkpoint requires task-scoped native layer bindings')
+        else:
+            from .qemu_dos_tasks import task_key
+            if task_key(layer_task) != task_key(task_binding):
+                raise ValueError('Checkpoint layer task differs from the selected task')
+
+
 def _derive(session, active, definitions, origin_run, origin_epoch):
     expected, ram, execute = {}, {}, {}
     patches = 0
@@ -86,6 +104,12 @@ def _derive(session, active, definitions, origin_run, origin_epoch):
             else:
                 if binding.get('run') != origin_run or binding.get('epoch') != origin_epoch:
                     raise ValueError('Checkpoint layer binding differs from its origin epoch')
+                layer_task = binding.get('task_identity')
+                if layer_task is not None:
+                    from .qemu_dos_tasks import task_key
+                    current = getattr(session, '_dos_task_binding', None)
+                    if current is None or task_key(layer_task) != task_key(current):
+                        raise ValueError('Checkpoint layer task differs from the selected task')
                 spans = binding.get('spans')
             if not isinstance(spans, (list, tuple)) or not spans or len(old) != len(new):
                 raise ValueError('Invalid checkpoint layer extents')
@@ -128,6 +152,10 @@ def capture_controls(session):
         raise ValueError('Checkpoint controls require a project outside a transaction')
     session._stopped()
     epoch, run = session._layer_epoch(), session.run_id
+    task_binding = deepcopy(getattr(session, '_dos_task_binding', None))
+    if task_binding is not None:
+        from .qemu_dos_tasks import require_task
+        require_task(session, binding=task_binding)
     active = list(getattr(session, '_layer_active', []))
     if (len(active) > _MAX_LAYERS or any(not isinstance(i, str) for i in active)
             or len(active) != len(set(active))):
@@ -150,6 +178,10 @@ def capture_controls(session):
         raise ValueError('Checkpoint pending hook is not uniquely owned')
     ids = set(active)
     for item in hooks:
+        if item.get('task_identity') is not None:
+            from .qemu_dos_tasks import task_key
+            if task_binding is None or task_key(item['task_identity']) != task_key(task_binding):
+                raise ValueError('Checkpoint hook task identity differs from the selected task')
         point = session.breakpoints.get(item['breakpoint_id'])
         if (item.get('epoch') != epoch or not isinstance(point, dict)
                 or point['address'] != item['runtime_address'] or point['access'] != item['access']
@@ -164,6 +196,7 @@ def capture_controls(session):
     if len(points) + len(hooks) > _MAX_POINTS:
         raise ValueError('Checkpoint breakpoint budget exceeded')
     definitions = _definitions(session, ids)
+    _validate_definition_tasks(definitions, task_binding)
     expected, ram, execution = _derive(session, active, definitions, run, epoch)
     if maps['ram_applied'] != ram or maps['exec'] != execution:
         raise ValueError('Checkpoint layer definitions differ from owned maps')
@@ -182,11 +215,18 @@ def capture_controls(session):
             _native_fetch(session, maps['exec_base'], execution)
     elif active:
         raise ValueError('Checkpoint layers are not supported by this machine')
-    result = dict(format=_FORMAT, run=run, epoch=epoch,
+    if task_binding is None:
+        for item in hooks:
+            if item.get('task_identity') is not None:
+                raise ValueError('Unbound checkpoint cannot carry a task-scoped hook')
+            item.pop('task_identity', None)
+    result = dict(format=_TASK_FORMAT if task_binding is not None else _FORMAT, run=run, epoch=epoch,
         source_sha256=session.metadata['source_sha256'], version=session.version['id'],
         version_sha256=session.version['sha256'], active=active, definitions=definitions,
         maps={key: _pack(value) for key, value in maps.items()}, observed=_pack(observed),
         hooks=hooks, pending_hook=pending, breakpoints=points)
+    if task_binding is not None:
+        result['task_identity'] = task_binding
     if len(_encode(result)) > _MAX_BYTES:
         raise ValueError('Checkpoint controls exceed the sidecar budget')
     return result
@@ -200,7 +240,7 @@ def restore_controls(session, controls, old_epoch):
     """
     if not isinstance(controls, dict) or len(_encode(controls)) > _MAX_BYTES:
         raise ValueError('Invalid checkpoint controls')
-    if (controls.get('format') != _FORMAT or controls.get('epoch') != old_epoch
+    if (controls.get('format') not in (_FORMAT, _TASK_FORMAT) or controls.get('epoch') != old_epoch
             or controls.get('source_sha256') != session.metadata['source_sha256']
             or controls.get('version') != session.version['id']
             or controls.get('version_sha256') != session.version['sha256']):
@@ -208,6 +248,24 @@ def restore_controls(session, controls, old_epoch):
     if session.project.db.in_transaction:
         raise ValueError('Checkpoint controls require a project outside a transaction')
     session._stopped()
+    saved_task = controls.get('task_identity')
+    current_task = getattr(session, '_dos_task_binding', None)
+    if controls['format'] == _TASK_FORMAT and saved_task is None:
+        raise ValueError('Task checkpoint controls require a task binding')
+    if controls['format'] == _FORMAT:
+        definitions = controls.get('definitions')
+        hooks = controls.get('hooks')
+        if ('task_identity' in controls or not isinstance(definitions, dict)
+                or not isinstance(hooks, list)
+                or any(isinstance(item, dict) and 'task_identity' in item for item in hooks)
+                or any(isinstance(item, dict) and isinstance(item.get('native_binding'), dict)
+                       and 'task_identity' in item['native_binding'] for item in definitions.values())):
+            raise ValueError('Legacy checkpoint controls cannot carry task identities')
+    if saved_task is not None or current_task is not None:
+        from .qemu_dos_tasks import require_task, task_key
+        if saved_task is None or current_task is None or task_key(saved_task) != task_key(current_task):
+            raise ValueError('Checkpoint task identity differs from the restored task')
+        require_task(session, binding=current_task)
     if session._layer_epoch() == old_epoch:
         raise ValueError('Checkpoint controls require a fresh runtime epoch')
     if (getattr(session, '_layer_active', []) or getattr(session, '_qemu_hooks', {})
@@ -227,6 +285,7 @@ def restore_controls(session, controls, old_epoch):
         raise ValueError('Fresh QEMU cannot restore layers')
     if _definitions(session, set(definitions)) != definitions:
         raise ValueError('Checkpoint layer definitions or identities changed')
+    _validate_definition_tasks(definitions, current_task)
     maps = {key: _unpack(controls['maps'][key]) for key in ('ram_base', 'ram_applied', 'exec_base', 'exec')}
     observed = _unpack(controls['observed'])
     expected, ram, execution = _derive(session, active, definitions, controls['run'], old_epoch)
@@ -300,6 +359,11 @@ def restore_controls(session, controls, old_epoch):
             if (item.get('epoch') != old_epoch or type(item.get('hits')) is not int
                     or type(item.get('max_hits')) is not int or not 0 <= item['hits'] < item['max_hits']):
                 raise ValueError('Invalid checkpoint hook epoch or hit count')
+            hook_task = item.get('task_identity')
+            if hook_task is not None:
+                from .qemu_dos_tasks import task_key
+                if current_task is None or task_key(hook_task) != task_key(current_task):
+                    raise ValueError('Checkpoint hook task differs from the restored task')
             actions = deepcopy(item['actions'])
             for action in actions:
                 if action.get('op') == 'layers': action['layers'] = [layer_ids[i] for i in action['layers']]
@@ -312,6 +376,7 @@ def restore_controls(session, controls, old_epoch):
             rebound = session._qemu_hooks[created['breakpoint_id']]
             rebound['hits'] = item['hits']
             rebound['hook'] = item['hook']
+            rebound['task_identity'] = deepcopy(current_task) if hook_task is not None else None
             session._event('hook-restore', dict(hook=item['hook'], created_hook=created['hook'],
                                                breakpoint_id=created['breakpoint_id'],
                                                hits=item['hits'], origin_epoch=old_epoch))
