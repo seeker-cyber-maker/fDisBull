@@ -29,6 +29,7 @@ from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COM
 from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COMMANDS
 from .qemu_dos_preemption import COMMAND as PREEMPTION_COMMAND
 from .qemu_dos_history import QemuDOSHistoryMixin
+from .qemu_dos_frames import QemuDOSFramesMixin, FRAME_COMMANDS
 
 
 def _sha(data):
@@ -155,7 +156,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -317,6 +318,10 @@ class QemuDOSProcessSession(QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOST
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
             self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
+            self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']
+                and self.capabilities['renderer_capture'] and FRAME_COMMANDS <= vm.qmp_commands)
+            self.capabilities['frame_timeline_unit'] = 'completed synchronous renderer publication followed by a safe CPU stop'
+            self.capabilities['frame_timeline_input'] = 'released input only; frame key ownership is unqualified'
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
@@ -816,7 +821,9 @@ class QemuDOSProcessSession(QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOST
 
     @property
     def script_operations(self):
-        return super().script_operations | {'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind'}
+        return super().script_operations | {'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',
+            'frame-advance', 'timeline-start', 'timeline-status', 'timeline-advance',
+            'timeline-rewind', 'timeline-stop', 'timeline-pin', 'timeline-image'}
 
     def close(self):
         if self.closed:

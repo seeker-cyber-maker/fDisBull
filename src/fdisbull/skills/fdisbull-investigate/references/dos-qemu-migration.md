@@ -135,12 +135,35 @@ intervening execution.
 
 The admitted checkpoint covers private QCOW2 and native controls, with
 `host_files_restored=false`; planned host-directory/file-layer restoration is
-separate. Frame histories, inverse CPU/RAM partial undo and
+separate. General frame/input parity, inverse CPU/RAM partial undo and
 comparative trials remain open. Local native witnesses cover ordinary
 Python/JSON/script step and rewind, retained IRQ branches and separate-process
 restore with task-private RAM/fetch layers and hooks; the dated handoff and
 !117 record the exact validation receipt. The four
 routes are partial and unqualified; DOSBox remains the default.
+
+## Native renderer frame histories
+
+The next optional native frame-history increment uses a token-bound fence on
+the next completed synchronous QEMU renderer publication and a safe CPU stop.
+`timeline_start/advance/rewind/status/image/pin/stop` retain full checkpoint/PNG
+points and earlier branches; a named timeline/point can restore across sessions.
+The root is a paused surface point, not a completed frame. The publication is
+not proof of guest drawing completion, VBlank, physical scanout or input
+consumption. `completed_guest_frames` stays false.
+
+This increment supports full storage and released input; held frame keys,
+scheduled frame edges, partial-memory policies and delta retention remain open.
+Hooks and task-private RAM/fetch layers use the existing full checkpoint
+contract, including native task/IRQ state. Earlier nonordinary stops do not
+create a completed frame or trigger another continue. Limits include the root
+and retained branches (default 16 points, maximum 128), cumulative state/PNG
+payloads (default 512 MiB, maximum 1 GiB), per-state/per-image bounds and the
+earlier-binding 256 MiB project runtime-artifact cap. Live QCOW2 growth remains
+separate. Nine direct native witnesses cover renderer history, cold restore,
+early stops, controller guards and task-private IRQ/layer/hook preservation;
+DOSBox-X remains retained and default.
+See `docs/DOS_QEMU_MIGRATION.md` for the API example and exact receipt.
 
 ## Check an installation without a game
 

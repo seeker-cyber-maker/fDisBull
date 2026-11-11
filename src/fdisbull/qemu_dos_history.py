@@ -100,7 +100,8 @@ def _history_operation(function):
             if time.monotonic() >= deadline:
                 error = TimeoutError('QEMU history operation exceeded its outer deadline')
                 error.result = result
-                if function.__name__ in ('rewind_start', 'rewind_record', 'rewind'):
+                if function.__name__ in ('rewind_start', 'rewind_record', 'rewind',
+                        'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames'):
                     try:
                         self.close()
                     except Exception:
@@ -561,6 +562,8 @@ class QemuDOSHistoryMixin:
         if not live:
             raise ValueError('Start or attach to a history before recording')
         manifest, _ = self._history_latest(live['history'])
+        if manifest.get('history_kind') == 'renderer-frames':
+            raise ValueError('Use timeline_advance to record renderer-frame history')
         if live.get('history') != manifest.get('_artifact_id'):
             raise ValueError('History revision changed in another session; attach to its latest manifest first')
         fingerprint = self._history_live_fingerprint()
@@ -705,6 +708,9 @@ class QemuDOSHistoryMixin:
                 raise ValueError('Rewind count exceeds the available parent lineage')
             target = ancestors[count]
         self._history_state_artifact(target['checkpoint'])
+        validate_node = getattr(self, '_history_validate_node_before_restore', None)
+        if validate_node is not None:
+            validate_node(target)
         self._stopped()
         self._history_admission()
         self._history_pending(manifest, target['id'], 'restore')
@@ -721,6 +727,9 @@ class QemuDOSHistoryMixin:
                         for key in ('registers', 'general', 'segments', 'instruction_pointer',
                                     'linear_pc', 'flags', 'cpu_mode', 'address_state')):
                     raise ValueError('Restored CPU readback differs from the selected history node')
+                validate_restored = getattr(self, '_history_restore_node_check', None)
+                if validate_restored is not None:
+                    validate_restored(target)
                 pending_manifest['cursor'] = target['id']
                 pending_manifest['live_cursor_valid'] = True
                 pending_manifest['invalid_reason'] = None

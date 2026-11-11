@@ -95,3 +95,19 @@ def test_virtual_surface_keeps_both_stopped_clock_domains(tmp_path):
     result = capture.capture_surface()
     assert result['metadata']['clock_stability'] == 'virtual_clock_and_instruction_counter_unchanged'
     assert result['metadata']['completed_guest_frame'] is None
+
+
+def test_surface_image_budget_refuses_before_artifact_publication(tmp_path):
+    capture = Capture(tmp_path)
+    with pytest.raises(ValueError, match='image byte budget'):
+        capture.capture_surface(max_bytes=1)
+    assert capture.calls == ['screendump'] and capture.artifacts == []
+    assert not capture.closed and list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize('limit', [0, True, 16*1024**2+1])
+def test_surface_invalid_image_budget_precedes_native_capture(tmp_path, limit):
+    capture = Capture(tmp_path)
+    with pytest.raises(ValueError, match='max_bytes'):
+        capture.capture_surface(max_bytes=limit)
+    assert capture.calls == capture.artifacts == []

@@ -230,12 +230,33 @@ def validate_script(script, *, session=None):
                         validate_policy(params['policy'],allow_references=True)
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
+                        native_frames = (backend or actual) == 'qemu-dos'
+                        if native_frames:
+                            if op == 'frame-inputs':
+                                raise ValueError('Native renderer histories require released input; frame key ownership is unqualified')
+                            if session is not None and op in ('frame-advance','timeline-start',
+                                    'timeline-advance','timeline-rewind','timeline-pin'):
+                                if not getattr(session,'capabilities',{}).get('frame_timeline'):
+                                    raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
+                                if session.project.db.in_transaction:
+                                    raise ValueError('Native frame histories require a project outside a caller-owned transaction')
+                            if op == 'timeline-advance' and params.get('inputs') not in (None, []):
+                                raise ValueError('Native renderer histories require released input; scheduled frame edges are unqualified')
+                            if op == 'timeline-rewind' and params.get('policy') is not None:
+                                raise ValueError('Native renderer histories restore full checkpoints; partial policies are unqualified')
+                            if op == 'timeline-start' and params.get('storage_mode','full') != 'full':
+                                raise ValueError('Native renderer histories currently require full storage mode')
                         limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
                                 'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
                                 'max_bytes':(1,256*1024*1024),
                                 'max_state_bytes':(1,256*1024*1024),
                                 'max_image_bytes':(1,16*1024*1024),
                                 'timeout_ms':(1,600000)}
+                        if native_frames:
+                            limits.update(frames=(1,128), max_frames=(1,128),
+                                max_captures=(1,128), max_bytes=(1,1024**3),
+                                max_state_bytes=(1,128*1024**2),
+                                period_ns=(1000000,1000000000))
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
@@ -250,9 +271,9 @@ def validate_script(script, *, session=None):
                                 _file_name(params['name'])
                         if op=='timeline-start':
                             validate_storage(params.get('storage_mode','full'), params.get('keyframe_interval',8), allow_references=True)
-                            sizes=[params.get('max_state_bytes',8*1024**2),
+                            sizes=[params.get('max_state_bytes',(128 if native_frames else 8)*1024**2),
                                    params.get('max_image_bytes',2*1024**2),
-                                   params.get('max_bytes',64*1024**2)]
+                                   params.get('max_bytes',(512 if native_frames else 64)*1024**2)]
                             if all(type(value) is int for value in sizes) and sum(sizes[:2])>sizes[2]:
                                 raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
@@ -417,6 +438,10 @@ def validate_script(script, *, session=None):
                         if not (isinstance(name,str) and name.startswith('$')):
                             from .external_files import _file_name
                             _file_name(name)
+                    if op in ('capture-surface','capture-display') and params.get('max_bytes') is not None:
+                        value=params['max_bytes']
+                        if not (isinstance(value,str) and value.startswith('$')):
+                            bounded(value,'max_bytes',1,16*1024**2)
                     if op=='screenshot-hooks' and params.get('configuration') is not None:
                         from .screenshot_hooks import validate_configuration
                         validate_configuration(params['configuration'])
@@ -479,7 +504,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
     frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
                         'timeline-rewind','timeline-pin','timeline-image'}
-    capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
+    native_frames = getattr(session,'metadata',{}).get('backend') == 'qemu-dos'
+    capabilities = (getattr(session,'capabilities',{}) if native_frames else
+                    getattr(getattr(session,'rpc',None),'capabilities',{}))
     if any(step['op'] in frame_operations for step in steps):
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
@@ -504,7 +531,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Native frame input ownership contains duplicate keys')
         return normalized
     frame_owned_before = None
-    track_restored_input = (isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+    track_restored_input = (not native_frames and isinstance(capabilities,dict) and capabilities.get('frame_timeline')
                            and any(step['op'] in restore_operations for step in steps))
     if track_restored_input:
         # A full-state restore can introduce held input without dispatching

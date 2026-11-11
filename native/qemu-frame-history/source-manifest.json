@@ -1,0 +1,101 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "native synchronous renderer publication stop fence",
+  "base": {
+    "qemu_version": "10.0.13",
+    "runtime": "native-runtime/native-cascade-runtime",
+    "prerequisite_patch": "native/qemu-task-cascade/qemu-10.0.13-fdisbull-task-cascade-v2.patch",
+    "prerequisite_patch_sha256": "df50e8d92c9a260c7c7721518ff4d50f3734b8f81012d2a8e1ef68b3d3ff28d7"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-renderer-publication-frame-fence-v1.patch",
+    "sha256": "beb6a9d20ff7be9e2456486d2fcde4dbb090d2d52fa66c78a5201d5d5023de93",
+    "modified_file_count": 7,
+    "files": [
+      {
+        "path": "include/system/fdisbull-display.h",
+        "before_sha256": "b2b61ec3ae12c0feb85e6a8cde4d79cb3aba74e77ec556929854a7e8e3e5cbe6",
+        "after_sha256": "0290e88a854373bdd6368f4b4e353d57dbdd319cf649fc473aa8b849f5633dcd"
+      },
+      {
+        "path": "include/system/fdisbull-instrumented-checkpoint.h",
+        "before_sha256": "48a9f8855a4ddccaddc0a1d3cb0d9c99e7d918be43b851c13449ded5da29fe48",
+        "after_sha256": "caf278e06f42bc716f8da4ea68a57756ed19eef62f79b7110d08d015d0bb73ba"
+      },
+      {
+        "path": "qapi/fdisbull-display.json",
+        "before_sha256": "5c14103d746a722116571298a1e135b1b971cf7e9951341794f3b431e474aaf5",
+        "after_sha256": "715b8b864bf2958c2987c440ba721c4aab6c335f9b4d4c0b0defff81d20efbec"
+      },
+      {
+        "path": "system/fdisbull-clock.c",
+        "before_sha256": "3445d41fc6a1350b778901281f20003e13dc6b48dd93cb40f986724c80f9cfb8",
+        "after_sha256": "d53fcac4515c11972eb4c8976da70f22251f3247cf8aae5a901d2fcbd4feb541"
+      },
+      {
+        "path": "system/fdisbull-display.c",
+        "before_sha256": "827678397a773a912564a3983931d148b556106d1722acc73886061f4c49b101",
+        "after_sha256": "83e5c5c1ee1fc7ac3fef85c5822f13ede79a7b7ef38bdb215c3393a144bf1ff0"
+      },
+      {
+        "path": "system/fdisbull-instrumented-checkpoint.c",
+        "before_sha256": "663497c77f49e310b65a11cef310724b2a23146e1b8749fc431b7666715bbbd5",
+        "after_sha256": "428eaa3a46334a036d0f4f6387eaada7b75ebcd48b7bc4df0606ece0398f1b33"
+      },
+      {
+        "path": "system/runstate.c",
+        "before_sha256": "4f2087cba96bf1dfdb48a20c2ba7094d9230bf169880f72ee22eb7bd8301fa8f",
+        "after_sha256": "bfa61480aef35f21dd8a8cac47c2f002875873ec37c1b746f27a3a41a21dbd1a"
+      }
+    ]
+  },
+  "api": {
+    "commands": [
+      "x-fdisbull-arm-display-frame",
+      "x-fdisbull-query-display-frame",
+      "x-fdisbull-cancel-display-frame"
+    ],
+    "receipt": "FdisbullDisplayFrameFenceInfo",
+    "completion_identity": "completed-update-id == baseline-update-id + 1; publication is the retained synchronous renderer update after graphic_hw_update and complete RGB copy",
+    "stop": "deferred stop at the next safe CPU boundary; stop-consumed is true only when the frame handler itself issues vm_stop(PAUSED)",
+    "checkpoint": "instrumented checkpoint export/load rejects uncancelled active or pending frame fences; after cancel, existing display window/update/pixels/configuration are checkpointed; standard mode may retain pixels without precise VGA publication config; precise retrace requires the config when pixels exist; fence itself is process-local"
+  },
+  "scope_limits": [
+    "Renderer publication is not a guest application frame, retrace, vertical blank, or proof that guest drawing completed.",
+    "Requires existing supported stopped virtual-clock profile, one stopped TCG vCPU, active retained display observer, unchanged display token and epoch.",
+    "Frame fence and virtual-clock budget cannot be armed together.",
+    "An already requested CPU debug interrupt, debugger stop, or hook stop takes precedence; a superseding stop does not set stop-consumed.",
+    "No guest execution or native guest qualification was performed by the patch author."
+  ],
+  "build": {
+    "source": "native-runtime/frame-history-runtime/qemu-10.0.13",
+    "build_dir": "native-runtime/frame-history-runtime/build-n20",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../qemu-10.0.13/configure --target-list=x86_64-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../qemu-10.0.13/pc-bios --prefix=<build-n20>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command": "TMPDIR=<frame-history-runtime/tmp> /Users/tiga/miniconda/bin/ninja -C build-n20 -j2 qemu-system-x86_64",
+    "result": "configure and full 1,587-step x86_64-softmmu TCG build/link succeeded; subsequent relinks succeeded, including 14-step display-checkpoint profile fix; no guest was launched by patch author",
+    "binary_path": "native-runtime/frame-history-runtime/build-n20/qemu-system-x86_64",
+    "binary_sha256": "411e868d941cf7cd138a39b931ac9886cd8156f79eb658174bfff44bc01800ed"
+  },
+  "qualification": {
+    "status": "bounded root-owned local renderer-history witnesses passed; formal migration qualification remains open",
+    "tests_run_by_patch_author": false,
+    "root_validation": {
+      "selection": "tests/test_qemu_dos_frames_native.py",
+      "cases": 9,
+      "receipt": "frames-focused-final.xml",
+      "ci": false,
+      "scope": "synchronous renderer publication; no guest drawing completion or VBlank claim",
+      "integrated_preservation": {
+        "files": 98,
+        "tests": 1864,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "receipt": "frames-preservation-complete.xml",
+        "source_witness_hashes_unchanged": true
+      }
+    }
+  }
+}

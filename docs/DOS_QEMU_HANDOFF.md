@@ -3501,3 +3501,85 @@ FreeDOS/directory-layer and file-aware restore work remain open. The four public
 rewind operations remain partial and unqualified, all 127 formal surface
 qualifications and seven campaigns stay open, and DOSBox remains the retained
 default. No CI result is implied.
+
+## Local continuation 2026-11-11: native renderer frame histories
+
+This continuation follows `50c40f7aa3d7dd96306b7da940d81356117e9bb9` on
+draft !117. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4213293580)
+records the next bounded part of **slice 7, Histories**. The complete bundled
+FreeDOS/directory-workspace amendment remains preserved.
+
+The new native fence arms the next successful synchronous QEMU renderer
+publication, including its copied pixels, and requests the ordinary pause at
+the next safe CPU boundary. The fence binds its own token, the retained display
+window, native epoch and exact `baseline-update-id + 1`. An earlier debugger,
+hook or other stop wins. Active/unacknowledged fences exclude clock budgets and
+instrumented checkpoint export/import. Cancellation retains the actual
+publication/stop receipt and never retries execution.
+
+`timeline_start/advance/rewind/status/image/pin/stop` retain immutable full
+process checkpoint/PNG points in the existing persistent DAG. The root is an
+explicitly paused CPU/surface point. Every completed child binds one native
+renderer publication, full private QCOW2 state and stored PNG. Rewinding and
+creating a child retains the previous branch; named points restore after the
+original process and project close. Image retrieval reads stored bytes, and
+pinning copies a cached checkpoint without recapture. Unrecorded mutations
+invalidate the live edge. Full storage and released input are admitted; held
+frame keys, scheduled frame edges, partial-memory policies and delta retention
+remain open.
+
+Every execution/capture/restore has a prior immutable intent. Uncertain
+completion closes the owner with that intent retained. A known early stop
+ends the invocation without another continue or a fabricated frame point.
+Both observed and final fence receipts survive a coincident nonordinary stop,
+distinguishing a published image from a recorded safe history node. A frame
+fence completed during pending hook displacement also ends that invocation
+before another continue. PNG payload limits apply before artifact publication;
+restore checks stored image/version/hash and decoded pixels before native
+load, then compares the retained native publication and RGB bytes after load.
+
+The **unit is a completed synchronous renderer update**, not completed guest
+drawing, VBlank or physical scanout. `completed_guest_frames` remains false.
+Observation cadence is not a claimed VGA refresh rate. State and PNG payloads
+count against cumulative history limits, with the existing project-wide
+256 MiB artifact cap able to bind first; live QCOW2 growth remains separate.
+The full checkpoint still reports `host_files_restored=false`.
+
+An isolated N20 runtime adds the fence without changing N19. Its source patch
+and manifest are under `native/qemu-frame-history/`; binary SHA-256 is
+`411e868d941cf7cd138a39b931ac9886cd8156f79eb658174bfff44bc01800ed`.
+The first native run passed seven cases but exposed a display-checkpoint
+decoder that required precise-VGA configuration for standard-profile pixels.
+The native fix makes that requirement conditional on admitted precise retrace;
+precise snapshots retain the strict requirement. The mode-13h renderer-publication
+rewind/branch/cold-restore witness then passed with its pixel oracle intact.
+
+The focused integrated selection passed **133 tests**, including all **nine
+new actual QEMU cases** and the five retained native checkpoint-history cases.
+New witnesses cover mode-13h renderer pixels against stopped guest VGA memory,
+branch/image retention, offline PNG export, separate-process restore and the
+next real publication, early hook/breakpoint stops, input refusal, native
+clock/checkpoint-controller exclusion and idempotent cancellation, and
+task-private RAM/fetch layers with same-site hooks and genuine IRQ state.
+The retained DOSBox history/delta/timeline/trial selection passed **317 tests**,
+including eight actual frame-timeline and four native rewind cases, with zero
+failures, errors or skips. The final integrated preservation run passed
+**1,864 tests across 98 files**, with zero failures, errors or skips and
+unchanged Python source/witness hashes. It includes all 19 retained native
+scheduler, timer/IRQ, slave-PIC/cascade, nested-interrupt and checkpoint cases,
+the five retained native history cases, all nine new renderer-history cases,
+and the four late frame-completion regressions. A focused deadline selection
+passed **88 tests** after the wrapper was extended to close all four new
+mutating frame operations on late completion, retaining the actual result.
+Final payload/skill/migration checks passed **48 tests**. These selections
+overlap and are not additive. The external study retains
+`frames-preservation-complete`, `frames-dosbox-complete`,
+`frames-deadline-final` and `frames-metadata-final` log/JUnit receipts; !117
+records the exact final commit and both mirror readbacks.
+
+This advances slices **4, 5, 7 and 8** without qualifying a whole milestone.
+Frame/input parity, lossless delta retention, inverse CPU/RAM partial undo,
+comparative trials, planned directory/file-aware restore, all 127 formal
+surface qualifications and seven campaigns remain open. DOSBox-X remains
+default and retained pending local parity. No CI, merge, tag, release, shared
+installation or private runtime/state upload is part of this continuation.

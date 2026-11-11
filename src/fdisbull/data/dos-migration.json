@@ -368,6 +368,11 @@
         "tests/test_qemu_dos_history.py",
         "tests/test_qemu_dos_history_public.py",
         "tests/test_qemu_dos_history_native.py",
+        "tests/test_qemu_dos_frames.py",
+        "tests/test_qemu_dos_frames_public.py",
+        "tests/test_qemu_dos_frames_native.py",
+        "tests/test_qemu_frame_hook_fence.py",
+        "tests/test_qemu_frame_deadlines.py",
         "tests/test_cpu_deltas.py",
         "tests/test_cpu_deltas_native.py",
         "tests/test_debug_experiments.py",
@@ -380,6 +385,7 @@
       ],
       "scope_limits": [
         "The first QEMU DOS history increment stores bounded immutable full-process checkpoint DAGs with branch retention and cross-session restore; its private QCOW2 scope does not restore host files. Explicit capture marks a manually advanced interval unobserved. Local native Python/JSON/script and task-private IRQ/cold-restore witnesses passed; no formal route is qualified.",
+        "The renderer-history increment adds a token-bound native next-publication fence and full checkpoint/image DAGs. The unit is a completed synchronous renderer update followed by a safe CPU stop, not guest drawing completion or VBlank. The root is a paused surface point. Full storage and released input only; nine local native witnesses cover branching/cold restore, image output, early stops and task-private IRQ/layer/hook preservation; no formal route is qualified.",
         "History consumers depend on separately qualified checkpoint, trace, input and layer contracts. CPU/RAM projection undo is partial and must preserve the frozen-state guard; epochs and disk/file policy cannot be inferred."
       ]
     },
@@ -908,8 +914,8 @@
       "operation": "advance_frames",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.advance_frames",
       "qualification": "unqualified"
     },
     {
@@ -1340,8 +1346,8 @@
       "operation": "timeline_advance",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_advance",
       "qualification": "unqualified"
     },
     {
@@ -1349,8 +1355,8 @@
       "operation": "timeline_image",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_image",
       "qualification": "unqualified"
     },
     {
@@ -1358,8 +1364,8 @@
       "operation": "timeline_pin",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_pin",
       "qualification": "unqualified"
     },
     {
@@ -1367,8 +1373,8 @@
       "operation": "timeline_rewind",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_rewind",
       "qualification": "unqualified"
     },
     {
@@ -1376,8 +1382,8 @@
       "operation": "timeline_start",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_start",
       "qualification": "unqualified"
     },
     {
@@ -1385,8 +1391,8 @@
       "operation": "timeline_status",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_status",
       "qualification": "unqualified"
     },
     {
@@ -1394,8 +1400,8 @@
       "operation": "timeline_stop",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_stop",
       "qualification": "unqualified"
     },
     {

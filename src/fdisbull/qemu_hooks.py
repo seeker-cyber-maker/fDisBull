@@ -285,6 +285,13 @@ class QemuHookSessionMixin:
             for item in peers:
                 item['breakpoint_id'] = point['breakpoint_id']
             self._hook_reindex([*others, *peers])
+            # A renderer fence may complete while this displaced instruction
+            # single-steps. Preserve that actual stop even if GDB attributes a
+            # coincident trap to the step; another continue would lose the
+            # completed publication boundary.
+            frame_stop = getattr(self, '_frame_stop_after_step', None)
+            if frame_stop is not None and frame_stop():
+                return stepped
             return stepped if stepped['outcome'] != 'step' else None
         except BaseException:
             self.close()

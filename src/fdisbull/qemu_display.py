@@ -315,7 +315,7 @@ class QemuDisplayMixin:
             self.vm.close()
             raise
 
-    def capture_display(self, name='machine-display.png', *, after_update=None):
+    def capture_display(self, name='machine-display.png', *, after_update=None, max_bytes=None):
         """Save the retained publication; an optional ID requires a newer one.
 
         ``after_update`` is local to this observation window. Refusing a stale
@@ -325,6 +325,8 @@ class QemuDisplayMixin:
         from .debugger import _file_name
 
         _file_name(name)
+        if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 16 * 1024**2):
+            raise ValueError('Renderer PNG max_bytes must be an integer in 1..16777216')
         validate_after_update(after_update)
         clock = self._display_context()
         prior = self._display_read(clock)
@@ -365,6 +367,8 @@ class QemuDisplayMixin:
         finally:
             path.unlink(missing_ok=True)
         data = output.getvalue()
+        if max_bytes is not None and len(data) > max_bytes:
+            raise ValueError('Renderer PNG exceeds its image byte budget before artifact publication')
         metadata = self._display_receipt(native, clock)
         metadata.update(source='qemu_completed_renderer_update', stopped=True,
                         pixel_sha256=hashlib.sha256(pixels).hexdigest(),

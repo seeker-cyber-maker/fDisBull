@@ -131,13 +131,71 @@ This scope includes the private QCOW2 process checkpoint and its admitted
 native controls. It reports `host_files_restored=false` and does not implement
 the planned host-directory or file-layer rollback described above. It is not
 inverse CPU/RAM undo, deterministic replay or a completed-frame history.
-Frame histories, partial CPU/RAM delta recovery and comparative trials remain
-open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
+The separate bounded renderer frame history is described below; partial CPU/RAM
+delta recovery and comparative trials remain open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
 retained IRQ branches and separate-process restore with task-private RAM/fetch
 layers and hooks. See the dated handoff and !117 for the exact validation
 receipt. All 127 formal surface qualifications and seven campaigns remain open,
-with DOSBox retained
-as the default.
+with DOSBox retained as the default.
+
+## Native renderer frame histories
+
+The next Histories increment adds an optional native renderer-publication
+fence. It arms the next successful synchronous QEMU renderer update, retains
+all copied pixels, and requests a stop at the next safe CPU boundary. Its
+window token, native epoch and exact next update ID identify that publication.
+A clock interval, retrace edge or screendump alone is not counted as a frame.
+The unit is a **completed synchronous renderer publication**; guest drawing
+completion, VBlank, physical scanout and input consumption remain unknown.
+The capability continues to report `completed_guest_frames=false`.
+
+On a source-bound process with full checkpoints, the virtual clock and the
+new fence extension, `timeline_start`, `timeline_advance`, `timeline_rewind`,
+`timeline_status`, `timeline_image`, `timeline_pin` and `timeline_stop` use an
+immutable full-checkpoint/image DAG. The initial root is explicitly a paused
+CPU/surface point and is not counted as a completed renderer update. Every
+completed child carries its native publication and full private-disk state.
+Earlier branches and stored images remain available after a new child or a
+closed session. Image export reads the stored PNG without running or
+refreshing the guest; pinning copies the cached full checkpoint without
+recapturing it.
+
+```python
+root = debug.timeline_start(max_frames=8, period_ns=16_666_667)
+first = debug.timeline_advance(frames=1)
+first_point = first["point"]
+image = debug.timeline_image("first-frame.png")
+debug.timeline_advance(frames=1)
+debug.timeline_rewind(frames=1)
+branch = debug.timeline_advance(frames=1)  # earlier child stays retained
+stone = debug.timeline_pin("frame-anchor.qcow2")
+
+# A new stopped session for the same project, source and native runtime:
+restored = debug2.timeline_rewind(timeline=branch["timeline"], point=first_point)
+```
+
+This first frame increment supports full storage and released input only.
+Frame-key ownership, scheduled frame edges, partial-memory restore policies
+and lossless delta retention remain unqualified. Active task-private RAM/fetch
+layers and hooks are preserved by the underlying full checkpoint. An earlier
+hook, breakpoint, watchpoint or lifecycle stop ends the invocation without a
+fabricated frame or another continue; uncertain execution/capture stays
+journaled and is never silently retried. Known checkpoint/controller admission
+failures refuse before an intent or execution, preserving the live owner.
+
+The default 16-point limit includes the paused root and retained branches;
+`max_captures` can bind earlier and no point limit exceeds 128. `max_bytes`
+counts retained checkpoint and PNG payloads (default 512 MiB, maximum 1 GiB).
+Per-state and per-image bounds are independent, and the project-wide 256 MiB
+runtime-artifact cap can bind first. Live QCOW2 growth is measured separately.
+The display period is an observation cadence, not a refresh-rate assertion.
+The current checkpoint scope remains private QCOW2 and admitted controls,
+with `host_files_restored=false`; planned directory/file layers remain open.
+Nine direct native witnesses cover completed publication/PNG capture, retained
+branches, offline export, separate-process restore, early stops, controller
+guards and task-private IRQ/layer/hook preservation. The dated handoff and
+!117 record the exact final source and verification receipt. The formal
+migration gate remains open and DOSBox-X stays default and retained.
 
 ## Save and restore a restricted raw-machine checkpoint
 

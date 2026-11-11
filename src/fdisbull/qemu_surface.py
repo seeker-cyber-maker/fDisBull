@@ -11,7 +11,7 @@ from .dosbox_rpc import DebuggerError
 
 
 class QemuSurfaceMixin:
-    def capture_surface(self, name='machine-surface.png'):
+    def capture_surface(self, name='machine-surface.png', *, max_bytes=None):
         """Retain one PNG and its stopped clock/CPU bracket.
 
         A QMP screendump refreshes a display surface. The capture identity is an
@@ -22,6 +22,8 @@ class QemuSurfaceMixin:
         from .debugger import _file_name
 
         _file_name(name)
+        if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 16 * 1024**2):
+            raise ValueError('Surface PNG max_bytes must be an integer in 1..16777216')
         if self.project is None:
             raise ValueError('Display capture requires a project-bound machine')
         if self.project.db.in_transaction:
@@ -56,6 +58,8 @@ class QemuSurfaceMixin:
             self.vm.close()
             raise DebuggerError('Observed machine clock changed across the stopped display capture')
         data = output.getvalue()
+        if max_bytes is not None and len(data) > max_bytes:
+            raise ValueError('Surface PNG exceeds its image byte budget before artifact publication')
         metadata = dict(
             context='machine', source='qemu_display_surface',
             capture='QEMU stored display surface', capture_id=capture_id,

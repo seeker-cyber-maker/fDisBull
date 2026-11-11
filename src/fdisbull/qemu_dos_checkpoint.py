@@ -68,6 +68,8 @@ def _preflight(session):
     if COMMAND not in session.vm.qmp_commands:
         raise ValueError('Mid-program checkpoints require the native DOS checkpoint extension')
     session._stopped()
+    if getattr(session.vm, '_active_frame_fence', None) is not None:
+        raise ValueError('Resolve the native renderer-frame fence before checkpointing')
     require_released_machine_input(session.vm)
     preflight(session)
 

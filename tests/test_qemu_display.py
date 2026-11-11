@@ -72,6 +72,16 @@ def test_start_and_passive_capture_never_refresh_or_run_the_guest(display):
     assert all(command not in ('cont', 'screendump', 'human-monitor-command') for command, _ in o.wire.calls)
 
 
+def test_renderer_image_budget_refuses_before_artifact_publication(display):
+    o = display
+    o.session.display_start()
+    o.wire.publish()
+    with pytest.raises(ValueError, match='image byte budget'):
+        o.session.capture_display(max_bytes=1)
+    assert o.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0] == 0
+    assert not o.vm.closed and not list(o.directory.glob('display-*.ppm'))
+
+
 @pytest.mark.parametrize('mutation', [
     {'api-version': True}, {'epoch': 2}, {'virtual-ns': 1001}, {'updates': True},
     {'state': 'invalidated'}, {'period-ns': 0}, {'token': 'another-window'},
