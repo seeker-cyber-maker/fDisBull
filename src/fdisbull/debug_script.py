@@ -202,12 +202,26 @@ def validate_script(script, *, session=None):
                         if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
                             raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
+                        if (op.startswith('rewind') and (backend or actual)=='qemu-dos'
+                                and session is not None):
+                            if not getattr(session,'capabilities',{}).get('rewind'):
+                                raise ValueError('Native history scripts require enabled full process checkpoints')
+                            if session.project.db.in_transaction:
+                                raise ValueError('Native history scripts require a project outside a caller-owned transaction')
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
                         if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
+                        if op=='rewind-start' and (backend or actual)=='qemu-dos':
+                            limits['max_bytes']=(1,1024**3)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
+                        if (backend or actual)=='qemu-dos' and op=='rewind-record':
+                            advance=params.get('advance','step')
+                            if not (isinstance(advance,str) and advance.startswith('$')) and advance not in ('step','capture'):
+                                raise ValueError('Native rewind advance must be step or capture')
+                            if advance=='capture' and type(params.get('count',1)) is int and params.get('count',1)!=1:
+                                raise ValueError('Explicit checkpoint capture records one stopped boundary')
                     if op=='delta-start':
                         from .debug_cpu_deltas import validate_ranges
                         validate_ranges(params['ranges'],allow_references=True)

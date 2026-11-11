@@ -3440,3 +3440,64 @@ vendor compatibility and formal migration qualification remain open: 127
 surface rows and seven campaigns. DOSBox remains default and retained. No CI,
 merge, release, shared installation or private runtime/state upload was part
 of this continuation.
+
+
+## Local continuation 2026-11-11: first native checkpoint histories
+
+The first bounded part of **slice 7, Histories**, is implemented; the slice
+remains in progress. This continuation follows the FreeDOS/file-workspace plan
+amendment at `b2b7483af10675989846942da5e26f3a3482d732` and
+adds persistent immutable full-process checkpoint DAGs for an owned native DOS
+session. `rewind_start`, `rewind_record`, `rewind` and `rewind_status` expose
+bounded nodes, retained branches and explicit manifest/node selection across
+sessions. An ordinary record performs a stopped single step; explicit
+`advance='capture'` records a manually advanced stopped boundary, including an
+admitted active hook/IRQ boundary, while leaving the interval unobserved.
+Branching retains earlier nodes and counts their checkpoint payloads against the
+cumulative history budget. The native checkpoint remains scoped to private
+QCOW2 and admitted controls and reports `host_files_restored=false`.
+
+Before any step, capture or restore, an immutable pending revision records the
+intent. Uncertain completion closes the owner and leaves that journal unresolved
+instead of replaying it. Manifest updates use an atomic latest-parent check.
+Unrecorded mutations invalidate the live edge; explicit capture can attach the
+new stopped state without describing the intervening instructions. A process
+nonce still fences each live owner, while compatibility neutralizes only the
+authored loader nonce field so a fresh process can restore a matching node.
+Existing checkpoint admission runs before an intent or forward step: held or
+queued input, a bound input schedule and active clock controllers refuse while
+preserving their live owner. Failure after possible execution or capture keeps
+the pending journal and closes the owner.
+
+Fresh local validation includes **79 focused host/public/deadline/hook passes**
+and **five actual QEMU Histories witnesses**: ordinary step/rewind through
+Python, JSON and scripts; an IRQ/task-private capture, retained branch and
+separate-process restore; and queued-input admission refusal with an unchanged
+guest and history.
+The IRQ/task-private witness compares CPU/PC, clock, pending IRQ frames and PIC state, hook counts,
+private RAM and fetch bytes for both tasks, and untouched shared base bytes.
+The host suite includes 41 actual-project/fake-native cases for immutable DAGs,
+project reopen, changed identity, budgets, corruption, unresolved intents,
+partial batches, stale epochs, closed owners and replacement-channel cleanup.
+The first native runs exposed and then verified fixes for replaced-channel
+deadline cleanup and the nonce-dependent compatibility key. The input/controller
+refusal regressions also caught and verified the pre-intent admission order.
+The integrated preservation selection passed **1,724 tests across 87 files**,
+with zero failures, errors or skips and unchanged source/witness hashes. It
+includes the five new native history cases and all 19 retained native scheduler,
+timer/IRQ, slave-PIC/cascade, nested-interrupt and checkpoint preservation cases.
+The retained DOSBox histories/deltas/timelines/trials selection passed **229
+tests**, including four actual native rewind cases. The final payload, skill
+and migration metadata selection passed **48 tests**. These selections overlap
+and are not additive. The local evidence is retained in the external study's
+`histories-preservation-final`, `histories-host-final`,
+`histories-admission-native`, `histories-dosbox-final` and
+`histories-metadata-final` log/JUnit receipts. The exact final commit and mirror
+readback are logged in !117.
+
+Frame history, inverse
+CPU/RAM partial undo, comparative trials and the separately planned bundled
+FreeDOS/directory-layer and file-aware restore work remain open. The four public
+rewind operations remain partial and unqualified, all 127 formal surface
+qualifications and seven campaigns stay open, and DOSBox remains the retained
+default. No CI result is implied.

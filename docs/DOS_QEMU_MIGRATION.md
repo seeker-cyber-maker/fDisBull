@@ -88,6 +88,57 @@ scope below; this plan does not retroactively give them host-file rollback or
 new directory-sharing support. The linked plan records runtime packaging,
 memory buffering/durable storage, branching and required native acceptance.
 
+## Native DOS checkpoint histories
+
+The first Histories slice is in progress. On a source-bound QEMU DOS process,
+`rewind_start`, `rewind_record`, `rewind` and `rewind_status` provide a bounded
+persistent DAG of immutable full-process checkpoints. A recorded child after
+rewind preserves earlier branches; an explicit manifest and node can select a
+checkpoint in a new session. The default record advances one stopped step;
+`advance='capture'` records a manually advanced stopped boundary, including an
+admitted active hook or IRQ boundary, without claiming observation of the
+interval between nodes. Restore is governed by the native process checkpoint's
+identity, input and compatibility preflight.
+
+For an already stopped `debug` session with the admitted QEMU DOS checkpoint
+profile, a branch and later cross-session restore can be selected explicitly:
+
+```python
+root = debug.rewind_start()                 # captures the root checkpoint
+first = debug.rewind_record()               # one stopped step and checkpoint
+old_node = first["node"]
+debug.rewind(count=1)                       # restore the root
+branch = debug.rewind_record()              # new child; old_node is retained
+status = debug.rewind_status()              # history artifact and node IDs
+
+# At a separately reached, admitted stopped boundary:
+manual = debug.rewind_record(count=1, advance="capture")
+history = manual["history_artifact"]
+
+# In a new stopped session `debug2` for the same project, source and runtime:
+restored = debug2.rewind(history=history, node=old_node)
+```
+
+The default `max_steps=16` counts all captured nodes including the root and
+retained branches, with a maximum of 128. `max_bytes` bounds cumulative
+checkpoint payloads (default 512 MiB, maximum 1 GiB); each state has a 128 MiB
+limit. The existing project-wide aggregate runtime-artifact limit of 256 MiB
+can bind earlier. Live QCOW2 growth is measured separately and is not a quota.
+The manual capture's intervening execution is unobserved; it is not an
+instruction trace or replay guarantee.
+
+This scope includes the private QCOW2 process checkpoint and its admitted
+native controls. It reports `host_files_restored=false` and does not implement
+the planned host-directory or file-layer rollback described above. It is not
+inverse CPU/RAM undo, deterministic replay or a completed-frame history.
+Frame histories, partial CPU/RAM delta recovery and comparative trials remain
+open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
+retained IRQ branches and separate-process restore with task-private RAM/fetch
+layers and hooks. See the dated handoff and !117 for the exact validation
+receipt. All 127 formal surface qualifications and seven campaigns remain open,
+with DOSBox retained
+as the default.
+
 ## Save and restore a restricted raw-machine checkpoint
 
 For an original raw boot-disk project, explicitly select a `qemu-img` executable

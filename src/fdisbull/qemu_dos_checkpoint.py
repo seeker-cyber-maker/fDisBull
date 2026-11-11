@@ -344,6 +344,8 @@ def load_process_state(session, artifact, timeout_ms):
         remaining()
         if session.vm is not owner:
             raise ValueError('Machine owner changed before process restore')
+        from .qemu_machine import _machine_operation_guard
+        _machine_operation_guard(owner, 'load_state', (artifact,), {'timeout_ms': timeout_ms})
         _preflight(session)
         _serial_idle(session)
         row = session.project.db.execute(
@@ -444,6 +446,9 @@ def load_process_state(session, artifact, timeout_ms):
             session.vm = session.rpc = new
             new.context = session
             new.close_observer = session._on_machine_closed
+            bind_history = getattr(session, '_history_bind', None)
+            if bind_history is not None:
+                bind_history()
             session._channel = channel
             session._serial_buffer = bytearray()
             (session._nonce, session._ready_bytes, session._tail, session._vectors_before,

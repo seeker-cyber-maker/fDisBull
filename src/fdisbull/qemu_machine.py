@@ -283,6 +283,16 @@ class QemuMachine:
                 except Exception as error:self.close_observer_error=type(error).__name__
 
 
+def _machine_operation_guard(vm, name, args=(), kwargs=None):
+    """Keep legacy guards and parameter-aware history fences independent."""
+    guard = getattr(vm, 'operation_guard', None)
+    if guard is not None:
+        guard(name)
+    history = getattr(vm, 'history_operation_guard', None)
+    if history is not None:
+        history(name, args, kwargs or {})
+
+
 def machine_operation(function,*,script_budget=False):
     @wraps(function)
     def invoke(self,*args,**kwargs):
@@ -291,8 +301,7 @@ def machine_operation(function,*,script_budget=False):
         if wait<=0:raise TimeoutError('Native machine I/O script deadline expired before admission')
         if not self.vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
         try:
-            guard=getattr(self.vm,'operation_guard',None)
-            if guard is not None:guard(function.__name__)
+            _machine_operation_guard(self.vm, function.__name__, args, kwargs)
             return function(self,*args,**kwargs)
         except BaseException:
             gdb_failed=self.vm.gdb is not None and self.vm.gdb.socket is None
@@ -366,8 +375,7 @@ def machine_clock_operation(function):
         previous_vm=getattr(vm,'operation_deadline',None)
         previous_channels=[]
         try:
-            guard=getattr(vm,'operation_guard',None)
-            if guard is not None:guard(function.__name__)
+            _machine_operation_guard(vm, function.__name__, (delta_ns,), {'timeout_ms': timeout_ms})
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
                     previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
@@ -422,8 +430,8 @@ def machine_run_operation(function):
         previous_channels=[]
         installed=False
         try:
-            guard=getattr(vm,'operation_guard',None)
-            if guard is not None:guard(function.__name__)
+            _machine_operation_guard(vm, function.__name__, (),
+                                     {'timeout_ms': timeout_ms, 'stop_on_hook': stop_on_hook})
             # Read ownership under the lock: another caller may have armed a
             # schedule while this request waited for admission.
             if not self._input_schedule_bound() and not getattr(self, '_qemu_hooks', None):
@@ -494,8 +502,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         previous_channels=[]
         installed=False
         try:
-            guard=getattr(vm,'operation_guard',None)
-            if guard is not None:guard(function.__name__)
+            _machine_operation_guard(vm, function.__name__, args, kwargs)
             bound=min(value for value in limits() if value is not None)
             if time.monotonic()>=bound:
                 raise TimeoutError(label+' host deadline expired before dispatch')

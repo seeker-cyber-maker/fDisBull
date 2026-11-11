@@ -104,6 +104,44 @@ preservation cases. The retained actual DOSBox witness passed once. These
 results do not qualify generic
 `guest_ms`, cycle or real-time scheduling, or promote the formal gates.
 
+## Checkpoint histories
+
+The first native DOS Histories slice is in progress: `rewind_start`,
+`rewind_record`, `rewind` and `rewind_status` use bounded, immutable full
+process checkpoints in a persistent branch DAG. The default record steps once;
+`advance='capture'` records a manually reached stopped boundary, with the
+intervening execution unobserved. A stored manifest and node can select a
+cross-session restore. For a stopped admitted `debug` session:
+
+```python
+root = debug.rewind_start()
+first = debug.rewind_record()                 # one stopped step
+old_node = first["node"]
+debug.rewind(count=1)
+branch = debug.rewind_record()                # old child remains retained
+status = debug.rewind_status()                # history artifact and node IDs
+manual = debug.rewind_record(count=1, advance="capture")  # stopped boundary
+history = manual["history_artifact"]
+# In a new stopped session for the same project, source and runtime:
+restored = debug2.rewind(history=history, node=old_node)
+```
+
+`max_steps` counts all nodes including the root and retained branches (default
+16, maximum 128). `max_bytes` counts cumulative checkpoint payloads (default
+512 MiB, maximum 1 GiB), with 128 MiB per state. The project-wide 256 MiB
+aggregate runtime-artifact cap can bind first. Live QCOW2 growth is measured
+separately, not capped by this budget. A manual capture does not observe the
+intervening execution.
+
+The admitted checkpoint covers private QCOW2 and native controls, with
+`host_files_restored=false`; planned host-directory/file-layer restoration is
+separate. Frame histories, inverse CPU/RAM partial undo and
+comparative trials remain open. Local native witnesses cover ordinary
+Python/JSON/script step and rewind, retained IRQ branches and separate-process
+restore with task-private RAM/fetch layers and hooks; the dated handoff and
+!117 record the exact validation receipt. The four
+routes are partial and unqualified; DOSBox remains the default.
+
 ## Check an installation without a game
 
 ```sh

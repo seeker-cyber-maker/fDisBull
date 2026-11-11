@@ -28,6 +28,7 @@ from .qemu_dos_tasks import QemuDOSTaskMixin
 from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
 from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COMMANDS
 from .qemu_dos_preemption import COMMAND as PREEMPTION_COMMAND
+from .qemu_dos_history import QemuDOSHistoryMixin
 
 
 def _sha(data):
@@ -154,7 +155,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -314,6 +315,8 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
                 native_cpu_scheduler=SCHEDULER_COMMANDS <= vm.qmp_commands,
                 native_irq_preemption=PREEMPTION_COMMAND in vm.qmp_commands,
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
+            self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
+            self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
@@ -330,6 +333,7 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
             project._live_debuggers.append(self)
             self._launching = False
             self._checkpoint_entry_clean = True
+            self._history_bind()
             self._set_deadline(None)
         except BaseException:
             try:
@@ -678,6 +682,8 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
         try:
             if self.vm is not owner:
                 raise ValueError('Machine owner changed before process checkpoint restore')
+            from .qemu_machine import _machine_operation_guard
+            _machine_operation_guard(owner, 'load_state', (artifact,), {'timeout_ms': timeout_ms})
             self._process_checkpoint_preflight(entry=False)
             row = self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?', (artifact,)).fetchone()
             if row is None or row['kind'] != 'state' or row['version'] != self.version['id'] or row['run'] != self.run_id:
@@ -709,6 +715,7 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
                 owner.close_observer = None
                 owner.close()
                 self.vm = self.rpc = new; new.context = self; new.close_observer = self._on_machine_closed
+                self._history_bind()
                 self._channel = new.serial(deadline); self._serial_buffer = bytearray()
                 self.breakpoints = {}; self.next_bp = 1
                 self._reset_native_layers()
@@ -809,7 +816,7 @@ class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOS
 
     @property
     def script_operations(self):
-        return super().script_operations | {'trace-until'}
+        return super().script_operations | {'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind'}
 
     def close(self):
         if self.closed:

@@ -363,8 +363,11 @@
         "trace-events"
       ],
       "gate": "Unrecorded-mutation invalidation, partial-state freeze/recovery, file identity, bounded storage, full-frame/key restore, dependency-aware history and incomplete-trial refusal.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
+        "tests/test_qemu_dos_history.py",
+        "tests/test_qemu_dos_history_public.py",
+        "tests/test_qemu_dos_history_native.py",
         "tests/test_cpu_deltas.py",
         "tests/test_cpu_deltas_native.py",
         "tests/test_debug_experiments.py",
@@ -376,6 +379,7 @@
         "tests/test_rewind_native.py"
       ],
       "scope_limits": [
+        "The first QEMU DOS history increment stores bounded immutable full-process checkpoint DAGs with branch retention and cross-session restore; its private QCOW2 scope does not restore host files. Explicit capture marks a manually advanced interval unobserved. Local native Python/JSON/script and task-private IRQ/cold-restore witnesses passed; no formal route is qualified.",
         "History consumers depend on separately qualified checkpoint, trace, input and layer contracts. CPU/RAM projection undo is partial and must preserve the frozen-state guard; epochs and disk/file policy cannot be inferred."
       ]
     },
@@ -1129,8 +1133,8 @@
       "operation": "rewind",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind",
       "qualification": "unqualified"
     },
     {
@@ -1138,8 +1142,8 @@
       "operation": "rewind_record",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_record",
       "qualification": "unqualified"
     },
     {
@@ -1147,8 +1151,8 @@
       "operation": "rewind_start",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_start",
       "qualification": "unqualified"
     },
     {
@@ -1156,8 +1160,8 @@
       "operation": "rewind_status",
       "slice": "histories",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_status",
       "qualification": "unqualified"
     },
     {
