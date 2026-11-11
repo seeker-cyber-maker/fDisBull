@@ -50,7 +50,8 @@ def test_native_process_entry_checkpoint_rebind_and_exit(tmp_path, case):
             before = debug.dos_process_info()
             assert before['state'] == 'active'
             saved = debug.save_state()
-            assert saved['metadata']['format'] == 'fdisbull-qemu-dos-entry-qcow2-v1'
+            assert saved['metadata']['format'] in (
+                'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2')
             assert project.debug_state_info(saved['artifact'])['sha256'] == saved['sha256']
             original = debug.run(timeout_ms=5000)
             assert original['outcome'] == expected
@@ -80,6 +81,13 @@ def test_native_process_checkpoint_refuses_after_entry_execution(tmp_path):
                 qemu_firmware=runtime['FDISBULL_QEMU_DOS_FIRMWARE'],
                 qemu_checkpoint_tool=runtime['FDISBULL_QEMU_IMG'], boot_timeout_ms=30000) as debug:
             debug.step(timeout_ms=5000)
-            with pytest.raises(ValueError, match='original verified entry'):
-                debug.save_state()
+            if 'x-fdisbull-dos-checkpoint-status' in debug.vm.qmp_commands:
+                saved = debug.save_state()
+                assert saved['metadata']['format'] == 'fdisbull-qemu-dos-process-qcow2-v2'
+                pc = debug.registers()['linear_pc']
+                debug.load_state(saved['artifact'])
+                assert debug.registers()['linear_pc'] == pc
+            else:
+                with pytest.raises(ValueError, match='original verified entry'):
+                    debug.save_state()
             assert debug.status()['state'] == 'stopped'

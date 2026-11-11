@@ -264,6 +264,16 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
+        if metadata.get('format') == 'fdisbull-qemu-dos-process-qcow2-v2':
+            from .qemu_dos_checkpoint import _json, _sha, _unarchive
+            machine, bundle = _unarchive(data)
+            if metadata.get('sidecar_sha256') != _sha(_json(bundle)):
+                raise ValueError('Process checkpoint sidecar identity differs')
+            return dict(artifact=artifact, version=row['version'], sha256=row['sha256'], size=len(data),
+                        metadata=metadata,
+                        components=[dict(name='machine.qcow2', size=len(machine)),
+                                    dict(name='process.json', size=len(_json(bundle)))],
+                        scope='stopped DOS process, private disk, layers and debugger controls')
         qemu_raw = metadata.get('format') == 'fdisbull-qemu-raw-qcow2-v1'
         qemu_dos_entry = metadata.get('format') == 'fdisbull-qemu-dos-entry-qcow2-v1'
         if qemu_raw or qemu_dos_entry:
@@ -283,7 +293,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
-        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1'):
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2'):
             raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers

@@ -17,8 +17,10 @@ RAM transitions validate all expected bytes before writing. Fetch overlays
 change the bytes translated by TCG while ordinary RAM reads use the underlying
 bytes. `debug.code(..., view='execute')` checks the native fetch view against
 the active stack. Captures use the `qemu-code-snapshot` artifact kind. Static
-promotion still requires a qualified source provenance path. Native checkpoints
-require the active stack to be cleared. A layered COM/MZ program that exits or
+promotion still requires a qualified source provenance path. The
+[native DOS checkpoint extension](DOS_QEMU_MIGRATION.md#save-a-dos-process-and-restore-in-another-session)
+preserves active layers and hooks across a new session in the same project.
+A layered COM/MZ program that exits or
 becomes resident closes its owned machine because DOS can release or reuse
 the underlying allocation.
 

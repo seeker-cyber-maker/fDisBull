@@ -613,6 +613,12 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
 
     @machine_operation
     def save_state(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
+        from .qemu_dos_checkpoint import COMMAND, save_process_state
+        if COMMAND in self.vm.qmp_commands:
+            return save_process_state(self, name, max_bytes)
+        return self._save_entry_state_v1(name, max_bytes=max_bytes)
+
+    def _save_entry_state_v1(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
         from .external_files import _file_name
         from .qemu_checkpoint import snapshot_job, validate_qcow_header
         _file_name(name)
@@ -642,6 +648,13 @@ class QemuDOSProcessSession(QemuDOSSourceTraceMixin, MachineDebugSession):
             raise
 
     def load_state(self, artifact, *, timeout_ms=60000):
+        from .qemu_dos_checkpoint import FORMAT, load_process_state
+        row = self.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()
+        if row is not None and json.loads(row['metadata']).get('format') == FORMAT:
+            return load_process_state(self, artifact, timeout_ms)
+        return self._load_entry_state_v1(artifact, timeout_ms=timeout_ms)
+
+    def _load_entry_state_v1(self, artifact, *, timeout_ms=60000):
         from .operation_budget import request_deadline
         from .qemu_checkpoint import snapshot_job
         deadline = request_deadline(self, timeout_ms)

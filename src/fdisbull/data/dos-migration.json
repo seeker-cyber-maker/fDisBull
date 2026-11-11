@@ -257,11 +257,13 @@
         "tests/test_protected_runtime_native.py",
         "tests/test_qemu_checkpoint.py",
         "tests/test_qemu_checkpoint_native.py",
-        "tests/test_qemu_dos_checkpoint_native.py"
+        "tests/test_qemu_dos_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_sessions_native.py",
+        "tests/test_qemu_checkpoint_host_restart_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
-        "Standard raw machines and same-session verified COM/MZ entry can cold restore from one private QCOW2 disk. Mid-program save, cross-session process restore, instrumented profiles, host files, active layers, state forks and histories remain unqualified."
+        "Standard raw machines and stopped unpaged real-mode COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Instrumented profiles, host files, state forks and histories remain unqualified."
       ]
     },
     {
@@ -287,7 +289,7 @@
       ],
       "scope_limits": [
         "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch. Source definitions require the verified unpaged real-mode DOS module.",
-        "Instruction bytes are selected during TCG translation. Protected-mode source bindings, mixed-device memory, runtime code promotion, screenshot hooks and active layer checkpoint restoration remain open."
+        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter. Protected-mode source bindings, mixed-device memory, runtime code promotion and screenshot hooks remain open."
       ]
     },
     {
@@ -596,7 +598,7 @@
       "slice": "checkpoints",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.load_state (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {
@@ -604,7 +606,7 @@
       "slice": "checkpoints",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.save_state (explicit standard raw-machine QCOW2 profile only)",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {
@@ -960,7 +962,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {
@@ -969,7 +971,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {
@@ -1122,7 +1124,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {
@@ -1140,7 +1142,7 @@
       "slice": "checkpoints",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "Native QEMU standard raw-machine or same-session verified COM/MZ entry QCOW2 path",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding",
       "qualification": "unqualified"
     },
     {

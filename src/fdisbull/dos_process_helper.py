@@ -154,6 +154,21 @@ _LOADER_TEMPLATE = bytes.fromhex(
 )
 
 
+def loader_code_ranges():
+    """File spans for the immutable jump and contiguous helper instructions.
+
+    The authored source jumps past its mutable report/EXEC data to start.
+    Its only trailing mutable storage consists of two 512-byte stacks.
+    """
+    if _LOADER_TEMPLATE[:1] != b"\xe9":
+        raise ValueError("The DOS helper entry must be its authored near jump")
+    start = 3 + struct.unpack_from("<h", _LOADER_TEMPLATE, 1)[0]
+    end = len(_LOADER_TEMPLATE) - 1024
+    if not _TAIL_FILE_OFFSET + _TAIL_BUFFER_SIZE <= start < end:
+        raise ValueError("The DOS helper code and stack extents are inconsistent")
+    return ((0, 3), (start, end))
+
+
 def _nonce(value: bytes) -> bytes:
     if not isinstance(value, bytes) or len(value) != 16:
         raise ValueError("The DOS process helper requires a 16-byte nonce")

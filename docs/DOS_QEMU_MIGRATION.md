@@ -35,8 +35,8 @@ Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. See [native timing synchronization](DOS_QEMU_TIMING.md) for the
 mapping, stop policy and exact limits.
 
-The standard profile supports restricted raw-machine checkpoints and an
-entry checkpoint for an original COM/MZ program. The optional native layers
+The standard profile supports restricted raw-machine checkpoints and
+process checkpoints for original COM/MZ programs. The optional native layers
 extension supplies guarded RAM and instruction-fetch views. The default-switch
 gate still requires qualification of the outstanding surfaces and compatibility
 campaigns.
@@ -76,20 +76,41 @@ clock/input/media extension state. Saved-script state operations and state
 forks are not admitted for this profile. It is not general DOSBox state or
 Anchor Stone parity.
 
-## Checkpoint the verified entry of a COM/MZ program
+## Save a DOS process and restore in another session
 
-Use `qemu_checkpoint_tool` with `backend='qemu-dos'`, a private DOS boot
-image and the standard profile above. Save before executing the first
-instruction of the selected COM or MZ. The helper channel must be drained,
-input released and layers, hooks and user breakpoints removed. The debugger
-keeps the private snapshot and recorded source identity with the owned run.
+Select `qemu_checkpoint_tool` with `backend='qemu-dos'`, a private DOS boot
+image, pinned firmware and the standard profiles. The native
+[DOS checkpoint extension](../native/qemu-dos-checkpoint/README.md) admits a
+stopped, unpaged real-mode COM/MZ process during execution. It verifies the
+original source and relocation mapping, child and helper allocation ownership,
+the helper report, and an idle COM2 UART with an empty host control channel.
+Release pending or held physical input before saving.
 
-The same live session can restore its entry artifact after running the program
-to ordinary exit or TSR. Restore starts a new QEMU process, reopens the helper
-channel, verifies the original PSP, allocation, relocated bytes and entry
-registers, and installs a fresh DOS parent-return breakpoint. Live memory
-identities change with the new epoch. Mid-program saves, restore into an
-unrelated session, and active clock, media or layer state remain open.
+`debug-save-state` stores the private disk and VM snapshot together with a
+hash-bound process and control record. Active RAM and instruction-fetch layers,
+hook actions and hit counts, pending hook step-over, and user breakpoints are
+included. The current RAM observation is preserved even when the guest has
+changed an active RAM layer.
+
+A later `debug-load-state` in the same project can restore the artifact after
+the original session and Python process have closed. Launch a compatible DOS
+session from the original source and boot inputs, then load the retained
+artifact ID. Restore starts a fresh QEMU, checks the saved CPU, module RAM,
+helper, PSP and allocations, reopens the helper channel, and recreates its
+parent-return trap and debugger controls. Snapshot data carries the former
+private disk and helper identity, so the previous staging directory is
+unnecessary.
+
+RAM layers use the restored guest RAM. Fetch overlays are rearmed against that
+backing before execution resumes. Native breakpoints and physical layer
+definitions receive fresh IDs where needed. The result's `controls` field
+maps prior IDs to current IDs. Logical hook tokens and their hit counts are
+preserved. The new runtime epoch invalidates previous memory edit plans and
+other live bindings.
+
+Existing entry-only QCOW2 artifacts retain their same-session loading route.
+Instrumented clock, audio and retrace profiles still require their own
+migration support. Checkpoints remain private byte-retaining artifacts.
 
 ## Prepare and check the core
 

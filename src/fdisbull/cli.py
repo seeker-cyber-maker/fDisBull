@@ -2088,7 +2088,7 @@ def parser():
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
     c.add_argument("--qemu-checkpoint-tool",
-                   help="Explicit qemu-img executable for raw-machine or verified DOS entry checkpoints")
+                   help="Explicit qemu-img executable for native machine and DOS process checkpoints")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")
