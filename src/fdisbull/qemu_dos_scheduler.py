@@ -68,12 +68,15 @@ def _validate_native_status(raw):
                 or any(type(item.get(name)) is not bool for name in
                     ('runnable','blocked','retired','context-valid'))
                 or any(not _digest(item.get(name)) for name in
-                    ('context-sha256','frame-sha256','execution-sha256'))
+                    ('frame-sha256','execution-sha256'))
                 or any(not _uint(item.get(name)) for name in ('eip','esp','eflags','execution-bytes'))
                 or type(item.get('interrupt-depth')) is not int or not 0 <= item['interrupt-depth'] <= 16
-                or item.get('mode') not in ('real','protected','v86')
+                or (item['context-valid'] and (not _digest(item.get('context-sha256'))
+                    or item.get('mode') not in ('real','protected','v86')))
+                or (not item['context-valid'] and (item.get('context-sha256') != ''
+                    or item.get('mode') != 'unknown' or not item['retired']))
                 or not isinstance(item.get('pages'),list) or len(item['pages']) > 16
-                or item['retired'] and (item['runnable'] or item['context-valid'])):
+                or item['retired'] and (item['runnable'] or item['context-valid'] or item['interrupt-depth'])):
             raise DebuggerError('Invalid native CPU slot receipt')
         seen.add(key); slots.add(item['slot'])
     return raw

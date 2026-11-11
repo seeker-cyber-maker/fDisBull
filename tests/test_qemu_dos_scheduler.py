@@ -166,6 +166,49 @@ def _checkpoint(s):
     return dict(format=FORMAT,metadata=metadata,native=native,contexts={binding['task_id']:cpu})
 
 
+def test_retired_native_slot_without_context_survives_checkpoint(monkeypatch):
+    import fdisbull.qemu_dos_scheduler as scheduler
+    session = _Session(); saved = _checkpoint(session); child = session.child
+    admission = deepcopy(saved['metadata']['slots'][session.binding['task_id']])
+    admission.update(binding=deepcopy(child), parent=session.binding['task_id'])
+    session._dos_scheduler = deepcopy(saved['metadata'])
+    session._dos_scheduler['slots'][child['task_id']] = admission
+    session._dos_task_views[child['task_id']]['retired'] = True
+    retired = _slot(child)
+    retired.update(slot=1, runnable=False, blocked=False, retired=True,
+                   mode='unknown', eip=0, esp=0, eflags=0,
+                   **{'context-valid': False, 'context-sha256': '', 'interrupt-depth': 0})
+    session.vm.qmp.status['tasks'].append(retired)
+    monkeypatch.setattr(scheduler, '_observe', lambda *_: {
+        'selected-uuid': session.binding['monitor_uuid'],
+        'selected-cookie': session.binding['cookie'],
+        'selected-incarnation': session.binding['incarnation']})
+    captured = capture_scheduler(session)
+    assert set(captured['contexts']) == {session.binding['task_id']}
+    assert captured['native']['tasks'][1]['context-sha256'] == ''
+    validate_scheduler(session, captured, session.binding['process_nonce'],
+        {'views': [{'binding': deepcopy(session.binding)}, {'binding': deepcopy(child)}]}, session._process)
+
+
+def test_live_native_slot_requires_context_digest():
+    session = _Session()
+    session.vm.qmp.status['tasks'][0]['context-sha256'] = ''
+    with pytest.raises(DebuggerError, match='CPU slot'):
+        _native_status(session.vm)
+
+
+@pytest.mark.parametrize('field,value', [('runnable',True), ('context-valid',True), ('interrupt-depth',1)])
+def test_retired_native_slot_rejects_live_cpu_state(field, value):
+    session = _Session(); retired = _slot(session.child)
+    retired.update(slot=1, runnable=False, blocked=False, retired=True,
+                   mode='unknown', eip=0, esp=0, eflags=0,
+                   **{'context-valid': False, 'context-sha256': '', 'interrupt-depth': 0})
+    retired[field] = value
+    session.vm.qmp.status['tasks'].append(retired)
+    with pytest.raises(DebuggerError, match='CPU slot'):
+        _native_status(session.vm)
+
+
 @pytest.mark.parametrize('bad', ['nonce','source','allocation','slot-key','context','frame'])
 def test_scheduler_checkpoint_rejects_identity_and_context_mismatch(bad):
     s=_Session(); saved=_checkpoint(s); binding=s.binding
