@@ -9,19 +9,28 @@ local lock. This is a Git service, not a scheduled model or Codex automation.
 
 The worker synchronizes eligible refs only when the destination can advance
 without losing history. It holds divergent refs, deletions and other conflicts
-for explicit review. It does not update a checked-out worktree, force-push,
+for explicit review. It does not update a checked-out worktree, replace history,
 resolve a conflict, or trigger CI; GitLab updates use the configured CI-skip
 option. The first setup establishes a baseline, so pre-existing unequal or
 missing refs are not implicitly interpreted as a new deletion. The service can
 catch up after an offline period on a later scheduled run; the one-minute
 schedule is not a delivery guarantee.
 
-Before creating an absent destination ref, the worker durably records creation
-intent. A lost reply or interruption cannot become a blind recreation: an
-absent or conflicting outcome is held for explicit review. A branch-specific
+Each push uses an exact expected-destination lease, including an empty expected
+value for a new ref. The ancestry check still requires an existing branch to
+advance without losing history; the lease rejects an absent or different
+destination value at push time. It cannot detect deletion and recreation at
+the identical object ID between observations. Before either creation or update, the
+worker durably records the intended and observed values. A lost reply or
+interruption cannot become a blind recreation or repeated update: an absent,
+changed or unconfirmed outcome is held for explicit review. A branch-specific
 push failure leaves other eligible refs free to progress. Ordinary conflicts
 can resume after their histories are reconciled; deletion and uncertain-create
 holds require deliberate review of the retained per-ref state.
+
+GitHub is inactive following the user's reported account flag. The service
+contacts only the configured local bare hub and GitLab. It never fetches,
+pushes or polls `origin`, and it does not update active working checkouts.
 
 The service uses the existing local hub and a separate independent bare
 transport cache. The cache lives on CODEX under
@@ -30,6 +39,30 @@ with its own identity marker. It is not a shared-object checkout or an
 alternate-object reference to the hub. It preserves objects needed for
 reconciliation without making the hub depend on it. Neither service operation
 nor disable deletes the cache or rewrites active worktrees.
+
+## Storage admission
+
+The installed configuration requires the storage checker, canonical
+`storage_admit.py` path, a positive conservative allocation estimate, and a
+destination reserve of at least 40,000,000,000 bytes. The default estimate is
+1,000,000,000 new bytes for each growth phase, including its temporary objects;
+raise it before admitting larger transfers. This is admission, not a running
+quota or a guarantee that another application cannot consume the pool.
+
+Under the run lock, admission precedes cache creation, every fetch and every
+outbound push. The worker also rechecks after each fetch before advancing to
+another phase. The canonical helper checks CODEX/cache and the internal
+20 GB minimum. A separate observation requires the local hub's available space
+minus the same conservative estimate to retain 40 GB. Free-space figures are
+checked independently, never added across sibling APFS volumes. Automatic
+fetch-time maintenance/repacking is disabled to avoid an unplanned growth phase.
+
+Denial, a missing helper, timeout, or malformed receipt prevents the next growth
+operation. The latest `status.json` reports `storage-held`, the phase and its
+admission evidence; the previous reconciliation baseline and objects remain.
+Small status/lock updates are permitted. No cache deletion, reserve reduction
+or relocation is automatic. Restore capacity or explicitly revise a justified
+growth estimate before expecting the next scheduled attempt to proceed.
 
 ## Preview and install
 
@@ -48,6 +81,9 @@ explicit path, executable and volume arguments in a different installation.
 The installer preserves the previous local `receive.denyCurrentBranch` value
 in its manifest and sets it to `refuse`; it leaves
 `receive.denyNonFastForwards` unchanged.
+Apply and disable acquire the worker's same nonblocking lock before changing
+managed files. A busy worker or changed installation manifest refuses the
+update. The installed checker and configuration are hash-bound in that manifest.
 
 `--apply` copies the standalone worker and writes its configuration and
 rollback manifest to `~/.local/state/fdisbull-mirror`, installs the wake-only
@@ -112,3 +148,22 @@ in the push path. Local source checks passed 52 tests plus the separate
 concurrent-readback archive witness. No CI was run. These are bounded local
 checks; later operation must still be read back from the current status and
 actual repository refs.
+
+## Concurrency and storage correction, 2026-11-11
+
+Three isolated regressions first reproduced stale pushes overwriting a
+destination deletion, rewind or competing creation. Exact destination leases
+and durable update intent now preserve those concurrent results across a fresh
+worker run. Additional witnesses cover lost acknowledgments on existing refs,
+storage denial before initialization/transfer/publication, invalid capacity
+receipts, and locked installation updates.
+
+The final focused source command covered `test_mirror_sync_races.py`,
+`test_mirror_sync_storage.py`, `test_mirror_storage_admit.py`,
+`test_mirror_sync_service.py`, `test_install_mirror_sync.py` and
+`test_sync_mirrors.py`: **72 passed**, with no skips. The real host admission
+check refused growth because internal storage was below 20 GB and the separate
+hub container was below its destination reserve. That is a storage hold, not
+a passing propagation result. Restore capacity before normal synchronization;
+the installer can replace the small control payload without reinitializing
+the retained reconciliation baseline. No hosted CI was run for this correction.

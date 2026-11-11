@@ -6,6 +6,8 @@ This command never starts launchd, initializes a cache, or contacts a remote.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import fcntl
 import hashlib
 import json
 import os
@@ -24,6 +26,10 @@ MANIFEST = 'fdisbull-mirror-install-1'
 DEFAULT_HUB = '/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git'
 DEFAULT_CACHE = '/Volumes/CODEX/Codex_Projects/active/fDisBull-mirror-sync/transport.git'
 DEFAULT_GITLAB = 'https://gitlab.com/brewster-jennings-group/fdisbull.git'
+DEFAULT_STORAGE_ADMISSION_SCRIPT = '/Users/tiga/.codex/bin/storage_admit.py'
+DEFAULT_STORAGE_EXPECTED_BYTES = 1_000_000_000
+DEFAULT_STORAGE_RESERVE_BYTES = 40_000_000_000
+MIN_STORAGE_RESERVE_BYTES = 40_000_000_000
 DEFAULT_VOLUMES = [('/Volumes/CODEX', '5DB767EC-4FB1-4B21-82B2-80B994B827E8'),
                    ('/Volumes/GitHub', '340727DA-0AC5-46F5-AD9B-29DB8CADD25A')]
 
@@ -115,6 +121,27 @@ def atomic_write(path, data, mode=0o600):
             os.unlink(tmp)
 
 
+@contextmanager
+def install_lock(state):
+    """Exclude the worker and other installers before changing managed files."""
+    state.mkdir(parents=True, exist_ok=True, mode=0o700)
+    path = state / 'run.lock'
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise ValueError('Invalid existing state control file: ' + str(path))
+    fd = os.open(path, os.O_CREAT | os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError('Mirror worker or installer is busy') from error
+        try:
+            yield
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
 def hook_contents(wake):
     return ('#!/bin/sh\n# Managed by fDisBull mirror sync.\n'
             '/bin/cat >/dev/null\n'
@@ -156,7 +183,15 @@ def build_plan(args):
     git = absolute(args.git or shutil.which('git') or '')
     python = absolute(args.python)
     worker_source = absolute(args.worker_source)
+    checker_source = absolute(args.storage_checker_source)
+    admission_script = absolute(args.storage_admission_script)
     diskutil = absolute(args.diskutil)
+    if (type(args.storage_expected_bytes) is not int or args.storage_expected_bytes <= 0
+            or type(args.storage_reserve_bytes) is not int
+            or args.storage_reserve_bytes < MIN_STORAGE_RESERVE_BYTES):
+        raise ValueError('Storage estimate must be positive and reserve must be at least 40 GB')
+    if not admission_script.is_file():
+        raise ValueError('Storage admission script is not available: ' + str(admission_script))
     volumes = [parse_volume(value) for value in args.volume] if args.volume else [
         {'path': path, 'uuid': uuid} for path, uuid in DEFAULT_VOLUMES]
     if len({v['path'] for v in volumes}) != len(volumes):
@@ -183,15 +218,24 @@ def build_plan(args):
     hook_dir = absolute(str(hook_dir))
     hook = hook_dir / 'post-receive'
     reject_symlinks(hook)
-    wake, runtime, config, manifest = state / 'wake', state / 'runtime' / 'mirror_sync_service.py', state / 'config.json', state / 'install-manifest.json'
+    wake, runtime, checker, config, manifest = (state / 'wake',
+        state / 'runtime' / 'mirror_sync_service.py', state / 'runtime' / 'mirror_storage_admit.py',
+        state / 'config.json', state / 'install-manifest.json')
     managed_hook = hook_contents(wake)
     if hooks_config and not _path_matches(hook, managed_hook):
         raise ValueError('Existing core.hooksPath is not an identical managed hook')
     if hook.is_symlink() or (hook.exists() and not _path_matches(hook, managed_hook)):
         raise ValueError('Existing post-receive hook is not an identical managed hook')
     payload = dict(format=FORMAT, git=str(git), hub=str(hub), gitlab=args.gitlab, cache=str(cache),
-                   state_dir=str(state), volumes=volumes, command_timeout_s=45, run_timeout_s=55)
+                   state_dir=str(state), volumes=volumes, command_timeout_s=45, run_timeout_s=55,
+                   storage=dict(python=str(python), checker=str(checker),
+                       admission_script=str(admission_script),
+                       expected_bytes=args.storage_expected_bytes,
+                       reserve_bytes=args.storage_reserve_bytes))
     remote = urlsplit(args.gitlab)
+    if remote.hostname and (remote.hostname.lower() == 'github.com'
+                            or remote.hostname.lower().endswith('.github.com')):
+        raise ValueError('GitHub mirror is inactive')
     if (remote.scheme not in ('https', 'ssh', 'git') or not remote.netloc
             or remote.username is not None or remote.password is not None
             or remote.query or remote.fragment or any(c in args.gitlab for c in ('\n', '\r', '\0'))):
@@ -205,6 +249,8 @@ def build_plan(args):
         raise ValueError('Existing LaunchAgent plist is not the managed configuration')
     if not worker_source.is_file():
         raise ValueError('Mirror worker source is not available: ' + str(worker_source))
+    if not checker_source.is_file():
+        raise ValueError('Mirror storage checker source is not available: ' + str(checker_source))
     for path in (state, state / 'runtime', plist.parent, hook_dir):
         if path.is_symlink():
             raise ValueError('Managed directories must not be symlinks')
@@ -221,7 +267,10 @@ def build_plan(args):
         raise ValueError('Receive setting changed after disable; review before reinstalling')
     config_data = (json.dumps(payload, indent=2, sort_keys=True) + '\n').encode()
     worker_data = worker_source.read_bytes()
-    for path, data, field in ((runtime, worker_data, 'runtime_sha256'), (config, config_data, 'config_sha256')):
+    checker_data = checker_source.read_bytes()
+    for path, data, field in ((runtime, worker_data, 'runtime_sha256'),
+                              (checker, checker_data, 'storage_checker_sha256'),
+                              (config, config_data, 'config_sha256')):
         if path.exists():
             if path.is_symlink() or not path.is_file():
                 raise ValueError('Existing managed file is not a regular file: ' + str(path))
@@ -239,22 +288,39 @@ def build_plan(args):
             or previous.get('plist_sha256') != bytes_hash(plist_data)):
         raise ValueError('Managed hook or plist differs from installation manifest')
     return dict(hub=hub, cache=cache, state=state, plist=plist, git=git, python=python,
-                worker_source=worker_source, hook=hook, wake=wake, runtime=runtime, config=config,
+                worker_source=worker_source, checker_source=checker_source,
+                hook=hook, wake=wake, runtime=runtime, checker=checker, config=config,
                 manifest=manifest, manifest_value=manifest_value, payload=payload,
+                manifest_before=manifest.read_bytes() if manifest.exists() else None,
                 hook_data=managed_hook, plist_data=plist_data, worker_data=worker_data,
+                checker_data=checker_data,
                 config_data=config_data, current=current)
 
 
+def _require_current_manifest(plan):
+    current = plan['manifest'].read_bytes() if plan['manifest'].exists() else None
+    if current != plan['manifest_before']:
+        raise ValueError('Installation manifest changed after preview; inspect and retry')
+
+
 def apply(plan):
+    with install_lock(plan['state']):
+        _require_current_manifest(plan)
+        _apply_locked(plan)
+
+
+def _apply_locked(plan):
     state = plan['state']
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(state, 0o700)
     manifest = dict(plan['manifest_value'], installed=False, phase='installing',
                     runtime_sha256=bytes_hash(plan['worker_data']),
+                    storage_checker_sha256=bytes_hash(plan['checker_data']),
                     config_sha256=bytes_hash(plan['config_data']))
     # Persist recovery information before any change to the bare hub.
     atomic_write(plan['manifest'], (json.dumps(manifest, indent=2, sort_keys=True) + '\n').encode())
     atomic_write(plan['runtime'], plan['worker_data'], 0o700)
+    atomic_write(plan['checker'], plan['checker_data'], 0o700)
     atomic_write(plan['config'], plan['config_data'])
     for name in ('wake', 'run.lock'):
         path = state / name
@@ -269,6 +335,12 @@ def apply(plan):
 
 
 def disable(plan):
+    with install_lock(plan['state']):
+        _require_current_manifest(plan)
+        _disable_locked(plan)
+
+
+def _disable_locked(plan):
     manifest = plan['manifest_value']
     phase = manifest.get('phase', 'installed' if manifest.get('installed') else 'disabled')
     if phase not in ('installed', 'installing'):
@@ -302,6 +374,10 @@ def main(argv=None):
     parser.add_argument('--git', default=shutil.which('git'))
     parser.add_argument('--python', default=sys.executable)
     parser.add_argument('--worker-source', default=str(Path(__file__).resolve().with_name('mirror_sync_service.py')))
+    parser.add_argument('--storage-checker-source', default=str(Path(__file__).resolve().with_name('mirror_storage_admit.py')))
+    parser.add_argument('--storage-admission-script', default=DEFAULT_STORAGE_ADMISSION_SCRIPT)
+    parser.add_argument('--storage-expected-bytes', type=int, default=DEFAULT_STORAGE_EXPECTED_BYTES)
+    parser.add_argument('--storage-reserve-bytes', type=int, default=DEFAULT_STORAGE_RESERVE_BYTES)
     parser.add_argument('--diskutil', default='/usr/sbin/diskutil')
     parser.add_argument('--volume', action='append', default=[])
     args = parser.parse_args(argv)

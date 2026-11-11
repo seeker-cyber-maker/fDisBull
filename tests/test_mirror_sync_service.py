@@ -47,9 +47,28 @@ def mirrors(tmp_path):
     cmd('git', '-C', seed, 'push', '-o', 'ci.skip', remote, f'{base}:refs/heads/main', env=env)
     config = tmp_path / 'config.json'
     cache, state = tmp_path / 'cache.git', tmp_path / 'state'
+    # Git protocol tests isolate storage policy at its executable boundary.
+    # The real checker has its own admission/denial contract tests.
+    storage = tmp_path / 'fixture-storage-checker.py'
+    storage.write_text('''import argparse, json, pathlib
+p=argparse.ArgumentParser()
+p.add_argument('--admission-script');p.add_argument('--path');p.add_argument('--hub')
+p.add_argument('--expected-bytes',type=int);p.add_argument('--destination-reserve-bytes',type=int)
+p.add_argument('--timeout-seconds');a=p.parse_args()
+print(json.dumps(dict(format='fdisbull-mirror-storage-1',admitted=True,
+ expected_bytes=a.expected_bytes,reserve_bytes=a.destination_reserve_bytes,
+ cache_path=str(pathlib.Path(a.path).resolve()),hub_path=str(pathlib.Path(a.hub).resolve()),reasons=[],
+ cache_receipt=dict(admitted=True,path=str(pathlib.Path(a.path).resolve()),expected_bytes=a.expected_bytes,
+ destination_target_bytes=a.destination_reserve_bytes,destination_pool_free_bytes=a.destination_reserve_bytes+a.expected_bytes,
+ destination_minimum_bytes=20000000000,internal_free_bytes=40000000000,internal_minimum_bytes=20000000000),
+ hub_receipt=dict(free_bytes=a.destination_reserve_bytes+a.expected_bytes,after_expected_bytes=a.destination_reserve_bytes,
+ reserve_bytes=a.destination_reserve_bytes,minimum_bytes=20000000000))))
+''')
     config.write_text(json.dumps(dict(format='fdisbull-mirror-sync-1', git=cmd('which','git',env=env).stdout.strip(),
         hub=str(hub), gitlab=str(remote), cache=str(cache), state_dir=str(state), volumes=[],
-        command_timeout_s=45, run_timeout_s=55)))
+        command_timeout_s=45, run_timeout_s=55,
+        storage=dict(python=sys.executable,checker=str(storage),admission_script=str(storage),
+                     expected_bytes=1_000_000_000,reserve_bytes=40_000_000_000))))
     return dict(env=env, hub=hub, remote=remote, seed=seed, base=base, config=config,
                 cache=cache, state=state, root=tmp_path)
 

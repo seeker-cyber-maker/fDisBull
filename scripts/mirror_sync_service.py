@@ -36,6 +36,12 @@ class WorkerError(Exception):
         self.code = code
 
 
+class StorageHeld(WorkerError):
+    def __init__(self, receipt: dict):
+        super().__init__("storage admission refused mirror growth", code=2)
+        self.receipt = receipt
+
+
 def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
@@ -92,15 +98,27 @@ def _clean_git_env() -> dict[str, str]:
 
 
 class Git:
-    def __init__(self, executable: str, cache: Path, deadline: float, command_timeout: int):
+    def __init__(self, executable: str, cache: Path, deadline: float, command_timeout: int,
+                 config: dict | None = None):
         self.executable = executable
         self.cache = cache
         self.deadline = deadline
         self.command_timeout = command_timeout
         self.env = _clean_git_env()
+        self.config = config
+
+    def admit(self, phase: str) -> None:
+        if self.config is not None:
+            _admit_storage(self.config, self.deadline, phase)
 
     def run(self, *args: str, cwd: Path | None = None, check: bool = True,
             input_data: str | None = None) -> str:
+        fetching = bool(args and args[0] == "fetch")
+        if fetching:
+            self.admit("before-fetch")
+            # Keep admission scoped to the transfer, without an implicit repack.
+            args = ("-c", "gc.auto=0", "-c", "maintenance.auto=false",
+                    "-c", "fetch.writeCommitGraph=false", *args)
         remaining = self.deadline - time.monotonic()
         if remaining <= 0:
             raise WorkerError("run deadline exceeded")
@@ -117,6 +135,8 @@ class Git:
         if check and result.returncode:
             # Do not retain or print remote stderr; it can contain transport details.
             raise WorkerError(f"git command failed ({args[0] if args else 'unknown'}, exit {result.returncode})")
+        if fetching:
+            self.admit("after-fetch")
         return result.stdout.strip()
 
 
@@ -131,7 +151,7 @@ def _load_config(path: Path) -> dict:
     cfg = _read_json(path)
     required = {
         "format", "git", "hub", "gitlab", "cache", "state_dir", "volumes",
-        "command_timeout_s", "run_timeout_s",
+        "command_timeout_s", "run_timeout_s", "storage",
     }
     if set(cfg) != required or cfg.get("format") != SCHEMA:
         raise WorkerError("config keys or schema do not match fdisbull-mirror-sync-1", code=2)
@@ -141,6 +161,9 @@ def _load_config(path: Path) -> dict:
     if not isinstance(cfg["gitlab"], str):
         raise WorkerError("config gitlab must be a remote URL", code=2)
     parsed = urlsplit(cfg["gitlab"])
+    if parsed.hostname and (parsed.hostname.lower() == "github.com"
+                            or parsed.hostname.lower().endswith(".github.com")):
+        raise WorkerError("GitHub mirror is inactive", code=2)
     if not (parsed.scheme in {"https", "ssh", "git"} and parsed.netloc) and not Path(cfg["gitlab"]).is_absolute():
         raise WorkerError("gitlab must be an exact supported remote URL", code=2)
     _safe_url_identity(cfg["gitlab"])
@@ -158,7 +181,82 @@ def _load_config(path: Path) -> dict:
             raise WorkerError(f"{key} must be a positive integer", code=2)
     if cfg["command_timeout_s"] > 45 or cfg["run_timeout_s"] > 55:
         raise WorkerError("timeouts exceed the service bounds (45s command, 55s run)", code=2)
+    storage = cfg["storage"]
+    if not isinstance(storage, dict) or set(storage) != {
+            "python", "checker", "admission_script", "expected_bytes", "reserve_bytes"}:
+        raise WorkerError("storage admission configuration is required", code=2)
+    for name in ("python", "checker", "admission_script"):
+        if not isinstance(storage[name], str) or not Path(storage[name]).is_absolute():
+            raise WorkerError("storage admission paths must be absolute", code=2)
+        if not Path(storage[name]).is_file():
+            raise WorkerError("storage admission executable or script is unavailable", code=2)
+    for name in ("expected_bytes", "reserve_bytes"):
+        if type(storage[name]) is not int or not 0 < storage[name] <= 2**63 - 1:
+            raise WorkerError("storage admission byte bounds must be positive integers", code=2)
+    if storage["reserve_bytes"] < 40_000_000_000:
+        raise WorkerError("mirror growth requires the 40 GB destination reserve", code=2)
     return cfg
+
+
+def _admit_storage(cfg: dict, deadline: float, phase: str) -> None:
+    policy = cfg["storage"]
+    parent = Path(cfg["cache"]).parent
+    while not parent.exists() and parent != parent.parent:
+        parent = parent.parent
+    command = [policy["python"], policy["checker"],
+               "--admission-script", policy["admission_script"], "--path", str(parent),
+               "--hub", cfg["hub"], "--expected-bytes", str(policy["expected_bytes"]),
+               "--destination-reserve-bytes", str(policy["reserve_bytes"]),
+               "--timeout-seconds", "5"]
+    remaining = deadline - time.monotonic()
+    base = {"phase": phase, "expected_bytes": policy["expected_bytes"],
+            "reserve_bytes": policy["reserve_bytes"]}
+    if remaining <= 0:
+        raise StorageHeld(dict(base, reasons=["storage admission deadline expired"]))
+    try:
+        reply = subprocess.run(command, capture_output=True, text=True,
+                               timeout=min(8.0, remaining), check=False, env=_clean_git_env())
+        if len(reply.stdout) > 65536:
+            raise ValueError("oversized response")
+        receipt = json.loads(reply.stdout)
+        if (not isinstance(receipt, dict)
+                or receipt.get("format") != "fdisbull-mirror-storage-1"
+                or type(receipt.get("admitted")) is not bool
+                or receipt.get("expected_bytes") != policy["expected_bytes"]
+                or receipt.get("reserve_bytes") != policy["reserve_bytes"]
+                or receipt.get("cache_path") != str(parent.resolve())
+                or receipt.get("hub_path") != str(Path(cfg["hub"]).resolve())
+                or not isinstance(receipt.get("reasons"), list)
+                or any(not isinstance(reason, str) for reason in receipt["reasons"])):
+            raise ValueError("invalid response")
+        if receipt["admitted"]:
+            cache, hub = receipt.get("cache_receipt"), receipt.get("hub_receipt")
+            if (receipt["reasons"] or not isinstance(cache, dict) or not isinstance(hub, dict)
+                    or cache.get("admitted") is not True
+                    or cache.get("path") != str(parent.resolve())
+                    or cache.get("expected_bytes") != policy["expected_bytes"]
+                    or cache.get("destination_target_bytes") != policy["reserve_bytes"]):
+                raise ValueError("incoherent positive admission")
+            for key in ("destination_pool_free_bytes", "destination_minimum_bytes",
+                        "internal_free_bytes", "internal_minimum_bytes"):
+                if type(cache.get(key)) is not int or cache[key] < 0:
+                    raise ValueError("invalid cache capacity evidence")
+            for key in ("free_bytes", "after_expected_bytes", "reserve_bytes", "minimum_bytes"):
+                if type(hub.get(key)) is not int or hub[key] < 0:
+                    raise ValueError("invalid hub capacity evidence")
+            if (cache["destination_minimum_bytes"] < 20_000_000_000
+                    or cache["internal_minimum_bytes"] < 20_000_000_000
+                    or cache["internal_free_bytes"] < cache["internal_minimum_bytes"]
+                    or cache["destination_pool_free_bytes"] - policy["expected_bytes"] < policy["reserve_bytes"]
+                    or hub["reserve_bytes"] != policy["reserve_bytes"]
+                    or hub["minimum_bytes"] < 20_000_000_000
+                    or hub["after_expected_bytes"] != hub["free_bytes"] - policy["expected_bytes"]
+                    or hub["after_expected_bytes"] < policy["reserve_bytes"]):
+                raise ValueError("capacity evidence does not admit growth")
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        raise StorageHeld(dict(base, reasons=["storage admission unavailable or invalid"]))
+    if reply.returncode != 0 or not receipt["admitted"]:
+        raise StorageHeld(dict(base, admission=receipt))
 
 
 def _validate_volumes(cfg: dict, deadline: float) -> None:
@@ -375,11 +473,14 @@ def _advance_seen(state: dict, snapshots: dict[str, dict[str, str]], *, update_o
                 holds.append({"ref": ref, "reason": "observed-deletion", "side": side})
             elif rec.get("state") == "deleted" and ref in current:
                 holds.append({"ref": ref, "reason": "deleted-ref-reappeared", "side": side})
-            elif rec.get("state") == "pending_create":
+            elif rec.get("state") in {"pending_create", "pending_update"}:
+                updating = rec["state"] == "pending_update"
                 if ref not in current:
                     rec["state"] = "deleted"
                     rec["deleted_at"] = _now()
-                    holds.append({"ref": ref, "reason": "unconfirmed-create-disappeared", "side": side})
+                    holds.append({"ref": ref, "reason": "unconfirmed-update-disappeared" if updating else "unconfirmed-create-disappeared", "side": side})
+                elif updating and current[ref] == rec.get("expected_oid"):
+                    holds.append({"ref": ref, "reason": "unconfirmed-update", "side": side})
                 elif current[ref] != rec.get("pending_oid"):
                     rec["state"] = "conflict"
                     rec["observed_oid"] = current[ref]
@@ -389,6 +490,7 @@ def _advance_seen(state: dict, snapshots: dict[str, dict[str, str]], *, update_o
                     rec["state"] = "present"
                     rec["last_oid"] = current[ref]
                     rec.pop("pending_oid", None)
+                    rec.pop("expected_oid", None)
                     rec["confirmed_at"] = _now()
             elif rec.get("state") == "conflict":
                 holds.append({"ref": ref, "reason": "pending-create-conflict", "side": side})
@@ -404,6 +506,13 @@ def _advance_seen(state: dict, snapshots: dict[str, dict[str, str]], *, update_o
 def _record_pending_create(state: dict, side: str, ref: str, oid: str) -> None:
     state["seen"][side][ref] = {"state": "pending_create", "pending_oid": oid,
                                  "first_seen_at": _now()}
+
+
+def _record_pending_update(state: dict, side: str, ref: str, expected: str, oid: str) -> None:
+    prior = state["seen"][side].get(ref, {})
+    state["seen"][side][ref] = {"state": "pending_update", "expected_oid": expected,
+                                 "last_oid": expected, "pending_oid": oid,
+                                 "first_seen_at": prior.get("first_seen_at", _now())}
 
 
 def _confirm_created_ref(state: dict, side: str, ref: str, oid: str) -> None:
@@ -441,11 +550,17 @@ def _checked_out_branches(git: Git, hub: Path) -> set[str]:
             if line.startswith("branch refs/heads/")}
 
 
-def _push(git: Git, side: str, remote: str, source_side: str, ref: str, oid: str) -> None:
+def _push(git: Git, side: str, remote: str, source_side: str, ref: str, oid: str,
+          expected_dst_oid: str | None) -> None:
     source_ref = f"{REF_NS}/{source_side}/{ref.removeprefix('refs/') }"
     if _ref_oid(git, source_ref) != oid:
         raise WorkerError("source ref changed before push")
+    if expected_dst_oid is not None and not _is_ancestor(git, expected_dst_oid, oid):
+        raise WorkerError("destination update is not a fast-forward")
     args = ["-c", "push.followTags=false", "-c", "push.recurseSubmodules=no", "push"]
+    # The ancestry guard above admits only fast-forwards. The exact lease also
+    # rejects a destination deletion/rewind/create after our fetched snapshot.
+    args.append(f"--force-with-lease={ref}:{expected_dst_oid or ''}")
     if side == "gitlab":
         args.extend(["-o", "ci.skip"])
     args.extend([remote, f"{source_ref}:{ref}"])
@@ -459,7 +574,7 @@ def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
     holds = list(deletion_holds)
     tombstoned = {
         side: {ref for ref, rec in state["seen"][side].items()
-               if rec.get("state") in {"deleted", "conflict"}}
+               if rec.get("state") in {"deleted", "conflict", "pending_update"}}
         for side in ("hub", "gitlab")
     }
     all_refs = sorted(set(snapshots["hub"]) | set(snapshots["gitlab"]) |
@@ -501,12 +616,15 @@ def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
                 holds.append({"ref": ref, "reason": "hub-branch-checked-out"})
                 continue
         remote = "hub" if dst_side == "hub" else "gitlab"
+        git.admit("before-push-" + dst_side)
         creating = dst_oid is None
         if creating:
             _record_pending_create(state, dst_side, ref, src_oid)
-            _atomic_json(state_path, state)
+        else:
+            _record_pending_update(state, dst_side, ref, dst_oid, src_oid)
+        _atomic_json(state_path, state)
         try:
-            _push(git, dst_side, remote, src_side, ref, src_oid)
+            _push(git, dst_side, remote, src_side, ref, src_oid, dst_oid)
         except WorkerError as exc:
             message = str(exc)
             if "deadline" in message or "timed out" in message:
@@ -521,20 +639,18 @@ def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
                 _archive_observed_remote_tip(git, remote, dst_side, ref, verified, run_id)
             if verified and _is_ancestor(git, src_oid, verified):
                 _update_source_tracking(git, dst_side, ref, verified)
-                if creating:
-                    _confirm_created_ref(state, dst_side, ref, verified)
-                    _atomic_json(state_path, state)
+                _confirm_created_ref(state, dst_side, ref, verified)
+                _atomic_json(state_path, state)
                 actions.append({"ref": ref, "direction": f"{src_side}-to-{dst_side}", "result": "advanced-concurrently"})
             else:
-                if creating and verified is not None:
+                if verified is not None:
                     _mark_ref_conflict(state, dst_side, ref, verified)
                     _atomic_json(state_path, state)
                 holds.append({"ref": ref, "reason": "destination-changed-after-push"})
                 continue
         else:
-            if creating:
-                _confirm_created_ref(state, dst_side, ref, src_oid)
-                _atomic_json(state_path, state)
+            _confirm_created_ref(state, dst_side, ref, src_oid)
+            _atomic_json(state_path, state)
             actions.append({"ref": ref, "direction": f"{src_side}-to-{dst_side}", "result": "fast-forwarded"})
     return actions, holds
 
@@ -645,8 +761,9 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, 
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return 3, {"status": "lock-busy", "at": _now()}
+        _admit_storage(cfg, deadline, "before-cache")
         cache, state_path = _ensure_cache(cfg, executable, initialize, deadline)
-        git = Git(executable, cache, deadline, cfg["command_timeout_s"])
+        git = Git(executable, cache, deadline, cfg["command_timeout_s"], cfg)
         run_id = uuid.uuid4().hex
         started = _now()
         if initialize:
@@ -738,6 +855,13 @@ def main(argv: list[str] | None = None) -> int:
         _validate_volumes(cfg, deadline)
         _validate_local_repositories(cfg, cfg["git"], deadline)
         code, result = _run(cfg, args.initialize, deadline=deadline)
+    except StorageHeld as exc:
+        result = {"status": "storage-held", "storage": exc.receipt, "at": _now()}
+        if cfg is not None:
+            safe_dir = _safe_existing_state_dir(cfg)
+            if safe_dir is not None:
+                _atomic_json(safe_dir / "status.json", result, create_parent=False)
+        code = exc.code
     except WorkerError as exc:
         result = {"status": "error", "error": str(exc), "at": _now()}
         if cfg is not None:

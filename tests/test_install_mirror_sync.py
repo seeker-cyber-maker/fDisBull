@@ -1,4 +1,6 @@
 """Isolated preview, installation and receive-hook wake contract."""
+import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,12 +24,18 @@ XML
     fake.chmod(0o755)
     fake_worker = m['root'] / 'authored-worker.py'
     fake_worker.write_text('# Authored fixture; installer must never launch it.\n')
+    fake_checker = m['root'] / 'authored-storage-checker.py'
+    fake_checker.write_text('# Authored fixture; installer must never launch it.\n')
+    fake_admission_script = m['root'] / 'authored-storage-admission.py'
+    fake_admission_script.write_text('# Authored fixture; installer must never launch it.\n')
     state = m['root'] / 'service-state'
     plist = m['root'] / 'agent.plist'
     args = ['/Users/tiga/miniconda/bin/python3', installer, '--hub', m['hub'],
         '--cache', m['cache'], '--gitlab', 'https://fixture.invalid/repository.git', '--state-dir', state,
         '--plist', plist, '--git', '/opt/homebrew/bin/git', '--python', '/Users/tiga/miniconda/bin/python3',
-        '--worker-source', fake_worker, '--diskutil', fake, '--volume', '/=TEST-UUID']
+        '--worker-source', fake_worker, '--storage-checker-source', fake_checker,
+        '--storage-admission-script', fake_admission_script,
+        '--diskutil', fake, '--volume', '/=TEST-UUID']
     return args, state, plist, fake_worker
 
 
@@ -41,6 +49,18 @@ def test_installer_preview_apply_hook_and_disable(mirrors):
     assert json.loads(applied.stdout)['launches_service'] is False
     assert not m['cache'].exists()
     assert (state / 'runtime' / 'mirror_sync_service.py').read_bytes() == fake_worker.read_bytes()
+    config = json.loads((state / 'config.json').read_text())
+    assert config['storage'] == {
+        'python': '/Users/tiga/miniconda/bin/python3',
+        'checker': str(state / 'runtime' / 'mirror_storage_admit.py'),
+        'admission_script': str(m['root'] / 'authored-storage-admission.py'),
+        'expected_bytes': 1_000_000_000,
+        'reserve_bytes': 40_000_000_000,
+    }
+    checker = state / 'runtime' / 'mirror_storage_admit.py'
+    assert checker.read_bytes() == (m['root'] / 'authored-storage-checker.py').read_bytes()
+    manifest = json.loads((state / 'install-manifest.json').read_text())
+    assert manifest['storage_checker_sha256'] == hashlib.sha256(checker.read_bytes()).hexdigest()
     wake = state / 'wake'
     os.utime(wake, (1, 1))
     updated = branch(m, m['base'], 'wake without executing sync')
@@ -118,3 +138,88 @@ def test_disable_retains_identical_files_that_predated_install(mirrors):
     cmd(*args, '--apply', env=m['env'])
     cmd(*args, '--disable', env=m['env'])
     assert hook.read_bytes() == hook_bytes and plist.read_bytes() == plist_bytes
+
+
+@pytest.mark.parametrize('mode', ['apply', 'disable'])
+def test_installer_refuses_busy_worker_lock_without_changing_installed_files(mirrors, mode):
+    m = mirrors
+    args, state, plist, fake_worker = installer_args(m)
+    cmd(*args, '--apply', env=m['env'])
+    hook = m['hub'] / 'hooks' / 'post-receive'
+    managed = [state / 'runtime' / 'mirror_sync_service.py',
+               state / 'runtime' / 'mirror_storage_admit.py', state / 'config.json',
+               state / 'install-manifest.json', hook, plist]
+    before = {path: path.read_bytes() for path in managed}
+    prior_manifest = json.loads(before[state / 'install-manifest.json'])
+    if mode == 'apply':
+        fake_worker.write_text('# Authored replacement; must wait for the lock.\n')
+    with (state / 'run.lock').open('r+b') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = cmd(*args, '--' + mode, env=m['env'], check=False)
+        assert result.returncode == 2
+        assert 'busy' in result.stderr
+        assert {path: path.read_bytes() for path in managed} == before
+    assert cmd('git', '--git-dir', m['hub'], 'config', '--local', '--get-all',
+               'receive.denyCurrentBranch', env=m['env']).stdout.strip() == 'refuse'
+    if mode == 'apply':
+        cmd(*args, '--apply', env=m['env'])
+        assert (state / 'runtime' / 'mirror_sync_service.py').read_bytes() == fake_worker.read_bytes()
+        updated_manifest = json.loads((state / 'install-manifest.json').read_text())
+        assert updated_manifest['original_deny_current_branch'] == prior_manifest['original_deny_current_branch']
+    else:
+        cmd(*args, '--disable', env=m['env'])
+        assert not plist.exists() and not hook.exists()
+
+
+@pytest.mark.parametrize('option,value', [
+    ('--storage-expected-bytes', '0'),
+    ('--storage-reserve-bytes', '39999999999'),
+    ('--storage-admission-script', 'relative.py'),
+    ('--storage-admission-script', '/missing/storage_admit.py'),
+    ('--storage-checker-source', 'relative.py'),
+])
+def test_installer_rejects_invalid_storage_options(mirrors, option, value):
+    m = mirrors
+    args, state, plist, _ = installer_args(m)
+    result = cmd(*args, option, value, env=m['env'], check=False)
+    assert result.returncode == 2
+    assert not state.exists() and not plist.exists()
+
+
+@pytest.mark.parametrize('url', ['https://github.com/fixture/inactive.git',
+                               'ssh://ssh.github.com/fixture/inactive.git'])
+def test_installer_rejects_inactive_github(mirrors, url):
+    m = mirrors
+    args, state, plist, _ = installer_args(m)
+    result = cmd(*args, '--gitlab', url, env=m['env'], check=False)
+    assert result.returncode == 2 and 'GitHub mirror is inactive' in result.stderr
+    assert not state.exists() and not plist.exists()
+
+
+def test_installer_storage_overrides_and_legacy_manifest_migration(mirrors):
+    m = mirrors
+    args, state, _, _ = installer_args(m)
+    cmd(*args, '--apply', env=m['env'])
+    config_path = state / 'config.json'
+    manifest_path = state / 'install-manifest.json'
+    checker_path = state / 'runtime' / 'mirror_storage_admit.py'
+    config = json.loads(config_path.read_text())
+    config.pop('storage')
+    legacy_config = (json.dumps(config, indent=2, sort_keys=True) + '\n').encode()
+    config_path.write_bytes(legacy_config)
+    manifest = json.loads(manifest_path.read_text())
+    manifest.pop('storage_checker_sha256')
+    manifest['config_sha256'] = hashlib.sha256(legacy_config).hexdigest()
+    manifest_path.write_text(json.dumps(manifest))
+    checker_path.unlink()
+    baseline = state / 'refs.json'
+    baseline.write_bytes(b'prior cache identity and cursor\n')
+    cmd(*args, '--storage-expected-bytes', '2000000000',
+        '--storage-reserve-bytes', '50000000000', '--apply', env=m['env'])
+    migrated = json.loads(config_path.read_text())
+    assert migrated['storage']['expected_bytes'] == 2_000_000_000
+    assert migrated['storage']['reserve_bytes'] == 50_000_000_000
+    new_manifest = json.loads(manifest_path.read_text())
+    assert new_manifest['storage_checker_sha256'] == hashlib.sha256(checker_path.read_bytes()).hexdigest()
+    assert new_manifest['original_deny_current_branch'] == manifest['original_deny_current_branch']
+    assert baseline.read_bytes() == b'prior cache identity and cursor\n'
