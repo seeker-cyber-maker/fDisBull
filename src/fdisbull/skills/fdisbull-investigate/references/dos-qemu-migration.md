@@ -47,7 +47,23 @@ local native build and authored same-page A → B → A → B → A checkpoint w
 passed, including separate-process restore, shared hooks, virtual clock and
 precise retrace. See the source migration guide for page limits, tombstones and admission
 boundaries. This is not vendor QEMM/DESQview compatibility or general DPMI
-qualification. Frame-timed input and scene parity remain later slices.
+qualification. A separate experimental native cooperative scheduler adds
+`debug-dos-task-scheduler`, `debug-dos-task-fork`, `debug-dos-task-context`,
+`debug-dos-task-runnable`, `debug-dos-task-scheduler-observe` and
+`debug-dos-task-scheduler-disable`. It targets registered task-private views and
+forks within one verified DOS source/allocation: guest INT 60h yields and INT
+62h blocks while the native engine selects runnable tasks and retains CPU and
+interrupt-frame state. An authored local V86 witness passed cooperative
+task switching and separate-process cold restore with distinct CPU/x87 states,
+private views and a dormant protected-mode interrupt frame; per-task x87
+rounding of 1.5 to 1 and 2 and guest watchpoints with matching DR7 controls but
+different DR0 addresses also survived switching and cold restore. It exercised
+single-step yield, idle and guest DOS exit. Its instrumented audio window had
+zero frames and zero dropped frames, establishing observer state and token
+rotation only, with no PCM or audible playback evidence. These are bounded
+results: no PIT/IRQ preemption or vendor scheduler compatibility follows from
+this cooperative interface. Frame-timed input and scene parity remain later
+slices.
 Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.
 

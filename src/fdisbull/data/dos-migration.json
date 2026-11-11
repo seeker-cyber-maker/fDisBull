@@ -88,14 +88,17 @@
         "tests/test_qemu_remapped_tasks_checkpoint_native.py",
         "tests/test_qemu_dos_task_views.py",
         "tests/test_qemu_dos_alias_task_layers_native.py",
-        "tests/test_qemu_dos_task_private_guards_native.py"
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py"
       ],
       "scope_limits": [
         "Original COM/MZ projects launch through real DOS EXEC with a separate private boot disk. Observed PSP/MCB, ordered MZ relocations, exact loader stack writes and native entry establish the initial source map; controls retain machine addresses.",
         "Nonce-bound parent return and DOS AH=4Dh distinguish selected process exit/residency. Resident mappings intersect observed retained allocations; machine close and uncertain observations invalidate live ownership and capture epochs.",
         "Entry requires observed real mode. Stopped protected/V86 ownership can include bounded remapped RAM under the native architectural-context extension. An explicit FDBTASK1 cooperating monitor supplies task lifetime through UUID, cookie, incarnation and DOS process nonce; this is not an inferred QEMM/DESQview task. Arbitrary DPMI and vendor scheduler/driver combinations remain unqualified.",
         "Device-header registration and an authored SYS initialization marker qualify only those observations, not arbitrary device I/O. Game assets/drivers must already be present in the image; existing startup/configuration bytes are preserved.",
-        "A cooperating monitor commits an even FDBTASK1 anchor with OUTW port 0xf1db value 0x4446; guest retains CPU/frame scheduling. Local authored same-page A-to-B-to-A-to-B-to-A, invalid-commit, reset and checkpoint witnesses passed on the native x86 TCG build; vendor task scheduling remains unqualified."
+        "A cooperating monitor commits an even FDBTASK1 anchor with OUTW port 0xf1db value 0x4446; guest retains CPU/frame scheduling. Local authored same-page A-to-B-to-A-to-B-to-A, invalid-commit, reset and checkpoint witnesses passed on the native x86 TCG build; vendor task scheduling remains unqualified.",
+        "Opt-in native cooperative scheduler has a local authored V86 witness for INT60 yield, INT62 block, separate task contexts and CPU-created protected interrupt frames. Same-source/allocation forks only; no vendor scheduler or timer/IRQ preemption qualification."
       ]
     },
     {
@@ -271,12 +274,15 @@
         "tests/test_qemu_remapped_tasks_checkpoint_native.py",
         "tests/test_qemu_dos_task_views.py",
         "tests/test_qemu_dos_alias_task_layers_native.py",
-        "tests/test_qemu_dos_task_private_guards_native.py"
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
         "Standard raw machines and stopped owned COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Optional native instrumentation sidecars preserve virtual time, retained media and precise retrace under fresh owner identities. Native task-context observation admits bounded remapped protected/V86 RAM when ownership and selected module PC are verified. An authored cooperating-monitor A-to-B-to-A witness and separate Python-process restore cover distinct physical backings, layers and task-scoped hooks. Host files, arbitrary QEMM/DPMI mappings, state forks and histories remain unqualified.",
-        "Native VMState version 1 retains the bounded private arena, task identity and tombstones; version-3 host controls retain per-task stacks, shared hook traps, hit counts and pending hooks with fresh private layer IDs. Authored same-page cold restore passed in a separate Python process under standard and virtual/precise-retrace profiles. Dormant generation-zero and selected-B checkpoints also passed; full parity remains unqualified."
+        "Native VMState version 1 retains the bounded private arena, task identity and tombstones; version-3 host controls retain per-task stacks, shared hook traps, hit counts and pending hooks with fresh private layer IDs. Authored same-page cold restore passed in a separate Python process under standard and virtual/precise-retrace profiles. Dormant generation-zero and selected-B checkpoints also passed; full parity remains unqualified.",
+        "Authored native cooperative scheduler cold restore passed in a separate Python process with a dormant protected INT61 frame, distinct CPU/x87 state and task-private RAM/fetch/hooks. Per-task x87 rounding of 1.5 to 1 and 2 and guest watchpoints with identical DR7 controls and different DR0 addresses survived switching and cold restore; an instrumented profile preserves virtual clock, precise retrace, VGA configuration and an audio observer with zero frames and zero drops, providing no PCM or audible playback evidence. General parity remains unqualified."
       ]
     },
     {
@@ -303,12 +309,15 @@
         "tests/test_qemu_remapped_tasks_checkpoint_native.py",
         "tests/test_qemu_dos_task_views.py",
         "tests/test_qemu_dos_alias_task_layers_native.py",
-        "tests/test_qemu_dos_task_private_guards_native.py"
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py"
       ],
       "scope_limits": [
         "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch; aliases of one physical page share layer effects. Source definitions require the verified DOS module and observed protected/V86 ownership, including bounded remapped RAM with the native task-context extension.",
         "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including bounded remapped protected/V86 ownership and explicitly bound cooperating-monitor task identity. Architectural CR3/TR alone does not identify a software task. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and screenshot hooks remain open.",
-        "Explicit task-private views support up to 16 cooperating task lifetimes and 16 physical pages per task. CPU RAM and fetch use the selected task view; ordinary debugger and device accesses retain base RAM. Retired lifetimes remain tombstones; private anchor/paging-structure pages and unsupported paging are rejected. Authored native same-page and shared-hook checkpoint witnesses passed; arbitrary schedulers and vendor compatibility remain unqualified."
+        "Explicit task-private views support up to 16 cooperating task lifetimes and 16 physical pages per task. CPU RAM and fetch use the selected task view; ordinary debugger and device accesses retain base RAM. Retired lifetimes remain tombstones; private anchor/paging-structure pages and unsupported paging are rejected. Authored native same-page and shared-hook checkpoint witnesses passed; arbitrary schedulers and vendor compatibility remain unqualified.",
+        "The authored native cooperative scheduler witness passed same-site task-scoped hooks over private RAM/fetch views, including restored hit counts. This is bounded shared-allocation evidence, not arbitrary DOS multitasker parity."
       ]
     },
     {
@@ -1467,9 +1476,12 @@
         "tests/test_qemu_dos_task_public.py",
         "tests/test_qemu_dos_task_views.py",
         "tests/test_qemu_dos_alias_task_layers_native.py",
-        "tests/test_qemu_dos_task_private_guards_native.py"
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py"
       ],
-      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; native task-private routes debug-dos-task-switching, debug-dos-task-register, debug-dos-task-layer-patch, debug-dos-task-layers, debug-dos-task-memory and debug-dos-task-retire; QemuDOSProcessSession and native extensions; local authored same-page task-private and cold-restore witnesses passed; not parity qualified"
+      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; native task-private routes debug-dos-task-switching, debug-dos-task-register, debug-dos-task-layer-patch, debug-dos-task-layers, debug-dos-task-memory and debug-dos-task-retire; QemuDOSProcessSession and native extensions; local authored same-page task-private and cold-restore witnesses passed; experimental native CPU scheduling routes debug-dos-task-scheduler, debug-dos-task-fork, debug-dos-task-context, debug-dos-task-runnable, debug-dos-task-scheduler-observe and debug-dos-task-scheduler-disable include locally passed authored cooperative V86 scheduler/frame and separate-process cold-restore witnesses; broader scheduler qualification remains open; not parity qualified"
     },
     {
       "id": "process-and-resident-completion",

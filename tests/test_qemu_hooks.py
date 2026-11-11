@@ -207,3 +207,63 @@ def test_shared_trap_one_shot_preserves_other_task_hook(monkeypatch):
     result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
     assert result['hook_hits'][0]['hook'] == second['hook']
     assert ('execute', 's') not in session.calls
+
+
+def test_pending_hook_after_task_switch_different_pc_does_not_dispatch_old_site(monkeypatch):
+    session, a, b, _ = _task_harness(monkeypatch)
+    first = session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                         once=False, max_hits=3)
+    session.selected = b
+    second = session.hook(0x1000, task=b['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                          once=False, max_hits=3)
+    session.selected = a
+    session.queue = [_stop('breakpoint', first['breakpoint_id'])]
+    assert session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)['outcome'] == 'hook'
+    session.selected = b
+    session.pc = 0x2000
+    session.queue = [_stop('guest_exit')]
+    result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
+    assert result['outcome'] == 'guest_exit' and result['hook_hits'] == []
+    assert ('execute', 's') not in session.calls
+    assert [item['hits'] for item in session.hooks()['hooks']] == [1, 0]
+    assert session.hooks()['hooks'][1]['hook'] == second['hook']
+
+
+def test_shared_trap_rearmed_after_step_switches_to_other_task(monkeypatch):
+    session, a, b, _ = _task_harness(monkeypatch)
+    first = session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                         once=False, max_hits=3)
+    session.selected = b
+    second = session.hook(0x1000, task=b['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                          once=False, max_hits=3)
+    session.selected = a
+    session.queue = [_stop('breakpoint', first['breakpoint_id'])]
+    assert session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)['outcome'] == 'hook'
+    def execute(command, timeout_ms):
+        session.calls.append(('execute', command))
+        if command == 's':
+            session.selected = b
+            return _stop('step')
+        return _stop('breakpoint', next(iter(session.points)))
+    session._execute = execute
+    result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
+    assert result['hook_hits'][0]['hook'] == second['hook']
+    assert [item['hits'] for item in session.hooks()['hooks']] == [1, 1]
+
+
+def test_scheduler_selection_mismatch_closes_before_hook_action(monkeypatch):
+    from fdisbull.dosbox_rpc import DebuggerError
+    import fdisbull.qemu_dos_scheduler as scheduler
+    session, a, b, _ = _task_harness(monkeypatch)
+    session.selected = b
+    hook = session.hook(0x1000, task=b['task_id'], space='linear',
+        actions=[{'op': 'registers', 'registers': {'eax': {'expected': 1, 'value': 2}}}],
+        once=False, max_hits=2)
+    session._dos_scheduler = {'enabled': True}
+    def refuse(*args, **kwargs):
+        raise DebuggerError('scheduler and private selection differ')
+    monkeypatch.setattr(scheduler, '_status', refuse)
+    with pytest.raises(DebuggerError, match='selection differ'):
+        session._dispatch_qemu_hook(_stop('breakpoint', hook['breakpoint_id']))
+    assert session.closed and not session.calls
+    assert session.hooks()['hooks'][0]['hits'] == 0

@@ -189,9 +189,9 @@ unqualified.
 The task-private extension is opt-in. The local x86 TCG build and bounded
 same-page, reset and checkpoint witnesses have passed; the formal migration
 and vendor compatibility gates remain unqualified.
-The guest's cooperating monitor remains responsible for saving CPU state,
-selecting its task and restoring its interrupt frame. fDisBull does not
-schedule a DOS task or infer a vendor scheduler. After writing a complete even
+In this monitor-committed mode, the guest remains responsible for saving CPU
+state, selecting its task and restoring its interrupt frame; fDisBull does not
+infer a vendor scheduler. After writing a complete even
 `FDBTASK1` anchor, that monitor must issue `OUTW` to port `0xf1db` with value
 `0x4446`. The native extension uses the committed identity to select the CPU's
 task-private view. An incomplete, unknown or retired lifetime is intended to
@@ -242,6 +242,63 @@ protected/V86 mode, single-step commit followed by a selected-B checkpoint,
 reset revocation, retired/unknown/odd commits, and atomic MMIO/page-table
 refusal. These are bounded cooperating-monitor results, not QEMM/DESQview
 vendor qualification or a replacement DOS scheduler.
+
+### Experimental native cooperative CPU scheduler
+
+A separate opt-in native scheduler runs on top of task-private views. A bounded
+authored real-DOS/V86 witness has passed locally for cooperative scheduling,
+hardware interrupt-frame ownership and cold restoration. This does not
+establish QEMM or DESQview compatibility or interrupt-driven preemption, and
+DOSBox remains the default.
+
+After binding the initial cooperating identity, enabling task-private views
+and registering the tasks and physical pages, `dos_task_scheduler()` captures
+the current task's stopped CPU context. `dos_task_fork(task=..., entry=...,
+stack=..., registers=..., eflags=...)` admits a registered child from that
+context. Entry is a source address in the same verified COM/MZ allocation;
+the stack must also fit that allocation and its cloned segment cache. This is
+a controlled shared-source fork, not permission to invent arbitrary dormant
+DOS processes or infer their allocations. Use `dos_task_context(task=...)`
+and `dos_task_scheduler_observe()` to inspect CPU, frame and runqueue receipts;
+`dos_task_runnable(task, runnable=...)` changes an admitted slot's state.
+Each has a corresponding `debug-dos-task-...` JSON route.
+
+Guest `INT 60h` is the explicit cooperative yield and `INT 62h` blocks the
+current task. The native round-robin scheduler chooses the next
+runnable task, owns saving and restoring its architectural context and private
+view, and updates the cooperating anchor; the guest does not select the next
+task or copy its interrupt frame. An ordinary guest interrupt through a
+protected-mode gate still uses CPU-created frames and `IRET`; its ownership
+is tracked separately from the yield. If no slot remains runnable, execution
+reports `scheduler-idle` at the stopped boundary. The caller can inspect the
+result, use `dos_task_scheduler_disable()` at a supported stopped state, and
+explicitly continue the guest's own cleanup code; the scheduler does not
+manufacture a DOS exit.
+
+The local authored witness exercises two V86 tasks sharing one verified DOS
+allocation. They retain distinct registers, direction and carry flags, stacks,
+x87 values, private RAM and instruction-fetch layers, and same-site task
+hooks. Per-task x87 rounding controls convert the same guest value, 1.5, to 1
+and 2 respectively across switches and cold restore. A guest watchpoint witness
+uses identical DR7 controls with different DR0 addresses; its exception return
+addresses verify the selected task's watched write before and after restore.
+A protected-mode INT 61h frame remains owned by dormant task B across cold
+restoration in a separate Python process. The witness also exercises a
+single step through INT 60h, scheduler idle and disable, and subsequent guest
+DOS exit. An instrumented profile preserves virtual clock, precise retrace
+and VGA configuration across restore, along with audio observer state and token
+rotation. That audio window contained zero frames and zero dropped frames; it
+provides no PCM or audible speaker playback evidence. Separate local guards
+exercise an unowned interrupt stack, mixed-task IRET and a fault with an error code. These are authored, bounded
+results, not general scheduler qualification.
+
+Checkpoint state includes scheduler slots, CPU context, frame ownership and
+private views, with fresh native epochs on restore. PAE, long mode, unsupported
+CPU or interrupt-frame forms and uncertain ownership are refused;
+other real/protected/V86 use still requires the specific admitted mapping and
+frame constraints. A cooperative `INT 60h` round robin is not evidence that
+PIT/IRQ preemption, real vendor multitasking, arbitrary DPMI clients or general
+DOSBox behavior has been qualified.
 
 ## Prepare and check the core
 

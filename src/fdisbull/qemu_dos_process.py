@@ -26,6 +26,7 @@ from .qemu_machine import MachineContext, MachineDebugSession, QemuMachine, mach
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
 from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
+from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COMMANDS
 
 
 def _sha(data):
@@ -152,7 +153,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -309,6 +310,7 @@ class QemuDOSProcessSession(QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourc
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
                 native_dos_tasks='x-fdisbull-query-task-context' in vm.qmp_commands,
                 native_task_views=TASK_VIEW_COMMANDS <= vm.qmp_commands,
+                native_cpu_scheduler=SCHEDULER_COMMANDS <= vm.qmp_commands,
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',
@@ -753,6 +755,11 @@ class QemuDOSProcessSession(QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourc
         if not self._launching and self._return_breakpoint is not None:
             ids = result['session']['stop_reason']['breakpoint_ids']
             if self._return_breakpoint in ids:
+                if (getattr(self,'_dos_scheduler',None) or {}).get('enabled'):
+                    self.vm.close()
+                    error = DebuggerError('Disable the native scheduler before returning to DOS')
+                    error.result = result
+                    raise error
                 previous_deadline = self._deadline
                 previous_vm = self.vm.operation_deadline
                 previous_channels = [(channel, channel.operation_deadline)
@@ -775,6 +782,8 @@ class QemuDOSProcessSession(QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourc
                     for channel, bound in previous_channels:
                         channel.operation_deadline = bound
         if not self._launching:
+            from .qemu_dos_scheduler import after_scheduler_stop
+            result = after_scheduler_stop(self,result)
             result['process'] = deepcopy(self._process)
         return result
 

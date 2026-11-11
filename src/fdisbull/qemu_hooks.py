@@ -204,6 +204,9 @@ class QemuHookSessionMixin:
         if task_binding is not None:
             from .qemu_dos_tasks import observe_task, task_key
             try:
+                if (getattr(self,'_dos_scheduler',None) or {}).get('enabled'):
+                    from .qemu_dos_scheduler import _status
+                    _status(self,adopt=True)
                 observed = observe_task(self, binding=task_binding)
                 selected = [item for item in candidates if item.get('task_identity') is not None
                             and task_key(item['task_identity']) == task_key(observed['task_identity'])]
@@ -302,10 +305,11 @@ class QemuHookSessionMixin:
                     from .qemu_dos_tasks import observe_task
                     try:
                         current = observe_task(self, binding=control['task_identity'])
+                        same_site = int(self.registers()['linear_pc'], 16) == control['runtime_address']
                     except BaseException:
                         self.close()
                         raise
-                    if current.get('task_id') != previous_task:
+                    if current.get('task_id') != previous_task and same_site:
                         pending_stop = dict(outcome='breakpoint' if control['access'] == 'x' else 'watchpoint',
                             session=dict(stop_reason=dict(breakpoint_ids=[control['breakpoint_id']])))
                 if pending_stop is None:

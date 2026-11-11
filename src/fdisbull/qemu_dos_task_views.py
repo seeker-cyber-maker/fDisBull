@@ -228,6 +228,8 @@ def before_task_execution(session):
     # Raw continuation can finish that transaction; source attribution and
     # checkpoints separately require anchor/native selection agreement.
     row = _row(session)
+    from .qemu_dos_scheduler import before_scheduler_execution
+    before_scheduler_execution(session)
     raw = session.vm.qmp.call('x-fdisbull-task-layer-observe',_arguments(row['binding']))
     try:
         _validate_status(session,row,raw)

@@ -255,6 +255,7 @@ def save_process_state(session, name, max_bytes):
     from .qemu_instrumented_checkpoint import capture, verify_saved
     from .qemu_dos_tasks import capture_task_checkpoint
     from .qemu_dos_task_views import capture_task_views
+    from .qemu_dos_scheduler import capture_scheduler
     import uuid
     _file_name(name)
     if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= MAX_STATE):
@@ -267,6 +268,7 @@ def save_process_state(session, name, max_bytes):
     controls = capture_controls(session)
     task_checkpoint = capture_task_checkpoint(session)
     task_views = capture_task_views(session)
+    scheduler = capture_scheduler(session)
     instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
     bundle = dict(format=FORMAT, tag=tag, source_sha256=session.metadata['source_sha256'],
@@ -275,7 +277,7 @@ def save_process_state(session, name, max_bytes):
         process=deepcopy(session._process), origin=origin, registers=registers,
         memory=memory, controls=controls, serial=serial, instrumentation=instrumentation,
         native_task=task_checkpoint, task_binding=deepcopy(getattr(session, '_dos_task_binding', None)),
-        task_views=task_views)
+        task_views=task_views,native_scheduler=scheduler)
     try:
         snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
                      instrumented=instrumentation is not None, export_token=export_token)
@@ -286,6 +288,8 @@ def save_process_state(session, name, max_bytes):
             raise DebuggerError('Native task context changed while saving checkpoint')
         if capture_task_views(session) != task_views:
             raise DebuggerError('Native private task views changed while saving checkpoint')
+        if capture_scheduler(session) != scheduler:
+            raise DebuggerError('Native scheduler CPU/frame state changed while saving checkpoint')
         with session.vm.checkpoint_disk.open('rb') as stream:
             machine = stream.read(limit + 1)
         if len(machine) > limit:
@@ -314,6 +318,7 @@ def load_process_state(session, artifact, timeout_ms):
     from .qemu_instrumented_checkpoint import validate, restore
     from .qemu_dos_tasks import read_task_context, restore_task_checkpoint, task_key
     from .qemu_dos_task_views import validate_task_views, prime_task_views, verify_task_views, restore_task_views
+    from .qemu_dos_scheduler import validate_scheduler,prime_scheduler,verify_scheduler,restore_scheduler
 
     deadline = request_deadline(session, timeout_ms)
 
@@ -376,6 +381,10 @@ def load_process_state(session, artifact, timeout_ms):
         if task_views is not None and (task_binding is None or not any(
                 task_key(row['binding']) == task_key(task_binding) for row in task_views['views'])):
             raise ValueError('Private checkpoint lacks its selected task binding')
+        scheduler = bundle.get('native_scheduler')
+        validate_scheduler(session,scheduler,bundle['origin']['nonce'],task_views,bundle['process'])
+        if ((scheduler is not None) != (bundle['controls'].get('format') == 'fdisbull-qemu-controls-task-4')):
+            raise ValueError('Native scheduler checkpoint requires its version-4 control fence')
         instrumentation = bundle.get('instrumentation')
         validate(session.vm, instrumentation)
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
@@ -396,17 +405,24 @@ def load_process_state(session, artifact, timeout_ms):
                 if read_task_context(new) is None:
                     raise ValueError('Fresh QEMU lacks the checkpoint task-context extension')
             prime_task_views(new, task_views)
+            prime_scheduler(new,scheduler,task_views)
             snapshot_job(new, 'load', tag=bundle['tag'], vmstate='disk0', devices=['disk0'],
                          timeout_ms=remaining(), instrumented=instrumentation is not None)
             restored_instrumentation = restore(new, instrumentation)
             restored_task = restore_task_checkpoint(new, native_task, task_binding)
             restored_views = verify_task_views(new, task_views)
+            restored_scheduler = verify_scheduler(new,scheduler)
             actual, _, _ = _verify_process(session, bundle['process'], bundle['origin'],
                 vm=new, memory=bundle['memory'], task_binding=task_binding,
                 private_views={} if task_views is None else {row['binding']['task_id']:row for row in task_views['views']})
             for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
                 if actual.get(field) != bundle['registers'].get(field):
-                    raise DebuggerError('Restored process CPU differs: ' + field)
+                    from .qemu_dos_scheduler import _differences
+                    changed = _differences(bundle['registers'].get(field),actual.get(field),field)
+                    error = DebuggerError('Restored process CPU differs: '+', '.join(changed))
+                    error.expected_cpu = bundle['registers']
+                    error.actual_cpu = actual
+                    raise error
             if _serial_idle(session, vm=new, channel=channel) != bundle['serial']:
                 raise DebuggerError('Restored native COM2 state differs from the checkpoint')
             # QEMU retains the fresh owner's prelaunch runstate after a cold
@@ -437,6 +453,7 @@ def load_process_state(session, artifact, timeout_ms):
             session._advance_epoch()
             session._set_deadline(deadline)
             private_layer_ids = restore_task_views(session, task_views, restored_views)
+            restore_scheduler(session,scheduler,restored_scheduler)
             session._return_breakpoint = MachineContext.breakpoint(
                 session, session._ready['helper_segment'] * 16 + session._ready['exit_wait_ip'])['breakpoint_id']
             restored_controls = restore_controls(session, bundle['controls'],
@@ -461,6 +478,8 @@ def load_process_state(session, artifact, timeout_ms):
             if restored_views is not None:
                 result['task_views'] = dict(layers=private_layer_ids,
                     tasks=list(session._dos_task_views), native=restored_views)
+            if restored_scheduler is not None:
+                result['scheduler'] = restored_scheduler
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)

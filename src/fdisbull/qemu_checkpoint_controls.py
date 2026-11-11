@@ -15,6 +15,8 @@ from .dosbox_rpc import DebuggerError
 _FORMAT = 'fdisbull-qemu-controls-1'
 _TASK_FORMAT = 'fdisbull-qemu-controls-task-2'
 _TASK_VIEWS_FORMAT = 'fdisbull-qemu-controls-task-3'
+_SCHEDULER_FORMAT = 'fdisbull-qemu-controls-task-4'
+_VIEW_FORMATS = (_TASK_VIEWS_FORMAT,_SCHEDULER_FORMAT)
 _MAX_BYTES = 64 * 1024 * 1024
 _MAX_MAP = 65536
 _MAX_LAYERS = 64
@@ -224,7 +226,8 @@ def capture_controls(session):
             if item.get('task_identity') is not None:
                 raise ValueError('Unbound checkpoint cannot carry a task-scoped hook')
             item.pop('task_identity', None)
-    result = dict(format=_TASK_VIEWS_FORMAT if task_views else _TASK_FORMAT if task_binding is not None else _FORMAT,
+    scheduler = getattr(session,'_dos_scheduler',None)
+    result = dict(format=_SCHEDULER_FORMAT if scheduler else _TASK_VIEWS_FORMAT if task_views else _TASK_FORMAT if task_binding is not None else _FORMAT,
         run=run, epoch=epoch,
         source_sha256=session.metadata['source_sha256'], version=session.version['id'],
         version_sha256=session.version['sha256'], active=active, definitions=definitions,
@@ -315,7 +318,7 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
     """
     if not isinstance(controls, dict) or len(_encode(controls)) > _MAX_BYTES:
         raise ValueError('Invalid checkpoint controls')
-    if (controls.get('format') not in (_FORMAT, _TASK_FORMAT, _TASK_VIEWS_FORMAT) or controls.get('epoch') != old_epoch
+    if (controls.get('format') not in (_FORMAT, _TASK_FORMAT, *_VIEW_FORMATS) or controls.get('epoch') != old_epoch
             or controls.get('source_sha256') != session.metadata['source_sha256']
             or controls.get('version') != session.version['id']
             or controls.get('version_sha256') != session.version['sha256']):
@@ -325,10 +328,12 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
     session._stopped()
     saved_task = controls.get('task_identity')
     current_task = getattr(session, '_dos_task_binding', None)
-    if controls['format'] in (_TASK_FORMAT, _TASK_VIEWS_FORMAT) and saved_task is None:
+    if controls['format'] in (_TASK_FORMAT, *_VIEW_FORMATS) and saved_task is None:
         raise ValueError('Task checkpoint controls require a task binding')
-    if controls['format'] == _TASK_VIEWS_FORMAT and not getattr(session, '_dos_task_views', {}):
+    if controls['format'] in _VIEW_FORMATS and not getattr(session, '_dos_task_views', {}):
         raise ValueError('Task-view checkpoint controls require the restored private registry')
+    if controls['format'] == _SCHEDULER_FORMAT and not getattr(session,'_dos_scheduler',None):
+        raise ValueError('Native scheduler checkpoint requires verified CPU/frame state')
     if controls['format'] == _FORMAT:
         definitions = controls.get('definitions')
         hooks = controls.get('hooks')
@@ -439,7 +444,7 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
             hook_task = item.get('task_identity')
             if hook_task is not None:
                 from .qemu_dos_tasks import task_key
-                task_views = getattr(session, '_dos_task_views', {}) if controls['format'] == _TASK_VIEWS_FORMAT else {}
+                task_views = getattr(session, '_dos_task_views', {}) if controls['format'] in _VIEW_FORMATS else {}
                 owner = task_views.get(hook_task.get('task_id'), {}).get('binding', current_task)
                 if owner is None or task_key(hook_task) != task_key(owner):
                     raise ValueError('Checkpoint hook task differs from the restored task')
@@ -447,11 +452,11 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
             for action in actions:
                 if action.get('op') == 'layers': action['layers'] = [layer_ids[i] for i in action['layers']]
                 elif action.get('op') == 'task-layers':
-                    if controls['format'] != _TASK_VIEWS_FORMAT or private_layer_ids is None:
+                    if controls['format'] not in _VIEW_FORMATS or private_layer_ids is None:
                         raise ValueError('Task-layer hook lacks a restored private stack')
                     action['layers'] = [private_layer_ids[i] for i in action['layers']]
             mutated = True
-            if controls['format'] == _TASK_VIEWS_FORMAT:
+            if controls['format'] in _VIEW_FORMATS:
                 restored_item = dict(deepcopy(item), actions=actions)
                 _validate_restored_task_hook(session, restored_item)
                 created = session._install_restored_qemu_hook(restored_item)
