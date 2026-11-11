@@ -322,6 +322,8 @@ class QemuDOSProcessSession(QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHisto
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']
                 and self.capabilities['renderer_capture'] and FRAME_COMMANDS <= vm.qmp_commands)
             self.capabilities['frame_timeline_unit'] = 'completed synchronous renderer publication followed by a safe CPU stop'
+            self.capabilities['frame_timeline_storage'] = ['full','delta'] if self.capabilities['frame_timeline'] else []
+            self.capabilities['frame_timeline_capture'] = 'complete native checkpoint at every point; delta mode changes retained storage only'
             self.capabilities['frame_timeline_input'] = 'released input only; frame key ownership is unqualified'
             self.capabilities['frame_key_ownership'] = bool(self.capabilities['source_trace_clock']
                 and FRAME_KEY_COMMANDS <= vm.qmp_commands)

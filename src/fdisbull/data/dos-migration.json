@@ -389,12 +389,17 @@
         "tests/test_qemu_frame_keys.py",
         "tests/test_qemu_frame_key_checkpoint.py",
         "tests/test_qemu_frame_keys_public.py",
-        "tests/test_qemu_frame_keys_native.py"
+        "tests/test_qemu_frame_keys_native.py",
+        "tests/test_qemu_dos_checkpoint_payload.py",
+        "tests/test_qemu_frame_storage.py",
+        "tests/test_qemu_frame_deltas.py",
+        "tests/test_qemu_frame_deltas_public.py",
+        "tests/test_qemu_frame_deltas_native.py"
       ],
       "scope_limits": [
-        "Native renderer histories retain full process checkpoint and PNG DAG points, earlier branches, offline images and cross-session restore. The unit is a synchronous renderer publication; completed_guest_frames remains false.",
+        "Native renderer histories retain complete checkpoint/PNG DAG points with default full or opt-in lossless checkpoint delta retention, bounded parent chains, full keyframes/fallback, exact pin reconstruction, retained branches and cold restore. PNGs stay full. The unit is a synchronous renderer publication; completed_guest_frames remains false.",
         "N21 adds atomic stopped frame-key ownership, input journals, scheduled edges and full held-key/device restore under fresh native identities without reinjection. Typematic repeat is unsupported. Ordinary physical input remains a separate lease model; actual capacity and owner guards bind.",
-        "Partial CPU/RAM undo, lossless delta retention, comparative trials, general completed-frame/input parity and directory/file-aware restore remain unqualified. DOSBox stays retained pending the formal local parity gate."
+        "Partial CPU/RAM undo, comparative trials, general completed-frame/input parity and directory/file-aware restore remain unqualified. Delta mode changes retention only, with encoded payload/canonical metadata budgets distinct from reconstructed bytes and live disk growth. DOSBox stays retained pending formal local parity."
       ]
     },
     {

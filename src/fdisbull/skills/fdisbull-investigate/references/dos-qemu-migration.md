@@ -152,7 +152,18 @@ The root is a paused surface point, not a completed frame. The publication is
 not proof of guest drawing completion, VBlank, physical scanout or input
 consumption. `completed_guest_frames` stays false.
 
-Full storage remains required. N21 additionally admits atomic stopped
+Complete checkpoints are captured at every point. Retention supports default
+`full` or opt-in `delta` with `keyframe_interval=1..128`. Deltas bind exact
+checkpoint bytes to their immediate retained DAG parent and use bounded chains;
+full keyframes or an unprofitable/oversized-delta fallback reset depth. PNGs stay
+full and lossless. No redundant full checkpoint is published for a delta point;
+restore reconstructs transiently, and pin explicitly exports a byte-identical
+standalone full state. New delta manifests use a version fence; older full
+histories remain readable. Validate chains and images before restore or forward
+execution. Status reports encoded payload, canonical metadata, raw reconstructed
+bytes, PNGs and input journal separately; live QCOW2 growth remains separate.
+Codec work is bounded with deadline checks before/after, rather than interrupted
+inside zlib. N21 additionally admits atomic stopped
 `frame_inputs` and scheduled edges with token/epoch/generation ownership,
 separate from ordinary physical leases. Native capacity is two edges only when
 the PS/2 FIFO/controller output is quiescent, zero otherwise. Validate the whole
@@ -168,7 +179,7 @@ input invalidates an active owner. Ordinary leases/pending input/schedules
 still require resolution before checkpointing; release all owned keys before
 switching back to ordinary physical input. N20 remains released-input only.
 Typematic repeat is unsupported; held ownership does not prove repeated output
-or guest consumption. Partial-memory policies and delta retention remain open.
+or guest consumption. Partial-memory policies remain open.
 Hooks and task-private RAM/fetch layers use the existing full checkpoint
 contract, including native task/IRQ state. Earlier nonordinary stops do not
 create a completed frame or trigger another continue. Limits include the root

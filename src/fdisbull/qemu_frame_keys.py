@@ -122,7 +122,8 @@ def _input_journal_budget(session, manifest, count):
     journal = manifest.get('input_journal',[])
     if not isinstance(journal,list) or len(journal) + count > 1024:
         raise ValueError('Renderer input journal budget exhausted')
-    used = sum(n['checkpoint']['size'] + n['frame']['image']['size'] for n in manifest['nodes'])
+    used = (session._frame_state_bytes(manifest)
+            + sum(n['frame']['image']['size'] for n in manifest['nodes']))
     journal_bytes = len(json.dumps(journal,sort_keys=True,separators=(',',':')).encode())
     reserve = count * 8192
     if used + journal_bytes + reserve > manifest['max_bytes']:

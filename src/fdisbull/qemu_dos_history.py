@@ -256,7 +256,7 @@ class QemuDOSHistoryMixin:
         self._validate_manifest(manifest)
         if row['metadata']:
             metadata = json.loads(row['metadata'])
-            if (metadata.get('format') != FORMAT or metadata.get('history_id') != manifest['id']
+            if (metadata.get('format') != manifest['format'] or metadata.get('history_id') != manifest['id']
                     or metadata.get('manifest_sha256') != row['sha256']):
                 raise ValueError('History manifest metadata does not match its content')
         if manifest['identity'] != self._history_identity():
@@ -332,7 +332,7 @@ class QemuDOSHistoryMixin:
                 raise ValueError('History manifest parent is missing; refusing to fork from stale state')
             artifact = self.project._debug_artifact(self.run_id,
                 f"rewind-{manifest['id'][:12]}-{manifest['revision']:06d}.json",
-                MANIFEST_KIND, data, dict(format=FORMAT, history_id=manifest['id'],
+                MANIFEST_KIND, data, dict(format=manifest['format'], history_id=manifest['id'],
                     revision=manifest['revision'], manifest_sha256=digest,
                     host_files_restored=False))
         manifest['_artifact_id'] = artifact['artifact']
@@ -707,7 +707,10 @@ class QemuDOSHistoryMixin:
             if count >= len(ancestors):
                 raise ValueError('Rewind count exceeds the available parent lineage')
             target = ancestors[count]
-        self._history_state_artifact(target['checkpoint'])
+        prepare_restore = getattr(self, '_history_prepare_restore', None)
+        prepared = prepare_restore(manifest, target) if prepare_restore is not None else None
+        if prepared is None:
+            self._history_state_artifact(target['checkpoint'])
         validate_node = getattr(self, '_history_validate_node_before_restore', None)
         if validate_node is not None:
             validate_node(target)
@@ -717,8 +720,13 @@ class QemuDOSHistoryMixin:
         pending_manifest, pending_row = self._history_row(self._qemu_history_live['history'])
         try:
             with self._history_internal():
-                restored = self.load_state(target['checkpoint']['artifact'],
-                                           timeout_ms=self._history_remaining_ms())
+                if prepared is None:
+                    restored = self.load_state(target['checkpoint']['artifact'],
+                                               timeout_ms=self._history_remaining_ms())
+                else:
+                    from .qemu_dos_checkpoint import load_process_state_data
+                    restored = load_process_state_data(self, prepared['data'], prepared['metadata'],
+                        source_id=prepared['artifact'], timeout_ms=self._history_remaining_ms())
                 if self.closed or not isinstance(restored, dict) or restored.get('source_binding_restored') is not True:
                     raise ValueError('Restored checkpoint did not verify process source ownership')
                 current = self.registers()

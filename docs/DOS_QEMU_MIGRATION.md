@@ -157,8 +157,8 @@ CPU/surface point and is not counted as a completed renderer update. Every
 completed child carries its native publication and full private-disk state.
 Earlier branches and stored images remain available after a new child or a
 closed session. Image export reads the stored PNG without running or
-refreshing the guest; pinning copies the cached full checkpoint without
-recapturing it.
+refreshing the guest; pinning exports the exact cached full checkpoint bytes without
+recapturing them.
 
 ```python
 root = debug.timeline_start(max_frames=8, period_ns=16_666_667)
@@ -174,11 +174,11 @@ stone = debug.timeline_pin("frame-anchor.qcow2")
 restored = debug2.timeline_rewind(timeline=branch["timeline"], point=first_point)
 ```
 
-Full storage remains required. The optional N21 frame-key extension adds
+Every point captures a complete native checkpoint. Retention can use full
+payloads or opt-in lossless deltas. The optional N21 frame-key extension adds
 owned physical makes/breaks while the CPU is stopped, scheduled edges before
 a renderer advance, and held-key cold restore. N20 retains its released-input
-contract. Partial-memory restore policies and lossless delta retention remain
-unqualified. Active task-private RAM/fetch layers and hooks are preserved by
+contract. Partial-memory restore policies remain unqualified. Active task-private RAM/fetch layers and hooks are preserved by
 the underlying full checkpoint. An earlier
 hook, breakpoint, watchpoint or lifecycle stop ends the invocation without a
 fabricated frame or another continue; uncertain execution/capture stays
@@ -198,6 +198,60 @@ branches, offline export, separate-process restore, early stops, controller
 guards and task-private IRQ/layer/hook preservation. The dated handoff and
 !117 record the exact final source and verification receipt. The formal
 migration gate remains open and DOSBox-X stays default and retained.
+
+### Lossless checkpoint delta retention
+
+Select `storage_mode="delta"` and a `keyframe_interval` in 1..128 to retain
+complete checkpoint bytes as full keyframes or lossless XOR/zlib deltas. The
+default remains `full`. This changes storage only: every point still takes a
+complete native snapshot with the same input, layer, hook and IRQ state.
+PNGs remain full, lossless screenshot artifacts.
+
+```python
+root = debug.timeline_start(storage_mode="delta", keyframe_interval=4,
+                            max_frames=12, period_ns=20_000_000)
+points = debug.timeline_advance(frames=3)
+status = debug.timeline_status()
+assert status["storage_mode"] == "delta"
+full = debug.timeline_pin("portable-checkpoint.qcow2")
+```
+
+A delta binds its immediate DAG parent, base/result lengths and SHA-256 hashes,
+codec descriptor, encoded payload and canonical artifact metadata. Full
+keyframes reset chain depth; no chain reaches `keyframe_interval`. A result
+that does not save space, including wrapper metadata, falls back to a full
+checkpoint. Delta payloads above the ordinary 16 MiB artifact limit also fall
+back to a full state, whose existing 128 MiB limit remains unchanged. Earlier
+branches and all existing artifacts remain immutable and retained.
+
+Transient capture returns complete checkpoint bytes before persistence, so a
+delta point does not leave a hidden full checkpoint artifact. Restore validates
+the entire dependency chain and PNG before journaling a restore or replacing
+the live VM. It then uses the existing full-checkpoint source, runtime, native
+control and owned-key validation. Reconstruction creates no permanent full
+copy. `timeline_pin` explicitly publishes an ordinary standalone state artifact
+with byte-identical original checkpoint data; it does not recapture or run the
+guest. The version-2 renderer manifest is rejected by older full-only readers.
+Previously stored full histories remain supported.
+
+Status distinguishes `retained_encoded_state_payload_bytes`,
+`retained_state_metadata_bytes`, `reconstructed_state_payload_bytes`,
+`image_bytes_used`, `input_bytes_used` and `storage_bytes_used`, plus full/delta
+point counts and the keyframe interval. The retained timeline budget charges
+selected checkpoint payloads and canonical metadata, full PNG payloads and the
+input journal. The project runtime-artifact cap separately covers actual
+artifact payloads, including immutable manifest revisions and explicit pin
+exports. Live QCOW2 growth and codec working memory remain separate; this is
+not a disk or process-memory quota. Forward admission still reserves space for
+a comparable full checkpoint and PNG, without assuming future compression.
+Codec deadlines are checked before and after each bounded operation; zlib work
+already in progress is not interrupted.
+
+Four direct native witnesses compare reconstruction with the same point's
+pre-encoding bytes, verify full PNG pixels, retain branches and cold restore,
+refuse a corrupt base before VM replacement, restore held keys without
+reinjection, and preserve task-private RAM/fetch, hooks and real IRQ state.
+These are bounded local results; formal parity and DOSBox retirement stay open.
 
 ### Owned frame keys and input restore
 

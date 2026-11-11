@@ -81,7 +81,7 @@ def test_saved_script_forwards_publication_period_and_remaining_budget(raw_proje
     assert 1 <= session.frame_calls[1][3] <= 200 and peer.calls == []
 
 
-@pytest.mark.parametrize('step', [dict(op='timeline-start',storage_mode='delta'),
+@pytest.mark.parametrize('step', [dict(op='timeline-start',storage_mode='unknown'),
     dict(op='timeline-start',period_ns=0), dict(op='timeline-advance',frames=0),
     dict(op='timeline-advance',inputs=[dict(frame=1,edges=[])]),
     dict(op='timeline-rewind',frames=-1)])

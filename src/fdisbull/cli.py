@@ -308,7 +308,7 @@ METHODS = {
     "debug-delta-recover": "Load the recovery Anchor Stone and clear the partial-state guard; run",
     "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",
     "debug-frame-inputs": "Apply owned keyboard edges at a stopped boundary; run,edges; QEMU DOS requires the native frame-key extension",
-    "debug-timeline-start": "Start bounded frame history; DOSBox supports full/delta input history; QEMU DOS supports full renderer-publication history and [period_ns,timeline,timeout_ms]",
+    "debug-timeline-start": "Start bounded full/delta frame history; QEMU DOS retains complete renderer-point checkpoints losslessly with [storage_mode,keyframe_interval,period_ns,timeline,timeout_ms]",
     "debug-timeline-status": "Inspect live frame history, cursor, input log, retained bytes and validity; run",
     "debug-timeline-advance": "Capture completed renderer frames and optional indexed key edges; run,[frames,inputs,timeout_ms]; QEMU DOS input requires native frame ownership",
     "debug-timeline-rewind": "Restore full frame and owned-key state; run,[frames]; DOSBox adds partial policy; QEMU DOS adds [timeline,point,timeout_ms] and frames=0 restores the current point",

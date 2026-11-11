@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 import uuid
 
-from .qemu_dos_history import (FORMAT, MAX_NODES, MAX_STATE, _history_operation,
+from .qemu_dos_history import (FORMAT, MAX_NODES, MAX_STATE, QemuDOSHistoryMixin, _history_operation,
                                _positive_int, _sha)
 from .dosbox_rpc import DebuggerError
 
@@ -76,6 +76,46 @@ def _image_row(session, image):
 class QemuDOSFramesMixin:
     """Renderer-update points backed by complete, immutable process states."""
 
+    @staticmethod
+    def _validate_manifest(manifest):
+        from .qemu_frame_storage import FORMAT as DELTA_FORMAT, validate_manifest
+        if isinstance(manifest,dict) and manifest.get('format') == DELTA_FORMAT:
+            validate_manifest(manifest)
+        else:
+            QemuDOSHistoryMixin._validate_manifest(manifest)
+
+    def _frame_delta(self, manifest):
+        from .qemu_frame_storage import FORMAT as DELTA_FORMAT
+        return manifest.get('format') == DELTA_FORMAT
+
+    def _frame_state_bytes(self, manifest):
+        from .qemu_frame_storage import stored_size
+        return sum(stored_size(n['checkpoint']) if self._frame_delta(manifest)
+                   else n['checkpoint']['size'] for n in manifest['nodes'])
+
+    def _frame_bytes_used(self, manifest):
+        return (self._frame_state_bytes(manifest)
+                + sum(n['frame']['image']['size'] for n in manifest['nodes'])
+                + len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()))
+
+    def _history_prepare_restore(self, manifest, target):
+        if not self._frame_delta(manifest): return None
+        from .qemu_frame_storage import materialize
+        return materialize(self,manifest,target)
+
+    def _frame_capture_delta(self, manifest, node_id, parent, name, image_capture):
+        from .qemu_dos_checkpoint import capture_process_state
+        from .qemu_frame_storage import store
+        config = manifest['frame_config']
+        before = self._history_disk_bytes()
+        captured = capture_process_state(self,name,config['max_state_bytes'])
+        after = self._history_disk_bytes()
+        image = self._frame_image(image_capture(max_bytes=config['max_image_bytes']),config['max_image_bytes'])
+        checkpoint = store(self,manifest,node_id,parent,captured,reserve_bytes=image['size'])
+        checkpoint.update(live_disk_bytes_before=before,live_disk_bytes_after=after,
+                          live_disk_bytes_growth=None if before is None or after is None else max(0,after-before))
+        return checkpoint,image
+
     def _frame_capability(self):
         from .qemu_display import DISPLAY_COMMANDS
         from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
@@ -106,9 +146,21 @@ class QemuDOSFramesMixin:
 
     def _frame_summary(self, manifest, artifact=None):
         result = self._history_summary(manifest,artifact)
-        result.update(unit='completed synchronous renderer update', completed_guest_frame=None,
+        delta = self._frame_delta(manifest)
+        full_points = sum(n['checkpoint'].get('storage',{}).get('kind','full') == 'full' for n in manifest['nodes'])
+        result.update(format=manifest['format'],unit='completed synchronous renderer update', completed_guest_frame=None,
             timeline=result['history'], point=result['cursor'],
-            storage_mode='full', frame_config=deepcopy(manifest['frame_config']),
+            storage_mode=manifest['frame_config'].get('storage_mode','full'),
+            keyframe_interval=manifest['frame_config'].get('keyframe_interval',8),
+            frame_config=deepcopy(manifest['frame_config']),
+            full_state_points=full_points,delta_state_points=len(manifest['nodes'])-full_points,
+            retained_encoded_state_payload_bytes=sum(n['checkpoint']['storage']['payload_size'] if delta
+                else n['checkpoint']['size'] for n in manifest['nodes']),
+            reconstructed_state_payload_bytes=sum(n['checkpoint']['size'] for n in manifest['nodes']),
+            retained_state_metadata_bytes=sum(n['checkpoint']['storage']['metadata_size'] for n in manifest['nodes']) if delta else 0,
+            state_bytes_used=self._frame_state_bytes(manifest),storage_bytes_used=self._frame_bytes_used(manifest),
+            input_bytes_used=len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()),
+            codec_transient_bound_bytes=6*manifest['frame_config']['max_state_bytes']+8*1024**2 if delta else 0,
             image_bytes_used=sum(n['frame']['image']['size'] for n in manifest['nodes']),
             nodes=[dict(id=n['id'],parent=n['parent'],edge=deepcopy(n['edge']),
                         checkpoint=deepcopy(n['checkpoint']),frame=deepcopy(n['frame'])) for n in manifest['nodes']])
@@ -125,8 +177,7 @@ class QemuDOSFramesMixin:
         config = manifest['frame_config']
         if len(manifest['nodes']) + count > min(config['max_frames'], config['max_captures'], MAX_NODES):
             raise ValueError('Renderer timeline capture budget exhausted')
-        used = (sum(n['checkpoint']['size'] + n['frame']['image']['size'] for n in manifest['nodes'])
-                + len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()))
+        used = self._frame_bytes_used(manifest)
         remaining = config['max_bytes'] - used
         state_reserve = max(4096, min(MAX_STATE, max(parent['checkpoint']['size'],self._history_disk_bytes() or 0)))
         reserve = count * (state_reserve + config['max_image_bytes']) + input_reserve
@@ -272,7 +323,8 @@ class QemuDOSFramesMixin:
                 (max_image_bytes,'max_image_bytes',16*1024**2),(keyframe_interval,'keyframe_interval',128)):
             _positive_int(value,name,1,maximum)
         validate_display_period(period_ns)
-        if storage_mode != 'full': raise ValueError('Renderer timeline supports full checkpoints only')
+        from .debug_timeline import validate_storage
+        validate_storage(storage_mode,keyframe_interval)
         if max_state_bytes + max_image_bytes > max_bytes:
             raise ValueError('Renderer timeline byte budget cannot reserve one state and image')
         self._frame_capability()
@@ -290,8 +342,10 @@ class QemuDOSFramesMixin:
         initial = self.display_observe()
         history_id = uuid.uuid4().hex
         config = dict(max_frames=max_frames,max_bytes=max_bytes,max_state_bytes=max_state_bytes,
-            max_image_bytes=max_image_bytes,max_captures=max_captures,period_ns=period_ns)
-        manifest = dict(format=FORMAT,id=history_id,revision=0,parent_manifest=None,
+            max_image_bytes=max_image_bytes,max_captures=max_captures,period_ns=period_ns,
+            storage_mode=storage_mode,keyframe_interval=keyframe_interval)
+        from .qemu_frame_storage import FORMAT as DELTA_FORMAT
+        manifest = dict(format=DELTA_FORMAT if storage_mode == 'delta' else FORMAT,id=history_id,revision=0,parent_manifest=None,
             identity=self._history_identity(),max_steps=min(max_frames,max_captures,MAX_NODES),
             max_bytes=max_bytes,nodes=[],head=None,cursor=None,live_cursor_valid=False,
             invalid_reason=None,pending=dict(kind='renderer-root',started=time.time_ns()),
@@ -305,10 +359,14 @@ class QemuDOSFramesMixin:
                     publication = initial
                     config['period_ns'] = publication['observation_period_ns']
                     manifest['frame_config'] = deepcopy(config)
-                checkpoint = self._history_checkpoint(remaining_bytes=max_state_bytes,
-                    node_name=f'frame-{history_id[:8]}-root.qcow2')
-                image = self._frame_image(self.capture_surface('frame-root.png',max_bytes=max_image_bytes),max_image_bytes)
                 node_id = uuid.uuid4().hex
+                if self._frame_delta(manifest):
+                    checkpoint,image = self._frame_capture_delta(manifest,node_id,None,
+                        f'frame-{history_id[:8]}-root.qcow2',lambda **kw:self.capture_surface('frame-root.png',**kw))
+                else:
+                    checkpoint = self._history_checkpoint(remaining_bytes=max_state_bytes,
+                        node_name=f'frame-{history_id[:8]}-root.qcow2')
+                    image = self._frame_image(self.capture_surface('frame-root.png',max_bytes=max_image_bytes),max_image_bytes)
                 manifest['nodes'].append(dict(id=node_id,parent=None,checkpoint=checkpoint,
                     edge=dict(kind='root',completed_instruction=False),registers=self.registers(),created=time.time_ns(),
                     frame=dict(kind='initial-paused',image=image,keys=self._timeline_frame_keys(),completed_guest_frame=None)))
@@ -336,6 +394,10 @@ class QemuDOSFramesMixin:
         self._frame_capability()
         manifest = self._frame_manifest()
         parent = self._frame_current(manifest)
+        if self._frame_delta(manifest):
+            from .qemu_frame_storage import materialize
+            materialize(self,manifest,parent)
+            self._history_validate_node_before_restore(parent)
         self._frame_budget(manifest,parent,frames,
                            input_reserve=8192 * sum(bool(v) for v in schedule.values()))
         self._history_admission()
@@ -393,20 +455,25 @@ class QemuDOSFramesMixin:
                             or after.get('published_ns') != observed['published-ns']):
                         raise DebuggerError('Renderer publication differs from frame fence')
                     config = manifest['frame_config']
-                    used = (sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])
-                            + len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()))
-                    checkpoint = self._history_checkpoint(remaining_bytes=min(config['max_state_bytes'],config['max_bytes']-used),
-                        node_name=f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2")
-                    image_limit = min(config['max_image_bytes'],config['max_bytes']-used-checkpoint['size'])
-                    if image_limit < 1: raise ValueError('Renderer timeline image budget exhausted')
-                    captured = self.capture_display('timeline-frame.png',max_bytes=image_limit)
-                    image = self._frame_image(captured,image_limit)
-                    metadata = captured['metadata']
+                    used = self._frame_bytes_used(manifest)
+                    node_id = uuid.uuid4().hex
+                    if self._frame_delta(manifest):
+                        checkpoint,image = self._frame_capture_delta(manifest,node_id,parent,
+                            f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2",
+                            lambda **kw:self.capture_display('timeline-frame.png',**kw))
+                        metadata = json.loads(_image_row(self,image)['metadata'])
+                    else:
+                        checkpoint = self._history_checkpoint(remaining_bytes=min(config['max_state_bytes'],config['max_bytes']-used),
+                            node_name=f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2")
+                        image_limit = min(config['max_image_bytes'],config['max_bytes']-used-checkpoint['size'])
+                        if image_limit < 1: raise ValueError('Renderer timeline image budget exhausted')
+                        captured = self.capture_display('timeline-frame.png',max_bytes=image_limit)
+                        image = self._frame_image(captured,image_limit)
+                        metadata = captured['metadata']
                     frame = dict(kind='renderer-update',image=image,update_id=after['update_id'],
                         published_ns=after['published_ns'],width=after['width'],height=after['height'],
                         pixel_sha256=metadata['pixel_sha256'],keys=self._timeline_frame_keys(),
                         input=deepcopy(key_receipt),completed_guest_frame=None)
-                    node_id = uuid.uuid4().hex
                     manifest['nodes'].append(dict(id=node_id,parent=parent['id'],checkpoint=checkpoint,
                         edge=dict(kind='renderer-update',stop=deepcopy(result),fence=final,completed_instruction=None),
                         registers=self.registers(),created=time.time_ns(),frame=frame))
@@ -460,6 +527,11 @@ class QemuDOSFramesMixin:
         manifest = self._frame_manifest()
         if manifest.get('input_dirty'): raise ValueError('Restore or capture dirty frame input before pinning')
         node = self._frame_current(manifest)
+        if self._frame_delta(manifest):
+            from .qemu_frame_storage import materialize
+            checkpoint = materialize(self,manifest,node)
+            self._history_validate_node_before_restore(node)
+            return self._artifact(name,'state',checkpoint['data'],checkpoint['metadata'])
         row = self._history_state_artifact(node['checkpoint'])
         return self._artifact(name,'state',bytes(row['data']),json.loads(row['metadata']))
 

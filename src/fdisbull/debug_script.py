@@ -244,8 +244,6 @@ def validate_script(script, *, session=None):
                                     raise ValueError('Native frame histories require a project outside a caller-owned transaction')
                             if op == 'timeline-rewind' and params.get('policy') is not None:
                                 raise ValueError('Native renderer histories restore full checkpoints; partial policies are unqualified')
-                            if op == 'timeline-start' and params.get('storage_mode','full') != 'full':
-                                raise ValueError('Native renderer histories currently require full storage mode')
                         limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
                                 'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
                                 'max_bytes':(1,256*1024*1024),

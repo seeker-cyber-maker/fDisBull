@@ -3672,3 +3672,81 @@ All **127 formal surface qualifications and seven campaigns** remain open.
 Partial CPU/RAM undo, lossless delta retention, comparative trials and the
 planned FreeDOS/directory/file layers remain future work. DOSBox-X remains
 default and retained. All checks were local; no CI result is implied.
+
+
+## Local continuation 2026-11-11: lossless frame-history checkpoint deltas
+
+This continuation follows `8bf6e49f0605a88a49284f19ec7065f1f3f41a1c` on
+Draft !117. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4214379025)
+records the next bounded part of **slice 7, Histories**. The complete prior
+handoff and FreeDOS/directory-workspace amendment remain preserved.
+
+`timeline_start(storage_mode="delta", keyframe_interval=...)` now opts into
+lossless retention of the exact full native checkpoint archive captured at each
+renderer point. Full is still the default. The shared bounded XOR/zlib codec
+binds immediate DAG-parent identity, lengths, hashes, depth, descriptor, payload
+and canonical metadata; full keyframes and full fallback keep reconstruction
+bounded. PNGs remain full and lossless. No original target, screenshot, private
+checkpoint or database is added to Git.
+
+Internal capture-to-bytes and verified load-from-bytes paths share the existing
+full checkpoint controls and native restoration. Selected deltas are published
+without first persisting a duplicate full checkpoint. Full keyframes remain
+ordinary state artifacts. Restore reconstructs transiently; pin is an explicit
+standalone full-state export with the original exact bytes. A version-fenced
+renderer manifest preserves old full histories and makes older readers refuse
+new delta histories. There is no eviction, branch truncation or deletion.
+
+State, PNG and input dependencies are checked before restore intent or forward
+execution. Corrupt/missing ancestors, mismatched source/version/metadata,
+invalid depth and conflicting budgets refuse before replacing the live owner.
+After an uncertain execution/capture/publication failure, the existing pending
+intent and close behavior remain. Known early hook/debugger stops retain their
+actual prefix. Frame-key ownership, dirty input journals, zero-frame rollback,
+private RAM/fetch layers, hooks, checkpoints and real IRQ state use the same
+full-state semantics.
+
+Status separates retained checkpoint payload/canonical metadata, reconstructed
+full bytes, PNG bytes and input journal. Delta selection includes wrapper cost
+and falls back when unprofitable or above the 16 MiB non-state artifact cap;
+full states retain the existing 128 MiB cap. History admission conservatively
+reserves a comparable full checkpoint and PNG. Immutable manifest revisions,
+explicit pins, live private QCOW2 growth and codec working memory are separate
+costs; no quota or future compression ratio is promised. Deadline checks bracket
+bounded codec calls, without interrupting zlib mid-call.
+
+The focused local selection passed **160 host tests**, and all **four new
+actual QEMU cases** passed on the unchanged N21 binary
+`54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a`.
+The native byte oracle records each point's original pre-encoding capture;
+separately executed snapshots are not substituted for that oracle. Witnesses
+cover exact pin reconstruction, full PNG/VRAM pixels, retained branches,
+offline images and separate-process delta restore, corrupt-base refusal,
+held-key restore without make reinjection, and genuine task-private IRQ,
+layer and hook continuation.
+
+In the authored mode-13h branch/cold-restore fixture, six retained nodes used
+20,892,989 checkpoint payload bytes for 31,574,427 reconstructed bytes
+(**33.83% payload reduction**), plus 5,044 canonical metadata bytes and 9,026
+PNG bytes. This is a measured fixture's node retention, excluding explicit pin
+exports, manifest revisions and live disk; it is not a whole-database or
+arbitrary-workload compression claim. The external sanitized observation is
+`frame-deltas-storage-observation.json`.
+
+The final integrated preservation run passed **1,950 tests across 107 files**,
+with zero failures, errors or skips and unchanged Python source/witness hashes.
+It includes all four new actual delta cases and the retained 14 owned-key,
+nine renderer-history, five checkpoint-history and native task/scheduler/IRQ
+preservation cases. The retained DOSBox history/delta/timeline/trial selection
+passed **317 tests**, and the sealed N20 renderer/checkpoint history selection
+passed **14 tests**. Final payload/skill/migration metadata passed **48 tests**.
+Selections overlap and are not additive. External log/JUnit receipts use
+`frame-deltas-preservation-final`, `frame-deltas-dosbox-final`,
+`frame-deltas-n20-preservation`, `frame-deltas-native-focused`,
+`frame-deltas-host-integrated` and `frame-deltas-metadata-final` stems. Exact
+commit and both-mirror readback are logged in !117.
+
+Histories remains in progress; selected CPU/RAM undo, comparative trials and
+the planned FreeDOS/directory/file layers remain open. All 127 formal
+qualifications and seven campaigns remain open. DOSBox-X remains default and
+retained. All verification is local; no CI is run for this continuation.

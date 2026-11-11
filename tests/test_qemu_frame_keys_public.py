@@ -70,7 +70,7 @@ def test_old_native_without_frame_key_capability_rejects_whole_script_before_wri
     assert writes == [] and peer.calls == []
 
 
-@pytest.mark.parametrize('step', [dict(op='timeline-start',storage_mode='delta'),
+@pytest.mark.parametrize('step', [dict(op='timeline-start',storage_mode='unknown'),
     dict(op='timeline-rewind',frames=-1),dict(op='timeline-rewind',policy={'preserve_memory':[]}),
     dict(op='frame-inputs',edges=[dict(key='a',pressed=True),dict(key='a',pressed=True)])])
 def test_native_frame_key_script_invalid_forms_reject(step):

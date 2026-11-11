@@ -19,6 +19,7 @@ FORMAT = 'fdisbull-qemu-dos-process-qcow2-v2'
 COMMAND = 'x-fdisbull-dos-checkpoint-status'
 MAX_STATE = 128 * 1024 * 1024
 MAX_SIDECAR = 64 * 1024 * 1024
+FRAME_STATE_DELTA_REF_FORMAT = 'fdisbull-qemu-frame-state-1'
 _CURRENT_TASK = object()
 
 
@@ -255,7 +256,13 @@ def _unarchive(data):
     return machine, bundle
 
 
-def save_process_state(session, name, max_bytes):
+def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_bytes=None):
+    """Capture a complete native process checkpoint without persisting it.
+
+    The returned bytes are the exact ordinary checkpoint archive consumed by
+    :func:`load_process_state_data`. Callers may retain or losslessly encode
+    that payload before deciding whether to publish a ``state`` artifact.
+    """
     from .external_files import _file_name
     from .qemu_instrumented_checkpoint import capture, verify_saved
     from .qemu_dos_tasks import capture_task_checkpoint
@@ -311,19 +318,51 @@ def save_process_state(session, name, max_bytes):
             metadata['instrumentation'] = dict(sha256=instrumentation['sha256'],
                 clock_profile='virtual', audio_profile=session._checkpoint_launch['audio_profile'],
                 retrace_profile=session._checkpoint_launch['retrace_profile'])
-        return session._artifact(name, 'state', data, metadata)
+        return dict(name=name, kind='state', data=data, metadata=metadata,
+                    sha256=_sha(data), size=len(data))
+    except BaseException:
+        session.close()
+        raise
+
+
+def save_process_state(session, name, max_bytes):
+    """Capture and persist a full process checkpoint (public behavior)."""
+    checkpoint = capture_process_state(session, name=name, max_bytes=max_bytes)
+    try:
+        return session._artifact(checkpoint['name'], checkpoint['kind'],
+                                 checkpoint['data'], checkpoint['metadata'])
     except BaseException:
         session.close()
         raise
 
 
 def load_process_state(session, artifact, timeout_ms):
+    """Load a persisted full checkpoint using its original public artifact."""
+    return load_process_state_data(session, None, None, source_id=artifact,
+                                  timeout_ms=timeout_ms)
+
+
+def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60000):
+    """Restore full checkpoint bytes without persisting a reconstructed copy.
+
+    ``source_id`` identifies either the ordinary full ``state`` artifact or a
+    stored ``qemu-frame-state-delta`` artifact in this project version. Delta
+    payload bytes are reconstructed and hash-checked by the history layer;
+    this function additionally verifies their stored descriptor and then runs
+    the same native/process validation and fresh-owner restore path as the
+    public artifact loader.
+    """
     from .operation_budget import request_deadline
     from .qemu_machine import MachineContext, QemuMachine
     from .qemu_instrumented_checkpoint import validate, restore
     from .qemu_dos_tasks import read_task_context, restore_task_checkpoint, task_key
     from .qemu_dos_task_views import validate_task_views, prime_task_views, verify_task_views, restore_task_views
     from .qemu_dos_scheduler import validate_scheduler,prime_scheduler,verify_scheduler,restore_scheduler
+
+    if not isinstance(source_id, str) or not source_id:
+        raise ValueError('Process checkpoint source ID must be a nonempty artifact identifier')
+    if (data is None) != (metadata is None):
+        raise ValueError('Reconstructed checkpoint data and metadata must be supplied together')
 
     deadline = request_deadline(session, timeout_ms)
 
@@ -350,20 +389,60 @@ def load_process_state(session, artifact, timeout_ms):
         if session.vm is not owner:
             raise ValueError('Machine owner changed before process restore')
         from .qemu_machine import _machine_operation_guard
-        _machine_operation_guard(owner, 'load_state', (artifact,), {'timeout_ms': timeout_ms})
+        _machine_operation_guard(owner, 'load_state', (source_id,), {'timeout_ms': timeout_ms})
         _preflight(session)
         _serial_idle(session)
         row = session.project.db.execute(
             'SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
-            (artifact,)).fetchone()
-        if row is None or row['kind'] != 'state' or row['version'] != session.version['id']:
-            raise ValueError('Process checkpoint must belong to the selected project version')
-        data = bytes(row['data'])
-        metadata = json.loads(row['metadata'])
-        if (_sha(data) != row['sha256'] or metadata.get('format') != FORMAT
+            (source_id,)).fetchone()
+        if row is None or row['version'] != session.version['id']:
+            raise ValueError('Process checkpoint source must belong to the selected project version')
+        stored_data = bytes(row['data'])
+        stored_sha = row['sha256']
+        stored_metadata = json.loads(row['metadata'])
+        if _sha(stored_data) != stored_sha:
+            raise ValueError('Stored process checkpoint source artifact hash mismatch')
+        reconstructed = data is not None or metadata is not None
+        if not reconstructed:
+            if row['kind'] != 'state':
+                raise ValueError('Process checkpoint must be a full state artifact')
+            data = stored_data
+            metadata = stored_metadata
+        else:
+            if (not isinstance(data, bytes) or not 1 <= len(data) <= MAX_STATE
+                    or not isinstance(metadata, dict)):
+                raise ValueError('Reconstructed process checkpoint payload is invalid')
+            if row['kind'] == 'state':
+                if data != stored_data or metadata != stored_metadata:
+                    raise ValueError('Full process checkpoint payload differs from its stored state artifact')
+            elif row['kind'] == 'qemu-frame-state-delta':
+                wrapper = stored_metadata
+                descriptor = wrapper.get('descriptor') if isinstance(wrapper, dict) else None
+                if (not isinstance(wrapper, dict)
+                        or set(wrapper) != {'format', 'history_id', 'node_id', 'full_metadata', 'descriptor'}
+                        or wrapper.get('format') != FRAME_STATE_DELTA_REF_FORMAT
+                        or not isinstance(wrapper.get('history_id'), str)
+                        or not 1 <= len(wrapper['history_id']) <= 128
+                        or not isinstance(wrapper.get('node_id'), str)
+                        or not 1 <= len(wrapper['node_id']) <= 128
+                        or not isinstance(descriptor, dict)
+                        or wrapper.get('full_metadata') != metadata):
+                    raise ValueError('Stored frame-state delta wrapper differs from its checkpoint payload')
+                from . import frame_state_codec
+                delta = dict(descriptor, payload=stored_data)
+                frame_state_codec.validate(delta, result_sha256=descriptor.get('result_sha256'),
+                    result_size=descriptor.get('result_size'), max_bytes=MAX_STATE, max_depth=127)
+                if (descriptor.get('result_size') != len(data)
+                        or descriptor.get('result_sha256') != _sha(data)):
+                    raise ValueError('Reconstructed checkpoint bytes differ from their stored delta reference')
+            else:
+                raise ValueError('Process checkpoint source must be a full state or frame-state delta artifact')
+        if (metadata.get('format') != FORMAT
                 or metadata.get('source_sha256') != session.metadata['source_sha256']
                 or metadata.get('version_sha256') != session.metadata['version_sha256']):
             raise ValueError('Process checkpoint source, version or data identity differs')
+        if reconstructed and row['kind'] == 'state' and _sha(data) != stored_sha:
+            raise ValueError('Reconstructed full checkpoint hash differs from its source artifact')
         remaining()
         machine, bundle = _unarchive(data)
         remaining()
@@ -478,15 +557,19 @@ def load_process_state(session, artifact, timeout_ms):
             session._checkpoint_entry_clean = False
             session._checkpoint_epoch += 1
             session.metadata['process_disk'] = deepcopy(bundle['origin']['process_disk'])
+            checkpoint_sha = _sha(data)
+            origin_run = metadata.get('origin_run', row['run'])
             session.metadata['checkpoint_restore'] = dict(
-                artifact=artifact, sha256=row['sha256'], origin_run=row['run'],
+                artifact=source_id, sha256=checkpoint_sha, origin_run=origin_run,
                 runtime_origin=bundle['runtime_origin'], launch_template_inputs=deepcopy(new.inputs))
             session._persist_process()
-            result = dict(artifact=artifact, sha256=row['sha256'],
-                          checkpoint_epoch=session._checkpoint_epoch, origin_run=row['run'],
+            result = dict(artifact=source_id, sha256=checkpoint_sha,
+                          checkpoint_epoch=session._checkpoint_epoch, origin_run=origin_run,
                           capture_epoch=session._runtime_epoch, source_binding_restored=True,
                           host_files_restored=False, process=deepcopy(session._process),
                           controls=restored_controls)
+            if reconstructed:
+                result['reconstructed_checkpoint'] = True
             if restored_instrumentation is not None:
                 result['instrumentation'] = restored_instrumentation
             if restored_task is not None:

@@ -97,7 +97,7 @@ def test_hook_interrupt_ends_without_child_or_extra_resume(frames):
 
 
 @pytest.mark.parametrize('kwargs',[
-    {'storage_mode':'delta'}, {'max_frames':0}, {'period_ns':0},
+    {'storage_mode':'unknown'}, {'max_frames':0}, {'period_ns':0},
 ])
 def test_invalid_start_refuses_before_artifact_or_native_action(frames,kwargs):
     before = frames.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0]
