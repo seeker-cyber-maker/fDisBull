@@ -551,6 +551,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     # brackets, including callers using the raw context of another backend.
     clock_observe=machine_io_operation(MachineClockMixin.clock_observe)
     clock_advance=machine_clock_operation(MachineClockMixin.clock_advance)
+    _clock_advance_with_hooks=machine_clock_operation(MachineClockMixin._clock_advance_with_hooks)
     capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
     audio_start=machine_io_operation(QemuAudioMixin.audio_start,close_on_timeout=True)
     audio_observe=machine_io_operation(QemuAudioMixin.audio_observe)

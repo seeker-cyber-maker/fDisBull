@@ -75,6 +75,17 @@ and an explicit task lifetime identifier; do not derive identity just from an
 address, CR3, application menu number or window handle. A mapping change, state
 restore, task replacement or freed allocation ends that search.
 
+The candidate native QEMU snapshot API accepts `view="base"` (the default
+legacy debugger view), `view="ram"`, or `view="execute"`. For an explicit
+private view, supply the selected registered native task's actual `task_id`,
+not a caller-created lifetime label. The recorded native task identity, run,
+epoch, backing and view generation guard the capture. `execute` permits
+inspection; rule edits require `ram`. A different selected task or changed view
+must refuse before a tick or write. After checkpoint restore, the old rule is
+stale: capture again and create a new rule; do not replay the old one. A bounded authored native IRQ witness passed locally for these private-view
+behaviors. The fresh bounded regression passed 1,159 tests across 72 files
+with no failures, errors or skips.
+
 JSON examples for a foreground `serve` session:
 
 ```json
@@ -97,7 +108,8 @@ endianness, stride and bias belong to the search and cannot change midstream.
 Use explicit `bias=-1` for stored=displayed−1; use a separate search for an
 alternative encoding. Results survive project reopen and retain previous values.
 
-Keep snapshots at most 16 MiB and candidates at most 1,048,576. The default
+Keep base-view snapshots at most 16 MiB, explicit native RAM/execute views at
+most 64 KiB, and candidates at most 1,048,576. The default
 candidate budget is finite, with at most 65,536 intervals. A budget error is not
 a partial complete result. Split a large domain or increase stride explicitly.
 Do not expose snapshot bytes in ordinary summaries; return artifact IDs and
@@ -131,11 +143,18 @@ For explicit repeated edits or freezing, create a rule:
 
 Each tick evaluates the fresh value, consumes a finite tick budget and creates
 a new guarded one-shot plan only for the originally selected candidate. An
-unconditional `always` rule provides bounded freezing. The run operation is
-DOSBox-only, begins with an immediate tick and uses finite guest-time slices;
-breakpoints, exits, timeouts and stale/uncertain context stop repetition. The
-host interval is not a DESQview scheduling guarantee. Manual ticks also work
-at qualified single-CPU machine stops. No persistent unattended writer starts.
+unconditional `always` rule provides bounded freezing. The run operation begins with an immediate tick. DOSBox uses finite guest-time
+slices; admitted native QEMU sessions use bounded token-owned intervals on the
+explicit virtual clock under one host deadline. A native private-RAM rule uses
+verified immutable rule-owned RAM overlays above authored RAM and code layers,
+without changing the other task's view or the shared base. Hook-aware native
+intervals dispatch the encountered hook once and stop without an extra tick;
+other nonordinary stops and stale or uncertain context also stop repetition
+without replay. A bounded authored native witness passed for the private-view and hook
+interaction, including IRQ cold restore. The interval is not a DESQview
+scheduling guarantee. Manual ticks
+also work at qualified single-CPU machine stops. No persistent unattended
+writer starts.
 
 ## Keep evidence scoped
 

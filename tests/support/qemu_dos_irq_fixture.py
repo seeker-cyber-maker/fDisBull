@@ -23,7 +23,7 @@ def _replace(source, old, new):
     return source.replace(old, new, 1)
 
 
-def irq_fixture(directory, nasm, *, fpu=False, guard="none", irq=0):
+def irq_fixture(directory, nasm, *, fpu=False, guard="none", irq=0, mutate_scratch=False):
     if guard not in ("none", "if", "mask", "chain-shadow"):
         raise ValueError("Unknown IRQ deferral guard")
     if irq not in (0, 1) or irq == 1 and guard != "none":
@@ -274,6 +274,8 @@ b_stack_top:''')
     # backwards-sized header fields while keeping new IRQ-specific entries.
     source = source.replace('dw mode_ready - $$, hook_site - $$, fetch_site - $$, scratch - $$',
                             'dw mode_ready - $$, irq_hook - $$, irq_fetch - $$, scratch - $$')
+    if mutate_scratch:
+        source = _replace(source, ' a_loop:\n', ' a_loop:\n    inc word [cs:scratch]\n')
     data = assemble(directory, 'irq-preempt', '%define MODE_V86 1\n%define MODE_PAGING 1\n' +
                     f'%define IRQ_LINE {irq}\n%define IRQ_FPU {int(fpu)}\n%define IRQ_GUARD {dict(none=0, if_=1, mask=2, **{"chain-shadow": 3})["if_" if guard == "if" else guard]}\n' + source, nasm)
     offset = data.index(b'FIRQ')

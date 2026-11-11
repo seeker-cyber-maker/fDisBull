@@ -280,12 +280,16 @@ class MachineClockMixin:
         return result
 
     def clock_advance(self, delta_ns, *, timeout_ms=1000):
-        """Continue once with a native virtual timer; preserve any earlier stop.
+        """Continue once with a native virtual timer; preserve any earlier stop."""
+        return self._clock_advance(delta_ns, timeout_ms=timeout_ms, hook_aware=False)
 
-        The public context supplies one absolute host deadline before lock
-        acquisition. An uncertain arm, execution, cleanup or persistence closes
-        the owned VM. No elapsed-time estimate substitutes for a native receipt.
-        """
+    def _clock_advance_with_hooks(self, delta_ns, *, timeout_ms=1000):
+        """Run one timer budget through the existing stop-on-hook dispatcher."""
+        return self._clock_advance(delta_ns, timeout_ms=timeout_ms, hook_aware=True)
+
+    def _clock_advance(self, delta_ns, *, timeout_ms, hook_aware):
+        # The owning context establishes an absolute deadline before lock
+        # acquisition; a single native budget owns every continuation inside it.
         validate_clock_budget(delta_ns, timeout_ms)
         if self.project is not None and self.project.db.in_transaction:
             raise ValueError('Native clock execution requires a project outside a caller-owned transaction')
@@ -311,7 +315,9 @@ class MachineClockMixin:
                 _invalid(vm, 'Native clock arm differs from the requested budget')
             vm._active_clock_budget = deepcopy(armed)
             # Dynamic dispatch retains DOS exit/TSR and physical input semantics.
-            result = self._execute('c', timeout_ms)
+            dispatcher = getattr(self, '_run_with_hooks', None) if hook_aware else None
+            result = (dispatcher(timeout_ms=timeout_ms, stop_on_hook=True)
+                      if dispatcher is not None else self._execute('c', timeout_ms))
             if vm.qmp is None:
                 error = DebuggerError('Machine closed before its native clock budget could be observed')
                 error.result = result

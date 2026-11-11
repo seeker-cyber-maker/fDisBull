@@ -231,7 +231,7 @@ def _mapping(session, address, length, space, observed):
     return identity, pages
 
 
-def _context(session, address, length, space, task_id, observed, mapping):
+def _context(session, address, length, space, task_id, observed, mapping, qemu_memory_view=None):
     if space not in ('linear', 'physical'):
         raise ValueError('Memory snapshot space must be linear or physical')
     if task_id is None and space == 'physical':
@@ -241,27 +241,55 @@ def _context(session, address, length, space, task_id, observed, mapping):
         if not isinstance(task_id, str) or not 1 <= len(task_id) <= 128 or any(ord(ch) < 32 for ch in task_id):
             raise ValueError('Linear snapshots require an explicit task_id (caller-declared task lifetime)')
         task_evidence = 'caller-declared task lifetime; not inferred from an address or CR3'
+    if isinstance(qemu_memory_view, dict):
+        if qemu_memory_view.get('scope') == 'task-private':
+            task_evidence = 'native registered task lifetime; exact monitor UUID, cookie and incarnation'
+        elif qemu_memory_view.get('scope') == 'machine':
+            task_id = 'physical-machine'
+            task_evidence = 'owned stopped QEMU machine memory view; allocation identity unqualified'
     if hasattr(session, '_runtime_state'):
         session._runtime_state()
     epoch = getattr(session, '_runtime_epoch', session.run_id)
-    return dict(source_sha256=session.metadata['source_sha256'], version_id=session.version['id'],
+    context = dict(source_sha256=session.metadata['source_sha256'], version_id=session.version['id'],
                 version_sha256=session.metadata['version_sha256'], run_id=session.run_id,
                 address_space=space, region=dict(start=address, length=length), task_id=task_id,
                 task_evidence=task_evidence, mapping_id=_sha(_json(mapping)), capture_epoch=epoch)
+    if qemu_memory_view is not None:
+        context['qemu_memory_view'] = qemu_memory_view
+    return context
 
 
-def _capture(session, address, length, space, task_id):
+def _capture(session, address, length, space, task_id, *, view='base'):
     address = _integer(address, 'snapshot address')
     length = _integer(length, 'snapshot length', 1, MAX_BYTES)
     if address + length > 0x100000000 or space not in ('linear','physical'):
         raise ValueError('Snapshot exceeds its 32-bit address domain')
+    if view not in ('base', 'ram', 'execute'):
+        raise ValueError('Memory view must be base, ram, or execute')
+    if not hasattr(session, 'vm') and view != 'base':
+        raise ValueError('Explicit RAM and execute views require QEMU')
     before = _paused(session)
     mapping, pages = _mapping(session, address, length, space, before)
-    context = _context(session, address, length, space, task_id, before, mapping)
-    data = _read(session, address, length, space)
+    descriptor = None
+    if hasattr(session, 'vm') and view != 'base':
+        from .qemu_memory_views import capture_qemu_memory_view
+        data, descriptor = capture_qemu_memory_view(session, address, length, space,
+                                                     task_id, view, pages=pages)
+        if descriptor.get('task_identity'):
+            task_id = descriptor['task_identity']['task_id']
+        else:
+            task_id = 'physical-machine'
+    else:
+        data = _read(session, address, length, space)
+    context = _context(session, address, length, space, task_id, before, mapping, descriptor)
     after = _paused(session)
-    after_mapping, _ = _mapping(session, address, length, space, after)
-    if context != _context(session, address, length, space, task_id, after, after_mapping):
+    after_mapping, after_pages = _mapping(session, address, length, space, after)
+    after_descriptor = None
+    if hasattr(session, 'vm') and view != 'base':
+        from .qemu_memory_views import capture_qemu_memory_view
+        _, after_descriptor = capture_qemu_memory_view(session, address, length, space,
+                                                        task_id, view, pages=after_pages)
+    if context != _context(session, address, length, space, task_id, after, after_mapping, after_descriptor):
         raise ValueError('Memory task, epoch or mapping changed during capture')
     # A physical range remains the same domain across modes, but the actual
     # capture must still be made at one stop, not across guest execution.
@@ -274,10 +302,11 @@ def _capture(session, address, length, space, task_id):
 
 class MemorySearchSessionMixin:
     @_locked
-    def memory_snapshot(self, address, *, length, space='linear', task_id=None, name='memory-snapshot.bin'):
+    def memory_snapshot(self, address, *, length, space='linear', task_id=None,
+                        view='base', name='memory-snapshot.bin'):
         from .memory_search import snapshot_metadata
         from .debugger import stamp
-        data, context, evidence = _capture(self, address, length, space, task_id)
+        data, context, evidence = _capture(self, address, length, space, task_id, view=view)
         snapshot = snapshot_metadata(data, context=context, capture_id=uuid.uuid4().hex, captured_at=stamp())
         artifact = self._artifact(name, 'memory-snapshot', data, dict(snapshot=snapshot, capture=evidence))
         return _brief(artifact, snapshot=snapshot, capture=evidence)
@@ -307,8 +336,10 @@ class MemorySearchSessionMixin:
             raise ValueError('Stored edit plan differs from its owning search and snapshot')
         expected_context = metadata['snapshot']['context']
         region = expected_context['region']
+        view = expected_context.get('qemu_memory_view', {}).get('view', 'base')
         current, context, _ = _capture(self, region['start'], region['length'], expected_context['address_space'],
-                                       None if expected_context['task_evidence'].startswith('physical address') else expected_context['task_id'])
+                                       None if expected_context['task_evidence'].startswith('physical address') else expected_context['task_id'],
+                                       view=view)
         if context != expected_context or planned['context'] != context:
             raise ValueError('Memory edit context changed; write refused')
         offset = _integer(planned['offset'], 'edit offset', 0, len(current) - 1)
@@ -321,6 +352,19 @@ class MemorySearchSessionMixin:
         layers = getattr(self, '_layer_state', None)
         if callable(layers) and layers().get('active'):
             raise ValueError('Disable code layers before a live memory search edit')
+        qemu_view = expected_context.get('qemu_memory_view')
+        prepared_view_write = None
+        if qemu_view is not None:
+            from .qemu_memory_views import prepare_qemu_memory_write
+            if qemu_view.get('view') != 'ram':
+                raise ValueError('Execute-view memory snapshots are read-only')
+            prepared_view_write = prepare_qemu_memory_write(
+                self, context, region['start'] + offset, expected, replacement,
+                owner=getattr(self, '_memory_rule_write_owner', None))
+        elif hasattr(self, 'vm'):
+            if (getattr(self, '_layer_active', None) or getattr(self, '_layer_exec', None)
+                    or getattr(self, '_dos_task_monitor', None)):
+                raise ValueError('Base-view edits require cleared QEMU layers and no task-private view')
         receipt = dict(plan_artifact=plan, run=self.run_id, address=hex(region['start'] + offset),
                        space=context['address_space'], expected_hex=expected.hex(), replacement_hex=replacement.hex(),
                        applied=False, verified=False, dispatch_outcome='unknown', assisted=True)
@@ -329,21 +373,48 @@ class MemorySearchSessionMixin:
         phase = 'dispatch'
         try:
             address = region['start'] + offset
-            if hasattr(self, 'vm'):
+            layer_receipt = None
+            if prepared_view_write is not None:
+                from .qemu_memory_views import commit_qemu_memory_write
+                layer_receipt = commit_qemu_memory_write(self, prepared_view_write)
+            elif hasattr(self, 'vm'):
                 self.write_memory(address, replacement.hex(), expected_hex=expected.hex(),
                                   space='virtual' if context['address_space'] == 'linear' else 'physical')
             else:
                 self.call('memory.write', dict(address=dict(space=context['address_space'], offset=f'0x{address:08X}'),
                     expected_sha256=_sha(expected), data_base64=base64.b64encode(replacement).decode()))
             phase = 'readback'
-            observed = _read(self, address, len(replacement), context['address_space'])
+            if prepared_view_write is not None:
+                observed, context_after_scalar, _ = _capture(self, address, len(replacement),
+                    context['address_space'], context['task_id'], view=view)
+            else:
+                observed = _read(self, address, len(replacement), context['address_space'])
+                context_after_scalar = None
             stopped = _paused(self)
-            mapping, _ = _mapping(self, region['start'], region['length'], context['address_space'], stopped)
-            after_context = _context(self, region['start'], region['length'], context['address_space'],
-                                    None if context['task_evidence'].startswith('physical address') else context['task_id'], stopped, mapping)
-            if observed != replacement or after_context != context:
+            after_region, after_context, _ = _capture(self, region['start'], region['length'],
+                context['address_space'],
+                None if context['task_evidence'].startswith('physical address') else context['task_id'],
+                view=view)
+            stable_after = dict(after_context)
+            if prepared_view_write is not None:
+                stable_after.pop('qemu_memory_view', None)
+                stable_before = dict(context)
+                stable_before.pop('qemu_memory_view', None)
+                from .qemu_memory_views import expected_memory_view_after
+                expected_view = expected_memory_view_after(qemu_view, prepared_view_write,
+                                                            layer_receipt['qemu_rule_overlay'])
+                if after_context.get('qemu_memory_view') != expected_view:
+                    raise ValueError('QEMU memory view generation or overlay receipt differs after dispatch')
+            else:
+                stable_before = context
+            if observed != replacement or stable_after != stable_before:
                 raise ValueError('Memory edit readback or mapping changed after dispatch')
             receipt.update(applied=True, verified=True, dispatch_outcome='readback-verified', after_hex=observed.hex())
+            if prepared_view_write is not None:
+                receipt.update(qemu_memory_view_after=after_context['qemu_memory_view'],
+                               qemu_rule_overlay=layer_receipt['qemu_rule_overlay'],
+                               qemu_rule_overlay_owner=layer_receipt['qemu_rule_overlay_owner'],
+                               qemu_rule_overlay_replaced=layer_receipt['qemu_rule_overlay_replaced'])
             phase = 'completion-journal'
             self._event('memory-search-write', receipt)
         except BaseException as error:

@@ -61,15 +61,11 @@ def test_native_rule_script_forwards_one_remaining_budget(raw_project, tmp_path)
     assert peer.calls == []
 
 
-@pytest.mark.parametrize('guard', ['standard', 'native hooks', 'task-private', 'transaction'])
+@pytest.mark.parametrize('guard', ['standard', 'transaction'])
 def test_native_rule_script_rejects_before_an_earlier_write(raw_project, tmp_path, guard):
     session, peer = (stopped_session(raw_project, tmp_path) if guard == 'standard'
                      else _native(raw_project, tmp_path))
-    if guard == 'native hooks':
-        session._qemu_hooks = {'h': {'active': True}}
-    elif guard == 'task-private':
-        session._dos_task_views = {'task': {}}
-    elif guard == 'transaction':
+    if guard == 'transaction':
         raw_project.db.execute('BEGIN')
     writes = []
     session.write_memory = lambda address, data_hex: writes.append((address, data_hex))
@@ -95,3 +91,14 @@ def test_native_rule_malformed_literals_refuse_whole_script(raw_project, tmp_pat
     with pytest.raises(ValueError):
         execute_script(session, _script(dict(op='write-memory', address=0x7c00, data_hex='90'), step))
     assert writes == [] and peer.calls == []
+
+
+@pytest.mark.parametrize('owner', ['native hooks', 'task-private', 'layers'])
+def test_native_script_admission_defers_context_specific_checks(raw_project, tmp_path, owner):
+    session, peer = _native(raw_project, tmp_path)
+    if owner == 'native hooks': session._qemu_hooks = {'h': {'active': True}}
+    elif owner == 'task-private': session._dos_task_views = {'task': {}}
+    else: session._layer_active = ['layer']
+    step = dict(op='memory-rule-run', rule='rule-1', ticks=2)
+    assert validate_script(_script(step), session=session) == [step]
+    assert peer.calls == []

@@ -94,12 +94,12 @@ def _dword(debug, address):
 def test_native_virtual_periodic_rules_capture_fresh_values_and_persist(tmp_path, monkeypatch, route):
     with _case(tmp_path) as (project, debug, marker, base, rule, path):
         calls = []
-        advance = debug.clock_advance
+        advance = debug._clock_advance_with_hooks
         def record(delta_ns, **kwargs):
             result = advance(delta_ns, **kwargs)
             calls.append((delta_ns, result, kwargs))
             return result
-        monkeypatch.setattr(debug, 'clock_advance', record)
+        monkeypatch.setattr(debug, '_clock_advance_with_hooks', record)
         before = debug.clock_observe()
         if route == 'python':
             result = debug.memory_rule_run(rule, ticks=3, interval_ms=10, timeout_ms=15000)
@@ -156,14 +156,9 @@ def test_native_periodic_rule_stops_before_next_tick_on_guest_event(tmp_path, st
         assert _history(project, result)[0]['last']['observed_value'] == 7
 
 
-@pytest.mark.parametrize('guard', ['nonvirtual', 'native hooks', 'active layers'])
+@pytest.mark.parametrize('guard', ['nonvirtual', 'active layers'])
 def test_native_rule_preflight_refuses_without_effects(tmp_path, guard):
     with _case(tmp_path, profile=None if guard == 'nonvirtual' else 'virtual') as (project, debug, marker, base, rule, _):
-        hook = None
-        if guard == 'native hooks':
-            static = project.regions(1)[0].start
-            hook = debug.hook(hex(static + marker['loop']), space='source', once=False,
-                max_hits=3, actions=[dict(op='layers', layers=[])])
         if guard == 'active layers':
             ram = debug.layer_patch('rule-guard-ram', base + marker['iterations'],
                 expected_hex='00000000', data_hex='01000000', kind='ram',
@@ -177,7 +172,7 @@ def test_native_rule_preflight_refuses_without_effects(tmp_path, guard):
         before_registers = debug.registers()['registers']
         before_memory = debug.memory(base + marker['counter'], length=8)['hex']
         before_progress = project.memory_rule_info(rule)
-        with pytest.raises(ValueError, match='virtual|clock' if guard == 'nonvirtual' else guard):
+        with pytest.raises(ValueError, match='virtual|clock' if guard == 'nonvirtual' else 'explicit RAM view'):
             debug.memory_rule_run(rule, ticks=3, interval_ms=10, timeout_ms=15000)
         assert debug.registers()['registers'] == before_registers
         assert debug.memory(base + marker['counter'], length=8)['hex'] == before_memory
@@ -188,6 +183,54 @@ def test_native_rule_preflight_refuses_without_effects(tmp_path, guard):
             debug.layers([])
             assert debug.memory(base + marker['iterations'], length=4)['hex'] == '00000000'
             assert debug.code(base + marker['ready'], length=1, view='execute', space='linear')['hex'] == '90'
-        if hook:
-            assert debug.hooks()['hooks'][0]['hook'] == hook['hook']
-            debug.delete_hook(hook['hook'])
+
+
+def test_native_hook_interrupts_periodic_interval_once_without_extra_tick(tmp_path):
+    with _case(tmp_path, early=True) as (project, debug, marker, base, rule, _):
+        static = project.regions(1)[0].start
+        registers = debug.registers()['registers']
+        name = 'rax' if 'rax' in registers else 'eax'
+        value = int(registers[name], 16)
+        hook = debug.hook(hex(static + marker['early']), space='source', once=False,
+            max_hits=3, actions=[dict(op='registers', registers={
+                name: dict(expected=value, value=value)})])['hook']
+        result = debug.memory_rule_run(rule, ticks=3, interval_ms=100, timeout_ms=15000)
+        assert not result['complete'] and result['outcome'] == 'clock_interrupted'
+        assert result['completed_ticks'] == 1
+        stopped = result['clock_stop']
+        assert stopped['outcome'] == 'hook' and stopped['hook_hits'][0]['hook'] == hook
+        assert stopped['hook_hits'][0]['hit'] == 1 and stopped['clock_budget']['token']
+        assert stopped['clock_budget']['deadline_reached'] is False
+        progress = project.memory_rule_info(rule)['progress']
+        assert (progress['ticks'], progress['applications']) == (1, 1)
+        assert next(row for row in debug.hooks()['hooks'] if row['hook'] == hook)['hits'] == 1
+        debug.delete_hook(hook)
+
+
+def test_native_rule_overlays_preserve_authored_ram_and_fetch_layers(tmp_path):
+    with _case(tmp_path) as (project, debug, marker, base, _, _):
+        counter = base + marker['counter']
+        ready = base + marker['ready']
+        ram = debug.layer_patch('authored-counter', counter, expected_hex='07000000',
+            data_hex='09000000', kind='ram', activate=True, space='linear')['layer']
+        fetch = debug.layer_patch('authored-fetch', ready, expected_hex='90',
+            data_hex='f8', kind='execute', activate=True, space='linear')['layer']
+        assert debug.layers()['active'] == [ram, fetch]
+        authored = [project.debug_layer_info(layer) for layer in (ram, fetch)]
+        snap = debug.memory_snapshot(counter, length=4, view='ram')['artifact']
+        search = project.memory_search_start(snap, width=4, stride=4, mode='unknown')['artifact']
+        rule = project.memory_rule_create(search, offset=0, value=0,
+            max_applications=10, max_ticks=10)['artifact']
+        result = debug.memory_rule_run(rule, ticks=3, interval_ms=10, timeout_ms=15000)
+        assert result['complete'] and result['completed_ticks'] == 3
+        history = _history(project, result)
+        assert history[0]['last']['observed_value'] == 9
+        assert all(item['last']['observed_value'] > 0 for item in history)
+        assert all(item['last']['applied'] and item['last']['write_receipt']['verified'] for item in history)
+        assert len({item['view_overlay'] for item in history}) == 3
+        progress = project.memory_rule_info(rule)['progress']
+        assert progress['ticks'] == 3 and progress['applications'] == 3
+        assert debug.layers()['active'] == [ram, fetch, progress['view_overlay']]
+        assert [project.debug_layer_info(layer) for layer in (ram, fetch)] == authored
+        assert _dword(debug, counter) == 0
+        assert debug.code(ready, length=1, view='execute', space='linear')['hex'] == 'f8'

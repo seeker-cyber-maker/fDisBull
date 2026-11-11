@@ -22,13 +22,6 @@ def admit_native_rule_run(session):
             or not VIRTUAL_CLOCK_COMMANDS <= getattr(vm, 'qmp_commands', frozenset())
             or vm.qmp is None):
         raise ValueError('Periodic QEMU memory rules require an explicit native virtual clock')
-    if (getattr(session, '_dos_task_binding', None) or getattr(session, '_dos_task_monitor', None)
-            or getattr(session, '_dos_task_views', None) or getattr(session, '_dos_scheduler', None)):
-        raise ValueError('Periodic QEMU memory rules do not support task-private switching or task bindings')
-    if getattr(session, '_layer_active', None) or getattr(session, '_layer_exec', None):
-        raise ValueError('Periodic QEMU memory rules cannot run with active layers or a stale fetch overlay')
-    if getattr(session, '_qemu_hooks', None) or getattr(session, '_qemu_hook_pending', None):
-        raise ValueError('Periodic QEMU memory rules cannot run with native hooks')
     state = getattr(vm, '_physical_input', None)
     if state is not None and (not state.get('valid') or state.get('pending') or state.get('leases')
                               or (state.get('schedule') or {}).get('bound')):
@@ -40,16 +33,33 @@ def admit_native_rule_run(session):
         raise ValueError('Periodic QEMU memory rules require an unowned native clock budget')
 
 
-def preflight(session, configuration):
+def admit_rule_context(session, context):
+    """Layers and native tasks require an explicitly captured RAM domain."""
+    view = context.get('qemu_memory_view')
+    if view is not None:
+        if not isinstance(view, dict) or view.get('view') != 'ram':
+            raise ValueError('Memory rules require an explicit RAM view; execute views are inspection only')
+        return
+    if any(getattr(session, name, None) for name in (
+            '_dos_task_binding', '_dos_task_monitor', '_dos_task_views', '_dos_scheduler')):
+        raise ValueError('Task-private memory rules require an explicit RAM view snapshot')
+    if getattr(session, '_layer_active', None) or getattr(session, '_layer_exec', None):
+        raise ValueError('Memory rules with active layers require an explicit RAM view snapshot')
+
+
+def preflight(session, configuration, progress=None):
     """Passively admit ownership, then qualify stopped clock and original mapping."""
     admit_native_rule_run(session)
+    from .memory_rules import _current_context, _task
+    original = _current_context(configuration, progress)
+    admit_rule_context(session, original)
     clock = session._clock_snapshot()
     native = clock.get('virtual_clock', {}).get('native', {})
     if native.get('budget-state') not in ('idle', 'stopped', 'cancelled'):
         raise ValueError('Periodic QEMU memory rules require a stable stopped virtual clock')
-    original = configuration['origin_context']
     region = original['region']
-    task = None if original['task_evidence'].startswith('physical address') else original['task_id']
-    _, observed, _ = _capture(session, region['start'], region['length'], original['address_space'], task)
+    args = (session, region['start'], region['length'], original['address_space'], _task(original))
+    view = original.get('qemu_memory_view', {}).get('view', 'base')
+    _, observed, _ = _capture(*args, view=view) if view != 'base' else _capture(*args)
     if _json(observed) != _json(original):
         raise ValueError('Original memory rule task, mapping or epoch changed')

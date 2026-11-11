@@ -40,6 +40,8 @@ class Session(MemoryRuleSessionMixin):
         assert self._rpc_deadline == self._deadline == self.vm.operation_deadline
         if isinstance(self.clock_result,Exception): raise self.clock_result
         return deepcopy(self.clock_result)
+    def _clock_advance_with_hooks(self, delta_ns, *, timeout_ms):
+        return self.clock_advance(delta_ns, timeout_ms=timeout_ms)
     def _event(self,*args,**kwargs): pass
     def close(self): self.closed = True
 
@@ -98,14 +100,9 @@ def test_uncertain_clock_dispatch_is_journaled_and_never_replayed(session):
     assert len([c for c in session.calls if isinstance(c,tuple) and c[0]=='advance']) == 1
 
 
-@pytest.mark.parametrize('owner', ['hooks','views','binding','monitor','scheduler','pending','lease','schedule','sync','budget','standard','commands'])
+@pytest.mark.parametrize('owner', ['pending','lease','schedule','sync','budget','standard','commands'])
 def test_passive_preflight_refuses_conflicts_without_target_effect(session,owner):
-    if owner == 'hooks': session._qemu_hooks = {1:{}}
-    elif owner == 'views': session._dos_task_views = {'a':{}}
-    elif owner == 'binding': session._dos_task_binding = {'task_id':'a'}
-    elif owner == 'monitor': session._dos_task_monitor = {'a':1}
-    elif owner == 'scheduler': session._dos_scheduler = {'enabled':False}
-    elif owner in ('pending','lease','schedule'):
+    if owner in ('pending','lease','schedule'):
         session.vm._physical_input = {'valid':True,'pending':[], 'leases':{}}
         if owner == 'pending': session.vm._physical_input['pending'] = [1]
         elif owner == 'lease': session.vm._physical_input['leases'] = {'a':1}
@@ -181,12 +178,75 @@ def test_caller_owned_real_project_transaction_refused_before_rule_or_target_io(
 @pytest.mark.parametrize('active,execution', [(['authored-ram-layer'],{}),
                                                 (['authored-fetch-layer'],{0x100:0x90}),
                                                 ([],{0x100:0x90})])
-def test_active_or_stale_native_layers_refuse_before_rule_io(session,active,execution):
+def test_base_origin_active_or_stale_native_layers_refuse_before_target_io(session,active,execution):
     session._layer_active = deepcopy(active)
     session._layer_exec = deepcopy(execution)
     before = deepcopy(session.progress)
-    with pytest.raises(ValueError,match='active layers'):
+    with pytest.raises(ValueError,match='explicit RAM view'):
         session.memory_rule_run('rule',ticks=2,timeout_ms=1000)
     assert session._layer_active == active and session._layer_exec == execution
     assert session.progress == before and session.calls == [] and session.ticks == 0
     assert not session.closed
+
+
+@pytest.mark.parametrize('owner', ['views', 'binding', 'monitor', 'scheduler'])
+def test_base_origin_tasks_refuse_before_target_io(session, owner):
+    attr = {'views':'_dos_task_views', 'binding':'_dos_task_binding',
+            'monitor':'_dos_task_monitor', 'scheduler':'_dos_scheduler'}[owner]
+    setattr(session, attr, {'present': True})
+    admit_native_rule_run(session)
+    before = deepcopy(session.progress)
+    with pytest.raises(ValueError, match='explicit RAM view'):
+        session.memory_rule_run('rule', ticks=2, timeout_ms=1000)
+    assert session.calls == [] and session.progress == before and session.ticks == 0
+
+
+def test_hooks_alone_admit_and_preserve_periodic_run(session):
+    session._qemu_hooks = {'h': {'active': True}}
+    admit_native_rule_run(session)
+    result = session.memory_rule_run('rule', ticks=2, timeout_ms=1000)
+    assert result['complete'] and result['completed_ticks'] == 2
+
+
+def test_rule_view_progress_accepts_only_owned_generation_changes(session):
+    context = dict(session.configuration['origin_context'], qemu_memory_view={
+        'view':'ram', 'scope':'task-private', 'task_identity':{'task_id':'a'},
+        'task_generation':1, 'active_layers':['authored'], 'active_layers_sha256':'h1'})
+    config = dict(session.configuration, origin_context=context)
+    next_context = deepcopy(context)
+    next_context['qemu_memory_view'].update(task_generation=2,
+        active_layers=['authored','rule-overlay'], active_layers_sha256='h2')
+    progress = {'view_context':next_context, 'view_overlay':'rule-overlay'}
+    assert memory_rules._current_context(config, progress) == next_context
+    wrong = deepcopy(progress)
+    wrong['view_context']['qemu_memory_view']['task_identity']['task_id'] = 'b'
+    with pytest.raises(ValueError, match='view identity'):
+        memory_rules._current_context(config, wrong)
+    without_overlay = dict(progress, view_overlay=None)
+    with pytest.raises(ValueError, match='view identity'):
+        memory_rules._current_context(config, without_overlay)
+
+
+def test_task_change_after_interval_stops_without_second_tick(session):
+    tick = session.memory_rule_tick
+    def selected_task_tick(rule):
+        if session.ticks:
+            raise ValueError('selected task differs from A')
+        return tick(rule)
+    session.memory_rule_tick = selected_task_tick
+    result = session.memory_rule_run('rule', ticks=3, interval_ms=10, timeout_ms=1000)
+    assert result['outcome'] == 'context_changed' and result['completed_ticks'] == 1
+    assert session.ticks == 1 and session.progress['ticks'] == 1
+    assert len([c for c in session.calls if isinstance(c,tuple) and c[0]=='advance']) == 1
+
+
+def test_wrong_selected_task_refuses_before_tick_journal(session, monkeypatch):
+    session.configuration['origin_context']['qemu_memory_view'] = {
+        'view':'ram', 'scope':'task-private', 'task_identity':{'task_id':'a'}}
+    before = deepcopy(session.progress)
+    def wrong_task(*args):
+        raise ValueError('selected task B differs from rule task A')
+    monkeypatch.setattr(memory_rules, '_check_rule_context', wrong_task)
+    with pytest.raises(ValueError, match='selected task B'):
+        MemoryRuleSessionMixin.memory_rule_tick(session, 'rule')
+    assert session.progress == before and session.calls == [] and not session.closed

@@ -315,6 +315,13 @@ class QemuHookSessionMixin:
                 if pending_stop is None:
                     stepped = self._hook_step_over(control, deadline)
                     if stepped is not None:
+                        # An interrupted single step may have stopped before
+                        # the trapped instruction completed. Preserve the
+                        # already-dispatched hook across the explicit resume;
+                        # the next step-over checks its PC and task again.
+                        if stepped.get('outcome') not in ('guest_exit', 'guest_tsr', 'exited'):
+                            self._qemu_hook_pending = control['hook']
+                            self._qemu_hook_pending_task = previous_task
                         stepped['hook_hits'] = hits
                         return stepped
         self._qemu_hook_pending_task = None
@@ -362,5 +369,8 @@ class QemuHookSessionMixin:
             if control is not None:
                 stepped = self._hook_step_over(control, deadline)
                 if stepped is not None:
+                    if stepped.get('outcome') not in ('guest_exit', 'guest_tsr', 'exited'):
+                        self._qemu_hook_pending = control['hook']
+                        self._qemu_hook_pending_task = evidence.get('task', {}).get('task_id')
                     stepped['hook_hits'] = hits
                     return stepped

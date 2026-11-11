@@ -81,19 +81,28 @@ the witness stops after A resumes and does not claim DOS cleanup. API 1
 cooperative and API 2 direct master-PIC runtimes remain recognized; unsupported
 PIC modes still fail closed. Frame-timed input and
 scene parity remain later slices.
-Explicit stopped rule ticks are available. The shared `memory_rule_run(rule,
-*, ticks, interval_ms=100, timeout_ms=10000)` admits an ordinary stopped QEMU session
-with an explicit virtual clock. Its first tick is immediate; subsequent intervals
-use token-bound native virtual nanoseconds under one host deadline. Each tick
-rechecks identity and mapping, reads fresh values, performs a guarded write and
-journals its result. Any nonordinary stop, including breakpoint, watchpoint or
-exit collisions, stops without another tick or replay. Task binding, private
-views, scheduler or native hooks, active ordinary RAM or fetch layers,
-queued/held/scheduled input, active clock
-synchronization or budget, and caller-owned transactions are refused before
-execution. Eight authored FreeDOS native cases passed locally, including Python,
-JSON and script routes and active RAM/fetch layer refusal. This does not qualify generic `guest_ms`,
-cycle or real-time scheduling, or promote a formal parity gate.
+Explicit stopped rule ticks are available. `memory_rule_run(rule, *, ticks,
+interval_ms=100, timeout_ms=10000)` also admits the explicit QEMU virtual clock:
+first tick immediately, subsequent token-bound native intervals under one host
+deadline. Each tick rechecks identity and mapping, reads fresh values, performs
+a guarded write and journals its result. A hook is dispatched once and stops
+the interval; any nonordinary stop ends without another tick or replay.
+
+Native snapshots offer `base`, `ram` and inspection-only `execute` views. A
+base-view caller label is not native task identity. Active layers or native
+task bindings require an explicit RAM view; task-private capture binds the
+selected registered task's lifetime, backing, epoch and view generation.
+Rule-owned immutable RAM overlays preserve authored RAM/fetch layers. Queued,
+held or scheduled input, active clock synchronization or budget, and
+caller-owned transactions remain refused. A changed task/view refuses before
+another edit. Old rules remain stale after restore; use a fresh capture and
+new rule. Ten authored native cases passed locally, including an actual
+IRQ-driven A/B private-view and cold-restore witness; 823 host checks passed.
+The fresh bounded broader regression passed 1,159 tests across 72 files with
+no failures, errors or skips, including the 19 native scheduler and IRQ
+preservation cases. The retained actual DOSBox witness passed once. These
+results do not qualify generic
+`guest_ms`, cycle or real-time scheduling, or promote the formal gates.
 
 ## Check an installation without a game
 

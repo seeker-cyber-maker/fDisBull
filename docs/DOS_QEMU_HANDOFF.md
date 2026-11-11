@@ -67,12 +67,11 @@ witness, not a passing result. Record partial and unverified behavior explicitly
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
 - Latest clock/memory-rule continuation: the bounded periodic `memory_rule_run`
-  route now admits ordinary stopped QEMU contexts with the explicit virtual
-  clock. Its native Python, JSON and script witnesses passed; active ordinary
-  layers, task-private switching and native hooks retain preflight refusals.
-- Next integration gate: memory-search identity must include selected layer/task
-  views, and clock execution must preserve hook dispatch, before these contexts
-  can be admitted to periodic rules. Frame/VBlank semantics, additional
+  route includes explicit RAM-view identity and guarded rule-owned overlays for
+  task-private or ordinary RAM/code stacks. Native hook dispatch shares the
+  bounded virtual-clock interval and stops before another tick on a hook hit.
+- Next integration gates: broader layer/task/clock workflow qualification,
+  frame/VBlank semantics, additional
   audio devices, coordinate/frame-bound clicks, guest text consumption/layout,
   frame-edge input, pointer calibration and input-to-source causality remain
   open slice-4 boundaries. This incremental clock/memory-rule work is a
@@ -3167,7 +3166,7 @@ virtual-nanosecond contract does not implement generic DOSBox `guest_ms`,
 cycle accuracy, an installed timer hook, background execution or real-time
 frequency. DOSBox retains its earlier guest-time route.
 
-This advances the clock/control part of **slice 4** and the guarded-memory
+This historical increment advanced the clock/control part of **slice 4** and the guarded-memory
 prerequisite in **slice 6**, with bounded Python/JSON/script coverage in
 **slice 8**. It does not close those slices. Ordinary active RAM/fetch layers,
 private task bindings/views/scheduling, native hooks, queued/held/scheduled
@@ -3193,3 +3192,62 @@ Histories remain pending and all 127 formal surface qualifications plus seven
 campaigns remain open. DOSBox stays default and retained. No CI, merge,
 release, shared installation or private runtime/state upload is part of this
 increment.
+
+## Local continuation 2026-11-11: periodic rules over explicit RAM views
+
+This continuation follows `ef318175478646e93b58c5e2b403ee633aee6326` on draft
+MR !117 and reuses the sealed N19 executable. It adds no new native patch or
+runtime version. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4212023694)
+records the scope against the same nine canonical milestones.
+
+`memory_snapshot(..., view='ram', task_id=<native task>)` captures a registered
+selected task's effective data view. Its context binds the full native task
+lifetime, runtime epoch, private backing pages, active layer IDs and native
+view generation. Every captured page must belong to that private view; shared
+fallback does not establish ownership. `view='base'` retains the older debugger
+domain and caller-label semantics. `view='execute'` supports inspection only;
+memory edits and periodic rules require the RAM view. Explicit native views
+are limited to 64 KiB. A linear mapping change still invalidates that domain;
+the cross-mode witness deliberately binds registered physical private pages.
+
+A verified RAM edit creates an immutable rule-owned overlay above authored
+RAM layers, replacing only the previous overlay owned by that rule. Authored
+definitions, private backing, other tasks and fetch layers remain represented
+separately. Each tick still captures fresh values and creates a new one-shot
+expected-byte plan. Durable progress advances its view context only after a
+verified overlay write. Selecting another task refuses before a tick journal
+or write; a later return to the same task and unchanged view can resume the
+rule. An external stack change needs a fresh capture/rule.
+
+Intervals retain one token-bound native clock budget but dispatch through the
+hook runner. A hook hit or another nonordinary stop ends the invocation before
+the next tick, including a hook coincident with a fired timer. An interrupted
+hook step-over retains its pending task identity so explicit continuation does
+not dispatch that same action twice. Checkpoint restore preserves native
+layers, hooks, task/IRQ state and the append-only rule journal; an old rule's
+captured epoch is stale after cold restore and refuses without replay. A fresh
+capture and new rule are required in the restored lifetime.
+
+Fresh local validation:
+
+- **1,159 passes, zero failures/errors/skips** across 72 regression files,
+  including all 19 retained native CPU scheduler, timer/IRQ, cascade/nested
+  IRQ and checkpoint preservation cases.
+- **823 passes, zero failures/errors/skips** in the 24-file host/public/package
+  contract selection. A subsequent 12-case view-guard selection includes the
+  additional imported-source-layer physical-budget check, pre-dispatch dirty
+  layer and target-CAS race refusals, execute-view and capability guards.
+- **10 actual native cases** cover Python/JSON/script routes, ordinary RAM/fetch
+  rules, hooks, and the integrated task-private IRQ/cold-restore witness.
+  The latter uses real guest writes to A's private value, replaces its prior
+  rule overlay on return to A, preserves aliased B/base/fetch views, and proves
+  both stale-rule refusal and fresh-rule success after separate-process restore.
+- **One retained actual DOSBox saved-script/save/restore case** passed.
+
+These selections overlap and are not additive. The native executable is still
+N19 SHA-256 `74daa2ab4e6cdb03a7d4a7f6725656fc81a0022cf171242813cfe188943e8b0f`.
+This advances **slices 4, 6 and 8** without closing them. Histories, broader
+vendor compatibility and formal migration qualification remain open: 127
+surface rows and seven campaigns. DOSBox remains default and retained. No CI,
+merge, release, shared installation or private runtime/state upload was part
+of this continuation.

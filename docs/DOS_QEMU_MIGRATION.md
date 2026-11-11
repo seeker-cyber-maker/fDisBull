@@ -1520,19 +1520,32 @@ nonordinary timer stop, including a breakpoint, watchpoint or guest exit
 collision, ends the run without an extra tick or replay. This does not establish
 generic `guest_ms`, cycle accuracy or real-time scheduling.
 
-Admission is limited to an ordinary stopped context: task bindings, private
-views or a scheduler, native hooks, active ordinary RAM or fetch layers,
-queued/held/scheduled input, active clock
-synchronization or a clock budget, and caller-owned transactions are refused
-before any tick or guest execution. Eight authored native FreeDOS cases passed
-locally: Python, JSON and script routes with three fresh writes and persisted progress, early
-breakpoint and exit, and refusal for a nonvirtual clock, native hook, and active
-RAM plus fetch layers. Host and public contract witnesses are in
-`tests/test_qemu_memory_rules.py` and `tests/test_qemu_memory_rules_public.py`;
-`tests/test_qemu_memory_rules_native.py` is the bounded native witness. The
-existing `tests/test_memory_rules.py` retains 52 DOSBox rule checks, and the
-separate native checkpoint, hook and task tests retain their own preservation
-scope. None promotes the formal parity gates.
+Native snapshots expose `base`, `ram` and inspection-only `execute` views.
+The base view's caller-declared task label does not confer native task
+ownership. With active layers or native task bindings, rules require an
+explicit RAM-view snapshot bound to the selected registered native task and
+its lifetime, backing, epoch and view generation. Rule-owned immutable RAM
+overlays preserve authored RAM and fetch layers. A hook encountered during
+an interval is dispatched once and stops the run without another tick.
+Queued, held or scheduled input, active clock synchronization or budget, and
+caller-owned transactions remain refused before execution. A changed task or
+view refuses before its next edit. An old rule is stale after checkpoint
+restore; take a fresh capture and create a new rule.
+
+Ten authored FreeDOS native cases passed locally: nine ordinary clock, public
+route, hook and layer cases, plus one task-private IRQ case. The latter used an
+explicit physical RAM view through A/B mode changes; actual guest mutation of
+A's private value was followed by replacement of the rule's prior overlay,
+without changing B or shared base. Its cold restore preserved IRQ state, hooks
+and layers, refused the old rule, and admitted a fresh rule above the retained
+overlay. The host contract suite passed 823 checks, the focused view guard
+selection passed 12, and the retained actual DOSBox witness passed once. The
+fresh bounded broader regression passed 1,159 tests across 72 files with no
+failures, errors or skips, including the existing 19 native scheduler and IRQ
+preservation cases. See `tests/test_qemu_memory_rules.py`,
+`tests/test_qemu_memory_rules_public.py`, `tests/test_qemu_memory_rules_native.py`
+and `tests/test_qemu_memory_rule_views_native.py`. These bounded results do not
+promote any of the 127 surfaces or seven campaigns; DOSBox remains the default.
 
 Hostcalls and UDL/UIL block services remain a later slice. The earlier lab's
 custom opcodes and plugins are not enabled by this launcher, and experimental
