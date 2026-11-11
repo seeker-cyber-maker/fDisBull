@@ -4,6 +4,13 @@ fDisBull maintains **equal repository state** across local Git (`/Volumes/CODEX/
 
 Agents are required to update **both** local Git and GitLab when landing or syncing branches and tags, while strictly preventing duplicate or unthrottled CI pipeline runs that could trigger provider abuse filters.
 
+The optional [local mirror service](MIRROR_SYNC.md) propagates ordinary
+fast-forward ref updates through a receive-hook wake and one-minute polling.
+It preserves checked-out branches and conflicting histories, uses `ci.skip`
+for every GitLab push, and starts no CI jobs. The older `sync_mirrors.py` helper
+remains a manual reconciliation tool; it must not be used as an unattended
+service because its branch-ref update policy differs.
+
 ## Local-first workflow and provider routing
 
 Routine pushes, all merge requests and tags do not admit GitLab pipelines.
