@@ -130,7 +130,10 @@ def test_gitlab_ci_yaml_blocks_routine_compute_and_requires_local_runner():
         pytest.skip("Repository checkout only")
     ci_text = ci_path.read_text()
     assert "workflow:" in ci_text
-    assert '$CI_COMMIT_MESSAGE =~ /\\[(skip ci|ci skip)\\]/i' in ci_text
+    # Commit-message skip markers must not veto deliberate web/API runs.
+    assert '$CI_COMMIT_MESSAGE' not in ci_text
+    assert '$FDISBULL_DISABLE_CI == "1"' in ci_text
+    assert "    - when: never" in ci_text
     assert '$CI_PIPELINE_SOURCE == "merge_request_event"' not in ci_text
     assert '$CI_PIPELINE_SOURCE == "push"' not in ci_text
     assert '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"' in ci_text
