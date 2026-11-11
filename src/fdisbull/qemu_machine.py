@@ -665,7 +665,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     def resume(self):
         if self._input_pending():raise ValueError('Queued physical input requires a bounded run, not resume')
         if self.breakpoints:raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
-        if getattr(self, '_layer_exec', None):self._layer_before_execution()
+        if getattr(self, '_layer_exec', None) or getattr(self, '_dos_task_monitor', None):self._layer_before_execution()
         # FIFOs do not produce a new GDB connection event when a client opens
         # them again. Keep the completed protocol session alive across QMP
         # continue/stop; there is no outstanding GDB execution request here.
@@ -859,7 +859,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         if self._input_pending() and self.project is not None and self.project.db.in_transaction:
             raise ValueError('Physical input execution requires a project outside a caller-owned transaction')
         self._input_schedule_preflight()
-        if getattr(self, '_layer_exec', None):self._layer_before_execution()
+        if getattr(self, '_layer_exec', None) or getattr(self, '_dos_task_monitor', None):self._layer_before_execution()
 
     def _execute(self,command,timeout_ms):
         self._execution_preflight(command,timeout_ms)

@@ -116,3 +116,94 @@ def test_hook_owned_breakpoint_cannot_be_deleted_directly():
     assert session.hooks()['hooks'][0]['hook'] == hook['hook']
     assert session.delete_hook(hook['hook'])['deleted']
     assert session.hooks()['hooks'] == []
+
+
+def _task(cookie):
+    from fdisbull.qemu_dos_tasks import FORMAT, _identifier
+    binding = dict(format=FORMAT, anchor_address=0x5000, monitor_uuid='11' * 16,
+                   cookie=cookie, incarnation=1, process_nonce='22' * 16)
+    binding['task_id'] = _identifier(binding)
+    return binding
+
+
+def _task_harness(monkeypatch):
+    import fdisbull.qemu_dos_tasks as tasks
+    session = Harness()
+    a, b, c = _task(1), _task(2), _task(3)
+    session.selected = a
+    session._dos_task_binding = a
+    session._dos_task_views = {x['task_id']: {'binding': x} for x in (a, b, c)}
+    def observe(s, binding=None):
+        return {'task_identity': s.selected, 'task_id': s.selected['task_id'],
+                'matches_binding': tasks.task_key(s.selected) == tasks.task_key(binding)}
+    def require(s, binding=None):
+        if not observe(s, binding or s._dos_task_binding)['matches_binding']:
+            raise ValueError('foreign task')
+    monkeypatch.setattr(tasks, 'observe_task', observe)
+    monkeypatch.setattr(tasks, 'require_task', require)
+    session.dos_task_layers = lambda **kw: session.calls.append(('task-layers', kw)) or kw
+    session.project.debug_layer_info = lambda _: {'version': 1, 'native_binding': {
+        'scope': 'task-private', 'task_identity': session.selected}}
+    return session, a, b, c
+
+
+def test_shared_task_trap_routes_and_preserves_sibling_on_delete(monkeypatch):
+    session, a, b, c = _task_harness(monkeypatch)
+    first = session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': ['L']}],
+                         once=False, max_hits=3)
+    session.selected = b
+    second = session.hook(0x1000, task=b['task_id'], actions=[{'op': 'task-layers', 'layers': ['L']}],
+                          once=False, max_hits=3)
+    assert first['breakpoint_id'] == second['breakpoint_id'] and len(session.points) == 1
+    event = session._dispatch_qemu_hook(_stop('breakpoint', first['breakpoint_id']))
+    assert event['hook'] == second['hook'] and event['hit'] == 1
+    assert session.calls[-1] == ('task-layers', {'active': ['L'], 'task': b['task_id']})
+    assert session._dos_task_binding == a
+    session.selected = c
+    event = session._dispatch_qemu_hook(_stop('breakpoint', first['breakpoint_id']))
+    assert event['task_switch'] and event['task']['task_id'] == c['task_id']
+    assert [item['hits'] for item in session.hooks()['hooks']] == [0, 1]
+    session.delete_hook(first['hook'])
+    assert len(session.points) == 1 and session.hooks()['hooks'][0]['hook'] == second['hook']
+    session.delete_hook(second['hook'])
+    assert not session.points
+
+
+def test_shared_pending_trap_routes_new_task_before_step(monkeypatch):
+    session, a, b, _ = _task_harness(monkeypatch)
+    first = session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                         once=False, max_hits=3)
+    session.selected = b
+    second = session.hook(0x1000, task=b['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                          once=False, max_hits=3)
+    session.selected = a
+    session.queue = [_stop('breakpoint', first['breakpoint_id'])]
+    assert session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)['hook_hits'][0]['hook'] == first['hook']
+    session.selected = b
+    result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
+    assert result['hook_hits'][0]['hook'] == second['hook']
+    assert ('execute', 's') not in session.calls
+    session.queue = [_stop('step'), _stop('guest_exit')]
+    assert session._run_with_hooks(timeout_ms=1000, stop_on_hook=False)['outcome'] == 'guest_exit'
+    assert len(session.points) == 1
+    assert len({x['breakpoint_id'] for x in session.hooks()['hooks']}) == 1
+
+
+def test_shared_trap_one_shot_preserves_other_task_hook(monkeypatch):
+    session, a, b, _ = _task_harness(monkeypatch)
+    first = session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': []}])
+    with pytest.raises(ValueError, match='Ambiguous hook'):
+        session.hook(0x1000, task=a['task_id'], actions=[{'op': 'task-layers', 'layers': []}])
+    session.selected = b
+    second = session.hook(0x1000, task=b['task_id'], actions=[{'op': 'task-layers', 'layers': []}],
+                          once=False, max_hits=2)
+    session.selected = a
+    session.queue = [_stop('breakpoint', first['breakpoint_id'])]
+    result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
+    assert result['hook_hits'][0]['hook'] == first['hook']
+    assert [x['hook'] for x in session.hooks()['hooks']] == [second['hook']]
+    assert len(session.points) == 1
+    session.selected = b
+    result = session._run_with_hooks(timeout_ms=1000, stop_on_hook=True)
+    assert result['hook_hits'][0]['hook'] == second['hook']
+    assert ('execute', 's') not in session.calls

@@ -35,10 +35,19 @@ the verified module. A stopped cooperating monitor may bind its explicit
 `debug-dos-task-observe`; the lifetime combines monitor UUID, cookie,
 incarnation and the DOS process nonce. Architectural CR3/TR observations alone
 do not identify a software task. An authored two-task V86 witness covers a
-cold restore and A → B → A with active layers and task-scoped hooks. Physical
-page aliases share layer effects. This is not vendor QEMM/DESQview compatibility
-or general DPMI qualification. Frame-timed input and scene parity remain later
-slices.
+cold restore and A → B → A with active layers and task-scoped hooks. Ordinary
+physical layer effects are shared by aliases. A separate experimental
+`debug-dos-task-switching`, `debug-dos-task-register`,
+`debug-dos-task-layer-patch`, `debug-dos-task-layers`, `debug-dos-task-memory`
+and `debug-dos-task-retire` interface targets isolated CPU RAM/fetch views for
+cooperating tasks even when they share a physical page. The guest monitor
+publishes an even anchor and commits it with OUTW `0xf1db`, `0x4446`; it still
+owns task scheduling. GDB/QMP debugger and device access use base RAM. The
+local native build and authored same-page A → B → A → B → A checkpoint witness
+passed, including separate-process restore, shared hooks, virtual clock and
+precise retrace. See the source migration guide for page limits, tombstones and admission
+boundaries. This is not vendor QEMM/DESQview compatibility or general DPMI
+qualification. Frame-timed input and scene parity remain later slices.
 Periodic memory rules still need their native clock integration and
 qualification; explicit stopped rule ticks are available.
 

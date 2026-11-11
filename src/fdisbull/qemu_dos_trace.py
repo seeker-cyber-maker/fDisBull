@@ -73,14 +73,19 @@ def _ownership(session, binding):
     from .qemu_dos_tasks import require_task
     require_task(session)
     process = session._process
+    read = session._read
+    if getattr(session,'_dos_task_monitor',None):
+        from .qemu_dos_task_views import _row, private_reader
+        row = _row(session)
+        read = private_reader(session.vm,row['binding'],row['generation'])
     # Inspect the chain, not a possibly freed MCB header left in old RAM.
-    blocks = observe_mcbs(session._read, session._ready['first_mcb_segment'])
+    blocks = observe_mcbs(read, session._ready['first_mcb_segment'])
     allocation = process['allocation']
     current = next((block for block in blocks
                     if block['mcb_segment'] == allocation['mcb_segment']), None)
     if current != allocation:
         raise ValueError('DOS allocation ownership changed during the source capture')
-    psp = session._read(process['psp_segment'] * 16, 0x18)
+    psp = read(process['psp_segment'] * 16, 0x18)
     if (psp[:2] != b'\xcd\x20'
             or struct.unpack_from('<H', psp, 0x16)[0] != process['parent_psp_segment']):
         raise ValueError('DOS PSP or parent identity changed during the source capture')
@@ -106,7 +111,8 @@ def _observe(session, binding, sequence, *, clocked=False):
             or linear != cs * 16 + ip or not 0 <= linear < 0x100000):
         raise ValueError('Source trace PC is outside its unwrapped real-mode mapping')
     length = min(15, 0x10000 - ip, 0x100000 - linear)
-    layer_view = session.code(linear, length=length, space='linear') if getattr(session, '_layer_exec', None) else None
+    layer_view = session.code(linear, length=length, space='linear') if (
+        getattr(session, '_layer_exec', None) or getattr(session,'_dos_task_monitor',None)) else None
     raw = bytes.fromhex(layer_view['hex']) if layer_view is not None else session._read(linear, length)
     instruction = Decoder(16, raw, ip=ip).decode()
     if instruction.is_invalid:

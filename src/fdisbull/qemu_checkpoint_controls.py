@@ -14,6 +14,7 @@ from .dosbox_rpc import DebuggerError
 
 _FORMAT = 'fdisbull-qemu-controls-1'
 _TASK_FORMAT = 'fdisbull-qemu-controls-task-2'
+_TASK_VIEWS_FORMAT = 'fdisbull-qemu-controls-task-3'
 _MAX_BYTES = 64 * 1024 * 1024
 _MAX_MAP = 65536
 _MAX_LAYERS = 64
@@ -170,7 +171,9 @@ def capture_controls(session):
     if len(hooks) > _MAX_POINTS:
         raise ValueError('Checkpoint hook budget exceeded')
     hook_ids = {item['breakpoint_id'] for item in hooks}
-    if (len(hook_ids) != len(hooks) or any(not isinstance(item.get('hook'), str) for item in hooks)
+    task_views = getattr(session, '_dos_task_views', {})
+    if ((len(hook_ids) != len(hooks) and not task_views)
+            or any(not isinstance(item.get('hook'), str) for item in hooks)
             or len({item['hook'] for item in hooks}) != len(hooks)):
         raise ValueError('Duplicate checkpoint hook breakpoint')
     pending = getattr(session, '_qemu_hook_pending', None)
@@ -180,7 +183,8 @@ def capture_controls(session):
     for item in hooks:
         if item.get('task_identity') is not None:
             from .qemu_dos_tasks import task_key
-            if task_binding is None or task_key(item['task_identity']) != task_key(task_binding):
+            owner = task_views.get(item['task_identity'].get('task_id'), {}).get('binding', task_binding)
+            if owner is None or task_key(item['task_identity']) != task_key(owner):
                 raise ValueError('Checkpoint hook task identity differs from the selected task')
         point = session.breakpoints.get(item['breakpoint_id'])
         if (item.get('epoch') != epoch or not isinstance(point, dict)
@@ -220,19 +224,90 @@ def capture_controls(session):
             if item.get('task_identity') is not None:
                 raise ValueError('Unbound checkpoint cannot carry a task-scoped hook')
             item.pop('task_identity', None)
-    result = dict(format=_TASK_FORMAT if task_binding is not None else _FORMAT, run=run, epoch=epoch,
+    result = dict(format=_TASK_VIEWS_FORMAT if task_views else _TASK_FORMAT if task_binding is not None else _FORMAT,
+        run=run, epoch=epoch,
         source_sha256=session.metadata['source_sha256'], version=session.version['id'],
         version_sha256=session.version['sha256'], active=active, definitions=definitions,
         maps={key: _pack(value) for key, value in maps.items()}, observed=_pack(observed),
         hooks=hooks, pending_hook=pending, breakpoints=points)
     if task_binding is not None:
         result['task_identity'] = task_binding
+    if task_views:
+        result['pending_task'] = getattr(session, '_qemu_hook_pending_task', None)
     if len(_encode(result)) > _MAX_BYTES:
         raise ValueError('Checkpoint controls exceed the sidecar budget')
     return result
 
 
-def restore_controls(session, controls, old_epoch):
+def _validate_restored_task_hook(session, item):
+    """Validate dormant task controls without running or selecting that task."""
+    from .qemu_dos_tasks import task_key
+    binding = item.get('task_identity')
+    registry = getattr(session, '_dos_task_views', {})
+    if binding is None:
+        raise ValueError('Private task checkpoint requires task-scoped hooks')
+    row = registry.get(binding.get('task_id'))
+    if (row is None or row['retired'] or task_key(binding) != task_key(row['binding'])
+            or item.get('task_id') not in (None, binding['task_id'])):
+        raise ValueError('Restored hook lacks a live registered task lifetime')
+    if (type(item.get('runtime_address')) is not int or not 0 <= item['runtime_address'] <= 0xffffffff
+            or item.get('access') not in ('x','r','w','rw')
+            or type(item.get('length')) is not int or not 1 <= item['length'] <= 65536
+            or item['access'] == 'x' and item['length'] != 1
+            or type(item.get('once')) is not bool or type(item.get('max_hits')) is not int
+            or not 1 <= item['max_hits'] <= 1000 or item.get('space') not in ('source','linear')):
+        raise ValueError('Invalid restored private task hook')
+    def resolve_source(address, length=1, cs=None):
+        static, _ = session.project._dos_parse_address(address, cs)
+        for extent in session._process['source_mapping']['live_ranges']:
+            offset = static - extent['project_address']
+            if 0 <= offset and offset + length <= extent['length']:
+                return extent['runtime_address'] + offset
+        raise ValueError('Restored task hook source is outside the owned DOS module')
+    if item['space'] == 'source':
+        runtime = resolve_source(item['address'], item['length'], item.get('cs'))
+    else:
+        runtime = int(item['address'],0) if isinstance(item['address'],str) else item['address']
+    if runtime != item['runtime_address']:
+        raise ValueError('Restored task hook address differs from its saved mapping')
+    actions = item.get('actions')
+    if not isinstance(actions,list) or not 1 <= len(actions) <= 16:
+        raise ValueError('Invalid restored task hook actions')
+    for action in actions:
+        if not isinstance(action,dict): raise ValueError('Invalid restored task hook action')
+        op = action.get('op')
+        if op in ('layers','task-layers') and set(action) == {'op','layers'}:
+            ids = action['layers']
+            if (not isinstance(ids,list) or len(ids)>64 or len(ids)!=len(set(ids))
+                    or any(not isinstance(i,str) for i in ids)):
+                raise ValueError('Invalid restored hook layer stack')
+            for identifier in ids:
+                definition = session.project.debug_layer_info(identifier)
+                if definition['version'] != session.version['id']:
+                    raise ValueError('Restored hook layer version changed')
+                if op == 'task-layers':
+                    native = definition.get('native_binding') or {}
+                    if (native.get('scope') != 'task-private'
+                            or task_key(native.get('task_identity')) != task_key(binding)):
+                        raise ValueError('Restored hook layer has a different private owner')
+        elif op == 'redirect' and set(action) == {'op','address'}:
+            resolve_source(action['address'])
+        elif op == 'registers' and set(action) == {'op','registers'}:
+            edits = action['registers']
+            if not isinstance(edits,dict) or not edits: raise ValueError('Invalid restored register action')
+            for name, change in edits.items():
+                if (not isinstance(name,str) or name.lower() in ('cs','eip','rip','ip')
+                        or not isinstance(change,dict) or set(change) != {'expected','value'}):
+                    raise ValueError('Invalid restored register action')
+                for value in change.values():
+                    parsed = int(value,0) if isinstance(value,str) else value
+                    if type(parsed) is not int or parsed < 0:
+                        raise ValueError('Invalid restored register action value')
+        else:
+            raise ValueError('Unsupported restored task hook action')
+
+
+def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
     """Rebind a verified sidecar onto a fresh stopped VM; return new control IDs.
 
     The QEMU snapshot must already have restored RAM. This never reapplies RAM
@@ -240,7 +315,7 @@ def restore_controls(session, controls, old_epoch):
     """
     if not isinstance(controls, dict) or len(_encode(controls)) > _MAX_BYTES:
         raise ValueError('Invalid checkpoint controls')
-    if (controls.get('format') not in (_FORMAT, _TASK_FORMAT) or controls.get('epoch') != old_epoch
+    if (controls.get('format') not in (_FORMAT, _TASK_FORMAT, _TASK_VIEWS_FORMAT) or controls.get('epoch') != old_epoch
             or controls.get('source_sha256') != session.metadata['source_sha256']
             or controls.get('version') != session.version['id']
             or controls.get('version_sha256') != session.version['sha256']):
@@ -250,8 +325,10 @@ def restore_controls(session, controls, old_epoch):
     session._stopped()
     saved_task = controls.get('task_identity')
     current_task = getattr(session, '_dos_task_binding', None)
-    if controls['format'] == _TASK_FORMAT and saved_task is None:
+    if controls['format'] in (_TASK_FORMAT, _TASK_VIEWS_FORMAT) and saved_task is None:
         raise ValueError('Task checkpoint controls require a task binding')
+    if controls['format'] == _TASK_VIEWS_FORMAT and not getattr(session, '_dos_task_views', {}):
+        raise ValueError('Task-view checkpoint controls require the restored private registry')
     if controls['format'] == _FORMAT:
         definitions = controls.get('definitions')
         hooks = controls.get('hooks')
@@ -362,12 +439,26 @@ def restore_controls(session, controls, old_epoch):
             hook_task = item.get('task_identity')
             if hook_task is not None:
                 from .qemu_dos_tasks import task_key
-                if current_task is None or task_key(hook_task) != task_key(current_task):
+                task_views = getattr(session, '_dos_task_views', {}) if controls['format'] == _TASK_VIEWS_FORMAT else {}
+                owner = task_views.get(hook_task.get('task_id'), {}).get('binding', current_task)
+                if owner is None or task_key(hook_task) != task_key(owner):
                     raise ValueError('Checkpoint hook task differs from the restored task')
             actions = deepcopy(item['actions'])
             for action in actions:
                 if action.get('op') == 'layers': action['layers'] = [layer_ids[i] for i in action['layers']]
+                elif action.get('op') == 'task-layers':
+                    if controls['format'] != _TASK_VIEWS_FORMAT or private_layer_ids is None:
+                        raise ValueError('Task-layer hook lacks a restored private stack')
+                    action['layers'] = [private_layer_ids[i] for i in action['layers']]
             mutated = True
+            if controls['format'] == _TASK_VIEWS_FORMAT:
+                restored_item = dict(deepcopy(item), actions=actions)
+                _validate_restored_task_hook(session, restored_item)
+                created = session._install_restored_qemu_hook(restored_item)
+                session._event('hook-restore', dict(hook=item['hook'], breakpoint_id=created['breakpoint_id'],
+                    hits=item['hits'], origin_epoch=old_epoch))
+                hook_ids[item['hook']] = item['hook']
+                continue
             created = session.hook(item['address'], actions=actions, once=item['once'],
                 max_hits=item['max_hits'], cs=item['cs'], access=item['access'],
                 length=item['length'], space=item['space'])
@@ -382,6 +473,10 @@ def restore_controls(session, controls, old_epoch):
                                                hits=item['hits'], origin_epoch=old_epoch))
             hook_ids[item['hook']] = item['hook']
         session._qemu_hook_pending = None if pending is None else hook_ids[pending]
+        session._qemu_hook_pending_task = controls.get('pending_task')
+        if (session._qemu_hook_pending_task is not None and
+                session._qemu_hook_pending_task not in getattr(session, '_dos_task_views', {})):
+            raise ValueError('Checkpoint pending hook task is not registered')
         return dict(layers=layer_ids, breakpoints=point_ids, hooks=hook_ids,
                     pending_hook=session._qemu_hook_pending, epoch=session._layer_epoch())
     except BaseException:

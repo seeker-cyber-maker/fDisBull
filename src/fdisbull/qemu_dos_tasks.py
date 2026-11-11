@@ -156,6 +156,9 @@ def require_task(session, binding=None):
     observed = observe_task(session, binding)
     if observed['matches_binding'] is not True:
         raise ValueError('Selected native DOS task differs from the bound task lifetime')
+    if getattr(session, '_dos_task_monitor', None):
+        from .qemu_dos_task_views import _observe, _row
+        _observe(session, _row(session, binding['task_id']))
     return observed
 
 
@@ -218,7 +221,10 @@ class QemuDOSTaskMixin:
             raise ValueError('Bind the native task before activating task-owned layers or hooks')
         if previous is not None and task_key(previous) != task_key(candidate):
             if getattr(self, '_layer_active', []) or getattr(self, '_qemu_hooks', {}):
-                raise ValueError('Clear task-owned layers and hooks before rebinding a different task')
+                row = getattr(self, '_dos_task_views', {}).get(candidate['task_id'])
+                if (getattr(self, '_layer_active', []) or row is None or row['retired']
+                        or task_key(row['binding']) != task_key(candidate)):
+                    raise ValueError('Clear task-owned layers and hooks before rebinding a different task')
         _verify_process(self, self._process, _origin(self), task_binding=candidate)
         self._dos_task_binding = deepcopy(candidate)
         self.metadata['dos_task_binding'] = deepcopy(candidate)

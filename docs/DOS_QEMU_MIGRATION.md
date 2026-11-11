@@ -173,14 +173,75 @@ restore in a separate Python process with active physical RAM/fetch layers and
 task-scoped hooks. The V86 witness also restores virtual time and precise
 retrace under the instrumented profile. This is evidence for that fixture,
 not vendor compatibility.
-Layers bind physical backing: if multiple tasks map the same physical page,
-they share that page's RAM/fetch layer effects. When a cooperating task is
-bound, its source views, source tracing and hooks require that task; source
-tracing and hook redirects still require real mode. There is no automatic
+Ordinary layers bind physical backing: if multiple tasks map the same physical
+page, they share that page's RAM/fetch layer effects. The separate experimental
+task-private layer interface below is intended to isolate cooperating tasks
+that alias the same backing. When a cooperating task is bound, its source
+views, source tracing and hooks require that task; source tracing and hook
+redirects still require real mode. There is no automatic
 inference of QEMM or DESQview task IDs, and these observations do not
 qualify either vendor installation, arbitrary DPMI clients or DOSBox parity.
 DOSBox stays available and remains the default while the separate gates remain
 unqualified.
+
+### Experimental task-private page views
+
+The task-private extension is opt-in. The local x86 TCG build and bounded
+same-page, reset and checkpoint witnesses have passed; the formal migration
+and vendor compatibility gates remain unqualified.
+The guest's cooperating monitor remains responsible for saving CPU state,
+selecting its task and restoring its interrupt frame. fDisBull does not
+schedule a DOS task or infer a vendor scheduler. After writing a complete even
+`FDBTASK1` anchor, that monitor must issue `OUTW` to port `0xf1db` with value
+`0x4446`. The native extension uses the committed identity to select the CPU's
+task-private view. An incomplete, unknown or retired lifetime is intended to
+revoke the view and stop before the next task executes.
+
+Bind the current task first. `dos_task_switching()` enables the monitor, then
+`dos_task_register(cookie=..., incarnation=..., pages=[...])` declares each
+task and its aligned physical RAM pages, including pages for the initial task.
+The corresponding JSON routes have `debug-` prefixes and hyphenated names.
+A private stack can be constructed with `dos_task_layer_patch(...)` and
+`dos_task_layers(...)`; `dos_task_memory(..., view='ram'|'execute'|'base')`
+inspects a registered task explicitly, including an inactive one. Retire a
+nonselected lifetime with `dos_task_retire(task)`. Registration is bounded to
+16 task lifetimes and 16 pages per task; retired identities remain tombstones
+and cannot be reused as the same lifetime. A reused cookie needs a new,
+non-reused incarnation. Task-scoped hooks may share an execution address but
+bind to different registered identities.
+Clear ordinary global layers before enabling task-private views. Hooks with
+nonempty global-layer actions must be replaced with task-private actions at
+that boundary; register-edit and redirect hooks retain their existing rules.
+
+The CPU RAM and instruction-fetch views are keyed by task identity and
+resolved physical backing. CPU writes to a private page remain in that task's
+arena; a different task can have a separate view even when both select the same
+physical page and CR3. Ordinary GDB and QMP memory reads and device accesses
+continue to observe shared base RAM, not a selected task's private CPU view.
+Use the explicit task-memory views when comparing these observations. Bound
+source ownership and source views use the task-private read path where needed.
+Private anchor pages, paging-structure pages, PAE and unsupported or ambiguous
+mappings are rejected rather than treated as private task RAM. Ordinary
+physical layers still have their shared-backing semantics.
+
+Native VMState version 1 includes the private arena, selected identity,
+registrations and tombstones. The version-3 host control sidecar preserves
+per-task stacks, shared hook traps, hit counts and the pending hook; on
+restore, task IDs remain stable while `task_views.layers` maps prior private
+layer IDs to their fresh IDs. The previous checkpoint formats and
+instrumentation remain subject to their own admission checks.
+
+The authored DOS witness runs A → B → A → B → A with identical CR3, TSS,
+virtual code/PSP addresses and physical backing. Its guest-written log records
+private data reads of `1234`, `5678`, `1235`, `5679`, `1236` and fetched carry
+results `0`, `1`, `0`, `1`, `0`; shared base data stays zero. A separate Python
+process restores that checkpoint and continues the per-task hooks at their
+saved hit counts. The same witness passes with virtual clock and precise
+retrace. Other local cases cover dormant generation-zero tasks restored in
+protected/V86 mode, single-step commit followed by a selected-B checkpoint,
+reset revocation, retired/unknown/odd commits, and atomic MMIO/page-table
+refusal. These are bounded cooperating-monitor results, not QEMM/DESQview
+vendor qualification or a replacement DOS scheduler.
 
 ## Prepare and check the core
 

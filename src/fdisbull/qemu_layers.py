@@ -136,6 +136,9 @@ class QemuLayerSessionMixin:
         return result
 
     def _layer_before_execution(self):
+        if getattr(self, '_dos_task_monitor', None):
+            from .qemu_dos_task_views import before_task_execution
+            before_task_execution(self)
         if getattr(self, '_layer_exec', None):
             state = self._layer_native_observe()
             if state.get('fault'):
@@ -154,6 +157,8 @@ class QemuLayerSessionMixin:
         if binding is None:
             _, _, spans, _ = self._layer_spans(patch['address'], len(data), 'source')
         else:
+            if binding.get('scope') == 'task-private':
+                raise ValueError('Task-private definitions require dos_task_layers')
             if binding['run'] != self.run_id or binding['epoch'] != self._layer_epoch():
                 raise ValueError('Layer backing belongs to a different QEMU run or epoch')
             if binding.get('task_identity') is not None:
@@ -176,6 +181,8 @@ class QemuLayerSessionMixin:
         if (not isinstance(active, list) or len(active) > 64
                 or any(not isinstance(i, str) for i in active) or len(set(active)) != len(active)):
             raise ValueError('Active stack requires at most 64 unique layer IDs')
+        if active and getattr(self, '_dos_task_monitor', None):
+            raise ValueError('Use task-private stacks while native task switching is enabled')
         if active and getattr(self, '_dos_task_binding', None) is not None:
             from .qemu_dos_tasks import require_task
             require_task(self)
@@ -307,7 +314,16 @@ class QemuLayerSessionMixin:
         linear, static, spans, state = self._layer_spans(address, length, space, cs)
         remote = self._stopped()
         observed = bytearray()
+        task_view = None
+        if getattr(self, '_dos_task_monitor', None) and space != 'physical':
+            from .qemu_dos_task_views import selected_view
+            task_view = selected_view(self)
         for start, count in spans:
+            if task_view is not None:
+                from .qemu_dos_task_views import _read
+                data, _ = _read(self, task_view, start, count, view)
+                observed.extend(data)
+                continue
             ram = remote.memory(start, count, space='physical')
             if view == 'ram':
                 observed.extend(ram)
@@ -358,7 +374,8 @@ class QemuLayerSessionMixin:
                     view=view, space=space, runtime_address=hex(linear),
                     project_address=hex(static) if static is not None else None, instructions=instructions,
                     runtime_cs=runtime_cs, project_cs=project_cs, instruction_pointer=hex(ip),
-                    generation=self._layer_generation, active_layers=list(self._layer_active),
+                    generation=self._layer_generation if task_view is None else task_view['generation'],
+                    active_layers=list(self._layer_active if task_view is None else task_view['active']),
                     backing=[dict(physical_address=hex(a), length=n) for a, n in spans],
                     evidence='stopped native backing bytes and guarded instruction overlay')
 

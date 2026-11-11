@@ -12,13 +12,14 @@ from .dos_memory import translate_386_page
 
 
 class DosAddressSpace:
-    def __init__(self, vm, registers, *, task_binding=None):
+    def __init__(self, vm, registers, *, task_binding=None, private_read=None):
         from .qemu_dos_tasks import read_task_context, validate_register_context
         self.vm = vm
         self.remote = vm.debugger()
         self.state = registers['address_state']
         self.mode = registers['cpu_mode']
         self.task_binding = task_binding
+        self.private_read = private_read
         self.native_context = read_task_context(vm, task_binding)
         validate_register_context(self.native_context, registers)
         state = self.state
@@ -80,7 +81,7 @@ class DosAddressSpace:
             if page in self.pages and self.pages[page] != item:
                 raise ValueError('DOS ownership mapping changed during capture')
             self.pages[page] = item
-            parts.append(physical)
+            parts.append(physical if self.private_read is None else self.private_read(backing,count))
             offset += count
         return b''.join(parts)
 

@@ -25,6 +25,7 @@ from .qemu_dos import QemuDOSSession
 from .qemu_machine import MachineContext, MachineDebugSession, QemuMachine, machine_operation
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
+from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
 
 
 def _sha(data):
@@ -151,7 +152,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -307,6 +308,7 @@ class QemuDOSProcessSession(QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDe
                 desqview_observation=True,
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
                 native_dos_tasks='x-fdisbull-query-task-context' in vm.qmp_commands,
+                native_task_views=TASK_VIEW_COMMANDS <= vm.qmp_commands,
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',

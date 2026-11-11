@@ -131,10 +131,12 @@ def _decode_origin(session, origin):
     return nonce, ready_bytes, tail, vectors, helper, ready
 
 
-def _verify_process(session, process, origin, vm=None, memory=None, task_binding=_CURRENT_TASK):
+def _verify_process(session, process, origin, vm=None, memory=None, task_binding=_CURRENT_TASK,
+                    private_views=_CURRENT_TASK):
     from .qemu_dos_process import observe_mcbs, relocated_source
     vm = session.vm if vm is None else vm
     task_binding = getattr(session, '_dos_task_binding', None) if task_binding is _CURRENT_TASK else task_binding
+    private_views = getattr(session,'_dos_task_views',{}) if private_views is _CURRENT_TASK else private_views
     if task_binding is not None:
         from .qemu_dos_tasks import observe_task
         if task_binding.get('process_nonce') != origin.get('nonce'):
@@ -156,10 +158,19 @@ def _verify_process(session, process, origin, vm=None, memory=None, task_binding
             or process['parent_psp_segment'] != ready['helper_psp']):
         raise ValueError('Checkpoint does not identify an active owned DOS process')
     space = None
+    private_read = None
+    if private_views and task_binding is not None:
+        from .qemu_dos_task_views import private_reader, _observe
+        row = private_views.get(task_binding['task_id'])
+        if row is None or row['retired']:
+            raise ValueError('Selected process lacks a live private task view')
+        if vm is session.vm and getattr(session,'_dos_task_monitor',None):
+            _observe(session,row)
+        private_read = private_reader(vm,task_binding,row['generation'])
     if registers['cpu_mode'] != 'real':
         from .qemu_dos_address_space import DosAddressSpace
-        space = DosAddressSpace(vm, registers, task_binding=task_binding)
-    read = (lambda address, length: _read(vm, address, length)) if space is None else space.read
+        space = DosAddressSpace(vm, registers, task_binding=task_binding,private_read=private_read)
+    read = ((lambda address, length: _read(vm, address, length)) if private_read is None else private_read) if space is None else space.read
     blocks = observe_mcbs(read, ready['first_mcb_segment'])
     allocation = process['allocation']
     current = next((block for block in blocks if block['mcb_segment'] == allocation['mcb_segment']), None)
@@ -243,6 +254,7 @@ def save_process_state(session, name, max_bytes):
     from .external_files import _file_name
     from .qemu_instrumented_checkpoint import capture, verify_saved
     from .qemu_dos_tasks import capture_task_checkpoint
+    from .qemu_dos_task_views import capture_task_views
     import uuid
     _file_name(name)
     if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= MAX_STATE):
@@ -254,6 +266,7 @@ def save_process_state(session, name, max_bytes):
     registers, memory, _ = _verify_process(session, session._process, origin)
     controls = capture_controls(session)
     task_checkpoint = capture_task_checkpoint(session)
+    task_views = capture_task_views(session)
     instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
     bundle = dict(format=FORMAT, tag=tag, source_sha256=session.metadata['source_sha256'],
@@ -261,7 +274,8 @@ def save_process_state(session, name, max_bytes):
         runtime=_compatibility(session), runtime_origin=deepcopy(session.vm.inputs),
         process=deepcopy(session._process), origin=origin, registers=registers,
         memory=memory, controls=controls, serial=serial, instrumentation=instrumentation,
-        native_task=task_checkpoint, task_binding=deepcopy(getattr(session, '_dos_task_binding', None)))
+        native_task=task_checkpoint, task_binding=deepcopy(getattr(session, '_dos_task_binding', None)),
+        task_views=task_views)
     try:
         snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
                      instrumented=instrumentation is not None, export_token=export_token)
@@ -270,6 +284,8 @@ def save_process_state(session, name, max_bytes):
         verify_saved(session, instrumentation)
         if capture_task_checkpoint(session) != task_checkpoint:
             raise DebuggerError('Native task context changed while saving checkpoint')
+        if capture_task_views(session) != task_views:
+            raise DebuggerError('Native private task views changed while saving checkpoint')
         with session.vm.checkpoint_disk.open('rb') as stream:
             machine = stream.read(limit + 1)
         if len(machine) > limit:
@@ -297,6 +313,7 @@ def load_process_state(session, artifact, timeout_ms):
     from .qemu_machine import MachineContext, QemuMachine
     from .qemu_instrumented_checkpoint import validate, restore
     from .qemu_dos_tasks import read_task_context, restore_task_checkpoint, task_key
+    from .qemu_dos_task_views import validate_task_views, prime_task_views, verify_task_views, restore_task_views
 
     deadline = request_deadline(session, timeout_ms)
 
@@ -354,6 +371,11 @@ def load_process_state(session, artifact, timeout_ms):
         native_task = bundle.get('native_task')
         if task_binding is not None and native_task is None:
             raise ValueError('Task-bound checkpoint lacks a native task observation')
+        task_views = bundle.get('task_views')
+        validate_task_views(session, task_views, bundle['origin']['nonce'])
+        if task_views is not None and (task_binding is None or not any(
+                task_key(row['binding']) == task_key(task_binding) for row in task_views['views'])):
+            raise ValueError('Private checkpoint lacks its selected task binding')
         instrumentation = bundle.get('instrumentation')
         validate(session.vm, instrumentation)
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
@@ -373,12 +395,15 @@ def load_process_state(session, artifact, timeout_ms):
             if native_task is not None:
                 if read_task_context(new) is None:
                     raise ValueError('Fresh QEMU lacks the checkpoint task-context extension')
+            prime_task_views(new, task_views)
             snapshot_job(new, 'load', tag=bundle['tag'], vmstate='disk0', devices=['disk0'],
                          timeout_ms=remaining(), instrumented=instrumentation is not None)
             restored_instrumentation = restore(new, instrumentation)
             restored_task = restore_task_checkpoint(new, native_task, task_binding)
+            restored_views = verify_task_views(new, task_views)
             actual, _, _ = _verify_process(session, bundle['process'], bundle['origin'],
-                                           vm=new, memory=bundle['memory'], task_binding=task_binding)
+                vm=new, memory=bundle['memory'], task_binding=task_binding,
+                private_views={} if task_views is None else {row['binding']['task_id']:row for row in task_views['views']})
             for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
                 if actual.get(field) != bundle['registers'].get(field):
                     raise DebuggerError('Restored process CPU differs: ' + field)
@@ -405,15 +430,17 @@ def load_process_state(session, artifact, timeout_ms):
             session._reset_native_layers()
             session._qemu_hooks = {}
             session._qemu_hook_pending = None
+            session._qemu_hook_pending_task = None
             session._dos_task_binding = deepcopy(task_binding)
             session.metadata['dos_task_binding'] = deepcopy(task_binding)
             session._process = deepcopy(bundle['process'])
             session._advance_epoch()
             session._set_deadline(deadline)
+            private_layer_ids = restore_task_views(session, task_views, restored_views)
             session._return_breakpoint = MachineContext.breakpoint(
                 session, session._ready['helper_segment'] * 16 + session._ready['exit_wait_ip'])['breakpoint_id']
             restored_controls = restore_controls(session, bundle['controls'],
-                                                 bundle['process']['capture_epoch'])
+                bundle['process']['capture_epoch'], private_layer_ids=private_layer_ids)
             session._checkpoint_entry_clean = False
             session._checkpoint_epoch += 1
             session.metadata['process_disk'] = deepcopy(bundle['origin']['process_disk'])
@@ -431,6 +458,9 @@ def load_process_state(session, artifact, timeout_ms):
             if restored_task is not None:
                 result['native_task'] = restored_task
                 result['task_identity'] = deepcopy(task_binding)
+            if restored_views is not None:
+                result['task_views'] = dict(layers=private_layer_ids,
+                    tasks=list(session._dos_task_views), native=restored_views)
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)
