@@ -152,7 +152,15 @@ def validate_script(script, *, session=None):
                     if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for this backend: '+op)
                     if op == 'memory-rule-run' and (backend or actual) in ('qemu-machine','qemu-dos'):
-                        raise ValueError('Periodic memory rules require DOSBox guest-time control')
+                        from .memory_rules import MAX_TICKS
+                        for key,limits in (('ticks',(1,MAX_TICKS)),('interval_ms',(1,60000)),
+                                           ('timeout_ms',(1,60000))):
+                            value=params.get(key)
+                            if key in params and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
+                        if session is not None:
+                            from .qemu_memory_rules import admit_native_rule_run
+                            admit_native_rule_run(session)
                     if op in ('save-state','load-state') and (backend or actual) in ('qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for native QEMU scripts: '+op)
                     operation_owner=owner
@@ -415,7 +423,7 @@ def validate_script(script, *, session=None):
         guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-click',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
-                 'clock-observe','clock-advance','capture-surface','screenshot',
+                 'clock-observe','clock-advance','memory-rule-run','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
@@ -556,6 +564,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 requested=params.get('timeout_ms')
                 if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration','mouse.move-mapped') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
+            if (step['op']=='memory-rule-run'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                params['timeout_ms']=min(params.get('timeout_ms',10000),remaining,60000)
             if step['op']=='assert':
                 if params['value'] != params['equals']:
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")

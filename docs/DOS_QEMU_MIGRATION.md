@@ -835,8 +835,9 @@ stop request must both be absent before another operation is admitted.
 
 The clock extension blocks generic migration after budget use. The separately
 admitted instrumented DOS checkpoint route above preserves its bounded native
-state. Completed-frame/audio fences, periodic memory rules and scene
-scheduling still need their own integration and qualification. The optional
+state. Completed-frame/audio fences and scene scheduling still need their own
+integration and qualification. The bounded periodic memory-rule route below uses
+this explicit native virtual clock. The optional
 keyboard extensions below implement separately admitted single chords and
 bounded US-layout text, with guest consumption and layout still unqualified.
 
@@ -1509,9 +1510,29 @@ Stored-surface PNG capture is distinct from the DOSBox completed-frame contract.
 
 Native event searches cover the verified initial real-mode DOS module, not a
 whole-program execution history, arbitrary driver mapping or unpacked original
-entry discovery. Periodic memory rules also remain blocked until their native
-clock integration is qualified; explicit stopped `memory-rule-tick` is
-available.
+entry discovery. Explicit stopped `memory-rule-tick` is available. The shared
+`memory_rule_run(rule, *, ticks, interval_ms=100, timeout_ms=10000)` method supports the
+explicit QEMU virtual-clock profile: its first tick is immediate, and each
+subsequent interval uses a token-bound native virtual-clock budget in
+nanoseconds under one host deadline. Each tick revalidates identity and mapping,
+captures fresh values, uses a guarded write and journals its outcome. Any
+nonordinary timer stop, including a breakpoint, watchpoint or guest exit
+collision, ends the run without an extra tick or replay. This does not establish
+generic `guest_ms`, cycle accuracy or real-time scheduling.
+
+Admission is limited to an ordinary stopped context: task bindings, private
+views or a scheduler, native hooks, active ordinary RAM or fetch layers,
+queued/held/scheduled input, active clock
+synchronization or a clock budget, and caller-owned transactions are refused
+before any tick or guest execution. Eight authored native FreeDOS cases passed
+locally: Python, JSON and script routes with three fresh writes and persisted progress, early
+breakpoint and exit, and refusal for a nonvirtual clock, native hook, and active
+RAM plus fetch layers. Host and public contract witnesses are in
+`tests/test_qemu_memory_rules.py` and `tests/test_qemu_memory_rules_public.py`;
+`tests/test_qemu_memory_rules_native.py` is the bounded native witness. The
+existing `tests/test_memory_rules.py` retains 52 DOSBox rule checks, and the
+separate native checkpoint, hook and task tests retain their own preservation
+scope. None promotes the formal parity gates.
 
 Hostcalls and UDL/UIL block services remain a later slice. The earlier lab's
 custom opcodes and plugins are not enabled by this launcher, and experimental

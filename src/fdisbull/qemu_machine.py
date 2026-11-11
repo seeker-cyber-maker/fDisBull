@@ -1207,7 +1207,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
     @property
     def script_operations(self):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
-                'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
+                'memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','breakpoint','delete-breakpoint','trace','screenshot',
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',

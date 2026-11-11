@@ -8,6 +8,7 @@ Durable pending records prevent a lost acknowledgment from becoming a retry.
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import wraps
 import json
 import time
 import uuid
@@ -230,6 +231,25 @@ class MemoryRuleProjectMixin:
                     progress_artifact=progress_id, progress=progress)
 
 
+def _rule_run_operation(function):
+    """Acquire the native machine under the same outer deadline as its RPCs."""
+    @wraps(function)
+    def invoke(self, *args, **kwargs):
+        if hasattr(self, 'vm'):
+            from .qemu_machine import machine_trace_operation
+            @wraps(function)
+            def native_bound(session, *inner_args, **inner_kwargs):
+                previous = getattr(session, '_rpc_deadline', None)
+                session._rpc_deadline = min(previous, session._deadline) if previous is not None else session._deadline
+                try:
+                    return function(session, *inner_args, **inner_kwargs)
+                finally:
+                    session._rpc_deadline = previous
+            return machine_trace_operation(native_bound, label='Periodic memory rule')(self, *args, **kwargs)
+        return _locked(rpc_budget(function))(self, *args, **kwargs)
+    return invoke
+
+
 class MemoryRuleSessionMixin:
     """Explicit ticks; every possible write has a new one-shot expected-byte plan."""
 
@@ -305,32 +325,39 @@ class MemoryRuleSessionMixin:
             uncertain = dispatched or (plan_id is not None and plan_id in getattr(self, '_applied_memory_plans', set()))
             return _failure(self, rule, progress_id, pending, error, uncertain=uncertain)
 
-    @_locked
-    @rpc_budget
+    @_rule_run_operation
     def memory_rule_run(self, rule, *, ticks, interval_ms=100, timeout_ms=10000):
-        """Run a finite DOSBox-only sequence, first tick immediately.
+        """Run a finite guest-time sequence, first tick immediately.
 
-        Subsequent ticks follow requested guest-time slices, not a real-time
-        interrupt or a guaranteed wall-clock frequency. A breakpoint, hook,
-        watchpoint, target exit or host timeout ends this invocation without an
-        extra edit. Full-machine callers must advance their guest explicitly.
+        Subsequent ticks follow DOSBox guest-time slices or the explicitly
+        selected QEMU virtual clock, not a guaranteed wall-clock frequency.
+        A nonordinary native stop or host timeout ends this invocation without
+        an extra edit.
         """
         _integer(ticks, 'ticks', 1, MAX_TICKS)
         _integer(interval_ms, 'interval_ms', 1, 60000)
         _integer(timeout_ms, 'timeout_ms', 1, 60000)
         backend = getattr(self, 'backend_name', None) or self.metadata.get('backend')
         # The ordinary DOSBox DebugSession predates an explicit backend_name.
-        # Named foreign backends and machine contexts must still refuse.
-        if backend not in (None, 'dosbox', 'dosbox-qemu') or hasattr(self, 'vm'):
+        # Native QEMU contexts use a separately admitted virtual-clock contract.
+        qemu = hasattr(self, 'vm')
+        if not qemu and backend not in (None, 'dosbox', 'dosbox-qemu'):
             raise ValueError('Periodic guest-time memory rules require the DOSBox backend')
+        if qemu:
+            from .qemu_memory_rules import admit_native_rule_run
+            admit_native_rule_run(self)
         row, configuration = _rule(self.project, rule)
         if row['run'] != self.run_id:
             raise ValueError('Memory rule belongs to a different live run')
+        if qemu:
+            from .qemu_memory_rules import preflight
+            preflight(self, configuration)
         # rpc_budget intersects this allowance with any outer operation. All
         # nested snapshot/read/edit RPCs share it; time is never renewed per tick.
         deadline = self._rpc_deadline
         completed, recent, outcome = 0, [], 'host_timeout'
         last = None
+        clock_stop = None
         while completed < ticks:
             if time.monotonic() >= deadline:
                 break
@@ -352,21 +379,39 @@ class MemoryRuleSessionMixin:
             waiting = _next(progress, status='pending', phase='execution-pending', reason=None)
             progress_id, waiting = _save(self.project, rule, self.run_id, progress_id, waiting, session=self)
             try:
-                elapsed = self.run(guest_ms=interval_ms, timeout_ms=max(1, remaining),
-                                   fast_forward=False, stop_on_hook=True)
-                if type(elapsed) is not dict or type(elapsed.get('outcome')) is not str:
-                    raise ValueError('Guest slice returned no qualified outcome')
-                outcome = elapsed['outcome']
-                if outcome == 'guest_time':
-                    if (elapsed.get('session', {}).get('state') != 'stopped'
-                            or type(elapsed.get('guest_elapsed_ms')) not in (int, float)
-                            or not elapsed['guest_elapsed_ms'] >= interval_ms):
-                        raise ValueError('Guest slice did not establish its time budget and paused endpoint')
-                status = 'disabled' if outcome in ('guest_exit', 'guest_tsr') else 'active'
+                if qemu:
+                    from .qemu_clock import clock_timer_stop_is_ordinary
+                    elapsed = self.clock_advance(interval_ms * 1_000_000, timeout_ms=max(1, remaining))
+                    ordinary = clock_timer_stop_is_ordinary(elapsed)
+                    native_outcome = elapsed.get('outcome') if isinstance(elapsed, dict) else None
+                    if not isinstance(native_outcome, str):
+                        raise ValueError('Virtual clock slice returned no qualified outcome')
+                    outcome = 'guest_time' if ordinary else 'clock_interrupted'
+                    if not ordinary:
+                        clock_stop = deepcopy(elapsed)
+                    terminal = native_outcome in ('guest_exit', 'guest_tsr') or (
+                        isinstance(elapsed.get('process'), dict) and
+                        elapsed['process'].get('state') in ('guest_exit', 'guest_tsr', 'exited'))
+                    guest_slice = dict(outcome=native_outcome, requested_virtual_ns=interval_ms * 1_000_000,
+                                       clock_stop=deepcopy(elapsed))
+                else:
+                    elapsed = self.run(guest_ms=interval_ms, timeout_ms=max(1, remaining),
+                                       fast_forward=False, stop_on_hook=True)
+                    if type(elapsed) is not dict or type(elapsed.get('outcome')) is not str:
+                        raise ValueError('Guest slice returned no qualified outcome')
+                    outcome = elapsed['outcome']
+                    if outcome == 'guest_time':
+                        if (elapsed.get('session', {}).get('state') != 'stopped'
+                                or type(elapsed.get('guest_elapsed_ms')) not in (int, float)
+                                or not elapsed['guest_elapsed_ms'] >= interval_ms):
+                            raise ValueError('Guest slice did not establish its time budget and paused endpoint')
+                    terminal = outcome in ('guest_exit', 'guest_tsr')
+                    guest_slice = dict(outcome=outcome, guest_elapsed_ms=elapsed.get('guest_elapsed_ms'),
+                                       requested_guest_ms=interval_ms)
+                status = 'disabled' if terminal else 'active'
                 resumed = _next(waiting, status=status, phase='execution-complete' if outcome == 'guest_time' else 'interrupted',
                                 reason=None if outcome == 'guest_time' else outcome,
-                                last=dict(waiting['last'], guest_slice=dict(outcome=outcome,
-                                    guest_elapsed_ms=elapsed.get('guest_elapsed_ms'), requested_guest_ms=interval_ms)))
+                                last=dict(waiting['last'], guest_slice=guest_slice))
                 progress_id, resumed = _save(self.project, rule, self.run_id, progress_id, resumed, session=self)
                 if outcome != 'guest_time':
                     break
@@ -375,8 +420,13 @@ class MemoryRuleSessionMixin:
                 outcome = 'uncertain'
                 break
         progress_id, progress = _progress(self.project, rule, configuration, self.run_id)
-        return dict(rule_artifact=rule, progress_artifact=progress_id, outcome=outcome,
+        result = dict(rule_artifact=rule, progress_artifact=progress_id, outcome=outcome,
                     complete=completed == ticks and outcome in ('tick_budget_complete', 'rule_exhausted'),
                     requested_ticks=ticks, completed_ticks=completed, interval_ms=interval_ms,
                     timeout_ms=timeout_ms, recent_ticks=recent, progress=progress,
                     assistance='bounded host snapshot/edit sequence; not an installed timer or original Game Wizard code')
+        if qemu:
+            result['clock_domain'] = 'qemu-virtual-ns'
+        if clock_stop is not None:
+            result['clock_stop'] = clock_stop
+        return result

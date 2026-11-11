@@ -81,8 +81,19 @@ the witness stops after A resumes and does not claim DOS cleanup. API 1
 cooperative and API 2 direct master-PIC runtimes remain recognized; unsupported
 PIC modes still fail closed. Frame-timed input and
 scene parity remain later slices.
-Periodic memory rules still need their native clock integration and
-qualification; explicit stopped rule ticks are available.
+Explicit stopped rule ticks are available. The shared `memory_rule_run(rule,
+*, ticks, interval_ms=100, timeout_ms=10000)` admits an ordinary stopped QEMU session
+with an explicit virtual clock. Its first tick is immediate; subsequent intervals
+use token-bound native virtual nanoseconds under one host deadline. Each tick
+rechecks identity and mapping, reads fresh values, performs a guarded write and
+journals its result. Any nonordinary stop, including breakpoint, watchpoint or
+exit collisions, stops without another tick or replay. Task binding, private
+views, scheduler or native hooks, active ordinary RAM or fetch layers,
+queued/held/scheduled input, active clock
+synchronization or budget, and caller-owned transactions are refused before
+execution. Eight authored FreeDOS native cases passed locally, including Python,
+JSON and script routes and active RAM/fetch layer refusal. This does not qualify generic `guest_ms`,
+cycle or real-time scheduling, or promote a formal parity gate.
 
 ## Check an installation without a game
 

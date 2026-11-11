@@ -66,10 +66,13 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Takeover: `chat:54d0a46c7daf` recovered the unpublished slice-4 commit
   `6434474b0318bf9ee6d7d3d1b2ea094a3a81629d` from the previous checkout. The
   existing branch, originating handoff marker and stacked MR target are retained.
-- Next increment: add the bounded periodic `memory_rule_run` route to the
-  explicit QEMU virtual-clock profile for ordinary, non-task-switched DOS
-  contexts. Keep task-private switching and native-hook contexts behind
-  preflight refusals for this increment. Frame/VBlank semantics, additional
+- Latest clock/memory-rule continuation: the bounded periodic `memory_rule_run`
+  route now admits ordinary stopped QEMU contexts with the explicit virtual
+  clock. Its native Python, JSON and script witnesses passed; active ordinary
+  layers, task-private switching and native hooks retain preflight refusals.
+- Next integration gate: memory-search identity must include selected layer/task
+  views, and clock execution must preserve hook dispatch, before these contexts
+  can be admitted to periodic rules. Frame/VBlank semantics, additional
   audio devices, coordinate/frame-bound clicks, guest text consumption/layout,
   frame-edge input, pointer calibration and input-to-source causality remain
   open slice-4 boundaries. This incremental clock/memory-rule work is a
@@ -81,15 +84,14 @@ witness, not a passing result. Record partial and unverified behavior explicitly
 - Publication: authored source and this maintained engineering log belong in the
   branch. Vendor images, game bytes, runtime databases and emulator states stay
   outside Git. Routine publication must not start hosted CI.
-- Publication snapshot: at the 2026-11-11 readback, the local-hub and GitLab
-  refs for `codex/qemu-dosbox-parity-20261110` both pointed to
-  `4da1a2f2270672593720d57fae1fc782175a3ace`. MR !117 still had source
-  `c2f608b4551041cc12cfe03ca0201236107b4a4f` and target
-  `089c1841c415eb2b5cdfa90d03b6291a07f73919`; the source is an ancestor of the
-  Codex head. The pending integration is a normal fast-forward of the existing
-  source branch, preserving the target and using `ci.skip`. Earlier notes that
-  the Mac mirror path was unavailable describe the prior Linux recovery
-  session, not this readback. No hosted CI was run.
+- Integration snapshot before the periodic-rule continuation: the existing MR
+  source and both local-hub/GitLab branches were fast-forwarded to
+  `28108fe746fc9838e06c3291d268f809e0acc283`, carrying the verified N12–N19 work
+  and reconciled handoff. MR !117 remained draft with target
+  `agent/execution-event-search-284eb73c` /
+  `089c1841c415eb2b5cdfa90d03b6291a07f73919`. The source ancestry required no
+  rebase or force push. Earlier Mac-mirror availability notes describe the
+  prior Linux session. Routine publication uses `ci.skip`; no CI was run.
 
 ## 2026-11-10: publication-bound declared mouse displacement
 
@@ -3138,3 +3140,56 @@ runtime image, VM state or raw external receipt is included here. This local
 continuation did not run hosted CI. The default-switch gate still has 127
 unqualified surface rows and seven unqualified campaigns. DOSBox remains the
 default, and removal remains forbidden.
+
+
+## Local continuation 2026-11-11: periodic native-clock memory rules
+
+This host-adapter increment follows integration parent
+`28108fe746fc9838e06c3291d268f809e0acc283` on the same source stack and draft
+MR !117. It uses the already verified N19 native executable; no new QEMU patch
+or native engine version is required. The [milestone progress note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4211660592)
+records the N12–N19 catch-up and start of this increment.
+
+The existing `memory_rule_run(rule, *, ticks, interval_ms=100,
+timeout_ms=10000)`, JSON `debug-memory-rule-run` and saved-script
+`memory-rule-run` now admit an explicitly selected QEMU virtual-clock profile.
+The first tick runs while stopped, and later intervals use token-bound native
+virtual-clock budgets. One host deadline begins before machine-lock admission
+and covers all nested clock and memory operations. Each tick rechecks its
+original run/task label, epoch and complete mapping before capturing fresh
+values and issuing a new one-shot expected-byte edit. Rule progress is a
+persistent append-only journal; an uncertain completion cannot become a retry.
+
+Any nonordinary native stop, including a fired timer coincident with another
+stop, ends the invocation without another tick or write. Guest exit/residency
+retains its own outcome and disables the old rule lifetime. The explicit
+virtual-nanosecond contract does not implement generic DOSBox `guest_ms`,
+cycle accuracy, an installed timer hook, background execution or real-time
+frequency. DOSBox retains its earlier guest-time route.
+
+This advances the clock/control part of **slice 4** and the guarded-memory
+prerequisite in **slice 6**, with bounded Python/JSON/script coverage in
+**slice 8**. It does not close those slices. Ordinary active RAM/fetch layers,
+private task bindings/views/scheduling, native hooks, queued/held/scheduled
+input, active clock synchronization/budgets and caller-owned transactions are
+refused before the first rule read/tick or target execution. Memory-search
+snapshots do not yet identify the native layer/fetch/private-task view; new
+periodic rules must not edit that unqualified view. Layer/task-aware memory
+identity and hook-aware clock execution remain a later integration step.
+
+Fresh focused evidence includes eight actual FreeDOS cases: all three public
+routes make three independently guarded writes across two distinct native
+clock tokens and preserve progress after project reopen; early breakpoint
+and DOS exit stop before the second tick; nonvirtual, hook and simultaneous
+RAM/fetch-layer admission refusals preserve the stopped state. A separate
+25-case native selection includes six of those cases and the previous 19
+checkpoint, private-layer/hook, scheduler and IRQ witnesses. The integrated
+host/public selection passed 102 cases, including the retained 52 DOSBox rule
+checks, and one retained DOSBox saved-script/save/restore case passed on its
+actual backend. These selections overlap and are not additive. Broader local
+and packaging receipts are logged against the final source in !117.
+
+Histories remain pending and all 127 formal surface qualifications plus seven
+campaigns remain open. DOSBox stays default and retained. No CI, merge,
+release, shared installation or private runtime/state upload is part of this
+increment.
