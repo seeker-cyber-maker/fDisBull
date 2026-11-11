@@ -232,16 +232,16 @@ def validate_script(script, *, session=None):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
                         native_frames = (backend or actual) == 'qemu-dos'
                         if native_frames:
-                            if op == 'frame-inputs':
-                                raise ValueError('Native renderer histories require released input; frame key ownership is unqualified')
+                            if (op == 'frame-inputs' or op == 'timeline-advance'
+                                    and params.get('inputs') not in (None, [])):
+                                if session is not None and not getattr(session,'capabilities',{}).get('frame_key_ownership'):
+                                    raise ValueError('Native frame key input requires its ownership extension')
                             if session is not None and op in ('frame-advance','timeline-start',
                                     'timeline-advance','timeline-rewind','timeline-pin'):
                                 if not getattr(session,'capabilities',{}).get('frame_timeline'):
                                     raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
                                 if session.project.db.in_transaction:
                                     raise ValueError('Native frame histories require a project outside a caller-owned transaction')
-                            if op == 'timeline-advance' and params.get('inputs') not in (None, []):
-                                raise ValueError('Native renderer histories require released input; scheduled frame edges are unqualified')
                             if op == 'timeline-rewind' and params.get('policy') is not None:
                                 raise ValueError('Native renderer histories restore full checkpoints; partial policies are unqualified')
                             if op == 'timeline-start' and params.get('storage_mode','full') != 'full':
@@ -257,6 +257,7 @@ def validate_script(script, *, session=None):
                                 max_captures=(1,128), max_bytes=(1,1024**3),
                                 max_state_bytes=(1,128*1024**2),
                                 period_ns=(1000000,1000000000))
+                            if op == 'timeline-rewind': limits['frames']=(0,128)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
@@ -507,7 +508,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     native_frames = getattr(session,'metadata',{}).get('backend') == 'qemu-dos'
     capabilities = (getattr(session,'capabilities',{}) if native_frames else
                     getattr(getattr(session,'rpc',None),'capabilities',{}))
-    if any(step['op'] in frame_operations for step in steps):
+    if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs') for step in steps):
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
@@ -521,7 +522,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     restore_operations = {'load-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
         from .keyboard_input import KEYS
-        result = session.call('input.keyboard.state')
+        result = session.keyboard_state() if native_frames else session.call('input.keyboard.state')
         keyboard = result.get('keyboard') if isinstance(result,dict) else None
         keys = keyboard.get('frame_keys') if isinstance(keyboard,dict) else None
         if not isinstance(keys,list) or any(not isinstance(key,str) or key not in KEYS for key in keys):
@@ -531,9 +532,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Native frame input ownership contains duplicate keys')
         return normalized
     frame_owned_before = None
-    track_restored_input = (not native_frames and isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+    native_key_tracking = native_frames and bool(capabilities.get('frame_key_ownership'))
+    track_restored_input = ((not native_frames or native_key_tracking) and isinstance(capabilities,dict) and capabilities.get('frame_timeline')
                            and any(step['op'] in restore_operations for step in steps))
-    if track_restored_input:
+    track_native_edges = native_key_tracking and any(step['op'] in ('frame-inputs','timeline-advance') for step in steps)
+    if track_restored_input or track_native_edges:
         # A full-state restore can introduce held input without dispatching
         # an edge. Existing entry ownership remains the caller's responsibility.
         try:
@@ -545,6 +548,37 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             # The delta guard deliberately refuses this query. Keep ownership
             # unknown while allowing the script's full recovery operation.
     frame_restore_attempted = False
+    frame_restore_completed = False
+    native_frame_touched = False
+    entry_released = set()
+    entry_reacquired = set()
+
+    def record_accepted_frame_edges(receipt):
+        if not isinstance(receipt, dict) or frame_owned_before is None:
+            return
+        from .qemu_frame_keys import _CANONICAL
+        for edge in receipt.get('edges', []):
+            if not isinstance(edge,dict) or type(edge.get('pressed')) is not bool:
+                continue
+            key = _CANONICAL.get(edge.get('key'),edge.get('key'))
+            key = 'escape' if key == 'esc' else key
+            if key not in frame_owned_before:
+                continue
+            if edge['pressed']:
+                if key in entry_released:
+                    entry_reacquired.add(key)
+            else:
+                entry_released.add(key)
+
+    def record_frame_result(op, result):
+        if op == 'frame-inputs':
+            record_accepted_frame_edges(result)
+        elif op == 'timeline-advance' and isinstance(result,dict):
+            for item in result.get('frames',[]):
+                if isinstance(item,dict):
+                    record_accepted_frame_edges(item.get('frame',{}).get('input'))
+            for receipt in result.get('pending_inputs',[]):
+                record_accepted_frame_edges(receipt)
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     if time.monotonic() >= deadline:
         raise TimeoutError('Script host-time budget expired before route publication')
@@ -573,6 +607,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
+            if native_key_tracking and step['op']=='frame-inputs':
+                params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
             if step['op']=='input-schedule-retrace':
                 # Validate resolved options before the budget clamp can turn
                 # an invalid supplied timeout into a valid remaining integer.
@@ -616,19 +652,30 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # Record intended input before dispatch so an uncertain failure
                 # follows the same terminal cleanup as legacy keyboard input.
                 prior_input_touched = keyboard_touched
+                frame_edges = ((step['op']=='frame-inputs' and params['edges'])
+                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or [])))
+                if frame_edges and native_key_tracking:
+                    native_frame_touched = True
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
                         or step['op'].startswith('mouse.') or step['op'] in ('input-cancel-pending','input-schedule','input-schedule-retrace')
                         or (step['op']=='trace-until' and params.get('action') is not None)
-                        or (step['op']=='frame-inputs' and params['edges'])
-                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):
+                        or (frame_edges and not native_key_tracking)):
                     keyboard_touched=True
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if native_key_tracking:
+                    record_frame_result(step['op'],result)
+                if track_restored_input and step['op'] in restore_operations:
+                    frame_restore_completed = True
                 if (step['op']=='trace-until' and result.get('action',{}).get('dispatch')
                         in ('not_requested','not_dispatched','skipped_initial_match')):
                     keyboard_touched = prior_input_touched
             record['result'] = result
+            if native_frames and step['op'] in ('timeline-advance','frame-advance'):
+                if (not isinstance(result,dict) or result.get('outcome') != 'completed'
+                        or result.get('completed_frames') != params.get('frames',1)):
+                    raise ValueError('Frame advancement stopped before completing the requested renderer publications')
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
                 raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
             if step['op']=='trace-until' and not (result.get('complete') and result.get('matched') and result.get('exact_stop')):
@@ -666,13 +713,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             break
     cleanup=None
     restored_input_held = restore_ownership_unknown = False
-    if failure and frame_restore_attempted and not keyboard_touched:
+    if failure and (frame_restore_attempted or native_frame_touched) and not keyboard_touched:
         try:
             current = frame_owned_keys()
             if frame_owned_before is None:
                 restore_ownership_unknown = bool(current)
             else:
-                restored_input_held = bool(current - frame_owned_before)
+                restored_input_held = bool(current - frame_owned_before
+                    or current.intersection(entry_reacquired)
+                    or native_key_tracking and frame_restore_completed and current)
         except Exception:
             # An attempted restore with no verifiable ownership readback must
             # not leave a failed route free to resume an unknown held key.

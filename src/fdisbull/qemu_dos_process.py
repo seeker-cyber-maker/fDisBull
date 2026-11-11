@@ -30,6 +30,7 @@ from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COM
 from .qemu_dos_preemption import COMMAND as PREEMPTION_COMMAND
 from .qemu_dos_history import QemuDOSHistoryMixin
 from .qemu_dos_frames import QemuDOSFramesMixin, FRAME_COMMANDS
+from .qemu_frame_keys import QemuFrameKeysMixin, FRAME_KEY_COMMANDS
 
 
 def _sha(data):
@@ -156,7 +157,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -322,6 +323,11 @@ class QemuDOSProcessSession(QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSche
                 and self.capabilities['renderer_capture'] and FRAME_COMMANDS <= vm.qmp_commands)
             self.capabilities['frame_timeline_unit'] = 'completed synchronous renderer publication followed by a safe CPU stop'
             self.capabilities['frame_timeline_input'] = 'released input only; frame key ownership is unqualified'
+            self.capabilities['frame_key_ownership'] = bool(self.capabilities['source_trace_clock']
+                and FRAME_KEY_COMMANDS <= vm.qmp_commands)
+            self.capabilities['frame_key_repeat'] = False
+            if self.capabilities['frame_key_ownership']:
+                self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
@@ -822,7 +828,7 @@ class QemuDOSProcessSession(QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSche
     @property
     def script_operations(self):
         return super().script_operations | {'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',
-            'frame-advance', 'timeline-start', 'timeline-status', 'timeline-advance',
+            'frame-advance', 'frame-inputs', 'timeline-start', 'timeline-status', 'timeline-advance',
             'timeline-rewind', 'timeline-stop', 'timeline-pin', 'timeline-image'}
 
     def close(self):

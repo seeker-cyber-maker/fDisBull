@@ -174,10 +174,12 @@ stone = debug.timeline_pin("frame-anchor.qcow2")
 restored = debug2.timeline_rewind(timeline=branch["timeline"], point=first_point)
 ```
 
-This first frame increment supports full storage and released input only.
-Frame-key ownership, scheduled frame edges, partial-memory restore policies
-and lossless delta retention remain unqualified. Active task-private RAM/fetch
-layers and hooks are preserved by the underlying full checkpoint. An earlier
+Full storage remains required. The optional N21 frame-key extension adds
+owned physical makes/breaks while the CPU is stopped, scheduled edges before
+a renderer advance, and held-key cold restore. N20 retains its released-input
+contract. Partial-memory restore policies and lossless delta retention remain
+unqualified. Active task-private RAM/fetch layers and hooks are preserved by
+the underlying full checkpoint. An earlier
 hook, breakpoint, watchpoint or lifecycle stop ends the invocation without a
 fabricated frame or another continue; uncertain execution/capture stays
 journaled and is never silently retried. Known checkpoint/controller admission
@@ -196,6 +198,54 @@ branches, offline export, separate-process restore, early stops, controller
 guards and task-private IRQ/layer/hook preservation. The dated handoff and
 !117 record the exact final source and verification receipt. The formal
 migration gate remains open and DOSBox-X stays default and retained.
+
+### Owned frame keys and input restore
+
+`frame_inputs` requires the explicit virtual-clock profile and all three
+native frame-key commands. Native ownership uses a token, epoch and generation
+compare-and-swap, separate from ordinary physical-key leases. A validated batch
+is applied atomically under QEMU's global lock without advancing the CPU or
+virtual clock. Capacity is conservative: two edges when the PS/2 FIFO and
+controller output are quiescent, zero otherwise. A refused batch has no input
+effects. The supported grammar allows larger batches, but actual native
+capacity always binds first; callers must inspect it rather than split and
+retry an uncertain operation.
+
+```python
+debug.frame_inputs([{"key": "shift", "pressed": True},
+                    {"key": "a", "pressed": True}])
+held = debug.keyboard_state()["keyboard"]["frame_keys"]
+point = debug.save_state("held-key.qcow2")
+# Run to the next renderer publications; guest consumption needs its own oracle.
+debug.timeline_advance(frames=3)
+debug.frame_inputs([{"key": "a", "pressed": False},
+                    {"key": "shift", "pressed": False}])
+```
+
+Frame edges accepted at the current timeline point append an input journal and
+mark that live point dirty. Capturing the next completed renderer publication
+clears the dirty flag and binds the input to a new full-state child. Pinning a
+dirty point refuses; `timeline_rewind(frames=0)` restores the cached current
+point and undoes pending input. Scheduled edges are validated for the entire
+requested sequence before its first effect. A later capacity refusal or early
+stop retains the recorded prefix and reports an incomplete result; scripts
+stop at that result and do not dispatch their next step. Failed scripts close
+new or uncertain held ownership instead of inventing release events.
+
+Instrumentation format 2 binds the held QCodes and accepted-edge counters to
+the actual PS/2 modifier/queue state, controller state and throttle deadline.
+The device digest uses canonical scalar/byte encodings, not structure padding.
+Cold restore first loads those device bytes, validates the proof, then adopts
+ownership under a fresh native epoch/token without reinjecting makes. Ordinary
+physical leases, pending input and active schedules still require explicit
+resolution before a checkpoint. Foreign keyboard input invalidates an active
+frame owner; no automatic adoption is allowed. After owned keys are released,
+ordinary input positively detaches the empty frame owner.
+
+Typematic repeat is not modeled by this increment (`repeat_supported=false`).
+A held key proves its ownership and queued make state, not repeated characters,
+input consumption, a completed guest frame or DOSBox parity. Full checkpoints
+continue to report `host_files_restored=false`. DOSBox-X remains retained.
 
 ## Save and restore a restricted raw-machine checkpoint
 

@@ -32,7 +32,7 @@ _READ_ONLY = frozenset({
     'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory',
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe',
-    'display_observe', 'retrace_observe', 'input_state',
+    'display_observe', 'retrace_observe', 'input_state', 'keyboard_state',
 })
 
 
@@ -101,7 +101,7 @@ def _history_operation(function):
                 error = TimeoutError('QEMU history operation exceeded its outer deadline')
                 error.result = result
                 if function.__name__ in ('rewind_start', 'rewind_record', 'rewind',
-                        'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames'):
+                        'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs'):
                     try:
                         self.close()
                     except Exception:
@@ -730,6 +730,9 @@ class QemuDOSHistoryMixin:
                 validate_restored = getattr(self, '_history_restore_node_check', None)
                 if validate_restored is not None:
                     validate_restored(target)
+                update_manifest = getattr(self, '_history_restore_manifest_updates', None)
+                if update_manifest is not None:
+                    update_manifest(target, pending_manifest)
                 pending_manifest['cursor'] = target['id']
                 pending_manifest['live_cursor_valid'] = True
                 pending_manifest['invalid_reason'] = None

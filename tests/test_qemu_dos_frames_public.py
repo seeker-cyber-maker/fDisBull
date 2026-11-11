@@ -26,7 +26,7 @@ class RoutedFramesSession(MachineDebugSession):
 
     def timeline_advance(self, frames=1, inputs=None, timeout_ms=60000):
         self.frame_calls.append(('advance',frames,inputs,timeout_ms))
-        return dict(timeline='manifest2',point='child',completed_frames=frames,completed_guest_frame=None)
+        return dict(timeline='manifest2',point='child',outcome='completed',completed_frames=frames,completed_guest_frame=None)
 
     def timeline_rewind(self, frames=1, policy=None, *, timeline=None, point=None, timeout_ms=60000):
         self.frame_calls.append(('rewind',frames,policy,timeline,point,timeout_ms))
@@ -83,8 +83,8 @@ def test_saved_script_forwards_publication_period_and_remaining_budget(raw_proje
 
 @pytest.mark.parametrize('step', [dict(op='timeline-start',storage_mode='delta'),
     dict(op='timeline-start',period_ns=0), dict(op='timeline-advance',frames=0),
-    dict(op='timeline-advance',inputs=[dict(frame=0,edges=[])]),
-    dict(op='timeline-rewind',frames=0)])
+    dict(op='timeline-advance',inputs=[dict(frame=1,edges=[])]),
+    dict(op='timeline-rewind',frames=-1)])
 def test_malformed_renderer_timeline_script_refuses_before_execution(step):
     with pytest.raises(ValueError):
         validate_script(script(step))

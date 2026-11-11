@@ -8,7 +8,7 @@ from fdisbull.qemu_dos_history import _history_operation
 
 
 @pytest.mark.parametrize('operation',[
-    'timeline_start','timeline_advance','timeline_rewind','advance_frames'])
+    'timeline_start','timeline_advance','timeline_rewind','advance_frames','frame_inputs'])
 def test_late_frame_completion_closes_owner_and_retains_the_actual_receipt(monkeypatch,operation):
     now = [100.0]
     monkeypatch.setattr('fdisbull.qemu_dos_history.time.monotonic',lambda:now[0])

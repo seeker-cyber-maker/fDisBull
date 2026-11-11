@@ -112,6 +112,7 @@ class QemuDOSFramesMixin:
             image_bytes_used=sum(n['frame']['image']['size'] for n in manifest['nodes']),
             nodes=[dict(id=n['id'],parent=n['parent'],edge=deepcopy(n['edge']),
                         checkpoint=deepcopy(n['checkpoint']),frame=deepcopy(n['frame'])) for n in manifest['nodes']])
+        result['current_dirty'] = bool(manifest.get('input_dirty',False))
         live = getattr(self,'_qemu_history_live',None)
         valid = bool(live and not self.closed and live.get('valid')
             and live.get('history') == manifest.get('_artifact_id')
@@ -120,14 +121,15 @@ class QemuDOSFramesMixin:
         result['cursor'] = result['point'] = live.get('cursor') if valid else None
         return result
 
-    def _frame_budget(self, manifest, parent, count=1):
+    def _frame_budget(self, manifest, parent, count=1, input_reserve=0):
         config = manifest['frame_config']
         if len(manifest['nodes']) + count > min(config['max_frames'], config['max_captures'], MAX_NODES):
             raise ValueError('Renderer timeline capture budget exhausted')
-        used = sum(n['checkpoint']['size'] + n['frame']['image']['size'] for n in manifest['nodes'])
+        used = (sum(n['checkpoint']['size'] + n['frame']['image']['size'] for n in manifest['nodes'])
+                + len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()))
         remaining = config['max_bytes'] - used
         state_reserve = max(4096, min(MAX_STATE, max(parent['checkpoint']['size'],self._history_disk_bytes() or 0)))
-        reserve = count * (state_reserve + config['max_image_bytes'])
+        reserve = count * (state_reserve + config['max_image_bytes']) + input_reserve
         project_used = int(self.project.db.execute('SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0])
         if remaining < reserve or 256*1024*1024 - project_used < reserve:
             raise ValueError('Renderer timeline cannot reserve checkpoint and image budget')
@@ -191,6 +193,14 @@ class QemuDOSFramesMixin:
 
     def _history_restore_node_check(self, target):
         frame = target.get('frame')
+        if frame is not None:
+            from .qemu_frame_keys import FRAME_KEY_COMMANDS
+            if FRAME_KEY_COMMANDS <= self.vm.qmp_commands:
+                actual = self._frame_keys_query()['held']
+                if actual != frame.get('keys',[]):
+                    raise DebuggerError('Restored frame key ownership differs from timeline point')
+            elif frame.get('keys',[]):
+                raise DebuggerError('Restored timeline requires native frame key ownership')
         if frame is None or frame.get('kind') == 'initial-paused': return
         if frame.get('kind') != 'renderer-update':
             raise ValueError('Unknown renderer timeline point kind')
@@ -301,7 +311,7 @@ class QemuDOSFramesMixin:
                 node_id = uuid.uuid4().hex
                 manifest['nodes'].append(dict(id=node_id,parent=None,checkpoint=checkpoint,
                     edge=dict(kind='root',completed_instruction=False),registers=self.registers(),created=time.time_ns(),
-                    frame=dict(kind='initial-paused',image=image,completed_guest_frame=None)))
+                    frame=dict(kind='initial-paused',image=image,keys=self._timeline_frame_keys(),completed_guest_frame=None)))
                 manifest.update(head=node_id,cursor=node_id,live_cursor_valid=True,pending=None)
                 new,artifact = self._history_new_revision(manifest)
                 return self._frame_summary(new,artifact['artifact'])
@@ -319,22 +329,51 @@ class QemuDOSFramesMixin:
     @_history_operation
     def timeline_advance(self, frames=1, inputs=None, timeout_ms=60000):
         _positive_int(frames,'frames',1,MAX_NODES)
-        if inputs not in (None,[]): raise ValueError('Renderer timeline does not support frame input edges')
+        from .debug_timeline import validate_schedule
+        from .qemu_frame_keys import _edges, _input_journal_budget
+        validate_schedule(inputs,frames)
+        schedule = {item['frame']:item['edges'] for item in (inputs or [])}
         self._frame_capability()
         manifest = self._frame_manifest()
         parent = self._frame_current(manifest)
-        self._frame_budget(manifest,parent,frames)
+        self._frame_budget(manifest,parent,frames,
+                           input_reserve=8192 * sum(bool(v) for v in schedule.values()))
         self._history_admission()
+        if schedule:
+            if not hasattr(self,'_frame_keys_query'):
+                raise ValueError('Native frame key ownership is unavailable')
+            native = self._frame_keys_query()
+            simulated = native['held']
+            for index in range(frames):
+                _, simulated = _edges(schedule.get(index,[]),simulated)
+            _input_journal_budget(self,manifest,sum(bool(v) for v in schedule.values()))
         records = []
         with self._history_internal():
-            for _ in range(frames):
+            for index in range(frames):
                 self._history_admission()
+                edge_list = schedule.get(index,[])
+                key_receipt = None
+                if edge_list:
+                    native, converted, next_held = self._frame_keys_prepare(edge_list)
+                    if len(converted) > native['edge-capacity']:
+                        output = self._frame_summary(manifest)
+                        output.update(outcome='input_refused',pending_inputs=deepcopy(manifest.get('pending_inputs',[])),completed_frames=len(records),
+                                      recorded_frames=len(records),frames=records,
+                                      reason='Native frame key edge capacity is unavailable')
+                        return output
                 publication = self.display_observe()
                 if publication.get('state') != 'observing': raise ValueError('Renderer observation window is not active')
                 token = uuid.uuid4().hex
                 baseline = publication['native']['updates']
                 self._history_pending(manifest,parent['id'],'renderer-frame',receipt=dict(token=token,baseline=baseline))
                 try:
+                    if edge_list:
+                        key_receipt = self._frame_keys_apply(native,converted,next_held)
+                        manifest.setdefault('input_journal',[]).append(deepcopy(key_receipt))
+                        manifest.setdefault('pending_inputs',[]).append(deepcopy(key_receipt))
+                        manifest['input_dirty'] = True
+                        self._history_pending(manifest,parent['id'],'renderer-frame',receipt=dict(
+                            token=token,baseline=baseline,input=deepcopy(key_receipt)))
                     result, observed, final, ordinary = self._frame_execute(publication,token)
                     if not ordinary:
                         result = deepcopy(result)
@@ -345,7 +384,7 @@ class QemuDOSFramesMixin:
                         stopped = self._history_resolve_known_stop(result,'renderer publication interrupted',
                             records=records,requested_count=frames)
                         output = self._frame_summary(self._frame_manifest(stopped['history']))
-                        output.update(completed_frames=len(records),recorded_frames=len(records),
+                        output.update(pending_inputs=deepcopy(manifest.get('pending_inputs',[])),completed_frames=len(records),recorded_frames=len(records),
                                       frames=records,stop=deepcopy(result),
                                       outcome='interrupted')
                         return output
@@ -354,7 +393,8 @@ class QemuDOSFramesMixin:
                             or after.get('published_ns') != observed['published-ns']):
                         raise DebuggerError('Renderer publication differs from frame fence')
                     config = manifest['frame_config']
-                    used = sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])
+                    used = (sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])
+                            + len(json.dumps(manifest.get('input_journal',[]),sort_keys=True,separators=(',',':')).encode()))
                     checkpoint = self._history_checkpoint(remaining_bytes=min(config['max_state_bytes'],config['max_bytes']-used),
                         node_name=f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2")
                     image_limit = min(config['max_image_bytes'],config['max_bytes']-used-checkpoint['size'])
@@ -364,25 +404,28 @@ class QemuDOSFramesMixin:
                     metadata = captured['metadata']
                     frame = dict(kind='renderer-update',image=image,update_id=after['update_id'],
                         published_ns=after['published_ns'],width=after['width'],height=after['height'],
-                        pixel_sha256=metadata['pixel_sha256'],completed_guest_frame=None)
+                        pixel_sha256=metadata['pixel_sha256'],keys=self._timeline_frame_keys(),
+                        input=deepcopy(key_receipt),completed_guest_frame=None)
                     node_id = uuid.uuid4().hex
                     manifest['nodes'].append(dict(id=node_id,parent=parent['id'],checkpoint=checkpoint,
                         edge=dict(kind='renderer-update',stop=deepcopy(result),fence=final,completed_instruction=None),
                         registers=self.registers(),created=time.time_ns(),frame=frame))
-                    manifest.update(head=node_id,cursor=node_id,live_cursor_valid=True,pending=None,invalid_reason=None)
+                    manifest.update(head=node_id,cursor=node_id,live_cursor_valid=True,pending=None,
+                                    invalid_reason=None,input_dirty=False,pending_inputs=[])
                     manifest,artifact = self._history_new_revision(manifest)
                     records.append(dict(point=node_id,parent=parent['id'],frame=deepcopy(frame),history=artifact['artifact']))
                     parent = manifest['nodes'][-1]
                 except BaseException:
                     self.close(); raise
         output = self._frame_summary(manifest)
-        output.update(completed_frames=len(records),frames=records)
+        output.update(outcome='completed',completed_frames=len(records),frames=records)
         return output
 
     @_history_operation
     def timeline_rewind(self, frames=1, policy=None, *, timeline=None, point=None, timeout_ms=60000):
         if policy not in (None,{}): raise ValueError('Renderer timeline partial-state preservation is unsupported')
-        _positive_int(frames,'frames',1,MAX_NODES)
+        if type(frames) is not int or not 0 <= frames <= MAX_NODES:
+            raise ValueError('frames must be an integer in 0..128')
         manifest = self._frame_manifest(timeline)
         if point is not None:
             target = self._node(manifest,point)
@@ -415,9 +458,21 @@ class QemuDOSFramesMixin:
         from .external_files import _file_name
         _file_name(name)
         manifest = self._frame_manifest()
+        if manifest.get('input_dirty'): raise ValueError('Restore or capture dirty frame input before pinning')
         node = self._frame_current(manifest)
         row = self._history_state_artifact(node['checkpoint'])
         return self._artifact(name,'state',bytes(row['data']),json.loads(row['metadata']))
+
+    def _timeline_frame_keys(self):
+        from .qemu_frame_keys import FRAME_KEY_COMMANDS
+        if FRAME_KEY_COMMANDS <= self.vm.qmp_commands:
+            return list(self._frame_keys_query()['held'])
+        return []
+
+    def _history_restore_manifest_updates(self, target, manifest):
+        if target.get('frame') is not None:
+            manifest['input_dirty'] = False
+            manifest['pending_inputs'] = []
 
     @_history_operation
     def timeline_stop(self):

@@ -3583,3 +3583,92 @@ comparative trials, planned directory/file-aware restore, all 127 formal
 surface qualifications and seven campaigns remain open. DOSBox-X remains
 default and retained pending local parity. No CI, merge, tag, release, shared
 installation or private runtime/state upload is part of this continuation.
+
+
+## Local continuation 2026-11-11: native frame-key ownership and input restore
+
+This continuation follows `972250231055d50a2ee66cdcac6ffa16e123258d` on
+draft !117. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4213836028)
+records the next bounded part of **slice 7, Histories**, with associated input
+and checkpoint work. The complete FreeDOS/directory-workspace amendment,
+original stack target and prior evidence remain preserved.
+
+The optional N21 native extension applies atomic PS/2 makes/breaks with the CPU
+stopped. A token, native clock epoch and monotone generation bind ownership;
+ordinary physical leases remain separate. Query is observational. The first
+accepted batch claims an owner only after preflight, and an empty owner can be
+explicitly detached before ordinary input resumes. Detach increments the CAS
+generation and retains accepted-edge counts, so reacquisition uses the observed
+highwater. Wrong tokens, stale generations, invalid transitions, foreign holds,
+controller conflicts and unavailable capacity refuse before input effects.
+Active foreign keyboard input invalidates ownership.
+
+PS/2 capacity is conservative: at most two edges when its FIFO/controller
+output is quiescent, zero otherwise. This does not add typematic repeat;
+`repeat_supported=false` remains explicit. Input acceptance is not evidence of
+guest consumption, completed guest drawing or DOSBox parity. Native dispatch
+uses the validated captured PS/2 handler under QEMU's global lock while paused,
+without continuing the CPU or virtual clock.
+
+Frame histories retain their full checkpoint/PNG DAG, stored images and earlier
+branches. Accepted current-point input appends a journal and marks the live
+point dirty. A completed renderer child binds the resulting key state; pinning
+a dirty point refuses, and zero-frame rewind restores the cached current point.
+Scheduled input is fully validated before the first effect, with later actual
+capacity refusal preserving the recorded prefix. Scripts stop on incomplete
+frame advancement and retain the stop/result. Failure closes newly acquired,
+restored or uncertain held ownership, while an untouched entry-held key can
+remain paused. Legacy DOSBox cleanup semantics are preserved.
+
+Instrumentation format 2 records held QCodes and counters together with PS/2
+modifier, queue and command state, controller state and exact throttle deadline.
+The canonical digest covers device behavior bytes using fixed-width scalar
+encodings. VMState now carries the missing modifier state and throttle timer.
+Cold restore validates the restored device proof and adopts ownership under a
+fresh token/epoch without reinjecting makes. Ordinary leases, pending inputs and
+active schedules still require explicit resolution before saving. Format 1
+remains supported for the prior runtime; N20 retains released-input frame
+histories. Full restore still reports `host_files_restored=false`.
+
+The first native run exposed that the ordinary QEMU input route silently drops
+events while paused; the new stopped path calls the preflighted handler directly.
+Review also found the need for transient exact-keyboard authorization on the
+first batch and script termination at interrupted publications. Those paths
+have dedicated regressions rather than a weaker acceptance-only claim.
+The first broad run also exposed a host guard that queried frame ownership
+while an ordinary native input plan was already active, preventing legacy
+schedule observation/cancellation. The guard now admits observation and
+resolution of a valid bound schedule, refuses inconsistent simultaneous
+ownership, and still checks/detaches before a new plan is armed.
+
+The corrected N21 native selection passed **14 actual QEMU cases**: BIOS and
+raw IRQ1 makes/consumption/releases, separate-process held-key restore without
+reinjection, scheduled edges/branching/dirty zero rewind, CAS/capacity guards,
+Python/JSON/script dispatch, failure cleanup, task-private IRQ checkpoints,
+legacy detach/reacquisition and actual running foreign-input invalidation.
+The binary SHA-256 is
+`54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a`.
+The packaged 14-file incremental patch applies to a separate copy of sealed N20
+source and yields exactly the recorded N21 file hashes. N19 and N20 binaries
+remain unchanged. Source, patch and build identities are under
+`native/qemu-frame-keys/`.
+
+The final integrated preservation run passed **1,917 tests across 102 files**,
+with zero failures, errors or skips and unchanged Python source/witness hashes.
+It includes the retained native task/scheduler/timer/cascade/nested-IRQ,
+checkpoint-history and renderer-history cases, plus all new frame-key cases.
+The retained DOSBox history/delta/timeline/trial selection passed **317 tests**,
+including the actual native frame-timeline and rewind cases. The focused native
+legacy input-schedule/retrace/press/type selection passed **58 tests**, and
+N20 retained runtime/history preservation passed **14 tests**. Selections overlap
+and are not additive. External log/JUnit receipts use the
+`frame-keys-preservation-final`, `frame-keys-dosbox-final`,
+`frame-keys-native-corrected`, `frame-keys-schedule-preservation` and
+`frame-keys-n20-preservation` stems. Final payload/skill/migration metadata
+verification passed **48 tests** (`frame-keys-metadata-final` receipts). The
+exact commit/mirror readback is recorded in !117.
+
+All **127 formal surface qualifications and seven campaigns** remain open.
+Partial CPU/RAM undo, lossless delta retention, comparative trials and the
+planned FreeDOS/directory/file layers remain future work. DOSBox-X remains
+default and retained. All checks were local; no CI result is implied.

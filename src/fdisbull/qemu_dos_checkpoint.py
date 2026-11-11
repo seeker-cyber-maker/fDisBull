@@ -72,6 +72,9 @@ def _preflight(session):
         raise ValueError('Resolve the native renderer-frame fence before checkpointing')
     require_released_machine_input(session.vm)
     preflight(session)
+    frame_keys = getattr(session, '_frame_keys_checkpoint_preflight', None)
+    if frame_keys is not None:
+        frame_keys()
 
 
 def _serial_idle(session, vm=None, channel=None):

@@ -152,8 +152,23 @@ The root is a paused surface point, not a completed frame. The publication is
 not proof of guest drawing completion, VBlank, physical scanout or input
 consumption. `completed_guest_frames` stays false.
 
-This increment supports full storage and released input; held frame keys,
-scheduled frame edges, partial-memory policies and delta retention remain open.
+Full storage remains required. N21 additionally admits atomic stopped
+`frame_inputs` and scheduled edges with token/epoch/generation ownership,
+separate from ordinary physical leases. Native capacity is two edges only when
+the PS/2 FIFO/controller output is quiescent, zero otherwise. Validate the whole
+schedule before dispatch; an incomplete prefix stops scripts without a retry.
+Accepted input makes the current timeline point dirty until a new renderer
+child is captured or restored; pinning dirty points refuses, and
+`timeline_rewind(frames=0)` restores the cached current point.
+
+Instrumentation format 2 preserves held QCodes, PS/2 modifiers/queue, controller
+state and the exact throttle deadline. Cold restore validates the loaded device
+proof and adopts a fresh token/epoch without injecting makes again. Foreign
+input invalidates an active owner. Ordinary leases/pending input/schedules
+still require resolution before checkpointing; release all owned keys before
+switching back to ordinary physical input. N20 remains released-input only.
+Typematic repeat is unsupported; held ownership does not prove repeated output
+or guest consumption. Partial-memory policies and delta retention remain open.
 Hooks and task-private RAM/fetch layers use the existing full checkpoint
 contract, including native task/IRQ state. Earlier nonordinary stops do not
 create a completed frame or trigger another continue. Limits include the root

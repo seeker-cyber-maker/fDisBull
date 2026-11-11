@@ -13,6 +13,7 @@ import json
 from .dosbox_rpc import DebuggerError
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
+FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
 PREFIX = 'x-fdisbull-instrumented-'
 COMMANDS = frozenset(PREFIX + name for name in (
     'checkpoint-export', 'checkpoint-import', 'checkpoint-status',
@@ -49,11 +50,16 @@ def _decode(record):
             or type(record.get('icount')) is not int or not 0 <= record['icount'] < 1 << 64):
         raise ValueError('Invalid instrumented checkpoint state or hash')
     state = json.loads(record['state'])
-    if (not isinstance(state, dict) or state.get('format') != FORMAT
+    if (not isinstance(state, dict) or state.get('format') not in (FORMAT, FRAME_KEYS_FORMAT)
             or type(state.get('virtual-ns')) is not int or not 0 <= state['virtual-ns'] < 1 << 63
             or type(state.get('source-epoch')) is not int or not 0 < state['source-epoch'] < 1 << 64
             or any(not isinstance(state.get(key), dict) for key in ('clock', 'audio', 'display', 'retrace'))):
         raise ValueError('Invalid instrumented checkpoint envelope')
+    if state['format'] == FRAME_KEYS_FORMAT:
+        from .qemu_frame_keys import validate_frame_key_checkpoint
+        validate_frame_key_checkpoint(state.get('frame-keys'), epoch=state['source-epoch'])
+    elif 'frame-keys' in state:
+        raise ValueError('Frame key checkpoint requires instrumented format 2')
     return state
 
 
@@ -109,6 +115,8 @@ def _logical(value):
     """Remove only the native owner identities deliberately rebound at import."""
     value = deepcopy(value)
     value.pop('source-epoch', None)
+    if isinstance(value.get('frame-keys'), dict):
+        value['frame-keys'].pop('source-epoch', None)
     value['clock'].pop('epoch', None)
     # A fresh local-load process can retain prelaunch/paused rather than the
     # source debugger stop class. Both are independently validated as stopped.
@@ -159,6 +167,18 @@ def restore(vm, record):
     if counter.get('mode') != 'none' or counter.get('icount') != record['icount']:
         raise DebuggerError('Restored native instruction counter differs from its checkpoint')
     clock = dict(virtual_ns=native['virtual-ns'], virtual_clock=dict(native=native))
+    key_state = saved.get('frame-keys')
+    if key_state is not None:
+        from .qemu_frame_keys import validate_frame_key_state, adopt_frame_keys
+        current_keys = validate_frame_key_state(vm.qmp.call('x-fdisbull-query-frame-keys'), epoch=epoch)
+        if (current_keys['active'] != key_state['active']
+                or current_keys['generation'] != key_state['generation']
+                or current_keys['accepted-edges'] != key_state['accepted-edges']
+                or current_keys['held'] != key_state['held']
+                or key_state['active'] and (result.get('frame-key-token') != current_keys.get('token')
+                    or result.get('frame-key-generation') != current_keys['generation'])):
+            raise DebuggerError('Restored frame key ownership differs from its checkpoint')
+        adopt_frame_keys(vm, current_keys, expected_held=key_state['held'])
     windows = {}
     if vm.machine_configuration.get('audio_profile', {}).get('profile') == 'pc-speaker':
         from .qemu_audio import _native_audio

@@ -90,6 +90,15 @@ class QemuPhysicalInputMixin:
             raise ValueError('Physical input ownership is invalid or the VM is closed')
         if not allow_schedule and self._input_schedule_bound():
             raise ValueError('Resolve the scheduled input batch before queueing another physical edge')
+        # A native schedule already excluded frame ownership when it armed.
+        # Its observation/cancellation must remain possible until resolved.
+        # New input still positively detaches an empty frame-key owner first.
+        bound_schedule = allow_schedule and self._input_schedule_bound()
+        if bound_schedule and getattr(self.vm, '_frame_key_owner', None) is not None:
+            raise DebuggerError('Bound input schedule conflicts with frame-key ownership')
+        frame_keys = getattr(self, '_frame_keys_before_physical_input', None)
+        if frame_keys is not None and not bound_schedule:
+            frame_keys()
         if 'input-send-event' not in getattr(self.vm, 'qmp_commands', ()):
             raise ValueError('Selected QEMU does not provide input-send-event')
         native = self.vm.qmp.call('query-status')
