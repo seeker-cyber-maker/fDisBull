@@ -98,3 +98,17 @@ refuses for manual review if ownership or configuration changed. Runtime files, 
 manifest, and the external cache are retained. If an earlier apply did not
 finish, inspect the manifest and the local hub configuration before manually
 recovering; do not delete object storage as a repair step.
+
+## Local activation evidence, 2026-11-11
+
+The user-authorized Mac installation uses a stable worker copy, system Git,
+the configured Python interpreter, and the 60-second user LaunchAgent. Initial
+cache setup was read-only. The first live sync copied six GitLab-only branches
+to the hub and one hub-only branch to GitLab, with no holds or errors.
+Commit `9de519c497fd550c7273aab52a71ccb85d82f26d` was then pushed only to the
+hub; the service propagated it to GitLab and both endpoints reported 681
+matching refs. The hub receive hook changed the wake file without network work
+in the push path. Local source checks passed 52 tests plus the separate
+concurrent-readback archive witness. No CI was run. These are bounded local
+checks; later operation must still be read back from the current status and
+actual repository refs.
