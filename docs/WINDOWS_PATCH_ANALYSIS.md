@@ -19,6 +19,16 @@ require its own compatible-state and input contract.
 | Compare independent PE runs | Export each version's qualified trace, then use the offline topology helper | Site correspondence can align paths; input and checkpoint compatibility must be established separately. The helper does not certify both runs began in equivalent states. |
 | Build an executable explanation | Authored UIL or a narrow C model with explicit typed ports and effects | Compare model outputs against original execution over chosen inputs and boundaries. Generated C is a realization of the model, not independent evidence that the binary was translated faithfully. |
 
+For the first patch lift, prefer **typed UIL as the semantic source and C11 as
+the readable executable view**. Keep arithmetic widths and wraparound,
+individual FLAGS, byte-addressed memory, and unknown effects explicit. Signed C
+overflow, pointer aliasing and optimizer assumptions can otherwise make a
+plausible reconstruction differ from x86. Rust is a useful later independent
+implementation of a bounded model; JavaScript/TypeScript fit report inspection
+and visualization, but 64-bit arithmetic needs deliberate BigInt handling.
+This is a choice of validation workflow, not a promise that C is intrinsically
+equivalent to the source binary.
+
 At an aligned PE trace site, the runtime instruction pointer is treated as the
 paired site identity **only when it equals the recorded runtime site**. This
 prevents a load-base or code-placement difference from appearing as a
@@ -48,6 +58,22 @@ the topology report and final restoration. It requires `FDISBULL_PE_QEMU`,
 them pytest skips native acceptance. Synthetic PE32/PE64 trace tests cover
 rebased instruction pointers, divergent paths and FLAGS at a rejoin. Those
 tests check the report logic, not a native PE32 run.
+
+The pure `fdisbull.pe_step_model.check_pe_step_model` helper adds one small
+source/model check. Given two adjacent completed PE trace events for the same
+thread, it decodes the first event's **executed** bytes through the existing
+single-instruction x86-to-UIL adapter, runs that typed model, and compares its
+declared full-width register and six arithmetic-flag outputs with the next
+event's pre-instruction state. It accepts the saved-experiment trace token or
+the exact native PE trace semantics recorded by `debug.trace()`. It returns
+agreement, mismatch, unsupported or unknown, with the instruction hash and
+semantic model ID. The supported set is
+register MOV/INC/ADD/ADC. Partial register aliases, memory operands, other
+instructions, a nonsequential next PC, missing next state and mismatched
+threads are not upgraded into agreement. This is a finite step observation; it
+does not establish a whole block lift or complete Windows process behavior.
+Existing independent CPU
+tests for that adapter remain a separate gate.
 
 For a real old/new Windows binary pair, a first qualified pilot should use a
 redistributable homegrown PE pair with a stable callable boundary. Preserve

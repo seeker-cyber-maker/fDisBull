@@ -1,5 +1,8 @@
 """Additive observation contracts. Native evidence is never replaced."""
 
+PE_TRACE_SEMANTICS = ('instructions completed by the selected stopped thread; '
+                      'pre-instruction registers; peer threads held per step')
+
 
 def contract(backend):
     if backend=='scummvm-kyra':

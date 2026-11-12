@@ -295,9 +295,9 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             event['project_address']=self.project_address(event['address'])
             decoded=decode(bytes.fromhex(event['bytes']),int(event['address'],16),'x86',getattr(self,'bits',64))
             if decoded:event['instruction']=decoded
+        from .debug_semantics import PE_TRACE_SEMANTICS, normalize_trace, contract
         result.update(run=self.run_id,version=self.version['id'],mapping=self.metadata,requested_count=count,
-                      semantics='instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step')
-        from .debug_semantics import normalize_trace,contract
+                      semantics=PE_TRACE_SEMANTICS)
         normalize_trace(self.backend_name,result['events'],version=self.version['id'],delta=self.delta)
         result['observation_contract']=contract(self.backend_name)
         if len(result['events'])>count:raise DebuggerError('PE trace exceeds requested count')
