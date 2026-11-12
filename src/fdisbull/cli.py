@@ -37,6 +37,7 @@ AGENT_SKILL_GUIDES = {
     "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
     "references/dos-qemu-migration.md": "Select native QEMU DOS, check core execution, track migration slices and retain DOSBox fallback",
     "references/dos-file-layers.md": "Prepare FreeDOS, capture a private D: workspace and manage checkpointed file generations",
+    "references/chip8-qemu.md": "Import an explicit CHIP-8 profile and inspect a bounded native QEMU CPU with source-bound checkpoints",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
     "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
 }
@@ -2151,7 +2152,7 @@ def parser():
     c.add_argument("--dos-generation", help="Activate a retained staged workspace generation at cold launch")
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",
+        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "qemu-chip8", "wine-ne",
                  "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
     c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")
@@ -2414,8 +2415,8 @@ def parser():
     c.add_argument("project")
     c.add_argument(
         "--profile",
-        choices=["cortex-m"],
-        help="explicit Cortex-M flash with Armv7-M vectors (not Armv8-M Security)",
+        choices=["cortex-m", "chip8-classic-pilot-default-v1"],
+        help="explicit Cortex-M vector image or bounded classic CHIP-8 ROM profile",
     )
     c.add_argument(
         "--vector-count",
@@ -2424,7 +2425,7 @@ def parser():
     )
     c.add_argument(
         "--arch",
-        choices=["x86", "arm64", "thumb"],
+        choices=["x86", "arm64", "thumb", "chip8"],
         help="explicit raw mode (bypasses executable loader)",
     )
     c.add_argument("--bits", type=int, choices=[16, 32, 64])

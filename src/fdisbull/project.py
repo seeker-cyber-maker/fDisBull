@@ -182,7 +182,8 @@ class Project(
                 if k not in ("application", "schema")
             }
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
-            self.context = f"{self.arch}:{self.bits}:little" + (
+            endian = 'big' if self.arch == 'chip8' else 'little'
+            self.context = f"{self.arch}:{self.bits}:{endian}" + (
                 ":ne" if self.meta["format"] == "NE" else ""
             )
             self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL)
@@ -282,7 +283,8 @@ class Project(
                     "INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
                     ("original", "file import", cls.digest(image.regions), now()),
                 )
-                context = f"{image.arch}:{image.bits}:little" + (
+                endian = 'big' if image.arch == 'chip8' else 'little'
+                context = f"{image.arch}:{image.bits}:{endian}" + (
                     ":ne" if image.format == "NE" else ""
                 )
                 for r in image.regions:

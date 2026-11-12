@@ -102,6 +102,7 @@ bundle:
 | Analyze DOS device roots, mixed LE driver objects, or a QEMM-configured full machine | [references/dos-drivers-and-qemm.md](references/dos-drivers-and-qemm.md) |
 | Prepare a FreeDOS runtime, capture a private D: directory, inspect/edit file generations or restore file-aware checkpoints | [references/dos-file-layers.md](references/dos-file-layers.md) |
 | Test native QEMU DOS, inspect migration coverage, or select the retained DOSBox fallback | [references/dos-qemu-migration.md](references/dos-qemu-migration.md) |
+| Import a CHIP-8 ROM, inspect its native CPU/RAM or restore an exact-runtime checkpoint | [references/chip8-qemu.md](references/chip8-qemu.md) |
 | Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [references/desqview-and-memory-search.md](references/desqview-and-memory-search.md) |
 | Compare action traces for code/register candidates or stop at a bounded instruction predicate | [references/execution-event-search.md](references/execution-event-search.md) |
 | Discover `media-modules`, inspect MZ tails or AGI v2 volumes, audit AVI captures, or build a bounded missing reader | [references/media-modules.md](references/media-modules.md) |

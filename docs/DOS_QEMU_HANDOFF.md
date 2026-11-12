@@ -4494,3 +4494,91 @@ save-diskfull-preservation-final, save-diskfull-native-final,
 save-diskfull-dosbox-final, save-diskfull-metadata-final and
 chip8-qemu-feasibility-source-audit.json. The consolidated private receipt is
 save-diskfull-final-receipt.json. Earlier handoff text is preserved verbatim.
+
+
+## Minimal CHIP-8 QEMU CPU/machine and fDisBull adapter (2026-11-12)
+
+The new native/qemu-chip8 package adds a compiled chip8-softmmu TCG target and
+chip8-test machine over clean QEMU 10.0.13. It is a CPU-only architecture
+experiment with one helper-backed instruction per translated block, not a
+Python interpreter wrapped by an x86 guest. A caller-owned raw ROM loads at
+0x200 in exactly 4 KiB RAM. The named classic-pilot-default profile and separate
+CPU-subset marker bind the quirks and implemented operations; display, keys,
+timers, audio and RNG remain unavailable.
+
+Existing CHIP-8 work is retained and reused: the current pilot supplies the
+static opcode patterns and declared quirks, while the earlier Python UDC
+catalog/compiler/sweding proof of concept remains separately preserved at
+3e437a9e9ca313a2a24d18ef928a40fc5084b5f7, verified against its GitLab branch.
+Its interpreter fallback and candidate UDL/UIL are not promoted to a standalone
+conversion or accepted common UIL. The existing G0-G8 end-to-end plan remains
+the gate for independent semantics, registered providers, emitted target
+execution and held-out reuse.
+
+The production loader admits arch=chip8 or its exact named profile, fixes the
+ROM and entry at 0x200, preserves raw source identity and uses chip8:16:big
+instruction facts. Classic skip/call/return edges enter the normal persistent
+analyzer; unknown I-based memory addresses and V0-indexed jumps remain unknown.
+SYS, SCHIP/XO, invalid and truncated words refuse static decoding. The 65,536
+word classifier comparison reuses the earlier pilot and is not an independent
+historical emulator oracle. Restart, patch isolation and stored SVG/PNG listing
+exports pass through the ordinary project API.
+
+An explicit qemu-chip8 backend reuses QMP/GDB transport, artifact persistence
+and operation-budget patterns without x86 HMP or segmented PC interpretation.
+It exposes registers, bounded RAM, guarded edits, run/step and execution
+breakpoints. A QMP profile/fault receipt identifies unsupported words, fetch/
+transfer bounds, stack faults and odd fetch. Faults are sticky across debugger
+edits and restore; faulting operations commit no partial architectural update.
+Guarded mutations require readback, including direct GDB writes whose generic
+OK does not prove target acceptance. Uncertain mutation/stop paths close the
+owner and retain available effects and bounded stderr diagnostics.
+
+Native VMState schema1 checkpoints use a private guest-unattached qcow2 node,
+binding exact ROM/version, profile/subset, machine/RAM, QEMU binary and
+checkpoint tool. Fresh-process and reopened-FDB restore verify registers,
+stack, fault receipt and the complete 4 KiB RAM before replacing the old owner.
+Remove breakpoints before this first checkpoint profile. No cross-binary
+restore or host-file rewind is claimed. CHIP-8 layers/hooks/histories/trials,
+selected undo, devices and IRQ models remain unavailable; the corresponding
+existing DOS machinery is retained separately.
+
+All 12 authored native cases pass on binary SHA-256
+65fa79f9104bf20997d9454fc0b0acabce2717816fd029323e6500bcd54cdbb6.
+They include real TCG step/branch/call/return, arithmetic/logic/VF alias and
+shift-from-Vy behavior, RAM transfers and limits, unsupported/device words,
+stack overflow/underflow, sticky fetch fault restore, SP retirement, code
+mutation/TB invalidation, source immutability and public JSON dispatch.
+The 26-file source patch SHA-256 is
+81fdfca213e47439d2acadea0d05ddc1e3e810e732942e8bc35cd1e1e4101e69.
+Isolated replay seeded eight baseline files from the pinned archive, created
+18 files, and matched all 26 output hashes; the parent also compared the
+delivered manifest against the built source and binary.
+
+The first native step crashed because the TCG frontend omitted its mandatory
+tb_start callback. A second failure at PC=0x1000 exposed a non-probe TLB miss
+returning false instead of raising the guest fault. Both mechanisms were
+corrected before the 12-case pass, and the failed runs remain separate. Review
+also tightened debug memory mapping, stack/VMState bounds, inactive slot
+handling, deadlines and uncertain breakpoint cleanup. The first preservation
+attempt caught an eager arch lookup in metadata-only QEMM launch; the guard
+now checks the field when present, with its focused 11-case regression passing.
+
+The source package includes build instructions and explicit local macOS arm64
+limits. Linux, other hosts, performance, arbitrary ROM compatibility and full
+source-to-UIL-to-UDC completion remain unqualified. DOSBox-X stays the default;
+all 141 DOS surfaces and seven campaigns remain open. No CI, release/tag,
+merge, shared installation or default-selector change.
+
+Final integrated preservation passes **2,658 tests across 158 files**, with
+zero failures, errors or skips. One existing private DinoPark identification
+check was explicitly deselected because its input is unavailable. All 1,190
+Python source/test hashes match before and after that run. Separate selections
+pass 12 native CHIP-8 cases, 323 retained DOSBox-X history/undo cases and 77
+staged package/skill/capability/runtime/dispatch/migration cases; selections
+overlap. The native archive/patch, all 26 built/replayed source hashes and exact
+binary identity were checked. N19-N24, component-04 and the shared selector
+retain their earlier identities. Evidence is chip8-preservation-final-02,
+chip8-native-03, chip8-dosbox-final, chip8-metadata-final and the source replay
+receipt. The consolidated private receipt is chip8-final-receipt.json. Earlier
+failed attempts remain separately retained and the old handoff prefix is exact.

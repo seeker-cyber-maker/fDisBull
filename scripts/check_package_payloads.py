@@ -45,6 +45,7 @@ SOURCE_SUPPORT = (
     "native/qemu-dos-provenance/",
     "native/qemu-dos-save-operations/",
     "native/qemu-dos-save-stop/",
+    "native/qemu-chip8/",
     "tests/",
     "scripts/",
     ".github/workflows/",

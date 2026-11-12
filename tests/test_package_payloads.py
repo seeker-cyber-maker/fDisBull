@@ -62,6 +62,9 @@ def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
         "native/qemu-dos-save-stop/README.md": b"automatic safe stop notes",
         "native/qemu-dos-save-stop/source-manifest.json": b"{}",
         "native/qemu-dos-save-stop/stop.patch": b"safe stop patch",
+        "native/qemu-chip8/README.md": b"CHIP-8 target notes",
+        "native/qemu-chip8/source-manifest.json": b"{}",
+        "native/qemu-chip8/chip8.patch": b"CHIP-8 TCG CPU and machine patch",
     }
     for name, data in source.items():
         path = tmp_path / name
@@ -180,7 +183,7 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
         "qemu-dos-checkpoint", "qemu-frame-history", "qemu-frame-keys",
         "qemu-instrumented-checkpoint", "qemu-layers", "qemu-task-private",
         "qemu-task-context", "qemu-task-scheduler", "qemu-task-preemption",
-        "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop",
+        "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop", "qemu-chip8",
     )
     manifest_rules = set((Path(__file__).parents[1] / "MANIFEST.in").read_text().splitlines())
     expected = set()

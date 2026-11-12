@@ -16,13 +16,15 @@ def catalog(report):
 
 def test_cli_and_projectless_json_agree(capsys):
     assert main(['capabilities']) == 0
-    cli = json.loads(capsys.readouterr().out)
+    wire = capsys.readouterr().out
+    cli = json.loads(wire)
     reply = respond({'method': 'capabilities'}, default_project='/does/not/exist.fdb')
     assert cli['ok'] and reply['ok']
     assert cli['result'] == reply['result']
     assert cli['result']['format'] == 'fdisbull-capabilities-1'
-    # The expanded 0.32 catalog stays within half the ordinary 64 KiB reply limit.
-    assert len(json.dumps(cli).encode()) < 32 * 1024
+    # Measure the actual compact wire reply, including its newline, rather
+    # than reserializing it with extra whitespace. Keep half of 64 KiB free.
+    assert len(wire.encode()) < 32 * 1024
     assert all(item['status'] == 'read' for item in cli['result']['sources'].values())
 
 
@@ -60,6 +62,16 @@ def test_discovery_never_starts_a_tool_or_target(monkeypatch):
         'native_modules_imported': False, 'runtime_validation': 'not_run',
     }
     assert all(item['runtime_validation'] == 'not_run' for item in report['capabilities'])
+
+
+def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
+    from fdisbull.capabilities import capabilities
+    items = catalog(capabilities())
+    assert items['decode.chip8']['architectures'] == ['chip8-classic-16be']
+    assert items['debug.chip8']['availability'] == 'not_checked'
+    assert items['debug.chip8']['runtime_validation'] == 'not_run'
+    assert items['debug.chip8']['maturity'] == 'experimental'
+    assert 'No devices' in items['debug.chip8']['scope']
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

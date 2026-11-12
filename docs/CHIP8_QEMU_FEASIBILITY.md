@@ -6,6 +6,11 @@ changed or built for this note.
 runtime study area, at the time of this assessment. Absence statements below
 refer only to that inspected tree and version.
 
+This is the assessment from source `d39cd947`. The subsequent CPU-only target
+and adapter are documented in [CHIP8_QEMU.md](CHIP8_QEMU.md), with actual local
+qualification recorded in the dated handoff. The proposed broader acceptance
+tests below remain separate gates.
+
 ## Recommendation
 
 A CHIP-8 QEMU target is technically feasible and is a useful debugger

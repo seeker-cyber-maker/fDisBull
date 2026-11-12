@@ -104,6 +104,28 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     base = _address(0 if base is None else base, "base address")
     if entry is not None:
         entry = _address(entry, "entry address")
+    from .chip8 import PROFILE as CHIP8_PROFILE, MEMORY_SIZE, ROM_BASE, MAX_ROM_SIZE
+    if arch == 'chip8' or profile == CHIP8_PROFILE:
+        if (arch not in (None, 'chip8') or bits not in (None, 16)
+                or profile not in (None, CHIP8_PROFILE) or image is not None
+                or slice_arch is not None or module or vector_count is not None
+                or load_segment != 0x1000 or explicit_base and base != ROM_BASE
+                or entry not in (None, ROM_BASE)):
+            raise ValueError('CHIP-8 requires its explicit classic profile, 16 bits and ROM/entry at 0x200')
+        if not 2 <= len(data) <= MAX_ROM_SIZE:
+            raise ValueError('CHIP-8 ROM must contain 2..3584 bytes and fit in 4 KiB RAM')
+        # Data after the instruction stream may have odd length. Only actual
+        # instruction starts are required to be even and contain a whole word.
+        return Image('raw', 'chip8', 16, ROM_BASE,
+                     [Region('chip8-rom', ROM_BASE, data, True, True)],
+                     [Seed(ROM_BASE, 'entry', 'entry')],
+                     dict(mapping='flat', filename=path.name,
+                          source_sha256=hashlib.sha256(data).hexdigest(),
+                          instruction_endian='big', chip8_profile=CHIP8_PROFILE,
+                          chip8=dict(profile=CHIP8_PROFILE, memory_size=MEMORY_SIZE,
+                                     rom_base=ROM_BASE, instruction_bytes=2),
+                          file_mappings=[dict(virtual_address=ROM_BASE, file_offset=0,
+                                              file_size=len(data))]), source_bytes=data)
     if profile is not None:
         if profile != 'cortex-m':
             raise ValueError('profile must be cortex-m')

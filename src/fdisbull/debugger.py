@@ -101,6 +101,19 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                                dos_directory, dos_file_mode, freedos_runtime, dos_generation)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
             raise ValueError('DOS process boot/staging options require backend=qemu-dos')
+        if backend == 'qemu-chip8':
+            if (any(value is not None for value in
+                    (kernel, initramfs, files, state, remote_server, spatial_mode,
+                     memory_mib, dot_mode, game_id, language, platform, guest_profile,
+                     qemu_transport, qemu_firmware, qemu_clock, qemu_audio, qemu_retrace))
+                    or window or fair_play):
+                raise ValueError('qemu-chip8 uses its explicit headless CPU profile without DOS/PC or device options')
+            from .qemu_chip8 import Chip8DebugSession
+            return Chip8DebugSession(self, executable, rom=Path(game_dir) / self.meta['filename'],
+                version=version, timeout_ms=boot_timeout_ms,
+                checkpoint_tool=qemu_checkpoint_tool, _on_spawn=_on_spawn)
+        if self.meta.get('arch') == 'chip8':
+            raise ValueError('CHIP-8 execution requires explicit backend=qemu-chip8')
         if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
             raise ValueError('guest_profile requires a native QEMU full-system backend')
         if any(value is not None for value in (qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace)) and backend not in ('qemu-machine','qemu-dos'):
