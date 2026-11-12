@@ -50,6 +50,7 @@ SOURCE_SUPPORT = (
     "native/qemu-chip8-classic/",
     "native/qemu-chip8-layers/",
     "native/qemu-chip8-frames/",
+    "native/qemu-chip8-frame-keys/",
     "tests/",
     "scripts/",
     ".github/workflows/",

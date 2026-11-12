@@ -76,6 +76,7 @@ def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
     assert 'separate v5 adds native 60 Hz sample histories' in scope
     assert 'full checkpoints and immutable PNGs' in scope
     assert 'checkpoint tool required' in scope
+    assert 'v6 adds owned hex-key edges and checkpointed input restore without reinjection' in scope
     assert 'Sample lateness is recorded' in scope
     assert 'no VBlank/frame-completion, deltas, undo, trials or parity claim' in scope
 

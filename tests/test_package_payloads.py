@@ -77,6 +77,9 @@ def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
         "native/qemu-chip8-frames/README.md": b"CHIP-8 frame sample notes",
         "native/qemu-chip8-frames/source-manifest.json": b"{}",
         "native/qemu-chip8-frames/frames.patch": b"CHIP-8 native frame sample patch",
+        "native/qemu-chip8-frame-keys/README.md": b"CHIP-8 frame key notes",
+        "native/qemu-chip8-frame-keys/source-manifest.json": b"{}",
+        "native/qemu-chip8-frame-keys/keys.patch": b"CHIP-8 native frame keys patch",
     }
     for name, data in source.items():
         path = tmp_path / name
@@ -195,7 +198,7 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
         "qemu-dos-checkpoint", "qemu-frame-history", "qemu-frame-keys",
         "qemu-instrumented-checkpoint", "qemu-layers", "qemu-task-private",
         "qemu-task-context", "qemu-task-scheduler", "qemu-task-preemption",
-        "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop", "qemu-chip8", "qemu-chip8-devices", "qemu-chip8-classic", "qemu-chip8-layers", "qemu-chip8-frames",
+        "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop", "qemu-chip8", "qemu-chip8-devices", "qemu-chip8-classic", "qemu-chip8-layers", "qemu-chip8-frames", "qemu-chip8-frame-keys",
     )
     manifest_rules = set((Path(__file__).parents[1] / "MANIFEST.in").read_text().splitlines())
     expected = set()

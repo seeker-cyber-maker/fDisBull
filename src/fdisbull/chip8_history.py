@@ -12,6 +12,8 @@ SUBSET='fdisbull-chip8-layers-hooks-4'
 STATE_FORMAT='fdisbull-qemu-chip8-state-4'
 FRAME_SUBSET='fdisbull-chip8-frames-5'
 FRAME_STATE_FORMAT='fdisbull-qemu-chip8-state-5'
+KEY_SUBSET='fdisbull-chip8-frame-keys-6'
+KEY_STATE_FORMAT='fdisbull-qemu-chip8-state-6'
 
 
 class Chip8HistoryMixin(QemuDOSHistoryMixin):
@@ -33,7 +35,7 @@ class Chip8HistoryMixin(QemuDOSHistoryMixin):
                 raise ValueError('Invalid CHIP-8 history node identity or metadata hash')
 
     def _history_supported(self):
-        if (self.closed or self.identity.get('cpu_subset') not in (SUBSET,FRAME_SUBSET) or
+        if (self.closed or self.identity.get('cpu_subset') not in (SUBSET,FRAME_SUBSET,KEY_SUBSET) or
                 self._checkpoint_tool is None or self.vm.checkpoint_disk is None):
             raise ValueError('CHIP-8 history requires the v4 native full checkpoint backend')
         if self.project.db.in_transaction:
@@ -81,9 +83,12 @@ class Chip8HistoryMixin(QemuDOSHistoryMixin):
                 raise ValueError('CHIP-8 history checkpoint metadata hash differs')
             try:meta=json.loads(item['metadata'])
             except (TypeError,ValueError):raise ValueError('Invalid CHIP-8 checkpoint metadata') from None
-            if (meta.get('format')!=(FRAME_STATE_FORMAT if self.identity.get('cpu_subset')==FRAME_SUBSET else STATE_FORMAT) or meta.get('identity')!=self.identity or
+            if (meta.get('format')!=(KEY_STATE_FORMAT if self.identity.get('cpu_subset')==KEY_SUBSET else FRAME_STATE_FORMAT if self.identity.get('cpu_subset')==FRAME_SUBSET else STATE_FORMAT) or meta.get('identity')!=self.identity or
                     meta.get('host_files_restored') is not False):
                 raise ValueError('CHIP-8 history checkpoint identity differs')
+            if self.identity.get('cpu_subset')==KEY_SUBSET:
+                from .chip8_keys import validate_key_snapshot
+                validate_key_snapshot(meta.get('key_state'),meta.get('environment'))
         return manifest,row
 
     def _history_state_artifact(self,checkpoint):
@@ -97,7 +102,7 @@ class Chip8HistoryMixin(QemuDOSHistoryMixin):
             raise ValueError('CHIP-8 history checkpoint metadata hash differs')
         try:meta=json.loads(row['metadata'])
         except (TypeError,ValueError):raise ValueError('Invalid CHIP-8 checkpoint metadata') from None
-        if (meta.get('format')!=(FRAME_STATE_FORMAT if self.identity.get('cpu_subset')==FRAME_SUBSET else STATE_FORMAT) or meta.get('identity')!=self.identity or
+        if (meta.get('format')!=(KEY_STATE_FORMAT if self.identity.get('cpu_subset')==KEY_SUBSET else FRAME_STATE_FORMAT if self.identity.get('cpu_subset')==FRAME_SUBSET else STATE_FORMAT) or meta.get('identity')!=self.identity or
                 meta.get('host_files_restored') is not False):
             raise ValueError('CHIP-8 history checkpoint identity differs')
         return row
@@ -152,6 +157,11 @@ def bind_history_mutations(cls):
                         channel.operation_deadline=min(deadline,prior_channel) if prior_channel is not None else deadline
                     if getattr(self,'_chip8_frame_context',None) is not None and not getattr(self,'_chip8_frame_driving',False):
                         raise ValueError('CHIP-8 native frame fence is active')
+                    if operation=='chip8_keypad' and getattr(self,'identity',{}).get('cpu_subset')==KEY_SUBSET:
+                        self._chip8_frame_idle()
+                        owner_state=self._chip8_keys_query()
+                        if owner_state['active'] and owner_state['held-mask']:
+                            raise ValueError('Release frame-owned CHIP-8 keys before manual keypad input')
                     self._history_before_operation(operation,args,kwargs)
                     if has_timeout:
                         remaining=int((deadline-time.monotonic())*1000)

@@ -405,6 +405,69 @@ CHIP-8 game compatibility, VBlank or historical replay, frame deltas, selected
 undo, comparative trials, IRQ/task-private behavior, audio, other hosts,
 arbitrary ROMs, end-to-end conversion, or DOS backend promotion.
 
+## V6 frame-key ownership and input restore
+
+The separate `fdisbull-chip8-frame-keys-6` runtime adds owned logical edges for
+CHIP-8's sixteen keypad values. It uses VMState6, host state format6 and
+`fdisbull-qemu-chip8-frames-v2` timelines. The original v1-v5 binaries, state
+formats and v5 frame-history format remain separate. Old histories must use
+their recorded runtime; cross-binary VMState restore is not supported.
+
+`frame_inputs(edges)` applies one stopped atomic batch without running the
+CPU or advancing virtual time. Each edge has exactly `key` and `pressed`:
+keys are lowercase hexadecimal strings `0` through `f`, and `pressed` is a
+boolean. At most sixteen distinct keys are allowed in a batch. Pressing an
+already held key or releasing an unheld key is refused. This API does not
+model a physical keyboard, PS/2 FIFO, typematic repeat or guest consumption.
+The receipt reports the held set and native ownership/counter proof.
+
+```python
+debug.frame_inputs([{'key': '0', 'pressed': True}])
+print(debug.keyboard_state()['keyboard']['frame_keys'])
+debug.frame_inputs([{'key': '0', 'pressed': False}])
+
+root = debug.timeline_start(max_frames=8)
+recorded = debug.timeline_advance(frames=3, inputs=[
+    {'frame': 0, 'edges': [{'key': 'a', 'pressed': True}]},
+    {'frame': 2, 'edges': [{'key': 'a', 'pressed': False}]},
+])
+debug.timeline_rewind(frames=3)
+```
+
+A schedule applies edges before the indexed sample interval. The complete
+schedule is validated against the current held set before any earlier frame
+runs. Native application compares the owner token, ownership generation and
+CPU state generation; malformed, stale and foreign requests are refused
+atomically. An active frame fence prevents input mutation. The sixteen-key
+mask remains distinct from ordinary `chip8_keypad` control: manual held keys
+prevent claiming a frame owner, and frame-owned held keys prevent manual mask
+replacement. Once all owned keys are released, the adapter can detach the empty
+owner before a manual keypad change.
+
+Each new timeline point binds the full input state to its checkpoint and records
+accepted edge receipts. Standalone edges make the live point input-dirty;
+`timeline_pin` refuses it, while `timeline_rewind(frames=0)` restores the last
+recorded point. Old branches and their input journals remain retained. An earlier
+hook, breakpoint, wait or fault creates no false sample: accepted input and the
+completed prefix remain explicit evidence and are not replayed automatically.
+
+Checkpoints retain logical owner activity, held keys and accepted-edge counters.
+A staged fresh owner verifies the saved state and adopts a fresh process token
+and epoch without injecting key edges or executing the guest. Layers, hooks,
+RNG, timer phase and framebuffer remain part of the same full restore. A pending
+`FX0A` retains its PC and waiting state after key input. Only explicit resumption
+permits the instruction to consume that key; a timer sample can precede the next
+instruction. Key `0` is valid. A blocked wait with no available key cannot be
+credited as a completed sample.
+
+The JSON routes remain `debug-frame-inputs`, `debug-keyboard-state` and
+`debug-timeline-*`; saved scripts use `frame-inputs`, `keyboard.state` and the
+corresponding timeline operations with backend `qemu-chip8`. The adapter only
+advertises `frame_key_ownership` on v6. Earlier runtimes refuse the capability
+before input effects. Full checkpoints and PNGs remain the storage model; this
+extension does not add CHIP-8 deltas, selected undo, trials, IRQ/task-private
+semantics or completed guest-frame/VBlank timing.
+
 ## Local checks
 
 ```sh
@@ -474,3 +537,13 @@ python -m pytest -q tests/test_chip8_frames.py tests/test_chip8_frames_native.py
 Native tests require the actual binary when their `FDISBULL_REQUIRE_CHIP8*` selector is 1; an
 optional skipped run is not acceptance evidence. No CI or default switch is
 part of this slice.
+
+V6 frame-key checks require their own explicit runtime selection:
+
+```sh
+FDISBULL_CHIP8_FRAME_KEYS_QEMU=/external/frame-keys/qemu-system-chip8 \
+FDISBULL_CHIP8_FRAME_KEYS_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_FRAME_KEYS=1 \
+python -m pytest -q tests/test_chip8_frame_keys.py \
+  tests/test_chip8_frame_keys_public.py tests/test_chip8_frame_keys_native.py
+```

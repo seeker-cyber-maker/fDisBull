@@ -5109,3 +5109,98 @@ native process closed its RPC channel before capability discovery; 230 earlier
 cases had passed. Its diagnostic log/XML remain chip8-frames-dosbox-final-02.
 The unchanged retained selection was then checked once more as
 chip8-frames-dosbox-final-03; the final receipt binds that completed run.
+
+
+## 2026-11-12 — CHIP-8 frame-key ownership and input restore
+
+Continued from `472139c6c120695f8e8205a80f33201da36152eb` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains target `agent/execution-event-search-284eb73c` and base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, release/tag, merge, shared installation or default change.
+
+The separate native v6 runtime identifies as `fdisbull-chip8-frame-keys-6`,
+environment `fdisbull-chip8-display-keypad-timers-rng-layers-frames-keys-5`,
+key model `fdisbull-chip8-frame-keys-1`, VMState6/min6 and host state6. New
+input-aware timelines use `fdisbull-qemu-chip8-frames-v2`; existing v5 timelines
+remain format1 with their exact original runtime. No cross-binary VMState
+restore is claimed. Binary SHA-256:
+`4c06e9426b581dc889f35f980b3bced1b92742e2b23cd28f8118924469f08ee5`.
+Five-file incremental patch SHA-256:
+`5f9162d7e88ae2bf0aaae6fc9c03504e7321d605e8124a252533cf4749aa15b3`.
+All five replayed source hashes match the built v6 source. The earlier v1-v5
+packages and eleven accepted native binaries retain their identities.
+
+`frame_inputs` accepts one atomic stopped batch of up to sixteen distinct
+lowercase hexadecimal key names and boolean `pressed` states. Native token,
+owner-generation and CPU-state-generation guards refuse stale, foreign,
+malformed or duplicate/no-op transitions before changing any mask/counter.
+Key `0` is valid. These are logical CHIP-8 keys, with no PS/2 FIFO, typematic,
+IRQ or guest-consumption claim. `keyboard_state` exposes held ownership to
+Python, JSON and saved scripts. Manual keypad holds prevent a first claim;
+owned holds prevent manual replacement. After all owned keys are released,
+the adapter detaches the empty owner before manual keypad input.
+
+A complete indexed schedule is simulated before the first intent or execution.
+Each accepted batch is durably journaled before sampling. Standalone changes
+mark a point input-dirty: pinning refuses it, rewind-zero restores the recorded
+point, and old branches/input journals stay available. Earlier hook/BP/wait/
+fault/layer stops retain accepted input and completed prefixes without a false
+sample or automatic replay. Input mutations refuse active frame fences and
+caller-owned transactions before effects. Unexpected native owner changes are
+checked before guest execution and after native stops.
+
+Full checkpoints bind logical key masks/activity and accepted-edge counters to
+the existing CPU/RAM/environment, layer and hook state. Pure sidecar validation
+runs before replacement-owner allocation. A staged owner checks restored native
+proof, rotates its process epoch/token, and adopts without key injection or CPU
+execution; adoption advances only owner generation. An FX0A wait keeps its PC
+and architectural latch after input. Explicit resumption permits consumption;
+a timer sample may still precede the next instruction. Empty blocked waits do
+not receive sample credit.
+
+Integrated coverage accounts for **3,277 distinct cases across 196 files**
+under **1,215 frozen Python source/test hashes**, matched to the committed tree.
+The full run stopped after 2,819 passes on one retained DOSBox-X startup RPC
+EOF. The 462-case tail passed, including that case, and collection reconciliation
+observes a passing result for every eligible case. **The original run is not
+clean and the retained startup reliability issue remains unresolved.** A
+same-time macOS report strongly correlates it with a stack-buffer abort in
+`DEBUG_ShowMsg`; the child PID is not independently bound to the traceback,
+and the triggering message remains unknown. Startup Python files and the test
+match the baseline exactly. Failure, tail, coverage and compact diagnostic
+receipts remain separate; a passing repeat does not erase the failure.
+Two predeclared exclusions remain. The exclusions remain the
+unavailable private DinoPark input and the unchanged pre-existing delta-policy
+discovery assertion. Focused selections pass 18 native cases, 72 retained cases
+on v6, 143 host/public cases, 323 DOSBox-X history/frame/undo/trial cases and
+56 capability/docs/package/migration checks. These selections overlap.
+
+An immutable-copy audit verifies 19 continuous input-aware manifest revisions,
+five retained nodes/two root branches, four accepted input receipts and 69
+hash-verified external objects in the checkpoint/PNG/key-state closure. Dirty pending input is cleared by
+restore while the historical journal remains. Original database files stay
+unchanged. Private receipt: chip8-frame-keys-externalization-final-01/receipt.json.
+A second actual-QEMU witness restores a v5 frame history created before this
+slice using the original v5 binary and upgraded host, compares full CPU/RAM/
+environment/pixels, refuses owned key input without effects, then advances
+exactly one additional native tick. Its original DB/ROM/54 objects stay intact;
+receipt: chip8-v5-frame-keys-upgraded-host-01/receipt.json.
+
+Private qualification names are chip8-frame-keys-preservation-final-01,
+chip8-frame-keys-preservation-tail-01,
+chip8-frame-keys-preservation-coverage-01.json,
+chip8-frame-keys-dosbox-startup-01.json,
+chip8-frame-keys-native-final-01, chip8-frame-keys-compat-final-01,
+chip8-frame-keys-host-final-02, chip8-frame-keys-dosbox-final-01,
+chip8-frame-keys-doc-package-final-01 and
+chip8-frame-keys-patch-replay-receipt-01.json. Inputs, FDBs, checkpoints and
+external objects remain private, outside Git and source packages.
+
+Existing DOS trials, task-private layers, histories, hooks, checkpoints and
+master/slave/nested IRQ paths remain exercised. CHIP-8 deltas, selected undo,
+comparative trials, IRQ/task-private semantics, audio, arbitrary ROM/other-host
+qualification and G0-G8 conversion remain separate work. Raw active-fence
+migration and forced-overdue-backlog qualification remain open. All 141 DOS
+surfaces and seven parity campaigns remain open before any default promotion
+or DOSBox-X removal.

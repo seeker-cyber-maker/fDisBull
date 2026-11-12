@@ -212,8 +212,10 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   native 60 Hz virtual-tick sample stops, with immutable PNGs and hash-bound
   pixel/checkpoint state; 16 native cases passed locally. The sample records
   actual callback lateness and does not claim VBlank, guest-frame completion,
-  or historical timing. Histories require the explicit checkpoint tool and do
-  not provide frame deltas, selected undo or automatic replay. Complete game
+  or historical timing. A separate v6 extension adds owned hexadecimal keypad
+  edges, indexed frame input and checkpointed input restore without reinjection.
+  Histories require the explicit checkpoint tool and do not provide frame deltas,
+  selected undo or automatic replay. Complete game
   and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.

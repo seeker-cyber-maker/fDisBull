@@ -245,8 +245,7 @@ def validate_script(script, *, session=None):
                         native_frames = (backend or actual) in ('qemu-dos','qemu-chip8')
                         chip8_frames = (backend or actual) == 'qemu-chip8'
                         if chip8_frames:
-                            if op == 'frame-inputs' or (op == 'timeline-advance' and params.get('inputs') not in (None, [])):
-                                raise ValueError('CHIP-8 frame input scheduling is unavailable')
+                            from .chip8_keys import validate_edges, validate_schedule
                             if op == 'timeline-rewind' and params.get('policy') not in (None, {}):
                                 raise ValueError('CHIP-8 frame histories restore full checkpoints without partial policies')
                             if op == 'timeline-start' and (params.get('storage_mode','full') != 'full'
@@ -706,7 +705,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if native_frames and step['op'] in ('timeline-advance','frame-advance'):
                 if (not isinstance(result,dict) or result.get('outcome') != 'completed'
                         or result.get('completed_frames') != params.get('frames',1)):
-                    raise ValueError('Frame advancement stopped before completing the requested renderer publications')
+                    raise ValueError('Frame advancement stopped before completing the requested native frame boundaries')
             if native_frames and step['op']=='delta-record':
                 if (not isinstance(result,dict) or result.get('outcome') != 'completed'
                         or result.get('recorded_count') != params.get('count',1)):

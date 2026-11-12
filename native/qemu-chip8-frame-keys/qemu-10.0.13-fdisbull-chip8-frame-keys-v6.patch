@@ -1,0 +1,806 @@
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -268,8 +268,96 @@
+ { 'command': 'x-chip8-cancel-frame',
+   'data': { 'token': 'str', 'expected-control-generation': 'uint64' },
+   'returns': 'Chip8FrameInfo' }
++
++##
++# @Chip8FrameKeyEdge:
++# One logical CHIP-8 keypad transition.
++#
++# @key: One lowercase hexadecimal CHIP-8 key, from 0 through f.
++# @pressed: True for a press edge and false for a release edge.
++##
++{ 'struct': 'Chip8FrameKeyEdge',
++  'data': { 'key': 'str', 'pressed': 'bool' } }
++
++##
++# @Chip8FrameKeysInfo:
++# Native owner receipt for explicitly authored CHIP-8 keypad edges.
++#
++# @model: Fixed native logical frame-key ownership model.
++# @subset: Fixed CHIP-8 CPU implementation subset.
++# @environment-model: Fixed CHIP-8 device environment model.
++# @epoch: Process-local owner epoch; it changes after restore.
++# @active: Whether a frame-key owner lease is active.
++# @valid: Whether owner and architectural keypad state agree.
++# @needs-adoption: Restored active ownership requires host adoption.
++# @generation: Owner-control compare-and-swap generation.
++# @accepted-edges: Total accepted frame-key edges since reset.
++# @held-mask: Held set owned by the frame-key lease.
++# @key-mask: Current architectural CHIP-8 key bitmap.
++# @state-generation: Architectural CPU/device compare-and-swap generation.
++# @token: Current owner token, or the empty string when inactive/unadopted.
++# @held: Sorted lowercase hexadecimal key names held by the owner.
++# @edge-capacity: Maximum edge count accepted in one atomic batch.
++# @repeat-supported: Whether native typematic repeat is modeled.
++##
++{ 'struct': 'Chip8FrameKeysInfo',
++  'data': { 'model': 'str', 'subset': 'str', 'environment-model': 'str',
++            'epoch': 'uint64', 'active': 'bool', 'valid': 'bool',
++            'needs-adoption': 'bool', 'generation': 'uint64',
++            'accepted-edges': 'uint64', 'held-mask': 'uint16',
++            'key-mask': 'uint16', 'state-generation': 'uint64',
++            'token': 'str', 'held': [ 'str' ], 'edge-capacity': 'uint8',
++            'repeat-supported': 'bool' } }
++
++##
++# @query-chip8-frame-keys:
++# Return the stopped-state CHIP-8 frame-key owner receipt.
++##
++{ 'command': 'query-chip8-frame-keys', 'returns': 'Chip8FrameKeysInfo' }
+ 
+ ##
++# @x-chip8-apply-frame-key-edges:
++# Atomically claim or update frame-key ownership with a bounded edge batch.
++#
++# @token: Fresh 32-character lowercase hexadecimal token for a first claim,
++#     or the current owner token for an update.
++# @expected-generation: Owner-control compare-and-swap generation.
++# @expected-state-generation: Architectural CPU/device compare-and-swap value.
++# @edges: One through 16 unique logical key transitions.
++##
++{ 'command': 'x-chip8-apply-frame-key-edges',
++  'data': { 'token': 'str', 'expected-generation': 'uint64',
++            'expected-state-generation': 'uint64',
++            'edges': [ 'Chip8FrameKeyEdge' ] },
++  'returns': 'Chip8FrameKeysInfo' }
++
++##
++# @x-chip8-detach-frame-keys:
++# Detach an empty frame-key owner; accepted edge count is retained.
++#
++# @token: Current owner token.
++# @expected-generation: Owner-control compare-and-swap generation.
++##
++{ 'command': 'x-chip8-detach-frame-keys',
++  'data': { 'token': 'str', 'expected-generation': 'uint64' },
++  'returns': 'Chip8FrameKeysInfo' }
++
++##
++# @x-chip8-adopt-frame-keys:
++# Bind restored logical owner state to a fresh process-local token without
++# dispatching or replaying any key transition.
++#
++# @token: Fresh 32-character lowercase hexadecimal token.
++# @expected-generation: Restored owner-control generation.
++# @expected-state-generation: Restored architectural generation.
++# @held-mask: Expected restored key bitmap.
++##
++{ 'command': 'x-chip8-adopt-frame-keys',
++  'data': { 'token': 'str', 'expected-generation': 'uint64',
++            'expected-state-generation': 'uint64', 'held-mask': 'uint16' },
++  'returns': 'Chip8FrameKeysInfo' }
++
++##
+ # = Miscellanea
+ ##
+ 
+--- a/system/qmp-chip8.c
++++ b/system/qmp-chip8.c
+@@ -1,6 +1,7 @@
+ /* Generic QMP bridge to read-only CHIP-8 CPU QOM properties. */
+ #include "qemu/osdep.h"
+ #include "qapi/error.h"
++#include "qapi/util.h"
+ #include "qapi/qapi-commands-misc.h"
+ #include "hw/core/cpu.h"
+ #include "qom/object.h"
+@@ -260,6 +261,14 @@
+     FRAME_GET_BOOL(stop_consumed, "frame-stop-consumed");
+     FRAME_GET_BOOL(faulted, "faulted");
+     FRAME_GET_BOOL(key_wait, "key-wait");
++    if (info->key_wait) {
++        uint64_t key_mask = object_property_get_uint(obj, "key-mask", &local_err);
++        bool wait_owned;
++        if (local_err) goto fail;
++        wait_owned = object_property_get_bool(obj, "key-wait-stop-owned", &local_err);
++        if (local_err) goto fail;
++        info->key_wait = !key_mask || wait_owned;
++    }
+     FRAME_GET_BOOL(layer_conflict, "frame-layer-conflict");
+ #undef FRAME_GET_STR
+ #undef FRAME_GET_U64
+@@ -473,4 +482,190 @@
+         return NULL;
+     }
+     return chip8_environment(errp);
++}
++
++#define CHIP8_FRAME_KEYS_MODEL "fdisbull-chip8-frame-keys-1"
++
++/* The QOM command interface uses ':' as a delimiter.  Never forward an
++ * unvalidated token or edge string across that boundary. */
++static bool chip8_frame_keys_token_ok(const char *token)
++{
++    size_t i;
++
++    if (!token || strlen(token) != 32) {
++        return false;
++    }
++    for (i = 0; i < 32; i++) {
++        if (!g_ascii_isdigit(token[i]) &&
++            !(token[i] >= 'a' && token[i] <= 'f')) {
++            return false;
++        }
++    }
++    return true;
+ }
++
++static Chip8FrameKeysInfo *chip8_frame_keys_info(Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Chip8FrameKeysInfo *info;
++    Error *local_err = NULL;
++    Object *obj;
++    strList **tail;
++    unsigned int i;
++
++    if (!cs || runstate_is_running()) {
++        error_setg(errp, "CHIP-8 frame key query requires a stopped CPU");
++        return NULL;
++    }
++    obj = OBJECT(cs);
++    info = g_new0(Chip8FrameKeysInfo, 1);
++    info->model = g_strdup(CHIP8_FRAME_KEYS_MODEL);
++#define KEY_GET_STR(field, prop) do { \
++    info->field = object_property_get_str(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define KEY_GET_UINT(field, prop) do { \
++    info->field = object_property_get_uint(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define KEY_GET_BOOL(field, prop) do { \
++    info->field = object_property_get_bool(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++    KEY_GET_STR(subset, "cpu-subset");
++    KEY_GET_STR(environment_model, "chip8-env-model");
++    KEY_GET_UINT(epoch, "frame-keys-epoch");
++    KEY_GET_BOOL(active, "frame-keys-active");
++    KEY_GET_BOOL(valid, "frame-keys-valid");
++    KEY_GET_BOOL(needs_adoption, "frame-keys-needs-adoption");
++    KEY_GET_UINT(generation, "frame-keys-generation");
++    KEY_GET_UINT(accepted_edges, "frame-keys-accepted-edges");
++    KEY_GET_UINT(held_mask, "frame-keys-held-mask");
++    KEY_GET_UINT(key_mask, "key-mask");
++    KEY_GET_UINT(state_generation, "state-generation");
++    KEY_GET_STR(token, "frame-keys-token");
++#undef KEY_GET_STR
++#undef KEY_GET_UINT
++#undef KEY_GET_BOOL
++    tail = &info->held;
++    for (i = 0; i < 16; i++) {
++        if (info->held_mask & (1u << i)) {
++            QAPI_LIST_APPEND(tail, g_strdup_printf("%x", i));
++        }
++    }
++    info->edge_capacity = 16;
++    info->repeat_supported = false;
++    return info;
++fail:
++    error_propagate(errp, local_err);
++    qapi_free_Chip8FrameKeysInfo(info);
++    return NULL;
++}
++
++Chip8FrameKeysInfo *qmp_query_chip8_frame_keys(Error **errp)
++{
++    return chip8_frame_keys_info(errp);
++}
++
++Chip8FrameKeysInfo *qmp_x_chip8_apply_frame_key_edges(
++    const char *token, uint64_t expected_generation,
++    uint64_t expected_state_generation, Chip8FrameKeyEdgeList *edges,
++    Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Chip8FrameKeyEdgeList *item;
++    Error *local_err = NULL;
++    GString *command;
++    unsigned int count = 0;
++    uint16_t seen = 0;
++
++    if (!cs || runstate_is_running()) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: stopped CPU required");
++        return NULL;
++    }
++    if (!chip8_frame_keys_token_ok(token)) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: invalid owner token");
++        return NULL;
++    }
++    for (item = edges; item; item = item->next) {
++        const char *key = item->value ? item->value->key : NULL;
++        unsigned int digit;
++        if (++count > 16 || !key || strlen(key) != 1 ||
++            !(g_ascii_isdigit(key[0]) || (key[0] >= 'a' && key[0] <= 'f'))) {
++            error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: invalid key batch");
++            return NULL;
++        }
++        digit = g_ascii_xdigit_value(key[0]);
++        if (seen & (1u << digit)) {
++            error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: duplicate key");
++            return NULL;
++        }
++        seen |= 1u << digit;
++    }
++    if (!count) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: empty key batch");
++        return NULL;
++    }
++    command = g_string_new(NULL);
++    g_string_append_printf(command, "%s:%" PRIu64 ":%" PRIu64 ":",
++                           token, expected_generation, expected_state_generation);
++    for (item = edges; item; item = item->next) {
++        g_string_append_c(command, item->value->key[0]);
++        g_string_append_c(command, item->value->pressed ? '+' : '-');
++    }
++    object_property_set_str(OBJECT(cs), "apply-frame-key-edges-command",
++                            command->str, &local_err);
++    g_string_free(command, true);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_frame_keys_info(errp);
++}
++
++Chip8FrameKeysInfo *qmp_x_chip8_detach_frame_keys(
++    const char *token, uint64_t expected_generation, Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Error *local_err = NULL;
++    char *command;
++
++    if (!cs || runstate_is_running() || !chip8_frame_keys_token_ok(token)) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: invalid detach request");
++        return NULL;
++    }
++    command = g_strdup_printf("%s:%" PRIu64, token, expected_generation);
++    object_property_set_str(OBJECT(cs), "detach-frame-keys-command", command,
++                            &local_err);
++    g_free(command);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_frame_keys_info(errp);
++}
++
++Chip8FrameKeysInfo *qmp_x_chip8_adopt_frame_keys(
++    const char *token, uint64_t expected_generation,
++    uint64_t expected_state_generation, uint16_t held_mask, Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Error *local_err = NULL;
++    char *command;
++
++    if (!cs || runstate_is_running() || !chip8_frame_keys_token_ok(token)) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: invalid adopt request");
++        return NULL;
++    }
++    command = g_strdup_printf("%s:%" PRIu64 ":%" PRIu64 ":%u", token,
++                              expected_generation, expected_state_generation,
++                              held_mask);
++    object_property_set_str(OBJECT(cs), "adopt-frame-keys-command", command,
++                            &local_err);
++    g_free(command);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_frame_keys_info(errp);
++}
+--- a/target/chip8/cpu.c
++++ b/target/chip8/cpu.c
+@@ -3,6 +3,7 @@
+ #include "qapi/visitor.h"
+ #include "qemu/typedefs.h"
+ #include "qemu/timer.h"
++#include "qemu/uuid.h"
+ #include "qapi/error.h"
+ #include "crypto/hash.h"
+ #include "qemu/host-utils.h"
+@@ -25,6 +26,65 @@
+ static bool chip8_layer_backing(Object *obj, uint16_t *mismatch,
+                                 Error **errp);
+ 
++void chip8_frame_keys_rotate_epoch(Chip8CPU *cpu)
++{
++    QemuUUID uuid;
++    uint64_t epoch;
++
++    qemu_uuid_generate(&uuid);
++    memcpy(&epoch, uuid.data, sizeof(epoch));
++    epoch &= INT64_MAX;
++    if (!epoch) {
++        epoch = 1;
++    }
++    if (epoch == cpu->frame_keys_epoch) {
++        epoch = (epoch + 1) & INT64_MAX;
++        if (!epoch) {
++            epoch = 1;
++        }
++    }
++    cpu->frame_keys_epoch = epoch;
++}
++
++static bool chip8_frame_keys_token_valid(const char *token)
++{
++    size_t i;
++
++    if (!token || strlen(token) != 32) {
++        return false;
++    }
++    for (i = 0; i < 32; i++) {
++        if (!((token[i] >= '0' && token[i] <= '9') ||
++              (token[i] >= 'a' && token[i] <= 'f'))) {
++            return false;
++        }
++    }
++    return true;
++}
++
++static bool chip8_frame_keys_state_valid(Chip8CPU *cpu)
++{
++    CPUArchState *env = &cpu->env;
++
++    if (cpu->frame_keys_needs_adoption) {
++        return env->frame_keys_active && !cpu->frame_keys_valid &&
++               !cpu->frame_keys_token[0] &&
++               env->frame_keys_generation > 0 &&
++               env->frame_keys_accepted_edges > 0 &&
++               env->frame_keys_held_mask == env->key_mask;
++    }
++    if (!cpu->frame_keys_valid) {
++        return false;
++    }
++    if (env->frame_keys_active) {
++        return env->frame_keys_held_mask == env->key_mask &&
++               env->frame_keys_generation > 0 &&
++               env->frame_keys_accepted_edges > 0 &&
++               chip8_frame_keys_token_valid(cpu->frame_keys_token);
++    }
++    return !cpu->frame_keys_token[0] && !env->frame_keys_held_mask;
++}
++
+ static vaddr chip8_get_pc(CPUState *cs)
+ {
+     return CHIP8_CPU(cs)->env.pc;
+@@ -95,6 +155,10 @@
+         mcc->parent_phases.hold(obj, type);
+     }
+     memset(&cpu->env, 0, sizeof(cpu->env));
++    memset(cpu->frame_keys_token, 0, sizeof(cpu->frame_keys_token));
++    cpu->frame_keys_valid = true;
++    cpu->frame_keys_needs_adoption = false;
++    chip8_frame_keys_rotate_epoch(cpu);
+     cpu->env.pc = CHIP8_ROM_BASE;
+     /* The first deadline is floor(1e9/60), with 40/60 ns carried forward. */
+     cpu->env.phase_numerator = 40;
+@@ -163,6 +227,26 @@
+     return g_strdup(CHIP8_LAYER_MODEL);
+ }
+ 
++static bool chip8_get_frame_keys_active(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.frame_keys_active;
++}
++
++static bool chip8_get_frame_keys_valid(Object *obj, Error **errp)
++{
++    return chip8_frame_keys_state_valid(CHIP8_CPU(obj));
++}
++
++static bool chip8_get_frame_keys_needs_adoption(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->frame_keys_needs_adoption;
++}
++
++static char *chip8_get_frame_keys_token(Object *obj, Error **errp)
++{
++    return g_strdup(CHIP8_CPU(obj)->frame_keys_token);
++}
++
+ static char *chip8_get_frame_model(Object *obj, Error **errp)
+ {
+     return g_strdup(CHIP8_FRAME_MODEL);
+@@ -654,6 +738,11 @@
+     }
+     if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
+         error_setg(errp, "CHIP8_FRAME_PRECONDITION: cancel frame fence before key updates");
++        return;
++    }
++    if (cpu->env.frame_keys_active || cpu->frame_keys_needs_adoption ||
++        !cpu->frame_keys_valid) {
++        error_setg(errp, "CHIP8_KEY_OWNER_PRECONDITION: detach frame-key owner before manual keypad update");
+         return;
+     }
+     errno = 0;
+@@ -782,6 +871,194 @@
+     }
+     *value = parsed;
+     return true;
++}
++
++static int chip8_key_hex_value(char ch)
++{
++    if (ch >= '0' && ch <= '9') {
++        return ch - '0';
++    }
++    if (ch >= 'a' && ch <= 'f') {
++        return ch - 'a' + 10;
++    }
++    return -1;
++}
++
++static bool chip8_frame_keys_mutation_admitted(Chip8CPU *cpu, bool adoption,
++                                               Error **errp)
++{
++    if (!tcg_enabled() || runstate_is_running() ||
++        qemu_get_cpu(0) != CPU(cpu) || qemu_get_cpu(1)) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: key ownership requires one stopped CPU");
++        return false;
++    }
++    if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
++        error_setg(errp,
++                   "CHIP8_FRAME_PRECONDITION: cancel frame fence before key ownership changes");
++        return false;
++    }
++    if (!adoption &&
++        (!cpu->frame_keys_valid || cpu->frame_keys_needs_adoption)) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: frame-key state is invalid or needs adoption");
++        return false;
++    }
++    return true;
++}
++
++static void chip8_frame_keys_apply_command(Object *obj, const char *value,
++                                           Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    g_auto(GStrv) parts = g_strsplit(value, ":", 4);
++    uint64_t generation, state_generation, edge_count;
++    uint16_t next_mask;
++    bool seen[16] = { false };
++    const char *edges;
++    size_t n;
++
++    if (!chip8_frame_keys_mutation_admitted(cpu, false, errp)) {
++        return;
++    }
++    if (g_strv_length(parts) != 4 ||
++        !parts[0] || !parts[1] || !parts[2] || !parts[3] ||
++        !chip8_frame_keys_token_valid(parts[0]) ||
++        !chip8_frame_parse_u64(parts[1], &generation) ||
++        !chip8_frame_parse_u64(parts[2], &state_generation) ||
++        !parts[3][0] || strlen(parts[3]) > 32 ||
++        (strlen(parts[3]) & 1)) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: malformed token, generation, or edge batch");
++        return;
++    }
++    edges = parts[3];
++    edge_count = strlen(edges) / 2;
++    if (!edge_count || edge_count > 16 ||
++        generation != env->frame_keys_generation ||
++        state_generation != env->state_generation ||
++        env->frame_keys_generation == UINT64_MAX ||
++        env->state_generation == UINT64_MAX ||
++        env->frame_keys_accepted_edges > UINT64_MAX - edge_count) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: stale generation or invalid edge count");
++        return;
++    }
++
++    if (env->frame_keys_active) {
++        if (strcmp(parts[0], cpu->frame_keys_token) ||
++            env->frame_keys_held_mask != env->key_mask) {
++            error_setg(errp,
++                       "CHIP8_KEY_OWNER_PRECONDITION: owner token or held set differs");
++            return;
++        }
++        next_mask = env->frame_keys_held_mask;
++    } else {
++        if (cpu->frame_keys_token[0] || env->frame_keys_held_mask ||
++            env->key_mask) {
++            error_setg(errp,
++                       "CHIP8_KEY_OWNER_PRECONDITION: manual keys must be released before claiming ownership");
++            return;
++        }
++        next_mask = 0;
++    }
++
++    for (n = 0; n < (size_t)edge_count; n++) {
++        int key = chip8_key_hex_value(edges[n * 2]);
++        char transition = edges[n * 2 + 1];
++        uint16_t bit;
++
++        if (key < 0 || (transition != '+' && transition != '-') ||
++            seen[key]) {
++            error_setg(errp,
++                       "CHIP8_KEY_OWNER_PRECONDITION: edge keys must be unique lowercase hex transitions");
++            return;
++        }
++        seen[key] = true;
++        bit = 1u << key;
++        if ((transition == '+' && (next_mask & bit)) ||
++            (transition == '-' && !(next_mask & bit))) {
++            error_setg(errp,
++                       "CHIP8_KEY_OWNER_PRECONDITION: edge does not change the held set");
++            return;
++        }
++        if (transition == '+') {
++            next_mask |= bit;
++        } else {
++            next_mask &= ~bit;
++        }
++    }
++
++    env->frame_keys_active = true;
++    env->frame_keys_held_mask = next_mask;
++    env->key_mask = next_mask;
++    g_strlcpy(cpu->frame_keys_token, parts[0], sizeof(cpu->frame_keys_token));
++    env->frame_keys_accepted_edges += edge_count;
++    env->frame_keys_generation++;
++    env->key_wait_stop_owned = false;
++    chip8_state_generation_advance(env);
++}
++
++static void chip8_frame_keys_detach_command(Object *obj, const char *value,
++                                            Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    g_auto(GStrv) parts = g_strsplit(value, ":", 3);
++    uint64_t generation;
++
++    if (!chip8_frame_keys_mutation_admitted(cpu, false, errp)) {
++        return;
++    }
++    if (g_strv_length(parts) != 2 || !parts[0] || !parts[1] ||
++        !chip8_frame_keys_token_valid(parts[0]) ||
++        !chip8_frame_parse_u64(parts[1], &generation) ||
++        !env->frame_keys_active || strcmp(parts[0], cpu->frame_keys_token) ||
++        generation != env->frame_keys_generation ||
++        env->frame_keys_generation == UINT64_MAX || env->key_mask ||
++        env->frame_keys_held_mask) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: detach requires a matching empty owner");
++        return;
++    }
++    env->frame_keys_active = false;
++    env->frame_keys_held_mask = 0;
++    env->frame_keys_generation++;
++    memset(cpu->frame_keys_token, 0, sizeof(cpu->frame_keys_token));
++}
++
++static void chip8_frame_keys_adopt_command(Object *obj, const char *value,
++                                           Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    g_auto(GStrv) parts = g_strsplit(value, ":", 5);
++    uint64_t generation, state_generation, held_mask;
++
++    if (!chip8_frame_keys_mutation_admitted(cpu, true, errp)) {
++        return;
++    }
++    if (g_strv_length(parts) != 4 ||
++        !parts[0] || !parts[1] || !parts[2] || !parts[3] ||
++        !chip8_frame_keys_token_valid(parts[0]) ||
++        !chip8_frame_parse_u64(parts[1], &generation) ||
++        !chip8_frame_parse_u64(parts[2], &state_generation) ||
++        !chip8_frame_parse_u64(parts[3], &held_mask) || held_mask > 0xffff ||
++        !env->frame_keys_active || !cpu->frame_keys_needs_adoption ||
++        cpu->frame_keys_valid || cpu->frame_keys_token[0] ||
++        generation != env->frame_keys_generation ||
++        state_generation != env->state_generation ||
++        held_mask != env->key_mask || held_mask != env->frame_keys_held_mask ||
++        env->frame_keys_generation == UINT64_MAX) {
++        error_setg(errp,
++                   "CHIP8_KEY_OWNER_PRECONDITION: restored owner adoption proof differs");
++        return;
++    }
++    g_strlcpy(cpu->frame_keys_token, parts[0], sizeof(cpu->frame_keys_token));
++    cpu->frame_keys_needs_adoption = false;
++    cpu->frame_keys_valid = true;
++    env->frame_keys_generation++;
+ }
+ 
+ static void chip8_frame_clear(CPUArchState *env)
+@@ -829,7 +1106,10 @@
+         env->virtual_ticks == UINT64_MAX ||
+         env->next_deadline_ns > INT64_MAX - 16666667 ||
+         env->frame_control_generation > UINT64_MAX - 2 ||
+-        env->faulted || env->key_wait || env->key_wait_stop_owned ||
++        env->faulted ||
++        !cpu->frame_keys_valid || cpu->frame_keys_needs_adoption ||
++        (env->key_wait && (!env->key_mask || env->key_wait_stop_owned)) ||
++        env->key_wait_stop_owned ||
+         env->layer_faulted || env->layer_stop_owned) {
+         error_setg(errp, "CHIP8_FRAME_PRECONDITION: stale, invalid, or unsafe frame arm");
+         return;
+@@ -1002,6 +1282,17 @@
+     object_property_add_str(obj, "chip8-device-subset",
+                             chip8_get_devices_subset, NULL);
+     object_property_add_str(obj, "chip8-env-model", chip8_get_env_model, NULL);
++    object_property_add_bool(obj, "frame-keys-active",
++                             chip8_get_frame_keys_active, NULL);
++    object_property_add_bool(obj, "frame-keys-valid",
++                             chip8_get_frame_keys_valid, NULL);
++    object_property_add_bool(obj, "frame-keys-needs-adoption",
++                             chip8_get_frame_keys_needs_adoption, NULL);
++    object_property_add_str(obj, "frame-keys-token",
++                            chip8_get_frame_keys_token, NULL);
++    object_property_add_uint64_ptr(obj, "frame-keys-epoch",
++                                   &cpu->frame_keys_epoch,
++                                   OBJ_PROP_FLAG_READ);
+     object_property_add_str(obj, "chip8-layer-model", chip8_get_layer_model,
+                             NULL);
+     object_property_add_str(obj, "chip8-frame-model", chip8_get_frame_model,
+@@ -1025,6 +1316,12 @@
+                             chip8_get_pixels_sha256, NULL);
+     object_property_add_str(obj, "set-keys-command", NULL,
+                             chip8_set_keys_command);
++    object_property_add_str(obj, "apply-frame-key-edges-command", NULL,
++                            chip8_frame_keys_apply_command);
++    object_property_add_str(obj, "detach-frame-keys-command", NULL,
++                            chip8_frame_keys_detach_command);
++    object_property_add_str(obj, "adopt-frame-keys-command", NULL,
++                            chip8_frame_keys_adopt_command);
+     object_property_add_str(obj, "debug-ticks-command", NULL,
+                             chip8_debug_ticks_command);
+     object_property_add_str(obj, "seed-rng-command", NULL,
+@@ -1042,6 +1339,9 @@
+     ADD_U64("next-deadline-ns", next_deadline_ns);
+     ADD_U64("rng-draws", rng_draws);
+     ADD_U64("layer-generation", layer_generation);
++    ADD_U64("frame-keys-generation", frame_keys_generation);
++    ADD_U64("frame-keys-accepted-edges", frame_keys_accepted_edges);
++    ADD_U16("frame-keys-held-mask", frame_keys_held_mask);
+     ADD_U64("frame-control-generation", frame_control_generation);
+     ADD_U64("frame-baseline-virtual-ticks", frame_baseline_virtual_ticks);
+     ADD_U64("frame-baseline-deadline-ns", frame_baseline_deadline_ns);
+--- a/target/chip8/cpu.h
++++ b/target/chip8/cpu.h
+@@ -14,9 +14,10 @@
+ #define CHIP8_DISPLAY_PIXELS (CHIP8_DISPLAY_WIDTH * CHIP8_DISPLAY_HEIGHT)
+ #define CHIP8_FONT_BASE 0x50
+ #define CHIP8_LAYER_MODEL "fdisbull-chip8-native-layers-1"
+-#define CHIP8_LAYERS_SUBSET "fdisbull-chip8-frames-5"
+-#define CHIP8_LAYERS_ENV_MODEL "fdisbull-chip8-display-keypad-timers-rng-layers-frames-4"
++#define CHIP8_LAYERS_SUBSET "fdisbull-chip8-frame-keys-6"
++#define CHIP8_LAYERS_ENV_MODEL "fdisbull-chip8-display-keypad-timers-rng-layers-frames-keys-5"
+ #define CHIP8_FRAME_MODEL "fdisbull-chip8-native-frame-sample-1"
++#define CHIP8_FRAME_KEYS_MODEL "fdisbull-chip8-frame-keys-1"
+ 
+ typedef enum Chip8FrameFenceState {
+     CHIP8_FRAME_IDLE = 0,
+@@ -56,6 +57,11 @@
+     uint8_t phase_numerator;
+     uint64_t next_deadline_ns;
+     bool key_wait_stop_owned;
++    /* Logical frame-key owner state is checkpointed; lease credentials are not. */
++    bool frame_keys_active;
++    uint16_t frame_keys_held_mask;
++    uint64_t frame_keys_generation;
++    uint64_t frame_keys_accepted_edges;
+     uint32_t rng_seed;
+     uint32_t rng_state;
+     uint64_t rng_draws;
+@@ -106,6 +112,10 @@
+     CPUState parent_obj;
+     CPUArchState env;
+     QEMUTimer *tick_timer;
++    uint64_t frame_keys_epoch;
++    bool frame_keys_valid;
++    bool frame_keys_needs_adoption;
++    char frame_keys_token[33];
+ };
+ 
+ struct Chip8CPUClass {
+@@ -124,6 +134,7 @@
+ void chip8_apply_ticks(CPUArchState *env, uint32_t count, bool manual);
+ void chip8_layer_check_or_stop(CPUArchState *env);
+ void chip8_frame_stop_or_block(CPUArchState *env);
++void chip8_frame_keys_rotate_epoch(Chip8CPU *cpu);
+ 
+ #define MMU_USER_IDX 0
+ 
+--- a/target/chip8/vmstate.c
++++ b/target/chip8/vmstate.c
+@@ -7,7 +7,21 @@
+     Chip8CPU *cpu = opaque;
+ 
+     /* The fence is process-local and cannot survive checkpoint export. */
+-    return cpu->env.frame_fence_state == CHIP8_FRAME_IDLE ? 0 : -EBUSY;
++    if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
++        return -EBUSY;
++    }
++    if (!cpu->frame_keys_valid || cpu->frame_keys_needs_adoption ||
++        (cpu->env.frame_keys_active &&
++         (!cpu->frame_keys_token[0] ||
++          !cpu->env.frame_keys_generation ||
++          !cpu->env.frame_keys_accepted_edges ||
++          cpu->env.frame_keys_generation == UINT64_MAX ||
++          cpu->env.frame_keys_held_mask != cpu->env.key_mask)) ||
++        (!cpu->env.frame_keys_active &&
++         (cpu->frame_keys_token[0] || cpu->env.frame_keys_held_mask))) {
++        return -EINVAL;
++    }
++    return 0;
+ }
+ 
+ static int chip8_cpu_pre_load(void *opaque)
+@@ -52,6 +66,13 @@
+         env->next_deadline_ns > INT64_MAX) {
+         return -EINVAL;
+     }
++    if ((env->frame_keys_active &&
++         (!env->frame_keys_generation || !env->frame_keys_accepted_edges ||
++          env->frame_keys_held_mask != env->key_mask ||
++          env->frame_keys_generation == UINT64_MAX)) ||
++        (!env->frame_keys_active && env->frame_keys_held_mask)) {
++        return -EINVAL;
++    }
+     if ((!env->layer_faulted &&
+          (env->layer_fault_address || env->layer_fault_pc)) ||
+         (env->layer_faulted &&
+@@ -88,13 +109,18 @@
+     memset(env->frame_last_cancelled_token, 0,
+            sizeof(env->frame_last_cancelled_token));
+     env->frame_last_cancel_expected_generation = 0;
++    /* The logical held set survives; its process-local lease does not. */
++    memset(cpu->frame_keys_token, 0, sizeof(cpu->frame_keys_token));
++    cpu->frame_keys_needs_adoption = env->frame_keys_active;
++    cpu->frame_keys_valid = !env->frame_keys_active;
++    chip8_frame_keys_rotate_epoch(cpu);
+     return 0;
+ }
+ 
+ const VMStateDescription vmstate_chip8_cpu = {
+     .name = "chip8-cpu",
+-    .version_id = 5,
+-    .minimum_version_id = 5,
++    .version_id = 6,
++    .minimum_version_id = 6,
+     .pre_load = chip8_cpu_pre_load,
+     .pre_save = chip8_cpu_pre_save,
+     .post_load = chip8_cpu_post_load,
+@@ -130,6 +156,10 @@
+         VMSTATE_BOOL(env.layer_faulted, Chip8CPU),
+         VMSTATE_UINT16(env.layer_fault_address, Chip8CPU),
+         VMSTATE_UINT16(env.layer_fault_pc, Chip8CPU),
++        VMSTATE_BOOL(env.frame_keys_active, Chip8CPU),
++        VMSTATE_UINT16(env.frame_keys_held_mask, Chip8CPU),
++        VMSTATE_UINT64(env.frame_keys_generation, Chip8CPU),
++        VMSTATE_UINT64(env.frame_keys_accepted_edges, Chip8CPU),
+         VMSTATE_END_OF_LIST()
+     }
+ };

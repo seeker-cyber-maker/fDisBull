@@ -127,7 +127,7 @@ def _catalog():
         _entry('debug.chip8', 'partial', ['chip8-classic-16be'],
                ['cli:debug --backend qemu-chip8', 'json:debug-launch'],
                ['qemu_chip8.py', 'chip8_history.py'], ['chip8-backend'],
-               'CHIP-8 TCG: v4 adds layers/hooks and full-checkpoint history; separate v5 adds native 60 Hz sample histories with full checkpoints and immutable PNGs (checkpoint tool required). Sample lateness is recorded; no VBlank/frame-completion, deltas, undo, trials or parity claim.', maturity='experimental'),
+               'CHIP-8 TCG: v4 adds layers/hooks and full-checkpoint history; separate v5 adds native 60 Hz sample histories with full checkpoints and immutable PNGs (checkpoint tool required). Separate v6 adds owned hex-key edges and checkpointed input restore without reinjection. Sample lateness is recorded; no VBlank/frame-completion, deltas, undo, trials or parity claim.', maturity='experimental'),
         _entry('debug.qemm-guest', 'partial', ['x86-16', 'x86-32'],
                ['cli:qemm-config', 'cli:qemm-profile', 'cli:debug --backend qemu-machine --guest-profile qemm',
                 'json:debug-memory-translation', 'json:debug-qemm-observe'],

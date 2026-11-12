@@ -25,6 +25,7 @@ from .chip8_layers import Chip8LayerMixin, LAYER_MODEL
 from .chip8_hooks import Chip8HookMixin
 from .chip8_history import Chip8HistoryMixin, bind_history_mutations
 from .chip8_frames import Chip8FramesMixin
+from .chip8_keys import Chip8KeysMixin, KEY_SUBSET, KEY_ENV, validate_key_snapshot
 
 BACKEND = 'qemu-chip8'
 PROFILE = 'chip8-classic-pilot-default-v1'
@@ -38,7 +39,7 @@ LAYERS_SUBSET = 'fdisbull-chip8-layers-hooks-4'
 LAYERS_ENV_MODEL = 'fdisbull-chip8-display-keypad-timers-rng-layers-3'
 FRAMES_SUBSET = 'fdisbull-chip8-frames-5'
 FRAMES_ENV_MODEL = 'fdisbull-chip8-display-keypad-timers-rng-layers-frames-4'
-DEVICE_MODELS = {DEVICE_SUBSET: ENV_MODEL, CLASSIC_SUBSET: CLASSIC_ENV_MODEL, LAYERS_SUBSET: LAYERS_ENV_MODEL, FRAMES_SUBSET: FRAMES_ENV_MODEL}
+DEVICE_MODELS = {DEVICE_SUBSET: ENV_MODEL, CLASSIC_SUBSET: CLASSIC_ENV_MODEL, LAYERS_SUBSET: LAYERS_ENV_MODEL, FRAMES_SUBSET: FRAMES_ENV_MODEL, KEY_SUBSET: KEY_ENV}
 STATE_DISK_SIZE = 1024 * 1024
 RAM_SIZE = 4096
 ROM_BASE = 0x200
@@ -73,7 +74,7 @@ def _remaining(deadline):
 def _fault_receipt(qmp, expected_subset=None):
     info=qmp.call('query-chip8-fault')
     if (not isinstance(info,dict) or type(info.get('faulted')) is not bool
-            or info.get('profile')!=PROFILE or info.get('cpu-subset') not in (CPU_SUBSET,DEVICE_SUBSET,CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET)
+            or info.get('profile')!=PROFILE or info.get('cpu-subset') not in (CPU_SUBSET,DEVICE_SUBSET,CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET)
             or expected_subset is not None and info.get('cpu-subset')!=expected_subset):
         raise DebuggerError('Invalid CHIP-8 fault receipt')
     for key in ('fault-code','fault-pc','fault-opcode'):
@@ -100,10 +101,10 @@ def _validate_environment(info):
     limits={'key-mask':0xffff,'delay-timer':255,'sound-timer':255,'phase-numerator':59,
             **{k:(1<<64)-1 for k in ('frame-generation','virtual-ticks','manual-ticks',
                                       'virtual-now-ns','next-deadline-ns','state-generation')}}
-    if info['cpu-subset'] in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET):
+    if info['cpu-subset'] in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
         if info.get('rng-model')!=RNG_MODEL:raise DebuggerError('Invalid CHIP-8 RNG model')
         limits.update({'rng-seed':0xffffffff,'rng-state':0xffffffff,'rng-draws':(1<<64)-1})
-    if info['cpu-subset'] in (LAYERS_SUBSET,FRAMES_SUBSET):
+    if info['cpu-subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
         if info.get('layer-model')!=LAYER_MODEL:raise DebuggerError('Invalid CHIP-8 layer model')
         limits['layer-generation']=(1<<64)-1
     for key,maximum in limits.items():
@@ -139,7 +140,7 @@ def _attach_native_diagnostics(error, owner):
 class _Owner:
     def __init__(self, executable, rom_bytes, identity, *, timeout_ms=30000, checkpoint_tool=None, checkpoint_data=None, on_spawn=None):
         self.process=None;self.qmp=None;self.gdb=None;self.lock=threading.RLock();self.closed=False
-        self.history_epoch=uuid.uuid4().hex
+        self.history_epoch=uuid.uuid4().hex;self._chip8_key_owner=None
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-chip8-')
         root=Path(self.temporary.name);self.qmp_path=root/'qmp.sock';self.gdb_path=root/'gdb.sock';self.log_path=root/'qemu.log'
         self.rom_path=root/'rom.ch8';self.rom_path.write_bytes(rom_bytes)
@@ -184,12 +185,14 @@ class _Owner:
                 names={item.get('name') for item in commands if isinstance(item,dict)} if isinstance(commands,list) else set()
                 if not {'query-chip8-environment','x-chip8-set-keys','x-chip8-debug-ticks'}<=names:
                     raise DebuggerError('CHIP-8 device command set is incomplete')
-                if self.cpu_subset in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET) and 'x-chip8-seed-rng' not in names:
+                if self.cpu_subset in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) and 'x-chip8-seed-rng' not in names:
                     raise DebuggerError('CHIP-8 RNG command is missing')
-                if self.cpu_subset in (LAYERS_SUBSET,FRAMES_SUBSET) and not {'query-chip8-layers','x-chip8-configure-layers'}<=names:
+                if self.cpu_subset in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) and not {'query-chip8-layers','x-chip8-configure-layers'}<=names:
                     raise DebuggerError('CHIP-8 native layer commands missing')
-                if self.cpu_subset==FRAMES_SUBSET and not {'x-chip8-arm-frame','query-chip8-frame','x-chip8-cancel-frame'}<=names:
+                if self.cpu_subset in (FRAMES_SUBSET,KEY_SUBSET) and not {'x-chip8-arm-frame','query-chip8-frame','x-chip8-cancel-frame'}<=names:
                     raise DebuggerError('CHIP-8 native frame commands missing')
+                if self.cpu_subset==KEY_SUBSET and not {'query-chip8-frame-keys','x-chip8-apply-frame-key-edges','x-chip8-detach-frame-keys','x-chip8-adopt-frame-keys'}<=names:
+                    raise DebuggerError('CHIP-8 frame key commands missing')
                 if _environment_receipt(self.qmp)['cpu-subset']!=self.cpu_subset:
                     raise DebuggerError('CHIP-8 environment subset differs')
             self._checkpoint_restored_stopped=True
@@ -228,7 +231,7 @@ class _Owner:
 
 
 @bind_history_mutations
-class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
+class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
     """One stopped-at-boundaries CHIP-8 machine bound to one immutable FDB ROM."""
     backend_id=BACKEND
     capabilities={'registers':True,'memory':True,'run':True,'step':True,'breakpoints':True,
@@ -280,16 +283,18 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
             if self.identity['cpu_subset'] in DEVICE_MODELS:
                 self.identity['env_model']=DEVICE_MODELS[self.identity['cpu_subset']]
                 self.capabilities.update(frame=True,input=True,timers=True,audio=False)
-                if self.identity['cpu_subset'] in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET):self.capabilities['rng']=True
-                if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET):
+                if self.identity['cpu_subset'] in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):self.capabilities['rng']=True
+                if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
                     self.capabilities.update(layers=True,code_layers=True,hooks=True,
                                              histories=checkpoint_tool is not None,rewind=checkpoint_tool is not None)
-                    if self.identity['cpu_subset']==FRAMES_SUBSET:self.capabilities['frame_timeline']=checkpoint_tool is not None
+                    if self.identity['cpu_subset'] in (FRAMES_SUBSET,KEY_SUBSET):self.capabilities['frame_timeline']=checkpoint_tool is not None
+                    if self.identity['cpu_subset']==KEY_SUBSET:self.capabilities['frame_key_ownership']=True
                     self._reset_chip8_layers()
                     layer=self._chip8_layer_query()
                     if layer['generation']!=0 or layer['execution-bytes'] or not layer['backing-valid']:
                         raise DebuggerError('CHIP-8 initial native layers differ')
-                    if self.identity['cpu_subset']==FRAMES_SUBSET:self._chip8_frame_idle()
+                    if self.identity['cpu_subset'] in (FRAMES_SUBSET,KEY_SUBSET):self._chip8_frame_idle()
+                    if self.identity['cpu_subset']==KEY_SUBSET:self._chip8_keys_query()
             if _file_sha(executable)!=binary_sha:raise ValueError('QEMU binary changed during startup')
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -351,6 +356,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
         if self.capabilities.get('save_states'):operations.update(('save-state','load-state'))
         if self.capabilities.get('rewind'):
             operations.update(('rewind-start','rewind-status','rewind-record','rewind'))
+        if self.capabilities.get('frame_key_ownership'):operations.update(('frame-inputs','keyboard.state'))
         if self.capabilities.get('frame_timeline'):
             operations.update(('frame-advance','timeline-start','timeline-status','timeline-advance',
                                'timeline-rewind','timeline-image','timeline-pin','timeline-stop'))
@@ -449,6 +455,16 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                 or len(set(keys))!=len(keys)):
             raise ValueError('CHIP-8 keys must be distinct integers from 0 to 15')
         mask=sum(1<<key for key in keys)
+        if self.identity['cpu_subset']==KEY_SUBSET:
+            with self.vm.lock:
+                self._stopped();self._chip8_frame_idle();detached=self._chip8_key_before_manual()
+                try:return self._device_mutation('x-chip8-set-keys',{'key-mask':mask},{'key-mask':mask},timeout_ms=timeout_ms)
+                except BaseException as error:
+                    if detached is not None:
+                        previous=getattr(error,'result',None)
+                        error.result=dict(key_detach=detached,cause_result=previous,
+                                          disposition='key owner detached; keypad outcome may be uncertain; do not replay')
+                    raise
         return self._device_mutation('x-chip8-set-keys',{'key-mask':mask},{'key-mask':mask},timeout_ms=timeout_ms)
 
     def chip8_tick(self,ticks,*,timeout_ms=10000):
@@ -461,7 +477,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
 
     def chip8_seed_rng(self,seed,*,timeout_ms=10000):
         if type(seed) is not int or not 0<=seed<=0xffffffff:raise ValueError('CHIP-8 RNG seed must be a uint32')
-        if self.identity['cpu_subset'] not in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET):raise ValueError('This CHIP-8 runtime has no deterministic RNG')
+        if self.identity['cpu_subset'] not in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):raise ValueError('This CHIP-8 runtime has no deterministic RNG')
         return self._device_mutation('x-chip8-seed-rng',{'seed':seed},
             {'rng-seed':seed,'rng-state':seed,'rng-draws':0},timeout_ms=timeout_ms)
 
@@ -626,7 +642,9 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
         deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
         with self._budget(owner,deadline):
             result=None
-            if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET):
+            if self.identity['cpu_subset']==KEY_SUBSET:
+                self._stopped();self._chip8_keys_query()
+            if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
                 self._stopped();layer=self._chip8_layer_query()
                 if layer['generation']!=self._layer_generation:
                     raise DebuggerError('CHIP-8 native layer generation differs')
@@ -672,7 +690,8 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                 fault=None if exited else _fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
                 environment=(_environment_receipt(self.vm.qmp)
                              if not exited and self.identity['cpu_subset'] in DEVICE_MODELS else None)
-                layer=(self._chip8_layer_query() if not exited and self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET) else None)
+                layer=(self._chip8_layer_query() if not exited and self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) else None)
+                if not exited and self.identity['cpu_subset']==KEY_SUBSET:self._chip8_keys_query()
                 conflict=bool(layer and (not layer['backing-valid'] or layer['stop-owned'] or layer['faulted']))
                 pc=None if regs is None else int(regs['linear_pc'],16)
                 sig=int(native[1:3],16);ids=[key for key,addr in self.breakpoints.items() if sig==5 and addr==pc and not (fault and fault['faulted'])]
@@ -686,7 +705,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                         raise DebuggerError('CHIP-8 key-wait stop ownership differs')
                     if pc is None or pc+2>RAM_SIZE:
                         raise DebuggerError('CHIP-8 key-wait PC is outside RAM')
-                    word=int(self.code(pc,length=2,view='execute')['hex'],16) if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET) else int.from_bytes(self._memory(pc,2),'big')
+                    word=int(self.code(pc,length=2,view='execute')['hex'],16) if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) else int.from_bytes(self._memory(pc,2),'big')
                     if word & 0xf0ff != 0xf00a:
                         raise DebuggerError('CHIP-8 key-wait PC does not contain FX0A')
                     wait=True;ids=[]
@@ -701,7 +720,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                             stop=dict(trigger=outcome,context='machine'),fault=fault)
                 if environment is not None:result['environment']=environment
                 if frame_fence is not None:result['frame_fence']=frame_fence
-                if not exited and self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET):
+                if not exited and self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
                     result['layer']=layer
                     if not (fault and fault['faulted']) and (not layer['backing-valid'] or layer['stop-owned'] or layer['faulted']):
                         result['outcome']='layer_conflict';result['stop']['trigger']='layer_conflict'
@@ -717,11 +736,11 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                 raise
 
     def step(self,*,timeout_ms=10000):
-        if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET) and (self._chip8_hooks or self._chip8_hook_pending):
+        if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) and (self._chip8_hooks or self._chip8_hook_pending):
             return self._chip8_step_with_hooks(timeout_ms=timeout_ms)
         return self._execute('s',timeout_ms)
     def run(self,*,timeout_ms=10000,stop_on_hook=False):
-        if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET):
+        if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET):
             return self._chip8_run_with_hooks(timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
         if stop_on_hook is not False:raise ValueError('CHIP-8 hooks are not supported')
         return self._execute('c',timeout_ms)
@@ -730,7 +749,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
         if self.closed or self._checkpoint_tool is None or self.vm.checkpoint_disk is None:
             raise ValueError('CHIP-8 native snapshots require a checkpoint tool')
         if self.project.db.in_transaction:raise ValueError('CHIP-8 snapshot requires no caller transaction')
-        if self.identity['cpu_subset']==FRAMES_SUBSET:self._chip8_frame_idle()
+        if self.identity['cpu_subset'] in (FRAMES_SUBSET,KEY_SUBSET):self._chip8_frame_idle()
         if any(not self._chip8_hook_owns_breakpoint(bp) for bp in self.breakpoints):
             raise ValueError('Remove CHIP-8 user breakpoints before snapshotting')
         if (_file_sha(self._executable)!=self.identity['qemu_sha256']
@@ -750,9 +769,11 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
         with self._budget(owner,deadline):
             self._checkpoint_admit();registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
             environment=_environment_receipt(self.vm.qmp) if self.identity['cpu_subset'] in DEVICE_MODELS else None
-            layer_native=self._chip8_layer_query() if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET) else None
+            layer_native=self._chip8_layer_query() if self.identity['cpu_subset'] in (LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) else None
             layer_state=self._chip8_layer_state() if layer_native is not None else None
             hook_state=self._chip8_hook_state() if layer_native is not None else None
+            key_state=self._chip8_key_snapshot() if self.identity['cpu_subset']==KEY_SUBSET else None
+            if key_state is not None:validate_key_snapshot(key_state,environment)
             if layer_native is not None:
                 if hook_state['pending'] is not None:
                     pending=next(item for item in hook_state['hooks'] if item['hook']==hook_state['pending'])
@@ -768,16 +789,20 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                     raise DebuggerError('CHIP-8 environment changed during checkpoint')
                 if layer_native is not None and self._chip8_layer_query()!=layer_native:
                     raise DebuggerError('CHIP-8 layers changed during checkpoint')
+                if key_state is not None and self._chip8_key_snapshot()!=key_state:
+                    raise DebuggerError('CHIP-8 key ownership changed during checkpoint')
                 path=self.vm.checkpoint_disk
                 if path.stat().st_size>limit:raise ValueError('CHIP-8 snapshot exceeds byte bound')
                 data=path.read_bytes();validate_qcow_header(data[:104],STATE_DISK_SIZE)
-                metadata=dict(format=('fdisbull-qemu-chip8-state-5' if self.identity['cpu_subset']==FRAMES_SUBSET else
+                metadata=dict(format=('fdisbull-qemu-chip8-state-6' if self.identity['cpu_subset']==KEY_SUBSET else
+                                      'fdisbull-qemu-chip8-state-5' if self.identity['cpu_subset']==FRAMES_SUBSET else
                                       'fdisbull-qemu-chip8-state-4' if self.identity['cpu_subset']==LAYERS_SUBSET else
                                       'fdisbull-qemu-chip8-state-3' if self.identity['cpu_subset']==CLASSIC_SUBSET else
                                       'fdisbull-qemu-chip8-state-2' if environment is not None else 'fdisbull-qemu-chip8-state-1'),tag=tag,identity=self.identity,
                               registers=registers,ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
                 if environment is not None:metadata['environment']=environment
                 if layer_native is not None:metadata.update(layer_native=layer_native,layer_state=layer_state,hook_state=hook_state)
+                if key_state is not None:metadata['key_state']=key_state
                 artifact=self.project._debug_artifact(self.run_id,name,'state',data,metadata)
                 _remaining(deadline)
                 return artifact
@@ -797,14 +822,16 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
             if row is None or row['kind']!='state' or row['version']!=self.version['id']:
                 raise ValueError('CHIP-8 snapshot belongs to another project version')
             data=bytes(row['data']);metadata=json.loads(row['metadata'])
-            expected_format=('fdisbull-qemu-chip8-state-5' if self.identity['cpu_subset']==FRAMES_SUBSET else
+            expected_format=('fdisbull-qemu-chip8-state-6' if self.identity['cpu_subset']==KEY_SUBSET else
+                             'fdisbull-qemu-chip8-state-5' if self.identity['cpu_subset']==FRAMES_SUBSET else
                              'fdisbull-qemu-chip8-state-4' if self.identity['cpu_subset']==LAYERS_SUBSET else
                              'fdisbull-qemu-chip8-state-3' if self.identity['cpu_subset']==CLASSIC_SUBSET else
                              'fdisbull-qemu-chip8-state-2' if self.identity['cpu_subset']==DEVICE_SUBSET else 'fdisbull-qemu-chip8-state-1')
             if (len(data)>128*1024*1024 or _sha(data)!=row['sha256'] or metadata.get('format')!=expected_format
                     or metadata.get('identity')!=self.identity):raise ValueError('CHIP-8 snapshot identity differs')
-            if expected_format.endswith(('-2','-3','-4','-5')):
+            if expected_format.endswith(('-2','-3','-4','-5','-6')):
                 saved_environment=_validate_environment(metadata.get('environment'))
+            if expected_format.endswith('-6'):validate_key_snapshot(metadata.get('key_state'),saved_environment)
             validate_qcow_header(data[:104],STATE_DISK_SIZE)
             new=None;result=None;replaced=False;closing_old=False
             try:
@@ -820,9 +847,10 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                 self.vm=new
                 try:
                     registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(new.qmp,self.identity['cpu_subset'])
-                    environment=_environment_receipt(new.qmp) if expected_format.endswith(('-2','-3','-4','-5')) else None
-                    layer_native=self._chip8_layer_query() if expected_format.endswith(('-4','-5')) else None
-                    if expected_format.endswith('-5'):self._chip8_frame_idle()
+                    environment=_environment_receipt(new.qmp) if expected_format.endswith(('-2','-3','-4','-5','-6')) else None
+                    layer_native=self._chip8_layer_query() if expected_format.endswith(('-4','-5','-6')) else None
+                    if expected_format.endswith(('-5','-6')):self._chip8_frame_idle()
+                    key_native=self._chip8_key_adopt(metadata.get('key_state')) if expected_format.endswith('-6') else None
                 finally:self.vm=old
                 if registers!=metadata['registers'] or _sha(ram)!=metadata['ram_sha256'] or fault!=metadata.get('fault'):
                     raise DebuggerError('Restored CHIP-8 CPU or RAM differs')
@@ -863,6 +891,7 @@ class Chip8DebugSession(Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8
                             ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
                 if environment is not None:result['environment']=environment
                 if layer_native is not None:result.update(layer=layer_native,hooks=hook_mapping)
+                if key_native is not None:result['keys']=key_native
                 closing_old=True;old.close();self.vm=self.rpc=new;replaced=True
                 if layer_native is not None:
                     (self.breakpoints,self.next_bp,self._chip8_hooks,self._chip8_hook_pending,self._chip8_hook_deleting,
