@@ -189,3 +189,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/macos_lldb.py`
 - `src/fdisbull/macos_session.py`
 - `src/fdisbull/mads_media.py`
+
+## Source batch 8
+
+24 additional unchanged Python files (380295 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 174 files, import still incomplete.
+
+- `src/fdisbull/mads_media_adapters.py`
+- `src/fdisbull/mads_processor.py`
+- `src/fdisbull/mads_resources.py`
+- `src/fdisbull/mads_runtime.py`
+- `src/fdisbull/mads_validation.py`
+- `src/fdisbull/managed.py`
+- `src/fdisbull/manual_ocr.py`
+- `src/fdisbull/mario_minus_world.py`
+- `src/fdisbull/media.py`
+- `src/fdisbull/membership_view.py`
+- `src/fdisbull/memory.py`
+- `src/fdisbull/memory_rules.py`
+- `src/fdisbull/memory_search.py`
+- `src/fdisbull/memory_search_runtime.py`
+- `src/fdisbull/miniplanets_audio.py`
+- `src/fdisbull/model.py`
+- `src/fdisbull/modules.py`
+- `src/fdisbull/movement.py`
+- `src/fdisbull/native_controller.py`
+- `src/fdisbull/native_inno.py`
+- `src/fdisbull/native_udc.py`
+- `src/fdisbull/navigation_geometry.py`
+- `src/fdisbull/ne.py`
+- `src/fdisbull/ne_processor.py`
