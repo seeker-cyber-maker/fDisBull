@@ -19,6 +19,50 @@ require its own compatible-state and input contract.
 | Compare independent PE runs | Export each version's qualified trace, then use the offline topology helper | Site correspondence can align paths; input and checkpoint compatibility must be established separately. The helper does not certify both runs began in equivalent states. |
 | Build an executable explanation | Authored UIL or a narrow C model with explicit typed ports and effects | Compare model outputs against original execution over chosen inputs and boundaries. Generated C is a realization of the model, not independent evidence that the binary was translated faithfully. |
 
+## Intent evidence from PE import calls
+
+The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
+topology report. Given a raw Wine/QEMU PE trace, an owning `Project`, and one
+analyzed function entry, `observed_pe_import_roles` joins each observed call
+site to that function's non-stale declared-import binding. It checks the
+project's original source hash, selected code-version hash, PE architecture,
+trace identity, executed CALL instruction, analysis budget and static binding
+stability. It also checks that the executed instruction bytes match the stored
+analyzed instruction. A changed execution layer, ambiguous binding or missing identity
+leaves the role unresolved. The helper does not scan the whole binary; callers
+must account for functions outside the selected analysis.
+
+`compare_divergent_import_roles` recomputes topology from the supplied traces,
+checks the exact trace digest for each projection, and highlights a repeated
+declared API role in evidenced divergent spans. This gives an investigator a lead when two
+different instruction paths reach the same framework boundary. It never marks
+the paths or their intent equivalent: argument values, call order, return
+values, memory effects, error paths and runtime DLL resolution still need
+independent comparison. A shared API name may implement different intent; a
+changed API name may implement the same intent. The topology's path and sampled
+state verdicts are unchanged.
+
+The user's CHimpREC pair provides a concrete static illustration. Read-only
+inspection of the supplied PE32 and PE64 executables found width-specific
+thunk walks: each reads a pointer-sized entry, tests for zero, advances by the
+entry width and repeats. Both expose IAT search/rebuild actions and import
+Win32 process-memory and module APIs. The common *candidate role* is import
+discovery across a thunk table, despite different machine encodings and
+registers. That is a bounded structural interpretation of these binaries;
+the inspection did not execute them or prove whole-binary API coverage, the
+complete algorithm, or behavioral equivalence. Existing
+[`CHIMPREC.md`](CHIMPREC.md) documents the separate offline import-recovery
+work; this patch context layer does not duplicate that recovery engine.
+
+The supplied *64-bit Unpacking* lab and *Unpacking Theory* slides add a useful
+counterexample to name-only reasoning. They describe fake IAT separators,
+redirected and emulated APIs, forwarded exports, and traps for unbounded
+automated tracing. Those descriptions are historical course claims, not
+instructions to execute or patch their targets. They reinforce why a declared
+import is only a candidate role: a patch analysis must compare the surrounding
+data flow and ordered effects, and preserve unresolved cases, before it can
+claim that two paths express the same UIL intent.
+
 For the first patch lift, prefer **typed UIL as the semantic source and C11 as
 the readable executable view**. Keep arithmetic widths and wraparound,
 individual FLAGS, byte-addressed memory, and unknown effects explicit. Signed C
