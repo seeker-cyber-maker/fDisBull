@@ -305,3 +305,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/shadowrun_enemy_overlap_one.py`
 - `src/fdisbull/shadowrun_enemy_projection.py`
 - `src/fdisbull/shadowrun_enemy_service.py`
+
+## Source batch 12
+
+24 additional unchanged Python files (34746 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 270 files, import still incomplete. Prior checkpoint reconciled by exact tree reconstruction.
+
+- `src/fdisbull/shadowrun_enemy_visible.py`
+- `src/fdisbull/shadowrun_enemy_waypoint.py`
+- `src/fdisbull/shadowrun_enemy_wound.py`
+- `src/fdisbull/shadowrun_enemy_wound_animation.py`
+- `src/fdisbull/shadowrun_enemy_wound_outer.py`
+- `src/fdisbull/shadowrun_field_combat.py`
+- `src/fdisbull/shadowrun_hostile.py`
+- `src/fdisbull/shadowrun_hostile_animation.py`
+- `src/fdisbull/shadowrun_hostile_attack_first.py`
+- `src/fdisbull/shadowrun_hostile_burst.py`
+- `src/fdisbull/shadowrun_hostile_cycle.py`
+- `src/fdisbull/shadowrun_hostile_direct.py`
+- `src/fdisbull/shadowrun_hostile_expired_pose.py`
+- `src/fdisbull/shadowrun_hostile_expiry_cycle.py`
+- `src/fdisbull/shadowrun_hostile_follow.py`
+- `src/fdisbull/shadowrun_hostile_idle_service.py`
+- `src/fdisbull/shadowrun_hostile_linked.py`
+- `src/fdisbull/shadowrun_hostile_motion.py`
+- `src/fdisbull/shadowrun_hostile_move.py`
+- `src/fdisbull/shadowrun_hostile_moving_attack.py`
+- `src/fdisbull/shadowrun_hostile_moving_attack_reentry.py`
+- `src/fdisbull/shadowrun_hostile_moving_idle.py`
+- `src/fdisbull/shadowrun_hostile_moving_idle_18.py`
+- `src/fdisbull/shadowrun_hostile_moving_pose.py`
