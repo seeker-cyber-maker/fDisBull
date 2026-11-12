@@ -1,6 +1,7 @@
 """Verify two-way mirror reconciliation and GitLab CI pipeline-suppression rules."""
 import importlib.util
 from pathlib import Path
+import re
 import subprocess
 
 import pytest
@@ -137,5 +138,18 @@ def test_gitlab_ci_yaml_blocks_routine_compute_and_requires_local_runner():
     assert '    - fdisbull-local-linux' in ci_text
     assert "interruptible: true" not in ci_text
     assert "retry: 0" in ci_text
-    assert 'resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"' in ci_text
+    # Check each executable job, including jobs inheriting the debugger template.
+    # A shared group serializes different branches and pipelines on the OVH host.
+    sections = dict(re.findall(r"(?ms)^([\w.-]+):\s*\n(.*?)(?=^[\w.-]+:|\Z)", ci_text))
+    jobs = {name: body for name, body in sections.items()
+            if not name.startswith('.') and re.search(r"(?m)^  (?:script|extends):", body)}
+    assert set(jobs) >= {"test-and-package", "native-qualification", "native-debugger-stable",
+                         "native-debugger-layers", "native-unified", "qualify-candidate"}
+    for name, body in jobs.items():
+        parent = re.search(r"(?m)^  extends: (\.[\w.-]+)\s*$", body)
+        inherited = sections.get(parent.group(1), "") if parent else ""
+        lock = re.search(r"(?m)^  resource_group: (.+?)\s*$", body)
+        if not lock:
+            lock = re.search(r"(?m)^  resource_group: (.+?)\s*$", inherited)
+        assert lock and lock.group(1).strip('"\'') == "fdisbull-ovh-ci", name
     assert "when: manual" in ci_text

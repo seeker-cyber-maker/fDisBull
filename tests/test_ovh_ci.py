@@ -90,6 +90,9 @@ def test_ci_resource_serial_retention_and_legacy_contract():
     assert config.count('expire_in: never') == 4
     assert '--legacy-dos-only' in config
     assert 'ovh-export.py verify' in config
+    # Ordinary CI compiles the actual PNG/zstd encoders in the source patches.
+    ordinary = config.split('test-and-package:', 1)[1].split('# A deliberate', 1)[0]
+    assert all(dependency in ordinary for dependency in ('pkg-config', 'zlib1g-dev', 'libzstd-dev'))
     for job in ('test-and-package', 'native-debugger-stable', 'native-debugger-layers', 'native-unified'):
         assert job + ':' in config
 

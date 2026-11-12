@@ -51,7 +51,7 @@ test-and-package:
   before_script:
     - python scripts/ci/ovh-admission.py
     - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev
+    - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev pkg-config zlib1g-dev libzstd-dev
   script:
     - bash scripts/ci/test-and-package.sh
   artifacts:
