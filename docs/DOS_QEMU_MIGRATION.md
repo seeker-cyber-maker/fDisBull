@@ -132,7 +132,7 @@ native controls. It reports `host_files_restored=false` and does not implement
 the planned host-directory or file-layer rollback described above. It is not
 inverse CPU/RAM undo, deterministic replay or a completed-frame history.
 The separate bounded selected CPU/RAM undo and renderer frame histories are
-described below; comparative trials remain open. Local native witnesses cover ordinary Python/JSON/script step and rewind,
+described below, along with bounded native comparative trials. Local native witnesses cover ordinary Python/JSON/script step and rewind,
 retained IRQ branches and separate-process restore with task-private RAM/fetch
 layers and hooks. See the dated handoff and !117 for the exact validation
 receipt. All 127 formal surface qualifications and seven campaigns remain open,
@@ -184,6 +184,70 @@ does not prove native instruction retirement. It is not a resumable partial
 machine state or a full-machine rewind. Projection artifacts remain immutable,
 but their live cursor does not reattach after a restart. These bounded operations do not qualify
 the full parity surfaces; DOSBox remains the default.
+
+## Native comparative trials
+
+On a stopped, source-bound QEMU DOS process, `save_experiment` stores an
+immutable native experiment containing a full recovery checkpoint, the bounded
+script, explicit source RAM observations and their identities. The existing
+`controls`, `restore_experiment` and `compare_experiment` methods use the native
+checkpoint controls rather than DOSBox registries. JSON methods are
+`debug-controls`, `debug-save-experiment`, `debug-restore-experiment` and
+`debug-compare-experiment`; offline `debug-experiment-info` and
+`debug-experiments` retain project inspection after the live session closes.
+
+```python
+experiment = debug.save_experiment("trial.json", script={
+    "format": "fdisbull-script-1", "backend": "qemu-dos", "steps": [
+        {"op": "step"}, {"op": "registers"}
+    ]}, observations=[{"address": "0x10020", "length": 2}])
+result = debug.compare_experiment(experiment["artifact"], layers=[candidate_layer])
+assert result["baseline_restored"]
+```
+
+Each arm starts by restoring the same complete checkpoint, runs the same script
+and captures validated endpoint CPU/source RAM and requested step, trace or
+image observations. `layers` is an explicit ordered replacement stack. With
+native task-private views enabled, it changes only the saved selected task's
+stack; other tasks retain their saved stacks. Runtime-bound candidate layers
+must belong to the captured origin and task, and acquire fresh bindings after
+restore without modifying their original definitions. Source RAM observations
+use the selected native RAM view, including private pages; script machine
+memory reads retain their explicitly requested machine space.
+
+The comparison reports captured differences only. Rearmed control IDs and
+fresh owner epochs remain provenance, while source/task identity, CPU mode,
+mapped ranges, instruction bytes and image dimensions remain meaningful.
+Native traces must contain the requested qualified stopped boundaries; they
+do not establish instruction retirement. Incomplete, interrupted, misaligned
+or corrupt captures cannot establish equality. A failed baseline skips the
+candidate. The final full baseline restore is part of the same overall
+deadline; an uncertain operation or failed recovery closes the owner without
+an automatic trial retry.
+
+Trial scripts admit bounded execution and observations, assertions and explicit
+control deletion through restored `controls` bindings. Input, layer creation
+or mutation, nested restores, selected undo and history mutation are excluded
+from the script. Existing held frame keys, layers, hooks and IRQ state travel
+through the full checkpoint without input reinjection. Existing selected-undo
+artifacts and full/lossless history DAGs remain retained; their live cursors
+are invalidated by trial operations. A frozen selected projection must first
+use explicit full recovery, which can be `restore_experiment`.
+
+The script limit is 128 expanded steps, 64 KiB combined endpoint/script memory,
+1,024 requested trace boundaries and four ungridded images. An omitted trace
+count means 128. Before saving, capacity admission reserves up to 128 MiB for
+the full checkpoint plus 16 MiB for its experiment. Comparison conservatively
+reserves 16 MiB for each arm's script report and each requested trace/image,
+another 16 MiB for the final report, 2 MiB for script definitions, and bound-layer cloning allowance. The
+project's cumulative 256 MiB artifact cap can therefore bind before the script
+limits. This is admission, not a quota on live private disk growth; no old
+artifacts or histories are deleted to make room.
+
+These are private local experiments, with `host_files_restored=false` and no
+deterministic replay, whole-program equivalence, completed-frame or vendor
+compatibility claim. DOSBox-X remains default and retained until local parity
+is proved. The dated handoff and !117 record the exact local validation.
 
 ## Native renderer frame histories
 

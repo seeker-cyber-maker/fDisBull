@@ -3832,3 +3832,102 @@ parity and the planned FreeDOS/directory/file layers remain open. All **127
 formal surface qualifications and seven campaigns** remain open. DOSBox-X
 remains default and retained until local parity is proved. No CI, release tag,
 release publication or installation change is part of this continuation.
+
+
+## Local continuation 2026-11-11: native comparative trials
+
+This continuation follows `426e15eb3d4973fadd91f3c63286a5059b02d3b9` on
+Draft !117. The [start note](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/117#note_4214884962)
+records the next bounded part of **slice 7, Histories**. The complete earlier
+handoff, FreeDOS/directory-workspace amendment and stack target are preserved.
+
+Native QEMU DOS now uses a distinct immutable experiment format behind
+`controls`, `save_experiment`, `restore_experiment` and `compare_experiment`.
+The existing JSON routes and offline project experiment listing/info share
+those artifacts. A saved experiment binds a complete process checkpoint,
+source/version/runtime identity, endpoint CPU/source RAM, owned controls,
+global and private task layer stacks, a canonical expanded script and hashes.
+It uses the existing validated full loader and its fresh control/layer bindings.
+The selected CPU/RAM inverse is never a whole-machine trial reset.
+
+Each arm restores the same full checkpoint and runs the same bounded script.
+The candidate replaces one explicit ordered global stack, or the saved
+selected task's private stack while preserving all other tasks. Original
+layer definitions stay immutable; native-bound candidates require captured
+origin/task/backing proof before fresh binding. Logical layer identity omits
+storage creation time and fresh owner fields, while retaining version, kind,
+patches and stable task/backing identity. The saved endpoint is checked against
+the checkpoint and after restoration before execution.
+
+Admission limits cover 128 expanded script steps, at most 64 KiB of combined
+endpoint and script memory observations, 1,024 requested trace boundaries and
+four ungridded images. Omitted trace counts retain the native default of 128.
+Project capacity is reserved before capture or trial dispatch, including
+script reports, traces, images and the final comparison; ordinary per-artifact
+and project limits still bind. Input, layer/history mutation, selected undo
+and nested restoration are excluded from trial scripts. Assertions and control
+deletion use validated receipts and restored logical control bindings.
+
+Endpoint observations use source coordinates and the explicit native RAM view,
+including selected task-private pages. Script memory reads remain explicit
+runtime address/space observations. The comparator validates capture counts,
+operation/range identity, artifact kind/run/version/bytes/hash, stopped image
+proof, source trace qualification and endpoint source/runtime/task identity.
+It retains raw receipts while normalizing only verified fresh owner/control
+identities. PNG byte identity and decoded pixel identity remain distinct.
+An incomplete, interrupted, corrupt or misaligned capture cannot prove equality.
+A failed baseline skips the candidate. Equality is only over captured qualified
+observations, with no deterministic replay or full-program equivalence claim.
+
+All execution and final full baseline recovery share one outer deadline.
+Uncertain dispatch, capture/publication or recovery effects close the owner;
+there is no automatic trial retry. Full checkpoint restoration preserves the
+admitted native clock/media/input profile, held frame keys, private RAM/fetch
+layers, hooks, scheduler and IRQ frames. Full/lossless history DAGs, branches,
+PNGs and selected-undo artifacts remain retained; trial operations invalidate
+their live cursors. A frozen selected inverse refuses save/compare, while
+explicit `restore_experiment` can recover through the trusted full checkpoint.
+
+The first actual COM trial exposed an existing timed-source-trace issue after
+full restoration: its native clock had a fresh verified owner epoch while
+trace metadata still used launch admission. Capture-local metadata now uses
+the current verified clock admission. Launch metadata and strict epoch checks
+are preserved; the original-epoch event-index qualification is not expanded.
+The reproduced trial then passed with complete timed source observations.
+
+The final integrated preservation selection passed **2,144 tests across 118
+files**, with zero failures, errors or skips and unchanged Python source/witness
+hashes. It includes all six new actual QEMU cases, all five retained selected
+CPU/RAM undo cases, four lossless-delta cases, 14 frame-key cases, nine renderer
+history cases, five checkpoint-history cases, and native task/scheduler/timer/
+cascade/nested-IRQ preservation. The focused host selection passed **160 tests**.
+The retained DOSBox history/delta/timeline/trial and native selected-undo
+selection passed **323 tests**; sealed N20 histories passed **14 tests**, and
+final payload/skill/migration metadata passed **48 tests**. Selections overlap
+and are not additive. External log/JUnit receipts use the
+`trials-preservation-final`, `trials-host-final`, `trials-native-final`,
+`trials-dosbox-final`, `trials-n20-final` and `trials-metadata-final` stems.
+
+The six native cases cover COM/MZ source-layer comparisons, ordinary global
+physical-bound layer rebinding, actual step/trace/run/machine-memory receipts,
+PNG export, offline experiment info and reopened restore. They compare an
+unchanged baseline and a differing candidate, retain original candidate hashes,
+restore a failed baseline with hook hit counts and controls, preserve A/B
+private IRQ/held-key state and continue to the next real task hook, and recover
+frozen selected undo while retaining lossless frame points and images. A probe
+that placed a breakpoint at the trace's next stop correctly produced an
+incomplete baseline and skipped the candidate; the successful witness places
+its subsequent run stop outside that traced interval. No incomplete trace was
+reclassified as equal.
+
+N19/N20/N21 hashes remain unchanged; no native rebuild was needed. N21 remains
+`54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a`.
+The exact source commit, four mirror refs and !117 note/description readback
+are recorded in `trials-final-receipt.json` outside Git. Private checkpoints,
+media, target inputs and project databases remain outside the checkout.
+
+Histories remains in progress. General frame/input and workflow parity, the
+planned FreeDOS/directory/file layers, and all **127 formal surface
+qualifications and seven campaigns** remain open. DOSBox-X stays default and
+retained until local parity is proved. No CI, release tag, release publication
+or installation change is part of this continuation.

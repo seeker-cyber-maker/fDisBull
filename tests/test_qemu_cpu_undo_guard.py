@@ -18,7 +18,8 @@ def owner(*,frozen=True):
 
 @pytest.mark.parametrize('name',['run','step','trace','write_memory','write_registers',
     'save_state','capture_surface','capture_display','frame_inputs','cpu_delta_start',
-    'cpu_delta_record','cpu_delta_rewind','memory_snapshot','memory_rule_run'])
+    'cpu_delta_record','cpu_delta_rewind','memory_snapshot','memory_rule_run',
+    'save_experiment','compare_experiment'])
 def test_frozen_projection_refuses_mutation_before_dispatch(name):
     s=owner()
     with pytest.raises(ValueError,match='frozen'):before_operation(s,name)
@@ -27,7 +28,8 @@ def test_frozen_projection_refuses_mutation_before_dispatch(name):
 
 @pytest.mark.parametrize('name',['registers','memory','code','keyboard_state',
     'dos_task_context','dos_task_memory','cpu_delta_status','clock_observe',
-    'timeline_image','timeline_status','cpu_delta_recover','rewind','timeline_rewind'])
+    'timeline_image','timeline_status','cpu_delta_recover','rewind','timeline_rewind',
+    'controls','restore_experiment'])
 def test_frozen_projection_allows_read_or_full_recovery_entry(name):
     s=owner();before_operation(s,name)
     assert s._qemu_cpu_delta_history['frozen'] and not s.events

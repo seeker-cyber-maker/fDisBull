@@ -32,7 +32,7 @@ _READ_ONLY = frozenset({
     'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory',
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe',
-    'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status',
+    'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
 })
 
 
@@ -102,7 +102,8 @@ def _history_operation(function):
                 error.result = result
                 if function.__name__ in ('rewind_start', 'rewind_record', 'rewind',
                         'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs',
-                        'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover'):
+                        'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover',
+                        'save_experiment','restore_experiment','compare_experiment'):
                     try:
                         self.close()
                     except Exception:
@@ -167,7 +168,8 @@ class QemuDOSHistoryMixin:
         if name in ('layers', 'dos_task_layers'):
             active = kwargs.get('active', args[0] if args else None)
             readonly = active is None
-        if getattr(self, '_history_busy', False) or readonly:
+        experiment_mutation = name in ('save_experiment','restore_experiment','compare_experiment')
+        if (getattr(self, '_history_busy', False) and not experiment_mutation) or readonly:
             return
         live = getattr(self, '_qemu_history_live', None)
         if live is None or not live.get('valid'):

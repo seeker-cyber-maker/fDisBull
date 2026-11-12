@@ -198,6 +198,11 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     _clock_preflight(session, until)
     started = time.monotonic()
     metadata = deepcopy(session.metadata)
+    if clocked:
+        # Full checkpoint import re-admits the native clock under a fresh
+        # owner epoch. Preserve launch metadata and bind this capture to the
+        # verified current admission, including its unchanged clock profile.
+        metadata['machine_configuration']['native_clock_admission'] = deepcopy(session.vm.native_clock_admission)
     binding = load_trace_binding(session.project, session.version['id'], metadata)
     _require_active(session, binding)
     if regions is None:

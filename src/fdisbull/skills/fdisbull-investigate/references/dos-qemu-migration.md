@@ -135,7 +135,7 @@ intervening execution.
 
 The admitted checkpoint covers private QCOW2 and native controls, with
 `host_files_restored=false`; planned host-directory/file-layer restoration is
-separate. General frame/input parity and comparative trials remain open. A
+separate. General frame/input parity remains open. Native comparative trials and a
 bounded selected CPU/RAM partial undo is described below. Local native witnesses cover ordinary
 Python/JSON/script step and rewind, retained IRQ branches and separate-process
 restore with task-private RAM/fetch layers and hooks; the dated handoff and
@@ -182,6 +182,44 @@ native step stop does not prove instruction retirement. This is not full-machine
 rewind or a resumable partial machine state. Immutable projection artifacts
 remain retained, but the live cursor does not reattach after restart. DOSBox
 remains the default.
+
+## Native comparative trials
+
+Use `save_experiment(name, script=..., observations=[...])`,
+`restore_experiment(experiment)` and
+`compare_experiment(experiment, layers=[...], timeout_ms=60000)` on a stopped,
+source-bound QEMU DOS process with full checkpoints. `controls()` inspects
+owned controls. Existing JSON routes are `debug-controls`,
+`debug-save-experiment`, `debug-restore-experiment` and
+`debug-compare-experiment`; offline `debug-experiment-info` and
+`debug-experiments` retain inspection after closing the session.
+
+Each arm restores the same full checkpoint and runs the same bounded script.
+The explicit ordered `layers` replaces the global stack, or only the saved
+selected task's stack when task-private views are enabled. Other tasks retain
+their saved stacks. Native-bound candidates must match the captured origin
+and task; fresh restore bindings leave original definitions immutable.
+Source RAM observations use the selected native RAM view, including private
+pages. Script memory reads retain their declared machine address space.
+
+Trial scripts allow step/run/registers/memory/trace/screenshot/capture-surface, assertions and
+deletion of restored controls. They exclude input, layer/history mutations,
+selected undo and nested restoration. Limits are 128 expanded steps, 64 KiB
+combined endpoint/script RAM observations, 1,024 trace boundaries and four
+ungridded screenshots. Admission and artifact budgets can bind earlier.
+
+Compare only validated captures, preserving source/task/mode/byte identity.
+Fresh epochs and rearmed control IDs remain provenance. Incomplete, corrupt,
+interrupted or misaligned observations cannot prove equality; a failed
+baseline skips the candidate. Final full baseline recovery shares the same
+overall deadline; uncertain effects or failed recovery close without retry.
+Full/lossless history DAGs and selected-undo artifacts remain retained, with
+their live cursors invalidated. A frozen selected inverse first needs explicit
+full recovery, which can be `restore_experiment`. Held keys, layers, hooks and
+IRQs use the full checkpoint path without input reinjection. No deterministic
+replay, full equivalence, completed guest frame or host-file rollback is
+claimed. See `docs/DOS_QEMU_MIGRATION.md` and !117 for scope and evidence;
+DOSBox remains default and retained pending local parity.
 
 ## Native renderer frame histories
 
