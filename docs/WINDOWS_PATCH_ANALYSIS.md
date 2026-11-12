@@ -257,6 +257,67 @@ the proof. Finite runtime agreement stays separate from the symbolic claims.
 The runner executes only matched pure expressions and admitted Wasm modules,
 with bounded Node memory/time; it does not run the complete CJS targets.
 
+## BLA complete-function qualification
+
+`scripts/verify_bla_functions.py` extends that source campaign to the complete
+`sha256Hex` and `tryUnlock` exports and the latter's `decodeFlagCipher` and
+`deriveFlagMask` call closure in the original v6 L1, L2 and L3 CJS artifacts.
+It checks the owning checkout revision, selected-source cleanliness, exact file
+hashes and published commitments before execution. Existing Babel modules are
+supplied explicitly; the runner downloads no dependencies. For example:
+
+```sh
+python scripts/verify_bla_functions.py \
+  --root /external/bla-upstream \
+  --babel-root /external/trusted/node_modules \
+  --output /external/evidence/bla-functions.json
+```
+
+The source reducer in `scripts/bla_function_analysis.cjs` recognizes only exact
+pure opaque-predicate patterns and records their modular low-bit proofs and
+source hashes/offsets. It folds literal string fragments and normalizes bound
+local names, rejecting name collisions, shadowed dependencies and guard
+contraction that could change declaration scope. The four reduced function
+ASTs and five constant initializers must match the materialized clean template.
+The contraction ledger preserves the connection to the original source; the
+original artifact is never rewritten or replaced by the reduction.
+
+Shadow-heap calls require a separate effect contract. The analyzer checks
+literal heap initialization, references, direct ignored calls, pure numeric
+arguments and the mutator's dependency/call surface. It retains the mutator's
+source identity and heap shape. Projecting away those calls assumes the pinned
+mutator continues to operate on an ordinary unaliased numeric heap, with stable
+intrinsics/prototypes and no permitted private-heap observer. This is conditional
+structural correspondence, not a machine-checked proof that arbitrary JS
+mutators terminate or preserve that invariant. All three hardened targets
+really mutate their heaps; full-state equivalence to the clean template is false.
+
+`scripts/bla_function_runtime.cjs` separately runs the original CJS exports in
+bounded Node VM contexts, under an explicit crypto/Buffer call boundary. Its
+observer compares return values, exception names/messages, ordered external
+calls, controlled input-coercion effects and exported constant state. A second
+diagnostic execution logs private heap writes through proxies and must agree
+with an uninstrumented execution on returns, calls and final heap contents.
+Reports contain only hashes/counts of those observations. The VM wrappers are
+diagnostic isolation; Node's VM is not a hostile-code security boundary.
+
+The pinned L1/L2/L3 campaign checks two process-seed bases, verifies the actual
+corpus digest and `seed & 3 == 1` invariant, and observes agreement in 204
+actual-crypto calls across 17 input classes. Another 42 controlled crypto-call
+scenarios exercise downstream success, rejection and exception paths. These
+modeled scenarios do not establish actual valid-key acceptance. The reference
+is the original clean template materialized with commitment-checked target
+constants, not an independently built original release.
+
+Two deliberate counterexamples keep the boundary visible: passing each module's
+own function as input exposes source differences, and poisoning `Math.imul`
+through a coercion callback makes later hardened calls differ. Source/name
+reflection, exception stacks, timing, resource exhaustion and hostile callbacks
+are outside the admitted contract. Finite observations plus the checked source
+reductions support the reported function correspondence under those assumptions;
+universal JS contextual equivalence and whole-module equivalence remain unproved.
+This is a JS source experiment, not native Windows whole-function qualification.
+
 ## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic

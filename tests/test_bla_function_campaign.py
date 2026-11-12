@@ -1,0 +1,129 @@
+"""The whole-export runner binds evidence and never upgrades finite observations."""
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+
+import pytest
+
+
+@pytest.fixture
+def setup_campaign(tmp_path, monkeypatch):
+    scripts = Path(__file__).resolve().parents[1] / 'scripts'
+    monkeypatch.syspath_prepend(str(scripts))
+    spec = importlib.util.spec_from_file_location('function_campaign_test', scripts / 'verify_bla_functions.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    root, babel = tmp_path / 'target', tmp_path / 'babel'
+    root.mkdir(); babel.mkdir()
+    pins = {}
+    for name in ('template', 'L1', 'L2', 'L3'):
+        raw = ('// authored test ' + name).encode()
+        relative = name + '.cjs'
+        (root / relative).write_bytes(raw)
+        pins[name] = (relative, module.digest(raw))
+    commitment = {'keySha256': '1' * 64, 'flagSha256': '2' * 64,
+                  'artifactSha256': {name: pins[name][1] for name in ('L1', 'L2', 'L3')}}
+    raw = json.dumps(commitment).encode()
+    (root / 'commitment.json').write_bytes(raw)
+    pins['commitment'] = ('commitment.json', module.digest(raw))
+    for name in ('parser', 'traverse', 'generator'):
+        package = babel / '@babel' / name
+        package.mkdir(parents=True)
+        (package / 'package.json').write_text(json.dumps({'version': '0.0-authored', 'main': 'index.js'}))
+        (package / 'index.js').write_text('// authored analyzer receipt only')
+    monkeypatch.setattr(module, 'PINS', pins)
+    monkeypatch.setattr(module, 'git', lambda root, *args:
+        module.SUPPORTED_COMMIT if args[0] == 'rev-parse' else
+        'https://github.com/qybaihe/bla.git' if args[0] == 'config' else '')
+    monkeypatch.setattr(module.shutil, 'which', lambda _: '/authored/node')
+    calls = []
+
+    def node(command, **kwargs):
+        config = json.loads(kwargs['input'])
+        calls.append((command, kwargs, config))
+        observation = {'node': 'authored-test-driver', 'tiers': [
+            {'tier': tier, 'source_sha256': pins[tier][1], 'caller_observations_equal': True,
+             'private_heap_effects_equal_to_clean': False, 'actual_crypto_cases': 3,
+             'modeled_call_cases': 2, 'static': {'status': 'structural_correspondence_under_assumptions'}}
+            for tier in ('L1', 'L2', 'L3')]}
+        return subprocess.CompletedProcess(command, 0, module.encoded(observation), b'')
+
+    monkeypatch.setattr(module.subprocess, 'run', node)
+    return module, root, babel, calls
+
+
+def test_report_preserves_claim_ceiling_and_binds_targets_analyzers_and_limits(setup_campaign, monkeypatch):
+    runner, root, babel, calls = setup_campaign
+    monkeypatch.setenv('NODE_OPTIONS', '--require=unapproved-preload')
+    monkeypatch.setenv('NODE_PATH', '/unapproved/modules')
+    report = runner.campaign(root, babel)
+    command, kwargs, config = calls[0]
+    assert command[1] == '--max-old-space-size=256' and kwargs['timeout'] == 60
+    assert 'NODE_OPTIONS' not in kwargs['env'] and 'NODE_PATH' not in kwargs['env']
+    assert config['commitment'] == {'keySha256': '1' * 64, 'flagSha256': '2' * 64}
+    assert report['full_state_equivalence'] is False
+    assert 'universal JS equivalence unproved' in report['claim_ceiling']
+    assert len(report['observations']['tiers']) == 3
+    assert set(report['analyzer_packages']) == {'@babel/parser', '@babel/traverse', '@babel/generator'}
+    assert report['report_sha256'] == runner.digest(runner.encoded({
+        key: value for key, value in report.items() if key != 'report_sha256'}))
+
+
+def test_changed_target_is_rejected_before_any_execution(setup_campaign):
+    runner, root, babel, calls = setup_campaign
+    (root / runner.PINS['L2'][0]).write_text('// changed authored target')
+    with pytest.raises(ValueError, match='hash differs'):
+        runner.campaign(root, babel)
+    assert not calls
+
+
+def test_changed_commit_is_rejected(setup_campaign, monkeypatch):
+    runner, root, babel, calls = setup_campaign
+    monkeypatch.setattr(runner, 'git', lambda *_: '0' * 40)
+    with pytest.raises(ValueError, match='revision'):
+        runner.campaign(root, babel)
+    assert not calls
+
+
+def test_dirty_selected_sources_are_rejected_before_execution(setup_campaign, monkeypatch):
+    runner, root, babel, calls = setup_campaign
+    original = runner.git
+    monkeypatch.setattr(runner, 'git', lambda root, *args:
+        ' M L2.cjs' if args[0] == 'status' else original(root, *args))
+    with pytest.raises(ValueError, match='Selected source differs'):
+        runner.campaign(root, babel)
+    assert not calls
+
+
+@pytest.mark.parametrize('mode', ['missing_tier', 'wrong_source', 'heap_ignored', 'unqualified_static'])
+def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, monkeypatch, mode):
+    runner, root, babel, calls = setup_campaign
+    original = runner.subprocess.run
+
+    def inconsistent(*args, **kwargs):
+        p = original(*args, **kwargs)
+        result = json.loads(p.stdout)
+        if mode == 'missing_tier':
+            result['tiers'].pop()
+        elif mode == 'wrong_source':
+            result['tiers'][0]['source_sha256'] = '0' * 64
+        elif mode == 'heap_ignored':
+            result['tiers'][0]['private_heap_effects_equal_to_clean'] = True
+        else:
+            result['tiers'][0]['static']['status'] = 'unknown'
+        p.stdout = runner.encoded(result)
+        return p
+
+    monkeypatch.setattr(runner.subprocess, 'run', inconsistent)
+    with pytest.raises(ValueError):
+        runner.campaign(root, babel)
+
+
+def test_driver_failure_does_not_publish_stderr_as_a_verified_report(setup_campaign, monkeypatch):
+    runner, root, babel, _ = setup_campaign
+    monkeypatch.setattr(runner.subprocess, 'run', lambda command, **kwargs:
+        subprocess.CompletedProcess(command, 2, b'', b'private diagnostic value'))
+    with pytest.raises(ValueError, match='driver failed') as error:
+        runner.campaign(root, babel)
+    assert 'private diagnostic' not in str(error.value)
