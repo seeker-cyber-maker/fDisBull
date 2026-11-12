@@ -19,6 +19,37 @@ require its own compatible-state and input contract.
 | Compare independent PE runs | Export each version's qualified trace, then use the offline topology helper | Site correspondence can align paths; input and checkpoint compatibility must be established separately. The helper does not certify both runs began in equivalent states. |
 | Build an executable explanation | Authored UIL or a narrow C model with explicit typed ports and effects | Compare model outputs against original execution over chosen inputs and boundaries. Generated C is a realization of the model, not independent evidence that the binary was translated faithfully. |
 
+## BinDiff as a correspondence lead
+
+Google's [BinDiff matching concepts](https://github.com/google/bindiff/blob/main/docs/concepts.md)
+make it a useful upstream source of candidate function and basic-block matches.
+Its first signatures use flow-graph block, edge and call counts; later methods
+use call-graph neighborhoods, names, hashes, strings and other anchors. BinDiff
+reports **confidence in the match** separately from **structural similarity**.
+The [zynamics BinDiff manual](https://www.zynamics.com/bindiff/manual/index.html)
+notes that similarity can overlook changed operands and immediates when
+mnemonics match. Neither number measures equality of intent or
+runtime effects.
+
+An eventual adapter should retain the original and selected-version hashes of
+both binaries, each [BinExport](https://github.com/google/binexport) artifact
+identity, disassembler and address-base convention, match method, confidence,
+similarity and unmatched regions. The BinExport2 format can carry an executable
+ID, commonly a source SHA-256, but the adapter must verify that value against
+each owning fDisBull project rather than trust the field. A function or block
+match narrows where to inspect; it is not yet the one-to-one instruction-site
+correspondence required by `compare_trace_topology`. Changed instructions,
+repeated loop sites and ambiguous matches stay unresolved until independent
+anchors and trace evidence establish their alignment.
+
+Once sites are established, the API-role and register-transfer helpers below
+ask a different question: what the matched or divergent paths actually do at
+the selected boundary. This separation lets a high-confidence BinDiff match
+contain a critical operand change, or a low-similarity obfuscated path carry
+the same bounded register transfer. BinDiff has not been run on the current PE
+fixtures or wired into this prototype; this section defines the evidence an
+adapter must preserve.
+
 ## Intent evidence from PE import calls
 
 The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
