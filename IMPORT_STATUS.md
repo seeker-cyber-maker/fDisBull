@@ -160,3 +160,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/ida_wire.py`
 - `src/fdisbull/il_recovery.py`
 - `src/fdisbull/il_scenes.py`
+
+## Source batch 7
+
+24 additional unchanged Python files (417075 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 150 files, import still incomplete.
+
+- `src/fdisbull/image_views.py`
+- `src/fdisbull/incremental.py`
+- `src/fdisbull/indirect.py`
+- `src/fdisbull/input_macros.py`
+- `src/fdisbull/inspection.py`
+- `src/fdisbull/intake.py`
+- `src/fdisbull/interaction_effects.py`
+- `src/fdisbull/interaction_flow.py`
+- `src/fdisbull/interaction_il.py`
+- `src/fdisbull/iso9660.py`
+- `src/fdisbull/keyboard_input.py`
+- `src/fdisbull/kq1_bow.py`
+- `src/fdisbull/kyra_scaffold.py`
+- `src/fdisbull/le.py`
+- `src/fdisbull/le_driver.py`
+- `src/fdisbull/library.py`
+- `src/fdisbull/linkage.py`
+- `src/fdisbull/loader.py`
+- `src/fdisbull/macho_metadata.py`
+- `src/fdisbull/macho_slices.py`
+- `src/fdisbull/macos_capture.py`
+- `src/fdisbull/macos_lldb.py`
+- `src/fdisbull/macos_session.py`
+- `src/fdisbull/mads_media.py`
