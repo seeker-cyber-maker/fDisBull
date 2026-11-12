@@ -113,6 +113,13 @@ registers or entry FLAGS, plus prior control-decision indices. Overwritten
 definitions are excluded. These are captured-prefix guard slices; arbitrary
 memory dependencies and external outcome slices remain unresolved. Unmatched
 guards and partial extraction remain explicit even when other pairs compare.
+Each normalized predicate has a semantic ID independent of instruction
+addresses and temporary MOV definitions, with explicit entry-register names
+and widths retained. For example, `CMP RCX,RBX` and `MOV RAX,RCX; CMP RAX,RBX`
+reduce to the same guard expression. The latter still clobbers RAX, so equal
+guard IDs do not authorize contracting both whole regions as equivalent.
+The original trace digests, instruction indices and slices remain expandable
+evidence for this scoped reduction.
 
 Different predicates trigger a finite search over boundary and sampled values
 under one shared entry register/FLAGS assignment. Earlier modeled branch

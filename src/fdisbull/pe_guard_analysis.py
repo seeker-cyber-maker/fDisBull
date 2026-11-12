@@ -89,6 +89,8 @@ def _extract(trace, bits):
                 dependencies = sorted(flag_producers) if condition != 'always' else []
                 guards.append({'event_index': index, 'project_address': event['project_address'],
                                'predicate': predicate, 'modeled_taken': taken,
+                               'semantic_id': 'pe-guard:' + hashlib.sha256(json.dumps(
+                                   predicate, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
                                'decision_basis': 'Captured FLAGS and x86 predicate; next PC checked',
                                'target': hex(ins.near_branch_target), 'fallthrough': hex(sequential),
                                'prior_path': [g['modeled_taken'] for g in guards],

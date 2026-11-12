@@ -198,3 +198,20 @@ def test_separate_sources_use_evidenced_site_map_and_partial_prefix_stays_partia
     layer['events'][1]['execution_bytes'] = 'cc'
     result = compare_pe_patch_guards(baseline, layer, same_source=True)
     assert len(result['guard_pairs']) == 1 and result['status'] == 'partial'
+
+
+def test_different_regions_reduce_to_same_guard_without_hiding_register_clobber():
+    # Same entry/guard sites: padding + CMP RCX,RBX versus MOV RAX,RCX + CMP RAX,RBX.
+    baseline = capture('909090904839d977019090', general={'rax': 99, 'rcx': 2, 'rbx': 3})
+    layer = capture('904889c84839d877019090', general={'rax': 99, 'rcx': 2, 'rbx': 3})
+    result = compare_pe_patch_paths(baseline, layer, same_source=True)
+    guards = result['guards']
+    a, b = guards['baseline']['guards'][0], guards['layer']['guards'][0]
+    assert a['predicate'] == b['predicate']
+    assert a['semantic_id'] == b['semantic_id']
+    assert a['slice']['event_indices'] == [4]
+    assert b['slice']['event_indices'] == [1, 2]
+    assert guards['guard_pairs'][0]['guard_relation'] == 'same_expression'
+    assert baseline['events'][-1]['registers']['general']['rax'] == '0x63'
+    assert layer['events'][-1]['registers']['general']['rax'] == '0x2'
+    assert result['semantic_equivalence'] is None
