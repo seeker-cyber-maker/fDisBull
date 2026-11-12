@@ -94,7 +94,44 @@ import is only a candidate role: a patch analysis must compare the surrounding
 data flow and ordered effects, and preserve unresolved cases, before it can
 claim that two paths express the same UIL intent.
 
-## Removing register-only detours from the candidate impact
+## Guard decisions, difference witnesses and backward slices
+
+`fdisbull.pe_guard_analysis.compare_pe_patch_paths` combines the existing
+register-transfer report with `compare_pe_patch_guards`. The guard analysis
+accepts raw PE32/PE64 traces under the same identity and completed-step
+contract. It evaluates all 16 direct Jcc predicates from captured FLAGS,
+checks the recorded successor and preserved state, and admits full-width
+register MOV, register/register or register/immediate CMP, NOP and direct
+JMP/Jcc prefixes. CMP arithmetic FLAGS are independently modeled and checked
+against the next sample. Unsupported operations, memory operands, partial
+registers or inconsistent state stop extraction at an explicit frontier.
+
+Only branches paired by evidenced common topology are compared, and both
+prefixes must start at a common entry. Each guard carries a backward data
+slice through the latest CMP and contributing MOV definitions to entry
+registers or entry FLAGS, plus prior control-decision indices. Overwritten
+definitions are excluded. These are captured-prefix guard slices; arbitrary
+memory dependencies and external outcome slices remain unresolved. Unmatched
+guards and partial extraction remain explicit even when other pairs compare.
+
+Different predicates trigger a finite search over boundary and sampled values
+under one shared entry register/FLAGS assignment. Earlier modeled branch
+decisions must hold on both captured prefixes. A found witness includes that
+entry state, both guard decisions and predicted successors; it establishes a
+decision difference in the admitted models. It does not establish an external
+behavioral difference or native replay. In particular, taken/not-taken can
+differ while target equals fallthrough, and branch inversion may accompany
+swapped destinations. Successor correspondence remains uncompared. Search
+exhaustion or a candidate-budget stop proves no equivalence. Reports include
+source/version hashes and exact trace-document digests.
+
+The homegrown JA-to-JAE test generates the equality-boundary witness, traces
+its inputs through MOV and CMP, and independently replays that witness in
+Unicorn to confirm different successor instructions. All Jcc predicates are
+checked against Unicorn for all combinations of CF/PF/ZF/SF/OF in PE32 and
+PE64. This validates the bounded model, not a native Wine/QEMU capture.
+
+## Register transfer through a common exit
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
 mapping from each captured entry register to the selected-thread general

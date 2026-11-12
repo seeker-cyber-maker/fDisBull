@@ -13,6 +13,7 @@ from iced_x86 import Decoder, FlowControl, OpKind
 from .behavior_diff import compare_trace_topology
 from .debug_semantics import PE_TRACE_SEMANTICS
 from .pe_step_model import check_pe_step_model
+from .pe_guard_model import condition_name, decision
 from .uil_catalog import from_asm_instruction
 from .wine_arch import flags_name, ip_name, register_names, validate_context
 
@@ -111,7 +112,8 @@ def _project_path(trace, bits):
             kind, destination, source = 'direct_branch', None, None
             allowed_next = {instruction.near_branch_target}
             if instruction.flow_control == FlowControl.CONDITIONAL_BRANCH:
-                allowed_next.add(address + len(raw))
+                allowed_next = {instruction.near_branch_target if decision(condition_name(instruction), before_flags)
+                                else address + len(raw)}
         else:
             try:
                 model = from_asm_instruction(raw, bits=bits, flags='explicit')
