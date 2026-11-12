@@ -4026,3 +4026,64 @@ provided. Only cli.py and its new runtime CLI test differ from the frozen
 preservation-run Python hashes; the affected parser/backend/dispatch/payload
 selection was rerun on those final bytes. This is a source contribution and
 private prepared runtime, not a tagged release or activated installation.
+
+## Controlled checkpointed host refresh (2026-11-12)
+
+The next file-workspace increment makes the existing Python/JSON
+`workspace_edit(generation, 'refresh')` operation usable for checkpointed
+workspaces. It captures the admitted host root again and publishes an inactive
+immutable child. A separate cold launch can select that generation. It never
+changes the active guest disk, loaded RAM, file handles/offsets, caches, source
+binding or history cursor. Full checkpoints retain their previous filesystem
+view even after host files change.
+
+The selected branch must match its last admitted host revision; private
+content, namespace or metadata edits refuse refresh instead of being merged.
+The recorded root device/inode must still match. The executable must retain
+the immutable base's host-relative path, DOS alias and original SHA-256.
+Changed, deleted or remapped source files refuse before generation publication.
+New host paths extend protected original/alias sets monotonically; older
+generations, chunks and tombstones remain readable. Capture retains its
+two-stable-pass no-follow contract and does not exclude noncooperating ABA
+writers. General live host visibility remains refused at launch.
+
+Review exposed two related edge cases. A checkpoint can order inventory entries
+by DOS alias while host capture orders them by host spelling. Refresh now
+compares unique DOS-path-keyed projections, preserving exact content/metadata
+checks without a false ordering conflict. Cold launch now refuses multiple
+original executables with the same project basename and hash instead of
+choosing a potentially different parent directory; it also verifies the
+selected host-relative path. Separate regressions reproduced the former
+false conflict and ambiguous selection before their fixes.
+
+Native COM/MZ witnesses refresh while an actual guest handle is open at offset
+two, retain that handle and history cursor, restore the earlier full checkpoint,
+and cold launch both generations to their respective file bytes. Host file
+addition, modification and deletion remain isolated from the active guest.
+Private-edit conflicts, executable changes and root replacement refuse while
+the original live owner remains usable. Source and staged-generation host
+tests additionally cover missing/remapped executables, unstable capture,
+symlinks, repeated refresh, retained old bytes and protected host paths.
+
+This advances the file-workspace amendment across slices 5, 6, 7 and 8; it does
+not qualify general live filesystem access or the whole migration milestone.
+Automatic keep policies, guest-create provenance, live reconciliation and broad
+filesystem/application/driver parity remain open. Trials, full/lossless
+histories, selected CPU/RAM undo, frame keys, task-private RAM/fetch layers,
+hooks, checkpoints and IRQs retain their established scopes. All 134 surface
+qualifications and seven campaigns remain open. DOSBox-X stays default and
+retained; no CI, native rebuild, release/tag or installation is performed.
+
+Fresh local verification on the integrated source passed **2,273 cases across
+132 preservation files**, including the three new actual-QEMU refresh cases,
+with zero failures/errors/skips. Python source and test hashes remained
+unchanged throughout that run. Separate focused selections passed 46 host
+workspace cases, 323 retained DOSBox cases and 58 runtime/dispatch/package/skill
+checks, also with zero failures/errors/skips. Selections overlap. Receipt/log
+names use the private `refresh-preservation-final`, `workspace-refresh-native-final`,
+`refresh-host-final`, `refresh-dosbox-final` and `refresh-metadata-final` prefixes;
+earlier evidence remains intact.
+
+The retained N20 renderer/checkpoint history selection also passed all 14 cases
+with zero failures/errors/skips. Final staged metadata verification passed all
+58 cases again. No Python source or test bytes changed after the integrated run.

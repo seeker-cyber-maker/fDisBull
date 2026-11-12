@@ -31,15 +31,19 @@ def prepare_workspace(project, game_dir, directory, mode, runtime, boot_image, s
         loaded = store.load(generation)
         manifest = loaded['manifest']
         base = store.load(manifest['base'] or generation)
-        original = next((row for row in base['entries'] if row['type'] == 'file'
+        originals = [row for row in base['entries'] if row['type'] == 'file'
                          and row['sha256'] == project.meta['source_sha256']
-                         and row['path'].split('/')[-1] == project.meta['filename']), None)
-        if original is None:
+                         and row['path'].split('/')[-1] == project.meta['filename']]
+        if not originals:
             raise ValueError('Workspace generation has no matching original project executable')
+        if len(originals) != 1:
+            raise ValueError('Workspace generation has an ambiguous original project executable')
+        original = originals[0]
         item = next((row for row in loaded['entries'] if row['dos_path'] == original['dos_path']), None)
         captured = dict(entries=loaded['entries'], root=manifest['source_root'],
                         root_identity=manifest['source_identity'])
     if (item is None or item['type'] != 'file'
+            or (generation is not None and item['path'] != original['path'])
             or hashlib.sha256(item['data']).hexdigest() != project.meta['source_sha256']):
         raise ValueError('Directory workspace executable differs from its original project source')
     if runtime is not None or boot_image is None:

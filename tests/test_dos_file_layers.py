@@ -141,6 +141,132 @@ def test_live_refresh_pins_identity_and_rejects_private_conflicts(store,tmp_path
         store.refresh(refreshed['artifact'])
 
 
+def test_checkpointed_refresh_stages_changes_and_preserves_generations(store,tmp_path):
+    root=tmp_path/'input';root.mkdir()
+    (root/'GAME.COM').write_bytes(b'program')
+    (root/'A.TXT').write_bytes(b'old')
+    (root/'DELETE.TXT').write_bytes(b'remove')
+    cap=capture_directory(root)
+    base=store.seal(cap['entries'],source_root=root,source_identity=cap['root_identity'])
+    base_entries=store.load(base['artifact'])['entries']
+    source=next(item for item in base_entries if item['dos_path']=='GAME.COM')
+
+    (root/'A.TXT').write_bytes(b'new')
+    (root/'DELETE.TXT').unlink()
+    (root/'ADDED.TXT').write_bytes(b'host addition')
+    first=store.refresh(base['artifact'],source_dospath='GAME.COM',
+                        expected_source_sha256=source['sha256'])
+    first_loaded=store.load(first['artifact'])
+    assert first_loaded['manifest']['mode']=='checkpointed'
+    assert first_loaded['manifest']['parent']==base['artifact']
+    assert {item['dos_path']:item.get('data') for item in first_loaded['entries']} == {
+        'GAME.COM':b'program','A.TXT':b'new','ADDED.TXT':b'host addition'}
+    assert 'DELETE.TXT' in first_loaded['manifest']['tombstones']
+    assert store.load(base['artifact'])['entries']==base_entries
+    assert set(base['manifest']['protected_dos_paths']) <= set(first_loaded['manifest']['protected_dos_paths'])
+    assert 'ADDED.TXT' in first_loaded['manifest']['protected_dos_paths']
+
+    (root/'ADDED.TXT').write_bytes(b'host changed again')
+    (root/'NEXT.TXT').write_bytes(b'next')
+    second=store.refresh(first['artifact'],source_dospath='GAME.COM',
+                         expected_source_sha256=source['sha256'])
+    second_loaded=store.load(second['artifact'])
+    assert second_loaded['manifest']['parent']==first['artifact']
+    assert {item['dos_path']:item.get('data') for item in second_loaded['entries']} == {
+        'GAME.COM':b'program','A.TXT':b'new','ADDED.TXT':b'host changed again','NEXT.TXT':b'next'}
+    assert store.load(first['artifact'])['entries']==first_loaded['entries']
+    assert set(first_loaded['manifest']['protected_dos_paths']) <= set(second_loaded['manifest']['protected_dos_paths'])
+
+
+def test_checkpointed_refresh_ignores_inventory_order_when_comparing_host_reference(store,tmp_path):
+    root=tmp_path/'input';root.mkdir()
+    (root/'GAME.COM').write_bytes(b'program')
+    (root/'a b.txt').write_bytes(b'space')
+    (root/'a-b.txt').write_bytes(b'hyphen')
+    captured=capture_directory(root)
+    base=store.seal(captured['entries'],source_root=root,
+                    source_identity=captured['root_identity'])
+    base_entries=store.load(base['artifact'])['entries']
+    # A checkpoint inventory can be ordered by FAT alias rather than the
+    # original host path traversal; all semantic entry data stays identical.
+    reordered=store.seal(list(reversed(base_entries)),parent=base['artifact'],
+                         reason='checkpointed-qcow2-capture')
+    (root/'a b.txt').write_bytes(b'host updated')
+    refreshed=store.refresh(reordered['artifact'])
+    entries={item['dos_path']:item for item in store.load(refreshed['artifact'])['entries']}
+    assert entries['A_B~1.TXT']['data']==b'host updated'
+    assert entries['A-B.TXT']['data']==b'hyphen'
+
+
+@pytest.mark.parametrize('change', ['modified','deleted','aliased-away'])
+def test_refresh_source_guard_refuses_before_generation_publication(store,tmp_path,change):
+    root=tmp_path/'input';root.mkdir()
+    (root/'GAME.COM').write_bytes(b'program')
+    cap=capture_directory(root)
+    base=store.seal(cap['entries'],source_root=root,source_identity=cap['root_identity'])
+    source=store.load(base['artifact'])['entries'][0]
+    if change=='modified':
+        (root/'GAME.COM').write_bytes(b'edited program')
+    elif change=='deleted':
+        (root/'GAME.COM').unlink()
+    else:
+        (root/'GAME.COM').rename(root/'OTHER.COM')
+    before=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                    ("workspace-generation",)).fetchone()[0]
+    with pytest.raises(ValueError,match='source changed|source differs'):
+        store.refresh(base['artifact'],source_dospath='GAME.COM',
+                      expected_source_sha256=source['sha256'])
+    after=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                   ("workspace-generation",)).fetchone()[0]
+    assert after==before
+
+
+def test_refresh_requires_source_guard_pair_and_rejects_private_conflicts(store,tmp_path):
+    root=tmp_path/'input';root.mkdir();(root/'GAME.COM').write_bytes(b'program')
+    cap=capture_directory(root)
+    base=store.seal(cap['entries'],source_root=root,source_identity=cap['root_identity'])
+    source=store.load(base['artifact'])['entries'][0]
+    with pytest.raises(ValueError,match='supplied together'):
+        store.refresh(base['artifact'],source_dospath='GAME.COM')
+    staged=store.create_file(base['artifact'],'SAVE.DAT',b'save')
+    (root/'HOST.TXT').write_bytes(b'new host data')
+    before=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                    ("workspace-generation",)).fetchone()[0]
+    with pytest.raises(ValueError,match='conflict'):
+        store.refresh(staged['artifact'],source_dospath='GAME.COM',
+                      expected_source_sha256=source['sha256'])
+    after=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                   ("workspace-generation",)).fetchone()[0]
+    assert after==before
+
+
+@pytest.mark.parametrize('mutation', ['symlink','unstable'])
+def test_checkpointed_refresh_capture_failures_publish_nothing(store,tmp_path,monkeypatch,mutation):
+    root=tmp_path/'input';root.mkdir();(root/'GAME.COM').write_bytes(b'program')
+    cap=capture_directory(root)
+    base=store.seal(cap['entries'],source_root=root,source_identity=cap['root_identity'])
+    if mutation=='symlink':
+        (root/'LINK').symlink_to(root/'GAME.COM')
+    else:
+        import fdisbull.dos_file_layers as module
+        original=module._scan
+        calls=[]
+        def unstable(*args,**kwargs):
+            result=original(*args,**kwargs)
+            calls.append(None)
+            if len(calls)==1:
+                (root/'LATE.TXT').write_bytes(b'changed between scans')
+            return result
+        monkeypatch.setattr(module,'_scan',unstable)
+    before=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                    ("workspace-generation",)).fetchone()[0]
+    with pytest.raises(ValueError):
+        store.refresh(base['artifact'])
+    after=store.project.db.execute('SELECT count(*) FROM debug_artifacts WHERE kind=?',
+                                   ("workspace-generation",)).fetchone()[0]
+    assert after==before
+
+
 def test_general_export_preserves_original_and_refuses_overwrite(store,tmp_path):
     root=tmp_path/'input';root.mkdir();(root/'A.TXT').write_bytes(b'original')
     cap=capture_directory(root)

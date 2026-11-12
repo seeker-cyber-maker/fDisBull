@@ -13,7 +13,9 @@ callers.
 
 Bounded native cases have passed locally; broader qualification remains open. Existing DOSBox remains the default;
 this is not general filesystem parity or qualification of the full migration
-plan. Live mode is currently refused. Live refresh against a changing host, automatic keep policies and broad DOS
+plan. Live mode is currently refused. An explicit controlled host refresh can
+stage a new checkpointed generation for a later cold launch; it does not refresh
+the running guest. Live visibility, automatic keep policies and broad DOS
 application behavior remain open. A pre-existing checkpoint without workspace metadata does not gain
 host-file restoration retroactively.
 
@@ -83,12 +85,41 @@ Neither operation silently overwrites original or previously admitted paths.
 
 `workspace_edit(generation, operation, ...)` creates an immutable, inactive
 child for `create`, `import`, `write`, `write-range`, `resize`, `rename` or
-`delete`. Replacement/range/resize edits require the expected original SHA-256;
+`delete` or `refresh`. Replacement/range/resize edits require the expected original SHA-256;
 Python byte payloads use `data`, while the JSON `debug-workspace-edit` route
-uses `data_hex`. Paths are DOS-relative or `D:` paths. `refresh` is a staged
-operation requiring live-mode admission, which is currently unavailable. A
+uses `data_hex`. Paths are DOS-relative or `D:` paths. `refresh` takes no file
+payload or path arguments. It captures the already admitted host root again
+and stages an immutable child without touching the running disk. A
 staged child is not a checkpoint or a change to the current guest. Changing
 layer selection does not rewrite loaded guest RAM or authorize rebinding source.
+
+For example, explicitly refresh from a sealed generation, inspect it, then
+select its returned artifact as `dos_generation` in a separate cold launch:
+
+```python
+current = debug.workspace_status()["generation"]["artifact"]
+staged = debug.workspace_edit(current, "refresh")
+child = staged["generation"]["artifact"]
+assert staged["active"] is False
+changes = debug.workspace_files(child, view="diff")
+```
+
+Refresh refuses a replaced root, unsupported or unstable capture, or a branch
+whose private contents or metadata differ from its last admitted host revision.
+No automatic merge is attempted. Select an earlier generation explicitly if
+that is the intended branch. The original executable must retain its original
+host-relative path, DOS alias and SHA-256. A changed, removed or remapped source
+refuses before a child is published. Newly admitted host paths become protected
+from replacement by later create/keep/export operations. Deletions and edits
+in the new generation leave every earlier generation readable.
+
+The active guest keeps its existing disk, open handles, offsets, caches,
+history cursor and source mapping. Refresh neither closes guest files nor
+imports new bytes into that machine. Old full checkpoints still restore their
+pinned file view even after the host changes. Only a cold launch selects the
+staged host revision. A generation with multiple original executables sharing
+the project basename and hash refuses cold launch because its source working
+directory is ambiguous.
 
 JSON counterparts are `debug-workspace-status`, `debug-workspace-files`,
 `debug-workspace-read`, `debug-workspace-seal`, `debug-workspace-export`,
@@ -99,7 +130,9 @@ in the private external store, not a source or review upload.
 Admission rejects symlinks and special entries rather than silently following
 them. Current host capture is bounded to 512 entries, 16 MiB total file bytes,
 and depth 16, subject also to FAT naming and capacity checks. The default D: FAT image is 32 MiB; the composite disk is bounded to 64 MiB. Unresolvable name mappings, unsupported paths, changes detected during
-capture, and invalid generations are refused. These bounds and the effective view do not imply live observation
+capture, and invalid generations are refused. Capture uses two stable no-follow
+passes; it is not an atomic host snapshot and cannot exclude undetected ABA
+changes by noncooperating writers. These bounds and the effective view do not imply live observation
 of later host edits.
 
 Host names receive deterministic ASCII 8.3 aliases (including case collisions);

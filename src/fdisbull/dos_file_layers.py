@@ -306,7 +306,7 @@ class WorkspaceStore:
             protected_paths=sorted(set(origin_paths));protected_dos=sorted(set(origin_dos))
             previous={}
         if _host_refresh:
-            if old is None or mode!='live': raise ValueError('Host refresh requires an existing live workspace')
+            if old is None: raise ValueError('Host refresh requires an existing workspace generation')
             protected_paths=sorted(set(protected_paths)|{item['path'].casefold() for item in entries})
             protected_dos=sorted(set(protected_dos)|{item['dos_path'] for item in entries})
         created=set(_created)
@@ -378,23 +378,51 @@ class WorkspaceStore:
         result=self.seal(entries+[item],parent=generation,reason='explicit-import')
         return result
 
-    def refresh(self,generation):
-        """Admit a two-pass host revision only when no private edits conflict."""
+    def refresh(self,generation, *, source_dospath=None, expected_source_sha256=None):
+        """Stage a two-pass host revision if private edits and source identity allow it."""
+        if (source_dospath is None) != (expected_source_sha256 is None):
+            raise ValueError('Workspace refresh source path and SHA-256 must be supplied together')
+        if source_dospath is not None and (
+                not isinstance(source_dospath,str) or not source_dospath
+                or source_dospath != source_dospath.upper() or '/' in source_dospath
+                or not isinstance(expected_source_sha256,str)
+                or not re.fullmatch(r'[0-9a-f]{64}',expected_source_sha256)):
+            raise ValueError('Workspace refresh source identity is malformed')
         current=self.load(generation)
-        if current['manifest']['mode'] != 'live' or not current['manifest'].get('source_root'):
-            raise ValueError('Controlled host refresh requires a live workspace with an admitted root')
+        if not current['manifest'].get('source_root'):
+            raise ValueError('Controlled host refresh requires an admitted source root')
         host_reference=current
         while host_reference['manifest']['parent'] is not None and host_reference['manifest']['reason'] != 'controlled-refresh':
             host_reference=self.load(host_reference['manifest']['parent'])
         keys=('path','dos_path','type','attributes','dos_date','dos_time','data')
         def projection(entries):
-            return [{key:item[key] for key in keys if key in item} for item in entries]
+            return sorted((item['dos_path'],tuple(item.get(key) for key in keys))
+                          for item in entries)
         if projection(current['entries']) != projection(host_reference['entries']):
             raise ValueError('Private workspace edits conflict with host refresh; reconcile explicitly')
+        source=None
+        if source_dospath is not None:
+            base_id=current['manifest']['base'] or generation
+            base=self.load(base_id)
+            if base['manifest']['parent'] is not None:
+                raise ValueError('Workspace refresh source is not bound to an immutable base')
+            source=next((item for item in base['entries']
+                         if item['dos_path']==source_dospath),None)
+            if (source is None or source['type']!='file' or source.get('origin')!='original'
+                    or source.get('sha256')!=expected_source_sha256):
+                raise ValueError('Workspace refresh source differs from the immutable base')
         captured=capture_directory(current['manifest']['source_root'])
         if (captured['root'] != current['manifest']['source_root']
                 or captured['root_identity'] != current['manifest']['source_identity']):
-            raise ValueError('Live workspace host root identity changed')
+            raise ValueError('Controlled workspace host root identity changed')
+
+        if source_dospath is not None:
+            observed=next((item for item in captured['entries']
+                           if item['path']==source['path']
+                           and item['dos_path']==source_dospath),None)
+            if (observed is None or observed['type']!='file'
+                    or _hash(observed['data'])!=expected_source_sha256):
+                raise ValueError('Workspace refresh source changed, disappeared or lost its DOS alias')
         result=self.seal(captured['entries'],parent=generation,reason='controlled-refresh',_host_refresh=True)
         result['capture_consistency']=captured['consistency']
         return result

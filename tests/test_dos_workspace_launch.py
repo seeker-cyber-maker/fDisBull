@@ -133,3 +133,19 @@ def test_generation_with_edited_original_executable_is_refused(project, tmp_path
         prepare_workspace(project, root, None, None, None, _boot(tmp_path),
                           _staging(tmp_path), generation=edited['artifact'],
                           version_id=project.version()['id'])
+
+
+def test_generation_refuses_identical_executables_in_different_working_directories(project,tmp_path):
+    root=tmp_path/'root'
+    for name in ('A','B'):
+        directory=root/name;directory.mkdir(parents=True)
+        (directory/'GAME.COM').write_bytes(b'\x90\xc3')
+        (directory/'DATA.TXT').write_bytes(name.encode())
+    generation=_generation(project,root)
+    # Selecting the first hash/basename match would choose A even if the
+    # original process ran from B and expects B's relative assets.
+    with pytest.raises(ValueError,match='ambiguous.*executable'):
+        prepare_workspace(project,root/'B',None,None,None,_boot(tmp_path),
+                          _staging(tmp_path),generation=generation,
+                          version_id=project.version()['id'])
+    assert list(_staging(tmp_path).iterdir())==[]

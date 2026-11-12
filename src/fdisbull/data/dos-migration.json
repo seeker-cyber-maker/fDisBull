@@ -1703,12 +1703,13 @@
       "slice": "layers-hooks",
       "surface": "Native-only workspace edit",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_edit; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_edit; bounded checkpointed edits and source-guarded inactive host refresh for cold launch; live visibility and broad qualification pending",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_workspace.py",
         "tests/test_qemu_workspace_edits.py",
-        "tests/test_qemu_dos_workspace_native.py"
+        "tests/test_qemu_dos_workspace_native.py",
+        "tests/test_qemu_workspace_refresh_native.py"
       ]
     }
   ],

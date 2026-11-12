@@ -609,11 +609,17 @@ class QemuDOSWorkspaceMixin:
         elif operation == 'delete':
             result = store.delete_file(generation, path)
         else:
-            result = store.refresh(generation)
+            result = store.refresh(generation,
+                source_dospath=_dos_path(self._dos_workspace['source_dospath'], allow_c=True),
+                expected_source_sha256=self._dos_workspace['source_sha256'])
         receipt = _generation_receipt(store, result['artifact'])
         if receipt['sha256'] != result['sha256']:
             raise ValueError('Staged workspace generation readback differs')
-        return dict(format=FORMAT, operation=operation, parent_generation=generation,
+        response = dict(format=FORMAT, operation=operation, parent_generation=generation,
                     generation=receipt, active=False,
                     activation='not active until launch or restore',
                     guest_create_provenance=False)
+        if operation == 'refresh':
+            response.update(activation='cold launch only; running guest unchanged',
+                            capture_consistency=result['capture_consistency'])
+        return response

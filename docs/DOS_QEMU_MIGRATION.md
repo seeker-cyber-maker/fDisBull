@@ -65,8 +65,11 @@ remains partly open, including live mode, which currently refuses launch.
 
 The checkpointed path captures a bounded private base and keeps guest writes in
 the private disk view. Sealed generations can be inspected or exported without
-overwriting the original directory. The wider live-mode contract and its
-external-host-change handling remain planned. Checkpointed mode is the
+overwriting the original directory. `workspace_edit(generation, 'refresh')`
+can explicitly capture the admitted host root into an inactive child for cold
+launch, with root/source identity and private-edit conflict checks. Existing
+guest handles, buffers and history remain on the old disk. The wider live-mode
+contract remains planned. Checkpointed mode is the
 workspace default; file-aware restoration has its own admission and evidence.
 
 After an independently established guest close/flush boundary, an explicit
