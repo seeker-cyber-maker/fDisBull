@@ -17,7 +17,7 @@ def node_json(body):
     prelude = r'''
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const {makeRealm, sanitizedCall, run} = require(process.argv[1]);
+const {makeRealm, sanitizedCall, run, referenceShadowHeapStep} = require(process.argv[1]);
 const commitment = {keySha256:'1'.repeat(64),flagSha256:'2'.repeat(64)};
 const source = (protectedHeap=false, extraCall=false, returned='authored private return') => `
   const FLAG_CIPHER_HEX = '00'.repeat(63);
@@ -145,3 +145,75 @@ console.log(JSON.stringify({a:sanitizedCall(x),b:sanitizedCall(y)}));
     assert result['a']['result_kind'] == 'return'
     assert result['b']['result_kind'] == 'throw'
     assert result['b']['exception_name'] == 'Error'
+
+
+def test_private_step_boundary_uses_original_helper_and_separate_proxy():
+    result = node_json(r'''
+const s=source().replace('function sha256Hex(value) {',
+  'function mutateFixture(delta) {H.cursor+=delta;H.slots[0].value^=delta;return H.cursor;}\nfunction sha256Hex(value) {');
+const metadata={...runtime,heapStepName:'mutateFixture'};
+const original=makeRealm(s,metadata,0,commitment);
+const diagnostic=makeRealm(s,metadata,0,commitment,'actual_crypto',true);
+const input={cursor:7,slots:[{value:2147483647}]};
+original.installHeap(input);diagnostic.installHeap(input);
+const a=original.step(-1),b=diagnostic.step(-1);
+assert.deepEqual(a.result,b.result);assert.deepEqual(a.after,b.after);
+assert.equal(a.result.value,6);assert.equal(a.after.slots[0].value,-2147483648);
+assert.deepEqual(a.exportsBefore,a.exportsAfter);assert.deepEqual(a.events,[]);
+assert.equal(input.cursor,7);assert.equal(input.slots[0].value,2147483647);
+assert.equal(b.writes.length,2);
+console.log(JSON.stringify({original:sanitizedCall(a),diagnostic:sanitizedCall(b)}));
+''')
+    assert result['original']['recorded_writes'] == 0
+    assert result['diagnostic']['recorded_writes'] == 2
+    assert result['original']['heap_after_sha256'] == result['diagnostic']['heap_after_sha256']
+
+
+def test_private_step_rejects_missing_helper_and_non_numeric_delta():
+    result = node_json(r'''
+assert.throws(()=>realm(true).step(1),{message:'No numeric private-step boundary'});
+const s=source().replace('function sha256Hex(value) {','function mutateFixture(delta) {return delta;}\nfunction sha256Hex(value) {');
+const r=makeRealm(s,{...runtime,heapStepName:'mutateFixture'},0,commitment);
+assert.throws(()=>r.step({valueOf(){throw new Error('must not coerce');}}),
+              {message:'No numeric private-step boundary'});
+for(const value of [NaN,Infinity,-Infinity,0.5,Number.MAX_SAFE_INTEGER+1])
+  assert.throws(()=>r.step(value),{message:'No numeric private-step boundary'});
+console.log(JSON.stringify({rejected:true}));
+''')
+    assert result['rejected'] is True
+
+
+def test_private_heap_certificate_must_bind_the_executed_source():
+    result = node_json(r'''
+const metadata={...runtime,shadowHeapProof:{status:'proved',source:{sha256:'0'.repeat(64)}}};
+assert.throws(()=>makeRealm(source(),metadata,0,commitment),{message:'Shadow-heap proof source mismatch'});
+console.log(JSON.stringify({rejected:true}));
+''')
+    assert result['rejected'] is True
+
+
+def test_bigint_oracle_preserves_boundary_shape_without_mutating_input():
+    result = node_json(r'''
+const heap={tick:2147483647,rollingMask:2147483647,cursor:7,
+  slots:Array.from({length:8},(_,slotId)=>({slotId,kind:'fixture',words:[2147483647,0,2147483647,0],epoch:2147483647,hmacTag:0})),
+  splitShareA:[0,2147483647,1],splitShareB:[2147483647,0,1],
+  diffEnvelope:{state_diff_frontier_0:0,state_diff_frontier_1:2147483647}};
+const before=JSON.stringify(heap);
+const rows=[];
+for(const delta of [0,-1,2147483647,-2147483648,4294967295,Number.MAX_SAFE_INTEGER,Number.MIN_SAFE_INTEGER]) {
+  const out=referenceShadowHeapStep(heap,delta);
+  assert.equal(JSON.stringify(heap),before);assert.equal(out.heap.tick,0);assert.equal(out.heap.cursor,7);
+  assert.equal(out.result,out.heap.rollingMask);assert.equal(out.heap.slots.length,8);
+  assert.equal(out.heap.splitShareA.length,3);assert.equal(out.heap.splitShareB.length,3);
+  assert.deepEqual(out.heap.slots.map(s=>s.kind),heap.slots.map(s=>s.kind));
+  for(const slot of out.heap.slots)for(const value of [...slot.words,slot.epoch,slot.hmacTag])
+    assert(Number.isInteger(value)&&value>=0&&value<=2147483647);
+  for(const value of [...out.heap.splitShareA,...out.heap.splitShareB,...Object.values(out.heap.diffEnvelope)])
+    assert(Number.isInteger(value)&&value>=0&&value<=2147483647);
+  rows.push(out.result);
+}
+assert.throws(()=>referenceShadowHeapStep(heap,0.5),{message:'Unsupported oracle delta'});
+assert.throws(()=>referenceShadowHeapStep({...heap,diffEnvelope:{unexpected:0}},0),{message:'Unsupported oracle frontier'});
+console.log(JSON.stringify({cases:rows.length,unchanged:JSON.stringify(heap)===before}));
+''')
+    assert result == {'cases': 7, 'unchanged': True}

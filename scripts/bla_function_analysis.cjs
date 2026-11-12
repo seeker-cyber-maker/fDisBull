@@ -2,6 +2,7 @@
 /** Source-bound BLA function reduction. No target is evaluated by this module. */
 const crypto = require('node:crypto');
 const path = require('node:path');
+const {proveShadowHeap} = require('./bla_shadow_heap_proof.cjs');
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const UNKNOWN = Symbol('unknown');
@@ -254,6 +255,8 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
     && heapBinding.referencePaths.every(ref => ref.getFunctionParent()?.node === stepOriginal)
     && stepCalls.every(call => call.direct && call.ignored) && !dynamic && mutatorPure && heapShape;
   if (!privateHeap) throw new Error('Shadow-heap privacy/call discipline audit failed');
+  const shadowHeapProof = proveShadowHeap({functionNode:stepOriginal,
+    heapInitializerNode:heapBinding.path.node.init,heapName,source:targetSource,babelRoot});
   const globalMap = {...Object.fromEntries(Object.entries(functionNames).map(([role,name]) => [name,role])),
     [cryptoBindingName]:'createHash', [cipherName]:'FLAG_CIPHER_HEX'};
   for (const role of ['SCOPE','KEY_SHA256','FLAG_SHA256','LICENSE_RPC']) {
@@ -291,7 +294,7 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
   traverse(target, {CallExpression(p) {
     if (p.node.callee.type === 'Identifier' && p.node.callee.name === heapStepName
         && p.parentPath.isExpressionStatement() && selectedNames.has(p.getFunctionParent()?.node.id?.name)) {
-      if (p.node.arguments.length !== 1 || p.node.arguments.some(a => a.type !== 'NumericLiteral' || !Number.isInteger(a.value))) throw new Error('Private heap step argument has unmodeled effects');
+      if (p.node.arguments.length !== 1 || p.node.arguments.some(a => a.type !== 'NumericLiteral' || !Number.isSafeInteger(a.value))) throw new Error('Private heap step argument has unmodeled effects or exceeds the safe-integer proof domain');
       ledger.push({kind:'private_heap_step',source_offsets:[p.node.start,p.node.end],argument_count:p.node.arguments.length});
       p.parentPath.remove();
     }
@@ -326,13 +329,17 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
       mutator_source_offsets:stepSourceOffsets,mutator_source_sha256:stepSourceHash,
       mutator_external_calls:['standard Math.imul'],literal_shape_checked:heapShape,
       initialization:{slots:heap.slots.length,split_share_length:heap.splitShareA.length},
-      totality_assumption:'Source-pinned mutator preserves the ordinary numeric heap shape; no getters/proxies/prototype mutation or concurrent observer',
+      proof:shadowHeapProof,
+      totality_assumption:shadowHeapProof.status === 'proved' ? null :
+        'Source-pinned mutator preserves the ordinary numeric heap shape; no getters/proxies/prototype mutation or concurrent observer',
+      discharged_obligations:shadowHeapProof.status === 'proved' ? ['shadow_heap_shape_preservation','shadow_heap_termination'] : [],
       full_state_equivalence:false,observer_relation:'Private heap is retained and may differ; no aliases or permitted observers.'},
     assumptions:['seed & 3 == 1 (intact corpus)','standard unmodified intrinsics/prototypes',
-      'normal initialized private heap with no proxies, getters or external aliases','no timing/resource observer',
+      shadowHeapProof.status === 'proved' ? 'ordinary writable private data objects; no proxies, getters or external aliases' :
+        'normal initialized private heap with no proxies, getters or external aliases','no timing/resource observer',
       'primitive sha256Hex inputs; controlled synchronous crypto provider','matching materialized constants'],
     scope:'Complete selected function call closure after proved pure-guard reduction and explicit private-state projection; no whole-module equivalence'},
-    runtime:{materializedCleanSource,seedName,heapName,corpusName,expectedCorpusDigest,cipherName,heapStepName,cryptoBindingName,
+    runtime:{materializedCleanSource,seedName,heapName,corpusName,expectedCorpusDigest,cipherName,heapStepName,cryptoBindingName,shadowHeapProof,
       functionNames,staticQualified:matched}};
 }
 

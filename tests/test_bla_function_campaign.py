@@ -45,7 +45,14 @@ def setup_campaign(tmp_path, monkeypatch):
         observation = {'node': 'authored-test-driver', 'tiers': [
             {'tier': tier, 'source_sha256': pins[tier][1], 'caller_observations_equal': True,
              'private_heap_effects_equal_to_clean': False, 'actual_crypto_cases': 3,
-             'modeled_call_cases': 2, 'static': {'status': 'structural_correspondence_under_assumptions'}}
+             'modeled_call_cases': 2, 'static': {'status': 'structural_correspondence_under_assumptions',
+                 'mutation_summary': {'mutator_source_sha256': '3' * 64,
+                     'totality_assumption': None,
+                     'discharged_obligations': ['shadow_heap_shape_preservation', 'shadow_heap_termination'],
+                     'proof': {'status': 'proved', 'source': {'sha256': pins[tier][1], 'mutator_sha256': '3' * 64,
+                                                          'ast_identity_verified': True},
+                               'invariant': {'initialized': True, 'preserved': True},
+                               'termination': {'proved': True}}}}}
             for tier in ('L1', 'L2', 'L3')]}
         return subprocess.CompletedProcess(command, 0, module.encoded(observation), b'')
 
@@ -63,6 +70,9 @@ def test_report_preserves_claim_ceiling_and_binds_targets_analyzers_and_limits(s
     assert 'NODE_OPTIONS' not in kwargs['env'] and 'NODE_PATH' not in kwargs['env']
     assert config['commitment'] == {'keySha256': '1' * 64, 'flagSha256': '2' * 64}
     assert report['full_state_equivalence'] is False
+    assert report['shadow_heap_obligations']['shape_preservation'] == 'proved'
+    assert report['shadow_heap_obligations']['termination'] == 'proved'
+    assert 'bla_shadow_heap_proof.cjs' in report['tool_sha256']
     assert 'universal JS equivalence unproved' in report['claim_ceiling']
     assert len(report['observations']['tiers']) == 3
     assert set(report['analyzer_packages']) == {'@babel/parser', '@babel/traverse', '@babel/generator'}
@@ -96,7 +106,9 @@ def test_dirty_selected_sources_are_rejected_before_execution(setup_campaign, mo
     assert not calls
 
 
-@pytest.mark.parametrize('mode', ['missing_tier', 'wrong_source', 'heap_ignored', 'unqualified_static'])
+@pytest.mark.parametrize('mode', ['missing_tier', 'wrong_source', 'heap_ignored', 'unqualified_static',
+                                 'missing_heap_proof', 'proof_wrong_source', 'proof_wrong_mutator', 'assumption_not_discharged',
+                                 'unproved_induction', 'unproved_termination', 'unbound_ast'])
 def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, monkeypatch, mode):
     runner, root, babel, calls = setup_campaign
     original = runner.subprocess.run
@@ -110,8 +122,24 @@ def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, 
             result['tiers'][0]['source_sha256'] = '0' * 64
         elif mode == 'heap_ignored':
             result['tiers'][0]['private_heap_effects_equal_to_clean'] = True
-        else:
+        elif mode == 'unqualified_static':
             result['tiers'][0]['static']['status'] = 'unknown'
+        else:
+            mutation = result['tiers'][0]['static']['mutation_summary']
+            if mode == 'missing_heap_proof':
+                mutation.pop('proof')
+            elif mode == 'proof_wrong_source':
+                mutation['proof']['source']['sha256'] = '0' * 64
+            elif mode == 'proof_wrong_mutator':
+                mutation['proof']['source']['mutator_sha256'] = '0' * 64
+            elif mode == 'unproved_induction':
+                mutation['proof']['invariant']['preserved'] = False
+            elif mode == 'unproved_termination':
+                mutation['proof']['termination']['proved'] = False
+            elif mode == 'unbound_ast':
+                mutation['proof']['source']['ast_identity_verified'] = False
+            else:
+                mutation['totality_assumption'] = 'still assumed'
         p.stdout = runner.encoded(result)
         return p
 

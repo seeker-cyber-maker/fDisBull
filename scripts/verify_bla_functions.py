@@ -61,6 +61,7 @@ def campaign(root, babel_root):
         raise ValueError('Node is required for the original-function campaign')
     scripts = Path(__file__).resolve().parent
     driver, analyzer = scripts / 'bla_function_runtime.cjs', scripts / 'bla_function_analysis.cjs'
+    heap_prover = scripts / 'bla_shadow_heap_proof.cjs'
     config = {'root': str(root), 'babelRoot': str(babel_root),
               'template': {'path': PINS['template'][0], 'sha256': PINS['template'][1]},
               'targets': [{'tier': name, 'path': PINS[name][0], 'sha256': PINS[name][1]}
@@ -78,6 +79,8 @@ def campaign(root, babel_root):
             or [item.get('tier') for item in observation['tiers']] != ['L1', 'L2', 'L3']):
         raise ValueError('Driver returned incomplete target coverage')
     for item in observation['tiers']:
+        mutation = item.get('static', {}).get('mutation_summary', {})
+        proof = mutation.get('proof', {})
         if (item.get('source_sha256') != PINS[item['tier']][1]
                 or item.get('caller_observations_equal') is not True
                 or item.get('private_heap_effects_equal_to_clean') is not False
@@ -85,6 +88,18 @@ def campaign(root, babel_root):
                 or type(item.get('modeled_call_cases')) is not int or item['modeled_call_cases'] < 1
                 or item.get('static', {}).get('status') != 'structural_correspondence_under_assumptions'):
             raise ValueError('Driver did not qualify each pinned function observation contract')
+        if (proof.get('status') != 'proved'
+                or proof.get('source', {}).get('sha256') != PINS[item['tier']][1]
+                or proof.get('source', {}).get('ast_identity_verified') is not True
+                or not mutation.get('mutator_source_sha256')
+                or proof.get('source', {}).get('mutator_sha256') != mutation['mutator_source_sha256']
+                or proof.get('invariant', {}).get('initialized') is not True
+                or proof.get('invariant', {}).get('preserved') is not True
+                or proof.get('termination', {}).get('proved') is not True
+                or mutation.get('totality_assumption') is not None
+                or set(mutation.get('discharged_obligations', [])) != {
+                    'shadow_heap_shape_preservation', 'shadow_heap_termination'}):
+            raise ValueError('Shadow-heap preservation and termination were not proved for the pinned source')
     analyzer_packages = {}
     for name in ('parser', 'traverse', 'generator'):
         package = babel_root / '@babel' / name
@@ -97,15 +112,19 @@ def campaign(root, babel_root):
               'source': {'repository': remote, 'commit': SUPPORTED_COMMIT,
                          'files': {name: {'path': PINS[name][0], 'bytes': len(raw), 'sha256': digest(raw)}
                                    for name, raw in files.items()}},
-              'tool_sha256': {path.name: digest(path.read_bytes()) for path in (Path(__file__), driver, analyzer)},
+              'tool_sha256': {path.name: digest(path.read_bytes()) for path in (Path(__file__), driver, analyzer, heap_prover)},
               'runtime_limits': {'node_old_space_mib': 256, 'subprocess_timeout_seconds': 60},
               'analyzer_packages': analyzer_packages,
               'observations': observation,
               'claim_ceiling': 'Conditional structural correspondence and finite function observations; universal JS equivalence unproved',
+              'shadow_heap_obligations': {
+                  'shape_preservation': 'proved', 'termination': 'proved',
+                  'basis': 'Source-checked inductive numeric-heap invariant and bounded loop ranking',
+                  'scope': 'Admitted ordinary private heap and numeric deltas under standard JavaScript intrinsics'},
               'full_state_equivalence': False,
               'limitations': [
                   'Hardened functions mutate private shadow heaps absent from the clean reference.',
-                  'Private-heap noninterference requires a well-shaped unaliased heap and stable intrinsics/prototypes.',
+                  'Heap preservation and termination are proved within the admitted source/model; ordinary writable unaliased objects and stable intrinsics/prototypes remain boundary conditions.',
                   'Function source/name introspection, Error stacks, timing, resource exhaustion and hostile callbacks are excluded.',
                   'Controlled crypto-return scenarios are call-contract tests, not actual valid-key acceptance.',
                   'The clean template is materialized from commitment-checked target constants; it is not an independently built original.',

@@ -153,6 +153,7 @@ def test_proved_false_guard_and_literal_fragments_reduce(analyze):
     "before,after",
     [
         ("stepShadowHeapFixture(1);", 'stepShadowHeapFixture((console.log("effect"), 1));'),
+        ("stepShadowHeapFixture(1);", 'stepShadowHeapFixture(9007199254740992);'),
         ("const amount = Math.imul(delta, 1);", 'console.log("effect"); const amount = Math.imul(delta, 1);'),
         ("const amount = Math.imul(delta, 1);", "Math.imul = 0; const amount = 1;"),
         ("const amount = Math.imul(delta, 1);", "const alias = Math; const amount = 1;"),

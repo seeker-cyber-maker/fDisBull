@@ -286,10 +286,9 @@ Shadow-heap calls require a separate effect contract. The analyzer checks
 literal heap initialization, references, direct ignored calls, pure numeric
 arguments and the mutator's dependency/call surface. It retains the mutator's
 source identity and heap shape. Projecting away those calls assumes the pinned
-mutator continues to operate on an ordinary unaliased numeric heap, with stable
-intrinsics/prototypes and no permitted private-heap observer. This is conditional
-structural correspondence, not a machine-checked proof that arbitrary JS
-mutators terminate or preserve that invariant. All three hardened targets
+heap is ordinary and unaliased, with stable intrinsics/prototypes and no
+permitted private-heap observer. The preservation and termination obligations
+are now checked separately as described below. All three hardened targets
 really mutate their heaps; full-state equivalence to the clean template is false.
 
 `scripts/bla_function_runtime.cjs` separately runs the original CJS exports in
@@ -317,6 +316,55 @@ are outside the admitted contract. Finite observations plus the checked source
 reductions support the reported function correspondence under those assumptions;
 universal JS contextual equivalence and whole-module equivalence remain unproved.
 This is a JS source experiment, not native Windows whole-function qualification.
+
+### Shadow-heap induction and termination
+
+`scripts/bla_shadow_heap_proof.cjs` checks the original parsed mutator and heap
+initializer against a narrow numeric heap model. Source hashes alone do not
+authorize a proof. Unsupported statements, structural writes, unsafe accesses
+or unrecognized loops return `unknown`. The complete-function campaign requires
+a `proved` certificate tied to both the target source and the exact mutator
+before it reports the preservation and termination obligations as discharged.
+
+The entry invariant describes ordinary writable own data properties, dense
+fixed-length arrays, existing slots with four words, equal-length share arrays,
+and numeric fields in `0..2^31-1`. Initialization establishes the base case.
+The checker generalizes these numeric values rather than assuming the original
+contents. It checks the admitted arithmetic, indexed accesses and writes against
+the invariant, retaining structural identities and unchanged metadata. Masked
+writes return to the unsigned 31-bit range; the unmasked share XOR also stays
+there because both operands have a zero sign bit. Addition bounds keep the
+integer intermediates exactly representable as JavaScript Numbers. Nonnegative
+remainder operands and positive immutable lengths keep slot/cursor accesses
+within existing arrays.
+
+The two admitted loops have natural-number ranking functions `8 - i` and
+`share_length - k`. The counters start at zero and advance by one, and neither
+their bounds nor their progress can be changed by the body. Each iteration
+preserves the heap invariant, giving an inductive postcondition for each loop
+and the whole mutator. For all three original targets, one invocation executes
+at most **51 loop iterations**: eight slot iterations and 43 share iterations.
+The source-derived numeric write bound is **165 for L1** and **169 for L2/L3**.
+Together, initialization and the mutator postcondition establish preservation
+under any finite sequence of admitted invocations, without bounding that
+sequence to the sampled runtime tests.
+
+The runtime campaign separately checks the invariant after original exported
+function calls and compares original mutator executions with an independently
+authored concrete transition model on boundary heaps and numeric deltas. These
+finite crosschecks exercise the proof model against the unchanged real target
+code; they are not the induction or termination proof. Independent Z3
+counterqueries check the arithmetic closure, access bounds and ranking lemmas,
+with satisfiable negative cases when essential constraints are removed.
+
+The discharged obligations are specifically numeric heap preservation and
+mutator termination in the admitted source/model. Ordinary writable objects,
+no getters/proxies or external aliases, stable standard intrinsics/prototypes,
+and an execution model excluding resource exhaustion remain explicit boundary
+conditions. These checks do not establish arbitrary JavaScript termination,
+crypto-provider totality, universal contextual equivalence or equality of the
+private heaps. The earlier reflection and intrinsic-poisoning counterexamples
+continue to distinguish the original programs outside the contract.
 
 ## Register-only transfer projection
 
