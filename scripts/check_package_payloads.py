@@ -48,6 +48,7 @@ SOURCE_SUPPORT = (
     "native/qemu-chip8/",
     "native/qemu-chip8-devices/",
     "native/qemu-chip8-classic/",
+    "native/qemu-chip8-layers/",
     "tests/",
     "scripts/",
     ".github/workflows/",

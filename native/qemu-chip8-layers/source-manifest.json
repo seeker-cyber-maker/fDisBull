@@ -1,0 +1,195 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Target-local CHIP-8 4 KiB RAM and instruction-fetch overlay layers with guarded mutation, backing checks, and checkpointed layer state",
+  "implementation_status": "guarded v4 native layers and paused host hooks locally verified on macOS arm64; bounded authored witnesses, not general parity",
+  "base": {
+    "qemu_version": "10.0.13",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "patch_parent": "native/qemu-chip8-classic/qemu-10.0.13-fdisbull-chip8-classic-v3.patch",
+    "patch_parent_sha256": "cb80c64be2ea206177fb9d5f787dad9f640a15de6dc2b4a34f2e768923713124",
+    "patch_parent_manifest_sha256": "468429e33d3261ee58f8b5cbdd66550318efe01833bfee776adf04b23972975d",
+    "applies_to": "QEMU source after sealed v1 CPU, v2 devices, and v3 classic/RNG patches"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-layers-v4.patch",
+    "sha256": "68a41f55450a3c66a61c0c8fa5ca49450957f96e92f93aed602635b23fb55cd6",
+    "modified_file_count": 7,
+    "files": [
+      {
+        "path": "qapi/misc.json",
+        "before_sha256": "0f78a84a3c65e58c89f4d30a76fe3d1c8fffb4f334b0e1b98994216078902c2b",
+        "after_sha256": "3279b4aaa1628fe41ccf9ecba9faaa7de5e6d91cd57ba2b78a6853518fb3dcc1"
+      },
+      {
+        "path": "system/qmp-chip8.c",
+        "before_sha256": "4a6217e37cd0b24b4ea253d1d968e6e3510fac1894ec5dd530ab663ae18682c0",
+        "after_sha256": "5c15efbe8d663a7ccb4c1628f8098212599e212e1e35f2a77df5863de1482c4b"
+      },
+      {
+        "path": "target/chip8/cpu.c",
+        "before_sha256": "57609cc88e4a204049069d840d5638833d0fa5cbda4df19f6ab9553b3b34c1ef",
+        "after_sha256": "c6dc315b11016ea2e5d9bdc3c5e40159738cfe20ed9f23b2046fc170eeaa5c3f"
+      },
+      {
+        "path": "target/chip8/cpu.h",
+        "before_sha256": "8e7f74b31a7102ba2bb91fdf439b18076893b4eee0e0516281158b0c5dbe3339",
+        "after_sha256": "de83d2c2f8384ca2aea435bc9a4ad28e6d1b4b3bcc56919c74c648bed1db93d1"
+      },
+      {
+        "path": "target/chip8/helper.c",
+        "before_sha256": "306c4a603d45d7aaa242870135f0299b3bcd090fc669ad8c0023688594f30938",
+        "after_sha256": "6b2c87b2e0e86d86178fdca3dd8578efc4f52a6121728140747a8254d8169b18"
+      },
+      {
+        "path": "target/chip8/translate.c",
+        "before_sha256": "e671870dbd10f43cb9705c643a93da2b980b0e84e320e846d368b2cb7c6f47f7",
+        "after_sha256": "74cd2f6b6dba020716be881f1d741c02e12b310e6fdaa7763ee0f212aad3671f"
+      },
+      {
+        "path": "target/chip8/vmstate.c",
+        "before_sha256": "ba1bed70b508de5e8ff4297e1db08b77d5d45ef230c49dc2525dcf8518b54472",
+        "after_sha256": "0caba13bca94ff1f7be2d61d8150a7921a81bd9a9aeb590b29df15473b1fa243"
+      }
+    ]
+  },
+  "target": {
+    "qemu_target": "chip8-softmmu",
+    "machine": "chip8-test",
+    "cpu_model": "chip8-cpu",
+    "profile": "chip8-classic-pilot-default-v1",
+    "cpu_subset": "fdisbull-chip8-layers-hooks-4",
+    "environment_model": "fdisbull-chip8-display-keypad-timers-rng-layers-3",
+    "layer_model": "fdisbull-chip8-native-layers-1",
+    "memory_model": "4 KiB flat physical RAM; execute-only overlay with a guarded RAM preimage; GDB/data reads remain physical RAM",
+    "qmp_query": "query-chip8-layers returns full mask/overlay/preimage and fault/backing receipt",
+    "qmp_configure": "x-chip8-configure-layers(expected-generation:uint64,expected-state-generation:uint64,ram:[Chip8LayerPatch],execute:[Chip8LayerPatch]); stopped one-CPU TCG only; guarded RAM patches plus complete replacement execute map",
+    "configure_limits": "At most 256 total ranges, each RAM and execute-byte union no larger than 4096; each range nonempty, in bounds, lowercase hex, nonoverlapping within its view; all expected bytes validated before writes",
+    "execution_behavior": "Execute view uses overlay bytes. Before each instruction side effect, verify all active overlay backing bytes; mismatch latches layer fault and stops at the unchanged PC without executing the instruction.",
+    "mutation_behavior": "Successful CAS increments layer and CPU generations once, clears layer fault and pending attribution, and flushes translated blocks. Rejected guards do not mutate state.",
+    "vmstate": "Version 4/minimum 4 stores execute mask, overlay, backing preimage, generation and latched layer fault. Ephemeral layer stop attribution is cleared after restore; cross-binary restore is unqualified.",
+    "hooks": "Host paused-RPC/GDB hooks only; no native hook table is added."
+  },
+  "build": {
+    "runtime": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112",
+    "source": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112",
+    "build_dir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112/build-layers",
+    "tmpdir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112/tmp-layers",
+    "target": "chip8-softmmu",
+    "accelerator": "TCG",
+    "configure_cwd": "build-layers",
+    "configure_command": "../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112/build-layers/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_cwd": ".",
+    "build_command": "/Users/tiga/miniconda/bin/ninja -C build-layers -j4 qemu-system-chip8",
+    "tmpdir_environment": "TMPDIR=/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112/tmp-layers for configure and Ninja",
+    "candidate_binary": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-layers-frozen/qemu-system-chip8-guarded-02",
+    "candidate_binary_sha256": "2e8f86c8390e7fef4304ee6752ce7902f8fefd4d01aae07cb308bbd6d7a6478b",
+    "candidate_binary_size": 6242136,
+    "configure_status": "passed",
+    "ninja_status": "passed; original 31f7... binary was replaced before it could be copied; the final guarded candidate was copied to chip8-layers-frozen/qemu-system-chip8-guarded-02 before any next build.",
+    "warnings": "Final incremental compile emitted one unrelated QEMU HAVE_CMPXCHG128 undefined-macro warning in accel/tcg/tcg-runtime.h.",
+    "storage_admission_pass": "CACHE path admitted for 2,000,000,000 bytes with --destination-reserve-bytes 20000000000; later incremental retry admitted for 100,000,000 bytes.",
+    "storage_admission_refusal_receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-layers-storage-admission-refusal.json",
+    "candidate_retention_receipt": "R/chip8-layers-build-correction-01.json"
+  },
+  "verification": {
+    "qapi_schema_generation": {
+      "status": "passed",
+      "command": "python3 scripts/qapi-gen.py -o /Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112/tmp-layers/qapi-check qapi/qapi-schema.json",
+      "working_directory": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112"
+    },
+    "native_tests": {
+      "status": "final guarded candidate native, retained compatibility, and integrated preservation selections passed",
+      "final_candidate_sha256": "2e8f86c8390e7fef4304ee6752ce7902f8fefd4d01aae07cb308bbd6d7a6478b",
+      "layer_selection": {
+        "cases": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml": "R/chip8-layers-native-final-02.xml"
+      },
+      "layer_selection_scope": "Includes malformed delimiter-injection precondition refusals. Bound to final guarded candidate SHA above.",
+      "retained_classic_device_cpu_selection": {
+        "status": "passed on final guarded candidate",
+        "cases": 49,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "deselected": 1,
+        "deselection": "tests/test_chip8_qemu_semantics_native.py::test_underflow_unknown_and_device_operation_are_inspectable_exceptions[00e0-1] (obsolete v1-only CLS refusal; CLS is supported by current target)",
+        "xml": "R/chip8-layers-compat-final-02.xml",
+        "log": "R/chip8-layers-compat-final-02.log",
+        "result": "R/chip8-layers-compat-final-02-result.json"
+      },
+      "integrated_preservation": {
+        "status": "passed",
+        "xml": "R/chip8-layers-preservation-final-02.xml",
+        "cases": 2774,
+        "files": 170,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "python_source_and_test_hashes_unchanged": 1203,
+        "explicit_deselection": "one existing private DinoPark identification test; input unavailable"
+      },
+      "ci": false,
+      "other_host_build": false,
+      "cross_binary_vmstate_restore_qualified": false
+    },
+    "ci": false,
+    "other_host_build": false,
+    "cross_binary_vmstate_restore_qualified": false,
+    "prior_candidate": {
+      "sha256": "31f7d6d45a719d83ebd0e974f52490fcd55577ced7784dd4c146bca6827a49f3",
+      "retained": false,
+      "first_candidate_tests_not_attributed_to_replacement": true,
+      "receipt": "R/chip8-layers-build-correction-01.json"
+    },
+    "retained_baseline_readback": {
+      "status": "passed read-only",
+      "receipt": "R/chip8-layers-preserved-baselines-02.json",
+      "matched_binaries": [
+        "N19",
+        "N20",
+        "N21",
+        "N22",
+        "N23",
+        "N24",
+        "CHIP-8 v1",
+        "CHIP-8 v2",
+        "CHIP-8 v3"
+      ],
+      "matched_source_packages": [
+        "N19",
+        "N20",
+        "N21",
+        "N22",
+        "N23",
+        "N24",
+        "CHIP-8 v1",
+        "CHIP-8 v2",
+        "CHIP-8 v3"
+      ],
+      "freedos_component_04_system_img_matches": true,
+      "shared_selector_path_unchanged": true,
+      "dosbox_remains_default": true,
+      "default_switch_gate_eligible": false
+    }
+  },
+  "applied_verification": {
+    "status": "passed",
+    "receipt": "R/chip8-layers-patch-replay-receipt-02.json",
+    "patch_sha256": "68a41f55450a3c66a61c0c8fa5ca49450957f96e92f93aed602635b23fb55cd6",
+    "replayed_file_count": 7,
+    "method": "Copied only touched files from the sealed v3 source tree to an isolated replay subset, applied patch -p1 --batch, and compared all seven after hashes to the candidate source.",
+    "replayed_after_sha256": {
+      "qapi/misc.json": "3279b4aaa1628fe41ccf9ecba9faaa7de5e6d91cd57ba2b78a6853518fb3dcc1",
+      "system/qmp-chip8.c": "5c15efbe8d663a7ccb4c1628f8098212599e212e1e35f2a77df5863de1482c4b",
+      "target/chip8/cpu.c": "c6dc315b11016ea2e5d9bdc3c5e40159738cfe20ed9f23b2046fc170eeaa5c3f",
+      "target/chip8/cpu.h": "de83d2c2f8384ca2aea435bc9a4ad28e6d1b4b3bcc56919c74c648bed1db93d1",
+      "target/chip8/helper.c": "6b2c87b2e0e86d86178fdca3dd8578efc4f52a6121728140747a8254d8169b18",
+      "target/chip8/translate.c": "74cd2f6b6dba020716be881f1d741c02e12b310e6fdaa7763ee0f212aad3671f",
+      "target/chip8/vmstate.c": "0caba13bca94ff1f7be2d61d8150a7921a81bd9a9aeb590b29df15473b1fa243"
+    },
+    "replay_revision": 2
+  }
+}

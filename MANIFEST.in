@@ -30,6 +30,7 @@ recursive-include native/qemu-dos-save-stop *.md *.json *.patch
 recursive-include native/qemu-chip8 *.md *.json *.patch
 recursive-include native/qemu-chip8-devices *.md *.json *.patch
 recursive-include native/qemu-chip8-classic *.md *.json *.patch
+recursive-include native/qemu-chip8-layers *.md *.json *.patch
 recursive-include src/fdisbull/web_runtime *.mjs *.html
 recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt

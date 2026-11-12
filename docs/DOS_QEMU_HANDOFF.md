@@ -4798,3 +4798,102 @@ V1/v2 packages/sources/binaries, N19-N24, component-04 and shared selector retai
 their identities. All 141 DOS surfaces and seven campaigns remain open; the
 bounded classic/RNG acceptance does not authorize DOSBox default promotion or
 removal, a release/tag, a merge or a shared installation change. No CI.
+
+
+## 2026-11-12 — CHIP-8 native code/RAM layers and paused hooks
+
+Continued from `fa0bd491b78978a26fa60837fc5b70a79ba8b01a` on the existing
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c` contribution.
+Draft !117 retains target `agent/execution-event-search-284eb73c` and base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X stays the default and is
+retained. No CI, release/tag, merge or shared installation change.
+
+### Native and host behavior
+
+The separate v4 target retains the declared classic CPU, display/keypad/timers
+and LCG32 RNG, adding a guarded flat 4 KiB layer model. RAM layers edit physical
+guest RAM; execute layers change instruction fetch without changing data/GDB
+reads. Immutable Project definitions are version-bound; ordered stacks resolve
+independently in each view. Clearing a guest-modified RAM layer requires explicit
+`keep_changed` recovery. Changed fetch backing latches an instrumentation fault
+and stops before the next instruction effect; a checkpoint preserves that dirty
+state until explicit reconfiguration, without silently rebasing it.
+
+Stopped configuration validates the entire RAM/fetch request and both CPU/layer
+generations before mutation, flushes translated blocks, and returns complete
+mask/data/preimage readback. The native identity is
+`fdisbull-chip8-layers-hooks-4`, environment
+`fdisbull-chip8-display-keypad-timers-rng-layers-3`, layer model
+`fdisbull-chip8-native-layers-1`, VMState4/min4 and host schema4. Earlier v1-v3
+formats and exact binaries remain separate; cross-binary restore is refused.
+
+Execution hooks use owned GDB breakpoints and paused-RPC actions: bounded
+layer-stack selection or guarded non-PC register edits. Logical hook IDs, hit
+counts, limits and pending displacement survive fresh-process/FDB reopen.
+Repeating traps displace one instruction without repeating actions; faults,
+layer conflicts, key waits, timeouts and ordinary breakpoints do not dispatch
+actions. Ordinary user breakpoints still prevent checkpointing. Staged restore
+verifies native CPU/RAM/device/RNG/layer state and sidecar definitions before
+replacing the old owner and reinstalling hook traps.
+
+### Fresh local verification
+
+- Integrated final selection: **2,774 passes / 170 files**, zero failures,
+  errors or skips; all **1,203 Python source/test hashes unchanged**. One
+  existing private DinoPark identification case was explicitly deselected
+  because its input is unavailable.
+- Final guarded v4 selection: **13 native passes**, covering warm fetch-cache
+  changes, RAM/fetch separation and stack removal, post-RAM guards, full-batch
+  refusal, malformed delimiter-bearing hex, stale generations, guest-write
+  conflicts, one-shot/repeating hooks, guarded failure and actual JSON routes.
+- Retained classic/CPU/device behavior on that same v4 binary: **49 passes**.
+  Only the obsolete v1 `00e0` refusal is deselected in this replay because CLS
+  is implemented. The original v1 runtime still runs its original full cases
+  in integrated acceptance.
+- Retained DOSBox-X histories, frame keys, undo and trials: **323 passes**.
+  These selections overlap; their counts are not a unique combined total.
+
+Cold native witnesses preserve active RAM/code layers, a pending repeating
+hook, full device state, held keys, nonzero timers/virtual time and exact future
+RNG results. Separate restored witnesses preserve guest-changed RAM conflicts
+and latched fetch faults. Common source checks retain the existing DOS
+private-layer/task, master/slave IRQ, nested-frame, checkpoint, history, trial
+and file/save-policy paths. This is bounded macOS arm64 evidence, not arbitrary
+ROM, historical timing or other-host qualification.
+
+Review found and fixed a caller-transaction hole in hook deletion. Native review
+also found that unvalidated hex could be reinterpreted by the internal command
+separator format. A strict native golden reproduced that failure; the corrected
+bridge validates each hex field before serialization and marks any attempted
+RAM-write failure uncertain. The earlier broad run was deliberately interrupted
+after 335 passes to add that regression. Its results are diagnostic, not the
+final acceptance. The initial candidate binary was superseded before being
+copied; its source patch, hashes and diagnostic receipts remain, while final
+acceptance binds only the separately preserved corrected binary.
+
+Final binary SHA-256:
+`2e8f86c8390e7fef4304ee6752ce7902f8fefd4d01aae07cb308bbd6d7a6478b`.
+Final seven-file patch SHA-256:
+`68a41f55450a3c66a61c0c8fa5ca49450957f96e92f93aed602635b23fb55cd6`.
+The patch replays against the sealed v3 parent and all seven built-source
+hashes match. Private evidence uses chip8-layers-native-final-02,
+chip8-layers-compat-final-02, chip8-layers-preservation-final-02,
+chip8-layers-dosbox-final-01 and chip8-layers-patch-replay-receipt-02.
+
+The read-only baseline audit verifies all nine retained DOS/CHIP-8 binaries,
+their source packages, component-04 and the existing shared selector. The
+component-04 builder boot qualification remains pending. All 141 DOS surfaces
+and seven parity campaigns remain open. CHIP-8 histories/selected undo/trials,
+IRQ/task-private semantics, predicates/watchpoints/redirects, audio output and
+G0-G8 end-to-end conversion qualification remain separate work. The new flat
+CHIP-8 layers do not qualify DOSBox default promotion or removal.
+
+A separate immutable-copy audit verified the completed cold-restore fixture:
+one schema4 snapshot with two active layers and a pending hook, all three
+4096-byte fetch maps, one layer-transition and three hook-hit events. Snapshot
+payload/metadata and byte-bearing events resolve through 20 hash-verified
+external objects; no inline fetch maps remain in the raw SQLite evidence.
+Original FDB/WAL/SHM hashes stayed unchanged. The private readback is
+chip8-v4-externalization-final-03/receipt.json; the earlier audit's incorrect
+`id` column lookup is retained as a harness diagnostic and was corrected to
+`debug_events.sequence` without changing production source.

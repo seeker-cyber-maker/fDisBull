@@ -71,8 +71,10 @@ def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
     assert items['debug.chip8']['availability'] == 'not_checked'
     assert items['debug.chip8']['runtime_validation'] == 'not_run'
     assert items['debug.chip8']['maturity'] == 'experimental'
-    assert 'optional device build' in items['debug.chip8']['scope']
-    assert 'No layers/hooks/histories/trials' in items['debug.chip8']['scope']
+    scope = items['debug.chip8']['scope']
+    assert 'v4 layers/hooks locally tested' in scope
+    assert 'Earlier profiles lack layers/hooks' in scope
+    assert 'no histories/trials' in scope
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

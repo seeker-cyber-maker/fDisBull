@@ -62,6 +62,8 @@ def branch_replacement(raw, mode):
 class LayerProjectMixin:
     def debug_layer(self,name,*,kind,patches,version=None):
         _file_name(name)
+        if self.meta.get('arch')=='chip8':
+            return self._debug_chip8_layer(name,kind,patches,version)
         pe=self.meta['format']=='PE' and self.bits==64 and self.meta['arch']=='x86'
         if self.meta['format'] not in ('MZ', 'COM') and not pe or kind not in ('ram','execute'):
             raise ValueError('DOS/PE64 layers require kind=ram or execute')
@@ -87,6 +89,36 @@ class LayerProjectMixin:
             if len(touched)>65536:raise ValueError('Layer exceeds 64 KiB')
             normalized.append({'address':hex(address),'expected_hex':before.hex(),'data_hex':after.hex()})
         return self._store_debug_layer(name, v, {'kind':kind,'patches':normalized})
+
+    def _debug_chip8_layer(self,name,kind,patches,version):
+        from .chip8 import PROFILE, MEMORY_SIZE
+        loader=self.meta.get('loader_metadata')
+        descriptor=loader.get('chip8') if isinstance(loader,dict) else None
+        if (self.meta.get('format')!='raw' or self.bits!=16 or
+                not isinstance(loader,dict) or loader.get('chip8_profile')!=PROFILE or
+                not isinstance(descriptor,dict) or descriptor.get('memory_size')!=MEMORY_SIZE):
+            raise ValueError('CHIP-8 layers require the declared flat 4 KiB profile')
+        if kind not in ('ram','execute'):
+            raise ValueError('CHIP-8 layer kind must be ram or execute')
+        if not isinstance(patches,list) or not 1<=len(patches)<=64:
+            raise ValueError('A layer requires 1..64 guarded patches')
+        v=self.version(version)['id'];normalized=[];touched=set()
+        for patch in patches:
+            if not isinstance(patch,dict) or set(patch)!={'address','expected_hex','data_hex'}:
+                raise ValueError('CHIP-8 layer patches require flat address, expected_hex and data_hex')
+            address=patch['address']
+            try:address=int(address,0) if isinstance(address,str) else address
+            except ValueError:raise ValueError('Invalid CHIP-8 layer address') from None
+            before=byte_string(patch['expected_hex']);after=byte_string(patch['data_hex'])
+            if (type(address) is not int or not before or len(before)!=len(after) or
+                    not 0<=address<MEMORY_SIZE or address+len(before)>MEMORY_SIZE):
+                raise ValueError('CHIP-8 layer extent must preserve length within 4 KiB')
+            positions=set(range(address,address+len(before)))
+            if touched&positions:raise ValueError('Patch ranges overlap inside one layer')
+            touched.update(positions)
+            normalized.append({'address':hex(address),'expected_hex':before.hex(),'data_hex':after.hex()})
+        return self._store_debug_layer(name,v,{'kind':kind,'patches':normalized,
+            'chip8_profile':PROFILE,'address_model':'chip8-flat-4k'})
 
     def _store_debug_layer(self, name, version, definition):
         from .project import now

@@ -140,10 +140,11 @@ def test_store_corruption_fails_closed(target):
             db.source_info()
 
 
-def test_native_pixel_receipts_are_external_and_resolve_after_reopen(target):
+@pytest.mark.parametrize('field',['pixels-hex','execute-mask-hex','execute-bytes-hex','execute-base-hex'])
+def test_native_pixel_receipts_are_external_and_resolve_after_reopen(target,field):
     project, _ = target
     pixels = bytes(int(i * 13 % 17 < 3) for i in range(2048))
-    document = {'environment': {'pixels-hex': pixels.hex(),
+    document = {'environment': {field: pixels.hex(),
                                'pixels-sha256': hashlib.sha256(pixels).hexdigest()}}
     with Project(project) as db:
         with db.transaction(True):

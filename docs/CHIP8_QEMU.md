@@ -1,4 +1,4 @@
-# CHIP-8 QEMU classic CPU, devices and RNG
+# CHIP-8 QEMU classic CPU, devices, RNG and layers
 
 This profile connects a newly compiled QEMU TCG CPU/machine to fDisBull's
 persistent source analysis and debugger. It is a bounded architecture experiment.
@@ -67,7 +67,11 @@ The executable is a separately built `qemu-system-chip8`, with machine
 `fdisbull-chip8-display-keypad-timers-1`. The optional
 [complete classic extension](../native/qemu-chip8-classic/README.md) identifies
 as `fdisbull-chip8-classic-complete-3` with environment model
-`fdisbull-chip8-display-keypad-timers-rng-2`. A raw ROM loads through `-kernel` at `0x200`.
+`fdisbull-chip8-display-keypad-timers-rng-2`. The experimental layer extension
+identifies as `fdisbull-chip8-layers-hooks-4`, environment
+`fdisbull-chip8-display-keypad-timers-rng-layers-3`, and layer model
+`fdisbull-chip8-native-layers-1`. Bounded authored native witnesses passed locally on macOS arm64. A raw ROM
+loads through `-kernel` at `0x200`.
 There is no DOS image, PC firmware, guest OS or hidden interpreter process.
 
 The first target uses one instruction per TCG block and a bounded native C
@@ -252,7 +256,8 @@ held keys, wait state, DT/ST, sound-active, timer phase/deadline, virtual time
 and both tick counters. Ephemeral ownership of the earlier wait stop is cleared.
 Restore across QEMU binaries or CPU profiles is refused. Host files are not restored.
 
-Remove execution breakpoints before saving or loading a checkpoint. A reopened
+Remove ordinary user execution breakpoints before saving or loading a checkpoint.
+The v4 profile may retain hook-owned traps as described below. A reopened
 FDB can restore its artifact after explicitly launching the same ROM and native runtime. A checkpoint is not permission to guess a
 different source, dialect, device state or engine binary.
 
@@ -261,15 +266,46 @@ remain supported with their exact original binary. The retained device runtime
 uses `fdisbull-qemu-chip8-state-2`. The complete classic runtime uses
 `fdisbull-qemu-chip8-state-3`, including RNG model, seed, state and count. It
 restores the exact future RNG sequence along with CPU/RAM and device state.
-These formats do not imply cross-binary restore.
+The v4 layer extension uses `fdisbull-qemu-chip8-state-4` with native fetch
+state and a sidecar for the active layer stack and hook controls. A bounded authored fresh-owner witness checks CPU, RAM, device/RNG state,
+native fetch state and immutable definition identities before replacing the
+old owner on macOS arm64. These formats do not imply
+cross-binary restore.
 Device capabilities are enabled only after checking the native subset identity
 and required command set. The older runtime continues to refuse device calls.
 
-All three profiles support stopped inspection, bounded run/step, execution breakpoints,
-guarded edits and native checkpoints. Audio output, watchpoints, code/RAM
-layers, hooks, histories, selected undo and comparative trials remain unavailable
-for CHIP-8. Their existing DOS implementations remain retained and are tested
-separately. IRQ/PIC and QEMM/DESQview task semantics remain DOS-profile work.
+## Experimental CHIP-8 layers and hooks
+
+The v4 profile adds immutable, version-bound flat 4 KiB layer definitions and
+stopped native activation. `debug.layer_patch(name, address, expected_hex=...,
+data_hex=..., kind="ram" | "execute")`, `debug.layers(active=[...])`,
+`debug.layer_enable(...)` and `debug.code(..., view="ram" | "execute")` use
+the existing layer routes. Source addresses are limited to the original ROM;
+physical and linear addresses refer to the same flat RAM. Ordered stacks use
+the last patch at a byte independently for RAM and instruction fetch. Guards
+must agree on the base bytes. Guest changes to an active RAM layer refuse a
+transition by default; clearing with `conflict="keep_changed"` retains changed
+bytes. A changed fetch backing or latched native layer fault stops execution
+with `layer_conflict` until a successful reconfiguration clears it. A checkpoint
+can preserve that fault and backing state without claiming it was repaired.
+
+`debug.hook(address, actions=[...], once=..., max_hits=...)` installs a bounded
+execution breakpoint with paused-RPC layer-stack or guarded non-PC register
+actions. `debug.hooks()`, `debug.delete_hook(...)`, and
+`debug.run(stop_on_hook=True)` expose the controls. Faults, layer conflicts,
+ambiguous stops and key waits do not dispatch hook actions. The v4 checkpoint
+sidecar records logical hook IDs, hit counts and pending step-over state; restore
+reinstalls hook traps on the fresh stopped owner. Bounded authored native witnesses passed locally on macOS arm64, including
+RAM and fetch views, guarded hooks, conflicts, fault preservation and
+fresh-owner restore. They do not establish general game compatibility or parity.
+
+All profiles support stopped inspection, bounded run/step, execution breakpoints,
+guarded edits and native checkpoints. The three earlier profiles continue to
+use their exact matching binaries and do not acquire v4 controls. CHIP-8 audio
+output, predicates, watchpoints, redirects, task-private views, histories,
+selected undo and comparative trials remain unavailable. IRQ/PIC and
+QEMM/DESQview task semantics remain DOS-profile work; DOSBox-X remains the
+default and retained fallback.
 
 ## Local checks
 
@@ -304,6 +340,16 @@ FDISBULL_CHIP8_CLASSIC_QEMU_IMG=/path/to/qemu-img \
 FDISBULL_REQUIRE_CHIP8_CLASSIC=1 \
 python -m pytest -q tests/test_qemu_chip8_classic.py \
   tests/test_qemu_chip8_classic_native.py tests/test_chip8_classic_semantics_native.py
+```
+
+For native RAM/fetch layers and paused execution hooks, use the v4 binary:
+
+```sh
+FDISBULL_CHIP8_LAYERS_QEMU=/external/layers/qemu-system-chip8 \
+FDISBULL_CHIP8_LAYERS_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_LAYERS=1 \
+python -m pytest -q tests/test_chip8_layers_project.py tests/test_chip8_layers.py \
+  tests/test_chip8_hooks.py tests/test_chip8_layers_native.py
 ```
 
 Native tests require the actual binary when their `FDISBULL_REQUIRE_CHIP8*` selector is 1; an
