@@ -494,15 +494,20 @@ class WorkspaceStore:
         """
         return self._export_file(generation,dos_path,destination,require_new=True)
 
-    def export_file(self,generation,dos_path,destination):
+    def export_file(self,generation,dos_path,destination, *, expected_parent_identity=None):
         """Export a coherently admitted generation file to a new destination.
 
         The caller owns guest-close and flush qualification; this function
         validates stored bytes and exclusive host publication only.
         """
-        return self._export_file(generation,dos_path,destination,require_new=False)
+        return self._export_file(generation,dos_path,destination,require_new=False,
+                                 expected_parent_identity=expected_parent_identity)
 
-    def _export_file(self,generation,dos_path,destination, *, require_new):
+    def _export_file(self,generation,dos_path,destination, *, require_new,expected_parent_identity=None):
+        if expected_parent_identity is not None and (not isinstance(expected_parent_identity,dict)
+                or set(expected_parent_identity)!={'device','inode'}
+                or any(type(v) is not int or v<0 for v in expected_parent_identity.values())):
+            raise ValueError('Invalid expected export parent identity')
         current=self.load(generation)
         entry=next((item for item in current['entries'] if item['dos_path']==dos_path),None)
         if entry is None or entry['type']!='file':
@@ -532,6 +537,10 @@ class WorkspaceStore:
             for component in parent.parts[1:]:
                 next_fd=os.open(component,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent_fd)
                 os.close(parent_fd);parent_fd=next_fd
+            if expected_parent_identity is not None:
+                observed=os.fstat(parent_fd)
+                if (observed.st_dev,observed.st_ino)!=(expected_parent_identity['device'],expected_parent_identity['inode']):
+                    raise ValueError('Workspace export parent identity changed')
 
             requested=_aliases([target.name])[target.name]
             def check_destination_free(exclude_temporary=False):

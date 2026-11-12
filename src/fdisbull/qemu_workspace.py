@@ -548,7 +548,48 @@ class QemuDOSWorkspaceMixin:
     @_history_operation
     def workspace_seal(self, name='qemu-workspace-checkpoint.qcow2', *, timeout_ms=60000):
         """Save one complete VM checkpoint; its QCOW2 snapshot creates the generation."""
-        return _seal_workspace(self, name)
+        result = _seal_workspace(self, name)
+        if getattr(self, '_dos_save_witness', None):
+            from .qemu_dos_provenance import service_policy
+            try:
+                kept = service_policy(self, result)
+                if kept is not None:
+                    result['keep_policy'] = kept
+            except BaseException as error:
+                error.result = dict(checkpoint=result, keep_policy=getattr(error, 'result', None))
+                raise
+        return result
+
+    @_history_operation
+    def workspace_provenance_start(self, path, *, timeout_ms=60000):
+        from .qemu_dos_provenance import start
+        return start(self, path)
+
+    @_history_operation
+    def workspace_provenance_status(self, *, timeout_ms=60000):
+        from .qemu_dos_provenance import status
+        return status(self)
+
+    @_history_operation
+    def workspace_provenance_capture(self, *, timeout_ms=60000):
+        from .qemu_dos_provenance import provenance
+        return provenance(self)
+
+    @_history_operation
+    def workspace_provenance_stop(self, *, timeout_ms=60000):
+        from .qemu_dos_provenance import stop
+        return stop(self)
+
+    @_history_operation
+    def workspace_keep_policy(self, path, directory, *, timeout_ms=60000):
+        """Opt in one witnessed path to versioned keeps at explicit workspace seals."""
+        from .qemu_dos_provenance import start
+        return start(self, path, directory)
+
+    @_history_operation
+    def workspace_keep_policy_enabled(self, policy, enabled, *, timeout_ms=60000):
+        from .dos_keep_policy import KeepPolicyStore
+        return KeepPolicyStore(self).set_enabled(policy, enabled)
 
     @_history_operation
     def workspace_save_output(self, path, new_destination, *, closed_and_flushed=False,
@@ -569,10 +610,13 @@ class QemuDOSWorkspaceMixin:
         return export(generation, _dos_path(path), new_destination)
 
     @_history_operation
-    def workspace_keep(self, path, new_destination, generation=None, *, timeout_ms=60000):
+    def workspace_keep(self, path, new_destination, generation=None, *, provenance=None, timeout_ms=60000):
         """Export an explicitly created staged file, without claiming guest creation."""
         store = self._workspace_store()
         generation = self._workspace_generation(store, generation)
+        if provenance is not None:
+            from .qemu_dos_provenance import keep_proven
+            return keep_proven(self, path, new_destination, generation, provenance)
         return store.keep(generation, _dos_path(path), new_destination)
 
     @_history_operation

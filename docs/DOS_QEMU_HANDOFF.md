@@ -4159,3 +4159,101 @@ Private receipts use `output-preservation-final`, `output-native-fixed-02`,
 The retained N20 history selection passed all 14 cases, and the final staged
 metadata selection passed all 59 cases, with zero failures/errors/skips.
 All 1,170 Python source/test files remained identical to the integrated run.
+
+
+## Guest-create provenance and opt-in save keeps (2026-11-12)
+
+This slice adds an isolated native N22 candidate and six Python/JSON workspace
+routes: provenance start/status/capture/stop and keep policy creation/enabling.
+`workspace_keep` can consume a stored native proof; its plain authored-create
+contract is retained. `workspace_keep_policy` explicitly arms one absent,
+unprotected root D: non-device 8.3 path with an existing pinned physical output
+directory. `workspace_seal` services that policy after the full VM/file capture;
+internal history/trial captures do not publish files. There is no background
+watcher, guest-boundary stop injection or automatic retry.
+
+Native evidence covers real DOS AH=5Bh exclusive creation, zero or more complete
+positive AH=40h sequential writes, optional AH=68h commit, AH=3Eh close and
+returned AH=0Dh flush. It retains actual accepted payload bytes, return flags,
+caller/return identities, pending INT 21h state and nested hardware frames.
+Source ranges are bounded to 64 below 0xA0000, payload to 64 KiB, events to 256
+and hardware nesting to 16. Unsupported mutators/process changes, vector changes,
+source escapes and unowned storage/DMA/PCI activity taint evidence without
+changing guest execution. Ready/invalid records remain owned until disarmed.
+Full checkpoint restore compares the entire logical ledger and advances native
+epoch and generation before host adoption; old idle checkpoints remain usable.
+
+The host requires the verified original entry, where its helper establishes the
+child PSP, and admits no prior unobserved interval. Observed PSP queries must
+agree and process-changing calls invalidate; there is no independently justified
+kernel current-PSP global read on every call. Admission and final capture use
+the exact qualified component-04 initial image and matching runtime descriptors,
+real/unpaged single CPU, no active layers/task views/input ownership/clock sync
+or budget. Kernel RAM integrity, arbitrary TSRs/drivers and later entry arming
+remain unqualified. The caller must stop after flush before termination or
+another unsupported operation. Existing broader layers/hooks/task/IRQ/history
+operations retain their contracts, without acquiring this new proof scope.
+
+A proof requires stable repeated stopped file/buffer observations around the
+full checkpoint and exact sealed FAT bytes equal to the captured accepted
+writes. The keep policy independently validates stored proof/source/path/base
+and bytes, reserves each content SHA-256 in an immutable project journal before
+exclusive export, and records completion after durable publication. Versioned
+names use 00000001.SAV onward, with 128 distinct versions and 1,024 events per
+policy. Existing files are never overwritten. Opened-parent identity checks
+reject destination swaps. Matching completed content verifies its existing file;
+pending/uncertain reservations return needs-reconciliation without replay.
+Journal and disable decisions survive guest rewind and reopened analysis runs,
+but not a deliberate rollback of the whole FDB. Different policies are separate.
+
+Review fixed event-persistence failure after arming and post-seal proof failures
+to preserve concrete owner/checkpoint effects. An unverified post-seal native
+or boundary observation closes the owner. Host mutation taints live evidence;
+full restore rebinds the historical observer rather than forging a new proof.
+The first real native attempt exposed a host summary size-key collision; the
+artifact size now stays distinct from payload_size. Earlier failing/interrupted
+logs remain separate from the corrected passes. A manually interrupted first
+broad run is not counted as completed preservation evidence.
+
+The authored N22 patch and manifest are in native/qemu-dos-provenance, applied
+incrementally to sealed N21 QEMU 10.0.13. The final build09 binary SHA-256 is
+0665e6d87e5c7fd23f1c62f4fabab534618fabe40c656ecbcd61d4e0d7703ce1; patch SHA-256
+99f615226a728a0d80ac6456ddd8f7f6e32f0a6c020de3a73f2cbbc2aac2e6aa.
+Source packaging now includes that patch and the omitted checkpoint/layer/task/
+frame prerequisite directories, with fixture checks excluding runtime binaries.
+No native executable, private disk, FDB or original target is added to Git.
+
+Final focused host verification passed 147 cases, retained DOSBox-X passed 323,
+and the final native provenance selection passed 13. Native witnesses include
+COM/MZ payloads, explicit proof keep, policy deduplication and disabling across
+rewind, in-flight INT 21h restore, actual PIT IRQ0 activity, real failed-exclusive-
+create carry/error results, open output refusal and six unsupported-operation
+taints. These bounded witnesses do not qualify general DOSBox or game parity.
+
+The inventory now contains 141 formally unqualified surfaces and seven open
+campaigns. DOSBox-X remains the default and retained backend. No CI, release/tag,
+merge, shared installation or default-selector change is part of this slice.
+Broader runtime/context coverage, overwrite/rename/seek saves, automatic safe
+boundary selection, live filesystem reconciliation and application/driver
+campaigns remain open. See DOS_FILE_LAYERS.md for APIs and exact scope.
+
+
+Integrated N22 preservation passed **2,384 cases across 138 files** with zero
+failures/errors/skips. All 1,175 Python source/test SHA-256 values stayed fixed
+through that run and match the staged source. Final staged metadata/runtime/
+dispatch/payload/skill checks passed all 60 cases. Selections overlap.
+
+A separate private COM/MZ witness passed both cases after closing the debugger
+and Project, reopening the persisted FDB in a new run/VM and restoring the
+armed observer. It verified already-kept content produces no duplicate and a
+host disable remains in force after another restore. This uses the same N22
+binary and does not establish cross-binary migration. Exact patch replay from
+only its touched N21 files reproduced all eight N22 after-images. Private
+receipts use provenance-preservation-02-final, provenance-host-verified,
+provenance-native-09, provenance-dosbox-final, provenance-reopen-final,
+provenance-metadata-staged and provenance-patch-replay-receipt.json; all earlier
+failure/interruption evidence remains separate. N19/N20/N21, the component-04
+system image and the shared installation selector retain their prior identities.
+
+The retained N20 renderer/checkpoint history selection passed all 14 cases,
+also with zero failures/errors/skips (provenance-n20-final).

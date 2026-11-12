@@ -1725,6 +1725,84 @@
         "tests/test_qemu_workspace_output_native.py",
         "tests/test_dos_workspace_export_atomic.py"
       ]
+    },
+    {
+      "id": "debug-workspace-provenance-start",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-start",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_start; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-status",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-status",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_status; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-capture",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-capture",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_capture; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-stop",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-stop",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_stop; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-keep-policy",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-keep-policy-enabled",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy-enabled",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy_enabled; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py"
+      ]
     }
   ],
   "required_campaigns": [

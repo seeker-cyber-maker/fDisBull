@@ -74,9 +74,11 @@ workspace default; file-aware restoration has its own admission and evidence.
 
 After an independently established guest close/flush boundary, an explicit
 export can create a private host copy that survives rewind and session exit.
-`keep` requires a witnessed authored create; a raw FAT directory difference
-cannot distinguish a guest create from a renamed original. Automatic keep
-policies and guest-create provenance remain open. Pre-existing host files stay
+`keep` requires an authored create or the separate bounded native guest-create
+proof; a raw FAT directory difference cannot distinguish a create from a renamed
+original. Opt-in keep policies service witnessed content at explicit workspace
+seals, with versioned exclusive exports and a host journal that survives guest
+rewind. Broader DOS/driver provenance and automatic boundary detection remain open. Pre-existing host files stay
 protected. An explicit staged import and cold launch can make an exported
 file visible again. Exports use exclusive creation and refuse existing paths.
 
@@ -86,6 +88,14 @@ before exporting one explicitly caller-attested closed/flushed output. It is
 limited to the qualified runtime/layout and real-mode context; it does not
 prove guest creation or supply an automatic keep policy. See the
 [output-capture contract](DOS_FILE_LAYERS.md#capture-a-caller-attested-output).
+
+The N22 extension can instead observe exclusive-create/write/close/flush calls
+from the verified original process entry and bind their accepted bytes to the
+sealed FAT file. Opt-in policies preserve content once per policy/hash at
+explicit workspace seals; internal histories and trials do not publish files.
+Pending calls and IRQ frames survive full restore. Initial support is one
+qualified real-mode process and root D: 8.3 target, not arbitrary DOS kernel,
+TSR, driver or DOSBox parity. See [guest-create provenance and policies](DOS_FILE_LAYERS.md#witness-a-guest-created-save).
 
 File-aware restore must synchronize VM state, directory membership, file
 contents and open handles, with a verified consistent base capture despite

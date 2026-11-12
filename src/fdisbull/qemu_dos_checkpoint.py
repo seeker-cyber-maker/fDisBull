@@ -290,6 +290,7 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
     from .qemu_dos_tasks import capture_task_checkpoint
     from .qemu_dos_task_views import capture_task_views
     from .qemu_dos_scheduler import capture_scheduler
+    from .qemu_dos_provenance import capture_checkpoint as capture_save_witness
     import uuid
     _file_name(name)
     if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= MAX_STATE):
@@ -303,6 +304,7 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
     task_checkpoint = capture_task_checkpoint(session)
     task_views = capture_task_views(session)
     scheduler = capture_scheduler(session)
+    save_witness = capture_save_witness(session)
     instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
     bundle = dict(format=checkpoint_format(session), tag=tag, source_sha256=session.metadata['source_sha256'],
@@ -311,7 +313,7 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
         process=deepcopy(session._process), origin=origin, registers=registers,
         memory=memory, controls=controls, serial=serial, instrumentation=instrumentation,
         native_task=task_checkpoint, task_binding=deepcopy(getattr(session, '_dos_task_binding', None)),
-        task_views=task_views,native_scheduler=scheduler)
+        task_views=task_views,native_scheduler=scheduler, dos_save_witness=save_witness)
     try:
         snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
                      instrumented=instrumentation is not None, export_token=export_token)
@@ -324,6 +326,8 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
             raise DebuggerError('Native private task views changed while saving checkpoint')
         if capture_scheduler(session) != scheduler:
             raise DebuggerError('Native scheduler CPU/frame state changed while saving checkpoint')
+        if capture_save_witness(session) != save_witness:
+            raise DebuggerError('Native DOS save witness changed while saving checkpoint')
         with session.vm.checkpoint_disk.open('rb') as stream:
             machine = stream.read(limit + 1)
         if len(machine) > limit:
@@ -488,6 +492,11 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
             validate_workspace(session.project, bundle['workspace'], session.version['id'])
             verify_workspace_checkpoint(session, machine, bundle['workspace'])
         _source(session)
+        from .qemu_dos_provenance import (validate_checkpoint as validate_save_witness,
+                                          query as query_save_witness, verify_loaded as verify_save_witness,
+                                          adopt as adopt_save_witness)
+        save_witness = bundle.get('dos_save_witness')
+        validate_save_witness(session, save_witness)
         decoded = _decode_origin(session, bundle['origin'])
         task_binding = bundle.get('task_binding')
         if task_binding is not None:
@@ -534,12 +543,15 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                     raise ValueError('Fresh QEMU lacks the checkpoint task-context extension')
             prime_task_views(new, task_views)
             prime_scheduler(new,scheduler,task_views)
+            # Prime its always-on native VMState registration without guest execution.
+            query_save_witness(new)
             snapshot_job(new, 'load', tag=bundle['tag'], vmstate='disk0', devices=['disk0'],
                          timeout_ms=remaining(), instrumented=instrumentation is not None)
             restored_instrumentation = restore(new, instrumentation)
             restored_task = restore_task_checkpoint(new, native_task, task_binding)
             restored_views = verify_task_views(new, task_views)
             restored_scheduler = verify_scheduler(new,scheduler)
+            restored_save_witness = verify_save_witness(new,save_witness)
             actual, _, _ = _verify_process(session, bundle['process'], bundle['origin'],
                 vm=new, memory=bundle['memory'], task_binding=task_binding,
                 private_views={} if task_views is None else {row['binding']['task_id']:row for row in task_views['views']})
@@ -620,6 +632,9 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                 restore_workspace(session, bundle['workspace'])
                 result['workspace_restored'] = True
                 result['workspace'] = deepcopy(bundle['workspace'])
+            adopt_save_witness(session,save_witness,restored_save_witness)
+            if save_witness is not None:
+                result['guest_create_observer_restored'] = True
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)

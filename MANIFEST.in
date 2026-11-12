@@ -14,6 +14,17 @@ recursive-include native/qemu-mouse-click *.md *.json *.patch
 recursive-include native/qemu-display-probe *.md *.json *.patch
 recursive-include native/qemu-vga-configuration *.md *.json *.patch
 recursive-include native/qemu-display-motion *.md *.json *.patch
+recursive-include native/qemu-dos-checkpoint *.md *.json *.patch
+recursive-include native/qemu-frame-history *.md *.json *.patch
+recursive-include native/qemu-frame-keys *.md *.json *.patch
+recursive-include native/qemu-instrumented-checkpoint *.md *.json *.patch
+recursive-include native/qemu-layers *.md *.json *.patch
+recursive-include native/qemu-task-private *.md *.json *.patch
+recursive-include native/qemu-task-context *.md *.json *.patch
+recursive-include native/qemu-task-scheduler *.md *.json *.patch
+recursive-include native/qemu-task-preemption *.md *.json *.patch
+recursive-include native/qemu-task-cascade *.md *.json *.patch
+recursive-include native/qemu-dos-provenance *.md *.json *.patch
 recursive-include src/fdisbull/web_runtime *.mjs *.html
 recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt

@@ -34,6 +34,7 @@ _READ_ONLY = frozenset({
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe',
     'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
     'workspace_status', 'workspace_files', 'workspace_read',
+    'workspace_provenance_status',
 })
 
 
@@ -105,7 +106,9 @@ def _history_operation(function):
                         'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs',
                         'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover',
                         'save_experiment','restore_experiment','compare_experiment',
-                        'workspace_seal','workspace_export','workspace_keep','workspace_save_output'):
+                        'workspace_seal','workspace_export','workspace_keep','workspace_save_output',
+                        'workspace_provenance_start','workspace_provenance_capture','workspace_provenance_stop',
+                        'workspace_keep_policy','workspace_keep_policy_enabled'):
                     try:
                         self.close()
                     except Exception:
@@ -166,6 +169,9 @@ class QemuDOSHistoryMixin:
         selected_guard = getattr(self,'_cpu_delta_before_operation',None)
         if selected_guard is not None:
             selected_guard(name,args,kwargs)
+        if getattr(self, '_dos_save_witness', None):
+            from .qemu_dos_provenance import before_host_operation
+            before_host_operation(self,name,args,kwargs)
         readonly = name in _READ_ONLY
         if name in ('layers', 'dos_task_layers'):
             active = kwargs.get('active', args[0] if args else None)
