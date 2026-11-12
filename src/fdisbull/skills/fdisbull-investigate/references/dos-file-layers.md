@@ -127,6 +127,65 @@ JSON counterparts are `debug-workspace-status`, `debug-workspace-files`,
 JSON. Workspace snapshots and exports can contain private file bytes and belong
 in the private external store, not a source or review upload.
 
+## Capture a caller-attested output
+
+`workspace_save_output(path, new_destination, closed_and_flushed=True)` combines
+a full native checkpoint with an exclusive physical export. The destination
+must be an absolute new host path. The selected guest pathname must be absent
+from the protected host/DOS admission sets and present as a file in the freshly
+sealed generation. The returned receipt binds the original source/process
+epoch, runtime, checkpoint, file generation, exact payload hash and export.
+JSON exposes the same operation as `debug-workspace-save-output`.
+
+The caller must independently establish close/flush before supplying literal
+`True`; omitted, false, integer and string attestations refuse. For example:
+
+```python
+# After the caller has observed the program close and flush this output:
+saved = debug.workspace_save_output(
+    "SAVE.DAT", "/private/kept/SAVE.DAT", closed_and_flushed=True)
+assert saved["export"]["durable"] is True
+assert saved["guest_create_provenance"] is False
+```
+
+The operation reads the qualified FreeDOS kernel's complete global SFT and
+buffer lists using stopped physical conventional RAM, with equal repeated
+observations and a stable CPU/process context. Every ordinary open SFT entry
+and dirty DOS buffer must be absent before and after checkpoint capture.
+There is no guest resume or implicit DOS close/flush. The counters are guards;
+the observer still reports full paths, sharing, locks, flush boundary and
+coherence as unknown. Provenance is **caller-attested**. A renamed original
+cannot acquire `keep` rights from this operation, and strict `workspace_keep`
+continues to require an explicitly authored create.
+
+Initial admission is deliberately bounded to the tested minimal FreeDOS
+component-04 image, SHA-256
+`badc71221f90a0ae823b23ee45b9372d8f6e4b819fecd301fed0ee4b7d0dadf2`,
+with matching locked package/runtime descriptors. `dos_output_capture` reports
+that runtime capability. Rebuilt images require separate qualification. The
+fingerprint qualifies the initial runtime/layout, not later kernel RAM
+integrity. A verified real-mode, unpaged, single-CPU context is required;
+active global/task-private layers, input ownership/schedules, clock budgets
+and clock sync refuse this initial route. Other workspace/debugging operations
+retain their existing contracts.
+
+The physical copy survives rewind independently. Loading an earlier checkpoint
+restores its historical guest membership; it neither deletes the export nor
+silently imports later bytes. Explicit staged import followed by cold launch
+makes an exported copy available to a new guest branch. New staged imports and
+authored creates default to the valid DOS epoch date, 1980-01-01; existing
+generation metadata is retained.
+
+All workspace exports now stage bytes in a private same-directory file, fsync
+and verify them, recheck case/DOS aliases, then publish the final name through
+an exclusive hard link. Partial writes do not expose a final file. This requires
+filesystem hard-link support; there is no in-place publication fallback.
+Exact-name races cannot overwrite another file; case/alias checks retain a
+filesystem-dependent concurrent-writer window. A failure after publication
+retains the file and precise available effects on the exception. Do not replay
+an uncertain export. These operations do not implement automatic keep policies
+or general guest-create provenance.
+
 Admission rejects symlinks and special entries rather than silently following
 them. Current host capture is bounded to 512 entries, 16 MiB total file bytes,
 and depth 16, subject also to FAT naming and capacity checks. The default D: FAT image is 32 MiB; the composite disk is bounded to 64 MiB. Unresolvable name mappings, unsupported paths, changes detected during

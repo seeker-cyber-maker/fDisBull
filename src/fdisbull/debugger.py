@@ -1368,7 +1368,8 @@ class DebugWorkspace:
         methods.update({'debug-workspace-status':'workspace_status',
                         'debug-workspace-files':'workspace_files','debug-workspace-read':'workspace_read',
                         'debug-workspace-seal':'workspace_seal','debug-workspace-export':'workspace_export',
-                        'debug-workspace-keep':'workspace_keep','debug-workspace-edit':'workspace_edit'})
+                        'debug-workspace-keep':'workspace_keep','debug-workspace-edit':'workspace_edit',
+                        'debug-workspace-save-output':'workspace_save_output'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',

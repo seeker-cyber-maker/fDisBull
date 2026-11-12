@@ -314,6 +314,7 @@ METHODS = {
     "debug-workspace-export": "Export a coherently admitted sealed file to a new exclusive destination; run,path,new_destination,[generation]",
     "debug-workspace-keep": "Keep a witnessed new sealed output without replacing original files; run,path,new_destination,[generation]",
     "debug-workspace-edit": "Stage a new immutable workspace generation without changing the live VM; run,generation,operation,[path,data_hex,offset,size,destination,expected_sha256,timeout_ms]",
+    "debug-workspace-save-output": "Capture and export caller-attested closed/flushed output from a qualified stopped FreeDOS workspace; run,path,new_destination,closed_and_flushed,[timeout_ms]",
     "freedos-runtime-info": "Verify a selected FreeDOS runtime component; [path], or FDISBULL_FREEDOS_RUNTIME",
     "freedos-runtime-prepare": "Build a new private FreeDOS runtime component from locked inputs; boot_image,kernel_package,freecom_package,output,mtools_dir",
     "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",

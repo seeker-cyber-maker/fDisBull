@@ -27,6 +27,16 @@ def test_json_read_and_edit_hex(tmp_path):
     assert calls==[{'generation':'g','operation':'write','path':'A.DAT','data':b'\x00\xff','expected_sha256':'a'*64}]
 
 
+def test_json_save_output_preserves_explicit_attestation(tmp_path):
+    workspace,calls,path=_workspace(tmp_path)
+    session=workspace.sessions['run']
+    session.workspace_save_output=lambda **kw:(calls.append(kw) or {'provenance':'caller-attested'})
+    params={'run':'run','path':'SAVE.DAT','new_destination':str(tmp_path/'save.dat'),
+            'closed_and_flushed':True,'timeout_ms':4000}
+    assert workspace.invoke('debug-workspace-save-output',str(path),params)=={'provenance':'caller-attested'}
+    assert calls==[{key:value for key,value in params.items() if key!='run'}]
+
+
 @pytest.mark.parametrize('options',[{'data_hex':'0'}, {'data_hex':'gg'}, {'data_hex':3}, {'data_hex':'00','data':'00'}])
 def test_json_edit_bad_hex_rejected_before_dispatch(tmp_path,options):
     workspace,calls,path=_workspace(tmp_path)

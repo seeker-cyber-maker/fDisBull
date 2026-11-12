@@ -105,7 +105,7 @@ def _history_operation(function):
                         'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs',
                         'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover',
                         'save_experiment','restore_experiment','compare_experiment',
-                        'workspace_seal','workspace_export','workspace_keep'):
+                        'workspace_seal','workspace_export','workspace_keep','workspace_save_output'):
                     try:
                         self.close()
                     except Exception:

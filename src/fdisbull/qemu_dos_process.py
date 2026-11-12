@@ -354,6 +354,10 @@ class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDelt
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
             self.capabilities['dos_directory_layers'] = bool(workspace_launch is not None)
             self.capabilities['dos_directory_layers_live'] = False
+            from .qemu_workspace_output import qualified_runtime
+            self.capabilities['dos_output_capture'] = bool(workspace_launch is not None
+                and checkpoint_tool is not None and qualified_runtime(workspace_launch['runtime_component'])
+                and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands)
             self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']

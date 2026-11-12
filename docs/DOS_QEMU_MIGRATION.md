@@ -80,6 +80,13 @@ policies and guest-create provenance remain open. Pre-existing host files stay
 protected. An explicit staged import and cold launch can make an exported
 file visible again. Exports use exclusive creation and refuse existing paths.
 
+The bounded `workspace_save_output` Python/JSON path additionally seals a full
+checkpoint and checks stopped global FreeDOS file/buffer state around capture
+before exporting one explicitly caller-attested closed/flushed output. It is
+limited to the qualified runtime/layout and real-mode context; it does not
+prove guest creation or supply an automatic keep policy. See the
+[output-capture contract](DOS_FILE_LAYERS.md#capture-a-caller-attested-output).
+
 File-aware restore must synchronize VM state, directory membership, file
 contents and open handles, with a verified consistent base capture despite
 external host writers. Existing checkpoint artifacts retain their documented

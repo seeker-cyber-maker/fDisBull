@@ -4087,3 +4087,75 @@ earlier evidence remains intact.
 The retained N20 renderer/checkpoint history selection also passed all 14 cases
 with zero failures/errors/skips. Final staged metadata verification passed all
 58 cases again. No Python source or test bytes changed after the integrated run.
+
+## Caller-attested output capture and atomic exports (2026-11-12)
+
+The next file-workspace slice adds Python `workspace_save_output` and JSON
+`debug-workspace-save-output`. It requires literal `closed_and_flushed=True`
+caller attestation, checks a stopped qualified FreeDOS file/buffer boundary,
+seals a complete native checkpoint, validates the selected file in that sealed
+generation and exports it to a new absolute physical destination. The receipt
+binds source/version, process nonce hash and epoch, runtime, checkpoint,
+generation, exact file bytes and the durable export. It records caller-attested
+provenance and guest_create_provenance=false. Strict `workspace_keep` is unchanged.
+
+The observer uses explicitly physical, unwrapped conventional RAM below
+0xA0000. Complete global SFT and DOS buffer lists must show no ordinary open
+files and no dirty buffers in repeated equal observations before and after the
+full checkpoint, with stable CPU/process identity. No guest execution or DOS
+close/flush is injected. Full paths, sharing, locks, coherence and the actual
+flush boundary remain unknown. This is a trusted-runtime observation plus
+caller attestation, not a general guest-create or kernel-integrity proof.
+
+Initial admission is restricted to the boot-witnessed component-04 system image
+and matching minimal runtime/package identities. A verified real-mode,
+unpaged, single-CPU context is required; active global/task-private layers,
+physical/scheduled input or frame-key ownership, clock budgets/sync and caller
+transactions refuse this route. Other existing debugging paths retain their
+contracts. Broader runtime/layout and contextual qualification remains open.
+
+All existing workspace exports now stage bytes in a random same-parent file,
+fsync/readback-verify them, recheck protected/case/DOS aliases and publish with
+an exclusive hard link. No final path is exposed by a partial write. Existing
+destinations are never overwritten. Post-publication or receipt failures retain
+the physical file and precise available effect evidence; no operation is
+automatically replayed. Exact-name link races are exclusive; concurrent
+case/alias behavior and hard-link support remain filesystem-dependent.
+
+The first actual COM output witness exposed a pre-existing cold-import defect:
+staged import/create defaulted to invalid DOS date zero. Both now default to
+1980-01-01. A host cold-disk regression fails for both operations against the
+previous store and passes with the corrected defaults. Existing immutable
+generations and host metadata are not rewritten. The first failing native run
+is retained separately from the corrected COM/MZ passes.
+
+The native witnesses verify binary output export, refusal with open/dirty
+files and without explicit attestation, protected paths and existing
+destinations, checkpoint restore to before the output existed, physical bytes
+surviving rewind, and explicit staged import plus cold launch. They retain
+unknown guest-create provenance and the strict keep refusal. Host failure
+injection covers pre-publication writes, publication races, lost receipts and
+partial-effect reporting after checkpoint creation. Histories, trials,
+task-private RAM/fetch layers, hooks, checkpoints and IRQ support retain their
+broader preservation suites.
+
+The inventory now tracks 135 formally unqualified surfaces and seven open
+campaigns. Automatic keep policies, general guest-create provenance, live
+filesystem reconciliation and broader application/driver parity remain open.
+DOSBox-X stays default and retained. No CI, native rebuild, release/tag, merge
+or installation change is part of this source continuation.
+
+Fresh integrated local verification passed **2,328 cases across 135 files**,
+including all three new actual-QEMU output cases, with zero failures/errors/skips.
+All Python source/test hashes remained unchanged throughout that run. Separate
+focused checks passed 104 host cases, 323 retained DOSBox cases and 59
+runtime/dispatch/payload/skill/migration cases, also without failures/errors/skips.
+Selections overlap. The original native cold-import failure and the two
+baseline-store regression failures are retained with the corrected passes;
+the separate failed baseline test-setup import is labeled as a collection error.
+Private receipts use `output-preservation-final`, `output-native-fixed-02`,
+`output-host-final`, `output-dosbox-final` and `output-metadata-final` prefixes.
+
+The retained N20 history selection passed all 14 cases, and the final staged
+metadata selection passed all 59 cases, with zero failures/errors/skips.
+All 1,170 Python source/test files remained identical to the integrated run.

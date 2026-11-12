@@ -149,3 +149,18 @@ def test_generation_refuses_identical_executables_in_different_working_directori
                           _staging(tmp_path),generation=generation,
                           version_id=project.version()['id'])
     assert list(_staging(tmp_path).iterdir())==[]
+
+
+@pytest.mark.parametrize('operation',['import_file','create_file'])
+def test_default_staged_file_date_can_build_cold_launch_disk(project,tmp_path,operation):
+    root=tmp_path/'root';root.mkdir();(root/'GAME.COM').write_bytes(b'\x90\xc3')
+    initial=_generation(project,root)
+    store=WorkspaceStore(_session(project,'default-file-dates'))
+    child=getattr(store,operation)(initial,'SAVE.DAT',b'\x00\xffsaved')
+    prepared=prepare_workspace(project,root,None,None,None,_boot(tmp_path),
+                               _staging(tmp_path),generation=child['artifact'],
+                               version_id=project.version()['id'])
+    raw=Path(prepared['image']).read_bytes();d=fat.volume_layout(raw)['D']
+    file=fat.parse_volume(raw[d['offset']:d['offset']+d['size']])['SAVE.DAT']
+    assert file['data']==b'\x00\xffsaved'
+    assert file['dos_date'] & 31==1 and (file['dos_date'] >> 5) & 15==1

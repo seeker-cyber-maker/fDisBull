@@ -470,6 +470,27 @@ def restore_workspace(session, record):
     return _status(session._dos_workspace)
 
 
+def _seal_workspace(session, name='qemu-workspace-checkpoint.qcow2'):
+    """Seal under the caller's existing machine lock, deadline and history scope."""
+    result = session.save_state(name, max_bytes=128 * 1024 * 1024)
+    artifact = result.get('artifact') if isinstance(result, dict) else None
+    if not isinstance(artifact, str):
+        raise ValueError('Workspace seal did not receive a full checkpoint artifact')
+    row = session.project.db.execute('SELECT data,sha256,metadata FROM debug_artifacts WHERE id=?',
+                                    (artifact,)).fetchone()
+    if row is None or row['sha256'] != _sha(bytes(row['data'])):
+        session.close()
+        raise ValueError('Workspace checkpoint artifact readback differs')
+    from .qemu_dos_checkpoint import _unarchive, checkpoint_format
+    if json.loads(row['metadata']).get('format') != checkpoint_format(session):
+        raise ValueError('Workspace sealing requires a full native DOS checkpoint')
+    _machine, bundle = _unarchive(bytes(row['data']))
+    record = bundle.get('workspace')
+    if not isinstance(record, dict):
+        raise ValueError('Full checkpoint did not publish a workspace generation')
+    return dict(checkpoint=artifact, workspace=deepcopy(record), status=restore_workspace(session, record))
+
+
 class QemuDOSWorkspaceMixin:
     """Read sealed D: generations; capture them only at full-QEMU checkpoint."""
 
@@ -527,23 +548,14 @@ class QemuDOSWorkspaceMixin:
     @_history_operation
     def workspace_seal(self, name='qemu-workspace-checkpoint.qcow2', *, timeout_ms=60000):
         """Save one complete VM checkpoint; its QCOW2 snapshot creates the generation."""
-        result = self.save_state(name, max_bytes=128 * 1024 * 1024)
-        artifact = result.get('artifact') if isinstance(result, dict) else None
-        if not isinstance(artifact, str):
-            raise ValueError('Workspace seal did not receive a full checkpoint artifact')
-        row = self.project.db.execute('SELECT data,sha256,metadata FROM debug_artifacts WHERE id=?',
-                                      (artifact,)).fetchone()
-        if row is None or row['sha256'] != _sha(bytes(row['data'])):
-            self.close()
-            raise ValueError('Workspace checkpoint artifact readback differs')
-        from .qemu_dos_checkpoint import _unarchive, checkpoint_format
-        if json.loads(row['metadata']).get('format') != checkpoint_format(self):
-            raise ValueError('Workspace sealing requires a full native DOS checkpoint')
-        _machine, bundle = _unarchive(bytes(row['data']))
-        record = bundle.get('workspace')
-        if not isinstance(record, dict):
-            raise ValueError('Full checkpoint did not publish a workspace generation')
-        return dict(checkpoint=artifact, workspace=deepcopy(record), status=restore_workspace(self, record))
+        return _seal_workspace(self, name)
+
+    @_history_operation
+    def workspace_save_output(self, path, new_destination, *, closed_and_flushed=False,
+                              timeout_ms=60000):
+        """Capture and export an explicitly attested closed/flushed guest output."""
+        from .qemu_workspace_output import save_output
+        return save_output(self, path, new_destination, closed_and_flushed=closed_and_flushed)
 
     @_history_operation
     def workspace_export(self, path, new_destination, generation=None, *, timeout_ms=60000):

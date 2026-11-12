@@ -368,7 +368,7 @@ class WorkspaceStore:
         return dict(base=root,generation=generation,base_entries=[summary(x) for x in original['entries']],
                     effective=[summary(x) for x in current['entries']],difference=changes)
 
-    def import_file(self,generation,dos_path,data, *, path=None,attributes=0x20,dos_date=0,dos_time=0):
+    def import_file(self,generation,dos_path,data, *, path=None,attributes=0x20,dos_date=0x0021,dos_time=0):
         if not isinstance(data,bytes): raise ValueError('Imported workspace data must be bytes')
         current=self.load(generation); entries=current['entries']
         if any(item['dos_path']==dos_path for item in entries): raise ValueError('Workspace import collides with an existing path')
@@ -427,7 +427,7 @@ class WorkspaceStore:
         result['capture_consistency']=captured['consistency']
         return result
 
-    def create_file(self,generation,dos_path,data, *, path=None,attributes=0x20,dos_date=0,dos_time=0):
+    def create_file(self,generation,dos_path,data, *, path=None,attributes=0x20,dos_date=0x0021,dos_time=0):
         """Apply an explicitly witnessed create to a new private generation.
 
         Call only for a verified create operation; a directory diff alone cannot
@@ -526,17 +526,40 @@ class WorkspaceStore:
         parent=target.parent
         parent_fd=os.open('/',os.O_RDONLY|os.O_DIRECTORY)
         fd=None
+        temporary_name=None
+        durable=False
         try:
             for component in parent.parts[1:]:
                 next_fd=os.open(component,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent_fd)
                 os.close(parent_fd);parent_fd=next_fd
-            names=os.listdir(parent_fd)
-            aliases=_aliases(names)
-            if any(name.casefold()==target.name.casefold() for name in names):
-                raise FileExistsError('Workspace export destination already exists')
+
             requested=_aliases([target.name])[target.name]
-            if requested in aliases.values(): raise FileExistsError('Workspace export DOS alias collides')
-            fd=os.open(target.name,os.O_CREAT|os.O_EXCL|os.O_RDWR|os.O_NOFOLLOW,0o600,dir_fd=parent_fd)
+            def check_destination_free(exclude_temporary=False):
+                names=os.listdir(parent_fd)
+                if exclude_temporary and temporary_name is not None:
+                    names=[name for name in names if name!=temporary_name]
+                aliases=_aliases(names)
+                if any(name.casefold()==target.name.casefold() for name in names):
+                    raise FileExistsError('Workspace export destination already exists')
+                if requested in aliases.values():
+                    raise FileExistsError('Workspace export DOS alias collides')
+
+            check_destination_free()
+            temporary_name='.fdisbull-export-'+uuid.uuid4().hex+'.tmp'
+            fd=os.open(temporary_name,os.O_CREAT|os.O_EXCL|os.O_RDWR|os.O_NOFOLLOW,
+                       0o600,dir_fd=parent_fd)
+            staged_stat=os.fstat(fd)
+
+            def is_staged_inode(name):
+                try:
+                    named_stat=os.stat(name,dir_fd=parent_fd,follow_symlinks=False)
+                except FileNotFoundError:
+                    return False
+                opened_stat=os.fstat(fd)
+                return (stat.S_ISREG(named_stat.st_mode)
+                        and (named_stat.st_dev,named_stat.st_ino)==(staged_stat.st_dev,staged_stat.st_ino)
+                        and (opened_stat.st_dev,opened_stat.st_ino)==(staged_stat.st_dev,staged_stat.st_ino))
+
             data=entry['data'];offset=0
             while offset<len(data):
                 written=os.write(fd,data[offset:])
@@ -550,7 +573,22 @@ class WorkspaceStore:
                 check.extend(part)
             if len(check)!=len(data) or _hash(check)!=entry['sha256']:
                 raise OSError('Workspace export readback differs')
+
+            # Recheck DOS aliases after staging. The final hard-link itself is
+            # exclusive against an exact-name race; external case/alias races
+            # between this scan and link remain filesystem-dependent.
+            check_destination_free(exclude_temporary=True)
+            if not is_staged_inode(temporary_name):
+                raise OSError('Workspace export staging file changed before publication')
+            os.link(temporary_name,target.name,src_dir_fd=parent_fd,
+                    dst_dir_fd=parent_fd,follow_symlinks=False)
+            if not is_staged_inode(target.name):
+                raise OSError('Workspace export final link differs from the verified staging file')
+            if is_staged_inode(temporary_name):
+                os.unlink(temporary_name,dir_fd=parent_fd)
+            temporary_name=None
             os.fsync(parent_fd)
+            durable=True
             evidence=dict(format=FORMAT,generation=generation,dos_path=dos_path,
                 destination=str(target),size=len(data),sha256=entry['sha256'],durable=True)
             encoded=_json(evidence)
@@ -562,13 +600,26 @@ class WorkspaceStore:
                                   publication='uncertain; do not replay')
                 raise
             if receipt.get('sha256')!=_hash(encoded):
-                raise ValueError('Workspace export receipt differs from its persisted bytes')
+                error=ValueError('Workspace export receipt differs from its persisted bytes')
+                error.result=dict(**deepcopy(evidence),receipt_persisted=True,
+                                  publication='uncertain; do not replay')
+                raise error
             return dict(**evidence,artifact=receipt['artifact'])
         except BaseException as error:
             if fd is not None and getattr(error,'result',None) is None:
                 error.result=dict(format=FORMAT,generation=generation,dos_path=dos_path,
-                                  destination=str(target),durable=False,publication='uncertain; do not replay')
+                                  destination=str(target),durable=bool(durable),
+                                  publication='uncertain; do not replay')
             raise
         finally:
+            if temporary_name is not None:
+                try:
+                    named_stat=os.stat(temporary_name,dir_fd=parent_fd,follow_symlinks=False)
+                    opened_stat=os.fstat(fd) if fd is not None else None
+                    if (opened_stat is not None and stat.S_ISREG(named_stat.st_mode)
+                            and (named_stat.st_dev,named_stat.st_ino)==(opened_stat.st_dev,opened_stat.st_ino)):
+                        os.unlink(temporary_name,dir_fd=parent_fd)
+                except FileNotFoundError:
+                    pass
             if fd is not None: os.close(fd)
             os.close(parent_fd)

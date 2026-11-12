@@ -1682,7 +1682,8 @@
       "tests": [
         "tests/test_qemu_workspace.py",
         "tests/test_qemu_workspace_edits.py",
-        "tests/test_qemu_dos_workspace_native.py"
+        "tests/test_qemu_dos_workspace_native.py",
+        "tests/test_dos_workspace_export_atomic.py"
       ]
     },
     {
@@ -1710,6 +1711,19 @@
         "tests/test_qemu_workspace_edits.py",
         "tests/test_qemu_dos_workspace_native.py",
         "tests/test_qemu_workspace_refresh_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-save-output",
+      "slice": "layers-hooks",
+      "surface": "Native-only caller-attested closed/flushed output capture and exclusive export",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_save_output; qualified minimal runtime, stopped physical RAM guards and full checkpoint; guest-create provenance remains unknown",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace_output.py",
+        "tests/test_qemu_workspace_output_native.py",
+        "tests/test_dos_workspace_export_atomic.py"
       ]
     }
   ],
