@@ -20,7 +20,7 @@ const canonical=x=>JSON.stringify(clean(x));
 function composeFunctionEquivalence(options={}) {
   try {
     const {templateSource,targetSource,babelRoot,functionNames,seedName,heapName,heapStepName,
-      cryptoBindingName,cipherName,globalMap,guardProofs,contractionLedger,noninterferenceProof,heapProof}=options;
+      cryptoBindingName,cipherName,globalMap,guardProofs,contractionLedger,noninterferenceProof,heapProof,seedProof}=options;
     if(typeof templateSource!=='string'||templateSource.length>65536||typeof targetSource!=='string'||targetSource.length>2*1024*1024
         ||typeof babelRoot!=='string'||!ROLES.every(r=>typeof functionNames?.[r]==='string')
         ||new Set(Object.values(functionNames)).size!==4||!Array.isArray(guardProofs)||!Array.isArray(contractionLedger))fail('invalid_composition_input');
@@ -82,6 +82,8 @@ function composeFunctionEquivalence(options={}) {
         ||test.right.left.arguments[0].type!=='NumericLiteral'||test.right.left.arguments[0].value!==0||test.right.right.type!=='NumericLiteral')fail('seed_invariant_shape');
     const corpusName=test.left.left.argument.name;
     if(!bindings[corpusName]||bindings[corpusName].constantViolations.length)fail('mutable_corpus_dependency');
+    const checkedSeed=require('./bla_seed_invariant.cjs').proveSeedInvariant({source:targetSource,babelRoot,seedName});
+    if(seedProof!==undefined&&canonical(seedProof)!==canonical(checkedSeed))fail('seed_evidence_mismatch');
     const reserved=new Set([...Object.values(map),seedName,'Math','String','Buffer']);
     for(const ast of [target,template])traverse(ast,{Identifier(p){if(/^__v\d+$/.test(p.node.name))fail('canonical_local_collision');}});
     program.traverse({ReferencedIdentifier(p){
@@ -213,7 +215,7 @@ function composeFunctionEquivalence(options={}) {
               ||expression(test.right.object)!=='buffer')fail('decoder_loop_contract');
           env.set(d.id.name,'number');statements(n.body.body,true);env.delete(d.id.name);
           decoderLoops.push({function:fn.id.name,source:'reference_template',source_offsets:[n.start,n.end],ranking_function:'buffer.length - counter',
-            counter_start:0,decrease:1,bound:'Finite immutable safe-integer length of a related fresh Buffer',
+            counter_start:0,decrease:1,bound:'Finite safe-integer logical Buffer length, stable under admitted operations',
             body_effects:'Only numeric indexed Buffer writes; no counter, reference or length reassignment'});
         }else if(n.type==='ExpressionStatement'&&n.expression.type==='AssignmentExpression'){
           const a=n.expression;if(!inLoop||a.operator!=='='||a.left.type!=='MemberExpression'||!a.left.computed||expression(a.left.object)!=='buffer'||!isNum(expression(a.left.property))||!isNum(expression(a.right)))fail('external_or_untyped_write');
@@ -238,25 +240,31 @@ function composeFunctionEquivalence(options={}) {
       source:{template_sha256:sha(templateSource),target_sha256:sha(targetSource)},
       noninterference_certificate_sha256:ni.certificate_sha256,guard_ledger_sha256:sha(canonical(proofs)),contraction_ledger_sha256:sha(canonical(ledger)),
       checked_reductions:{opaque_guards:proofs.length,private_stuttering_calls:removed},
-      seed_invariant:{immutable:true,low_two_bits:1,rule:'Initialization masks low two bits clear and ORs 1 when the intact-corpus commitment predicate holds',
-        condition:'Source corpus callback at initialization returns its embedded expected digest',source:'target',source_offsets:[init.start,init.end]},
+      seed_invariant:{immutable:true,low_two_bits:1,rule:'Initialization masks low two bits clear and ORs the literal-corpus commitment bit',
+        condition:checkedSeed.status==='proved'?'Literal corpus commitment and all admitted clock branches proved from source':'Source corpus callback at initialization returns its embedded expected digest',
+        intact_corpus_condition_discharged:checkedSeed.status==='proved',
+        proof_certificate_sha256:checkedSeed.status==='proved'?checkedSeed.certificate_sha256:null,
+        source:'target',source_offsets:[init.start,init.end]},
+      seed_invariant_proof:checkedSeed,
       functions:functionResults,constants:constantResults,call_graph:callGraph,composition_order:order,leaf_sites:leafSites,decoder_loops:decoderLoops,
       rules:['Pure total guard/literal rewrite preserves low transition','Total private step is silent and low-state framing; discarded result permits stuttering erasure',
-        'Identical typed JS ASTs preserve related primitive/local values and fresh heap graphs',
+        'Identical typed JS ASTs preserve related primitive/local values, hash typestates and logical Buffer byte views',
         'Coupled typed external calls preserve related provider state on normal return and on matching throw, with related values/bytes or equal exception name/message',
         'Acyclic callee contracts substitute into caller bodies, including matching exception propagation',
         'Related public/provider state and preserved private invariants support induction over finite admitted call sequences, including calls after a caught exception'],
       observations:['Return primitive value','Exception name and message','Ordered admitted provider operations and primitive/byte arguments',
-        'Related reachable public ordinary data and fresh Buffer/hash typestate'],
+        'Related reachable public ordinary data, hash typestate and logical Buffer byte views'],
       input_domains:{sha256Hex:'ECMAScript primitive values, including undefined/null/boolean/number/bigint/symbol/string',
         tryUnlock:'Any input value; nonstrings return null through the checked type gate before coercion or provider calls',deriveFlagMask:'string',decodeFlagCipher:'string'},
       leaf_contract:{provider:'Coupled total synchronous SHA-256 and Buffer providers on related receiver typestates and identical primitive/byte arguments',
-        outcomes:'Provider states remain related on both normal return and matching throw; results are related fresh Buffer/hash graphs and equal primitives, or equal exception name/message; hash.digest() yields 32 bytes and digest(hex) 64 characters; Buffer lengths are finite immutable safe integers',
-        preservation:'No callbacks/reentry, stack/source/name/caller inspection, private-state access, public-data mutation or intrinsic/prototype mutation'},
+        outcomes:'Provider states remain related on both normal return and matching throw; results are related new hash objects, nonoverlapping logical Buffer byte views and equal primitives, or equal exception name/message; hash.digest() yields 32 bytes and digest(hex) 64 characters; logical Buffer lengths are finite safe integers stable under admitted operations',
+        preservation:'No callbacks/reentry, stack/source/name/caller inspection, private-state access, public-data mutation or intrinsic/prototype mutation',
+        excluded_observers:'Buffer backing ArrayBuffer identity, byteOffset/allocator state, outside-view bytes, metadata mutation/detachment and concurrent backing-store observers'},
       public_state_contract:'Matching ordinary writable own-data constants; exported LICENSE_RPC string properties remain related string data properties across admitted calls',
-      remaining_conditions:['Intact corpus commitment at initialization and immutable selected dependency bindings','Stable standard Math.imul, String and object/array/Buffer semantics',
+      remaining_conditions:[checkedSeed.status==='proved'?'Immutable selected dependency bindings; literal-corpus seed invariant discharged by source proof':'Intact corpus commitment at initialization and immutable selected dependency bindings',
+        'Stable standard Math.imul, String, Array.isArray, Number/BigInt and object/array/Buffer semantics; ordinary normal clock interfaces during initialization',
         'Primitive sha256Hex inputs; no hostile coercion callbacks','Coupled total synchronous typed provider contract and related ordinary public data',
-        'No source/name/reflection, exception-stack, timing/resource or concurrent observer'],
+        'No source/name/reflection, exception-stack, timing/resource, backing-store/allocator or concurrent observer'],
       claim:'Whole selected function observation equivalence for all admitted inputs and related entry states; not unrestricted JS contextual or whole-module equivalence',
       full_state_equivalence:false,finite_runtime_checks_are_not_proof:true};
     result.certificate_sha256=sha(canonical(result));return result;

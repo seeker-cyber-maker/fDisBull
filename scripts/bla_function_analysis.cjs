@@ -5,6 +5,7 @@ const path = require('node:path');
 const {proveShadowHeap} = require('./bla_shadow_heap_proof.cjs');
 const {proveHeapNoninterference} = require('./bla_heap_noninterference.cjs');
 const {composeFunctionEquivalence} = require('./bla_function_equivalence.cjs');
+const {proveSeedInvariant} = require('./bla_seed_invariant.cjs');
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const UNKNOWN = Symbol('unknown');
@@ -49,6 +50,7 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
   }});
   if (!Number.isInteger(expectedCorpusDigest) || expectedCorpusDigest < 0 || expectedCorpusDigest > 0xffffffff) throw new Error('Expected corpus commitment missing');
   if (bindings[seedName].constantViolations.length || ['Math','String','Buffer'].some(name => bindings[name])) throw new Error('Mutable seed or shadowed intrinsic binding');
+  const seedInvariantProof = proveSeedInvariant({source:targetSource,babelRoot,seedName});
   program.traverse({ReferencedIdentifier(p) {
     if ((p.node.name === seedName && p.scope.getBinding(seedName) !== bindings[seedName])
         || (p.node.name === 'Math' && p.scope.getBinding('Math'))) throw new Error('Opaque predicate binding identity is ambiguous');
@@ -328,7 +330,7 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
   const matched = functionResults.every(fn => fn.equal) && constantResults.every(value => value.equal);
   const wholeFunctionEquivalence = composeFunctionEquivalence({templateSource,targetSource,babelRoot,
     functionNames,seedName,heapName,heapStepName,cryptoBindingName,cipherName,globalMap,
-    guardProofs:opaqueProofs,contractionLedger:ledger,noninterferenceProof:heapNoninterference,heapProof:shadowHeapProof});
+    guardProofs:opaqueProofs,contractionLedger:ledger,noninterferenceProof:heapNoninterference,heapProof:shadowHeapProof,seedProof:seedInvariantProof});
   return {report:{format:'fdisbull-bla-function-static-1',status:matched?'structural_correspondence_under_assumptions':'different',
     sources:{template_sha256:hash(templateSource),target_sha256:hash(targetSource)},function_results:functionResults,
     constant_results:constantResults,
@@ -342,14 +344,16 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
         'Source-pinned mutator preserves the ordinary numeric heap shape; no getters/proxies/prototype mutation or concurrent observer',
       discharged_obligations:shadowHeapProof.status === 'proved' ? ['shadow_heap_shape_preservation','shadow_heap_termination'] : [],
       full_state_equivalence:false,observer_relation:'Private heap is retained and may differ; no aliases or permitted observers.'},
-    assumptions:['seed & 3 == 1 (intact corpus)','standard unmodified intrinsics/prototypes',
+    assumptions:[...(seedInvariantProof.status === 'proved' ? [] : ['seed & 3 == 1 (intact corpus)']),
+      'standard unmodified intrinsics/prototypes',
       shadowHeapProof.status === 'proved' ? 'ordinary writable private data objects; no proxies, getters or external aliases' :
         'normal initialized private heap with no proxies, getters or external aliases','no timing/resource observer',
       'primitive sha256Hex inputs; controlled synchronous crypto provider','matching materialized constants'],
     whole_function_equivalence:wholeFunctionEquivalence,
+    seed_invariant_proof:seedInvariantProof,
     scope:'Complete selected function call closure; composed equivalence is a separate certificate under its observer/call contract; no whole-module equivalence'},
     runtime:{materializedCleanSource,seedName,heapName,corpusName,expectedCorpusDigest,cipherName,heapStepName,cryptoBindingName,shadowHeapProof,
-      functionNames,heapNoninterference,wholeFunctionEquivalence,staticQualified:matched}};
+      functionNames,heapNoninterference,wholeFunctionEquivalence,seedInvariantProof,staticQualified:matched}};
 }
 
 module.exports = {analyze};

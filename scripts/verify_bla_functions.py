@@ -64,6 +64,9 @@ def campaign(root, babel_root):
     heap_prover = scripts / 'bla_shadow_heap_proof.cjs'
     noninterference_prover = scripts / 'bla_heap_noninterference.cjs'
     composer = scripts / 'bla_function_equivalence.cjs'
+    seed_prover = scripts / 'bla_seed_invariant.cjs'
+    provider_validator = scripts / 'bla_provider_validation.cjs'
+    native_probe = scripts / 'bla_native_functions.cjs'
     config = {'root': str(root), 'babelRoot': str(babel_root),
               'template': {'path': PINS['template'][0], 'sha256': PINS['template'][1]},
               'targets': [{'tier': name, 'path': PINS[name][0], 'sha256': PINS[name][1]}
@@ -80,11 +83,19 @@ def campaign(root, babel_root):
     if (not isinstance(observation, dict) or not isinstance(observation.get('tiers'), list)
             or [item.get('tier') for item in observation['tiers']] != ['L1', 'L2', 'L3']):
         raise ValueError('Driver returned incomplete target coverage')
+    provider = observation.get('provider_validation', {})
+    if (provider.get('status') != 'verified_finite_conformance'
+            or type(provider.get('cases')) is not int or provider['cases'] < 1
+            or not provider.get('receipt_sha256')
+            or provider.get('runtime', {}).get('node') != observation.get('node')):
+        raise ValueError('Real crypto/Buffer implementation validation is missing')
     for item in observation['tiers']:
         mutation = item.get('static', {}).get('mutation_summary', {})
         proof = mutation.get('proof', {})
         noninterference = mutation.get('noninterference', {})
         whole = item.get('static', {}).get('whole_function_equivalence', {})
+        seed = item.get('static', {}).get('seed_invariant_proof', {})
+        native = item.get('native_exports', {})
         if (item.get('source_sha256') != PINS[item['tier']][1]
                 or item.get('caller_observations_equal') is not True
                 or item.get('private_heap_effects_equal_to_clean') is not False
@@ -116,6 +127,26 @@ def campaign(root, babel_root):
                 or [function.get('role') for function in whole.get('functions', [])] != [
                     'sha256Hex', 'deriveFlagMask', 'decodeFlagCipher', 'tryUnlock']):
             raise ValueError('Noninterference and whole-function contracts were not composed for the pinned sources')
+        if (seed.get('status') != 'proved' or seed.get('source', {}).get('sha256') != PINS[item['tier']][1]
+                or seed.get('source', {}).get('ast_identity_verified') is not True
+                or seed.get('digest', {}).get('matches') is not True
+                or seed.get('digest', {}).get('evaluated_value') != seed.get('digest', {}).get('expected_value')
+                or seed.get('seed', {}).get('low_two_bits') != 1
+                or seed.get('seed', {}).get('intact_corpus_condition_discharged') is not True
+                or not seed.get('certificate_sha256')
+                or whole.get('seed_invariant', {}).get('proof_certificate_sha256') != seed['certificate_sha256']
+                or whole.get('seed_invariant', {}).get('intact_corpus_condition_discharged') is not True):
+            raise ValueError('Intact-corpus seed invariant was not proved and composed for the pinned source')
+        if (native.get('status') != 'verified_native_wrapper_and_reference_agreement'
+                or native.get('source_sha256') != PINS[item['tier']][1]
+                or native.get('cases') != 34 or len(native.get('rows', [])) != 34
+                or native.get('provider_substitutions') is not False or native.get('target_observer_suffix') is not False
+                or native.get('provider_validation_sha256') != provider['receipt_sha256']
+                or any(native.get('runtime', {}).get(key) != provider['runtime'].get(key)
+                       for key in ('node', 'openssl', 'fips', 'executable_sha256'))
+                or any(row.get('native_wrapper_equal') is not True or row.get('clean_reference_equal') is not True
+                       for row in native['rows'])):
+            raise ValueError('Native CJS exports were not qualified against the tested real providers')
     analyzer_packages = {}
     for name in ('parser', 'traverse', 'generator'):
         package = babel_root / '@babel' / name
@@ -129,8 +160,10 @@ def campaign(root, babel_root):
                          'files': {name: {'path': PINS[name][0], 'bytes': len(raw), 'sha256': digest(raw)}
                                    for name, raw in files.items()}},
               'tool_sha256': {path.name: digest(path.read_bytes()) for path in
-                              (Path(__file__), driver, analyzer, heap_prover, noninterference_prover, composer)},
-              'runtime_limits': {'node_old_space_mib': 256, 'subprocess_timeout_seconds': 60},
+                              (Path(__file__), driver, analyzer, heap_prover, noninterference_prover, composer,
+                               seed_prover, provider_validator, native_probe)},
+              'runtime_limits': {'node_old_space_mib': 256, 'subprocess_timeout_seconds': 60,
+                                 'native_child_old_space_mib': 256, 'native_child_timeout_seconds': 10},
               'analyzer_packages': analyzer_packages,
               'observations': observation,
               'claim_ceiling': 'Whole-function observational equivalence proved under explicit heap/guard/call contracts; unrestricted JavaScript contextual equivalence unproved',
@@ -139,10 +172,14 @@ def campaign(root, babel_root):
                   'basis': 'Source-checked inductive numeric-heap invariant, loop ranking and two-run public-state frame',
                   'scope': 'Admitted ordinary private heap and numeric deltas under standard JavaScript intrinsics'},
               'full_state_equivalence': False,
+              'seed_invariant': 'Source-proved for all three intact literal corpora and every admitted normal clock branch',
+              'provider_qualification': 'Finite real-implementation conformance plus unwrapped native CJS export observations; no universal native-code proof',
               'limitations': [
                   'Hardened functions mutate private shadow heaps absent from the clean reference.',
                   'Heap preservation and termination are proved within the admitted source/model; ordinary writable unaliased objects and stable intrinsics/prototypes remain boundary conditions.',
                   'Function source/name introspection, Error stacks, timing, resource exhaustion and hostile callbacks are excluded.',
+                  'Buffer observations are confined to logical byte views; backing-store/allocator observers and metadata mutation are excluded.',
+                  'Native provider fingerprints and finite conformance do not establish universal implementation correctness or totality.',
                   'Controlled crypto-return scenarios are call-contract tests, not actual valid-key acceptance.',
                   'The clean template is materialized from commitment-checked target constants; it is not an independently built original.',
                   'The whole-function proof is relative to its stated observer/provider contract; finite runtime crosschecks remain separate.']}

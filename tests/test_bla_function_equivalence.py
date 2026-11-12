@@ -72,7 +72,7 @@ try {
   globalMap:{sha256Hex:'sha256Hex',deriveFlagMask:'deriveFlagMask',decodeFlagCipher:'decodeFlagCipher',tryUnlock:'tryUnlock',
     createHash:'createHash',SCOPE:'SCOPE',KEY_SHA256:'KEY_SHA256',FLAG_SHA256:'FLAG_SHA256',FLAG_CIPHER_HEX:'FLAG_CIPHER_HEX',LICENSE_RPC:'LICENSE_RPC'},
   guardProofs:a.report.guard_reductions,contractionLedger:a.report.contraction_ledger,
-  heapProof:r.shadowHeapProof,noninterferenceProof:r.heapNoninterference};
+  heapProof:r.shadowHeapProof,noninterferenceProof:r.heapNoninterference,seedProof:r.seedInvariantProof};
  if(input.mode==='missing_ni')delete options.noninterferenceProof;
  if(input.mode==='forged_ni')options.noninterferenceProof={status:'proved'};
  if(input.mode==='missing_step')options.contractionLedger=options.contractionLedger.filter(x=>x.kind!=='private_heap_step');
@@ -81,6 +81,7 @@ try {
  if(input.mode==='stale_source')options.targetSource+='\n// changed source receipt\n';
  if(input.mode==='role_mapping')options.globalMap.KEY_SHA256='SCOPE';
  if(input.mode==='stale_heap')options.heapProof={...options.heapProof,status:'unknown'};
+ if(input.mode==='forged_seed')options.seedProof={status:'proved'};
  console.log(JSON.stringify(composeFunctionEquivalence(options)));
 }catch(error){console.log(JSON.stringify({status:'unknown',reason:'source_rejected_before_composition'}));}
 '''
@@ -109,6 +110,7 @@ def test_source_replay_composes_all_four_function_contracts(compose):
     assert 'nonstrings return null' in c['input_domains']['tryUnlock']
     assert 'Coupled total synchronous' in c['leaf_contract']['provider']
     assert 'LICENSE_RPC' in c['public_state_contract']
+    assert 'backing ArrayBuffer' in c['leaf_contract']['excluded_observers']
     serialized=json.dumps(c)
     assert 'authored-key-commitment' not in serialized and 'authored-output-commitment' not in serialized
     assert 'function sha256Hex' not in serialized
@@ -122,7 +124,7 @@ def test_pure_guard_and_literal_replay_is_bound_to_the_real_source_site(compose)
     assert c['checked_reductions']=={'opaque_guards':1,'private_stuttering_calls':4}
 
 
-@pytest.mark.parametrize('mode',['missing_ni','forged_ni','missing_step','extra_step','guard_evidence','stale_source','role_mapping','stale_heap'])
+@pytest.mark.parametrize('mode',['missing_ni','forged_ni','missing_step','extra_step','guard_evidence','stale_source','role_mapping','stale_heap','forged_seed'])
 def test_missing_stale_or_mismatched_evidence_cannot_compose(compose,mode):
     c=compose(mode=mode)
     assert c['status']=='unknown' and 'certificate_sha256' not in c

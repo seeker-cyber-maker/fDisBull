@@ -10,6 +10,8 @@ const vm = require('node:vm');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 const {analyze} = require('./bla_function_analysis.cjs');
+const {validateProviders} = require('./bla_provider_validation.cjs');
+const {probeNativeFunctions,INPUTS:NATIVE_INPUTS} = require('./bla_native_functions.cjs');
 
 const sha = x => crypto.createHash('sha256').update(x).digest('hex');
 const stable = x => JSON.stringify(x);
@@ -368,6 +370,27 @@ function crosscheckFunctionNoninterference(source, runtime, seedBase, commitment
     limitation:'Finite original-code observations; the universal two-run and composition claims are separate source certificates'};
 }
 
+function crosscheckNativeExports(source,runtime,filename,seedBase,commitment,providerValidation) {
+  const native=probeNativeFunctions({source,filename});
+  for (const field of ['node','openssl','fips','executable_sha256'])
+    if (native.runtime[field]!==providerValidation.runtime[field]) throw Error('Native provider runtime identity mismatch');
+  const observed=makeRealm(source,runtime,seedBase,commitment);
+  const reference=makeRealm(runtime.materializedCleanSource,null,seedBase,commitment);
+  const inputs=new Map(NATIVE_INPUTS),rows=[];
+  for (const row of native.rows) {
+    const expression=inputs.get(row.input_class);
+    if (expression===undefined) throw Error('Unknown native observation input');
+    const actual=observed.call(row.function,expression),clean=reference.call(row.function,expression);
+    equal(actual.result,clean.result,'native/clean-reference');
+    if (hash(actual.result)!==row.result_sha256) throw Error('Native loader/wrapper observation mismatch');
+    rows.push({...row,native_wrapper_equal:true,clean_reference_equal:true});
+  }
+  return {...native,status:'verified_native_wrapper_and_reference_agreement',
+    provider_validation_sha256:providerValidation.receipt_sha256,
+    rows,rows_sha256:hash(rows),
+    observation:'Unwrapped native CJS return/throw digests agree with the instrumented VM and materialized clean reference; native call trace is not intercepted'};
+}
+
 function run(config) {
   if (!config || !Array.isArray(config.targets) || config.targets.length < 1 || config.targets.length > 3 ||
       !/^[0-9a-f]{64}$/.test(config.commitment?.keySha256 || '') ||
@@ -376,6 +399,8 @@ function run(config) {
   const seeds = config.seedBases || [0, 4660];
   if (!Array.isArray(seeds) || !seeds.length || seeds.length > 4 || seeds.some(s => !Number.isSafeInteger(s) || s < 0 || s > 0x7ffff))
     throw Error('Invalid deterministic seed bases');
+  const providerValidation=validateProviders();
+  if (providerValidation.status!=='verified_finite_conformance') throw Error('Real provider validation failed');
   const tiers = [];
   for (const target of config.targets) {
     const source = load(config.root, target);
@@ -385,6 +410,11 @@ function run(config) {
     if (analysis.runtime.heapNoninterference?.status !== 'proved' ||
         analysis.runtime.wholeFunctionEquivalence?.status !== 'equivalent_under_contract')
       throw Error('Composed whole-function proof not qualified');
+    if (analysis.runtime.seedInvariantProof?.status!=='proved' ||
+        analysis.runtime.wholeFunctionEquivalence.seed_invariant?.intact_corpus_condition_discharged!==true)
+      throw Error('Source-bound seed invariant not qualified');
+    const nativeExports=crosscheckNativeExports(source,analysis.runtime,path.resolve(config.root,target.path),
+      seeds[0],config.commitment,providerValidation);
     const heapBoundary = crosscheckShadowHeap(source, analysis.runtime, seeds[0], config.commitment);
     const noninterferenceBoundary = crosscheckFunctionNoninterference(source, analysis.runtime, seeds[0], config.commitment);
     const rows = [];
@@ -468,12 +498,13 @@ function run(config) {
                 guard_evidence: seedEvidence,
                 shadow_heap_boundary: heapBoundary,
                 noninterference_boundary: noninterferenceBoundary,
+                native_exports:nativeExports,
                 assumption_breakers: breakers,
                 actual_crypto_cases: rows.filter(r => r.profile === 'actual_crypto').length,
                 modeled_call_cases: rows.filter(r => r.profile === 'modeled_crypto_call_contract').length,
                 caller_observations_equal: true, private_heap_effects_equal_to_clean: false,
                 rows, rows_sha256: hash(rows),
-                assumptions: ['CommonJS module boundary; CLI not invoked', 'Standard intrinsics and intact source corpus',
+                assumptions: ['CommonJS module boundary; CLI not invoked', 'Standard intrinsics and ordinary successful initialization',
                   'Private shadow heap excluded from caller-visible state; entry/exit snapshots retained',
                   'Allowlisted node:crypto and Buffer call contract; deterministic process seed'],
                 limitations: ['Finite differential checks are not an all-input runtime proof',
@@ -485,12 +516,13 @@ function run(config) {
                   'Module-load global properties and timing are outside exported-function observation']});
   }
   return {format: 'fdisbull-bla-function-campaign-1', status: 'verified_finite_function_observations', node: process.version,
+          provider_validation:providerValidation,
           tiers, total_actual_crypto_cases: tiers.reduce((n,t)=>n+t.actual_crypto_cases,0),
           total_modeled_call_cases: tiers.reduce((n,t)=>n+t.modeled_call_cases,0),
           full_state_equivalence: false, whole_program_equivalence: null};
 }
 
-module.exports = {run, makeRealm, sanitizedCall, referenceShadowHeapStep, crosscheckShadowHeap, crosscheckFunctionNoninterference};
+module.exports = {run, makeRealm, sanitizedCall, referenceShadowHeapStep, crosscheckShadowHeap, crosscheckFunctionNoninterference,crosscheckNativeExports};
 if (require.main === module) {
   try {
     const input = fs.readFileSync(0, 'utf8');

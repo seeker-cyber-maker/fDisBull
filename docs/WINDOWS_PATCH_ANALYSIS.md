@@ -401,14 +401,17 @@ explicit leaf-call contracts.
 
 The input domain is all ECMAScript primitives for `sha256Hex`. `tryUnlock`
 accepts any value; its checked type gate rejects nonstrings before coercion or
-provider calls. Helper inputs are strings. The seed must retain its proved
-low-bit invariant under the intact-corpus condition. Public constants and the
+provider calls. Helper inputs are strings. The literal-corpus seed condition
+is discharged by the source proof below. Public constants and the
 exported `LICENSE_RPC` object must remain related ordinary data. The SHA-256 and
 Buffer providers must be coupled total synchronous providers: equal admitted
-operations on related receivers/arguments return related fresh objects/bytes
+operations on related receivers/arguments return related hash objects and
+nonoverlapping logical Buffer byte views
 and equal primitives, or throw matching exception names/messages. They cannot
 reenter the functions, inspect private/source/caller state or mutate the
-intrinsics or public data. Stable standard String/object/array semantics and
+intrinsics or public data. Buffer backing-store identity, allocator state,
+outside-view bytes and metadata mutation are excluded. Logical lengths remain
+stable under the admitted operations. Stable standard String/object/array semantics and
 the earlier observer exclusions remain part of the contract. Provider totality
 is a leaf contract; it is not inferred from private-heap termination.
 
@@ -422,6 +425,68 @@ boundary checks remain separate receipts. Runtime agreement checks the source
 proof against original code; it does not replace the noninterference or
 composition argument. Module initialization, CLI behavior, unrestricted JS
 contexts and native Windows whole-function equivalence remain unqualified.
+
+### Intact-corpus seed proof and real provider qualification
+
+`scripts/bla_seed_invariant.cjs` proves the digest/seed initialization prefix
+from the original source. It checks the literal own-string corpus, the complete
+digest function AST and their binding identities, then evaluates the exact
+UTF-16 code units with an independent BigInt multiply/rotate model. The corpus
+cannot escape into other functions or be changed before the seed declaration.
+The exact first three executable statements establish that no intervening
+effect changes the data or the digest calculation. Embedded instruction-like
+payloads are string data throughout this check; they are never evaluated.
+
+| Original tier | Proved corpus digest | Entries | UTF-16 loop iterations |
+| --- | ---: | ---: | ---: |
+| L1 | 4129934667 | 4 | 817 |
+| L2 | 3543391658 | 6 | 1078 |
+| L3 | 919223159 | 8 | 2400 |
+
+Each calculated digest equals its embedded commitment. The checked initializer
+clears the clock's low two bits with `0x7fffc` and ORs the now-proved commitment
+bit `1`. Consequently `(seed & 3) === 1` for every admitted process-clock BigInt,
+Date-clock Number and fallback value, including negative/wrapped clock values.
+The digest loops terminate over fixed literal strings and the seed binding is
+immutable. Normal synchronous clock interfaces and standard numeric/string/
+array semantics remain explicit environmental conditions. The composer
+recomputes this certificate and links its digest, replacing the earlier
+unproved corpus-equality premise for these three original artifacts.
+
+`scripts/bla_provider_validation.cjs` separately checks the actual Node
+`node:crypto` and `node:buffer` implementations. Its 73 finite cases cover four
+SHA-256 known vectors, padding/chunk boundaries, independent SHA-256 arithmetic,
+primitive/Unicode UTF-8 encoding, hex-prefix and malformed UTF-8 decoding,
+buffer zeroing/indexing/copying and native exception/state behavior. The receipt
+records the Node executable hash, Node/OpenSSL versions, FIPS mode and selected
+builtin JavaScript source hashes. It identifies the tested runtime rather than
+establishing universal native-code correctness or a complete library provenance
+chain.
+
+Native Buffers demonstrate why the observation boundary matters. Distinct
+logical views can share an allocation pool, and a whole-backing-store observer
+can inspect bytes outside a view. A Buffer's `length` property can also be
+shadowed through metadata operations. The provider relation therefore covers
+nonoverlapping logical byte views and lengths preserved by the admitted BLA
+operations; it excludes backing-store/allocator observers, metadata changes,
+detachment and concurrent observation. The selected typed source never uses
+those excluded capabilities.
+
+`scripts/bla_native_functions.cjs` adds a fresh bounded native CJS execution for
+each artifact. It compiles the exact source through Node's ordinary CommonJS
+loader, with real crypto/Buffer globals, no target observer suffix and no
+provider substitutions. The CLI entry is not invoked. All 102 native primitive
+export observations agree with the instrumented VM and materialized clean
+reference on return/throw digests. These native runs do not intercept the call
+trace. Their executable/version/OpenSSL/FIPS identities must match the provider
+validation receipt. They are authorized-target probes, not hostile-code
+sandboxes.
+
+The seed result is a source proof. The native provider and loader receipts are
+finite implementation evidence. The whole-function theorem retains its typed
+relational provider contract, stable intrinsic semantics and observer limits;
+those native contracts are not universally discharged by sampled conformance.
+No actual valid-key acceptance or native Windows qualification is inferred.
 
 ## Register-only transfer projection
 

@@ -61,6 +61,20 @@ def setup_campaign(tmp_path, monkeypatch):
                     'functions': [{'role': role} for role in ('sha256Hex','deriveFlagMask','decodeFlagCipher','tryUnlock')],
                     'source': {'target_sha256': pins[tier][1], 'template_sha256': pins['template'][1]}}}}
             for tier in ('L1', 'L2', 'L3')]}
+        runtime = {'node': 'authored-test-driver', 'openssl': 'authored', 'fips': 0, 'executable_sha256': '6' * 64}
+        observation['provider_validation'] = {'status': 'verified_finite_conformance', 'cases': 3,
+                                            'runtime': runtime, 'receipt_sha256': '7' * 64}
+        for item in observation['tiers']:
+            item['static']['seed_invariant_proof'] = {'status': 'proved', 'certificate_sha256': '8' * 64,
+                'source': {'sha256': item['source_sha256'], 'ast_identity_verified': True},
+                'digest': {'matches': True, 'expected_value': 17, 'evaluated_value': 17},
+                'seed': {'low_two_bits': 1, 'intact_corpus_condition_discharged': True}}
+            item['static']['whole_function_equivalence']['seed_invariant'] = {
+                'proof_certificate_sha256': '8' * 64, 'intact_corpus_condition_discharged': True}
+            item['native_exports'] = {'status': 'verified_native_wrapper_and_reference_agreement',
+                'source_sha256': item['source_sha256'], 'cases': 34, 'provider_substitutions': False,
+                'target_observer_suffix': False, 'runtime': dict(runtime), 'provider_validation_sha256': '7' * 64,
+                'rows': [{'native_wrapper_equal': True, 'clean_reference_equal': True} for _ in range(34)]}
         return subprocess.CompletedProcess(command, 0, module.encoded(observation), b'')
 
     monkeypatch.setattr(module.subprocess, 'run', node)
@@ -82,6 +96,8 @@ def test_report_preserves_claim_ceiling_and_binds_targets_analyzers_and_limits(s
     assert 'bla_shadow_heap_proof.cjs' in report['tool_sha256']
     assert 'unrestricted JavaScript contextual equivalence unproved' in report['claim_ceiling']
     assert report['shadow_heap_obligations']['noninterference'] == 'proved'
+    assert report['seed_invariant'].startswith('Source-proved')
+    assert 'no universal native-code proof' in report['provider_qualification']
     assert len(report['observations']['tiers']) == 3
     assert set(report['analyzer_packages']) == {'@babel/parser', '@babel/traverse', '@babel/generator'}
     assert report['report_sha256'] == runner.digest(runner.encoded({
@@ -119,7 +135,10 @@ def test_dirty_selected_sources_are_rejected_before_execution(setup_campaign, mo
                                  'unproved_induction', 'unproved_termination', 'unbound_ast',
                                  'missing_noninterference', 'wrong_noninterference_heap', 'unknown_whole_function',
                                  'wrong_whole_function_target', 'wrong_whole_function_template',
-                                 'whole_wrong_noninterference', 'partial_function_coverage'])
+                                 'whole_wrong_noninterference', 'partial_function_coverage',
+                                 'missing_provider', 'provider_wrong_runtime', 'missing_seed', 'seed_digest_mismatch',
+                                 'seed_bad_low_bits', 'whole_seed_stale', 'native_substitute', 'native_wrong_source',
+                                 'native_runtime_mismatch', 'native_nonagreement'])
 def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, monkeypatch, mode):
     runner, root, babel, calls = setup_campaign
     original = runner.subprocess.run
@@ -135,6 +154,10 @@ def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, 
             result['tiers'][0]['private_heap_effects_equal_to_clean'] = True
         elif mode == 'unqualified_static':
             result['tiers'][0]['static']['status'] = 'unknown'
+        elif mode == 'missing_provider':
+            result.pop('provider_validation')
+        elif mode == 'provider_wrong_runtime':
+            result['provider_validation']['runtime']['node'] = 'wrong-runtime'
         else:
             mutation = result['tiers'][0]['static']['mutation_summary']
             if mode == 'missing_heap_proof':
@@ -162,6 +185,22 @@ def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, 
                 result['tiers'][0]['static']['whole_function_equivalence']['noninterference_certificate_sha256'] = '0' * 64
             elif mode == 'partial_function_coverage':
                 result['tiers'][0]['static']['whole_function_equivalence']['functions'].pop()
+            elif mode == 'missing_seed':
+                result['tiers'][0]['static'].pop('seed_invariant_proof')
+            elif mode == 'seed_digest_mismatch':
+                result['tiers'][0]['static']['seed_invariant_proof']['digest']['evaluated_value'] = 18
+            elif mode == 'seed_bad_low_bits':
+                result['tiers'][0]['static']['seed_invariant_proof']['seed']['low_two_bits'] = 0
+            elif mode == 'whole_seed_stale':
+                result['tiers'][0]['static']['whole_function_equivalence']['seed_invariant']['proof_certificate_sha256'] = '0' * 64
+            elif mode == 'native_substitute':
+                result['tiers'][0]['native_exports']['provider_substitutions'] = True
+            elif mode == 'native_wrong_source':
+                result['tiers'][0]['native_exports']['source_sha256'] = '0' * 64
+            elif mode == 'native_runtime_mismatch':
+                result['tiers'][0]['native_exports']['runtime']['executable_sha256'] = '0' * 64
+            elif mode == 'native_nonagreement':
+                result['tiers'][0]['native_exports']['rows'][0]['native_wrapper_equal'] = False
             else:
                 mutation['totality_assumption'] = 'still assumed'
         p.stdout = runner.encoded(result)
