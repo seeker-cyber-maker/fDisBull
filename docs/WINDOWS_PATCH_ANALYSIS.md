@@ -63,6 +63,32 @@ import is only a candidate role: a patch analysis must compare the surrounding
 data flow and ordered effects, and preserve unresolved cases, before it can
 claim that two paths express the same UIL intent.
 
+## Removing register-only detours from the candidate impact
+
+`fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
+mapping from each captured entry register to the selected-thread general
+registers at a common exit. It accepts completed, source-hash-recorded PE
+traces with evidenced topology from a common entry to a common exit. Every
+executed step before the exit must be a full-width register MOV checked against
+the existing UIL step model, a one-byte NOP, or a direct near branch. It
+checks each next PC and all sampled general registers and FLAGS, then walks
+MOV dependencies backward to identify writes overwritten before use. A memory
+operand, call, partial register, malformed step, changed undeclared state or
+unresolved path makes the projection unknown.
+
+Two encodings of `MOV RAX,RBX` can therefore have equal admitted register
+transfer despite different bytes. In the authored detour test, one path first
+copies `RCX` to `RAX`, then both paths copy `RBX` to `RAX`; the detour's first
+write is dead at the common exit. A separate Unicorn execution test checks the
+two captured paths and their register states. The result reports the *register
+transfer conditional on each captured path*, plus dead writes and path shape.
+It reports sampled entry and exit register-state equality separately; the same
+transfer mapping can produce different exits when entry values differ.
+It does not equate branch guards, timing, external effects, hidden machine
+state or the complete UIL intent. In particular, changing a conditional
+branch to an unconditional one can alter behavior even when the admitted
+register transfer at the sampled exit is identical.
+
 For the first patch lift, prefer **typed UIL as the semantic source and C11 as
 the readable executable view**. Keep arithmetic widths and wraparound,
 individual FLAGS, byte-addressed memory, and unknown effects explicit. Signed C
