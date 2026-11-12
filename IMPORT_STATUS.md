@@ -218,3 +218,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/navigation_geometry.py`
 - `src/fdisbull/ne.py`
 - `src/fdisbull/ne_processor.py`
+
+## Source batch 9
+
+24 additional unchanged Python files (285112 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 198 files, import still incomplete.
+
+- `src/fdisbull/nes_multicart.py`
+- `src/fdisbull/omf_catalog.py`
+- `src/fdisbull/operation_budget.py`
+- `src/fdisbull/operation_goals.py`
+- `src/fdisbull/output_artifacts.py`
+- `src/fdisbull/output_limits.py`
+- `src/fdisbull/player_checkpoints.py`
+- `src/fdisbull/preflight.py`
+- `src/fdisbull/presentation_il.py`
+- `src/fdisbull/processor.py`
+- `src/fdisbull/progressive_scenes.py`
+- `src/fdisbull/project.py`
+- `src/fdisbull/proofs.py`
+- `src/fdisbull/psg_il.py`
+- `src/fdisbull/qemm_runtime.py`
+- `src/fdisbull/qemm_tools.py`
+- `src/fdisbull/qemu_control.py`
+- `src/fdisbull/qemu_machine.py`
+- `src/fdisbull/qpi.py`
+- `src/fdisbull/record_candidates.py`
+- `src/fdisbull/render.py`
+- `src/fdisbull/rom_asm.py`
+- `src/fdisbull/rom_asm_capstone.py`
+- `src/fdisbull/rom_asm_ghidra.py`
