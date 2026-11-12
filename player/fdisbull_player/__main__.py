@@ -19,6 +19,7 @@ def main():
     source.add_argument("--intents", help="partial game-intent UIL package with explicit residual IR")
     source.add_argument("--scenes", help="recovered scene rules, direct handler links and explicit residual IR")
     source.add_argument("--connect", help="JSON-lines backend host:port")
+    parser.add_argument("--connect-password-file", help="private password file reported by text-host")
     source.add_argument("--backend-command", help="local content-service command, without a shell")
     parser.add_argument("--backend-timeout", type=float, default=60,
                         help="local service request deadline or socket inactivity limit, seconds (0 < value <= 60)")
@@ -68,6 +69,8 @@ def main():
         parser.error('--backend-timeout must be finite and between 0 and 60 seconds')
     if args.backend_command and args.save_dir:
         parser.error('--save-dir belongs to --package; the content service owns checkpoints')
+    if bool(args.connect) != bool(args.connect_password_file):
+        parser.error('--connect requires --connect-password-file and vice versa')
     if args.agent_command and not args.live:
         parser.error("--agent-command requires --live")
     if args.transcript and not args.agent_command:
@@ -90,8 +93,16 @@ def main():
             backend = LocalRuntime(package, save_dir=save_dir)
             return run_mode(backend, args)
         host, port = args.connect.rsplit(":", 1)
+        password_path = Path(args.connect_password_file)
+        if password_path.stat().st_size > 128:
+            raise ValueError('Connect password file exceeds limit')
+        password = password_path.read_text(encoding='ascii').strip()
+        if len(password) != 64 or any(c not in '0123456789abcdef' for c in password):
+            raise ValueError('Invalid connect password file')
         with socket.create_connection((host, int(port)), timeout=args.backend_timeout) as sock, sock.makefile("r", encoding="utf-8") as reader, sock.makefile("w", encoding="utf-8") as writer:
-            return run_mode(JsonLineBackend(reader, writer), args)
+            backend = JsonLineBackend(reader, writer)
+            backend.authenticate(password)
+            return run_mode(backend, args)
     except (OSError, ValueError, EOFError, json.JSONDecodeError) as exc:
         print(f"Player stopped: {exc}", file=sys.stderr)
         return 1

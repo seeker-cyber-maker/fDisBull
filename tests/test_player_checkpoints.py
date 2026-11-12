@@ -75,6 +75,36 @@ def test_slot_history_and_restart_restore(tmp_path):
     assert p.db.execute('SELECT count(*) FROM player_checkpoints').fetchone()[0]==2
 
 
+def test_hex_shaped_slot_takes_precedence_over_opaque_checkpoint_id(tmp_path):
+    p=Project(tmp_path/'private.sqlite'); s=Session(p); h=Handle(s)
+    slot='a'+'0'*31
+    s.state=42
+    saved=player_checkpoints.save(h,slot)
+    assert saved['complete'] and saved['slot']==slot
+    s.state=0
+    restored=player_checkpoints.load(h,slot)
+    assert restored['status']=='restored' and s.state==42
+    # Checkpoint IDs remain accepted directly even when they also match slot syntax.
+    s.state=0
+    assert player_checkpoints.load(h,saved['checkpoint'])['status']=='restored' and s.state==42
+
+
+def test_explicit_id_selector_bypasses_colliding_hex_slot(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    p=Project(tmp_path/'private.sqlite'); s=Session(p); h=Handle(s)
+    ids=iter(['a'*32,'c'*32,'b'*32,'d'*32,'e'*32,'f'*32])
+    monkeypatch.setattr(player_checkpoints.uuid,'uuid4',lambda:SimpleNamespace(hex=next(ids)))
+    s.state=11
+    first=player_checkpoints.save(h)
+    assert first['complete']
+    # Saving at a slot named after the first opaque ID deliberately shadows it.
+    s.state=22
+    shadow=player_checkpoints.save(h,first['checkpoint'])
+    assert shadow['complete'] and shadow['checkpoint']!=first['checkpoint']
+    assert player_checkpoints.load(h,first['checkpoint'])['status']=='restored' and s.state==22
+    assert player_checkpoints.load(h,'id:'+first['checkpoint'])['status']=='restored' and s.state==11
+
+
 def test_corrupt_incompatible_and_stopped_restores_never_claim_success(tmp_path):
     p=Project(tmp_path/'private.sqlite'); s=Session(p); h=Handle(s)
     saved=player_checkpoints.save(h); assert saved['complete']

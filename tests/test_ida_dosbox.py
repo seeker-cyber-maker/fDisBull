@@ -17,7 +17,7 @@ def test_real_dos_endpoint_breakpoints_registers_memory_trace_layers_state_and_r
     path,binary=game
     original=binary.read_bytes()
     with Endpoint(path,emulator,binary.parent) as endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         try:
             started=client.start(binary.name,bits=16)
             base=started['module']['base']
@@ -80,7 +80,7 @@ def test_real_dos_endpoint_breakpoints_registers_memory_trace_layers_state_and_r
 def test_real_disconnect_while_cpu_runs_reaps_only_owned_emulator(game,emulator):
     path,binary=game
     with Endpoint(path,emulator,binary.parent) as endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         client.start(binary.name,bits=16)
         client.continue_event()
         client.close()
@@ -92,7 +92,7 @@ def test_real_disconnect_while_cpu_runs_reaps_only_owned_emulator(game,emulator)
 def test_real_dos_wire_read_and_read_write_watch_modes(access_game,emulator,access,expected_ip):
     path,binary=access_game
     with Endpoint(path,emulator,binary.parent) as endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         try:
             base=client.start(binary.name,bits=16)['module']['base']
             entry=client.breakpoint(base+5)
@@ -113,7 +113,7 @@ def test_real_dos_wire_read_and_read_write_watch_modes(access_game,emulator,acce
 def test_real_dos_remote_execution_layer_changes_fetch_but_guest_reads_original(layered_game,emulator):
     path,binary=layered_game
     with Endpoint(path,emulator,binary.parent) as endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         try:
             base=client.start(binary.name,bits=16)['module']['base']
             layer=client.extension('layer-patch',name='fetch only',address='1000:0003',
@@ -138,7 +138,7 @@ def test_real_dos_remote_grid8_click_frame_and_timeout(tmp_path,emulator):
     path=tmp_path/'grid.fdb'
     with Project.create(path,binary) as project:project.analyze(max_instructions=10)
     with Endpoint(path,emulator,tmp_path) as endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         try:
             client.start(binary.name,bits=16)
             result=client.extension('run',guest_ms=100,timeout_ms=2000,fast_forward=True)

@@ -16,6 +16,7 @@ import threading
 import time
 
 from . import ida_wire as w
+from .local_auth import LocalCredential
 from .project import Project
 from .ida_remote import RemoteDebugger
 
@@ -32,8 +33,8 @@ FLAGS = 16 | 128 | 512
 
 
 class DOSRemoteDebugger(RemoteDebugger):
-    def __init__(self, stream):
-        super().__init__(stream,debugger_id=10)
+    def __init__(self, stream, *, password):
+        super().__init__(stream,debugger_id=10,password=password)
 
     def extension(self, operation, **params):
         data=json.dumps(dict(op=operation,params=params),separators=(',',':'),allow_nan=False).encode()
@@ -286,8 +287,14 @@ class Endpoint:
         self._closing=threading.Event();self._spawned=None
         self.debug_options['_on_spawn']=self._own_process
         self.listener=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.listener.bind(('127.0.0.1',port));self.listener.listen(1)
+        try:
+            self.listener.bind(('127.0.0.1',port));self.listener.listen(1)
+            self.credential=LocalCredential('fdisbull-ida-')
+        except BaseException:
+            self.listener.close()
+            raise
         self.address=self.listener.getsockname()
+        self.password_file=str(self.credential.path)
         self.idle_timeout=idle_timeout
         self.channel=None;self.error=None;self.debug=None
         self.thread=threading.Thread(target=self._serve,name='fdisbull-dos-remote',daemon=False)
@@ -303,14 +310,26 @@ class Endpoint:
     def _serve(self):
         session=None
         try:
-            self.listener.settimeout(self.idle_timeout)
-            stream,_=self.listener.accept()
-            self.channel=w.Channel(stream)
-            deadline=time.monotonic()+self.idle_timeout
-            self.channel.send(w.OPEN,w.dd(w.INTERFACE)+w.dd(10)+w.dd(8),deadline)
-            code,data=self.channel.receive(deadline);reader=w.Reader(data)
-            if code!=w.OK or reader.dd()!=1 or reader.string()!='':raise ValueError('Invalid endpoint handshake')
-            reader.finish();self.channel.send(w.OK,w.dd(1),deadline)
+            accept_deadline=time.monotonic()+self.idle_timeout
+            while True:
+                remaining=accept_deadline-time.monotonic()
+                if remaining<=0:raise TimeoutError('IDA endpoint accept deadline expired')
+                self.listener.settimeout(remaining)
+                stream,_=self.listener.accept()
+                channel=w.Channel(stream)
+                try:
+                    deadline=min(accept_deadline,time.monotonic()+5)
+                    channel.send(w.OPEN,w.dd(w.INTERFACE)+w.dd(10)+w.dd(8),deadline)
+                    code,data=channel.receive(deadline);reader=w.Reader(data)
+                    if len(data)>128 or code!=w.OK or reader.dd()!=1 or not self.credential.check(reader.string()):
+                        raise ValueError('Invalid endpoint handshake')
+                    reader.finish()
+                    channel.send(w.OK,w.dd(1),deadline)
+                except Exception:
+                    channel.close()
+                    continue
+                self.channel=channel
+                break
             with Project(self.project) as project:
                 session=Session(project,self.executable,self.game_dir,**self.debug_options)
                 try:
@@ -341,15 +360,18 @@ class Endpoint:
         try:self.listener.shutdown(socket.SHUT_RDWR)
         except OSError:pass
         self.listener.close()
-        self.thread.join(5)
-        if self.thread.is_alive() and self.debug is not None:
-            # A broken peer must not strand the emulator while its RPC worker
-            # is waiting on a native stop. Terminate only this endpoint's child;
-            # EOF lets the worker record closure on its own SQLite thread.
-            process=self.debug.rpc.process
-            if process.poll() is None:process.terminate()
-        self.thread.join(15)
-        if self.thread.is_alive():raise TimeoutError('DOS endpoint failed to reap its owned session')
+        try:
+            self.thread.join(5)
+            if self.thread.is_alive() and self.debug is not None:
+                # A broken peer must not strand the emulator while its RPC worker
+                # is waiting on a native stop. Terminate only this endpoint's child;
+                # EOF lets the worker record closure on its own SQLite thread.
+                process=self.debug.rpc.process
+                if process.poll() is None:process.terminate()
+            self.thread.join(15)
+            if self.thread.is_alive():raise TimeoutError('DOS endpoint failed to reap its owned session')
+        finally:
+            self.credential.close()
 
     def __exit__(self,*args):
         self.close()
@@ -368,7 +390,8 @@ def main():
     args=parser.parse_args()
     with Endpoint(args.project,args.executable,args.game_dir,port=args.port,idle_timeout=args.idle_timeout,
                   backend=args.backend,kernel=args.kernel,initramfs=args.initramfs,files=args.files,window=args.window) as endpoint:
-        print(json.dumps(dict(host=endpoint.address[0],port=endpoint.address[1],interface=w.INTERFACE,debugger_id=10)),flush=True)
+        print(json.dumps(dict(host=endpoint.address[0],port=endpoint.address[1],interface=w.INTERFACE,
+                              debugger_id=10,password_file=endpoint.password_file)),flush=True)
         endpoint.thread.join()
         if endpoint.error and not isinstance(endpoint.error,(w.ProtocolError,OSError)):
             raise endpoint.error
