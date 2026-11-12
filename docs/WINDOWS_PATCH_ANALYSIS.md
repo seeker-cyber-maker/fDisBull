@@ -138,7 +138,76 @@ Unicorn to confirm different successor instructions. All Jcc predicates are
 checked against Unicorn for all combinations of CF/PF/ZF/SF/OF in PE32 and
 PE64. This validates the bounded model, not a native Wine/QEMU capture.
 
-## Register transfer through a common exit
+## Regional equivalence and controlled contraction
+
+`fdisbull.pe_region_equivalence.compare_pe_regions` proves equivalence of two
+captured regions under an explicit live-state contract, using the optional
+existing `proof` extra (Z3). Only entry and exit correspondence is required;
+the interiors may have different instruction counts and graph shapes. The
+comparison builds shared symbolic entry registers, FLAGS and byte-addressed
+RAM, proves both captured path domains feasible and equal, then checks for a
+counterexample in live outputs and memory effects. Unsatisfiable domain and
+effect differences authorize `equivalent_under_contract`. Unsupported behavior,
+missing evidence, solver absence or timeout return unknown without contraction.
+This is equivalence over the captured paths' domains, not every path through
+the surrounding functions.
+
+The caller must establish liveness at the boundary. Defaults keep every
+general register and all 32 captured FLAGS bits live. A narrower
+`live_registers` list or `live_flags` mask is an explicit assumption retained
+in the result. The admitted register model includes full-width MOV, ADD, SUB,
+XOR, AND, OR and CMP, plus NOP and direct JMP/Jcc. Undefined AF after logical
+operations prevents a live-AF proof unless a later operation defines it.
+Partial register aliases, calls, legacy prefixes and unsupported implicit
+effects remain unknown. All captured register/defined-FLAGS transitions are
+checked against the model independently of the symbolic equivalence query.
+
+Fixed-address MOV loads and stores use at most 256 bytes of explicitly
+declared `private_ordinary_ram`. Addresses must reduce to constants from the
+instructions or declared fixed entry registers; observed pointers alone do
+not establish that assumption. Byte composition preserves little-endian and
+overlapping writes. Exact entry/exit memory snapshots are required, and the
+modeled exit must agree. Symbolic addresses, code overlap, out-of-range
+accesses and contradictory snapshots prevent contraction. All declared RAM
+bytes remain live and other memory is framed as untouched by admitted code.
+
+`memory_observation="ordered"` is the default: read/write kind, address,
+width, value and final bytes must agree. The explicit `"final"` mode compares
+final private RAM and can discard an overwritten temporary store; it assumes
+no concurrent or external observer of intermediate accesses. Equal sample
+bytes do not suffice: the solver can expose a differing overlapping write for
+another input and returns a concrete model counterexample for replay.
+
+Successful contraction produces one region node containing the live-state
+contract, solver version/budget, proof outcomes, boundary identities, original
+event indices and exact trace/memory digests. It also presents typed symbolic
+live outputs, path domain, RAM bytes and ordered accesses as the reduced
+operation, with explicit presentation truncation if needed. These expressions
+describe the modeled operation; they are not an executable UIL program or a
+solver certificate. `expand_pe_contraction` verifies
+those identities and returns copies of the original evidence. The digest is
+an integrity check, not an authenticated proof signature. No source bytes are
+deleted or replaced, and no broader human intent label is inferred.
+
+The existing combined API accepts `region_contract` and optional
+`baseline_memory`/`layer_memory`, returning the proof in `regional` alongside
+guard and register-path evidence:
+
+```python
+report = compare_pe_patch_paths(old_trace, new_trace, same_source=True,
+    region_contract={"live_registers": ["rax"], "live_flags": 0})
+if report["regional"]["status"] == "equivalent_under_contract":
+    node = report["regional"]["contraction"]
+    original = expand_pe_contraction(node, old_trace, new_trace)
+```
+
+The omitted registers/FLAGS in this example must be proved dead by the caller.
+Native CPU-model tests cover live clobbers, arithmetic cancellation, guarded
+domains, ordered versus final RAM, byte aliases, memory loads through
+temporaries, contraction expansion and independent counterexample replay.
+They do not qualify a native Wine/QEMU run or external effects.
+
+## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
 mapping from each captured entry register to the selected-thread general

@@ -249,12 +249,21 @@ def compare_pe_patch_guards(baseline, layer, *, same_source=False, correspondenc
 
 
 def compare_pe_patch_paths(baseline, layer, *, same_source=False, correspondence=None,
-                           max_candidates=4096):
-    """Combine existing path transfer and new guard evidence without an equivalence verdict."""
+                           max_candidates=4096, region_contract=None,
+                           baseline_memory=None, layer_memory=None, region_timeout_ms=1000):
+    """Combine path/guard evidence and an optional proof under a regional contract."""
     from .pe_path_transfer import compare_pe_register_paths
-    return {'format': 'fdisbull-pe-patch-paths-1',
+    result = {'format': 'fdisbull-pe-patch-paths-1',
             'guards': compare_pe_patch_guards(baseline, layer, same_source=same_source,
                                              correspondence=correspondence, max_candidates=max_candidates),
             'register_paths': compare_pe_register_paths(baseline, layer, same_source=same_source,
                                                        correspondence=correspondence),
             'semantic_equivalence': None}
+    if region_contract is not None:
+        from .pe_region_equivalence import compare_pe_regions
+        result['regional'] = compare_pe_regions(baseline, layer, contract=region_contract,
+            same_source=same_source, correspondence=correspondence,
+            baseline_memory=baseline_memory, layer_memory=layer_memory, timeout_ms=region_timeout_ms)
+    elif baseline_memory is not None or layer_memory is not None:
+        raise ValueError('Regional RAM evidence requires an explicit region_contract')
+    return result
