@@ -54,38 +54,34 @@ Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
-## Planned bundled FreeDOS and directory layers
+## FreeDOS and directory layers
 
-The [bundled environment and filesystem plan](DOS_QEMU_HANDOFF.md#planned-bundled-freedos-and-layered-directory-workspace-2026-11-11)
-adds a ready-to-boot, versioned FreeDOS runtime and automatic guest read/write
-access to the host launch directory, with an explicit directory override.
-The proposed system drive is `C:` and the directory workspace is `D:`.
-Capture the caller-selected root before runtime-directory changes and select
-the mapped DOS drive/path before target execution, including relative reads
-and saves; server requests report their explicit or owner-workspace root.
-This is planned work; current launches still use an explicitly supplied boot
-disk and the existing staging contract.
+The optional checkpointed FreeDOS `C:` and private FAT workspace `D:` path,
+its runtime selector, sealed generations and staged edits are described in
+[Native DOS workspace and file layers](DOS_FILE_LAYERS.md). Bounded native COM/MZ, open-handle, dirty-write, search-cursor and cold-restore
+witnesses passed locally; DOSBox remains the default. The broader
+[bundled environment and filesystem plan](DOS_QEMU_HANDOFF.md#planned-bundled-freedos-and-layered-directory-workspace-2026-11-11)
+remains partly open, including live mode, which currently refuses launch.
 
-Both proposed modes preserve original host files through copy-on-write file
-layers. Live mode observes guarded current host content and applies writes to
-the session's effective view. Checkpointed mode pins base content and binds each
-Anchor Stone to the matching file-layer generation and file-service state.
-The proposed debugger default is checkpointed mode. Changes are inspectable,
-revertible and exportable without overwriting the original directory.
+The checkpointed path captures a bounded private base and keeps guest writes in
+the private disk view. Sealed generations can be inspected or exported without
+overwriting the original directory. The wider live-mode contract and its
+external-host-change handling remain planned. Checkpointed mode is the
+workspace default; file-aware restoration has its own admission and evidence.
 
-New guest-created saves have an explicit keep/export option and an opt-in
-policy for selected new-file paths. After a coherent flush/close, this can
-physically create a private host file that survives rewind and session exit.
-Pre-existing executables and surrounding files retain their layer protection.
-Rewind preserves the physical copy while restoring historical guest membership;
-explicit import/refresh makes that save visible in a new child layer revision.
-Exports use guarded creation and do not silently overwrite existing paths.
+After an independently established guest close/flush boundary, an explicit
+export can create a private host copy that survives rewind and session exit.
+`keep` requires a witnessed authored create; a raw FAT directory difference
+cannot distinguish a guest create from a renamed original. Automatic keep
+policies and guest-create provenance remain open. Pre-existing host files stay
+protected. An explicit staged import and cold launch can make an exported
+file visible again. Exports use exclusive creation and refuse existing paths.
 
 File-aware restore must synchronize VM state, directory membership, file
 contents and open handles, with a verified consistent base capture despite
 external host writers. Existing checkpoint artifacts retain their documented
-scope below; this plan does not retroactively give them host-file rollback or
-new directory-sharing support. The linked plan records runtime packaging,
+scope below; enabling the new path does not retroactively give them host-file
+rollback or new directory-sharing support. The linked plan records runtime packaging,
 memory buffering/durable storage, branching and required native acceptance.
 
 ## Native DOS checkpoint histories
@@ -128,14 +124,14 @@ The manual capture's intervening execution is unobserved; it is not an
 instruction trace or replay guarantee.
 
 This scope includes the private QCOW2 process checkpoint and its admitted
-native controls. It reports `host_files_restored=false` and does not implement
-the planned host-directory or file-layer rollback described above. It is not
+native controls. It reports `host_files_restored=false` and does not roll back original host files. The optional file-aware format adds
+private D: namespace/content rollback; older artifacts retain their original scope. It is not
 inverse CPU/RAM undo, deterministic replay or a completed-frame history.
 The separate bounded selected CPU/RAM undo and renderer frame histories are
 described below, along with bounded native comparative trials. Local native witnesses cover ordinary Python/JSON/script step and rewind,
 retained IRQ branches and separate-process restore with task-private RAM/fetch
 layers and hooks. See the dated handoff and !117 for the exact validation
-receipt. All 127 formal surface qualifications and seven campaigns remain open,
+receipt. All 134 formal surface qualifications and seven campaigns remain open,
 with DOSBox retained as the default.
 
 ## Selected native CPU/RAM undo
@@ -1385,7 +1381,7 @@ position and INT33 remain unknown. There is no `GuestMouse` facade or legacy
 `DebugSession` stub; `click(x, y)`, `debug-click`, `click-frame` and
 `input.mouse.click` retain their coordinate/frame contracts and native refusal.
 General timing, absolute mouse, guest-time and completed-frame flags stay false;
-all 127 promotion qualifications stay open. See the
+all 134 promotion qualifications stay open. See the
 [click and explicit sync workflow](DOS_QEMU_TIMING.md#queue-one-timed-physical-mouse-click).
 
 ### Schedule input at a modeled retrace edge
@@ -1659,7 +1655,7 @@ consumers require mode/frame/state identities, or coordinate `click`/`click-fram
 It reports no `mode_id`, `frame_id` or `state_revision`. Completed guest drawing,
 VBlank, cursor location, INT33 mapping, application readiness and input consumption
 remain unknown. `completed_guest_frame` and `guest_frame_id` remain `None`; all
-127 default-promotion qualifications remain open.
+134 default-promotion qualifications remain open.
 
 ### Observe current and published VGA configuration
 
@@ -1735,7 +1731,7 @@ Malformed, contradictory, control, persistence or late-result failures close
 ownership without retry and retain available native evidence and clock brackets
 on `error.result`. Successful `machine-vga-configuration-observe` events survive
 project reopening as history, without recreating ownership. Generic frame
-probes, coordinate/frame clicks and scenes remain unqualified, and all 127
+probes, coordinate/frame clicks and scenes remain unqualified, and all 134
 default-promotion qualifications remain open.
 
 ### Move with a declared image-to-relative scale
@@ -1849,7 +1845,7 @@ wrong declared scale. Those controlled observations do not qualify arbitrary
 INT33 drivers or games. Legacy coordinate clicks, frame probes and scene
 consumers retain their existing requirements. Broad `timed_input`,
 `absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false;
-DOSBox remains the default and all 127 promotion qualifications remain open.
+DOSBox remains the default and all 134 promotion qualifications remain open.
 
 ## What the first slice does and does not qualify
 
@@ -1903,7 +1899,7 @@ failures, errors or skips, including the existing 19 native scheduler and IRQ
 preservation cases. See `tests/test_qemu_memory_rules.py`,
 `tests/test_qemu_memory_rules_public.py`, `tests/test_qemu_memory_rules_native.py`
 and `tests/test_qemu_memory_rule_views_native.py`. These bounded results do not
-promote any of the 127 surfaces or seven campaigns; DOSBox remains the default.
+promote any of the 134 surfaces or seven campaigns; DOSBox remains the default.
 
 Hostcalls and UDL/UIL block services remain a later slice. The earlier lab's
 custom opcodes and plugins are not enabled by this launcher, and experimental
@@ -1965,7 +1961,7 @@ Use `FDISBULL_QEMU_CLOCK` for the separately prepared clock + media + input
 executable and `FDISBULL_REQUIRE_QEMU_CLOCK=1`, with the required DOS boot image,
 mcopy, firmware and NASM inputs described above. This selection never replaces
 the stock `FDISBULL_QEMU_DOS` lane. The handoff records actual results; these
-witness references do not close any of the 127 default-switch qualifications.
+witness references do not close any of the 134 default-switch qualifications.
 
 Rehearse the retained path with a separate original DOS program project:
 

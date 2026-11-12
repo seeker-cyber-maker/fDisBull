@@ -155,11 +155,22 @@ def test_factory_keeps_program_and_boot_disk_as_separate_inputs(com_project, tmp
     assert captured['transport'] == 'pipe'
 
 
-def test_process_launch_requires_explicit_native_disk_and_backend(com_project, tmp_path):
-    with pytest.raises(ValueError, match='separate dos_boot_image'):
-        com_project.debugger('not-started', tmp_path, backend='qemu-dos')
+def test_process_launch_selects_freedos_runtime_without_boot_image(com_project, tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='require backend=qemu-dos'):
         com_project.debugger('not-started', tmp_path, backend='dosbox', dos_boot_image=tmp_path/'DOS.img')
+
+    import fdisbull.dos_workspace_launch as launch
+    calls = []
+    def missing_runtime(path=None):
+        calls.append(path)
+        raise ValueError('Select a FreeDOS runtime path or set FDISBULL_FREEDOS_RUNTIME')
+    monkeypatch.setattr(launch, 'resolve_runtime', missing_runtime)
+    spawned = []
+    with pytest.raises(ValueError, match='Select a FreeDOS runtime'):
+        com_project.debugger('not-started', tmp_path, backend='qemu-dos',
+                             _on_spawn=lambda *args: spawned.append(args))
+    assert calls == [None]
+    assert spawned == []
 
 
 @pytest.mark.parametrize('arguments', ['x'*127, 'one\rtwo', 'one\ntwo', 'one\0two', '\U0001f642'])

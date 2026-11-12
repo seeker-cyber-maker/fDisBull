@@ -36,6 +36,7 @@ AGENT_SKILL_GUIDES = {
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
     "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
     "references/dos-qemu-migration.md": "Select native QEMU DOS, check core execution, track migration slices and retain DOSBox fallback",
+    "references/dos-file-layers.md": "Prepare FreeDOS, capture a private D: workspace and manage checkpointed file generations",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
     "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
 }
@@ -184,7 +185,7 @@ METHODS = {
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
@@ -306,6 +307,15 @@ METHODS = {
     "debug-delta-record": "Record selected CPU/RAM intervals; native DOS observes single-step stops without retirement proof, DOSBox next-fetch and Wine completed-instruction boundaries; run,[count,timeout_ms]",
     "debug-delta-rewind": "Undo selected CPU/RAM deltas with optional preservation policy; native DOS freezes until full recovery and refuses partial resume; run,[count,policy,timeout_ms]",
     "debug-delta-recover": "Load the recovery Anchor Stone and clear the partial-state guard; run",
+    "debug-workspace-status": "Inspect the native DOS private directory workspace and last sealed generation; run",
+    "debug-workspace-files": "Inspect sealed base/effective/diff file generations; run,[generation,view]",
+    "debug-workspace-read": "Read a file from a retained DOS workspace generation; run,path,[generation]",
+    "debug-workspace-seal": "Save a complete native VM/C:/D: checkpoint and seal its committed FAT generation; run,[name,timeout_ms]",
+    "debug-workspace-export": "Export a coherently admitted sealed file to a new exclusive destination; run,path,new_destination,[generation]",
+    "debug-workspace-keep": "Keep a witnessed new sealed output without replacing original files; run,path,new_destination,[generation]",
+    "debug-workspace-edit": "Stage a new immutable workspace generation without changing the live VM; run,generation,operation,[path,data_hex,offset,size,destination,expected_sha256,timeout_ms]",
+    "freedos-runtime-info": "Verify a selected FreeDOS runtime component; [path], or FDISBULL_FREEDOS_RUNTIME",
+    "freedos-runtime-prepare": "Build a new private FreeDOS runtime component from locked inputs; boot_image,kernel_package,freecom_package,output,mtools_dir",
     "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",
     "debug-frame-inputs": "Apply owned keyboard edges at a stopped boundary; run,edges; QEMU DOS requires the native frame-key extension",
     "debug-timeline-start": "Start bounded full/delta frame history; QEMU DOS retains complete renderer-point checkpoints losslessly with [storage_mode,keyframe_interval,period_ns,timeline,timeout_ms]",
@@ -658,6 +668,18 @@ def invoke(method, params, debugger=None):
         from .dos_migration import migration_status
 
         return migration_status(**p)
+    if method == "freedos-runtime-info":
+        from .freedos_runtime import runtime_info
+
+        return runtime_info(**p)
+    if method == "freedos-runtime-prepare":
+        import subprocess
+        from .freedos_runtime import prepare_runtime
+
+        try:
+            return prepare_runtime(**p)
+        except subprocess.SubprocessError as error:
+            raise ValueError("FreeDOS runtime preparation failed: " + str(error)) from error
     if method in ("macos-snapshot", "macos-session", "macos-session-recover"):
         from .macos_capture import NativeCapture
         native = NativeCapture()
@@ -1872,6 +1894,14 @@ def parser():
     c.add_argument("--details", action="store_true")
     c.add_argument("--surface")
     c.add_argument("--slice")
+    c = sub.add_parser("freedos-runtime-info", help=METHODS["freedos-runtime-info"])
+    c.add_argument("--path", help="Component directory; defaults to FDISBULL_FREEDOS_RUNTIME")
+    c = sub.add_parser("freedos-runtime-prepare", help=METHODS["freedos-runtime-prepare"])
+    c.add_argument("boot_image")
+    c.add_argument("kernel_package")
+    c.add_argument("freecom_package")
+    c.add_argument("output", help="New private component directory")
+    c.add_argument("--mtools-dir", required=True)
     c = sub.add_parser("macos-snapshot", help=METHODS["macos-snapshot"])
     c.add_argument("bundle_id")
     c = sub.add_parser("macos-session", help=METHODS["macos-session"])
@@ -2088,7 +2118,7 @@ def parser():
     )
     c.add_argument("project")
     c.add_argument("--executable", required=True)
-    c.add_argument("--game-dir", required=True)
+    c.add_argument("--game-dir", help="Target directory; qemu-dos defaults to the captured caller workspace")
     c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
     c.add_argument("--guest-profile", choices=["dos", "dos-pc-v1", "qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
@@ -2108,6 +2138,10 @@ def parser():
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")
     c.add_argument("--dos-arguments", help="Exact CP437 command-tail string for the DOS program, including any leading space")
+    c.add_argument("--freedos-runtime", help="Versioned minimal FreeDOS component; default selector FDISBULL_FREEDOS_RUNTIME")
+    c.add_argument("--dos-directory", help="Workspace root; defaults to game_dir, or the captured caller workspace when game_dir is omitted")
+    c.add_argument("--dos-file-mode", choices=["checkpointed", "live"], help="Native file-layer mode; live mode currently refuses")
+    c.add_argument("--dos-generation", help="Activate a retained staged workspace generation at cold launch")
     c.add_argument(
         "--backend",
         choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "wine-ne",

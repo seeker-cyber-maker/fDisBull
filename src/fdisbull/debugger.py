@@ -86,13 +86,19 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                                    transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,
                                    retrace_profile=retrace_profile,_on_spawn=_on_spawn,**checkpoint_options)
 
-    def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
+    def debugger(self, executable, game_dir=None, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
                  guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
                  qemu_checkpoint_tool=None,
-                 dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None):
-        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments)
+                 dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None,
+                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None):
+        if game_dir is None:
+            if backend != 'qemu-dos':
+                raise ValueError('This backend requires an explicit game_dir')
+            game_dir = str(Path.cwd().resolve())
+        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments,
+                               dos_directory, dos_file_mode, freedos_runtime, dos_generation)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
             raise ValueError('DOS process boot/staging options require backend=qemu-dos')
         if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
@@ -177,13 +183,13 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                 options['checkpoint_tool'] = qemu_checkpoint_tool
             if backend=='qemu-dos':
                 if self.meta['format'] in ('COM', 'MZ'):
-                    if dos_boot_image is None:
-                        raise ValueError('Native DOS COM/MZ launch requires a separate dos_boot_image')
                     from .qemu_dos_process import QemuDOSProcessSession
                     options['boot_image'] = dos_boot_image
                     return QemuDOSProcessSession(self, executable, game_dir,
                         mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
-                        arguments='' if dos_arguments is None else dos_arguments, **options)
+                        arguments='' if dos_arguments is None else dos_arguments,
+                        directory=dos_directory, file_mode=dos_file_mode, freedos_runtime=freedos_runtime,
+                        generation=dos_generation, **options)
                 if any(value is not None for value in dos_process_options):
                     raise ValueError('DOS process options require a COM/MZ project; raw boot uses its own source disk')
                 from .qemu_dos import QemuDOSSession
@@ -264,11 +270,18 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
-        if metadata.get('format') == 'fdisbull-qemu-dos-process-qcow2-v2':
+        if metadata.get('format') in ('fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1'):
             from .qemu_dos_checkpoint import _json, _sha, _unarchive
             machine, bundle = _unarchive(data)
             if metadata.get('sidecar_sha256') != _sha(_json(bundle)):
                 raise ValueError('Process checkpoint sidecar identity differs')
+            if metadata['format'] == 'fdisbull-qemu-dos-workspace-qcow2-v1':
+                from .qemu_workspace import validate_workspace
+                if (bundle.get('format') != metadata['format']
+                        or metadata.get('workspace_state_present') is not True
+                        or metadata.get('workspace') != bundle.get('workspace')):
+                    raise ValueError('File-aware checkpoint metadata differs')
+                validate_workspace(self, bundle.get('workspace'), row['version'])
             return dict(artifact=artifact, version=row['version'], sha256=row['sha256'], size=len(data),
                         metadata=metadata,
                         components=[dict(name='machine.qcow2', size=len(machine)),
@@ -293,7 +306,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
-        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2'):
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1'):
             raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
@@ -1225,6 +1238,7 @@ class DebugWorkspace:
     def __init__(self):
         self.sessions = {}
         self.async_runs = {}
+        self.startup_workspace = str(Path.cwd().resolve())
 
     def _async_result(self, run, operation, wait_ms=0):
         bounded(wait_ms,'wait_ms',0,1000)
@@ -1286,6 +1300,8 @@ class DebugWorkspace:
     def invoke(self, method, project, params):
         from .project import Project
         if method=='debug-launch':
+            if params.get('backend') == 'qemu-dos' and params.get('game_dir') is None:
+                params['game_dir'] = self.startup_workspace
             db = Project(project)
             try:
                 session = db.debugger(**params)
@@ -1349,6 +1365,10 @@ class DebugWorkspace:
                         'debug-timeline-advance':'timeline_advance','debug-timeline-rewind':'timeline_rewind',
                         'debug-timeline-stop':'timeline_stop','debug-timeline-pin':'timeline_pin',
                         'debug-timeline-image':'timeline_image'})
+        methods.update({'debug-workspace-status':'workspace_status',
+                        'debug-workspace-files':'workspace_files','debug-workspace-read':'workspace_read',
+                        'debug-workspace-seal':'workspace_seal','debug-workspace-export':'workspace_export',
+                        'debug-workspace-keep':'workspace_keep','debug-workspace-edit':'workspace_edit'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
@@ -1392,7 +1412,21 @@ class DebugWorkspace:
                 from .dos_migration import unavailable_operation
                 raise ValueError(unavailable_operation(method))
             raise ValueError('Operation is unavailable in the selected execution context')
-        return operation(**params)
+        if method == 'debug-workspace-edit' and 'data_hex' in params:
+            if 'data' in params:
+                raise ValueError('Use only data_hex for JSON workspace edits')
+            encoded = params.pop('data_hex')
+            if not isinstance(encoded, str):
+                raise ValueError('Workspace data_hex must be a hexadecimal string')
+            try:
+                params['data'] = bytes.fromhex(encoded)
+            except ValueError:
+                raise ValueError('Workspace data_hex is malformed') from None
+        result = operation(**params)
+        if method == 'debug-workspace-read':
+            result = dict(result)
+            result['data_hex'] = result.pop('data').hex()
+        return result
 
     def close(self):
         for session in self.sessions.values():

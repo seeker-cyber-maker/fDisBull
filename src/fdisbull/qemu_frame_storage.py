@@ -153,8 +153,8 @@ def _row(session, cp, expected_kind):
 
 
 def _full_metadata(session, metadata):
-    from .qemu_dos_checkpoint import FORMAT as PROCESS_FORMAT
-    if (not isinstance(metadata,dict) or metadata.get('format') != PROCESS_FORMAT
+    from .qemu_dos_checkpoint import checkpoint_format
+    if (not isinstance(metadata,dict) or metadata.get('format') != checkpoint_format(session)
             or metadata.get('host_files_restored') is not False
             or metadata.get('source_sha256') != session.metadata['source_sha256']
             or metadata.get('version_sha256') != session.metadata['version_sha256']):

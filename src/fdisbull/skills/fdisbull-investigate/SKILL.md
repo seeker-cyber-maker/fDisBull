@@ -100,6 +100,7 @@ bundle:
 | Design causal controls, screen for guest interpreters, coordinate parallel workers or set standing probes | [references/methodology.md](references/methodology.md) |
 | Qualify containers (MZ/COM/LE/NE/PE/ELF/AIL, Mach-O ARM64, Cortex-M, ROM/disc), reversible macOS UI or media reduction | [references/formats-and-media.md](references/formats-and-media.md) |
 | Analyze DOS device roots, mixed LE driver objects, or a QEMM-configured full machine | [references/dos-drivers-and-qemm.md](references/dos-drivers-and-qemm.md) |
+| Prepare a FreeDOS runtime, capture a private D: directory, inspect/edit file generations or restore file-aware checkpoints | [references/dos-file-layers.md](references/dos-file-layers.md) |
 | Test native QEMU DOS, inspect migration coverage, or select the retained DOSBox fallback | [references/dos-qemu-migration.md](references/dos-qemu-migration.md) |
 | Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [references/desqview-and-memory-search.md](references/desqview-and-memory-search.md) |
 | Compare action traces for code/register candidates or stop at a bounded instruction predicate | [references/execution-event-search.md](references/execution-event-search.md) |

@@ -8,7 +8,8 @@ READ_ONLY = frozenset({'cpu_delta_status','status','registers','memory','memory_
     'dos_process_info','dos_task_observe','dos_task_context','dos_task_scheduler_observe',
     'dos_task_memory','hooks','layer_stack','clock_observe','audio_observe',
     'display_observe','retrace_observe','input_state','keyboard_state',
-    'rewind_status','timeline_status','timeline_image','controls','close'})
+    'rewind_status','timeline_status','timeline_image','controls','close',
+    'workspace_status','workspace_files','workspace_read'})
 FULL_RECOVERY = frozenset({'cpu_delta_recover','rewind','timeline_rewind','restore_experiment'})
 
 

@@ -33,6 +33,7 @@ from .qemu_dos_frames import QemuDOSFramesMixin, FRAME_COMMANDS
 from .qemu_frame_keys import QemuFrameKeysMixin, FRAME_KEY_COMMANDS
 from .qemu_cpu_deltas import QemuCpuDeltaMixin
 from .qemu_experiments import QemuExperimentMixin
+from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
 
 
 def _sha(data):
@@ -159,7 +160,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -168,12 +169,12 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
     """
     backend_id = 'qemu-dos'
 
-    def __init__(self, project, executable, game_dir, *, boot_image, mcopy=None,
+    def __init__(self, project, executable, game_dir, *, boot_image=None, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
                  firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard',
-                 checkpoint_tool=None, _on_spawn=None):
-        from .dos_process_helper import build_loader
+                 checkpoint_tool=None, _on_spawn=None, directory=None, file_mode=None, freedos_runtime=None,
+                 generation=None):
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
 
@@ -185,6 +186,9 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
         self._serial_buffer = bytearray()
         self._process = None
         self._published = False
+        self._dos_workspace_enabled = (boot_image is None or directory is not None
+                                       or file_mode is not None or freedos_runtime is not None or generation is not None)
+        workspace_launch = None
         self._epoch_number = 1
         if project.db.in_transaction:
             raise ValueError('DOS process launch requires a project outside a caller-owned transaction')
@@ -196,6 +200,7 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
             raise ValueError('Native DOS process launch does not qualify secondary executable stubs')
         if type(boot_timeout_ms) is not int or not 1 <= boot_timeout_ms <= 600000:
             raise ValueError('DOS process startup timeout must be 1..600000 ms')
+        self._deadline = time.monotonic() + boot_timeout_ms / 1000
         from .qemu_clock import machine_clock_configuration
         machine_clock_configuration(clock_profile, 1)
         from .qemu_audio import machine_audio_configuration
@@ -210,40 +215,68 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
             raise ValueError('DOS arguments must fit CP437') from error
         if len(tail) > 126 or any(byte in tail for byte in (0, 10, 13)):
             raise ValueError('DOS command tail requires at most 126 bytes without NUL/CR/LF')
-        directory = Path(game_dir).expanduser().resolve(strict=True)
-        source = (directory / project.meta['filename']).resolve(strict=True)
-        if source.parent != directory or not source.is_file() or source.stat().st_size > 64*1024*1024:
-            raise ValueError('DOS source must be a regular file directly inside game_dir, at most 64 MiB')
-        source_data = source.read_bytes()
-        if _sha(source_data) != project.meta['source_sha256']:
-            raise ValueError('DOS executable does not match the project source hash')
-        image = Path(boot_image).expanduser().resolve(strict=True)
-        profile = QemuDOSSession._admit_guest_profile('dos' if guest_profile is None else guest_profile, image)
-        copy_tool = shutil.which('mcopy') if mcopy is None else mcopy
-        if copy_tool is None:
-            raise ValueError('Native DOS process staging requires mcopy; supply dos_mcopy explicitly')
-        nonce = secrets.token_bytes(16)
-        target = guest_name(source.name, project.meta['source_sha256'], project.meta['format'])
-        guest_target = profile['machine']['boot_drive'] + '\\' + target
-        helper = build_loader(guest_target, tail, nonce)
-        self._nonce = nonce
-        self._helper = helper
-        self._tail = tail
-        self._checkpoint_source = source
-        self._checkpoint_entry_clean = False
-        self._checkpoint_epoch = 0
-        self.dos = dos
-        self.version = selected
-        self.guest_profile = profile
-        self.run_id = uuid.uuid4().hex
-        self._runtime_epoch = self.run_id + ':process:1'
-        self._deadline = time.monotonic() + boot_timeout_ms/1000
-        try:
+        if generation is None:
+            game_directory = Path(game_dir).expanduser().resolve(strict=True)
+            source = (game_directory / project.meta['filename']).resolve(strict=True)
+            if source.parent != game_directory or not source.is_file() or source.stat().st_size > 64*1024*1024:
+                raise ValueError('DOS source must be a regular file directly inside game_dir, at most 64 MiB')
+            if _sha(source.read_bytes()) != project.meta['source_sha256']:
+                raise ValueError('DOS executable does not match the project source hash')
+        if self._dos_workspace_enabled:
+            from .dos_workspace_launch import prepare_workspace
             self._staging = tempfile.TemporaryDirectory(prefix='fdisbull-dos-process-')
+            try:
+                workspace_launch = prepare_workspace(project, game_dir, directory, file_mode,
+                                                       freedos_runtime, boot_image, self._staging.name,
+                                                       generation=generation, version_id=selected['id'])
+            except BaseException:
+                self._staging.cleanup()
+                raise
+            image = workspace_launch['image']
+            source = workspace_launch['source']
+            self._workspace_target = workspace_launch['target']
+            self._workspace_runtime_component = workspace_launch['runtime_component']
+            self._workspace_launch_identity = dict(runtime=workspace_launch['runtime_component'],
+                layout=workspace_launch['layout']['partitions'], source_dospath=workspace_launch['source_dospath'])
+        else:
+            image = Path(boot_image).expanduser().resolve(strict=True)
+        try:
+            profile = QemuDOSSession._admit_guest_profile('dos' if guest_profile is None else guest_profile, image)
+            copy_tool = shutil.which('mcopy') if mcopy is None else mcopy
+            if copy_tool is None:
+                raise ValueError('Native DOS process staging requires mcopy; supply dos_mcopy explicitly')
+            source_data = source.read_bytes()
+            if _sha(source_data) != project.meta['source_sha256']:
+                raise ValueError('Staged DOS source differs from the project source hash')
+            nonce = secrets.token_bytes(16)
+            target = guest_name(source.name, project.meta['source_sha256'], project.meta['format'])
+            guest_target = (workspace_launch['target'] if workspace_launch else
+                            profile['machine']['boot_drive'] + '\\' + target)
+            helper = self._helper_module().build_loader(guest_target, tail, nonce)
+            self._nonce = nonce
+            self._helper = helper
+            self._tail = tail
+            self._checkpoint_source = source
+            self._checkpoint_entry_clean = False
+            self._checkpoint_epoch = 0
+            self.dos = dos
+            self.version = selected
+            self.guest_profile = profile
+            self.run_id = uuid.uuid4().hex
+            self._runtime_epoch = self.run_id + ':process:1'
+            self._remaining()
+        except BaseException:
+            if self._staging is not None:
+                self._staging.cleanup()
+            raise
+        try:
+            if self._staging is None:
+                self._staging = tempfile.TemporaryDirectory(prefix='fdisbull-dos-process-')
             staged = prepare_process_disk(image, source, project.meta['source_sha256'], helper,
                 Path(self._staging.name)/'dos-runtime.img', mcopy=copy_tool,
                 startup_batch=startup_batch, target_name=target, image_format=project.meta['format'],
-                deadline=self._deadline)
+                deadline=self._deadline, stage_source=not self._dos_workspace_enabled,
+                program_guest_path=guest_target if self._dos_workspace_enabled else None)
             if staged['original_boot_image']['sha256'] != profile['boot_image']['sha256']:
                 raise ValueError('DOS boot image changed between profile admission and staging')
             self._checkpoint_launch = dict(executable=executable, boot_image=staged['prepared_boot_image']['path'],
@@ -319,6 +352,8 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
                 native_cpu_scheduler=SCHEDULER_COMMANDS <= vm.qmp_commands,
                 native_irq_preemption=PREEMPTION_COMMAND in vm.qmp_commands,
                 memory_search='paused snapshots; process lifetime epoch changes on exit/residency')
+            self.capabilities['dos_directory_layers'] = bool(workspace_launch is not None)
+            self.capabilities['dos_directory_layers_live'] = False
             self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']
@@ -350,6 +385,12 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
                     (self.run_id, selected['id'], stamp(), None, 'stopped', json.dumps(self.metadata)))
                 self._event('dos-process-entry', dict(process=deepcopy(self._process), native_stop=entry_stop))
             self._published = True
+            if workspace_launch is not None:
+                from .qemu_workspace import init_state
+                init_state(self, workspace_launch['capture'], workspace_launch['runtime_component'],
+                           workspace_launch['layout']['partitions'], workspace_launch['source_dospath'], workspace_launch['mode'],
+                           generation=workspace_launch['generation'])
+                self._persist_process()
             project._live_debuggers.append(self)
             self._launching = False
             self._checkpoint_entry_clean = True
@@ -418,8 +459,15 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
                                        space='virtual', timeout_ms=timeout))
         return b''.join(parts)
 
+    def _helper_module(self):
+        if getattr(self, '_dos_workspace_enabled', False):
+            from . import dos_workspace_helper
+            return dos_workspace_helper
+        from . import dos_process_helper
+        return dos_process_helper
+
     def _receive_report(self, deadline):
-        from .dos_process_helper import REPORT_SIZE, parse_report
+        from .dos_process_helper import REPORT_SIZE
         while len(self._serial_buffer) < REPORT_SIZE:
             remaining = deadline-time.monotonic()
             if remaining <= 0:
@@ -431,7 +479,7 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
             self._serial_buffer.extend(part)
         raw = bytes(self._serial_buffer[:REPORT_SIZE])
         del self._serial_buffer[:REPORT_SIZE]
-        return parse_report(raw, self._nonce), raw
+        return self._helper_module().parse_report(raw, self._nonce), raw
 
     def _validate_helper(self, report, raw):
         from .dos_process_helper import REPORT_SIZE
@@ -501,14 +549,14 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
                                     (json.dumps(self.metadata), self.run_id))
 
     def _observe_return(self, result):
-        from .dos_process_helper import REPORT_SIZE, parse_report
+        from .dos_process_helper import REPORT_SIZE
         ready = self._ready
         expected_pc = ready['helper_segment']*16 + ready['exit_wait_ip']
         regs = result.get('registers')
         if not regs or regs['cpu_mode'] != 'real' or int(regs['linear_pc'], 16) != expected_pc:
             raise DebuggerError('DOS process return trap did not establish the helper callback context')
         raw = self._read(ready['helper_segment']*16+ready['report_offset'], REPORT_SIZE)
-        report = parse_report(raw, self._nonce)
+        report = self._helper_module().parse_report(raw, self._nonce)
         serial, serial_bytes = self._receive_report(self._deadline)
         if raw != serial_bytes or report['type'] != 'terminated' or serial['type'] != 'terminated':
             raise DebuggerError('DOS process return reports disagree')
@@ -680,9 +728,9 @@ class QemuDOSProcessSession(QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKey
             raise
 
     def load_state(self, artifact, *, timeout_ms=60000):
-        from .qemu_dos_checkpoint import FORMAT, load_process_state
+        from .qemu_dos_checkpoint import PROCESS_FORMATS, load_process_state
         row = self.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()
-        if row is not None and json.loads(row['metadata']).get('format') == FORMAT:
+        if row is not None and json.loads(row['metadata']).get('format') in PROCESS_FORMATS:
             return load_process_state(self, artifact, timeout_ms)
         return self._load_entry_state_v1(artifact, timeout_ms=timeout_ms)
 

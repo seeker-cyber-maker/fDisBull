@@ -220,8 +220,9 @@ def project_document(project, artifact, version=None):
             or state['sha256'] != checkpoint['sha256']
             or state_metadata.get('source_sha256') != document.get('source_sha256')):
         raise ValueError('Native experiment checkpoint identity mismatch')
-    from .qemu_dos_checkpoint import FORMAT as CHECKPOINT_FORMAT, _unarchive, _sha as checkpoint_sha
-    if state_metadata.get('format') != CHECKPOINT_FORMAT:
+    from .qemu_dos_checkpoint import PROCESS_FORMATS, _unarchive, _sha as checkpoint_sha
+    CHECKPOINT_FORMAT = state_metadata.get('format')
+    if CHECKPOINT_FORMAT not in PROCESS_FORMATS:
         raise ValueError('Native experiment requires a full process checkpoint')
     _machine, bundle = _unarchive(state_data)
     if (bundle.get('format') != CHECKPOINT_FORMAT
@@ -231,6 +232,12 @@ def project_document(project, artifact, version=None):
             or bundle.get('runtime') != document.get('runtime')
             or state_metadata.get('sidecar_sha256') != checkpoint_sha(_json(bundle))):
         raise ValueError('Native experiment checkpoint sidecar differs from its source/runtime identity')
+    from .qemu_dos_checkpoint import WORKSPACE_FORMAT
+    if CHECKPOINT_FORMAT == WORKSPACE_FORMAT:
+        from .qemu_workspace import validate_workspace
+        if state_metadata.get('workspace') != bundle.get('workspace'):
+            raise ValueError('Native experiment workspace metadata differs')
+        validate_workspace(project, bundle.get('workspace'), row['version'])
     origin_run = document.get('origin_run')
     capture_epoch = document.get('capture_epoch')
     if (not isinstance(origin_run, str) or not origin_run

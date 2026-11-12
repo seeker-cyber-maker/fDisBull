@@ -17,6 +17,12 @@ from .qemu_checkpoint_controls import capture_controls, restore_controls
 from .qemu_cpu_undo_guard import full_load
 
 FORMAT = 'fdisbull-qemu-dos-process-qcow2-v2'
+WORKSPACE_FORMAT = 'fdisbull-qemu-dos-workspace-qcow2-v1'
+PROCESS_FORMATS = frozenset((FORMAT, WORKSPACE_FORMAT))
+
+
+def checkpoint_format(session):
+    return WORKSPACE_FORMAT if getattr(session, '_dos_workspace_enabled', False) else FORMAT
 COMMAND = 'x-fdisbull-dos-checkpoint-status'
 MAX_STATE = 128 * 1024 * 1024
 MAX_SIDECAR = 64 * 1024 * 1024
@@ -49,7 +55,7 @@ def _compatibility(session):
         if key.startswith('native_') and key.endswith('_admission'):
             del machine[key]
     profile = session.guest_profile
-    return dict(
+    result = dict(
         inputs={key: {field: value[field] for field in ('sha256', 'version') if field in value}
                 for key, value in inputs.items() if key != 'boot_image'},
         machine=machine,
@@ -57,6 +63,16 @@ def _compatibility(session):
             machine=profile['machine'], profile_sha256=profile['profile_sha256'],
             boot_image={key: profile['boot_image'][key] for key in ('size', 'sha256')}),
         disk_size=session.vm.checkpoint_virtual_size)
+    workspace = getattr(session, '_workspace_launch_identity', None)
+    if workspace is not None:
+        # The pinned directory is snapshot data, not a runtime compatibility
+        # requirement. Full restore may recover it after host files change.
+        result['guest_profile']['boot_image'] = deepcopy(workspace['runtime']['files']['system.img']
+            if 'files' in workspace['runtime'] else workspace['runtime'])
+        result['guest_profile']['profile_sha256'] = _sha(_json(dict(
+            profile=profile['profile'], machine=profile['machine'], workspace=workspace)))
+        result['workspace'] = deepcopy(workspace)
+    return result
 
 
 def _preflight(session):
@@ -111,7 +127,7 @@ def _origin(session):
     return dict(
         nonce=session._nonce.hex(), ready=session._ready_bytes.hex(),
         command_tail=session._tail.hex(),
-        target=session.guest_profile['machine']['boot_drive'] + '\\' +
+        target=getattr(session, '_workspace_target', None) or session.guest_profile['machine']['boot_drive'] + '\\' +
                guest_name(session.project.meta['filename'], session.metadata['source_sha256'],
                           session.project.meta['format']),
         helper_sha256=_sha(session._helper), vectors_before=session._vectors_before.hex(),
@@ -119,7 +135,10 @@ def _origin(session):
 
 
 def _decode_origin(session, origin):
+    helper_api = session._helper_module() if hasattr(session, '_helper_module') else None
     from .dos_process_helper import build_loader, parse_report
+    if helper_api is not None:
+        build_loader, parse_report = helper_api.build_loader, helper_api.parse_report
     try:
         nonce = bytes.fromhex(origin['nonce'])
         ready_bytes = bytes.fromhex(origin['ready'])
@@ -211,6 +230,8 @@ def _verify_process(session, process, origin, vm=None, memory=None, task_binding
     if read(ready['helper_segment'] * 16 + ready['report_offset'], len(raw)) != raw:
         raise ValueError('Checkpoint helper READY identity changed')
     from .dos_process_helper import loader_code_ranges
+    if hasattr(session, '_helper_module'):
+        loader_code_ranges = session._helper_module().loader_code_ranges
     for first, last in loader_code_ranges():
         address = ready['helper_segment'] * 16 + 0x100 + first
         if read(address, last - first) != helper[first:last]:
@@ -252,7 +273,7 @@ def _unarchive(data):
             raise ValueError('Process checkpoint sidecar exceeds its byte budget')
         machine = archive.read('machine.qcow2')
         bundle = json.loads(archive.read('process.json'))
-    if not isinstance(bundle, dict) or bundle.get('format') != FORMAT:
+    if not isinstance(bundle, dict) or bundle.get('format') not in PROCESS_FORMATS:
         raise ValueError('Unknown DOS process checkpoint format')
     return machine, bundle
 
@@ -284,7 +305,7 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
     scheduler = capture_scheduler(session)
     instrumentation, export_token = capture(session)
     tag = 'fdb-' + uuid.uuid4().hex
-    bundle = dict(format=FORMAT, tag=tag, source_sha256=session.metadata['source_sha256'],
+    bundle = dict(format=checkpoint_format(session), tag=tag, source_sha256=session.metadata['source_sha256'],
         version_sha256=session.metadata['version_sha256'], version=session.version['id'],
         runtime=_compatibility(session), runtime_origin=deepcopy(session.vm.inputs),
         process=deepcopy(session._process), origin=origin, registers=registers,
@@ -308,13 +329,19 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
         if len(machine) > limit:
             raise ValueError('Checkpoint exceeds its byte budget')
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
+        if getattr(session, '_dos_workspace_enabled', False):
+            from .qemu_workspace import checkpoint_workspace
+            bundle['workspace'] = checkpoint_workspace(session, machine)
         data = _archive(machine, bundle)
         if len(data) > limit:
             raise ValueError('Checkpoint exceeds its byte budget')
-        metadata = dict(format=FORMAT, source_sha256=bundle['source_sha256'],
+        metadata = dict(format=bundle['format'], source_sha256=bundle['source_sha256'],
             version_sha256=bundle['version_sha256'], origin_run=session.run_id,
             sidecar_sha256=_sha(_json(bundle)), checkpoint_scope='stopped DOS process with private disk and debugger controls',
             host_files_restored=False)
+        if 'workspace' in bundle:
+            metadata['workspace'] = deepcopy(bundle['workspace'])
+            metadata['workspace_state_present'] = True
         if instrumentation is not None:
             metadata['instrumentation'] = dict(sha256=instrumentation['sha256'],
                 clock_profile='virtual', audio_profile=session._checkpoint_launch['audio_profile'],
@@ -439,7 +466,7 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                     raise ValueError('Reconstructed checkpoint bytes differ from their stored delta reference')
             else:
                 raise ValueError('Process checkpoint source must be a full state or frame-state delta artifact')
-        if (metadata.get('format') != FORMAT
+        if (metadata.get('format') != checkpoint_format(session)
                 or metadata.get('source_sha256') != session.metadata['source_sha256']
                 or metadata.get('version_sha256') != session.metadata['version_sha256']):
             raise ValueError('Process checkpoint source, version or data identity differs')
@@ -448,12 +475,18 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
         remaining()
         machine, bundle = _unarchive(data)
         remaining()
-        expected = dict(format=FORMAT, source_sha256=session.metadata['source_sha256'],
+        expected = dict(format=checkpoint_format(session), source_sha256=session.metadata['source_sha256'],
                         version_sha256=session.metadata['version_sha256'], version=session.version['id'],
                         runtime=_compatibility(session))
         if (metadata.get('sidecar_sha256') != _sha(_json(bundle))
                 or any(bundle.get(key) != value for key, value in expected.items())):
             raise ValueError('Process checkpoint sidecar or runtime identity differs')
+        if bundle['format'] == WORKSPACE_FORMAT:
+            from .qemu_workspace import validate_workspace, verify_workspace_checkpoint
+            if metadata.get('workspace') != bundle.get('workspace') or metadata.get('workspace_state_present') is not True:
+                raise ValueError('File-aware checkpoint workspace sidecar differs')
+            validate_workspace(session.project, bundle['workspace'], session.version['id'])
+            verify_workspace_checkpoint(session, machine, bundle['workspace'])
         _source(session)
         decoded = _decode_origin(session, bundle['origin'])
         task_binding = bundle.get('task_binding')
@@ -582,6 +615,11 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                     tasks=list(session._dos_task_views), native=restored_views)
             if restored_scheduler is not None:
                 result['scheduler'] = restored_scheduler
+            if bundle['format'] == WORKSPACE_FORMAT:
+                from .qemu_workspace import restore_workspace
+                restore_workspace(session, bundle['workspace'])
+                result['workspace_restored'] = True
+                result['workspace'] = deepcopy(bundle['workspace'])
             session._event('load-state', result)
             remaining()
             session._set_deadline(previous_session_deadline)

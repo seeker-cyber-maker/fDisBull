@@ -138,7 +138,8 @@ def _owned_destination(path, identity):
 
 def prepare_process_disk(boot_image, source_path, source_sha256, helper_bytes,
                          destination, *, mcopy, startup_batch='FDAUTO.BAT',
-                         target_name=None, image_format=None, deadline=None):
+                         target_name=None, image_format=None, deadline=None,
+                         stage_source=True, program_guest_path=None):
     """Create one new private image and return independently pinned identities.
 
     ``startup_batch`` must already exist on the selected FAT12/16 boot volume.
@@ -187,6 +188,17 @@ def prepare_process_disk(boot_image, source_path, source_sha256, helper_bytes,
 
     _remaining(deadline)
     volume = _FATVolume(disk.data)
+    if type(stage_source) is not bool or stage_source and program_guest_path is not None:
+        raise ValueError('Workspace staging requires an explicit uncopied D: program')
+    if not stage_source:
+        from .dos_workspace_fat import volume_layout, parse_volume
+        if not isinstance(program_guest_path, str) or not program_guest_path.startswith('D:\\'):
+            raise ValueError('Workspace program requires an absolute D: path')
+        extent = volume_layout(disk.data)['D']
+        entries = parse_volume(disk.data[extent['offset']:extent['offset'] + extent['size']])
+        entry = entries.get(program_guest_path[3:])
+        if entry is None or entry['type'] != 'file' or entry['data'] != source.data:
+            raise ValueError('Workspace program does not match the pinned source')
     startup_path = _guest_path(startup_batch, volume)
     if not startup_path.endswith('.BAT'):
         raise ValueError('The selected startup member must be an existing .BAT file')
@@ -204,7 +216,7 @@ def prepare_process_disk(boot_image, source_path, source_sha256, helper_bytes,
     extensions = ('.COM',) if image_format == 'COM' else ('.EXE', '.COM')
     if not program_name.endswith(extensions):
         raise ValueError('DOS program target extension differs from its image format')
-    for name in (program_name, HELPER_NAME):
+    for name in ((program_name, HELPER_NAME) if stage_source else (HELPER_NAME,)):
         if _root_present(volume, name):
             raise ValueError('DOS staging name already exists in the boot image: ' + name)
     appended = ('\r\n' + helper_path + '\r\n').encode('ascii')
@@ -242,7 +254,7 @@ def prepare_process_disk(boot_image, source_path, source_sha256, helper_bytes,
         if _sha(target.read_bytes()) != disk.sha256:
             raise ValueError('Private DOS disk copy differs from its original input')
         image_argument = str(target) + (f'@@{volume.offset}' if volume.offset else '')
-        staged_members = ((program_path, source.data, False),
+        staged_members = (((program_path, source.data, False),) if stage_source else ()) + (
                           (helper_path, helper_bytes, False),
                           (startup_path, after_startup, True))
         with tempfile.TemporaryDirectory(prefix='fdisbull-dos-stage-', dir=target.parent) as temporary:
@@ -296,7 +308,8 @@ def prepare_process_disk(boot_image, source_path, source_sha256, helper_bytes,
             original_boot_image=disk.metadata(),
             prepared_boot_image=dict(path=str(target), size=len(staged_data), sha256=_sha(staged_data)),
             program=dict(source_path=str(source.path), source_sha256=source.sha256,
-                         size=len(source.data), image_format=image_format, guest_path=program_path),
+                         size=len(source.data), image_format=image_format,
+                         guest_path=program_path if stage_source else program_guest_path),
             helper=dict(guest_path=helper_path, size=len(helper_bytes), sha256=_sha(helper_bytes)),
             startup=dict(guest_path=startup_path, before_sha256=_sha(before_startup),
                          after_sha256=_sha(after_startup), append_hex=appended.hex(),

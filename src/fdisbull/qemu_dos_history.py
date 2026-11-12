@@ -33,6 +33,7 @@ _READ_ONLY = frozenset({
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe',
     'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
+    'workspace_status', 'workspace_files', 'workspace_read',
 })
 
 
@@ -103,7 +104,8 @@ def _history_operation(function):
                 if function.__name__ in ('rewind_start', 'rewind_record', 'rewind',
                         'timeline_start', 'timeline_advance', 'timeline_rewind', 'advance_frames', 'frame_inputs',
                         'cpu_delta_start','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover',
-                        'save_experiment','restore_experiment','compare_experiment'):
+                        'save_experiment','restore_experiment','compare_experiment',
+                        'workspace_seal','workspace_export','workspace_keep'):
                     try:
                         self.close()
                     except Exception:
@@ -168,7 +170,8 @@ class QemuDOSHistoryMixin:
         if name in ('layers', 'dos_task_layers'):
             active = kwargs.get('active', args[0] if args else None)
             readonly = active is None
-        experiment_mutation = name in ('save_experiment','restore_experiment','compare_experiment')
+        experiment_mutation = name in ('save_experiment','restore_experiment','compare_experiment',
+                                      'workspace_seal','workspace_export','workspace_keep')
         if (getattr(self, '_history_busy', False) and not experiment_mutation) or readonly:
             return
         live = getattr(self, '_qemu_history_live', None)
@@ -373,8 +376,8 @@ class QemuDOSHistoryMixin:
         if row is None or row['kind'] != 'state' or row['sha256'] != result['sha256']:
             raise ValueError('Checkpoint artifact readback differs from its returned receipt')
         meta = json.loads(row['metadata'])
-        from .qemu_dos_checkpoint import FORMAT as PROCESS_FORMAT
-        if meta.get('format') != PROCESS_FORMAT or meta.get('host_files_restored') is not False:
+        from .qemu_dos_checkpoint import checkpoint_format
+        if meta.get('format') != checkpoint_format(self) or meta.get('host_files_restored') is not False:
             raise ValueError('History requires the complete native process checkpoint format')
         return dict(artifact=result['artifact'], sha256=result['sha256'], size=result['size'],
                     live_disk_bytes_before=disk_before, live_disk_bytes_after=disk_after,
@@ -435,8 +438,8 @@ class QemuDOSHistoryMixin:
                 or _sha(bytes(row['data'])) != checkpoint['sha256']):
             raise ValueError('History checkpoint artifact is missing or corrupt')
         meta = json.loads(row['metadata'])
-        from .qemu_dos_checkpoint import FORMAT as PROCESS_FORMAT
-        if (meta.get('format') != PROCESS_FORMAT or meta.get('host_files_restored') is not False
+        from .qemu_dos_checkpoint import checkpoint_format
+        if (meta.get('format') != checkpoint_format(self) or meta.get('host_files_restored') is not False
                 or meta.get('source_sha256') != self.metadata['source_sha256']
                 or meta.get('version_sha256') != self.metadata['version_sha256']):
             raise ValueError('History node is not a full native DOS process checkpoint')

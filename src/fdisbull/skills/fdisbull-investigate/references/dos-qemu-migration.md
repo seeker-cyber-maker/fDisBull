@@ -649,7 +649,7 @@ mutation, callback, deadline or evidence results close the VM without replay.
 
 The new host/native witnesses are `tests/test_qemu_input_schedule.py` and
 `tests/test_qemu_input_schedule_native.py`; test paths are not passing receipts.
-All 127 default-switch qualifications remain open and DOSBox stays the default.
+All 134 default-switch qualifications remain open and DOSBox stays the default.
 Legacy `guest_ms`, timed press/type, frame presses, pixel/INT33 semantics and
 whole-game timing remain unqualified. The separate host clock-sync controller
 preserves input's first-stop semantics and never re-arms a cancelled batch.
@@ -745,7 +745,7 @@ scripts reject an unsupported profile or invalid literal timeout before earlier
 writes. A journal can commit before a late timeout is detected, so inspect
 `error.result` for retained observation evidence. Do not infer rollback or
 replay. Use the separate explicit operations below for bounded edge waiting
-or host auto-sync. All 127 default-switch gates remain open.
+or host auto-sync. All 134 default-switch gates remain open.
 
 ## Synchronize at an explicit cooperation point
 
@@ -885,7 +885,7 @@ overlapping coordinates only with the immediately preceding probe, bounded to
 not contain one. Keep `frame_probe`, `video.probe`, coordinate clicks and scene
 readiness unavailable until their mode/frame/state and mouse mappings are
 qualified. Do not infer cursor position, INT33 semantics, VBlank, input
-consumption or guest drawing completion. All 127 promotion qualifications remain
+consumption or guest drawing completion. All 134 promotion qualifications remain
 open, and DOSBox remains the default.
 
 ## Observe VGA configuration identity
@@ -953,7 +953,7 @@ native evidence and completed clock brackets in `error.result`. Successful
 `machine-vga-configuration-observe` journal entries survive reopening as
 history, without restoring a live machine. Reset/overflow/restore identity
 rules do not provide checkpoint compatibility. DOSBox stays the default and
-all 127 promotion qualifications remain open.
+all 134 promotion qualifications remain open.
 
 ## Declare pixel displacement for relative mouse motion
 
@@ -1031,4 +1031,4 @@ callbacks with a different application displacement. Do not promote those
 fixture facts to arbitrary DOS drivers/games. Legacy coordinate click/frame
 operations and scene consumers remain unqualified. General `timed_input`,
 `absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false.
-DOSBox stays the default; all 127 promotion qualifications remain open.
+DOSBox stays the default; all 134 promotion qualifications remain open.

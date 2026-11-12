@@ -106,7 +106,8 @@ class QemuCpuDeltaMixin:
                 or row['sha256'] != anchor['sha256'] or len(row['data']) != anchor['size']
                 or _sha(bytes(row['data'])) != anchor['sha256']):
             raise ValueError('Selected CPU delta recovery anchor is missing or corrupt')
-        from .qemu_dos_checkpoint import FORMAT as CHECKPOINT_FORMAT, _unarchive, _compatibility, _json
+        from .qemu_dos_checkpoint import checkpoint_format, _unarchive, _compatibility, _json
+        CHECKPOINT_FORMAT = checkpoint_format(self)
         metadata=json.loads(row['metadata'])
         if (not isinstance(metadata,dict) or metadata.get('format') != CHECKPOINT_FORMAT
                 or metadata.get('source_sha256') != self.metadata['source_sha256']

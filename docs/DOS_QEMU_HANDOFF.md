@@ -3931,3 +3931,98 @@ planned FreeDOS/directory/file layers, and all **127 formal surface
 qualifications and seven campaigns** remain open. DOSBox-X stays default and
 retained until local parity is proved. No CI, release tag, release publication
 or installation change is part of this continuation.
+
+
+## Checkpointed FreeDOS directory/file layers (2026-11-11)
+
+This bounded implementation advances the bundled FreeDOS/file-workspace
+amendment without closing that entire plan. It keeps DOSBox-X as the default
+and retained backend. No CI, release/tag or shared-prefix installation is part
+of this continuation.
+
+The optional native COM/MZ launch prepares one private composite disk: a small
+FreeDOS 1.4 C: system and a FAT16 D: directory workspace. C: and D: share disk0,
+so the existing native full snapshot transaction captures both alongside CPU,
+DOS kernel caches, JFT/SFT handles, file offsets and directory-search state.
+The process helper selects D: and the executable's parent directory before
+load-only EXEC. Explicit roots and deterministic 8.3 aliases cover bounded
+nested paths; symlinks/special entries, unstable captures and unsupported
+mappings refuse admission. See [the file-layer guide](DOS_FILE_LAYERS.md).
+
+A caller-selected root defaults to game_dir; only omitted game_dir uses the
+captured Python/CLI cwd or server startup workspace. Admission retains original
+host paths, mappings and identities. Guest reads/writes use a copied private
+FAT volume, including raw disk access; host originals are never mounted writable.
+File generations retain immutable 64 KiB chunks, hashes, lineage and protected
+original paths. Full checkpoints seal committed FAT inventories from a supplied
+standalone snapshot copy, never from a live QCOW image. Rewind branches preserve
+earlier generations and original chunks. New checkpoint format
+`fdisbull-qemu-dos-workspace-qcow2-v1` binds the file-generation record, disk
+layout, runtime component and QCOW/raw/volume hashes. Restore validates these
+before replacing the VM and adopts the namespace only after full restoration.
+Older checkpoint formats keep their earlier scope.
+
+Python and JSON expose workspace status, base/effective/difference inventories,
+reads, full-checkpoint seal, exclusive export/keep, and immutable staged edits.
+Create/import/write/range/resize/rename/delete produce inactive children;
+`dos_generation` activates a selected child at cold boot without requiring the
+original host tree. A changed executable cannot silently replace the original
+source-bound program. JSON file payloads use data_hex. Physical exports survive
+rewind while historical guest namespace membership is restored; importing an
+export and cold launching a new generation makes it visible again. An explicitly
+authored create can qualify for keep. A raw guest directory difference cannot
+prove create versus rename, so guest outputs use general exclusive export after
+the caller establishes close/flush. Originals and pre-existing destinations
+remain protected, including after rename and deletion.
+
+FreeDOS runtime preparation pins the official floppy, kernel and FreeCOM
+archives, carries their complete source packages/notices, extracts matching
+kernel/shell bytes, and builds a separate minimal image and portable archive.
+Source and installed-wheel recipe resources are covered by local checks.
+The final private receipt pins component-04 and its native boot evidence;
+manifest boot_validation remains pending because the builder does not run QEMU.
+The standalone rebuild reproduced guest files/boot code but changed FAT serial
+and timestamps; byte-reproducible builds remain open. Authored MBR assembly
+matches the emitted 440-byte loader exactly.
+
+Local witnesses cover COM/MZ CRUD and open-handle/offset restore, dirty writes
+and FindFirst/FindNext cursor restoration, cold restore after moving the original
+host tree, staged-byte activation, aliased subdirectory relative I/O, and a
+flushed binary export that survives rewind. Separate existing deep native
+scenarios run against the composite disk with their assertions preserved:
+comparative trials with private IRQ/held-key state, selected CPU/RAM inverse
+with full recovery, and lossless frame histories with task-private RAM/fetch
+layers and hooks. The full prior preservation selection is retained as well.
+
+Limits remain explicit: live refresh/host synchronization is refused; automatic
+keep patterns and guest-create provenance are open; file inventories contain
+committed FAT bytes, while unclosed buffers live in the accompanying full VM
+checkpoint. A malformed/transient FAT inventory is refused. Long-filename DOS
+APIs, network filesystems, general driver/application compatibility and every
+internal DOS capture boundary are unqualified. Selected CPU/RAM undo still
+freezes execution and does not rewind files/devices; a full recovery restores
+the file-aware anchor. Manual/renderer histories retain their existing scopes,
+including completed_guest_frames=false. host_files_restored=false remains
+accurate: the private guest filesystem is restored; physical host files are not.
+
+The inventory now tracks 134 surfaces (the 127 prior surfaces plus seven
+native-only workspace routes) and seven compatibility campaigns. All formal
+promotion qualifications remain open. No DOSBox removal is permitted.
+
+
+Fresh local verification for this slice: **2,257 passes across 131 preservation
+files**, **nine new native workspace cases**, **323 retained DOSBox cases**,
+**14 retained N20 history cases**, and **63 payload/skill/migration/dispatch
+checks**; zero failures/errors/skips in these completed selections. Selections
+overlap. Python source/test hashes stayed unchanged during the 131-file run.
+A subsequent CLI-only correction permits omitted --game-dir for qemu-dos and
+adds a parser regression; affected CLI/backend/dispatch and package checks are
+rerun after that correction. Native engine, checkpoint and filesystem code is
+unchanged from the preservation run. N19/N20/N21 binaries are unchanged.
+
+The final CLI follow-up selection passed **83 tests** with **one unrelated
+ScummVM/private-KQ1 test skipped** because that separate runtime/input was not
+provided. Only cli.py and its new runtime CLI test differ from the frozen
+preservation-run Python hashes; the affected parser/backend/dispatch/payload
+selection was rerun on those final bytes. This is a source contribution and
+private prepared runtime, not a tagged release or activated installation.
