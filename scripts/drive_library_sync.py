@@ -21,7 +21,7 @@ import sys
 import time
 import uuid
 
-from fdb_backup import capture_fdb
+from fdb_backup import capture_fdb, source_identity
 
 FORMAT = 'fdisbull-drive-sync-1'
 
@@ -400,15 +400,19 @@ def _sync_fdb_phase(config, db, directory, run, result, transport):
             result['phase']='capturing_and_uploading_fdb'
             _atomic_json(Path(config['state_dir'])/'status.json',result)
             signature = _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots))
+            identity = source_identity(source)
+            identifier = identity['project_id']
             previous = db.execute('SELECT signature,generation FROM projects WHERE path=?',(source,)).fetchone()
             if previous and previous[0] == signature:
                 prior=db.execute('SELECT value FROM metadata WHERE name=?',('project:'+source,)).fetchone()
                 if not prior:raise ValueError('FDB remote manifest reference is missing')
                 proof=json.loads(prior[0])
-                if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
-                    raise ValueError('Existing FDB generation remote verification failed')
-                continue
-            identifier = hashlib.sha256(str(Path(source).absolute()).encode()).hexdigest()[:20]
+                if proof.get('source') == identity:
+                    if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
+                        raise ValueError('Existing FDB generation remote verification failed')
+                    continue
+                # Older completion records lack the recoverable source name.
+                # Preserve them and publish one freshly labeled generation.
             output = directory / ('fdb-'+identifier)
             manifest = capture_fdb(source, roots, output, config.get('snapshot_timeout_seconds',120))
             # Keep every complete project version independently
@@ -435,7 +439,7 @@ def _sync_fdb_phase(config, db, directory, run, result, transport):
             if _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots)) == signature:
                 db.execute('INSERT OR REPLACE INTO projects VALUES (?,?,?)',(source,signature,generation))
                 db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('project:'+source,
-                           _json({'remote_path':remote_generation,'expected':_proofs(output)})))
+                           _json({'remote_path':remote_generation,'expected':_proofs(output),'source':identity})))
                 db.commit()
             result['uploaded_files'] += uploaded.get('files',0)
             result['projects'].append(dict(path=source, id=identifier, generation=generation,

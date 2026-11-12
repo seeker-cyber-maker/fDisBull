@@ -296,6 +296,54 @@ def test_fdb_upload_uses_consistent_snapshot_and_preserves_new_generations(tmp_p
     assert transport.remote[second_path]["project.fdb"]
 
 
+def test_legacy_fdb_proof_without_source_recaptures_once_then_reuses(tmp_path):
+    library_root=tmp_path/'library';(library_root/'targets').mkdir(parents=True)
+    fdb_root=tmp_path/'fdb';_make_fdb_root(fdb_root)
+    database=fdb_root/'projects'/'analysis.fdb'
+    with sqlite3.connect(database) as db:
+        db.execute('CREATE TABLE facts(value TEXT)')
+        db.execute("INSERT INTO facts VALUES ('preserve this generation')")
+    config=_config(tmp_path,library_root,fdb_root);transport=FakeTransport()
+
+    first=sync.run_once(config,transport)
+    assert first['status']=='complete' and len(first['projects'])==1
+    first_project=first['projects'][0]
+    first_path=f"fdb/projects/{first_project['id']}/{first_project['generation']}"
+    first_bytes=dict(transport.remote[first_path])
+
+    # Simulate an existing completion receipt written before source identity
+    # was part of the remote-generation proof.
+    metadata_name='project:'+str(database)
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        row=db.execute('SELECT value FROM metadata WHERE name=?',(metadata_name,)).fetchone()
+        proof=json.loads(row[0]);proof.pop('source',None)
+        db.execute('UPDATE metadata SET value=? WHERE name=?',
+                   (json.dumps(proof,sort_keys=True,indent=2)+'\n',metadata_name))
+
+    legacy=sync.run_once(config,transport)
+    assert legacy['status']=='complete' and len(legacy['projects'])==1
+    replacement=legacy['projects'][0]
+    assert replacement['generation']!=first_project['generation']
+    replacement_path=f"fdb/projects/{replacement['id']}/{replacement['generation']}"
+    assert transport.remote[first_path]==first_bytes
+    assert transport.remote[replacement_path]['project.fdb']
+    assert 'manifest.json' in transport.remote[replacement_path]
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        current=json.loads(db.execute('SELECT value FROM metadata WHERE name=?',
+                                      (metadata_name,)).fetchone()[0])
+    assert current['source']=={
+        'path':str(database.absolute()),
+        'name':database.name,
+        'project_id':hashlib.sha256(str(database.absolute()).encode()).hexdigest()[:20],
+    }
+
+    fdb_calls_before=[call for call in transport.calls if call[0].startswith('fdb/projects/')]
+    unchanged=sync.run_once(config,transport)
+    assert unchanged['status']=='complete' and unchanged['projects']==[]
+    assert [call for call in transport.calls if call[0].startswith('fdb/projects/')]==fdb_calls_before
+    assert transport.remote[first_path]==first_bytes
+
+
 def test_failed_library_manifest_keeps_source_pending_for_retry(tmp_path):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     (root/'targets'/'a.com').write_bytes(b'authored')

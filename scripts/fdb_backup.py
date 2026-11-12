@@ -86,6 +86,13 @@ def _hash_file(path,end,maximum):
     return size,digest.hexdigest()
 
 
+def source_identity(path):
+    """Keep the original project name recoverable from an opaque generation."""
+    source=Path(path).expanduser().absolute()
+    return {'path':str(source),'name':source.name,
+            'project_id':hashlib.sha256(str(source).encode()).hexdigest()[:20]}
+
+
 def capture_fdb(path, objects_roots, output_newdir, timeout_seconds):
     """Snapshot one FDB and all recursively referenced objects, without fake data.
 
@@ -198,7 +205,7 @@ def capture_fdb(path, objects_roots, output_newdir, timeout_seconds):
             size,digest=_hash_file(snapshot,end,MAX_DATABASE)
             with open(snapshot,'rb') as stream: os.fsync(stream.fileno())
             os.fsync(objectsfd)
-            manifest={'format':FORMAT,'database':{'path':'project.fdb','size':size,'sha256':digest},
+            manifest={'format':FORMAT,'source':source_identity(source),'database':{'path':'project.fdb','size':size,'sha256':digest},
                       'objects':[{'path':'objects/'+key,'size':refs[key]['size'],'sha256':key,
                                   'encodings':sorted(refs[key]['encodings'])} for key in sorted(refs)],
                       'objects_total_bytes':total_objects,

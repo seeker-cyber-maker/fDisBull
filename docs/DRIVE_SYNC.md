@@ -1,17 +1,26 @@
 # Private Drive library synchronization
 
-As of November 11, 2026, the updated local synchronization service is installed
-and enabled. Its initial library transfer remains in progress and is not yet
-qualified as complete; retained partial uploads are not completion evidence.
-The current intake plan contains 7,350 files and 5,063 distinct objects; these
-are scope counts, not verified upload progress. A newly added authored FDB was backed up automatically by the installed
-watcher/worker and downloaded successfully with all three referenced objects,
-verified hashes, SQLite integrity and an isolated Project reopen. A separate completed
-FDB generation was downloaded from Drive and restored locally with all nine
-referenced objects and a successful SQLite integrity check.
+As of November 12, 2026, the local synchronization service is installed and
+enabled with a dedicated Desktop OAuth client. The initial selected intake
+copy is complete: 7,350 ordinary files, represented by 5,063 unique objects
+(1,514,440,745 object bytes), passed independent Drive size/MD5 readback. The
+downloaded completion manifest exactly matches its local canonical bytes.
+Another 124 symlinks are metadata only. Both captured FDBs were independently
+downloaded with their three- and nine-object closures, verified by SHA-256 and
+size, checked for SQLite integrity, and reopened in isolated Project instances.
+These checks cover the admitted selection and referenced FDB objects.
+
+A subsequent authored intake addition and FDB edit were captured by the
+automatic service without a manual worker start. Independent readback verified
+the updated 7,351-file namespace and all 5,064 unique objects, the added file's
+SHA-256, and the earlier manifest's continued availability. Fresh labeled FDB
+generations passed database/object hash checks, SQLite integrity and isolated
+reopen; the authored database edit and original project identities were present.
+These receipts establish the automatic service outcome; they do not distinguish
+the FSEvents wake from the one-minute fallback as the production run's cause.
 
 The service is one-way: the local intake library and private FDB repository are
-the sources, and the [private fDisBull-Sync Drive folder](https://drive.google.com/drive/folders/14q0TFwF42EQ5ux5cQ007rr-Woc7C_mRG)
+the sources, and the [private fDisBull-Sync-Dedicated Drive folder](https://drive.google.com/drive/folders/1drp905-ll27cME_zi7g-TMGnLCAgfD_N)
 is the destination.
 
 The current local setup uses:
@@ -19,12 +28,13 @@ The current local setup uses:
 - Configuration: `~/.local/state/fdisbull-drive-sync/config.json`.
 - Local wake marker: `~/.local/state/fdisbull-drive-sync/wake`.
 - Separate private mode-0600 rclone OAuth configuration:
-  `~/.local/state/fdisbull-drive-sync/rclone.conf`.
+  `~/.local/state/fdisbull-drive-sync/rclone-first.conf`, profile
+  `fdisbull-drive-first`.
 - Active worker and watcher runtime: `~/.local/state/fdisbull-drive-sync/runtime/`.
 - Inspectable versioned service payload:
   `/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/service/v1-20261111/`.
 - Private state, snapshots, receipts and logs:
-  `/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/sync-state/`.
+  `/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/sync-state-first-20261112/`.
 - Agents: `org.fdisbull.drive-sync.watcher` and
   `org.fdisbull.drive-sync.worker`; the worker uses a 60-second interval and
   watches the marker. Confirm launchd state and the latest receipt before
@@ -39,15 +49,30 @@ mount identity or verification fails, retain the existing copies and report a
 failure. No password from the existing encrypted rclone configuration is needed
 for this separate setup.
 
-This setup currently uses rclone's shared Google Drive client ID. Rclone says
-that ID will stop working during 2026; creating and authorizing a dedicated
-Desktop OAuth client is a follow-up, not an indefinite guarantee for the present
-grant. A new client's per-file access to the existing folder must be verified
-before switching. See [rclone's own-client guidance](https://rclone.org/drive/#making-your-own-client-id).
-One bounded diagnostic received Google Drive HTTP 403 `quotaExceeded`. A new
-Google Cloud project could not be created because the account reached its
-project limit; no existing project was changed. The choice between an existing
-project, resolving the limit, or temporary shared-client use remains open.
+The dedicated client is named **fDisBull Drive Backup**, in the existing Google
+Cloud project **first** (`first-498620`). Its Drive API is enabled, and its
+limited grant and owner-only destination were read back successfully. Existing
+OAuth clients are preserved. The earlier shared-client folder and its partial
+uploads remain available separately; `drive.file` access is specific to the
+app, so this client created its own destination. See
+[rclone's own-client guidance](https://rclone.org/drive/#making-your-own-client-id).
+
+The shared OAuth app remains **External / Testing**. Google requires renewed
+authorization after seven days for this grant. Production setup remains open:
+the app needs the appropriate reachable homepage, privacy and terms URLs and
+domain ownership configuration. The supplied `brewsterjennings.ca` currently
+returns Cloudflare HTTP 521, and its server/website is still being set up.
+Manual Google domain-verification instructions were prepared; no DNS records,
+website settings, shared branding or publishing status were changed. Once
+Production is configured, authorize again under that configuration and verify
+a real backup. The current grant does not establish indefinite unattended
+operation. See [Google's publishing-status guidance](https://support.google.com/cloud/answer/15549945?hl=en)
+and [branding requirements](https://support.google.com/cloud/answer/15549049?hl=en-AU).
+
+The earlier `/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/sync-state/`
+is retained. The active state reuses verified local captures stored there;
+preserve those files and their location. Old remote completion records were
+not carried across clients: the new destination was verified independently.
 
 ## Scope and local wake-up
 
@@ -124,13 +149,16 @@ Each FDB is a separate fresh generation, rather than a copy of its live file.
 The worker uses SQLite online backup to capture committed WAL state, then
 collects and SHA-256 verifies the recursively referenced external objects. It
 uploads and verifies the snapshot and objects first; `manifest.json` is the
-last completion artifact. The manifest records hashes and sizes for
-`project.fdb` and its `objects/` closure. The scope is the snapshot and
+last completion artifact. The manifest records the original source path,
+filename and stable project ID, plus hashes and sizes for `project.fdb` and
+its `objects/` closure. Older generations without source identity remain
+preserved; the worker creates one fresh labeled generation before reusing the
+unchanged project's completion proof. The scope is the snapshot and
 referenced objects; backend runtimes, source media and other external files are
 not automatically included. Missing or corrupt referenced objects prevent a
 complete generation. A completed local or host-test capture is not proof of a
-completed Drive upload; the separate nine-object restore above is the current
-bounded cloud evidence. See [SQLite's backup API](https://sqlite.org/backup.html)
+completed Drive upload; the downloaded three- and nine-object restores above
+are bounded cloud evidence. See [SQLite's backup API](https://sqlite.org/backup.html)
 and [rclone copy](https://rclone.org/commands/rclone_copy/).
 
 The current snapshot bounds are 2 GiB for the database, 128 MiB per object and
@@ -150,8 +178,9 @@ are metadata only; recreating or following them requires a separate decision.
 The Drive objects directory uses hashes as names; the manifest retains the
 original filenames and directory structure.
 
-For a verified Drive transfer, select its exact project ID and
-complete generation. Copy the generation to a **new private directory** using
+For an FDB, select its exact project ID and complete generation. The manifest's
+`source` field identifies the original filename and path; the snapshot itself
+uses the portable name `project.fdb`. Copy the generation to a **new private directory** using
 the authorized rclone profile, verify `manifest.json` and every recorded SHA-256
 and size, then open `project.fdb` with `FDISBULL_TARGET_STORE` set to that
 restored generation's `objects` directory. Use an isolated location so no
@@ -161,13 +190,13 @@ Preserve earlier generations and conflicting content; retention or deletion is
 a separate explicit decision.
 
 
-### Local launchd control-path correction
+## Local launchd control paths
 
 The initial external stdout/stderr paths caused launchd EX_CONFIG before either
 program started. The installed agents now use a small runtime under
 `~/.local/state/fdisbull-drive-sync/runtime`, a local WorkingDirectory and local
 error logs; stdout is discarded. Bulk snapshots and durable receipts stay in
-`/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/sync-state`. The existing
+`/Volumes/CODEX/Codex_Projects/fDisBull-fdb-private/sync-state-first-20261112`. The existing
 mirror service and encrypted default rclone configuration are preserved.
 The subsequent Drive grant and private root were verified, and the updated
 worker was installed atomically and enabled. A loaded agent alone is not
@@ -176,7 +205,7 @@ cloud-backup evidence.
 
 ## Verification and remaining work
 
-The final focused host selection passed 34 tests, including active-WAL snapshot and
+The final focused host selection passed 36 tests, including active-WAL snapshot and
 isolated Project restore, recursive object closure, failed transfer/manifest
 retry, remote disappearance refusal, scope-change fencing and a source rescan
 before publishing the namespace. The installed watcher writes its marker and
@@ -186,10 +215,15 @@ postpone a wake forever. Native updates are installed by atomic replacement;
 in-place replacement caused an observed OS code-signing cache rejection during
 setup. No security setting or volume ownership was changed.
 
-The separate cloud FDB restore establishes that one captured generation and
-its nine referenced objects can be downloaded and opened with SQLite integrity
-intact. A bounded cloud test of the installed content-addressed layout verified
-both downloaded versions by SHA-256, retained the older generation after a
-deliberately refused new manifest, and verified the exact new manifest after
-retry. The focused host suite passed 34 tests. These are bounded receipts; the
-initial library transfer remains incomplete and requires its own final receipt.
+The dedicated-client cloud checks verified both downloaded library versions by
+SHA-256, retained the older generation after a deliberately refused new
+manifest, and verified the exact new manifest after retry. An actual Drive
+incompatible overwrite was refused with `--immutable`, with earlier bytes
+unchanged. Both captured FDBs and their referenced objects passed independent
+restore checks. The separate initial-copy receipt establishes completion for
+the selected 7,350-file namespace; later additions have separate manifests.
+
+The remaining operational work is the website/domain and shared OAuth app's
+Production configuration, followed by renewed authorization and a real backup
+check. No CI, release, tag, merge or shared fDisBull installation was performed.
+DOSBox-X is retained pending the separate local parity milestone.

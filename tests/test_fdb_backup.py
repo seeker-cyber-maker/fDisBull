@@ -26,6 +26,24 @@ def test_online_snapshot_includes_committed_wal_and_nested_closure(tmp_path):
     conn.close()
 
 
+def test_snapshot_retains_original_project_identity_in_opaque_output(tmp_path):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    database=source_dir/'meaningful-project.fdb'
+    with sqlite3.connect(database) as connection:
+        connection.execute('CREATE TABLE authored(value TEXT)')
+        connection.execute('INSERT INTO authored VALUES(?)',('preserved',))
+    output=tmp_path/'opaque-id'/'opaque-generation';output.parent.mkdir()
+    manifest=backup.capture_fdb(database,[],output,20)
+    original=str(database.expanduser().absolute())
+    expected={'path':original,'name':'meaningful-project.fdb',
+              'project_id':hashlib.sha256(original.encode('utf-8')).hexdigest()[:20]}
+    assert manifest['source']==expected
+    assert json.loads((output/'manifest.json').read_text())['source']==expected
+    with sqlite3.connect(output/'project.fdb') as restored:
+        assert restored.execute('PRAGMA integrity_check').fetchone()==('ok',)
+        assert restored.execute('SELECT value FROM authored').fetchone()==('preserved',)
+
+
 def test_missing_or_corrupt_object_has_no_completion_manifest(tmp_path):
     source=tmp_path/'source';source.mkdir();store=tmp_path/'store';objects=TargetStore(store)
     ref=objects.put(b'valuable');db=source/'test.fdb'
