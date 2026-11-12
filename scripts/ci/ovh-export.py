@@ -6,7 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 
 RECEIPTS = {"test-and-package": "ordinary.json",
@@ -26,7 +26,26 @@ def decimal(value):
     return value
 
 
+def reference_path(value, project_directory):
+    if (not isinstance(value, str) or not value or '..' in PurePosixPath(value).parts
+            or str(PurePosixPath(value)) != value):
+        raise ValueError('Unsafe artifact reference')
+    path = PurePosixPath(value)
+    base = PurePosixPath(project_directory)
+    if not base.is_absolute() or '..' in base.parts or str(base) != project_directory:
+        raise ValueError('Invalid producer project directory')
+    if path.is_absolute():
+        try:
+            path = path.relative_to(base)
+        except ValueError as exc:
+            raise ValueError('Artifact reference outside producer project') from exc
+    if str(path) in ('', '.'):
+        raise ValueError('Invalid artifact reference')
+    return str(path)
+
+
 def export(work, root, env):
+    work = work.resolve()
     sha = env["CI_COMMIT_SHA"]
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("Invalid source identity")
@@ -37,6 +56,7 @@ def export(work, root, env):
     record = {"schema": "fdisbull-ovh-result-export-v1", "source_commit": sha,
               "pipeline_id": env["CI_PIPELINE_ID"], "job_id": env["CI_JOB_ID"],
               "job_name": env["CI_JOB_NAME"], "job_status": env.get("CI_JOB_STATUS"),
+              "project_directory": str(work),
               "export_success": False}
     try:
         path = Path(__file__).with_name("export-local-artifacts.py")
@@ -119,7 +139,8 @@ def verify(work, root, env):
                 for child in value:
                     yield from references(child)
         for reference in references(receipt):
-            if reference["path"] not in seen or digest(target / "exported" / reference["path"]) != reference["sha256"]:
+            relative = reference_path(reference["path"], meta.get("project_directory", ""))
+            if relative not in seen or digest(target / "exported" / relative) != reference["sha256"]:
                 raise ValueError("A canonical job artifact is missing or differs in preserved results")
     print("All four ordinary/native job exports verified on OVH")
 

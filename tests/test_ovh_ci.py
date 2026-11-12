@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -40,7 +41,7 @@ def git(work, *args):
 
 
 @pytest.fixture
-def exports(tmp_path):
+def exports(tmp_path, request):
     work = tmp_path / 'work'
     work.mkdir()
     git(work, 'init', '-q')
@@ -54,7 +55,25 @@ def exports(tmp_path):
     receipts.mkdir(parents=True)
     root = tmp_path / 'results'
     for job, (name, receipt) in enumerate(exporter.RECEIPTS.items(), 101):
-        (receipts / receipt).write_text(json.dumps({'job_id': str(job)}))
+        document = {'job_id': str(job)}
+        if name == 'native-unified':
+            paths = ['.native/pe/qemu-9.2.4/build/qemu-system-x86_64', '.native/pe/linux-amd64',
+                     '.native/pe/runtime.cpio.gz', '.native/pe/oracle.exe',
+                     '.native/backends/layers/dosbox-x', '.native/pe/dos-runtime.cpio.gz']
+            inputs = {}
+            for index, relative in enumerate(paths):
+                path = work / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                data = f'authored runtime {index}'.encode()
+                path.write_bytes(data)
+                reference = str(path)
+                if index == 0 and getattr(request, 'param', None) == 'outside':
+                    reference = str(tmp_path / 'outside')
+                if index == 0 and getattr(request, 'param', None) == 'missing':
+                    reference = str(work / '.native/pe/missing')
+                inputs[str(index)] = {'path': reference, 'sha256': hashlib.sha256(data).hexdigest()}
+            document['backend_identity'] = {'inputs': inputs}
+        (receipts / receipt).write_text(json.dumps(document))
         env = {'CI_COMMIT_SHA': sha, 'CI_PIPELINE_ID': '50', 'CI_JOB_ID': str(job), 'CI_JOB_NAME': name, 'CI_JOB_STATUS': 'success'}
         exporter.export(work, root, env)
     return work, root, {'CI_COMMIT_SHA': sha, 'CI_PIPELINE_ID': '50'}
@@ -64,6 +83,27 @@ def test_actual_git_export_verifies(exports):
     work, root, env = exports
     exporter.verify(work, root, env)
     assert json.loads((root / '50/101/source-postcheck.json').read_text())['tracked_worktree_dirty'] is False
+    assert json.loads((root / '50/104/job.json').read_text())['project_directory'] == str(work.resolve())
+
+
+@pytest.mark.parametrize('exports', ['outside', 'missing'], indirect=True)
+def test_nested_runtime_references_reject_outside_or_missing(exports):
+    work, root, env = exports
+    with pytest.raises(ValueError):
+        exporter.verify(work, root, env)
+
+
+def test_nested_runtime_reference_rejects_corruption(exports):
+    work, root, env = exports
+    (root / '50/104/exported/.native/pe/linux-amd64').write_bytes(b'corrupt')
+    with pytest.raises(ValueError):
+        exporter.verify(work, root, env)
+
+
+@pytest.mark.parametrize('reference', ['../escape', 'a/../b', '/elsewhere/file', './relative'])
+def test_reference_path_rejects_escape_and_noncanonical(reference):
+    with pytest.raises(ValueError):
+        exporter.reference_path(reference, '/ci/project')
 
 
 @pytest.mark.parametrize('damage', ['corrupt', 'missing', 'different_sha'])
