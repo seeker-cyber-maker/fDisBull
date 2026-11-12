@@ -1,4 +1,4 @@
-> **Partial import, not buildable yet.** This private GitHub repository is being populated from GitLab. Only the bootstrap files listed in [IMPORT_STATUS.md](IMPORT_STATUS.md) are present. Linked source/docs may not exist here yet; use the pinned GitLab source meanwhile. GitHub Actions is disabled.
+> **Partial import, not buildable yet.** This private GitHub repository is being populated from GitLab. Only the imported files listed in [IMPORT_STATUS.md](IMPORT_STATUS.md) are present. Linked source/docs may not exist here yet; use the pinned GitLab source meanwhile. GitHub Actions is disabled.
 
 # fDisBull
 
