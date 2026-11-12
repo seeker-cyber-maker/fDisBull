@@ -6,6 +6,7 @@ captured paths. They do not establish whole-function or external equivalence.
 from copy import deepcopy
 import hashlib
 import json
+import time
 
 import capstone
 from capstone import x86_const as X
@@ -25,18 +26,26 @@ def _digest(value):
 
 def _contract(value, bits):
     if not isinstance(value, dict) or set(value) - {
-            'live_registers', 'live_flags', 'entry_registers', 'memory_ranges',
+            'live_registers', 'live_flags', 'entry_registers', 'entry_register_ranges', 'memory_ranges',
             'memory_model', 'memory_observation'}:
         raise ValueError('Unknown regional contract field')
     names = register_names(bits) - ({'rip', 'rflags'} if bits == 64 else {'eip', 'eflags'})
     live = value.get('live_registers', sorted(names))
     flags = value.get('live_flags', 0xffffffff)
     entry = value.get('entry_registers', {})
+    register_ranges = value.get('entry_register_ranges', {})
     if (not isinstance(live, list) or any(not isinstance(n, str) or n not in names for n in live)
             or len(live) != len(set(live)) or type(flags) is not int or not 0 <= flags <= 0xffffffff
             or not isinstance(entry, dict) or any(n not in names or not isinstance(v, str)
             or not v.startswith('0x') or not 0 <= int(v, 16) < 1 << bits for n, v in entry.items())):
         raise ValueError('Invalid live state or entry-register assumptions')
+    if not isinstance(register_ranges, dict):
+        raise ValueError('Entry-register ranges must be a mapping')
+    for name, bounds in register_ranges.items():
+        if (name not in names or not isinstance(bounds, dict) or set(bounds) != {'min', 'max'}
+                or any(not isinstance(v, str) or not v.startswith('0x') for v in bounds.values())
+                or not 0 <= int(bounds['min'], 16) <= int(bounds['max'], 16) < 1 << bits):
+            raise ValueError('Entry-register ranges require inclusive unsigned min/max bounds')
     ranges = value.get('memory_ranges', [])
     mode = value.get('memory_observation', 'ordered')
     if not isinstance(ranges, list) or len(ranges) > 32 or mode not in ('ordered', 'final'):
@@ -58,6 +67,8 @@ def _contract(value, bits):
         raise ValueError('At most 256 bytes of explicitly private ordinary RAM are supported')
     return {'live_registers': sorted(live), 'live_flags': flags,
             'entry_registers': {n: hex(int(v, 16)) for n, v in sorted(entry.items())},
+            'entry_register_ranges': {n: {key: hex(int(v, 16)) for key, v in sorted(bounds.items())}
+                                      for n, bounds in sorted(register_ranges.items())},
             'memory_ranges': sorted(normalized, key=lambda r: int(r['address'], 16)),
             'memory_model': 'private_ordinary_ram' if addresses else 'no_memory_access',
             'memory_observation': mode}, sorted(addresses), sorted(names)
@@ -122,9 +133,16 @@ def _arithmetic_flags(z, op, a, b, result, flags, fresh):
     return out
 
 
-def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side):
+def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline):
     regs, flags, memory = dict(initial), initial_flags, dict(initial_memory)
     domains, accesses = [], []
+    safety, alias_work = [], 0
+    runs = []
+    for address in sorted(memory):
+        if runs and runs[-1][1] == address:
+            runs[-1][1] += 1
+        else:
+            runs.append([address, address + 1])
     undefined = 0
     events = trace['events']
     concrete, concrete_flags, _ = _state(events[0], bits)
@@ -132,6 +150,9 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
         raise ValueError('Captured FLAGS contradict fixed architectural bit 1')
     if any(concrete[n] != int(v, 16) for n, v in contract['entry_registers'].items()):
         raise ValueError('Captured entry contradicts fixed-register assumptions')
+    if any(not int(bounds['min'], 16) <= concrete[n] <= int(bounds['max'], 16)
+           for n, bounds in contract['entry_register_ranges'].items()):
+        raise ValueError('Captured entry contradicts register-range assumptions')
     substitutions = [(initial[n], z.BitVecVal(v, bits)) for n, v in concrete.items()]
     substitutions += [(initial_flags, z.BitVecVal(concrete_flags, 32))]
     substitutions += [(initial_memory[a], z.BitVecVal(v, 8)) for a, v in snapshots[0].items()]
@@ -143,6 +164,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
     decoder = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64 if bits == 64 else capstone.CS_MODE_32)
     decoder.detail = True
     for index, event in enumerate(events[:-1]):
+        if time.monotonic() >= deadline:
+            raise ValueError('Total regional proof deadline exhausted during model construction')
         following = events[index + 1]
         if event['observation'].get('instruction_completed') is not True:
             raise ValueError(f'Event {index}: incomplete instruction')
@@ -168,6 +191,7 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 raise ValueError(f'Event {index}: partial register operand')
             return name
         def location(operand):
+            nonlocal alias_work
             value = z.BitVecVal(operand.mem.disp % (1 << bits), bits)
             for register, scale in ((operand.mem.base, 1), (operand.mem.index, operand.mem.scale)):
                 if not register:
@@ -177,16 +201,34 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 if term is None:
                     raise ValueError(f'Event {index}: unknown address register')
                 value = value + term * scale
-            # Only contract-fixed or instruction-constant addresses are admitted.
             fixed = [(initial[n], z.BitVecVal(int(v, 16), bits))
                      for n, v in contract['entry_registers'].items()]
             value = z.simplify(z.substitute(value, *fixed))
-            if not z.is_bv_value(value):
-                raise ValueError(f'Event {index}: symbolic memory address or unresolved alias')
-            a, width = value.as_long(), operand.size
-            if width not in (1, 2, 4, 8) or any(a + k not in memory for k in range(width)):
+            width = operand.size
+            if width not in (1, 2, 4, 8):
+                raise ValueError(f'Event {index}: unsupported memory width')
+            concrete_address = observed(value)
+            if concrete_address + width > 1 << bits or any(
+                    concrete_address + k not in memory for k in range(width)):
                 raise ValueError(f'Event {index}: memory access outside declared RAM')
-            return a, width
+            valid = z.Or(*[z.And(z.UGE(value, start), z.ULE(value, end - width))
+                           for start, end in runs if end - start >= width])
+            # Check under guards preceding the access, never guards encountered later.
+            safety.append({'event_index': index, 'address': value, 'width': width,
+                           'prefix': z.And(*domains), 'valid': valid})
+            if not z.is_bv_value(value):
+                alias_work += width * len(memory)
+                if alias_work > 32768:
+                    raise ValueError('Symbolic alias-expression budget exceeds 32768 byte-cell operations')
+            return value, width
+        def byte_at(address):
+            address = z.simplify(address)
+            if z.is_bv_value(address):
+                return memory.get(address.as_long(), z.BitVecVal(0, 8))
+            value = z.BitVecVal(0, 8)
+            for cell, byte in memory.items():
+                value = z.If(address == cell, byte, value)
+            return value
         def read(operand):
             if operand.type == X.X86_OP_REG:
                 return regs[reg_name(operand)]
@@ -194,7 +236,7 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 return z.BitVecVal(operand.imm % (1 << (operand.size * 8)), operand.size * 8)
             if operand.type == X.X86_OP_MEM:
                 a, width = location(operand)
-                value = memory[a] if width == 1 else z.Concat(*[memory[a + k] for k in reversed(range(width))])
+                value = byte_at(a) if width == 1 else z.Concat(*[byte_at(a + k) for k in reversed(range(width))])
                 accesses.append(('read', a, width, value))
                 return value
             raise ValueError(f'Event {index}: unknown operand')
@@ -227,7 +269,13 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                              else z.Extract(width * 8 - 1, 0, value))
                     accesses.append(('write', a, width, value))
                     for k in range(width):
-                        memory[a + k] = z.Extract(k * 8 + 7, k * 8, value)
+                        pointer = z.simplify(a + k)
+                        byte = z.Extract(k * 8 + 7, k * 8, value)
+                        if z.is_bv_value(pointer):
+                            if pointer.as_long() in memory:
+                                memory[pointer.as_long()] = byte
+                        else:
+                            memory = {cell: z.If(pointer == cell, byte, old) for cell, old in memory.items()}
                 else:
                     raise ValueError(f'Event {index}: unsupported MOV destination')
             elif ins.mnemonic in ('add', 'sub', 'xor', 'and', 'or', 'cmp') and len(operands) == 2:
@@ -258,7 +306,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
     if any(observed(memory[a]) != v for a, v in snapshots[1].items()):
         raise ValueError('Exit RAM snapshot contradicts modeled stores')
     return {'registers': regs, 'flags': flags, 'memory': memory,
-            'domain': z.And(*domains), 'accesses': accesses}
+            'domain': z.And(*domains), 'accesses': accesses, 'safety': safety,
+            'alias_byte_cell_operations': alias_work}
 
 
 def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspondence=None,
@@ -319,22 +368,28 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
         import z3 as z
     except ImportError:
         return base | {'reason': 'Optional z3 proof dependency is unavailable'}
-    base['solver'] = {'name': 'z3', 'version': z.get_version_string(), 'timeout_ms_per_query': timeout_ms}
+    deadline = time.monotonic() + timeout_ms / 1000
+    base['solver'] = {'name': 'z3', 'version': z.get_version_string(), 'timeout_ms_total': timeout_ms}
     base['sources'] = {'baseline': _receipt(baseline) | {'memory_sha256': _digest(baseline_memory)},
                        'layer': _receipt(layer) | {'memory_sha256': _digest(layer_memory)}}
     initial = {n: z.BitVec('entry_' + n, bits) for n in names}
     flags = z.BitVec('entry_flags', 32)
     memory = {a: z.BitVec(f'entry_ram_{a:x}', 8) for a in addresses}
     assumptions = [initial[n] == int(v, 16) for n, v in normalized['entry_registers'].items()]
+    for n, bounds in normalized['entry_register_ranges'].items():
+        assumptions += [z.UGE(initial[n], int(bounds['min'], 16)), z.ULE(initial[n], int(bounds['max'], 16))]
     assumptions.append((flags & 2) == 2)  # Fixed architectural FLAGS bit.
     try:
-        a = _execute(z, baseline, bits, initial, flags, memory, normalized, snapshots[0], 'baseline')
-        b = _execute(z, layer, bits, initial, flags, memory, normalized, snapshots[1], 'layer')
+        a = _execute(z, baseline, bits, initial, flags, memory, normalized, snapshots[0], 'baseline', deadline)
+        b = _execute(z, layer, bits, initial, flags, memory, normalized, snapshots[1], 'layer', deadline)
     except ValueError as error:
         return base | {'reason': str(error)}
     solver = z.Solver()
-    solver.set(timeout=timeout_ms)
     def query(claim):
+        remaining = int((deadline - time.monotonic()) * 1000)
+        if remaining <= 0:
+            return z.unknown, None, 'Total regional proof deadline exhausted'
+        solver.set(timeout=remaining)
         solver.push()
         solver.add(*assumptions, claim)
         result = solver.check()
@@ -342,6 +397,22 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
         reason = solver.reason_unknown() if result == z.unknown else None
         solver.pop()
         return result, model, reason
+    for side, modeled in (('baseline', a), ('layer', b)):
+        for access in modeled['safety']:
+            outcome, model, reason = query(z.And(access['prefix'], z.Not(access['valid'])))
+            if outcome == z.sat:
+                val = lambda expr: hex(model.eval(expr, model_completion=True).as_long())
+                return base | {'reason': 'Memory access may escape declared RAM under its prior guards',
+                    'safety_counterexample': {'side': side, 'event_index': access['event_index'],
+                        'address': val(access['address']), 'width': access['width'],
+                        'entry_general': {n: val(v) for n, v in initial.items()},
+                        'entry_flags': val(flags), 'entry_memory': {hex(p): val(v) for p, v in memory.items()}}}
+            if outcome == z.unknown:
+                return base | {'reason': 'Memory bounds solver unknown: ' + str(reason)}
+    base['memory_safety'] = {'status': 'proved_under_entry_assumptions_and_prior_guards',
+                            'accesses_checked': len(a['safety']) + len(b['safety']),
+                            'alias_byte_cell_operations': {'baseline': a['alias_byte_cell_operations'],
+                                                           'layer': b['alias_byte_cell_operations']}}
     def failure(kind, model):
         value = lambda expr: hex(model.eval(expr, model_completion=True).as_long())
         return base | {'status': 'different', 'difference': kind, 'counterexample': {
@@ -374,7 +445,8 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
         if len(a['accesses']) != len(b['accesses']):
             differences.append(z.BoolVal(True))
         for x, y in zip(a['accesses'], b['accesses']):
-            differences.append(z.BoolVal(True) if x[:3] != y[:3] else x[3] != y[3])
+            differences.append(z.BoolVal(True) if x[0] != y[0] or x[2] != y[2]
+                               else z.Or(x[1] != y[1], x[3] != y[3]))
     outcome, model, reason = query(z.And(a['domain'], b['domain'], z.Or(*differences)))
     if outcome == z.sat:
         return failure('live_state_or_memory_effects', model)
@@ -399,7 +471,7 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
                'memory_bytes': {hex(p): {'type': 'u8', 'expression': expression(a['memory'][p])}
                                 for p in addresses},
                'memory_observation': normalized['memory_observation'],
-               'ordered_accesses': [{'kind': kind, 'address': hex(address), 'width': width,
+               'ordered_accesses': [{'kind': kind, 'address': expression(address), 'width': width,
                                      'value': expression(value)} for kind, address, width, value in a['accesses']]
                                    if normalized['memory_observation'] == 'ordered' else [],
                'expression_language': 'Z3 SMT-LIB presentation over shared entry symbols',
@@ -407,8 +479,9 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
     effects['presentation_truncated'] = presentation['truncated']
     contraction = {'format': 'fdisbull-pe-region-contraction-1', 'contract': normalized,
                    'reduced_effects': effects,
+                   'memory_safety': base['memory_safety'],
                    'sources': base['sources'], 'solver': {'name': 'z3', 'version': z.get_version_string(),
-                   'timeout_ms_per_query': timeout_ms, 'baseline_domain': 'sat', 'layer_domain': 'sat',
+                   'timeout_ms_total': timeout_ms, 'baseline_domain': 'sat', 'layer_domain': 'sat',
                    'domain_difference': 'unsat', 'effect_difference': 'unsat'},
                    'regions': {label: {'event_indices': list(range(len(trace['events']) - 1)),
                                       'entry': deepcopy(trace['events'][0]['identity']),

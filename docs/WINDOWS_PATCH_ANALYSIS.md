@@ -162,14 +162,28 @@ Partial register aliases, calls, legacy prefixes and unsupported implicit
 effects remain unknown. All captured register/defined-FLAGS transitions are
 checked against the model independently of the symbolic equivalence query.
 
-Fixed-address MOV loads and stores use at most 256 bytes of explicitly
-declared `private_ordinary_ram`. Addresses must reduce to constants from the
-instructions or declared fixed entry registers; observed pointers alone do
-not establish that assumption. Byte composition preserves little-endian and
-overlapping writes. Exact entry/exit memory snapshots are required, and the
-modeled exit must agree. Symbolic addresses, code overlap, out-of-range
-accesses and contradictory snapshots prevent contraction. All declared RAM
-bytes remain live and other memory is framed as untouched by admitted code.
+MOV loads and stores use at most 256 bytes of explicitly declared
+`private_ordinary_ram`. Addresses can be symbolic, including scaled indices
+and pointers loaded from symbolic RAM. Optional `entry_register_ranges`
+provide inclusive unsigned `min`/`max` bounds; fixed `entry_registers` remain
+available. Observed pointers alone never establish a bound. Each access must
+be proved safe under the entry assumptions and guards **preceding that
+access**. A later guard cannot hide an earlier unsafe access. Access bounds
+are proof obligations, not assumptions that shrink the compared path domain.
+An unsafe alternative returns unknown with a safety counterexample even if
+the captured pointer was valid.
+
+Symbolic reads select the current byte map, and writes conditionally update
+every possibly aliased byte. The model preserves little-endian values,
+overlapping stores and store-to-load aliases. Ordered effects compare symbolic
+addresses as well as values. Access spans cannot wrap through address zero.
+Exact entry/exit memory snapshots remain required, and the modeled exit must
+agree. Code overlap, unproved bounds and contradictory evidence prevent
+contraction. All declared RAM bytes remain live, and other memory is framed
+as untouched by admitted code. Symbolic alias expansion is bounded to 32,768
+byte-cell operations per region. A cumulative proof deadline covers model
+construction and solver queries; reduced-effect presentation follows the
+proof. Exhaustion produces unknown, never an equivalence result.
 
 `memory_observation="ordered"` is the default: read/write kind, address,
 width, value and final bytes must agree. The explicit `"final"` mode compares
@@ -206,6 +220,42 @@ Native CPU-model tests cover live clobbers, arithmetic cancellation, guarded
 domains, ordered versus final RAM, byte aliases, memory loads through
 temporaries, contraction expansion and independent counterexample replay.
 They do not qualify a native Wine/QEMU run or external effects.
+
+## BLA source-region qualification
+
+`scripts/verify_bla_patch_regions.py` runs a bounded campaign against an
+existing external [BLA](https://github.com/qybaihe/bla) checkout at the reviewed
+revision `0269b5b0f4f2941e53070c9b3ffbda88d5348437`. It pins the selected L1
+source hash and validates selected source cleanliness, exact pure-expression
+patterns, module sections and opcode profiles. Original challenge files stay
+outside this repository. The runner emits a sanitized JSON report with
+artifact hashes, source-region offsets, proof assumptions and runtime receipts.
+
+The actual BLA crackmes in this corpus are JS/CommonJS and Wasm. They do not
+qualify as x86 inputs to `compare_pe_regions`. The campaign establishes these
+separate region claims:
+
+- Three matched L1 opaque predicates reduce to constant true. Two square
+  predicates require `seed & 3 == 1`; a consecutive-product predicate is
+  universally true for the u32 input profile. The standard `Math.imul`
+  intrinsic is assumed. Z3 counterqueries are unsatisfiable, and Node checks
+  264 deterministic seeds per expression. Seed zero falsifies the two square
+  reductions outside their stated invariant.
+- The clean v6 Wasm module is 98 bytes and the decoded hardened module is
+  6,880,354 bytes, with 2 versus 252 exports. Their type/function sections and
+  53-byte executable code section are identical. The admitted `mix`/`seal`
+  regions have no imports, memory, table, globals, start, element or data
+  sections, and use a checked pure-i32 opcode profile. Both actual modules
+  agree on 144 `mix` pairs and 144 `seal` inputs in Node, also matching an
+  independent interpreter of the parsed bodies.
+
+The Wasm result is code-region identity beneath changed presentation, not a
+proof that different instruction bodies were normalized. The JS result is a
+source-matched predicate reduction, not whole-function equivalence: corpus
+integrity, shadow-heap writes, calls, module exports and timing remain outside
+the proof. Finite runtime agreement stays separate from the symbolic claims.
+The runner executes only matched pure expressions and admitted Wasm modules,
+with bounded Node memory/time; it does not run the complete CJS targets.
 
 ## Register-only transfer projection
 
