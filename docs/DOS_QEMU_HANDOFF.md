@@ -4582,3 +4582,103 @@ retain their earlier identities. Evidence is chip8-preservation-final-02,
 chip8-native-03, chip8-dosbox-final, chip8-metadata-final and the source replay
 receipt. The consolidated private receipt is chip8-final-receipt.json. Earlier
 failed attempts remain separately retained and the old handoff prefix is exact.
+
+
+## CHIP-8 display, keypad and virtual timers (2026-11-12)
+
+This slice adds an optional device extension over the retained native CHIP-8
+CPU target. The named classic profile is unchanged; native subset
+fdisbull-chip8-classic-devices-2 and environment model
+fdisbull-chip8-display-keypad-timers-1 distinguish the new runtime. The original
+CPU-only patch/runtime and schema1 checkpoints remain separately preserved.
+DOSBox-X stays the default and retained fallback. No CI is used.
+
+The native machine stores exact 64x32 monochrome pixels and implements clear,
+clipped XOR sprites, collision VF, coordinate aliases and the classic font at
+0x50. Sprite RAM extent is validated before architectural or display effects.
+The adapter derives exact RGBA bytes and stored PNG artifacts from that native
+state without a GUI. Logical held keys use a sixteen-bit mask; key skips reject
+out-of-range register values as unpressed. FX0A selects the lowest held key or
+stops at its unchanged PC with an attributed key_wait event. Setting/releasing
+keys never resumes the CPU. Ephemeral wait-stop ownership is cleared at CPU
+entry, debugger mutation and snapshot restore, so a restored wait cannot be
+misreported as a new execution event or hide an actual breakpoint.
+
+DT/ST use a native QEMU_CLOCK_VIRTUAL timer at rational 60 Hz. Callbacks dispatch
+mutations on the CPU thread and advance from prior absolute deadlines, including
+overdue ticks. Fractional phase is carried from the first deadline; late callback
+dispatch does not rebase the schedule. Stopped debug ticks decrement/clamp the
+same timers without executing CPU instructions or changing virtual time, phase
+or deadline, and their counter remains separate from virtual ticks. Sound-active
+is native timer state only; audio output remains unavailable. Owned debugger
+key waits pause the virtual clock; historical nonblocking wait timing and a
+wall-clock instruction rate are not qualified.
+
+Stopped JSON/Python environment, keypad and tick methods check profile/subset,
+command availability, generation and full readback. Uncertain mutations close
+the owner. Device schema2 checkpoints bind the exact ROM/runtime/tool identity,
+and fresh-process restore compares all CPU/RAM, pixels, keys, wait state,
+DT/ST, sound-active, virtual time, phase, deadline and counters before replacing
+the previous owner. Restored wait ownership is cleared. No cross-binary restore
+or host-file rewind is claimed.
+
+Nine real-native device witnesses pass, including PNG pixel identity, VF alias
+and atomic out-of-bounds draw, font bytes, held-key skips/waits, deterministic
+ticks, nonzero virtual-time/phase cold restore, wait/breakpoint attribution and
+native stale-generation/invalid-argument refusal. Ten additional retained CPU
+semantics and JSON dispatch cases pass on the device binary; the CPU-only CLS
+refusal is explicitly excluded because CLS is implemented here. Review caught
+and corrected initial callback-relative timer drift and preservation of old VF
+on a non-colliding draw before this accepted native run. Earlier build feedback
+and failed host-discovery expectations remain separate diagnostic evidence.
+The first integrated run passed 2,516 cases before a phase-selection test
+failed: repeated 250 ms samples can remain on the same 15-tick phase. The
+test now selects a nonzero observed phase using bounded finer samples. The
+corrected nine-case device selection and five additional cold-restore phase
+probes pass on the unchanged native binary; the failed run is retained separately.
+Final raw-SQLite inspection found that the native pixels-hex field needed an
+explicit external-object classification. It is now externalized recursively
+in event/checkpoint/screenshot metadata before SQLite/WAL writes, with exact
+readback and reopen coverage. The 32-case storage/device selection includes
+actual DOSBox-X and CHIP-8 execution and passes without skips. The second
+integrated run was stopped after 401 passes to refresh this source; its partial
+receipt is retained. Final preservation includes the target-storage file.
+
+The upgraded host also restored an already-created schema1 artifact using the
+retained original native binary: PC=0x208, V0=3, I=0x301, SP=0 and RAM[0x300]=03.
+The original FDB, WAL, SHM and ROM hashes were unchanged. This is a preserved
+artifact witness, separately from creating new checkpoints under the new host.
+
+CHIP-8 code/RAM layers, hooks, histories, selected undo, comparative trials,
+audio/RNG and IRQ models remain unavailable. Existing DOS task-private layers,
+hooks, checkpoints, trials, histories and IRQ implementations remain retained.
+Independent historical/quirk qualification, arbitrary ROM compatibility,
+Linux/other-host builds, performance and the G0-G8 conversion gates remain open.
+All 141 DOS surfaces and seven compatibility campaigns remain unqualified for
+default switching/removal. No release/tag, merge, shared installation or selector
+change is included.
+
+
+Final integrated preservation passes **2,697 tests across 163 files**, with
+zero failures, errors or skips and one explicit private DinoPark identification
+fixture deselection. All **1,194 Python source/test hashes** match before and
+after the run. Separate overlapping selections pass nine native device cases,
+ten CPU/JSON cases on the new binary, 323 DOSBox-X history/undo cases, 97
+host/package/skill/capability/runtime/dispatch/migration cases and 32
+storage/device cases. Five extra phase/restore probes pass. External-object
+readback verifies eight native artifacts and twenty key/timer events, with
+inspected database bytes unchanged.
+
+The device binary SHA-256 is
+8dfc32e0853dba5096563d97f4dd5f54b319b7e4d4c5ebfa416dbfc82d903ebd;
+the incremental patch SHA-256 is
+0bfaec7730ac13b172b3a743c10dbb39d0b214924098e7cc475afb48c1a37d11.
+Both author and parent replayed the seven-file patch over the unchanged v1
+baseline and matched the built-source hashes. Evidence is
+chip8-devices-preservation-final-03, chip8-devices-storage-native-05,
+chip8-devices-cpu-regression-02, chip8-devices-dosbox-final-02,
+chip8-devices-metadata-host-final-02 and the external-storage/replay receipts.
+The consolidated private receipt is chip8-devices-final-receipt.json. Earlier
+failed/interrupted diagnostics remain separate. The historical handoff prefix,
+v1 package/source/runtime, N19-N24, component-04 and shared selector retain
+their earlier identities. No CI, release/tag, merge or default switch.

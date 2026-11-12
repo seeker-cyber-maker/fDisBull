@@ -1,4 +1,4 @@
-# CHIP-8 CPU-only QEMU profile
+# CHIP-8 QEMU CPU and device profiles
 
 This profile connects a newly compiled QEMU TCG CPU/machine to fDisBull's
 persistent source analysis and debugger. It is a bounded architecture experiment.
@@ -58,10 +58,13 @@ is silently wrapped or invented from a missing register.
 
 ## Native CPU contract
 
-The executable is a separately built `qemu-system-chip8` from the authored
-[QEMU patch](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/native/qemu-chip8/README.md), with machine `chip8-test` and
-profile `chip8-classic-pilot-default-v1`. The CPU subset identity is
-`fdisbull-chip8-cpu-smoke-1`. A raw ROM loads through `-kernel` at `0x200`.
+The executable is a separately built `qemu-system-chip8`, with machine
+`chip8-test` and profile `chip8-classic-pilot-default-v1`. The retained
+[CPU-only patch](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/native/qemu-chip8/README.md) identifies itself as
+`fdisbull-chip8-cpu-smoke-1`. The optional
+[device extension](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/native/qemu-chip8-devices/README.md) uses
+`fdisbull-chip8-classic-devices-2` and environment model
+`fdisbull-chip8-display-keypad-timers-1`. A raw ROM loads through `-kernel` at `0x200`.
 There is no DOS image, PC firmware, guest OS or hidden interpreter process.
 
 The first target uses one instruction per TCG block and a bounded native C
@@ -130,6 +133,55 @@ their effects. An uncertain mutation closes the owner rather than allowing
 unobserved guest state or hidden breakpoints to remain live. Debug runs and
 execution events are persisted in the FDB; an ended run is not a live session.
 
+## Display, keypad and timers in the device extension
+
+The device runtime adds `00E0`, `DxyN`, `Ex9E`, `ExA1`, `Fx07`, `Fx0A`,
+`Fx15`, `Fx18` and `Fx29` to the retained CPU instructions. The display is
+64 × 32 monochrome pixels in native machine state. Sprite coordinates wrap
+to the display bounds before drawing; the sprite then clips at the right and
+bottom edges. Drawing XORs pixels and sets VF on collision. VX/VY are captured
+before VF is written, including coordinate aliases. A sprite read outside RAM
+faults before changing the display or CPU. The font starts at `0x50`; `Fx29`
+selects the low nibble of VX from the declared classic font.
+
+The keypad stores a held mask of the sixteen logical hex keys. `Fx0A` consumes
+the lowest held key, including key zero. With no held key it stops at the same
+PC with outcome `key_wait`. Changing the key mask prepares input; the caller
+explicitly runs or steps to continue. A restored architectural wait does not
+carry ownership of an earlier debugger stop. Values above fifteen never match
+a pressed key in `Ex9E`/`ExA1`.
+
+DT and ST decrement at 60 Hz on QEMU's virtual clock while the machine runs.
+Stopped debugger time does not advance that clock. Rational timer phase,
+absolute next deadline and separate virtual/manual tick counters are observable.
+This does not qualify a wall-clock CPU rate or historical nonblocking key-wait
+timing: the owned `key_wait` stop pauses the machine. ST exposes `sound-active`
+while nonzero; audio waveform/output is unavailable.
+
+Stopped-state controls are available through Python and the foreground JSON
+workspace. Every key/tick mutation checks the native generation and reads back
+CPU and complete device state. Uncertain mutations close the owner and must not
+be replayed blindly.
+
+```python
+environment = debug.chip8_environment()
+debug.chip8_keypad([0, 10])  # complete held set: hex 0 and A
+debug.step()               # explicit execution; setting keys does not resume
+debug.chip8_keypad([])      # release every key
+debug.chip8_tick(2)         # deterministic decrement by two 60-Hz units
+frame = debug.frame_rgba()  # exact 64 × 32 RGBA bytes, hash and native receipt
+png = debug.screenshot()   # stored PNG artifact derived from native pixels
+```
+
+`chip8_tick(1..65535)` decrements/clamps DT/ST through the native timer routine
+without executing CPU instructions or advancing virtual time, deadline or phase.
+It records manual ticks separately. The JSON methods are
+`debug-chip8-environment`, `debug-chip8-keypad` (`keys`) and `debug-chip8-tick`
+(`ticks`), with the selected `run`. Existing frame/screenshot routes use the
+same device state. No GUI is needed for a capture. Framebuffer-bearing receipts,
+PNG bytes and checkpoint bytes use the private external object store; keep
+that store available when reopening the FDB.
+
 ## Checkpoints and capabilities
 
 The machine has no guest storage. With an explicit `qemu-img`, a private,
@@ -137,19 +189,25 @@ guest-unattached qcow2 node holds QEMU's full native snapshot. The snapshot
 binds the exact source version/hash, CPU profile/subset, QEMU binary/version,
 machine/RAM configuration and checkpoint-tool hash. CPU registers, stack,
 fault state and all 4 KiB RAM are checked after load in a fresh QEMU process
-before replacing the previous owner. Restore across QEMU binaries or CPU
-profiles is refused. Host files are not restored.
+before replacing the previous owner. Device snapshots also compare every pixel,
+held keys, wait state, DT/ST, sound-active, timer phase/deadline, virtual time
+and both tick counters. Ephemeral ownership of the earlier wait stop is cleared.
+Restore across QEMU binaries or CPU profiles is refused. Host files are not restored.
 
-Remove execution breakpoints before saving or loading this first checkpoint
-profile. A reopened FDB can restore its artifact after explicitly launching
-the same ROM and native runtime. A checkpoint is not permission to guess a
+Remove execution breakpoints before saving or loading a checkpoint. A reopened
+FDB can restore its artifact after explicitly launching the same ROM and native runtime. A checkpoint is not permission to guess a
 different source, dialect, device state or engine binary.
 
-The new profile supports stopped inspection, bounded run/step, execution
-breakpoints, guarded edits and native checkpoints. Display, keypad, timer,
-audio/RNG, watchpoints, code/RAM layers, hooks, histories, selected undo and
-comparative trials are not implemented for CHIP-8 and do not borrow DOS
-semantics. Their existing DOS implementations remain retained and are tested
+The retained CPU-only runtime and its `fdisbull-qemu-chip8-state-1` artifacts
+remain supported with their exact original binary. The device runtime uses
+`fdisbull-qemu-chip8-state-2`; these formats do not imply cross-binary restore.
+Device capabilities are enabled only after checking the native subset identity
+and required command set. The older runtime continues to refuse device calls.
+
+Both profiles support stopped inspection, bounded run/step, execution breakpoints,
+guarded edits and native checkpoints. Audio output/RNG, watchpoints, code/RAM
+layers, hooks, histories, selected undo and comparative trials remain unavailable
+for CHIP-8. Their existing DOS implementations remain retained and are tested
 separately. IRQ/PIC and QEMM/DESQview task semantics remain DOS-profile work.
 
 ## Local checks
@@ -161,6 +219,18 @@ FDISBULL_REQUIRE_CHIP8=1 \
 python -m pytest -q tests/test_chip8.py tests/test_chip8_project.py \
   tests/test_qemu_chip8.py tests/test_qemu_chip8_native.py \
   tests/test_chip8_qemu_semantics_native.py
+```
+
+For the device extension, run the additional local witnesses with an explicit
+device binary; keep the retained CPU-only binary selected for its older tests.
+
+```sh
+FDISBULL_CHIP8_DEVICES_QEMU=/external/devices/qemu-system-chip8 \
+FDISBULL_CHIP8_DEVICES_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_DEVICES=1 \
+python -m pytest -q tests/test_chip8_devices_dispatch.py \
+  tests/test_qemu_chip8_devices.py tests/test_qemu_chip8_devices_native.py \
+  tests/test_chip8_devices_semantics_native.py
 ```
 
 Tests use authored microprograms and independent expected states. The static

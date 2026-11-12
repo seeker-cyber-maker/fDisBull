@@ -50,7 +50,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Identify NES, SNES or Sega cartridges, CUE/ISO discs, or disassemble Saturn SH-2 / SNES 65816 | [Console media](docs/CONSOLE_MEDIA_PARSING.md) · [Disc parsing](docs/CUE_ISO_PARSING.md) · [ROM-to-ASM](docs/ROM_ASM.md) |
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
-| Explore a small CHIP-8 program's CPU and RAM with an experimental native backend | [CHIP-8 QEMU profile](docs/CHIP8_QEMU.md) |
+| Explore CHIP-8 CPU, pixels, keys and timers with an experimental native backend | [CHIP-8 QEMU profile](docs/CHIP8_QEMU.md) |
 | Inspect DESQview modules, observe its cooperative APIs, or narrow changing memory values | [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
 | Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
@@ -201,10 +201,11 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   retaining explicit CPU-mode and address-space limits. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
-- **CHIP-8 targets:** an explicit [classic CPU-only profile](docs/CHIP8_QEMU.md)
-  adds persistent disassembly and a separately built QEMU backend for stepping,
-  registers, RAM, breakpoints and native checkpoints. Display, input, timers
-  and complete game/conversion compatibility remain outside this first profile.
+- **CHIP-8 targets:** an explicit [classic profile](docs/CHIP8_QEMU.md) adds
+  persistent disassembly and a separately built QEMU backend for stepping,
+  registers, RAM, breakpoints and native checkpoints. An optional device build
+  adds monochrome frames, held keys and virtual-clock timers with checkpoint
+  restore. Complete game and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped

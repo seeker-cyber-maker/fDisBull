@@ -1,4 +1,4 @@
-"""A bounded, CPU-only CHIP-8 QEMU debugging session.
+"""A bounded CHIP-8 QEMU CPU session with an optional native device profile.
 
 This is a distinct architecture adapter: no x86 HMP, PC firmware or DOS
 contracts apply. The native target and ROM are pinned by SHA-256.
@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,8 @@ from .debugger import stamp
 BACKEND = 'qemu-chip8'
 PROFILE = 'chip8-classic-pilot-default-v1'
 CPU_SUBSET = 'fdisbull-chip8-cpu-smoke-1'
+DEVICE_SUBSET = 'fdisbull-chip8-classic-devices-2'
+ENV_MODEL = 'fdisbull-chip8-display-keypad-timers-1'
 STATE_DISK_SIZE = 1024 * 1024
 RAM_SIZE = 4096
 ROM_BASE = 0x200
@@ -55,10 +58,11 @@ def _remaining(deadline):
     return min(value,600000)
 
 
-def _fault_receipt(qmp):
+def _fault_receipt(qmp, expected_subset=None):
     info=qmp.call('query-chip8-fault')
     if (not isinstance(info,dict) or type(info.get('faulted')) is not bool
-            or info.get('profile')!=PROFILE or info.get('cpu-subset')!=CPU_SUBSET):
+            or info.get('profile')!=PROFILE or info.get('cpu-subset') not in (CPU_SUBSET,DEVICE_SUBSET)
+            or expected_subset is not None and info.get('cpu-subset')!=expected_subset):
         raise DebuggerError('Invalid CHIP-8 fault receipt')
     for key in ('fault-code','fault-pc','fault-opcode'):
         if type(info.get(key)) is not int or not 0<=info[key]<=0xffff:
@@ -67,6 +71,37 @@ def _fault_receipt(qmp):
             or not info['faulted'] and any(info[key] for key in ('fault-code','fault-pc','fault-opcode'))):
         raise DebuggerError('Inconsistent CHIP-8 fault receipt')
     return info
+
+
+def _environment_receipt(qmp):
+    return _validate_environment(qmp.call('query-chip8-environment'))
+
+
+def _validate_environment(info):
+    if (not isinstance(info,dict) or info.get('profile')!=PROFILE
+            or info.get('cpu-subset')!=DEVICE_SUBSET or info.get('env-model')!=ENV_MODEL
+            or info.get('width')!=64 or info.get('height')!=32):
+        raise DebuggerError('Invalid CHIP-8 environment identity')
+    for key in ('key-wait','key-wait-stop-owned','sound-active'):
+        if type(info.get(key)) is not bool:raise DebuggerError('Invalid CHIP-8 environment '+key)
+    limits={'key-mask':0xffff,'delay-timer':255,'sound-timer':255,'phase-numerator':59,
+            **{k:(1<<64)-1 for k in ('frame-generation','virtual-ticks','manual-ticks',
+                                      'virtual-now-ns','next-deadline-ns','state-generation')}}
+    for key,maximum in limits.items():
+        if type(info.get(key)) is not int or not 0<=info[key]<=maximum:
+            raise DebuggerError('Invalid CHIP-8 environment '+key)
+    if (info['sound-active']!=(info['sound-timer']>0)
+            or info['key-wait-stop-owned'] and not info['key-wait']):
+        raise DebuggerError('Inconsistent CHIP-8 environment state')
+    encoded=info.get('pixels-hex')
+    if not isinstance(encoded,str) or len(encoded)!=4096:
+        raise DebuggerError('Invalid CHIP-8 framebuffer length')
+    try:pixels=bytes.fromhex(encoded)
+    except ValueError:raise DebuggerError('Invalid CHIP-8 framebuffer encoding') from None
+    if (len(pixels)!=2048 or any(value not in (0,1) for value in pixels)
+            or _sha(pixels)!=info.get('pixels-sha256')):
+        raise DebuggerError('CHIP-8 framebuffer identity differs')
+    return dict(info)
 
 
 def _attach_native_diagnostics(error, owner):
@@ -123,7 +158,13 @@ class _Owner:
             if actual!=expected:raise DebuggerError('QEMU CHIP-8 register description differs from profile')
             if self.qmp.call('query-status',timeout_ms=_remaining(deadline)).get('running'):
                 raise DebuggerError('CHIP-8 QEMU did not start stopped')
-            _fault_receipt(self.qmp)
+            self.cpu_subset=_fault_receipt(self.qmp,identity.get('cpu_subset'))['cpu-subset']
+            if self.cpu_subset==DEVICE_SUBSET:
+                commands=self.qmp.call('query-commands',timeout_ms=_remaining(deadline))
+                names={item.get('name') for item in commands if isinstance(item,dict)} if isinstance(commands,list) else set()
+                if not {'query-chip8-environment','x-chip8-set-keys','x-chip8-debug-ticks'}<=names:
+                    raise DebuggerError('CHIP-8 device command set is incomplete')
+                _environment_receipt(self.qmp)
             self._checkpoint_restored_stopped=True
         except BaseException as error:
             _attach_native_diagnostics(error,self)
@@ -195,7 +236,7 @@ class Chip8DebugSession:
         version_line=subprocess.check_output([str(executable),'--version'],text=True,stderr=subprocess.STDOUT,timeout=_remaining(deadline)/1000).splitlines()[0]
         binary_sha=_file_sha(executable)
         self.identity=dict(profile=PROFILE,source_sha256=_sha(data),version_sha256=selected['sha256'],
-                           cpu_subset=CPU_SUBSET,qemu_sha256=binary_sha,qemu_version=version_line,
+                           cpu_subset=None,qemu_sha256=binary_sha,qemu_version=version_line,
                            checkpoint_tool_sha256=_file_sha(checkpoint_tool) if checkpoint_tool else None,
                            machine='chip8-test',memory=RAM_SIZE)
         self._rom=data;self._executable=executable;self.project=project;self.version=selected
@@ -206,6 +247,10 @@ class Chip8DebugSession:
         self.vm=_Owner(executable,data,self.identity,timeout_ms=_remaining(deadline),checkpoint_tool=checkpoint_tool,on_spawn=_on_spawn)
         self.rpc=self.vm
         try:
+            self.identity['cpu_subset']=getattr(self.vm,'cpu_subset',CPU_SUBSET)
+            if self.identity['cpu_subset']==DEVICE_SUBSET:
+                self.identity['env_model']=ENV_MODEL
+                self.capabilities.update(frame=True,input=True,timers=True,audio=False)
             if _file_sha(executable)!=binary_sha:raise ValueError('QEMU binary changed during startup')
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -263,10 +308,100 @@ class Chip8DebugSession:
         if self.closed:return dict(context='machine',run=self.run_id,state='exited',capabilities=self.capabilities)
         with self.vm.lock:
             native=self.vm.qmp.call('query-status')
-            fault=None if native.get('running') else _fault_receipt(self.vm.qmp)
+            fault=None if native.get('running') else _fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
             return dict(context='machine',run=self.run_id,version=self.version['id'],
                         state='running' if native.get('running') else 'stopped',native=native,
                         fault=fault,capabilities=self.capabilities,mapping=self.metadata)
+
+    def _require_devices(self):
+        if self.identity['cpu_subset']!=DEVICE_SUBSET:
+            raise ValueError('This CHIP-8 runtime has no display, keypad or timers')
+
+    def chip8_environment(self,*,timeout_ms=10000):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 environment timeout')
+        self._require_devices();deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
+        with self._budget(owner,deadline):
+            self._stopped()
+            return _environment_receipt(owner.qmp)
+
+    def _device_mutation(self,command,arguments,expected,*,timeout_ms):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 device timeout')
+        if self.project.db.in_transaction:raise ValueError('CHIP-8 device mutation requires no caller transaction')
+        self._require_devices();deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
+        with self._budget(owner,deadline):
+            self._stopped();before=_environment_receipt(owner.qmp);registers=self.registers()
+            if before['state-generation']==(1<<64)-1 or (command=='x-chip8-debug-ticks'
+                    and before['manual-ticks']>(1<<64)-1-arguments['count']):
+                raise ValueError('CHIP-8 device counter exhausted')
+            args=dict(arguments,**{'expected-generation':before['state-generation']})
+            after=None
+            try:
+                after=_validate_environment(owner.qmp.call(command,args,timeout_ms=_remaining(deadline)))
+                observed=_environment_receipt(owner.qmp)
+                actual_registers=self.registers()
+                unchanged=set(before)-set(expected)-{'state-generation','key-wait-stop-owned'}
+                if (after!=observed or after['state-generation']!=before['state-generation']+1
+                        or after['key-wait-stop-owned'] or actual_registers!=registers
+                        or any(after[k]!=before[k] for k in unchanged)
+                        or any(after[k]!=(value(before) if callable(value) else value) for k,value in expected.items())):
+                    raise DebuggerError('CHIP-8 device mutation readback differs')
+                self._event('chip8-keypad' if command=='x-chip8-set-keys' else 'chip8-tick',
+                            dict(before=before,after=after))
+                _remaining(deadline)
+                return after
+            except BaseException as error:
+                if getattr(error,'result',None) is None:
+                    error.result=dict(before=before,after=after,command=command,arguments=args,
+                                      disposition='device mutation uncertain; do not replay')
+                _attach_native_diagnostics(error,owner)
+                try:self.close()
+                except BaseException:pass
+                raise
+
+    def chip8_keypad(self,keys,*,timeout_ms=10000):
+        if (not isinstance(keys,(list,tuple)) or len(keys)>16
+                or any(type(key) is not int or not 0<=key<=15 for key in keys)
+                or len(set(keys))!=len(keys)):
+            raise ValueError('CHIP-8 keys must be distinct integers from 0 to 15')
+        mask=sum(1<<key for key in keys)
+        return self._device_mutation('x-chip8-set-keys',{'key-mask':mask},{'key-mask':mask},timeout_ms=timeout_ms)
+
+    def chip8_tick(self,ticks,*,timeout_ms=10000):
+        if type(ticks) is not int or not 1<=ticks<=65535:raise ValueError('CHIP-8 ticks must be 1..65535')
+        return self._device_mutation('x-chip8-debug-ticks',{'count':ticks},
+            {'manual-ticks':lambda old:old['manual-ticks']+ticks,
+             'delay-timer':lambda old:max(0,old['delay-timer']-ticks),
+             'sound-timer':lambda old:max(0,old['sound-timer']-ticks),
+             'sound-active':lambda old:old['sound-timer']>ticks},timeout_ms=timeout_ms)
+
+    def frame_rgba(self,*,timeout_ms=10000):
+        info=self.chip8_environment(timeout_ms=timeout_ms)
+        indices=bytes.fromhex(info['pixels-hex'])
+        rgba=b''.join(b'\xff\xff\xff\xff' if value else b'\x00\x00\x00\xff' for value in indices)
+        return dict(width=64,height=32,rgba=rgba,sha256=_sha(rgba),format='rgba8888',environment=info)
+
+    def screenshot(self,name='screenshot.png',*,encoding='png',timeout_ms=10000):
+        from .external_files import _file_name
+        from PIL import Image
+        _file_name(name)
+        if encoding!='png':raise ValueError('CHIP-8 screenshots support PNG only')
+        if self.project.db.in_transaction:raise ValueError('CHIP-8 screenshot requires no caller transaction')
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 screenshot timeout')
+        self._require_devices();deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
+        with self._budget(owner,deadline):
+            frame=self.frame_rgba(timeout_ms=_remaining(deadline))
+            image=Image.frombytes('RGBA',(64,32),frame['rgba']);out=io.BytesIO();image.save(out,format='PNG')
+            data=out.getvalue();metadata=dict(format='chip8-frame-png-1',width=64,height=32,
+                pixel_sha256=frame['sha256'],environment=frame['environment'],identity=self.identity)
+            artifact=self._artifact(name,'screenshot',data,metadata)
+            if artifact.get('sha256')!=_sha(data):raise DebuggerError('CHIP-8 screenshot artifact differs')
+            result=dict(**artifact,width=64,height=32,pixel_sha256=frame['sha256'],
+                        format='png',environment=frame['environment'])
+            try:_remaining(deadline)
+            except BaseException as error:
+                error.result=result
+                raise
+            return result
 
     def registers(self):
         with self.vm.lock:
@@ -397,6 +532,8 @@ class Chip8DebugSession:
         with self._budget(owner,deadline):
             result=None
             try:
+                before_pc=(int(self.registers()['linear_pc'],16)
+                           if command=='s' and self.identity['cpu_subset']==DEVICE_SUBSET else None)
                 reply,timed_out=self._stopped().execute(command,_remaining(deadline))
                 if reply[:1] not in (b'T',b'S',b'W',b'X'):raise DebuggerError('Invalid CHIP-8 stop reply')
                 native=reply.decode('ascii');exited=reply[:1] in (b'W',b'X')
@@ -410,15 +547,31 @@ class Chip8DebugSession:
                     self._event('machine-step' if command=='s' else 'machine-run',result)
                     return result
                 regs=None if exited else self.registers()
-                fault=None if exited else _fault_receipt(self.vm.qmp)
+                fault=None if exited else _fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
+                environment=(_environment_receipt(self.vm.qmp)
+                             if not exited and self.identity['cpu_subset']==DEVICE_SUBSET else None)
                 pc=None if regs is None else int(regs['linear_pc'],16)
                 sig=int(native[1:3],16);ids=[key for key,addr in self.breakpoints.items() if sig==5 and addr==pc and not (fault and fault['faulted'])]
+                wait=False
+                explicit_break=any(field.startswith(('swbreak:','hwbreak:','watch:','rwatch:','awatch:'))
+                                   for field in native[3:].split(';'))
+                if environment and environment['key-wait-stop-owned'] and not explicit_break and not fault['faulted']:
+                    if sig!=5 or environment['key-mask'] or command=='s' and pc!=before_pc:
+                        raise DebuggerError('CHIP-8 key-wait stop ownership differs')
+                    if pc is None or pc+2>RAM_SIZE:
+                        raise DebuggerError('CHIP-8 key-wait PC is outside RAM')
+                    word=int.from_bytes(self._memory(pc,2),'big')
+                    if word & 0xf0ff != 0xf00a:
+                        raise DebuggerError('CHIP-8 key-wait PC does not contain FX0A')
+                    wait=True;ids=[]
                 outcome=('exited' if exited else 'timeout' if timed_out else 'exception' if fault and fault['faulted'] else 'breakpoint' if ids
+                         else 'key_wait' if wait
                          else 'step' if sig==5 and command=='s' else 'stopped' if sig==2 else 'exception')
                 reason=dict(kind=outcome,address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)
                 result=dict(context='machine',outcome=outcome,timed_out=timed_out,registers=regs,
                             session=dict(state='exited' if exited else 'stopped',stop_reason=reason),
                             stop=dict(trigger=outcome,context='machine'),fault=fault)
+                if environment is not None:result['environment']=environment
                 self._event('machine-step' if command=='s' else 'machine-run',result)
                 return result
             except BaseException as error:
@@ -453,16 +606,20 @@ class Chip8DebugSession:
         limit=max_bytes or 128*1024*1024;deadline=time.monotonic()+timeout_ms/1000
         owner=self.vm
         with self._budget(owner,deadline):
-            self._checkpoint_admit();registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(self.vm.qmp)
+            self._checkpoint_admit();registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
+            environment=_environment_receipt(self.vm.qmp) if self.identity['cpu_subset']==DEVICE_SUBSET else None
             tag='fdb-'+uuid.uuid4().hex
             artifact=None
             try:
                 snapshot_job(self.vm,'save',tag=tag,vmstate='disk0',devices=['disk0'],timeout_ms=_remaining(deadline))
+                if environment is not None and _environment_receipt(self.vm.qmp)!=environment:
+                    raise DebuggerError('CHIP-8 environment changed during checkpoint')
                 path=self.vm.checkpoint_disk
                 if path.stat().st_size>limit:raise ValueError('CHIP-8 snapshot exceeds byte bound')
                 data=path.read_bytes();validate_qcow_header(data[:104],STATE_DISK_SIZE)
-                metadata=dict(format='fdisbull-qemu-chip8-state-1',tag=tag,identity=self.identity,
+                metadata=dict(format='fdisbull-qemu-chip8-state-2' if environment is not None else 'fdisbull-qemu-chip8-state-1',tag=tag,identity=self.identity,
                               registers=registers,ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
+                if environment is not None:metadata['environment']=environment
                 artifact=self.project._debug_artifact(self.run_id,name,'state',data,metadata)
                 _remaining(deadline)
                 return artifact
@@ -482,8 +639,11 @@ class Chip8DebugSession:
             if row is None or row['kind']!='state' or row['version']!=self.version['id']:
                 raise ValueError('CHIP-8 snapshot belongs to another project version')
             data=bytes(row['data']);metadata=json.loads(row['metadata'])
-            if (len(data)>128*1024*1024 or _sha(data)!=row['sha256'] or metadata.get('format')!='fdisbull-qemu-chip8-state-1'
+            expected_format='fdisbull-qemu-chip8-state-2' if self.identity['cpu_subset']==DEVICE_SUBSET else 'fdisbull-qemu-chip8-state-1'
+            if (len(data)>128*1024*1024 or _sha(data)!=row['sha256'] or metadata.get('format')!=expected_format
                     or metadata.get('identity')!=self.identity):raise ValueError('CHIP-8 snapshot identity differs')
+            if expected_format.endswith('-2'):
+                saved_environment=_validate_environment(metadata.get('environment'))
             validate_qcow_header(data[:104],STATE_DISK_SIZE)
             new=None;result=None;replaced=False;closing_old=False
             try:
@@ -497,13 +657,22 @@ class Chip8DebugSession:
                 # Observe the fresh owner without touching or releasing the original VM.
                 new.lock=old.lock
                 self.vm=new
-                try:registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(new.qmp)
+                try:
+                    registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(new.qmp,self.identity['cpu_subset'])
+                    environment=_environment_receipt(new.qmp) if expected_format.endswith('-2') else None
                 finally:self.vm=old
                 if registers!=metadata['registers'] or _sha(ram)!=metadata['ram_sha256'] or fault!=metadata.get('fault'):
                     raise DebuggerError('Restored CHIP-8 CPU or RAM differs')
+                if environment is not None:
+                    saved=dict(saved_environment);actual=dict(environment)
+                    # Attribution is tied to the old debugger stop, not guest state.
+                    saved.pop('key-wait-stop-owned');actual.pop('key-wait-stop-owned')
+                    if saved!=actual or environment['key-wait-stop-owned']:
+                        raise DebuggerError('Restored CHIP-8 environment differs')
                 _remaining(deadline)
                 result=dict(artifact=artifact,sha256=row['sha256'],registers=registers,
                             ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
+                if environment is not None:result['environment']=environment
                 closing_old=True;old.close();self.vm=self.rpc=new;replaced=True
                 new.qmp.operation_deadline=None;new.gdb.operation_deadline=None
                 _remaining(deadline)

@@ -140,6 +140,26 @@ def test_store_corruption_fails_closed(target):
             db.source_info()
 
 
+def test_native_pixel_receipts_are_external_and_resolve_after_reopen(target):
+    project, _ = target
+    pixels = bytes(int(i * 13 % 17 < 3) for i in range(2048))
+    document = {'environment': {'pixels-hex': pixels.hex(),
+                               'pixels-sha256': hashlib.sha256(pixels).hexdigest()}}
+    with Project(project) as db:
+        with db.transaction(True):
+            db.db.execute('CREATE TABLE authored_frame_cache (document TEXT NOT NULL)')
+            db.db.execute('INSERT INTO authored_frame_cache VALUES (?)', (json.dumps(document),))
+        assert json.loads(db.db.execute('SELECT document FROM authored_frame_cache').fetchone()[0]) == document
+    with sqlite3.connect(project) as raw:
+        assert reference(raw.execute('SELECT document FROM authored_frame_cache').fetchone()[0])
+    for path in (project, Path(str(project) + '-wal')):
+        if path.exists():
+            assert pixels.hex().encode() not in path.read_bytes()
+    assert storage_report(project)['embedded_payload_columns'] == []
+    with Project(project) as db:
+        assert json.loads(db.db.execute('SELECT document FROM authored_frame_cache').fetchone()[0]) == document
+
+
 def test_json_raw_cache_is_external_and_legacy_derivative_preserves_original(target, tmp_path):
     project, source = target
     legacy = tmp_path / 'legacy.fdb'

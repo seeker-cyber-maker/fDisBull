@@ -39,6 +39,7 @@ class VM:
 
 def session():
     s=Chip8DebugSession.__new__(Chip8DebugSession);s.vm=VM();s.closed=False
+    s.identity={'cpu_subset':'fdisbull-chip8-cpu-smoke-1'}
     s.project=SimpleNamespace(_live_debuggers=[s],db=SimpleNamespace(in_transaction=False));s.breakpoints={};s.next_bp=1
     s._event=lambda *args:None
     return s

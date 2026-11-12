@@ -127,7 +127,7 @@ def _catalog():
         _entry('debug.chip8', 'partial', ['chip8-classic-16be'],
                ['cli:debug --backend qemu-chip8', 'json:debug-launch'],
                ['qemu_chip8.py', 'gdb_rpc.py', 'qemu_control.py'], ['chip8-backend'],
-               'CPU-only TCG run/step, registers/RAM, breakpoints and exact-runtime snapshots. No devices/layers/hooks/histories/trials.', maturity='experimental'),
+               'TCG CPU/RAM and snapshots; optional device build adds pixels, keys and 60Hz timers. No layers/hooks/histories/trials.', maturity='experimental'),
         _entry('debug.qemm-guest', 'partial', ['x86-16', 'x86-32'],
                ['cli:qemm-config', 'cli:qemm-profile', 'cli:debug --backend qemu-machine --guest-profile qemm',
                 'json:debug-memory-translation', 'json:debug-qemm-observe'],

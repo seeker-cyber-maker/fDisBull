@@ -1416,6 +1416,8 @@ class DebugWorkspace:
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})
+        methods.update({'debug-chip8-environment':'chip8_environment',
+                        'debug-chip8-keypad':'chip8_keypad','debug-chip8-tick':'chip8_tick'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:
