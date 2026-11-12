@@ -17,7 +17,7 @@ def node_json(body):
     prelude = r'''
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const {makeRealm, sanitizedCall, run, referenceShadowHeapStep} = require(process.argv[1]);
+const {makeRealm, sanitizedCall, run, referenceShadowHeapStep, crosscheckFunctionNoninterference} = require(process.argv[1]);
 const commitment = {keySha256:'1'.repeat(64),flagSha256:'2'.repeat(64)};
 const source = (protectedHeap=false, extraCall=false, returned='authored private return') => `
   const FLAG_CIPHER_HEX = '00'.repeat(63);
@@ -217,3 +217,41 @@ assert.throws(()=>referenceShadowHeapStep({...heap,diffEnvelope:{unexpected:0}},
 console.log(JSON.stringify({cases:rows.length,unchanged:JSON.stringify(heap)===before}));
 ''')
     assert result == {'cases': 7, 'unchanged': True}
+
+
+def test_two_private_states_have_equal_primitive_observations_and_public_frame():
+    result = node_json(r'''
+// An authored observer fixture: the separate source-proof tests validate real certificates.
+const heap={tick:0,rollingMask:0,cursor:0,
+  slots:Array.from({length:8},(_,slotId)=>({slotId,kind:'fixture',words:[0,0,0,0],epoch:0,hmacTag:0})),
+  splitShareA:[0,0,0],splitShareB:[0,0,0],diffEnvelope:{state_diff_frontier_0:0}};
+const hidden='H.tick=(H.tick+1)&2147483647;H.cursor=(H.cursor+1)%H.slots.length;';
+const s=source().replace('let H = {cursor:0,slots:[{value:3}]};','let H = '+JSON.stringify(heap)+';')
+  .replace('function sha256Hex(value) {','function sha256Hex(value) {'+hidden);
+const schema=value=>typeof value==='number'?{kind:'number',minimum:0,maximum:2147483647}:
+  typeof value==='string'?{kind:'string'}:Array.isArray(value)?{kind:'array',length:value.length,elements:value.map(schema)}:
+  {kind:'object',properties:Object.fromEntries(Object.entries(value).map(([k,v])=>[k,schema(v)]))};
+const shape=schema(heap);shape.properties.cursor.maximum=7;
+const proof={status:'proved',source:{sha256:crypto.createHash('sha256').update(s).digest('hex')},invariant:{schema:shape}};
+const metadata={...runtime,shadowHeapProof:proof,materializedCleanSource:s.replace(hidden,'')};
+const receipt=crosscheckFunctionNoninterference(s,metadata,0,commitment);
+assert.equal(receipt.cases,41);assert.equal(receipt.actual_crypto_cases,34);assert.equal(receipt.modeled_call_cases,7);
+assert(receipt.rows.every(r=>r.entry_heaps_differ&&r.caller_observations_equal&&r.heap_invariants_preserved));
+assert(!JSON.stringify(receipt).includes('authored private return'));
+console.log(JSON.stringify({cases:receipt.cases,status:receipt.status}));
+''')
+    assert result == {'cases': 41, 'status': 'verified_finite_two_heap_crosscheck'}
+
+
+def test_two_heap_crosscheck_detects_a_private_return_dependency():
+    result = node_json(r'''
+const heap={tick:0,rollingMask:0,cursor:0,
+  slots:Array.from({length:8},(_,slotId)=>({slotId,kind:'fixture',words:[0,0,0,0],epoch:0,hmacTag:0})),
+  splitShareA:[0],splitShareB:[0],diffEnvelope:{state_diff_frontier_0:0}};
+const s=source().replace('let H = {cursor:0,slots:[{value:3}]};','let H = '+JSON.stringify(heap)+';')
+ .replace('return h.digest(\'hex\');','return String(H.tick);');
+assert.throws(()=>crosscheckFunctionNoninterference(s,{...runtime,materializedCleanSource:s},0,commitment),
+ {message:'Differential mismatch: two-heaps/result'});
+console.log(JSON.stringify({detected:true}));
+''')
+    assert result['detected'] is True

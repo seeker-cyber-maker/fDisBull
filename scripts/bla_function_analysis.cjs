@@ -3,6 +3,8 @@
 const crypto = require('node:crypto');
 const path = require('node:path');
 const {proveShadowHeap} = require('./bla_shadow_heap_proof.cjs');
+const {proveHeapNoninterference} = require('./bla_heap_noninterference.cjs');
+const {composeFunctionEquivalence} = require('./bla_function_equivalence.cjs');
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const UNKNOWN = Symbol('unknown');
@@ -257,6 +259,8 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
   if (!privateHeap) throw new Error('Shadow-heap privacy/call discipline audit failed');
   const shadowHeapProof = proveShadowHeap({functionNode:stepOriginal,
     heapInitializerNode:heapBinding.path.node.init,heapName,source:targetSource,babelRoot});
+  const heapNoninterference = proveHeapNoninterference({source:targetSource,babelRoot,
+    heapName,heapStepName,functionNames,heapProof:shadowHeapProof});
   const globalMap = {...Object.fromEntries(Object.entries(functionNames).map(([role,name]) => [name,role])),
     [cryptoBindingName]:'createHash', [cipherName]:'FLAG_CIPHER_HEX'};
   for (const role of ['SCOPE','KEY_SHA256','FLAG_SHA256','LICENSE_RPC']) {
@@ -264,7 +268,7 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
     globalMap[exported[role]] = role;
   }
   for (const name of Object.keys(globalMap)) if (!bindings[name] || bindings[name].constantViolations.length) throw new Error('Mutable public function/constant dependency');
-  const reserved = new Set([...Object.values(globalMap),seedName,'Math','String','Buffer']);
+  const reserved = new Set([...Object.values(globalMap),seedName,heapName,heapStepName,'Math','String','Buffer']);
   for (const [name,role] of Object.entries(globalMap)) if (bindings[role] && bindings[role] !== bindings[name]) throw new Error('Canonical global binding collision');
   program.traverse({Scopable(p) {
     if (p.scope === program.scope) return;
@@ -290,10 +294,11 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
     return {name:role,equal:a === b,reference_ast_sha256:hash(a),target_ast_sha256:hash(b)};
   });
   const materializedCleanSource = generate(template, {comments:false}).code;
-  const selectedNames = new Set(Object.values(functionNames));
+  const selectedFunctions = new Set(Object.values(functionNames).map(name => program.scope.getBinding(name).path.node));
   traverse(target, {CallExpression(p) {
     if (p.node.callee.type === 'Identifier' && p.node.callee.name === heapStepName
-        && p.parentPath.isExpressionStatement() && selectedNames.has(p.getFunctionParent()?.node.id?.name)) {
+        && p.scope.getBinding(heapStepName) === program.scope.getBinding(heapStepName)
+        && p.parentPath.isExpressionStatement() && selectedFunctions.has(p.getFunctionParent()?.node)) {
       if (p.node.arguments.length !== 1 || p.node.arguments.some(a => a.type !== 'NumericLiteral' || !Number.isSafeInteger(a.value))) throw new Error('Private heap step argument has unmodeled effects or exceeds the safe-integer proof domain');
       ledger.push({kind:'private_heap_step',source_offsets:[p.node.start,p.node.end],argument_count:p.node.arguments.length});
       p.parentPath.remove();
@@ -321,6 +326,9 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
       target_source_offsets:originalFunctionOffsets[role]};
   });
   const matched = functionResults.every(fn => fn.equal) && constantResults.every(value => value.equal);
+  const wholeFunctionEquivalence = composeFunctionEquivalence({templateSource,targetSource,babelRoot,
+    functionNames,seedName,heapName,heapStepName,cryptoBindingName,cipherName,globalMap,
+    guardProofs:opaqueProofs,contractionLedger:ledger,noninterferenceProof:heapNoninterference,heapProof:shadowHeapProof});
   return {report:{format:'fdisbull-bla-function-static-1',status:matched?'structural_correspondence_under_assumptions':'different',
     sources:{template_sha256:hash(templateSource),target_sha256:hash(targetSource)},function_results:functionResults,
     constant_results:constantResults,
@@ -329,7 +337,7 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
       mutator_source_offsets:stepSourceOffsets,mutator_source_sha256:stepSourceHash,
       mutator_external_calls:['standard Math.imul'],literal_shape_checked:heapShape,
       initialization:{slots:heap.slots.length,split_share_length:heap.splitShareA.length},
-      proof:shadowHeapProof,
+      proof:shadowHeapProof,noninterference:heapNoninterference,
       totality_assumption:shadowHeapProof.status === 'proved' ? null :
         'Source-pinned mutator preserves the ordinary numeric heap shape; no getters/proxies/prototype mutation or concurrent observer',
       discharged_obligations:shadowHeapProof.status === 'proved' ? ['shadow_heap_shape_preservation','shadow_heap_termination'] : [],
@@ -338,9 +346,10 @@ function analyze(templateSource, targetSource, {babelRoot} = {}) {
       shadowHeapProof.status === 'proved' ? 'ordinary writable private data objects; no proxies, getters or external aliases' :
         'normal initialized private heap with no proxies, getters or external aliases','no timing/resource observer',
       'primitive sha256Hex inputs; controlled synchronous crypto provider','matching materialized constants'],
-    scope:'Complete selected function call closure after proved pure-guard reduction and explicit private-state projection; no whole-module equivalence'},
+    whole_function_equivalence:wholeFunctionEquivalence,
+    scope:'Complete selected function call closure; composed equivalence is a separate certificate under its observer/call contract; no whole-module equivalence'},
     runtime:{materializedCleanSource,seedName,heapName,corpusName,expectedCorpusDigest,cipherName,heapStepName,cryptoBindingName,shadowHeapProof,
-      functionNames,staticQualified:matched}};
+      functionNames,heapNoninterference,wholeFunctionEquivalence,staticQualified:matched}};
 }
 
 module.exports = {analyze};

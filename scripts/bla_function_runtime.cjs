@@ -314,6 +314,60 @@ const INPUTS = [
   ['honeypot', '"/internal/v2/license/verify-entitlement"'],
 ];
 
+/** Two independent private states share the same public input/provider state.
+ * These finite observations cross-check the separate noninterference proof.
+ */
+function crosscheckFunctionNoninterference(source, runtime, seedBase, commitment) {
+  const excluded = new Set(['boxed_string','array','coercion_object','primitive_hook','throwing_coercion']);
+  const primitives = [...INPUTS.filter(([name]) => !excluded.has(name)),
+    ['nan','NaN'],['positive_infinity','Infinity'],['negative_infinity','-Infinity'],
+    ['negative_zero','-0'],['bigint','12345678901234567890n']];
+  function privateState(initial, maximum) {
+    const state = JSON.parse(stable(initial)), value = maximum ? 0x7fffffff : 0;
+    state.tick = value; state.rollingMask = value;
+    state.cursor = maximum ? state.slots.length - 1 : 0;
+    for (const slot of state.slots) {
+      slot.words = slot.words.map(() => value); slot.epoch = value; slot.hmacTag = value;
+    }
+    state.splitShareA = state.splitShareA.map(() => value);
+    state.splitShareB = state.splitShareB.map(() => value);
+    for (const name of Object.keys(state.diffEnvelope)) state.diffEnvelope[name] = value;
+    return state;
+  }
+  const rows = [];
+  for (const mode of ['actual_crypto','modeled_success','bad_prefix','bad_final_hash',
+                       'create_throw','update_throw','digest_throw','buffer_alloc_throw']) {
+    const first = makeRealm(source, runtime, seedBase, commitment, mode);
+    const second = makeRealm(source, runtime, seedBase, commitment, mode);
+    const clean = makeRealm(runtime.materializedCleanSource, null, seedBase, commitment, mode);
+    first.installHeap(privateState(first.initialization.heap, false));
+    second.installHeap(privateState(second.initialization.heap, true));
+    const cases = mode === 'actual_crypto' ? ['sha256Hex','tryUnlock'].flatMap(fn =>
+      primitives.map(([label,input]) => ({fn,label,input}))) :
+      [{fn:'tryUnlock',label:mode,input:'"authored-contract-key"'}];
+    for (const {fn,label,input} of cases) {
+      const a = first.call(fn,input), b = second.call(fn,input), reference = clean.call(fn,input);
+      if (stable(a.before) === stable(b.before)) throw Error('Distinct private-state premise was lost');
+      equal(a.result,b.result,'two-heaps/result'); equal(a.result,reference.result,'two-heaps/clean-result');
+      equal(a.events,b.events,'two-heaps/ordered-calls'); equal(a.events,reference.events,'two-heaps/clean-calls');
+      equal(a.exportsBefore,b.exportsBefore,'two-heaps/public-entry');
+      equal(a.exportsAfter,b.exportsAfter,'two-heaps/public-exit');
+      equal(a.exportsAfter,reference.exportsAfter,'two-heaps/clean-public-exit');
+      equal(a.exportsBefore,a.exportsAfter,'two-heaps/public-frame');
+      if (!a.heapInvariantChecked || !b.heapInvariantChecked) throw Error('Private-state invariant was not checked');
+      rows.push({mode,function:fn,input_class:label,entry_heaps_differ:true,
+        caller_observations_equal:true,clean_observations_equal:true,heap_invariants_preserved:true,
+        first:sanitizedCall(a),second:sanitizedCall(b),clean:sanitizedCall(reference)});
+    }
+  }
+  return {status:'verified_finite_two_heap_crosscheck',cases:rows.length,
+    actual_crypto_cases:rows.filter(row => row.mode === 'actual_crypto').length,
+    modeled_call_cases:rows.filter(row => row.mode !== 'actual_crypto').length,
+    private_profiles:['zero_numeric_cells_first_cursor','maximum_u31_cells_last_cursor'],
+    repeated_calls_preserve_related_public_state:true,rows,rows_sha256:hash(rows),
+    limitation:'Finite original-code observations; the universal two-run and composition claims are separate source certificates'};
+}
+
 function run(config) {
   if (!config || !Array.isArray(config.targets) || config.targets.length < 1 || config.targets.length > 3 ||
       !/^[0-9a-f]{64}$/.test(config.commitment?.keySha256 || '') ||
@@ -328,7 +382,11 @@ function run(config) {
     const analysis = analyze(template, source, {babelRoot: config.babelRoot});
     if (!analysis.runtime?.staticQualified) throw Error('Static whole-function observer contract not qualified');
     if (analysis.runtime.shadowHeapProof?.status !== 'proved') throw Error('Static shadow-heap proof not qualified');
+    if (analysis.runtime.heapNoninterference?.status !== 'proved' ||
+        analysis.runtime.wholeFunctionEquivalence?.status !== 'equivalent_under_contract')
+      throw Error('Composed whole-function proof not qualified');
     const heapBoundary = crosscheckShadowHeap(source, analysis.runtime, seeds[0], config.commitment);
+    const noninterferenceBoundary = crosscheckFunctionNoninterference(source, analysis.runtime, seeds[0], config.commitment);
     const rows = [];
     const seedEvidence = [];
     for (const seedBase of seeds) {
@@ -409,6 +467,7 @@ function run(config) {
     tiers.push({tier: target.tier, source_sha256: target.sha256, static: analysis.report,
                 guard_evidence: seedEvidence,
                 shadow_heap_boundary: heapBoundary,
+                noninterference_boundary: noninterferenceBoundary,
                 assumption_breakers: breakers,
                 actual_crypto_cases: rows.filter(r => r.profile === 'actual_crypto').length,
                 modeled_call_cases: rows.filter(r => r.profile === 'modeled_crypto_call_contract').length,
@@ -431,7 +490,7 @@ function run(config) {
           full_state_equivalence: false, whole_program_equivalence: null};
 }
 
-module.exports = {run, makeRealm, sanitizedCall, referenceShadowHeapStep, crosscheckShadowHeap};
+module.exports = {run, makeRealm, sanitizedCall, referenceShadowHeapStep, crosscheckShadowHeap, crosscheckFunctionNoninterference};
 if (require.main === module) {
   try {
     const input = fs.readFileSync(0, 'utf8');

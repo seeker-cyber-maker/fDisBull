@@ -170,6 +170,7 @@ def test_proved_false_guard_and_literal_fragments_reduce(analyze):
         ("function sha256Hex(value) {", "function sha256Hex(value) { const runtimeSeedFixture = 1; if ((Math.imul(runtimeSeedFixture ^ 0, runtimeSeedFixture ^ 0) & 7) === 1) return 0;"),
         ("const {createHash} = require(\"node:crypto\");", 'const {createHash} = require("node:crypto"); createHash = () => 0;'),
         ("function sha256Hex(value) {", "function sha256Hex(createHash) {"),
+        ("function sha256Hex(value) {", "function sha256Hex(stepShadowHeapFixture) {"),
         ("function sha256Hex(value) {", "function sha256Hex(__v0) {"),
         ("const runtimeSeedFixture =", "let runtimeSeedFixture ="),
     ],

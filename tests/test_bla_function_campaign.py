@@ -49,10 +49,17 @@ def setup_campaign(tmp_path, monkeypatch):
                  'mutation_summary': {'mutator_source_sha256': '3' * 64,
                      'totality_assumption': None,
                      'discharged_obligations': ['shadow_heap_shape_preservation', 'shadow_heap_termination'],
-                     'proof': {'status': 'proved', 'source': {'sha256': pins[tier][1], 'mutator_sha256': '3' * 64,
+                     'noninterference': {'status': 'proved', 'source': {'sha256': pins[tier][1]},
+                                         'heap_certificate_sha256': '4' * 64, 'certificate_sha256': '5' * 64},
+                     'proof': {'status': 'proved', 'certificate_sha256': '4' * 64,
+                               'source': {'sha256': pins[tier][1], 'mutator_sha256': '3' * 64,
                                                           'ast_identity_verified': True},
                                'invariant': {'initialized': True, 'preserved': True},
-                               'termination': {'proved': True}}}}}
+                               'termination': {'proved': True}}},
+                 'whole_function_equivalence': {'status': 'equivalent_under_contract',
+                    'noninterference_certificate_sha256': '5' * 64,
+                    'functions': [{'role': role} for role in ('sha256Hex','deriveFlagMask','decodeFlagCipher','tryUnlock')],
+                    'source': {'target_sha256': pins[tier][1], 'template_sha256': pins['template'][1]}}}}
             for tier in ('L1', 'L2', 'L3')]}
         return subprocess.CompletedProcess(command, 0, module.encoded(observation), b'')
 
@@ -73,7 +80,8 @@ def test_report_preserves_claim_ceiling_and_binds_targets_analyzers_and_limits(s
     assert report['shadow_heap_obligations']['shape_preservation'] == 'proved'
     assert report['shadow_heap_obligations']['termination'] == 'proved'
     assert 'bla_shadow_heap_proof.cjs' in report['tool_sha256']
-    assert 'universal JS equivalence unproved' in report['claim_ceiling']
+    assert 'unrestricted JavaScript contextual equivalence unproved' in report['claim_ceiling']
+    assert report['shadow_heap_obligations']['noninterference'] == 'proved'
     assert len(report['observations']['tiers']) == 3
     assert set(report['analyzer_packages']) == {'@babel/parser', '@babel/traverse', '@babel/generator'}
     assert report['report_sha256'] == runner.digest(runner.encoded({
@@ -108,7 +116,10 @@ def test_dirty_selected_sources_are_rejected_before_execution(setup_campaign, mo
 
 @pytest.mark.parametrize('mode', ['missing_tier', 'wrong_source', 'heap_ignored', 'unqualified_static',
                                  'missing_heap_proof', 'proof_wrong_source', 'proof_wrong_mutator', 'assumption_not_discharged',
-                                 'unproved_induction', 'unproved_termination', 'unbound_ast'])
+                                 'unproved_induction', 'unproved_termination', 'unbound_ast',
+                                 'missing_noninterference', 'wrong_noninterference_heap', 'unknown_whole_function',
+                                 'wrong_whole_function_target', 'wrong_whole_function_template',
+                                 'whole_wrong_noninterference', 'partial_function_coverage'])
 def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, monkeypatch, mode):
     runner, root, babel, calls = setup_campaign
     original = runner.subprocess.run
@@ -138,6 +149,19 @@ def test_incomplete_or_inconsistent_driver_evidence_is_rejected(setup_campaign, 
                 mutation['proof']['termination']['proved'] = False
             elif mode == 'unbound_ast':
                 mutation['proof']['source']['ast_identity_verified'] = False
+            elif mode == 'missing_noninterference':
+                mutation.pop('noninterference')
+            elif mode == 'wrong_noninterference_heap':
+                mutation['noninterference']['heap_certificate_sha256'] = '0' * 64
+            elif mode.startswith('wrong_whole_function_'):
+                which = 'target_sha256' if mode.endswith('target') else 'template_sha256'
+                result['tiers'][0]['static']['whole_function_equivalence']['source'][which] = '0' * 64
+            elif mode == 'unknown_whole_function':
+                result['tiers'][0]['static']['whole_function_equivalence']['status'] = 'unknown'
+            elif mode == 'whole_wrong_noninterference':
+                result['tiers'][0]['static']['whole_function_equivalence']['noninterference_certificate_sha256'] = '0' * 64
+            elif mode == 'partial_function_coverage':
+                result['tiers'][0]['static']['whole_function_equivalence']['functions'].pop()
             else:
                 mutation['totality_assumption'] = 'still assumed'
         p.stdout = runner.encoded(result)

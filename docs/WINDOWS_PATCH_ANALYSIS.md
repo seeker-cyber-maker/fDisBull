@@ -312,9 +312,10 @@ Two deliberate counterexamples keep the boundary visible: passing each module's
 own function as input exposes source differences, and poisoning `Math.imul`
 through a coercion callback makes later hardened calls differ. Source/name
 reflection, exception stacks, timing, resource exhaustion and hostile callbacks
-are outside the admitted contract. Finite observations plus the checked source
-reductions support the reported function correspondence under those assumptions;
-universal JS contextual equivalence and whole-module equivalence remain unproved.
+are outside the admitted contract. The composed source proof below establishes
+selected whole-function observational equivalence under explicit contracts;
+finite observations remain separate. Universal JS contextual equivalence and
+whole-module equivalence remain unproved.
 This is a JS source experiment, not native Windows whole-function qualification.
 
 ### Shadow-heap induction and termination
@@ -365,6 +366,62 @@ conditions. These checks do not establish arbitrary JavaScript termination,
 crypto-provider totality, universal contextual equivalence or equality of the
 private heaps. The earlier reflection and intrinsic-poisoning counterexamples
 continue to distinguish the original programs outside the contract.
+
+### Noninterference and whole-function composition
+
+`scripts/bla_heap_noninterference.cjs` establishes a two-run private-state
+relation. Two executions may have independently different admitted heaps and
+the same permitted public state. The checker independently reparses the source,
+recomputes the heap transition proof and audits lexical separation, exact
+binding ownership and escape paths. Each selected private call must evaluate a
+pure safe-integer literal and discard its result. Totality, the private write
+frame and empty observable trace then make that call a finite silent step:
+it preserves the public state in either run and can be erased. All three BLA
+tiers have four selected call sites. Three other module call sites are recorded
+and remain outside the selected closure.
+
+`scripts/bla_function_equivalence.cjs` composes that result with the guard and
+call contracts. It independently replays the admitted pure guard/literal
+rewrites from original source, checks the exact private-call sites against the
+noninterference certificate, and compares all four complete normalized function
+ASTs and their five constant dependencies. The private-step erasure is binding
+aware: a local parameter with the same spelling as the mutator cannot authorize
+removing its call. Stale or mismatched source, guard, contraction or heap
+evidence cannot produce an equivalence certificate.
+
+The composer checks the remaining call closure and method receiver types,
+including hash creation/update/digest, Buffer construction/allocation and
+decoding, primitive String conversion and string predicates. It substitutes
+the acyclic helper contracts into callers using AST congruence and private-step
+stuttering. The proof compares return values, exception names/messages, ordered
+provider operations and related reachable public data. The private heaps may
+continue to differ. These are whole selected function proofs for all admitted
+inputs and related entry states, relative to the checked source model and
+explicit leaf-call contracts.
+
+The input domain is all ECMAScript primitives for `sha256Hex`. `tryUnlock`
+accepts any value; its checked type gate rejects nonstrings before coercion or
+provider calls. Helper inputs are strings. The seed must retain its proved
+low-bit invariant under the intact-corpus condition. Public constants and the
+exported `LICENSE_RPC` object must remain related ordinary data. The SHA-256 and
+Buffer providers must be coupled total synchronous providers: equal admitted
+operations on related receivers/arguments return related fresh objects/bytes
+and equal primitives, or throw matching exception names/messages. They cannot
+reenter the functions, inspect private/source/caller state or mutate the
+intrinsics or public data. Stable standard String/object/array semantics and
+the earlier observer exclusions remain part of the contract. Provider totality
+is a leaf contract; it is not inferred from private-heap termination.
+
+The real-target campaign separately runs repeated calls with zero/maximum
+numeric private cells and different cursor positions while preserving the same
+public inputs/provider state. It compares both target executions with the
+materialized clean reference on 123 two-heap cases across L1/L2/L3, including
+BigInt, NaN, infinities and the modeled collaborator exceptions. The existing
+204 actual-crypto observations, 42 modeled call scenarios and 144 direct-mutator
+boundary checks remain separate receipts. Runtime agreement checks the source
+proof against original code; it does not replace the noninterference or
+composition argument. Module initialization, CLI behavior, unrestricted JS
+contexts and native Windows whole-function equivalence remain unqualified.
 
 ## Register-only transfer projection
 

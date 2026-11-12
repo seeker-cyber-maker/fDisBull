@@ -62,6 +62,8 @@ def campaign(root, babel_root):
     scripts = Path(__file__).resolve().parent
     driver, analyzer = scripts / 'bla_function_runtime.cjs', scripts / 'bla_function_analysis.cjs'
     heap_prover = scripts / 'bla_shadow_heap_proof.cjs'
+    noninterference_prover = scripts / 'bla_heap_noninterference.cjs'
+    composer = scripts / 'bla_function_equivalence.cjs'
     config = {'root': str(root), 'babelRoot': str(babel_root),
               'template': {'path': PINS['template'][0], 'sha256': PINS['template'][1]},
               'targets': [{'tier': name, 'path': PINS[name][0], 'sha256': PINS[name][1]}
@@ -81,6 +83,8 @@ def campaign(root, babel_root):
     for item in observation['tiers']:
         mutation = item.get('static', {}).get('mutation_summary', {})
         proof = mutation.get('proof', {})
+        noninterference = mutation.get('noninterference', {})
+        whole = item.get('static', {}).get('whole_function_equivalence', {})
         if (item.get('source_sha256') != PINS[item['tier']][1]
                 or item.get('caller_observations_equal') is not True
                 or item.get('private_heap_effects_equal_to_clean') is not False
@@ -100,6 +104,18 @@ def campaign(root, babel_root):
                 or set(mutation.get('discharged_obligations', [])) != {
                     'shadow_heap_shape_preservation', 'shadow_heap_termination'}):
             raise ValueError('Shadow-heap preservation and termination were not proved for the pinned source')
+        if (noninterference.get('status') != 'proved'
+                or noninterference.get('source', {}).get('sha256') != PINS[item['tier']][1]
+                or not proof.get('certificate_sha256')
+                or noninterference.get('heap_certificate_sha256') != proof['certificate_sha256']
+                or whole.get('status') != 'equivalent_under_contract'
+                or not noninterference.get('certificate_sha256')
+                or whole.get('noninterference_certificate_sha256') != noninterference['certificate_sha256']
+                or whole.get('source', {}).get('target_sha256') != PINS[item['tier']][1]
+                or whole.get('source', {}).get('template_sha256') != PINS['template'][1]
+                or [function.get('role') for function in whole.get('functions', [])] != [
+                    'sha256Hex', 'deriveFlagMask', 'decodeFlagCipher', 'tryUnlock']):
+            raise ValueError('Noninterference and whole-function contracts were not composed for the pinned sources')
     analyzer_packages = {}
     for name in ('parser', 'traverse', 'generator'):
         package = babel_root / '@babel' / name
@@ -108,18 +124,19 @@ def campaign(root, babel_root):
         analyzer_packages['@babel/' + name] = {'version': metadata['version'],
             'package_sha256': digest(read(package / 'package.json')), 'entry_sha256': digest(read(entry))}
     report = {'format': 'fdisbull-bla-function-campaign-1',
-              'status': 'qualified_function_observations',
+              'status': 'proved_whole_function_contracts_with_runtime_observations',
               'source': {'repository': remote, 'commit': SUPPORTED_COMMIT,
                          'files': {name: {'path': PINS[name][0], 'bytes': len(raw), 'sha256': digest(raw)}
                                    for name, raw in files.items()}},
-              'tool_sha256': {path.name: digest(path.read_bytes()) for path in (Path(__file__), driver, analyzer, heap_prover)},
+              'tool_sha256': {path.name: digest(path.read_bytes()) for path in
+                              (Path(__file__), driver, analyzer, heap_prover, noninterference_prover, composer)},
               'runtime_limits': {'node_old_space_mib': 256, 'subprocess_timeout_seconds': 60},
               'analyzer_packages': analyzer_packages,
               'observations': observation,
-              'claim_ceiling': 'Conditional structural correspondence and finite function observations; universal JS equivalence unproved',
+              'claim_ceiling': 'Whole-function observational equivalence proved under explicit heap/guard/call contracts; unrestricted JavaScript contextual equivalence unproved',
               'shadow_heap_obligations': {
-                  'shape_preservation': 'proved', 'termination': 'proved',
-                  'basis': 'Source-checked inductive numeric-heap invariant and bounded loop ranking',
+                  'shape_preservation': 'proved', 'termination': 'proved', 'noninterference': 'proved',
+                  'basis': 'Source-checked inductive numeric-heap invariant, loop ranking and two-run public-state frame',
                   'scope': 'Admitted ordinary private heap and numeric deltas under standard JavaScript intrinsics'},
               'full_state_equivalence': False,
               'limitations': [
@@ -128,7 +145,7 @@ def campaign(root, babel_root):
                   'Function source/name introspection, Error stacks, timing, resource exhaustion and hostile callbacks are excluded.',
                   'Controlled crypto-return scenarios are call-contract tests, not actual valid-key acceptance.',
                   'The clean template is materialized from commitment-checked target constants; it is not an independently built original.',
-                  'Finite runtime agreement is not a universal whole-function proof.']}
+                  'The whole-function proof is relative to its stated observer/provider contract; finite runtime crosschecks remain separate.']}
     report['report_sha256'] = digest(encoded(report))
     return report
 
