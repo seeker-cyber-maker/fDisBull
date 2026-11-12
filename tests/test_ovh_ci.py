@@ -137,6 +137,14 @@ def test_ci_resource_serial_retention_and_legacy_contract():
         assert job + ':' in config
 
 
+@pytest.mark.parametrize('job', ['native-qualification', 'qualify-candidate'])
+def test_control_jobs_use_git_capable_image_for_export(job):
+    config = (ROOT / '.gitlab-ci.yml').read_text()
+    section = config.split(f'\n{job}:\n', 1)[1].split('\n\n', 1)[0]
+    assert '\n  image: python:3.12-bookworm\n' in section
+    assert 'ovh-export.py export' in config
+
+
 @pytest.mark.parametrize('damage', ['omitted_inventory_entry', 'omitted_canonical_receipt', 'dirty_postcheck'])
 def test_preservation_requires_complete_inventory_and_own_receipt(exports, damage):
     work, root, env = exports

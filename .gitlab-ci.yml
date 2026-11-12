@@ -19,6 +19,7 @@ default:
     - fdisbull-ovh-ca
   interruptible: false
   before_script:
+    - git --version
     - python scripts/ci/ovh-admission.py
   after_script:
     - python scripts/ci/ovh-export.py export --work "$CI_PROJECT_DIR" --root /ci-host-results
@@ -75,6 +76,7 @@ test-and-package:
 native-qualification:
   resource_group: fdisbull-ovh-ci
   stage: native-gate
+  image: python:3.12-bookworm
   interruptible: false
   rules:
     - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
@@ -187,7 +189,7 @@ qualify-candidate:
   resource_group: fdisbull-ovh-ci
   extends: .native_qualification_rules
   stage: qualification
-  image: python:3.12-slim-bookworm
+  image: python:3.12-bookworm
   interruptible: false
   timeout: 10m
   needs:
