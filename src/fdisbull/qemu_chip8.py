@@ -27,6 +27,10 @@ PROFILE = 'chip8-classic-pilot-default-v1'
 CPU_SUBSET = 'fdisbull-chip8-cpu-smoke-1'
 DEVICE_SUBSET = 'fdisbull-chip8-classic-devices-2'
 ENV_MODEL = 'fdisbull-chip8-display-keypad-timers-1'
+CLASSIC_SUBSET = 'fdisbull-chip8-classic-complete-3'
+CLASSIC_ENV_MODEL = 'fdisbull-chip8-display-keypad-timers-rng-2'
+RNG_MODEL = 'fdisbull-lcg32-high8-v1'
+DEVICE_MODELS = {DEVICE_SUBSET: ENV_MODEL, CLASSIC_SUBSET: CLASSIC_ENV_MODEL}
 STATE_DISK_SIZE = 1024 * 1024
 RAM_SIZE = 4096
 ROM_BASE = 0x200
@@ -61,7 +65,7 @@ def _remaining(deadline):
 def _fault_receipt(qmp, expected_subset=None):
     info=qmp.call('query-chip8-fault')
     if (not isinstance(info,dict) or type(info.get('faulted')) is not bool
-            or info.get('profile')!=PROFILE or info.get('cpu-subset') not in (CPU_SUBSET,DEVICE_SUBSET)
+            or info.get('profile')!=PROFILE or info.get('cpu-subset') not in (CPU_SUBSET,DEVICE_SUBSET,CLASSIC_SUBSET)
             or expected_subset is not None and info.get('cpu-subset')!=expected_subset):
         raise DebuggerError('Invalid CHIP-8 fault receipt')
     for key in ('fault-code','fault-pc','fault-opcode'):
@@ -79,7 +83,8 @@ def _environment_receipt(qmp):
 
 def _validate_environment(info):
     if (not isinstance(info,dict) or info.get('profile')!=PROFILE
-            or info.get('cpu-subset')!=DEVICE_SUBSET or info.get('env-model')!=ENV_MODEL
+            or info.get('cpu-subset') not in DEVICE_MODELS
+            or info.get('env-model')!=DEVICE_MODELS.get(info.get('cpu-subset'))
             or info.get('width')!=64 or info.get('height')!=32):
         raise DebuggerError('Invalid CHIP-8 environment identity')
     for key in ('key-wait','key-wait-stop-owned','sound-active'):
@@ -87,6 +92,9 @@ def _validate_environment(info):
     limits={'key-mask':0xffff,'delay-timer':255,'sound-timer':255,'phase-numerator':59,
             **{k:(1<<64)-1 for k in ('frame-generation','virtual-ticks','manual-ticks',
                                       'virtual-now-ns','next-deadline-ns','state-generation')}}
+    if info['cpu-subset']==CLASSIC_SUBSET:
+        if info.get('rng-model')!=RNG_MODEL:raise DebuggerError('Invalid CHIP-8 RNG model')
+        limits.update({'rng-seed':0xffffffff,'rng-state':0xffffffff,'rng-draws':(1<<64)-1})
     for key,maximum in limits.items():
         if type(info.get(key)) is not int or not 0<=info[key]<=maximum:
             raise DebuggerError('Invalid CHIP-8 environment '+key)
@@ -159,12 +167,15 @@ class _Owner:
             if self.qmp.call('query-status',timeout_ms=_remaining(deadline)).get('running'):
                 raise DebuggerError('CHIP-8 QEMU did not start stopped')
             self.cpu_subset=_fault_receipt(self.qmp,identity.get('cpu_subset'))['cpu-subset']
-            if self.cpu_subset==DEVICE_SUBSET:
+            if self.cpu_subset in DEVICE_MODELS:
                 commands=self.qmp.call('query-commands',timeout_ms=_remaining(deadline))
                 names={item.get('name') for item in commands if isinstance(item,dict)} if isinstance(commands,list) else set()
                 if not {'query-chip8-environment','x-chip8-set-keys','x-chip8-debug-ticks'}<=names:
                     raise DebuggerError('CHIP-8 device command set is incomplete')
-                _environment_receipt(self.qmp)
+                if self.cpu_subset==CLASSIC_SUBSET and 'x-chip8-seed-rng' not in names:
+                    raise DebuggerError('CHIP-8 RNG command is missing')
+                if _environment_receipt(self.qmp)['cpu-subset']!=self.cpu_subset:
+                    raise DebuggerError('CHIP-8 environment subset differs')
             self._checkpoint_restored_stopped=True
         except BaseException as error:
             _attach_native_diagnostics(error,self)
@@ -248,9 +259,10 @@ class Chip8DebugSession:
         self.rpc=self.vm
         try:
             self.identity['cpu_subset']=getattr(self.vm,'cpu_subset',CPU_SUBSET)
-            if self.identity['cpu_subset']==DEVICE_SUBSET:
-                self.identity['env_model']=ENV_MODEL
+            if self.identity['cpu_subset'] in DEVICE_MODELS:
+                self.identity['env_model']=DEVICE_MODELS[self.identity['cpu_subset']]
                 self.capabilities.update(frame=True,input=True,timers=True,audio=False)
+                if self.identity['cpu_subset']==CLASSIC_SUBSET:self.capabilities['rng']=True
             if _file_sha(executable)!=binary_sha:raise ValueError('QEMU binary changed during startup')
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -314,7 +326,7 @@ class Chip8DebugSession:
                         fault=fault,capabilities=self.capabilities,mapping=self.metadata)
 
     def _require_devices(self):
-        if self.identity['cpu_subset']!=DEVICE_SUBSET:
+        if self.identity['cpu_subset'] not in DEVICE_MODELS:
             raise ValueError('This CHIP-8 runtime has no display, keypad or timers')
 
     def chip8_environment(self,*,timeout_ms=10000):
@@ -345,7 +357,8 @@ class Chip8DebugSession:
                         or any(after[k]!=before[k] for k in unchanged)
                         or any(after[k]!=(value(before) if callable(value) else value) for k,value in expected.items())):
                     raise DebuggerError('CHIP-8 device mutation readback differs')
-                self._event('chip8-keypad' if command=='x-chip8-set-keys' else 'chip8-tick',
+                self._event({'x-chip8-set-keys':'chip8-keypad','x-chip8-debug-ticks':'chip8-tick',
+                             'x-chip8-seed-rng':'chip8-seed-rng'}[command],
                             dict(before=before,after=after))
                 _remaining(deadline)
                 return after
@@ -373,6 +386,12 @@ class Chip8DebugSession:
              'delay-timer':lambda old:max(0,old['delay-timer']-ticks),
              'sound-timer':lambda old:max(0,old['sound-timer']-ticks),
              'sound-active':lambda old:old['sound-timer']>ticks},timeout_ms=timeout_ms)
+
+    def chip8_seed_rng(self,seed,*,timeout_ms=10000):
+        if type(seed) is not int or not 0<=seed<=0xffffffff:raise ValueError('CHIP-8 RNG seed must be a uint32')
+        if self.identity['cpu_subset']!=CLASSIC_SUBSET:raise ValueError('This CHIP-8 runtime has no deterministic RNG')
+        return self._device_mutation('x-chip8-seed-rng',{'seed':seed},
+            {'rng-seed':seed,'rng-state':seed,'rng-draws':0},timeout_ms=timeout_ms)
 
     def frame_rgba(self,*,timeout_ms=10000):
         info=self.chip8_environment(timeout_ms=timeout_ms)
@@ -533,7 +552,7 @@ class Chip8DebugSession:
             result=None
             try:
                 before_pc=(int(self.registers()['linear_pc'],16)
-                           if command=='s' and self.identity['cpu_subset']==DEVICE_SUBSET else None)
+                           if command=='s' and self.identity['cpu_subset'] in DEVICE_MODELS else None)
                 reply,timed_out=self._stopped().execute(command,_remaining(deadline))
                 if reply[:1] not in (b'T',b'S',b'W',b'X'):raise DebuggerError('Invalid CHIP-8 stop reply')
                 native=reply.decode('ascii');exited=reply[:1] in (b'W',b'X')
@@ -549,7 +568,7 @@ class Chip8DebugSession:
                 regs=None if exited else self.registers()
                 fault=None if exited else _fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
                 environment=(_environment_receipt(self.vm.qmp)
-                             if not exited and self.identity['cpu_subset']==DEVICE_SUBSET else None)
+                             if not exited and self.identity['cpu_subset'] in DEVICE_MODELS else None)
                 pc=None if regs is None else int(regs['linear_pc'],16)
                 sig=int(native[1:3],16);ids=[key for key,addr in self.breakpoints.items() if sig==5 and addr==pc and not (fault and fault['faulted'])]
                 wait=False
@@ -607,7 +626,7 @@ class Chip8DebugSession:
         owner=self.vm
         with self._budget(owner,deadline):
             self._checkpoint_admit();registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(self.vm.qmp,self.identity['cpu_subset'])
-            environment=_environment_receipt(self.vm.qmp) if self.identity['cpu_subset']==DEVICE_SUBSET else None
+            environment=_environment_receipt(self.vm.qmp) if self.identity['cpu_subset'] in DEVICE_MODELS else None
             tag='fdb-'+uuid.uuid4().hex
             artifact=None
             try:
@@ -617,7 +636,8 @@ class Chip8DebugSession:
                 path=self.vm.checkpoint_disk
                 if path.stat().st_size>limit:raise ValueError('CHIP-8 snapshot exceeds byte bound')
                 data=path.read_bytes();validate_qcow_header(data[:104],STATE_DISK_SIZE)
-                metadata=dict(format='fdisbull-qemu-chip8-state-2' if environment is not None else 'fdisbull-qemu-chip8-state-1',tag=tag,identity=self.identity,
+                metadata=dict(format=('fdisbull-qemu-chip8-state-3' if self.identity['cpu_subset']==CLASSIC_SUBSET else
+                                      'fdisbull-qemu-chip8-state-2' if environment is not None else 'fdisbull-qemu-chip8-state-1'),tag=tag,identity=self.identity,
                               registers=registers,ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
                 if environment is not None:metadata['environment']=environment
                 artifact=self.project._debug_artifact(self.run_id,name,'state',data,metadata)
@@ -639,10 +659,11 @@ class Chip8DebugSession:
             if row is None or row['kind']!='state' or row['version']!=self.version['id']:
                 raise ValueError('CHIP-8 snapshot belongs to another project version')
             data=bytes(row['data']);metadata=json.loads(row['metadata'])
-            expected_format='fdisbull-qemu-chip8-state-2' if self.identity['cpu_subset']==DEVICE_SUBSET else 'fdisbull-qemu-chip8-state-1'
+            expected_format=('fdisbull-qemu-chip8-state-3' if self.identity['cpu_subset']==CLASSIC_SUBSET else
+                             'fdisbull-qemu-chip8-state-2' if self.identity['cpu_subset']==DEVICE_SUBSET else 'fdisbull-qemu-chip8-state-1')
             if (len(data)>128*1024*1024 or _sha(data)!=row['sha256'] or metadata.get('format')!=expected_format
                     or metadata.get('identity')!=self.identity):raise ValueError('CHIP-8 snapshot identity differs')
-            if expected_format.endswith('-2'):
+            if expected_format.endswith(('-2','-3')):
                 saved_environment=_validate_environment(metadata.get('environment'))
             validate_qcow_header(data[:104],STATE_DISK_SIZE)
             new=None;result=None;replaced=False;closing_old=False
@@ -659,7 +680,7 @@ class Chip8DebugSession:
                 self.vm=new
                 try:
                     registers=self.registers();ram=self._memory(0,RAM_SIZE);fault=_fault_receipt(new.qmp,self.identity['cpu_subset'])
-                    environment=_environment_receipt(new.qmp) if expected_format.endswith('-2') else None
+                    environment=_environment_receipt(new.qmp) if expected_format.endswith(('-2','-3')) else None
                 finally:self.vm=old
                 if registers!=metadata['registers'] or _sha(ram)!=metadata['ram_sha256'] or fault!=metadata.get('fault'):
                     raise DebuggerError('Restored CHIP-8 CPU or RAM differs')

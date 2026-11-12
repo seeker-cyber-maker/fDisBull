@@ -1,4 +1,4 @@
-# CHIP-8 QEMU CPU and device profiles
+# CHIP-8 QEMU classic CPU, devices and RNG
 
 This profile connects a newly compiled QEMU TCG CPU/machine to fDisBull's
 persistent source analysis and debugger. It is a bounded architecture experiment.
@@ -64,7 +64,10 @@ The executable is a separately built `qemu-system-chip8`, with machine
 `fdisbull-chip8-cpu-smoke-1`. The optional
 [device extension](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/native/qemu-chip8-devices/README.md) uses
 `fdisbull-chip8-classic-devices-2` and environment model
-`fdisbull-chip8-display-keypad-timers-1`. A raw ROM loads through `-kernel` at `0x200`.
+`fdisbull-chip8-display-keypad-timers-1`. The optional
+[complete classic extension](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/native/qemu-chip8-classic/README.md) identifies
+as `fdisbull-chip8-classic-complete-3` with environment model
+`fdisbull-chip8-display-keypad-timers-rng-2`. A raw ROM loads through `-kernel` at `0x200`.
 There is no DOS image, PC firmware, guest OS or hidden interpreter process.
 
 The first target uses one instruction per TCG block and a bounded native C
@@ -182,6 +185,61 @@ same device state. No GUI is needed for a capture. Framebuffer-bearing receipts,
 PNG bytes and checkpoint bytes use the private external object store; keep
 that store available when reopening the FDB.
 
+## Complete classic profile and checkpointed RNG
+
+This extension is currently an uncompiled source candidate. The required local
+memory guard refused its native build; native opcode execution and schema3 RNG
+restore acceptance remain pending. The retained CPU-only and device binaries
+are unchanged. The following is the intended contract implemented in source.
+
+The classic extension implements all 34 non-legacy instruction families admitted
+by this profile. It adds the four remaining families to the CPU/device runtime:
+
+- `Bnnn` jumps to `nnn + V0`, without wrapping at the 4 KiB RAM boundary.
+  An out-of-range or odd destination faults on its next fetch.
+- `Fx1E` adds VX to I modulo 65,536 and leaves VF unchanged. VX is read before
+  updating I, including when X is F. This preserves the declared pilot quirk.
+- `Fx33` writes the hundreds, tens and units of VX to I..I+2 without changing
+  I or VF. The complete three-byte extent is checked before any write.
+- `Cxkk` advances the native RNG once and writes its masked byte to VX.
+  A zero mask still consumes a draw; VF is preserved unless it is the destination.
+
+Legacy `0nnn` calls require a different host-machine execution contract and
+remain unsupported. SCHIP/XO words remain outside this classic profile. Full
+opcode-family implementation does not qualify arbitrary ROMs, historical timing
+or every dialect/quirk combination.
+
+The native RNG is explicitly `fdisbull-lcg32-high8-v1`. Its seed and state are
+32-bit integers; reset starts both at zero. For each draw:
+
+```text
+state = (1664525 * state + 1013904223) modulo 2^32
+byte = state >> 24
+VX = byte & kk
+```
+
+The draw counter saturates at the maximum uint64 value. This is a deterministic
+analysis generator, with no cryptographic claim or claim to reproduce the Python
+pilot's `random.Random` stream. The receipt binds the RNG model, seed, current
+state and draw count. Fresh sessions repeat the same default stream; callers
+choose other seeds explicitly.
+
+```python
+before = debug.chip8_environment()
+seeded = debug.chip8_seed_rng(123)  # uint32, including zero
+assert seeded["rng-state"] == 123 and seeded["rng-draws"] == 0
+checkpoint = debug.save_state()
+# Explicit run/step executes Cxkk; restore returns to the same stream position.
+debug.load_state(checkpoint["artifact"])
+```
+
+`debug-chip8-seed-rng` exposes the same operation through JSON with `run` and
+`seed`. The native `x-chip8-seed-rng` command requires a stopped VM and matching
+generation. Successful reseeding resets seed/state/count and advances the state
+generation once; it does not execute CPU instructions or change RAM, pixels,
+keys or timer state. Stale/invalid updates refuse before effects. The existing
+keypad/tick controls preserve the RNG stream.
+
 ## Checkpoints and capabilities
 
 The machine has no guest storage. With an explicit `qemu-img`, a private,
@@ -199,13 +257,16 @@ FDB can restore its artifact after explicitly launching the same ROM and native 
 different source, dialect, device state or engine binary.
 
 The retained CPU-only runtime and its `fdisbull-qemu-chip8-state-1` artifacts
-remain supported with their exact original binary. The device runtime uses
-`fdisbull-qemu-chip8-state-2`; these formats do not imply cross-binary restore.
+remain supported with their exact original binary. The retained device runtime
+uses `fdisbull-qemu-chip8-state-2`. The complete classic runtime uses
+`fdisbull-qemu-chip8-state-3`, including RNG model, seed, state and count. It
+restores the exact future RNG sequence along with CPU/RAM and device state.
+These formats do not imply cross-binary restore.
 Device capabilities are enabled only after checking the native subset identity
 and required command set. The older runtime continues to refuse device calls.
 
-Both profiles support stopped inspection, bounded run/step, execution breakpoints,
-guarded edits and native checkpoints. Audio output/RNG, watchpoints, code/RAM
+All three profiles support stopped inspection, bounded run/step, execution breakpoints,
+guarded edits and native checkpoints. Audio output, watchpoints, code/RAM
 layers, hooks, histories, selected undo and comparative trials remain unavailable
 for CHIP-8. Their existing DOS implementations remain retained and are tested
 separately. IRQ/PIC and QEMM/DESQview task semantics remain DOS-profile work.
@@ -235,6 +296,16 @@ python -m pytest -q tests/test_chip8_devices_dispatch.py \
 
 Tests use authored microprograms and independent expected states. The static
 classifier comparison is labelled separately from executed native cases.
-Native tests require the actual binary when `FDISBULL_REQUIRE_CHIP8=1`; an
+For the complete classic extension, additionally select its separate binary:
+
+```sh
+FDISBULL_CHIP8_CLASSIC_QEMU=/external/classic/qemu-system-chip8 \
+FDISBULL_CHIP8_CLASSIC_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_CLASSIC=1 \
+python -m pytest -q tests/test_qemu_chip8_classic.py \
+  tests/test_qemu_chip8_classic_native.py tests/test_chip8_classic_semantics_native.py
+```
+
+Native tests require the actual binary when their `FDISBULL_REQUIRE_CHIP8*` selector is 1; an
 optional skipped run is not acceptance evidence. No CI or default switch is
 part of this slice.

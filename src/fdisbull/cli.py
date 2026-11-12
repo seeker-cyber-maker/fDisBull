@@ -184,6 +184,7 @@ METHODS = {
     "debug-restore-experiment": "Restore native state, layers, breakpoints, watches and hook hit counts; run,experiment",
     "debug-compare-experiment": "Compare the same bounded script from a full checkpoint with an explicit layer stack; native DOS changes global or saved selected-task stack and requires final full baseline recovery; run,experiment,layers,[timeout_ms]",
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
+    "debug-chip8-seed-rng": "Seed the stopped native CHIP-8 RNG without executing CPU instructions; run,seed",
     "debug-chip8-environment": "Observe stopped CHIP-8 pixels, keypad and 60 Hz timer state; run",
     "debug-chip8-keypad": "Set the complete held CHIP-8 hex-key list without running; run,keys",
     "debug-chip8-tick": "Apply explicit stopped CHIP-8 timer ticks without advancing CPU or virtual time; run,ticks",

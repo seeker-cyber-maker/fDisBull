@@ -4682,3 +4682,63 @@ The consolidated private receipt is chip8-devices-final-receipt.json. Earlier
 failed/interrupted diagnostics remain separate. The historical handoff prefix,
 v1 package/source/runtime, N19-N24, component-04 and shared selector retain
 their earlier identities. No CI, release/tag, merge or default switch.
+
+
+## Complete classic CHIP-8 source and RNG candidate (2026-11-12)
+
+The four remaining non-legacy classic families are implemented in a new isolated
+source extension over the retained v2 device target: Bnnn uses nnn+V0 without
+12-bit wrapping, Fx1E adds VX to I modulo 65536 without changing VF, Fx33
+preflights all three decimal-digit bytes before writing, and Cxkk advances an
+explicit native LCG32 stream before masking its high byte. A baseline probe on
+the retained v2 binary confirmed all four still raise unsupported-opcode faults.
+The 34-family claim is source implementation and prepared witness coverage;
+new native execution is not yet qualified. Legacy 0nnn, SCHIP and XO stay outside
+the declared profile.
+
+RNG model fdisbull-lcg32-high8-v1 uses state=(1664525*state+1013904223) modulo
+2^32 and byte=state>>24. Seed/state start at zero, Cxkk consumes a draw even for
+mask zero, and VF is unchanged unless it is the destination. The model is a
+deterministic analysis stream, not the earlier Python random.Random sequence.
+Stopped generation-guarded reseeding resets seed/state/count without executing
+CPU code or changing other machine state. New subset
+fdisbull-chip8-classic-complete-3 and environment model
+fdisbull-chip8-display-keypad-timers-rng-2 identify it; native VMState3 and host
+format fdisbull-qemu-chip8-state-3 include the RNG fields. Receipt counters
+saturate and stopped mutators reject an exhausted state generation. V1/v2
+identities and formats remain separately supported with their retained binaries.
+
+The adapter, JSON seed route, package selectors and portable guide are prepared.
+The focused host selection passes **138 tests**, zero failures/errors/skips,
+with all **1,197 Python source/test hashes unchanged**. One native DOSBox storage
+test is explicitly deselected for this host-only pass. The new prepared native
+selection contains 29 execution cases plus one host witness-map check; it covers
+the missing families, remaining ALU/skip family gaps, nonempty CLS, fixed RNG
+vectors, zero masks, VF preservation, atomic BCD refusal, seed CAS and future
+RNG replay after fresh-process/FDB reopen. Prepared cases are not passes.
+
+A fresh source tree/configuration uses external TMPDIR. The required memory-run
+admission refused the 4 GB estimated compile before Ninja started: compressed
+memory exceeds one quarter of physical memory, swap exceeds 4 GiB, and the
+shared-memory reserve would be crossed. No ticket was granted. The refusal is
+preserved, and the launcher is not bypassed. Native compilation, these new
+execution cases, checkpoint replay and integrated preservation remain pending
+until resource admission succeeds. Earlier v2 acceptance results remain dated
+prior evidence rather than being relabelled as current-v3 verification.
+
+The original v1/v2 source packages/runtimes and existing DOS implementations
+remain retained. DOSBox-X is still the default/fallback; all 141 DOS surfaces
+and seven campaigns remain open. No CI, release/tag, merge or shared selector
+change. This source candidate does not add CHIP-8 layers/hooks/histories/trials
+or IRQ machinery, audio output, historical timing or arbitrary ROM qualification,
+or complete the G0-G8 conversion gates.
+
+
+The frozen six-file incremental patch SHA-256 is
+cb80c64be2ea206177fb9d5f787dad9f640a15de6dc2b4a34f2e768923713124.
+Both author and parent independently replayed it and verified all six source
+hashes; both lightweight QAPI generation passes completed without C compilation.
+The private memory refusal is chip8-classic-memory-run-refusal.json. The new
+source/host progress receipt is chip8-classic-source-receipt.json; its status
+remains native-build-and-acceptance-pending. The retained v2 acceptance receipt
+chip8-devices-final-receipt.json is separate prior evidence.

@@ -47,6 +47,7 @@ SOURCE_SUPPORT = (
     "native/qemu-dos-save-stop/",
     "native/qemu-chip8/",
     "native/qemu-chip8-devices/",
+    "native/qemu-chip8-classic/",
     "tests/",
     "scripts/",
     ".github/workflows/",
