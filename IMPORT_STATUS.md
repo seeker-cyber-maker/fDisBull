@@ -276,3 +276,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/scummvm_debugger.py`
 - `src/fdisbull/scummvm_gob.py`
 - `src/fdisbull/scummvm_kyra.py`
+
+## Source batch 11
+
+24 additional unchanged Python files (210020 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 246 files, import still incomplete.
+
+- `src/fdisbull/scummvm_rpc.py`
+- `src/fdisbull/scummvm_zcode.py`
+- `src/fdisbull/semantics.py`
+- `src/fdisbull/serializer_candidates.py`
+- `src/fdisbull/serializer_discovery.py`
+- `src/fdisbull/shadowrun_ai.py`
+- `src/fdisbull/shadowrun_ai_play.py`
+- `src/fdisbull/shadowrun_animation.py`
+- `src/fdisbull/shadowrun_assisted_arena.py`
+- `src/fdisbull/shadowrun_camera.py`
+- `src/fdisbull/shadowrun_city.py`
+- `src/fdisbull/shadowrun_city_view.py`
+- `src/fdisbull/shadowrun_combat.py`
+- `src/fdisbull/shadowrun_dialogue.py`
+- `src/fdisbull/shadowrun_enemy_combat_clock.py`
+- `src/fdisbull/shadowrun_enemy_east_slide.py`
+- `src/fdisbull/shadowrun_enemy_idle.py`
+- `src/fdisbull/shadowrun_enemy_move.py`
+- `src/fdisbull/shadowrun_enemy_outer.py`
+- `src/fdisbull/shadowrun_enemy_outer_slide.py`
+- `src/fdisbull/shadowrun_enemy_overlap.py`
+- `src/fdisbull/shadowrun_enemy_overlap_one.py`
+- `src/fdisbull/shadowrun_enemy_projection.py`
+- `src/fdisbull/shadowrun_enemy_service.py`
