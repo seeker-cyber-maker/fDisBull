@@ -208,9 +208,13 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   extension supports the declared 34-family classic instruction profile and
   restores an explicit seeded RNG alongside CPU/RAM and device state. Bounded
   layer, paused-hook and v4 full-checkpoint history witnesses passed locally on
-  macOS arm64. Histories require the explicit native checkpoint tool and do not
-  provide frame rewind, deltas or automatic replay. Complete game and
-  conversion compatibility remain unqualified.
+  macOS arm64. A separate v5 runtime adds bounded full-checkpoint histories at
+  native 60 Hz virtual-tick sample stops, with immutable PNGs and hash-bound
+  pixel/checkpoint state; 16 native cases passed locally. The sample records
+  actual callback lateness and does not claim VBlank, guest-frame completion,
+  or historical timing. Histories require the explicit checkpoint tool and do
+  not provide frame deltas, selected undo or automatic replay. Complete game
+  and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped

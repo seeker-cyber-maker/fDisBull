@@ -242,7 +242,16 @@ def validate_script(script, *, session=None):
                             raise ValueError('Native selected CPU/RAM undo does not permit partial resume')
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
-                        native_frames = (backend or actual) == 'qemu-dos'
+                        native_frames = (backend or actual) in ('qemu-dos','qemu-chip8')
+                        chip8_frames = (backend or actual) == 'qemu-chip8'
+                        if chip8_frames:
+                            if op == 'frame-inputs' or (op == 'timeline-advance' and params.get('inputs') not in (None, [])):
+                                raise ValueError('CHIP-8 frame input scheduling is unavailable')
+                            if op == 'timeline-rewind' and params.get('policy') not in (None, {}):
+                                raise ValueError('CHIP-8 frame histories restore full checkpoints without partial policies')
+                            if op == 'timeline-start' and (params.get('storage_mode','full') != 'full'
+                                    or params.get('period_ns',16666667) != 16666667):
+                                raise ValueError('CHIP-8 frame histories require full storage and the native 60 Hz sampling period')
                         if native_frames:
                             if (op == 'frame-inputs' or op == 'timeline-advance'
                                     and params.get('inputs') not in (None, [])):
@@ -254,7 +263,7 @@ def validate_script(script, *, session=None):
                                     raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
                                 if session.project.db.in_transaction:
                                     raise ValueError('Native frame histories require a project outside a caller-owned transaction')
-                            if op == 'timeline-rewind' and params.get('policy') is not None:
+                            if op == 'timeline-rewind' and params.get('policy') is not None and not chip8_frames:
                                 raise ValueError('Native renderer histories restore full checkpoints; partial policies are unqualified')
                         limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
                                 'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
@@ -274,7 +283,7 @@ def validate_script(script, *, session=None):
                         if op=='frame-inputs':validate_edges(params['edges'],allow_references=True)
                         if op=='timeline-advance' and params.get('inputs') is not None:
                             validate_schedule(params['inputs'],params.get('frames',1),allow_references=True)
-                        if op=='timeline-rewind' and params.get('policy') is not None:
+                        if op=='timeline-rewind' and params.get('policy') is not None and not chip8_frames:
                             validate_timeline_policy(params['policy'],allow_references=True)
                         if op in ('timeline-pin','timeline-image') and 'name' in params:
                             if not (isinstance(params['name'],str) and params['name'].startswith('$')):
@@ -525,7 +534,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
     frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
                         'timeline-rewind','timeline-pin','timeline-image'}
-    native_frames = getattr(session,'metadata',{}).get('backend') == 'qemu-dos'
+    native_frames = getattr(session,'metadata',{}).get('backend') in ('qemu-dos','qemu-chip8')
     capabilities = (getattr(session,'capabilities',{}) if native_frames else
                     getattr(getattr(session,'rpc',None),'capabilities',{}))
     if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs') for step in steps):

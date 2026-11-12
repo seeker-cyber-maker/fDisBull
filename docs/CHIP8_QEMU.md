@@ -301,9 +301,9 @@ fresh-owner restore. They do not establish general game compatibility or parity.
 
 All profiles support stopped inspection, bounded run/step, execution breakpoints,
 guarded edits and native checkpoints. The three earlier profiles continue to
-use their exact matching binaries and do not acquire v4 controls. CHIP-8 audio
-output, predicates, watchpoints, redirects, task-private views, frame histories,
-selected undo and comparative trials remain unavailable. IRQ/PIC and
+use their exact matching binaries and do not acquire v4 or v5 controls. CHIP-8 audio
+output, predicates, watchpoints, redirects, task-private views, selected undo
+and comparative trials remain unavailable in this target. IRQ/PIC and
 QEMM/DESQview task semantics remain DOS-profile work; DOSBox-X remains the
 default and retained fallback.
 
@@ -349,10 +349,61 @@ The history accepts at most 128 nodes and 1 GiB of cumulative checkpoint
 artifact payloads. Each state artifact is bounded to 128 MiB, and the FDB's
 256 MiB runtime-artifact cap can reduce the usable history budget further.
 Growth of the live private QCOW2 file is measured separately and is not
-covered by that history byte quota. Ten bounded authored native history cases
-passed locally on macOS arm64. They do not qualify CHIP-8 game compatibility,
-conversion, frame histories, deltas, selected undo, trials, or promotion of the
-DOS backend.
+covered by that history byte quota. Ten bounded authored native v4 history
+cases passed locally on macOS arm64. They do not qualify CHIP-8 game
+compatibility, conversion, frame sampling, deltas, selected undo, trials, or
+promotion of the DOS backend.
+
+## V5 virtual-tick frame histories
+
+The separate v5 `fdisbull-chip8-frames-5` runtime adds a sample fence at the
+next native 60 Hz virtual timer tick. With the explicit checkpoint tool,
+`timeline_start`, `timeline_status`, `timeline_advance`, `timeline_rewind`,
+`timeline_image`, `timeline_pin`, and `timeline_stop` record full-checkpoint
+nodes and immutable PNG artifacts. JSON methods use `debug-timeline-start`,
+`debug-timeline-status`, `debug-timeline-advance`, `debug-timeline-rewind`,
+`debug-timeline-image`, `debug-timeline-pin`, and `debug-timeline-stop`;
+saved scripts use the corresponding `timeline-*` names with backend
+`qemu-chip8`. The history preserves CPU/RAM, device and RNG state,
+layers, hooks, display pixels, timer phase/deadline, and virtual-tick counters.
+Rewind restores a selected retained node; recording from an older node keeps
+the later branch.
+
+Each node binds the PNG pixel hash to the saved pixel state and checkpoint
+metadata. The native receipt distinguishes the consumed tick deadline, the
+actual virtual time at which the timer callback sampled pixels, and the later
+stopped virtual time. Callback lateness is recorded; the sample does not claim
+historical wall-clock timing, guest drawing completion, VBlank, or a completed
+guest frame. `completed_guest_frame` remains null. The fence is process-local:
+checkpoint save/load is refused while armed or completed, including after the
+owned stop, until the fence is cancelled. A reopened history has no valid live
+cursor until an explicit node restore succeeds.
+
+Frame histories use full checkpoints and immutable full PNGs. The budget is at
+most 128 nodes/captures and 1 GiB of combined checkpoint and image artifacts,
+subject to the 256 MiB project artifact cap; private QCOW2 growth is measured
+separately and is not included in that quota. Advance admission estimates each
+future checkpoint from the previous checkpoint and live QCOW2 size, plus the
+configured image limit. A later snapshot can grow beyond that estimate. Actual
+combined size is checked before committing its timeline node; exhaustion after
+execution closes the owner and retains the pending intent, and already-created
+checkpoint/image artifacts may remain unreferenced. This is not a guarantee of
+no guest effects for every future byte-budget failure.
+
+The adapter reserves a bounded part of the caller's existing execution allowance
+for stop recovery and classification; it does not extend the requested budget.
+A recovered short run can return its timeout receipt without exhausting the
+outer admission deadline. A genuine overrun still closes the owner. The shared
+GDB client's existing emergency Ctrl-C recovery may take up to five extra
+seconds, so this is not a hard wall-clock return guarantee.
+
+Sixteen bounded native v5
+frame-history cases passed locally on macOS arm64. The retained v4
+instruction-history and v1-v4 native runtime identities remain separate; no
+cross-binary VMState restore is claimed. This does not qualify
+CHIP-8 game compatibility, VBlank or historical replay, frame deltas, selected
+undo, comparative trials, IRQ/task-private behavior, audio, other hosts,
+arbitrary ROMs, end-to-end conversion, or DOS backend promotion.
 
 ## Local checks
 
@@ -409,6 +460,15 @@ FDISBULL_CHIP8_HISTORY_QEMU_IMG=/path/to/qemu-img \
 FDISBULL_REQUIRE_CHIP8_HISTORY=1 \
 python -m pytest -q tests/test_chip8_history.py \
   tests/test_chip8_history_public.py tests/test_chip8_history_native.py
+```
+
+For v5 native 60 Hz sample histories, select the separate frames runtime:
+
+```sh
+FDISBULL_CHIP8_FRAMES_QEMU=/external/frames/qemu-system-chip8 \
+FDISBULL_CHIP8_FRAMES_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_FRAMES=1 \
+python -m pytest -q tests/test_chip8_frames.py tests/test_chip8_frames_native.py
 ```
 
 Native tests require the actual binary when their `FDISBULL_REQUIRE_CHIP8*` selector is 1; an

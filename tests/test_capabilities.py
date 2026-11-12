@@ -72,10 +72,12 @@ def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
     assert items['debug.chip8']['runtime_validation'] == 'not_run'
     assert items['debug.chip8']['maturity'] == 'experimental'
     scope = items['debug.chip8']['scope']
-    assert 'v4 adds layers, hooks and full-checkpoint DAG history' in scope
+    assert 'v4 adds layers/hooks and full-checkpoint history' in scope
+    assert 'separate v5 adds native 60 Hz sample histories' in scope
+    assert 'full checkpoints and immutable PNGs' in scope
     assert 'checkpoint tool required' in scope
-    assert 'Earlier profiles lack v4' in scope
-    assert 'no frame histories, deltas, undo, trials or parity' in scope
+    assert 'Sample lateness is recorded' in scope
+    assert 'no VBlank/frame-completion, deltas, undo, trials or parity claim' in scope
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

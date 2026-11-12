@@ -587,7 +587,7 @@ class QemuDOSHistoryMixin:
         if not live:
             raise ValueError('Start or attach to a history before recording')
         manifest, _ = self._history_latest(live['history'])
-        if manifest.get('history_kind') == 'renderer-frames':
+        if manifest.get('history_kind') in ('renderer-frames', 'chip8-60hz-samples'):
             raise ValueError('Use timeline_advance to record renderer-frame history')
         if live.get('history') != manifest.get('_artifact_id'):
             raise ValueError('History revision changed in another session; attach to its latest manifest first')

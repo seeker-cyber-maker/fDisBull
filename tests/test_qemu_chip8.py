@@ -179,3 +179,38 @@ def test_owner_diagnostics_bounds_tail_and_reports_exit(tmp_path):
     info=owner.diagnostics()
     assert info['native_exit_code']==42 and info['native_stderr'].endswith('final error')
     assert len(info['native_stderr'].encode())==16384
+
+
+def test_timeout_recovery_has_reserved_outer_budget_and_single_dispatch(monkeypatch):
+    import fdisbull.qemu_chip8 as module
+    clock=[1000.0];monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
+    s=session();calls=[];events=[];s._event=lambda name,value:events.append((name,value))
+    def timed(command,timeout):
+        calls.append((command,timeout));clock[0]+=(timeout+8)/1000
+        return b'T02',True
+    s.vm.gdb.execute=timed
+    result=s.run(timeout_ms=120)
+    assert result['outcome']=='timeout' and result['timed_out'] and not s.closed
+    assert len(calls)==1 and calls[0][0]=='c' and 1<=calls[0][1]<=90
+    assert len(events)==1 and events[0][1]['outcome']=='timeout'
+
+
+def test_stop_recovery_that_truly_exceeds_outer_deadline_closes_owner(monkeypatch):
+    import fdisbull.qemu_chip8 as module
+    clock=[1000.0];monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
+    s=session();calls=[]
+    def slow(command,timeout):
+        calls.append((command,timeout));clock[0]+=.09
+        return b'T02',True
+    s.vm.gdb.execute=slow
+    with pytest.raises(TimeoutError) as error:s.run(timeout_ms=50)
+    assert len(calls)==1 and s.closed and error.value.result['outcome']=='timeout'
+
+
+def test_tiny_predispatch_budget_refusal_keeps_owner_and_sends_no_execution(monkeypatch):
+    import fdisbull.qemu_chip8 as module
+    monkeypatch.setattr(module.time,'monotonic',lambda:1000.0)
+    s=session();calls=[]
+    s.vm.gdb.execute=lambda *args:calls.append(args)
+    with pytest.raises(TimeoutError):s.run(timeout_ms=2)
+    assert not calls and not s.closed and not s.vm.closed

@@ -4996,3 +4996,116 @@ renderer-frame histories, deltas, selected undo, trials, task/IRQ semantics,
 arbitrary ROM/other-host qualification and G0-G8 conversion remain open.
 All 141 DOS surfaces and seven parity campaigns remain open before any
 DOSBox-X default promotion or removal.
+
+## 2026-11-12 — CHIP-8 native virtual-tick frame histories
+
+Continued from `87db5fe27e12b87a45c4bd747d0272772ba29fa5` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains target `agent/execution-event-search-284eb73c` and base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, release/tag, merge, shared installation or default change.
+
+This bounded extension adds full-checkpoint CHIP-8 frame histories to the
+existing v4 CPU, display/keypad/timer/RNG, RAM/fetch-layer and hook profile. Its
+native identity is CPU subset `fdisbull-chip8-frames-5`, environment
+`fdisbull-chip8-display-keypad-timers-rng-layers-frames-4`, and frame model
+`fdisbull-chip8-native-frame-sample-1`. The preserved QEMU binary is SHA-256
+`5388cd16dcdf1fe06457f02a93460ac128a15ba079eeedefd04acd21da992288`; the
+incremental v5 patch is SHA-256
+`7dfbb94ee30de832b1521d187a1d2607bfb6cb9fca5b1a6fc098d46539bc5c28`.
+The exact v1-v4 source packages and binaries remain separate and unchanged;
+cross-binary VMState restore is not qualified.
+
+With the explicit native checkpoint tool, `timeline_start`, `timeline_status`,
+`timeline_advance`, `timeline_rewind`, `timeline_image`, `timeline_pin` and
+`timeline_stop` maintain a bounded immutable DAG. A recorded frame node pairs
+the full native checkpoint with a full PNG artifact. Pixel bytes, PNG pixels,
+checkpoint bytes and metadata sidecars are hash-checked. Branching from an
+older node retains its later descendants. A reopened timeline has no live
+forward cursor until an explicit node restore succeeds. Save/load is refused
+while the native sample fence is armed or completed, including after its stop
+was consumed; cancellation is required before checkpointing.
+
+The frame boundary is one native QEMU virtual 60 Hz timer tick, not a renderer
+publication or an emulated-game frame. Receipts distinguish the consumed tick
+deadline, the actual virtual time when the timer callback sampled pixels, and
+the later stopped virtual time. Callback lateness is recorded. The sample
+does not claim historical timing, VBlank, guest drawing completion, or a
+completed guest frame; `completed_guest_frame` remains null. An earlier user
+breakpoint or hook can win before the fence is consumed, in which case the
+host cancels the unconsumed fence before dispatch. The native fence processes
+one due tick and suppresses further tick callbacks until cancellation. No
+forced-overdue-backlog stress test or raw-migration admission claim is made.
+
+The frame-history limit is 128 nodes/captures and 1 GiB of combined checkpoint
+and image payloads, subject to the existing 256 MiB project runtime-artifact
+cap. Private QCOW2 growth is measured separately, not quota-managed. Future
+state admission estimates from the preceding checkpoint/live disk, so unexpected
+snapshot growth can exhaust the actual byte budget after guest execution and
+capture publication, before committing a timeline node. The owner closes and
+pending evidence remains; unreferenced checkpoint/image artifacts may remain.
+Known exhausted preflight limits refuse before execution, but this is not a
+no-effect guarantee for every future growth failure. The v5
+frame-native selection passed 16 cases; a retained compatibility selection
+passed 72 cases with the obsolete v1-only CLS refusal deselected. Both results
+are macOS arm64 local evidence, not hosted CI or arbitrary-ROM qualification.
+
+The final frozen integrated preservation run passed **3,243 tests across 193
+files**, with zero failures/errors/skips and all **1,211 Python source/test
+hashes unchanged** over 811.32 seconds. Only the two original predeclared
+exclusions remain: unavailable private DinoPark input and the unchanged
+pre-existing delta-policy discovery assertion. Neither native deadline case
+is excluded. The 16 new native frame cases, 72 retained cases on v5 and 323
+retained DOSBox-X history/frame/undo/trial cases pass in overlapping selections;
+their counts are not a unique combined total. The final private receipts are
+chip8-frames-preservation-final-04, chip8-frames-native-final-03,
+chip8-frames-compat-final-02, chip8-frames-dosbox-final-03 and
+chip8-frames-doc-package-final-02.
+
+The immutable-copy audit records 12 continuous manifest revisions, four
+retained nodes/two root branches and 54 hash-verified external objects. Each
+checkpoint/metadata pair and decoded PNG matches the native sample state and
+rational timer proof; original database files remain unchanged. A prior-created
+v4 history restores on its original runtime using the final upgraded host,
+compares full CPU/RAM/environment/layers, then obtains V0=0x30 with one RNG
+draw. Original DB/ROM/objects remain unchanged. Private readbacks use
+chip8-frames-externalization-final-02/receipt.json and
+chip8-v4-frames-upgraded-host-02/receipt.json. This is not a cross-binary
+VMState restore claim.
+
+Final review fixed partial-progress reporting when a later batch journal write
+or native sample fails. Exceptions now expose the completed prefix, last
+confirmed committed history/point, observed journal, known artifacts and a
+`do_not_replay` disposition. The uncertain owner closes. Three new host
+regressions cover second-journal failure, unrecorded batch failure and actual
+post-execution growth exhaustion after one already committed frame. The initial
+3,237-pass full run remains diagnostic evidence before this host refinement;
+the corrected final run below binds the final source. Native patch/binary stay
+unchanged.
+
+The second expanded run exposed a pre-existing short-run deadline race:
+retained v2 clock and v4 layer/cold-restore tests could consume the entire run
+allowance before Ctrl-C recovery and host stop handling finished. An isolated
+`87db5fe2` baseline reproduced the v2 failure; its v4 test passed once, so the
+latter baseline observation remains distinct. The adapter now reserves a bounded
+share of the existing allowance for stop recovery/classification and retains
+strict outer-deadline rejection/owner closure after a genuine overrun. Three
+controlled-clock host regressions and both affected native tests pass. No test
+timeout was increased, no shared GDB code changed, and neither case is excluded
+from final acceptance. The shared client's emergency Ctrl-C recovery can still
+take up to five extra seconds; a hard wall-clock return bound is not claimed.
+Tiny pre-dispatch budget refusal preserves the owner and sends no execution
+command. Failed full/tail logs, baseline reproduction and focused repair receipts remain
+separate diagnostic evidence.
+
+This does not qualify CHIP-8 deltas, selected undo, comparative trials, input
+schedules, IRQ/task-private behavior, audio, general renderer/VBlank timing,
+other hosts, arbitrary ROMs or end-to-end conversion. The CHIP-8 work does not
+close DOS task/IRQ parity gaps or alter the retained DOSBox-X default. Native
+and host selections overlap and must not be added to the integrated test count.
+
+A supplemental DOSBox-X repeat stopped during one fixture startup because the
+native process closed its RPC channel before capability discovery; 230 earlier
+cases had passed. Its diagnostic log/XML remain chip8-frames-dosbox-final-02.
+The unchanged retained selection was then checked once more as
+chip8-frames-dosbox-final-03; the final receipt binds that completed run.
