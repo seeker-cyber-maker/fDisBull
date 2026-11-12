@@ -73,3 +73,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/code_layout.py`
 - `src/fdisbull/codec_dcl.py`
 - `src/fdisbull/codec_fab.py`
+
+## Source batch 4
+
+24 additional unchanged Python files (432068 bytes). Secret-pattern scan found no matches; not a comprehensive secret certification. No tests/CI executed. Total 78 files, import still incomplete.
+
+- `src/fdisbull/codec_profiles.py`
+- `src/fdisbull/common_uil.py`
+- `src/fdisbull/console_udc.py`
+- `src/fdisbull/cortex_m.py`
+- `src/fdisbull/court_adapter.py`
+- `src/fdisbull/court_intents.py`
+- `src/fdisbull/cue.py`
+- `src/fdisbull/debug_cpu_deltas.py`
+- `src/fdisbull/debug_experiments.py`
+- `src/fdisbull/debug_rewind.py`
+- `src/fdisbull/debug_script.py`
+- `src/fdisbull/debug_semantics.py`
+- `src/fdisbull/debug_state.py`
+- `src/fdisbull/debug_timeline.py`
+- `src/fdisbull/debug_wait.py`
+- `src/fdisbull/debugger.py`
+- `src/fdisbull/decoder.py`
+- `src/fdisbull/decoder_check.py`
+- `src/fdisbull/decoder_modules.py`
+- `src/fdisbull/desqview.py`
+- `src/fdisbull/desqview_runtime.py`
+- `src/fdisbull/dinopark_fence.py`
+- `src/fdisbull/dinopark_land.py`
+- `src/fdisbull/dinopark_purchase.py`
