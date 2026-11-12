@@ -40,7 +40,7 @@ test-and-package:
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
   before_script:
     - apt-get update
-    - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev
+    - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev zlib1g-dev
   script:
     - bash scripts/ci/test-and-package.sh
   artifacts:
