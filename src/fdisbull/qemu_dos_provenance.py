@@ -1,4 +1,4 @@
-"""Native, bounded DOS exclusive-create evidence and opt-in keep service.
+"""Native, bounded DOS save evidence and opt-in keep service.
 
 The native observer owns call/return and raw-I/O coverage. FAT inventories are
 only final byte evidence. Host keep reservations are never part of VM rewind.
@@ -16,6 +16,7 @@ FORMAT = 'fdisbull-dos-guest-create-1'
 CHECKPOINT = 'fdisbull-dos-save-witness-checkpoint-1'
 KIND = 'workspace-guest-create-provenance'
 ARM = 'x-fdisbull-arm-dos-save-witness'
+ARM_SAVE = 'x-fdisbull-arm-dos-save-operations'
 QUERY = 'x-fdisbull-query-dos-save-witness'
 DISARM = 'x-fdisbull-disarm-dos-save-witness'
 COMMANDS = frozenset((ARM, QUERY, DISARM))
@@ -55,6 +56,10 @@ def _path(path):
 
 
 def validate(info):
+    if isinstance(info,dict) and info.get('api-version') == 2:
+        from .dos_save_operations import validate_packet
+        validate_packet(info)
+        return deepcopy(info)
     if (not isinstance(info, dict) or info.get('api-version') != 1 or info.get('model') != MODEL
             or type(info.get('active')) is not bool or type(info.get('valid')) is not bool):
         raise ValueError('Unsupported native DOS save witness response')
@@ -84,7 +89,7 @@ def validate(info):
         if info.get('dos-path') != 'D:\\'+_path(info.get('dos-path')):
             raise ValueError('Native save witness path differs')
         ranges=info.get('source-ranges')
-        if not isinstance(ranges,list) or not 1<=len(ranges)<=64:
+        if not isinstance(ranges,list) or not 1<=len(ranges)<=32:
             raise ValueError('Native save witness source ranges are missing')
         for entry in ranges:
             if (not isinstance(entry,dict) or type(entry.get('start')) is not int
@@ -109,6 +114,14 @@ def _bound(session,info,binding=None, *, check_workspace=True):
         'int21-vector':binding['int21_vector']})
     if any(info.get(key)!=value for key,value in expected.items()):
         raise ValueError('Native save witness owner/source/path binding changed')
+    if binding.get('mode','exclusive') == 'save':
+        if (info.get('api-version') != 2
+                or info.get('initial-exists') != binding['initial_exists']
+                or info.get('initial-payload-hex') != binding['initial_payload_hex']
+                or info.get('temporary-path') != ('D:\\'+binding['temporary_path'] if binding['temporary_path'] else '')):
+            raise ValueError('Native save-operation preimage/path binding changed')
+    elif info.get('api-version') != 1:
+        raise ValueError('Native save witness operation mode changed')
     if (binding.get('version') != session.version['id']
             or binding.get('source_sha256') != session.metadata.get('source_sha256')
             or check_workspace and binding.get('base_generation') != session._dos_workspace['base_generation']['artifact']):
@@ -116,11 +129,98 @@ def _bound(session,info,binding=None, *, check_workspace=True):
     return binding
 
 
-def start(session,path,directory=None):
+def _unprotected(loaded,path):
+    manifest=loaded['manifest']
+    entry=next((e for e in loaded['entries'] if e['dos_path']==path),None)
+    if (path in manifest['protected_dos_paths'] or path.casefold() in manifest['protected_paths']
+            or entry and entry['path'].casefold() in manifest['protected_paths']):
+        raise ValueError('Save path exists in the protected admission set')
+    return entry
+
+
+def _proof_payload(doc):
+    if doc['native'].get('api-version') == 2:
+        from .dos_save_operations import replay
+        return replay(doc['native'])
+    return bytes.fromhex(doc['native']['payload-hex'])
+
+
+def _stored_proof(session,reference,seen=()):
+    if (not isinstance(reference,dict) or not isinstance(reference.get('artifact'),str)
+            or reference['artifact'] in seen or len(seen)>=32):
+        raise ValueError('Invalid or cyclic save provenance predecessor')
+    import json
+    store=WorkspaceStore(session)
+    row,data=store._row(reference['artifact'],KIND)
+    if row['sha256']!=reference.get('sha256'):
+        raise ValueError('Guest-create reference hash differs')
+    doc=json.loads(data)
+    validate_proof_document(doc)
+    if (doc.get('version')!=session.version['id']
+            or doc.get('source_sha256')!=session.metadata['source_sha256']):
+        raise ValueError('Save provenance source/version changed')
+    loaded=store.load(doc['generation'])
+    if (loaded['manifest']['base'] or loaded['artifact'])!=doc.get('base_generation'):
+        raise ValueError('Save provenance base generation changed')
+    entry=_select_output(store,doc['generation'],_path(doc['path']))
+    payload=_proof_payload(doc)
+    if entry['data']!=payload or entry['sha256']!=doc['payload_sha256'] or entry['size']!=doc['size']:
+        raise ValueError('Save provenance sealed bytes differ')
+    if doc['format']!=FORMAT:
+        if doc['binding'].get('base_generation')!=doc['base_generation']:
+            raise ValueError('Save proof and preimage workspace bases differ')
+        _verify_arm_preimage(session,doc['binding'],seen+(reference['artifact'],))
+    return doc,payload
+
+
+def _save_preimage(session,loaded,path,predecessor,seen=()):
+    entry=_unprotected(loaded,path)
+    if entry is None:
+        if predecessor is not None:raise ValueError('Save predecessor has no current file')
+        return False,b''
+    if entry['type']!='file' or entry['size']>MAX_BYTES:
+        raise ValueError('Existing save is not a bounded ordinary file')
+    if predecessor is not None:
+        doc,payload=_stored_proof(session,predecessor,seen)
+        if (doc['path']!=path or doc['base_generation']!=(loaded['manifest']['base'] or loaded['artifact'])
+                or entry['data']!=payload):
+            raise ValueError('Existing save differs from its provenance predecessor')
+    elif entry['origin']!='new':
+        raise ValueError('Existing save needs authored-create or stored provenance predecessor')
+    return True,entry['data']
+
+
+def _verify_arm_preimage(session,binding,seen=()):
+    required={'arm_generation','base_generation','version','source_sha256','path',
+              'initial_exists','initial_payload_hex','temporary_path'}
+    if not isinstance(binding,dict) or not required <= binding.keys():
+        raise ValueError('Save preimage binding is incomplete')
+    store=WorkspaceStore(session);loaded=store.load(binding['arm_generation'])
+    if ((loaded['manifest']['base'] or loaded['artifact'])!=binding['base_generation']
+            or binding.get('version')!=session.version['id']
+            or binding.get('source_sha256')!=session.metadata['source_sha256']):
+        raise ValueError('Save preimage source/base binding changed')
+    exists,payload=_save_preimage(session,loaded,binding['path'],binding.get('predecessor'),seen)
+    if exists!=binding['initial_exists'] or payload.hex()!=binding['initial_payload_hex']:
+        raise ValueError('Save preimage bytes changed')
+    temp=binding['temporary_path']
+    if temp is not None and _unprotected(loaded,temp) is not None:
+        raise ValueError('Temporary save path already exists')
+
+
+def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,predecessor=None):
     path = _path(path)
+    if mode not in ('exclusive','save'):
+        raise ValueError('Save provenance mode must be exclusive or save')
+    if mode=='exclusive' and (temporary_path is not None or predecessor is not None):
+        raise ValueError('Temporary paths and predecessors require save mode')
+    temporary_path=_path(temporary_path) if temporary_path is not None else None
+    if temporary_path==path:raise ValueError('Temporary save path must differ from final path')
     context = _context(session)
     if not COMMANDS <= session.vm.qmp_commands:
         raise ValueError('Guest-create provenance requires the native DOS save witness extension')
+    if mode=='save' and ARM_SAVE not in session.vm.qmp_commands:
+        raise ValueError('Save operations require the native N23 extension')
     prior=query(session.vm)
     if prior['active']:
         raise ValueError('Disarm the existing DOS save witness before arming another')
@@ -132,9 +232,14 @@ def start(session,path,directory=None):
     base=state['base_generation']['artifact']
     store=WorkspaceStore(session)
     current=store.load(state['generation']['artifact'])
-    if (path in current['manifest']['protected_dos_paths']
-            or any(e['dos_path']==path for e in current['entries'])):
+    entry=_unprotected(current,path)
+    if mode=='exclusive' and entry is not None:
         raise ValueError('Guest-create path already exists or is protected')
+    initial_exists,initial_payload=False,b''
+    if mode=='save':
+        initial_exists,initial_payload=_save_preimage(session,current,path,predecessor)
+        if temporary_path is not None and _unprotected(current,temporary_path) is not None:
+            raise ValueError('Temporary save path already exists')
     ranges=[]
     for item in session._process['source_mapping']['live_ranges']:
         start=_number(item['runtime_address'],'source start',0x9ffff)
@@ -142,7 +247,7 @@ def start(session,path,directory=None):
         if not size or start+size>0xa0000:
             raise ValueError('Guest-create source range is not conventional RAM')
         ranges.append(dict(start=start,size=size))
-    if not 1<=len(ranges)<=64:
+    if not 1<=len(ranges)<=32:
         raise ValueError('Guest-create source mapping is unavailable or too fragmented')
     token=uuid.uuid4().hex
     vectors=getattr(session,'_vectors_before',None)
@@ -158,10 +263,17 @@ def start(session,path,directory=None):
                  version=session.version['id'],base_generation=base,arm_context=context,
                  ownership='verified original loader entry; process-changing DOS calls invalidate',
                  policy_id=policy['artifact'] if policy else None)
+    if mode=='save':
+        binding.update(mode=mode,temporary_path=temporary_path,initial_exists=initial_exists,
+                       initial_payload_hex=initial_payload.hex(),predecessor=deepcopy(predecessor),
+                       arm_generation=current['artifact'])
+    arguments={'token':token,'child-psp':binding['child_psp'],
+               'source-ranges':ranges,'dos-path':'D:\\'+path,'int21-vector':expected_vector}
+    if mode=='save':
+        arguments.update({'initial-exists':initial_exists,'initial-payload-hex':initial_payload.hex(),
+                          'temporary-path':'D:\\'+temporary_path if temporary_path else ''})
     try:
-        session.vm.qmp.call(ARM,{'token':token,'child-psp':binding['child_psp'],
-                                'source-ranges':ranges,'dos-path':'D:\\'+path,
-                                'int21-vector':expected_vector})
+        session.vm.qmp.call(ARM_SAVE if mode=='save' else ARM,arguments)
         actual=query(session.vm)
         _bound(session,actual,binding)
         if not actual['valid'] or actual['phase']!='armed':
@@ -230,6 +342,7 @@ def validate_checkpoint(session,record):
     info=validate(record.get('native'))
     binding=record.get('binding')
     _bound(session,info,binding,check_workspace=False)
+    if binding.get('mode')=='save':_verify_arm_preimage(session,binding)
     WorkspaceStore(session).load(binding['base_generation'])
     if binding.get('policy_id'):
         KeepPolicyStore(session).load(binding['policy_id'])
@@ -258,12 +371,16 @@ def adopt(session,record,actual):
 def _ready(session,info):
     binding=_bound(session,info)
     if (binding.get('host_fault') or not info['valid'] or info['phase']!='ready'
-            or any(info.get(k) is not True for k in ('create-seen','close-seen','flush-seen'))):
-        raise ValueError('Guest-create evidence is not a completed create/write/close/flush witness')
+            or any(info.get(k) is not True for k in ('close-seen','flush-seen'))
+            or info.get('api-version')==1 and not info['create-seen']):
+        raise ValueError('Guest-save evidence has no completed owned close/flush witness')
     return binding
 
 
 def validate_proof_document(doc):
+    from .dos_save_operations import FORMAT as SAVE_FORMAT, validate_document
+    if isinstance(doc,dict) and doc.get('format')==SAVE_FORMAT:
+        return validate_document(doc)
     if not isinstance(doc,dict) or doc.get('format')!=FORMAT:
         raise ValueError('Invalid guest-create provenance document')
     info=validate(doc.get('native'))
@@ -311,6 +428,7 @@ def validate_proof_document(doc):
 
 def provenance(session,sealed=None):
     before=query(session.vm);binding=_ready(session,before)
+    if binding.get('mode')=='save':_verify_arm_preimage(session,binding)
     boundary=_boundary(session)
     if sealed is None:sealed=_seal_workspace(session)
     effects=dict(format=FORMAT,checkpoint=sealed['checkpoint'],
@@ -329,22 +447,27 @@ def provenance(session,sealed=None):
         generation=sealed['workspace']['generation']['artifact']
         store=WorkspaceStore(session)
         entry=_select_output(store,generation,binding['path'])
-        payload=bytes.fromhex(after['payload-hex'])
+        payload=_proof_payload(dict(native=after))
+        if binding.get('temporary_path') and any(e['dos_path']==binding['temporary_path']
+                for e in store.load(generation)['entries']):
+            raise ValueError('Temporary save still exists in the sealed generation')
         if entry['data']!=payload or entry['sha256']!=_sha(payload):
             raise ValueError('Sealed guest file differs from observed accepted DOS writes')
         checkpoint=session.project.db.execute('SELECT sha256 FROM debug_artifacts WHERE id=?',(sealed['checkpoint'],)).fetchone()
         if checkpoint is None:
             raise ValueError('Guest-create checkpoint receipt is missing')
-        doc=dict(format=FORMAT,path=binding['path'],source_sha256=session.metadata['source_sha256'],
+        from .dos_save_operations import FORMAT as SAVE_FORMAT
+        proof_format=SAVE_FORMAT if binding.get('mode')=='save' else FORMAT
+        doc=dict(format=proof_format,path=binding['path'],source_sha256=session.metadata['source_sha256'],
                  version=session.version['id'],base_generation=binding['base_generation'],generation=generation,
                  payload_sha256=entry['sha256'],size=entry['size'],observer_token=binding['observer_token'],
                  native=after,binding=deepcopy(binding),boundary=boundary,
                  checkpoint=dict(artifact=sealed['checkpoint'],sha256=checkpoint['sha256']))
         validate_proof_document(doc)
         data=_json(doc);ref=session._artifact('workspace-guest-create.json',KIND,data,
-            dict(format=FORMAT,generation=generation,path=binding['path']))
+            dict(format=proof_format,generation=generation,path=binding['path']))
         if ref['sha256']!=_sha(data):raise ValueError('Guest-create provenance receipt differs')
-        return dict(**ref,format=FORMAT,path=binding['path'],generation=generation,
+        return dict(**ref,format=proof_format,path=binding['path'],generation=generation,
                     payload_sha256=entry['sha256'],payload_size=entry['size'],guest_create_provenance=True)
     except BaseException as error:
         error.result=effects
@@ -353,16 +476,12 @@ def provenance(session,sealed=None):
 
 def keep_proven(session,path,destination,generation,reference):
     store=WorkspaceStore(session)
-    row,data=store._row(reference['artifact'],KIND)
-    if row['sha256']!=reference.get('sha256'):raise ValueError('Guest-create reference hash differs')
-    import json
-    doc=json.loads(data)
-    if (doc.get('format')!=FORMAT or doc.get('path')!=_path(path) or doc.get('generation')!=generation
+    doc,payload=_stored_proof(session,reference)
+    if (doc.get('path')!=_path(path) or doc.get('generation')!=generation
             or doc.get('source_sha256')!=session.metadata['source_sha256'] or doc.get('version')!=session.version['id']):
         raise ValueError('Guest-create provenance does not bind this source/path/generation')
     entry=_select_output(store,generation,doc['path'])
-    native=validate_proof_document(doc)
-    if (entry['data']!=bytes.fromhex(native['payload-hex'])
+    if (entry['data']!=payload
             or entry['sha256']!=doc.get('payload_sha256') or entry['size']!=doc.get('size')):
         raise ValueError('Guest-create proof or file bytes differ')
     result=store.export_file(generation,doc['path'],destination)

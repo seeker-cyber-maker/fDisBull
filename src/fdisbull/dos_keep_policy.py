@@ -140,11 +140,14 @@ class KeepPolicyStore:
         if not isinstance(provenance_receipt, dict):
             raise ValueError('A stored provenance reference is required')
         row, proof = self._read(provenance_receipt.get('artifact'), PROVENANCE_KIND)
-        if provenance_receipt.get('sha256') != row['sha256'] or proof.get('format') != PROVENANCE:
+        if provenance_receipt.get('sha256') != row['sha256'] or proof.get('format') not in (PROVENANCE, 'fdisbull-dos-save-operations-1'):
             raise ValueError('Invalid provenance reference')
         # Deferred import avoids the policy/provenance module dependency cycle.
-        from .qemu_dos_provenance import validate_proof_document
-        validate_proof_document(proof)
+        from .qemu_dos_provenance import validate_proof_document, _stored_proof
+        if proof.get('format') == 'fdisbull-dos-save-operations-1':
+            proof, _ = _stored_proof(self.session, provenance_receipt)
+        else:
+            validate_proof_document(proof)
         config = self.load(policy_id)['manifest']
         for key, expected in (('path', config['path']), ('source_sha256', config['source_sha256']),
                               ('version', self.version), ('base_generation', config['base_generation']),

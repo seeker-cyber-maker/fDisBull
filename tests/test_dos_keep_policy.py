@@ -184,3 +184,61 @@ def test_directory_swap_between_check_and_export_refuses(session,tmp_path,monkey
     assert error.value.result['outcome']=='needs-reconciliation'
     assert not list(dest.iterdir()) and not list(moved.iterdir())
     assert store.status(policy)['pending']==1
+
+
+def test_v2_proof_policy_deduplicates_and_checks_actual_generation(session,tmp_path):
+    from test_dos_save_operations import create
+    debug,store,policy,base,dest=setup(session,tmp_path)
+    ws=WorkspaceStore(debug);generation=ws.create_file(base,'SAVE.DAT',b'abc')['artifact']
+    native=create();native['token']='observer-token'
+    doc=dict(format='fdisbull-dos-save-operations-1',path='SAVE.DAT',
+        source_sha256=debug.metadata['source_sha256'],version=debug.version['id'],
+        base_generation=base,generation=generation,payload_sha256=hashlib.sha256(b'abc').hexdigest(),
+        size=3,observer_token='observer-token',native=native,
+        binding=dict(mode='save',initial_exists=False,initial_payload_hex='',temporary_path=None,
+            path='SAVE.DAT',observer_token='observer-token',child_psp=0x200,int21_vector=0x12345678,
+            source_ranges=native['source-ranges'],arm_generation=base,base_generation=base,
+            source_sha256=debug.metadata['source_sha256'],version=debug.version['id'],predecessor=None))
+    for mutation in ('missing_arm','wrong_arm','missing_predecessor','wrong_predecessor'):
+        from copy import deepcopy
+        bad=deepcopy(doc)
+        if mutation=='missing_arm': bad['binding'].pop('arm_generation')
+        elif mutation=='wrong_arm': bad['binding']['arm_generation']='missing-generation'
+        elif mutation=='missing_predecessor': bad['binding']['predecessor']={'artifact':'missing','sha256':'0'*64}
+        else:
+            bad['binding']['predecessor']={'artifact':generation,'sha256':'0'*64}
+        invalid=debug._artifact('bad-v2.json',PROVENANCE_KIND,json.dumps(bad).encode(),{})
+        with pytest.raises(ValueError):
+            store.apply(policy,generation,dict(artifact=invalid['artifact'],sha256=invalid['sha256']))
+        assert store.status(policy)['reservations']==0 and not list(dest.iterdir())
+    artifact=debug._artifact('save-v2.json',PROVENANCE_KIND,json.dumps(doc).encode(),{})
+    ref=dict(artifact=artifact['artifact'],sha256=artifact['sha256'])
+    assert store.apply(policy,generation,ref)['outcome']=='kept'
+    assert store.apply(policy,generation,ref)['outcome']=='already-kept'
+    assert (dest/'00000001.SAV').read_bytes()==b'abc'
+
+
+@pytest.mark.parametrize('predecessor_kind',['missing','wrong_kind'])
+def test_v2_existing_preimage_requires_valid_stored_predecessor(session,tmp_path,predecessor_kind):
+    from test_dos_save_operations import event,packet
+    debug,store,policy,base,dest=setup(session,tmp_path)
+    ws=WorkspaceStore(debug);arm=ws.create_file(base,'SAVE.DAT',b'old')['artifact']
+    generation=ws.write_file(arm,'SAVE.DAT',b'new',expected_sha256=hashlib.sha256(b'old').hexdigest())['artifact']
+    f='D:\\SAVE.DAT';events=[event(0x3c,(0,3),(0,0),path=f,ax=5),
+        event(0x40,(0,0),(3,3),requested=3,accepted=3,ax=3),
+        event(0x3e,(3,3),(3,3)),event(0x0d,(3,3),(3,3))]
+    native=packet(events,b'new',b'new',initial=b'old');native['token']='observer-token'
+    reference=dict(artifact='missing',sha256='0'*64)
+    if predecessor_kind=='wrong_kind':
+        other=debug._artifact('wrong.json','unrelated',b'{}',{})
+        reference=dict(artifact=other['artifact'],sha256=other['sha256'])
+    doc=dict(format='fdisbull-dos-save-operations-1',path='SAVE.DAT',source_sha256=debug.metadata['source_sha256'],
+        version=debug.version['id'],base_generation=base,generation=generation,
+        payload_sha256=hashlib.sha256(b'new').hexdigest(),size=3,observer_token='observer-token',native=native,
+        binding=dict(mode='save',initial_exists=True,initial_payload_hex=b'old'.hex(),temporary_path=None,
+        path='SAVE.DAT',observer_token='observer-token',child_psp=0x200,int21_vector=0x12345678,
+        source_ranges=native['source-ranges'],arm_generation=arm,base_generation=base,
+        source_sha256=debug.metadata['source_sha256'],version=debug.version['id'],predecessor=reference))
+    proof_ref=debug._artifact('save-v2.json',PROVENANCE_KIND,json.dumps(doc).encode(),{})
+    with pytest.raises(ValueError): store.apply(policy,generation,dict(artifact=proof_ref['artifact'],sha256=proof_ref['sha256']))
+    assert store.status(policy)['reservations']==0 and not list(dest.iterdir())

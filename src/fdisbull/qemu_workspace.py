@@ -561,9 +561,10 @@ class QemuDOSWorkspaceMixin:
         return result
 
     @_history_operation
-    def workspace_provenance_start(self, path, *, timeout_ms=60000):
+    def workspace_provenance_start(self, path, *, mode='exclusive', temporary_path=None,
+                                   predecessor=None, timeout_ms=60000):
         from .qemu_dos_provenance import start
-        return start(self, path)
+        return start(self, path, mode=mode, temporary_path=temporary_path, predecessor=predecessor)
 
     @_history_operation
     def workspace_provenance_status(self, *, timeout_ms=60000):
@@ -581,10 +582,11 @@ class QemuDOSWorkspaceMixin:
         return stop(self)
 
     @_history_operation
-    def workspace_keep_policy(self, path, directory, *, timeout_ms=60000):
+    def workspace_keep_policy(self, path, directory, *, mode='exclusive', temporary_path=None,
+                              predecessor=None, timeout_ms=60000):
         """Opt in one witnessed path to versioned keeps at explicit workspace seals."""
         from .qemu_dos_provenance import start
-        return start(self, path, directory)
+        return start(self, path, directory, mode=mode, temporary_path=temporary_path, predecessor=predecessor)
 
     @_history_operation
     def workspace_keep_policy_enabled(self, policy, enabled, *, timeout_ms=60000):
@@ -611,7 +613,7 @@ class QemuDOSWorkspaceMixin:
 
     @_history_operation
     def workspace_keep(self, path, new_destination, generation=None, *, provenance=None, timeout_ms=60000):
-        """Export an explicitly created staged file, without claiming guest creation."""
+        """Export an authored create or a file with a validated native save proof."""
         store = self._workspace_store()
         generation = self._workspace_generation(store, generation)
         if provenance is not None:

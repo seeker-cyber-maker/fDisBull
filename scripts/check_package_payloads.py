@@ -43,6 +43,7 @@ SOURCE_SUPPORT = (
     "native/qemu-task-preemption/",
     "native/qemu-task-cascade/",
     "native/qemu-dos-provenance/",
+    "native/qemu-dos-save-operations/",
     "tests/",
     "scripts/",
     ".github/workflows/",

@@ -358,10 +358,12 @@ class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDelt
             self.capabilities['dos_output_capture'] = bool(workspace_launch is not None
                 and checkpoint_tool is not None and qualified_runtime(workspace_launch['runtime_component'])
                 and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands)
-            from .qemu_dos_provenance import COMMANDS as SAVE_WITNESS_COMMANDS
+            from .qemu_dos_provenance import COMMANDS as SAVE_WITNESS_COMMANDS, ARM_SAVE
             self.capabilities['dos_guest_create_provenance'] = bool(self.capabilities['dos_output_capture']
                 and SAVE_WITNESS_COMMANDS <= vm.qmp_commands)
             self.capabilities['dos_save_keep_policy'] = self.capabilities['dos_guest_create_provenance']
+            self.capabilities['dos_save_operations'] = bool(self.capabilities['dos_guest_create_provenance']
+                and ARM_SAVE in vm.qmp_commands)
             self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']

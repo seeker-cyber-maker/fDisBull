@@ -240,7 +240,7 @@ An empty exclusive-created file is supported. Overwrite/truncate creation,
 seeks, duplicate handles, rename/delete, process changes and unowned raw
 storage/DMA/PCI operations invalidate evidence without changing guest execution.
 
-The native ledger is bounded to 64 source ranges below `0xA0000`, 64 KiB of
+The native ledger is bounded to 32 source ranges below `0xA0000`, 64 KiB of
 accepted payload, 256 events and 16 nested hardware return frames. Pending DOS
 calls, their input bytes and hardware frames survive full checkpoint restore;
 restore compares the complete record and requires advanced epoch/generation
@@ -302,3 +302,71 @@ JSON interfaces. Missing native extensions refuse these routes. Plain
 provenance reference grants the bounded guest-create route. All new surfaces
 remain formally unqualified in the migration inventory. DOSBox-X stays default
 and retained; no CI or backend-default change is required.
+
+
+## Overwrite, seek and rename saves
+
+N23 adds an explicit `mode="save"` for `workspace_provenance_start` and
+`workspace_keep_policy`. The default remains `mode="exclusive"`, preserving
+N22's append-only exclusive-create contract. The new mode has a separate native
+arm command and versioned receipt; missing N23 support refuses before arming.
+It retains the original-entry/runtime/context admission limits above.
+
+```python
+armed = debug.workspace_keep_policy(
+    "SAVE.DAT", "/private/kept/versions", mode="save",
+    temporary_path="SAVE.TMP")
+# Run to a caller-selected stopped boundary after the guest closes and flushes.
+sealed = debug.workspace_seal()
+assert sealed["keep_policy"]["outcome"] in ("kept", "already-kept")
+```
+
+The final path may be absent or contain an eligible save. An existing file must
+come from an immutable authored workspace create (`origin=new`), or match the
+exact bytes and path of a validated stored provenance receipt supplied as
+`predecessor={"artifact": prior_id, "sha256": prior_hash}`. The predecessor must
+bind the same source version and original workspace base. Its sealed bytes and
+all v2 preimage dependencies are revalidated before admission and publication;
+chains are bounded to 32 receipts. Mere FAT presence, a matching filename or an
+unproven import does not grant overwrite eligibility. Initial original host
+paths and their aliases remain protected even after deletion or replacement.
+
+The native transcript supports create/truncate (`AH=3Ch`), exclusive create
+(`AH=5Bh`), reopen for writing/readwrite (`AH=3Dh`, AL=1/2), full writes
+(`AH=40h`), BOF/current/EOF-relative signed seeks (`AH=42h`, AL=0/1/2),
+zero-count writes that truncate at the cursor, optional commit, close and
+returned DOS flush. Each event retains its entry path and inputs, returned
+flags/count/seek result and cursor/size transition. The host independently
+replays those operations from the immutable preimage and captured write stream,
+then compares the reconstructed final bytes with the sealed FAT file. In v2,
+native `payload-hex` is the chronological write stream; the proof's
+`payload_sha256` and `payload_size` describe the reconstructed final file.
+
+A configured temporary path must start absent, be distinct from the final path
+and pass the same protection checks. One tracked file identity and one open
+handle are supported. A successful closed-file rename (`AH=56h`) can move it
+between those two paths. Temporary replacement may retain an eligible old final
+file while writing the temporary file, then observe deletion of that old final
+(`AH=41h`) and rename the closed temporary file into place. The host also checks
+that the temporary name has disappeared from the sealed generation. Unknown
+paths, rename collisions, duplicate handles, unmodeled reads and unsuccessful or
+short operations invalidate evidence. A policy remains bound to its explicitly
+named final path; it does not silently follow a rename away.
+
+Repeated create/open/write/close/flush cycles can produce new content versions
+within the same observer. Explicit workspace seals keep each distinct content
+hash once per policy; repeated content after rewind is verified and deduplicated.
+The journal and policy disabling still survive guest rewind and reopened FDBs.
+Pending seeks and renames, their captured path/offset inputs, stream bytes and
+IRQ frames are included in full checkpoints before host rebind.
+
+Logical file size and cursor are bounded to 64 KiB, as is the **cumulative**
+accepted write stream over the observer lifetime. The initial preimage is also
+bounded to 64 KiB. Up to 256 events, 32 source ranges below `0xA0000` and 16
+hardware interrupt frames are retained. The source code mapping itself may
+exceed 64 KiB. A seek may pass EOF within the cursor bound, but a subsequent
+write or zero-count extension that would introduce undefined gap bytes refuses.
+The witness never invents zero-filled DOS file contents. General filesystem
+semantics, multiple simultaneous save handles, arbitrary drivers/TSRs, automatic
+safe-stop selection and broader runtime/context parity remain unqualified.
+DOSBox-X remains default and retained, with no CI requirement for this local slice.

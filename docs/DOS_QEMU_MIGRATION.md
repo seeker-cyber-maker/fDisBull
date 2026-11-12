@@ -97,6 +97,13 @@ Pending calls and IRQ frames survive full restore. Initial support is one
 qualified real-mode process and root D: 8.3 target, not arbitrary DOS kernel,
 TSR, driver or DOSBox parity. See [guest-create provenance and policies](DOS_FILE_LAYERS.md#witness-a-guest-created-save).
 
+The explicit N23 `mode="save"` extends the witness to eligible-file overwrite,
+signed BOF/current/EOF seeks, zero-count truncation and configured temporary-file
+rename replacement. Its versioned transcript is independently replayed against
+a proven preimage before comparing sealed bytes. Original paths/aliases remain
+protected; broader runtime/context and filesystem behavior stay unqualified.
+See [overwrite, seek and rename saves](DOS_FILE_LAYERS.md#overwrite-seek-and-rename-saves).
+
 File-aware restore must synchronize VM state, directory membership, file
 contents and open handles, with a verified consistent base capture despite
 external host writers. Existing checkpoint artifacts retain their documented

@@ -4257,3 +4257,94 @@ system image and the shared installation selector retain their prior identities.
 
 The retained N20 renderer/checkpoint history selection passed all 14 cases,
 also with zero failures/errors/skips (provenance-n20-final).
+
+
+## Overwrite, rename and seek save provenance (2026-11-12)
+
+This slice extends provenance start and keep-policy APIs with explicit
+`mode="save"`, an optional temporary path and an optional stored predecessor
+reference. The default exclusive-create mode and v1 receipts retain their
+contracts. New native support is capability-gated through
+x-fdisbull-arm-dos-save-operations and an API2 operation transcript. DOSBox-X
+remains default and retained; no CI, release/tag, merge, shared installation or
+default-selector change is part of this continuation.
+
+The N23 native observer covers AH=3Ch create/truncate, AH=5Bh exclusive create,
+AH=3Dh write/readwrite open, AH=40h complete writes and zero-count truncation,
+AH=42h signed BOF/current/EOF seeks, AH=68h commit, AH=3Eh close, tracked AH=41h
+delete, closed-file AH=56h rename, and returned AH=0Dh flush. Captured event
+inputs and return flags/counts bind path, handle, cursor and size transitions.
+The host independently reconstructs the final bytes from the immutable initial
+preimage and chronological accepted write stream, validates every transition,
+and compares the result with the sealed FAT file before proof or publication.
+Native payload-hex in v2 means write stream; public proof payload hash/size mean
+the reconstructed final file. Unsupported/short/failed operations taint evidence.
+
+An existing final file must be an immutable authored create or match an exact
+stored predecessor proof for the same path/source/version/workspace base.
+Arbitrary unproven files and original protected host/DOS aliases cannot acquire
+keep or overwrite rights. A full v2 proof revalidates its immutable arm generation
+and predecessor dependencies, bounded to 32 receipts. Direct policy application
+now uses that same stored-proof validation before any host reservation; source
+review caught and closed the initial transcript-only policy path.
+
+One current file identity and one open handle are modeled. A configured absent
+temporary path may be written while the eligible old final remains as a shadow,
+then the observer can follow deletion of that final and rename of the closed
+temporary image into place. Final proof requires the configured final name and
+no remaining temporary entry in the sealed generation. Policy names do not
+silently follow renames. Multiple save cycles keep distinct content hashes once
+per policy; the journal and disable decisions remain outside guest rewind.
+
+Pending seek/rename inputs and ledger state survive full snapshots and fresh
+process/FDB reopening. The N23 native VMState uses schema2/minimum2, explicitly
+rejecting older native streams. Legacy v1 QMP/proof support is separate from
+that internal schema. N22 and its exact runtime remain available for N22
+checkpoints; cross-binary state migration remains unqualified. Existing trials,
+histories, selected CPU/RAM undo, task-private RAM/code layers, hooks and IRQ
+contracts are retained and undergo the integrated preservation selection.
+
+Admission remains verified original entry, trusted component-04 runtime,
+real/unpaged single CPU and no active layer/task/input/clock ownership. Bounds
+are 32 source ranges below A0000, 256 events, 16 hardware frames, 64 KiB logical
+file/cursor/preimage and a cumulative 64 KiB accepted write stream per observer.
+The earlier guide's 64 source-range count is corrected to the actual native
+32-range limit. V2 code mappings may exceed 64 KiB. Seek beyond EOF is observed
+within the cursor bound, but subsequent hole writes or zero-count extension
+refuse rather than inventing bytes. Multiple simultaneous handles, unmodeled
+reads, arbitrary drivers/TSRs and automatic safe-stop selection remain open.
+
+The authored incremental N23 patch is packaged separately in
+native/qemu-dos-save-operations over sealed N22. Exact two-file apply-and-hash
+replay passed. Build04 binary SHA-256 is
+cf7d52018709d4d467d0cf426aa4616361a34c46c4fb590337f47f1ad0badaca;
+patch SHA-256 is
+8d7ac0a56445afe2ad47e9aaaa8977579ce8d1c559616a0f85bf3c5864f23339.
+Earlier compiler diagnostics are retained separately; the post-load validation
+was simplified into reviewed early-return checks. Review also corrected reopen
+cursor reset and preservation of close/commit state across shadow deletion and
+rename before final native validation.
+
+Thirteen new real COM/MZ cases pass, including actual PIT ticks, commit,
+overlapping signed seeks, truncation, two policy content versions, replay
+deduplication, eligible-file open/overwrite, temp replacement, pending seek and
+rename restoration after FDB reopen, and stored predecessor refusal/acceptance.
+The retained v1 provenance suite passes all 13 cases on both N23 and unchanged
+N22. Final host checks pass 176 cases, retained DOSBox-X 323, retained N20 14 and
+metadata/runtime/dispatch/payload/skill/migration 60, all with zero
+failures/errors/skips. Selections overlap. Native disk-full/short-write behavior
+has not been independently exercised; that path remains unqualified despite
+fail-closed implementation and host transcript rejection tests. Broader parity
+and all 141 formal surface qualifications plus seven campaigns remain open.
+
+
+Integrated preservation on N23 passed **2,426 cases across 141 files**, with
+zero failures/errors/skips. All 1,179 Python source/test hashes remained fixed
+through that run. Evidence uses save-operations-preservation-final,
+save-operations-host-final, save-ops-native-02, save-ops-v1-native-01,
+save-operations-n22-legacy, save-ops-dosbox-final, save-ops-n20-final,
+save-operations-metadata-final and save-operations-patch-replay-receipt.json.
+Native build01–03 diagnostics and initial host-fixture failures are retained
+separately. The final consolidated private receipt is save-operations-final-receipt.json.
+N19/N20/N21/N22, the exact component-04 image and shared installation selector
+retain their prior identities.
