@@ -167,7 +167,8 @@ class RcloneTransport:
         if not files:
             return {'verified': True, 'files': 0}
         destination = self.remote + remote_path
-        self.command('copy', str(source_dir), destination, '--checksum', '--fast-list',
+        immutable = ['--immutable'] if remote_path.startswith(('library/objects', 'library/manifests/', 'fdb/projects/')) else []
+        self.command('copy', str(source_dir), destination, '--checksum', '--fast-list', *immutable,
                      '--backup-dir', self.remote + 'history/' + backup_suffix + '/' + remote_path,
                      '--transfers', '8', '--checkers', '8', '--tpslimit', '8', '--retries', '3', '--low-level-retries', '5')
         # Google Drive ordinary files expose MD5. Never treat a size-only check
@@ -226,6 +227,7 @@ def _state(path):
     db = sqlite3.connect(path)
     db.execute('CREATE TABLE IF NOT EXISTS files(path TEXT PRIMARY KEY, signature TEXT, receipt TEXT)')
     db.execute('CREATE TABLE IF NOT EXISTS projects(path TEXT PRIMARY KEY, signature TEXT, generation TEXT)')
+    db.execute('CREATE TABLE IF NOT EXISTS captures(path TEXT PRIMARY KEY, signature TEXT, receipt TEXT, payload TEXT)')
     db.execute('CREATE TABLE IF NOT EXISTS metadata(name TEXT PRIMARY KEY, value TEXT)')
     db.commit()
     return db
@@ -305,13 +307,34 @@ def _sync_library_phase(config, db, directory, run, result, transport):
             receipt = dict(kind='symlink', target=entry['target'], bytes_uploaded=False)
         else:
             captured = library / relative
-            receipt = stable_copy(entry['path'], captured)
+            cached = db.execute('SELECT signature,receipt,payload FROM captures WHERE path=?', (relative,)).fetchone()
+            if cached and cached[0] == signature:
+                receipt = json.loads(cached[1])
+                payload = Path(cached[2])
+                # A failed cloud attempt does not require another full local
+                # allocation. Reuse only exact, independently hashed bytes.
+                sha, md5 = hashlib.sha256(), hashlib.md5()
+                with os.fdopen(os.open(payload, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b''):
+                        sha.update(block); md5.update(block)
+                    size = os.fstat(stream.fileno()).st_size
+                if (size, sha.hexdigest(), md5.hexdigest()) != (receipt['size'], receipt['sha256'], receipt['md5']):
+                    raise ValueError('Cached library capture differs; no payload was published')
+                captured.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                os.link(payload, captured)
+            else:
+                receipt = stable_copy(entry['path'], captured)
+                db.execute('INSERT OR REPLACE INTO captures VALUES (?,?,?,?)',
+                           (relative, signature, _json(receipt), str(captured)))
             objects.mkdir(exist_ok=True)
             object_path = objects / receipt['sha256']
             if not object_path.exists():
                 os.link(captured, object_path)
             receipt['remote_path'] = 'library/objects/' + receipt['sha256']
         pending.append((relative, signature, receipt))
+    # Captured is distinct from synced. These reusable local bytes are not a
+    # remote completion claim; the files table still waits for its manifest.
+    db.commit()
     result['phase']='uploading_library'
     result['staged_files']=len(pending)
     _atomic_json(Path(config['state_dir'])/'status.json',result)
@@ -418,6 +441,7 @@ def _sync_fdb_phase(config, db, directory, run, result, transport):
             result['projects'].append(dict(path=source, id=identifier, generation=generation,
                                            manifest=manifest, verified=True))
         except Exception as error:
+            db.rollback()
             result['errors'].append(dict(source=source, type=type(error).__name__, message=str(error)))
 
 

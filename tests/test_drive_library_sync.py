@@ -523,3 +523,129 @@ def test_fdb_backup_completes_when_library_rescan_detects_churn(tmp_path):
     assert 'manifest.json' in transport.remote[generation]
     assert any(error['phase']=='library' for error in result['errors'])
     assert not any(path.startswith('library/manifests/') for path in transport.remote)
+
+
+def test_failed_fdb_state_pair_is_rolled_back_before_library_commit(tmp_path, monkeypatch):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    (root/'targets'/'payload.com').write_bytes(b'intake continues')
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    source=repository/'projects'/'a.fdb'
+    with sqlite3.connect(source) as db:
+        db.execute('CREATE TABLE facts(v TEXT)')
+        db.execute("INSERT INTO facts VALUES ('durable')")
+
+    original_state=sync._state
+    fail_metadata=[True]
+    class FailProjectMetadataOnce:
+        def __init__(self, connection):
+            self.connection=connection
+        def execute(self, statement, parameters=()):
+            if (fail_metadata[0] and 'INSERT OR REPLACE INTO metadata' in statement
+                    and parameters and parameters[0]=='project:'+str(source)):
+                fail_metadata[0]=False
+                raise sqlite3.OperationalError('injected project metadata write failure')
+            return self.connection.execute(statement, parameters)
+        def commit(self):
+            return self.connection.commit()
+        def rollback(self):
+            return self.connection.rollback()
+        def close(self):
+            return self.connection.close()
+
+    monkeypatch.setattr(sync, '_state', lambda path: FailProjectMetadataOnce(original_state(path)))
+    config=_config(tmp_path,root,repository)
+    transport=FakeTransport()
+    result=sync.run_once(config,transport)
+
+    assert result['status']=='partial'
+    assert len(result['projects'])==0
+    assert any(error['source']==str(source) for error in result['errors'])
+    assert any(path.startswith('library/manifests/') for path in transport.remote)
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        assert db.execute('SELECT path FROM projects').fetchall()==[]
+        assert db.execute("SELECT name FROM metadata WHERE name=?",('project:'+str(source),)).fetchall()==[]
+        assert db.execute("SELECT value FROM metadata WHERE name='namespace'").fetchone() is not None
+
+    # The following pass must retry and commit the complete pair after the
+    # injected failure has been consumed.
+    retry=sync.run_once(config,transport)
+    assert retry['status']=='complete'
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        assert db.execute('SELECT path FROM projects').fetchall()==[(str(source),)]
+        assert db.execute("SELECT name FROM metadata WHERE name=?",('project:'+str(source),)).fetchall()==[
+            ('project:'+str(source),)
+        ]
+
+
+def test_failed_library_transfer_reuses_verified_local_capture_on_retry(tmp_path, monkeypatch):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    payload=b'large immutable intake payload'
+    source=root/'targets'/'payload.com';source.write_bytes(payload)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    config=_config(tmp_path,root,repository)
+
+    original_copy=sync.stable_copy
+    copy_calls=[]
+    def counted_copy(*args,**kwargs):
+        copy_calls.append((args[0],args[1]))
+        return original_copy(*args,**kwargs)
+    monkeypatch.setattr(sync,'stable_copy',counted_copy)
+
+    class FailFirstLibraryTransfer(FakeTransport):
+        failed=False
+        def put_tree(self,source_dir,remote_path,backup_suffix):
+            if remote_path=='library/objects' and not self.failed:
+                self.failed=True
+                submitted={p.relative_to(source_dir).as_posix():p.read_bytes()
+                           for p in Path(source_dir).rglob('*') if p.is_file()}
+                self.calls.append((remote_path,backup_suffix,submitted))
+                return {'verified':False,'files':len(submitted)}
+            return super().put_tree(source_dir,remote_path,backup_suffix)
+
+    transport=FailFirstLibraryTransfer()
+    first=sync.run_once(config,transport)
+    assert first['status']=='partial'
+    assert not any(path.startswith('library/manifests/') for path in transport.remote)
+    assert len(copy_calls)==1
+
+    retry=sync.run_once(config,transport)
+    assert retry['status']=='complete'
+    assert len(copy_calls)==1
+    assert transport.remote['library/objects'][_sha_payload(payload)]==payload
+    manifest=_latest_library_manifest(transport,retry['run'])
+    assert manifest['entries']['targets/payload.com']['content']['remote_path']==(
+        'library/objects/'+_sha_payload(payload)
+    )
+
+
+def test_tampered_cached_library_capture_is_refused_before_upload(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    source=root/'targets'/'payload.com';source.write_bytes(b'original stable bytes')
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    config=_config(tmp_path,root,repository)
+
+    class FailFirstLibraryTransfer(FakeTransport):
+        failed=False
+        def put_tree(self,source_dir,remote_path,backup_suffix):
+            if remote_path=='library/objects' and not self.failed:
+                self.failed=True
+                submitted={p.relative_to(source_dir).as_posix():p.read_bytes()
+                           for p in Path(source_dir).rglob('*') if p.is_file()}
+                self.calls.append((remote_path,backup_suffix,submitted))
+                return {'verified':False,'files':len(submitted)}
+            return super().put_tree(source_dir,remote_path,backup_suffix)
+
+    transport=FailFirstLibraryTransfer()
+    first=sync.run_once(config,transport)
+    assert first['status']=='partial'
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        cached=db.execute('SELECT payload FROM captures WHERE path=?',
+                           ('targets/payload.com',)).fetchone()
+    assert cached is not None
+    Path(cached[0]).write_bytes(b'tampered cached bytes')
+
+    retry=sync.run_once(config,transport)
+    assert retry['status']=='partial'
+    assert not transport.remote.get('library/objects')
+    assert not any(path.startswith('library/manifests/') for path in transport.remote)
+    assert any('Cached library capture differs' in error['message'] for error in retry['errors'])

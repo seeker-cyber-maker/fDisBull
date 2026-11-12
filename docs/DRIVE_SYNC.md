@@ -111,7 +111,11 @@ are not propagated as remote deletions.
 
 A successful transfer requires Drive size and MD5 readback for every submitted
 file; missing or mismatched hashes refuse completion. A transfer or manifest
-failure must not advance local success state. The worker runs the FDB phase
+failure must not advance local success state. Verified local captures are cached
+separately and hard-linked into retries; an unchanged failed upload does not
+allocate another full copy. Cached bytes must pass size, SHA-256 and MD5 checks
+before reuse. A damaged cache refuses publication. Permanent cloud paths use
+rclone `--immutable` to refuse an incompatible overwrite. The worker runs the FDB phase
 before the library phase and records phase errors separately, so a library
 failure does not prevent an independent FDB attempt. Inspect each run's receipt
 for the actual outcome of both phases.
@@ -172,7 +176,7 @@ cloud-backup evidence.
 
 ## Verification and remaining work
 
-The final focused host selection passed 31 tests, including active-WAL snapshot and
+The final focused host selection passed 34 tests, including active-WAL snapshot and
 isolated Project restore, recursive object closure, failed transfer/manifest
 retry, remote disappearance refusal, scope-change fencing and a source rescan
 before publishing the namespace. The installed watcher writes its marker and
@@ -187,5 +191,5 @@ its nine referenced objects can be downloaded and opened with SQLite integrity
 intact. A bounded cloud test of the installed content-addressed layout verified
 both downloaded versions by SHA-256, retained the older generation after a
 deliberately refused new manifest, and verified the exact new manifest after
-retry. The focused host suite passed 31 tests. These are bounded receipts; the
+retry. The focused host suite passed 34 tests. These are bounded receipts; the
 initial library transfer remains incomplete and requires its own final receipt.
