@@ -207,8 +207,10 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   adds monochrome frames, held keys and virtual-clock timers. A further native
   extension supports the declared 34-family classic instruction profile and
   restores an explicit seeded RNG alongside CPU/RAM and device state. Bounded
-  layer and paused-hook witnesses passed locally on macOS arm64.
-  Complete game and conversion compatibility remain unqualified.
+  layer, paused-hook and v4 full-checkpoint history witnesses passed locally on
+  macOS arm64. Histories require the explicit native checkpoint tool and do not
+  provide frame rewind, deltas or automatic replay. Complete game and
+  conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped

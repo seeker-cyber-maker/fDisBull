@@ -302,10 +302,57 @@ fresh-owner restore. They do not establish general game compatibility or parity.
 All profiles support stopped inspection, bounded run/step, execution breakpoints,
 guarded edits and native checkpoints. The three earlier profiles continue to
 use their exact matching binaries and do not acquire v4 controls. CHIP-8 audio
-output, predicates, watchpoints, redirects, task-private views, histories,
+output, predicates, watchpoints, redirects, task-private views, frame histories,
 selected undo and comparative trials remain unavailable. IRQ/PIC and
 QEMM/DESQview task semantics remain DOS-profile work; DOSBox-X remains the
 default and retained fallback.
+
+## V4 full-checkpoint histories
+
+The v4 `fdisbull-chip8-layers-hooks-4` runtime also supports bounded native
+histories when launched with the explicit QEMU checkpoint tool. Histories use
+the existing full `fdisbull-qemu-chip8-state-4` checkpoints; they do not replay
+instructions or store inverse CPU/RAM deltas. Each checkpoint covers the
+CHIP-8 CPU and 4 KiB RAM, native fault, display/key/timer/RNG state, native code
+layer state, and the portable logical hook state. Hook-owned breakpoints are
+recreated with fresh runtime IDs during restore. No host files are restored.
+
+```python
+root = debug.rewind_start(max_steps=16, max_bytes=512 * 1024 * 1024)
+first = debug.rewind_record()  # one stopped native step and full checkpoint
+debug.rewind(history=first['history'], node=root['cursor'])
+branch = debug.rewind_record(advance='capture')  # explicit stopped boundary
+```
+
+`rewind_start`, `rewind_status`, `rewind_record`, and `rewind` are also exposed
+through JSON `debug-rewind-start`, `debug-rewind-status`, `debug-rewind-record`
+and `debug-rewind`. Saved scripts use `rewind-start`, `rewind-status`,
+`rewind-record` and `rewind` with backend `qemu-chip8`. A normal record advances one native
+step; a known stop can be checkpointed without claiming that an instruction
+completed. `advance="capture"` captures one explicit stopped boundary and
+labels the interval as unobserved. It does not claim a step occurred. Recording
+by step refuses while a hook is pending; explicit capture remains available.
+
+Histories are immutable manifest revisions over a retained DAG: rewinding to
+an older node and recording again creates a branch while preserving later
+nodes. A reopened FDB can attach to a history, but its live cursor starts
+invalid; restore an explicit node before recording steps. Explicit capture can
+add the current stopped state as an unobserved boundary. Checkpoint data and
+its metadata sidecar are both hash-bound. Restore verifies the ROM/version,
+QEMU binary and profile identity, checkpoint bytes and metadata, then checks
+the full restored CPU/RAM/device/layer/hook state before accepting the new
+owner. After dispatch, an uncertain step, capture, restore or journal publication
+leaves an unresolved pending operation and is never automatically replayed.
+Known admission refusals occur before recording intent or changing the guest.
+
+The history accepts at most 128 nodes and 1 GiB of cumulative checkpoint
+artifact payloads. Each state artifact is bounded to 128 MiB, and the FDB's
+256 MiB runtime-artifact cap can reduce the usable history budget further.
+Growth of the live private QCOW2 file is measured separately and is not
+covered by that history byte quota. Ten bounded authored native history cases
+passed locally on macOS arm64. They do not qualify CHIP-8 game compatibility,
+conversion, frame histories, deltas, selected undo, trials, or promotion of the
+DOS backend.
 
 ## Local checks
 
@@ -349,7 +396,19 @@ FDISBULL_CHIP8_LAYERS_QEMU=/external/layers/qemu-system-chip8 \
 FDISBULL_CHIP8_LAYERS_QEMU_IMG=/path/to/qemu-img \
 FDISBULL_REQUIRE_CHIP8_LAYERS=1 \
 python -m pytest -q tests/test_chip8_layers_project.py tests/test_chip8_layers.py \
-  tests/test_chip8_hooks.py tests/test_chip8_layers_native.py
+  tests/test_chip8_hooks.py tests/test_chip8_layers_native.py \
+  tests/test_chip8_history.py tests/test_chip8_history_native.py \
+  tests/test_chip8_history_public.py
+```
+
+For v4 checkpoint-backed histories, select that same layers runtime:
+
+```sh
+FDISBULL_CHIP8_HISTORY_QEMU=/external/layers/qemu-system-chip8 \
+FDISBULL_CHIP8_HISTORY_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_HISTORY=1 \
+python -m pytest -q tests/test_chip8_history.py \
+  tests/test_chip8_history_public.py tests/test_chip8_history_native.py
 ```
 
 Native tests require the actual binary when their `FDISBULL_REQUIRE_CHIP8*` selector is 1; an

@@ -144,8 +144,11 @@ class QemuDOSHistoryMixin:
     ``metadata``, ``vm``, ``_process``, ``save_state``, ``load_state``,
     ``registers`` and ``step``. The integration calls :meth:`_history_bind`
     after session creation and after a verified full-checkpoint VM replacement.
+    Other checkpoint backends may override the format, identity, admission,
+    live-owner and artifact-validation hooks while retaining the DAG journal.
     """
 
+    HISTORY_FORMAT = FORMAT
     _history_busy = False
 
     def _history_bind(self):
@@ -230,8 +233,16 @@ class QemuDOSHistoryMixin:
         _preflight(self)
         _serial_idle(self)
 
+    def _history_require_live(self):
+        if self._process.get('state') != 'active' or self._process.get('machine_closed'):
+            raise ValueError('History requires a live owned DOS process')
+
+    def _history_verify_restored(self, restored):
+        if self.closed or not isinstance(restored, dict) or restored.get('source_binding_restored') is not True:
+            raise ValueError('Restored checkpoint did not verify process source ownership')
+
     def _history_base_response(self):
-        return dict(format=FORMAT, active=not getattr(self, 'closed', True),
+        return dict(format=self.HISTORY_FORMAT, active=not getattr(self, 'closed', True),
                     implementation='immutable full native DOS process checkpoints; no deterministic replay',
                     checkpoint_scope='source-bound DOS process, private QCOW2 and debugger/native controls',
                     host_files_restored=False,
@@ -292,9 +303,9 @@ class QemuDOSHistoryMixin:
         _, latest_id = max(candidates)
         return self._history_row(latest_id)
 
-    @staticmethod
-    def _validate_manifest(manifest):
-        if (not isinstance(manifest, dict) or manifest.get('format') != FORMAT
+    @classmethod
+    def _validate_manifest(cls, manifest):
+        if (not isinstance(manifest, dict) or manifest.get('format') != cls.HISTORY_FORMAT
                 or not isinstance(manifest.get('id'), str)
                 or not isinstance(manifest.get('identity'), dict)
                 or not isinstance(manifest.get('nodes'), list)
@@ -505,15 +516,14 @@ class QemuDOSHistoryMixin:
             summary['valid'] = self._qemu_history_live['valid']
             summary['invalid_reason'] = self._qemu_history_live['invalid_reason']
             return summary
-        if self._process.get('state') != 'active' or self._process.get('machine_closed'):
-            raise ValueError('History requires a live owned DOS process')
+        self._history_require_live()
         self._history_admission()
         project_used = int(self.project.db.execute(
             'SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0])
         if 256 * 1024 * 1024 - project_used < min(MAX_STATE, max_bytes):
             raise ValueError('Project artifact budget cannot reserve a full root checkpoint')
         history_id = uuid.uuid4().hex
-        manifest = dict(format=FORMAT, id=history_id, revision=0, parent_manifest=None,
+        manifest = dict(format=self.HISTORY_FORMAT, id=history_id, revision=0, parent_manifest=None,
             identity=identity, max_steps=max_steps, max_bytes=max_bytes, nodes=[],
             head=None, cursor=None, live_cursor_valid=False, invalid_reason=None,
             pending=dict(kind='root-capture', started=time.time_ns()))
@@ -601,7 +611,8 @@ class QemuDOSHistoryMixin:
         used = self._history_capacity(manifest, parent, count)
         self._stopped()
         if advance == 'step' and (getattr(self, '_qemu_hook_pending', None) is not None
-                                  or getattr(self, '_qemu_hook_pending_task', None) is not None):
+                                  or getattr(self, '_qemu_hook_pending_task', None) is not None
+                                  or getattr(self, '_chip8_hook_pending', None) is not None):
             raise ValueError('A pending hook must be resolved before history stepping')
         self._history_admission()
         records = []
@@ -622,7 +633,7 @@ class QemuDOSHistoryMixin:
                         raise ValueError('History step returned no inspectable native stop receipt')
                     if outcome != 'step' and (outcome in ('exited', 'guest_exit', 'guest_tsr')
                             or self.closed or self.vm is None or self.vm.process.poll() is not None
-                            or self._process.get('state') in ('exited', 'session_closed', 'observation_failed')):
+                            or getattr(self, '_process', {}).get('state') in ('exited', 'session_closed', 'observation_failed')):
                         try:
                             return self._history_resolve_known_stop(step_result,
                                 'guest reached a non-checkpointable terminal stop',
@@ -742,8 +753,7 @@ class QemuDOSHistoryMixin:
                     from .qemu_dos_checkpoint import load_process_state_data
                     restored = load_process_state_data(self, prepared['data'], prepared['metadata'],
                         source_id=prepared['artifact'], timeout_ms=self._history_remaining_ms())
-                if self.closed or not isinstance(restored, dict) or restored.get('source_binding_restored') is not True:
-                    raise ValueError('Restored checkpoint did not verify process source ownership')
+                self._history_verify_restored(restored)
                 current = self.registers()
                 expected = target.get('registers')
                 if not isinstance(expected, dict) or any(current.get(key) != expected.get(key)

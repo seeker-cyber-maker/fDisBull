@@ -79,7 +79,7 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine','qemu-dos')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine','qemu-dos','qemu-chip8')
     if backend is not None and backend not in supported_backends:
         raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
@@ -102,6 +102,9 @@ def validate_script(script, *, session=None):
         elif backend=='qemu-dos':
             from .qemu_dos_process import QemuDOSProcessSession
             owner=QemuDOSProcessSession
+        elif backend=='qemu-chip8':
+            from .qemu_chip8 import Chip8DebugSession
+            owner=Chip8DebugSession
         elif backend=='scummvm-kyra':
             from .scummvm_kyra import ScummVMKyraSession
             owner=ScummVMKyraSession
@@ -118,6 +121,8 @@ def validate_script(script, *, session=None):
         outcomes|={'guest_exit','guest_tsr'}
     if (backend or actual) in ('qemu-machine','qemu-dos'):
         outcomes.add('hook')
+    if (backend or actual) == 'qemu-chip8':
+        outcomes|={'hook','key_wait','layer_conflict','exception','stopped'}
     if (backend or actual) in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
@@ -203,21 +208,24 @@ def validate_script(script, *, session=None):
                         if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
                             raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
-                        if (op.startswith('rewind') and (backend or actual)=='qemu-dos'
+                        if (op.startswith('rewind') and (backend or actual) in ('qemu-dos','qemu-chip8')
                                 and session is not None):
                             if not getattr(session,'capabilities',{}).get('rewind'):
-                                raise ValueError('Native history scripts require enabled full process checkpoints')
+                                message=('Native history scripts require enabled full process checkpoints'
+                                         if (backend or actual)=='qemu-dos' else
+                                         'CHIP-8 history scripts require enabled full checkpoints')
+                                raise ValueError(message)
                             if session.project.db.in_transaction:
                                 raise ValueError('Native history scripts require a project outside a caller-owned transaction')
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
                         if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
-                        if op=='rewind-start' and (backend or actual)=='qemu-dos':
+                        if op=='rewind-start' and (backend or actual) in ('qemu-dos','qemu-chip8'):
                             limits['max_bytes']=(1,1024**3)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
-                        if (backend or actual)=='qemu-dos' and op=='rewind-record':
+                        if (backend or actual) in ('qemu-dos','qemu-chip8') and op=='rewind-record':
                             advance=params.get('advance','step')
                             if not (isinstance(advance,str) and advance.startswith('$')) and advance not in ('step','capture'):
                                 raise ValueError('Native rewind advance must be step or capture')
@@ -707,7 +715,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
             if step['op']=='step':
-                native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
+                native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos','qemu-chip8')
                 complete = (result.get('outcome')=='step' and result.get('timed_out') is False
                             if native_machine else result.get('completed'))
                 if not complete:

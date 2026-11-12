@@ -4897,3 +4897,102 @@ Original FDB/WAL/SHM hashes stayed unchanged. The private readback is
 chip8-v4-externalization-final-03/receipt.json; the earlier audit's incorrect
 `id` column lookup is retained as a harness diagnostic and was corrected to
 `debug_events.sequence` without changing production source.
+
+
+## 2026-11-12 — CHIP-8 persistent checkpoint histories
+
+Continued from `bbb66193747b4328c315ba322e7c9cbf98f19b84` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains target `agent/execution-event-search-284eb73c` and base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, release/tag, merge, shared installation or default change.
+
+### Behavior and identity
+
+The v4 CHIP-8 adapter now exposes `rewind_start`, `rewind_status`,
+`rewind_record` and `rewind`, plus existing JSON history routes and explicit
+`qemu-chip8` saved scripts. Histories use immutable full native checkpoints
+indexed by append-only DAG manifest revisions, format
+`fdisbull-qemu-chip8-history-v1`. Old branches remain available and continue
+charging their cumulative budget after a rewind and new recording. There is
+no instruction replay or inverse CPU/RAM delta implementation.
+
+The adapter reuses the existing v4 binary and VMState4/host schema4. No new
+QEMU patch or native rebuild was needed. All four CHIP-8 native packages and
+ten accepted CHIP-8/DOS binaries retain their recorded hashes. The selected
+runtime remains SHA-256
+`2e8f86c8390e7fef4304ee6752ce7902f8fefd4d01aae07cb308bbd6d7a6478b`.
+Histories require this v4 profile and the explicit checkpoint tool; v1-v3
+capability boundaries remain separate.
+
+Each history node binds the full checkpoint data and its resolved metadata
+sidecar by SHA-256, including layer definitions, hook controls and device/RNG
+expectations. Restoring uses the established staged fresh-owner checkpoint
+loader, checks full CPU/RAM/device/layer/hook state, and only then publishes
+the new cursor. A fresh owner epoch fences live cursor ownership independently
+of persistent runtime identity. Cold attach initially has no valid forward
+cursor; explicit node restore permits step recording. Explicit capture can
+instead add the current stopped state as an unobserved interval.
+
+Unrecorded public execution, register/RAM writes, keypad/timer/RNG changes,
+layer changes, hook/breakpoint edits and manual save/load invalidate the live
+forward cursor before dispatch. Read-only observations preserve it. Step
+recording refuses a pending hook before intent or guest effects; stopped
+capture preserves it, and restore retains its logical identity/hits/pending
+state. Known wait/fault/layer-conflict stops retain one stopped checkpoint
+without an instruction-completion claim. Uncertain operations leave durable
+pending evidence and never replay automatically. Script preflight rejects
+unavailable operations before earlier mutations, and nested operations retain
+the original deadline across lock waits and owner replacement.
+
+Limits remain 128 nodes, 1 GiB cumulative state payloads and 128 MiB per state;
+the project 256 MiB runtime-artifact cap also applies. Live private QCOW2 growth
+is measured separately rather than quota-managed. Native state, ROMs, byte-
+retaining FDBs and external object stores remain private and outside Git.
+
+### Fresh local verification and retained exception
+
+The expanded 190-file selection and its completed tail cover **3,207 distinct
+passing tests**, with every eligible collected node matched to passing XML
+and all **1,207 Python source/test hashes unchanged**. The first run stopped
+after 3,027 passes on
+`test_delta_rewind_method_discovery_mentions_policy_and_partial_continuation`:
+it expects the word `experimental` in the unchanged delta-undo CLI description.
+Both that description and the test are identical at the starting commit. The
+failure is retained; it was excluded from the tail rather than changing
+unrelated delta behavior. The existing private DinoPark identification check
+is also explicitly deselected because its input is unavailable. The tail
+passes 191 cases, including repeated cases in its first file; counts are
+reconciled by collected node identity rather than summed as unique passes.
+
+Additional overlapping selections pass **10 native history cases**,
+**49 retained classic/CPU/device cases on v4**, **323 DOSBox-X history/undo/trial
+cases**, and **102 host/shared-history/public cases**. The compatibility replay
+excludes only the obsolete v1 CLS refusal; v1 still runs its original cases
+on the original binary in broader coverage. Native witnesses include active
+RAM/fetch layers, framebuffer export/state, RNG sequence, branch retention,
+cold FDB reopen, pending hooks, dirty backing, wait/fault stops and contended
+30 ms admission without guest or journal effects.
+
+An immutable-copy evidence audit verifies **14 continuous manifest revisions,
+five retained nodes and 60 hash-verified external objects**. Every node's state
+payload, metadata hash, runtime identity and native fetch maps resolve; two
+root branches remain. Original FDB/WAL/SHM hashes stay unchanged. A separate
+actual-QEMU witness restores the checkpoint created before this slice, verifies
+full CPU/RAM/environment/layers and the pending hook, then displaces exactly
+one RNG-backed instruction to V0=8 with one draw and no repeated hook action.
+Its original database, ROM and objects remain unchanged.
+
+Private receipts use chip8-history-preservation-coverage-01.json,
+chip8-history-native-final-02, chip8-history-compat-final-01,
+chip8-history-dosbox-final-01, chip8-history-host-final-01,
+chip8-history-externalization-final-01/receipt.json and
+chip8-v4-history-upgraded-host-01/receipt.json. The original expanded-run
+failure and unchanged-baseline comparison remain in their separate receipts.
+
+Existing DOS trials, histories, private layers, hooks, checkpoints, master/slave
+and nested IRQ support, and file/save-policy paths remain exercised. CHIP-8
+renderer-frame histories, deltas, selected undo, trials, task/IRQ semantics,
+arbitrary ROM/other-host qualification and G0-G8 conversion remain open.
+All 141 DOS surfaces and seven parity campaigns remain open before any
+DOSBox-X default promotion or removal.

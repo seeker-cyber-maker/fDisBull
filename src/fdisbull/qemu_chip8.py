@@ -23,6 +23,7 @@ from .qemu_control import QemuControl
 from .debugger import stamp
 from .chip8_layers import Chip8LayerMixin, LAYER_MODEL
 from .chip8_hooks import Chip8HookMixin
+from .chip8_history import Chip8HistoryMixin, bind_history_mutations
 
 BACKEND = 'qemu-chip8'
 PROFILE = 'chip8-classic-pilot-default-v1'
@@ -135,6 +136,7 @@ def _attach_native_diagnostics(error, owner):
 class _Owner:
     def __init__(self, executable, rom_bytes, identity, *, timeout_ms=30000, checkpoint_tool=None, checkpoint_data=None, on_spawn=None):
         self.process=None;self.qmp=None;self.gdb=None;self.lock=threading.RLock();self.closed=False
+        self.history_epoch=uuid.uuid4().hex
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-chip8-')
         root=Path(self.temporary.name);self.qmp_path=root/'qmp.sock';self.gdb_path=root/'gdb.sock';self.log_path=root/'qemu.log'
         self.rom_path=root/'rom.ch8';self.rom_path.write_bytes(rom_bytes)
@@ -220,7 +222,8 @@ class _Owner:
         self.temporary.cleanup()
 
 
-class Chip8DebugSession(Chip8LayerMixin,Chip8HookMixin):
+@bind_history_mutations
+class Chip8DebugSession(Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
     """One stopped-at-boundaries CHIP-8 machine bound to one immutable FDB ROM."""
     backend_id=BACKEND
     capabilities={'registers':True,'memory':True,'run':True,'step':True,'breakpoints':True,
@@ -274,7 +277,8 @@ class Chip8DebugSession(Chip8LayerMixin,Chip8HookMixin):
                 self.capabilities.update(frame=True,input=True,timers=True,audio=False)
                 if self.identity['cpu_subset'] in (CLASSIC_SUBSET,LAYERS_SUBSET):self.capabilities['rng']=True
                 if self.identity['cpu_subset']==LAYERS_SUBSET:
-                    self.capabilities.update(layers=True,code_layers=True,hooks=True)
+                    self.capabilities.update(layers=True,code_layers=True,hooks=True,
+                                             histories=checkpoint_tool is not None,rewind=checkpoint_tool is not None)
                     self._reset_chip8_layers()
                     layer=self._chip8_layer_query()
                     if layer['generation']!=0 or layer['execution-bytes'] or not layer['backing-valid']:
@@ -314,6 +318,8 @@ class Chip8DebugSession(Chip8LayerMixin,Chip8HookMixin):
 
     @contextmanager
     def _budget(self,owner,deadline):
+        prior_deadline=getattr(self,'_rpc_deadline',None)
+        if prior_deadline is not None:deadline=min(deadline,prior_deadline)
         wait=min(10,max(0,deadline-time.monotonic()))
         if not wait or not owner.lock.acquire(timeout=wait):raise TimeoutError('CHIP-8 machine is busy')
         channels=[c for c in (owner.qmp,owner.gdb) if c is not None]
@@ -326,6 +332,46 @@ class Chip8DebugSession(Chip8LayerMixin,Chip8HookMixin):
         finally:
             for channel,previous in zip(channels,saved):channel.operation_deadline=previous
             owner.lock.release()
+
+    @property
+    def script_operations(self):
+        operations={'status','registers','memory','write-memory','write-registers','run','step',
+                    'breakpoint','delete-breakpoint','assert'}
+        if self.capabilities.get('frame'):operations.add('screenshot')
+        if self.capabilities.get('code_layers'):
+            operations.update(('layer-stack','layer-enable','layer-patch','code'))
+        if self.capabilities.get('hooks'):operations.update(('hook','hooks','delete-hook'))
+        if self.capabilities.get('save_states'):operations.update(('save-state','load-state'))
+        if self.capabilities.get('rewind'):
+            operations.update(('rewind-start','rewind-status','rewind-record','rewind'))
+        return operations
+
+    def script(self,script=None,*,script_id=None,timeout_ms=60000):
+        from .debug_script import execute_script
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 script timeout')
+        if (script is None)==(script_id is None):raise ValueError('Supply exactly one of script or script_id')
+        deadline=time.monotonic()+timeout_ms/1000
+        previous=getattr(self,'_rpc_deadline',None)
+        if previous is not None:deadline=min(deadline,previous)
+        owner=self.vm
+        with self._budget(owner,deadline):
+            self._rpc_deadline=deadline
+            try:
+                if script_id is not None:
+                    row=self.project.db.execute('SELECT * FROM debug_scripts WHERE id=? AND version=?',
+                                                (script_id,self.version['id'])).fetchone()
+                    if row is None:raise ValueError('Unknown script for selected project version')
+                    if _sha(row['script'].encode())!=row['sha256']:raise ValueError('Stored script hash mismatch')
+                    script=json.loads(row['script'])
+                result=execute_script(self,script,timeout_ms=_remaining(deadline))
+                try:_remaining(deadline)
+                except TimeoutError as error:
+                    error.result=result
+                    try:self.close()
+                    except Exception:pass
+                    raise
+                return result
+            finally:self._rpc_deadline=previous
 
     def contexts(self):return dict(run=self.run_id,selected='machine',contexts=[dict(id='machine',kind='machine',capabilities=self.capabilities)])
     def context(self,name):
