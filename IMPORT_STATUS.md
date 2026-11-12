@@ -44,3 +44,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/agi_source.py`
 - `src/fdisbull/agi_spatial_predicates.py`
 - `src/fdisbull/ail.py`
+
+## Source batch 3
+
+24 additional unchanged Python source files (365,792 bytes). Secret-pattern scan found no matches; this is not comprehensive secret certification. No code/tests/CI executed. Repository now has 54 files, not a complete or buildable copy.
+
+- `src/fdisbull/analysis.py`
+- `src/fdisbull/anchor_stones.py`
+- `src/fdisbull/assisted_travel.py`
+- `src/fdisbull/audio_services.py`
+- `src/fdisbull/boundaries.py`
+- `src/fdisbull/calls.py`
+- `src/fdisbull/capabilities.py`
+- `src/fdisbull/capture_audit.py`
+- `src/fdisbull/cfg.py`
+- `src/fdisbull/cfg_render.py`
+- `src/fdisbull/chimprec.py`
+- `src/fdisbull/chimprec_capture.py`
+- `src/fdisbull/chimprec_common.py`
+- `src/fdisbull/chimprec_pe.py`
+- `src/fdisbull/chimprec_pe_image.py`
+- `src/fdisbull/chimprec_pe_imports.py`
+- `src/fdisbull/chimprec_pe_writer.py`
+- `src/fdisbull/chimprec_plan.py`
+- `src/fdisbull/code_backings.py`
+- `src/fdisbull/code_blocks.py`
+- `src/fdisbull/code_layers.py`
+- `src/fdisbull/code_layout.py`
+- `src/fdisbull/codec_dcl.py`
+- `src/fdisbull/codec_fab.py`

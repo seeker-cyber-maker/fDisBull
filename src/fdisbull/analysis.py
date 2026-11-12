@@ -1,0 +1,517 @@
+"""Fact-driven recursive analysis and shared address presentation.
+
+A queue becoming empty is a fixed point of these implemented rules, not a claim
+that every function or indirect reference has been recovered.
+"""
+import json
+from pathlib import Path
+
+
+def k(a):
+    if isinstance(a,bool) or not isinstance(a,int) or not 0<=a<(1<<64):
+        raise ValueError('address must be an unsigned 64-bit integer')
+    return f'{a:016x}'
+
+
+def h(a):
+    return f'0x{a:x}'
+
+
+EXTENSION_DDL = """
+CREATE TABLE IF NOT EXISTS binary_info(version INTEGER PRIMARY KEY REFERENCES versions(id), document TEXT NOT NULL, source_bytes BLOB);
+CREATE TABLE IF NOT EXISTS symbols(version INTEGER NOT NULL, address TEXT NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, module TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL, PRIMARY KEY(version,address,kind,module,name));
+CREATE TABLE IF NOT EXISTS data_items(version INTEGER NOT NULL, context TEXT NOT NULL, address TEXT NOT NULL, representation TEXT NOT NULL, size INTEGER NOT NULL, value TEXT NOT NULL, source TEXT NOT NULL, PRIMARY KEY(version,context,address));
+CREATE TABLE IF NOT EXISTS definitions(version INTEGER NOT NULL, context TEXT NOT NULL, address TEXT NOT NULL, representation TEXT NOT NULL, size INTEGER NOT NULL, author TEXT NOT NULL, PRIMARY KEY(version,context,address));
+CREATE TABLE IF NOT EXISTS investigations(version INTEGER NOT NULL, context TEXT NOT NULL, address TEXT NOT NULL, reason TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'pending', detail TEXT, PRIMARY KEY(version,context,address));
+CREATE TABLE IF NOT EXISTS operand_refs(version INTEGER NOT NULL, context TEXT NOT NULL, source TEXT NOT NULL, operand_index INTEGER NOT NULL, role TEXT NOT NULL, target TEXT NOT NULL, width INTEGER, PRIMARY KEY(version,context,source,operand_index,role,target));
+CREATE TABLE IF NOT EXISTS analysis_state(version INTEGER PRIMARY KEY REFERENCES versions(id), entry_complete INTEGER NOT NULL DEFAULT 0, seeds_admitted INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS recoveries(version INTEGER PRIMARY KEY REFERENCES versions(id), document TEXT NOT NULL);
+"""
+
+
+class AnalysisMixin:
+    def _init_information(self, image, version=1):
+        from .inspection import inspect_binary
+        document = inspect_binary(image.source_bytes,slice_arch=image.metadata.get('slice_arch'),image=image.metadata.get('selected_image'))
+        if image.format in ('MZ', 'COM', 'SYS'):
+            document=self._dos_document_for_image(image,document)
+        if image.metadata.get('managed'):
+            document['header']['managed']=image.metadata['managed']
+        if image.format == 'raw':
+            region = image.regions[0]
+            document['sections'] = [dict(name=r.name,virtual_address=r.start,virtual_size=len(r.data),file_offset=r.start-region.start,file_size=len(r.data),permissions='rx' if r.executable else 'r') for r in image.regions]
+            if image.metadata.get('cortex_m'):
+                document['cortex_m'] = image.metadata['cortex_m']
+            document['imports'], document['exports'] = [], []
+            for item in document['strings']:
+                item['address'] = region.start + item['file_offset']
+        document['file_mappings']=image.metadata.get('file_mappings',[])
+        self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),image.source_bytes))
+        self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
+        self._index_symbols(version, document)
+        self._fresh_facts(version)
+        if image.arch == 'thumb':
+            self._thumb_reset(version)
+        if image.format in ('MZ', 'COM', 'SYS'):
+            self._dos_init(image,version)
+
+    def _index_symbols(self, version, document):
+        from .linkage import metadata_symbols
+        if self.meta['format'] == 'NE':
+            # Standalone inspection is a bounded preview. Address identity in
+            # an imported project must use the full validated retained tables.
+            ne = self.meta['loader_metadata']['ne']
+            document = dict(document, imports=ne['imports'], exports=ne['exports'])
+        for address,kind,item in metadata_symbols(document):
+            name=item.get('name') or (f"ordinal_{item['ordinal']}" if item.get('ordinal') is not None else 'unnamed')
+            self.db.execute('INSERT OR IGNORE INTO symbols VALUES (?,?,?,?,?,?)',
+                (version,k(address),kind,name,item.get('module') or '',json.dumps(item)))
+
+    def _document(self, version):
+        row = self.db.execute('SELECT document FROM binary_info WHERE version=?',(version,)).fetchone()
+        if row:
+            return json.loads(row[0])
+        return dict(header=None,sections=[],imports=[],exports=[],strings=[],warnings=['Original file metadata unavailable in this migrated 0.1 project; reimport to obtain it.'])
+
+    def _mapping(self, version, address):
+        return next((r for r in self.regions(version) if r.start <= address < r.start+len(r.data)),None)
+
+    def _label(self, version, address):
+        row = self.db.execute("SELECT text FROM annotations WHERE version=? AND context=? AND address=? AND kind='name'",(version,self.context,k(address))).fetchone()
+        if row:
+            return row[0]
+        row = self.db.execute("SELECT module,name FROM symbols WHERE version=? AND address=? ORDER BY CASE kind WHEN 'recovered_import' THEN 0 WHEN 'imports' THEN 1 ELSE 2 END,name LIMIT 1",(version,k(address))).fetchone()
+        if row:
+            return (row[0]+'!' if row[0] else '')+row[1]
+        recognized=self._signature_name(version,self.context,address)
+        if recognized:return recognized
+        row = self.db.execute('SELECT name FROM functions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
+        return row[0] if row else f'mem_{address:x}'
+
+    def _presentation(self, version, address):
+        row = self.db.execute('SELECT representation,size FROM definitions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
+        if row is None:
+            row = self.db.execute('SELECT representation,size FROM data_items WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
+        if row is None:
+            instruction=self.db.execute('SELECT size FROM instructions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
+            if instruction:
+                row=('code',instruction[0])
+        return {'name':self._label(version,address),'representation':row[0] if row else None,'size':row[1] if row else None}
+
+    def information(self, topic='summary', version=None, limit=200, offset=0):
+        from .project import integer
+        limit,offset = integer(limit,'limit',1,10000),integer(offset,'offset',0,(1<<63)-1)
+        with self.transaction():
+            v = self.version(version)['id']
+            doc = self._document(v)
+            if topic == 'summary':
+                counts = {x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings','libraries','relocations')}
+                if self.meta['format'] in ('LE', 'NE'):
+                    counts['relocations'] = len(self.meta['loader_metadata'][self.meta['format'].lower()]['fixups'])
+                if self.meta['format'] == 'NE':
+                    for name in ('sections', 'imports', 'exports', 'libraries'):
+                        counts[name] = len(self.meta['loader_metadata']['ne'][name])
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','cortex_m','dos_driver') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
+            if topic == 'linkage':
+                return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
+            if topic == 'header':
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','dos_driver') if key in doc},'warnings':doc.get('warnings',[])}
+            if topic not in ('sections','imports','exports','strings','libraries','relocations'):
+                raise ValueError('unknown information topic')
+            records = doc.get(topic, [])
+            if self.meta['format'] == 'NE' and topic in ('relocations', 'imports', 'exports', 'sections', 'libraries'):
+                records = self.meta['loader_metadata']['ne']['fixups' if topic == 'relocations' else topic]
+            if self.meta['format'] == 'LE' and topic == 'relocations':
+                # Standalone inspection has a bounded preview; the importer
+                # retains every applied LE record. Page that retained list
+                # here without duplicating it into ordinary status replies.
+                records = self.meta['loader_metadata']['le']['fixups']
+            items=[]
+            for original in records[offset:offset+limit]:
+                item=dict(original)
+                if item.get('address') is not None:
+                    if 'name' in item:
+                        item['original_name']=item['name']
+                    presentation=self._presentation(v,item['address'])
+                    item['name']=presentation['name']
+                    item['representation']=presentation['representation']
+                    item['representation_size']=presentation['size']
+                for field in ('address','virtual_address'):
+                    if item.get(field) is not None:
+                        item[field]=h(item[field])
+                items.append(item)
+            result={'version':v,'items':items,'total':len(records),'offset':offset,'has_more':offset+len(items)<len(records),'warnings':doc.get('warnings',[])}
+            if topic=='imports':
+                row=self.db.execute('SELECT document FROM recoveries WHERE version=?',(v,)).fetchone()
+                result['recovery']=json.loads(row[0]) if row else None
+            return result
+
+    def refresh_metadata(self,version=None):
+        """Reinspect retained container bytes; preserve mappings and user names."""
+        from .inspection import inspect_binary
+        if self.meta['format'] not in ('ELF','Mach-O','PE'):
+            raise ValueError('metadata refresh supports ELF, Mach-O and PE containers')
+        with self.transaction(True):
+            v=self.version(version)['id']
+            row=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+            if not row or row[0] is None:raise ValueError('original source bytes are unavailable; reimport the original file')
+            old=self._document(v)
+            document=inspect_binary(bytes(row[0]),slice_arch=self.meta['loader_metadata'].get('slice_arch'),image=self.meta['loader_metadata'].get('selected_image'))
+            document['file_mappings']=old.get('file_mappings',self.meta['loader_metadata'].get('file_mappings',[]))
+            if document.get('sections')!=old.get('sections'):
+                document['warnings'].append('Refreshed metadata; existing immutable memory mappings are retained.')
+            self.db.execute('UPDATE binary_info SET document=? WHERE version=?',(json.dumps(document),v))
+            self.db.execute("DELETE FROM symbols WHERE version=? AND kind IN ('imports','exports','import_stubs')",(v,))
+            self._index_symbols(v,document)
+            invalidated=self._invalidate_derived(v,reason='container metadata refreshed')
+            return dict(version=v,metadata_revision=document.get('metadata_revision',0),
+                        imports=len(document.get('imports',[])),exports=len(document.get('exports',[])),
+                        libraries=len(document.get('libraries',[])),relocations=len(document.get('relocations',[])),
+                        invalidated_tasks=invalidated,warnings=document['warnings'])
+
+    def _queue_code(self, version, address, reason):
+        return self.db.execute('INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)',(version,self.context,k(address),reason)).rowcount
+
+    def _queue_data(self, version, address, reason, reopen=False):
+        added=self.db.execute('INSERT OR IGNORE INTO investigations(version,context,address,reason) VALUES (?,?,?,?)',(version,self.context,k(address),reason)).rowcount
+        if reopen and not added:
+            self.db.execute("UPDATE investigations SET state='pending',detail=NULL WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
+        return added
+
+    def _add_xref(self, version, source, target, kind, evidence):
+        return self.db.execute('INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)',(version,self.context,k(source),k(target),kind,evidence)).rowcount
+
+    def _data_one(self, version, address, regions, document):
+        held=self.db.execute("SELECT address,size FROM definitions WHERE version=? AND representation='unexplored'",(version,)).fetchall()
+        if any(int(row[0],16)<=address<int(row[0],16)+row[1] for row in held):
+            self.db.execute("UPDATE investigations SET state='deferred',detail='explicit unexplored representation' WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
+            return
+        region=next((r for r in regions if r.start<=address<r.start+len(r.data)),None)
+        if region is None:
+            self.db.execute("UPDATE investigations SET state='outside',detail='outside mapped bytes' WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
+            return
+        offset=address-region.start
+        next_held=min((int(row[0],16) for row in held if int(row[0],16)>address),default=region.start+len(region.data))
+        data=region.data[offset:offset+min(4096,next_held-address)]
+        defined=self.db.execute('SELECT representation,size FROM definitions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
+        symbol=self.db.execute("SELECT kind FROM symbols WHERE version=? AND address=? AND kind IN ('imports','recovered_import') LIMIT 1",(version,k(address))).fetchone()
+        string=next((s for s in document.get('strings',[]) if s.get('address')==address),None)
+        width=self.bits//8
+        representation='scalar'
+        value=None
+        source='referenced mapped bytes'
+        size=min(width,len(data))
+        if defined:
+            representation,size=defined
+            if size>len(data):
+                raise ValueError('definition exceeds mapped bytes')
+            source='user definition'
+        elif symbol:
+            representation='import_slot'
+        elif string:
+            representation=string['encoding']
+            size=min(string['size'],len(data))
+            try:
+                text=data[:size].decode(representation).split('\0',1)[0]
+                if len(text)<4 or any(not ch.isprintable() for ch in text):
+                    raise ValueError('not a current string')
+                value={'text':text,'truncated':True} if size<string['size'] else text
+                source='snapshot bytes with file string hint'
+            except (UnicodeError,ValueError):
+                representation,size,value='scalar',min(width,len(data)),None
+        else:
+            end=data.find(b'\0')
+            if end>=4 and all(32<=b<127 or b in (9,10,13) for b in data[:end]):
+                representation,size,value='ascii',end+1,data[:end].decode('ascii')
+                source='referenced NUL-terminated bytes'
+        if representation in ('ascii','utf-16le') and value is None:
+            raw=data[:size]
+            try:
+                value=raw.decode('ascii' if representation=='ascii' else 'utf-16le').rstrip('\0')
+            except UnicodeDecodeError as exc:
+                raise ValueError('bytes do not match requested string representation') from exc
+        elif value is None:
+            value=int.from_bytes(data[:size],'little')
+        if representation in ('scalar','pointer') and size==width and width in (4,8):
+            target=int.from_bytes(data[:size],'little')
+            target_region=next((r for r in regions if r.start<=target<r.start+len(r.data)),None)
+            if target and target_region:
+                representation='pointer' if defined else 'pointer_candidate'
+                value={'target':h(target)}
+                if self._add_xref(version,address,target,'pointer','static pointer value; candidate unless corroborated'):
+                    self._queue_data(version,target,'pointer target')
+                # Promote only corroborated indirect control-flow, never an arbitrary pointer.
+                sources=self.db.execute("SELECT DISTINCT i.address,i.flow FROM xrefs x JOIN instructions i ON i.version=x.version AND i.context=x.context AND i.address=x.source JOIN operand_refs o ON o.version=x.version AND o.context=x.context AND o.source=x.source AND o.target=x.target WHERE x.version=? AND x.context=? AND x.target=? AND x.kind='data' AND i.flow IN ('indirect_call','indirect_jump') AND o.role='memory' AND o.width=?",(version,self.context,k(address),self.bits//8)).fetchall()
+                advanced=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{version}',)).fetchone()
+                if sources and target_region.executable and not advanced and self.arch != 'thumb':
+                    for ins in sources:
+                        kind='resolved_call' if ins['flow']=='indirect_call' else 'resolved_branch'
+                        self._add_xref(version,int(ins['address'],16),target,kind,'indirect operand + stored pointer value')
+                        if kind=='resolved_call':
+                            self.db.execute('INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)',(version,self.context,k(target),f'sub_{target:x}','resolved indirect call'))
+                    self._queue_code(version,target,'corroborated indirect pointer')
+        self.db.execute('INSERT INTO data_items VALUES (?,?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,value=excluded.value,source=excluded.source',
+            (version,self.context,k(address),representation,size,json.dumps(value),source))
+        self.db.execute("UPDATE investigations SET state='done',detail=NULL WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
+
+    def analyze(self, version=None, start=None, max_instructions=10000,cs=None,ds=None,es=None,ss=None):
+        if self.meta["format"] in ('MZ', 'COM', 'SYS'):
+            return self._dos_analyze(version,start,max_instructions,cs,ds,es,ss)
+        if self.meta['format']=='PE':
+            from .managed import managed_kind
+            v=self.version(version)['id']
+            row=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+            clr=managed_kind(bytes(row[0])) if row and row[0] is not None else self.meta['loader_metadata'].get('managed',{})
+            if clr.get('recognized') and (clr.get('il_only') or clr.get('status')=='invalid_managed'):
+                raise ValueError('CLR/CIL assembly requires the managed command and a MethodDef token; native analysis is not applied to IL bytes')
+        if any(x is not None for x in (cs,ds,es,ss)):
+            raise ValueError("segment registers apply only to DOS MZ")
+        from .project import integer,number
+        from .processor import NativeProcessor, Location, decode_instruction
+        processor=NativeProcessor(self.arch,self.bits)
+        if self.meta['format'] == 'NE':
+            from .ne_processor import NEProcessor
+            processor = NEProcessor(self.meta['loader_metadata']['ne'])
+        budget=integer(max_instructions,'max_instructions',1,1_000_000)
+        with self.transaction(True):
+            v=self.version(version)['id']
+            self.db.execute('INSERT OR IGNORE INTO analysis_state(version) VALUES (?)',(v,))
+            regions=self.regions(v)
+            doc=self._document(v)
+            if self.arch=='thumb' and doc.get('cortex_m',{}).get('error'):
+                raise ValueError('Invalid Cortex-M vectors in selected version: '+doc['cortex_m']['error'])
+            definitions=[(int(r[0],16),r[1],r[2]) for r in self.db.execute('SELECT address,representation,size FROM definitions WHERE version=? AND context=?',(v,self.context))]
+            def mapped(a):
+                return next((r for r in regions if r.start<=a<r.start+len(r.data)),None)
+            def executable(a):
+                r=mapped(a)
+                return r is not None and (r.executable or any(x<=a<x+s and t=='code' for x,t,s in definitions))
+            def blocked(a,size):
+                explicit_code = any(t=='code' and x<=a<x+s for x,t,s in definitions)
+                return (any(t!='code' and a<x+s and a+size>x for x,t,s in definitions)
+                        or self.arch=='thumb' and not explicit_code and self._thumb_blocked(v,a,size))
+            def fact_count():
+                return sum(self.db.execute(f'SELECT count(*) FROM {table} WHERE version=?',(v,)).fetchone()[0] for table in ('instructions','xrefs','functions','data_items','operand_refs'))
+            if start is not None:
+                a=self._address(start)
+                if self.arch=='thumb' and a & 1:
+                    raise ValueError('Thumb start must be a canonical halfword-aligned code address')
+                if not executable(a):
+                    raise ValueError('analysis start is not in executable mapped bytes')
+                self._queue_code(v,a,'user seed')
+                self.db.execute('INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)',(v,self.context,k(a),f'sub_{a:x}','user seed'))
+            preferred = k(a) if start is not None else None
+            before=fact_count()
+            attempted=decoded=data_processed=passes=0
+            while attempted<budget:
+                work=None
+                if preferred is not None:
+                    work=self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND address=? AND state='pending'",(v,self.context,preferred)).fetchone()
+                    preferred=None
+                if work is None:
+                    work=self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND state='pending' ORDER BY rowid LIMIT 1",(v,self.context)).fetchone()
+                if work:
+                    attempted+=1
+                    a=int(work[0],16)
+                    region=mapped(a)
+                    result=decode_instruction(processor,region.data[a-region.start:a-region.start+16],Location(processor.info.address_space,a)) if region and executable(a) else None
+                    ins=result.facts if result else None
+                    if ins is None or blocked(a,ins['size']):
+                        state='blocked' if ins is not None else 'invalid'
+                        detail = ('data definition or evidenced Thumb literal' if self.arch == 'thumb' else 'user data definition') if state == 'blocked' else getattr(processor, 'last_failure', None) or 'invalid or outside executable mapping'
+                        self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,detail,v,self.context,k(a)))
+                        continue
+                    if self.arch=='thumb':
+                        ins=self._thumb_prepare(v,a,ins,regions)
+                    flow,target=ins['flow'],ins['target']
+                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
+                    detail = 'unresolved indirect control flow' if flow.startswith('indirect') else None
+                    if self.arch=='thumb' and (flow=='return' or flow=='conditional' and target is None):
+                        detail = 'Thumb conditional/return target and exception state remain unresolved'
+                    if ins.get('issue'):
+                        detail = ins['issue'] + ('; '+detail if detail else '')
+                    self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",(detail,v,self.context,k(a)))
+                    decoded+=inserted.rowcount
+                    self._clear_memory_facts(v,self.context,a)
+                    self._memory_facts(v,self.context,a,bytes.fromhex(ins['bytes']))
+                    if target is not None:
+                        kind='call' if flow=='call' else 'branch'
+                        edge = next((edge for edge in result.successors if edge.kind == kind and edge.target is not None), None)
+                        self._add_xref(v,a,target,kind,edge.evidence if edge else 'decoded direct operand')
+                        if executable(target):
+                            self._queue_code(v,target,kind)
+                            if flow=='call':
+                                self.db.execute('INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)',(v,self.context,k(target),f'sub_{target:x}','direct call'))
+                    for reference in ins.get('references',[]):
+                        self.db.execute('INSERT OR IGNORE INTO operand_refs VALUES (?,?,?,?,?,?,?)',(v,self.context,k(a),reference['operand_index'],reference['role'],k(reference['target']),reference.get('width')))
+                    for ref in ins.get('data_refs',[]):
+                        inserted=self._add_xref(v,a,ref,'data','decoded static memory operand')
+                        if mapped(ref):
+                            self._queue_data(v,ref,'decoded memory reference',reopen=bool(inserted))
+                    for immediate in ins.get('immediates',[]):
+                        ref=immediate['value']
+                        if mapped(ref):
+                            inserted=self._add_xref(v,a,ref,'offset_candidate','immediate equals mapped address; heuristic offset')
+                            self.db.execute('INSERT OR IGNORE INTO operand_refs VALUES (?,?,?,?,?,?,?)',(v,self.context,k(a),immediate['operand_index'],'offset_candidate',k(ref),None))
+                            self._queue_data(v,ref,'mapped immediate candidate',reopen=bool(inserted))
+                    following=a+ins['size']
+                    if self.meta['format'] == 'NE':
+                        from .ne import following as ne_following
+                        following = ne_following(a, ins['size'])
+                    if flow in ('next','call','conditional','indirect_call') and executable(following):
+                        self._queue_code(v,following,'fallthrough')
+                        evidence=('permitted call-return fallthrough; return is assumed' if flow in ('call','indirect_call') else 'decoded conditional fallthrough' if flow=='conditional' else 'decoded straight-line fallthrough')
+                        self._add_xref(v,a,following,'fallthrough',evidence)
+                    continue
+                self.db.execute('UPDATE analysis_state SET entry_complete=1 WHERE version=?',(v,))
+                task=self.db.execute("SELECT address FROM investigations WHERE version=? AND context=? AND state='pending' ORDER BY rowid LIMIT 1",(v,self.context)).fetchone()
+                if task:
+                    attempted+=1
+                    data_processed+=1
+                    self._data_one(v,int(task[0],16),regions,doc)
+                    continue
+                state=self.db.execute('SELECT seeds_admitted FROM analysis_state WHERE version=?',(v,)).fetchone()[0]
+                if not state:
+                    # Disconnected symbols/exports are a later recursive seed phase.
+                    roots=self.meta.get('analysis_roots')
+                    if roots is not None:
+                        for a in roots:
+                            self._queue_code(v,a,'requested module root')
+                    else:
+                        for row in self.db.execute('SELECT address FROM functions WHERE version=? AND context=? ORDER BY address',(v,self.context)).fetchall():
+                            self._queue_code(v,int(row[0],16),'deferred symbol or export seed')
+                        for item in doc.get('exports',[]):
+                            a=item.get('address')
+                            if a is not None and item.get('code_seed_eligible',item.get('is_code',True)) and executable(a):
+                                self._queue_code(v,a,'deferred export seed')
+                    self.db.execute('UPDATE analysis_state SET seeds_admitted=1 WHERE version=?',(v,))
+                    passes+=1
+                    continue
+                break
+            pending_code=self.db.execute("SELECT count(*) FROM work WHERE version=? AND state='pending'",(v,)).fetchone()[0]
+            pending_data=self.db.execute("SELECT count(*) FROM investigations WHERE version=? AND state='pending'",(v,)).fetchone()[0]
+            state=self.db.execute('SELECT entry_complete,seeds_admitted FROM analysis_state WHERE version=?',(v,)).fetchone()
+            stable=not pending_code and not pending_data and bool(state[1])
+            # If the last item consumed exactly the budget, metadata-only scheduling
+            # may still be outstanding; it is deliberately not called stable.
+            pending=pending_code+pending_data+(0 if state[1] else 1)
+            return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=fact_count()-before,pending=pending,pending_code=pending_code,pending_data=pending_data,entry_complete=bool(state[0]),pending_seed_phase=not bool(state[1]),passes=passes,stable=stable,budget_exhausted=not stable and attempted>=budget)
+
+    def _reset_analysis(self, version):
+        self._reset_derived(version)
+        if self.meta["format"] in ('MZ', 'COM', 'SYS'):
+            return self._dos_reset(version)
+        for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','memory_refs','analysis_facts_revision'):
+            self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))
+        self.db.execute("DELETE FROM functions WHERE version=? AND source IN ('direct call','resolved indirect call')",(version,))
+        self.db.execute('INSERT INTO analysis_state VALUES (?,0,0) ON CONFLICT(version) DO UPDATE SET entry_complete=0,seeds_admitted=0',(version,))
+        self._fresh_facts(version)
+        if self.arch=='thumb' and not self.meta['loader_metadata'].get('cortex_m'):
+            self._thumb_reset(version)
+        roots=self.meta.get('analysis_roots')
+        if roots is not None:
+            for a in roots:
+                self._queue_code(version,a,'requested module root')
+        elif self.meta['loader_metadata'].get('entrypoint_present',True):
+            if self.arch!='thumb' or not self._thumb_reset(version):
+                self._queue_code(version,self.meta['entry'],'entry')
+        for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation='code'",(version,)).fetchall():
+            self._queue_code(version,int(row[0],16),'user code definition')
+        for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation NOT IN ('code','unexplored')",(version,)).fetchall():
+            self._queue_data(version,int(row[0],16),'user data definition')
+
+    def represent(self, address, representation, size=None, author='agent', version=None, max_instructions=10000,defer=False):
+        from .project import number,integer
+        a=self._address(address)
+        allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.bits//8,'ascii':None,'utf-16le':None,'unexplored':None}
+        if representation not in allowed:
+            raise ValueError('representation must be code, byte, word, dword, qword, pointer, ascii, utf-16le or unexplored')
+        if not isinstance(defer,bool):
+            raise ValueError('defer must be a boolean')
+        if size is None:
+            size=1 if representation=='unexplored' else allowed[representation]
+        size=integer(size,'size',1,4096)
+        if allowed[representation] is not None and representation!='code' and size!=allowed[representation]:
+            raise ValueError('numeric/pointer representation size must match its width')
+        if representation=='utf-16le' and size%2:
+            raise ValueError('UTF-16 size must be even')
+        if not isinstance(author,str) or not author or len(author)>256:
+            raise ValueError('author must contain 1..256 characters')
+        with self.transaction(True):
+            v=self.version(version)['id']
+            r=self._mapping(v,a)
+            if not r or a+size>r.start+len(r.data):
+                raise ValueError('definition must fit in one mapped region')
+            if representation in ('ascii','utf-16le'):
+                r.data[a-r.start:a-r.start+size].decode('ascii' if representation=='ascii' else 'utf-16le')
+            overlap=self.db.execute('SELECT address,size,representation FROM definitions WHERE version=? AND context=? AND address!=?',(v,self.context,k(a))).fetchall()
+            if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16)
+                   and (representation!='code' or row[2]!='code') for row in overlap):
+                raise ValueError('definition overlaps another explicit definition')
+            self.db.execute('INSERT INTO definitions VALUES (?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,author=excluded.author',(v,self.context,k(a),representation,size,author))
+            invalidation=self._incremental_representation(v,a,size)
+            if invalidation is None:
+                self._reset_analysis(v)
+                invalidation={'mode':'full_reset','reason':'complete dependency index not yet available'}
+            analysis=None if defer else self.analyze(version=v,max_instructions=max_instructions)
+            return dict(version=v,address=h(a),representation=representation,size=size,analysis=analysis,invalidation=invalidation)
+
+    def items(self, version=None, limit=200, offset=0):
+        from .project import integer
+        limit,offset=integer(limit,'limit',1,10000),integer(offset,'offset',0,(1<<63)-1)
+        with self.transaction():
+            v=self.version(version)['id']
+            rows=self.db.execute('SELECT * FROM data_items WHERE version=? ORDER BY address LIMIT ? OFFSET ?',(v,limit,offset)).fetchall()
+            result=[]
+            for r in rows:
+                value=json.loads(r['value'])
+                if isinstance(value,dict) and 'target' in value:
+                    target=int(value['target'],0)
+                    value={**value,'target_name':self._label(v,target)}
+                result.append(dict(address=h(int(r['address'],16)),**self._presentation(v,int(r['address'],16)),value=value,source=r['source']))
+            return result
+
+    def queue(self, version=None, limit=200, offset=0):
+        from .project import integer
+        limit,offset=integer(limit,'limit',1,10000),integer(offset,'offset',0,(1<<63)-1)
+        v=self.version(version)['id']
+        rows=self.db.execute("SELECT 'decode' AS kind,address,reason,state,detail FROM work WHERE version=? UNION ALL SELECT 'investigate_data',address,reason,state,detail FROM investigations WHERE version=? ORDER BY kind,address LIMIT ? OFFSET ?",(v,v,limit,offset))
+        return [dict(kind=r['kind'],address=h(int(r['address'],16)),reason=r['reason'],state=r['state'],detail=r['detail'],**self._presentation(v,int(r['address'],16))) for r in rows]
+
+    def recover_imports(self, module_exports=None, export_map=None, candidate_slots=None, version=None, max_slots=4096, gap_limit=10):
+        from .chimprec import recover_iat
+        from .project import number
+        if export_map is not None:
+            if module_exports is not None:
+                raise ValueError('use module_exports or export_map, not both')
+            p=Path(export_map)
+            if p.stat().st_size>16*1024*1024:
+                raise ValueError('export map exceeds 16 MiB')
+            module_exports=json.loads(p.read_text())
+        if not isinstance(module_exports,list):
+            raise ValueError('module_exports must be an export-address list')
+        normalized=[{**entry,'address':number(entry['address'])} for entry in module_exports]
+        slots=[number(a) for a in candidate_slots] if candidate_slots is not None else None
+        with self.transaction(True):
+            v=self.version(version)['id']
+            analysis=None
+            if slots is None:
+                analysis=self.analyze(version=v)
+                slots=[int(row[0],16) for row in self.db.execute("SELECT DISTINCT target FROM operand_refs WHERE version=? AND context=? AND role='memory' AND width=?",(v,self.context,self.bits//8))]
+            result=recover_iat(self.regions(v),self.bits,normalized,slots,max_slots,gap_limit)
+            if analysis is not None:
+                result['analysis']=analysis
+                result['source']['candidate_selection']='recursive decoded memory operands'
+                if not analysis['stable']:
+                    result['warnings'].append('Recursive analysis is budget-limited; IAT candidate discovery is partial. Resume analysis and repeat recovery.')
+            self.db.execute("DELETE FROM symbols WHERE version=? AND kind='recovered_import'",(v,))
+            for item in result['entries']:
+                if item.get('resolved'):
+                    alternatives=item['alternatives']
+                    modules={alt['module'] for alt in alternatives}
+                    # A combined label preserves alias uncertainty; never arbitrarily pick one.
+                    label='|'.join(sorted({alt.get('name') or f"ordinal_{alt.get('ordinal')}" for alt in alternatives}))
+                    module=next(iter(modules)) if len(modules)==1 else '{'+ '|'.join(sorted(modules))+'}'
+                    self.db.execute('INSERT OR IGNORE INTO symbols VALUES (?,?,?,?,?,?)',(v,k(item['address']),'recovered_import',label,module,json.dumps(item)))
+            self.db.execute('INSERT INTO recoveries VALUES (?,?) ON CONFLICT(version) DO UPDATE SET document=excluded.document',(v,json.dumps(result)))
+            return result
