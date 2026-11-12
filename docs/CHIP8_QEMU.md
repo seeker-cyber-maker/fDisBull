@@ -187,10 +187,10 @@ that store available when reopening the FDB.
 
 ## Complete classic profile and checkpointed RNG
 
-This extension is currently an uncompiled source candidate. The required local
-memory guard refused its native build; native opcode execution and schema3 RNG
-restore acceptance remain pending. The retained CPU-only and device binaries
-are unchanged. The following is the intended contract implemented in source.
+This extension has a locally built macOS arm64 runtime with executed classic
+instruction and RNG checkpoint witnesses. The retained CPU-only and device
+binaries remain unchanged. Linux/other-host and arbitrary-ROM compatibility
+remain unqualified.
 
 The classic extension implements all 34 non-legacy instruction families admitted
 by this profile. It adds the four remaining families to the CPU/device runtime:

@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
   "feature": "Classic CHIP-8 Bnnn/Cxkk/Fx1e/Fx33 opcodes and deterministic LCG random source, incremental over device-aware v2",
-  "implementation_status": "source complete; build refused by required memory-run admission; unbuilt",
+  "implementation_status": "built and locally native-tested classic profile/RNG; broader compatibility and conversion qualification remains open",
   "base": {
     "qemu_version": "10.0.13",
     "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
@@ -80,39 +80,67 @@
     "configure_cwd": "R/native-runtime/chip8-classic-runtime/build-classic",
     "configure_command": "../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-classic>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
     "build_cwd": "R/native-runtime/chip8-classic-runtime",
-    "build_command": "/Users/tiga/.local/bin/memory-run --kind cpu --peak-bytes 4000000000 -- /Users/tiga/miniconda/bin/ninja -C build-classic -j4 qemu-system-chip8",
-    "tmpdir_environment": "TMPDIR=<normalized_tmpdir> (set before memory-run)",
+    "build_command": "/Users/tiga/miniconda/bin/ninja -C build-classic -j4 qemu-system-chip8",
+    "tmpdir_environment": "TMPDIR=<normalized_tmpdir> (set for configure and direct Ninja build)",
     "candidate_binary": "R/native-runtime/chip8-classic-runtime/build-classic/qemu-system-chip8",
     "memory_guard_refusal_receipt": "R/chip8-classic-memory-run-refusal.json",
-    "memory_guard_status": "denied; ticket_granted=false; Ninja did not start",
-    "candidate_binary_sha256": null,
-    "candidate_binary_size": null
+    "memory_guard_status": "initial attempt denied; user later explicitly overrode guard; direct build completed",
+    "candidate_binary_sha256": "c1dca2817894b3d45e0ea3262f3b907167c854f28e4c35df25e283a24262a987",
+    "candidate_binary_size": 6220664,
+    "override_receipt": "R/chip8-classic-build-override-receipt.json",
+    "authorization": "Explicit user override for this build; original memory-run refusal preserved"
   },
   "qualification": {
-    "status": "unbuilt and unqualified; native tests were not run for this increment",
+    "status": "bounded local macOS arm64 native classic/RNG acceptance passed",
     "source_static_review": true,
     "ci": false,
     "cross_architecture_build": false,
     "cross_binary_restore_qualified": false,
-    "native_cases": null,
-    "native_passed": null,
-    "native_failures": null,
-    "native_errors": null,
-    "native_skipped": null,
-    "host_verification": {
-      "tests": 138,
+    "native_selection": {
+      "total_cases": 31,
+      "native_cases": 30,
+      "host_map_cases": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml": "R/chip8-classic-native-01.xml"
+    },
+    "representative_classic_families_executed": 34,
+    "retained_compatibility": {
+      "cases": 19,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
       "deselected": 1,
-      "scope": "host-only; native DOSBox storage acceptance explicitly excluded",
-      "python_files": 1197,
-      "source_unchanged": true,
-      "xml": "R/chip8-classic-host-final-01.xml"
+      "exclusion": "obsolete v1 CPU-only CLS refusal on v3",
+      "xml": "R/chip8-classic-compat-01.xml"
     },
-    "prepared_native_cases": 29,
-    "prepared_native_cases_are_passes": false,
-    "parent_source_receipt": "R/chip8-classic-parent-source-receipt.json"
+    "integrated_preservation": {
+      "cases": 2731,
+      "files": 166,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "exclusion": "existing private DinoPark identification input unavailable",
+      "python_source_test_files": 1197,
+      "source_unchanged": true,
+      "xml": "R/chip8-classic-preservation-final-01.xml"
+    },
+    "host_verification": {
+      "cases": 138,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "exclusion": "native DOSBox storage case excluded from host-only selection, included in integrated acceptance",
+      "xml": "R/chip8-classic-host-final-02.xml"
+    },
+    "retained_dosbox_cases": 323,
+    "retained_v2_artifact_restore_cases": 2,
+    "external_schema3_artifacts_verified": 4,
+    "external_seed_events_verified": 18,
+    "receipt": "R/chip8-classic-native-final-receipt.json"
   },
   "applied_verification": {
     "status": "passed",

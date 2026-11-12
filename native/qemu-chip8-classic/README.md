@@ -39,21 +39,28 @@ of `UINT64_MAX`; manual ticks also refuse a count that would overflow their
 counter before applying any timer decrement.
 
 The CHIP-8 CPU VMState changes to version 3 with minimum version 3 and stores
-the RNG seed, current state, and draw count. Only same-binary restore is
-intended; cross-binary VMState compatibility is not claimed.
+the RNG seed, current state, and draw count. Same-binary cold/FDB-reopen restore is locally verified; cross-binary VMState
+compatibility is not claimed.
 
 ## Build and verification status
 
-The source diff and incremental patch are prepared, and the isolated patch
-replay validates the six changed-file hashes against the source candidate.
-The source is **unbuilt**. Configure succeeded in the isolated
-`R/native-runtime/chip8-classic-runtime/build-classic` tree, but the required
-`memory-run --kind cpu --peak-bytes 4000000000` gate refused the Ninja command
-before the build started. The sanitized refusal record is referenced in
-`source-manifest.json`; no binary hash, build pass, or native test pass is
-claimed for this increment.
+The six-file incremental patch replays against the sealed v2 source hashes, and
+lightweight QAPI generation passed. The isolated `build-classic` target was
+built after the user explicitly overrode the prior `memory-run` refusal. The
+original refusal remains recorded at `R/chip8-classic-memory-run-refusal.json`;
+the authorized direct build and binary identity are recorded at
+`R/chip8-classic-build-override-receipt.json`.
 
-The manifest records the exact external `TMPDIR`, configure/build working
-directories, refused command, refusal reason, parent patch hash, and source
-hashes. Once resource admission changes, the required memory-run gate must be
-re-evaluated before building; this package does not authorize bypassing it.
+Native binary SHA-256: `c1dca2817894b3d45e0ea3262f3b907167c854f28e4c35df25e283a24262a987` (6,220,664 bytes). The frozen binary passed 30 native cases and one host family-map check, plus 19 retained CPU/device cases on v3. The executed representatives cover all 34 non-legacy classic families; this is not exhaustive dialect or arbitrary-ROM qualification.
+
+Integrated preservation passed 2,731 tests across 166 files with all 1,197
+Python source/test hashes unchanged. Separate overlapping selections passed
+323 DOSBox-X history/undo cases and 138 host/package cases. Accepted selections
+have zero failures/errors/skips. One private identification input is explicitly
+deselected in the integrated run; the obsolete v1-only CLS refusal is excluded
+when replaying old CPU cases on v3. Two already-created v2 artifacts restored
+under the upgraded host with the original runtime and original evidence intact.
+
+The private consolidated receipt is `R/chip8-classic-native-final-receipt.json`.
+The package does not claim CI, Linux/other-host build, cross-binary VMState
+compatibility, audio output, historical timing or arbitrary ROM compatibility.

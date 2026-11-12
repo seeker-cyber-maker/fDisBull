@@ -4742,3 +4742,59 @@ The private memory refusal is chip8-classic-memory-run-refusal.json. The new
 source/host progress receipt is chip8-classic-source-receipt.json; its status
 remains native-build-and-acceptance-pending. The retained v2 acceptance receipt
 chip8-devices-final-receipt.json is separate prior evidence.
+
+
+## Classic CHIP-8 native acceptance resumed (2026-11-12)
+
+The user explicitly directed this slice to disregard the memory guard. The
+original refusal remains preserved; only the current build/test work used the
+override. No global guard state/policy or unrelated process was changed. Fresh
+storage admission passed for the bounded external build and test outputs.
+The direct external-TMPDIR build completed and froze qemu-system-chip8 SHA-256
+c1dca2817894b3d45e0ea3262f3b907167c854f28e4c35df25e283a24262a987
+at 6,220,664 bytes. The six-file source patch remains unchanged at
+cb80c64be2ea206177fb9d5f787dad9f640a15de6dc2b4a34f2e768923713124.
+
+The new selection passes **31 cases: 30 actual native cases plus one host
+family-map check**. These cover Bnnn high/odd destinations, 16-bit I/VF aliasing,
+six BCD values and atomic boundary refusal, fixed RNG vectors/masked zero draws,
+nonzero VF preservation, repeated/different seeds, cold/FDB-reopen future-stream
+replay, stale/invalid native seed rejection with complete CPU/RAM/device
+readback, and the public JSON seed route without hidden execution. A further
+**19 retained CPU/device cases pass on the new classic binary**, excluding
+only the obsolete CPU-only CLS refusal because CLS is implemented. Together
+the explicit executed witnesses cover all 34 non-legacy classic families;
+this is representative family coverage, not exhaustive dialect/ROM qualification.
+
+Two already-created schema2 artifacts also restore with the upgraded host and
+unchanged original v2 binary: one retains held keys/key wait, and the other
+retains nonzero virtual time, tick count, phase and deadline. Fresh-process
+readback matched all CPU registers, RAM hash, fault and saved environment except
+its documented ephemeral wait-stop ownership. Original FDB/WAL/SHM/ROM hashes
+were unchanged and verified object closures were copied privately. Evidence is
+chip8-v2-upgraded-host-01/receipt.json. V1/v2 packages/sources/binaries remain
+retained separately; cross-binary snapshot restore is still refused.
+
+The integrated 166-file preservation run follows against frozen Python source.
+DOSBox-X remains the default/fallback. No CI, release/tag, merge or shared
+installation/default change is included.
+
+
+Final integrated acceptance passes **2,731 tests across 166 files**, with zero
+failures/errors/skips and one explicit unavailable private DinoPark fixture
+deselection. All **1,197 Python source/test hashes** match before/after the run.
+Separate overlapping selections pass 31 new cases (30 native plus one host
+map), 19 retained CPU/device cases on v3, 323 DOSBox-X history/undo cases and
+138 host/package cases. Direct external-object readback verified four schema3
+checkpoint artifacts and eighteen seed events without changing database bytes.
+
+Evidence is chip8-classic-preservation-final-01, chip8-classic-native-01,
+chip8-classic-compat-01, chip8-classic-dosbox-final-01,
+chip8-classic-host-final-02, chip8-classic-external-state-receipt.json and
+chip8-v2-upgraded-host-01/receipt.json. The consolidated private receipt is
+chip8-classic-native-final-receipt.json. The original source-only receipt,
+refusal and explicit override/build receipts remain separately preserved.
+V1/v2 packages/sources/binaries, N19-N24, component-04 and shared selector retain
+their identities. All 141 DOS surfaces and seven campaigns remain open; the
+bounded classic/RNG acceptance does not authorize DOSBox default promotion or
+removal, a release/tag, a merge or a shared installation change. No CI.
