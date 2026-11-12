@@ -167,9 +167,9 @@ class RcloneTransport:
         if not files:
             return {'verified': True, 'files': 0}
         destination = self.remote + remote_path
-        self.command('copy', str(source_dir), destination, '--checksum',
+        self.command('copy', str(source_dir), destination, '--checksum', '--fast-list',
                      '--backup-dir', self.remote + 'history/' + backup_suffix + '/' + remote_path,
-                     '--transfers', '2', '--checkers', '4', '--retries', '1', '--low-level-retries', '2')
+                     '--transfers', '8', '--checkers', '8', '--tpslimit', '8', '--retries', '3', '--low-level-retries', '5')
         # Google Drive ordinary files expose MD5. Never treat a size-only check
         # as verification. Only this exact submitted set must match.
         expected={}
@@ -184,7 +184,7 @@ class RcloneTransport:
 
     def verify_files(self,remote_path,expected):
         if not expected:return {'verified':True,'files':0}
-        response = json.loads(self.command('lsjson', self.remote+remote_path, '--recursive', '--files-only',
+        response = json.loads(self.command('lsjson', self.remote+remote_path, '--recursive', '--files-only', '--fast-list',
                                           '--hash', '--hash-type', 'MD5'))
         actual = {}
         for row in response:
@@ -291,6 +291,136 @@ def plan(config):
                 external_links='metadata only; linked sources are not silently followed')
 
 
+def _sync_library_phase(config, db, directory, run, result, transport):
+    entries = scan_library(config['library'])
+    library = directory / 'library'
+    objects = directory / 'library-objects'
+    pending = []
+    for relative, entry in entries.items():
+        signature = _signature(entry)
+        previous = db.execute('SELECT signature FROM files WHERE path=?', (relative,)).fetchone()
+        if previous and previous[0] == signature:
+            continue
+        if entry['kind'] == 'symlink':
+            receipt = dict(kind='symlink', target=entry['target'], bytes_uploaded=False)
+        else:
+            captured = library / relative
+            receipt = stable_copy(entry['path'], captured)
+            objects.mkdir(exist_ok=True)
+            object_path = objects / receipt['sha256']
+            if not object_path.exists():
+                os.link(captured, object_path)
+            receipt['remote_path'] = 'library/objects/' + receipt['sha256']
+        pending.append((relative, signature, receipt))
+    result['phase']='uploading_library'
+    result['staged_files']=len(pending)
+    _atomic_json(Path(config['state_dir'])/'status.json',result)
+    transferred = transport.put_tree(objects, 'library/objects', run)
+    if transferred.get('verified') is not True:
+        raise ValueError('Transport did not certify the submitted library set')
+    result['uploaded_files'] += transferred.get('files', 0)
+    # Namespace manifests retain deletion/link observations. They do not
+    # remove any remote payload and appear only after that set verifies.
+    content={row[0]:json.loads(row[1]) for row in db.execute('SELECT path,receipt FROM files')}
+    content.update({row[0]:row[2] for row in pending})
+    groups = {}
+    for path, entry in entries.items():
+        if entry['kind'] != 'file':
+            continue
+        # Old completed installations may reference the original latest path.
+        # It is read-only under this layout; new payloads always use SHA-256.
+        proof = content[path]
+        remote_path = proof.get('remote_path', 'library/files/' + path)
+        if remote_path == 'library/objects/' + proof['sha256']:
+            prefix, relative = 'library/objects', proof['sha256']
+        elif remote_path == 'library/files/' + path:
+            prefix, relative = 'library/files', path
+        else:
+            raise ValueError('Cached library payload identity is invalid')
+        proof['remote_path'] = remote_path
+        groups.setdefault(prefix, {})[relative] = proof
+    for prefix, expected in groups.items():
+        if transport.verify_files(prefix, expected).get('verified') is not True:
+            raise ValueError('Current library remote verification failed')
+    if scan_library(config['library'])!=entries:
+        raise ValueError('Library changed during transfer; namespace was not published')
+    summary = {path:dict(**{k:v for k,v in entry.items() if k!='path'},content=content[path])
+               for path,entry in entries.items()}
+    namespace_hash=hashlib.sha256(_json(summary).encode()).hexdigest()
+    prior_namespace=db.execute('SELECT value FROM metadata WHERE name=?',('namespace',)).fetchone()
+    if pending or not prior_namespace or prior_namespace[0]!=namespace_hash:
+        metadata = directory / 'library-manifest'
+        _write_new(metadata/'manifest.json', _json(dict(format=FORMAT, run=run, entries=summary,
+                  source_root=str(_root(config['library']['root'])),
+                  source_identity=_identity(_root(config['library']['root'])),
+                  external_links='recorded only', payload_layout='sha256-objects-v1', complete_transfer_set=True)).encode())
+        complete = transport.put_tree(metadata, 'library/manifests/'+run, run)
+        if complete.get('verified') is not True:
+            raise ValueError('Library manifest remote verification failed')
+        db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('library_manifest',
+                   _json({'remote_path':'library/manifests/'+run,'expected':_proofs(metadata)})))
+    else:
+        prior=db.execute('SELECT value FROM metadata WHERE name=?',('library_manifest',)).fetchone()
+        if not prior:raise ValueError('Library completion manifest reference is missing')
+        prior=json.loads(prior[0])
+        if transport.verify_files(prior['remote_path'],prior['expected']).get('verified') is not True:
+            raise ValueError('Stored library manifest remote verification failed')
+    for relative, signature, receipt in pending:
+        db.execute('INSERT OR REPLACE INTO files VALUES (?,?,?)', (relative, signature, _json(receipt)))
+    db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('namespace',namespace_hash))
+    db.commit()
+
+
+def _sync_fdb_phase(config, db, directory, run, result, transport):
+    for source, roots in _fdb_inputs(config['fdb_repository']):
+        try:
+            result['phase']='capturing_and_uploading_fdb'
+            _atomic_json(Path(config['state_dir'])/'status.json',result)
+            signature = _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots))
+            previous = db.execute('SELECT signature,generation FROM projects WHERE path=?',(source,)).fetchone()
+            if previous and previous[0] == signature:
+                prior=db.execute('SELECT value FROM metadata WHERE name=?',('project:'+source,)).fetchone()
+                if not prior:raise ValueError('FDB remote manifest reference is missing')
+                proof=json.loads(prior[0])
+                if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
+                    raise ValueError('Existing FDB generation remote verification failed')
+                continue
+            identifier = hashlib.sha256(str(Path(source).absolute()).encode()).hexdigest()[:20]
+            output = directory / ('fdb-'+identifier)
+            manifest = capture_fdb(source, roots, output, config.get('snapshot_timeout_seconds',120))
+            # Keep every complete project version independently
+            # restorable, including its exact private object subset.
+            generation = run
+            payload=directory/('fdb-payload-'+identifier)
+            commit=directory/('fdb-commit-'+identifier)
+            payload.mkdir();commit.mkdir()
+            for selected in output.rglob('*'):
+                if selected.is_file():
+                    relative=selected.relative_to(output)
+                    destination=(commit if relative.as_posix()=='manifest.json' else payload)/relative
+                    destination.parent.mkdir(parents=True,exist_ok=True)
+                    os.link(selected,destination)
+            remote_generation='fdb/projects/'+identifier+'/'+generation
+            uploaded = transport.put_tree(payload, remote_generation, run)
+            if uploaded.get('verified') is not True:
+                raise ValueError('FDB generation transfer was not verified')
+            committed=transport.put_tree(commit,remote_generation,run)
+            if committed.get('verified') is not True:
+                raise ValueError('FDB completion manifest transfer was not verified')
+            # If commits occurred during the backup, the current source
+            # signature is deliberately not marked as captured.
+            if _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots)) == signature:
+                db.execute('INSERT OR REPLACE INTO projects VALUES (?,?,?)',(source,signature,generation))
+                db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('project:'+source,
+                           _json({'remote_path':remote_generation,'expected':_proofs(output)})))
+                db.commit()
+            result['uploaded_files'] += uploaded.get('files',0)
+            result['projects'].append(dict(path=source, id=identifier, generation=generation,
+                                           manifest=manifest, verified=True))
+        except Exception as error:
+            result['errors'].append(dict(source=source, type=type(error).__name__, message=str(error)))
+
+
 def run_once(config, transport=None):
     if config.get('format') != FORMAT:
         raise ValueError('Unsupported sync configuration')
@@ -301,8 +431,9 @@ def run_once(config, transport=None):
         run = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S') + '-' + uuid.uuid4().hex[:8]
         directory = state / 'runs' / run
         directory.mkdir(parents=True, mode=0o700)
-        result = dict(format=FORMAT, run=run, status='incomplete', uploaded_files=0,
+        result = dict(format=FORMAT, run=run, status='running', phase='preflight', pid=os.getpid(), uploaded_files=0,
                       projects=[], errors=[], deletions_propagated=False)
+        _atomic_json(state/'status.json',result)
         transport = transport or RcloneTransport(config['transport'])
         db = _state(state / 'state.sqlite')
         try:
@@ -316,103 +447,21 @@ def run_once(config, transport=None):
             if previous_binding and previous_binding[0]!=binding:
                 raise ValueError('Sync source/destination changed; use a new state directory')
             db.execute('INSERT OR IGNORE INTO metadata VALUES (?,?)',('binding',binding));db.commit()
-            entries = scan_library(config['library'])
-            library = directory / 'library'
-            pending = []
-            for relative, entry in entries.items():
-                signature = _signature(entry)
-                previous = db.execute('SELECT signature FROM files WHERE path=?', (relative,)).fetchone()
-                if previous and previous[0] == signature:
-                    continue
-                if entry['kind'] == 'symlink':
-                    receipt = dict(kind='symlink', target=entry['target'], bytes_uploaded=False)
-                else:
-                    receipt = stable_copy(entry['path'], library / relative)
-                pending.append((relative, signature, receipt))
-            transferred = transport.put_tree(library, 'library/files', run)
-            if transferred.get('verified') is not True:
-                raise ValueError('Transport did not certify the submitted library set')
-            result['uploaded_files'] += transferred.get('files', 0)
-            # Namespace manifests retain deletion/link observations. They do not
-            # remove any remote payload and appear only after that set verifies.
-            content={row[0]:json.loads(row[1]) for row in db.execute('SELECT path,receipt FROM files')}
-            content.update({row[0]:row[2] for row in pending})
-            if transport.verify_files('library/files',{path:content[path] for path,entry in entries.items()
-                     if entry['kind']=='file'}).get('verified') is not True:
-                raise ValueError('Current library remote verification failed')
-            if scan_library(config['library'])!=entries:
-                raise ValueError('Library changed during transfer; namespace was not published')
-            summary = {path:dict(**{k:v for k,v in entry.items() if k!='path'},content=content[path])
-                       for path,entry in entries.items()}
-            namespace_hash=hashlib.sha256(_json(summary).encode()).hexdigest()
-            prior_namespace=db.execute('SELECT value FROM metadata WHERE name=?',('namespace',)).fetchone()
-            if pending or not prior_namespace or prior_namespace[0]!=namespace_hash:
-                metadata = directory / 'library-manifest'
-                _write_new(metadata/'manifest.json', _json(dict(format=FORMAT, run=run, entries=summary,
-                          external_links='recorded only', complete_transfer_set=True)).encode())
-                complete = transport.put_tree(metadata, 'library/manifests/'+run, run)
-                if complete.get('verified') is not True:
-                    raise ValueError('Library manifest remote verification failed')
-                db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('library_manifest',
-                           _json({'remote_path':'library/manifests/'+run,'expected':_proofs(metadata)})))
-            else:
-                prior=db.execute('SELECT value FROM metadata WHERE name=?',('library_manifest',)).fetchone()
-                if not prior:raise ValueError('Library completion manifest reference is missing')
-                prior=json.loads(prior[0])
-                if transport.verify_files(prior['remote_path'],prior['expected']).get('verified') is not True:
-                    raise ValueError('Stored library manifest remote verification failed')
-            for relative, signature, receipt in pending:
-                db.execute('INSERT OR REPLACE INTO files VALUES (?,?,?)', (relative, signature, _json(receipt)))
-            db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('namespace',namespace_hash))
-            db.commit()
-            for source, roots in _fdb_inputs(config['fdb_repository']):
+            # FDBs are independent inputs and run before the potentially large
+            # intake copy. A failure in either phase cannot skip the other.
+            for phase, operation in (('fdb', _sync_fdb_phase), ('library', _sync_library_phase)):
+                result['phase'] = phase
+                _atomic_json(state/'status.json', result)
                 try:
-                    signature = _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots))
-                    previous = db.execute('SELECT signature,generation FROM projects WHERE path=?',(source,)).fetchone()
-                    if previous and previous[0] == signature:
-                        prior=db.execute('SELECT value FROM metadata WHERE name=?',('project:'+source,)).fetchone()
-                        if not prior:raise ValueError('FDB remote manifest reference is missing')
-                        proof=json.loads(prior[0])
-                        if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
-                            raise ValueError('Existing FDB generation remote verification failed')
-                        continue
-                    identifier = hashlib.sha256(str(Path(source).absolute()).encode()).hexdigest()[:20]
-                    output = directory / ('fdb-'+identifier)
-                    manifest = capture_fdb(source, roots, output, config.get('snapshot_timeout_seconds',120))
-                    # Keep every complete project version independently
-                    # restorable, including its exact private object subset.
-                    generation = run
-                    payload=directory/('fdb-payload-'+identifier)
-                    commit=directory/('fdb-commit-'+identifier)
-                    payload.mkdir();commit.mkdir()
-                    for selected in output.rglob('*'):
-                        if selected.is_file():
-                            relative=selected.relative_to(output)
-                            destination=(commit if relative.as_posix()=='manifest.json' else payload)/relative
-                            destination.parent.mkdir(parents=True,exist_ok=True)
-                            os.link(selected,destination)
-                    remote_generation='fdb/projects/'+identifier+'/'+generation
-                    uploaded = transport.put_tree(payload, remote_generation, run)
-                    if uploaded.get('verified') is not True:
-                        raise ValueError('FDB generation transfer was not verified')
-                    committed=transport.put_tree(commit,remote_generation,run)
-                    if committed.get('verified') is not True:
-                        raise ValueError('FDB completion manifest transfer was not verified')
-                    # If commits occurred during the backup, the current source
-                    # signature is deliberately not marked as captured.
-                    if _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots)) == signature:
-                        db.execute('INSERT OR REPLACE INTO projects VALUES (?,?,?)',(source,signature,generation))
-                        db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('project:'+source,
-                                   _json({'remote_path':remote_generation,'expected':_proofs(output)})))
-                        db.commit()
-                    result['uploaded_files'] += uploaded.get('files',0)
-                    result['projects'].append(dict(path=source, id=identifier, generation=generation,
-                                                   manifest=manifest, verified=True))
+                    operation(config, db, directory, run, result, transport)
                 except Exception as error:
-                    result['errors'].append(dict(source=source, type=type(error).__name__, message=str(error)))
+                    db.rollback()
+                    result['errors'].append(dict(phase=phase, type=type(error).__name__, message=str(error)))
             result['status'] = 'complete' if not result['errors'] else 'partial'
+            result['phase']='finished'
             return result
         except Exception as error:
+            result['status']='failed'
             result['errors'].append(dict(type=type(error).__name__, message=str(error)))
             raise
         finally:

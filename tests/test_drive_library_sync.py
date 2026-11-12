@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -158,6 +159,15 @@ def _make_fdb_root(root):
     (root / "objects").mkdir()
 
 
+def _sha_payload(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _latest_library_manifest(transport, run):
+    path = f"library/manifests/{run}"
+    return json.loads(transport.remote[path]["manifest.json"])
+
+
 def test_run_once_uploads_initial_and_changed_files_but_never_deletes_remote(tmp_path):
     root = tmp_path / "library"
     (root / "targets/game").mkdir(parents=True)
@@ -175,26 +185,39 @@ def test_run_once_uploads_initial_and_changed_files_but_never_deletes_remote(tmp
     first = sync.run_once(config, transport=transport)
     assert first["status"] == "complete"
     assert first["deletions_propagated"] is False
-    assert transport.remote["library/files"]["targets/game/KEEP.COM"] == b"original"
-    assert "targets/game/linked.bin" not in transport.remote["library/files"]
+    assert transport.remote["library/objects"][_sha_payload(b"original")] == b"original"
+    assert _sha_payload(b"never upload linked payload") not in transport.remote["library/objects"]
+    first_manifest = _latest_library_manifest(transport, first["run"])
+    assert first_manifest["entries"]["targets/game/KEEP.COM"]["content"]["remote_path"] == (
+        "library/objects/" + _sha_payload(b"original")
+    )
     initial_call_count = len(transport.calls)
 
     unchanged = sync.run_once(config, transport=transport)
     assert unchanged["status"] == "complete"
-    assert len(transport.remote["library/files"]) == 2
-    assert len(transport.calls) == initial_call_count + 1  # empty delta check; no manifest rewrite
+    assert len(transport.remote["library/objects"]) == 2
+    unchanged_calls = transport.calls[initial_call_count:]
+    assert all(not call[2] for call in unchanged_calls)
+    assert not any(call[0].startswith("library/manifests/") for call in unchanged_calls)
+    before_changed_call_count = len(transport.calls)
 
     (root / "targets/game/CHANGE.COM").write_bytes(b"after")
     (root / "targets/game/KEEP.COM").unlink()
     changed = sync.run_once(config, transport=transport)
     assert changed["status"] == "complete"
-    assert transport.remote["library/files"]["targets/game/CHANGE.COM"] == b"after"
-    assert transport.remote["library/files"]["targets/game/KEEP.COM"] == b"original"
+    assert transport.remote["library/objects"][_sha_payload(b"after")] == b"after"
+    assert transport.remote["library/objects"][_sha_payload(b"before")] == b"before"
+    assert transport.remote["library/objects"][_sha_payload(b"original")] == b"original"
     assert changed["deletions_propagated"] is False
-    changed_uploads = [call for call in transport.calls[initial_call_count + 1:]
-                       if call[0] == "library/files"]
+    changed_uploads = [call for call in transport.calls[before_changed_call_count:]
+                       if call[0] == "library/objects"]
     assert len(changed_uploads) == 1
-    assert set(changed_uploads[0][2]) == {"targets/game/CHANGE.COM"}
+    assert set(changed_uploads[0][2]) == {_sha_payload(b"after")}
+    latest = _latest_library_manifest(transport, changed["run"])
+    assert "targets/game/KEEP.COM" not in latest["entries"]
+    assert latest["entries"]["targets/game/CHANGE.COM"]["content"]["remote_path"] == (
+        "library/objects/" + _sha_payload(b"after")
+    )
 
 
 def test_unavailable_library_root_never_causes_remote_deletion_or_sync_advance(tmp_path):
@@ -206,14 +229,14 @@ def test_unavailable_library_root_never_causes_remote_deletion_or_sync_advance(t
     transport = FakeTransport()
     config = _config(tmp_path, root, fdb_root)
     sync.run_once(config, transport=transport)
-    retained = dict(transport.remote["library/files"])
+    retained = dict(transport.remote["library/objects"])
     calls_before = len(transport.calls)
 
     config["library"]["root"] = str(tmp_path / "unmounted-library")
     with pytest.raises(ValueError, match="unavailable|changed"):
         sync.run_once(config, transport=transport)
 
-    assert transport.remote["library/files"] == retained
+    assert transport.remote["library/objects"] == retained
     assert len(transport.calls) == calls_before
 
 
@@ -227,15 +250,15 @@ def test_failed_transfer_does_not_mark_source_as_synced(tmp_path):
     transport.fail_next = True
     config = _config(tmp_path, root, fdb_root)
 
-    with pytest.raises(ValueError, match="did not certify"):
-        sync.run_once(config, transport=transport)
-    assert "library/files" not in transport.remote
+    failed = sync.run_once(config, transport=transport)
+    assert failed["status"] == "partial"
+    assert "library/objects" not in transport.remote
 
     result = sync.run_once(config, transport=transport)
     assert result["status"] == "complete"
-    assert transport.remote["library/files"]["targets/new.com"] == b"new bytes"
-    assert [call for call in transport.calls if call[0] == "library/files"][-1][2] == {
-        "targets/new.com": b"new bytes"
+    assert transport.remote["library/objects"][_sha_payload(b"new bytes")] == b"new bytes"
+    assert [call for call in transport.calls if call[0] == "library/objects"][-1][2] == {
+        _sha_payload(b"new bytes"): b"new bytes"
     }
 
 
@@ -285,8 +308,9 @@ def test_failed_library_manifest_keeps_source_pending_for_retry(tmp_path):
                 return {'verified':False,'files':0}
             return super().put_tree(source_dir,remote_path,backup_suffix)
     transport=FailManifest();config=_config(tmp_path,root,repository)
-    with pytest.raises(ValueError,match='manifest remote verification'):
-        sync.run_once(config,transport)
+    failed=sync.run_once(config,transport)
+    assert failed['status']=='partial'
+    assert not any(p.startswith('library/manifests/') for p in transport.remote)
     assert sync.run_once(config,transport)['status']=='complete'
     assert any(p.startswith('library/manifests/') for p in transport.remote)
 
@@ -317,9 +341,10 @@ def test_unchanged_source_cannot_certify_a_missing_remote_file(tmp_path):
     repository=tmp_path/'fdb';_make_fdb_root(repository)
     config=_config(tmp_path,root,repository);transport=FakeTransport()
     sync.run_once(config,transport)
-    del transport.remote['library/files']['targets/a.com']
-    with pytest.raises(ValueError,match='Remote file absent or changed'):
-        sync.run_once(config,transport)
+    del transport.remote['library/objects'][_sha_payload(b'authored')]
+    result=sync.run_once(config,transport)
+    assert result['status']=='partial'
+    assert any(error['phase']=='library' for error in result['errors'])
 
 
 def test_scope_change_requires_a_separate_state_directory(tmp_path):
@@ -339,9 +364,162 @@ def test_inventory_change_during_transfer_does_not_publish_completion(tmp_path):
     class ConcurrentWriter(FakeTransport):
         def put_tree(self,source_dir,remote_path,backup_suffix):
             result=super().put_tree(source_dir,remote_path,backup_suffix)
-            if remote_path=='library/files':(root/'targets'/'b.com').write_bytes(b'new addition')
+            if remote_path=='library/objects':(root/'targets'/'b.com').write_bytes(b'new addition')
             return result
     transport=ConcurrentWriter()
-    with pytest.raises(ValueError,match='Library changed during transfer'):
-        sync.run_once(_config(tmp_path,root,repository),transport)
+    result=sync.run_once(_config(tmp_path,root,repository),transport)
+    assert result['status']=='partial'
     assert not any(p.startswith('library/manifests/') for p in transport.remote)
+
+
+def test_manifest_failure_preserves_previous_content_addressed_generation(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    original=b'first immutable version'
+    changed=b'second immutable version'
+    (root/'targets'/'program.com').write_bytes(original)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+
+    class FailNextManifest(FakeTransport):
+        fail_manifest=False
+        def put_tree(self,source_dir,remote_path,backup_suffix):
+            if remote_path.startswith('library/manifests/') and self.fail_manifest:
+                self.fail_manifest=False
+                self.calls.append((remote_path,backup_suffix,{}))
+                return {'verified':False,'files':0}
+            return super().put_tree(source_dir,remote_path,backup_suffix)
+
+    transport=FailNextManifest();config=_config(tmp_path,root,repository)
+    first=sync.run_once(config,transport)
+    first_manifest_path=f"library/manifests/{first['run']}"
+    first_manifest_bytes=transport.remote[first_manifest_path]['manifest.json']
+    first_manifest=json.loads(first_manifest_bytes)
+    old_remote_path=first_manifest['entries']['targets/program.com']['content']['remote_path']
+    old_hash=old_remote_path.rsplit('/',1)[-1]
+    assert old_remote_path==f'library/objects/{_sha_payload(original)}'
+
+    (root/'targets'/'program.com').write_bytes(changed)
+    transport.fail_manifest=True
+    failed=sync.run_once(config,transport)
+
+    assert failed['status']=='partial'
+    assert transport.remote[first_manifest_path]['manifest.json']==first_manifest_bytes
+    assert transport.remote['library/objects'][old_hash]==original
+    assert transport.remote['library/objects'][_sha_payload(changed)]==changed
+    assert first_manifest['entries']['targets/program.com']['content']['remote_path']==old_remote_path
+
+
+def test_identical_files_share_one_content_addressed_remote_object(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    payload=b'duplicate bytes'
+    (root/'targets'/'one.com').write_bytes(payload)
+    (root/'targets'/'two.com').write_bytes(payload)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    transport=FakeTransport()
+
+    result=sync.run_once(_config(tmp_path,root,repository),transport)
+
+    digest=_sha_payload(payload)
+    assert result['status']=='complete'
+    assert transport.remote['library/objects']=={digest:payload}
+    manifest=_latest_library_manifest(transport,result['run'])
+    first=manifest['entries']['targets/one.com']['content']['remote_path']
+    second=manifest['entries']['targets/two.com']['content']['remote_path']
+    assert first==second==f'library/objects/{digest}'
+
+
+def test_legacy_cached_receipt_stays_readonly_while_changed_file_moves_to_objects(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    original=b'legacy stored bytes'
+    relative='targets/legacy.com'
+    (root/relative).write_bytes(original)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    transport=FakeTransport();config=_config(tmp_path,root,repository)
+    first=sync.run_once(config,transport)
+
+    # Model a completed schema from before SHA-keyed library objects: its file
+    # receipt has a stable SHA/MD5 but only the original path-based remote key.
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        db.execute('UPDATE files SET receipt=? WHERE path=?',(
+            json.dumps({'kind':'file','size':len(original),'md5':hashlib.md5(original).hexdigest(),
+                        'sha256':_sha_payload(original)}), relative))
+    transport.remote.setdefault('library/files',{})[relative]=original
+
+    unchanged=sync.run_once(config,transport)
+    assert unchanged['status']=='complete'
+    legacy_manifest=_latest_library_manifest(transport,unchanged['run'])
+    legacy_path=legacy_manifest['entries'][relative]['content']['remote_path']
+    assert legacy_path==f'library/files/{relative}'
+    assert transport.remote['library/files'][relative]==original
+    object_calls=[call for call in transport.calls if call[0]=='library/objects']
+    assert object_calls[-1][2]=={}
+
+    changed=b'new content-addressed bytes'
+    (root/relative).write_bytes(changed)
+    result=sync.run_once(config,transport)
+    assert result['status']=='complete'
+    manifest=_latest_library_manifest(transport,result['run'])
+    new_path=manifest['entries'][relative]['content']['remote_path']
+    assert new_path==f'library/objects/{_sha_payload(changed)}'
+    assert transport.remote['library/objects'][_sha_payload(changed)]==changed
+    assert transport.remote['library/files'][relative]==original
+    assert first['status']=='complete'
+
+
+def test_fdb_backup_completes_when_library_payload_transfer_fails(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    (root/'targets'/'payload.com').write_bytes(b'intake')
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    with sqlite3.connect(repository/'projects'/'a.fdb') as db:
+        db.execute('CREATE TABLE facts(v TEXT)')
+        db.execute("INSERT INTO facts VALUES ('durable')")
+
+    class FailLibraryObjects(FakeTransport):
+        def put_tree(self,source_dir,remote_path,backup_suffix):
+            if remote_path=='library/objects':
+                submitted={p.relative_to(source_dir).as_posix():p.read_bytes()
+                           for p in Path(source_dir).rglob('*') if p.is_file()}
+                self.calls.append((remote_path,backup_suffix,submitted))
+                return {'verified':False,'files':len(submitted)}
+            return super().put_tree(source_dir,remote_path,backup_suffix)
+
+    transport=FailLibraryObjects()
+    result=sync.run_once(_config(tmp_path,root,repository),transport)
+
+    assert result['status']=='partial'
+    assert len(result['projects'])==1
+    project=result['projects'][0]
+    generation=f"fdb/projects/{project['id']}/{project['generation']}"
+    assert 'project.fdb' in transport.remote[generation]
+    assert 'manifest.json' in transport.remote[generation]
+    assert any(error['phase']=='library' for error in result['errors'])
+    assert not any(path.startswith('library/manifests/') for path in transport.remote)
+
+
+def test_fdb_backup_completes_when_library_rescan_detects_churn(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    (root/'targets'/'initial.com').write_bytes(b'initial')
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    with sqlite3.connect(repository/'projects'/'a.fdb') as db:
+        db.execute('CREATE TABLE facts(v TEXT)')
+        db.execute("INSERT INTO facts VALUES ('durable')")
+
+    class AddDuringLibraryTransfer(FakeTransport):
+        did_add=False
+        def put_tree(self,source_dir,remote_path,backup_suffix):
+            result=super().put_tree(source_dir,remote_path,backup_suffix)
+            if remote_path=='library/objects' and not self.did_add:
+                self.did_add=True
+                (root/'targets'/'concurrent.com').write_bytes(b'appeared during copy')
+            return result
+
+    transport=AddDuringLibraryTransfer()
+    result=sync.run_once(_config(tmp_path,root,repository),transport)
+
+    assert result['status']=='partial'
+    assert len(result['projects'])==1
+    project=result['projects'][0]
+    generation=f"fdb/projects/{project['id']}/{project['generation']}"
+    assert 'project.fdb' in transport.remote[generation]
+    assert 'manifest.json' in transport.remote[generation]
+    assert any(error['phase']=='library' for error in result['errors'])
+    assert not any(path.startswith('library/manifests/') for path in transport.remote)
