@@ -1,0 +1,27 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
+build/
+dist/
+*-wal
+*-shm
+*.fdb
+examples/**/local/
+
+# Recovered archives, local toolchains, and byte-retaining project sidecars
+/.recovery/
+*.fdb-*
+
+# Exported emulator checkpoints stay local
+*.sav
+*.state
+*.db
+*.sqlite
+*.sqlite3
+*.fdisbull-states/
+*.mig.gz
+
+# Native CI source checkout and transient reports
+/.native/
+/native-evidence/

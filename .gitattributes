@@ -1,0 +1,14 @@
+# Preserve verifier receipts and upstream notices byte for byte.
+docs/evidence/** -whitespace
+experimental/dosbox-x/**/headless-agent.patch -whitespace
+experimental/dosbox-x/headless-agent.patch -whitespace
+examples/dinopark/evidence/** -whitespace
+src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt -whitespace
+
+# Preserve the exact corpus bytes on every checkout, including Windows.
+fixtures/freeware-games/** -text
+
+# Archived generated game snapshots remain raw-viewable; compare manifest hashes.
+fixtures/freeware-games/snake/builds/** -diff
+fixtures/freeware-games/snake/source-snapshots/** -diff
+fixtures/freeware-games.zip -diff
