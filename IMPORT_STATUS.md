@@ -102,3 +102,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/dinopark_fence.py`
 - `src/fdisbull/dinopark_land.py`
 - `src/fdisbull/dinopark_purchase.py`
+
+## Source batch 5
+
+24 additional unchanged Python files (417047 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 102 files, import still incomplete.
+
+- `src/fdisbull/dinopark_terminal.py`
+- `src/fdisbull/dinopark_z.py`
+- `src/fdisbull/disc.py`
+- `src/fdisbull/disc_sectors.py`
+- `src/fdisbull/doctor.py`
+- `src/fdisbull/dos.py`
+- `src/fdisbull/dos_analysis.py`
+- `src/fdisbull/dos_decoder.py`
+- `src/fdisbull/dos_driver.py`
+- `src/fdisbull/dos_launch.py`
+- `src/fdisbull/dos_memory.py`
+- `src/fdisbull/dos_qemu.py`
+- `src/fdisbull/dos_runtime.py`
+- `src/fdisbull/dos_services.py`
+- `src/fdisbull/dos_state_refresh.py`
+- `src/fdisbull/dos_views.py`
+- `src/fdisbull/dosbox_rpc.py`
+- `src/fdisbull/elf_metadata.py`
+- `src/fdisbull/event_search.py`
+- `src/fdisbull/execution_events.py`
+- `src/fdisbull/execution_trace.py`
+- `src/fdisbull/external_files.py`
+- `src/fdisbull/facts.py`
+- `src/fdisbull/file_references.py`
