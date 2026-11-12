@@ -30,6 +30,8 @@ def test_missing_or_unrecognized_ldd_fails(monkeypatch):
 
 
 def test_static_ldd_and_actual_failure_are_distinct(monkeypatch):
+    monkeypatch.setattr(module, 'run', lambda args: '\tstatically linked\n')
+    assert module.ldd_dependencies(Path('/a'), Path('/ldd')) == {}
     def static(args):
         raise subprocess.CalledProcessError(1, args, stderr='not a dynamic executable')
     monkeypatch.setattr(module, 'run', static)
@@ -38,6 +40,21 @@ def test_static_ldd_and_actual_failure_are_distinct(monkeypatch):
         raise subprocess.CalledProcessError(1, args, stderr='permission denied')
     monkeypatch.setattr(module, 'run', fail)
     with pytest.raises(ValueError, match='permission denied'):
+        module.ldd_dependencies(Path('/a'), Path('/ldd'))
+
+
+@pytest.mark.parametrize('output', [
+    'statically linked\nlibbad.so => not found\n',
+    'statically linked\nunexpected output\n',
+])
+def test_static_mixed_with_other_ldd_output_fails(monkeypatch, output):
+    monkeypatch.setattr(module, 'run', lambda args: output)
+    with pytest.raises(ValueError):
+        module.ldd_dependencies(Path('/a'), Path('/ldd'))
+    def failed(args):
+        raise subprocess.CalledProcessError(1, args, stderr=output)
+    monkeypatch.setattr(module, 'run', failed)
+    with pytest.raises(ValueError, match='ldd failed'):
         module.ldd_dependencies(Path('/a'), Path('/ldd'))
 
 

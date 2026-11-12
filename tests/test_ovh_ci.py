@@ -2,6 +2,7 @@ import importlib.util
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 from types import SimpleNamespace
@@ -135,6 +136,23 @@ def test_ci_resource_serial_retention_and_legacy_contract():
     assert all(dependency in ordinary for dependency in ('pkg-config', 'zlib1g-dev', 'libzstd-dev'))
     for job in ('test-and-package', 'native-debugger-stable', 'native-debugger-layers', 'native-unified'):
         assert job + ':' in config
+
+
+def test_unified_timeout_reserves_export_and_upload_time():
+    config = (ROOT / '.gitlab-ci.yml').read_text()
+    section = config.split('\nnative-unified:\n', 1)[1].split('\nqualify-candidate:', 1)[0]
+
+    def seconds(value):
+        parts = re.findall(r'(\d+)([hms])', value)
+        assert parts and ''.join(n + unit for n, unit in parts) == value
+        scale = {'h': 3600, 'm': 60, 's': 1}
+        return sum(int(n) * scale[unit] for n, unit in parts)
+
+    job = seconds(re.search(r'^  timeout: (\S+)$', section, re.M).group(1))
+    script = seconds(re.search(r'RUNNER_SCRIPT_TIMEOUT: "([^"]+)"', section).group(1))
+    export = seconds(re.search(r'RUNNER_AFTER_SCRIPT_TIMEOUT: "([^"]+)"', section).group(1))
+    assert script > 0 and export >= 300
+    assert script + export + 600 <= job <= 3 * 3600
 
 
 @pytest.mark.parametrize('job', ['native-qualification', 'qualify-candidate'])

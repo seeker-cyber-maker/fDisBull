@@ -137,7 +137,7 @@ native-unified:
   stage: native-unified
   image: python:3.12-bookworm
   interruptible: false
-  timeout: 90m
+  timeout: 3h
   needs:
     - job: test-and-package
       artifacts: true
@@ -150,6 +150,10 @@ native-unified:
       alias: docker
       command: ["--storage-driver=vfs"]
   variables:
+    # Independent TCG guests exceeded 90 minutes on the OVH worker. Reserve
+    # time for after_script export and artifact upload even on script timeout.
+    RUNNER_SCRIPT_TIMEOUT: "2h40m"
+    RUNNER_AFTER_SCRIPT_TIMEOUT: "10m"
     FDISBULL_EXPECTED_BYTES: "35000000000"
     DOCKER_BUILDKIT: "0"
     DOCKER_HOST: "tcp://docker:2375"

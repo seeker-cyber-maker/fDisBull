@@ -30,9 +30,11 @@ def ldd_dependencies(path, ldd):
         out = run([str(ldd), str(path)])
     except subprocess.CalledProcessError as exc:
         text = (exc.stdout or '') + (exc.stderr or '')
-        if 'statically linked' in text or 'not a dynamic executable' in text:
+        if text.strip() in ('statically linked', 'not a dynamic executable'):
             return {}
         raise ValueError(f'ldd failed for {path}: {text.strip()}') from exc
+    if out.strip() == 'statically linked':
+        return {}
     found = {}
     for line in out.splitlines():
         line = line.strip()

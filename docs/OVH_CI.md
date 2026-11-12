@@ -12,6 +12,12 @@ service may be privileged; no host Docker socket is mounted. The service uses
 VFS so nested overlay support is not assumed. Compiler steps use two processes.
 Actual container limits and n8n/website health need readback during qualification.
 
+The unified Wine/QEMU job allows three hours on this TCG worker. Its script
+budget is two hours forty minutes, followed by up to ten minutes for the
+independent host export and ten minutes for artifact upload/cleanup. The
+runner maximum must admit the full three-hour job. A script timeout remains
+a failed qualification; reserved export time preserves its diagnostics.
+
 Each job admits its next allocation while preserving 20 GB. Estimates are
 ordinary 12 GB, stable 14 GB, layers 18 GB, unified 35 GB and control/summary
 500 MB. Admission is not a running quota and never authorizes deletion.
