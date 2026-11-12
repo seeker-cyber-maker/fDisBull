@@ -131,3 +131,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/external_files.py`
 - `src/fdisbull/facts.py`
 - `src/fdisbull/file_references.py`
+
+## Source batch 6
+
+24 additional unchanged Python files (363430 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 126 files, import still incomplete.
+
+- `src/fdisbull/flic.py`
+- `src/fdisbull/flowdata.py`
+- `src/fdisbull/format_media.py`
+- `src/fdisbull/format_registry.py`
+- `src/fdisbull/frame_coherence.py`
+- `src/fdisbull/frame_state_codec.py`
+- `src/fdisbull/frames.py`
+- `src/fdisbull/function_analysis.py`
+- `src/fdisbull/game_il.py`
+- `src/fdisbull/gdb_rpc.py`
+- `src/fdisbull/genesis_replay.py`
+- `src/fdisbull/ghidra_arm64.py`
+- `src/fdisbull/gog_galaxy.py`
+- `src/fdisbull/gog_galaxy_cli.py`
+- `src/fdisbull/gog_unpack.py`
+- `src/fdisbull/guest_assets.py`
+- `src/fdisbull/ida_debugger.py`
+- `src/fdisbull/ida_dosbox.py`
+- `src/fdisbull/ida_remote.py`
+- `src/fdisbull/ida_runtime.py`
+- `src/fdisbull/ida_trace.py`
+- `src/fdisbull/ida_wire.py`
+- `src/fdisbull/il_recovery.py`
+- `src/fdisbull/il_scenes.py`
