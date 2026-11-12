@@ -247,3 +247,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/rom_asm.py`
 - `src/fdisbull/rom_asm_capstone.py`
 - `src/fdisbull/rom_asm_ghidra.py`
+
+## Source batch 10
+
+24 additional unchanged Python files (395300 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 222 files, import still incomplete.
+
+- `src/fdisbull/rom_asm_saturn.py`
+- `src/fdisbull/rom_disc.py`
+- `src/fdisbull/rom_nes.py`
+- `src/fdisbull/rom_sega.py`
+- `src/fdisbull/rom_semantics.py`
+- `src/fdisbull/rom_snes.py`
+- `src/fdisbull/roms.py`
+- `src/fdisbull/runtime_code.py`
+- `src/fdisbull/runtime_identity.py`
+- `src/fdisbull/runtime_observations.py`
+- `src/fdisbull/scene_backend_comparison.py`
+- `src/fdisbull/scene_boundaries.py`
+- `src/fdisbull/scene_bundles.py`
+- `src/fdisbull/scene_domains.py`
+- `src/fdisbull/scene_geometry.py`
+- `src/fdisbull/scene_receipts.py`
+- `src/fdisbull/scene_values.py`
+- `src/fdisbull/scenes.py`
+- `src/fdisbull/screenshot_codecs.py`
+- `src/fdisbull/screenshot_grid.py`
+- `src/fdisbull/screenshot_hooks.py`
+- `src/fdisbull/scummvm_debugger.py`
+- `src/fdisbull/scummvm_gob.py`
+- `src/fdisbull/scummvm_kyra.py`
