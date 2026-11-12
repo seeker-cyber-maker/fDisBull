@@ -1,0 +1,702 @@
+diff --git a/qapi/fdisbull-dos-provenance.json b/qapi/fdisbull-dos-provenance.json
+--- a/qapi/fdisbull-dos-provenance.json
++++ b/qapi/fdisbull-dos-provenance.json
+@@ -187,3 +187,69 @@
+ { 'command': 'x-fdisbull-disarm-dos-save-witness',
+   'data': { 'token': 'str', 'expected-generation': 'uint64' },
+   'returns': 'FdisbullDosSaveWitnessInfo' }
++
++##
++# @FdisbullDosSaveStopInfo:
++# @api-version: Version of the independent safe-stop receipt protocol.
++# @model: Exact native model name.
++# @observer-token: Current save-witness owner token, or empty before arming.
++# @epoch: Safe-stop owner epoch, rotated after native restore.
++# @generation: Safe-stop compare-and-swap generation.
++# @observer-generation: Current save-witness generation.
++# @enabled: Whether future qualifying AH=0Dh returns request a stop.
++# @state: Current stop receipt state.
++# @sequence: Monotone one-shot qualifying-return sequence.
++# @acknowledged: Whether the current terminal receipt has been acknowledged.
++# @pending: A stop request awaits main-loop consumption.
++# @event-count: Witness event count latched at the qualifying return.
++# @witness-generation: Witness generation latched at the qualifying return.
++# @return-pc: Linear return address immediately after the qualifying IRET.
++# @return-cs: Return CS selector.
++# @return-ss: Return SS selector.
++# @return-sp: Return 16-bit return stack pointer.
++# @reason: Empty for normal receipts, otherwise a bounded diagnostic.
++##
++{ 'struct': 'FdisbullDosSaveStopInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'observer-token': 'str',
++            'epoch': 'uint64', 'generation': 'uint64',
++            'observer-generation': 'uint64', 'enabled': 'bool', 'state': 'str',
++            'sequence': 'uint64', 'acknowledged': 'bool', 'pending': 'bool',
++            'event-count': 'uint32', 'witness-generation': 'uint64',
++            'return-pc': 'uint32', 'return-cs': 'uint16',
++            'return-ss': 'uint16', 'return-sp': 'uint16', 'reason': 'str' } }
++
++##
++# @x-fdisbull-query-dos-save-stop:
++# Query the independent automatic safe-stop receipt. This command does not
++# infer a stop from a ready save ledger and never resumes guest execution.
++##
++{ 'command': 'x-fdisbull-query-dos-save-stop',
++  'returns': 'FdisbullDosSaveStopInfo' }
++
++##
++# @x-fdisbull-set-dos-save-stop:
++# @token: Current save-witness owner token.
++# @epoch: Current safe-stop epoch.
++# @expected-generation: Safe-stop CAS generation observed by the caller.
++# @enabled: Enable stop requests for future qualifying flush returns.
++#
++# Set the one-shot automatic stop policy without changing witness proof data.
++##
++{ 'command': 'x-fdisbull-set-dos-save-stop',
++  'data': { 'token': 'str', 'epoch': 'uint64',
++            'expected-generation': 'uint64', 'enabled': 'bool' },
++  'returns': 'FdisbullDosSaveStopInfo' }
++
++##
++# @x-fdisbull-ack-dos-save-stop:
++# @token: Current save-witness owner token.
++# @epoch: Current safe-stop epoch.
++# @expected-generation: Safe-stop CAS generation observed by the caller.
++# @sequence: Exact terminal stop receipt sequence to acknowledge.
++#
++# Acknowledge a consumed or preempted receipt. Acknowledgement never retries.
++##
++{ 'command': 'x-fdisbull-ack-dos-save-stop',
++  'data': { 'token': 'str', 'epoch': 'uint64',
++            'expected-generation': 'uint64', 'sequence': 'uint64' },
++  'returns': 'FdisbullDosSaveStopInfo' }
+
+diff --git a/target/i386/fdisbull-dos-provenance.c b/target/i386/fdisbull-dos-provenance.c
+--- a/target/i386/fdisbull-dos-provenance.c
++++ b/target/i386/fdisbull-dos-provenance.c
+@@ -6,9 +6,14 @@
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-dos-provenance.h"
+ #include "exec/cpu-common.h"
++#include "exec/exec-all.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/accel.h"
+ #include "qemu/uuid.h"
++#include "system/cpus.h"
++#include "system/fdisbull-clock.h"
++#include "system/fdisbull-dos-save-stop.h"
++#include "system/fdisbull-display.h"
+ #include "system/runstate.h"
+ #include "target/i386/fdisbull-dos-provenance.h"
+ 
+@@ -18,6 +23,11 @@
+ #define DOS_WITNESS_MAX_RANGES 32
+ #define DOS_WITNESS_MAX_HW_DEPTH 16
+ #define DOS_WITNESS_HANDLE_NONE UINT16_MAX
++#define DOS_SAVE_STOP_IDLE 0
++#define DOS_SAVE_STOP_PENDING 1
++#define DOS_SAVE_STOP_CONSUMED 2
++#define DOS_SAVE_STOP_PREEMPTED 3
++#define DOS_SAVE_STOP_INVALID 4
+ 
+ typedef struct DosWitnessRange {
+     uint32_t start;
+@@ -112,6 +122,23 @@
+     uint32_t pending_size_before;
+     uint8_t pending_mode;
+     int64_t pending_seek_offset;
++
++    /* Independent opt-in stop receipt; never part of the v1/v2 proof API. */
++    uint64_t stop_epoch;
++    uint64_t stop_generation;
++    uint64_t stop_sequence;
++    uint64_t stop_sequence_highwater;
++    bool stop_enabled;
++    uint8_t stop_state;
++    bool stop_acknowledged;
++    bool stop_pending;
++    uint32_t stop_event_count;
++    uint64_t stop_witness_generation;
++    uint32_t stop_return_pc;
++    uint16_t stop_return_cs;
++    uint16_t stop_return_ss;
++    uint16_t stop_return_sp;
++    uint8_t stop_reason[160];
+ } DosWitnessState;
+ 
+ static DosWitnessState witness = {
+@@ -120,9 +147,16 @@
+     .valid = true,
+     .created_handle = DOS_WITNESS_HANDLE_NONE,
+     .pending_handle = DOS_WITNESS_HANDLE_NONE,
++    .stop_epoch = 1,
++    .stop_generation = 1,
++    .stop_sequence_highwater = 1,
++    .stop_acknowledged = true,
+ };
+ static uint64_t epoch_highwater = 1;
+ static uint64_t generation_highwater = 1;
++static uint64_t stop_epoch_highwater = 1;
++static uint64_t stop_generation_highwater = 1;
++static uint64_t stop_sequence_highwater = 1;
+ static bool vmstate_registered;
+ static bool token_valid(const char *token);
+ static bool normalize_dos_path(const char *path, char out[16], Error **errp);
+@@ -148,6 +182,163 @@
+         return;
+     }
+     witness.generation = generation_highwater;
++}
++
++static const char *dos_save_stop_state_name(uint8_t state)
++{
++    static const char *const names[] = {
++        "idle", "pending", "consumed", "preempted", "invalid"
++    };
++    return state < ARRAY_SIZE(names) ? names[state] : "invalid";
++}
++
++static bool dos_save_stop_advance_generation(void)
++{
++    if (!counter_advance(&stop_generation_highwater)) {
++        witness.stop_state = DOS_SAVE_STOP_INVALID;
++        witness.stop_enabled = false;
++        witness.stop_pending = false;
++        witness.stop_acknowledged = false;
++        g_strlcpy((char *)witness.stop_reason, "safe-stop generation overflow",
++                  sizeof(witness.stop_reason));
++        return false;
++    }
++    witness.stop_generation = stop_generation_highwater;
++    return true;
++}
++
++static bool dos_save_stop_reset_for_new_owner(void)
++{
++    if (!counter_advance(&stop_epoch_highwater)) {
++        return false;
++    }
++    witness.stop_epoch = stop_epoch_highwater;
++    witness.stop_generation = stop_generation_highwater;
++    witness.stop_sequence = 0;
++    witness.stop_sequence_highwater = stop_sequence_highwater;
++    witness.stop_enabled = false;
++    witness.stop_state = DOS_SAVE_STOP_IDLE;
++    witness.stop_acknowledged = true;
++    witness.stop_pending = false;
++    witness.stop_event_count = 0;
++    witness.stop_witness_generation = 0;
++    witness.stop_return_pc = 0;
++    witness.stop_return_cs = 0;
++    witness.stop_return_ss = 0;
++    witness.stop_return_sp = 0;
++    witness.stop_reason[0] = 0;
++    return dos_save_stop_advance_generation();
++}
++
++static void dos_save_stop_latch(uint8_t state, const char *reason,
++                                CPUX86State *env, const DosWitnessEvent *event)
++{
++    witness.stop_pending = false;
++    witness.stop_state = state;
++    witness.stop_acknowledged = false;
++    witness.stop_event_count = witness.event_count;
++    witness.stop_witness_generation = witness.generation;
++    witness.stop_return_pc = event->return_pc;
++    witness.stop_return_cs = env->segs[R_CS].selector;
++    witness.stop_return_ss = env->segs[R_SS].selector;
++    witness.stop_return_sp = env->regs[R_ESP] & 0xffff;
++    g_strlcpy((char *)witness.stop_reason, reason ? reason : "",
++              sizeof(witness.stop_reason));
++    dos_save_stop_advance_generation();
++}
++
++static void dos_save_stop_on_ready(CPUX86State *env,
++                                   const DosWitnessEvent *event)
++{
++    CPUState *cpu = env_cpu(env);
++    const char *reason = NULL;
++
++    if (!witness.stop_enabled || !witness.active || !witness.valid ||
++        witness.operation_policy != 1 || witness.phase != 6 ||
++        witness.pending || witness.hardware_depth || !witness.close_seen ||
++        !witness.flush_seen || witness.file_open || witness.temporary_exists) {
++        return;
++    }
++    if ((witness.stop_state == DOS_SAVE_STOP_CONSUMED ||
++         witness.stop_state == DOS_SAVE_STOP_PREEMPTED) &&
++        !witness.stop_acknowledged) {
++        witness.stop_enabled = false;
++        witness.stop_pending = false;
++        witness.stop_state = DOS_SAVE_STOP_INVALID;
++        g_strlcpy((char *)witness.stop_reason,
++                  "new flush reached before prior stop receipt was acknowledged",
++                  sizeof(witness.stop_reason));
++        dos_save_stop_advance_generation();
++        return;
++    }
++    if (witness.stop_state == DOS_SAVE_STOP_PENDING ||
++        stop_sequence_highwater == UINT64_MAX) {
++        witness.stop_enabled = false;
++        witness.stop_state = DOS_SAVE_STOP_INVALID;
++        g_strlcpy((char *)witness.stop_reason,
++                  "safe-stop attempt sequence is unresolved or exhausted",
++                  sizeof(witness.stop_reason));
++        dos_save_stop_advance_generation();
++        return;
++    }
++    witness.stop_sequence = stop_sequence_highwater++;
++
++    if (cpu->stop || cpu->stopped) {
++        reason = "existing-cpu-stop";
++    } else if (cpu->singlestep_enabled) {
++        reason = "single-step-stop-precedence";
++    } else if (cpu->interrupt_request & CPU_INTERRUPT_DEBUG) {
++        reason = "debug-interrupt-pending";
++    } else if (cpu_breakpoint_test(cpu, event->return_pc, BP_GDB | BP_CPU)) {
++        reason = "breakpoint-at-return-pc";
++    } else if (fdisbull_clock_budget_active()) {
++        reason = "clock-budget-owns-stop-selection";
++    } else if (fdisbull_display_frame_fence_blocks_control()) {
++        reason = "display-frame-fence-owns-stop-selection";
++    }
++
++    if (reason) {
++        dos_save_stop_latch(DOS_SAVE_STOP_PREEMPTED, reason, env, event);
++        return;
++    }
++
++    witness.stop_pending = true;
++    witness.stop_state = DOS_SAVE_STOP_PENDING;
++    witness.stop_acknowledged = false;
++    witness.stop_event_count = witness.event_count;
++    witness.stop_witness_generation = witness.generation;
++    witness.stop_return_pc = event->return_pc;
++    witness.stop_return_cs = env->segs[R_CS].selector;
++    witness.stop_return_ss = env->segs[R_SS].selector;
++    witness.stop_return_sp = env->regs[R_ESP] & 0xffff;
++    witness.stop_reason[0] = 0;
++    if (!dos_save_stop_advance_generation()) {
++        return;
++    }
++    /* cpu_exit forces the current translated IRET instruction to finish at
++     * its own safe boundary.  The main-loop handler attributes PAUSED. */
++    cpu_stop_current();
++    qemu_notify_event();
++}
++
++void fdisbull_dos_save_stop_handle_request(void)
++{
++    assert(bql_locked());
++    if (!witness.stop_pending || witness.stop_state != DOS_SAVE_STOP_PENDING) {
++        return;
++    }
++    if (runstate_is_running()) {
++        vm_stop(RUN_STATE_PAUSED);
++        witness.stop_pending = false;
++        witness.stop_state = DOS_SAVE_STOP_CONSUMED;
++        witness.stop_reason[0] = 0;
++    } else {
++        witness.stop_pending = false;
++        witness.stop_state = DOS_SAVE_STOP_PREEMPTED;
++        g_strlcpy((char *)witness.stop_reason, "another-stop-won-main-loop-race",
++                  sizeof(witness.stop_reason));
++    }
++    dos_save_stop_advance_generation();
+ }
+ 
+ static bool witness_register_vmstate(Error **errp)
+@@ -159,14 +350,22 @@
+                          &witness);
+         vmstate_registered = true;
+     }
++    fdisbull_register_dos_save_stop_handler(
++        fdisbull_dos_save_stop_handle_request);
+     return true;
+ }
+ 
+ static int dos_witness_pre_save(void *opaque)
+ {
+     DosWitnessState *state = opaque;
++    if (state->stop_pending) {
++        return -EBUSY;
++    }
+     state->epoch = epoch_highwater;
+     state->generation = generation_highwater;
++    state->stop_epoch = stop_epoch_highwater;
++    state->stop_generation = stop_generation_highwater;
++    state->stop_sequence_highwater = stop_sequence_highwater;
+     return 0;
+ }
+ 
+@@ -176,10 +375,17 @@
+     uint64_t accepted_sum = 0;
+     uint32_t i;
+ 
+-    if (version_id != 2 || !state->epoch || !state->generation ||
++    if (version_id != 3 || !state->epoch || !state->generation ||
+         state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
+         !epoch_highwater || !generation_highwater ||
+         epoch_highwater == UINT64_MAX || generation_highwater == UINT64_MAX ||
++        !state->stop_epoch || state->stop_epoch == UINT64_MAX ||
++        !state->stop_generation || state->stop_generation == UINT64_MAX ||
++        !state->stop_sequence_highwater ||
++        state->stop_sequence_highwater == UINT64_MAX ||
++        !stop_epoch_highwater || stop_epoch_highwater == UINT64_MAX ||
++        !stop_generation_highwater || stop_generation_highwater == UINT64_MAX ||
++        !stop_sequence_highwater || stop_sequence_highwater == UINT64_MAX ||
+         state->range_count > DOS_WITNESS_MAX_RANGES ||
+         state->event_count > DOS_WITNESS_MAX_EVENTS ||
+         state->bytes_written > DOS_WITNESS_MAX_BYTES ||
+@@ -200,6 +406,25 @@
+                                !state->close_seen ||
+                                !state->flush_seen || !state->valid)) ||
+         (state->create_seen && state->created_handle == DOS_WITNESS_HANDLE_NONE)) {
++        return -EINVAL;
++    }
++
++    if (state->stop_state > DOS_SAVE_STOP_INVALID ||
++        state->stop_pending || state->stop_state == DOS_SAVE_STOP_PENDING ||
++        !memchr(state->stop_reason, '\0', sizeof(state->stop_reason)) ||
++        (state->stop_state == DOS_SAVE_STOP_IDLE &&
++         (!state->stop_acknowledged || state->stop_sequence != 0)) ||
++        ((state->stop_state == DOS_SAVE_STOP_CONSUMED ||
++          state->stop_state == DOS_SAVE_STOP_PREEMPTED) &&
++         (!state->stop_sequence || (!state->stop_reason[0] &&
++          state->stop_state == DOS_SAVE_STOP_PREEMPTED) ||
++          !state->stop_event_count || !state->stop_witness_generation)) ||
++        (state->stop_state == DOS_SAVE_STOP_INVALID &&
++         (state->stop_enabled || !state->stop_reason[0])) ||
++        (state->stop_enabled && (!state->active || !state->valid ||
++                                 state->operation_policy != 1)) ||
++        (state->stop_state != DOS_SAVE_STOP_IDLE && !state->stop_sequence) ||
++        state->stop_sequence >= state->stop_sequence_highwater) {
+         return -EINVAL;
+     }
+ 
+@@ -350,8 +575,15 @@
+     }
+     epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
+     generation_highwater = MAX(generation_highwater, state->generation) + 1;
++    stop_epoch_highwater = MAX(stop_epoch_highwater, state->stop_epoch) + 1;
++    stop_generation_highwater = MAX(stop_generation_highwater,
++                                    state->stop_generation) + 1;
++    stop_sequence_highwater = MAX(stop_sequence_highwater,
++                                  state->stop_sequence_highwater);
+     state->epoch = epoch_highwater;
+     state->generation = generation_highwater;
++    state->stop_epoch = stop_epoch_highwater;
++    state->stop_generation = stop_generation_highwater;
+     return 0;
+ }
+ 
+@@ -408,8 +640,8 @@
+ 
+ const VMStateDescription vmstate_fdisbull_dos_save_witness = {
+     .name = "fdisbull/dos-save-witness",
+-    .version_id = 2,
+-    .minimum_version_id = 2,
++    .version_id = 3,
++    .minimum_version_id = 3,
+     .pre_save = dos_witness_pre_save,
+     .post_load = dos_witness_post_load,
+     .fields = (const VMStateField[]) {
+@@ -474,6 +706,21 @@
+         VMSTATE_UINT32_V(pending_size_before, DosWitnessState, 2),
+         VMSTATE_UINT8_V(pending_mode, DosWitnessState, 2),
+         VMSTATE_INT64_V(pending_seek_offset, DosWitnessState, 2),
++        VMSTATE_UINT64_V(stop_epoch, DosWitnessState, 3),
++        VMSTATE_UINT64_V(stop_generation, DosWitnessState, 3),
++        VMSTATE_UINT64_V(stop_sequence, DosWitnessState, 3),
++        VMSTATE_UINT64_V(stop_sequence_highwater, DosWitnessState, 3),
++        VMSTATE_BOOL_V(stop_enabled, DosWitnessState, 3),
++        VMSTATE_UINT8_V(stop_state, DosWitnessState, 3),
++        VMSTATE_BOOL_V(stop_acknowledged, DosWitnessState, 3),
++        VMSTATE_BOOL_V(stop_pending, DosWitnessState, 3),
++        VMSTATE_UINT32_V(stop_event_count, DosWitnessState, 3),
++        VMSTATE_UINT64_V(stop_witness_generation, DosWitnessState, 3),
++        VMSTATE_UINT32_V(stop_return_pc, DosWitnessState, 3),
++        VMSTATE_UINT16_V(stop_return_cs, DosWitnessState, 3),
++        VMSTATE_UINT16_V(stop_return_ss, DosWitnessState, 3),
++        VMSTATE_UINT16_V(stop_return_sp, DosWitnessState, 3),
++        VMSTATE_BUFFER_V(stop_reason, DosWitnessState, 3),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+@@ -1231,6 +1478,9 @@
+         witness_fault("DOS save witness generation overflow");
+     } else {
+         witness.generation = generation_highwater;
++    }
++    if (fn == 0x0d && witness.valid && witness.phase == 6) {
++        dos_save_stop_on_ready(env, event);
+     }
+ }
+ 
+@@ -1731,6 +1981,121 @@
+     return info;
+ }
+ 
++static FdisbullDosSaveStopInfo *dos_save_stop_info(void)
++{
++    FdisbullDosSaveStopInfo *info = g_new0(FdisbullDosSaveStopInfo, 1);
++    info->api_version = 1;
++    info->model = g_strdup("qemu-pc-dos-save-stop-v1");
++    info->observer_token = g_strdup((const char *)witness.token);
++    info->epoch = witness.stop_epoch;
++    info->generation = witness.stop_generation;
++    info->observer_generation = witness.generation;
++    info->enabled = witness.stop_enabled;
++    info->state = g_strdup(dos_save_stop_state_name(witness.stop_state));
++    info->sequence = witness.stop_sequence;
++    info->acknowledged = witness.stop_acknowledged;
++    info->pending = witness.stop_pending;
++    info->event_count = witness.stop_event_count;
++    info->witness_generation = witness.stop_witness_generation;
++    info->return_pc = witness.stop_return_pc;
++    info->return_cs = witness.stop_return_cs;
++    info->return_ss = witness.stop_return_ss;
++    info->return_sp = witness.stop_return_sp;
++    info->reason = g_strdup((const char *)witness.stop_reason);
++    return info;
++}
++
++static bool dos_save_stop_cas(const char *token, uint64_t epoch,
++                              uint64_t expected_generation, Error **errp)
++{
++    if (!witness.token[0] || !token || strcmp(token, (const char *)witness.token) ||
++        epoch != witness.stop_epoch ||
++        expected_generation != witness.stop_generation) {
++        error_setg(errp, "DOS save-stop owner or generation CAS failed");
++        return false;
++    }
++    return true;
++}
++
++FdisbullDosSaveStopInfo *qmp_x_fdisbull_query_dos_save_stop(Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++    if (!stopped_cpu(&cpu, &env, false, errp) || !witness_register_vmstate(errp)) {
++        return NULL;
++    }
++    fdisbull_dos_save_stop_handle_request();
++    return dos_save_stop_info();
++}
++
++FdisbullDosSaveStopInfo *qmp_x_fdisbull_set_dos_save_stop(
++    const char *token, uint64_t epoch, uint64_t expected_generation,
++    bool enabled, Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++
++    if (!stopped_cpu(&cpu, &env, false, errp) || !witness_register_vmstate(errp) ||
++        !dos_save_stop_cas(token, epoch, expected_generation, errp)) {
++        return NULL;
++    }
++    if (witness.stop_pending ||
++        ((witness.stop_state == DOS_SAVE_STOP_CONSUMED ||
++          witness.stop_state == DOS_SAVE_STOP_PREEMPTED) &&
++         !witness.stop_acknowledged)) {
++        error_setg(errp, "A pending or unacknowledged save-stop receipt must be drained first");
++        return NULL;
++    }
++    if (enabled && (!witness.active || !witness.valid ||
++                    witness.operation_policy != 1)) {
++        error_setg(errp, "Automatic save-stop requires a valid active save-operations v2 witness");
++        return NULL;
++    }
++    if (enabled && witness.stop_state == DOS_SAVE_STOP_INVALID) {
++        error_setg(errp, "Invalid save-stop control requires a fresh save-witness owner");
++        return NULL;
++    }
++    if (enabled && (fdisbull_clock_budget_active() ||
++                    fdisbull_display_frame_fence_blocks_control())) {
++        error_setg(errp, "Automatic save-stop cannot share an active clock budget or display-frame fence");
++        return NULL;
++    }
++    if (witness.stop_enabled != enabled) {
++        witness.stop_enabled = enabled;
++        if (!dos_save_stop_advance_generation()) {
++            error_setg(errp, "DOS save-stop generation overflow");
++            return NULL;
++        }
++    }
++    return dos_save_stop_info();
++}
++
++FdisbullDosSaveStopInfo *qmp_x_fdisbull_ack_dos_save_stop(
++    const char *token, uint64_t epoch, uint64_t expected_generation,
++    uint64_t sequence, Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++
++    if (!stopped_cpu(&cpu, &env, false, errp) || !witness_register_vmstate(errp) ||
++        !dos_save_stop_cas(token, epoch, expected_generation, errp)) {
++        return NULL;
++    }
++    if (witness.stop_pending || witness.stop_acknowledged ||
++        (witness.stop_state != DOS_SAVE_STOP_CONSUMED &&
++         witness.stop_state != DOS_SAVE_STOP_PREEMPTED) ||
++        sequence != witness.stop_sequence) {
++        error_setg(errp, "DOS save-stop acknowledgement does not match a settled receipt");
++        return NULL;
++    }
++    witness.stop_acknowledged = true;
++    if (!dos_save_stop_advance_generation()) {
++        error_setg(errp, "DOS save-stop generation overflow");
++        return NULL;
++    }
++    return dos_save_stop_info();
++}
++
+ FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_query_dos_save_witness(Error **errp)
+ {
+     CPUState *cpu;
+@@ -1775,6 +2140,10 @@
+         }
+     }
+     memset(&witness, 0, sizeof(witness));
++    if (!dos_save_stop_reset_for_new_owner()) {
++        error_setg(errp, "DOS save-stop generation overflow");
++        return NULL;
++    }
+     witness.epoch = epoch_highwater;
+     witness.child_psp = child_psp;
+     witness.int21_vector = int21_vector;
+@@ -1843,6 +2212,10 @@
+         }
+     }
+     memset(&witness, 0, sizeof(witness));
++    if (!dos_save_stop_reset_for_new_owner()) {
++        error_setg(errp, "DOS save-stop generation overflow");
++        return NULL;
++    }
+     witness.epoch = epoch_highwater;
+     witness.child_psp = child_psp;
+     witness.int21_vector = int21_vector;
+@@ -1887,11 +2260,26 @@
+         return NULL;
+     }
+     if (!witness.token[0] || strcmp(token, (const char *)witness.token) ||
+-        expected_generation != witness.generation || witness.pending) {
++        expected_generation != witness.generation || witness.pending ||
++        witness.stop_pending ||
++        ((witness.stop_state == DOS_SAVE_STOP_CONSUMED ||
++          witness.stop_state == DOS_SAVE_STOP_PREEMPTED) &&
++         !witness.stop_acknowledged)) {
+         error_setg(errp, "DOS save witness disarm CAS failed or call is pending");
+         return NULL;
+     }
++    if (witness.stop_enabled) {
++        witness.stop_enabled = false;
++        if (!dos_save_stop_advance_generation()) {
++            error_setg(errp, "DOS save-stop generation overflow");
++            return NULL;
++        }
++    }
+     witness.active = false;
++    if (!dos_save_stop_reset_for_new_owner()) {
++        error_setg(errp, "DOS save-stop generation overflow");
++        return NULL;
++    }
+     if (counter_advance(&generation_highwater)) {
+         witness.generation = generation_highwater;
+     } else {
+
+diff --git a/target/i386/fdisbull-dos-provenance.h b/target/i386/fdisbull-dos-provenance.h
+--- a/target/i386/fdisbull-dos-provenance.h
++++ b/target/i386/fdisbull-dos-provenance.h
+@@ -12,5 +12,6 @@
+ void fdisbull_dos_save_witness_iret(CPUX86State *env);
+ void fdisbull_dos_save_witness_raw_io(CPUX86State *env, uint32_t port,
+                                       unsigned width);
++void fdisbull_dos_save_stop_handle_request(void);
+ 
+ #endif
+
+diff --git a/system/runstate.c b/system/runstate.c
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -53,6 +53,7 @@
+ #include "qom/object_interfaces.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-dos-save-stop.h"
+ #include "system/fdisbull-display.h"
+ #include "system/qtest.h"
+ #include "system/replay.h"
+@@ -67,6 +68,16 @@
+     NOTIFIER_LIST_INITIALIZER(exit_notifiers);
+ 
+ static RunState current_run_state = RUN_STATE_PRELAUNCH;
++static void (*dos_save_stop_handler)(void);
++
++void fdisbull_register_dos_save_stop_handler(void (*handler)(void))
++{
++    if (!dos_save_stop_handler) {
++        dos_save_stop_handler = handler;
++    } else {
++        g_assert(dos_save_stop_handler == handler);
++    }
++}
+ 
+ /* We use RUN_STATE__MAX but any invalid value will do */
+ static RunState vmstop_requested = RUN_STATE__MAX;
+@@ -782,6 +793,9 @@
+     }
+     fdisbull_clock_handle_stop_request();
+     fdisbull_display_frame_handle_stop_request();
++    if (dos_save_stop_handler) {
++        dos_save_stop_handler();
++    }
+     if (qemu_suspend_requested()) {
+         qemu_system_suspend();
+     }
+
+diff --git a/system/fdisbull-clock.c b/system/fdisbull-clock.c
+--- a/system/fdisbull-clock.c
++++ b/system/fdisbull-clock.c
+@@ -115,6 +115,13 @@
+     return false;
+ }
+ 
++bool fdisbull_clock_budget_active(void)
++{
++    return clock_state.pending_stop ||
++           clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++           clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_FIRED;
++}
++
+ static void fdisbull_clock_invalidate(void)
+ {
+     if (!clock_state.initialized) {
+
+diff --git a/include/system/fdisbull-clock.h b/include/system/fdisbull-clock.h
+--- a/include/system/fdisbull-clock.h
++++ b/include/system/fdisbull-clock.h
+@@ -7,6 +7,7 @@
+ 
+ void fdisbull_clock_set_icount_profile(bool supported);
+ bool fdisbull_clock_stop_pending(void);
++bool fdisbull_clock_budget_active(void);
+ void fdisbull_clock_handle_stop_request(void);
+ void fdisbull_clock_on_runstate_change(RunState state);
+ void fdisbull_clock_on_reset(void);
+
+diff --git a/include/system/fdisbull-dos-save-stop.h b/include/system/fdisbull-dos-save-stop.h
+--- /dev/null
++++ b/include/system/fdisbull-dos-save-stop.h
+@@ -0,0 +1,8 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef SYSTEM_FDISBULL_DOS_SAVE_STOP_H
++#define SYSTEM_FDISBULL_DOS_SAVE_STOP_H
++
++/* Register the target-owned deferred stop consumer with the system loop. */
++void fdisbull_register_dos_save_stop_handler(void (*handler)(void));
++
++#endif
+

@@ -26,6 +26,7 @@ recursive-include native/qemu-task-preemption *.md *.json *.patch
 recursive-include native/qemu-task-cascade *.md *.json *.patch
 recursive-include native/qemu-dos-provenance *.md *.json *.patch
 recursive-include native/qemu-dos-save-operations *.md *.json *.patch
+recursive-include native/qemu-dos-save-stop *.md *.json *.patch
 recursive-include src/fdisbull/web_runtime *.mjs *.html
 recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt

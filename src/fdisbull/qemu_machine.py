@@ -434,7 +434,9 @@ def machine_run_operation(function):
                                      {'timeout_ms': timeout_ms, 'stop_on_hook': stop_on_hook})
             # Read ownership under the lock: another caller may have armed a
             # schedule while this request waited for admission.
-            if not self._input_schedule_bound() and not getattr(self, '_qemu_hooks', None):
+            from .qemu_save_stop import safe_stop_enabled
+            save_stop = safe_stop_enabled(self)
+            if not self._input_schedule_bound() and not getattr(self, '_qemu_hooks', None) and not save_stop:
                 return function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
@@ -446,7 +448,19 @@ def machine_run_operation(function):
             vm.operation_deadline=bound
             for channel,_ in previous_channels:channel.operation_deadline=bound
             installed=True
-            result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
+            if save_stop:
+                from .qemu_save_stop import SaveRunScope
+                result = None
+                try:
+                    with SaveRunScope(self) as scope:
+                        result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
+                        result=scope.finish(result)
+                except BaseException as error:
+                    if result is not None and getattr(error,'result',None) is None:
+                        error.result=result
+                    raise
+            else:
+                result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
             if time.monotonic()>=bound:
                 vm.close()
                 error=TimeoutError('Scheduled or hooked native run exceeded its host deadline')

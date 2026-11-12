@@ -208,8 +208,12 @@ def _verify_arm_preimage(session,binding,seen=()):
         raise ValueError('Temporary save path already exists')
 
 
-def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,predecessor=None):
+def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,predecessor=None,safe_stop=False):
     path = _path(path)
+    if type(safe_stop) is not bool:
+        raise ValueError('safe_stop must be boolean')
+    if safe_stop and (mode!='save' or directory is None):
+        raise ValueError('Automatic safe stops require a save-mode keep policy')
     if mode not in ('exclusive','save'):
         raise ValueError('Save provenance mode must be exclusive or save')
     if mode=='exclusive' and (temporary_path is not None or predecessor is not None):
@@ -221,6 +225,10 @@ def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,p
         raise ValueError('Guest-create provenance requires the native DOS save witness extension')
     if mode=='save' and ARM_SAVE not in session.vm.qmp_commands:
         raise ValueError('Save operations require the native N23 extension')
+    if safe_stop:
+        from .qemu_save_stop import COMMANDS as STOP_COMMANDS
+        if not STOP_COMMANDS <= session.vm.qmp_commands:
+            raise ValueError('Automatic save stops require the native N24 extension')
     prior=query(session.vm)
     if prior['active']:
         raise ValueError('Disarm the existing DOS save witness before arming another')
@@ -267,6 +275,7 @@ def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,p
         binding.update(mode=mode,temporary_path=temporary_path,initial_exists=initial_exists,
                        initial_payload_hex=initial_payload.hex(),predecessor=deepcopy(predecessor),
                        arm_generation=current['artifact'])
+    if safe_stop:binding['safe_stop']=True
     arguments={'token':token,'child-psp':binding['child_psp'],
                'source-ranges':ranges,'dos-path':'D:\\'+path,'int21-vector':expected_vector}
     if mode=='save':
@@ -279,6 +288,9 @@ def start(session,path,directory=None, *, mode='exclusive',temporary_path=None,p
         if not actual['valid'] or actual['phase']!='armed':
             raise ValueError('Native save witness did not arm cleanly')
         session._dos_save_witness=binding
+        if safe_stop:
+            from .qemu_save_stop import checkpoint_record
+            checkpoint_record(session,actual)
         session._event('workspace-provenance-start',binding)
     except BaseException as error:
         error.result=dict(binding=binding,policy=policy,disposition='uncertain; do not replay arm')
@@ -304,6 +316,9 @@ def status(session):
     result=dict(format=CHECKPOINT,binding=deepcopy(binding),native=_summary(info))
     if binding and binding.get('policy_id'):
         result['policy']=KeepPolicyStore(session).status(binding['policy_id'])
+    if binding and binding.get('safe_stop'):
+        from .qemu_save_stop import query as stop_query
+        result['safe_stop']=stop_query(session.vm)
     return result
 
 
@@ -314,10 +329,15 @@ def stop(session):
     if binding.get('policy_id'):
         KeepPolicyStore(session).set_enabled(binding['policy_id'],False)
     try:
+        if binding.get('safe_stop'):
+            from .qemu_save_stop import query as stop_query,_ack,_set
+            auxiliary,_receipt=_ack(session,stop_query(session.vm),'explicit provenance stop')
+            _set(session,auxiliary,False)
         session.vm.qmp.call(DISARM,{'token':binding['observer_token'],'expected-generation':info['generation']})
         after=query(session.vm)
         if after['active']:
             raise ValueError('Native DOS save witness remained active')
+        if binding.get('safe_stop'):binding['safe_stop_disarmed']=True
     except BaseException:
         session.close();raise
     return status(session)
@@ -331,7 +351,11 @@ def capture_checkpoint(session):
         return None
     if info['active']:
         _bound(session,info,binding)
-        return dict(format=CHECKPOINT,binding=deepcopy(binding),native=info)
+        record=dict(format=CHECKPOINT,binding=deepcopy(binding),native=info)
+        if binding.get('safe_stop'):
+            from .qemu_save_stop import checkpoint_record
+            record['safe_stop']=checkpoint_record(session,info)
+        return record
     return None
 
 
@@ -343,6 +367,11 @@ def validate_checkpoint(session,record):
     binding=record.get('binding')
     _bound(session,info,binding,check_workspace=False)
     if binding.get('mode')=='save':_verify_arm_preimage(session,binding)
+    if binding.get('safe_stop'):
+        from .qemu_save_stop import validate_checkpoint_record
+        validate_checkpoint_record(record.get('safe_stop'),info,binding)
+    elif record.get('safe_stop') is not None:
+        raise ValueError('Unowned save-stop checkpoint record')
     WorkspaceStore(session).load(binding['base_generation'])
     if binding.get('policy_id'):
         KeepPolicyStore(session).load(binding['policy_id'])
@@ -360,6 +389,9 @@ def verify_loaded(vm,record):
     if (left!=expected or actual['epoch']<=record['native']['epoch']
             or actual['generation']<=record['native']['generation']):
         raise ValueError('Restored native DOS save witness differs from checkpoint')
+    if record.get('safe_stop') is not None:
+        from .qemu_save_stop import verify_loaded as verify_stop_loaded
+        verify_stop_loaded(vm,record['safe_stop'],actual)
     return actual
 
 

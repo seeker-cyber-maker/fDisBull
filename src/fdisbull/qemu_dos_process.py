@@ -364,6 +364,9 @@ class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDelt
             self.capabilities['dos_save_keep_policy'] = self.capabilities['dos_guest_create_provenance']
             self.capabilities['dos_save_operations'] = bool(self.capabilities['dos_guest_create_provenance']
                 and ARM_SAVE in vm.qmp_commands)
+            from .qemu_save_stop import COMMANDS as SAVE_STOP_COMMANDS
+            self.capabilities['dos_save_safe_stop'] = bool(self.capabilities['dos_save_operations']
+                and SAVE_STOP_COMMANDS <= vm.qmp_commands)
             self.capabilities['rewind'] = checkpoint_tool is not None and 'x-fdisbull-dos-checkpoint-status' in vm.qmp_commands
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']
@@ -829,8 +832,15 @@ class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDelt
         self._execution_preflight(command, timeout_ms)
         if not self._launching:
             self._checkpoint_entry_clean = False
+        save_stop_before=None
+        if not self._launching:
+            from .qemu_save_stop import before_execute
+            save_stop_before=before_execute(self,command)
         try:
             result = MachineContext._execute(self, command, timeout_ms)
+            if save_stop_before is not None:
+                from .qemu_save_stop import after_execute
+                result=after_execute(self,result,save_stop_before)
         except BaseException:
             # Native execution can finish before its event is persisted. A
             # logging failure must not preserve an unobserved live process.

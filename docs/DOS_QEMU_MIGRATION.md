@@ -104,6 +104,13 @@ a proven preimage before comparing sealed bytes. Original paths/aliases remain
 protected; broader runtime/context and filesystem behavior stay unqualified.
 See [overwrite, seek and rename saves](DOS_FILE_LAYERS.md#overwrite-seek-and-rename-saves).
 
+The optional N24 `safe_stop=True` keep policy selects the exact post-flush
+return during an outer public `run()`, then validates/seals/keeps once without
+continuing the guest. Competing debugger controls retain their actual stop;
+scripts/trials/internal history, undo and frame/timing execution do not publish
+automatic keeps. A separate acknowledged native stop receipt survives same-binary
+restore without replay. See [automatic safe stops and keeps](DOS_FILE_LAYERS.md#automatic-safe-stops-and-keeps).
+
 File-aware restore must synchronize VM state, directory membership, file
 contents and open handles, with a verified consistent base capture despite
 external host writers. Existing checkpoint artifacts retain their documented

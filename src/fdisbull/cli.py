@@ -319,7 +319,7 @@ METHODS = {
     "debug-workspace-provenance-status": "Inspect the owned native guest-create ledger and optional keep policy; run,[timeout_ms]",
     "debug-workspace-provenance-capture": "Seal and verify native guest-create evidence against exact FAT bytes; run,[timeout_ms]",
     "debug-workspace-provenance-stop": "Persist and disarm the native guest-create observer; run,[timeout_ms]",
-    "debug-workspace-keep-policy": "Opt in one witnessed save path to versioned keeps at explicit seals; run,path,directory,[mode,temporary_path,predecessor,timeout_ms]",
+    "debug-workspace-keep-policy": "Opt in one witnessed save path to versioned keeps at explicit seals; run,path,directory,[mode,temporary_path,predecessor,safe_stop,timeout_ms]",
     "debug-workspace-keep-policy-enabled": "Enable or disable a host keep policy independently of guest rewind; run,policy,enabled,[timeout_ms]",
     "freedos-runtime-info": "Verify a selected FreeDOS runtime component; [path], or FDISBULL_FREEDOS_RUNTIME",
     "freedos-runtime-prepare": "Build a new private FreeDOS runtime component from locked inputs; boot_image,kernel_package,freecom_package,output,mtools_dir",

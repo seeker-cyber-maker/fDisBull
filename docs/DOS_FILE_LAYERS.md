@@ -370,3 +370,69 @@ The witness never invents zero-filled DOS file contents. General filesystem
 semantics, multiple simultaneous save handles, arbitrary drivers/TSRs, automatic
 safe-stop selection and broader runtime/context parity remain unqualified.
 DOSBox-X remains default and retained, with no CI requirement for this local slice.
+
+
+## Automatic safe stops and keeps
+
+N24 adds `safe_stop=True` to a `mode="save"` keep policy. The default remains
+false. With this opt-in, an explicit outer public `run()` selects the native
+return from a completed DOS flush, pauses before the next guest instruction,
+then seals and validates the file and services the keep policy under the same
+outer host deadline. The caller no longer supplies a post-flush breakpoint.
+
+```python
+armed = debug.workspace_keep_policy(
+    "SAVE.DAT", "/private/kept/versions", mode="save", safe_stop=True,
+    temporary_path="SAVE.TMP")
+result = debug.run(timeout_ms=30000)
+assert result["outcome"] == "save_boundary"
+assert result["save_keep"]["policy"]["outcome"] in ("kept", "already-kept")
+# A later explicit run may reach another save boundary or normal guest exit.
+```
+
+The return includes the original native machine stop, a separate save-stop
+receipt, full checkpoint/workspace references and the policy result. Publication
+never continues the guest implicitly. `needs-reconciliation` retains the
+reservation/effect evidence and is never replayed automatically. A failure after
+checkpoint or physical export carries the known effects and closes an unverified
+owner; a close-persistence failure does not erase the earlier export receipt.
+
+The native controller attempts a stop only after a matched `INT 21h/AH=0Dh`
+return has completed and the v2 file is closed, final-named, valid and free of
+pending DOS calls or hardware frames. A preexisting ready ledger, query, IRQ
+return or restore cannot synthesize a new attempt. Each actual completed flush
+may produce one new sequence; identical content is still deduplicated by the
+host journal. The auxiliary stop packet binds observer token, epoch/generation,
+sequence, event count and returned PC/CS/SS/SP. The host also checks the actual
+GDB stop and the last DOS return, so a matching PC alone cannot claim ownership.
+
+A user breakpoint, hook, step or another stop owner keeps its actual receipt.
+The keep is withheld on a conflicting/preempted attempt. A configured control
+at the returned PC is reported separately if it has not actually fired; the
+host never manufactures breakpoint IDs from the PC. Hook hits and pending
+step-over state are retained instead of silently continuing past the boundary.
+Active clock budgets and renderer fences cannot share automatic stop selection.
+The existing runtime/context and proven-preimage admission rules still apply.
+
+Automatic selection/publication is limited to an outer public `run()`. Scripts,
+comparative trials, internal history/CPU-undo execution and renderer/timing
+execution disable this controller and retain their established contracts. No
+background watcher or loop is added. Policy disable decisions remain in the
+host journal, including after rewind or reopened FDBs. Host state mutations
+still invalidate the underlying save evidence under its existing rules.
+
+The native attempt outcome distinguishes `consumed` and `preempted`. A settled
+receipt is durably recorded before a token/epoch/generation/sequence-bound ACK;
+control is disabled on leaving the public run. An unacknowledged repeated flush
+invalidates the auxiliary automatic-stop control, separately from the core
+filesystem ledger. A pending native/main-loop handoff cannot be checkpointed.
+A settled receipt can: full restore validates its logical state and advanced
+owner counters, and explicit resume acknowledges an old consumed/preempted
+attempt without republishing or retrying it. A later fresh flush may create the
+next stop. Physical copies and journal decisions remain outside guest rewind;
+whole-FDB rollback remains outside that guarantee.
+
+N24 uses native VMState schema3/minimum3 and same-binary restore. Existing v1/v2
+save-witness packets remain unchanged; N22 and N23 and their matching runtimes
+stay available for their own checkpoints. Broad runtime/driver and cross-binary
+migration qualification remain open. DOSBox-X remains default and retained.

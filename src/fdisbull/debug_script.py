@@ -6,6 +6,7 @@ import inspect
 import json
 import re
 import time
+from functools import wraps
 
 from .debugger import bounded
 from .operation_budget import rpc_budget
@@ -477,7 +478,17 @@ def validate_script(script, *, session=None):
     return expanded
 
 
+def _suppress_automatic_keeps(function):
+    """Resolve the QEMU controller lazily for non-QEMU script users."""
+    @wraps(function)
+    def invoke(*args, **kwargs):
+        from .qemu_save_stop import no_automatic_keeps
+        return no_automatic_keeps(function)(*args, **kwargs)
+    return invoke
+
+
 @rpc_budget
+@_suppress_automatic_keeps
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     started = time.monotonic()

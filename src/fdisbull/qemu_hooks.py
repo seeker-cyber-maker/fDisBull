@@ -292,6 +292,8 @@ class QemuHookSessionMixin:
             frame_stop = getattr(self, '_frame_stop_after_step', None)
             if frame_stop is not None and frame_stop():
                 return stepped
+            if stepped.get('save_boundary_conflict'):
+                return stepped
             return stepped if stepped['outcome'] != 'step' else None
         except BaseException:
             self.close()
@@ -363,7 +365,7 @@ class QemuHookSessionMixin:
             if control is None:
                 control = next((x for x in self._qemu_hooks.values()
                                 if x['breakpoint_id'] == evidence['breakpoint_id']), None)
-            if stop_on_hook:
+            if stop_on_hook or result.get('save_boundary_conflict'):
                 if control is not None:
                     self._qemu_hook_pending = control['hook']
                     self._qemu_hook_pending_task = evidence.get('task', {}).get('task_id')

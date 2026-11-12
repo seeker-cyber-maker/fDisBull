@@ -583,10 +583,11 @@ class QemuDOSWorkspaceMixin:
 
     @_history_operation
     def workspace_keep_policy(self, path, directory, *, mode='exclusive', temporary_path=None,
-                              predecessor=None, timeout_ms=60000):
+                              predecessor=None, safe_stop=False, timeout_ms=60000):
         """Opt in one witnessed path to versioned keeps at explicit workspace seals."""
         from .qemu_dos_provenance import start
-        return start(self, path, directory, mode=mode, temporary_path=temporary_path, predecessor=predecessor)
+        return start(self, path, directory, mode=mode, temporary_path=temporary_path,
+                     predecessor=predecessor, safe_stop=safe_stop)
 
     @_history_operation
     def workspace_keep_policy_enabled(self, policy, enabled, *, timeout_ms=60000):

@@ -44,6 +44,7 @@ SOURCE_SUPPORT = (
     "native/qemu-task-cascade/",
     "native/qemu-dos-provenance/",
     "native/qemu-dos-save-operations/",
+    "native/qemu-dos-save-stop/",
     "tests/",
     "scripts/",
     ".github/workflows/",

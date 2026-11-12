@@ -1731,7 +1731,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-start",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_start; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_start; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1739,7 +1739,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     },
     {
@@ -1747,7 +1750,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-status",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_status; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_status; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1755,7 +1758,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     },
     {
@@ -1763,7 +1769,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-capture",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_capture; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_capture; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1771,7 +1777,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     },
     {
@@ -1779,7 +1788,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-stop",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_stop; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_stop; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1787,7 +1796,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     },
     {
@@ -1795,7 +1807,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1803,7 +1815,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     },
     {
@@ -1811,7 +1826,7 @@
       "slice": "layers-hooks",
       "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy-enabled",
       "status": "partial",
-      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy_enabled; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy_enabled; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
       "qualification": "unqualified",
       "tests": [
         "tests/test_qemu_dos_provenance.py",
@@ -1819,7 +1834,10 @@
         "tests/test_qemu_dos_provenance_native.py",
         "tests/test_dos_save_operations.py",
         "tests/test_qemu_dos_save_admission.py",
-        "tests/test_qemu_dos_save_operations_native.py"
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
       ]
     }
   ],

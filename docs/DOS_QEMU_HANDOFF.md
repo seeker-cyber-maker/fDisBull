@@ -4348,3 +4348,82 @@ Native build01–03 diagnostics and initial host-fixture failures are retained
 separately. The final consolidated private receipt is save-operations-final-receipt.json.
 N19/N20/N21/N22, the exact component-04 image and shared installation selector
 retain their prior identities.
+
+
+## Automatic safe-stop selection for save keeps (2026-11-12)
+
+N24 adds explicit safe_stop=True to a mode=save workspace keep policy. Its
+outer public run selects a matched completed DOS AH=0Dh return, pauses before
+the next guest instruction, validates the native stop and file evidence, seals
+a full checkpoint and keeps one version under the original host deadline.
+Defaults stay unchanged; no implicit continue follows publication. Scripts,
+comparative trials, internal histories/CPU undo, frame and timing execution
+suppress this controller and retain their existing behavior.
+
+Three separate QMP commands SET/QUERY/ACK configure and reconcile the auxiliary
+qemu-pc-dos-save-stop-v1 receipt, preserving v1/v2 save-witness info contracts.
+The native request records the exact returned PC/CS/SS/SP, event count and
+witness generation. The main-loop callback credits a PAUSED stop only if the
+request wins. Debugger, single-step and return-site breakpoint conflicts retain
+their actual cause; active clock/frame controllers cannot share ownership. The
+host verifies raw GDB attribution and the last DOS return. Hook hits and pending
+step-over are not swallowed by automatic continuation or a fabricated breakpoint.
+
+Each completed eligible flush can create one fresh sequence. A ready record,
+query, IRQ return or restored old attempt cannot reissue it. Settled receipts
+are persisted before CAS-bound ACK. Invalid repeated unacknowledged attempts
+lose automatic-stop credit while the core file-provenance ledger remains a
+separate contract. Host file keeps and disable decisions remain outside rewind;
+pending reservations require reconciliation without replay. The stop controller
+is disabled when the outer public run returns.
+
+Full checkpoints include the auxiliary state when opted in. Pending main-loop
+handoffs refuse capture; settled consumed/preempted states are validated and
+restored with advanced native owner counters. An old restored receipt is ACKed
+without publication before explicit resume, and only a later fresh flush can
+stop again. Native schema3/minimum3 is same-binary N24 only; N22/N23 and matching
+runtimes stay retained for their checkpoints. Original-entry, qualified FreeDOS,
+real/unpaged single CPU and no active layered/task/input/clock admission rules
+remain unchanged. Arbitrary driver/runtime and cross-binary parity remain open.
+
+Review closed the path that allowed an unexpectedly missing/inactive native
+owner to proceed to guest dispatch. Known stop/checkpoint/export/ACK effects
+survive failures, including failure to persist the close. The initial native
+build exposed a target-specific macro in common runstate; a target-neutral
+registered callback replaced it. Initial clean-build warnings in unchanged
+media code and the first compile failure remain in their dated logs. Build02
+then compiled successfully; no guest retry was needed for the first 12-case
+integration pass.
+
+The authored N24 patch is in native/qemu-dos-save-stop. Exact isolated replay
+seeded six N23 files and one new callback header and matched all seven N24
+outputs. Binary SHA-256 is
+8af033a259892808dd5b15b524f64145aa17a6dcf3a774dc6e8d2985c31e4d27;
+patch SHA-256 is
+468f3bf0f1adb8f7d9f1dc11b822e983e180d892cbe1573a09a2f91dc583d195.
+Source packaging includes its authored README/manifest/patch, excluding runtime
+binaries. Existing N19/N20/N21/N22/N23 and component-04 inputs remain retained.
+
+The new 12 native cases pass: exact COM/MZ post-flush PC and unchanged next
+instruction marker, repeated versions, temp replacement, pending-flush snapshots,
+FDB reopen/dedup/disable, competing BP/hook, script/trial suppression, tainted
+save refusal and post-export journal failure. A separate private consumed-stop
+checkpoint/FDB-reopen witness passes: the old attempt is durably acknowledged
+without publication, the next fresh boundary is already-kept, and exactly two
+physical versions remain. Focused host verification passes 235 cases, retained
+DOSBox 323, retained N23 save operations 13, retained N20 histories 14 and
+metadata/runtime/dispatch/payload/skill/migration 60, all with zero
+failures/errors/skips. Selections overlap. Formal 141-surface qualification and
+seven campaigns remain open. DOSBox-X stays default and retained; no CI,
+release/tag, merge, shared installation or default-selector change.
+
+
+Integrated preservation on N24 passed **2,459 cases across 144 files**, with
+zero failures/errors/skips. All 1,183 Python source/test SHA-256 values stayed
+fixed through the run. Private evidence uses save-stop-preservation-final,
+save-stop-host-final, save-stop-native-01, save-stop-dosbox-final,
+save-stop-n23-legacy, save-stop-n20-final, save-stop-metadata-final,
+save-stop-consumed-restore-final and save-stop-patch-replay-receipt.json. The
+consolidated private receipt is save-stop-final-receipt.json. Earlier diagnostics
+remain separate. No source/native runtime is promoted by these bounded local
+results; all formal qualification campaigns remain open.
