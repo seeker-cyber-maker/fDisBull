@@ -227,3 +227,137 @@ def test_keep_journal_failure_after_export_closes_without_replay(tmp_path,monkey
             assert debug.closed
             assert [p.read_bytes() for p in keeps.iterdir()]==[b'AXZ']
     assert binary.read_bytes()==source
+
+
+def _disk_full_probe(directory,nasm):
+    """One real DOS exclusive create and a 1024-byte write, then close/flush."""
+    from support.dos_process_fixture import assemble
+    code=assemble(directory,'disk-full-save',r'''
+bits 16
+org 100h
+    push cs
+    pop ds
+    mov dx,filename
+    xor cx,cx
+    mov ax,5b00h
+    int 21h
+    jc failed
+    mov bx,ax
+    mov [handle],ax
+    mov dx,payload
+    mov cx,1024
+    mov ah,40h
+    int 21h
+    mov [written],ax
+    pushf
+    pop word [flags]
+    mov bx,[handle]
+    mov ah,3eh
+    int 21h
+    mov dl,4
+    mov ah,36h
+    int 21h
+    mov [free_after],bx
+    mov ah,0dh
+    int 21h
+    mov word [status],0beefh
+    jmp short done
+failed:
+    mov word [status],0deadh
+done:
+    nop
+    mov ax,4c2ah
+    int 21h
+handle: dw 0
+written: dw 0
+flags: dw 0
+free_after: dw 0ffffh
+status: dw 0
+filename: db 'D:\SAVE.DAT',0
+payload: times 1024 db 05ah
+    db 'FDSF'
+    dw done-100h,status-100h,written-100h,flags-100h,free_after-100h
+''',nasm)
+    if code[-14:-10]!=b'FDSF':raise ValueError('Disk-full fixture marker missing')
+    return code,dict(zip(('done','status','written','flags','free_after'),
+                         struct.unpack_from('<5H',code,len(code)-10)))
+
+
+@pytest.mark.parametrize('free_clusters',[1,0],ids=['short-write','full-disk'])
+def test_real_disk_full_write_taints_and_never_automatically_keeps(tmp_path,monkeypatch,free_clusters):
+    import hashlib
+    import json
+    import math
+    from fdisbull import dos_workspace_fat as fat
+    import fdisbull.dos_workspace_launch as launch
+    from support.dos_process_fixture import digest
+    runtime=_runtime();build=tmp_path/'build';build.mkdir();directory=tmp_path/'input';directory.mkdir()
+    source,marker=_disk_full_probe(build,runtime['NASM']);binary=directory/'PROBE.COM';binary.write_bytes(source)
+    # The complete C:/D: disk ends on a full 16-head, 63-sector cylinder.
+    d_start=fat._align(fat._C_START_LBA+fat.FLOPPY_BYTES//fat.SECTOR,2048)
+    cylinder=16*63
+    volume_sectors=((d_start+8192+cylinder-1)//cylinder)*cylinder-d_start
+    volume_bytes=volume_sectors*fat.SECTOR
+    layout=fat._layout_fat16(volume_bytes)
+    cluster_bytes=layout['spc']*fat.SECTOR
+    assert cluster_bytes==512
+    program_clusters=math.ceil(len(source)/cluster_bytes)
+    filler_size=(layout['clusters']-program_clusters-free_clusters)*cluster_bytes
+    assert 0<filler_size<16*1024*1024
+    filler=directory/'ZZZZ.BIN';filler.write_bytes(b'F'*filler_size)
+    source_hash=hashlib.sha256(source).hexdigest();filler_hash=digest(filler)
+    real_build=fat.build_volume;observed=[]
+    def small_real_volume(entries):
+        volume=real_build(entries,size_bytes=volume_bytes)
+        fat_start=layout['reserved']*fat.SECTOR
+        free=sum(struct.unpack_from('<H',volume,fat_start+2*i)[0]==0
+                 for i in range(2,layout['clusters']+2))
+        assert free==free_clusters
+        observed.append(free)
+        return volume
+    monkeypatch.setattr(launch,'build_volume',small_real_volume)
+    keeps=tmp_path/'keeps';keeps.mkdir()
+    with Project.create(tmp_path/'project.fdb',binary,image='com') as project:
+        with _launch(project,runtime,directory) as debug:
+            assert observed==[free_clusters]
+            base=_runtime_base(debug)
+            debug.workspace_keep_policy('SAVE.DAT',keeps,mode='save',safe_stop=True)
+            point=debug.breakpoint(base+marker['done'])
+            result=debug.run(timeout_ms=30000)
+            assert result['outcome']=='breakpoint' and not result.get('save_keep')
+            assert _word(debug,base+marker['status'])==0xbeef
+            actual=_word(debug,base+marker['written']);carry=bool(_word(debug,base+marker['flags'])&1)
+            free_after=_word(debug,base+marker['free_after'])
+            if free_clusters:
+                assert not carry and 0<actual<1024, f'expected short write: AX={actual} CF={carry}'
+            else:
+                assert carry or actual==0, f'expected disk-full failure: AX={actual} CF={carry}'
+            assert free_after==0
+            status=debug.workspace_provenance_status();native=status['native']
+            assert not native['valid'] and native['phase']=='invalid'
+            assert native['fault']=='DOS write failed or was short' and native['bytes-written']==0
+            assert status['policy']['reservations']==status['policy']['completed']==0
+            assert list(keeps.iterdir())==[]
+            sealed=debug.workspace_seal(timeout_ms=60000)
+            assert sealed['keep_policy']['status']=='not-ready'
+            payload=debug.workspace_read('SAVE.DAT',sealed['workspace']['generation']['artifact'])['data']
+            if not carry:
+                assert payload==b'Z'*actual
+            assert debug.workspace_provenance_status()['policy']['reservations']==0
+            assert list(keeps.iterdir())==[]
+            restored=debug.load_state(sealed['checkpoint'],timeout_ms=60000)
+            after=debug.workspace_provenance_status()
+            assert not after['native']['valid']
+            assert after['policy']['reservations']==after['policy']['completed']==0
+            assert list(keeps.iterdir())==[]
+            witness={'free_clusters_before':free_clusters,'free_clusters_after':free_after,
+                     'requested':1024,'ax':actual,'carry':carry,'file_size':len(payload),
+                     'file_sha256':hashlib.sha256(payload).hexdigest(),'stop':result['outcome'],
+                     'invalid_after_restore':not after['native']['valid']}
+            (tmp_path/'disk-full-witness.json').write_text(json.dumps(witness,sort_keys=True))
+            print('disk-full witness:',json.dumps(witness,sort_keys=True),flush=True)
+            debug.delete_breakpoint(restored['controls']['breakpoints'][point['breakpoint_id']])
+            debug.workspace_provenance_stop()
+            assert debug.run(timeout_ms=10000)['outcome']=='guest_exit'
+    assert hashlib.sha256(binary.read_bytes()).hexdigest()==source_hash
+    assert digest(filler)==filler_hash and not (directory/'SAVE.DAT').exists()

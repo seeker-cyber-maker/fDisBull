@@ -2009,3 +2009,16 @@ and regression tests. Default promotion requires each remaining surface's
 native evidence, real compatibility campaigns, cold restore and a fallback
 rehearsal. Retaining DOSBox is part of the migration contract even after those
 gates pass.
+
+## Bounded disk-full evidence and architecture follow-up
+
+The [file-layer guide](DOS_FILE_LAYERS.md#disk-full-save-failures) records two
+actual FreeDOS short/zero-count save writes, invalid-witness checkpoint restore
+and withheld keep publication. Their small, authored fixture does not establish
+general near-full-volume or BIOS-geometry compatibility. DOSBox-X remains the
+default; the formal surface qualifications and seven campaigns remain open.
+
+[CHIP-8 QEMU feasibility](CHIP8_QEMU_FEASIBILITY.md) separately maps a potential
+new compiled TCG CPU/machine and the debugger's x86 coupling. It is an
+architecture-generalization proposal, with no CHIP-8 QEMU target built or run.
+It does not change the DOS parity gates or the default backend.

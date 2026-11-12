@@ -4427,3 +4427,70 @@ save-stop-consumed-restore-final and save-stop-patch-replay-receipt.json. The
 consolidated private receipt is save-stop-final-receipt.json. Earlier diagnostics
 remain separate. No source/native runtime is promoted by these bounded local
 results; all formal qualification campaigns remain open.
+
+
+## Disk-full save refusal and CHIP-8 feasibility (2026-11-12)
+
+This slice closes two concrete negative-save witnesses without changing the
+production engine or the retained N24 binary. The native test uses a real,
+bounded 4,595,712-byte FAT16 D: volume, independently counts its free clusters,
+and runs an authored COM program through the normal FreeDOS loader. A requested
+1,024-byte AH=40h write returns AX=512 with one free 512-byte cluster and AX=0
+with none; carry is clear in both observed cases. The sealed files contain
+exactly 512 authored Z bytes and zero bytes, respectively.
+
+Both completed close/flush routes reach the genuine user breakpoint, not an
+automatic save boundary. The witness faults with DOS write failed or was short,
+admits no payload to the proof, and creates no keep reservation, completion or
+physical output. Explicit sealing reports not-ready for that policy while
+retaining actual workspace bytes. Full checkpoint restore into a fresh native
+process preserves the invalid witness and empty keep journal. The source and
+filler originals remain unchanged; a later explicit disarm and run reaches
+ordinary guest exit. The production workspace default remains 32 MiB.
+
+The first 4 MiB, source-after-filler fixture timed out before source entry.
+Retained boot-only controls show that changing either file placement or the
+image size/alignment reaches entry. QEMU's first-partition CHS heuristic and
+the composite BPB also disagree. That metadata finding is not a demonstrated
+cause; no geometry fix is claimed or applied. The final fixture allocates the
+source before filler and ends the complete disk on a 16x63 cylinder boundary.
+Arbitrary near-full layouts, BIOS geometry, carry-set failures, other runtimes
+and the wider overwrite/seek/rename failure matrix remain open.
+
+Fresh verification of the final aligned fixture passes all 14 N24 native
+safe-stop cases, including the two new disk-full cases, with zero failures,
+errors or skips. Its two machine-readable witnesses record actual DOS AX/CF,
+free clusters, file size/hash, stop cause and invalid-after-restore result.
+The separate staged payload/skill/runtime/dispatch/migration selection passes
+60 cases. Earlier diagnostic receipts remain distinct from this final source
+run: disk-full-native-01, the positive/small-volume/probe controls,
+disk-full-native-02 and disk-full-matrix-controls-01.
+
+CHIP8_QEMU_FEASIBILITY.md separately documents a source-grounded architecture
+experiment. QEMU 10.0.13 in the inspected tree has no CHIP-8 target. The existing
+CHIP-8 pilot is an authored Python interpreter/decoder, not a QEMU CPU or an
+independent correctness oracle. A real experiment needs a compiled TCG CPU,
+minimal system machine, GDB/VMState support and a thin fDisBull non-x86 profile
+before it demonstrates debugger reuse. Transport, operation budgets and
+artifacts are candidates for reuse; current launch/register/PC/address/decoder
+paths and DOS-specific scheduling/layers/IRQ/file protocols need explicit
+architecture boundaries. The proposed later layer/hook/history/device tests
+are acceptance gates, not completed capabilities. No CHIP-8 QEMU source, build,
+guest execution or end-to-end package qualification is claimed.
+
+DOSBox-X stays default and retained. All 141 formal surface qualifications and
+seven campaigns remain open. Existing trials, histories, task-private layers,
+hooks, checkpoints and IRQ contracts remain in the preservation selection.
+No native rebuild, CI, release/tag, merge or shared installation change.
+
+Integrated preservation passes **2,461 cases across 144 files**, with zero
+failures, errors or skips. All 1,183 Python source/test hashes remained fixed
+through the run. The separate retained DOSBox-X history/undo selection passes
+323 cases, final native safe-stop selection 14 and staged metadata/runtime/
+dispatch/payload/skill/migration selection 60; selections overlap. N19 through
+N24 binary hashes, component-04 system image and the shared installation
+selector retain their previous identities. Final evidence uses
+save-diskfull-preservation-final, save-diskfull-native-final,
+save-diskfull-dosbox-final, save-diskfull-metadata-final and
+chip8-qemu-feasibility-source-audit.json. The consolidated private receipt is
+save-diskfull-final-receipt.json. Earlier handoff text is preserved verbatim.

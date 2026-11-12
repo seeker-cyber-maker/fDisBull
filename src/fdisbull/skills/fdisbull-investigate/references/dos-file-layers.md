@@ -436,3 +436,38 @@ N24 uses native VMState schema3/minimum3 and same-binary restore. Existing v1/v2
 save-witness packets remain unchanged; N22 and N23 and their matching runtimes
 stay available for their own checkpoints. Broad runtime/driver and cross-binary
 migration qualification remain open. DOSBox-X remains default and retained.
+
+## Disk-full save failures
+
+Two bounded native N24/FreeDOS cases now exercise an actual full workspace,
+rather than injected DOS replies. The authored test uses the real FAT builder
+with a 4,595,712-byte D: volume and an independently counted allocation table;
+the production workspace remains 32 MiB. The executable is allocated before
+the filler and the complete test disk ends on a 16-head, 63-sector cylinder
+boundary. This is a fixture layout, not a change to the production launcher or
+a claim about the BIOS-reported geometry.
+
+| Initially free clusters | Requested `AH=40h` bytes | Observed DOS return | Sealed file |
+| --- | ---: | --- | ---: |
+| One 512-byte cluster | 1,024 | Carry clear, AX=512 | 512 authored bytes |
+| Zero | 1,024 | Carry clear, AX=0 | Empty |
+
+Carry clear does not prove the whole write succeeded: the accepted count must
+also match the request. Both runs invalidate the native save witness with
+`DOS write failed or was short`; no write payload is admitted into that proof.
+The guest still reaches its real user breakpoint after close/flush. Neither an
+automatic boundary nor a keep reservation/completion is produced. An explicit
+seal reports the policy as `not-ready`, retains the actual partial/empty file
+as ordinary workspace state, and does not grant it save provenance. Full
+checkpoint restore in a fresh QEMU process retains that invalid state and the
+empty keep journal. The original host executable and filler remain unchanged.
+
+An earlier nearly full 4 MiB fixture timed out before source entry when the
+executable was allocated after the filler. Boot-only controls reached entry
+when either file placement or image size/alignment changed. The pinned QEMU
+geometry heuristic also disagrees with the BPB geometry; causality has not been
+established. The failed run and controls are retained as diagnostics. Arbitrary
+near-full layouts, BIOS geometry, other DOS runtimes, carry-set errors, and
+short writes across the broader overwrite/seek/rename combinations remain
+unqualified. The two save-refusal witnesses do not close a formal migration
+surface or authorize removing DOSBox-X.
