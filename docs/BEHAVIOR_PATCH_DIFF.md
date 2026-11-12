@@ -93,3 +93,6 @@ The helper admits at most 10,000 events per side. It limits stored example
 changes to 64 and topology segments to 256, reporting truncation. The original
 trace artifacts remain the evidence for detailed inspection. Native DOSBox and
 Wine/QEMU acceptance of this new report shape has not yet been run.
+
+For the PE route and its source/model validation gates, see
+[Windows patch analysis](WINDOWS_PATCH_ANALYSIS.md).

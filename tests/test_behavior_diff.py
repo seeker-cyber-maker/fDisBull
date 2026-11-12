@@ -3,6 +3,7 @@ import pytest
 
 from fdisbull.behavior_diff import compare_trace_topology
 from fdisbull.debug_experiments import compare_trials
+from fdisbull.debug_semantics import normalize_trace
 
 
 def event(address, *, version=1, code='90', ax='0x1', flags='0x0', context='flat'):
@@ -229,4 +230,86 @@ def test_partial_register_relation_retains_different_shared_fields():
     relation = result['segments'][0]['entry_registers']
     assert relation['relation'] == 'partial'
     assert relation['different_fields'] == ['general.ax']
+    assert result['observed_register_difference'] is True
+
+
+@pytest.mark.parametrize('bits,ip,flags,accumulator', [
+    (64, 'rip', 'rflags', 'rax'),
+    (32, 'eip', 'eflags', 'eax'),
+])
+def test_rebased_pe_trace_rejoin_keeps_flags_and_runtime_identity_separate(bits, ip, flags, accumulator):
+    base = 0x140000000 if bits == 64 else 0x400000
+
+    def pe_events(sites, delta, rejoin_flags):
+        events = []
+        for address in sites:
+            project_address = base + address
+            events.append({
+                'address': hex(project_address + delta),
+                'project_address': hex(project_address),
+                'bytes': '90',
+                'registers': {ip: hex(project_address + delta),
+                              flags: rejoin_flags if address == 0x1010 else '0x202',
+                              'general': {accumulator: '0x7'}},
+            })
+        normalize_trace('wine-qemu', events, version=1, delta=delta)
+        return events
+
+    baseline = pe_events([0x1000, 0x1001, 0x1010], 0, '0x202')
+    layer = pe_events([0x1000, 0x1005, 0x1010], 0x10000000, '0x242')
+    assert all(e['observation']['instruction_completed'] is True for e in baseline + layer)
+    result = compare_trace_topology(trace(baseline), trace(layer), same_source=True)
+    assert result['alignment'] == 'evidenced'
+    assert [part['kind'] for part in result['segments']] == ['common', 'divergent', 'common']
+    assert result['segments'][1]['rejoin']['registers']['different_fields'] == [flags]
+    assert result['control_flow_difference'] is True
+    assert result['observed_register_difference'] is True
+    assert result['code_difference'] is None
+
+
+def test_rebased_pe_instruction_pointer_alone_is_not_an_observed_effect():
+    def pe_event(delta):
+        event = {'address': hex(0x140001000 + delta), 'project_address': '0x140001000',
+                 'bytes': '90', 'registers': {'rip': hex(0x140001000 + delta),
+                                             'rflags': '0x202', 'general': {'rax': '0x7'}}}
+        normalize_trace('wine-qemu', [event], version=1, delta=delta)
+        return event
+
+    result = compare_trace_topology(trace([pe_event(0)]), trace([pe_event(0x10000000)]), same_source=True)
+    assert result['observed_register_difference'] is False
+    assert result['segments'][0]['entry_registers']['relation'] == 'equal'
+
+
+def test_mapped_pe_sites_do_not_count_relocated_instruction_pointer_as_data():
+    def pe_event(version, project_address, delta):
+        event = {'address': hex(project_address + delta), 'project_address': hex(project_address),
+                 'bytes': '90', 'registers': {'rip': hex(project_address + delta),
+                                             'rflags': '0x202', 'general': {'rax': '0x7'}}}
+        normalize_trace('wine-qemu', [event], version=version, delta=delta)
+        return event
+
+    a = pe_event(1, 0x140001000, 0)
+    b = pe_event(2, 0x140009000, 0x10000000)
+    correspondence = [{'baseline': {'source_version': 1, 'context': 'flat',
+                                     'project_address': a['project_address']},
+                       'layer': {'source_version': 2, 'context': 'flat',
+                                 'project_address': b['project_address']},
+                       'evidence': 'reviewed authored PE block map'}]
+    result = compare_trace_topology(trace([a]), trace([b]), correspondence=correspondence)
+    assert result['alignment'] == 'evidenced'
+    assert result['observed_register_difference'] is False
+    assert result['segments'][0]['entry_registers']['relation'] == 'equal'
+
+
+def test_pe_general_register_pointer_is_not_rebased_away():
+    a = {'address': '0x140001000', 'project_address': '0x140001000', 'bytes': '90',
+         'registers': {'rip': '0x140001000', 'rflags': '0x202',
+                       'general': {'rax': '0x140002000'}}}
+    b = {'address': '0x150001000', 'project_address': '0x140001000', 'bytes': '90',
+         'registers': {'rip': '0x150001000', 'rflags': '0x202',
+                       'general': {'rax': '0x150002000'}}}
+    normalize_trace('wine-qemu', [a], version=1)
+    normalize_trace('wine-qemu', [b], version=1, delta=0x10000000)
+    result = compare_trace_topology(trace([a]), trace([b]), same_source=True)
+    assert result['register_changes'][0]['fields'] == ['general.rax']
     assert result['observed_register_difference'] is True

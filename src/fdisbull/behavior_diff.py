@@ -158,6 +158,25 @@ def _flat_registers(value, prefix=''):
     return result
 
 
+def _comparable_registers(event):
+    """Use an aligned-site token for a PE pre-instruction IP at its site.
+
+    A PE may be rebased or its matched code may move between binary versions.
+    The caller only uses this for paired sites. Other registers remain raw:
+    inferring which of them are image pointers would hide real differences.
+    """
+    registers = event.get('registers')
+    if not isinstance(registers, dict):
+        return registers
+    if not isinstance(event.get('address'), str) or not isinstance(event.get('project_address'), str):
+        return registers
+    result = registers.copy()
+    for name in ('rip', 'eip'):
+        if name in result and _address(str(result[name])) == _address(event['address']):
+            result[name] = '<aligned-site>'
+    return result
+
+
 def _register_relation(left, right):
     if not isinstance(left, dict) or not isinstance(right, dict):
         return {'relation': 'unobserved'}
@@ -265,10 +284,10 @@ def compare_trace_topology(baseline, layer, *, same_source=False, correspondence
             for label, offset in (('entry', 0), ('exit', -1)):
                 i = segment['baseline'][0] if offset == 0 else segment['baseline'][1] - 1
                 j = segment['layer'][0] if offset == 0 else segment['layer'][1] - 1
-                segment[label + '_registers'] = _register_relation(a[i].get('registers'), b[j].get('registers'))
+                segment[label + '_registers'] = _register_relation(_comparable_registers(a[i]), _comparable_registers(b[j]))
         elif segment['rejoin'] is not None:
             i, j = segment['rejoin']['baseline_index'], segment['rejoin']['layer_index']
-            segment['rejoin']['registers'] = _register_relation(a[i].get('registers'), b[j].get('registers'))
+            segment['rejoin']['registers'] = _register_relation(_comparable_registers(a[i]), _comparable_registers(b[j]))
     code_changes, register_changes, presentation_changes = [], [], []
     code_count = register_count = presentation_count = 0
     code_observed = bool(pairs)
@@ -293,8 +312,9 @@ def compare_trace_topology(baseline, layer, *, same_source=False, correspondence
             code_count += 1
             if len(code_changes) < max_examples:
                 code_changes.append({'baseline_index': i, 'layer_index': j, 'fields': code_fields})
-        if isinstance(x.get('registers'), dict) and isinstance(y.get('registers'), dict):
-            left_regs, right_regs = _flat_registers(x['registers']), _flat_registers(y['registers'])
+        x_registers, y_registers = _comparable_registers(a[i]), _comparable_registers(b[j])
+        if isinstance(x_registers, dict) and isinstance(y_registers, dict):
+            left_regs, right_regs = _flat_registers(x_registers), _flat_registers(y_registers)
             if not left_regs and not right_regs:
                 registers_observed = False
                 if 'Empty register snapshots provide no state comparison' not in unknown:
