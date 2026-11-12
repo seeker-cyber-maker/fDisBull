@@ -16,13 +16,19 @@ default:
   image: python:3.12-slim-bookworm
   tags:
     - fdisbull-local-linux
+    - fdisbull-ovh-ca
   interruptible: false
+  before_script:
+    - python scripts/ci/ovh-admission.py
+  after_script:
+    - python scripts/ci/ovh-export.py export --work "$CI_PROJECT_DIR" --root /ci-host-results
   timeout: 20m
   retry: 0
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYTHONDONTWRITEBYTECODE: "1"
+  FDISBULL_EXPECTED_BYTES: "500000000"
 
 cache:
   key: "pip-py312-$CI_COMMIT_REF_SLUG"
@@ -37,10 +43,13 @@ stages:
   - qualification
 
 test-and-package:
+  resource_group: fdisbull-ovh-ci
   stage: verify
   timeout: 40m
-  resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
+  variables:
+    FDISBULL_EXPECTED_BYTES: "12000000000"
   before_script:
+    - python scripts/ci/ovh-admission.py
     - apt-get update
     - apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev
   script:
@@ -48,7 +57,7 @@ test-and-package:
   artifacts:
     name: "fdisbull-packages-$CI_COMMIT_SHORT_SHA"
     when: always
-    expire_in: 7 days
+    expire_in: never
     paths:
       - dist/*
       - artifacts/receipts/*.json
@@ -64,6 +73,7 @@ test-and-package:
     - when: never
 
 native-qualification:
+  resource_group: fdisbull-ovh-ci
   stage: native-gate
   interruptible: false
   rules:
@@ -75,6 +85,7 @@ native-qualification:
     - 'echo "Starting native qualification for $CI_COMMIT_SHA"'
 
 .native_debugger_template:
+  resource_group: fdisbull-ovh-ci
   extends: .native_qualification_rules
   stage: native-qualification
   interruptible: false
@@ -92,10 +103,11 @@ native-qualification:
     - python scripts/ci/native-receipt.py "$FDISBULL_PROFILE"
   artifacts:
     when: always
-    expire_in: 7 days
+    expire_in: never
     paths:
       - native-evidence/
       - artifacts/receipts/native-*.json
+      - artifacts/receipts/ovh-*.json
       - .native/offline/output/
       - .native/backends/
     reports:
@@ -105,6 +117,7 @@ native-debugger-stable:
   extends: .native_debugger_template
   image: python:3.12-bookworm
   variables:
+    FDISBULL_EXPECTED_BYTES: "14000000000"
     FDISBULL_PROFILE: stable
     FDISBULL_PATCH_DIRECTORY: experimental/dosbox-x
 
@@ -112,10 +125,12 @@ native-debugger-layers:
   extends: .native_debugger_template
   image: python:3.13.5-bookworm
   variables:
+    FDISBULL_EXPECTED_BYTES: "18000000000"
     FDISBULL_PROFILE: layers
     FDISBULL_PATCH_DIRECTORY: experimental/dosbox-x/layers
 
 native-unified:
+  resource_group: fdisbull-ovh-ci
   extends: .native_qualification_rules
   stage: native-unified
   image: python:3.12-bookworm
@@ -131,7 +146,10 @@ native-unified:
   services:
     - name: docker:27-dind
       alias: docker
+      command: ["--storage-driver=vfs"]
   variables:
+    FDISBULL_EXPECTED_BYTES: "35000000000"
+    DOCKER_BUILDKIT: "0"
     DOCKER_HOST: "tcp://docker:2375"
     DOCKER_TLS_CERTDIR: ""
     FDISBULL_PE_QEMU: "$CI_PROJECT_DIR/.native/pe/qemu-9.2.4/build/qemu-system-x86_64"
@@ -153,11 +171,12 @@ native-unified:
     - python scripts/ci/native-receipt.py unified
   artifacts:
     when: always
-    expire_in: 7 days
+    expire_in: never
     paths:
       - native-evidence/pe/
       - native-evidence/unified/
       - artifacts/receipts/native-unified.json
+      - artifacts/receipts/ovh-*.json
       - .native/pe/packages/*.whl
     reports:
       junit:
@@ -165,6 +184,7 @@ native-unified:
         - native-evidence/unified/tests.xml
 
 qualify-candidate:
+  resource_group: fdisbull-ovh-ci
   extends: .native_qualification_rules
   stage: qualification
   image: python:3.12-slim-bookworm
@@ -176,11 +196,13 @@ qualify-candidate:
     - native-debugger-layers
     - native-unified
   script:
-    - python scripts/check_ci_qualification.py --output artifacts/receipts/qualification.json
+    - python scripts/ci/ovh-export.py verify --work "$CI_PROJECT_DIR" --root /ci-host-results
+    # This graph qualifies ordinary/native core only; complete chat delivery is separate.
+    - python scripts/check_ci_qualification.py --output artifacts/receipts/qualification.json --legacy-dos-only
   artifacts:
     when: on_success
     name: "fdisbull-qualified-$CI_COMMIT_SHORT_SHA"
-    expire_in: 30 days
+    expire_in: never
     paths:
       - artifacts/receipts/
       - dist/
