@@ -32,7 +32,7 @@ def _digest(value):
 
 def _contract(value, bits):
     if not isinstance(value, dict) or set(value) - {
-            'live_registers', 'live_flags', 'entry_registers', 'entry_register_ranges', 'memory_ranges',
+            'live_registers', 'live_flags', 'entry_registers', 'entry_register_ranges', 'entry_memory', 'memory_ranges',
             'memory_model', 'memory_observation'}:
         raise ValueError('Unknown regional contract field')
     names = register_names(bits) - ({'rip', 'rflags'} if bits == 64 else {'eip', 'eflags'})
@@ -71,10 +71,27 @@ def _contract(value, bits):
         normalized.append({'address': hex(address), 'length': length})
     if len(addresses) > 256 or (addresses and value.get('memory_model') != 'private_ordinary_ram'):
         raise ValueError('At most 256 bytes of explicitly private ordinary RAM are supported')
+    entry_memory = value.get('entry_memory', [])
+    if not isinstance(entry_memory, list) or len(entry_memory) > 256:
+        raise ValueError('Entry-memory assumptions require at most 256 bounded rows')
+    entry_cells, fixed_memory = set(), []
+    for item in entry_memory:
+        if (not isinstance(item, dict) or set(item) != {'address', 'hex'}
+                or not isinstance(item['address'], str) or not item['address'].startswith('0x')
+                or not isinstance(item['hex'], str) or not 2 <= len(item['hex']) <= 512
+                or len(item['hex']) % 2):
+            raise ValueError('Entry-memory assumptions require an address and 1..256 exact bytes')
+        address, raw = int(item['address'], 16), bytes.fromhex(item['hex'])
+        cells = set(range(address, address + len(raw)))
+        if len(raw) * 2 != len(item['hex']) or not cells <= addresses or cells & entry_cells:
+            raise ValueError('Entry-memory assumptions must be nonoverlapping subsets of declared RAM')
+        entry_cells |= cells
+        fixed_memory.append({'address': hex(address), 'hex': raw.hex()})
     return {'live_registers': sorted(live), 'live_flags': flags,
             'entry_registers': {n: hex(int(v, 16)) for n, v in sorted(entry.items())},
             'entry_register_ranges': {n: {key: hex(int(v, 16)) for key, v in sorted(bounds.items())}
                                       for n, bounds in sorted(register_ranges.items())},
+            'entry_memory': sorted(fixed_memory, key=lambda row: int(row['address'], 16)),
             'memory_ranges': sorted(normalized, key=lambda r: int(r['address'], 16)),
             'memory_model': 'private_ordinary_ram' if addresses else 'no_memory_access',
             'memory_observation': mode}, sorted(addresses), sorted(names)
@@ -141,7 +158,7 @@ def _arithmetic_flags(z, op, a, b, result, flags, fresh):
 
 def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline):
     regs, flags, memory = dict(initial), initial_flags, dict(initial_memory)
-    domains, accesses = [], []
+    domains, accesses, returns = [], [], []
     safety, alias_work = [], 0
     runs = []
     for address in sorted(memory):
@@ -159,6 +176,11 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
     if any(not int(bounds['min'], 16) <= concrete[n] <= int(bounds['max'], 16)
            for n, bounds in contract['entry_register_ranges'].items()):
         raise ValueError('Captured entry contradicts register-range assumptions')
+    for row in contract['entry_memory']:
+        address = int(row['address'], 16)
+        if any(snapshots[0][address + offset] != byte
+               for offset, byte in enumerate(bytes.fromhex(row['hex']))):
+            raise ValueError('Captured entry contradicts fixed-memory assumptions')
     substitutions = [(initial[n], z.BitVecVal(v, bits)) for n, v in concrete.items()]
     substitutions += [(initial_flags, z.BitVecVal(concrete_flags, 32))]
     substitutions += [(initial_memory[a], z.BitVecVal(v, 8)) for a, v in snapshots[0].items()]
@@ -196,21 +218,11 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             if name not in regs or operand.size * 8 != bits:
                 raise ValueError(f'Event {index}: partial register operand')
             return name
-        def location(operand):
+        def memory_location(value, width):
             nonlocal alias_work
-            value = z.BitVecVal(operand.mem.disp % (1 << bits), bits)
-            for register, scale in ((operand.mem.base, 1), (operand.mem.index, operand.mem.scale)):
-                if not register:
-                    continue
-                name = ins.reg_name(register)
-                term = z.BitVecVal(sequential, bits) if name in ('rip', 'eip') else regs.get(name)
-                if term is None:
-                    raise ValueError(f'Event {index}: unknown address register')
-                value = value + term * scale
             fixed = [(initial[n], z.BitVecVal(int(v, 16), bits))
                      for n, v in contract['entry_registers'].items()]
             value = z.simplify(z.substitute(value, *fixed))
-            width = operand.size
             if width not in (1, 2, 4, 8):
                 raise ValueError(f'Event {index}: unsupported memory width')
             concrete_address = observed(value)
@@ -227,6 +239,17 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 if alias_work > 32768:
                     raise ValueError('Symbolic alias-expression budget exceeds 32768 byte-cell operations')
             return value, width
+        def location(operand):
+            value = z.BitVecVal(operand.mem.disp % (1 << bits), bits)
+            for register, scale in ((operand.mem.base, 1), (operand.mem.index, operand.mem.scale)):
+                if not register:
+                    continue
+                name = ins.reg_name(register)
+                term = z.BitVecVal(sequential, bits) if name in ('rip', 'eip') else regs.get(name)
+                if term is None:
+                    raise ValueError(f'Event {index}: unknown address register')
+                value = value + term * scale
+            return memory_location(value, operand.size)
         def byte_at(address):
             address = z.simplify(address)
             if z.is_bv_value(address):
@@ -235,6 +258,11 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             for cell, byte in memory.items():
                 value = z.If(address == cell, byte, value)
             return value
+        def read_memory(address, width):
+            value = byte_at(address) if width == 1 else z.Concat(*[
+                byte_at(address + k) for k in reversed(range(width))])
+            accesses.append(('read', address, width, value))
+            return value
         def read(operand):
             if operand.type == X.X86_OP_REG:
                 return regs[reg_name(operand)]
@@ -242,11 +270,21 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 return z.BitVecVal(operand.imm % (1 << (operand.size * 8)), operand.size * 8)
             if operand.type == X.X86_OP_MEM:
                 a, width = location(operand)
-                value = byte_at(a) if width == 1 else z.Concat(*[byte_at(a + k) for k in reversed(range(width))])
-                accesses.append(('read', a, width, value))
-                return value
+                return read_memory(a, width)
             raise ValueError(f'Event {index}: unknown operand')
-        if iced.is_jcc_short_or_near or iced.is_jmp_short_or_near:
+        if raw == b'\xc3':
+            stack = 'rsp' if bits == 64 else 'esp'
+            stack_address, width = memory_location(regs[stack], bits // 8)
+            target = read_memory(stack_address, width)
+            if observed(target) != next_address:
+                raise ValueError(f'Event {index}: return target contradicts captured successor')
+            # The observed caller is a path condition, not an inferred constant
+            # value for arbitrary stack data. Bounds use only preceding guards.
+            domains.append(target == z.BitVecVal(next_address, bits))
+            returns.append({'event_index': index, 'target': target,
+                            'stack_address': stack_address, 'width': width})
+            regs[stack] = regs[stack] + width
+        elif iced.is_jcc_short_or_near or iced.is_jmp_short_or_near:
             predicate = _condition(z, condition_name(iced), flags)
             # Guard feasibility is checked against captured FLAGS, including equal target/fallthrough.
             from .pe_guard_model import decision
@@ -328,7 +366,7 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
         raise ValueError('Exit RAM snapshot contradicts modeled stores')
     return {'registers': regs, 'flags': flags, 'memory': memory,
             'domain': z.And(*domains), 'accesses': accesses, 'safety': safety,
-            'alias_byte_cell_operations': alias_work}
+            'alias_byte_cell_operations': alias_work, 'returns': returns}
 
 
 def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspondence=None,
@@ -399,6 +437,10 @@ def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspo
     assumptions = [initial[n] == int(v, 16) for n, v in normalized['entry_registers'].items()]
     for n, bounds in normalized['entry_register_ranges'].items():
         assumptions += [z.UGE(initial[n], int(bounds['min'], 16)), z.ULE(initial[n], int(bounds['max'], 16))]
+    for row in normalized['entry_memory']:
+        address = int(row['address'], 16)
+        assumptions += [memory[address + offset] == byte
+                        for offset, byte in enumerate(bytes.fromhex(row['hex']))]
     assumptions.append((flags & 2) == 2)  # Fixed architectural FLAGS bit.
     try:
         a = _execute(z, baseline, bits, initial, flags, memory, normalized, snapshots[0], 'baseline', deadline)

@@ -180,6 +180,7 @@ METHODS = {
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
     "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
+    "debug-compare-runtime-functions": "Recover complete returning PE64 path families per runtime epoch; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
@@ -252,6 +253,7 @@ METHODS = {
     "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",
     "debug-trace-until": "Stop at a current instruction predicate in qualified real-mode DOS; run,until,[regions,max_steps,timeout_ms,name,action,label]",
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
+    "debug-stack-memory": "Observe a bounded window around the stopped Wine thread's stack pointer; run,[offset,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
     "debug-save-state": "Compatibility name for saving a full native Anchor Stone; run,[name,max_bytes]",
@@ -1029,6 +1031,7 @@ def invoke(method, params, debugger=None):
         "debug-promote-code",
         "debug-trace-view",
         "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
     ):
         if debugger is None:
             raise ValueError(
@@ -1108,6 +1111,7 @@ def invoke(method, params, debugger=None):
             "debug-promote-code",
             "debug-trace-view",
             "debug-compare-runtime-code",
+            "debug-compare-runtime-functions",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -2400,6 +2404,7 @@ def parser():
         "debug-promote-code",
         "debug-trace-view",
         "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2413,6 +2418,13 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
+        elif name == "debug-compare-runtime-functions":
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("--baseline-paths", type=json.loads, required=True)
+            c.add_argument("--layer-paths", type=json.loads, required=True)
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--timeout-ms", type=int, default=5000)
         elif name == "debug-compare-runtime-code":
             c.add_argument("baseline_version", type=int)
             c.add_argument("layer_version", type=int)

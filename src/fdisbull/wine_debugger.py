@@ -189,6 +189,27 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
         result['cpu_mode']='protected32' if bits==32 else 'long64'
         return result
 
+    @pe_delta_locked
+    def stack_memory(self, *, offset=0, length=16):
+        """Observe a bounded window around the selected stopped thread's SP."""
+        bounded(offset,'offset',-4096,4096);bounded(length,'length',1,256)
+        if offset + length > 4096:
+            raise ValueError('Stack window must stay within 4096 bytes of the current SP')
+        if self.call('status').get('state')!='stopped':
+            raise ValueError('Stack memory requires a stopped selected thread')
+        registers=self.registers();bits=getattr(self,'bits',64)
+        pointer=int(registers['general']['rsp' if bits==64 else 'esp'],16)
+        address=pointer+offset
+        if address<0 or address+length>1<<bits:
+            raise ValueError('Stack window exceeds the selected process address width')
+        result=self.call('read',dict(address=address,length=length))
+        data=base64.b64decode(result['data_base64'],validate=True)
+        if len(data)!=length:raise DebuggerError('Incomplete selected-thread stack read')
+        return {'run':self.run_id,'version':self.version['id'],'runtime_address':hex(address),
+                'stack_pointer':hex(pointer),'thread':registers['thread'],'offset':offset,
+                'length':length,'hex':data.hex(),'view':'selected-thread-stack',
+                'scope':'Observed process-stack bytes; no static project address or automatic memory assumption'}
+
     def memory(self,address,*,cs=None,length=16):
         if cs is not None:raise ValueError('PE64 addresses are flat virtual addresses')
         bounded(length,'length',1,65536);value=self._address(address,length)

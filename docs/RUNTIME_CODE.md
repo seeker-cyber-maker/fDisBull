@@ -116,3 +116,68 @@ ordinary first/second calls are checked separately. Register seeds and
 debugger-directed probes are recorded; exact difference-witness replay on
 Unicorn stays distinct from Wine execution. Original captures and static version
 1 remain preserved.
+
+## Returning functions, branch coverage and stack memory
+
+`debug_compare_runtime_functions` composes complete PE64 leaf-function path
+families for two stable captured code epochs. Every path in a family is bound
+to the same explicitly promoted version. It uses the existing instruction,
+guard and ordered byte-memory model, including exact unprefixed near `RET`.
+The last modeled instruction must be one completed RET followed by an observed
+caller-boundary state inside the capture. Calls, immediate/far returns and
+within-call code mutation remain outside this profile.
+
+```python
+paths = [{"trace": accepted_trace_id, "memory": accepted_entry_exit_ram},
+         {"trace": rejected_trace_id, "memory": rejected_entry_exit_ram}]
+result = project.debug_compare_runtime_functions(
+    before_version, after_version, before_paths, after_paths,
+    contract=call_frame_contract, timeout_ms=5000)
+```
+
+The contract declares ordinary private RAM, fixed entry RSP/output pointer and
+an exact return word through `entry_memory=[{"address": "0x...", "hex": "..."}]`.
+These byte assumptions must be nonoverlapping subsets of declared RAM and
+agree with the observed entry. Output and spill snapshots remain symbolic
+unless explicitly constrained; the analyzer does not silently assume the
+whole sampled RAM state. Declared data cannot overlap the observed code epoch.
+
+RET reads a pointer-width word through the same memory safety/alias model,
+adds its target constraint to the path domain, and advances RSP by eight bytes.
+The function-level proof requires that this is the original entry return slot
+and that the final stack pointer equals entry RSP plus eight. The declared
+return word must establish the actual caller boundary. Missing return evidence
+or an unpinned return word cannot be turned into function equivalence.
+
+The result's `function` field reports recovered guarded cases, register/FLAGS
+expressions, final bytes and ordered memory accesses. It proves the feasible
+path union covers the entire admitted input domain and compares **every**
+feasible cross-family path intersection. A missing branch produces
+`incomplete_path_coverage` with an uncovered input, not a contraction. A finite
+complete returning path cover supplies a bounded termination result for this
+instruction model. `expand_pe_function_contraction` requires the exact original
+trace/memory documents and returns them unchanged.
+
+The known-source acceptance in `tests/test_smc_function_wine.py` uses an authored
+53-byte function: unsigned `x <= 10` stores/returns `x + constant`; otherwise it
+returns `UINT64_MAX` without writing output. It spills/restores RBX, balances its
+local stack and consumes its real caller return word. The guest changes the
+constant from one to two between calls. A separately labeled execution layer
+encodes the same two with a full-width MOV in the same ten-byte window. Native
+observations and symbolic source-specification checks retain the spill slot's
+post-return mutation, conditional output store, restoration read and RET read.
+
+Use `debug.stack_memory(offset=-8, length=16)` or live JSON
+`debug-stack-memory` for a stopped Wine thread's bounded SP-relative read.
+Offsets stay within 4096 bytes of current SP, length is at most 256, and the
+result has a runtime address rather than a fabricated project address. This is
+an observation window, not an OS stack-allocation identity or a RAM assumption.
+The fixture's explicit register/RAM resets are recorded assistance; they do not
+claim whole-machine, host-file or control-FLAGS rollback.
+
+The offline JSON/CLI method is `debug-compare-runtime-functions`, with
+`baseline_version`, `layer_version`, `baseline_paths`, `layer_paths`, `contract`
+and optional `timeout_ms`. Existing snapshots, native trace identities and
+earlier versions remain immutable. Whole-function results apply under the
+declared stable-epoch/call-frame/RAM contract; other threads, traps, devices,
+timing, external effects and module initialization/CLI behavior remain unknown.

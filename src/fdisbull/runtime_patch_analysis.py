@@ -90,3 +90,40 @@ def compare_runtime_code(project, baseline_version, layer_version, baseline_trac
             'scope': 'Compared captured PE64 paths and explicit live-state/RAM contract; '
                      'temporal IDs identify byte interpretations, not whole executed versions. '
                      'Uncaptured code, other paths, external effects and timing remain unknown'}
+
+
+def compare_runtime_functions(project, baseline_version, layer_version, baseline_paths, layer_paths, *,
+                              contract, timeout_ms=5000):
+    """Bind one observed code epoch per family, then prove coverage and effects."""
+    from .pe_function_recovery import compare_pe_functions
+    from .pe_region_equivalence import _contract
+    if project.meta['format'] != 'PE' or project.arch != 'x86' or project.bits != 64:
+        raise ValueError('Runtime function recovery currently requires an x86-64 PE project')
+    _, addresses, _ = _contract(contract, 64)
+    documents, receipts = [], []
+    for version, paths in ((baseline_version, baseline_paths), (layer_version, layer_paths)):
+        if not isinstance(paths, list) or not 1 <= len(paths) <= 8:
+            raise ValueError('Function recovery requires 1..8 stored paths per code epoch')
+        group, references = [], []
+        for path in paths:
+            if not isinstance(path, dict) or set(path) != {'trace', 'memory'}:
+                raise ValueError('Stored function paths require trace artifact and memory evidence')
+            trace, receipt = _bound_trace(project, version, path['trace'])
+            record = project._runtime_record(receipt['version'])
+            start = record['address'] + record['identity']['delta']
+            if any(start <= address < start + record['size'] for address in addresses):
+                raise ValueError('Declared function memory overlaps its observed code epoch')
+            group.append({'trace': trace, 'memory': path['memory']})
+            references.append(receipt)
+        documents.append(group)
+        receipts.append({'version': references[0]['version'],
+                         'version_sha256': references[0]['version_sha256'], 'paths': references,
+                         'execution_proven': False})
+    if receipts[0]['paths'][0]['source_version'] != receipts[1]['paths'][0]['source_version']:
+        raise ValueError('Function epochs must derive from the same immutable source version')
+    function = compare_pe_functions(*documents, contract=contract, timeout_ms=timeout_ms)
+    return {'format': 'fdisbull-runtime-function-analysis-1',
+            'baseline': receipts[0], 'layer': receipts[1], 'function': function,
+            'semantic_equivalence': None,
+            'scope': 'Whole-function recovery per stable captured epoch under an explicit call frame and private RAM; '
+                     'native source identities and earlier evidence remain unchanged'}
