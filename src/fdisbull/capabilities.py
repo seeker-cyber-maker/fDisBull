@@ -127,7 +127,7 @@ def _catalog():
         _entry('debug.chip8', 'partial', ['chip8-classic-16be'],
                ['cli:debug --backend qemu-chip8', 'json:debug-launch'],
                ['qemu_chip8.py', 'chip8_history.py', 'chip8_frame_storage.py'], ['chip8-backend'],
-               'CHIP-8: v4 layers/hooks/history; v5 60 Hz samples; v6 owned keys, no-reinjection restore, lossless checkpoint deltas and frozen V0..VF/I/PC/RAM undo. Checkpoint tool required; full PNGs. No VBlank/frame completion, partial resume, trials or parity claim.', maturity='experimental'),
+               'CHIP-8 v6: layers/hooks, owned keys, lossless histories, frozen V0..VF/I/PC/RAM undo and paired trials. Full recovery without key reinjection; checkpoint tool required. No partial resume, VBlank or parity claim.', maturity='experimental'),
         _entry('debug.qemm-guest', 'partial', ['x86-16', 'x86-32'],
                ['cli:qemm-config', 'cli:qemm-profile', 'cli:debug --backend qemu-machine --guest-profile qemm',
                 'json:debug-memory-translation', 'json:debug-qemm-observe'],

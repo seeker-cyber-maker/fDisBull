@@ -302,9 +302,9 @@ fresh-owner restore. They do not establish general game compatibility or parity.
 All profiles support stopped inspection, bounded run/step, execution breakpoints,
 guarded edits and native checkpoints. The three earlier profiles continue to
 use their exact matching binaries and do not acquire v4 or v5 controls. CHIP-8 audio
-output, predicates, watchpoints, redirects, task-private views and comparative
-trials remain unavailable in this target. Selected undo is separately scoped
-to the v6 runtime below. IRQ/PIC and
+output, predicates, watchpoints, redirects and task-private views remain
+unavailable in this target. Selected undo and comparative trials are separately
+scoped to the v6 runtime below. IRQ/PIC and
 QEMM/DESQview task semantics remain DOS-profile work; DOSBox-X remains the
 default and retained fallback.
 
@@ -544,6 +544,31 @@ Eleven bounded authored native selected-undo witnesses passed locally on macOS
 arm64. This is a bounded experimental capability,
 not CHIP-8 game compatibility, historical timing, DOS parity or a backend
 promotion. DOSBox-X remains the DOS default and retained fallback.
+
+## V6 comparative trials
+
+The v6 runtime with its checkpoint tool supports bounded paired experiments
+from the same verified full checkpoint. The baseline uses saved layers; the
+candidate supplies a complete guarded RAM/fetch stack. Final restoration
+reinstalls logical hooks and adopts held keys without injecting new edges.
+The captured observations compare registers, declared RAM, script stops, PNG
+pixels and selected device state; this is not deterministic replay.
+
+The allowed script operations are `step`, `run`, `registers`, `memory`,
+`screenshot`, `assert` and deletion of a captured hook by its `$controls`
+reference. Captured hooks require `stop_on_hook=True` on each `run`. Whole
+script and layer admission, report size and observation budgets are checked
+before the arms. Failed baseline evidence skips the candidate; uncertain
+dispatch or failed final restoration closes the owner without automatic replay.
+A frozen selected-undo state can be cleared by a verified full experiment
+restore, while save and compare are refused until recovery.
+
+Eleven bounded authored native trial witnesses passed locally on macOS arm64
+as part of a 65-case trial and preservation run. See the
+[comparative trial contract](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/DEBUGGER_EXPERIMENTS.md#chip-8-v6-comparative-trials) for exact limits, failure
+receipts and offline inspection. These checks do not establish game or
+conversion compatibility, deterministic replay, CI qualification or a DOS
+backend default change.
 
 ## Local checks
 

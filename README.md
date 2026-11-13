@@ -217,8 +217,10 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   Histories require the explicit checkpoint tool. Optional v6 lossless frame
   checkpoint delta witnesses passed locally on macOS arm64. A separate v6
   selected CPU/RAM undo is freeze-only; eleven bounded native witnesses passed
-  locally on macOS arm64. Full recovery is required before execution. Automatic replay remains unavailable. Complete game
-  and conversion compatibility remain unqualified.
+  locally on macOS arm64. Full recovery is required before execution. Bounded
+  v6 [comparative trials](docs/DEBUGGER_EXPERIMENTS.md#chip-8-v6-comparative-trials)
+  also passed authored native witnesses locally. Automatic replay, complete game
+  compatibility and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped

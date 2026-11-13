@@ -148,6 +148,9 @@ class ExperimentProjectMixin:
         if document.get('format') == 'fdisbull-qemu-experiment-1':
             from .qemu_experiments import project_document
             return project_document(self, artifact, version)
+        if document.get('format') == 'fdisbull-chip8-experiment-1':
+            from .chip8_experiments import project_document
+            return project_document(self, artifact, version)
         if document['format'] != 'fdisbull-experiment-1' or document['version'] != row['version']:
             raise ValueError('Invalid experiment identity')
         state = self.debug_state_info(document['checkpoint']['artifact'])

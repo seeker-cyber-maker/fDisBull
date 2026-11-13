@@ -72,13 +72,12 @@ def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
     assert items['debug.chip8']['runtime_validation'] == 'not_run'
     assert items['debug.chip8']['maturity'] == 'experimental'
     scope = items['debug.chip8']['scope']
-    assert 'v4 layers/hooks/history' in scope
-    assert 'v5 60 Hz samples' in scope
-    assert 'v6 owned keys' in scope
-    assert 'no-reinjection restore, lossless checkpoint deltas' in scope
+    assert 'CHIP-8 v6: layers/hooks, owned keys, lossless histories' in scope
+    assert 'Full recovery without key reinjection' in scope
     assert 'frozen V0..VF/I/PC/RAM undo' in scope
-    assert 'Checkpoint tool required; full PNGs' in scope
-    assert 'No VBlank/frame completion, partial resume, trials or parity claim' in scope
+    assert 'paired trials' in scope
+    assert 'checkpoint tool required' in scope
+    assert 'No partial resume, VBlank or parity claim' in scope
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

@@ -67,9 +67,9 @@ class Chip8CpuDeltaMixin:
         history=getattr(self,'_qemu_cpu_delta_history',None)
         if history is None: return
         readonly=name in {'cpu_delta_status','status','registers','memory','code','hooks','keyboard_state',
-            'chip8_environment','frame_rgba','rewind_status','timeline_status','timeline_image','close'}
+            'chip8_environment','frame_rgba','controls','rewind_status','timeline_status','timeline_image','close'}
         if name=='layers': readonly=kwargs.get('active',args[0] if args else None) is None
-        recovery=name in {'cpu_delta_recover','load_state','rewind','timeline_rewind'}
+        recovery=name in {'cpu_delta_recover','load_state','rewind','timeline_rewind','restore_experiment'}
         own=name in {'cpu_delta_start','cpu_delta_status','cpu_delta_record','cpu_delta_rewind','cpu_delta_recover'}
         if history.get('frozen') and not readonly and not recovery:
             raise ValueError('Selected CHIP-8 partial state is frozen until full checkpoint recovery')

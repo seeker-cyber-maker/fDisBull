@@ -23,6 +23,7 @@ from .qemu_control import QemuControl
 from .debugger import stamp
 from .chip8_layers import Chip8LayerMixin, LAYER_MODEL
 from .chip8_cpu_deltas import Chip8CpuDeltaMixin
+from .chip8_experiments import Chip8ExperimentMixin
 from .chip8_hooks import Chip8HookMixin
 from .chip8_history import Chip8HistoryMixin, bind_history_mutations
 from .chip8_frames import Chip8FramesMixin
@@ -232,7 +233,7 @@ class _Owner:
 
 
 @bind_history_mutations
-class Chip8DebugSession(Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
+class Chip8DebugSession(Chip8ExperimentMixin,Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
     """One stopped-at-boundaries CHIP-8 machine bound to one immutable FDB ROM."""
     backend_id=BACKEND
     capabilities={'registers':True,'memory':True,'run':True,'step':True,'breakpoints':True,
@@ -293,6 +294,7 @@ class Chip8DebugSession(Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8
                         self.capabilities['frame_key_ownership']=True
                         self.capabilities['frame_delta_storage']=checkpoint_tool is not None
                         self.capabilities['selected_cpu_ram_undo']=checkpoint_tool is not None
+                        self.capabilities['comparative_trials']=checkpoint_tool is not None
                     self._reset_chip8_layers()
                     layer=self._chip8_layer_query()
                     if layer['generation']!=0 or layer['execution-bytes'] or not layer['backing-valid']:

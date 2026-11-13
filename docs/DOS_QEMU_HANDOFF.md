@@ -5402,3 +5402,101 @@ frozen projection, not cross-session machine history or deterministic replay.
 CHIP-8 comparative trials, SP/stack inverse selection, IRQ/task-private semantics,
 audio, broad ROM/host and G0-G8 conversion qualification remain open. All 141 DOS
 surfaces and seven campaigns still gate promotion or DOSBox-X removal.
+
+## 2026-11-12 — CHIP-8 comparative trials
+
+Continued from `27738a5a73b039cec5c1d5a72cce84f7d768514a` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains its originating handoff marker, target
+`agent/execution-event-search-284eb73c` and stacked base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, native rebuild, release/tag, merge, installation or default
+switch was performed.
+
+The unchanged v6 runtime and explicit checkpoint tool now support
+`controls`, `save_experiment`, `restore_experiment` and `compare_experiment`,
+their existing JSON routes and offline Project inspection/export. Separate
+CHIP-8 experiment/trial/comparison formats bind the original ROM/version,
+exact runtime/checkpoint-tool identity, full checkpoint bytes and metadata,
+script hash, immutable layer definitions and captured hook/key controls.
+Both arms restore the same full anchor: the baseline uses its saved layer
+stack and the candidate supplies a complete ordered RAM/fetch stack. A final
+verified full restoration is required for successful recovery. Hook logical
+IDs/hit counts and held keys restore without reinjecting key edges. RNG,
+timers, pixels, RAM and CPU recover from the anchor. Saved full/delta frame
+DAGs remain retained; trial effects invalidate their old live execution edge.
+
+Admission checks the complete script and candidate against the saved RAM
+before either arm replaces the owner. Candidates are limited to 64 layer IDs
+and 256 patches, with expected-base, overlap, immutable-hash and active-RAM
+backing checks. An identical saved stack avoids an unnecessary transition,
+including when its active RAM was modified by the guest. At most 64 explicit,
+nonoverlapping flat RAM ranges total 4 KiB. Script reads are individually
+bounded to 4 KiB and combined declared/script reads to 64 KiB.
+
+Allowed trial operations are `step`, `run`, `registers`, `memory`, `screenshot`,
+`assert` and deletion of a captured hook through `$controls.hooks.<id>.hook`.
+Captured hooks require literal `stop_on_hook=True` on every run, bounding
+dispatch to one hook per run. Input, writes, tracing, timeline/undo operations
+and nested experiments are refused. The 128 expanded-step/1 MiB script limits
+are further constrained by a conservative 4 MiB per-arm report-plan budget.
+Each arm permits four PNGs of at most 1 MiB each; comparison output is capped
+at 16 MiB. Native checkpoint and project artifact limits can bind earlier.
+
+Comparison checks exposed registers, declared/intermediate RAM, normalized
+stops and hook actions, decoded PNG pixels and explicit RNG/timer/pixel/key/fault
+fields. Raw reports, file hashes and administrative/virtual-time provenance
+remain available. Missing or malformed evidence cannot establish equality;
+an incomplete paired comparison has unknown `observed_difference`, and a
+missing arm has no comparison. Failed baseline execution skips the candidate.
+Uncertain dispatch/publication or failed final restoration closes the owner
+and preserves the available prefix, report and nested no-replay cause.
+One operation budget includes the reserved cleanup attempt; an expired owner
+closes rather than resuming an unverified state.
+
+Selected CPU/RAM undo remains freeze-only. Save/compare refuse a frozen
+projection; an explicit verified full experiment restore is another recovery
+route. Prior histories, full PNGs/journals, frame-key ownership, layers, hooks,
+seeded RNG, VMState6/state6 and opt-in lossless format3 remain intact.
+
+The final affected-surface pass reports **957 passed across 67 files**, with
+zero failures, skips or exclusions and **1,229 unchanged Python file hashes**.
+It includes **34 new cases: 16 host, seven public and eleven native**. A separate
+native selection reports **65 passed** across trials, selected undo, lossless
+frame deltas, frame keys and frames. The integrated pass also retains all 323
+DOSBox-X history/undo/trial cases, five native DOS selected-undo cases and six
+native DOS trial cases combining task-private layers, held keys, IRQ state,
+full recovery and frame DAGs. Selections overlap; results are bounded to local
+macOS arm64. Equal/candidate CPU-RAM trials, cold-session restore, failed-arm
+admission, frozen-state recovery, captured hook deletion/reinstallation,
+one-hit hook dispatch, RNG continuation and every pixel of a shifted authored
+glyph are covered. The glyph returns to the original blank full anchor.
+The final capability, bundled-skill, package, migration and policy selection
+reports **68 passed** after the documentation updates.
+
+A separate read-only artifact audit verifies all nine artifact rows and eleven
+referenced external objects for the drawing trial, then exports the experiment,
+anchor, comparison, both five-step reports and exact PNGs. Both arms bind the
+same anchor/script, the intended pixels match independently, and the source
+FDB remains unchanged. Its final-restore evidence is the persisted API result;
+the ended guest was not reconnected. Live recovery assertions are in the
+native test. The earlier prior-created format3 recovery witness and its
+original inputs remain retained rather than being replayed for this slice.
+
+The 600 MB CODEX reservation was refused because it would cross the 40 GB
+target. The same reservation passed on the separate approved CACHE pool, so
+the 67-file run placed bulk outputs there. No reserve was lowered,
+originals removed or active data relocated. Private evidence uses
+chip8-trials-native-final-01, chip8-trials-preservation-final-01 and
+chip8-trials-tested-source-hashes-01.json and
+chip8-trials-artifact-audit-01/receipt.json. Native states, RAM-bearing reports,
+FDBs, ROMs and external stores remain outside Git and packages.
+
+The twelve retained native binaries, six CHIP-8 source packages, active shared
+selector/runtime and component04 retain their identities. Component04 boot
+qualification is still pending. The earlier broad-run DOSBox-X `DEBUG_ShowMsg`
+startup stack-buffer abort remains unresolved; this clean focused selection
+does not erase it or establish DOS parity. All 141 DOS surfaces and seven
+campaigns still gate promotion or DOSBox-X removal. SP/stack inverse selection,
+partial resume, CHIP-8 IRQ/task-private semantics/audio, broad ROM/host,
+historical/VBlank timing and G0-G8 conversion qualification remain open.
