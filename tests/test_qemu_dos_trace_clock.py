@@ -337,7 +337,7 @@ def test_invalid_nested_clock_literal_refuses_unopened_script_before_prior_write
         execute_script(unopened_session(), route(until))
 
 
-@pytest.mark.parametrize('failure_stage', ['registers', 'step-journal'])
+@pytest.mark.parametrize('failure_stage', ['registers', 'step-journal', 'tracking-stop', 'tracking-retirement'])
 def test_post_reply_failure_retains_the_original_native_stop_without_a_clock(trace_owner, failure_stage):
     o = trace_owner
     attempts = []
@@ -351,10 +351,19 @@ def test_post_reply_failure_retains_the_original_native_stop_without_a_clock(tra
         raise failure
 
     o.remote.execute = execute
+    retirements = []
     if failure_stage == 'registers':
         o.context.registers = fail
-    else:
+    elif failure_stage == 'step-journal':
         o.context._event = fail
+    else:
+        def retire(reason):
+            retirements.append(reason)
+            if failure_stage == 'tracking-retirement':
+                raise ValueError('authored tracking retirement failure')
+        o.context._automatic_runtime_tracker = SimpleNamespace(
+            before_execution=lambda reason: None, internal_breakpoints=set(),
+            after_stop=fail, close=retire)
     with pytest.raises(OSError) as caught:
         o.context.step()
     assert caught.value is failure
@@ -367,3 +376,8 @@ def test_post_reply_failure_retains_the_original_native_stop_without_a_clock(tra
     else:
         assert stop['outcome'] == 'step'
     assert attempts == ['s'] and o.vm.machine_stopped
+    if failure_stage.startswith('tracking'):
+        assert retirements == ['machine-post-stop-publication-failed']
+        assert o.vm.closed and o.context._automatic_internal_pending is None
+        if failure_stage == 'tracking-retirement':
+            assert caught.value.tracking_retirement_error == 'ValueError'

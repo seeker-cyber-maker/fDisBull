@@ -5899,3 +5899,56 @@ tag, merge, installation or backend-default change occurs. DOSBox-X stays
 default and retained. The previous !117 description is preserved in the
 [historical snapshot](milestones/archive/117-description-before-consolidation-20261113.md)
 so the live description can present current behavior and the next blocker.
+
+
+## 2026-11-13 — protected-mode stopped source admission
+
+This slice adds `debug-dos-source-admit` / `dos_source_admit` behind explicit
+QEMU-DOS selection. The original MZ source and process binding remain intact.
+An explicit runtime carrier parser follows declared LE/BW links; the matcher
+qualifies bounded current/entry code windows, eight data offset32 witnesses,
+and a small GDT-backed 16-bit bridge with symbolic fixup exclusions. It rejects
+ambiguous placements, including alternatives hidden by complementary masks.
+The physical/linear RAM reads, stopped CPU/CS cache, GDT, source, epoch and
+producer identities are rechecked before an atomic artifact/event publication.
+Replies summarize large fixup inventories; the complete proof stays in the
+private artifact. See [the public contract](QEMU_DOS_PROTECTED_SOURCE.md).
+
+The coordinated mapping/tracking port adds persistent object/task registries,
+raw-FAT source discovery and original DESQview provider dependencies. Engine
+adapters preserve separate MZ/LE namespaces and explicit virtual-only scope for
+the older matcher. Internal/user native breakpoint aliases retain reference
+ownership. Late owned stops are consumed once. Publication failures retain the
+already-arrived native result and quarantine uncertain owners. Control repair
+shares the caller deadline, with at most one fixed one-second grace after a
+valid stopped reply; it never permits guest execution.
+
+A local original Ultimate Doom run reached its title on the retained QEMU
+10.0.13 candidate and admitted all three LE objects without a seeded DOSBox
+runtime placement. That early witness predates the final masked-search and
+tracking fixes, so exact combined-candidate installed Doom/DESQview acceptance
+is recorded separately. Original EXE/WAD, FDB/CAS and screenshots remain private.
+The native executable remains
+`d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d`;
+no native rebuild is needed for this Python-only slice.
+
+This closes the bounded stopped source-admission implementation gap. The
+receipt deliberately states `lifetime_qualified: false` and
+`live_mapping_installed: false`. Continuous protected LE binding, protected
+source traces and source-addressed layer/hook/checkpoint consumers remain
+separate acceptance work. Existing trials, histories, shared selected-state
+replay, task-private layers, hooks, checkpoints and IRQ contracts are preserved
+and exercised by focused checks; no broader equivalence is inferred.
+All 141 formal surfaces and seven campaigns retain their prior unqualified
+status. DOSBox-X remains default and retained. No CI, release, tag, merge or
+shared installation change is part of this slice.
+
+
+The final combined focused host selection passes 534 tests with no skips or
+failures. It covers strict/runtime LE parsing, both matchers, stopped admission,
+registry/tracking/containment, late stops, hooks/input/deadlines, package payloads,
+skill/capability discovery and migration/default policies. Every Python source
+and test hash remained unchanged throughout. Separate earlier red/green cases
+preserve the masked-ambiguity and stop-publication failure evidence. Final
+native and installed-package qualification follows the immutable source commit;
+those results must not be inferred from the host total.

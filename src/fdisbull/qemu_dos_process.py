@@ -34,6 +34,7 @@ from .qemu_frame_keys import QemuFrameKeysMixin, FRAME_KEY_COMMANDS
 from .qemu_cpu_deltas import QemuCpuDeltaMixin
 from .qemu_experiments import QemuExperimentMixin
 from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
+from .qemu_dos_source_admission import QemuDOSSourceAdmissionMixin
 
 
 def _sha(data):
@@ -160,7 +161,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -386,6 +387,7 @@ class QemuDOSProcessSession(QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDelt
             if self.capabilities['frame_key_ownership']:
                 self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None
+            self.capabilities['dos_protected_source_admission'] = True
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
                 version_sha256=selected['sha256'], runtime_inputs=vm.inputs,

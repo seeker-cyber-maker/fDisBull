@@ -104,6 +104,32 @@ preservation cases. The retained actual DOSBox witness passed once. These
 results do not qualify generic
 `guest_ms`, cycle or real-time scheduling, or promote the formal gates.
 
+## Stopped protected source admission
+
+For an owned native DOS session already stopped in unpaged protected32 mode,
+`dos_source_admit(expected_source_sha256=...)` records a bounded original-source
+LE view. The foreground JSON route is `debug-dos-source-admit` with the selected
+`run`; capability `dos_protected_source_admission` identifies this operation.
+See the [protected-source contract](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/QEMU_DOS_PROTECTED_SOURCE.md)
+for comparison/scan/deadline limits and private artifact export.
+
+It checks source/version/producer pins, A20, CS/GDT consistency and fresh
+physical/linear RAM readback. Active RAM/fetch overlays and cooperating
+task-private views refuse. Complete masked-window comparison rejects ambiguous
+source placement; loader fixups remain explicitly excluded, and a matched
+16-bit bridge does not prove bridge execution or its symbolic selector operand.
+LE object IDs are a separate preferred-address namespace. The initial MZ EXEC
+binding and existing real-mode trace/layer/hook admission do not change.
+
+The receipt is historical stopped evidence with `lifetime_qualified: false`
+and `live_mapping_installed: false`. Call again after execution, mutation,
+restore or owner replacement. It neither grants resume from frozen selected
+undo nor installs automatic registry bindings. The separately integrated runtime
+registry/tracker dependencies retain their own source/span and lifetime
+contracts; exact combined native qualification remains a separate gate. Read
+the [reuse account](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/QEMU_DEBUGGER_REUSE.md)
+for that boundary.
+
 ## Checkpoint histories
 
 The first native DOS Histories slice is in progress: `rewind_start`,
