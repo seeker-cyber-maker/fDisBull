@@ -165,11 +165,14 @@ Build a usable local agent-first disassembler. Native decoders provide instructi
 
 For an authorized contribution, follow [agent contribution and file handoff](docs/AGENT_HANDOFF.md).
 Use a stable originating chat/task ID, a unique branch and the intended stack
-parent. Return a read-back draft GitLab MR URL, exact branch/head and target/base,
+parent. New contributions target original GitHub `seeker-cyber-maker/fDisBull`.
+Return a read-back draft GitHub PR URL, exact branch/head and target/base,
 tests, limitations and verified attachment links to the originating chat.
 Commit inspected authored source and eligible target fixtures; attach sanitized
-reports separately. Preserve existing MR targets and other agents' work.
-Use `scripts/gitlab_handoff.py` for
-offline preview and, with existing API access, resumable publication. Chat agents
-without write/upload access export the documented handoff and report it pending.
-Never invent access, successful uploads, commit identities or completed MRs.
+reports separately. Preserve existing GitLab MR targets and other agents' work;
+do not duplicate or retarget existing reviews merely to change providers.
+Use the connected GitHub tools or reviewed Git/CLI publication for new PRs.
+`scripts/gitlab_handoff.py` remains the preview/resumable publisher for existing
+GitLab contributions. Without write/upload access, export a documented handoff
+and report the exact remaining action. Never invent access, successful uploads,
+commit identities or completed reviews. CI dispatch remains with n8n.
