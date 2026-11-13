@@ -6,4 +6,4 @@ repair worker must make the truth-table check pass on a new source commit.
 
 
 def capture_ready(observation):
-    return not observation.get('errors')
+    return observation.get('complete') is True and not observation.get('errors')
