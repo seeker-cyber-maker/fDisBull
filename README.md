@@ -201,7 +201,9 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   retaining explicit CPU-mode and address-space limits. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
-- **CHIP-8 targets:** an explicit [classic profile](docs/CHIP8_QEMU.md) adds
+- **CHIP-8 targets:** [pinned conversion intake](docs/CHIP8_CONVERSION_INTAKE.md)
+  verifies one classic corpus member before creating a private project. An explicit
+  [classic profile](docs/CHIP8_QEMU.md) adds
   persistent disassembly and a separately built QEMU backend for stepping,
   registers, RAM, breakpoints and native checkpoints. An optional device build
   adds monochrome frames, held keys and virtual-clock timers. A further native

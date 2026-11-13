@@ -14,6 +14,14 @@ CREATE TABLE IF NOT EXISTS target_sources(
 
 
 class TargetSourcesMixin:
+    def chip8_intake_info(self, version=None, expected_manifest_sha256=None,
+                          expected_intake_sha256=None):
+        """Reverify one exact original CHIP-8 corpus intake without execution."""
+        from .chip8_intake import inspect_project
+        return inspect_project(self, version=version,
+                               expected_manifest_sha256=expected_manifest_sha256,
+                               expected_intake_sha256=expected_intake_sha256)
+
     def _external_text(self, value):
         return self.db.store.put(value) if hasattr(self.db, 'store') else value
 

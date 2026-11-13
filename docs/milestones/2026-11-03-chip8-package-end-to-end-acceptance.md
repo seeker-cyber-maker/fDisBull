@@ -20,6 +20,18 @@ Historical family curve by successively adding the six classic titles: **11, 18,
 
 **Different experiment:** [!58](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/58) reported one, two and three **connected authored pure-scalar C blocks** sweded by fresh agents, first attempt passed for each worker mode, with finite independent arithmetic replay. These results are **not** a demonstration that one/two/three consecutive missing CHIP-8 instructions were blindly recovered or that host-device effects and UIL are already connected. The new experiment below extends that methodology.
 
+## 2026-11-12 bounded G0 implementation note
+
+The current source adds a pinned Git-corpus CHIP-8 intake and read-only
+project identity verifier: [CHIP-8 conversion intake](../CHIP8_CONVERSION_INTAKE.md).
+It validates the caller-pinned raw manifest, selected member size/SHA-256/Git
+blob, original source mapping and declared classic profile before project
+creation. Repository, edition and rights remain manifest-attributed claims;
+source bytes are retained in the required private object store. This bounded
+G0 slice does not implement the proposed G1 package closure or qualify any
+G2–G8 conversion, independent execution or delivery gate. The matrix below
+remains the proposed acceptance plan, not a completed gate report.
+
 ## A. End-to-end gates, in execution order
 
 | Gate | Primary owner | Required software-owned acceptance | Common false positive to reject |

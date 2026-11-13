@@ -28,6 +28,16 @@ still governs qualification of source semantics, common UIL, registered UDC
 providers, standalone emitted executables and reuse on held-out programs.
 Building this debugger seam does not close those later conversion gates.
 
+## Pinned conversion intake
+
+For the bounded G0 Git-corpus identity path, use
+[CHIP-8 conversion intake](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/CHIP8_CONVERSION_INTAKE.md). It checks the caller-pinned
+manifest and exact selected ROM before creating an ordinary private project,
+and supports later read-only identity verification. It does not auto-detect
+dialects, retrieve or extract archives, resolve the G1 package closure, or
+qualify conversion and execution semantics. The original source is retained in
+the required private content-addressed object store.
+
 ## Explicit source admission
 
 For this source candidate, run the CLI from the checkout with

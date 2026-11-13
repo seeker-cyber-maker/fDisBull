@@ -5500,3 +5500,97 @@ does not erase it or establish DOS parity. All 141 DOS surfaces and seven
 campaigns still gate promotion or DOSBox-X removal. SP/stack inverse selection,
 partial resume, CHIP-8 IRQ/task-private semantics/audio, broad ROM/host,
 historical/VBlank timing and G0-G8 conversion qualification remain open.
+
+## 2026-11-12 — CHIP-8 conversion G0: pinned source intake
+
+Continued from `849bd994c3c60029fa2c764736c7ad3968a5a675` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains its originating marker, target
+`agent/execution-event-search-284eb73c` and stacked base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, native rebuild, release/tag, merge, installation or default
+switch was performed.
+
+The first conversion gate now has a bounded production implementation for one
+explicit classic CHIP-8 member of a caller-pinned Git-corpus manifest. Python
+`create_intake`, CLI/JSON `chip8-intake`, and Project/CLI/JSON
+`chip8-intake-info` connect provenance to the ordinary loader, external source
+store and immutable mapped original. A required raw-manifest SHA-256 and the
+member's size, ROM SHA-256 and Git blob SHA-1 are checked before project or
+object-store publication. The importer uses the loader's single immutable ROM
+snapshot without rereading it during publication. It creates the required
+private content-addressed source object, with no secondary working ROM copy.
+
+The manifest is strict UTF-8 JSON of at most 1 MiB and 4,096 program entries.
+Duplicate keys/members, nonfinite values, unrecognized fields, malformed pins,
+unsafe repository declarations and unsupported selected platform/profile refuse.
+Regular manifest admission uses no-follow/nonblocking open plus descriptor type
+validation; a FIFO refuses without waiting for a writer. The selected classic
+ROM is 2..3,584 bytes, with odd data tails supported, and maps at 0x200 in 4 KiB
+RAM with the named big-endian profile. Other listed dialects may remain in the
+manifest but cannot be selected through this classic route. No filename or
+opcode-pattern inference establishes dialect compatibility.
+
+The G0 receipt binds the pinned manifest, exact member path, source identities,
+repository/commit, attributed author/title/license/edition label and declared
+profile. Repository plus commit plus member path is the exact Git-corpus
+edition identity; an absent human edition label remains unknown. Canonical
+intake identity excludes project ID, path, filename and time, while the receipt
+also reports each project's separate original-version and mapped-digest binding.
+Matching bytes do not authenticate publisher, rights or execution semantics.
+The information method revalidates stored manifest/receipt, live versus cached
+metadata, exact original source, loader selection and mapped bytes. External
+expected manifest/intake pins can be supplied. Patched versions, caller-owned
+transactions and missing/corrupt source objects refuse rather than rebinding.
+
+The final affected-surface pass reports **1,022 passed across 71 files**, with
+zero failures, skips or exclusions. All **1,233 Python file hashes** stayed
+unchanged during the run. This includes **39 new G0 cases: 23 host, 15 public
+and one native**, all prior 957 affected checks and 26 target-storage cases.
+The integrated selection includes 323 DOSBox-X history/undo/trial cases, five
+native DOS selected-undo cases and six native DOS trials retaining task-private
+layers, held keys, IRQ state and recovery. Results are bounded to macOS arm64.
+
+The native G0 witness starts from an actual intake-created FDB and exercises
+active RAM/fetch layers, hooks, seeded RNG and held `f`, a real lossless delta
+child, same-anchor comparative trials, selected CPU/RAM freeze and verified
+experiment recovery, retained frame DAG/image and cold G0 reinspection. Full
+CPU/RAM/environment and accepted key counts recover; the stored PNG exports
+without operating a GUI. Native v6 and checkpoint formats remain unchanged.
+
+A separate private corpus witness acquires only the already pinned Snek and
+Ghost Escape members (65 and 135 bytes), verifies all three source identities,
+imports both and repeats exact receipt verification in fresh Python processes.
+It retains only two distinct source objects, without extra working copies made
+by intake. A changed-byte input for the same member refuses before publishing
+a new project/object, and original inputs and the tracked manifest remain
+unchanged. These corpus programs were not executed; this is G0 identity
+evidence, with attributed provenance, not semantic or historical qualification.
+Authored fixtures separately cover alias filenames, source replacement after
+snapshot, invalid manifest/loader/pins, object corruption and patch isolation.
+An independent read-only audit repeats manifest/source/object hashes and pinned
+Project API verification for both corpus members, with all original hashes
+unchanged. Its corrected receipt explicitly records writable/executable source
+regions at 0x200; stored source identity does not make guest RAM immutable.
+The final capability, skill, package, migration and policy selection passes
+**68 checks** after documentation updates; selections overlap the main pass.
+
+The preservation run used a fresh admitted 600 MB allocation in the approved
+CACHE build area, with bulk outputs outside Git. Private evidence uses
+chip8-g0-preservation-final-01, chip8-g0-tested-source-hashes-01.json,
+chip8-g0-corpus-witness-01.json, chip8-g0-artifact-audit-02.json and
+chip8-g0-retained-baselines-01.json.
+ROMs, FDBs, states, RAM-bearing reports and external objects remain private.
+Twelve native binaries, six CHIP-8 packages and the shared selector/runtime
+retain their previous identities; component04 boot qualification remains pending.
+
+This completes the bounded pinned Git-corpus classic intake slice of G0.
+G1 compatible ISA/environment package closure is next; G1-G8 remain open,
+including source mapping, admitted semantics, independent original-to-UIL
+qualification, provider selection/build, emitted target execution, held-out
+reuse and end-user delivery. No executable conversion has been qualified.
+All prior limitations on CHIP-8 IRQ/task-private semantics/audio, partial
+resume, broad ROM/host and historical/VBlank timing remain. The old broader
+DOSBox-X startup stack-buffer abort remains unresolved; this focused pass does
+not erase it. All 141 DOS surfaces and seven campaigns still gate backend
+promotion or DOSBox-X removal.

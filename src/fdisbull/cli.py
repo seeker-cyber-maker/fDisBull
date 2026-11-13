@@ -464,6 +464,8 @@ METHODS = {
     "storage-info": "Read-only storage inventory; project",
     "migrate-external": "Explicitly create an external-storage derivative; project,destination",
     "source-info": "Recorded target size/SHA-256, loader provenance and current availability; [version]",
+    "chip8-intake": "Create a G0 project from an exact pinned classic CHIP-8 corpus member; path,project,manifest_path,manifest_sha256,member,[profile]; no execution",
+    "chip8-intake-info": "Reverify stored CHIP-8 G0 source/member/profile identity; [version,expected_manifest_sha256,expected_intake_sha256]; no execution",
     "source-candidate": "Inspect candidate identity without attaching; path,[version]",
     "bind-source": "Bind exact source or explicitly approved divergent layer; path,[version,approval]",
     "new-source-analysis": "Explicitly create a separate analysis without changing this one; path,destination,[version]",
@@ -1047,6 +1049,11 @@ def invoke(method, params, debugger=None):
             raise ValueError("path is required for import")
         with Project.create(project, binary, **p) as db:
             return db.status()
+    if method == "chip8-intake":
+        from .chip8_intake import create_intake
+
+        with create_intake(project, **p) as db:
+            return db.chip8_intake_info()
     with Project(project) as db:
         if method in ('memory-snapshot-info', 'memory-search-start', 'memory-search-refine',
                       'memory-search-results', 'memory-edit-plan', 'memory-rule-create', 'memory-rule-info',
@@ -1077,7 +1084,7 @@ def invoke(method, params, debugger=None):
         if method in BLOCK_METHODS:
             from .udc_api import invoke as invoke_block
             return invoke_block(db,method,p)
-        if method in ("source-info", "source-candidate", "bind-source"):
+        if method in ("source-info", "source-candidate", "bind-source", "chip8-intake-info"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
             p["project"] = p.pop("destination")
@@ -2412,6 +2419,18 @@ def parser():
                 type=json.loads,
                 help="Exact source-candidate receipt, only after user approval of this base and candidate",
             )
+    c = sub.add_parser("chip8-intake", help=METHODS["chip8-intake"])
+    c.add_argument("path")
+    c.add_argument("project")
+    c.add_argument("--manifest-path", required=True)
+    c.add_argument("--manifest-sha256", required=True)
+    c.add_argument("--member", required=True)
+    c.add_argument("--profile", choices=["chip8-classic-pilot-default-v1"])
+    c = sub.add_parser("chip8-intake-info", help=METHODS["chip8-intake-info"])
+    c.add_argument("project")
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-manifest-sha256")
+    c.add_argument("--expected-intake-sha256")
     c = sub.add_parser(
         "import", help="create project from executable or explicit raw code"
     )
