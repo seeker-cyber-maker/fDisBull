@@ -5989,3 +5989,14 @@ set a VM quarantine fence before cleanup; later controls refuse even if cleanup
 partially fails, and disposal remains available. The final combined host pass
 is 561 tests, zero failures/skips, with all 1,265 Python source/test hashes stable.
 Exact final installed/native results belong to the !117 acceptance note.
+
+
+The 30-case C2 native preservation pass retained 29 successes and one precise
+regression: after a deliberately injected journal error, quarantine blocked
+`dos_process_info()` from exposing the ended process identity. C3 permits only
+that offline receipt and `tracking_status`; process metadata returns without
+repeating native cleanup. Execution, native status and inspection remain fenced.
+The native failure receipt is preserved; targeted journal-failure verification
+is separate from the unchanged successful C2 compositions. Final combined C3
+host verification passes 562 tests with stable source hashes. No further broad
+native campaign or default activation is inferred.

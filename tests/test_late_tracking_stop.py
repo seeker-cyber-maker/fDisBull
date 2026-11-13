@@ -261,3 +261,19 @@ def test_failed_cleanup_keeps_tail_and_control_repair_owners_quarantined(stopped
  # Disposal remains callable after the public control gate has closed.
  with pytest.raises(BrokenPipeError):machine.vm.close()
  assert closed==[True,True]
+
+
+def test_quarantine_keeps_only_offline_diagnostics_readable(stopped):
+ from fdisbull.qemu_dos_process import QemuDOSProcessSession
+ machine,_=stopped
+ machine.vm._fdisbull_control_quarantine='authored failed cleanup'
+ machine._process={'state':'observation_failed','machine_closed':True,'source_mapping':{'live':False,'live_ranges':[]}}
+ def unexpected(*args,**kwargs):pytest.fail('Offline diagnostic touched a native owner')
+ machine.vm.process=SimpleNamespace(poll=unexpected)
+ machine.vm.close=unexpected;machine.vm.qmp.call=unexpected
+ process=QemuDOSProcessSession.dos_process_info(machine)
+ assert process==machine._process and process is not machine._process
+ assert machine.tracking_status()['enabled'] is True
+ for operation in (machine.run,machine.step,machine.status,machine._stopped):
+  with pytest.raises(q.DebuggerError,match='quarantined'):operation()
+ assert machine.remote.calls==[] and machine.remote.requests==[]

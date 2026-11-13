@@ -894,6 +894,9 @@ class QemuDOSProcessSession(QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, Qem
     @machine_operation
     def dos_process_info(self):
         """Return persistent process identity; machine controls stay separate."""
+        if getattr(self.vm,'_fdisbull_control_quarantine',None):
+            # An ended owner's diagnostic must not repeat failed native cleanup.
+            return deepcopy(self._process)
         process = self.vm.process
         if process is not None and process.poll() is not None:
             self.vm.close()

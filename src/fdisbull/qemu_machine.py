@@ -305,7 +305,7 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
-    if name != 'close' and getattr(vm,'_fdisbull_control_quarantine',None):
+    if name not in ('close','dos_process_info','tracking_status') and getattr(vm,'_fdisbull_control_quarantine',None):
         raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
     guard = getattr(vm, 'operation_guard', None)
     if guard is not None:
