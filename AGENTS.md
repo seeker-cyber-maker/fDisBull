@@ -127,18 +127,13 @@ prefix locally, then run
 from the source tree. A release is not locally complete until the active
 payload, version, commit and selector all verify.
 
-## Repository mirrors and CI coordination (GitLab 30-day trial + local Git parity)
+## Repository authority, mirrors and CI coordination
 
-- **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is reinstated and active as a peer mirror.** GitLab and local-hub remain the release and CI authority; use GitHub for public mirror visibility and reproduce CI state from the recorded Boat.dev/GitLab receipts rather than triggering GitHub Actions from this mirror.
-- **Local Git and GitLab (`gitlab` -> `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`) are equal representations.** Because GitLab is under a 30-day evaluation trial, agents must update **both** the local Git repository (`local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git` and local branches/tags in `/Volumes/CODEX/Codex_Projects/fDisBull`) and GitLab (`gitlab`), using `python scripts/sync_mirrors.py` or pushing to the `dual` remote (`git push -o ci.skip dual <branch>`).
-- Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before starting or observing hosted checks.
-- **CI cost controls**: routine pushes, MRs and tags admit no automatic provider pipelines. The default is finite local Linux work with explicit local identities and storage admission. An explicitly requested web/API GitLab pipeline requires a separately authorized `fdisbull-local-linux` runner; its heavy qualification starts only after the blocking manual gate. Always pass `-o ci.skip` when mirroring non-main branches to GitLab.
-- **Package/release gate**: require the exact-source ordinary, stable, layers and unified results, including the tested package hashes, and preserve missing or failed evidence as incomplete. A local pass is not a hosted result. Release tagging still requires ordinary and required-native Linux CI on the exact SHA; publication and installation need separate authorization. Do not invent pipeline or job IDs for local work.
-- Name one CI owner for the repository; other agents consume that owner's dated receipt. Use `scripts/ci_status.py` in cache-only mode by default:
-  ```sh
-  python scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull --sha "$(git rev-parse HEAD)"
-  ```
-  Only the named owner uses `--refresh --owner`; the helper permits one repository-wide refresh per five minutes, shared across local worktrees. Do not run parallel job-status loops, `glab ci trace`, `gh run watch`, automatic retry loops, or empty commits to restart CI.
+- **The original GitHub repository `seeker-cyber-maker/fDisBull` (ID `1431097789`) is the preferred source/review platform.** The user confirmed this exact repository has their reported Trust & Safety exemption. The connected `TiGa-RCE` account has Write access. This is not an exemption for other repositories/accounts. `TiGa-RCE/fdisbull` is a separate partial import; leave it separate.
+- **Preserve local-hub and GitLab work.** The guarded service serializes original GitHub ↔ local-hub ↔ GitLab using separate peer histories, volume/storage admission and fast-forward-only updates. Original GitHub is `origin`; local-hub is `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git`; GitLab remains `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`. Push ordinary source branches to `origin` or `local-hub`; the service propagates them. Manual GitLab pushes require `-o ci.skip`; never send that provider option to GitHub or local-hub. Do not use the old `dual` push remote.
+- Do not overwrite differing tags or delete/recreate refs to obtain parity. Historical `v0.27.0` has two preserved annotated tag identities pointing to the same commit. The exact configured exception and archive aliases are described in `docs/GITHUB_RESTORATION.md`; changes outside that mapping must hold for review. Working checkouts are not advanced by the service.
+- **n8n owns CI.** During the restoration bootstrap, GitHub Actions remains disabled until n8n supplies its reviewed manual-only OVH control commit and runner readiness. Current CI/release qualification authority remains on the established GitLab/local routes until that transition is demonstrated. Restoring GitHub source is not a new qualification or release. Other workers must not enable Actions, register runners, dispatch pipelines or duplicate status polling.
+- Read [CI triggers and status coordination](docs/CI_COORDINATION.md). Preserve GitLab's deliberate triggers and `ci.skip` mirroring. Heavy native compilation remains an explicit CI-owner action. Use `scripts/ci_status.py` in cache-only mode by default; only the named owner refreshes within the shared cooldown. No automatic retry loops, empty commits or parallel job-status loops.
 
 ## Game files and target identity
 
