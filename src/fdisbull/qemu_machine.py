@@ -922,23 +922,30 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         del self.breakpoints[breakpoint_id]
         return dict(deleted=True,context='machine')
 
-    def _execution_preflight(self,command,timeout_ms):
-        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine timeout must be 1..600000 ms')
-        if command!='c' and self._input_pending():
+    def _execution_input_preflight(self,command,*,_internal_owned_step=False):
+        if _internal_owned_step:
+            if command!='s':raise ValueError('Internal owned execution requires a single step')
+            if self._input_schedule_bound():
+                raise ValueError('Internal owned breakpoint steps do not support scheduled input')
+        if command!='c' and not _internal_owned_step and self._input_pending():
             raise ValueError('Queued physical input requires run() before stepping or tracing')
         if self._input_pending() and self.project is not None and self.project.db.in_transaction:
             raise ValueError('Physical input execution requires a project outside a caller-owned transaction')
+
+    def _execution_preflight(self,command,timeout_ms,*,_internal_owned_step=False):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine timeout must be 1..600000 ms')
+        self._execution_input_preflight(command,_internal_owned_step=_internal_owned_step)
         self._input_schedule_preflight()
         if getattr(self, '_layer_exec', None) or getattr(self, '_dos_task_monitor', None):self._layer_before_execution()
 
-    def _execute_once(self,command,timeout_ms):
-        self._execution_preflight(command,timeout_ms)
+    def _execute_once(self,command,timeout_ms,*,_internal_owned_step=False):
+        self._execution_preflight(command,timeout_ms,_internal_owned_step=_internal_owned_step)
         remote=self._stopped();delivery=None
         scheduled=self._input_schedule_bound()
         if scheduled:
             try:reply,timed_out=remote.execute(command,timeout_ms)
             except BaseException:self.vm.close();raise
-        elif self._input_pending():
+        elif not _internal_owned_step and self._input_pending():
             def dispatch(deadline):
                 nonlocal delivery
                 delivery=self._input_after_continue(deadline)
@@ -1001,13 +1008,15 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome='tracking-budget')
         return result
 
-    def _native_execute(self,remote,command,deadline):
+    def _native_execute(self,remote,command,deadline,*,_internal_owned_step=False):
         remaining=int((deadline-time.monotonic())*1000)
         if remaining<1:raise _TrackingDeadline('Machine execution deadline reached before dispatch')
         _before_machine_execution(self,'machine-gdb-'+('step' if command=='s' else 'run'))
         remaining=int((deadline-time.monotonic())*1000)
         if remaining<1:raise _TrackingDeadline('Machine execution deadline reached during tracking invalidation')
         try:
+            if _internal_owned_step:
+                return self._execute_once(command,remaining,_internal_owned_step=True)
             return self._execute_once(command,remaining)
         except BaseException as error:
             # An arrived native stop may have escaped classification (for
@@ -1021,6 +1030,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             raise
 
     def _step_over_internal(self,remote,identifiers,deadline):
+        # Refuse unsupported input compositions before removing any controls.
+        # Ordinary edges remain owned in Python until the outer public c;
+        # this one displaced instruction must never inject them via after_send.
+        self._execution_input_preflight('s',_internal_owned_step=True)
         suspended=[];attempted=False;result=None;failure=None
         def remaining():
             bounds=[deadline,getattr(self,'_deadline',None),getattr(self,'_rpc_deadline',None),
@@ -1038,7 +1051,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 if remote.request(f'z{bp["kind"]},{bp["address"]:x},{bp["length"]:x}',timeout_ms=timeout)!=b'OK':
                     raise DebuggerError('Internal breakpoint suspension failed')
                 suspended.append(key)
-            result=self._native_execute(remote,'s',deadline)
+            result=self._native_execute(remote,'s',deadline,_internal_owned_step=True)
         except BaseException as error:
             failure=error
         observed=result or getattr(failure,'result',None) or (getattr(self,'_automatic_internal_pending',None) or {}).get('result')
@@ -1111,6 +1124,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     def _execute(self,command,timeout_ms):
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:
             raise ValueError('Machine timeout must be1..600000ms')
+        self._execution_input_preflight(command)
         remote=self._stopped()
         bounds=[time.monotonic()+timeout_ms/1000,getattr(self,'_deadline',None),
                 getattr(self,'_rpc_deadline',None),getattr(self.vm,'operation_deadline',None),

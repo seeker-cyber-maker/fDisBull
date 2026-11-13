@@ -1,4 +1,5 @@
 """Mock GDB/QMP boundaries, no VM; candidate copied from sealed S5."""
+from copy import deepcopy
 from types import SimpleNamespace
 import threading
 import pytest
@@ -277,3 +278,128 @@ def test_quarantine_keeps_only_offline_diagnostics_readable(stopped):
  for operation in (machine.run,machine.step,machine.status,machine._stopped):
   with pytest.raises(q.DebuggerError,match='quarantined'):operation()
  assert machine.remote.calls==[] and machine.remote.requests==[]
+
+
+class PhysicalInputQMP:
+ def __init__(self):self.running=False;self.calls=[]
+ def call(self,method,arguments=None,**options):
+  self.calls.append((method,deepcopy(arguments)))
+  if method=='query-status':return dict(running=self.running)
+  assert method=='input-send-event' and self.running
+  return {}
+
+
+class PhysicalInputRemote(Remote):
+ def __init__(self,machine,clock):super().__init__(machine,clock);self.intervals=[];self.failure=None
+ def execute(self,command,timeout_ms,*,after_send=None):
+  self.intervals.append((command,deepcopy(self.machine.vm._physical_input),after_send is not None))
+  if self.failure is not None:raise self.failure
+  self.machine.vm.qmp.running=command=='c'
+  try:
+   if after_send is not None:after_send(self.clock.now+timeout_ms/1000)
+   return super().execute(command,timeout_ms)
+  finally:self.machine.vm.qmp.running=False
+
+
+def pending_with_physical_edges(stopped,monkeypatch):
+ from fdisbull import qemu_input
+ machine,clock=stopped;owned(machine)
+ machine.remote.stops=[(0x20200,True,.11,b'T05')]
+ assert machine.run(timeout_ms=100)['outcome']=='timeout'
+ monkeypatch.setattr(qemu_input,'time',clock)
+ machine.vm.qmp=PhysicalInputQMP();machine.vm.qmp_commands={'input-send-event'}
+ remote=PhysicalInputRemote(machine,clock);machine.remote=remote;machine.vm.gdb=remote
+ lease=machine.keyboard_key_down('a')['lease'];machine.keyboard_key_up(lease)
+ machine.vm.qmp.calls.clear()
+ return machine,clock,lease
+
+
+def test_pending_owned_step_keeps_physical_edges_until_public_continue_once(stopped,monkeypatch):
+ machine,_,lease=pending_with_physical_edges(stopped,monkeypatch)
+ before=deepcopy(machine.vm._physical_input)
+ machine.remote.stops=[(0x20201,False,0,b'T05'),(0x20400,False,0,b'T05'),(0x20500,False,0,b'T05')]
+ first=machine.run(timeout_ms=100)
+ assert first['outcome']=='stopped' and machine.remote.calls==['s','c']
+ assert machine.remote.intervals[0]==('s',before,False)
+ assert machine.remote.intervals[1]==('c',before,True)
+ assert len([1 for method,_ in machine.vm.qmp.calls if method=='input-send-event'])==1
+ assert machine.vm.qmp.calls[-1][1]['events']==[
+  {'type':'key','data':{'key':{'type':'qcode','data':'a'},'down':True}},
+  {'type':'key','data':{'key':{'type':'qcode','data':'a'},'down':False}}]
+ state=machine.input_state()
+ assert not state['pending_edges'] and lease not in state['leases']
+ assert first['input_delivery']['delivery']=='qmp_accepted' and first['input_delivery']['guest_consumed'] is None
+ machine.run(timeout_ms=100)
+ assert machine.remote.calls==['s','c','c'] and machine.remote.intervals[-1][2] is False
+ assert len([1 for method,_ in machine.vm.qmp.calls if method=='input-send-event'])==1
+
+
+@pytest.mark.parametrize('operation',['step','trace'])
+def test_public_step_and_trace_with_pending_hook_keep_physical_input_refusal(stopped,monkeypatch,operation):
+ machine,_,_=pending_with_physical_edges(stopped,monkeypatch)
+ state=deepcopy(machine.vm._physical_input);pending=deepcopy(machine._automatic_internal_pending)
+ with pytest.raises(ValueError,match='requires run'):
+  getattr(machine,operation)(timeout_ms=100)
+ assert machine.vm._physical_input==state and machine._automatic_internal_pending==pending
+ assert machine.remote.calls==machine.remote.requests==machine.vm.qmp.calls==[]
+ assert not getattr(machine.vm,'_fdisbull_control_quarantine',None)
+
+
+@pytest.mark.parametrize('kind',['ordinary','press','typing','click','motion','retrace'])
+def test_owned_step_refuses_bound_input_plans_before_suspending_controls(stopped,monkeypatch,kind):
+ machine,_,_=pending_with_physical_edges(stopped,monkeypatch)
+ state=machine.vm._physical_input
+ state['schedule']=dict(bound=True,records=deepcopy(state['pending']),native={'state':'armed'},applied_count=0)
+ if kind!='ordinary':state['schedule'][kind]={'authored':'opaque native plan'}
+ before=deepcopy(state);pending=deepcopy(machine._automatic_internal_pending)
+ machine._layer_exec=True
+ machine._layer_before_execution=lambda:pytest.fail('Policy refusal entered mutating layer preflight')
+ with pytest.raises(ValueError,match='do not support scheduled input'):machine.run(timeout_ms=100)
+ assert state==before and machine._automatic_internal_pending==pending
+ assert machine.remote.calls==machine.remote.requests==[]
+ assert not any(method=='input-send-event' for method,_ in machine.vm.qmp.calls)
+ assert not getattr(machine.vm,'_fdisbull_control_quarantine',None)
+
+
+def test_late_owned_step_keeps_edges_and_layers_until_next_explicit_continue(stopped,monkeypatch):
+ machine,_,_=pending_with_physical_edges(stopped,monkeypatch)
+ state=deepcopy(machine.vm._physical_input);preflights=[]
+ machine._layer_exec=True;machine._layer_before_execution=lambda:preflights.append(deepcopy(machine.vm._physical_input))
+ machine._layer_native_observe=lambda:{}
+ machine.remote.stops=[(0x20201,True,.11,b'T05'),(0x20400,False,0,b'T05')]
+ stopped_result=machine.run(timeout_ms=100)
+ assert stopped_result['outcome']=='timeout' and stopped_result['timed_out']
+ assert stopped_result['tracking_control_repair']['complete']
+ assert machine.remote.calls==['s'] and machine.remote.intervals==[('s',state,False)]
+ assert machine.vm._physical_input==state and not any(method=='input-send-event' for method,_ in machine.vm.qmp.calls)
+ assert preflights==[state]
+ result=machine.run(timeout_ms=100)
+ assert result['input_delivery']['delivery']=='qmp_accepted' and machine.remote.calls==['s','c']
+ assert preflights==[state,state] and not machine._input_pending()
+ assert len([1 for method,_ in machine.vm.qmp.calls if method=='input-send-event'])==1
+
+
+def test_expired_owned_step_preserves_unsent_edges_and_pending_stop(stopped,monkeypatch):
+ machine,clock,_=pending_with_physical_edges(stopped,monkeypatch)
+ state=deepcopy(machine.vm._physical_input);pending=deepcopy(machine._automatic_internal_pending)
+ machine.vm.operation_deadline=clock.now
+ with pytest.raises(TimeoutError,match='deadline'):machine.run(timeout_ms=100)
+ assert machine.vm._physical_input==state and machine._automatic_internal_pending==pending
+ assert machine.remote.calls==machine.remote.requests==machine.vm.qmp.calls==[]
+ assert not getattr(machine.vm,'_fdisbull_control_quarantine',None)
+
+
+def test_owned_step_transport_failure_never_dispatches_unsent_edges(stopped,monkeypatch):
+ machine,_,_=pending_with_physical_edges(stopped,monkeypatch)
+ before=deepcopy(machine.vm._physical_input);closed=[]
+ def close():
+  closed.append(True);machine._input_on_close()
+ machine.vm.close=close;machine.remote.failure=OSError('authored internal step transport failure')
+ with pytest.raises(OSError,match='authored internal step'):machine.run(timeout_ms=100)
+ assert machine.remote.intervals==[('s',before,False)]
+ assert closed and not any(method=='input-send-event' for method,_ in machine.vm.qmp.calls)
+ state=machine.vm._physical_input
+ assert state['last_delivery'] is None and state['valid'] is False
+ assert state['invalidated_edges']==2 and state['invalidated_leases']==1
+ assert state['pending']==[] and state['leases']=={}
+ assert machine.vm._fdisbull_control_quarantine and machine._automatic_internal_pending is None

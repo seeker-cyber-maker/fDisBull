@@ -101,3 +101,10 @@ public reads and stable CPU/translation checks. Such a receipt qualifies only
 those observed extents and does not upgrade the automatic provider's scope.
 The stricter `dos_source_admit` operation owns its explicit physical/linear
 readback proof independently.
+
+
+A hidden step over an owned lifecycle breakpoint during a public run preserves
+ordinary queued physical edges and leases. It performs no input callback; only
+the following continue may dispatch that queue. Public step/trace and active
+scheduled-input restrictions remain explicit. Unsupported compositions refuse
+before native breakpoint suspension, preserving the stopped owner and its queue.

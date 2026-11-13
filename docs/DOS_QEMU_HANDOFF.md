@@ -6000,3 +6000,25 @@ The native failure receipt is preserved; targeted journal-failure verification
 is separate from the unchanged successful C2 compositions. Final combined C3
 host verification passes 562 tests with stable source hashes. No further broad
 native campaign or default activation is inferred.
+
+
+The final original DESQview C3 run confirms the x86_64 alias fix attaches the
+native provider. Normal queued input then exposes a hidden-step composition
+gap: the pending internal breakpoint's step-over invokes the public queued-input
+step refusal. It must preserve queued edges/leases during the hidden instruction
+and dispatch them only on the following public continue. Simply skipping the
+preflight would incorrectly run the separate input callback during that step.
+The failed guest was closed/reaped with source/image/native pins unchanged;
+this is not a completed task-relocation result. The narrow follow-up keeps
+public step/trace and scheduled-input policies explicit, with its own regression
+and final installed/native acceptance recorded in !117.
+
+
+C4 implements the explicit private owned-step path without changing public
+run/step/trace signatures. Its focused input/tracking preservation selection
+passes 715 cases; the disjoint source/registry/package selection passes 383.
+Both have zero failures/skips. The latter records all 1,265 Python source/test
+hashes unchanged, including the exact two files checked by the input run.
+The remaining qualification is the final immutable installed candidate on the
+original protected target and original DESQview workflow, using private evidence
+and the independent stopped physical-read scope described above.
