@@ -28,6 +28,11 @@ RUNTIME_WHEELS = {'fdisbull', 'fdisbull-player', 'iced-x86', 'capstone', 'lief',
 ELF_ROLES = {'python', 'loader', 'dosbox', 'qemu'}
 SINGLE_ROLES = REQUIRED_ROLES - {'firmware', 'license'}
 FORBIDDEN = {'.fdb', '.sav', '.state', '.png', '.jpg', '.jpeg', '.gif', '.bmp'}
+# QEMU's pinned upstream installer artwork is firmware-distribution material,
+# not a captured target image. This exception is exact-path, role and byte bound.
+QEMU_INSTALLER_BITMAP = 'native/qemu/share/qemu/qemu-nsis.bmp'
+QEMU_INSTALLER_BITMAP_SIZE = 154542
+QEMU_INSTALLER_BITMAP_SHA256 = '93f79a2b6e0f97bc7b7c75ded89a3c4c7657af37c087cf067470771e0affda9c'
 
 
 def sha256(path):
@@ -42,13 +47,14 @@ def is_elf64_x86_64(header):
     return len(header) >= 20 and header[:6] == b'\x7fELF\x02\x01' and struct.unpack_from('<H', header, 18)[0] == 62
 
 
-def destination(value):
+def destination(value, role=None):
     if not isinstance(value, str) or not value or '\\' in value:
         raise ValueError('invalid destination')
     p = PurePosixPath(value)
     if p.is_absolute() or any(part in ('.', '..') for part in value.split('/')) or not re.fullmatch(r'[A-Za-z0-9_+.,@/=-]+', value):
         raise ValueError(f'unsafe destination: {value}')
-    if any(part.startswith('.') for part in p.parts) or p.suffix.lower() in FORBIDDEN:
+    installer_bitmap = role == 'firmware' and value == QEMU_INSTALLER_BITMAP
+    if any(part.startswith('.') for part in p.parts) or (p.suffix.lower() in FORBIDDEN and not installer_bitmap):
         raise ValueError(f'private or hidden payload prohibited: {value}')
     if p.parts[0] in {'bin', 'MANIFEST.json', 'README.txt'}:
         raise ValueError(f'reserved destination: {value}')
@@ -95,7 +101,7 @@ def load_inventory(path):
     if not isinstance(entries, list) or not entries:
         raise ValueError('empty inventory')
     for item in entries:
-        target = str(destination(item['destination']))
+        target = str(destination(item['destination'], role=item.get('role', 'payload')))
         if target in paths:
             raise ValueError(f'duplicate destination: {target}')
         paths.add(target)
@@ -107,6 +113,9 @@ def load_inventory(path):
         if item.get('size') != src.stat().st_size or isinstance(item.get('size'), bool):
             raise ValueError(f'size mismatch: {src}')
         role = item.get('role', 'payload')
+        if target == QEMU_INSTALLER_BITMAP and (item['size'] != QEMU_INSTALLER_BITMAP_SIZE
+                or item['sha256'] != QEMU_INSTALLER_BITMAP_SHA256):
+            raise ValueError('QEMU installer bitmap identity mismatch')
         roles.setdefault(role, []).append(target)
         if role in ELF_ROLES:
             with src.open('rb') as f:
@@ -257,7 +266,7 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
         profile = inventory.get('profile', 'prebuilt')
         delivered = [x for x in inventory['files'] if profile != 'shared' or not x['destination'].startswith('wheels/')]
         for item in delivered:
-            dst = root / str(destination(item['destination']))
+            dst = root / str(destination(item['destination'], role=item.get('role', 'payload')))
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(item['source'], dst)
             if sha256(dst) != item['sha256']:

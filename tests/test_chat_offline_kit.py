@@ -176,3 +176,55 @@ def test_qemu_wrapper_passes_private_firmware_and_preserves_arguments(tmp_path):
         str(root / 'native/qemu/bin/qemu-system-x86_64').encode(), b'-L',
         str(root / 'native/qemu/share/qemu').encode(), b'-machine', b'pc with spaces', b'-S']
     assert ' -L ' not in kit.wrapper('lib/loader', 'native/dosbox')
+
+
+@pytest.mark.parametrize('path,role', [
+    ('native/qemu/share/qemu/other.bmp', 'firmware'),
+    ('targets/qemu-nsis.bmp', 'firmware'),
+    ('native/qemu/share/qemu/qemu-nsis.bmp', 'payload'),
+    ('native/qemu/share/qemu/qemu-nsis.bmp', None),
+    ('native/qemu/share/qemu/screenshot.png', 'firmware'),
+])
+def test_installer_bitmap_exception_keeps_private_images_forbidden(path, role):
+    with pytest.raises(ValueError, match='prohibited'):
+        kit.destination(path, role=role)
+
+
+def test_exact_installer_bitmap_is_byte_bound_in_inventory_and_archive(tmp_path, monkeypatch):
+    inv, data = inventory(tmp_path)
+    # This bundle's firmware shares QEMU's real directory layout.
+    qemu = next(x for x in data['files'] if x['role'] == 'qemu')
+    qemu['destination'] = 'native/qemu/bin/qemu-system-x86_64'
+    closure_entry = next(x for x in data['files'] if x['role'] == 'closure_receipt')
+    closure_path = Path(closure_entry['source']); closure = json.loads(closure_path.read_text())
+    next(obj for obj in closure['objects'] if obj['path'] == 'native/qemu')['path'] = qemu['destination']
+    closure_path.write_text(json.dumps(closure))
+    closure_entry.update(size=closure_path.stat().st_size, sha256=kit.sha256(closure_path))
+    bitmap = next(x for x in data['files'] if x['role'] == 'firmware')
+    payload = b'authored upstream bitmap stand-in'
+    Path(bitmap['source']).write_bytes(payload)
+    bitmap.update(destination=kit.QEMU_INSTALLER_BITMAP, size=len(payload), sha256=kit.sha256(Path(bitmap['source'])))
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SIZE', len(payload))
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SHA256', bitmap['sha256'])
+    inv.write_text(json.dumps(data))
+    kit.load_inventory(inv)
+    output = tmp_path / 'bitmap.zip'; kit.build(inv, output)
+    with zipfile.ZipFile(output) as archive:
+        assert archive.read('fdisbull-chat-offline/' + kit.QEMU_INSTALLER_BITMAP) == payload
+    # Rehashing a replacement cannot bypass the independently pinned identity.
+    Path(bitmap['source']).write_bytes(b'X' * len(payload))
+    bitmap['sha256'] = kit.sha256(Path(bitmap['source']))
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='bitmap identity mismatch'):
+        kit.load_inventory(inv)
+
+
+def test_installer_bitmap_size_is_pinned_independently(tmp_path, monkeypatch):
+    inv, data = inventory(tmp_path)
+    bitmap = next(x for x in data['files'] if x['role'] == 'firmware')
+    bitmap['destination'] = kit.QEMU_INSTALLER_BITMAP
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SHA256', bitmap['sha256'])
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SIZE', bitmap['size'] + 1)
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='bitmap identity mismatch'):
+        kit.load_inventory(inv)

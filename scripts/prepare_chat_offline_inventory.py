@@ -100,7 +100,7 @@ def prepare(config, stage, resolver=ldd_dependencies):
     roles = {}
     origins = {}
     def add(source, dest, role='payload'):
-        dest = str(kit.destination(dest))
+        dest = str(kit.destination(dest, role=role))
         source = Path(source).resolve(strict=True)
         if not source.is_file():
             raise ValueError(f'not a regular input: {source}')
