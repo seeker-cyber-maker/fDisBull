@@ -450,3 +450,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/udc_shell.py`
 - `src/fdisbull/udc_splice.py`
 - `src/fdisbull/udc_web.py`
+
+## Source batch 17
+
+24 additional unchanged Python files (498644 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 390 files, import still incomplete.
+
+- `src/fdisbull/udc_web_memory.py`
+- `src/fdisbull/udc_web_shell.py`
+- `src/fdisbull/udl_blocks.py`
+- `src/fdisbull/udl_genesis.py`
+- `src/fdisbull/udl_miniplanets.py`
+- `src/fdisbull/udl_miniplanets_full.py`
+- `src/fdisbull/udl_shadowrun.py`
+- `src/fdisbull/uil_api.py`
+- `src/fdisbull/uil_catalog.py`
+- `src/fdisbull/uil_codegen.py`
+- `src/fdisbull/uil_dataflow.py`
+- `src/fdisbull/uil_desktop.py`
+- `src/fdisbull/uil_link.py`
+- `src/fdisbull/uil_native.py`
+- `src/fdisbull/uil_native_codegen.py`
+- `src/fdisbull/uil_runtime.py`
+- `src/fdisbull/uil_store.py`
+- `src/fdisbull/westwood_emc2.py`
+- `src/fdisbull/westwood_media.py`
+- `src/fdisbull/win16_debugger.py`
+- `src/fdisbull/windows_ui.py`
+- `src/fdisbull/wine_arch.py`
+- `src/fdisbull/wine_deltas.py`
+- `src/fdisbull/wine_execution.py`
