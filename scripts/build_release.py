@@ -126,6 +126,7 @@ SOURCE_PATTERNS = (
     ("scripts", "*.sh"),
     ("scripts", "*.txt"),
     (".github/workflows", "*.yml"),
+    (".github/retained-workflows", "*.disabled"),
     ("scripts", "miniplanets_display_observer.c"),
     ("docs/evidence/civd-browser-shell", "verification.json"),
     ("docs/evidence/civd-food-arm64", "verification.json"),

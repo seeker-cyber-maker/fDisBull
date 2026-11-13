@@ -122,12 +122,43 @@ def test_gitlab_host_uses_glab_api_and_normalizes_pipelines(tmp_path, fake_gh, m
                        f'projects/brewster-jennings-group%2Ffdisbull/pipelines?sha={SHA}&per_page=100']
 
 
-def test_retired_github_repository_blocks_before_spawning_gh(tmp_path, fake_gh):
+def test_restored_github_repository_allows_one_bounded_authorized_refresh(tmp_path, fake_gh):
+    calls = []
+
+    def fetch(host, repo, sha):
+        calls.append((host, repo, sha))
+        return response(sha)
+
     row = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=SHA, host='github.com',
-                            state_dir=tmp_path, refresh=True, owner='coordinator', clock=lambda: 1000)
-    assert row['status'] == 'error' and row['error'] == 'provider_retired_repository'
-    assert row['provider_stop'] == {'reason': 'provider_retired_repository', 'observed_at': 1000}
+                            state_dir=tmp_path, refresh=True, owner='coordinator',
+                            clock=lambda: 1000, fetch=fetch)
+
+    assert row['status'] == 'fresh' and row['refresh_performed']
+    assert row['repo'] == 'seeker-cyber-maker/fdisbull' and row['owner'] == 'coordinator'
+    assert row['next_refresh_at'] == 1300 and row['qualification'] == 'observation_only'
+    assert calls == [('github.com', 'seeker-cyber-maker/fdisbull', SHA)]
     assert not fake_gh.exists()
+
+
+def test_restored_github_repository_still_persists_provider_restriction_stop(tmp_path):
+    calls = []
+
+    def restricted(*args):
+        calls.append(args)
+        raise gate.FetchError('provider_restriction', provider_stop=True)
+
+    row = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=SHA, host='github.com',
+                            state_dir=tmp_path, refresh=True, owner='coordinator',
+                            clock=lambda: 1000, fetch=restricted)
+    assert row['status'] == 'error' and row['error'] == 'provider_restriction'
+    assert row['provider_stop'] == {'reason': 'provider_restriction', 'observed_at': 1000}
+    assert calls == [('github.com', 'seeker-cyber-maker/fdisbull', SHA)]
+
+    stopped = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=OTHER, host='github.com',
+                                state_dir=tmp_path, refresh=True, owner='coordinator',
+                                clock=lambda: 1400, fetch=forbidden)
+    assert stopped['refresh_reason'] == 'provider_stopped'
+    assert not stopped['refresh_performed']
 
 
 def test_different_sha_cannot_bypass_repository_gate_or_read_other_sha_cache(tmp_path):

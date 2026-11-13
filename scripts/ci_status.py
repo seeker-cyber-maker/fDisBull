@@ -4,8 +4,7 @@
 This development helper reports observations, never acceptance or release
 qualification. It has no watch, force, retry, owner takeover, or resume mode.
 Supports both GitLab (gitlab.com, active 30-day trial) and GitHub (portable
-fallback / unit-test compatibility), while blocking live requests to the
-retired seeker-cyber-maker/fDisBull GitHub repository.
+fallback / unit-test compatibility).
 """
 from __future__ import annotations
 
@@ -31,7 +30,6 @@ INTERVAL_SECONDS = 300
 FETCH_TIMEOUT_SECONDS = 30
 PAGE_SIZE = 100
 SCHEMA = 1
-RETIRED_GITHUB_REPOS = frozenset({'seeker-cyber-maker/fdisbull'})
 
 
 class StatusError(ValueError):
@@ -304,9 +302,7 @@ def fetch_gitlab_runs(host, repo, sha):
 
 
 def fetch_runs(host, repo, sha):
-    """Exactly one provider API invocation; blocks retired GitHub repository."""
-    if host == 'github.com' and repo.lower() in RETIRED_GITHUB_REPOS:
-        raise FetchError('provider_retired_repository', provider_stop=True)
+    """Exactly one provider API invocation."""
     if _is_gitlab_host(host):
         return fetch_gitlab_runs(host, repo, sha)
     endpoint = f'repos/{repo}/actions/runs?head_sha={sha}&per_page={PAGE_SIZE}'
