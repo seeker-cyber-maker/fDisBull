@@ -5594,3 +5594,113 @@ resume, broad ROM/host and historical/VBlank timing remain. The old broader
 DOSBox-X startup stack-buffer abort remains unresolved; this focused pass does
 not erase it. All 141 DOS surfaces and seven campaigns still gate backend
 promotion or DOSBox-X removal.
+
+## 2026-11-13 — CHIP-8 G1 compatible ISA/environment package closure
+
+Continued from `677e31ab59a9e1a9d7d9d96cc1b5642bc3268988` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 keeps its originating marker, target
+`agent/execution-event-search-284eb73c` and stacked base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, native rebuild, merge, release/tag, installation or backend
+default switch was performed.
+
+The G1 resolver exposes a data-only package catalog plus Project/Python,
+CLI/JSON closure resolve/info operations. It binds freshly verified G0 intake,
+source and mapped identities to separately versioned, content-hashed
+`isa:chip8-classic-qemu-v6:1` and `env:chip8-qemu-v6:1` definitions. Environment
+selection is explicit. Exact nested requirements and both package hash pins
+are checked; unknown or incompatible constraints refuse before storage.
+The earlier Python pilot's clock/RNG behavior is not inferred from the shared
+profile label or silently substituted for the native v6 environment.
+
+Declared contracts include register/word/stack widths, classic families and
+fault/bounds policy; Vy shifts, logic VF clearing, I transfer increments and
+alias handling; memory mapping, display clipping/XOR/font, held keys and wait
+policy; virtual rational 60 Hz timers/manual ticks, native LCG/high-byte RNG
+and sound-active without waveform output. Definitions remain declarations,
+with decoder-source identity and explicit evidence ceilings, rather than
+independently qualified semantic rules or historical compatibility.
+
+Immutable project definition/closure records carry exact dependency hashes and
+a bounded acyclic graph. Target, optional runtime and optional analysis node
+identities bind their transitive dependencies. Different ROMs reuse the same
+ISA/environment definitions with distinct source/target closures. Repeated and
+cold resolution never decodes, runs analysis, starts a guest or repeats proof.
+Package/closure corruption, unknown versions/dependencies, stale source or
+missing external objects refuse instead of selecting a mutable latest value.
+
+An optional runtime is always a strictly validated, caller-declared/unverified
+native identity. Resolution performs no binary probe or execution. Optional
+analysis fingerprints only existing original-version instructions, functions,
+xrefs, work and analysis status, bounded to 4,096 rows per table and 4 MiB;
+payload fields are hashed rather than copied. It never promotes those facts
+to semantic proof, and later changes invalidate that analysis-bound closure.
+Runtime/session evidence and semantic qualification remain separate caches.
+
+Source guards bracket G0 inspection and are rechecked with definitions and
+requested analysis inside the owned write transaction before DDL and commit.
+Late dependency changes roll back the new records. Read-only info initializes
+no tables and repeats source/package/analysis validation. Caller transactions
+refuse. Existing generic private-CAS policy may externalize definition JSON;
+the FDB and store remain a single preservation obligation.
+
+The final affected-surface pass reports **1,058 passed across 75 files**, with
+zero failures, skips or exclusions, and **1,237 unchanged Python file hashes**.
+It includes **32 new G1 cases: 19 host, 12 public and one native**, all 1,022
+prior affected cases and four shared common-UIL storage cases. The final
+capability/skill/package/migration/policy selection passes **68 checks**;
+selections overlap and are bounded to local macOS arm64.
+
+The new native witness starts with G0 intake and existing static facts, binds
+the actual v6 identity as an explicitly unverified runtime declaration, and
+retains active RAM/fetch layers, hooks, seeded RNG and held frame keys through
+a real lossless delta child, same-anchor comparative trials, selected CPU/RAM
+freeze and full experiment recovery. G1 inspection works while native selected
+state is frozen without mutating it, and both G0 and G1 revalidate after cold
+Project reopen. The integrated suite retains 323 DOSBox-X history/undo/trial
+cases, five native DOS selected-undo cases and six native DOS trials covering
+task-private layers, held keys, IRQ state and full recovery.
+
+The private Snek/Ghost Escape witness copies their already verified G0 FDBs,
+explicitly hard-links the two immutable source-CAS objects into an isolated
+private store, and resolves the same ISA/environment pins for both. Definition
+reuse, distinct target/closure identities, one closure/two definitions per
+project, cold CLI identity and incompatible-quirk refusal pass without target
+execution, network, decode or analysis. Original source bytes, G0 FDBs and the
+manifest remain unchanged. The retained first witness passed behavior but
+failed its final two-file store-count assumption: generic storage added one
+992-byte ISA metadata object. The corrected witness isolates metadata storage
+and records that addition; no original object was overwritten or deleted.
+Independent read-only audit reopens both corrected witness projects, rechecks
+canonical package/closure hashes and graph/source identities, confirms shared
+definitions with distinct targets, and verifies the explicit source hardlinks.
+Both copied FDBs and all audit-listed G0 originals remain byte-identical.
+
+The initial 100 MB native admission was refused at 15.3 GB internal free space.
+The user then explicitly instructed: "Disregard the space restrictions."
+Validation continued under that waiver with a bounded 600 MB CACHE output plan;
+no internal bulk output, native build or CI was introduced. Private evidence
+uses chip8-g1-preservation-final-01, chip8-g1-tested-source-hashes-01.json,
+chip8-g1-corpus-witness-02.json and chip8-g1-storage-waiver-01.json. Source ROMs,
+FDBs, states, RAM-bearing reports and object stores remain outside Git/packages.
+
+The separate DOS parity audit still records **141/141 unqualified surfaces**:
+108 partial, 31 pending, one retained-host-code row and one planned-addition row.
+The 31 pending rows include all 17 legacy workflows, nine clock/media/input,
+three DOS process, one layer service and the qualification row. None of these
+counts is a percentage of engineering completion; surfaces differ in size,
+and partial native mechanisms remain materially narrower than parity.
+All seven campaigns remain unqualified: native DOS/resident/TSR behavior;
+QEMM/protected-V86; DESQview task switching; real-game comparison; Windows
+shared-core regression; cold restore/epoch; explicit DOSBox fallback rehearsal.
+The audit separates these missing campaign proofs from already implemented
+bounded engine work. CHIP-8 G1 does not reduce the DOS compatibility inventory.
+
+Twelve retained binaries, six CHIP-8 native packages and the active shared
+selector/runtime retain identity. Component04 boot qualification and the older
+DOSBox-X startup stack-buffer abort remain unresolved. All DOS surfaces and
+campaigns still gate backend promotion/removal. G1 closes declared compatible
+package selection for this bounded classic/v6 route; G2 source mapping/UDL,
+G3-G4 semantic admission/independent qualification and G5-G8 build, execution,
+reuse and delivery remain open.

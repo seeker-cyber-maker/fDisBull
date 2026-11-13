@@ -466,6 +466,9 @@ METHODS = {
     "source-info": "Recorded target size/SHA-256, loader provenance and current availability; [version]",
     "chip8-intake": "Create a G0 project from an exact pinned classic CHIP-8 corpus member; path,project,manifest_path,manifest_sha256,member,[profile]; no execution",
     "chip8-intake-info": "Reverify stored CHIP-8 G0 source/member/profile identity; [version,expected_manifest_sha256,expected_intake_sha256]; no execution",
+    "chip8-packages": "Inspect exact versioned CHIP-8 ISA/environment declarations; no project or execution",
+    "chip8-closure-resolve": "Resolve and persist a G0-bound compatible declared package closure; environment,[version,requirements,pins,runtime,include_analysis,expected_intake_sha256]; no execution",
+    "chip8-closure-info": "Reverify an immutable CHIP-8 package closure and its source dependencies; closure,[version,expected_intake_sha256]; no execution",
     "source-candidate": "Inspect candidate identity without attaching; path,[version]",
     "bind-source": "Bind exact source or explicitly approved divergent layer; path,[version,approval]",
     "new-source-analysis": "Explicitly create a separate analysis without changing this one; path,destination,[version]",
@@ -497,6 +500,11 @@ def invoke(method, params, debugger=None):
     if not isinstance(params, dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method == "chip8-packages":
+        from .chip8_packages import catalog
+        if p:
+            raise ValueError("chip8-packages accepts no parameters")
+        return catalog()
     if source_catalog_request(method, p):
         from .source_api import invoke as source_invoke
         return source_invoke(method, p)
@@ -1084,7 +1092,8 @@ def invoke(method, params, debugger=None):
         if method in BLOCK_METHODS:
             from .udc_api import invoke as invoke_block
             return invoke_block(db,method,p)
-        if method in ("source-info", "source-candidate", "bind-source", "chip8-intake-info"):
+        if method in ("source-info", "source-candidate", "bind-source", "chip8-intake-info",
+                      "chip8-closure-resolve", "chip8-closure-info"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
             p["project"] = p.pop("destination")
@@ -1369,6 +1378,7 @@ def respond(request, default_project=None, debugger=None):
                 "media-modules",
                 "format-modules",
                 "intake-inventory",
+                "chip8-packages",
                 "file-identify",
                 "smk-frame",
                 "media-inspect",
@@ -2430,6 +2440,21 @@ def parser():
     c.add_argument("project")
     c.add_argument("--version", type=int)
     c.add_argument("--expected-manifest-sha256")
+    c.add_argument("--expected-intake-sha256")
+    sub.add_parser("chip8-packages", help=METHODS["chip8-packages"])
+    c = sub.add_parser("chip8-closure-resolve", help=METHODS["chip8-closure-resolve"])
+    c.add_argument("project")
+    c.add_argument("--environment", required=True)
+    c.add_argument("--version", type=int)
+    c.add_argument("--requirements", type=json.loads)
+    c.add_argument("--pins", type=json.loads)
+    c.add_argument("--runtime", type=json.loads)
+    c.add_argument("--include-analysis", action="store_true")
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-closure-info", help=METHODS["chip8-closure-info"])
+    c.add_argument("project")
+    c.add_argument("closure")
+    c.add_argument("--version", type=int)
     c.add_argument("--expected-intake-sha256")
     c = sub.add_parser(
         "import", help="create project from executable or explicit raw code"

@@ -32,6 +32,18 @@ G0 slice does not implement the proposed G1 package closure or qualify any
 G2–G8 conversion, independent execution or delivery gate. The matrix below
 remains the proposed acceptance plan, not a completed gate report.
 
+## 2026-11-13 bounded G1 implementation note
+
+The [compatible package-closure resolver](../CHIP8_PACKAGE_CLOSURE.md) now
+binds G0 to separately versioned, hash-pinned classic ISA and explicit native
+v6 environment declarations. Cold inspection revalidates source and transitive
+dependencies; another ROM reuses the same definitions with its own source and
+target closure. Optional runtime declarations remain unverified, and optional
+analysis pins hash only existing static records without decoding or proof.
+This is a bounded G1 declaration-compatibility result. It does not qualify
+instruction semantics, historical behavior, arbitrary ROM compatibility or
+G2-G8 conversion. The wider resolver/campaign plan below remains prospective.
+
 ## A. End-to-end gates, in execution order
 
 | Gate | Primary owner | Required software-owned acceptance | Common false positive to reject |

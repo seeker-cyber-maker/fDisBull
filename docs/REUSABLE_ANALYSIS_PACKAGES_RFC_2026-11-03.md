@@ -7,6 +7,14 @@
 
 ## Decision proposed
 
+The 2026-11-13 source contains bounded CHIP-8 implementations of
+[G0 pinned intake](CHIP8_CONVERSION_INTAKE.md) and
+[G1 declared ISA/environment closure](CHIP8_PACKAGE_CLOSURE.md). They do not
+implement this full cross-platform resolver proposal or independently qualify
+semantic packages. G1 keeps package-definition identities, exact target binding,
+optional unverified runtime declarations and existing-analysis fingerprints
+distinct; G2-G8 conversion remains separate work.
+
 Establish **three mandatory reusable package classes**, one optional runtime/family class, and a separately versioned session:
 
 | Package | Responsibility | Reuse |

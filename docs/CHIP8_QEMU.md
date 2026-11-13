@@ -38,6 +38,19 @@ dialects, retrieve or extract archives, resolve the G1 package closure, or
 qualify conversion and execution semantics. The original source is retained in
 the required private content-addressed object store.
 
+## Compatible package closure
+
+The separate [G1 package resolver](CHIP8_PACKAGE_CLOSURE.md) binds a verified G0
+intake to exact versioned ISA and environment declarations. Select the
+`env:chip8-qemu-v6:1` environment explicitly; a generic CHIP-8 label does not
+select its clock, RNG or quirks. Cold inspection rechecks the source, package
+hashes, dependency graph and any requested existing-analysis fingerprint.
+Different ROMs can share ISA/environment definition identities while retaining
+distinct target and closure identities. Resolution performs no instruction
+decoding, guest execution or proof. Optional runtime identities remain unverified
+caller declarations. G2-G8 semantic conversion and DOS parity remain separate
+qualification work; DOSBox-X stays default.
+
 ## Explicit source admission
 
 For this source candidate, run the CLI from the checkout with

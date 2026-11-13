@@ -7,6 +7,10 @@ caller-supplied ROM against one caller-pinned Git-corpus manifest. It does not
 resolve a reusable ISA/environment package closure, lift semantics to UIL,
 produce a conversion, execute a guest, or establish G1–G8 acceptance.
 
+After G0 intake, the separate [G1 package resolver](CHIP8_PACKAGE_CLOSURE.md)
+can bind exact declared ISA/environment dependencies without changing this
+source-identity receipt or running the target.
+
 The accepted profile is explicitly `chip8-classic-pilot-default-v1`: raw
 CHIP-8, 16-bit instruction words in big-endian order, 4 KiB memory, and ROM and
 entry at `0x200`. The selected ROM must be 2–3,584 bytes; an odd-length data
