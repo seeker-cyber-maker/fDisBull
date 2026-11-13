@@ -81,6 +81,59 @@ def test_loader_list_parses_real_glibc_form_and_rejects_host_or_missing(tmp_path
         verifier.parse_loader_list('libfoo.so => not found', root)
 
 
+def static_loader_roles(tmp_path, *, with_dependency=False):
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux.so';loader.write_bytes(b'\x7fELFloader')
+    objects=[{'path':'lib/ld-linux.so','needed':{}}]
+    roles={'loader':[loader]}
+    if with_dependency:
+        library=root/'lib/libexample.so';library.write_bytes(b'\x7fELFlibrary')
+        objects[0]['needed']={'libexample.so':'lib/libexample.so'}
+        objects.append({'path':'lib/libexample.so','needed':{}})
+        roles['payload']=[library]
+    receipt=root/'closure.json';receipt.write_text(json.dumps({
+        'schema':'fdisbull-elf-closure-v1','complete':True,'objects':objects}))
+    roles['closure_receipt']=[receipt]
+    return root,roles
+
+
+@pytest.mark.parametrize('output', ['statically linked\n','\tstatically linked\n'])
+def test_loader_closure_accepts_successful_exact_static_leaf(tmp_path, monkeypatch, output):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout=output,stderr=''))
+    assert verifier.check_loader_closure(root,roles)==1
+
+
+def test_loader_closure_rejects_static_result_with_declared_dependencies(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path,with_dependency=True)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout='statically linked\n',stderr=''))
+    with pytest.raises(ValueError,match='contradicts declared dependencies'):
+        verifier.check_loader_closure(root,roles)
+
+
+@pytest.mark.parametrize('output', ['statically linked\nextra output\n','extra output\nstatically linked\n'])
+def test_loader_closure_rejects_mixed_static_output(tmp_path, monkeypatch, output):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout=output,stderr=''))
+    with pytest.raises(ValueError,match='Unrecognized or unresolved'):
+        verifier.check_loader_closure(root,roles)
+
+
+def test_loader_closure_does_not_accept_failed_static_probe(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=1,stdout='statically linked\n',stderr='inspection failed'))
+    with pytest.raises(ValueError,match='Loader could not inspect'):
+        verifier.check_loader_closure(root,roles)
+
+
 def test_closure_checks_actual_loader_output_and_declared_map(tmp_path, monkeypatch):
     root = tmp_path / 'kit'; (root / 'lib').mkdir(parents=True)
     loader = root / 'ld'; loader.write_bytes(b'\x7fELFloader')

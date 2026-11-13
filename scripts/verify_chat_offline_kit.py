@@ -193,7 +193,12 @@ def check_loader_closure(root, roles):
                                 env={'PATH':str(root / 'bin')}, capture_output=True, text=True, timeout=30)
         if result.returncode:
             raise ValueError('Loader could not inspect ' + name + ': ' + result.stderr.strip())
-        resolved = parse_loader_list(result.stdout, root)
+        if result.stdout.strip() == 'statically linked':
+            if needed:
+                raise ValueError('Loader static result contradicts declared dependencies: ' + name)
+            resolved = {}
+        else:
+            resolved = parse_loader_list(result.stdout, root)
         if any(path.relative_to(root).as_posix() not in actual_elf for path in resolved.values()):
             raise ValueError('Loader resolved an uninventoried or non-ELF library')
         for soname, target in needed.items():
