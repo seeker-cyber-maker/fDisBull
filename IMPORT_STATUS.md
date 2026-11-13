@@ -520,3 +520,21 @@ Imported 5 unchanged Python source files (87305 bytes) from the pinned GitLab so
 - `src/fdisbull/zork_uil.py`
 - `src/fdisbull/zork_window.py`
 - `src/fdisbull/zork_worker.py`
+
+
+## Batch 20 (2026-11-13 18:41 UTC scheduled run)
+
+Imported 12 unchanged nested Python source files (92504 bytes) from pinned GitLab source. Total files: 431. All 425 eligible Python files under src/ at or below 100 KB are now imported, including nested packages. Two oversized Python source files remain excluded: cli.py (174757 bytes) and dinopark_scenes.py (147594 bytes). Other source/support files, tests, documentation, fixtures and history remain unimported. This is still a partial, not-buildable copy. No tests or CI run. Pattern scan found zero matches, not comprehensive secret certification.
+
+- `src/fdisbull/console_synthesis/__init__.py`
+- `src/fdisbull/console_synthesis/c_frontend.py`
+- `src/fdisbull/console_synthesis/compare.py`
+- `src/fdisbull/console_synthesis/mapping.py`
+- `src/fdisbull/console_synthesis/model.py`
+- `src/fdisbull/console_synthesis/recover.py`
+- `src/fdisbull/console_synthesis/targets.py`
+- `src/fdisbull/dos_guest/__init__.py`
+- `src/fdisbull/dos_guest/broker.py`
+- `src/fdisbull/ida_guest/__init__.py`
+- `src/fdisbull/ida_guest/broker.py`
+- `src/fdisbull/wine_guest/broker.py`
