@@ -464,6 +464,28 @@ def test_private_workspace_refuses_existing_directory_without_chmod_or_reuse(tmp
                ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'))
 
 
+def test_dos_fixture_isolated_from_runtime_cache_preserves_real_manifest_guard(tmp_path,monkeypatch):
+    from fdisbull.project import Project
+    from fdisbull.debugger import DebugSession
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path.resolve()/'consumer';workspace.mkdir()
+    verifier.prepare_private_workspace(workspace)
+    cache=workspace/'runtime-cache';cache.mkdir()
+    # Sparse data reproduces the cache-size boundary without allocating bulk bytes.
+    with (cache/'base.cpio.gz').open('xb') as stream:stream.truncate(256*1024*1024+1)
+    directory,target=verifier.prepare_dos_fixture(workspace)
+    with Project.create(directory/'dos.fdb',target) as project:
+        assert project.meta['format']=='MZ'
+        debug=DebugSession.__new__(DebugSession);debug.project=project
+        debug.game_dir=workspace
+        with pytest.raises(ValueError,match='Game directory exceeds state manifest budget'):
+            debug._disk_manifest()
+        debug.game_dir=directory
+        assert debug._disk_manifest()==[{'path':'KEY.EXE','sha256':hashlib.sha256(target.read_bytes()).hexdigest()}]
+    assert directory==workspace/'dos'
+
+
 def windows_profile_fakes(tmp_path, monkeypatch):
     import sys
     from types import SimpleNamespace

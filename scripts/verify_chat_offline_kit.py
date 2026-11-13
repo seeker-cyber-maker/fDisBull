@@ -365,6 +365,16 @@ def prepare_private_workspace(workspace):
     return paths
 
 
+def prepare_dos_fixture(workspace):
+    """Keep mounted DOS inputs separate from the large runtime caches."""
+    directory=workspace/'dos';directory.mkdir(mode=0o700)
+    code=bytes.fromhex('b81300cd100e1f30e4cd16a20001ebfe')+bytes(1024)
+    header=bytearray(32);header[:2]=b'MZ';size=32+len(code)
+    struct.pack_into('<13H',header,2,*[size%512,(size+511)//512,0,2,0,0xffff,0,0x400,0,0,0,0x1c,0])
+    target=directory/'KEY.EXE';target.write_bytes(header+code)
+    return directory,target
+
+
 def verify(root, workspace, archive):
     root, workspace, archive = root.resolve(), workspace.resolve(), archive.resolve()
     if root == workspace or root.is_relative_to(workspace) or workspace.is_relative_to(root):
@@ -414,11 +424,8 @@ def verify(root, workspace, archive):
         cmd=[str(cli),'agent-skill','--reference','SKILL.md']
         if skill != 'fdisbull': cmd += ['--skill',skill]
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, timeout=30)
-    code=bytes.fromhex('b81300cd100e1f30e4cd16a20001ebfe')+bytes(1024)
-    header=bytearray(32);header[:2]=b'MZ';size=32+len(code)
-    struct.pack_into('<13H',header,2,*[size%512,(size+511)//512,0,2,0,0xffff,0,0x400,0,0,0,0x1c,0])
-    dos=workspace/'KEY.EXE';dos.write_bytes(header+code)
-    with Project.create(workspace/'dos.fdb',dos) as project, project.debugger(root/'bin/dosbox',workspace) as debug:
+    dos_directory,dos=prepare_dos_fixture(workspace)
+    with Project.create(dos_directory/'dos.fdb',dos) as project, project.debugger(root/'bin/dosbox',dos_directory) as debug:
         debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True); state=debug.save_state('before.sav')
         debug.keyboard.press('a');debug.run(guest_ms=250,timeout_ms=5000,fast_forward=True)
         if debug.memory('1000:0100',length=1)['hex'] != '61': raise ValueError('DOS keyboard failed')
