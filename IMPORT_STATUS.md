@@ -392,3 +392,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/shadowrun_world.py`
 - `src/fdisbull/shadowrun_z.py`
 - `src/fdisbull/shared_labels.py`
+
+## Source batch 15
+
+24 additional unchanged Python files (353444 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 342 files, import still incomplete.
+
+- `src/fdisbull/smacker.py`
+- `src/fdisbull/snes_decode.py`
+- `src/fdisbull/snippet_links.py`
+- `src/fdisbull/source_api.py`
+- `src/fdisbull/source_builds.py`
+- `src/fdisbull/source_catalog.py`
+- `src/fdisbull/source_native.py`
+- `src/fdisbull/spatial.py`
+- `src/fdisbull/spatial_map.py`
+- `src/fdisbull/spatial_modes.py`
+- `src/fdisbull/stock_flow.py`
+- `src/fdisbull/strategy_z.py`
+- `src/fdisbull/summaries.py`
+- `src/fdisbull/target_sources.py`
+- `src/fdisbull/target_storage.py`
+- `src/fdisbull/text_host.py`
+- `src/fdisbull/text_projection.py`
+- `src/fdisbull/thumb.py`
+- `src/fdisbull/type_catalog.py`
+- `src/fdisbull/typesystem.py`
+- `src/fdisbull/udc.py`
+- `src/fdisbull/udc_api.py`
+- `src/fdisbull/udc_blueprint.py`
+- `src/fdisbull/udc_c.py`
