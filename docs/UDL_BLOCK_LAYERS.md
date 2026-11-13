@@ -294,6 +294,7 @@ There are two native output routes:
 | --- | --- | --- |
 | `compile_splice_selection(project, selection, recipe, destination, output_name="PROGRAM.COM")` | A complete retained source-file snippet, exact selected x86-16 modules, and an explicit COM placement/data recipe | Hash-bound byte derivation and specified invocation checks; target callsite, relocation and continuation assertions remain explicit |
 | `build_selection_shell(project, selection, plan, destination)` | A structured `fdisbull-native-shell-1` plan with supported selected UIL and notification providers; emits a new native PE32+ AMD64 program | Shared-IL admission, supported lowering and build hashes; Windows execution and visible provider effects need separate native evidence |
+| `build_selection_shell(..., target="macos-arm64")` | The same plan, realized as generator-owned C compiled for `arm64-apple-macos*` and linked against libSystem; notifications use the explicit `macos-stdout` adapter | Sweding profile: identical UIL state/effects, different machinery. `capture_state` is unsupported; the program writes one JSON observation line to stdout. Build receipts record `native_execution: false`; running the artifact is separate evidence |
 
 COM recipes use `fdisbull-udc-splice-selection-1`, `source_snippet`,
 `placements`, `data_bindings` and optional `qualification_inputs`. A placement

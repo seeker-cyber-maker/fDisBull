@@ -79,6 +79,10 @@ def validate_il(document):
             _fields(c, ('op', 'left', 'right'))
             a, b = value(c['left']), value(c['right'])
             _require((a == 'bool') == (b == 'bool'), 'incompatible equality')
+        elif op == 'ge':
+            _fields(c, ('op', 'left', 'right'))
+            a, b = value(c['left']), value(c['right'])
+            _require(a != 'bool' and b != 'bool', 'ge compares integer cells only')
         elif op == 'bit_test':
             _fields(c, ('op', 'value', 'bit'))
             _require(value(c['value']) != 'bool' and type(c['bit']) is int and 0 <= c['bit'] < 64, 'invalid bit test')
@@ -97,7 +101,7 @@ def validate_il(document):
             _require(count[0] <= 1024, 'node budget exceeded')
             _require(isinstance(block, dict), 'invalid block')
             op = block.get('op')
-            fields = {'set': ('var','value'), 'add': ('var','value'), 'subtract': ('var','value'), 'if': ('condition','then','else'), 'require': ('condition',), 'text': ('resource',), 'load_graphic': ('resource','x','y'), 'play_sound': ('resource',), 'click': ('target',)}
+            fields = {'set': ('var','value'), 'add': ('var','value'), 'subtract': ('var','value'), 'multiply': ('var','value'), 'divide': ('var','value'), 'if': ('condition','then','else'), 'require': ('condition',), 'text': ('resource',), 'load_graphic': ('resource','x','y'), 'play_sound': ('resource',), 'click': ('target',)}
             _require(op in fields, 'unknown block')
             _fields(block, ('id','op',*fields[op]), ('evidence',))
             ident = block['id']
@@ -105,7 +109,7 @@ def validate_il(document):
             ids.add(ident)
             refs = block.get('evidence', [])
             _require(isinstance(refs, list) and all(isinstance(x, str) and x in evidence for x in refs), 'invalid evidence reference')
-            if op in ('set','add','subtract'):
+            if op in ('set','add','subtract','multiply','divide'):
                 var = block['var']; _require(var in variables, 'unknown variable')
                 typ = variables[var]['type']; vtyp = value(block['value'])
                 _require((typ == 'bool') == (vtyp == 'bool') and (op == 'set' or typ != 'bool'), 'incompatible assignment')
@@ -158,6 +162,7 @@ def execute_il(document, state=None, capabilities=(), max_steps=1024):
         def cond(c):
             op = c['op']
             if op == 'eq': return val(c['left']) == val(c['right'])
+            if op == 'ge': return val(c['left']) >= val(c['right'])
             if op == 'bit_test': return bool(val(c['value']) & (1 << c['bit']))
             if op == 'not': return not cond(c['condition'])
             return all(cond(x) for x in c['conditions'])
@@ -165,12 +170,19 @@ def execute_il(document, state=None, capabilities=(), max_steps=1024):
             for b in body:
                 _require(len(visited) < max_steps, 'step budget exceeded')
                 visited.append(b['id']); op = b['op']
-                if op in ('set','add','subtract'):
+                if op in ('set','add','subtract','multiply','divide'):
                     name, v = b['var'], val(b['value']); typ = declarations[name]['type']
                     if op == 'set':
                         _require(_typed(v, typ), 'assignment out of range'); work[name] = v
                     else:
-                        bits = int(typ[1:]); n = (work[name] + (v if op == 'add' else -v)) % (1 << bits)
+                        bits = int(typ[1:])
+                        if op == 'divide':
+                            _require(v != 0, 'division by zero')
+                            n = abs(work[name]) // abs(v)
+                            n = -n if (work[name] < 0) != (v < 0) else n
+                        elif op == 'multiply': n = work[name] * v
+                        else: n = work[name] + (v if op == 'add' else -v)
+                        n %= (1 << bits)
                         work[name] = n - (1 << bits) if typ[0] == 'i' and n >= (1 << (bits-1)) else n
                 elif op == 'if': run(b['then'] if cond(b['condition']) else b['else'])
                 elif op == 'require': _require(cond(b['condition']), 'qualification condition not met')

@@ -1,0 +1,99 @@
+{
+ "format": "fdisbull-civ-city-founding-state-1",
+ "method": "fdisbull debugger: authentic keyboard route, live guest-memory reads after the first city is founded; no state edits",
+ "target": {
+  "edition": "Civilization DOS 474.03 English install (runtime/47403)",
+  "civ_exe_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+  "game_dir": "private copy under /tmp; originals unmodified"
+ },
+ "client": {
+  "fdisbull_version": "0.28.0",
+  "backend": "DOSBox-X headless agent",
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60"
+ },
+ "route": [
+  "1 VGA",
+  "1 no sound",
+  "2 keyboard only",
+  "Enter on title (four times until the intro starts)",
+  "intro completes",
+  "Enter difficulty (Chieftain)",
+  "Enter competition (7)",
+  "Enter tribe (Roman)",
+  "Enter leader name",
+  "Enter message",
+  "b first-task note",
+  "Enter dismiss",
+  "b found Rome",
+  "Enter city name",
+  "Enter production note"
+ ],
+ "read": {
+  "ds": "0x32A4",
+  "city_address": "0x32A4:0x70EC",
+  "city_bytes_hex": "010000003d0e0001000100010000000000000000000000ffffffffff00000000",
+  "city_fields": {
+   "buildings": "Palace (bit 0)",
+   "x": 61,
+   "y": 14,
+   "status": 0,
+   "size": 1,
+   "visible_size": 0,
+   "production": 1,
+   "trade": 0,
+   "owner": 1,
+   "food_box": 0,
+   "shield_box": 0,
+   "workers": 0,
+   "specialists": 0,
+   "name_id": 0,
+   "routes": [
+    -1,
+    -1,
+    -1
+   ],
+   "garrison": [
+    -1,
+    -1
+   ]
+  },
+  "money_address": "0x32A4:0xB1D6",
+  "money_words_hex": "00003200000000000000000000000000000000000000ffff00008d003f003800",
+  "money": [
+   0,
+   50,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "money_note": "int money[8] is 16-bit in the Borland large model; the human civ index is 1, so money[1] is the 50 gold shown on the world map."
+ },
+ "findings": [
+  "The founded city record has garrison[0] = -1 and garrison[1] = -1: no unit is in the city.",
+  "The founded city production is 1 (Militia), not 0 (Settlers).",
+  "buildings has the Palace bit; shield_box and status are 0.",
+  "The human treasury is 50 at Chieftain, matching NEWGAME.C:151-161.",
+  "Rome is founded at 4000 BC with the world-map message still displayed."
+ ],
+ "frames": [
+  {
+   "file": "founding-message.png",
+   "bytes": 27399,
+   "sha256": "78f31bd1246b42474e13f4d5aeba172e1e74b7bb44601c355fb3d942e7c2d351",
+   "role": "Rome founded 4000 BC message on the world map; keyboard-only Chieftain route"
+  },
+  {
+   "file": "production-note.png",
+   "bytes": 13694,
+   "sha256": "8aeb78b3c4f86f5dc1eb3ed3803fb845cb545a46660fd12d264ab2fdfe12f85a",
+   "role": "The first production note before the city screen"
+  }
+ ],
+ "limits": [
+  "One 474.03 run, Chieftain/Roman, keyboard-only route; no buy or turn was exercised.",
+  "The city record was read from guest memory; the frame alone is not state authority."
+ ]
+}
