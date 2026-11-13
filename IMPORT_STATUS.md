@@ -509,3 +509,14 @@ Imported 24 Python source files (350519 bytes), unchanged from pinned GitLab com
 - `src/fdisbull/zork_intents.py`
 - `src/fdisbull/zork_recovery.py`
 - `src/fdisbull/zork_scene_dispatch.py`
+
+
+## Batch 19 (2026-11-13 17:41 UTC scheduled run)
+
+Imported 5 unchanged Python source files (87305 bytes) from the pinned GitLab source. Total imported files: 419. No CI or tests run. Pattern scan found no matches, not a comprehensive secret certification. Eligible first-level src/fdisbull/*.py files at or below 100 KB are now exhausted; larger files and other directories remain unimported pending scope/review. Repository is still partial and not buildable.
+
+- `src/fdisbull/zork_scene_export.py`
+- `src/fdisbull/zork_scenes.py`
+- `src/fdisbull/zork_uil.py`
+- `src/fdisbull/zork_window.py`
+- `src/fdisbull/zork_worker.py`
