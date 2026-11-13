@@ -116,7 +116,7 @@ def test_retained_workflows_are_exact_and_only_manual_control_active():
     for name, digest in expected.items():
         assert hashlib.sha256((ROOT / ".github/retained-workflows" / (name + ".disabled")).read_bytes()).hexdigest() == digest
     workflows = list((ROOT / '.github/workflows').glob('*'))
-    assert [p.name for p in workflows] == ['ci.yml']
+    assert [p.name for p in workflows] == ['ovh-bootstrap.yml']
     text = workflows[0].read_text()
     assert 'workflow_dispatch:' in text and 'pull_request:' not in text and 'push:' not in text
     assert 'fdisbull-ovh-ca-gh1' in text and 'cancel-in-progress: false' in text
