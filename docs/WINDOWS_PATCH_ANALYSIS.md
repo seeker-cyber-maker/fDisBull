@@ -631,7 +631,7 @@ The comparison records separate results:
 | Boundary | Current v6 | Current v7 |
 | --- | --- | --- |
 | Plain native CLI | All ten cases agree, including real valid/mutated keys and three actual retired-key honeypots | Eleven of twelve agree; the recovered valid key succeeds only on the original |
-| Initialization | Missing input exits before the decorative tail; normal-length inputs allow the original's added getter to run while async main is suspended | `process.exitCode` allows the original's later getter initializer to run |
+| Initialization | Missing input exits before the decorative tail; the measured valid/mutated-key inputs allow the original's added getter to run while async main is suspended | `process.exitCode` allows the original's later getter initializer to run |
 | Exported API samples | The host invokes async main automatically; it exposes no activation API | Fourteen synchronous calls cover all nine exported product functions; thirteen result/throw projections agree, and valid-key activation differs |
 | Wasm interface | Exports change from 252 to 2 and the `name` custom section is removed | Not used by this edition |
 | Whole-module equivalence | Refuted by initialization and Wasm reflection | Refuted by real activation and initialization differences |
