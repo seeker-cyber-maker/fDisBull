@@ -334,3 +334,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/shadowrun_hostile_moving_idle.py`
 - `src/fdisbull/shadowrun_hostile_moving_idle_18.py`
 - `src/fdisbull/shadowrun_hostile_moving_pose.py`
+
+## Source batch 13
+
+24 additional unchanged Python files (95417 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 294 files, import still incomplete.
+
+- `src/fdisbull/shadowrun_hostile_moving_pose_58.py`
+- `src/fdisbull/shadowrun_hostile_moving_relaunch.py`
+- `src/fdisbull/shadowrun_hostile_moving_relaunch_repeat.py`
+- `src/fdisbull/shadowrun_hostile_north.py`
+- `src/fdisbull/shadowrun_hostile_path_finish.py`
+- `src/fdisbull/shadowrun_hostile_pursuit.py`
+- `src/fdisbull/shadowrun_hostile_pursuit_route.py`
+- `src/fdisbull/shadowrun_hostile_received_hit.py`
+- `src/fdisbull/shadowrun_hostile_relaunch.py`
+- `src/fdisbull/shadowrun_hostile_self_hit.py`
+- `src/fdisbull/shadowrun_hostile_stationary.py`
+- `src/fdisbull/shadowrun_hostile_waypoint.py`
+- `src/fdisbull/shadowrun_hostile_zero_counter.py`
+- `src/fdisbull/shadowrun_interaction.py`
+- `src/fdisbull/shadowrun_inventory.py`
+- `src/fdisbull/shadowrun_linked_actors.py`
+- `src/fdisbull/shadowrun_linked_heading.py`
+- `src/fdisbull/shadowrun_macos.py`
+- `src/fdisbull/shadowrun_menu.py`
+- `src/fdisbull/shadowrun_nes_ai.py`
+- `src/fdisbull/shadowrun_nes_animation.py`
+- `src/fdisbull/shadowrun_nes_banked.py`
+- `src/fdisbull/shadowrun_nes_play.py`
+- `src/fdisbull/shadowrun_nes_rom_reader.py`
