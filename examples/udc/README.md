@@ -1,5 +1,10 @@
 # UDC native verification examples
 
+The [selectable Tic-Tac-Toe and Five-Dice slices](game_variants/README.md)
+exercise three equivalent UIL/C module styles and per-roll implementation
+selection. They are authored bounded examples, separate from the original-backed
+DOS verification below.
+
 These examples belong to a source checkout. They compare separate, fresh native
 DOS runs of original-backed compiled files. They are not included in tool-only
 source or wheel distributions. Private game inputs are supplied by the operator;
