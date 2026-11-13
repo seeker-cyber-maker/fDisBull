@@ -363,3 +363,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/shadowrun_nes_banked.py`
 - `src/fdisbull/shadowrun_nes_play.py`
 - `src/fdisbull/shadowrun_nes_rom_reader.py`
+
+## Source batch 14
+
+24 additional unchanged Python files (150325 bytes). Secret-pattern scan found no matches; not comprehensive secret certification. No tests/CI executed. Total 318 files, import still incomplete.
+
+- `src/fdisbull/shadowrun_party_clock.py`
+- `src/fdisbull/shadowrun_play.py`
+- `src/fdisbull/shadowrun_player_attack.py`
+- `src/fdisbull/shadowrun_player_combat_slide.py`
+- `src/fdisbull/shadowrun_player_combat_walk.py`
+- `src/fdisbull/shadowrun_player_combat_wall.py`
+- `src/fdisbull/shadowrun_player_damage.py`
+- `src/fdisbull/shadowrun_player_reaction.py`
+- `src/fdisbull/shadowrun_player_reaction_direction.py`
+- `src/fdisbull/shadowrun_player_reaction_direction_down.py`
+- `src/fdisbull/shadowrun_player_reaction_held.py`
+- `src/fdisbull/shadowrun_player_reaction_idle_walk.py`
+- `src/fdisbull/shadowrun_player_reaction_resume.py`
+- `src/fdisbull/shadowrun_player_reaction_step.py`
+- `src/fdisbull/shadowrun_projectile_lifecycle.py`
+- `src/fdisbull/shadowrun_replay.py`
+- `src/fdisbull/shadowrun_scene_assets.py`
+- `src/fdisbull/shadowrun_snes_field.py`
+- `src/fdisbull/shadowrun_snes_macos.py`
+- `src/fdisbull/shadowrun_systems.py`
+- `src/fdisbull/shadowrun_targeting.py`
+- `src/fdisbull/shadowrun_world.py`
+- `src/fdisbull/shadowrun_z.py`
+- `src/fdisbull/shared_labels.py`
