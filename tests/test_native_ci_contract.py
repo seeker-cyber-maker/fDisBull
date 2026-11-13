@@ -156,3 +156,19 @@ def test_native_local_receipt_does_not_fabricate_gitlab_ids(tmp_path, monkeypatc
     assert receipt['local_run_id'] == 'b4f5594b-2d10-4f1a-bd00-e25412e0f851'
     assert receipt['local_job_id'] == '00000000-0000-4000-8000-000000000002'
     assert 'pipeline_id' not in receipt and 'job_id' not in receipt
+
+
+def test_pipeline_inputs_are_bounded_and_default_to_ordinary_mode():
+    text = (ROOT / '.gitlab-ci.yml').read_text()
+    header, _ = text.split('\n---\n', 1)
+    assert header.count('    recovery') == 4
+    assert "options: ['0', '1']\n      default: '0'" in header
+    assert "regex: '^[A-Za-z0-9_-]{1,100}$'\n      default: 'none'" in header
+    assert header.count("regex: '^[0-9a-f]{64}$'") == 2
+    assert header.count("default: '" + '0' * 64 + "'") == 2
+    variables = ci_section('variables')
+    for name, input_name in [('FDISBULL_CI_RECOVERY_REHEARSAL', 'recovery'),
+                             ('FDISBULL_RECOVERY_INCIDENT', 'recovery_incident'),
+                             ('FDISBULL_RECOVERY_INPUT_SHA256', 'recovery_input_sha256')]:
+        assert name + ": '$[[ inputs." + input_name + " ]]'" in variables
+    assert 'action:$[[ inputs.recovery_action_id ]]' in ci_section('workflow')

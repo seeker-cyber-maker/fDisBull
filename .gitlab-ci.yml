@@ -1,8 +1,27 @@
 # Local-first CI: pushes, merge requests and tags do not create pipelines.
 # Only deliberate web/API pipelines are admitted, and every job requires the
 # dedicated local-runner tag. Heavy qualification has a blocking manual start.
+spec:
+  inputs:
+    recovery:
+      type: string
+      options: ['0', '1']
+      default: '0'
+    recovery_incident:
+      type: string
+      regex: '^[A-Za-z0-9_-]{1,100}$'
+      default: 'none'
+    recovery_input_sha256:
+      type: string
+      regex: '^[0-9a-f]{64}$'
+      default: '0000000000000000000000000000000000000000000000000000000000000000'
+    recovery_action_id:
+      type: string
+      regex: '^[0-9a-f]{64}$'
+      default: '0000000000000000000000000000000000000000000000000000000000000000'
+---
 workflow:
-  name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME)"
+  name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME) action:$[[ inputs.recovery_action_id ]]"
   rules:
     - if: '$CI_COMMIT_MESSAGE =~ /\[(skip ci|ci skip)\]/i'
       when: never
@@ -30,6 +49,9 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYTHONDONTWRITEBYTECODE: "1"
   FDISBULL_EXPECTED_BYTES: "500000000"
+  FDISBULL_CI_RECOVERY_REHEARSAL: '$[[ inputs.recovery ]]'
+  FDISBULL_RECOVERY_INCIDENT: '$[[ inputs.recovery_incident ]]'
+  FDISBULL_RECOVERY_INPUT_SHA256: '$[[ inputs.recovery_input_sha256 ]]'
 
 cache:
   key: "pip-py312-$CI_COMMIT_REF_SLUG"

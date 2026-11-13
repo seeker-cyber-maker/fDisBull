@@ -108,6 +108,14 @@ def execute(config, directory):
             state = controller.step()
             print(json.dumps({'status': state['status'], 'phase': state['phase'],
                               'target': state['target'], 'reason': state.get('reason')}), flush=True)
+            # Finish the action arising from this authoritative observation in
+            # its already-reserved batch. A new observation still waits for a
+            # new five-minute reservation. No provider request is replayed.
+            if (state['status'] == 'pending' and state['phase'] in ('dispatch_retry', 'dispatch_pipeline')
+                    and backend.prepared and time.time() < (backend.next_refresh_at or 0)):
+                state = controller.step()
+                print(json.dumps({'status': state['status'], 'phase': state['phase'],
+                                  'target': state['target'], 'reason': state.get('reason')}), flush=True)
         raise RuntimeError('finite incident deadline expired')
 
 

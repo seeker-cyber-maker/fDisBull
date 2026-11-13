@@ -11,6 +11,10 @@ excludes those jobs when selected. It first fails for a missing CI-owned input,
 then exposes a deliberately incomplete predicate in `recovery_probe_logic.py`.
 The worker may repair only that file. Original failures remain failed.
 
+Dispatch uses validated pipeline inputs, with harmless defaults for ordinary
+pipelines. It does not require or enable pipeline-variable overrides. The
+action hash is bound to the provider's pipeline name for canonical readback.
+
 The finite controller retains and verifies each completed job's export before
 classification. It permits one known input repair and one source worker, with
 fresh production-health checks before dispatch. Unknown evidence, conflicting
@@ -31,6 +35,8 @@ worker is not automatically relaunched after an uncertain result.
 The existing repository-wide provider reservation retains its five-minute
 cooldown and persistent access/rate-limit stop. Configuration must name its
 current owner; this command has no takeover, reset or force switch.
+An immediately resulting retry/dispatch can complete in the same reserved
+observation batch; the next status observation still waits for a new interval.
 
 Failure/recovery events go to the existing operations incident journal with a
 stable incident key. An accepted journal write proves neither notification

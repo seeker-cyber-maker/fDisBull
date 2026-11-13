@@ -195,10 +195,68 @@ def test_bootstrap_pipeline_accepts_planned_placeholder(tmp_path):
     backend._lease_held = True
     placeholder = dict(TARGET, pipeline_id='0', job_id='0')
     payload = {'project': '88349936', 'target': placeholder, 'source_sha': SHA}
+    action_id = hashlib.sha256(b'incident:bootstrap').hexdigest()
     provider.responses = [{'commit': {'id': SHA}}, {'id': 2},
-                          {'id': 2, 'project_id': 88349936, 'sha': SHA, 'ref': 'codex/repair'},
+                          {'id': 2, 'project_id': 88349936, 'sha': SHA, 'ref': 'codex/repair', 'name': 'fDisBull CI action:' + action_id},
                           [dict(provider_job(job_id='20', status='pending', runner=None), pipeline={'id': 2})]]
     transport.responses = [{'receipt_path': '/var/lib/fdisbull-ci/control/recovery/incident/bootstrap.json'}]
     result = backend.perform('start_pipeline', 'incident:bootstrap', payload)
     assert result['target']['pipeline_id'] == '2' and result['target']['job_id'] == '20'
     assert [x[0] for x in provider.calls] == ['GET', 'POST', 'GET', 'GET']
+    body = json.loads(provider.calls[1][2])
+    assert body == {'ref': 'codex/repair', 'inputs': {'recovery': '1', 'recovery_incident': 'incident',
+                    'recovery_input_sha256': backend.config['marker_sha256'], 'recovery_action_id': action_id}}
+
+
+def test_pipeline_action_name_required_before_job_discovery(tmp_path):
+    backend, provider, _ = make(tmp_path)
+    backend.prepared = True
+    provider.responses = [{'id': 2, 'project_id': 88349936, 'sha': SHA, 'ref': 'codex/repair', 'name': 'fDisBull CI action:' + '0' * 64}]
+    with pytest.raises(ValueError): backend._pipeline_target('2', SHA, TARGET, 'a' * 64)
+    assert len(provider.calls) == 1
+
+
+def test_ambiguous_bootstrap_reconciles_action_name_without_second_post(tmp_path):
+    backend, provider, transport = make(tmp_path)
+    backend.prepared = True; backend._lease_held = True
+    placeholder = dict(TARGET, pipeline_id='0', job_id='0')
+    payload = {'project': '88349936', 'target': placeholder, 'source_sha': SHA}
+    action_id = hashlib.sha256(b'incident:bootstrap').hexdigest()
+    provider.responses = [{'commit': {'id': SHA}}, TimeoutError(),
+                          [{'id': 2, 'sha': SHA, 'ref': 'codex/repair', 'created_at': '2099-01-01T00:00:00Z'}],
+                          {'id': 2, 'project_id': 88349936, 'sha': SHA, 'ref': 'codex/repair', 'name': 'fDisBull CI action:' + action_id},
+                          [dict(provider_job(job_id='20', status='pending', runner=None), pipeline={'id': 2})]]
+    with pytest.raises(TimeoutError): backend.perform('start_pipeline', 'incident:bootstrap', payload)
+    transport.responses = [{'receipt_path': '/var/lib/fdisbull-ci/control/recovery/incident/bootstrap.json'}]
+    result = backend.reconcile_action('start_pipeline', 'incident:bootstrap', payload)
+    assert result['target']['job_id'] == '20'
+    assert [call[0] for call in provider.calls] == ['GET', 'POST', 'GET', 'GET', 'GET']
+    assert all('/variables' not in call[1] for call in provider.calls)
+
+
+def test_request_receipts_are_durable_and_sanitized(tmp_path):
+    backend, provider, _ = make(tmp_path)
+    backend.prepared = True
+    provider.responses = [RuntimeError('GitLab POST returned HTTP 400'), RuntimeError('secret in provider exception')]
+    for _ in range(2):
+        with pytest.raises(RuntimeError): backend._request('POST', '/projects/88349936/pipeline', body=b'secret-body')
+    receipts = [json.loads(path.read_text()) for path in tmp_path.glob('provider-request-*.json')]
+    assert len(receipts) == 2
+    assert all(r['state'] == 'error' and r['resource'] == 'pipeline_create' and r['method'] == 'POST' for r in receipts)
+    assert sorted(r.get('http_status', 0) for r in receipts) == [0, 400]
+    assert 'secret' not in json.dumps(receipts)
+
+
+def test_request_receipt_exists_before_provider_and_captures_result_id(tmp_path):
+    backend, _, _ = make(tmp_path)
+    backend.prepared = True
+    class InspectProvider:
+        def request(self, method, path, body=None):
+            paths = list(tmp_path.glob('provider-request-*.json'))
+            assert len(paths) == 1 and json.loads(paths[0].read_text())['state'] == 'started'
+            return {'id': 42, 'private': 'secret-value'}
+    backend.provider = InspectProvider()
+    backend._request('POST', '/projects/88349936/pipeline', body=b'secret-body')
+    record = json.loads(next(tmp_path.glob('provider-request-*.json')).read_text())
+    assert record['state'] == 'response_received' and record['result_id'] == 42
+    assert 'secret' not in json.dumps(record)

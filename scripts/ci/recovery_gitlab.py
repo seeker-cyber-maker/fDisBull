@@ -216,10 +216,29 @@ class GitLabRecoveryBackend:
             raise RuntimeError('host lease ended')
         if not self.prepared:
             raise RuntimeError('repository refresh not reserved')
+        resource = 'other'
+        if '/repository/branches/' in path: resource = 'branch'
+        elif re.search(r'/jobs/\d+/retry$', path): resource = 'job_retry'
+        elif re.search(r'/pipelines/\d+/jobs\?', path): resource = 'pipeline_jobs'
+        elif re.search(r'/pipelines/\d+$', path): resource = 'pipeline_detail'
+        elif re.search(r'/pipelines\?', path): resource = 'pipeline_list'
+        elif path.endswith('/pipeline'): resource = 'pipeline_create'
+        elif re.search(r'/jobs/\d+$', path): resource = 'job_detail'
+        receipt = self.state_dir / ('provider-request-' + str(time.time_ns()) + '-' + os.urandom(8).hex() + '.json')
+        record = {'method': method if method in ('GET', 'POST') else 'other', 'resource': resource,
+                  'state': 'started', 'started_epoch': time.time()}
+        self.status_api._write(receipt, record)
         try:
-            return self.provider.request(method, path, body=body)
+            response = self.provider.request(method, path, body=body)
         except Exception as exc:
             message = str(exc).lower()
+            http = re.fullmatch(r'gitlab (get|post) returned http ([1-5][0-9]{2})', message)
+            transport = re.fullmatch(r'gitlab (get|post) transport error \((urlerror|timeouterror|httpexception)\)', message)
+            record.update(state='error', error_class=type(exc).__name__ if type(exc).__name__ in
+                          ('RuntimeError', 'TimeoutError', 'ValueError', 'OSError') else 'other')
+            if http and http.group(1).upper() == method: record['http_status'] = int(http.group(2))
+            if transport and transport.group(1).upper() == method: record['transport_type'] = transport.group(2)
+            self.status_api._write(receipt, record)
             reason = next(('provider_http_' + code for code in ('401', '403', '429') if re.search(r'http\s+' + code + r'\b', message)), None)
             if reason is None and CI_STATUS._restricted(message): reason = 'provider_restriction'
             if reason:
@@ -227,6 +246,11 @@ class GitLabRecoveryBackend:
                 if not result.get('recorded') and result.get('reason') != 'provider_stopped':
                     raise RuntimeError('provider stop could not be persisted') from None
             raise
+        record['state'] = 'response_received'
+        if isinstance(response, dict) and type(response.get('id')) is int and response['id'] >= 0:
+            record['result_id'] = response['id']
+        self.status_api._write(receipt, record)
+        return response
 
     def _job_list(self, pipeline):
         jobs = []
@@ -378,10 +402,12 @@ class GitLabRecoveryBackend:
         return {'pipeline_id': str(pipeline), 'job_id': str(job['id']), 'source_sha': sha,
                 'job_name': previous['job_name'], 'runner_id': self.runner}
 
-    def _pipeline_target(self, pipeline, sha, previous):
+    def _pipeline_target(self, pipeline, sha, previous, action_id):
         value = self._request('GET', f'/projects/{self.project}/pipelines/{pipeline}')
         if (str(value.get('id')) != str(pipeline) or str(value.get('project_id')) != self.project
-                or value.get('sha') != sha or value.get('ref') != self.config['ref']):
+                or value.get('sha') != sha or value.get('ref') != self.config['ref']
+                or not isinstance(value.get('name'), str)
+                or not value['name'].endswith(' action:' + action_id)):
             raise ValueError('new pipeline identity mismatch')
         jobs = self._job_list(pipeline)
         if len(jobs) != 1 or jobs[0].get('name') != 'ci-recovery-rehearsal':
@@ -411,13 +437,13 @@ class GitLabRecoveryBackend:
             branch = self._request('GET', f"/projects/{self.project}/repository/branches/{quote(self.config['ref'], safe='')}")
             if branch.get('commit', {}).get('id') != payload['source_sha']:
                 raise ValueError('ref does not point at repaired source')
-            variables = {'FDISBULL_CI_RECOVERY_REHEARSAL': '1', 'FDISBULL_RECOVERY_INCIDENT': self.incident,
-                         'FDISBULL_RECOVERY_INPUT_SHA256': self.config['marker_sha256'],
-                         'FDISBULL_RECOVERY_ACTION_ID': hashlib.sha256(key.encode()).hexdigest()}
-            body = json.dumps({'ref': self.config['ref'], 'variables': [{'key': k, 'value': v} for k, v in variables.items()]}).encode()
+            action_id = hashlib.sha256(key.encode()).hexdigest()
+            inputs = {'recovery': '1', 'recovery_incident': self.incident,
+                      'recovery_input_sha256': self.config['marker_sha256'], 'recovery_action_id': action_id}
+            body = json.dumps({'ref': self.config['ref'], 'inputs': inputs}).encode()
             pipeline = self._request('POST', f'/projects/{self.project}/pipeline', body=body)
             if not isinstance(pipeline, dict) or not str(pipeline.get('id', '')).isdecimal(): raise ValueError('unknown new pipeline')
-            target = self._pipeline_target(str(pipeline['id']), payload['source_sha'], old)
+            target = self._pipeline_target(str(pipeline['id']), payload['source_sha'], old, action_id)
         path = self._action_receipt(key, {'action': action, 'target': target, 'status': 'completed'})
         return {'status': 'completed', 'target': target, 'receipt_path': path}
 
@@ -464,11 +490,7 @@ class GitLabRecoveryBackend:
                     created = datetime.datetime.fromisoformat(pipeline['created_at'].replace('Z', '+00:00')).timestamp()
                     if created < math.floor(intent['created_epoch']) - 1 or pipeline.get('sha') != payload['source_sha'] or pipeline.get('ref') != self.config['ref']: continue
                     pid = str(pipeline['id'])
-                    variables = self._request('GET', f'/projects/{self.project}/pipelines/{pid}/variables')
-                    expected = {'FDISBULL_CI_RECOVERY_REHEARSAL': '1', 'FDISBULL_RECOVERY_INCIDENT': self.incident,
-                                'FDISBULL_RECOVERY_INPUT_SHA256': self.config['marker_sha256'], 'FDISBULL_RECOVERY_ACTION_ID': action_id}
-                    if not isinstance(variables, list) or any(sum(v.get('key') == k and v.get('value') == x for v in variables if isinstance(v, dict)) != 1 for k, x in expected.items()): continue
-                    candidates.append(self._pipeline_target(pid, payload['source_sha'], old))
+                    candidates.append(self._pipeline_target(pid, payload['source_sha'], old, action_id))
                 except (KeyError, TypeError, ValueError):
                     continue
         if len(candidates) != 1:
