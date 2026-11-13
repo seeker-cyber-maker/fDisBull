@@ -81,6 +81,47 @@ def test_loader_list_parses_real_glibc_form_and_rejects_host_or_missing(tmp_path
         verifier.parse_loader_list('libfoo.so => not found', root)
 
 
+def interpreter_alias_kit(tmp_path):
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux-x86-64.so.2';loader.write_bytes(b'\x7fELFloader')
+    return root,loader
+
+
+def test_loader_list_normalizes_exact_private_interpreter_alias(tmp_path):
+    root,loader=interpreter_alias_kit(tmp_path)
+    line=f'/lib64/ld-linux-x86-64.so.2 => {loader} (0x00007fff0010)\n'
+    assert verifier.parse_loader_list(line,root)=={'ld-linux-x86-64.so.2':loader}
+
+
+@pytest.mark.parametrize('target', ['/lib64/ld-linux-x86-64.so.2','/usr/lib/ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_interpreter_alias_resolving_to_host(tmp_path,target):
+    root,_=interpreter_alias_kit(tmp_path)
+    with pytest.raises(ValueError,match='exact kit loader'):
+        verifier.parse_loader_list(f'/lib64/ld-linux-x86-64.so.2 => {target} (0x1234)',root)
+
+
+def test_loader_list_rejects_interpreter_alias_to_another_private_file(tmp_path):
+    root,_=interpreter_alias_kit(tmp_path)
+    other=root/'lib/other.so';other.write_bytes(b'\x7fELFother')
+    with pytest.raises(ValueError,match='exact kit loader'):
+        verifier.parse_loader_list(f'/lib64/ld-linux-x86-64.so.2 => {other} (0x1234)',root)
+
+
+@pytest.mark.parametrize('alias', ['/lib/ld-linux-x86-64.so.2','/tmp/ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_other_absolute_dependency_names(tmp_path,alias):
+    root,loader=interpreter_alias_kit(tmp_path)
+    with pytest.raises(ValueError,match='Invalid or duplicate'):
+        verifier.parse_loader_list(f'{alias} => {loader} (0x1234)',root)
+
+
+@pytest.mark.parametrize('first', ['/lib64/ld-linux-x86-64.so.2','ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_duplicate_normalized_interpreter(tmp_path,first):
+    root,loader=interpreter_alias_kit(tmp_path)
+    output=f'{first} => {loader} (0x1234)\n/lib64/ld-linux-x86-64.so.2 => {loader} (0x5678)\n'
+    with pytest.raises(ValueError,match='Invalid or duplicate'):
+        verifier.parse_loader_list(output,root)
+
+
 def static_loader_roles(tmp_path, *, with_dependency=False):
     root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
     loader=root/'lib/ld-linux.so';loader.write_bytes(b'\x7fELFloader')
@@ -131,6 +172,56 @@ def test_loader_closure_does_not_accept_failed_static_probe(tmp_path, monkeypatc
     monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
         SimpleNamespace(returncode=1,stdout='statically linked\n',stderr='inspection failed'))
     with pytest.raises(ValueError,match='Loader could not inspect'):
+        verifier.check_loader_closure(root,roles)
+
+
+def cpython_object_roles(tmp_path, *, name='python/lib/python3.13/config-3.13-x86_64-linux-gnu/python.o',
+                         needed=False, entry_role=None, mutation=None):
+    import struct
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux.so';loader.write_bytes(b'\x7fELFloader')
+    build_object=root/name;build_object.parent.mkdir(parents=True,exist_ok=True)
+    header=bytearray(64);header[:7]=b'\x7fELF\x02\x01\x01'
+    struct.pack_into('<HHIQQQIHHHHHH',header,16,1,62,1,0,0,7448,0,64,0,0,64,48,47)
+    if mutation=='class':header[4]=1
+    if mutation=='big-endian':
+        header[5]=2
+        struct.pack_into('>HHIQQQIHHHHHH',header,16,1,62,1,0,0,7448,0,64,0,0,64,48,47)
+    for field,offset,format,value in (('machine',18,'<H',183),('entry',24,'<Q',1),
+            ('program-offset',32,'<Q',64),('header-size',52,'<H',32),('program-count',56,'<H',1)):
+        if mutation==field:struct.pack_into(format,header,offset,value)
+    build_object.write_bytes(header+b'authored relocatable fixture')
+    objects=[{'path':'lib/ld-linux.so','needed':{}},
+             {'path':name,'needed':{'ld-linux.so':'lib/ld-linux.so'} if needed else {}}]
+    receipt=root/'closure.json';receipt.write_text(json.dumps({
+        'schema':'fdisbull-elf-closure-v1','complete':True,'objects':objects}))
+    roles={'loader':[loader],'payload':[build_object],'closure_receipt':[receipt]}
+    if entry_role=='loader':roles['loader']=[build_object];roles['payload']=[loader]
+    elif entry_role:roles[entry_role]=[build_object]
+    return root,roles
+
+
+def test_loader_closure_retains_exact_cpython_link_object_without_loading_it(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=cpython_object_roles(tmp_path);inspected=[]
+    def run(args,**kwargs):
+        inspected.append(args[-1])
+        return SimpleNamespace(returncode=0,stdout='statically linked\n',stderr='')
+    monkeypatch.setattr(verifier.subprocess,'run',run)
+    assert verifier.check_loader_closure(root,roles)==2
+    assert inspected==[str(root/'lib/ld-linux.so')]
+
+
+@pytest.mark.parametrize('options', [
+    {'name':'python/lib/python3.13/other.o'}, {'needed':True},
+    *({'entry_role':role} for role in ('python','loader','dosbox','qemu')),
+    *({'mutation':field} for field in ('class','big-endian','machine','entry','program-offset','header-size','program-count'))])
+def test_loader_closure_rejects_other_or_malformed_relocatable_payloads(tmp_path, monkeypatch, options):
+    from types import SimpleNamespace
+    root,roles=cpython_object_roles(tmp_path,**options)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout='statically linked\n',stderr=''))
+    with pytest.raises(ValueError,match='Invalid or unexpected relocatable'):
         verifier.check_loader_closure(root,roles)
 
 

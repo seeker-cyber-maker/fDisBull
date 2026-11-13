@@ -140,6 +140,12 @@ def parse_loader_list(output, root):
         match = re.fullmatch(r'(\S+) => (\S+) \(0x[0-9a-fA-F]+\)', line)
         if match:
             name, path = match.groups()
+            # glibc may print the executable's absolute PT_INTERP name while
+            # resolving it to the explicitly selected private loader.
+            if name == '/lib64/ld-linux-x86-64.so.2':
+                if path != str(root / 'lib/ld-linux-x86-64.so.2'):
+                    raise ValueError('Interpreter alias must resolve to the exact kit loader')
+                name = 'ld-linux-x86-64.so.2'
             if '/' in name or name in libraries:
                 raise ValueError('Invalid or duplicate loader dependency')
         else:
@@ -166,11 +172,13 @@ def check_loader_closure(root, roles):
     if not isinstance(objects, list) or not objects:
         raise ValueError('Empty ELF closure receipt')
     files = {p.relative_to(root).as_posix() for paths in roles.values() for p in paths}
-    actual_elf = set()
+    actual_elf, headers = set(), {}
+    entry_paths = {p.relative_to(root).as_posix() for role in ('python','loader','dosbox','qemu')
+                   for p in roles.get(role, [])}
     firmware = {p.relative_to(root).as_posix() for p in roles.get('firmware', [])}
     for name in files:
         with (root / name).open('rb') as stream:
-            header = stream.read(20)
+            header = stream.read(64)
         if header[:4] != b'\x7fELF':
             continue
         # QEMU's firmware directory includes guest-architecture ELF images. They
@@ -179,6 +187,11 @@ def check_loader_closure(root, roles):
         if name in firmware and name.startswith('native/qemu/share/qemu/'):
             continue
         actual_elf.add(name)
+        headers[name] = header
+    relocatable = {name for name, header in headers.items() if len(header) >= 20
+        and int.from_bytes(header[16:18], 'big' if header[5:6] == b'\x02' else 'little') == 1}
+    if relocatable & entry_paths:
+        raise ValueError('Invalid or unexpected relocatable ELF entry role')
     seen = set()
     for obj in objects:
         name = obj.get('path')
@@ -186,6 +199,19 @@ def check_loader_closure(root, roles):
         if name not in actual_elf or name in seen or not isinstance(needed, dict):
             raise ValueError('Unknown, duplicate, or invalid closure object')
         seen.add(name)
+        header = headers[name]
+        if name in relocatable:
+            # CPython's retained config object is ET_REL linker input, not a
+            # loadable runtime object. Keep its hashed bytes without feeding it
+            # to ld.so; no other relocatable payload receives this exemption.
+            valid_build_object = (name == 'python/lib/python3.13/config-3.13-x86_64-linux-gnu/python.o'
+                and not needed and name not in entry_paths and len(header) == 64
+                and header[:7] == b'\x7fELF\x02\x01\x01'
+                and header[16:24] == b'\x01\x00\x3e\x00\x01\x00\x00\x00'
+                and header[24:40] == bytes(16) and header[52:58] == b'\x40\x00\x00\x00\x00\x00')
+            if not valid_build_object:
+                raise ValueError('Invalid or unexpected relocatable ELF payload: ' + name)
+            continue
         for soname, target in needed.items():
             if not isinstance(soname, str) or not soname or '/' in soname or target not in actual_elf or not private_library_path(root, (root / target).resolve()) or PurePosixPath(target).name != soname:
                 raise ValueError('Invalid declared dependency map')
