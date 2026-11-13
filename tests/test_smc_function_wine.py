@@ -224,8 +224,8 @@ def test_real_wine_smc_function_paths_recover_guarded_return_and_memory_behavior
                               initramfs=str(runtime), files=[source.name],
                               version=1, memory_mib=4096) as debug:
             report['runtime'] = debug.metadata
-            for marker in ('smc_before_write', 'smc_after_write', 'smc_done'):
-                debug.breakpoint(exports[marker])
+            markers = {marker: debug.breakpoint(exports[marker])
+                       for marker in ('smc_before_write', 'smc_after_write', 'smc_done')}
             common_general = None
             common_flags = None
             entry_rsp = None
@@ -397,9 +397,11 @@ def test_real_wine_smc_function_paths_recover_guarded_return_and_memory_behavior
                 save()
 
             stop_at(exports['smc_before_write'])
+            debug.delete_breakpoint(markers['smc_before_write']['breakpoint_id'])
             assert main_word(exports['first_value']) == 4 and main_word(output) == 4
             collect_epoch('original', 1, view='ram')
             stop_at(exports['smc_after_write'])
+            debug.delete_breakpoint(markers['smc_after_write']['breakpoint_id'])
             assert debug.memory(immediate, length=4)['hex'] == '02000000'
             assert main_word(exports['first_value']) == 4 and main_word(exports['second_value']) == 0
             collect_epoch('self-modified', 2, view='ram')
