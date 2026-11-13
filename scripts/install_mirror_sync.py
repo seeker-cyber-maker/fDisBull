@@ -242,6 +242,12 @@ def build_plan(args):
         raise ValueError('GitLab remote must be a credential-free supported URL')
     plist_data = plist_contents(python, runtime, config, state, wake)
     previous = _read_manifest(manifest)
+    # A routine managed upgrade must not silently remove an opted-in peer.
+    # The manifest/hash checks below still reject unreviewed config changes.
+    if previous is not None and config.is_file():
+        existing = json.loads(config.read_text())
+        if 'github' in existing:
+            payload['github'] = existing['github']
     if previous is not None and any(previous.get(k) != v for k, v in
             {'hub':str(hub),'hook':str(hook),'plist':str(plist),'state_dir':str(state)}.items()):
         raise ValueError('Existing installation manifest identifies a different target')
