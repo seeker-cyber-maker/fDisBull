@@ -28,6 +28,11 @@ still governs qualification of source semantics, common UIL, registered UDC
 providers, standalone emitted executables and reuse on held-out programs.
 Building this debugger seam does not close those later conversion gates.
 
+The [debugger reuse account](QEMU_DEBUGGER_REUSE.md) distinguishes shared
+transport/history/storage/replay code from CPU and device adapters. The
+[component build boundary](QEMU_COMPONENT_BUILD_BOUNDARY.md) describes exact
+native artifact reuse, targeted rebuilds and remaining offline dependencies.
+
 ## Pinned conversion intake
 
 For the bounded G0 Git-corpus identity path, use

@@ -99,3 +99,26 @@ def test_live_input_callback_is_rejected_for_single_step_before_dispatch():
     with pytest.raises(ValueError, match='continue'):
         remote.execute('s', 1000, after_send=lambda deadline: None)
     assert wire.requests == [] and not wire.closed
+
+
+@pytest.mark.parametrize('entrypoint', ['execute', 'request'])
+@pytest.mark.parametrize('failure', [TimeoutError, BrokenPipeError])
+def test_uncertain_stop_ack_closes_without_interrupt_or_replay(entrypoint, failure):
+    remote, wire = remote_with(packet(b'T05thread:01;'))
+    sent, acknowledgements = wire.sendall, []
+
+    def fail_ack(data):
+        if data == b'+':
+            acknowledgements.append(data)
+            raise failure('authored uncertain ACK write')
+        return sent(data)
+
+    wire.sendall = fail_ack
+    with pytest.raises(DebuggerError, match='acknowledgement failed'):
+        if entrypoint == 'execute':
+            remote.execute('c', 1000)
+        else:
+            remote.request('?')
+    assert acknowledgements == [b'+']
+    assert wire.requests == [packet(b'c' if entrypoint == 'execute' else b'?')]
+    assert remote.socket is None and wire.closed

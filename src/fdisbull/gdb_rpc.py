@@ -85,8 +85,14 @@ class GDBRemote:
             try:checksum=int(state['checksum'],16)
             except ValueError as error:raise DebuggerError('Invalid GDB checksum') from error
             if sum(raw)%256!=checksum:raise DebuggerError('GDB checksum mismatch; request not replayed')
-            self.socket.sendall(b'+')
             self._packet_state=None
+            try:
+                self.socket.settimeout(max(.001,deadline-time.monotonic()))
+                self.socket.sendall(b'+')
+            except (OSError,TimeoutError) as error:
+                # An uncertain write is not a receive deadline. Interrupting
+                # and reading again cannot safely identify a new stop reply.
+                raise DebuggerError('GDB packet acknowledgement failed; request not replayed') from error
             result=bytearray();i=0
             while i<len(raw):
                 value=raw[i];i+=1

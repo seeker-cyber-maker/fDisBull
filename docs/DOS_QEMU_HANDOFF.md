@@ -5792,3 +5792,110 @@ The DOS ledger still has 141 unqualified surfaces and seven unqualified campaign
 G2 does not reduce them. Component04 boot qualification and the historical
 DOSBox-X startup stack-buffer abort remain unresolved. Backend promotion or
 removal still requires the separate local parity evidence.
+
+## 2026-11-13 — shared debugger seam and a completed original-game workflow
+
+The next work changed from G3 conversion to consolidation and a concrete DOS
+acceptance path. [The feature account](QEMU_DEBUGGER_REUSE.md) identifies shared
+unchanged transports, Project storage, script validation, history DAG and delta
+codec; CPU/device adapters; and remaining repeated frame/trial/layer/hook
+orchestration. It does not label all CHIP-8-specific code as duplication or
+claim a third architecture needs only a small adapter.
+
+**Shared seam now implemented:** DOS and CHIP-8 previously reconstructed and
+validated selected CPU/RAM delta chains independently. Both now use
+`qemu_selected_state.replay` for ordered parent/binding/preimage/fingerprint
+validation and projection reconstruction. Their artifact wrappers, exact formats,
+CPU widths, address/task bindings, inverse-write preparation, freeze and full
+recovery policies remain separate. Existing affected host/public checks and
+actual native selected-undo/recovery cases pass with this seam, including the
+G0/G1/G2 native preservation witness. No universal debugger framework was added.
+
+**Original-game workflow blocker found and fixed:** the earlier ATTT evidence
+proved one move and ended with the guest still running. A new public-API route
+reached the expected four-move board, then failed full checkpoint export on
+accepted N24: completed timed keyboard input retained a descriptor which the
+native guard mistook for pending work. The failed result is preserved in
+`qemu-consolidation-native-01-result.json`; its other 17 affected native cases
+passed. This was a real unmet composition requirement, not inferred progress
+from a green total.
+
+The separate [completed-input checkpoint candidate](../native/qemu-input-checkpoint-completion/README.md)
+admits retained completion metadata only after positive terminal/dispatch proof,
+matching counts, empty batches/next queues and no pending timer. Invalidation,
+armed, failed and incomplete cancelled schedules remain refused. The same
+predicate guards the exception for the exact input-owned migration blocker.
+No input is replayed, released synthetically or deleted; guest-consumption is
+not inferred. Public input-lease admission and other instrumentation owners
+retain their separate guards.
+
+On the new candidate, the unchanged hash-pinned ATTT game now demonstrates:
+
+1. Physical `q`, `4`, `w`, `5` moves and the expected mid-round board.
+2. Full checkpoint publication, a reversible assisted RAM-layer edit, then
+   owner/FDB close and reopen with a new guest.
+3. Cold full restore of board/source binding and the empty active layer stack.
+4. Physical `e` producing the expected top-row win, winner/counter/turn state,
+   and stored native PNG export. The exported screen visibly reports player 1
+   winning. Restoring the same checkpoint and repeating `e` reproduces the
+   recorded game-state bytes.
+5. Space starting a new round, Escape producing actual `guest_exit` code 0,
+   process reaping and an ended run after reopening the FDB.
+
+Armed input still refuses both public and direct native export. The separate
+five-case native selection also preserves existing audio/display ordinary
+migration blockers and COM/MZ virtual mid-program restore. It passes without
+skips. The private `qemu-consolidation-workflow-receipt-01.json` records the
+failure-to-success boundary, exact candidate, project and exported PNG. This
+bounded real-mode workflow does not qualify the broad game campaign, DOSBox
+winning-pixel equivalence, historical timing or deterministic replay. Type,
+click and motion completion were not newly qualified by the keyboard route.
+
+**Build and delivery boundary:** [the component recipe](QEMU_COMPONENT_BUILD_BOUNDARY.md)
+shows CHIP-8 and x86/DOS as separately selected targets of the shared QEMU source
+foundation. There is no dynamically loadable CPU plugin today. Python-only
+consolidation reuses exact native artifacts. A CPU-only C change rebuilds its
+affected object/dependencies and target link, while QAPI/common changes can
+broaden that scope. This fix compiled one C object, linked and signed a separate
+x86 candidate in about 1.01 seconds, plus about 1.14 seconds copying the existing
+build inputs. This is an actual bounded incremental observation, not a clean
+build comparison. No configure/generation, CHIP-8 or DOSBox-X build ran.
+The accepted N24 source/object/binaries and CHIP-8 runtimes remain unchanged.
+The new binary is `d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d`.
+Protocol and VMState layouts remain unchanged; exact binary identity still
+prevents claiming cross-binary saved-state compatibility. The current macOS
+CHIP-8 executable's absolute Homebrew dependencies remain an offline-delivery
+gap for the package owner, who is consuming the component recipe separately.
+
+**Doom Intake integration disposition:** the reviewed handoff/patch is mapped
+at a deliberate boundary, not merged wholesale. !117 already preserves partial
+packet/checksum state. Only the independently reproduced uncertain ACK-write
+classification is ported: the shared GDB channel now closes after an uncertain
+ACK write without entering receive recovery, interrupting again or replaying
+execution. Its four new failure cases fail before the fix and pass afterward.
+Late-owned-stop bookkeeping and its absent runtime-tracker dependencies remain
+deferred. Doom's private title/LE-object observations used DOSBox-X; genuine
+QEMU DESQview relocation/recovery observations used the separate private
+candidate. Neither is relabelled as !117 qualification.
+
+**Next DOS acceptance boundary:** port the pinned LE/GDT/fixup-aware source
+matcher and its mapping dependencies behind QEMU-DOS admission, then demonstrate
+unambiguous stopped instruction/object binding on the original protected target.
+The specific blocker is !117's observed-real-mode source admission and protected
+trace stop at the transition. Preserve ambiguous mappings as unknown. Follow
+that with the existing task/driver, media/input/time, Windows shared-core,
+cold-epoch and explicit fallback campaigns; do not substitute one successful
+game round for their distinct contracts. All 141 inventoried surfaces and seven
+campaigns remain formally unqualified. Component04 boot qualification and the
+historical DOSBox startup abort remain open.
+
+Verification supports these behavior claims: existing selected-state host/public
+selection passes 50; affected transport selection passes 56 with five optional
+machine-native cases skipped (not qualification); the initial native selection
+has 17 successes and the retained workflow failure; the corrected workflow and
+checkpoint selection passes five. Broader unchanged suites were not repeated.
+The final package/document checks are recorded separately. No CI, release,
+tag, merge, installation or backend-default change occurs. DOSBox-X stays
+default and retained. The previous !117 description is preserved in the
+[historical snapshot](milestones/archive/117-description-before-consolidation-20261113.md)
+so the live description can present current behavior and the next blocker.

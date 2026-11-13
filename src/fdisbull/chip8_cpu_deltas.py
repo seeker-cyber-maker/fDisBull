@@ -12,6 +12,7 @@ import uuid
 from .debug_cpu_deltas import validate_policy, _fingerprint, _runs
 from .chip8_cpu_undo_runtime import validate_ranges, validate_registers
 from .qemu_dos_history import _history_operation
+from .qemu_selected_state import replay
 
 FORMAT = 'fdisbull-chip8-selected-cpu-ram-1'
 
@@ -136,11 +137,7 @@ class Chip8CpuDeltaMixin:
             raise ValueError('Project artifact budget cannot reserve selected CPU delta evidence')
 
     def _qemu_delta_chain(self, history, target):
-        cpu=deepcopy(history['initial_cpu']); ram=list(history['initial_ram'])
-        selected=(deepcopy(cpu),list(ram)) if target == 0 else None
-        parent=history['anchor']['sha256']
-        for entry in history['entries'][:history['cursor']]:
-            self._history_remaining_ms()
+        def load_document(entry, parent):
             row=self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',(entry['artifact'],)).fetchone()
             if (row is None or row['kind'] != 'cpu-ram-delta' or row['run'] != self.run_id
                     or row['version'] != self.version['id'] or row['sha256'] != entry['sha256']
@@ -150,29 +147,9 @@ class Chip8CpuDeltaMixin:
             except (ValueError,TypeError):raise ValueError('Invalid CHIP-8 delta artifact') from None
             if metadata != dict(format=FORMAT,history=history['id'],index=entry['index'],parent_sha256=parent):
                 raise ValueError('Selected CHIP-8 delta metadata differs')
-            if (doc.get('format') != FORMAT or doc.get('history') != history['id']
-                    or doc.get('identity') != history['identity'] or doc.get('binding') != history['binding']
-                    or doc.get('ranges') != history['ranges'] or doc.get('parent_sha256') != parent
-                    or doc.get('index') != entry['index'] or doc.get('before') != _fingerprint(cpu,ram)):
-                raise ValueError('Selected CPU delta history chain differs')
-            for name, change in doc['registers'].items():
-                if name not in cpu or cpu[name] != change['before'] or type(change['after']) is not int or change['after'] < 0:
-                    raise ValueError('Selected CPU delta register chain differs')
-                cpu[name]=change['after']
-            for change in doc['memory']:
-                n, offset = change['range'],change['offset']
-                before, after = bytes.fromhex(change['before_hex']),bytes.fromhex(change['after_hex'])
-                if (type(n) is not int or not 0 <= n < len(ram) or type(offset) is not int or offset < 0
-                        or not before or len(before) != len(after) or offset+len(before)>len(ram[n])
-                        or ram[n][offset:offset+len(before)] != before):
-                    raise ValueError('Selected CPU delta memory chain differs')
-                ram[n]=ram[n][:offset]+after+ram[n][offset+len(before):]
-            if doc.get('after') != _fingerprint(cpu,ram):
-                raise ValueError('Selected CPU delta after-state hash differs')
-            if entry['index'] == target: selected=(deepcopy(cpu),list(ram))
-            parent=entry['sha256']
-        if selected is None: raise ValueError('Selected CPU delta target is unavailable')
-        return (cpu,ram),selected
+            return doc
+        return replay(history, target, format=FORMAT, load_document=load_document,
+                      remaining_ms=self._history_remaining_ms)
 
     @_history_operation
     def cpu_delta_start(self, ranges, *, registers=None, max_steps=16, max_bytes=67108864, timeout_ms=60000):

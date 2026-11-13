@@ -15,6 +15,7 @@ import shutil
 import pytest
 
 from fdisbull.project import Project
+from fdisbull.dosbox_rpc import DebuggerError
 from support.dos_process_fixture import BASELINE_CONFIG, prepare_dos_baseline
 
 
@@ -67,7 +68,7 @@ def game_runtime(tmp_path):
     return result
 
 
-def _launch_qemu(project, directory, runtime):
+def _launch_qemu(project, directory, runtime, *, checkpoint_tool=None):
     return project.debugger(
         str(runtime["qemu"]), directory,
         backend="qemu-dos",
@@ -77,6 +78,7 @@ def _launch_qemu(project, directory, runtime):
         qemu_transport="pipe",
         qemu_firmware=os.environ.get("FDISBULL_QEMU_DOS_FIRMWARE"),
         qemu_clock="virtual",
+        qemu_checkpoint_tool=checkpoint_tool,
         boot_timeout_ms=15000,
     )
 
@@ -154,3 +156,69 @@ def test_original_tic_tac_toe_one_physical_move_has_paired_com_state(
             assert row["ended"] is not None
         assert len(project.debug_runs()["runs"]) == 2
     assert hashlib.sha256(game_runtime["boot_image"].read_bytes()).hexdigest() == game_runtime["boot_sha256"]
+
+
+def test_original_tic_tac_toe_cold_restore_winning_round_and_guest_exit(tmp_path, game_runtime):
+    """A real round, reversible assisted RAM edit, cold restore and DOS exit."""
+    tool = os.environ.get('FDISBULL_QEMU_IMG')
+    if not tool:
+        if os.environ.get('FDISBULL_REQUIRE_QEMU_DOS_OS') == '1':
+            pytest.fail('Native game workflow needs the explicit checkpoint tool')
+        pytest.skip('Set FDISBULL_QEMU_IMG for the cold game workflow')
+    source = game_runtime['source']; database = tmp_path / 'attt-workflow.fdb'
+    def board(debug):
+        return _read_qemu_image(debug, 22)[3:12]
+    with Project.create(database, source, image='com') as project:
+        with _launch_qemu(project, tmp_path, game_runtime, checkpoint_tool=tool) as debug:
+            assert board(debug) == b' ' * 9
+            debug.keyboard_press('q', hold_ms=80, gap_ms=80)
+            with pytest.raises(ValueError, match='schedule|released machine input'):
+                debug.save_state()
+            with pytest.raises(DebuggerError, match='no pending native input schedule'):
+                debug.vm.qmp.call('x-fdisbull-instrumented-checkpoint-export')
+            first = debug.clock_advance(750_000_000, timeout_ms=5000)
+            assert first['clock_budget']['deadline_reached']
+            assert first['input_delivery']['state'] == 'dispatched'
+            assert board(debug) == b'x' + b' ' * 8
+            for key in ('4', 'w', '5'):
+                _play_one_move(debug, key, qemu=True)
+            assert board(debug) == b'xx oo    '
+            saved = debug.save_state()
+            assert project.debug_state_info(saved['artifact'])['sha256'] == saved['sha256']
+            static = project.regions(1)[0].start
+            changed = debug.layer_patch('assisted-last-square', static + 11,
+                expected_hex='20', data_hex='78', kind='ram')['layer']
+            assert changed in debug.layers()['active'] and board(debug) == b'xx oo   x'
+        # The old machine is closed. A new project and guest must load the
+        # retained checkpoint; saved history alone does not reconnect a guest.
+    with Project(database) as project:
+        with _launch_qemu(project, tmp_path, game_runtime, checkpoint_tool=tool) as debug:
+            old = debug.vm.process
+            assert debug.load_state(saved['artifact'])['source_binding_restored']
+            assert old.poll() is not None
+            assert debug.layers()['active'] == [] and board(debug) == b'xx oo    '
+            _play_one_move(debug, 'e', qemu=True)
+            state = _read_qemu_image(debug, 22)
+            assert state[3:12] == b'xxxoo    '
+            assert state[17] == 1 and state[19] == 1 and state[21] == 5
+            image = debug.screenshot()['artifact']
+            destination = tmp_path / 'winning-round.png'
+            project.debug_export(image, destination)
+            assert destination.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+            debug.load_state(saved['artifact'])
+            assert board(debug) == b'xx oo    '
+            _play_one_move(debug, 'e', qemu=True)
+            assert _read_qemu_image(debug, 22) == state
+            _play_one_move(debug, 'space', qemu=True)
+            assert board(debug) == b' ' * 9
+            debug.keyboard_press('escape', hold_ms=80, gap_ms=80)
+            ended = debug.run(timeout_ms=5000)
+            assert ended['outcome'] == 'guest_exit' and ended['process']['termination']['code'] == 0
+            run_id = debug.run_id
+            native = debug.vm.process
+        assert native.poll() is not None
+    with Project(database) as project:
+        completed = next(row for row in project.debug_runs()['runs'] if row['id'] == run_id)
+        assert completed['ended'] is not None
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == _ATTT_SHA256
+    assert hashlib.sha256(game_runtime['boot_image'].read_bytes()).hexdigest() == game_runtime['boot_sha256']
