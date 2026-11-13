@@ -421,3 +421,32 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/udc_api.py`
 - `src/fdisbull/udc_blueprint.py`
 - `src/fdisbull/udc_c.py`
+
+## Source batch 16
+
+24 additional unchanged Python files (448908 bytes). Secret scan: only two reviewed noncredential local-variable identifier assignments in udc_memory_cuts.py at pinned lines 257 and 261; no other pattern matches. No tests/CI executed. Total 366 files, import still incomplete.
+
+- `src/fdisbull/udc_genesis.py`
+- `src/fdisbull/udc_genesis_game.py`
+- `src/fdisbull/udc_layers.py`
+- `src/fdisbull/udc_linux.py`
+- `src/fdisbull/udc_macos.py`
+- `src/fdisbull/udc_macos_probe.py`
+- `src/fdisbull/udc_memory_cuts.py`
+- `src/fdisbull/udc_memory_desktop.py`
+- `src/fdisbull/udc_memory_layers.py`
+- `src/fdisbull/udc_memory_macos.py`
+- `src/fdisbull/udc_memory_native.py`
+- `src/fdisbull/udc_memory_regions.py`
+- `src/fdisbull/udc_memory_shell.py`
+- `src/fdisbull/udc_memory_win16.py`
+- `src/fdisbull/udc_memory_win16_shell.py`
+- `src/fdisbull/udc_native16.py`
+- `src/fdisbull/udc_nes.py`
+- `src/fdisbull/udc_nes_game.py`
+- `src/fdisbull/udc_nes_level.py`
+- `src/fdisbull/udc_nes_shadowrun.py`
+- `src/fdisbull/udc_qualify.py`
+- `src/fdisbull/udc_shell.py`
+- `src/fdisbull/udc_splice.py`
+- `src/fdisbull/udc_web.py`
