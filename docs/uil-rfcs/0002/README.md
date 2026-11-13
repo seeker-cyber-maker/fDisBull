@@ -1,5 +1,45 @@
 # RFC 0002: evidence and literal vectors
 
+**REVISION IN PROGRESS. Shared for discussion, not merge approval.**
+
+## Latest clarification: native ports and high-level services
+
+[Semantic ports and replaceable service backends](SEMANTIC_PORTS_AND_SERVICES.md)
+clarifies the intended route: recover a 16-bit program's meaning through executable
+UDL/UIL, then generate a new native x64 Windows program using a PE32+ scaffold.
+The original segmented-memory machinery is not a target requirement. Simple
+`read_file`, `play_video` and `play_sound` calls use imported service definitions;
+the UDC owns buffering, codecs, resource bindings and target orchestration.
+Clarity-first implementations may deliberately use extra memory. Application
+chunks, OS pages and required semantic precision remain separate concepts.
+This is a documentation clarification with eight prospective SVC01-SVC08 cases;
+no PE64 port, service implementation or media playback was executed for it.
+
+## Earlier discussion: interchangeable components and reversible realization
+
+- [Labels, deduplication, UDC orchestration and round trips](LABELS_ORCHESTRATION_AND_ROUNDTRIPS.md) defines symbolic references, compatible component replacement, implementation freedom and its observable limits. It adds prospective D01-D20 cases without changing the production schema.
+- [Authored witness checks](check_component_witnesses.py) and their [result receipt](component-witness-results.json): 16 Python-only tests passed. They exhibit selected identity, deduplication, activation-state and inverse-ambiguity cases; they are not tests of a production UDC or decompiler adapter.
+- [Selected concept illustrations](ILLUSTRATION_NOTES.md): both original PNGs are preserved in the separate full-resolution Git asset patch. Their binary transfer to this branch remains pending; captions correct the first image's PR-number error and distinguish art from schemas or verification.
+
+Run the new illustrative checks from a checkout:
+
+```sh
+python docs/uil-rfcs/0002/check_component_witnesses.py
+```
+
+No native game, real-mode DOS memory model, provider tournament or general
+reversible compiler was executed for this increment. Earlier receipts below
+retain their original scope and were not rerun for this revision.
+
+New discussion material, 30 October 2026:
+
+- [Agent-first UIL, providers, language-neutral values/functions and target scaffolds](AGENT_FIRST_TOPOLOGY.md).
+- [Branching/rejoining route map](PIPELINE_MAP.md), with [editable Mermaid source](pipeline-map.mmd).
+- [Dataflow, execution history and H-Houdini-inspired verification](RESEARCH_AND_VERIFICATION.md), including prospective Q01-Q12 cases.
+
+These additions are documentation research. They do not rerun the earlier
+experiments below, implement the proposed integrations, or fix a final schema.
+
 This companion supports the [executable Rosetta principles](../0002-executable-rosetta-contracts.md).
 It separates executed prototype evidence from proposed production requirements.
 It adds no runtime implementation or new UIL encoding.
