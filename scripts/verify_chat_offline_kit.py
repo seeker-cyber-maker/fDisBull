@@ -351,6 +351,20 @@ def verify_windows_profiles(root, workspace, kernel, compact_runtime, windows_ru
     return images
 
 
+def prepare_private_workspace(workspace):
+    """Create new private consumer directories without reusing caller paths."""
+    paths={name:workspace/name.lower() for name in
+           ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR')}
+    for path in paths.values():
+        if path.exists() or path.is_symlink():
+            raise FileExistsError('Consumer private directory already exists: ' + str(path))
+    for path in paths.values():
+        path.mkdir(mode=0o700)
+    for name,path in paths.items():
+        os.environ[name]=str(path)
+    return paths
+
+
 def verify(root, workspace, archive):
     root, workspace, archive = root.resolve(), workspace.resolve(), archive.resolve()
     if root == workspace or root.is_relative_to(workspace) or workspace.is_relative_to(root):
@@ -365,9 +379,7 @@ def verify(root, workspace, archive):
     for role in ('python', 'dosbox', 'qemu', 'kernel', 'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe', 'pe_fixture'):
         required(roles, role)
     closure_objects = check_loader_closure(root, roles)
-    for variable in ('HOME', 'TMPDIR', 'FDISBULL_TARGET_STORE', 'FDISBULL_OUTPUT_ARTIFACT_DIR'):
-        os.environ[variable] = str(workspace / variable.lower())
-        Path(os.environ[variable]).mkdir()
+    prepare_private_workspace(workspace)
     os.environ['PATH'] = str(root / 'bin')
     preparer = required(roles, 'runtime_preparer')
     spec = importlib.util.spec_from_file_location('_chat_runtime_preparer', preparer)

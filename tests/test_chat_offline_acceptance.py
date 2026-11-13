@@ -424,6 +424,46 @@ def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path, full_windows
                               'memory_mib': memory_mib, 'boot_timeout_ms': 600000}
 
 
+def test_private_workspace_allows_real_project_creation_under_umask_022(tmp_path,monkeypatch):
+    import os
+    import stat
+    from fdisbull.project import Project
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path.resolve()/'consumer';workspace.mkdir()
+    before=os.umask(0o022)
+    try:
+        paths=verifier.prepare_private_workspace(workspace)
+        target=workspace/'AUTHORED.COM';target.write_bytes(b'\xcd\x20')
+        with Project.create(workspace/'target.fdb',target,image='com') as project:
+            assert project.meta['format']=='COM'
+            assert project.regions(1)[0].data==b'\xcd\x20'
+    finally:
+        os.umask(before)
+    assert set(paths)=={'HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'}
+    for name,path in paths.items():
+        assert os.environ[name]==str(path)
+        assert stat.S_IMODE(path.stat().st_mode)==0o700
+
+
+def test_private_workspace_refuses_existing_directory_without_chmod_or_reuse(tmp_path,monkeypatch):
+    import os
+    import stat
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path/'consumer';workspace.mkdir()
+    existing=workspace/'fdisbull_target_store';existing.mkdir(mode=0o755)
+    # Set an intentional caller-owned mode, independently of the test runner's umask.
+    existing.chmod(0o755);(existing/'keep').write_text('caller data')
+    with pytest.raises(FileExistsError,match='already exists'):
+        verifier.prepare_private_workspace(workspace)
+    assert stat.S_IMODE(existing.stat().st_mode)==0o755
+    assert (existing/'keep').read_text()=='caller data'
+    assert list(workspace.iterdir())==[existing]
+    assert all(os.environ[name]=='inherited-value' for name in
+               ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'))
+
+
 def windows_profile_fakes(tmp_path, monkeypatch):
     import sys
     from types import SimpleNamespace
