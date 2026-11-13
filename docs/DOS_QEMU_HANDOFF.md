@@ -5306,3 +5306,99 @@ guarantee a hard wall-clock return bound. Selected CHIP-8 CPU/RAM undo, trials,
 IRQ/task-private semantics, audio, raw active-fence migration, forced-overdue
 backlog qualification and G0-G8 conversion remain open. All 141 DOS surfaces
 and seven parity campaigns remain open before promotion or DOSBox-X removal.
+
+## 2026-11-12 — CHIP-8 selected CPU/RAM undo
+
+Continued from `2f8fca365564f560c50162283c1dfa25a5abc9f8` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 retains its origin marker, target
+`agent/execution-event-search-284eb73c` and stacked base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, native rebuild, release/tag, merge, installation or default
+switch was performed.
+
+The existing v6 runtime and explicit checkpoint tool now expose
+`cpu_delta_start/status/record/rewind/recover`, JSON `debug-delta-*` and saved
+script `delta-*` operations. A history selects `v0`–`vf`, `i` and `pc` plus
+1–64 nonoverlapping flat RAM ranges totalling at most 4,096 bytes. SP/stack
+selection is refused; unselected exposed registers, including stack slots,
+are checked unchanged. Limits remain 128 captures, 256 MiB cumulative selected
+history payload and the existing project/native-state caps. The journal binds
+the live owner/ROM/runtime, layer definitions/fetch guards, hooks and held-key
+ownership to exact before/after selected CPU/RAM fingerprints and an immutable
+full recovery anchor. Anchor metadata and interval payload/sidecar/parent hashes
+are validated before inverse writes.
+
+Recording retains actual stopped-step receipts, accepted prefixes and uncertain
+outcomes without claiming instruction retirement or replay. Pending/current
+hooks refuse recording before intent; a future hook stop does not dispatch its
+actions or earn a false completed interval. Literal invalid ranges/registers,
+budgets and policies refuse a complete script before an earlier write.
+
+Undo freezes the session before dispatch. It uses the v6 guarded native RAM
+transition to retain active RAM/fetch layer identities and fetch bytes while
+updating the native generation/backing proof, followed by guarded register
+edits. This combined operation is not an atomic native transaction. Full CPU
+and 4 KiB RAM readback verifies selected targets and every unselected value;
+device/RNG/timer/display/key and hook state remain current. Preservation policies
+cannot permit partial resume. Uncertain dispatch, readback or evidence
+publication closes the owner and retains committed-prefix/no-replay receipts.
+Status rejects closed, exited or changed owners. Screenshots recheck the freeze
+under the owner lock before capture/publication.
+
+Only verified full anchor/checkpoint or full/reconstructed-delta frame recovery
+thaws execution. The prior-created delta witness exposed an internal hook
+reinstallation being blocked by the freeze. A scoped exception around hook
+staging now restores its depth/state in `finally`. Direct-loader metadata/staging
+failures retain the old owner/freeze; enclosing history failures still close on
+uncertainty. Thaw follows complete verified adoption.
+Native tests cover both full and actual delta points with active layers, hooks,
+held keys and seeded RNG. They also verify corrupt full loads do not replace
+the owner or thaw, and all five operations work through a stored script without
+reinjecting held keys. Retained frame DAGs and exact full pins remain available.
+
+The final affected-surface pass reports **923 passed across 64 files**, with
+zero failures, skips or exclusions and **1,224 frozen Python file hashes**.
+It includes **39 new cases**: 11 host, 17 public and 11 native; the retained/new
+native frame/key/delta selection contains 54 cases. The integrated pass also
+contains all 323 retained DOSBox-X history/undo/trial cases, five native DOS
+selected-undo cases and six native trial cases. The latter combine task-private
+layers, held keys, IRQ state, full recovery and frame DAG preservation.
+Selections overlap; these are local macOS arm64 results.
+
+The smaller 64-file selection covers changed CHIP-8/public seams and combined
+DOS invariants. The prepared larger 164-file plan was not executed after its
+2.3 GB reservation would cross the 40 GB target. A fresh 1.8 GB reservation
+passed for the smaller batch. No storage floor was lowered. The old broad-run
+DOSBox-X `DEBUG_ShowMsg` startup stack-buffer abort remains unresolved; this
+clean focused selection does not erase that finding or qualify DOS parity.
+The previously excluded delta-description assertion now passes because this
+slice labels the preservation policy experimental. No private-input exclusion
+was needed in the affected selection.
+
+A separate native witness froze a selected projection, then restored an actual
+format3 delta child created before this slice. Full CPU/RAM/environment/pixels,
+active RAM/fetch layers, hooks and held `f` match, accepted counters are
+preserved, fresh key ownership is adopted without injection, the pin matches
+original bytes/metadata, and RNG continuation matches. All guest assertions
+passed; original-object postconditions were finalized read-only after a
+receipt-writer digest/record type mismatch, without replaying the guest. Original
+source DB/ROM/control/objects remain unchanged. The failed pre-fix copied guest
+and the postcondition-writer failure remain private evidence.
+
+Private evidence uses chip8-cpu-undo-preservation-final-02,
+chip8-cpu-undo-tested-source-hashes-02.json,
+chip8-cpu-undo-artifact-audit-02.json,
+chip8-v6-cpu-undo-upgraded-host-03/witness.json and
+chip8-cpu-undo-retained-baselines-01.json. Native states, selected RAM bytes,
+FDBs, original ROMs and external stores remain outside Git/packages. The v6
+binary, twelve retained native binaries, six CHIP-8 packages and active selector
+retain their previous identities; component04 boot qualification remains pending.
+
+Lossless frame storage remains opt-in, with full PNGs/journals and unchanged
+VMState6/state6; full storage stays default. The boundary remains a native
+virtual 60 Hz sample, not completed drawing/VBlank. Selected undo is a live,
+frozen projection, not cross-session machine history or deterministic replay.
+CHIP-8 comparative trials, SP/stack inverse selection, IRQ/task-private semantics,
+audio, broad ROM/host and G0-G8 conversion qualification remain open. All 141 DOS
+surfaces and seven campaigns still gate promotion or DOSBox-X removal.

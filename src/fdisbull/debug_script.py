@@ -219,7 +219,7 @@ def validate_script(script, *, session=None):
                                 raise ValueError('Native history scripts require a project outside a caller-owned transaction')
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
-                        if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
+                        if op=='delta-start' and (backend or actual)!='qemu-chip8':limits['max_bytes']=(1,2*1024**3)
                         if op=='rewind-start' and (backend or actual) in ('qemu-dos','qemu-chip8'):
                             limits['max_bytes']=(1,1024**3)
                         for key,value in params.items():
@@ -234,10 +234,30 @@ def validate_script(script, *, session=None):
                     if op=='delta-start':
                         from .debug_cpu_deltas import validate_ranges
                         validate_ranges(params['ranges'],allow_references=True)
+                        if (backend or actual)=='qemu-chip8':
+                            from .chip8_cpu_undo_runtime import validate_ranges as chip8_ranges, validate_registers
+                            chip8_ranges(params['ranges'],allow_references=True)
+                            validate_registers(params.get('registers'),allow_references=True)
+                    if op in ('delta-start','delta-record','delta-rewind','delta-recover') and (backend or actual)=='qemu-chip8':
+                        if session is not None:
+                            if not getattr(session,'capabilities',{}).get('selected_cpu_ram_undo'):
+                                raise ValueError('CHIP-8 selected CPU/RAM undo requires v6 and a checkpoint tool')
+                            if session.project.db.in_transaction:
+                                raise ValueError('CHIP-8 selected CPU/RAM scripts require no caller transaction')
+                        if op=='delta-recover' and 'timeout_ms' in params:
+                            value=params['timeout_ms']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,'timeout_ms',1,600000)
                     if op=='delta-rewind' and 'policy' in params:
                         from .debug_cpu_deltas import validate_policy
-                        validate_policy(params['policy'],allow_references=True)
-                        if ((backend or actual)=='qemu-dos' and isinstance(params['policy'],dict)
+                        selected_registers=None
+                        if (backend or actual)=='qemu-chip8':
+                            from .chip8_cpu_undo_runtime import REGISTERS, validate_ranges as chip8_ranges
+                            selected_registers=REGISTERS
+                            if isinstance(params['policy'],dict) and params['policy'].get('preserve_memory') not in (None,[]):
+                                chip8_ranges(params['policy']['preserve_memory'],allow_references=True)
+                        validate_policy(params['policy'],registers=selected_registers,allow_references=True)
+                        if ((backend or actual) in ('qemu-dos','qemu-chip8') and isinstance(params['policy'],dict)
                                 and params['policy'].get('allow_partial_resume') is True):
                             raise ValueError('Native selected CPU/RAM undo does not permit partial resume')
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):

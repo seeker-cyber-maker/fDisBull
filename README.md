@@ -215,8 +215,9 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   or historical timing. A separate v6 extension adds owned hexadecimal keypad
   edges, indexed frame input and checkpointed input restore without reinjection.
   Histories require the explicit checkpoint tool. Optional v6 lossless frame
-  checkpoint delta witnesses passed locally on macOS arm64; selected undo and
-  automatic replay remain unavailable. Complete game
+  checkpoint delta witnesses passed locally on macOS arm64. A separate v6
+  selected CPU/RAM undo is freeze-only; eleven bounded native witnesses passed
+  locally on macOS arm64. Full recovery is required before execution. Automatic replay remains unavailable. Complete game
   and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.

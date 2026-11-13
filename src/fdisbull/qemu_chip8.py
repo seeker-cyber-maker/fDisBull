@@ -22,6 +22,7 @@ from .gdb_rpc import GDBRemote
 from .qemu_control import QemuControl
 from .debugger import stamp
 from .chip8_layers import Chip8LayerMixin, LAYER_MODEL
+from .chip8_cpu_deltas import Chip8CpuDeltaMixin
 from .chip8_hooks import Chip8HookMixin
 from .chip8_history import Chip8HistoryMixin, bind_history_mutations
 from .chip8_frames import Chip8FramesMixin
@@ -231,7 +232,7 @@ class _Owner:
 
 
 @bind_history_mutations
-class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
+class Chip8DebugSession(Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
     """One stopped-at-boundaries CHIP-8 machine bound to one immutable FDB ROM."""
     backend_id=BACKEND
     capabilities={'registers':True,'memory':True,'run':True,'step':True,'breakpoints':True,
@@ -291,6 +292,7 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                     if self.identity['cpu_subset']==KEY_SUBSET:
                         self.capabilities['frame_key_ownership']=True
                         self.capabilities['frame_delta_storage']=checkpoint_tool is not None
+                        self.capabilities['selected_cpu_ram_undo']=checkpoint_tool is not None
                     self._reset_chip8_layers()
                     layer=self._chip8_layer_query()
                     if layer['generation']!=0 or layer['execution-bytes'] or not layer['backing-valid']:
@@ -302,6 +304,7 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
                     (self.run_id,selected['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
             project._live_debuggers.append(self)
+            self._history_bind()
         except BaseException:self.vm.close();raise
 
     def __enter__(self):return self
@@ -358,6 +361,8 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
         if self.capabilities.get('save_states'):operations.update(('save-state','load-state'))
         if self.capabilities.get('rewind'):
             operations.update(('rewind-start','rewind-status','rewind-record','rewind'))
+        if self.capabilities.get('selected_cpu_ram_undo'):
+            operations.update(('delta-start','delta-status','delta-record','delta-rewind','delta-recover'))
         if self.capabilities.get('frame_key_ownership'):operations.update(('frame-inputs','keyboard.state'))
         if self.capabilities.get('frame_timeline'):
             operations.update(('frame-advance','timeline-start','timeline-status','timeline-advance',
@@ -490,6 +495,8 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
         return dict(width=64,height=32,rgba=rgba,sha256=_sha(rgba),format='rgba8888',environment=info)
 
     def screenshot(self,name='screenshot.png',*,encoding='png',timeout_ms=10000):
+        if getattr(self,'_qemu_cpu_delta_history',{}).get('frozen',False):
+            raise ValueError('Selected CHIP-8 partial state is frozen until full checkpoint recovery')
         from .external_files import _file_name
         from PIL import Image
         _file_name(name)
@@ -498,6 +505,8 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 screenshot timeout')
         self._require_devices();deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
         with self._budget(owner,deadline):
+            if getattr(self,'_qemu_cpu_delta_history',{}).get('frozen',False):
+                raise ValueError('Selected CHIP-8 partial state is frozen until full checkpoint recovery')
             frame=self.frame_rgba(timeout_ms=_remaining(deadline))
             image=Image.frombytes('RGBA',(64,32),frame['rgba']);out=io.BytesIO();image.save(out,format='PNG')
             data=out.getvalue();metadata=dict(format='chip8-frame-png-1',width=64,height=32,
@@ -905,11 +914,14 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                             self._layer_active,self._layer_generation,self._layer_ram_base,self._layer_ram_applied)
                     self.vm=new;self.breakpoints={};self.next_bp=1;self._reset_chip8_hooks()
                     self._chip8_layer_install_state(restored_layer);self._chip8_staging_restore=True
+                    prior_load_depth=getattr(self,'_qemu_cpu_delta_full_load_depth',0)
+                    self._qemu_cpu_delta_full_load_depth=prior_load_depth+1
                     try:
                         hook_mapping=self._restore_chip8_hooks(metadata.get('hook_state'))
                         staged_new=(self.breakpoints,self.next_bp,self._chip8_hooks,self._chip8_hook_pending,self._chip8_hook_deleting,
                                     self._layer_active,self._layer_generation,self._layer_ram_base,self._layer_ram_applied)
                     finally:
+                        self._qemu_cpu_delta_full_load_depth=prior_load_depth
                         self._chip8_staging_restore=False;self.vm=old
                         (self.breakpoints,self.next_bp,self._chip8_hooks,self._chip8_hook_pending,self._chip8_hook_deleting,
                          self._layer_active,self._layer_generation,self._layer_ram_base,self._layer_ram_applied)=staged
@@ -924,7 +936,9 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                     (self.breakpoints,self.next_bp,self._chip8_hooks,self._chip8_hook_pending,self._chip8_hook_deleting,
                      self._layer_active,self._layer_generation,self._layer_ram_base,self._layer_ram_applied)=staged_new
                 new.qmp.operation_deadline=None;new.gdb.operation_deadline=None
+                self._history_bind()
                 _remaining(deadline)
+                self._cpu_delta_full_restore_complete()
                 return result
             except BaseException as error:
                 if new is not None:

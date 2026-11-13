@@ -75,10 +75,10 @@ def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
     assert 'v4 layers/hooks/history' in scope
     assert 'v5 60 Hz samples' in scope
     assert 'v6 owned keys' in scope
-    assert 'input restore without reinjection, lossless checkpoint deltas' in scope
-    assert 'Keyframes/full PNGs require checkpoint tool' in scope
-    assert 'Lateness recorded' in scope
-    assert 'no VBlank/frame completion, selected undo, trials or parity claim' in scope
+    assert 'no-reinjection restore, lossless checkpoint deltas' in scope
+    assert 'frozen V0..VF/I/PC/RAM undo' in scope
+    assert 'Checkpoint tool required; full PNGs' in scope
+    assert 'No VBlank/frame completion, partial resume, trials or parity claim' in scope
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

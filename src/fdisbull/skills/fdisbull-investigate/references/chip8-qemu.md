@@ -302,8 +302,9 @@ fresh-owner restore. They do not establish general game compatibility or parity.
 All profiles support stopped inspection, bounded run/step, execution breakpoints,
 guarded edits and native checkpoints. The three earlier profiles continue to
 use their exact matching binaries and do not acquire v4 or v5 controls. CHIP-8 audio
-output, predicates, watchpoints, redirects, task-private views, selected undo
-and comparative trials remain unavailable in this target. IRQ/PIC and
+output, predicates, watchpoints, redirects, task-private views and comparative
+trials remain unavailable in this target. Selected undo is separately scoped
+to the v6 runtime below. IRQ/PIC and
 QEMM/DESQview task semantics remain DOS-profile work; DOSBox-X remains the
 default and retained fallback.
 
@@ -465,8 +466,8 @@ The JSON routes remain `debug-frame-inputs`, `debug-keyboard-state` and
 corresponding timeline operations with backend `qemu-chip8`. The adapter only
 advertises `frame_key_ownership` on v6. Earlier runtimes refuse the capability
 before input effects. Full checkpoints and PNGs remain the default storage model.
-This extension does not add selected undo, trials, IRQ/task-private semantics or
-completed guest-frame/VBlank timing.
+Frame-key ownership itself does not establish selected undo, trials,
+IRQ/task-private semantics or completed guest-frame/VBlank timing.
 
 
 ## V6 lossless frame checkpoint storage
@@ -497,8 +498,52 @@ metadata, PNGs and input journals. Each reconstructed state is bounded to
 live private QCOW2 growth is separate. A future state can grow after an estimate:
 if the actual retained budget is exceeded after execution, the owner closes, the
 pending intent and any already-created artifacts remain, and completed prefix
-receipts must not be replayed. No game compatibility, IRQ/task-private, selected
-undo, trials, CI or DOS backend promotion follows from this storage mode.
+receipts must not be replayed. No game compatibility, IRQ/task-private behavior,
+trials, CI or DOS backend promotion follows from this storage mode.
+
+## V6 selected CPU/RAM undo
+
+With the v6 frame-key runtime and an explicit checkpoint tool, the experimental
+`selected_cpu_ram_undo` capability records a bounded projection at observed
+native single-step stops. Select from `v0`–`vf`, `i` and `pc`, and supply 1–64
+nonoverlapping flat RAM ranges totalling at most 4,096 bytes. `sp` and stack
+registers cannot be selected. The interface does not certify instruction
+retirement or reconstruct the full machine from inverse deltas.
+
+```python
+undo = debug.cpu_delta_start(
+    [{'address': '0x300', 'length': 4}], registers=['v0', 'pc'],
+    max_steps=16, max_bytes=64 * 1024 * 1024)
+debug.cpu_delta_record(count=2)
+partial = debug.cpu_delta_rewind(count=1)
+# Inspect selected CPU/RAM and the reported frozen state here.
+debug.cpu_delta_recover()  # load the full anchor; does not resume execution
+```
+
+The matching JSON routes are `debug-delta-start`, `debug-delta-status`,
+`debug-delta-record`, `debug-delta-rewind` and `debug-delta-recover`; saved
+scripts use `delta-start`, `delta-status`, `delta-record`, `delta-rewind` and
+`delta-recover` with backend `qemu-chip8`. The per-session capture limit is at
+most 128 steps and the configured byte limit at most 256 MiB; the project
+runtime-artifact cap and per-state limit can bind earlier. Pending hooks and a
+hook at the current PC are refused for step recording. A nonordinary stop is
+reported without inventing a completed interval.
+
+A guarded native RAM transition retains active layer definitions and the fetch
+view, and advances the native layer generation; it does not create a new layer.
+Register writes are a separate guarded operation, so the combined partial
+inverse is not an atomic machine restore. Readback verifies all RAM and exposed
+registers outside the selection as well as the selected result. Device, RNG,
+timer, display and owned-key state remain current rather than being rewound.
+A policy may preserve declared selected values but cannot authorize partial
+resume. The machine remains frozen after an inverse until a verified full anchor,
+full checkpoint, or reconstructed full/delta frame point is restored. Stored
+history branches remain available; the mixed live edge is not a checkpoint.
+
+Eleven bounded authored native selected-undo witnesses passed locally on macOS
+arm64. This is a bounded experimental capability,
+not CHIP-8 game compatibility, historical timing, DOS parity or a backend
+promotion. DOSBox-X remains the DOS default and retained fallback.
 
 ## Local checks
 
@@ -588,4 +633,14 @@ FDISBULL_CHIP8_FRAME_KEYS_QEMU_IMG=/path/to/qemu-img \
 FDISBULL_REQUIRE_CHIP8_FRAME_KEYS=1 \
 python -m pytest -q tests/test_chip8_frame_deltas.py \
   tests/test_chip8_frame_deltas_public.py tests/test_chip8_frame_deltas_native.py
+```
+
+For v6 selected CPU/RAM undo, use the same v6 runtime selector:
+
+```sh
+FDISBULL_CHIP8_FRAME_KEYS_QEMU=/external/frame-keys/qemu-system-chip8 \
+FDISBULL_CHIP8_FRAME_KEYS_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_FRAME_KEYS=1 \
+python -m pytest -q tests/test_chip8_cpu_deltas.py \
+  tests/test_chip8_cpu_deltas_public.py tests/test_chip8_cpu_deltas_native.py
 ```

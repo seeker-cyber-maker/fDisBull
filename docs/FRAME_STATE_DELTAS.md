@@ -141,6 +141,6 @@ PNGs, key journals and checkpoint metadata remain retained; `timeline_pin`
 emits a standalone full state. Encoded state payloads, storage metadata, PNGs
 and journals count against the timeline budget, while the project artifact cap
 can bind earlier and live QCOW2 growth is separate. Nine bounded authored native CHIP-8 delta witnesses passed locally on macOS
-arm64. They do not imply completed guest frames,
-selected CPU/RAM undo or broader runtime parity. See the
+arm64. They do not imply completed guest frames, qualification of the separate
+selected CPU/RAM undo, or broader runtime parity. See the
 [CHIP-8 profile](CHIP8_QEMU.md) for its input and restore limits.
