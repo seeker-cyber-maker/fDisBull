@@ -116,6 +116,7 @@ prune experimental
 prune build
 prune dist
 recursive-include .github/workflows *.yml
+recursive-include .github/retained-workflows *.disabled
 include .gitlab-ci.yml
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
 include docs/evidence/civd-food-arm64/verification.json
