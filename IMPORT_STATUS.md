@@ -479,3 +479,33 @@ Exact source bytes from the pinned GitLab commit; secret-pattern scan found no m
 - `src/fdisbull/wine_arch.py`
 - `src/fdisbull/wine_deltas.py`
 - `src/fdisbull/wine_execution.py`
+
+
+## Batch 18 (2026-11-13 07:41 UTC scheduled run)
+
+Imported 24 Python source files (350519 bytes), unchanged from pinned GitLab commit. Total imported files: 414. This remains a partial, not-buildable import. No CI or tests were run. Pattern-based secret scan found no matches; this is not a comprehensive secret certification. Files individually over 100 KB remain excluded pending separate review.
+
+- `src/fdisbull/wine_debugger.py`
+- `src/fdisbull/wine_layers.py`
+- `src/fdisbull/wine_rpc.py`
+- `src/fdisbull/wine_runtime.py`
+- `src/fdisbull/wine_state.py`
+- `src/fdisbull/wine_watch.py`
+- `src/fdisbull/z_argument_changes.py`
+- `src/fdisbull/z_call_contract.py`
+- `src/fdisbull/z_capture.py`
+- `src/fdisbull/z_capture_watch.py`
+- `src/fdisbull/z_controller.py`
+- `src/fdisbull/z_dos.py`
+- `src/fdisbull/z_native.py`
+- `src/fdisbull/z_queue.py`
+- `src/fdisbull/z_replies.py`
+- `src/fdisbull/zmachine.py`
+- `src/fdisbull/zmachine_analysis.py`
+- `src/fdisbull/zmachine_probe.py`
+- `src/fdisbull/zmachine_processor.py`
+- `src/fdisbull/zork.py`
+- `src/fdisbull/zork_intent_export.py`
+- `src/fdisbull/zork_intents.py`
+- `src/fdisbull/zork_recovery.py`
+- `src/fdisbull/zork_scene_dispatch.py`
