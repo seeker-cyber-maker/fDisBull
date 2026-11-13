@@ -90,3 +90,14 @@ The historical private native DOSBox-X Doom evidence and QEMU DESQview evidence
 do not qualify this newly integrated source. Exact-source host tests, installed
 package readback and actual backend checks remain separate integration-owner
 gates, recorded in the [maintained handoff](DOS_QEMU_HANDOFF.md).
+
+
+The Engine snapshot path retains its existing PTE-derived translation evidence;
+it does not adopt the private W7 per-page `physical_readback` extension. A
+registry physical coordinate is therefore not, by itself, a proof that original
+source bytes were independently read at that physical address. Native acceptance
+can add a separate bounded stopped physical-read auditor receipt using ordinary
+public reads and stable CPU/translation checks. Such a receipt qualifies only
+those observed extents and does not upgrade the automatic provider's scope.
+The stricter `dos_source_admit` operation owns its explicit physical/linear
+readback proof independently.

@@ -201,3 +201,62 @@ def test_changed_stop_during_read_is_not_an_identity(native, monkeypatch):
         return observed
     monkeypatch.setattr(dv, '_paused', paused)
     with pytest.raises(dv.DesqviewProviderError, match='changed CPU stop'): dv.discover(native)
+
+
+def wide_bank(native):
+    row = native.observed['registers']
+    row['architecture'] = 'i386:x86-64'
+    for narrow, wide in (('eip', 'rip'), ('eax', 'rax'), ('ebx', 'rbx'),
+                         ('edx', 'rdx'), ('ebp', 'rbp')):
+        if narrow in row['registers']:
+            row['registers'][wide] = row['registers'].pop(narrow)
+    return deepcopy(row)
+
+
+@pytest.mark.parametrize('mode', ['real', 'v86'])
+def test_wide_xml_bank_qualifies_legacy_manager_and_event_without_rewriting_raw_registers(native, mode):
+    native.observed['address_state']['cpu_mode'] = mode
+    native.observed['registers']['cpu_mode'] = mode
+    before = wide_bank(native)
+    provider = dv.discover(native)
+    assert provider is not None
+    assert native.observed['registers'] == before
+    native.hook(6)
+    registers = wide_bank(native)
+    registers['registers']['rax'] = '0xc000de06'
+    native.observed['registers'] = deepcopy(registers)
+    event = provider.interpret_event(registers)
+    assert event['kind'] == 'create' and event['handle'] == native.handle
+    assert event['mapping_context'] == native.mapping and event['containment_qualified']
+    assert native.observed['registers'] == registers
+    assert 'eip' not in registers['registers'] and registers['registers']['rax'] == '0xc000de06'
+
+
+@pytest.mark.parametrize('name', ['eip', 'eax', 'ebx', 'edx', 'ebp'])
+def test_conflicting_wide_and_narrow_register_aliases_refuse(native, name):
+    provider = dv.discover(native)
+    native.hook(6)
+    registers = wide_bank(native)
+    wide = {'eip':'rip', 'eax':'rax', 'ebx':'rbx', 'edx':'rdx', 'ebp':'rbp'}[name]
+    registers['registers'][name] = hex(int(registers['registers'][wide], 0) ^ 1)
+    native.observed['registers'] = deepcopy(registers)
+    with pytest.raises(dv.DesqviewProviderError, match='alias'):
+        provider.interpret_event(registers)
+
+
+@pytest.mark.parametrize('change', ['rip-upper32', 'rax-upper32', 'rip-above16',
+                                   'long-mode', 'code64', 'wrong-architecture'])
+def test_wide_register_adaptation_never_truncates_invalid_or_out_of_domain_values(native, change):
+    provider = dv.discover(native)
+    native.hook(6)
+    registers = wide_bank(native)
+    if change == 'rip-upper32': registers['registers']['rip'] = '0x100001a63'
+    elif change == 'rax-upper32': registers['registers']['rax'] = '0x10000de06'
+    elif change == 'rip-above16': registers['registers']['rip'] = '0x11a63'
+    elif change == 'long-mode':
+        registers['cpu_mode'] = native.observed['address_state']['cpu_mode'] = 'long'
+    elif change == 'code64': native.observed['address_state']['code_bits'] = 64
+    else: registers['architecture'] = 'aarch64'
+    native.observed['registers'] = deepcopy(registers)
+    with pytest.raises(dv.DesqviewProviderError):
+        provider.interpret_event(registers)

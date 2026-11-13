@@ -5952,3 +5952,40 @@ and test hash remained unchanged throughout. Separate earlier red/green cases
 preserve the masked-ambiguity and stop-publication failure evidence. Final
 native and installed-package qualification follows the immutable source commit;
 those results must not be inferred from the host total.
+
+
+### Combined-candidate review follow-up
+
+The first immutable source candidate `e5dfda4f` passed the host selection and
+an isolated wheel readback of all 706 source/resource/install members. Its
+native DESQview attempt reached an original MS.COM instruction breakpoint and
+qualified three source bindings, but did not qualify relocation: the imported
+provider expected EIP/EAX names absent from the x86_64 GDB bank. Its untouched
+image and native identities were preserved and the guest was closed. This is
+retained partial evidence, not a completed task-lifetime result.
+
+A separate authored-boundary reproduction found that an internal lifecycle
+provider/journal failure after an arrived T05 escaped the tail publication
+catch. It lost `error.result` and left the owner usable. The follow-up applies
+the same observed-stop preservation and quarantine policy to internal callbacks,
+including secondary cleanup failures, without dispatching another instruction.
+The register-provider follow-up and exact final candidate verification are
+recorded in the final acceptance note; no C1 native evidence is relabelled.
+
+
+The private W7 per-page physical-readback snapshot extension is deliberately not
+ported into Engine's newer snapshot/layer path here. Registry translation
+records keep their PTE-derived scope; a separate stopped physical-read auditor
+can qualify actual observed extents through standard public reads without
+manual registry insertion. The strict `dos_source_admit` proof already owns
+physical/linear readback. Neither route grants automatic full-memory parity.
+
+
+The follow-up admits explicit zero-extended 32-bit EIP/EAX/EBX/EDX/EBP aliases
+from an observed x86_64 GDB bank only in real/V86 mode. Present aliases must
+agree; invalid upper bits, long mode and IP outside the 16-bit manager domain
+refuse without modifying the raw bank. Internal/tail/control-repair failures
+set a VM quarantine fence before cleanup; later controls refuse even if cleanup
+partially fails, and disposal remains available. The final combined host pass
+is 561 tests, zero failures/skips, with all 1,265 Python source/test hashes stable.
+Exact final installed/native results belong to the !117 acceptance note.

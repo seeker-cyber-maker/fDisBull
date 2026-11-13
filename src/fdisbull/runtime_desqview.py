@@ -46,17 +46,29 @@ def _require(value, message):
 
 
 def _number(value):
-    result = int(value, 0) if isinstance(value, str) else value
+    try:
+        result = int(value, 0) if isinstance(value, str) else value
+    except ValueError as error:
+        raise DesqviewProviderError('Invalid native register') from error
     _require(type(result) is int and 0 <= result <= 0xffffffff, 'Invalid native register')
     return result
 
 
 def _register(registers, name):
     values = registers.get('registers', {})
-    for key in (name, name.lower(), name.upper()):
-        if key in values:
-            return _number(values[key])
-    raise DesqviewProviderError('Missing native register ' + name)
+    keys = list(dict.fromkeys((name, name.lower(), name.upper())))
+    wide = {'eip':'rip', 'eax':'rax', 'ebx':'rbx', 'edx':'rdx', 'ebp':'rbp'}.get(name.lower())
+    if wide is not None and any(key in values for key in (wide, wide.upper())):
+        _require(registers.get('architecture') == 'i386:x86-64' and
+                 registers.get('cpu_mode') in ('real', 'v86'),
+                 'Wide native register aliases require an observed legacy x86 context')
+        keys.extend((wide, wide.upper()))
+    # The XML bank stays untouched. Only exact zero-extended 32-bit values are
+    # admitted; neither upper bits nor EIP above FFFF are silently truncated.
+    found = [_number(values[key]) for key in keys if key in values]
+    _require(found, 'Missing native register ' + name)
+    _require(all(value == found[0] for value in found), 'Native register aliases disagree')
+    return found[0]
 
 
 def _cpu(observed):

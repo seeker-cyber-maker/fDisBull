@@ -176,3 +176,88 @@ def test_expired_inherited_budget_preserves_pending_controls_without_dispatch(st
  assert result['outcome']=='tracking-budget' and result['timed_out']
  assert machine.remote.calls==['c'] and machine.remote.requests==[] and not closed
  assert machine._automatic_internal_pending==pending and point in machine.breakpoints
+
+
+@pytest.mark.parametrize('stage',['provider-register-read','native-lifecycle-journal'])
+@pytest.mark.parametrize('late',[False,True])
+@pytest.mark.parametrize('secondary',['none','retirement','cleanup'])
+def test_internal_tracking_failure_retains_arrived_stop_and_closes_without_replay(stopped,stage,late,secondary):
+ from types import MethodType
+ from fdisbull.runtime_tracking import AutomaticRuntimeTracker
+ machine,_=stopped;point=owned(machine);tracker=machine._automatic_runtime_tracker
+ tracker.session=machine
+ tracker.provider=SimpleNamespace(source_identity={'provider':'authored'},
+     interpret_event=lambda registers:dict(kind='other',handle=None,source_identity={'provider':'authored'}))
+ tracker.internal_stop=MethodType(AutomaticRuntimeTracker.internal_stop,tracker)
+ failure=OSError('authored '+stage+' failure');records=[];closed=[]
+ def record(kind,document):
+  records.append(kind)
+  if stage=='native-lifecycle-journal':raise failure
+  return dict(kind='recorded',reference='authored',sha256='0'*64)
+ tracker._record=record
+ original=machine.registers
+ def registers():
+  if stage=='provider-register-read' and getattr(machine,'_automatic_tracking_callback_active',False):raise failure
+  return original()
+ machine.registers=registers
+ def retire(reason):
+  tracker.events.append(('close',reason))
+  if secondary=='retirement':raise RuntimeError('authored retirement failure')
+ tracker.close=retire
+ def close():
+  closed.append(True)
+  if secondary=='cleanup':
+   machine.remote.socket=None
+   raise BrokenPipeError('authored cleanup failure')
+ machine.vm.close=close;machine.remote.requests=[]
+ machine.remote.stops=[(0x20200,late,.11 if late else 0,b'T05')]
+ with pytest.raises(OSError) as caught:machine.run(timeout_ms=100)
+ assert caught.value is failure
+ result=caught.value.result
+ assert result['outcome']==('timeout' if late else 'breakpoint') and result['timed_out'] is late
+ assert result['registers']['linear_pc']=='0x20200'
+ assert result['session']['stop_reason']['native_reply']=='T05'
+ assert result['session']['stop_reason']['breakpoint_ids']==[point]
+ assert result['breakpoints']==[point]
+ assert machine.remote.calls==['c'] and machine.remote.requests==[]
+ assert machine._automatic_internal_pending is None and closed==[True]
+ assert ('close','machine-internal-stop-publication-failed') in tracker.events
+ assert records==(['native-lifecycle'] if stage=='native-lifecycle-journal' else [])
+ if secondary=='retirement':assert caught.value.tracking_retirement_error=='RuntimeError'
+ if secondary=='cleanup':assert caught.value.machine_cleanup_error=='BrokenPipeError'
+ calls,requests=list(machine.remote.calls),list(machine.remote.requests)
+ for operation in (machine.run,machine.step,machine._stopped):
+  with pytest.raises(q.DebuggerError,match='quarantined'):operation()
+ assert machine.remote.calls==calls and machine.remote.requests==requests
+
+
+@pytest.mark.parametrize('route',['tail','control-repair'])
+def test_failed_cleanup_keeps_tail_and_control_repair_owners_quarantined(stopped,route):
+ machine,_=stopped;closed=[]
+ failure=OSError('authored '+route+' failure')
+ if route=='tail':
+  def after(reason):raise failure
+  machine._automatic_runtime_tracker.after_stop=after
+  machine.remote.stops=[(0x20200,False,0,b'T05')]
+ else:
+  owned(machine);machine.remote.stops=[(0x20200,True,.11,b'T05')]
+  machine.run(timeout_ms=100)
+  def request(*args,**kwargs):raise failure
+  machine.remote.request=request
+ def close():
+  closed.append(True)
+  machine.remote.socket=None
+  raise BrokenPipeError('authored disposal failure')
+ machine.vm.close=close
+ with pytest.raises(OSError) as caught:
+  if route=='tail':machine.run(timeout_ms=100)
+  else:machine.step(timeout_ms=100)
+ assert caught.value is failure and caught.value.result['session']['stop_reason']['native_reply']=='T05'
+ assert caught.value.machine_cleanup_error=='BrokenPipeError' and closed==[True]
+ calls,requests=list(machine.remote.calls),list(machine.remote.requests)
+ for operation in (machine.run,machine.step,machine._stopped):
+  with pytest.raises(q.DebuggerError,match='quarantined'):operation()
+ assert machine.remote.calls==calls and machine.remote.requests==requests
+ # Disposal remains callable after the public control gate has closed.
+ with pytest.raises(BrokenPipeError):machine.vm.close()
+ assert closed==[True,True]

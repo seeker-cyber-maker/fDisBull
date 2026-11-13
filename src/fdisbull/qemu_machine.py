@@ -305,6 +305,8 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
+    if name != 'close' and getattr(vm,'_fdisbull_control_quarantine',None):
+        raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
     guard = getattr(vm, 'operation_guard', None)
     if guard is not None:
         guard(name)
@@ -327,7 +329,7 @@ def machine_operation(function,*,script_budget=False):
             gdb_failed=self.vm.gdb is not None and self.vm.gdb.socket is None
             qmp=getattr(self.vm,'qmp',None)
             qmp_failed=qmp is not None and hasattr(qmp,'socket') and qmp.socket is None
-            if gdb_failed or qmp_failed:self.vm.close()
+            if not getattr(self.vm,'_fdisbull_control_quarantine',None) and (gdb_failed or qmp_failed):self.vm.close()
             raise
         finally:self.vm.lock.release()
     return invoke
@@ -414,7 +416,7 @@ def machine_clock_operation(function):
             return result
         except BaseException:
             channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
-            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+            if not getattr(vm,'_fdisbull_control_quarantine',None) and any(channel is not None and hasattr(channel,'socket') and channel.socket is None
                    for channel in channels):vm.close()
             raise
         finally:
@@ -489,7 +491,7 @@ def machine_run_operation(function):
             return result
         except BaseException:
             channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
-            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+            if not getattr(vm,'_fdisbull_control_quarantine',None) and any(channel is not None and hasattr(channel,'socket') and channel.socket is None
                    for channel in channels):vm.close()
             raise
         finally:
@@ -567,7 +569,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             return result
         except BaseException:
             channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
-            if any(channel is not None and hasattr(channel,'socket') and channel.socket is None
+            if not getattr(vm,'_fdisbull_control_quarantine',None) and any(channel is not None and hasattr(channel,'socket') and channel.socket is None
                    for channel in channels):vm.close()
             raise
         finally:
@@ -730,6 +732,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         return self.status()
 
     def _stopped(self):
+        if getattr(self.vm,'_fdisbull_control_quarantine',None):
+            raise DebuggerError('Machine controls are quarantined after '+self.vm._fdisbull_control_quarantine)
         if self.vm.qmp.call('query-status')['running']:
             raise ValueError('Pause the machine context before inspecting or changing CPU state')
         self.vm.machine_stopped=True
@@ -1093,6 +1097,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 if observed is not None:error.result=observed
             if repair_error is not None:error.tracking_control_repair_error=type(repair_error).__name__
             if attempted:
+                self.vm._fdisbull_control_quarantine='uncertain internal breakpoint controls'
                 self._automatic_internal_pending=None
                 try:_tracking(self,'close','machine-breakpoint-control-failed')
                 except BaseException as retirement_error:
@@ -1154,7 +1159,26 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             # Bounded stop cleanup records this already-arrived event before
             # enforcing the running-interval deadline. Never dispatch another
             # guest instruction after expiry; retain the pending original one.
-            hide=_tracking(self,'internal_stop',result)
+            try:
+                hide=_tracking(self,'internal_stop',result)
+            except BaseException as error:
+                # This stop already arrived, even if its provider read or
+                # lifecycle journal failed before pending state was installed.
+                # Keep the native receipt and retire the uncertain owner; no
+                # step-over or continue may follow this failed observation.
+                prior=getattr(error,'result',None)
+                if prior is not None and prior is not result:error.tracking_cause_result=prior
+                error.result=result
+                self._automatic_runtime_stop=result
+                self._automatic_internal_pending=None
+                self.vm._fdisbull_control_quarantine='failed internal stop publication'
+                try:_tracking(self,'close','machine-internal-stop-publication-failed')
+                except BaseException as retirement_error:
+                    error.tracking_retirement_error=type(retirement_error).__name__
+                try:self.vm.close()
+                except BaseException as cleanup_error:
+                    error.machine_cleanup_error=type(cleanup_error).__name__
+                raise
             count+=1
             self._automatic_internal_pending=dict(ids=sorted(matched),
                 registers=deepcopy(result['registers']['registers']),
@@ -1194,6 +1218,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             # lifetime before closing the owner; never execute it again.
             if getattr(error,'result',None) is None:error.result=result
             self._automatic_internal_pending=None
+            self.vm._fdisbull_control_quarantine='failed native stop publication'
             try:_tracking(self,'close','machine-post-stop-publication-failed')
             except BaseException as retirement_error:
                 error.tracking_retirement_error=type(retirement_error).__name__
