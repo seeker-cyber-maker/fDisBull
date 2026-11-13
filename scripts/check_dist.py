@@ -77,6 +77,8 @@ REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {
 REQUIRED_TEST_HELPERS = {
     ".gitlab-ci.yml",
     ".github/workflows/ovh-bootstrap.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/native-debugger.yml",
     ".github/retained-workflows/ci.yml.disabled",
     ".github/retained-workflows/native-debugger.yml.disabled",
     "scripts/ci/github-bootstrap.py",

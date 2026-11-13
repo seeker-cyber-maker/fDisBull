@@ -1,0 +1,13 @@
+name: Legacy CI identity - keep disabled
+
+# Provider compatibility stub. Keep this legacy workflow ID disabled.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  retired:
+    if: ${{ false }}
+    runs-on: [self-hosted, Linux, X64, fdisbull-ovh-ca-gh1]
+    steps:
+      - run: exit 1
