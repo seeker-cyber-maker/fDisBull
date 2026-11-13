@@ -4,7 +4,7 @@
 
 New contributions use `seeker-cyber-maker/fDisBull` (repository ID `1431097789`). Return a read-back **draft GitHub PR** with stable origin chat/task ID, exact source branch/head, target/base, relevant verification, limitations and verified attachment links. Use connected GitHub tools or reviewed Git/CLI access; the original owner connection is available, and connected `TiGa-RCE` also has Write permission. A successful repository listing and real PR creation/readback were demonstrated in [PR #84](https://github.com/seeker-cyber-maker/fDisBull/pull/84).
 
-Choose the existing stack parent deliberately. Preserve existing GitLab reviews and their targets instead of duplicating or retargeting them automatically. Missing access or upload capability remains an explicit handoff gap. Keep original/private inputs out of review uploads and leave CI dispatch to n8n under the current bootstrap gate. Use the guarded mirror service for local/GitLab parity.
+Choose the existing stack parent deliberately. Preserve existing GitLab reviews and their targets instead of duplicating or retargeting them automatically. Missing access or upload capability remains an explicit handoff gap. Keep original/private inputs out of review uploads and leave manual CI dispatch to n8n under the shared OVH executor lock. The [verified bootstrap handoff](https://github.com/seeker-cyber-maker/fDisBull/pull/84#issuecomment-6865708771) demonstrates PR artifact delivery; it does not qualify a candidate or authorize release. Use the guarded mirror service for local/GitLab parity.
 
 ## Existing GitLab handoff procedure
 
