@@ -5704,3 +5704,91 @@ campaigns still gate backend promotion/removal. G1 closes declared compatible
 package selection for this bounded classic/v6 route; G2 source mapping/UDL,
 G3-G4 semantic admission/independent qualification and G5-G8 build, execution,
 reuse and delivery remain open.
+
+## 2026-11-13 — bounded CHIP-8 G2 original-source mapping and typed UDL candidates
+
+This slice adds `Project.chip8_source_map` / `chip8_source_map_info` and the
+matching `chip8-source-map` / `chip8-source-map-info` CLI/JSON methods. See
+[the source-map and UDL contract](CHIP8_SOURCE_MAP_UDL.md). It requires an exact
+verified G0 intake and compatible G1 closure, retains their identities, and
+does not change ordinary instruction/function/xref/work records or their G1
+analysis pin. Original PC, complete word, source span/hash and decoded facts
+are retained with a typed candidate descriptor. A bounded worklist tracks PC
+and abstract return-stack context, follows CALL/RET without inventing a call
+fallthrough, and preserves both conditional edges as candidates.
+
+The map records explicit frontier reasons for unsupported/truncated words,
+odd/out-of-RAM or non-source fetches, indirect jumps, stack and budget limits,
+key waits and symbolic I-relative accesses. A possible source write permits
+continued static mapping only under nonfaulting-write and unchanged subsequent
+source-fetch assumptions; range-sensitive reads likewise have a nonfaulting
+continuation condition. Unclassified bytes remain unknown. Worklist exhaustion
+does not establish execution coverage, whole-program completeness or termination.
+Active RAM/fetch overlays are not substituted for the original-source view.
+
+Descriptors cover the declared classic families' typed operands, may-read/write
+ports, ordered writes, memory guards, control and effect candidates: VF aliases,
+the 8-bit bounded SP and 16-bit return slots, popped-slot clearing, I transfers,
+display/key waits, timers and RNG. Current-instruction atomic faults are separate
+from successor-fetch faults after committed effects. These are static candidates,
+not an executable evaluator, admitted common UIL or independently qualified
+semantics. Administrative ownership/generation and asynchronous effects retain
+explicit scope limits. G3-G8 remain open.
+
+Canonical byte-bearing maps live in the private external store, with immutable
+content and request identities and an 8 MiB cap. Identical requests reuse the
+stored map. Cold inspection checks G0/G1/source/producer pins, exact decoded
+fields and typed descriptors, then reconstructs the graph from verified stored
+facts without calling the decoder or starting a guest. Rehashed corruption,
+changed producers, stale included analysis, invalid options and unavailable
+objects refuse. Private exports and oversized output artifacts stay outside Git.
+
+Fresh local preservation passes **1,141 tests in 79 files**, no errors, failures,
+skips or exclusions, against 1,243 frozen Python-file hashes. The 83 new G2 cases
+are 46 typed-candidate, 27 map, nine public-interface and one actual-native
+integration case. The latter matches original PC/word/return-stack contexts to
+v6 stepping with nested calls and RNG, then distinguishes an original source
+word from an active execute-layer word. It preserves RAM/code layers, logical
+hooks, held keys, lossless frame-delta history, comparative trials, frozen
+selected CPU/RAM undo and full recovery. G0/G1 pins and maps survive these
+operations and cold reopen. Previous CHIP-8 and DOS IRQ/checkpoint/task-private
+preservation cases remain selected. This bounded authored witness does not prove
+independent semantics or arbitrary-ROM/DOS compatibility.
+The final capability, bundled-skill, package-payload, DOS-migration and policy
+selection also passes 68 checks after the documentation changes; these overlap
+the affected preservation selection rather than adding 68 distinct cases.
+
+The separate Snek/Ghost Escape corpus witness copies the accepted G1 projects
+into an isolated private store. Snek maps 28 instructions / 56 of 65 source bytes,
+leaving nine unknown bytes and three frontiers (two possible range faults and
+one key wait). Ghost Escape maps 67 instructions / 134 of 135 source bytes,
+leaving one unknown byte and five possible-range-fault frontiers. Both bounded
+worklists exhaust without exhausting their budgets; the frontier conditions
+remain unresolved. One-instruction partial maps remain separately inspectable.
+Cold Python and CLI replies match, cached requests invoke no decoder, and
+ordinary analysis and original G0/G1 files and objects remain unchanged. These
+ROMs were not executed by the corpus witness.
+
+Independent read-only artifact audit checks all 13 listed G0/G1 originals,
+both copied FDBs, all ordinary tables against their G1 sources, and the four
+full/partial map records and their canonical private objects. Source, closure,
+request, producer and exported document hashes agree. Twelve retained binaries,
+six native packages, selector/payload and component04 identity match the fresh
+retained baseline. The audit does not upgrade static candidates to runtime
+reachability or semantic qualification.
+
+Private evidence: `chip8-g2-preservation-final-01.xml` (SHA-256
+`0f424a89cbda97d273c325c0ea5cdabfe67fad6ef90a5b9df5f9bc2dc99bf805`),
+`chip8-g2-tested-source-hashes-01.json` (SHA-256
+`46f641b48ae0b0a12c1e42029706e58690411e18568128bb6731aaf5f92bf771`),
+and `chip8-g2-corpus-witness-01.json` (SHA-256
+`01f6416dab933b7129b06d797427aadf9bf890042617f9d182b227f3a5ab814d`).
+The user storage waiver remains in force; new bounded outputs stay on CACHE.
+No native rebuild, CI, release, tag, merge or installation occurs in this slice.
+
+DOSBox-X remains the default and retained fallback. The native v6 binary,
+retained native packages and active shared payload retain their identities.
+The DOS ledger still has 141 unqualified surfaces and seven unqualified campaigns;
+G2 does not reduce them. Component04 boot qualification and the historical
+DOSBox-X startup stack-buffer abort remain unresolved. Backend promotion or
+removal still requires the separate local parity evidence.

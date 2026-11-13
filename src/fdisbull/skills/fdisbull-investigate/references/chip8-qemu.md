@@ -48,9 +48,23 @@ source, package hashes, graph and any requested existing-analysis fingerprint.
 Two ROMs may share ISA/environment definitions while retaining distinct target
 and closure identities. Resolution never decodes, executes or proves behavior.
 Optional runtime identities stay caller-declared/unverified, and analysis uses
-only existing records. G2-G8 conversion and DOS parity remain separate work;
+only existing records. G1 does not qualify source semantics or DOS parity;
 DOSBox-X stays default. See the source guide `docs/CHIP8_PACKAGE_CLOSURE.md` for
 the complete API contract.
+
+## Original-source map and typed candidates
+
+The bounded G2 API exposes `chip8-source-map` and `chip8-source-map-info` for a
+verified G0 source and G1 closure. It records original-source PCs, two-byte
+words and hashed spans, call/return contexts, typed candidate reads, writes and
+effects, and explicit unknown and budget frontiers. Cold inspection verifies
+the stored source, package and producer bindings and reconstructs the graph
+without invoking the decoder. Paths following possible source writes remain
+conditional on subsequent original fetches; active overlays are not this source
+view. These are static candidates, not executable common UIL or independent
+G3/G4 semantic qualification. G3–G8 remain open. See
+[the source-map guide](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/CHIP8_SOURCE_MAP_UDL.md)
+for the API and limits.
 
 ## Explicit source admission
 

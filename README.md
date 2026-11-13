@@ -204,7 +204,8 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
 - **CHIP-8 targets:** [pinned conversion intake](docs/CHIP8_CONVERSION_INTAKE.md)
   verifies one classic corpus member before creating a private project. A
   [declared ISA/environment closure](docs/CHIP8_PACKAGE_CLOSURE.md) binds compatible
-  package definitions to that exact source. An explicit [classic profile](docs/CHIP8_QEMU.md) adds
+  package definitions to that exact source; [source maps](docs/CHIP8_SOURCE_MAP_UDL.md)
+  retain bounded original-word and typed UDL candidates. An explicit [classic profile](docs/CHIP8_QEMU.md) adds
   persistent disassembly and a separately built QEMU backend for stepping,
   registers, RAM, breakpoints and native checkpoints. An optional device build
   adds monochrome frames, held keys and virtual-clock timers. A further native

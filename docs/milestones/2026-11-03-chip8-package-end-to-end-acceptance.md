@@ -44,6 +44,27 @@ This is a bounded G1 declaration-compatibility result. It does not qualify
 instruction semantics, historical behavior, arbitrary ROM compatibility or
 G2-G8 conversion. The wider resolver/campaign plan below remains prospective.
 
+## 2026-11-13 bounded G2 implementation note
+
+The [original-source map and typed UDL candidate](../CHIP8_SOURCE_MAP_UDL.md)
+now binds verified G0/G1 identities to bounded source PCs, two-byte words and
+hashed file spans, call/return contexts, typed candidate reads, writes and
+effects, and explicit unknown and budget frontiers. Cold inspection verifies
+stored source, package and producer identities and reconstructs the graph from
+stored facts without invoking the decoder. The map is an original-fetch view:
+active overlays are excluded, and paths after a possible source write remain
+conditional on a matching subsequent original fetch. It does not establish
+common UIL or independent G3/G4 semantics; G3–G8 remain open.
+
+A bounded static walk of two pinned natural corpus members classified 28
+instructions (56 of 65 source bytes) with three frontiers for Snek, and 67
+instructions (134 of 135 bytes) with five frontiers for Ghost Escape. These
+are source-walk candidates, not guest execution or qualified semantic
+coverage. Worklist exhaustion is not proof of complete program behavior. The
+local affected preservation selection reported 1,141 passing cases across 79
+files with no failures or skips; it is not hosted CI or an end-to-end
+conversion qualification.
+
 ## A. End-to-end gates, in execution order
 
 | Gate | Primary owner | Required software-owned acceptance | Common false positive to reject |

@@ -113,9 +113,13 @@ Inspection refuses a stale included-table binding instead of presenting changed
 records as the original closure. Without
 these options the runtime and analysis bindings are absent.
 
-This slice does not implement G2–G8: source-to-UIL recovery, independent
-semantic qualification, target selection, executable comparison and delivery
-remain separate work. The DOSBox-to-QEMU migration gate is independent of this
+G1 itself does not perform source mapping or qualify G2–G8. The separate
+[bounded original-source map and typed UDL candidate](CHIP8_SOURCE_MAP_UDL.md)
+uses this closure to retain PCs, words, spans, control contexts and explicit
+frontiers; its cold verification does not make the candidates executable common
+UIL or independent semantic proof. G3–G8 source-to-UIL qualification, target
+selection, executable comparison and delivery remain separate work. The
+DOSBox-to-QEMU migration gate is independent of this
 CHIP-8 declaration; DOSBox remains the default, with its separate outstanding
 141 unqualified surfaces and seven campaigns in the current gate unchanged by a
 G1 closure.

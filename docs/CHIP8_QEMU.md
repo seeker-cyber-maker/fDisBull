@@ -48,8 +48,20 @@ hashes, dependency graph and any requested existing-analysis fingerprint.
 Different ROMs can share ISA/environment definition identities while retaining
 distinct target and closure identities. Resolution performs no instruction
 decoding, guest execution or proof. Optional runtime identities remain unverified
-caller declarations. G2-G8 semantic conversion and DOS parity remain separate
-qualification work; DOSBox-X stays default.
+caller declarations. G1 does not qualify source semantics or DOS parity;
+DOSBox-X stays default.
+
+## Original-source map and typed candidates
+
+The bounded [G2 source-map and UDL guide](CHIP8_SOURCE_MAP_UDL.md) starts from a
+verified G0 intake and G1 closure. It records original-source PCs, two-byte
+words and hashed spans, call/return contexts, typed candidate reads, writes and
+effects, and explicit unknown and budget frontiers. Cold inspection verifies
+the retained source, package and producer bindings and reconstructs the stored
+graph without invoking the decoder. Paths after a possible source write remain
+conditional on the subsequent original fetch; active overlays are not this
+source view. These records are static candidates, not executable common UIL or
+independent G3/G4 semantic qualification. G3–G8 remain open.
 
 ## Explicit source admission
 

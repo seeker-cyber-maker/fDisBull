@@ -469,6 +469,8 @@ METHODS = {
     "chip8-packages": "Inspect exact versioned CHIP-8 ISA/environment declarations; no project or execution",
     "chip8-closure-resolve": "Resolve and persist a G0-bound compatible declared package closure; environment,[version,requirements,pins,runtime,include_analysis,expected_intake_sha256]; no execution",
     "chip8-closure-info": "Reverify an immutable CHIP-8 package closure and its source dependencies; closure,[version,expected_intake_sha256]; no execution",
+    "chip8-source-map": "Map a G0/G1-bound original CHIP-8 source to bounded contexts and typed UDL candidates; closure,[max_instructions,max_states,max_call_depth,version,expected_intake_sha256]; no execution or semantic proof",
+    "chip8-source-map-info": "Reverify a private original-source map, spans, contexts and typed candidates without decoding; mapping,[version,expected_intake_sha256]",
     "source-candidate": "Inspect candidate identity without attaching; path,[version]",
     "bind-source": "Bind exact source or explicitly approved divergent layer; path,[version,approval]",
     "new-source-analysis": "Explicitly create a separate analysis without changing this one; path,destination,[version]",
@@ -1093,7 +1095,8 @@ def invoke(method, params, debugger=None):
             from .udc_api import invoke as invoke_block
             return invoke_block(db,method,p)
         if method in ("source-info", "source-candidate", "bind-source", "chip8-intake-info",
-                      "chip8-closure-resolve", "chip8-closure-info"):
+                      "chip8-closure-resolve", "chip8-closure-info", "chip8-source-map",
+                      "chip8-source-map-info"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
             p["project"] = p.pop("destination")
@@ -2454,6 +2457,19 @@ def parser():
     c = sub.add_parser("chip8-closure-info", help=METHODS["chip8-closure-info"])
     c.add_argument("project")
     c.add_argument("closure")
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-source-map", help=METHODS["chip8-source-map"])
+    c.add_argument("project")
+    c.add_argument("closure")
+    c.add_argument("--max-instructions", type=int)
+    c.add_argument("--max-states", type=int)
+    c.add_argument("--max-call-depth", type=int)
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-source-map-info", help=METHODS["chip8-source-map-info"])
+    c.add_argument("project")
+    c.add_argument("mapping")
     c.add_argument("--version", type=int)
     c.add_argument("--expected-intake-sha256")
     c = sub.add_parser(

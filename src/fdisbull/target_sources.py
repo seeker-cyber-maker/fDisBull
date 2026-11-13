@@ -14,6 +14,20 @@ CREATE TABLE IF NOT EXISTS target_sources(
 
 
 class TargetSourcesMixin:
+    def chip8_source_map(self, closure, max_instructions=256, max_states=2048,
+                         max_call_depth=16, version=None, expected_intake_sha256=None):
+        """Build a bounded original-source map and typed UDL candidates."""
+        from .chip8_source_map import build
+        return build(self, closure, max_instructions=max_instructions,
+                     max_states=max_states, max_call_depth=max_call_depth,
+                     version=version, expected_intake_sha256=expected_intake_sha256)
+
+    def chip8_source_map_info(self, mapping, version=None, expected_intake_sha256=None):
+        """Inspect a pinned source map without decoding or guest execution."""
+        from .chip8_source_map import info
+        return info(self, mapping, version=version,
+                    expected_intake_sha256=expected_intake_sha256)
+
     def chip8_closure_resolve(self, environment, version=None, requirements=None,
                              pins=None, runtime=None, include_analysis=False,
                              expected_intake_sha256=None):
