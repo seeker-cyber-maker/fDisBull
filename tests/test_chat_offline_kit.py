@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import subprocess
 from pathlib import Path
 import tarfile
@@ -228,3 +229,26 @@ def test_installer_bitmap_size_is_pinned_independently(tmp_path, monkeypatch):
     inv.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='bitmap identity mismatch'):
         kit.load_inventory(inv)
+
+
+@pytest.mark.parametrize('module', [None, 'fdisbull', 'fdisbull_player'])
+def test_python_wrapper_sets_builtin_locale_and_utf8_before_loader(tmp_path, module):
+    root = tmp_path / 'kit with spaces'
+    (root / 'bin').mkdir(parents=True); (root / 'lib').mkdir()
+    loader = root / 'lib/loader'
+    loader.write_text('#!/bin/sh\nprintf "%s\\0" "$LC_ALL" "$LANG" "$PYTHONCOERCECLOCALE" "$PYTHONUTF8" "$PYTHONHOME" "$@"\n')
+    loader.chmod(0o755)
+    script = root / 'bin/python'
+    script.write_text(kit.wrapper('lib/loader', 'python/bin/python3.13', python=True, module=module))
+    script.chmod(0o755)
+    # Inherited Unicode locale/coercion must not map host locale data; UTF-8
+    # is explicitly restored by Python's own mode rather than libc locale data.
+    env = dict(os.environ, LC_ALL='C.UTF-8', LANG='C.UTF-8', PYTHONCOERCECLOCALE='1', PYTHONUTF8='0')
+    result = subprocess.run([str(script), '-c', 'pass'], env=env, check=True, capture_output=True)
+    values = result.stdout.split(b'\0')[:-1]
+    assert values[:5] == [b'C', b'C', b'0', b'1', str(root / 'python').encode()]
+    expected = [b'--inhibit-cache', b'--library-path', str(root / 'lib').encode(),
+                str(root / 'python/bin/python3.13').encode(), b'-s', b'-P']
+    if module is not None: expected += [b'-m', module.encode()]
+    assert values[5:] == expected + [b'-c', b'pass']
+    assert 'PYTHONCOERCECLOCALE' not in kit.wrapper('lib/loader', 'native/qemu', qemu=True)

@@ -249,7 +249,11 @@ def wrapper(loader, target, python=False, module=None, qemu=False):
         command += ' -L "$ROOT/native/qemu/share/qemu"'
     return ('#!/bin/sh\nset -eu\nROOT=$(CDPATH= cd -- "${0%/*}/.." && pwd)\n'
             'unset PYTHONPATH PYTHONHOME LD_LIBRARY_PATH LD_PRELOAD\nexport PYTHONNOUSERSITE=1\n' +
-            ('export PYTHONHOME="$ROOT/python"\n' if python else '') +
+            # Keep libc in its built-in C locale while Python retains UTF-8
+            # text/path semantics. CPython's locale coercion would otherwise
+            # map the host's C.UTF-8 locale outside the immutable kit.
+            ('export PYTHONHOME="$ROOT/python"\n'
+             'export LC_ALL=C LANG=C PYTHONCOERCECLOCALE=0 PYTHONUTF8=1\n' if python else '') +
             'exec ' + command + ' "$@"\n')
 
 
