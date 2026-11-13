@@ -4,7 +4,9 @@ The user selected original GitHub [`seeker-cyber-maker/fDisBull`](https://github
 
 The guarded mirror service preserves original GitHub, local-hub and GitLab refs. GitHub and GitLab use separate durable histories and one outer lock. GitLab pushes retain `ci.skip`; GitHub/local pushes do not receive that option. Historical tag identities remain immutable. See [the restoration contract](GITHUB_RESTORATION.md).
 
-**CI owner: n8n. GitHub Actions stays disabled during bootstrap.** Re-enabling requires n8n's reviewed manual-only OVH workflow commit, runner readiness, and one deliberate bootstrap validation. Until that gate is passed, current CI/release qualification authority remains on the existing GitLab/local route. Source restoration does not qualify the QEMU migration or an offline consumer package. Other workers consume dated receipts rather than independently dispatching/polling jobs.
+**CI owner: n8n. The manual GitHub → OVH bootstrap passed on 2026-11-13.** [Run 43512305780](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/43512305780), attempt 1, completed successfully on runner `fdisbull-ovh-ca-gh1`; its artifact was independently verified and [handed back to PR #84](https://github.com/seeker-cyber-maker/fDisBull/pull/84#issuecomment-6865708771). Actions is enabled, `ovh-bootstrap.yml` is manual-only, and legacy workflow IDs `394106283` and `394474280` remain disabled. Its finite worker shares the OVH executor lock with GitLab and relinquishes the lock after owned-process cleanup. Pushes, PRs and tags do not automatically dispatch this workflow. Only n8n dispatches/observes jobs; other workers consume dated receipts.
+
+This establishes infrastructure and artifact handoff, not application/native qualification. The real qualification checker rejected missing ordinary/native receipts and emitted `release_ready=false`. Existing exact-candidate GitLab/local receipts retain their own scope. QEMU qualification, the full offline consumer kit and release publication remain separate gates.
 
 ## Local-first workflow and provider routing
 
