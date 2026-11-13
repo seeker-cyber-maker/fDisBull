@@ -47,6 +47,10 @@ test-and-package:
   resource_group: fdisbull-ovh-ci
   stage: verify
   timeout: 40m
+  rules:
+    - if: '$FDISBULL_CI_RECOVERY_REHEARSAL == "1"'
+      when: never
+    - when: on_success
   variables:
     FDISBULL_EXPECTED_BYTES: "12000000000"
   before_script:
@@ -69,6 +73,8 @@ test-and-package:
 # A deliberate API or web pipeline has one blocking manual native start.
 .native_qualification_rules:
   rules:
+    - if: '$FDISBULL_CI_RECOVERY_REHEARSAL == "1"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
       when: on_success
     - when: never
@@ -79,12 +85,37 @@ native-qualification:
   image: python:3.12-bookworm
   interruptible: false
   rules:
+    - if: '$FDISBULL_CI_RECOVERY_REHEARSAL == "1"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: false
     - when: never
   script:
     - 'echo "Starting native qualification for $CI_COMMIT_SHA"'
+
+# An explicitly selected control-plane rehearsal; never release qualification.
+ci-recovery-rehearsal:
+  resource_group: fdisbull-ovh-ci
+  stage: verify
+  image: python:3.12-bookworm
+  timeout: 5m
+  variables:
+    FDISBULL_EXPECTED_BYTES: "100000000"
+    RUNNER_SCRIPT_TIMEOUT: "3m"
+    RUNNER_AFTER_SCRIPT_TIMEOUT: "1m"
+  rules:
+    - if: '$FDISBULL_CI_RECOVERY_REHEARSAL == "1" && $CI_PIPELINE_SOURCE == "api"'
+      when: on_success
+    - when: never
+  script:
+    - python scripts/ci/recovery-probe.py
+  artifacts:
+    when: always
+    expire_in: never
+    paths:
+      - artifacts/recovery/
+      - artifacts/receipts/ovh-*.json
 
 .native_debugger_template:
   resource_group: fdisbull-ovh-ci

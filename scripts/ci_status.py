@@ -44,21 +44,26 @@ class FetchError(Exception):
         self.code, self.provider_stop = code, provider_stop
 
 
-def _identity(repo, sha, host, owner, refresh):
+def _scope(repo, host, owner):
     if not isinstance(repo, str) or not re.fullmatch(r'[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+', repo):
         raise StatusError('repo must be an explicit OWNER/REPOSITORY')
     if repo.count('/') != 1 and 'gitlab' not in str(host).lower():
         raise StatusError('repo must be an explicit OWNER/REPOSITORY')
-    if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-fA-F]{40}', sha):
-        raise StatusError('sha must contain exactly 40 hexadecimal characters')
     if not isinstance(host, str) or not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?', host):
         raise StatusError('host must be an explicit hostname without a scheme or path')
     if owner is not None and (not isinstance(owner, str) or not 1 <= len(owner) <= 128
                               or owner.strip() != owner or any(ord(c) < 32 or ord(c) == 127 for c in owner)):
         raise StatusError('owner must contain 1..128 printable characters')
+    return repo.lower(), host.lower()
+
+
+def _identity(repo, sha, host, owner, refresh):
+    repo, host = _scope(repo, host, owner)
+    if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-fA-F]{40}', sha):
+        raise StatusError('sha must contain exactly 40 hexadecimal characters')
     if refresh and owner is None:
         raise StatusError('refresh requires an owner ID')
-    return repo.lower(), sha.lower(), host.lower()
+    return repo, sha.lower(), host
 
 
 def default_state_dir(cwd=None):
@@ -120,6 +125,88 @@ def _locked(directory):
         if acquired:
             fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
+
+
+def _directory(root, host, repo):
+    return root / hashlib.sha256(f'{host}/{repo}'.encode()).hexdigest()
+
+
+def _load_state(path, host, repo):
+    state = _read(path)
+    if state is None:
+        state = dict(schema=SCHEMA, host=host, repo=repo, owner=None,
+                     next_allowed_at=0, provider_stop=None)
+    if (state.get('schema'), state.get('host'), state.get('repo')) != (SCHEMA, host, repo):
+        raise StatusError('local CI state identity mismatch')
+    next_allowed = state.get('next_allowed_at')
+    if (not {'owner', 'provider_stop', 'next_allowed_at'} <= state.keys()
+            or type(next_allowed) not in (int, float) or not math.isfinite(next_allowed)
+            or next_allowed < 0 or not (state.get('owner') is None or isinstance(state['owner'], str))
+            or not (state.get('provider_stop') is None or isinstance(state['provider_stop'], dict))):
+        raise StatusError('invalid local CI cooldown/owner state')
+    return state
+
+
+def _clock_value(clock):
+    now = (clock or time.time)()
+    if type(now) not in (int, float) or not math.isfinite(now) or now < 0:
+        raise StatusError('invalid local clock')
+    return now
+
+
+def reserve_refresh(*, repo, host, owner, state_dir=None, clock=None):
+    """Durably reserve the shared repository refresh interval for an observation batch."""
+    repo, host = _scope(repo, host, owner)
+    if owner is None:
+        raise StatusError('reservation requires an owner ID')
+    now = _clock_value(clock)
+    root = Path(state_dir) if state_dir is not None else default_state_dir()
+    directory = _directory(root, host, repo)
+    with _locked(directory) as acquired:
+        if not acquired:
+            return dict(allowed=False, reason='busy', next_refresh_at=None, owner=None)
+        state_path = directory / 'state.json'
+        state = _load_state(state_path, host, repo)
+        if state['owner'] is not None and state['owner'] != owner:
+            reason = 'owner_conflict'
+        elif state['provider_stop'] is not None:
+            reason = 'provider_stopped'
+        elif now < state['next_allowed_at']:
+            reason = 'cooldown'
+        else:
+            state.update(owner=owner, next_allowed_at=now + INTERVAL_SECONDS)
+            _write(state_path, state)
+            return dict(allowed=True, reason='reserved',
+                        next_refresh_at=state['next_allowed_at'], owner=state['owner'])
+        return dict(allowed=False, reason=reason,
+                    next_refresh_at=state['next_allowed_at'], owner=state['owner'])
+
+
+def record_provider_stop(*, repo, host, owner, reason, state_dir=None, clock=None):
+    """Persist a provider stop for the current owner without replacing an earlier stop."""
+    repo, host = _scope(repo, host, owner)
+    if owner is None:
+        raise StatusError('provider stop recording requires an owner ID')
+    if not isinstance(reason, str) or not re.fullmatch(r'[a-z0-9_]{1,64}', reason):
+        raise StatusError('provider stop reason must be a short lowercase code')
+    now = _clock_value(clock)
+    root = Path(state_dir) if state_dir is not None else default_state_dir()
+    directory = _directory(root, host, repo)
+    with _locked(directory) as acquired:
+        if not acquired:
+            return dict(recorded=False, reason='busy', owner=None, provider_stop=None)
+        state_path = directory / 'state.json'
+        state = _load_state(state_path, host, repo)
+        if state['owner'] != owner:
+            return dict(recorded=False, reason='owner_conflict', owner=state['owner'],
+                        provider_stop=state['provider_stop'])
+        if state['provider_stop'] is not None:
+            return dict(recorded=False, reason='provider_stopped', owner=state['owner'],
+                        provider_stop=state['provider_stop'])
+        state['provider_stop'] = dict(reason=reason, observed_at=now)
+        _write(state_path, state)
+        return dict(recorded=True, reason='provider_stopped', owner=state['owner'],
+                    provider_stop=state['provider_stop'])
 
 
 def _restricted(message):
@@ -280,29 +367,16 @@ def _snapshot(document, host, repo, sha, observed):
 def check_status(*, repo, sha, host='github.com', state_dir=None, refresh=False,
                  owner=None, clock=None, fetch=None):
     repo, sha, host = _identity(repo, sha, host, owner, refresh)
-    now = (clock or time.time)()
-    if type(now) not in (int, float) or not math.isfinite(now) or now < 0:
-        raise StatusError('invalid local clock')
+    now = _clock_value(clock)
     root = Path(state_dir) if state_dir is not None else default_state_dir()
-    directory = root / hashlib.sha256(f'{host}/{repo}'.encode()).hexdigest()
+    directory = _directory(root, host, repo)
     base = dict(schema=SCHEMA, host=host, repo=repo, sha=sha, queried_at=now,
                 refresh_requested=refresh, refresh_performed=False, qualification='observation_only')
     with _locked(directory) as acquired:
         if not acquired:
             return dict(base, status='missing', source='none', refresh_reason='busy', runs=[])
         state_path, cache_path = directory / 'state.json', directory / (sha + '.json')
-        state = _read(state_path)
-        if state is None:
-            state = dict(schema=SCHEMA, host=host, repo=repo, owner=None,
-                         next_allowed_at=0, provider_stop=None)
-        if (state.get('schema'), state.get('host'), state.get('repo')) != (SCHEMA, host, repo):
-            raise StatusError('local CI state identity mismatch')
-        next_allowed = state.get('next_allowed_at')
-        if (not {'owner', 'provider_stop', 'next_allowed_at'} <= state.keys()
-                or type(next_allowed) not in (int, float) or not math.isfinite(next_allowed)
-                or next_allowed < 0 or not (state.get('owner') is None or isinstance(state['owner'], str))
-                or not (state.get('provider_stop') is None or isinstance(state['provider_stop'], dict))):
-            raise StatusError('invalid local CI cooldown/owner state')
+        state = _load_state(state_path, host, repo)
         cached = _read(cache_path)
         if cached is not None:
             if ((cached.get('schema'), cached.get('host'), cached.get('repo'), cached.get('sha'))
@@ -319,7 +393,7 @@ def check_status(*, repo, sha, host='github.com', state_dir=None, refresh=False,
                 reason = 'owner_conflict'
             elif state['provider_stop'] is not None:
                 reason = 'provider_stopped'
-            elif now < next_allowed:
+            elif now < state['next_allowed_at']:
                 reason = 'cooldown'
             else:
                 state.update(owner=owner, next_allowed_at=now + INTERVAL_SECONDS)

@@ -27,9 +27,12 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
     assert re.search(r'^  tags:\n    - fdisbull-local-linux$', ci_section('default'), re.M)
     gate = ci_section('native-qualification')
     assert 'when: manual' in gate and 'allow_failure: false' in gate
+    rehearsal_guard = '- if: \'$FDISBULL_CI_RECOVERY_REHEARSAL == "1"\'\n      when: never'
     for name in ('native-qualification', '.native_qualification_rules'):
         conditions = [line.strip() for line in ci_section(name).splitlines() if line.strip().startswith('- if:')]
-        assert conditions == ['- if: \'$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"\'']
+        assert conditions == [rehearsal_guard.splitlines()[0].strip(),
+                              '- if: \'$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"\'']
+        assert rehearsal_guard in ci_section(name)
         assert 'when: never' in ci_section(name)
     assert 'extends: .native_qualification_rules' in ci_section('.native_debugger_template')
     for name in ('native-debugger-stable', 'native-debugger-layers'):
@@ -43,6 +46,26 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
     assert 'bash scripts/ci/test-and-package.sh' in ci_section('test-and-package')
     for name in ('native-qualification', '.native_qualification_rules', '.native_debugger_template', 'native-unified', 'qualify-candidate'):
         assert 'allow_failure: true' not in ci_section(name)
+
+
+def test_api_rehearsal_omits_package_and_native_qualification_jobs():
+    rehearsal = ci_section('ci-recovery-rehearsal')
+    assert ('- if: \'$FDISBULL_CI_RECOVERY_REHEARSAL == "1" && '
+            '$CI_PIPELINE_SOURCE == "api"\'\n      when: on_success') in rehearsal
+    assert '\n    - when: never\n' in rehearsal
+    ordinary = ci_section('test-and-package')
+    assert ('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"' in ordinary
+            and ordinary.index('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"')
+            < ordinary.index('when: never') < ordinary.index('when: on_success'))
+    for name in ('native-qualification', '.native_qualification_rules'):
+        section = ci_section(name)
+        assert section.index('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"') < section.index('when: never')
+    assert 'when: manual' in ci_section('native-qualification')
+    assert 'allow_failure: false' in ci_section('native-qualification')
+    assert 'extends: .native_qualification_rules' in ci_section('native-unified')
+    assert 'extends: .native_qualification_rules' in ci_section('qualify-candidate')
+    assert 'extends: .native_debugger_template' in ci_section('native-debugger-stable')
+    assert 'extends: .native_debugger_template' in ci_section('native-debugger-layers')
 
 
 def test_ordinary_job_requires_inventory_and_isolated_install_receipts():

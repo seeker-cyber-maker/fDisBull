@@ -91,57 +91,89 @@ def export(work, root, env):
             stream.write("\n")
 
 
+def references(value):
+    if isinstance(value, dict):
+        if isinstance(value.get("path"), str) and isinstance(value.get("sha256"), str):
+            yield value
+        for child in value.values():
+            yield from references(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from references(child)
+
+
+def verify_job_export(root, pipeline_id, job_id, expected_sha, expected_job_name,
+                      *, expected_job_status, required_receipt=None):
+    """Verify preserved bytes for one completed job, without qualifying its outcome.
+
+    required_receipt, when supplied, is the canonical producer receipt path in
+    the caller's worktree. It is compared byte-for-byte and its references are
+    verified against the preserved inventory.
+    """
+    pipeline, job = decimal(pipeline_id), decimal(job_id)
+    if (not isinstance(expected_sha, str) or not re.fullmatch(r"[0-9a-f]{40}", expected_sha)
+            or not isinstance(expected_job_name, str) or not expected_job_name
+            or expected_job_status not in {"success", "failed", "canceled"}):
+        raise ValueError("Invalid expected job identity or terminal status")
+    target = Path(root) / pipeline / job
+    meta = json.loads((target / "job.json").read_text())
+    if (meta.get("schema") != "fdisbull-ovh-result-export-v1"
+            or meta.get("source_commit") != expected_sha or meta.get("pipeline_id") != pipeline
+            or meta.get("job_id") != job or meta.get("job_name") != expected_job_name
+            or meta.get("job_status") != expected_job_status or meta.get("export_success") is not True):
+        raise ValueError("Required job result export is absent or differs")
+    post = json.loads((target / "source-postcheck.json").read_text())
+    if (post.get("source_commit") != expected_sha or post.get("expected_source_commit") != expected_sha
+            or post.get("tracked_worktree_dirty") is not False or post.get("export_success") is not True):
+        raise ValueError("Exported job source did not pass its postcheck")
+    inventory = json.loads((target / "inventory.json").read_text())
+    if not isinstance(inventory, list) or not inventory or len(inventory) != meta.get("files"):
+        raise ValueError("Missing or incomplete result inventory")
+    seen = set()
+    for entry in inventory:
+        raw = entry["path"]
+        path = Path(raw)
+        if (not isinstance(raw, str) or not raw or path.is_absolute() or ".." in path.parts
+                or path.as_posix() != raw or raw in seen):
+            raise ValueError("Unsafe/duplicate result inventory path")
+        seen.add(raw)
+        item = target / "exported" / path
+        if any(p.is_symlink() for p in (item, *item.parents)):
+            raise ValueError("Symlink in preserved results")
+        if item.stat().st_size != entry["size"] or digest(item) != entry["sha256"]:
+            raise ValueError("Preserved result changed")
+    exported = target / "exported"
+    paths = list(exported.rglob("*"))
+    if any(p.is_symlink() for p in paths):
+        raise ValueError("Symlink in preserved results")
+    actual = {p.relative_to(exported).as_posix() for p in paths if p.is_file()}
+    if seen != actual:
+        raise ValueError("Preserved files differ from the complete inventory")
+    if required_receipt is not None:
+        canonical = Path(required_receipt)
+        own_receipt = "artifacts/receipts/" + canonical.name
+        if own_receipt not in seen or digest(exported / own_receipt) != digest(canonical):
+            raise ValueError("Canonical job receipt absent or different in preserved results")
+        receipt = json.loads(canonical.read_text())
+        if str(receipt.get("job_id")) != job:
+            raise ValueError("Canonical job receipt identity differs")
+        for reference in references(receipt):
+            relative = reference_path(reference["path"], meta.get("project_directory", ""))
+            if relative not in seen or digest(exported / relative) != reference["sha256"]:
+                raise ValueError("A canonical job artifact is missing or differs in preserved results")
+    return {"status": "export-verified", "pipeline_id": pipeline, "job_id": job,
+            "source_commit": expected_sha, "job_name": expected_job_name,
+            "job_status": expected_job_status}
+
+
 def verify(work, root, env):
     pipeline = decimal(env["CI_PIPELINE_ID"])
     sha = env["CI_COMMIT_SHA"]
     for name, filename in RECEIPTS.items():
-        receipt = json.loads((work / "artifacts/receipts" / filename).read_text())
-        job = str(receipt["job_id"])
-        target = root / pipeline / decimal(job)
-        meta = json.loads((target / "job.json").read_text())
-        if (meta.get("schema") != "fdisbull-ovh-result-export-v1"
-                or meta.get("source_commit") != sha or meta.get("pipeline_id") != pipeline
-                or meta.get("job_id") != job or meta.get("job_name") != name
-                or meta.get("export_success") is not True):
-            raise ValueError("Required job result export is absent or differs")
-        post = json.loads((target / "source-postcheck.json").read_text())
-        if (post.get("source_commit") != sha or post.get("expected_source_commit") != sha
-                or post.get("tracked_worktree_dirty") is not False or post.get("export_success") is not True):
-            raise ValueError("Exported job source did not pass its postcheck")
-        inventory = json.loads((target / "inventory.json").read_text())
-        if not inventory or len(inventory) != meta.get("files"):
-            raise ValueError("Missing or incomplete result inventory")
-        seen = set()
-        for entry in inventory:
-            path = Path(entry["path"])
-            if path.is_absolute() or ".." in path.parts or path.as_posix() in seen:
-                raise ValueError("Unsafe/duplicate result inventory path")
-            seen.add(path.as_posix())
-            item = target / "exported" / path
-            if any(p.is_symlink() for p in (item, *item.parents)):
-                raise ValueError("Symlink in preserved results")
-            if item.stat().st_size != entry["size"] or digest(item) != entry["sha256"]:
-                raise ValueError("Preserved result changed")
-        actual = {p.relative_to(target / "exported").as_posix()
-                  for p in (target / "exported").rglob("*") if p.is_file()}
-        if seen != actual:
-            raise ValueError("Preserved files differ from the complete inventory")
-        own_receipt = "artifacts/receipts/" + filename
-        if own_receipt not in seen or digest(target / "exported" / own_receipt) != digest(work / own_receipt):
-            raise ValueError("Canonical job receipt absent or different in preserved results")
-        def references(value):
-            if isinstance(value, dict):
-                if isinstance(value.get("path"), str) and isinstance(value.get("sha256"), str):
-                    yield value
-                for child in value.values():
-                    yield from references(child)
-            elif isinstance(value, list):
-                for child in value:
-                    yield from references(child)
-        for reference in references(receipt):
-            relative = reference_path(reference["path"], meta.get("project_directory", ""))
-            if relative not in seen or digest(target / "exported" / relative) != reference["sha256"]:
-                raise ValueError("A canonical job artifact is missing or differs in preserved results")
+        canonical = work / "artifacts/receipts" / filename
+        receipt = json.loads(canonical.read_text())
+        verify_job_export(root, pipeline, str(receipt["job_id"]), sha, name,
+                          expected_job_status="success", required_receipt=canonical)
     print("All four ordinary/native job exports verified on OVH")
 
 
