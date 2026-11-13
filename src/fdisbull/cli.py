@@ -179,6 +179,7 @@ METHODS = {
     "dos-services": "List DOS/BIOS/audio contracts or describe a vector with pre-call registers",
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
+    "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
@@ -1027,6 +1028,7 @@ def invoke(method, params, debugger=None):
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
     ):
         if debugger is None:
             raise ValueError(
@@ -1105,6 +1107,7 @@ def invoke(method, params, debugger=None):
             "debug-experiment-info",
             "debug-promote-code",
             "debug-trace-view",
+            "debug-compare-runtime-code",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -2396,6 +2399,7 @@ def parser():
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2409,6 +2413,16 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
+        elif name == "debug-compare-runtime-code":
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("baseline_trace")
+            c.add_argument("layer_trace")
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--correspondence", type=json.loads)
+            c.add_argument("--baseline-memory", type=json.loads)
+            c.add_argument("--layer-memory", type=json.loads)
+            c.add_argument("--timeout-ms", type=int, default=1000)
         elif name == "debug-promote-code":
             c.add_argument("artifact")
             c.add_argument("--label", default="runtime interpretation")

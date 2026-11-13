@@ -67,3 +67,52 @@ Runtime artifacts can contain program bytes. Keep private databases/states out
 of Git. The authored branch test proves changed CFG edges, restart and patch
 isolation; the DinoPark lookup test proves a changed operand and observed price,
 not a completed purchase or reconstructed game binary.
+
+## Feeding observed code versions into patch analysis
+
+For x86-64 Wine/QEMU, `debug_compare_runtime_code` connects two explicitly
+promoted captures to the existing regional analyzer. Supply a completed trace
+for each interpretation and an explicit live-state contract:
+
+```python
+report = project.debug_compare_runtime_code(
+    original_child["version"], modified_child["version"],
+    original_trace["artifact"], modified_trace["artifact"], contract={})
+```
+
+An empty contract keeps all modeled GPRs and FLAGS live. Each trace must contain
+at least the modeled instruction and a following pre-instruction state. Capture
+the exit instruction too: both the region and its exit boundary must be fully
+observed, match the temporal byte interpretation, and have analyzed instruction
+facts. A one-event trace cannot supply its missing terminal register state.
+
+The bridge checks the stored artifact hashes, owning source/run, loaded-address
+mapping and observed byte view. It retains the native trace's original source
+version and records the temporal version separately. Matching an address alone
+does not assign execution to a whole code version. It performs no promotion or
+artifact mutation implicitly, and authored edits are not treated as observed
+captures. An explicit `correspondence` list uses the **original trace identities**
+when entries or exits move between encodings. The existing private-RAM evidence
+and timeout options are also accepted.
+
+The result's `regional` field contains the bounded difference witness or
+equivalence-under-contract report. Equivalent regions retain an expandable
+contraction; use `expand_pe_contraction` with the exact original traces. Whole
+function/module equivalence, external effects and timing remain outside this
+claim. The PE64 model includes register/immediate dword MOV zero-extension into
+the full GPR; byte/word aliases and dword memory loads/arithmetic remain unknown.
+
+The same operation is available offline through JSON and the CLI:
+
+```bash
+fdisbull debug-compare-runtime-code private.fdb 2 3 TRACE_A TRACE_B --contract '{}'
+```
+
+`tests/test_smc_patch_analysis_wine.py` is the native known-source acceptance:
+original `MOV EAX,1`, guest-modified `MOV EAX,2`, and an explicitly layered
+`MOV RAX,2` encoding control. Its region ends at the native RET pre-state, so
+the proof does not interpret RET or infer caller/ABI effects. The guest's
+ordinary first/second calls are checked separately. Register seeds and
+debugger-directed probes are recorded; exact difference-witness replay on
+Unicorn stays distinct from Wine execution. Original captures and static version
+1 remain preserved.

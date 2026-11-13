@@ -48,6 +48,14 @@ def qualify_capture(session, observed):
 
 
 class RuntimeCodeMixin:
+    def debug_compare_runtime_code(self, baseline_version, layer_version, baseline_trace, layer_trace, *,
+                                   contract, correspondence=None, baseline_memory=None, layer_memory=None,
+                                   timeout_ms=1000):
+        from .runtime_patch_analysis import compare_runtime_code
+        return compare_runtime_code(self, baseline_version, layer_version, baseline_trace, layer_trace,
+            contract=contract, correspondence=correspondence, baseline_memory=baseline_memory,
+            layer_memory=layer_memory, timeout_ms=timeout_ms)
+
     def _runtime_record(self, version):
         row = self.db.execute('SELECT * FROM runtime_versions WHERE version=?', (version,)).fetchone()
         if row is None:

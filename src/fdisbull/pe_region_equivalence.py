@@ -19,6 +19,12 @@ from .pe_path_transfer import _qualified_trace, _state
 from .wine_arch import register_names
 
 
+_GPR32_TO_64 = dict(zip(
+    ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp', 'esp'),
+    ('rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'rbp', 'rsp'))) | {
+        f'r{index}d': f'r{index}' for index in range(8, 16)}
+
+
 def _digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'),
                                     allow_nan=False).encode()).hexdigest()
@@ -257,13 +263,28 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 pass
             elif ins.mnemonic in ('mov', 'movabs') and len(operands) == 2:
                 dest, src = operands
-                value = read(src)
-                if dest.type == X.X86_OP_REG:
+                if bits == 64 and dest.type == X.X86_OP_REG and dest.size == 4:
+                    # A PE64 dword GPR write replaces the complete 64-bit value:
+                    # read only the source's low half, then clear the high half.
+                    name = _GPR32_TO_64.get(ins.reg_name(dest.reg))
+                    source = _GPR32_TO_64.get(ins.reg_name(src.reg)) if src.type == X.X86_OP_REG else None
+                    if name is None or src.size != 4:
+                        raise ValueError(f'Event {index}: unsupported dword MOV operands')
+                    if src.type == X.X86_OP_IMM:
+                        value = z.BitVecVal(src.imm % (1 << 32), 32)
+                    elif source is not None:
+                        value = z.Extract(31, 0, regs[source])
+                    else:
+                        raise ValueError(f'Event {index}: dword MOV requires an immediate or GPR source')
+                    regs[name] = z.ZeroExt(32, value)
+                elif dest.type == X.X86_OP_REG:
+                    value = read(src)
                     name = reg_name(dest)
                     if value.size() != bits:
                         raise ValueError(f'Event {index}: aliased load width')
                     regs[name] = value
                 elif dest.type == X.X86_OP_MEM and src.type != X.X86_OP_MEM:
+                    value = read(src)
                     a, width = location(dest)
                     value = (z.SignExt(width * 8 - value.size(), value) if value.size() < width * 8
                              else z.Extract(width * 8 - 1, 0, value))
