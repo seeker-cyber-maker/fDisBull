@@ -280,10 +280,44 @@ def confined(root, manifest):
 
 
 
-def windows_debugger(project, root, workspace, kernel, initramfs):
-    """Use the small Wine guest for the PE64 consumer check."""
+def windows_debugger(project, root, workspace, kernel, initramfs, *, full_windows=False):
+    """Keep each included guest's explicit memory and cold-boot budget."""
     return project.debugger(root / 'bin/qemu', workspace, kernel=kernel, initramfs=initramfs,
-                            memory_mib=4096, boot_timeout_ms=600000)
+                            memory_mib=8192 if full_windows else 4096, boot_timeout_ms=600000)
+
+
+def verify_pe_oracle(project, root, workspace, kernel, initramfs, checkpoint, counter, *, full_windows=False):
+    """Run the authored PE64 contract through the normal resource-bound guest."""
+    with windows_debugger(project, root, workspace, kernel, initramfs, full_windows=full_windows) as debug:
+        bp=debug.breakpoint(checkpoint)
+        if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
+        if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
+        frame=wait_for_pe_frame(debug); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
+        if not trace['metadata']['complete']: raise ValueError('PE trace incomplete')
+        state=debug.save_state('pe.sav'); debug.click(80,80,mode_id=frame['metadata']['mode_id'])
+        if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')
+        debug.load_state(state['artifact'])
+        if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE native restore failed')
+    return frame
+
+
+def verify_windows_profiles(root, workspace, kernel, compact_runtime, windows_runtime, fixture):
+    """Both delivered Wine images must execute; neither lane may be skipped."""
+    from fdisbull.project import Project
+    import lief
+    binary=lief.PE.parse(str(fixture)); base=binary.optional_header.imagebase
+    exports={entry.name:base+entry.address for entry in binary.get_export().entries}
+    images={}
+    for name, initramfs, full_windows in (('wine',compact_runtime,False), ('windows',windows_runtime,True)):
+        private=workspace / name
+        private.mkdir()
+        # Each target/project/state belongs to its own writable consumer folder.
+        pe=private/'oracle.exe';pe.write_bytes(fixture.read_bytes())
+        with Project.create(private/'pe.fdb',pe) as project:
+            project.analyze(start=exports['checkpoint'],max_instructions=64)
+            images[name]=verify_pe_oracle(project,root,private,kernel,initramfs,
+                                         exports['checkpoint'],exports['counter'],full_windows=full_windows)
+    return images
 
 
 def verify(root, workspace, archive):
@@ -321,7 +355,6 @@ def verify(root, workspace, archive):
     from fdisbull.project import Project
     from fdisbull.proofs import check_equivalence
     from fdisbull_player import LiveSession, LocalRuntime
-    import lief
     import z3
     spec = {'format':'fdisbull-proof-1','scope':'authored offline acceptance','variables':{'x':8},'assumptions':[],
             'left':{'op':'add','args':[{'var':'x'},{'const':1,'width':8}]},'right':{'var':'x'}}
@@ -348,29 +381,18 @@ def verify(root, workspace, archive):
         if debug.memory('1000:0100',length=1)['hex'] != '61': raise ValueError('DOS keyboard failed')
         dos_image=debug.screenshot('dos.png',hooks=False);debug.load_state(state['artifact'])
         if debug.memory('1000:0100',length=1)['hex'] != '00': raise ValueError('DOS restore failed')
-    fixture=required(roles,'pe_fixture'); binary=lief.PE.parse(str(fixture)); base=binary.optional_header.imagebase
-    exports={entry.name:base+entry.address for entry in binary.get_export().entries}; checkpoint=exports['checkpoint'];counter=exports['counter']
-    # Copy the authored fixture so the kit remains read-only and game directory is private.
-    pe=workspace/'oracle.exe';pe.write_bytes(fixture.read_bytes())
-    with Project.create(workspace/'pe.fdb',pe) as project:
-        project.analyze(start=checkpoint,max_instructions=64)
-        with windows_debugger(project, root, workspace, required(roles, 'kernel'), runtime['wine']) as debug:
-            bp=debug.breakpoint(checkpoint)
-            if not bp['bytes_verified'] or debug.run(timeout_ms=60000)['outcome'] != 'breakpoint': raise ValueError('PE breakpoint failed')
-            if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE memory failed')
-            frame=wait_for_pe_frame(debug); trace=debug.trace('pe-trace.json',count=4,timeout_ms=20000)
-            if not trace['metadata']['complete']: raise ValueError('PE trace incomplete')
-            state=debug.save_state('pe.sav'); debug.click(80,80,mode_id=frame['metadata']['mode_id'])
-            if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')
-            debug.load_state(state['artifact'])
-            if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE native restore failed')
+    frames=verify_windows_profiles(root,workspace,required(roles,'kernel'),runtime['wine'],
+                                  windows_runtime,required(roles,'pe_fixture'))
     return {'schema':'fdisbull-chat-consumer-verification-v1','status':'passed',
             'archive_sha256':digest(archive),'manifest_sha256':digest(root/'MANIFEST.json'),
             'source_commit':manifest.get('identities',{}).get('source_commit'),
             'test_source_commit':manifest.get('identities',{}).get('test_source_commit'),
             'runtime_sha256':{**{profile:digest(Path(runtime[profile])) for profile in ('wine','dos')},
                               'windows':digest(Path(windows_runtime))},
-            'windows_native_qualification':'not-tested',
+            'windows_native_qualification':{'status':'passed','scope':'authored PE64 oracle only',
+                'memory_mib':8192,'pe32':'not-tested','win16':'not-tested',
+                'checks':{name:True for name in ('breakpoint','memory','screenshot','trace','click','native_restore')},
+                'screenshot_sha256':frames['windows']['sha256']},
             'elf_objects_checked':closure_objects,'python':platform.python_version(),
             'z3':z3.get_version_string(), 'network_interfaces':['lo'],
             'python_origin':'kit','python_mappings':'kit','loader_closure':'kit-lib',
@@ -379,7 +401,7 @@ def verify(root, workspace, archive):
                 'pe_breakpoint','pe_memory','pe_screenshot','pe_click','pe_trace','pe_restore',
                 'solver_counterexample','solver_equivalence','player_save','player_resume',
                 'skill_fdisbull','skill_gamefaqs')},
-            'dos_screenshot_sha256':dos_image['sha256'],'pe_screenshot_sha256':frame['sha256'],
+            'dos_screenshot_sha256':dos_image['sha256'],'pe_screenshot_sha256':frames['wine']['sha256'],
             'profiles':['dos','wine','player','z3']}
 
 

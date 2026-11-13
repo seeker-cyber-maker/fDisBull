@@ -284,6 +284,8 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
                 "  ./bin/fdisbull --help\n"
                 "  ./bin/fdisbull agent-skill --reference SKILL.md\n"
                 "  ./bin/player --help\n")
+        if any(item['destination'] == 'docs/START_HERE.md' for item in delivered):
+            text += "  Read docs/START_HERE.md for extraction, runtime preparation and scope.\n"
         if profile == 'shared':
             text += ("  ./bin/prepare-runtimes --cache /absolute/writable/cache\n"
                      "This prepares compact DOS and Wine PE64 images. The full Windows\n"

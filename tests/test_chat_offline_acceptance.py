@@ -267,13 +267,95 @@ def test_loader_closure_accepts_declared_private_vendor_elf(tmp_path, monkeypatc
     assert verifier.check_loader_closure(root,roles)==3
 
 
-def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path):
+@pytest.mark.parametrize('full_windows,memory_mib', [(False,4096),(True,8192)])
+def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path, full_windows, memory_mib):
     class Project:
         def debugger(self, *args, **kwargs):
             self.args, self.kwargs = args, kwargs
             return 'session'
     project = Project()
-    assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine') == 'session'
+    assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine', full_windows=full_windows) == 'session'
     assert project.args == (tmp_path / 'bin/qemu', tmp_path / 'work')
     assert project.kwargs == {'kernel': tmp_path / 'kernel', 'initramfs': tmp_path / 'wine',
-                              'memory_mib': 4096, 'boot_timeout_ms': 600000}
+                              'memory_mib': memory_mib, 'boot_timeout_ms': 600000}
+
+
+def windows_profile_fakes(tmp_path, monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    class Project:
+        def __init__(self, path, target):
+            self.path, self.target = path, target
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def analyze(self, **kwargs):
+            assert kwargs == {'start':0x401000,'max_instructions':64}
+    fixture=tmp_path/'oracle.exe';fixture.write_bytes(b'authored fixture')
+    binary=SimpleNamespace(optional_header=SimpleNamespace(imagebase=0x400000),
+        get_export=lambda:SimpleNamespace(entries=[SimpleNamespace(name='checkpoint',address=0x1000),
+                                                   SimpleNamespace(name='counter',address=0x2000)]))
+    monkeypatch.setitem(sys.modules,'fdisbull.project',SimpleNamespace(Project=SimpleNamespace(create=Project)))
+    monkeypatch.setitem(sys.modules,'lief',SimpleNamespace(PE=SimpleNamespace(parse=lambda path:binary)))
+    return fixture
+
+
+def test_windows_profiles_require_distinct_compact_and_full_native_workflows(tmp_path, monkeypatch):
+    fixture=windows_profile_fakes(tmp_path,monkeypatch)
+    work=tmp_path/'work';work.mkdir();seen=[]
+    def oracle(project, root, workspace, kernel, initramfs, checkpoint, counter, *, full_windows):
+        assert project.target.read_bytes()==fixture.read_bytes()
+        assert project.target.parent==workspace and project.path.parent==workspace
+        assert (checkpoint,counter)==(0x401000,0x402000)
+        seen.append((workspace.name,initramfs,full_windows))
+        return {'sha256':str(full_windows)}
+    monkeypatch.setattr(verifier,'verify_pe_oracle',oracle)
+    result=verifier.verify_windows_profiles(tmp_path,work,tmp_path/'kernel',tmp_path/'compact',tmp_path/'full',fixture)
+    assert seen==[('wine',tmp_path/'compact',False),('windows',tmp_path/'full',True)]
+    assert result=={'wine':{'sha256':'False'},'windows':{'sha256':'True'}}
+
+
+def test_full_windows_native_failure_cannot_be_reported_as_compact_success(tmp_path, monkeypatch):
+    fixture=windows_profile_fakes(tmp_path,monkeypatch)
+    work=tmp_path/'work';work.mkdir();seen=[]
+    def oracle(*args, full_windows):
+        seen.append(full_windows)
+        if full_windows: raise RuntimeError('full Windows guest failed')
+        return {'sha256':'compact'}
+    monkeypatch.setattr(verifier,'verify_pe_oracle',oracle)
+    with pytest.raises(RuntimeError,match='full Windows guest failed'):
+        verifier.verify_windows_profiles(tmp_path,work,tmp_path/'kernel',tmp_path/'compact',tmp_path/'full',fixture)
+    assert seen==[False,True]
+
+
+@pytest.mark.parametrize('restore_works', [True,False])
+def test_pe_oracle_requires_actual_counter_restore(tmp_path, monkeypatch, restore_works):
+    class Debug:
+        value=7
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+        def breakpoint(self,address):
+            assert address==0x401000
+            return {'bytes_verified':True}
+        def run(self,**kwargs): return {'outcome':'breakpoint'}
+        def memory(self,address,*,length):
+            assert address==0x402000 and length==4
+            return {'hex':self.value.to_bytes(4,'little').hex()}
+        def trace(self,name,*,count,timeout_ms):
+            assert count==4
+            return {'metadata':{'complete':True}}
+        def save_state(self,name): return {'artifact':'saved'}
+        def click(self,x,y,*,mode_id):
+            assert (x,y,mode_id)==(80,80,'mode')
+            self.value=8
+        def load_state(self,artifact):
+            assert artifact=='saved'
+            if restore_works:self.value=7
+    frame={'metadata':{'mode_id':'mode'},'sha256':'frame'}
+    monkeypatch.setattr(verifier,'windows_debugger',lambda *a,**kw:Debug())
+    monkeypatch.setattr(verifier,'wait_for_pe_frame',lambda debug:frame)
+    def run():
+        return verifier.verify_pe_oracle(None,tmp_path,tmp_path,tmp_path/'kernel',tmp_path/'full',
+                                         0x401000,0x402000,full_windows=True)
+    if restore_works: assert run()==frame
+    else:
+        with pytest.raises(ValueError,match='PE native restore failed'):run()
