@@ -598,6 +598,89 @@ benchmark also uses a different challenge edition from this archived tiered
 corpus. Candidate correspondence, checked reductions, retained effects and
 native witnesses remain distinct evidence.
 
+## Current v6/v7 originals and LASIK reductions
+
+`scripts/verify_bla_current_modules.py` compares the current Harden-Native v6
+and Meridian v7 editions against fresh LASIK reductions, using external
+commitment-matching key files. These editions remain distinct from the archived
+single-file L1/L2/L3 experiment above.
+
+```sh
+python scripts/verify_bla_current_modules.py \
+  --root /external/bla-upstream \
+  --lasik-root /external/lasik-src \
+  --prepared /external/current-lasik/preparation.json \
+  --v6-key-file /private/external/v6-key.json \
+  --v7-key-file /private/external/v7-key.json \
+  --output /external/evidence/current-modules.json
+```
+
+For a new preparation, replace `--prepared` with `--prepare-output` naming a
+new external directory, after storage admission for the planned allocation.
+The preparer refuses an existing destination. It checks originals against the
+pinned release seals and Git objects, fingerprints the existing LASIK
+distribution, creates independent original/reduced trees and decompresses the
+v6 Wasm for its real host. The campaign replays the exact static JS/HTML/Wasm
+reductions in memory and checks every prepared file before and after native
+execution. Changed candidate bytes cannot be qualified merely by updating a
+manifest hash. Symlinks, unlisted files and shared original/candidate inodes
+prevent qualification. No dependencies are downloaded or installed.
+
+The comparison records separate results:
+
+| Boundary | Current v6 | Current v7 |
+| --- | --- | --- |
+| Plain native CLI | All ten cases agree, including real valid/mutated keys and three actual retired-key honeypots | Eleven of twelve agree; the recovered valid key succeeds only on the original |
+| Initialization | Missing input exits before the decorative tail; normal-length inputs allow the original's added getter to run while async main is suspended | `process.exitCode` allows the original's later getter initializer to run |
+| Exported API samples | The host invokes async main automatically; it exposes no activation API | Fourteen synchronous calls cover all nine exported product functions; thirteen result/throw projections agree, and valid-key activation differs |
+| Wasm interface | Exports change from 252 to 2 and the `name` custom section is removed | Not used by this edition |
+| Whole-module equivalence | Refuted by initialization and Wasm reflection | Refuted by real activation and initialization differences |
+
+The v6 selected `mix`/`seal` exports retain the same indices, types and function
+bodies. The admitted pure-i32 decoder confirms identity of the type, function
+and 53-byte code sections. That supports preservation of these two computations
+under standard Wasm semantics. The removed export aliases and custom sections
+remain observable through ordinary Wasm reflection, so complete module equality
+does not follow from code-section identity.
+
+V7 has a concrete source-byte dependency. Its retained integrity helper hashes
+five JS files and returns the digest to the activation seed builder. The
+binding-aware slice connects exported `activate`, file reads, the immutable
+SHA-256 receiver and returned digest, seed definitions, `timingSafeEqual` and
+the conditional return. Every measured original/reduced file pair differs.
+Running the candidate from its **own reduced tree** rejects the recovered key
+through both the CLI and original exported API. Compiling reduced text with an
+original filename would give its relative reads the wrong filesystem context.
+
+A separate causal diagnostic installs a phase-guarded filesystem wrapper before
+loading the reduced graph. During all module loading it delegates unchanged;
+only during synchronous activation does it optionally supply the five pinned
+original source-byte inputs. The same-wrapper control rejects the valid key,
+the five-input substitution restores the committed certificate, and disabling
+substitution rejects again. Mutated keys reject throughout. All substituted
+reads and their byte hashes are recorded. This experiment explicitly changes
+the filesystem provider contract; the native standalone reduction still fails.
+It supports the observed byte-to-integrity-to-acceptance chain without proving
+every other transformation preserves behavior.
+
+`bla_current_module_analysis.cjs` inventories calls, writes, reflection,
+CommonJS edges, initialization phases and syntactic dependency slices. It
+retains unresolved receivers/callbacks and marks the inventory incomplete.
+Matching fragments, counts and finite native agreement never authorize a
+universal JS equivalence claim. Discarded reads remain effects but do not become
+digest-input edges unless linked to the returned hash receiver.
+
+`bla_current_module_runtime.cjs` separates plain CLI execution from measured
+CLI/module execution. Plain runs have no exit listener or descriptor priming.
+Measured runs declare both, record synchronous return separately from actual
+exit, and observe global descriptors, process listeners, bounded exports and
+call results. A listener observes its own registration-order point, not effects
+of later exit callbacks. Pre-existing object internals, arbitrary file writes,
+browser event registrations, unawaited async export results and resource/timing
+behavior are not exhaustively traced. Native filesystem, crypto, Buffer, Wasm
+and exit interfaces remain unmodified in the baseline comparison. Raw keys,
+target bytes and returned flags/certificates stay outside Git and uploads.
+
 ## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
