@@ -2,8 +2,8 @@
 """Two-way synchronize and audit ref parity between local Git, local-hub, and GitLab.
 
 Agents are required to keep local Git (`local-hub` and local branches/tags) and
-GitLab (`gitlab`) as equal representations while keeping GitHub (`origin`)
-permanently retired.
+GitLab (`gitlab`) as equal representations. Original GitHub is managed by the
+guarded mirror service; this legacy helper intentionally excludes GitHub.
 
 Key behaviors:
 1. Phase 1 (Fetch & Reconcile across all remotes): Fetches remote-tracking
@@ -71,10 +71,10 @@ def local_refs(repo_dir: Path, remote: str | None = None) -> dict[str, dict[str,
 
 
 def verify_remote_not_retired(repo_dir: Path, remote: str) -> str:
-    """Refuse to push to a retired GitHub remote."""
+    """Keep GitHub restoration on the guarded service rather than this legacy helper."""
     url = _git(repo_dir, "remote", "get-url", "--push", remote).stdout.strip()
     if RETIRED_HOST in url.lower() or "retired_github" in url.lower():
-        raise MirrorSyncError(f"Refusing to push to retired GitHub remote {remote!r} ({url})")
+        raise MirrorSyncError(f"Legacy helper excludes GitHub remote {remote!r} ({url})")
     return url
 
 

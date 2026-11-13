@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded, fast-forward-only local-hub/GitLab mirror worker.
+"""Bounded, fast-forward-only local-hub/GitLab and opt-in original GitHub worker.
 
 This module is intentionally invoked by an external scheduler.  It does not
 install hooks, create launch agents, read credentials, or start itself.
@@ -22,6 +22,7 @@ import uuid
 from urllib.parse import urlsplit
 
 SCHEMA = "fdisbull-mirror-sync-1"
+GITHUB_URL = "https://github.com/seeker-cyber-maker/fDisBull.git"
 MARKER_NAME = ".fdisbull-mirror-cache.json"
 REF_NS = "refs/mirror-sync/source"
 FETCH_NS = "refs/mirror-sync/fetch"
@@ -153,7 +154,7 @@ def _load_config(path: Path) -> dict:
         "format", "git", "hub", "gitlab", "cache", "state_dir", "volumes",
         "command_timeout_s", "run_timeout_s", "storage",
     }
-    if set(cfg) != required or cfg.get("format") != SCHEMA:
+    if set(cfg) - {"github"} != required or cfg.get("format") != SCHEMA:
         raise WorkerError("config keys or schema do not match fdisbull-mirror-sync-1", code=2)
     for key in ("git", "hub", "cache", "state_dir"):
         if not isinstance(cfg[key], str) or not Path(cfg[key]).is_absolute():
@@ -195,7 +196,46 @@ def _load_config(path: Path) -> dict:
             raise WorkerError("storage admission byte bounds must be positive integers", code=2)
     if storage["reserve_bytes"] < 40_000_000_000:
         raise WorkerError("mirror growth requires the 40 GB destination reserve", code=2)
+    if "github" in cfg:
+        peer = cfg["github"]
+        if not isinstance(peer, dict) or set(peer) != {"url", "cache", "state_dir", "tag_exceptions"}:
+            raise WorkerError("GitHub peer keys are invalid", code=2)
+        if peer["url"] != GITHUB_URL:
+            raise WorkerError("only the confirmed original GitHub repository is authorized", code=2)
+        for key in ("cache", "state_dir"):
+            if not isinstance(peer[key], str) or not Path(peer[key]).is_absolute():
+                raise WorkerError("GitHub peer paths must be absolute", code=2)
+            a, b = Path(peer[key]).resolve(), Path(cfg[key]).resolve()
+            if a == b or a in b.parents or b in a.parents:
+                raise WorkerError("GitHub and GitLab peer storage must be disjoint", code=2)
+        if not isinstance(peer["tag_exceptions"], list):
+            raise WorkerError("tag exceptions must be a list", code=2)
+        refs = set()
+        for row in peer["tag_exceptions"]:
+            if not isinstance(row, dict) or set(row) != {"ref", "hub_oid", "peer_oid", "peeled_commit"}:
+                raise WorkerError("tag exception keys are invalid", code=2)
+            ref = row["ref"]
+            if not isinstance(ref, str) or not ref.startswith("refs/tags/") or BAD_REF_CHARS.search(ref) or ref in refs:
+                raise WorkerError("tag exception ref is invalid or duplicated", code=2)
+            if any(not isinstance(row[k], str) or not OID_RE.fullmatch(row[k])
+                   for k in ("hub_oid", "peer_oid", "peeled_commit")):
+                raise WorkerError("tag exception object IDs are invalid", code=2)
+            refs.add(ref)
     return cfg
+
+
+def _github_config(cfg: dict) -> dict:
+    """Reuse the qualified pair engine and v1 state without rewriting old history.
+
+    In a pair's durable v1 state, `gitlab` means its remote side. The outer
+    topology receipt names the provider explicitly. Each pair has separate
+    archives, tombstones, cache identity and state; both share one outer lock.
+    """
+    peer = cfg["github"]
+    return {**{k: v for k, v in cfg.items() if k != "github"},
+            "gitlab": peer["url"], "cache": peer["cache"],
+            "state_dir": peer["state_dir"], "_peer_kind": "github",
+            "_tag_exceptions": peer["tag_exceptions"]}
 
 
 def _admit_storage(cfg: dict, deadline: float, phase: str) -> None:
@@ -561,10 +601,20 @@ def _push(git: Git, side: str, remote: str, source_side: str, ref: str, oid: str
     # The ancestry guard above admits only fast-forwards. The exact lease also
     # rejects a destination deletion/rewind/create after our fetched snapshot.
     args.append(f"--force-with-lease={ref}:{expected_dst_oid or ''}")
-    if side == "gitlab":
+    if side == "gitlab" and (git.config or {}).get("_peer_kind") != "github":
         args.extend(["-o", "ci.skip"])
     args.extend([remote, f"{source_ref}:{ref}"])
     git.run(*args)
+
+
+def _accepted_tag_exception(git: Git, cfg: dict, ref: str, left: str, right: str) -> bool:
+    if cfg.get("_peer_kind") != "github":
+        return False
+    for row in cfg.get("_tag_exceptions", []):
+        if (row["ref"], row["hub_oid"], row["peer_oid"]) == (ref, left, right):
+            return all(git.run("rev-parse", "--verify", oid + "^{}") == row["peeled_commit"]
+                       for oid in (left, right))
+    return False
 
 
 def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
@@ -589,6 +639,8 @@ def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
         if left == right:
             continue
         if ref.startswith("refs/tags/") and left is not None and right is not None:
+            if _accepted_tag_exception(git, cfg, ref, left, right):
+                continue
             holds.append({"ref": ref, "reason": "tag-mismatch"})
             continue
         if left is None and right is None:
@@ -750,7 +802,8 @@ def _ensure_cache(cfg: dict, executable: str, initialize: bool, deadline: float)
     return cache, state_path
 
 
-def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, dict]:
+def _run(cfg: dict, initialize: bool = False, *, deadline: float,
+         publish_status: bool = True) -> tuple[int, dict]:
     executable = cfg["git"]
     state_dir = Path(cfg["state_dir"])
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -780,7 +833,8 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, 
                     result = {"status": "initialized", "run_id": last.get("id"),
                               "observed": {s: len(prior["seen"][s]) for s in ("hub", "gitlab")},
                               "actions": [], "pending": last.get("pending", [])}
-                    _atomic_json(state_dir / "status.json", result)
+                    if publish_status:
+                        _atomic_json(state_dir / "status.json", result)
                     return 0, result
                 raise WorkerError("baseline state exists but is not a completed initialization", code=2)
             state = _new_state()
@@ -810,7 +864,8 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, 
                                                 "started_at": started, "initialized_at": started})
             result = {"status": "initialized", "run_id": run_id, "observed": {
                 side: len(snapshots[side]) for side in ("hub", "gitlab")}, "actions": [], "pending": deletion_holds}
-            _atomic_json(state_dir / "status.json", result)
+            if publish_status:
+                _atomic_json(state_dir / "status.json", result)
             return 0, result
         # Persist first-seen refs and deletions before any outbound push. A
         # failed push or final poll must not erase a deletion observation.
@@ -833,7 +888,8 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, 
         result = {"status": "ok" if not holds else "held", "run_id": run_id,
                   "actions": actions, "pending": holds, "observed": {
                       side: len(final[side]) for side in ("hub", "gitlab")}}
-        _atomic_json(state_dir / "status.json", result)
+        if publish_status:
+            _atomic_json(state_dir / "status.json", result)
         return (1 if any(item.get("reason") == "push-failed" for item in holds) else 0), result
     finally:
         try:
@@ -842,10 +898,61 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float) -> tuple[int, 
             os.close(lock_fd)
 
 
+def _run_topology(cfg: dict, initialize: bool = False, *, initialize_github: bool = False,
+                  deadline: float) -> tuple[int, dict]:
+    state_dir = Path(cfg["state_dir"])
+    state_dir.mkdir(parents=True, exist_ok=True)
+    fd = os.open(state_dir / "topology.lock", os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return 3, {"status": "lock-busy", "at": _now()}
+        if "github" not in cfg:
+            if initialize_github:
+                raise WorkerError("GitHub is not configured", code=2)
+            return _run(cfg, initialize, deadline=deadline)
+        legacy = {k: v for k, v in cfg.items() if k != "github"}
+        github = _github_config(cfg)
+        _validate_local_repositories(github, cfg["git"], deadline)
+        if initialize_github:
+            code, result = _run(github, True, deadline=deadline, publish_status=False)
+            if code:
+                return code, result
+            result = {"status": "initialized-github", "at": _now(), "peers": {"github": result}}
+            _atomic_json(state_dir / "status.json", result)
+            return 0, result
+        results = {}
+        codes = []
+        for name, peer in (("github", github), ("gitlab", legacy)):
+            code, result = _run(peer, initialize, deadline=deadline, publish_status=False)
+            results[name] = result
+            codes.append(code)
+            if code:
+                break
+        # GitHub changes reached GitLab in the ordered passes above. If GitLab
+        # contributed changes, give GitHub one bounded second pass; otherwise
+        # the next scheduled invocation continues without resetting pair state.
+        if (not initialize and not any(codes) and results.get("gitlab", {}).get("actions")
+                and deadline - time.monotonic() > 5):
+            code, result = _run(github, deadline=deadline, publish_status=False)
+            results["github_followup"] = result
+            codes.append(code)
+        result = {"format": "fdisbull-mirror-topology-1", "at": _now(),
+                  "status": "ok" if not any(codes) and all(
+                      r.get("status") in {"ok", "initialized"} for r in results.values()) else "held",
+                  "peers": results, "tag_exceptions": cfg["github"]["tag_exceptions"]}
+        _atomic_json(state_dir / "status.json", result)
+        return next((code for code in codes if code), 0), result
+    finally:
+        os.close(fd)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--initialize", action="store_true", help="capture baseline without pushing")
+    parser.add_argument("--initialize-github", action="store_true", help="capture only the new GitHub baseline")
     args = parser.parse_args(argv)
     cfg = None
     deadline = None
@@ -854,7 +961,10 @@ def main(argv: list[str] | None = None) -> int:
         deadline = time.monotonic() + cfg["run_timeout_s"]
         _validate_volumes(cfg, deadline)
         _validate_local_repositories(cfg, cfg["git"], deadline)
-        code, result = _run(cfg, args.initialize, deadline=deadline)
+        if args.initialize and args.initialize_github:
+            raise WorkerError("initialization modes are mutually exclusive", code=2)
+        code, result = _run_topology(cfg, args.initialize, initialize_github=args.initialize_github,
+                                     deadline=deadline)
     except StorageHeld as exc:
         result = {"status": "storage-held", "storage": exc.receipt, "at": _now()}
         if cfg is not None:

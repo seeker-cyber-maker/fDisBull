@@ -223,3 +223,22 @@ def test_installer_storage_overrides_and_legacy_manifest_migration(mirrors):
     assert new_manifest['storage_checker_sha256'] == hashlib.sha256(checker_path.read_bytes()).hexdigest()
     assert new_manifest['original_deny_current_branch'] == manifest['original_deny_current_branch']
     assert baseline.read_bytes() == b'prior cache identity and cursor\n'
+
+
+def test_managed_upgrade_preserves_enabled_github_peer(mirrors):
+    m = mirrors
+    args, state, _, _ = installer_args(m)
+    cmd(*args, '--apply', env=m['env'])
+    config = state / 'config.json'
+    value = json.loads(config.read_text())
+    peer = dict(url='https://github.com/seeker-cyber-maker/fDisBull.git',
+                cache=str(m['root'] / 'github-cache.git'),
+                state_dir=str(m['root'] / 'github-state'), tag_exceptions=[])
+    value['github'] = peer
+    config.write_text(json.dumps(value))
+    manifest = state / 'install-manifest.json'
+    recorded = json.loads(manifest.read_text())
+    recorded['config_sha256'] = hashlib.sha256(config.read_bytes()).hexdigest()
+    manifest.write_text(json.dumps(recorded))
+    cmd(*args, '--apply', env=m['env'])
+    assert json.loads(config.read_text())['github'] == peer
