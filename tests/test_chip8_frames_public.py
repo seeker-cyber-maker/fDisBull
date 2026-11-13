@@ -19,7 +19,7 @@ def test_sample_timeline_script_accepts_stored_points():
 
 @pytest.mark.parametrize('bad',[
     {'op':'timeline-start','max_frames':True},
-    {'op':'timeline-start','storage_mode':'delta'},
+    {'op':'timeline-start','storage_mode':'unknown'},
     {'op':'timeline-advance','frames':0},
     {'op':'timeline-rewind','frames':-1},
     {'op':'timeline-rewind','policy':{'preserve':['v0']}},

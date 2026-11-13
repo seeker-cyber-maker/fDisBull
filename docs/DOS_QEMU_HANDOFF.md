@@ -5204,3 +5204,105 @@ qualification and G0-G8 conversion remain separate work. Raw active-fence
 migration and forced-overdue-backlog qualification remain open. All 141 DOS
 surfaces and seven parity campaigns remain open before any default promotion
 or DOSBox-X removal.
+
+## 2026-11-12 — CHIP-8 lossless frame-history checkpoint deltas
+
+Continued from `01d5bfcedfe5de697934bcc1159bb47efe092a47` on
+`codex/qemu-dosbox-parity-20261110` / `agent/qemu-sunset-284eb73c`.
+Draft !117 keeps its originating handoff marker, target
+`agent/execution-event-search-284eb73c` and base
+`089c1841c415eb2b5cdfa90d03b6291a07f73919`. DOSBox-X remains default and
+retained. No CI, native rebuild, release/tag, merge, shared installation or
+default change.
+
+`timeline_start(storage_mode='delta', keyframe_interval=8)` now selects
+`fdisbull-qemu-chip8-frames-v3` on the existing v6 runtime with an explicit
+checkpoint tool. Full storage remains the default. The native v6 binary,
+VMState6/min6, host state6 and key ownership model remain unchanged. V5 format1
+and v6 format2 full histories retain their original runtime bindings and
+metadata semantics; cross-binary VMState restore is not supported.
+
+The host captures the complete native checkpoint once without publishing a
+redundant full artifact. Roots and bounded-depth keyframes retain full bytes;
+other nodes use the existing XOR/zlib codec only when encoded payload plus
+complete stored metadata is smaller than the full representation. Unprofitable
+or oversized deltas fall back to full storage. Descriptors bind parent point,
+base/result byte lengths and SHA-256, depth, codec, payload and full metadata.
+The interval is 1–128, each reconstructed state is at most 128 MiB and each
+encoded delta payload at most 16 MiB. Full PNGs and complete input journals
+remain retained. Accounting includes retained payloads, storage metadata,
+PNGs and journals; project artifact limits and separate live QCOW2 growth still
+apply. Savings are not guaranteed.
+
+Advance validates the current delta parent and its image/key proof before a
+new intent or input/guest effects. Restore and pin validate the selected bounded
+chain first. Corrupt child/base payloads, sidecars and PNGs refuse without
+execution, journal/artifact publication or replacement-owner allocation.
+Explicit pinning emits a standalone full state from reconstructed bytes, with
+no new native capture. Dirty input still refuses pinning; rewind-zero restores
+recorded input. Branches and prior journals remain available. A minimal shared
+prepared-load hook retains the DOS restore path and dispatches CHIP-8 bytes to
+its existing staged full restore and fresh key-owner adoption without injection.
+Actual byte-budget failure after execution still retains uncertainty and closes
+the owner; it does not promise no effects for every future growth failure.
+
+Nine new authored native delta cases pass locally on macOS arm64. They cover
+an independent raw-capture oracle, bounded keyframes and branches, exact pins,
+corruption refusal, budget admission, saved scripts, pending hooks and a fresh
+Python process restoring an actual delta child with held `f`, active RAM/fetch
+layers, hooks and RNG continuation. The combined new/retained frame and key
+selection passes 43 cases; 72 classic/device/layer/history cases pass on v6,
+323 DOSBox-X history/delta/undo/trial cases pass and 63 capability, skill,
+package and migration cases pass. These selections overlap.
+
+Integrated collection accounts for **3,332 distinct eligible cases across
+201 files**, under **1,219 frozen Python hashes**. The first attempt stops after
+16 passes on a retained DOSBox-X startup RPC EOF. The one remaining-case pass
+completes 3,316 cases without failures or skips, including that failed case;
+every eligible case has a passing observation. **The original full attempt is
+not clean, and DOSBox-X startup reliability remains unresolved.** A same-time
+macOS report has the prior `__stack_chk_fail -> DEBUG_ShowMsg -> main`
+stack-buffer abort signature. The failing child PID and triggering message
+remain unconfirmed; startup Python files, the test and the retained binary
+match the baseline. Two predeclared exclusions remain: unavailable private
+DinoPark identification input and the unchanged pre-existing delta-discovery
+assertion. The obsolete v1-only CLS refusal is excluded only from v6 replay.
+
+Two immutable-copy audits validate six/seven continuous revisions, each with
+one full root and one delta child. They reconstruct complete bytes/metadata,
+decode PNG pixels, check saved key proof and find no unindexed full/delta
+artifacts. The actual cold child has two explicit byte-identical full pins;
+the saved-script history retains its accepted input receipt after restore.
+Private receipts: chip8-frame-delta-artifact-closure-audit-01/audit.json and
+chip8-frame-delta-artifact-closure-audit-02/audit.json. Native capture bytes and
+the original test databases remain private.
+
+A separate native witness restores an actual format2 history created before
+this slice with the updated host and original v6 runtime. Full CPU/RAM,
+environment, pixels, held `f` and accepted counters match; the owner adopts
+fresh epoch/token values without injection. Its pin matches the original state
+bytes/metadata, then a new format3 timeline releases `f` once and records one
+native tick as a delta child. Original DB/ROM/69 external objects remain
+unchanged. Receipt: chip8-v6-frame-deltas-upgraded-host-04/witness.json.
+
+Fresh identity checks match all twelve retained native binaries, all six
+CHIP-8 package manifests/patches and 57 listed built-source files. Shared
+selector/runtime metadata, DOSBox-X and component04 remain unchanged; the
+component's builder boot qualification remains pending. Private run/receipt
+names use chip8-frame-deltas-native-final-02,
+chip8-frame-deltas-preservation-final-01,
+chip8-frame-deltas-preservation-tail-01, chip8-frame-deltas-coverage-02.json,
+chip8-frame-deltas-dosbox-startup-01.json,
+chip8-frame-deltas-compat-final-01, chip8-frame-deltas-dosbox-final-01,
+chip8-frame-deltas-doc-package-final-02 and
+chip8-frame-deltas-preserved-baselines-01.json.
+
+Existing DOS task-private layers, trials, histories, hooks, checkpoints and
+master/slave/nested IRQ paths remain exercised. The CHIP-8 boundary is still a
+native virtual 60 Hz sample, with `completed_guest_frame=null`; no VBlank,
+completed drawing, historical timing or broad game/host compatibility follows.
+Synchronous artifact reads/hashing and shared emergency GDB recovery do not
+guarantee a hard wall-clock return bound. Selected CHIP-8 CPU/RAM undo, trials,
+IRQ/task-private semantics, audio, raw active-fence migration, forced-overdue
+backlog qualification and G0-G8 conversion remain open. All 141 DOS surfaces
+and seven parity campaigns remain open before promotion or DOSBox-X removal.

@@ -34,6 +34,9 @@ class Chip8HistoryMixin(QemuDOSHistoryMixin):
                     not isinstance(digest,str) or len(digest)!=64 or any(c not in '0123456789abcdef' for c in digest)):
                 raise ValueError('Invalid CHIP-8 history node identity or metadata hash')
 
+    def _history_load_prepared(self,prepared,*,timeout_ms):
+        return self._load_state_data(prepared['data'],prepared['metadata'],source_id=prepared['artifact'],timeout_ms=timeout_ms)
+
     def _history_supported(self):
         if (self.closed or self.identity.get('cpu_subset') not in (SUBSET,FRAME_SUBSET,KEY_SUBSET) or
                 self._checkpoint_tool is None or self.vm.checkpoint_disk is None):
@@ -67,6 +70,10 @@ class Chip8HistoryMixin(QemuDOSHistoryMixin):
 
     def _history_latest(self,history):
         manifest,row=super()._history_latest(history)
+        from .chip8_frame_storage import FORMAT as DELTA_FORMAT, validate_index
+        if manifest.get('format')==DELTA_FORMAT:
+            validate_index(self,manifest)
+            return manifest,row
         # Validate every indexed node at attach/read, without repeatedly hashing
         # up to the full retained checkpoint budget. The selected restore does
         # the full content hash in _history_state_artifact before dispatch.

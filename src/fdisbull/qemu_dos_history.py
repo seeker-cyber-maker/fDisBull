@@ -702,6 +702,11 @@ class QemuDOSHistoryMixin:
             invalid_reason=manifest.get('invalid_reason'),
             fingerprint=self._history_live_fingerprint())
 
+    def _history_load_prepared(self,prepared,*,timeout_ms):
+        from .qemu_dos_checkpoint import load_process_state_data
+        return load_process_state_data(self,prepared['data'],prepared['metadata'],
+                                       source_id=prepared['artifact'],timeout_ms=timeout_ms)
+
     @_history_operation
     def rewind(self, count=1, *, history=None, node=None, timeout_ms=60000):
         _positive_int(count, 'count', 1, MAX_NODES)
@@ -750,9 +755,7 @@ class QemuDOSHistoryMixin:
                     restored = self.load_state(target['checkpoint']['artifact'],
                                                timeout_ms=self._history_remaining_ms())
                 else:
-                    from .qemu_dos_checkpoint import load_process_state_data
-                    restored = load_process_state_data(self, prepared['data'], prepared['metadata'],
-                        source_id=prepared['artifact'], timeout_ms=self._history_remaining_ms())
+                    restored = self._history_load_prepared(prepared,timeout_ms=self._history_remaining_ms())
                 self._history_verify_restored(restored)
                 current = self.registers()
                 expected = target.get('registers')

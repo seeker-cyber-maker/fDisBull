@@ -288,7 +288,9 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                     self.capabilities.update(layers=True,code_layers=True,hooks=True,
                                              histories=checkpoint_tool is not None,rewind=checkpoint_tool is not None)
                     if self.identity['cpu_subset'] in (FRAMES_SUBSET,KEY_SUBSET):self.capabilities['frame_timeline']=checkpoint_tool is not None
-                    if self.identity['cpu_subset']==KEY_SUBSET:self.capabilities['frame_key_ownership']=True
+                    if self.identity['cpu_subset']==KEY_SUBSET:
+                        self.capabilities['frame_key_ownership']=True
+                        self.capabilities['frame_delta_storage']=checkpoint_tool is not None
                     self._reset_chip8_layers()
                     layer=self._chip8_layer_query()
                     if layer['generation']!=0 or layer['execution-bytes'] or not layer['backing-valid']:
@@ -757,7 +759,7 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
             raise ValueError('CHIP-8 runtime identity changed')
         self._stopped()
 
-    def save_state(self,name='chip8-state.qcow2',*,max_bytes=None,timeout_ms=60000):
+    def _capture_state(self,name='chip8-state.qcow2',*,max_bytes=None,timeout_ms=60000):
         from .external_files import _file_name
         from .qemu_checkpoint import snapshot_job,validate_qcow_header
         _file_name(name)
@@ -803,7 +805,22 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                 if environment is not None:metadata['environment']=environment
                 if layer_native is not None:metadata.update(layer_native=layer_native,layer_state=layer_state,hook_state=hook_state)
                 if key_state is not None:metadata['key_state']=key_state
-                artifact=self.project._debug_artifact(self.run_id,name,'state',data,metadata)
+                _remaining(deadline)
+                return dict(name=name,kind='state',data=data,size=len(data),sha256=_sha(data),metadata=metadata)
+            except BaseException as error:
+                if artifact is not None and getattr(error,'result',None) is None:error.result=artifact
+                try:self.close()
+                except BaseException:pass
+                raise
+
+    def save_state(self,name='chip8-state.qcow2',*,max_bytes=None,timeout_ms=60000):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 snapshot timeout')
+        deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
+        with self._budget(owner,deadline):
+            captured=self._capture_state(name,max_bytes=max_bytes,timeout_ms=_remaining(deadline))
+            artifact=None
+            try:
+                artifact=self._artifact(name,'state',captured['data'],captured['metadata'])
                 _remaining(deadline)
                 return artifact
             except BaseException as error:
@@ -813,21 +830,31 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                 raise
 
     def load_state(self,artifact,*,timeout_ms=60000):
-        from .qemu_checkpoint import snapshot_job,validate_qcow_header
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 snapshot timeout')
-        deadline=time.monotonic()+timeout_ms/1000;old=self.vm
-        with self._budget(old,deadline):
+        deadline=time.monotonic()+timeout_ms/1000;owner=self.vm
+        with self._budget(owner,deadline):
             self._checkpoint_admit()
             row=self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',(artifact,)).fetchone()
             if row is None or row['kind']!='state' or row['version']!=self.version['id']:
                 raise ValueError('CHIP-8 snapshot belongs to another project version')
             data=bytes(row['data']);metadata=json.loads(row['metadata'])
+            if _sha(data)!=row['sha256']:raise ValueError('CHIP-8 snapshot identity differs')
+            return self._load_state_data(data,metadata,source_id=artifact,timeout_ms=_remaining(deadline))
+
+    def _load_state_data(self,data,metadata,*,source_id,timeout_ms=60000):
+        from .qemu_checkpoint import snapshot_job,validate_qcow_header
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Invalid CHIP-8 snapshot timeout')
+        deadline=time.monotonic()+timeout_ms/1000;old=self.vm
+        with self._budget(old,deadline):
+            self._checkpoint_admit()
+            if not isinstance(data,bytes) or not isinstance(metadata,dict) or not isinstance(source_id,str) or not source_id:
+                raise ValueError('Invalid prepared CHIP-8 checkpoint')
             expected_format=('fdisbull-qemu-chip8-state-6' if self.identity['cpu_subset']==KEY_SUBSET else
                              'fdisbull-qemu-chip8-state-5' if self.identity['cpu_subset']==FRAMES_SUBSET else
                              'fdisbull-qemu-chip8-state-4' if self.identity['cpu_subset']==LAYERS_SUBSET else
                              'fdisbull-qemu-chip8-state-3' if self.identity['cpu_subset']==CLASSIC_SUBSET else
                              'fdisbull-qemu-chip8-state-2' if self.identity['cpu_subset']==DEVICE_SUBSET else 'fdisbull-qemu-chip8-state-1')
-            if (len(data)>128*1024*1024 or _sha(data)!=row['sha256'] or metadata.get('format')!=expected_format
+            if (len(data)>128*1024*1024 or metadata.get('format')!=expected_format
                     or metadata.get('identity')!=self.identity):raise ValueError('CHIP-8 snapshot identity differs')
             if expected_format.endswith(('-2','-3','-4','-5','-6')):
                 saved_environment=_validate_environment(metadata.get('environment'))
@@ -887,7 +914,7 @@ class Chip8DebugSession(Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8L
                         (self.breakpoints,self.next_bp,self._chip8_hooks,self._chip8_hook_pending,self._chip8_hook_deleting,
                          self._layer_active,self._layer_generation,self._layer_ram_base,self._layer_ram_applied)=staged
                 _remaining(deadline)
-                result=dict(artifact=artifact,sha256=row['sha256'],registers=registers,
+                result=dict(artifact=source_id,sha256=_sha(data),registers=registers,
                             ram_sha256=_sha(ram),fault=fault,host_files_restored=False)
                 if environment is not None:result['environment']=environment
                 if layer_native is not None:result.update(layer=layer_native,hooks=hook_mapping)

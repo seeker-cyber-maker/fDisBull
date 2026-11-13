@@ -126,3 +126,21 @@ remain material; this storage option does not normalize those tasks.
 Native states, deltas, databases and raw runtime receipts remain private and
 outside Git. The live history ends with its owning session; restart preserves
 pinned full Anchor Stones and exported stored images, not the live delta chain.
+
+## CHIP-8 v6 sample timelines
+
+The experimental CHIP-8 v6 timeline also offers opt-in lossless full-checkpoint
+delta storage, using `fdisbull-qemu-chip8-frames-v3` and unchanged native
+VMState6. Full storage remains the default; earlier v5/v6 full histories retain
+their existing formats and exact-runtime binding. Unlike the eviction behavior
+described above, CHIP-8 retains recorded branches and their parent chains.
+
+Each selected parent is materialized and checked before recording, and each
+selected point's image and key proof are checked before restore or pin. Full
+PNGs, key journals and checkpoint metadata remain retained; `timeline_pin`
+emits a standalone full state. Encoded state payloads, storage metadata, PNGs
+and journals count against the timeline budget, while the project artifact cap
+can bind earlier and live QCOW2 growth is separate. Nine bounded authored native CHIP-8 delta witnesses passed locally on macOS
+arm64. They do not imply completed guest frames,
+selected CPU/RAM undo or broader runtime parity. See the
+[CHIP-8 profile](CHIP8_QEMU.md) for its input and restore limits.

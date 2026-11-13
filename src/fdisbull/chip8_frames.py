@@ -14,6 +14,7 @@ from .dosbox_rpc import DebuggerError
 
 FORMAT='fdisbull-qemu-chip8-frames-v1'
 KEY_FORMAT='fdisbull-qemu-chip8-frames-v2'
+from .chip8_frame_storage import FORMAT as DELTA_FORMAT
 KIND='chip8-60hz-samples'
 MODEL='fdisbull-chip8-native-frame-sample-1'
 ENV='fdisbull-chip8-display-keypad-timers-rng-layers-frames-4'
@@ -23,6 +24,9 @@ PERIOD=16666667
 class Chip8FramesMixin:
     @classmethod
     def _validate_manifest(cls,manifest):
+        if isinstance(manifest,dict) and manifest.get('format')==DELTA_FORMAT:
+            from .chip8_frame_storage import validate_manifest
+            return validate_manifest(manifest)
         if not isinstance(manifest,dict) or manifest.get('format') not in (FORMAT,KEY_FORMAT):
             return Chip8HistoryMixin._validate_manifest(manifest)
         copied=dict(manifest,format=Chip8HistoryMixin.HISTORY_FORMAT)
@@ -76,6 +80,9 @@ class Chip8FramesMixin:
     def _history_summary(self,manifest,artifact=None):
         result=super()._history_summary(manifest,artifact)
         result['format']=manifest['format']
+        if manifest['format']==DELTA_FORMAT:
+            result['state_bytes_used']=sum(self._frame_state_size(node,manifest) for node in manifest['nodes'])
+            result['reconstructed_state_bytes']=sum(node['checkpoint']['size'] for node in manifest['nodes'])
         return result
 
     def _frame_capability(self):
@@ -149,7 +156,7 @@ class Chip8FramesMixin:
         live=getattr(self,'_qemu_history_live',None);selected=timeline or (live.get('history') if live else None)
         if selected is None:raise ValueError('Start or attach a CHIP-8 timeline first')
         manifest,_=self._history_latest(selected)
-        if manifest.get('format')!=(KEY_FORMAT if self.identity['cpu_subset']==KEY_SUBSET else FORMAT):raise ValueError('Selected history is not a CHIP-8 frame timeline')
+        if manifest.get('format') not in ((KEY_FORMAT,DELTA_FORMAT) if self.identity['cpu_subset']==KEY_SUBSET else (FORMAT,)):raise ValueError('Selected history is not a CHIP-8 frame timeline')
         for node in manifest['nodes']:self._image_row(node['frame']['image'])
         return manifest
 
@@ -166,11 +173,35 @@ class Chip8FramesMixin:
         except (OSError,ValueError) as error:raise ValueError('Invalid CHIP-8 timeline PNG') from error
         return row
 
-    def _history_validate_node_before_restore(self,target):
+    def _frame_delta(self,manifest):
+        return manifest.get('format')==DELTA_FORMAT
+
+    def _frame_state_size(self,node,manifest):
+        if self._frame_delta(manifest):
+            from .chip8_frame_storage import stored_size
+            return stored_size(node['checkpoint'])
+        return node['checkpoint']['size']
+
+    def _history_prepare_restore(self,manifest,target):
+        if not self._frame_delta(manifest):return None
+        from .chip8_frame_storage import materialize
+        prepared=materialize(self,manifest,target)
+        self._chip8_prepared_frame=(target['id'],prepared)
+        return prepared
+
+    def _history_validate_node_before_restore(self,target,*,manifest=None):
         frame=target.get('frame')
+        cached=getattr(self,'_chip8_prepared_frame',None)
+        self._chip8_prepared_frame=None
         if frame is None:return
         self._image_row(frame['image'])
-        row=self._history_state_artifact(target['checkpoint']);metadata=json.loads(row['metadata'])
+        if manifest is not None and self._frame_delta(manifest):
+            from .chip8_frame_storage import materialize
+            metadata=materialize(self,manifest,target)['metadata']
+        elif cached and cached[0]==target['id']:
+            metadata=cached[1]['metadata']
+        else:
+            row=self._history_state_artifact(target['checkpoint']);metadata=json.loads(row['metadata'])
         environment=metadata.get('environment')
         if not isinstance(environment,dict):raise ValueError('CHIP-8 checkpoint lacks frame environment')
         try:pixels=bytes.fromhex(environment['pixels-hex'])
@@ -227,12 +258,18 @@ class Chip8FramesMixin:
                       cursor=live.get('cursor') if valid else None,valid=valid,unit='native 60 Hz sample',completed_guest_frame=None,
                       frame_config=deepcopy(manifest['frame_config']),nodes=deepcopy(manifest['nodes']),
                       input_dirty=manifest.get('input_dirty',False),pending_inputs=deepcopy(manifest.get('pending_inputs',[])),
-                      storage_mode='full',keyframe_interval=manifest['frame_config']['keyframe_interval'],
-                      state_bytes_used=sum(n['checkpoint']['size'] for n in manifest['nodes']),
+                      storage_mode=manifest['frame_config']['storage_mode'],keyframe_interval=manifest['frame_config']['keyframe_interval'],
+                      state_bytes_used=sum(self._frame_state_size(n,manifest) for n in manifest['nodes']),
                       image_bytes_used=sum(n['frame']['image']['size'] for n in manifest['nodes']),
-                      input_bytes_used=(len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode()) if manifest['format']==KEY_FORMAT else 0),
-                      storage_bytes_used=(sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])+
-                          (len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode()) if manifest['format']==KEY_FORMAT else 0)))
+                      input_bytes_used=(len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode()) if manifest['format'] in (KEY_FORMAT,DELTA_FORMAT) else 0),
+                      storage_bytes_used=(sum(self._frame_state_size(n,manifest)+n['frame']['image']['size'] for n in manifest['nodes'])+
+                          (len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode()) if manifest['format'] in (KEY_FORMAT,DELTA_FORMAT) else 0)))
+        if self._frame_delta(manifest):
+            output.update(full_state_points=sum(n['checkpoint']['storage']['kind']=='full' for n in manifest['nodes']),
+                          delta_state_points=sum(n['checkpoint']['storage']['kind']=='delta' for n in manifest['nodes']),
+                          retained_encoded_state_payload_bytes=sum(n['checkpoint']['storage']['payload_size'] for n in manifest['nodes']),
+                          reconstructed_state_payload_bytes=sum(n['checkpoint']['size'] for n in manifest['nodes']),
+                          retained_state_metadata_bytes=sum(n['checkpoint']['storage']['metadata_size'] for n in manifest['nodes']))
         return output
 
     def _frame_current(self,manifest):
@@ -246,8 +283,8 @@ class Chip8FramesMixin:
     def _frame_budget(self,manifest,count=1,input_reserve=0):
         config=manifest['frame_config'];nodes=manifest['nodes']
         if len(nodes)+count>min(config['max_frames'],config['max_captures']):raise ValueError('CHIP-8 timeline capture budget exhausted')
-        used=sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in nodes)
-        if manifest.get('format')==KEY_FORMAT:used+=len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode())
+        used=sum(self._frame_state_size(n,manifest)+n['frame']['image']['size'] for n in nodes)
+        if manifest.get('format') in (KEY_FORMAT,DELTA_FORMAT):used+=len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode())
         if nodes:
             previous=self._node(manifest,manifest.get('cursor')) or nodes[-1]
             state_reserve=min(config['max_state_bytes'],max(4096,previous['checkpoint']['size'],self._history_disk_bytes() or 0))
@@ -260,7 +297,7 @@ class Chip8FramesMixin:
     def _key_journal_budget(self,manifest,count):
         journal=manifest.get('input_journal',[])
         if not isinstance(journal,list) or len(journal)+count>1024:raise ValueError('CHIP-8 input journal budget exhausted')
-        used=sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])
+        used=sum(self._frame_state_size(n,manifest)+n['frame']['image']['size'] for n in manifest['nodes'])
         used+=len(json.dumps(journal,sort_keys=True,separators=(',',':')).encode())
         if used+count*8192>manifest['max_bytes']:raise ValueError('CHIP-8 input journal byte budget exhausted')
         project_used=int(self.project.db.execute('SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0])
@@ -272,7 +309,9 @@ class Chip8FramesMixin:
         for value,name,maximum in ((max_frames,'max_frames',MAX_NODES),(max_captures,'max_captures',MAX_NODES),
                 (max_bytes,'max_bytes',1024**3),(max_state_bytes,'max_state_bytes',MAX_STATE),(max_image_bytes,'max_image_bytes',16*1024**2),
                 (keyframe_interval,'keyframe_interval',128)):_positive_int(value,name,1,maximum)
-        if storage_mode!='full' or type(period_ns) is not int or period_ns!=PERIOD:raise ValueError('CHIP-8 timeline requires full checkpoints and native 60 Hz')
+        if storage_mode not in ('full','delta') or type(period_ns) is not int or period_ns!=PERIOD:raise ValueError('CHIP-8 timeline requires full or delta storage and native 60 Hz')
+        if storage_mode=='delta' and (self.identity.get('cpu_subset')!=KEY_SUBSET or not self.capabilities.get('frame_delta_storage')):
+            raise ValueError('CHIP-8 delta frame storage requires v6 and a checkpoint tool')
         self._frame_capability()
         if timeline is not None:
             manifest=self._frame_manifest(timeline);live=getattr(self,'_qemu_history_live',None)
@@ -284,7 +323,7 @@ class Chip8FramesMixin:
         config=dict(max_frames=max_frames,max_bytes=max_bytes,max_state_bytes=max_state_bytes,max_image_bytes=max_image_bytes,
                     max_captures=max_captures,storage_mode=storage_mode,keyframe_interval=keyframe_interval,period_ns=period_ns)
         ident=uuid.uuid4().hex
-        manifest=dict(format=(KEY_FORMAT if self.identity['cpu_subset']==KEY_SUBSET else FORMAT),id=ident,revision=0,parent_manifest=None,identity=self._history_identity(),
+        manifest=dict(format=(DELTA_FORMAT if storage_mode=='delta' else KEY_FORMAT if self.identity['cpu_subset']==KEY_SUBSET else FORMAT),id=ident,revision=0,parent_manifest=None,identity=self._history_identity(),
                       max_steps=min(max_frames,max_captures),max_bytes=max_bytes,nodes=[],head=None,cursor=None,
                       live_cursor_valid=False,invalid_reason=None,pending=dict(kind='frame-root',started=time.time_ns()),
                       history_kind=KIND,frame_config=config)
@@ -292,11 +331,18 @@ class Chip8FramesMixin:
         self._frame_budget(manifest);manifest,_=self._history_new_revision(manifest,pending=manifest['pending'])
         try:
             with self._history_internal():
-                checkpoint=self._history_checkpoint(remaining_bytes=max_state_bytes,node_name='chip8-frame-root.qcow2')
-                image,env=self._frame_image(max_image_bytes)
-                saved=json.loads(self._history_state_artifact(checkpoint)['metadata'])
+                node=uuid.uuid4().hex
+                if self._frame_delta(manifest):
+                    from .chip8_frame_storage import store
+                    captured=self._capture_state('chip8-frame-root.qcow2',max_bytes=max_state_bytes,timeout_ms=self._history_remaining_ms())
+                    image,env=self._frame_image(max_image_bytes);saved=captured['metadata']
+                    checkpoint=store(self,manifest,node,None,captured,reserve_bytes=image['size'])
+                else:
+                    checkpoint=self._history_checkpoint(remaining_bytes=max_state_bytes,node_name='chip8-frame-root.qcow2')
+                    image,env=self._frame_image(max_image_bytes)
+                    saved=json.loads(self._history_state_artifact(checkpoint)['metadata'])
                 if env!=saved.get('environment') or env!=self.chip8_environment():raise DebuggerError('CHIP-8 root image environment changed')
-                node=uuid.uuid4().hex;frame=dict(kind='initial-paused',image=image,completed_guest_frame=None)
+                frame=dict(kind='initial-paused',image=image,completed_guest_frame=None)
                 if self.identity['cpu_subset']==KEY_SUBSET:frame['keys']=self._chip8_keys_query()['held']
                 manifest['nodes'].append(dict(id=node,parent=None,checkpoint=checkpoint,
                     edge=dict(kind='root',completed_instruction=False),registers=self.registers(),created=time.time_ns(),frame=frame))
@@ -369,6 +415,7 @@ class Chip8FramesMixin:
                 raise ValueError('CHIP-8 frame key schedule counters exhausted')
             self._key_journal_budget(manifest,batches)
         elif inputs not in (None,[]):raise ValueError('CHIP-8 frame input schedules require v6')
+        if self._frame_delta(manifest):self._history_validate_node_before_restore(parent,manifest=manifest)
         self._history_admission()
         if self.identity['cpu_subset']==KEY_SUBSET:self._frame_admit(future_mask=first_mask,will_apply=bool(schedule.get(0)))
         else:self._frame_admit()
@@ -404,30 +451,34 @@ class Chip8FramesMixin:
                     if (stopped['state-generation']==(1<<64)-1 or stopped['next-deadline-ns']!=expected_next or
                             stopped['virtual-now-ns']<proof['sampled-virtual-now-ns']):
                         raise DebuggerError('CHIP-8 sample stopped timing differs')
-                    stage='checkpoint-capture'
-                    checkpoint=self._history_checkpoint(remaining_bytes=config['max_state_bytes'],node_name='chip8-frame.qcow2')
-                    stage='image-capture'
-                    image,env=self._frame_image(config['max_image_bytes'])
-                    saved=json.loads(self._history_state_artifact(checkpoint)['metadata'])
+                    stage='checkpoint-capture';node=uuid.uuid4().hex
+                    if self._frame_delta(manifest):
+                        from .chip8_frame_storage import store
+                        captured=self._capture_state('chip8-frame.qcow2',max_bytes=config['max_state_bytes'],timeout_ms=self._history_remaining_ms())
+                        stage='image-capture';image,env=self._frame_image(config['max_image_bytes']);saved=captured['metadata']
+                        stage='delta-publication';checkpoint=store(self,manifest,node,parent,captured,reserve_bytes=image['size'])
+                    else:
+                        checkpoint=self._history_checkpoint(remaining_bytes=config['max_state_bytes'],node_name='chip8-frame.qcow2')
+                        stage='image-capture';image,env=self._frame_image(config['max_image_bytes'])
+                        saved=json.loads(self._history_state_artifact(checkpoint)['metadata'])
                     if (env!=stopped or env!=saved.get('environment') or env['virtual-ticks']!=proof['completed-virtual-ticks'] or env['pixels-sha256']!=proof['pixels-sha256']
                             or env['frame-generation']!=proof['frame-generation'] or env!=self.chip8_environment()):
                         raise DebuggerError('CHIP-8 sampled image and stopped state differ')
-                    used=sum(n['checkpoint']['size']+n['frame']['image']['size'] for n in manifest['nodes'])
-                    if manifest['format']==KEY_FORMAT:used+=len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode())
-                    if used+checkpoint['size']+image['size']>config['max_bytes']:
+                    used=sum(self._frame_state_size(n,manifest)+n['frame']['image']['size'] for n in manifest['nodes'])
+                    if manifest['format'] in (KEY_FORMAT,DELTA_FORMAT):used+=len(json.dumps(manifest['input_journal'],sort_keys=True,separators=(',',':')).encode())
+                    if used+(self._frame_state_size({'checkpoint':checkpoint},manifest))+image['size']>config['max_bytes']:
                         raise ValueError('CHIP-8 timeline byte budget exceeded')
-                    node=uuid.uuid4().hex
                     frame=dict(kind='native-60hz-sample',image=image,virtual_ticks=proof['completed-virtual-ticks'],
                                sampled_ns=proof['sampled-virtual-now-ns'],stopped_ns=env['virtual-now-ns'],
                                phase_numerator=env['phase-numerator'],next_deadline_ns=env['next-deadline-ns'],
                                baseline_deadline_ns=proof['baseline-deadline-ns'],baseline_phase=phase,state_generation=env['state-generation'],
                                frame_generation=env['frame-generation'],pixels_sha256=env['pixels-sha256'],completed_guest_frame=None)
-                    if manifest['format']==KEY_FORMAT:frame.update(keys=self._chip8_keys_query()['held'],input=deepcopy(key_receipt))
+                    if manifest['format'] in (KEY_FORMAT,DELTA_FORMAT):frame.update(keys=self._chip8_keys_query()['held'],input=deepcopy(key_receipt))
                     manifest['nodes'].append(dict(id=node,parent=parent['id'],checkpoint=checkpoint,
                         edge=dict(kind='native-60hz-sample',completed_instruction=None,stop=deepcopy(result)),
                         registers=self.registers(),created=time.time_ns(),frame=frame))
                     manifest.update(head=node,cursor=node,live_cursor_valid=True,pending=None,invalid_reason=None)
-                    if manifest['format']==KEY_FORMAT:manifest.update(input_dirty=False,pending_inputs=[])
+                    if manifest['format'] in (KEY_FORMAT,DELTA_FORMAT):manifest.update(input_dirty=False,pending_inputs=[])
                     stage='node-publication'
                     manifest,_=self._history_new_revision(manifest);records.append(dict(point=node,parent=parent['id'],frame=deepcopy(frame)))
                     parent=manifest['nodes'][-1];committed_history=manifest['_artifact_id'];committed_point=node;last_journal=committed_history
@@ -457,7 +508,7 @@ class Chip8FramesMixin:
         else:
             target=self._node(manifest,point)
             if target is None:raise ValueError('Unknown CHIP-8 timeline point')
-        self._history_validate_node_before_restore(target)
+        self._history_validate_node_before_restore(target,manifest=manifest)
         restored=self.rewind(history=manifest['_artifact_id'],node=target['id'],timeout_ms=self._history_remaining_ms())
         result=self._frame_summary(self._frame_manifest(restored['history']))
         result.update(rewound_frames=frames,restore=restored,completed_guest_frame=None)
@@ -476,10 +527,15 @@ class Chip8FramesMixin:
         from .external_files import _file_name
         _file_name(name);manifest=self._frame_manifest();node=self._frame_current(manifest)
         if manifest.get('input_dirty'):raise ValueError('Restore or capture dirty CHIP-8 frame input before pinning')
+        if self._frame_delta(manifest):
+            self._history_validate_node_before_restore(node,manifest=manifest)
+            from .chip8_frame_storage import materialize
+            prepared=materialize(self,manifest,node)
+            return self._artifact(name,'state',prepared['data'],prepared['metadata'])
         row=self._history_state_artifact(node['checkpoint']);return self._artifact(name,'state',bytes(row['data']),json.loads(row['metadata']))
 
     def _history_restore_manifest_updates(self,target,manifest):
-        if manifest.get('format')==KEY_FORMAT:
+        if manifest.get('format') in (KEY_FORMAT,DELTA_FORMAT):
             manifest['input_dirty']=False;manifest['pending_inputs']=[]
 
     @_history_operation

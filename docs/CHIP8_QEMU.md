@@ -464,9 +464,41 @@ The JSON routes remain `debug-frame-inputs`, `debug-keyboard-state` and
 `debug-timeline-*`; saved scripts use `frame-inputs`, `keyboard.state` and the
 corresponding timeline operations with backend `qemu-chip8`. The adapter only
 advertises `frame_key_ownership` on v6. Earlier runtimes refuse the capability
-before input effects. Full checkpoints and PNGs remain the storage model; this
-extension does not add CHIP-8 deltas, selected undo, trials, IRQ/task-private
-semantics or completed guest-frame/VBlank timing.
+before input effects. Full checkpoints and PNGs remain the default storage model.
+This extension does not add selected undo, trials, IRQ/task-private semantics or
+completed guest-frame/VBlank timing.
+
+
+## V6 lossless frame checkpoint storage
+
+The v6 runtime also has opt-in `timeline_start(storage_mode='delta',
+keyframe_interval=8)`. Full storage remains the default. Delta timelines use
+`fdisbull-qemu-chip8-frames-v3` with the same native VMState6; v5/v6 full
+timeline formats and their exact matching runtimes remain supported. This is
+host-side storage of complete checkpoint captures, not selected CPU/RAM undo or
+deterministic replay. Nine bounded authored native delta witnesses passed locally
+on macOS arm64; they do not establish general game compatibility or parity.
+
+A root or keyframe stores a complete QCOW2 artifact. Other points retain a
+bounded XOR/zlib delta only when its encoded payload and complete metadata are
+smaller; otherwise they become full keyframes. `keyframe_interval` is 1–128,
+and each retained encoded delta payload is limited to 16 MiB. The bounded parent chain binds
+every payload, full reconstructed bytes and complete checkpoint metadata by
+hash. PNG images and key-input journals remain complete. Before advancing from
+a delta parent, restoring a point or pinning it, the adapter validates the
+required chain and the selected image/key proof. Pinning produces an ordinary
+standalone full state artifact; a delta point does not retain a hidden duplicate
+full-state row. Cold restore uses the same v6 staged state and key-owner adoption
+without reinjecting key edges.
+
+Timeline accounting includes retained state payloads, their full storage
+metadata, PNGs and input journals. Each reconstructed state is bounded to
+128 MiB; the FDB runtime-artifact cap can bind before the timeline budget, and
+live private QCOW2 growth is separate. A future state can grow after an estimate:
+if the actual retained budget is exceeded after execution, the owner closes, the
+pending intent and any already-created artifacts remain, and completed prefix
+receipts must not be replayed. No game compatibility, IRQ/task-private, selected
+undo, trials, CI or DOS backend promotion follows from this storage mode.
 
 ## Local checks
 
@@ -546,4 +578,14 @@ FDISBULL_CHIP8_FRAME_KEYS_QEMU_IMG=/path/to/qemu-img \
 FDISBULL_REQUIRE_CHIP8_FRAME_KEYS=1 \
 python -m pytest -q tests/test_chip8_frame_keys.py \
   tests/test_chip8_frame_keys_public.py tests/test_chip8_frame_keys_native.py
+```
+
+For the v6 lossless delta witnesses, use the same v6 runtime selector:
+
+```sh
+FDISBULL_CHIP8_FRAME_KEYS_QEMU=/external/frame-keys/qemu-system-chip8 \
+FDISBULL_CHIP8_FRAME_KEYS_QEMU_IMG=/path/to/qemu-img \
+FDISBULL_REQUIRE_CHIP8_FRAME_KEYS=1 \
+python -m pytest -q tests/test_chip8_frame_deltas.py \
+  tests/test_chip8_frame_deltas_public.py tests/test_chip8_frame_deltas_native.py
 ```

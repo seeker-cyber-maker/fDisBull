@@ -248,9 +248,12 @@ def validate_script(script, *, session=None):
                             from .chip8_keys import validate_edges, validate_schedule
                             if op == 'timeline-rewind' and params.get('policy') not in (None, {}):
                                 raise ValueError('CHIP-8 frame histories restore full checkpoints without partial policies')
-                            if op == 'timeline-start' and (params.get('storage_mode','full') != 'full'
-                                    or params.get('period_ns',16666667) != 16666667):
-                                raise ValueError('CHIP-8 frame histories require full storage and the native 60 Hz sampling period')
+                            if op == 'timeline-start':
+                                if params.get('period_ns',16666667) != 16666667:
+                                    raise ValueError('CHIP-8 frame histories require the native 60 Hz sampling period')
+                                if (session is not None and params.get('storage_mode','full') == 'delta'
+                                        and not getattr(session,'capabilities',{}).get('frame_delta_storage')):
+                                    raise ValueError('CHIP-8 lossless delta storage requires native v6 and a checkpoint tool')
                         if native_frames:
                             if (op == 'frame-inputs' or op == 'timeline-advance'
                                     and params.get('inputs') not in (None, [])):

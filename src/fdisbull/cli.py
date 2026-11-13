@@ -330,7 +330,7 @@ METHODS = {
     "freedos-runtime-prepare": "Build a new private FreeDOS runtime component from locked inputs; boot_image,kernel_package,freecom_package,output,mtools_dir",
     "debug-frame-advance": "Advance native DOS renderer updates or CHIP-8 60 Hz samples without recording; run,[frames,timeout_ms]",
     "debug-frame-inputs": "Apply owned DOS keyboard or CHIP-8 hex-key edges at a stopped boundary; run,edges; requires frame-key ownership",
-    "debug-timeline-start": "Start bounded frame history; DOS supports full/delta storage, CHIP-8 full native 60 Hz sample checkpoints; run,[timeline,timeout_ms]",
+    "debug-timeline-start": "Start bounded full/delta frame history; CHIP-8 deltas require v6 and preserve native 60 Hz samples; run,[storage_mode,keyframe_interval,timeline,timeout_ms]",
     "debug-timeline-status": "Inspect live frame history, cursor, input log, retained bytes and validity; run",
     "debug-timeline-advance": "Capture DOS renderer updates or CHIP-8 60 Hz samples; run,[frames,inputs,timeout_ms]; indexed input requires native frame-key ownership",
     "debug-timeline-rewind": "Restore full frame state; run,[frames]; DOSBox adds partial policy; QEMU DOS/CHIP-8 add [timeline,point,timeout_ms], frames=0 restores current point",
