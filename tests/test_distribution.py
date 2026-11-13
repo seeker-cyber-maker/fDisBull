@@ -12,6 +12,8 @@ import pytest
 REQUIRED_SOURCE_FILES = (
     ".gitlab-ci.yml",
     ".github/workflows/ovh-bootstrap.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/native-debugger.yml",
     ".github/retained-workflows/ci.yml.disabled",
     ".github/retained-workflows/native-debugger.yml.disabled",
     "scripts/ci/github-bootstrap.py",
