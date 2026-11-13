@@ -488,6 +488,116 @@ relational provider contract, stable intrinsic semantics and observer limits;
 those native contracts are not universally discharged by sampled conformance.
 No actual valid-key acceptance or native Windows qualification is inferred.
 
+## BLA module initialization and terminating CLI
+
+`scripts/verify_bla_modules.py` extends the pinned function campaign with an
+independent module composition and fresh native module/CLI observations:
+
+```sh
+python scripts/verify_bla_modules.py \
+  --root /external/bla-upstream \
+  --babel-root /external/lasik-src/node_modules \
+  --output /external/evidence/bla-modules.json
+```
+
+An optional `--valid-key-file /private/external/key.json` supplies a UTF-8 key
+or a JSON object with a `key` or `authorization_key` string. The file is bounded
+and its candidate must match the pinned archive's key commitment before target
+execution. The runner never emits the key, ciphertext, returned flag or source.
+It records hashes and classifications. This is an authorized-target native
+probe, not a hostile-code sandbox.
+
+The original three modules **are different from the materialized clean
+reference under a global initialization observer**. The source checker
+classifies all 93/121/151 top-level statements, preserving order, lexical
+function declarations, pure allocations and reached effects. Each module
+installs a configurable non-enumerable getter on `globalThis` when its named
+property is absent. An event-capable host additionally sees 6/10/10 listener
+registrations. L2/L3 have a reached bounded crypto block with 36 SHA-256 and
+4 HMAC operations when the checked native builtin interfaces complete normally.
+Those calls remain explicit in the effect inventory even though their results
+are discarded. Getter names and source regions are retained as hashes/offsets.
+
+Native import observations independently confirm the added getter for every
+tier. Exported functions also retain different `.name` values, another
+reflection-level difference. The same six export keys and related constants
+and function contracts do not establish equality of the entire exported object
+under reflection. An unclassified initializer or changed control profile
+prevents the module certificate from claiming a complete inventory.
+
+The CLI has a stronger, separate result. The source-bound checker recomputes
+the seed, heap and selected-function proofs, extends heap noninterference to
+the two CLI functions, and compares their complete normalized ASTs. It checks
+the executed startup prefix and exact `require.main === module` dispatch order.
+Every admitted normal path prints usage, grant or denial output and reaches
+native `process.exit`. The decorative initializers occur later and cannot run
+on those paths. Each tier therefore has CLI `equivalent_under_contract` while
+its CommonJS initialization status remains `different`.
+
+This CLI theorem observes ordered normal console writes and exit status under
+ordinary string/undefined `argv[2]`, stable intrinsics, normally completing
+crypto/Buffer/console interfaces, native immediate exit and no exit handlers
+or reentry. Provider throws, failed writes, exception-stack formatting,
+reflection, resource/timing and concurrent observers remain outside that
+contract. The theorem covers the checked source paths; it does not establish
+that an unknown input satisfies a cryptographic acceptance predicate.
+
+The native oracle compiles exact unmodified source with real providers and
+uses a CommonJS main-module/argv bridge. No target suffix, body rewrite,
+provider replacement or exit substitution is installed. Its nine no-witness
+cases cover missing/empty arguments, short, minimum/maximum-length wrong keys,
+overlong and Unicode inputs, the honeypot string and an ordinary wrong key.
+All 27 original-target CLI cases agree byte-for-byte with the materialized
+reference on stdout/stderr and exit status; reports retain hashes and lengths.
+The corresponding 27 exported `tryUnlock` calls return null. A separate direct
+Node invocation of the original files crosschecks those same 27 CLI cases
+against the bridge. Finite observations and the static theorem remain separate.
+
+Actual valid-key acceptance for this **archived tiered v6** remains unverified:
+the later solved v6 is a different edition and its witness does not match the
+archive's commitment. Without a matching external key, the oracle reports
+`verified_finite_rejections_real_acceptance_pending`. With one, it additionally
+requires original exported acceptance, a returned flag matching its commitment,
+real CLI grant/exit zero, acceptance with an extra CLI argument and rejection
+of a one-character key mutation. Authored acceptance regressions qualify that
+harness branch; they never qualify acceptance on the original targets.
+
+Reading native global descriptors can itself initialize Node's lazy globals.
+The oracle records that observer bootstrap separately, reaches a bounded stable
+baseline, and then measures target initialization. The independently observed
+getter difference does not depend on those bootstrap effects. Full module
+equivalence remains false; reduced core/CLI intent does not erase reached
+ambient effects.
+
+## LASIK as a reduction candidate
+
+The requested project is [LASIK](https://github.com/pktq/lasik), a static
+deobfuscator aimed specifically at BLA, with CLI, library and MCP interfaces.
+Its source has known-bits guard reductions, corpus-interlock evaluation,
+string recovery, private-state pruning and runtime-decoy removal. The latter
+[deliberately removes decoy global/listener blocks](https://github.com/pktq/lasik/blob/main/src/js/passes/runtime-decoys.ts).
+Those are useful candidates for recovering core intent; the observer contract
+still determines whether removal preserves the behavior being compared.
+
+A finite static trial used the existing local LASIK 0.3.0 distribution alongside
+checkout `58f47e047a4d858e29186e5c3dab38ebba8a7786`, without downloads, setup,
+target execution or the prompt-firewall transform (`firewall: false`). It reduced
+the exact archived L1/L2/L3 files as follows:
+
+| Tier | Original bytes | Reduced bytes |
+| --- | ---: | ---: |
+| L1 | 78,614 | 2,731 |
+| L2 | 163,626 | 2,434 |
+| L3 | 189,095 | 2,449 |
+
+The trial fingerprints the compiled entry and reduced outputs; it does not
+establish build provenance or behavioral equivalence of LASIK's output. Our
+module counterexample shows why output size and successful deobfuscation cannot
+authorize a whole-module contraction. LASIK's published multi-format v6
+benchmark also uses a different challenge edition from this archived tiered
+corpus. Candidate correspondence, checked reductions, retained effects and
+native witnesses remain distinct evidence.
+
 ## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
