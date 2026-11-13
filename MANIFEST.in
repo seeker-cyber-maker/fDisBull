@@ -111,6 +111,7 @@ include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py *.c *.sh *.txt
 prune examples
+prune fixtures/behavior-curriculum
 prune history
 prune experimental
 prune build

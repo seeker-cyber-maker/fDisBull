@@ -19,6 +19,7 @@ EXCLUDED_DIRECTORIES = {
     "__pycache__",
     "freeware-games",
     "freeware-games.zip",
+    "behavior-curriculum",
 }
 EXCLUDED_SUFFIXES = {
     ".fdb",

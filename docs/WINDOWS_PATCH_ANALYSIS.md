@@ -681,6 +681,100 @@ behavior are not exhaustively traced. Native filesystem, crypto, Buffer, Wasm
 and exit interfaces remain unmodified in the baseline comparison. Raw keys,
 target bytes and returned flags/certificates stay outside Git and uploads.
 
+## Authored BLA calibration curriculum
+
+The archived crackmes remain useful adversarial examples, but recovering a key
+from a cryptographic flaw does not measure recovery of an original algorithm.
+`fixtures/behavior-curriculum/` provides an MIT, known-source PE64 DLL target
+with no imports, entry point, secret or flag. Keep its source and independent
+integer oracle available to the evaluator; a future blind recovery exercise
+must receive its own declared input packet without those answers.
+
+The exported wrapper accepts unsigned 64-bit `x`, `limit` and a caller output
+pointer. It leaves the output untouched when `x > limit`; otherwise it stores
+`((x XOR 90) + 7) modulo 2^64`. The separately exported, non-inlined core makes
+the guard and output boundary explicit. Caller output must be disjoint from the
+DLL image and active stack: allowing it to alias BLA's shadow heap would change
+the equivalence question, even on rejected inputs.
+
+Run the verifier from a source checkout with an existing reviewed BLA 3.2.4
+distribution and compiler/linker. It creates a new external output directory
+after a 50 MB storage admission; it does not install a toolchain or execute the
+teaching EXEs supplied with the research discussion.
+
+```sh
+PYTHONPATH=src python scripts/verify_bla_curriculum.py \
+  --output /external/evidence/authored-bla-01 \
+  --bla-cli /external/bla/dist/cli.js \
+  --node /existing/supported/node \
+  --clang /existing/clang \
+  --linker /existing/lld-link \
+  --seed fdisbull-known-target-v1 --max-level 3
+```
+
+`--max-level 0` builds the baseline and mandatory guard mutation only; higher
+values add these retained stages in order:
+
+| Level | Construction | What it exercises |
+| --- | --- | --- |
+| 0 | Original authored C, `-O1` | Plain guard, wraparound and one output store |
+| 1 | Original build plus BLA `protect --intensity stealth` | Post-build section/slack/trailer noise |
+| 2 | Generated C header at `stealth`, explicitly called anchor, then `protect stealth` | Reachable generated work and private image mutations |
+| 3 | Generated header and post-build pass at `balanced` | More retained generated material under the same caller contract |
+
+These are construction levels, not a measured difficulty scale. The reviewed
+native BLA post-build path does not rewrite the customer's reachable kernel.
+The source-authored wrapper explicitly discards the generated anchor's return;
+it still executes its volatile writes. This is distinct from an agent-authored
+weave that makes the business result depend on protection state.
+
+The campaign retains original compiled DLLs, protected DLLs, object files,
+generated headers, complete command arguments/logs, tool and artifact hashes,
+external analysis databases, and exact core trace/RAM evidence. The extracted
+BLA distribution is identified by its payload hashes and package version;
+matching an upstream version string does not establish source-build provenance.
+Target fixtures remain outside tool-only packages.
+
+The initial local qualification used Clang/LLD 23.1.4, supported Node 26.13.0
+and BLA 3.2.4. All four unchanged variants passed 254 complete-wrapper Unicorn
+calls each. One retained CPU per variant preserves image state between calls.
+Cases cover unsigned boundaries, equality, modulo wraparound, seeded inputs
+and same-input repetitions after other calls. The verifier checks every output
+value and permitted store count, canaries, stack restoration and Win64
+nonvolatile general registers. Writes outside output, stack and declared
+writable image sections fail the campaign. Anchor variants executed four
+private image writes per call; post-build-only protection executed none.
+
+fDisBull imports and recursively analyzes each exact DLL, verifies a stable
+analysis stop and reopens the database to verify persistence. For accepted and
+rejected **core** paths it checks explicit cross-file boundary correspondence,
+live nonvolatile registers/stack, dead FLAGS and the caller's eight RAM bytes.
+The baseline and three unchanged levels each yielded two
+`equivalent_under_contract` results. Each contraction was expanded back into
+the exact traces and RAM evidence. This does not contract the complete BLA
+wrapper or prove private-heap noninterference for every input.
+
+The separate `GUARD_MUTATION` build changes rejection from `>` to `>=`.
+Every call is checked against that exact mutated contract, so an arbitrary
+broken implementation cannot pass merely by producing one difference. It
+differed from the baseline on 79 of 254 cases, all at equality (including one
+store-event difference with identical final bytes). Both aligned
+core-path comparisons found a guard-domain difference; their symbolic
+input/output-memory projections were replayed on complete wrappers and
+produced a real output/store difference at `x == limit`. For example, with
+`x = limit = 0` and initial output `0x0123456789abcdef`, the original stores
+97 while the mutation leaves the initial value. Pairing an accepted path with
+a rejected path can produce unrelated domain counterexamples, so the verifier
+aligns accepted with accepted and rejected with rejected before replay.
+
+Repeated complete builds with the same seed/options produced byte-identical
+DLLs and headers in this local environment. That observation does not promise
+cross-toolchain determinism. Execution here means direct function calls under
+Unicorn, normalized to the existing PE completed-step evidence schema; it does
+not establish Wine or native Windows loader behavior. SIMD state, timing,
+resource effects, arbitrary aliasing, agent recovery quality and training
+improvement remain unqualified.
+
 ## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic
