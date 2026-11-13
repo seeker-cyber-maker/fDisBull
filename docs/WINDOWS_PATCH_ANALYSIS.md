@@ -775,6 +775,99 @@ not establish Wine or native Windows loader behavior. SIMD state, timing,
 resource effects, arbitrary aliasing, agent recovery quality and training
 improvement remain unqualified.
 
+## Reachable rewrites, held-out seeds and blind recovery
+
+`scripts/bla_reachable_rewrites.py` generates authored, full-width Win64
+assembly for the same known-source operation. Level 1 changes temporary
+registers and operand order, adds a redundant guard, and inserts cancelling
+XOR/ADD/SUB work. Levels 2 and above replace the meaningful XOR with
+`(x | 90) - (x & 90)` and split the final addition across seeded constants.
+These operations execute on the real path, including extra register writes
+before the rejection guard. The generator emits no calls, stack stores or
+hidden mutable image state. These transformations are separately attributed
+authored rewrites; BLA's native post-build pass adds its usual noise afterward.
+
+```sh
+PYTHONPATH=src python scripts/verify_bla_rewrites.py campaign \
+  --output /external/evidence/reachable-cohort \
+  --clang /existing/clang --linker /existing/lld-link \
+  --node /existing/supported/node --bla-cli /external/bla/dist/cli.js \
+  --heldout-count 3
+```
+
+Default storage admission precedes artifact creation. An explicit user waiver
+may be recorded with `--storage-waiver`; the receipt identifies that decision
+as a waiver rather than a successful admission. Existing output directories
+and frozen protocol files are preserved. The generator hash is frozen before
+held-out seeds are sampled, and source, generator, protocol and tool identities
+are checked again before a qualified report is written. The linker invocation
+preserves the `lld-link` symlink name because LLD selects its driver from
+`argv[0]`.
+Use `--protocol /external/earlier-cohort/protocol.json` to replay the exact
+frozen cohort without selecting replacement seeds. Replay checks the source,
+generator, seed schema and cohort size and retains the original protocol bytes.
+
+The verification cohort has two development seeds and three independent
+held-out seeds, each at levels 1, 2 and 3. All 15 unchanged variants must match
+the original C build on 510 complete-wrapper CPU calls, including full-width
+inputs, equality, overflow, unchanged final bytes with a required store and
+retained-CPU repetition. fDisBull analyzes every exact DLL to a stable stop and
+checks database restart. The 30 accepted/rejected region comparisons use
+**ordered** memory effects, caller RAM, nonvolatile GPRs and stack liveness.
+Each successful contraction retains exact trace/RAM evidence for expansion.
+An additional same-family guard mutation must satisfy its exact altered
+contract and produce replayable equality-boundary witnesses.
+
+Widened comparisons are separate results. All-GPR comparison exposes scratch
+register differences. Full-FLAGS observation remains unknown wherever a logical
+instruction leaves live AF undefined; a second projection selects only the
+defined CF/PF/ZF/SF/OF bits. Concrete sampled FLAGS and general registers are
+retained separately from symbolic results. Callable ABI liveness cannot be
+assumed at an arbitrary mid-block patch site. These proofs do not establish
+native Windows loader behavior, timing equality, or universal private-memory
+and process equivalence.
+
+`scripts/bla_blind_recovery.py` creates a fresh packet for one held-out DLL.
+It discloses a neutral `void(u64,u64,u64*)` ABI, visible exports and a JSON-lines
+submission protocol, without the formula, branch condition, source, generator
+or oracle. Its preflight checks actual permission denial for outside reads,
+target writes and networking and verifies the selected fDisBull runtime.
+The fresh CLI has only the bounded `lab.run_command` interface; other tool use
+and budget overruns invalidate the trial. Authentication stays in the CLI
+process; analysis commands receive an allowlisted environment. Each trial has
+300 seconds, 48 calls, 20 seconds per command and 16 KiB returned output per
+call. No model override is requested; receipts retain actual startup/usage
+evidence without asserting hidden model identity.
+
+The agent submits a standalone Python solver returning both final output and
+store count, plus an explanation of registers, FLAGS and memory. Regular-file
+submissions are frozen outside the writable packet. The independent grader
+runs the solver on new input vectors in another OS sandbox with no target,
+oracle or source file, and checks exact integer types and store events as well
+as values. Empty cohorts, malformed output, missing/extra rows, nonzero exits
+and final-byte-only answers fail. Held-out transformation seeds and finite
+blind recovery do not establish unseen-algorithm generalization or an
+improvement caused by training.
+
+Two initial fresh blind trials completed under this boundary:
+
+| Target | Tool calls | Frozen-solver grader cases |
+| --- | ---: | ---: |
+| Held-out seed 0, level 2 | 8 | 2,254/2,254 |
+| Held-out seed 1, level 3 | 8 | 2,254/2,254 |
+
+Both used fDisBull import, export inspection, recursive analysis and selected
+disassembly. Neither used target execution, reference source, the generator or
+an oracle. The tool audits found only the allowed lab calls and no boundary
+violations. Each standalone solver recovered the unsigned guard, modulo result
+and required store count, including the case where storing preserves the final
+bytes. The coordinator read both complete frozen solvers/reports and checked
+their predicted volatile-register state and defined arithmetic FLAGS against
+132 complete-wrapper Unicorn cases per target. AF on the logical-operation
+path remained explicitly undefined. These two small trials support recovery of
+this particular transformed algorithm; they do not estimate population-level
+anti-obfuscation performance or training benefit.
+
 ## Register-only transfer projection
 
 `fdisbull.pe_path_transfer.compare_pe_register_paths` now composes a symbolic

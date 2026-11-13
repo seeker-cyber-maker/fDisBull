@@ -218,8 +218,10 @@ def analyze(path, output):
             'restart_verified': True}
 
 
-def core_comparison(left, right, *, mutation=False, evidence_dir=None):
+def core_comparison(left, right, *, mutation=False, evidence_dir=None, contract=None):
     """Contract only the real core paths, never discard the wrapper's BLA call."""
+    if contract is not None and not isinstance(contract, dict):
+        raise ValueError('Regional contract override must be an object')
     from fdisbull.debug_semantics import PE_TRACE_SEMANTICS, normalize_trace
     from fdisbull.pe_region_equivalence import compare_pe_regions, expand_pe_contraction
     reports = []
@@ -245,11 +247,12 @@ def core_comparison(left, right, *, mutation=False, evidence_dir=None):
         for row in correspondence:
             for side in ('baseline', 'layer'):
                 row[side] = {key: row[side][key] for key in ('source_version', 'context', 'project_address')}
-        result = compare_pe_regions(*traces, correspondence=correspondence,
-            contract={'live_registers': ['rsp', *NONVOLATILE], 'live_flags': 0,
+        regional_contract = {'live_registers': ['rsp', *NONVOLATILE], 'live_flags': 0,
                       'entry_registers': {'r8': hex(OUTPUT + 8)},
                       'memory_ranges': [{'address': hex(OUTPUT + 8), 'length': 8}],
-                      'memory_model': 'private_ordinary_ram', 'memory_observation': 'final'},
+                      'memory_model': 'private_ordinary_ram', 'memory_observation': 'final'}
+        regional_contract.update(contract or {})
+        result = compare_pe_regions(*traces, correspondence=correspondence, contract=regional_contract,
             baseline_memory=samples[0]['memory'], layer_memory=samples[1]['memory'], timeout_ms=5000)
         if result['contraction']:
             expanded = expand_pe_contraction(result['contraction'], *traces,

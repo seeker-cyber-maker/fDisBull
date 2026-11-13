@@ -66,3 +66,38 @@ private external teaching samples. They are not included here, have not been
 executed as part of this fixture intake, and do not supply a known-source oracle
 for this target. Their related names or shared regions do not establish complete
 program equivalence.
+
+## Reachable transformations and held-out recovery
+
+`scripts/bla_reachable_rewrites.py` emits separately identified, authored Win64
+assembly. Level 1 changes temporary registers and guard encodings and inserts
+cancelling modular arithmetic. Levels 2 and above replace the meaningful XOR
+with `(x | 90) - (x & 90)`, split the final addition, and increase bounded
+cancellation depth. All instructions execute in the core's real control flow;
+the generated wrapper tail-jumps to that core. These authored transformations
+are distinct from BLA's native post-build protection, which the campaign also
+applies with an explicit seed.
+
+`scripts/verify_bla_rewrites.py` freezes the generator identity before sampling
+held-out transformation seeds. It retains a write-once protocol, the original
+C build, all assembly/object/DLL stages, BLA command logs, CPU observations,
+analysis projects and expandable ordered-memory proof evidence. Development
+seeds, held-out transformation seeds, and independent input vectors have
+separate roles. Rechecking the same family does not establish recovery of an
+unseen algorithm.
+
+The callable projection preserves output bytes and ordered stores, Win64
+nonvolatile GPRs and stack state. Volatile GPRs and FLAGS remain separate
+observations: widened comparisons expose differences, and live undefined AF
+prevents contraction. ABI-derived dead state applies to this callable boundary;
+it cannot be assumed for an arbitrary patch in the middle of a block.
+
+`scripts/bla_blind_recovery.py` prepares a fresh, source-denied recovery packet,
+checks its OS boundary, runs a bounded fresh CLI agent, and freezes its solver
+and report. The packet discloses a neutral three-argument ABI and JSON-lines
+submission protocol. The agent inspects the actual DLL and uses installed
+fDisBull; the reference source, oracle, generator, other variants and prior
+solutions remain outside the command sandbox. The independent grader executes
+the frozen solver in a different sandbox with no target or answer files.
+Execution and recovery results require fresh receipts; these scripts alone
+do not establish a passing blind trial.
