@@ -255,3 +255,84 @@ def test_hook_runs_only_after_acceptance_receipt_and_is_reconcilable():
     assert b.reconcile_action('retry_job','one',{'target':TARGET})['status']=='pending'
     assert calls == [('retry_job','one'),('retry_job','one')]
     assert len([row for row in f.calls if row[0]=='POST'])==1
+
+
+def canonical_unknown_fixture():
+    f=Fixture();repository='seeker-cyber-maker/fDisBull'
+    target={**TARGET,'repository':repository,'job_name':'qualification'}
+    key='incident:2:retry_job';payload={'target':target,'project':repository}
+    timestamp=1794642705.0
+    intent={'action':'retry_job','action_key':key,'payload':payload,'created_epoch':timestamp}
+    opts={'repository':repository,'actor':'seeker-cyber-maker','sole_executor_authority':True,
+          'load_intent':lambda k:{'intent':copy.deepcopy(intent),'receipt_path':'intent.json'}}
+    b=f.backend(**opts);path=b.base+'/jobs/20/rerun'
+    digest=github._transport.request_digest('github','POST',path,{})
+    f.receipt=lambda k:{'receipt':{'action_key':k,'request_sha256':digest,'status':'unknown'}}
+    run={'id':10,'run_attempt':2,'head_sha':CONTROL,'head_branch':'codex/control',
+         'repository':{'full_name':repository},'actor':{'login':'seeker-cyber-maker'},
+         'triggering_actor':{'login':'seeker-cyber-maker'},'workflow_id':123}
+    job={'id':22,'run_id':10,'name':'qualification','head_sha':CONTROL,'created_at':'2026-11-14T07:51:46Z',
+         'runner_id':0,'status':'queued','conclusion':None}
+    f.responses['GET',b.base+'/runs/10']=run
+    f.responses['GET',b.base+'/runs/10/attempts/2']=run
+    f.responses['GET',b.base+'/runs/10/attempts/2/jobs?per_page=100&page=1']={'total_count':1,'jobs':[job]}
+    f.responses['GET',b.base+'/jobs/22']=job
+    return f,b,target,key,payload,intent,run,job
+
+
+def test_unknown_retry_reconciles_canonical_queued_then_assigned_without_post():
+    f,b,target,key,payload,intent,run,job=canonical_unknown_fixture();callbacks=[]
+    b.after_acceptance=lambda action,key,payload,proof:callbacks.append(proof)
+    result=b.reconcile_action('retry_job',key,payload)
+    assert result['status']=='pending' and result['origin_proof']['kind']=='canonical-origin'
+    origin=f.proofs[key]['proof']['canonical_origin']
+    assert 'envelope' not in f.proofs[key]['proof'] and callbacks[0]['canonical_origin']['job_id']=='22'
+    assert set(origin['observation_sha256'])=={'latest_run','attempt','job_list_pages','job'}
+    def sha(value):return github.hashlib.sha256(github.json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+    assert origin['observation_sha256']=={'latest_run':sha(run),'attempt':sha(run),
+        'job_list_pages':sha([{'total_count':1,'jobs':[job]}]),'job':sha(job)}
+    assert not any(method=='POST' for method,_,_ in f.calls)
+    job['runner_id']=21
+    result=b.reconcile_action('retry_job',key,payload)
+    assert result['status']=='completed' and result['target']=={**target,'job_id':'22','run_attempt':'2'}
+    assert result['origin_proof']['kind']=='canonical-origin'
+    assert not any(method=='POST' for method,_,_ in f.calls)
+
+
+@pytest.mark.parametrize('damage',['authority','intent','actor','triggering_actor','workflow_id','ref','ambiguous','time','missing_time','job_mismatch','remote'])
+def test_unknown_retry_canonical_origin_requires_every_binding(damage):
+    f,b,target,key,payload,intent,run,job=canonical_unknown_fixture()
+    if damage=='authority':b.sole_executor_authority=False
+    if damage=='intent':intent['payload']={'target':target}
+    if damage=='actor':run['actor']={'login':'other'}
+    if damage=='triggering_actor':run['triggering_actor']={'login':'other'}
+    if damage=='workflow_id':run['workflow_id']=456
+    if damage=='ref':run['head_branch']='wrong'
+    if damage=='ambiguous':
+        f.responses['GET',b.base+'/runs/10/attempts/2/jobs?per_page=100&page=1']={'total_count':2,'jobs':[job,{**job,'id':23}]}
+    if damage=='time':job['created_at']='2026-11-14T07:51:44Z'
+    if damage=='missing_time':job.pop('created_at')
+    if damage=='job_mismatch':f.responses['GET',b.base+'/jobs/22']={**job,'head_sha':'c'*40}
+    if damage=='remote':f.receipt=lambda k:{'receipt':{'action_key':k,'request_sha256':'f'*64,'status':'unknown'}}
+    assert b.reconcile_action('retry_job',key,payload) is None
+    assert not f.proofs and not any(method=='POST' for method,_,_ in f.calls)
+
+
+def test_canonical_retry_acceptance_does_not_switch_successor_job():
+    f,b,target,key,payload,intent,run,job=canonical_unknown_fixture()
+    assert b.reconcile_action('retry_job',key,payload)['status']=='pending'
+    changed={**job,'id':23,'runner_id':21}
+    f.responses['GET',b.base+'/runs/10/attempts/2/jobs?per_page=100&page=1']={'total_count':1,'jobs':[changed]}
+    assert b.reconcile_action('retry_job',key,payload) is None
+    assert not any(method=='POST' for method,_,_ in f.calls)
+
+
+@pytest.mark.parametrize('which,field',[('latest','triggering_actor'),('attempt','triggering_actor'),('latest','workflow_id'),('attempt','workflow_id')])
+def test_canonical_retry_checks_each_run_observation_independently(which,field):
+    f,b,target,key,payload,intent,run,job=canonical_unknown_fixture()
+    path=b.base+('/runs/10' if which=='latest' else '/runs/10/attempts/2')
+    altered=copy.deepcopy(run)
+    altered[field]={'login':'other'} if field=='triggering_actor' else 999
+    f.responses['GET',path]=altered
+    assert b.reconcile_action('retry_job',key,payload) is None
+    assert not f.proofs and not any(method=='POST' for method,_,_ in f.calls)
