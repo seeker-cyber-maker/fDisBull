@@ -252,6 +252,22 @@ def _capture(session, address, length, space, task_id):
     mapping, pages = _mapping(session, address, length, space, before)
     context = _context(session, address, length, space, task_id, before, mapping)
     data = _read(session, address, length, space)
+    physical_compared = 0
+    if space == 'linear':
+        # Retain an independent byte witness for the observed translation,
+        # rather than assuming that two backend address spaces agree.
+        for page in pages:
+            page_start = int(page['linear'], 16)
+            low, high = max(address, page_start), min(address + length, page_start + 4096)
+            if low >= high:
+                continue
+            physical = int(page['physical'], 16)
+            observed = _read(session, physical + low - page_start, high - low, 'physical')
+            if observed != data[low - address:high - address]:
+                raise ValueError('Translated physical bytes differ from the linear memory capture')
+            physical_compared += high - low
+        if physical_compared != length:
+            raise ValueError('Physical readback does not cover the complete linear capture')
     after = _paused(session)
     after_mapping, _ = _mapping(session, address, length, space, after)
     if context != _context(session, address, length, space, task_id, after, after_mapping):
@@ -261,6 +277,8 @@ def _capture(session, address, length, space, task_id):
     if before != after:
         raise ValueError('Stopped CPU context changed during memory capture')
     return data, context, dict(before=before, mapping=mapping, pages=pages,
+                               physical_readback=dict(compared_bytes=physical_compared,
+                                   verified=space == 'linear' and physical_compared == length),
                                atomicity='owned paused CPU; no guest execution during capture',
                                task_lifetime='caller-declared; allocation/free events are not inferred')
 

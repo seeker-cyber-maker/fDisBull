@@ -14,7 +14,11 @@ class FactsMixin:
     def _memory_facts(self, version, context, address, raw, cs=None, registers=None):
         from .memory import instruction_memory_accesses
         source = f'{address:016x}'
-        facts = instruction_memory_accesses(raw,address,self.arch,self.bits,cs=cs,registers=registers)
+        facts = instruction_memory_accesses(raw,address,self.arch,self.decode_bits(address,version),cs=cs,registers=registers)
+        mode = self.decode_mode(address, version)
+        if self.meta['format'] == 'LE' and mode is not None:
+            from .decode_modes import memory_accesses
+            facts = memory_accesses(raw, address, mode, self._le_processor(version).fixups_for(address,len(raw)))
         if self.meta['format'] == 'NE':
             from .ne_processor import memory_accesses
             facts = memory_accesses(raw, address)
@@ -62,13 +66,10 @@ class FactsMixin:
                     self._memory_facts(v,row['context'],address,raw,cs,state)
                 if row['flow'] not in ('next','conditional','call','indirect_call'):
                     continue
-                following = cs*16+((address-cs*16+row['size'])&65535) if cs is not None else address+row['size']
-                if self.meta['format'] == 'NE':
-                    from .ne import following as ne_following
-                    following = ne_following(address, row['size'])
+                following = cs*16+((address-cs*16+row['size'])&65535) if cs is not None else self._instruction_following(v,address,row['size'])
                 # Preserve real decoded continuations, including holes the graph
                 # must report; do not invent destinations outside mapped memory.
-                if not any(r.start<=following<r.start+len(r.data) for r in regions):
+                if following is None or not any(r.start<=following<r.start+len(r.data) for r in regions):
                     continue
                 evidence = ('permitted call-return fallthrough; return is assumed' if row['flow'] in ('call','indirect_call')
                             else 'decoded conditional fallthrough' if row['flow']=='conditional'

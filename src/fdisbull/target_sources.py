@@ -84,6 +84,8 @@ class TargetSourcesMixin:
             kind = image.format.lower()
             if image.metadata.get(kind) != self.meta['loader_metadata'][kind]:
                 raise ValueError(f'{image.format} loader metadata differs; explicitly start a separate analysis')
+            if image.metadata.get('decode_regions', []) != self.decode_regions(version):
+                raise ValueError(f'{image.format} object decode modes differ; explicitly start a separate analysis')
         return document, image
 
     def source_candidate(self, path, version=None):
@@ -145,7 +147,7 @@ class TargetSourcesMixin:
             record = {'identity': candidate, 'format': image.format, 'arch': image.arch, 'bits': image.bits,
                       'loader_options': document['loader_options'],
                       'loader': {'name':'fdisbull.load_image','version':__version__},
-                      'schema': 9, 'approval': expected, 'base_version': v['id']}
+                      'schema': self.schema, 'approval': expected, 'base_version': v['id']}
             self.db.execute('INSERT INTO target_sources VALUES (?,?)', (child, json.dumps(record)))
             return {'version': child, 'parent': v['id'], 'identity': candidate, 'attached': True, 'layer': True, 'executed': False}
 
@@ -219,7 +221,7 @@ class TargetSourcesMixin:
                             if loader.get('slice_arch'):
                                 options['slice_arch'] = loader['slice_arch']
                             record = {'identity':identity(raw), 'format':fmt, 'arch':metadata['arch'],
-                                      'bits':metadata['bits'], 'loader_options':options, 'schema':9,
+                                      'bits':metadata['bits'], 'loader_options':options, 'schema':max(9,report['schema']),
                                       'loader':{'name':'fdisbull.load_image','version':'unknown legacy import'},
                                       'migration':{'source_schema':report['schema'],
                                                    'qualification':'identity measured from retained legacy bytes; loader options reconstructed, mapping must still match before binding'}}

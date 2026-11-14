@@ -33,6 +33,27 @@ ends the bounded real-mode SYS traversal; it cannot preserve real-mode CS
 semantics after that boundary. SYS imports do not enable direct DOSBox process
 launch or generic driver UDC compilation.
 
+## Mixed LE executable projects
+
+Supported LE executables, including a validated MZ/BW/inner-MZ carrier, can use
+normal `import --image le` and `analyze`. Each object's 16/32-bit mode persists
+through reopen and mapped-memory child versions. New mode-bearing LE projects
+use semantic schema10 so older readers reject them; ordinary legacy9 remains
+supported. Unguarded9 mode prototypes require explicit reimport. Instructions report their
+actual decoder width; the project context is a stable namespace. Preserve
+object-local near targets and stop at unbacked/object boundaries. Do not infer
+runtime selectors, segment memory targets or cross-mode near edges.
+
+Internal offset32 fixups affect only the preferred static image. Offset16
+records stay symbolic/unapplied because original loader conventions differ;
+intersecting instructions and backing exports retain that unresolved status.
+CFG closure is not complete operand interpretation. Native code-backings keep
+per-block widths but remain incomplete for executable reconstruction where a
+relocation is unresolved. Mixed projects and any LE image with symbolic operand fixups refuse the fixed-width advanced ABI
+analysis. These are ordinary persisted static projects, not runtime selector
+bindings or runnable reconstructed executables. The source guide
+`docs/dos4gw-le.md` records the complete contract.
+
 ## LE objects and VxD ABI
 
 Some drivers contain both an MZ/DOS loader and an LE module. Select an object
@@ -159,6 +180,35 @@ not an EMS allocation inventory. The sequential QPI loop is not atomic and
 leaf PTE attributes alone do not establish effective permissions. Do not treat
 a parsed file, authored emulator fixture, successful API call or detected QEMU
 binary as native QEMM/game qualification.
+
+## Persist task/object relationships
+
+Use `runtime-objects` to select a source-bound object, then
+`runtime-task-start`, `runtime-map`, `runtime-unmap`, `runtime-map-checkpoint`
+and `runtime-map-restore` to preserve attributed relationships and their event
+history. `runtime-tasks`, `runtime-mappings`, `runtime-resolve` and `runtime-mapping-events`
+remain available after project reopen. CLI writes take one bounded JSON object
+through `--definition-file`; JSON-line calls accept the operation parameters.
+
+These direct records are caller evidence, including when labeled `recorded`;
+they do not authenticate a live mapping. `runtime-map-snapshot` additionally
+checks a local retained snapshot's bounded object span and capture context.
+Excluded relocation fields, task ownership and continuous mapping lifetime
+remain separately qualified. A foreign artifact ID is not silently imported.
+Register the task with its explicit capture epoch before taking the qualifying
+snapshot; an older baseline may establish the epoch but cannot qualify a new
+incarnation. Original MZ carriers can expose source-bound `le:1` objects without
+pretending their LE preferred keys are MZ instruction addresses.
+
+Preserve every alias instead of choosing one inverse physical address. Do not
+project a protected selector through `selector * 16` or infer one global object
+relocation delta. A direct map's `selector` is an explicit descriptor object
+with integer `value`, `base`, `limit` and `bits` fields, not a numeric selector
+alone. Selector queries take the numeric value and an offset, using the recorded
+base and limit. This still describes attributed evidence, not a verified hidden
+CPU cache. A registry restore creates fresh recorded binding lifetimes;
+it does not restore the guest. The full public contract and examples are in
+`docs/runtime-mappings.md` in the source documentation.
 
 ## Sources and useful follow-up work
 
