@@ -7,7 +7,7 @@ Exact private source/patch/blob evidence is indexed in the operational
 `history-disposition-complete.json` receipt. This is source disposition, not
 runtime or release qualification.
 
-## Outcome
+## Initial audit outcome
 
 | Disposition | Head count |
 | --- | --- |
@@ -15,7 +15,7 @@ runtime or release qualification.
 | integrated | 2 |
 | intentional preserved | 18 |
 | superseded | 35 |
-| unique needing adaptation | 44 |
+| unique needing adaptation at the initial audit | 44 |
 
 Branch aliases are deduplicated to their tip OID. Different tips may still
 contain the same capability: old Civ/UDC work and the three LE snapshots overlap.
@@ -23,11 +23,34 @@ A preserved branch is not treated as an integrated feature. Intentional CI
 faults, unrelated partial-import roots, archived target evidence and unadopted
 activation proposals remain preserved without being merged into the release.
 
-## Remaining unique source
+## Current integration disposition
 
-The table identifies every remaining unique head and the concrete adaptation
-or review it needs. It is the source work required by the user’s integrate-all
-direction; a CI-ready pipeline does not waive it.
+All deduplicated recovered groups now have source implementations through
+integration `27838f79`. The initial counts above remain unchanged as historical
+classification; the 44 rows below are not 44 still-open adaptations.
+
+| Recovered group | Integrated source and followup |
+| --- | --- |
+| Overlapping mixed-width LE/static and runtime seams | `b5afeaed`, with current QEMU successor bindings retained and backend-specific hooks in tools |
+| Media/intake/installer profiles | `e06b5d66` merged at `39514391`; preservation fix `bf46036a` included |
+| UDC/compiler/backing/example adapters | `b86f1d2f` merged at `b1c21ed5`; final emitted-data receipt fix `6dafd643` included as `57e97691` |
+| Tools, bounded lifecycle/fuzzing/friction/RTLink and sanitized historical guidance | `e78ac8dc` merged at `f14bbc22` |
+| Drive source-selection and FDB admission/staging corrections | `b5bdde1d` and `170aa463`, integrated through `27838f79` |
+| n8n owner CI policy and recoverable installer/selector corrections | `be68826e` and installer line through `736cb7c6`, included through `4684a8dc`; 88 fresh focused root checks |
+
+See the [current capability mapping](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
+for source-bound checks and limitations. One final FDB source-preservation
+followup remains under review, followed by final combined/package checks; the
+candidate is not frozen. Exact-SHA CI/native/offline acceptance, release and
+installation remain separate gates. Existing draft GitHub PR #87 is retained.
+
+## Initial unique-source findings (historical)
+
+The table preserves every initially unique head and its audit-time adaptation
+recommendation. Its owner/action wording records that earlier read-only audit,
+not a present instruction, backlog or claim that integrated LE/media/UDC/tools
+source is still absent. Current dispositions are mapped above; original branches
+and OIDs remain preserved.
 
 | Source head / representative branch | Unique content and disposition |
 | --- | --- |
@@ -76,20 +99,21 @@ direction; a CI-ready pipeline does not waive it.
 | `f8a70aade905310c533cef196cca4551e6e559d7`<br>`docs/udc-module-layers-provenance` | ["docs/UDC_MODULE_LAYERS.md"] {"action": "Port the missing module-layer design and useful provenance concepts into current docs, preserving historical0.27 publication notes without copying stale front-door identity or claiming implementation.", "owner": "release source integration owner; n8n only for CI/native/package gates", "decision_state": "recommended disposition from read-only audit; not an invented owner approval or integration completion", "branch_retention": "retain all listed original GitHub branches/OIDs; no deletion/force update"} |
 | `fcef2877320e0981d5b979ad9bba1e1d1dcbd488`<br>`fdisbull-origin/fix/review-ghidra-resource-gate` | ["src/fdisbull/dcc_asm_c.py", "src/fdisbull/ghidra_asm_c.py", "src/fdisbull/reko_asm_c.py", "src/fdisbull/data/FdisbullGhidraAsmC.txt", "tests/test_asm_c_engine_contract.py"] {"action": "Port independently reviewed bounded adapter interfaces/resource gates and authored rejection tests against current UDL block contracts. External tool invocation/benchmarks/native results require their own authorization and fresh evidence; do not claim universal decompiler parity.", "owner": "release source integration owner; n8n only for CI/native/package gates", "decision_state": "recommended disposition from read-only audit; not an invented owner approval or integration completion", "branch_retention": "retain all listed original GitHub branches/OIDs; no deletion/force update"} |
 
-## Implementation handoff
+## Remaining handoff
 
-The existing user instruction authorizes all unique eligible adaptations. This
-is engineering work, not a missing permission or a generic scope decision.
-The [deduplicated capability work items](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
-assign owners, source/test references and the next concrete changes. The
-candidate stays provisional while those source changes and combination checks
-are completed. Only an actual conflicting product requirement or behavior that
-cannot coexist calls for an explicit decision with precise alternatives.
+The integrate-all authorization has been applied to the eligible recovered
+source groups. No additional generic scope or permission decision is required.
+The one source-preservation followup in `scripts/fdb_backup.py` still needs
+review/integration: actual SQLite main-file descriptor admission across a
+regular-file A→B→A swap, held manifest inode/hash proof, and retained private
+stages instead of pathname check/unlink cleanup. Final combined source/package
+checks also remain pending, including correction and full regression of the
+eligible tool-ZIP/sdist inventory. These are the remaining source-freeze gates,
+not 44 missing recovered implementations.
 
-The endpoint-authentication/checkpoint-selector contribution `dd7c43a4` is now
+The endpoint-authentication/checkpoint-selector contribution `dd7c43a4` is
 included through integration merge `2ca96ea7`; its focused checks passed with
-43 passed and 11 missing-input skips. Its former gap is closed, without claiming
-the skips establish native acceptance.
-
-See [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md) for the included
-QEMU/Wine/CI line and the deduplicated mixed-width LE contract issue.
+43 passes and 11 missing-input skips. Missing-input skips do not establish
+native acceptance. The [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md)
+records current QEMU/Wine/CI integration and the separate final qualification,
+publication and installation gates. The approved release process is unchanged.

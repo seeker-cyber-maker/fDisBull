@@ -1,7 +1,8 @@
 # 0.35.0 contribution disposition
 
 This records the finite integration pass on 2026-11-14. The integration branch
-is `codex/release-0.35.0-integration-20261114`, based on primary GitHub main
+is `codex/release-0.35.0-integration-20261114`, reviewed here through
+`27838f79606a5dfb0cdfc40ae2b052a361438c61`, based on primary GitHub main
 `829453ecae3fb0de236dbdd95be85a554efd1fb7`. It is **not yet a frozen release
 candidate**. See the [release process](RELEASE_PROCESS.md) and
 [release status](RELEASE_STATUS.md). No preserved contribution is qualified merely
@@ -18,6 +19,12 @@ because its branch was mirrored or its files parse.
 | Release front door | `RELEASE_PROCESS.md` SHA-256 `a28ff3311a7d47fe96d301c5084920ae8d37f9e7ad03c85c0230f426831d78d5` | Integrated the exact approved revision, including conditional 0.35 installation/activation authority and DotBox separation; linked from current README/status. |
 | Frozen finite CI/release continuation | `0fcbda2c287fa64a14d82d320b8f6d3971071c73` | Integrated from the owner-frozen object; canonical branch `adef0021` read back on primary GitHub, GitLab and local hub. Combined broker retains both loader diagnostics and control inventory. No run or deployment follows from this merge. |
 | Authenticated local endpoints and checkpoint selector disambiguation | `dd7c43a46da241dd5e17deefe0e102ba938ac0eb` / `ed4750a7` | Integrated as merge `2ca96ea7`; 43 focused tests passed, 11 missing-input skips. |
+| Guarded mixed-width LE static analysis and runtime carrier views | `b5afeaed` | Integrated the overlapping `35f7dffb`/`51d8bdae`/`b875722c` seams with schema9 compatibility, schema10 admission, per-object widths and qualified static backings; unsupported symbolic behavior stays explicit. |
+| Recovered media, intake and installer profiles | `e06b5d66` / preservation fix `bf46036a` | Integrated at `39514391`, with failed-output retention and exclusive owned probe artifacts; authored source checks do not establish native/private-corpus acceptance. |
+| Recovered bounded UDC, source examples and compiler adapters | `b86f1d2f` / data-receipt fix `6dafd643` | Integrated at `b1c21ed5`, with final emitted-data hashing at `57e97691`; current interfaces, variant distinctions and private-target exclusions retained. |
+| Recovered tools, owned shutdown and historical guidance | `e78ac8dc` | Integrated at `f14bbc22`; source-only Drive/FDB, RTLink, fuzzing/friction and backend lifecycle ports, plus sanitized historical guidance. No service/native activation is implied. |
+| Pinned Drive library and FDB selections | `b5bdde1d` / `170aa463` | Integrated through `27838f79`; exact admitted source/parent bindings and manifest-checked staging. The final SQLite source-preservation followup remains under review. |
+| Owner CI and recoverable installer corrections | `be68826e` / installer line through `736cb7c6` | Included through `4684a8dc`; 88 fresh focused root checks covered installer/CI recovery. Native/package/release/install acceptance remains separate. |
 | Intended version and current installation documentation | This integration line | Core/player/runtime metadata now 0.35.0. Historical installation notes remain historical; current shared 0.34.1 local candidate is not attributed to the old tag. |
 
 ## Equivalent or superseded work, with provenance retained
@@ -40,21 +47,21 @@ because its branch was mirrored or its files parse.
   banner and an obsolete manifest omission. Retain provenance without merging
   its unrelated, incomplete root.
 
-## Preserved with explicit unresolved integration issues
+## Preserved snapshots with reconciled or excluded deltas
 
-| Preserved branch | Exact head | Issue retained |
+| Preserved branch | Exact head | Current disposition |
 | --- | --- | --- |
 | `codex/preserve-root-dirty-20261114` | `48cf02fe2cd41ad8bf5533ddbe50e29ad35f9fe3` | Root CLI semantic delta adds a duplicate `z-controller` parser. Raw dirty work is preserved, but duplicate registration is excluded. Current docs are reconciled separately. |
-| `codex/preserve-dirty-automatic-relocation-20261114` | `35f7dffb0df031760d9b17b61f4b81e665fc1aa2` | Unique LE schema10/object-width decoder and competing loader/Project contract require reconciliation with the current carrier implementation. |
-| `codex/preserve-dirty-mixed-le-20261114` | `51d8bdae7fe4db82edd45fe25531899bf9139300` | Same schema/loader seam; not wholly equivalent to current code. No wholesale overwrite. |
-| `codex/preserve-dirty-desqview-containment-20261114` | `b875722cfd832624cb57ab41b6f725de468aab57` | Older containment/source snapshot includes competing schema10 assumptions. Preserve unique ideas; current qualification/source bindings remain authoritative. |
+| `codex/preserve-dirty-automatic-relocation-20261114` | `35f7dffb0df031760d9b17b61f4b81e665fc1aa2` | Shared LE/schema and runtime hooks reconciled through `b5afeaed` and `f14bbc22`; original snapshot retained without wholesale overwrite. |
+| `codex/preserve-dirty-mixed-le-20261114` | `51d8bdae7fe4db82edd45fe25531899bf9139300` | Unique static mixed-width seam integrated at `b5afeaed`; original snapshot remains preserved, not a separate held capability. |
+| `codex/preserve-dirty-desqview-containment-20261114` | `b875722cfd832624cb57ab41b6f725de468aab57` | Overlapping ideas reconciled at `b5afeaed`; newer containment/source bindings remain authoritative. Historical native observations retain their original scope. |
 
 n8n froze `codex/ci-end-to-end-stabilization-20261114` at
 `0fcbda2c287fa64a14d82d320b8f6d3971071c73`, followed by the bounded correction
 `adef0021cf5dc39c66601e9afadedf188dfb8a9f`. That immutable local source is now
 integrated; its live worktree/index were not swept. The owner corrected the plain-output parser failure. Exact canonical branch
 `adef0021` readback is verified on primary GitHub, GitLab and the local hub.
-The remaining contribution/delivery issues below still prevent a final freeze.
+The source-preservation followup and final combined/package checks below still prevent a final freeze.
 
 The public-metadata transport prototype
 `75114464333fb96771e0e2fc6f1be6497e015d69` is separately preserved on primary as
@@ -88,23 +95,30 @@ explicit preserved issues above. Their finite content-equivalence/disposition au
 [complete source consolidation audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md). After
 the endpoint-authentication merge and final ancestry check, the 126 tips comprise
 27 content-equivalent, 35 superseded, 18 intentionally preserved, 2 integrated
-and 44 with concrete unique adaptations still required. These are tip counts,
-not counts of independent capabilities. This does not claim all historical
-contributions are integrated.
+and 44 initially classified as needing concrete unique adaptation. These are
+historical tip counts, not a current backlog or counts of independent capabilities.
+The recovered groups are now source-implemented as mapped above; excluded and
+intentionally preserved histories retain their dispositions.
 The private operational receipt `primary-integration-coverage.json` lists every
-head and exact OID for the next bounded comparison pass.
+head and exact OID for that captured audit.
 
-The three older LE snapshots share one mixed-width static-import/analysis
-prototype, not three independent new formats. Current containment, source
-matching and input successors passed 400 focused checks; their results do not
-establish the absent schema10 static decoder/Project behavior. The preserved
-DOSBox RPC automatic-tracking hooks also require backend-specific adaptation
-instead of assuming that QEMU lifecycle coverage transfers.
+The three older LE snapshots shared one mixed-width static-import/analysis
+prototype. That contract is now reconciled at `b5afeaed`, and the backend-specific
+DOSBox RPC hooks are included with tools at `f14bbc22`; neither is a held source
+gap. See the [current recovered-capability mapping](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
+and [historical audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md) for the bounded source
+and claim limits.
 
-Before freeze, implement the [remaining source adaptations](SOURCE_CONSOLIDATION_AUDIT_0.35.md)
-under the existing integrate-all instruction using the
-[deduplicated work items](RECOVERED_CAPABILITY_INTEGRATION_0.35.md). Required
-adaptation effort is not a missing permission or generic scope decision. Close the remaining delivery gaps, then qualify
-one exact primary-GitHub SHA. Ordinary/native CI, complete offline packaging,
-network-disabled DOS/PE32/Win16 consumption, public delivery and fresh shared
-installation verification remain independent open gates.
+Before source freeze, close the one active `scripts/fdb_backup.py`
+source-preservation followup: actual SQLite main-file descriptor admission across
+a regular-file A→B→A swap, held manifest inode/hash proof, and retained private
+stages in place of pathname check/unlink cleanup. Complete the final combined
+source/package checks, including the eligible tool-ZIP/sdist inventory correction.
+Draft [GitHub PR #87](https://github.com/seeker-cyber-maker/fDisBull/pull/87)
+remains the existing review; this status update does not publish or install it.
+
+Then qualify one exact primary-GitHub SHA. Ordinary/native Linux CI, backend and
+private-input acceptance, complete offline packaging, network-disabled
+DOS/PE32/Win16 consumption, public delivery and fresh shared installation
+verification remain independent gates. The approved release process and its
+conditional installation/activation authority are unchanged.
