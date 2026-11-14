@@ -318,7 +318,14 @@ def test_dead_leader_live_child_is_killed_on_owned_group_timeout(tmp_path,monkey
     work=tmp_path/'work';work.mkdir();pidfile=work/'child.pid';leaders=[]
     popen=subprocess.Popen
     def capture(*args,**kw):
-        process=popen(*args,**kw);leaders.append(process.pid);return process
+        process=popen(*args,**kw);leaders.append(process.pid)
+        # Establish the exact dead-leader/live-child condition before starting
+        # the runner's timeout; slow CI startup must not change the test case.
+        ready=time.monotonic()+10
+        while process.poll() is None or not pidfile.is_file() or not pidfile.read_text().strip().isdecimal():
+            if time.monotonic()>=ready:pytest.fail('authored child did not report readiness')
+            time.sleep(.01)
+        return process
     code=('import subprocess,sys; from pathlib import Path; '
           'p=subprocess.Popen([sys.executable,"-c","import time; time.sleep(60)"]); '
           'Path(sys.argv[1]).write_text(str(p.pid))')
