@@ -149,7 +149,14 @@ def source_identity(source, *, generated_outputs=False):
     if capture(status, cwd=source).strip():
         raise ValueError('Source must be clean, including new authored files')
     sha = capture(['git', 'rev-parse', 'HEAD'], cwd=source).strip()
-    branch = capture(['git', 'symbolic-ref', '--short', 'HEAD'], cwd=source).strip()
+    try:
+        branch = capture(['git', 'symbolic-ref', '--quiet', '--short', 'HEAD'], cwd=source).strip()
+    except subprocess.CalledProcessError as error:
+        if error.returncode != 1:
+            raise
+        # The production pipeline deliberately checks out an immutable commit.
+        # Detached HEAD is a valid source identity, not an unknown branch name.
+        branch = None
     if not re.fullmatch('[0-9a-f]{40}', sha):
         raise ValueError('Expected one exact source commit')
     return sha, branch
@@ -158,8 +165,10 @@ def source_identity(source, *, generated_outputs=False):
 def clone_source(source, destination, sha, branch):
     # --no-local uses a shallow upload-pack transfer, rather than copying the
     # original Git config, worktree pointer, credentials or complete history.
-    capture(['git', '-c', 'core.hooksPath=/dev/null', 'clone', '--no-local', '--depth', '1', '--single-branch',
-             '--branch', branch, str(source), str(destination)], timeout=180)
+    command = ['git', '-c', 'core.hooksPath=/dev/null', 'clone', '--no-local', '--depth', '1', '--single-branch']
+    if branch is not None:
+        command += ['--branch', branch]
+    capture([*command, str(source), str(destination)], timeout=180)
     if source_identity(destination) != (sha, branch):
         raise ValueError('Source moved during snapshot; preserve this attempt and start a new run')
 
