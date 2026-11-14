@@ -1,0 +1,165 @@
+{
+  "format": "fdisbull-exact-combined-reader-verification-1",
+  "date": "2026-11-14",
+  "status": "verified-bounded-combined-build-with-explicit-compatibility-gaps",
+  "runtime_build_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+  "corrected_native_test_source_commit": "0ee7780fc5785f72a0a1b6dc9a7a93b8baf72e22",
+  "retained_DESQview_capture_origin_commit": "daab62e573727eb2df64609cc9e0fac204ea16cf",
+  "wheel_sha256": "0e9199f5fb0c3bf908aafc41177b6ad1743da1894ec774a95567cea2164b5762",
+  "package_manifest_sha256": "0d791caa7fa3b50afac0850cace2717ef916ce77bf9e3c355bb372dd5702c2bb",
+  "documentation_integrated": {
+    "original_commit": "874f0a8b760a272840f9d36a24e3edeede904182",
+    "integrated_in_runtime_build": true,
+    "files": {
+      "docs/evidence/desqview-checkpoint-public-cold-reopen-2026-11-14/README.md": "854fd7024ff7ec3142f9ead0002d165d3d292729d5fa928f5d9448b42dbd4d67",
+      "docs/evidence/desqview-checkpoint-public-cold-reopen-2026-11-14/verification.json": "e3fe73dca47b4b1029f6ee0fc0deca2949f9b4830706c7ee462006cd1f09adae"
+    },
+    "original_daab_only_claims_preserved": true
+  },
+  "package_identity": {
+    "source_Git_wheel_installed_members": 710,
+    "complete_inventories_equal": true,
+    "no_extra_installed_files_or_pyc": true,
+    "all_member_hashes_equal_before_after": true,
+    "corrected_test_head_runtime_subtree_identical": true
+  },
+  "host_checks": {
+    "source_suite": {
+      "source_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+      "passed": 3434,
+      "skipped_native_inputs": 12,
+      "failures": 0,
+      "errors": 0
+    },
+    "independent_installed_selection": {
+      "passed": 221,
+      "skips": 0,
+      "frozen_test_helper_modules": 16,
+      "loaded_runtime_modules_from_verified_prefix": 137
+    },
+    "counts_overlap_do_not_sum": true,
+    "initial_independent_collection_fixture_error_retained_separately": true
+  },
+  "fresh_native_checks": {
+    "final_selection08": {
+      "passed": 19,
+      "skips": 0,
+      "failures": 0,
+      "errors": 0,
+      "runtime_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+      "test_source_commit": "0ee7780fc5785f72a0a1b6dc9a7a93b8baf72e22"
+    },
+    "scope": "Selected original COM/MZ game workflows, filesystem/private-workspace, preservation and public wait/input composition",
+    "prior06": {
+      "passed": 18,
+      "delivery_consumer_failure": 1,
+      "retained": true
+    },
+    "prior07": {
+      "corrected_delivery_consumer_passed": 1,
+      "retained": true
+    },
+    "prior_de2_failed_native_composition_retained": true,
+    "output_ref_recovery_is_not_operation_replay": true,
+    "no_native_rebuild": true
+  },
+  "public_reader_checks": {
+    "controlled_Project_reopens": 2,
+    "alias_queries": 348,
+    "historical_views": 29,
+    "restore_phase_queries": 28,
+    "restore_sequences": [
+      4,
+      8,
+      9,
+      10,
+      11,
+      13,
+      14
+    ],
+    "one_shot_cases": 47,
+    "retained_serve_cases": 47,
+    "named_CLI_cases": 23,
+    "wire_replies": 193,
+    "exact_JSON_exports": 72,
+    "selected_set_per_JSON_path": {
+      "detailed_errors": 17,
+      "physical_certificates": 9,
+      "memory_snapshots": 9,
+      "checkpoint": 1
+    },
+    "Project_exact_exports": 39,
+    "checkpoint_bytes_each": 11927552,
+    "checkpoint_sha256": "cbe045dbd83a64cc13f6504cb261bcecc5ae3c18131041ca3782ca2c3ac40ae0",
+    "checkpoint_public_exports": 3,
+    "restored_generation": 0,
+    "restored_creation_observed": false,
+    "native_creation_unknown_preserved": true,
+    "preincarnation_typed_errors_per_JSON_path": 3,
+    "old_errors_preserved_after_tracker_counter_reset": 17,
+    "positive_semantic_ambiguity_cases_observed": 0,
+    "output_reference": {
+      "recovered_reply_bytes": 10127,
+      "original_operation_replayed": false,
+      "execution_complete": null,
+      "execution_status": null
+    },
+    "new_live_DESQview_restore_performed_by_reader_gate": false
+  },
+  "ordinary_Doom_probe": {
+    "runtime_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+    "outcome": "Remained visibly at R_Init after WAD loading within the bounded observed run; cause unknown",
+    "measured_virtual_nanoseconds": 90000000000,
+    "saved_frames": 9,
+    "PNG_hashes": 2,
+    "only_pixel_difference": "cursor-sized region 369,237..378,239",
+    "host_hard_deadline_seconds": 180,
+    "title_menu_gameplay_observed": false,
+    "menu_input_attempted": false,
+    "checkpoint_attempted": false,
+    "LE_binding_or_IRQ_mask_or_private_CPU_epoch_writes": false,
+    "original_EXE_WAD_hashes_unchanged": true,
+    "controller_guest_group_absent": true,
+    "failure_database_WAL_SHM_retained_private": true,
+    "probe01_controller_parameter_failure_retained_separately": true
+  },
+  "preservation": {
+    "original_executables_untouched": true,
+    "canonical_pristine_clone_DB_and_327_objects_each_unchanged": true,
+    "public_reader_lane_has_no_sidecars": true,
+    "Doom_failure_sidecars_preserved": true,
+    "all_recorded_owned_processes_closed": true,
+    "native_dependencies_and_legacy_inputs_unchanged": true,
+    "groups_overlap_do_not_sum": true
+  },
+  "private_primary_evidence_hashes": {
+    "PACKAGE-IDENTITY.json": "1a204b85bbb42ba2bf35813c2ac0a2757b339b72c0964bd3c76e4dd6451d4898",
+    "PACKAGE-IDENTITY-POST.json": "1a204b85bbb42ba2bf35813c2ac0a2757b339b72c0964bd3c76e4dd6451d4898",
+    "PROJECT-REOPEN.json": "8a5d40322b0676a315eb4b600bc5ab13b1fa072cf487dcd15a5824add5aa72ed",
+    "JSON-REOPEN.json": "9687ccf3e3a3e40644c44a13f2efef824a94030cc230fec9a1c0233732e9bd79",
+    "JSON-CLOSEOUT.json": "2823a18c74ae3ce891c61b4b909ff7eaa51f25644c566a67a40bf7b4a2f40a9d",
+    "INSTALLED-FOCUSED-HOST-V2.json": "6d137bb2c9e4388da95c59b974bf3e8e2eb4168a4376867aff5a6c4cd2a58b4c",
+    "INSTALLED-FOCUSED-HOST-V2.xml": "76de77d6763d38d01ac390d8db1898df78b9c78a1aafa7e610a248cd01d2f615",
+    "TEST-HEAD-ASSOCIATION.json": "3bbbace89bde4f9c21d4ee8dbeb776a95a9bfb2a530e9dbf76133d6c90437e82",
+    "INPUT-PRESERVATION.json": "8559dfe41357f027fd8ec3ab4f7a7a502126410087d00130ecc4147ec2c35442",
+    "DOOM-READBACK.json": "a5e416ae8832bca3335518f0487ebbc6020ffb89a9d714fa3b7de66340b5eb55",
+    "ROOT-POSTFLIGHT.json": "8f162b1978a4ff4b41c6768da29846a8c70c2f9e85fb2e544854944d593b0aa3",
+    "INDEPENDENT-PUBLIC-READBACK.json": "b2e8a1d54fbdf105e1f25a3994dfcf7abf1c7112380961b4a810470c8e964f96",
+    "INDEPENDENT-NATIVE-HOST-REVIEW.md": "d009e6c64f253c9e09421020556117d9d2e04279b8d60fcc3891a2320fda1c60"
+  },
+  "Engine_primary_evidence_hashes": {
+    "native-final-08.json": "6bc2433ab0188caf308993bfafb7a4d992f77733cba7cd99ac716806907cd5b9",
+    "native-corrected-06.json": "99f75ecb15dc7251f07a919bbb7b91dbd2e3b7e5213efbaa7d94aead3b8cbfad",
+    "native-wait-delivery-07.json": "8f80db7d4abf87a6db89cba4f9cbd0f73a5a50600279be1a4300ec2d444e2b5c",
+    "host-corrected-source-02-155885-result.json": "fecdebfaccfe641eaa794d62c3dd869cbe7108cee74a5645c930c0ea968cd6d8",
+    "doom-ordinary-02-closeout.json": "913a8aa37980d68802576dd77acd6d614e6fbc3c9411ac233d4831ec8e533fab"
+  },
+  "claim_limits": [
+    "Fresh reader checks use the original daab native captures as data; they add no current live DESQview relocation, handle-reuse or restore witness",
+    "The selected native cases do not qualify whole-game, exact full-raster/timing or complete DOSBox replacement parity",
+    "Doom has no title/menu/gameplay or checkpoint acceptance; startup cause remains unknown",
+    "The separate strict paired ATTT DOSBox-X cold-reference gap remains open in Engine assessment",
+    "Final documentation/test head needs explicit association to the same710 runtime members",
+    "No CI, merge, release, shared installation or default-backend activation"
+  ]
+}

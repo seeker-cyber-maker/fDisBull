@@ -108,6 +108,12 @@ install. Later test/documentation commits must preserve those bytes.
 Counts overlap and measure verification quality, not percentage completion.
 The [sanitized receipt](verification.json) binds the exact raw reports and
 distinguishes failed candidates, delivery-consumer corrections and open gates.
+The independently verified [combined public-reader supplement](combined-public-readback.md)
+adds exact installed-prefix Project/JSON/CLI reopening and export checks against
+retained `daab62e5` DESQview captures, including 193 replies and 72 exact JSON
+exports. It qualifies the new reader against historical data and supplies no
+new live DESQview restore authority. Its separate installed host selection
+passes 221 cases with zero skips on the same 710-file runtime.
 Original commercial inputs, images, states, FDB/CAS and raw observations remain
 private. No CI, native rebuild, release, merge, default change or shared
 installation change is part of this slice.

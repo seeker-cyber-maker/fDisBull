@@ -6463,3 +6463,12 @@ RNG/checkpoints and IRQ behavior while closing these gaps. No CI, native
 rebuild, release, merge, default switch or shared activation is part of this
 slice. The previous MR description is preserved in
 [the archive](milestones/archive/117-description-before-ordinary-end-to-end-20261114.md).
+
+The coordinated [combined public-reader supplement](evidence/qemu-ordinary-end-to-end-2026-11-14/combined-public-readback.md)
+independently verifies the exact 710-file runtime, 348 historical alias queries,
+193 public replies and 72 exact JSON exports, plus 221 installed-prefix host
+checks. Its DESQview native captures remain attributed to `daab62e5`; no new
+live vendor-task restoration is inferred from reopening that data. Final
+test/documentation source preserves the `29f45ab6` runtime bytes and committed
+`0ee7780f` consumer test. The clean final native selection passes all 19 cases
+with zero skips; failed/earlier candidate receipts remain separately retained.
