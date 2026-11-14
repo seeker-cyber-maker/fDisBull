@@ -253,6 +253,18 @@ METHODS = {
     "debug-memory-snapshot": "Capture an immutable paused DOS memory range with run/task/mapping identity; run,address,length,[space,task_id,name,context]",
     "debug-memory-apply": "Apply one owned memory edit plan with fresh context/expected-byte guards and readback; run,plan,[context]",
     "memory-snapshot-info": "Inspect a retained private memory snapshot and capture provenance; snapshot",
+    "runtime-objects": "List source-bound LE objects or mapped regions for runtime relationships; [version]",
+    "runtime-task-start": "Record a fresh task incarnation; run,external_id,evidence,[version,capture_epoch]",
+    "runtime-task-end": "End one task incarnation without deleting history; task,evidence",
+    "runtime-map": "Record a caller-supplied bounded object relationship; task,object_id,object_offset,length,linear_start,evidence,[physical_start,selector,mapping_context,replace]",
+    "runtime-map-snapshot": "Bind only a local snapshot's compared object extent; task,snapshot,object_id,object_offset,length,[snapshot_offset,replace]",
+    "runtime-unmap": "Close explicitly selected active binding lifetimes; task,bindings,evidence",
+    "runtime-map-checkpoint": "Record the selected task's current binding set; task,evidence",
+    "runtime-map-restore": "Restore a same-task checkpoint as fresh binding lifetimes; task,checkpoint,evidence",
+    "runtime-mappings": "Inspect a task's current or historical recorded relationships; task,[at,offset,limit]",
+    "runtime-tasks": "Page persisted task incarnations; [run,offset,limit]",
+    "runtime-resolve": "Return every matching bounded relationship without guessing ownership; task,address,[space,at,selector]",
+    "runtime-mapping-events": "Page append-only task mapping history; task,[after,limit]",
     "memory-search-start": "Search a retained snapshot using unknown, exact or range values; snapshot,[width,signed,byteorder,stride,mode,value,minimum,maximum,bias,max_candidates]",
     "memory-search-refine": "Narrow only existing candidates against a compatible new snapshot; search,snapshot,mode,[value,delta,max_candidates]",
     "memory-search-results": "Page retained memory candidates with current/previous scalar values; search,[offset,limit]",
@@ -514,6 +526,45 @@ METHODS["source-info"] = (
     "Recorded target size/SHA-256, loader provenance and current availability; [version]; "
     "or source-catalog counts and scope with catalog"
 )
+
+RUNTIME_MAPPING_WRITES = frozenset((
+    "runtime-task-start", "runtime-task-end", "runtime-map", "runtime-map-snapshot",
+    "runtime-unmap", "runtime-map-checkpoint", "runtime-map-restore",
+))
+RUNTIME_MAPPING_METHODS = RUNTIME_MAPPING_WRITES | frozenset((
+    "runtime-objects", "runtime-tasks", "runtime-mappings", "runtime-resolve", "runtime-mapping-events",
+))
+
+
+def _runtime_mapping_parameters(method, params):
+    """CLI definitions are bounded data, never a recipe to execute."""
+    if "definition_file" not in params:
+        return params
+    if method not in RUNTIME_MAPPING_WRITES or set(params) != {"definition_file"}:
+        raise ValueError("runtime mapping definition_file cannot be combined with other parameters")
+    path = Path(params["definition_file"])
+    maximum = 4 * 1024 * 1024
+    if not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("expected one runtime mapping JSON definition file at most 4 MiB")
+    with path.open("rb") as stream:
+        raw = stream.read(maximum + 1)
+    if len(raw) > maximum:
+        raise ValueError("runtime mapping definition exceeds 4 MiB")
+    def unique(pairs):
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError("duplicate runtime mapping definition key: " + name)
+            result[name] = value
+        return result
+    def finite(value):
+        raise ValueError("nonfinite runtime mapping definition value: " + value)
+    definition = json.loads(raw.decode("utf-8"), object_pairs_hook=unique, parse_constant=finite)
+    if not isinstance(definition, dict):
+        raise ValueError("runtime mapping definition must be a JSON object")
+    if "project" in definition or "definition_file" in definition:
+        raise ValueError("runtime mapping definition cannot override project or definition_file")
+    return definition
 
 
 METHODS.update({

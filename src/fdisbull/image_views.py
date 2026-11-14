@@ -88,7 +88,7 @@ def _le_view(data: bytes, offset: int) -> dict:
     """A compact inventory of the supported static LE loading profile."""
     view = dict(image='le', format='LE', header_offset=offset, arch='x86', bits=32,
                 endian='little', available=False, loadable=False, valid=False,
-                error=None, validation_scope='bounded DOS/4GW flat object, page and internal fixup validation')
+                error=None, validation_scope='bounded DOS/4GW object, per-object decoder width, page and internal fixup validation')
     try:
         from .le import inspect_le
         metadata = inspect_le(data)
@@ -97,7 +97,11 @@ def _le_view(data: bytes, offset: int) -> dict:
                     object_count=len(metadata['objects']),
                     page_count=len(metadata['pages']),
                     fixup_count=metadata['fixup_count'],
-                    load_model=metadata['load_model'])
+                    load_model=metadata['load_model'],
+                    bits=metadata['bits'], mixed_bits=metadata.get('mixed_bits', False),
+                    decode_regions=metadata.get('decode_regions', []),
+                    application_file_offset=metadata.get('carrier', {}).get('application_offset', 0),
+                    carrier=metadata.get('carrier'))
     except ValueError as error:
         view['error'] = str(error)
         from .dos_driver import embedded_le_inventory
@@ -156,6 +160,16 @@ def image_views(data:bytes)->list[dict]:
         return [_le_view(data, 0)]
     if not data.startswith(b'MZ'):return [_sys_view(data, driver)] if driver else []
     secondary=secondary_header(data)
+    bound_le = None
+    bound_error = None
+    if secondary is None:
+        from .le import le_carrier_origin
+        try:
+            origin = le_carrier_origin(data)
+            if origin is not None and origin['application_offset']:
+                bound_le = origin
+        except ValueError as error:
+            bound_error = str(error)
     mz=dict(image='mz',format='MZ',header_offset=0,arch='x86',bits=16,endian='little',
             available=False,loadable=False,valid=False,error=None,load_segment=0x1000,
             secondary_format=secondary['format'] if secondary else None,
@@ -177,4 +191,13 @@ def image_views(data:bytes)->list[dict]:
     if secondary and secondary['format']=='PE':views.append(_pe_view(data,secondary['header_offset']))
     if secondary and secondary['format']=='LE':views.append(_le_view(data,secondary['header_offset']))
     if secondary and secondary['format']=='NE':views.append(_ne_view(data,secondary['header_offset']))
+    if bound_le is not None:
+        views.append(_le_view(data, bound_le['header_offset']))
+    elif bound_error is not None:
+        # A declared BW chain failed validation. Keep the usable DOS envelope,
+        # but expose the refused native candidate rather than scanning for LE.
+        views.append(dict(image='le', format='LE', arch='x86', bits=None,
+                          available=False, loadable=False, valid=False,
+                          header_offset=None, error=bound_error,
+                          validation_scope='declared MZ/BW/MZ carrier refused'))
     return views

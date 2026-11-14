@@ -1,4 +1,4 @@
-"""Explicit runtime-source carrier parsing, separate from strict static import."""
+"""Runtime-source carrier parsing alongside guarded mixed-width static import."""
 import hashlib
 import struct
 
@@ -54,10 +54,15 @@ def test_symbolic_offset16_and_object_widths_are_not_concrete_runtime_bindings()
 
 
 @pytest.mark.parametrize('source', [mixed_le(), bound_le(le_file()),
-                                  le_file(fixups=[struct.pack('<BBhBH', 5, 0, 1, 2, 2), b''])])
-def test_new_runtime_cases_do_not_broaden_ordinary_static_admission(source):
-    with pytest.raises(ValueError):
-        load_le(source)
+                                  le_file(fixups=[struct.pack('<BBhBH', 5, 0, 1, 2, 2), b''])],
+                         ids=['mixed-objects', 'bound-carrier', 'symbolic-offset16'])
+def test_runtime_cases_have_guarded_static_source_views(source):
+    image = load_le(source)
+    assert image.source_bytes == source
+    assert 'runtime_source_profile' not in image.metadata['le']
+    if any(not item['applied'] for item in image.metadata['le']['fixups']):
+        assert image.metadata['decode_regions']
+        assert all(item['runtime_selector'] is None for item in image.metadata['le']['objects'])
     assert load_runtime_le_carrier(source).format == 'LE'
 
 
@@ -67,6 +72,9 @@ def test_strict_flat_profile_keeps_its_metadata_schema():
     assert 'runtime_source_profile' not in image.metadata['le']
     assert 'bits' not in image.metadata['le']['objects'][0]
     assert 'runtime_applied' not in image.metadata['le']['fixups'][0]
+    assert 'alias_required' not in image.metadata['le']['objects'][0]
+    assert 'carrier' not in image.metadata['le']
+    assert 'symbolic_fixup_count' not in image.metadata['le']
     assert image.metadata['le']['load_model'] == 'Preferred LE object addresses with internal offset32 fixups; no runtime selectors or DOS extender execution'
 
 

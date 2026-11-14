@@ -143,6 +143,7 @@ class CFGMixin:
 
         with self.transaction():
             v = self.version(version)['id']
+            le_processor = self._le_processor(v)
             if dos and context is None:
                 alternatives = [row[0] for row in self.db.execute('SELECT context FROM instructions WHERE version=? AND address=? ORDER BY context', (v, _key(start)))]
                 if len(alternatives) > 1:
@@ -197,8 +198,20 @@ class CFGMixin:
                 node = dict(id=node_id, address=_hex(a), context=current_context, segmented_address=_segmented(a, current_context),
                             size=row['size'], bytes=row['bytes'], mnemonic=row['mnemonic'], operands=row['operands'],
                             raw_operands=row['operands'], display_operands=display, flow=row['flow'], references=references, file_references=file_refs, file_reference_summary=file_refs_summary,
-                            next_address=_following(row, a), name=shown['name'], representation=shown['representation'],
+                            next_address=(self._instruction_following(v,a,row['size']) if le_processor else _following(row,a)), name=shown['name'], representation=shown['representation'],
                             presentation=shown, highlights=[])
+                node['decoder_bits'] = self.decode_bits(a,v)
+                node['decoder_context'] = self.decoder_context(a,v)
+                if le_processor is not None:
+                    mode = self.decode_mode(a,v)
+                    node.update(le_object_index=mode['object_index'],le_object_offset=a-mode['start'],
+                                le_fixups=le_processor.fixups_for(a,row['size']))
+                    node['operand_status'] = ('symbolic_unapplied_fixup'
+                                              if any(item.get('applied') is False for item in node['le_fixups'])
+                                              else 'decoded_static_operand')
+                    if node['operand_status'] == 'symbolic_unapplied_fixup':
+                        unresolved.append(dict(source=node_id,address=_hex(a),context=current_context,kind='operand',
+                                               reason='symbolic_unapplied_LE_fixup',le_fixups=node['le_fixups']))
                 if self.arch=='thumb':
                     predicate=self._thumb_predicate(v,a)
                     if predicate:
@@ -235,8 +248,8 @@ class CFGMixin:
                         for following in fallthroughs:
                             add_edge(row, a, int(following['target'], 16), following['context'], 'fallthrough', following['evidence'], 'stored')
                     else:
-                        following = _following(row, a)
-                        if following < (0x100000 if dos else 1 << 64):
+                        following = node['next_address']
+                        if following is not None and following < (0x100000 if dos else 1 << 64):
                             add_edge(row, a, following, current_context, 'fallthrough',
                                      'reconstructed from stored instruction size and permitted flow' + ('; assumes call returns' if flow in ('call', 'indirect_call') else ''), 'reconstructed')
                         else:
@@ -275,6 +288,7 @@ class CFGMixin:
                         instruction_count=len(nodes), block_count=len(blocks), edge_count=len(edges),
                         budget=budget, budget_exhausted=bool(queue), traversal_exhausted=not queue,
                         graph_closed=not queue and not gaps and not any(item['kind'] == 'branch' for item in unresolved),
+                        interpretation_complete=not any(item['kind'] == 'operand' for item in unresolved),
                         analysis=self.analysis_status(v),
                         assumptions=['Calls are not entered; each call continuation assumes the call returns.',
                                      'Branch outcomes are not evaluated. Stored state alternatives can introduce infeasible paths.'],

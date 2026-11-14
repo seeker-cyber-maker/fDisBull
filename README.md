@@ -204,7 +204,7 @@ profiles:
 - **DOS & 16/32-bit Windows:** classic MZ, explicit COM,
   [DOS `.SYS` device drivers](docs/DOS_DRIVERS_AND_QEMM.md) (`dos-sys-inspect`),
   [DESQview `.DVR` modules](docs/DESQVIEW_AND_MEMORY_SEARCH.md) (`desqview-module-inspect`),
-  bounded 32-bit [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
+  bounded per-object 16/32-bit [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
   [Win16 NE](docs/NE_LOADING.md) segments with logical `ne:seg:offset` addresses
   and symbolic relocations, OMF library signature catalogs (`omf-catalog`), and
   [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md) (Miles AIL 2 `.ADV` exports
