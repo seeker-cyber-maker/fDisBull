@@ -62,8 +62,8 @@ not repeat publication. Each new URL needs fresh live verification.
 This code path must pass a real uninterrupted source-to-release run before
 being called operationally qualified. Historical operator-assisted closure does
 not qualify it. Publication and the active local installation retain separate
-identities and gates. There is no automatic system-wide application installation
-in this path.
+identities and gates. The separately invoked system installer has its own host qualification and
+activation receipts; this controller does not automatically install the app.
 
 ## Execution and ownership
 
@@ -194,6 +194,8 @@ For the current 0.35.0 release, the user approved fresh-prefix installation and
 activation after the full release checks pass, retaining the previous prefix
 and exact selector for rollback. That approval supersedes earlier no-install
 instructions for older candidates; it does not make an unverified Mac backend
-qualified. The source-to-release controller does not yet implement application
-prefix assembly or activation. Record that implementation/host-qualification
-stage explicitly rather than treating it as a new permission requirement.
+qualified. The evidence-bound [system installer](SYSTEM_INSTALLATION.md) implements fresh
+prefix assembly, verification, activation and rollback. The source-to-release
+controller does not automatically invoke that host installer; its release result
+does not claim Mac activation. Record actual host qualification and installation
+readback as distinct stages, rather than adding another permission requirement.

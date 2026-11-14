@@ -1,0 +1,35 @@
+{
+  "actual_cli_probe": {
+    "fixture_sha256": "419ddca7a484fee079460325c7a9ffcb85eaf4c689409978d96a57f4612501af",
+    "installed_version": "0.34.1",
+    "operations": [
+      "import",
+      "analyze",
+      "status/reopen"
+    ],
+    "persisted_instructions": 8,
+    "selector_changed": false,
+    "source_commit": "3aaac41b1f73220568fc07b9d53f5ccd4307a242"
+  },
+  "focused_integrated_checks": "66 passed in1.33s",
+  "game_files_states_databases_included": false,
+  "implemented": [
+    "fresh evidence-bound prefix",
+    "version-neutral payload and installed-wheel verifier",
+    "atomic activation and prior-selector rollback",
+    "command-resolution and existing checker postcheck",
+    "authoredMZ CLI intake/analyze/reopen outsideprefix"
+  ],
+  "qualification_remaining": [
+    "finalfrozen0.35source",
+    "exactcommitLinuxordinary+native",
+    "newno-networkkitconsumer",
+    "publication+CDNfull/resumereadback",
+    "source-boundfreshMacbackendbuilds and sixnativeprofiles",
+    "real0.35freshprefix/activation/postcheck"
+  ],
+  "schema": "fdisbull-system-installation-implementation-evidence-1",
+  "system_installation_performed": false,
+  "tests_scope": "Disposable and synthetic protocol regression checks; no real0.35installation/nativequalification.",
+  "version": "0.35.0"
+}
