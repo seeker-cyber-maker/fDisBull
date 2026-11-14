@@ -10,13 +10,11 @@ import struct
 import time
 
 import capstone
-from capstone import x86_const as X
-from iced_x86 import Decoder
 
 from .debug_semantics import PE_TRACE_SEMANTICS
 from .pe_dll_contracts import validate_dll_callback
-from .pe_guard_model import FLAG_BITS, condition_name, decision
-from .pe_region_equivalence import _arithmetic_flags, _condition, _digest
+from .pe_region_equivalence import _digest
+from ._wine_loader_step import typed_loader_step
 from .wine_arch import register_names, validate_context
 
 
@@ -24,12 +22,6 @@ SCOPE = ('Complete captured source-linked MODULE_InitDLL normal path, including 
          'callback, DllMain, PE-directory/NT-header lookup and context-save leaves; generic owned DLL '
          'globals with event_count 0..6 and irrelevant GPR/defined FLAGS. Mapping/dispatch into '
          'MODULE_InitDLL, faults, exceptions, other threads and uncovered loader intervals remain unproved')
-_R32 = dict(zip(('eax','ebx','ecx','edx','esi','edi','ebp','esp'),
-               ('rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp'))) | {f'r{i}d':f'r{i}' for i in range(8,16)}
-_R16 = dict(zip(('ax','bx','cx','dx','si','di','bp','sp'),
-               ('rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp'))) | {f'r{i}w':f'r{i}' for i in range(8,16)}
-_R8 = dict(zip(('al','bl','cl','dl','sil','dil','bpl','spl'),
-              ('rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp'))) | {f'r{i}b':f'r{i}' for i in range(8,16)}
 
 
 def _number(value):
@@ -362,34 +354,6 @@ def validate_wine_loader_capsule(capsule, *, contract, loader_source, timeout_ms
             native=list(decoder.disasm(raw,address))
             if len(native)!=1 or native[0].size!=len(raw): raise ValueError('Loader bytes do not decode exactly')
             ins=native[0];seq=address+len(raw);pc_after=_number(after['rip']);access_position=0;current_accesses=[]
-            def reg(op):
-                n=ins.reg_name(op.reg)
-                if n in regs and op.size==8:return n,64,0
-                table={4:_R32,2:_R16,1:_R8}.get(op.size,{})
-                if n in table:return table[n],op.size*8,0
-                if n in ('ah','bh','ch','dh') and op.size==1:return {'ah':'rax','bh':'rbx','ch':'rcx','dh':'rdx'}[n],8,8
-                raise ValueError('Unmodeled loader register view')
-            def reg_read(op):
-                n,w,shift=reg(op);return regs[n] if w==64 else z.Extract(shift+w-1,shift,regs[n])
-            def reg_write(op,value):
-                n,w,shift=reg(op)
-                if value.size()!=w: raise ValueError('Loader register operand width differs')
-                if w==64:regs[n]=value
-                elif w==32:regs[n]=z.ZeroExt(32,value)
-                else:
-                    keep=((1<<64)-1)^(((1<<w)-1)<<shift)
-                    regs[n]=(regs[n]&keep)|(z.ZeroExt(64-w,value)<<shift)
-            def loc(op):
-                value=z.BitVecVal(op.mem.disp%(1<<64),64)
-                for r,scale in ((op.mem.base,1),(op.mem.index,op.mem.scale)):
-                    if r:
-                        n=ins.reg_name(r);term=z.BitVecVal(seq,64) if n=='rip' else regs.get(n)
-                        if term is None:raise ValueError('Unknown loader address register')
-                        value+=term*scale
-                if op.mem.segment:
-                    if ins.reg_name(op.mem.segment)!='gs':raise ValueError('Unknown loader segment binding')
-                    value+=teb
-                return simplify(value),op.size
             def access(kind,pointer,width,value=None):
                 nonlocal access_position
                 pointer=simplify(pointer);a=observed(pointer)
@@ -428,29 +392,9 @@ def validate_wine_loader_capsule(capsule, *, contract, loader_source, timeout_ms
                 final=value if kind=='write' else old
                 current_accesses.append((kind,pointer,width,final));all_accesses.append((index,kind,pointer,width,final))
                 return old
-            def read_op(op):
-                if op.type==X.X86_OP_REG:return reg_read(op)
-                if op.type==X.X86_OP_IMM:return z.BitVecVal(op.imm%(1<<(8*op.size)),8*op.size)
-                if op.type==X.X86_OP_MEM:return access('read',*loc(op))
-                raise ValueError('Unknown loader operand')
-            def write_op(op,value):
-                if op.type==X.X86_OP_REG:reg_write(op,value)
-                elif op.type==X.X86_OP_MEM:
-                    p,w=loc(op)
-                    value=z.SignExt(w*8-value.size(),value) if value.size()<w*8 else z.Extract(w*8-1,0,value)
-                    access('write',p,w,value)
-                else:raise ValueError('Unknown loader destination')
-            ops=ins.operands;mn=ins.mnemonic;expected_pc=seq
-            if raw==b'\xf3\x0f\x1e\xfa' or mn=='nop':pass
-            elif mn=='push' and len(ops)==1:
-                value=read_op(ops[0]);value=z.SignExt(64-value.size(),value) if value.size()<64 else value
-                regs['rsp']-=8;access('write',regs['rsp'],8,value)
-            elif mn=='pop' and len(ops)==1:
-                value=access('read',regs['rsp'],8);regs['rsp']+=8;write_op(ops[0],value)
-            elif mn=='call' and len(ops)==1:
-                target=read_op(ops[0]);target=z.ZeroExt(64-target.size(),target) if target.size()<64 else target
-                expected_pc=pc_after;obligations.append(('call_target',index,z.And(*domains),target==pc_after))
-                regs['rsp']-=8;access('write',regs['rsp'],8,z.BitVecVal(seq,64));call_stack.append((seq,regs['rsp']))
+            def on_call(target,seq,frame):
+                obligations.append(('call_target',index,z.And(*domains),target==pc_after))
+                call_stack.append((seq,frame))
                 calls.append({'step':index,'target':hex(pc_after),'return_address':hex(seq),
                     'target_expression':target,'entry_arguments':{n:regs[n] for n in ('rcx','rdx','r8','r9','rsp')}})
                 if pc_after in (symbols['dll_tls_callback'],symbols['dll_entry']):
@@ -458,44 +402,27 @@ def validate_wine_loader_capsule(capsule, *, contract, loader_source, timeout_ms
                     obligations.append(('callback_arguments',index,z.And(*domains),z.And(regs['rcx']==sb,z.Extract(31,0,regs['rdx'])==reason,
                         regs['r8']==0 if role.startswith('tls-') else regs['r8']==initial['r8'])))
                     callback_calls.append(role)
-            elif mn=='ret' and raw==b'\xc3':
-                target=access('read',regs['rsp'],8)
+                return pc_after
+            def on_return(target,frame):
                 if call_stack:
-                    ret,frame=call_stack.pop();obligations.append(('internal_return',index,z.And(*domains),z.And(regs['rsp']==frame,target==ret)));expected_pc=ret
-                else:
-                    if index!=len(steps)-1:raise ValueError('Outer loader RET is not final')
-                    obligations.append(('outer_return',index,z.And(*domains),z.And(regs['rsp']==stack,target==caller)));expected_pc=caller
-                regs['rsp']+=8
-            elif mn in ('mov','movabs') and len(ops)==2:write_op(ops[0],read_op(ops[1]))
-            elif mn=='movzx' and len(ops)==2:
-                value=read_op(ops[1]);dest_width=reg(ops[0])[1];write_op(ops[0],z.ZeroExt(dest_width-value.size(),value))
-            elif mn=='lea' and len(ops)==2:
-                if ops[1].mem.segment:raise ValueError('Segment-prefixed LEA remains unsupported')
-                write_op(ops[0],loc(ops[1])[0])
-            elif mn in ('cmp','test','add','sub','and','or','xor') and len(ops)==2:
-                a,b=read_op(ops[0]),read_op(ops[1])
-                if a.size()!=b.size():b=z.SignExt(a.size()-b.size(),b)
-                value=a-b if mn in ('cmp','sub') else a+b if mn=='add' else a|b if mn=='or' else a^b if mn=='xor' else a&b
+                    ret,saved=call_stack.pop();obligations.append(('internal_return',index,z.And(*domains),z.And(frame==saved,target==ret)))
+                    return ret
+                if index!=len(steps)-1:raise ValueError('Outer loader RET is not final')
+                obligations.append(('outer_return',index,z.And(*domains),z.And(frame==stack,target==caller)))
+                return caller
+            def fresh_af():
                 fresh=z.Bool(f'loader_undefined_af_{index}');opaque_symbols[str(fresh)]='Bool'
-                flags=_arithmetic_flags(z,'and' if mn=='test' else mn,a,b,value,flags,fresh)
-                undefined=1<<FLAG_BITS['af'] if mn in ('test','and','or','xor') else 0
-                if mn not in ('cmp','test'):write_op(ops[0],value)
-            elif mn.startswith('cmov') and len(ops)==2:
-                value=read_op(ops[1]);old=read_op(ops[0]);condition=_condition(z,mn[4:],flags)
-                write_op(ops[0],z.If(condition,value,old))
-            elif mn in ('stmxcsr','fnstcw','movdqa','movups','movaps'):
-                if not ops or ops[0].type!=X.X86_OP_MEM:raise ValueError('Only context-save floating stores are supported')
-                pointer,width=loc(ops[0]);symbol=z.BitVec(f'loader_opaque_fp_store_{index}',8*width)
+                return fresh
+            def opaque_store(width):
+                symbol=z.BitVec(f'loader_opaque_fp_store_{index}',8*width)
                 opaque_symbols[str(symbol)]=8*width
                 ledger=step['accesses'][access_position]
                 samples.append((symbol,z.BitVecVal(int.from_bytes(bytes.fromhex(ledger['after_hex']),'little'),8*width)))
-                access('write',pointer,width,symbol)
-            else:
-                iced=Decoder(64,raw,ip=address).decode()
-                if iced.is_jcc_short_or_near or iced.is_jmp_short_or_near:
-                    cond=condition_name(iced);taken=decision(cond,_number(event['registers']['rflags']));pred=_condition(z,cond,flags)
-                    domains.append(pred if taken else z.Not(pred));expected_pc=iced.near_branch_target if taken else seq
-                else:raise ValueError('Unsupported native loader instruction: '+mn)
+                return symbol
+            flags,undefined,expected_pc=typed_loader_step(ins,z=z,registers=regs,flags=flags,undefined=undefined,
+                teb=teb,access=access,simplify=simplify,fresh_af=fresh_af,opaque_store=opaque_store,
+                on_call=on_call,on_return=on_return,on_branch=domains.append,
+                native_flags=_number(event['registers']['rflags']))
             if expected_pc!=pc_after or access_position!=len(step['accesses']):raise ValueError('Native PC or complete access footprint disagrees with typed loader transfer')
             # Every ledger after_hex is sampled after the *whole* instruction,
             # including the read row of a read/modify/write memory operation.

@@ -317,12 +317,134 @@ def _bind_loader_capsules(report, *, run, exe_image, dll_image, documents, recei
     return result
 
 
-def load_loader_evidence(project, dll_project, run_report, *, require_loader_capsules=False):
+def _require_loader_boundary_overlap(left, right):
+    """Shared metadata and stack observations at one boundary must agree."""
+    a = _cells(left, maximum=16384, range_limit=256)
+    b = _cells(right, maximum=16384, range_limit=256)
+    common = a.keys() & b.keys()
+    if not common or any(a[p] != b[p] for p in common):
+        raise ValueError('Shared caller/dispatcher boundary metadata or stack bytes differ')
+    return len(common)
+
+
+def _bind_loader_intervals(report, *, run, exe_image, dll_image, documents, receipts,
+                           protected, capsules):
+    """Join short caller fragments to the same proved dispatcher boundaries.
+
+    Caller metadata and saved frames remain explicit interval preconditions.
+    These joins never turn an entire outer loader edge into a proved edge.
+    """
+    references = report.get('loader_intervals')
+    roles = ('attach_success_tail', 'detach_selection_prefix')
+    boundaries = report.get('loader_interval_boundaries', {})
+    if (not isinstance(references, list) or len(references) != 2
+            or not isinstance(boundaries, dict) or set(boundaries) != set(roles)
+            or [c['phase'] for c in capsules] != ['attach', 'detach']):
+        raise ValueError('Both source-linked caller intervals and dispatcher capsules are required')
+    owned = {a for start, length in protected.values() for a in range(start, start + length)}
+    fields = ('name', 'base', 'size', 'bits', 'generation')
+    same_module = lambda a, b: all(a.get(k) == b.get(k) for k in fields)
+    def doc(ref, kind=None):
+        return _reference(ref, documents, receipts, kind)
+    def sequence(ref):
+        doc(ref)
+        return receipts[ref['artifact']]['sequence']
+    def frame(rows):
+        actual = {r.get('role'): (_number(r['address']), len(bytes.fromhex(r['hex']))) for r in rows}
+        if len(actual) != len(rows) or actual != protected:
+            raise ValueError('Caller interval omits a complete protected source range')
+        return _cells(rows)
+    result = []
+    for role, reference, dispatcher in zip(roles, references, capsules, strict=True):
+        interval = doc(reference, 'wine-loader-interval')
+        capsule = dispatcher['capsule']
+        endpoints = boundaries[role]
+        before = doc(endpoints['entry_snapshot'], 'loader-frame-snapshot')
+        after = doc(endpoints['exit_snapshot'], 'loader-frame-snapshot')
+        if (interval.get('format') != 'fdisbull-wine-loader-interval-1'
+                or interval.get('status') != 'complete' or interval.get('role') != role
+                or interval.get('run') != run or interval.get('semantics') != PE_TRACE_SEMANTICS
+                or interval.get('controller_source_sha256') != exe_image['sha256']
+                or interval.get('subject_source_sha256') != dll_image['sha256']
+                or not same_module(interval.get('subject_module', {}), dll_image['module'])
+                or not same_module(interval.get('loader_module', {}), capsule['loader_module'])
+                or interval['loader_module'].get('source_sha256') != capsule['loader_module']['source_sha256']
+                or before['registers'] != interval['entry'] or after['registers'] != interval['exit']):
+            raise ValueError('Caller interval source, context or dispatcher ownership differs')
+        if not sequence(endpoints['entry_snapshot']) < sequence(reference) < sequence(endpoints['exit_snapshot']):
+            raise ValueError('Caller interval snapshots contradict their actual journal order')
+        declared = {r['role']: (_number(r['address']), r['length']) for r in interval['protected_ranges']}
+        if len(declared) != len(interval['protected_ranges']) or declared != protected:
+            raise ValueError('Caller interval declarations differ from complete source ranges')
+        for state in (interval['modules_before'], interval['modules_after']):
+            for expected in (capsule['loader_module'], dll_image['module']):
+                owners = [m for m in state['modules'] if _number(m['base']) == _number(expected['base'])]
+                if len(owners) != 1 or not same_module(owners[0], expected):
+                    raise ValueError('Caller interval source generation changes')
+        steps = interval.get('steps')
+        if not isinstance(steps, list) or not 1 <= len(steps) <= 512:
+            raise ValueError('Caller interval needs complete bounded instructions')
+        for index, step in enumerate(steps):
+            event = step['event']
+            validate_context(event['registers'], 64); validate_context(step['after'], 64)
+            identity, observation = event['identity'], event['observation']
+            if (event['address'] != event['registers']['rip'] or event.get('project_address') is not None
+                    or identity.get('project_address') is not None or identity.get('source_version') != 1
+                    or identity.get('context') != 'flat' or identity.get('runtime_address') != event['address']
+                    or observation.get('registers_stage') != 'before-instruction'
+                    or observation.get('instruction_completed') is not True
+                    or event['registers']['thread'] != capsule['entry']['thread']
+                    or step['after']['thread'] != capsule['entry']['thread']
+                    or event['registers'] != (interval['entry'] if index == 0 else steps[index - 1]['after'])):
+                raise ValueError('Caller interval rewrites its native instruction identity')
+            a, b = frame(step['protected_before']), frame(step['protected_after'])
+            if a != b or (index and a != frame(steps[index - 1]['protected_after'])):
+                raise ValueError('Caller interval changes or loses the protected source frame')
+            read = step['code_read']; raw = bytes.fromhex(read['hex'])
+            if (read['address'] != event['address'] or hashlib.sha256(raw).hexdigest() != read['sha256']
+                    or not raw.startswith(bytes.fromhex(event.get('execution_bytes', event['bytes'])))
+                    or not same_module(read['module'], capsule['loader_module'])):
+                raise ValueError('Caller instruction lacks its immutable loader byte owner')
+        if steps[-1]['after'] != interval['exit']:
+            raise ValueError('Caller interval exit is detached from its last instruction')
+        first, last = frame(steps[0]['protected_before']), frame(steps[-1]['protected_after'])
+        for rows, expected in ((interval['entry_memory'], first), (interval['exit_memory'], last)):
+            union = _cells(rows, maximum=16384, range_limit=256)
+            if not owned <= union.keys() or any(union[a] != expected[a] for a in owned):
+                raise ValueError('Caller interval protected-memory union differs from its native frame')
+        _require_protected_memory_join(before['memory'], first, owned, 'caller entry snapshot')
+        _require_protected_memory_join(after['memory'], last, owned, 'caller exit snapshot')
+        if role == 'attach_success_tail':
+            if (interval['entry'] != capsule['exit']
+                    or endpoints['entry_snapshot']['artifact'] != dispatcher['exit_snapshot']['artifact']
+                    or receipts[dispatcher['artifact']]['sequence'] >= sequence(reference)
+                    or sequence(endpoints['exit_snapshot']) >= sequence(report['recovery']['entry'])):
+                raise ValueError('Attach caller tail is detached from the actual dispatcher return')
+            _require_protected_memory_join(capsule['steps'][-1]['protected_after'], first, owned, 'dispatcher to caller tail')
+            overlap = _require_loader_boundary_overlap(capsule['exit_memory'], interval['entry_memory'])
+        else:
+            if (interval['exit'] != capsule['entry']
+                    or endpoints['exit_snapshot']['artifact'] != dispatcher['entry_snapshot']['artifact']
+                    or sequence(reference) >= receipts[dispatcher['artifact']]['sequence']
+                    or sequence(report['recovery']['calls'][-1]['entry']) >= sequence(endpoints['entry_snapshot'])):
+                raise ValueError('Detach selection is detached from its pending dispatcher CALL')
+            _require_protected_memory_join(capsule['steps'][0]['protected_before'], last, owned, 'selection to dispatcher')
+            overlap = _require_loader_boundary_overlap(interval['exit_memory'], capsule['entry_memory'])
+        result.append({'artifact': reference['artifact'], 'role': role, 'interval': interval,
+            'boundaries': deepcopy(endpoints), 'dispatcher_artifact': dispatcher['artifact'],
+            'overlapping_boundary_bytes_checked': overlap})
+    return result
+
+
+def load_loader_evidence(project, dll_project, run_report, *, require_loader_capsules=False,
+                         require_loader_intervals=False):
     """Return hash-bound observations and source images for a semantic checker.
 
     Native equality at a loader gap is deliberately not a universal frame
     condition. The composition checker must expose that condition explicitly.
     """
+    if require_loader_intervals and not require_loader_capsules:
+        raise ValueError('Caller interval composition also requires verified dispatcher capsules')
     if not isinstance(run_report, dict) or 'recovery' not in run_report:
         raise ValueError('Fresh full-range loader composition evidence is required')
     report = deepcopy(run_report); recovery = report['recovery']
@@ -600,8 +722,11 @@ def load_loader_evidence(project, dll_project, run_report, *, require_loader_cap
         raise ValueError('Reported loader history differs from its complete native event artifacts')
     loader_capsules = _bind_loader_capsules(report, run=run, exe_image=exe_image, dll_image=dll_image,
         documents=documents, receipts=receipts, protected=protected, terminal_sequence=exit_sequence) if require_loader_capsules else []
+    loader_intervals = _bind_loader_intervals(report, run=run, exe_image=exe_image, dll_image=dll_image,
+        documents=documents, receipts=receipts, protected=protected, capsules=loader_capsules) if require_loader_intervals else []
     return {'format': 'fdisbull-runtime-loader-evidence-1', 'run': run, 'metadata': deepcopy(runtime),
         'exe': exe_image, 'dll': dll_image, 'documents': documents, 'receipts': receipts, 'report': report,
         'loader_capsules': loader_capsules,
+        'loader_intervals': loader_intervals,
         'subject_source_bytes': dll_raw if require_loader_capsules else None,
         'scope': 'Hash-bound native/source observations only; universal loader frame conditions require an explicit semantic contract'}

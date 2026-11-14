@@ -24,6 +24,11 @@ VERIFIED_LOADER_ENVIRONMENT = {
     'dispatch': 'source_proved_module_initdll_inner_dispatch_outer_scheduling_observed',
     'memory_frame': 'source_proved_inside_module_initdll_outer_owned_memory_frame_assumed',
 }
+VERIFIED_CALLER_ENVIRONMENT = {
+    **ENVIRONMENT,
+    'dispatch': 'source_proved_dispatchers_and_detach_selection_outer_scheduling_observed',
+    'memory_frame': 'source_proved_dispatcher_and_caller_intervals_outer_owned_memory_frame_assumed',
+}
 SCOPE = ('Whole authored PE64 module including the imported authored DLL TLS/DllMain '
          'initialization, report and teardown, and the exact captured Wine Set/GetLastError '
          'bodies, conditional on explicit loader dispatch, owned-memory frame, GS/TEB and '
@@ -38,8 +43,10 @@ def _bind_loader_source(bound, loader_source):
     """Full frozen source identity must precede contract construction."""
     actual = hashlib.sha256(loader_source).hexdigest()
     expected = bound['report']['loader_selection']['source']['source_sha256']
-    if actual != expected or any(item['capsule']['loader_module'].get('source_sha256') != actual
-                                 for item in bound['loader_capsules']):
+    if (actual != expected or any(item['capsule']['loader_module'].get('source_sha256') != actual
+                                  for item in bound['loader_capsules'])
+            or any(item['interval']['loader_module'].get('source_sha256') != actual
+                   for item in bound.get('loader_intervals', []))):
         raise ValueError('Original Wine loader bytes differ from their native selected source identity')
     return actual
 
@@ -115,13 +122,15 @@ def recover_loader_module(project, dll_project, evidence, *, environment_contrac
     result = {'format': 'fdisbull-pe-loader-module-recovery-1', 'status': 'unknown',
               'scope': SCOPE, 'whole_module_recovery': None, 'contraction': None}
     try:
-        if environment_contract not in (ENVIRONMENT, VERIFIED_LOADER_ENVIRONMENT):
+        if environment_contract not in (ENVIRONMENT, VERIFIED_LOADER_ENVIRONMENT, VERIFIED_CALLER_ENVIRONMENT):
             raise ValueError('Explicit loader dispatch, owned-memory frame, terminal and GS/TEB contracts are required')
-        verified = environment_contract == VERIFIED_LOADER_ENVIRONMENT
+        verified = environment_contract != ENVIRONMENT
+        caller_intervals = environment_contract == VERIFIED_CALLER_ENVIRONMENT
         if verified and not isinstance(loader_source, bytes):
             raise ValueError('Verified inner loader dispatch requires original Wine loader bytes')
         from .runtime_loader_analysis import load_loader_evidence
-        bound = load_loader_evidence(project, dll_project, evidence, require_loader_capsules=verified)
+        bound = load_loader_evidence(project, dll_project, evidence, require_loader_capsules=verified,
+                                     require_loader_intervals=caller_intervals)
         if verified:
             _bind_loader_source(bound, loader_source)
         bound['loader_source'] = loader_source if verified else None
@@ -192,7 +201,7 @@ def _recover(bound, result, deadline):
         raise ValueError('The source module requires one attach pair, report and detach pair')
     result['dll_contracts'] = proofs
     loader_dispatch_contracts = []
-    if result['environment_contract'] == VERIFIED_LOADER_ENVIRONMENT:
+    if result['environment_contract'] in (VERIFIED_LOADER_ENVIRONMENT, VERIFIED_CALLER_ENVIRONMENT):
         from .pe_wine_loader_contracts import build_wine_loader_contract, validate_wine_loader_capsule
         for capsule in bound['loader_capsules']:
             phase = capsule['phase']
@@ -228,6 +237,38 @@ def _recover(bound, result, deadline):
                     'exit_snapshot': capsule['exit_snapshot'],
                     'limits': 'Capsule prefix/tail proved only inside MODULE_InitDLL; outer scheduling/frame/ExitProcess remain explicit'}})
     result['loader_dispatch_contracts'] = loader_dispatch_contracts
+    caller_contracts = []
+    if result['environment_contract'] == VERIFIED_CALLER_ENVIRONMENT:
+        from .pe_wine_loader_intervals import build_wine_loader_interval_contract, validate_wine_loader_interval
+        from .pe_loader_caller_joins import join_caller_contract
+        for fragment in bound['loader_intervals']:
+            interval = fragment['interval']
+            contract = build_wine_loader_interval_contract(interval, loader_source=bound['loader_source'],
+                                                          subject_source=bound['subject_source_bytes'])
+            remaining = int((deadline - time.monotonic()) * 1000)
+            if remaining < 1:
+                raise ValueError('Whole module caller-interval proof deadline exhausted')
+            proof = validate_wine_loader_interval(interval, contract=contract,
+                loader_source=bound['loader_source'], timeout_ms=min(remaining, 60000))
+            if proof['status'] != 'proved_for_observed_wine_loader_interval':
+                raise ValueError('Actual Wine caller fragment was not proved: ' + proof.get('reason', proof['status']))
+            if _cells(proof['post_protected_memory']) != _cells(interval['steps'][0]['protected_before']):
+                raise ValueError('Proved caller fragment does not preserve its linked source frame')
+            dispatcher = next(c for c in bound['loader_capsules'] if c['artifact'] == fragment['dispatcher_artifact'])
+            dispatcher_proof = next(c['proof'] for c in loader_dispatch_contracts
+                                    if c['artifact'] == fragment['dispatcher_artifact'])
+            join = join_caller_contract(z, fragment, proof, contract,
+                dispatcher | {'proof': dispatcher_proof}, deadline=deadline)
+            caller_contracts.append({'artifact': fragment['artifact'], 'role': fragment['role'],
+                'contract': contract, 'proof': proof,
+                'coverage': {'partial_outer_edge': 'dll-return-to-exe-entry'
+                             if fragment['role'] == 'attach_success_tail' else 'exit-to-detach-0',
+                    'dispatcher_artifact': fragment['dispatcher_artifact'],
+                    'overlapping_boundary_bytes_checked': fragment['overlapping_boundary_bytes_checked'],
+                    'conditional_join': join,
+                    **deepcopy(fragment['boundaries']),
+                    'limits': 'Source-linked caller metadata and saved-frame preconditions remain explicit; this fragment does not close the full outer interval'}})
+    result['loader_caller_contracts'] = caller_contracts
     entry_cells=_cells(get(recovery['entry'])['memory'])
     initialized_code=_cells([proofs[1]['post_code']])
     if any(entry_cells.get(a)!=b for a,b in initialized_code.items()):
@@ -345,17 +386,27 @@ def _recover(bound, result, deadline):
                 **({'outer_prefix_artifact': contract['coverage']['outer_prefix']} if endpoint == 'prefix' else {}),
                 'scope': note})
         result['remaining_loader_intervals'] = remaining_intervals
+        for interval in remaining_intervals:
+            interval['additional_caller_coverage'] = [
+                {'artifact': caller['artifact'], 'role': caller['role'],
+                 'contract_sha256': caller['proof']['sha256'],
+                 'entry_snapshot': caller['coverage']['entry_snapshot'],
+                 'exit_snapshot': caller['coverage']['exit_snapshot'],
+                 'remaining_assumptions': deepcopy(caller['proof']['remaining_assumptions'])}
+                for caller in caller_contracts if caller['coverage']['partial_outer_edge'] == interval['label']]
         result['whole_module_recovery']['loader_dispatch'] = {
             'proved_inner_edges': [p['coverage']['fully_discharged_edge'] for p in loader_dispatch_contracts],
             'outer_intervals_still_conditional': len(remaining_intervals),
             'source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
             'scope': 'Exactly the captured normal MODULE_InitDLL attach/detach paths; no loader-wide frame or scheduling theorem'}
+        result['whole_module_recovery']['loader_dispatch']['caller_fragments'] = [c['role'] for c in caller_contracts]
     contraction = {'format': 'fdisbull-loader-module-contraction-1',
         'evidence_sha256': _digest(report), 'receipts_sha256': _digest(bound['receipts']),
         'callback_contracts': [p['sha256'] for p in proofs],
         'api_contracts': {k: v['sha256'] for k, v in api_proofs.items()},
         'environment_contract': deepcopy(result['environment_contract']), 'recovery_sha256': _digest(result['whole_module_recovery']),
         'loader_dispatch_contracts': [p['proof']['sha256'] for p in loader_dispatch_contracts],
+        'caller_contracts': [p['proof']['sha256'] for p in caller_contracts],
         **({'loader_source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
              'remaining_loader_intervals_sha256': _digest(result['remaining_loader_intervals'])} if loader_dispatch_contracts else {}),
         'expansion': 'Exact original reference bundle; owning project resolves its immutable native artifacts'}

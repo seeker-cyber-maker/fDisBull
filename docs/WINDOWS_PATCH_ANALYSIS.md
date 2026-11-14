@@ -173,6 +173,32 @@ assumptions for expansion. Native qualification adds independent source
 postconditions and complete concrete Unicorn replay; agreement on that one
 invocation is reported separately from the generic symbolic transfer.
 
+`VERIFIED_CALLER_ENVIRONMENT` additionally requires two complete caller
+intervals. The 21-instruction attach success tail updates the attached/loading
+flags, assigns `current_modref` from saved R14, loads seven saved registers and
+returns through the actual caller word with RSP advanced by 128. The
+28-instruction detach prefix derives its selected MODREF through TEB → PEB →
+initialization list, checks the attached/load-count/shutdown guards, clears the
+attached bit and establishes the actual pending dispatcher CALL frame.
+Protected source memory, metadata, saved-stack words and relevant registers
+remain symbolic in the transfers. Vector/FP stores are refused in these
+intervals; integer pointer construction with SIMD requires its own semantics.
+
+Each interval is joined to its dispatcher by full contexts, protected ranges
+and every overlapping observed metadata/stack byte. The attach join explicitly
+requires the enclosing caller's R12 layout; its saved-stack values are not a
+proof of the original caller-entry ABI. The detach join specializes declared
+initial metadata before proving the following fixed MODULE preconditions.
+Generic attached flags alone do not establish that path. The single captured
+selector path admits nonzero load count and nonzero shutdown state; the
+eligible zero-load-count branch needs separate coverage.
+
+These fragments extend partial coverage of two outer intervals. All four
+complete outer intervals remain conditional, including metadata construction,
+earlier foreign initializers, FLS/notification callbacks, context transfer and
+stack clearing. The caller contracts retain these limits and exact expansion
+back to their original instruction/access evidence.
+
 The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
 topology report. Given a raw Wine/QEMU PE trace, an owning `Project`, and one
 analyzed function entry, `observed_pe_import_roles` joins each observed call
