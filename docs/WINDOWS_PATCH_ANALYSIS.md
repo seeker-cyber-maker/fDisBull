@@ -52,6 +52,53 @@ adapter must preserve.
 
 ## Intent evidence from PE import calls
 
+### Actual Wine implementations and early loader observations
+
+`debug-import-call` / `PEDebugSession.import_call` accepts
+`trace_implementation=true` for PE64 `SetLastError` and `GetLastError`.
+The observer follows the loaded kernel32 thunks and leaf instructions through
+the actual RET. It retains each completed native step, full general-register
+and FLAGS contexts, hashed code reads with loaded-DLL ownership, and the exact
+memory operands before and after execution. Unknown instructions are refused
+before execution; a failure retains a partial observation. `ExitProcess`
+remains outside this implementation proof profile.
+
+`fdisbull.wine_api_contracts.validate_wine_api_contract` checks that evidence,
+then proves the DWORD last-error operation for every DWORD argument and prior
+last-error value with the observed thunk and return-frame bytes fixed. It also
+checks the implementation's actual register, FLAGS, stack and memory effects.
+The thread's TEB comes from the real CREATE_PROCESS/CREATE_THREAD debug event.
+The GS/TEB relationship is an explicit Win64 convention corroborated by the
+executed GS self load; the hidden CPU GS-base register is not directly observed.
+This is a proof of the captured implementation under those bindings, not a
+universal Windows API or OS-state proof. Existing opaque-call observations and
+module recovery keep their conservative contracts.
+
+For loader investigations, `debug-launch` / `Project.debugger` accepts
+`loader_mode="process-create"` on the native PE64 Wine backend. The first stop
+is the actual CREATE_PROCESS event before it is continued; its PC can belong
+to ntdll and has no fabricated main-project address. DLL-load stops occur
+before continuing those events. `debug-loader-control` selects these stops;
+`debug-loader-events` retains a 256-event ring with explicit retention-gap and
+cursor fields. Declared PE entry/TLS metadata is separate from the observed
+stopped PC. `debug-thread-info` exposes the selected debug-event TEB. The
+default launch still stops at EXE entry. Native checkpoint save/restore is
+unqualified in the early-loader profile and is refused.
+
+The homegrown `self_modifying_init_*_wine.S` fixtures declare a genuine TLS
+directory and imported DLL. Its TLS callback changes a future return constant
+from 1 to 2; process-attach DllMain changes it from 2 to 3, before EXE entry.
+The EXE calls the modified function, round-trips four DWORD API inputs, then
+calls ExitProcess(7). Both process-detach callbacks leave distinct log records.
+`tests/test_smc_loader_wine.py` is an opt-in native acceptance test that retains
+every code mutation and callback trace, checks the source milestones, and
+independently replays the observed callback inputs with Unicorn. Foreign DLL
+events retain their runtime module identity; derived code versions belong to
+a separate source DLL analysis. This lane observes authored DLL initialization
+and teardown; it does not prove all Wine loader or ExitProcess effects. Run it
+only with a fresh external evidence directory and a matching runtime rebuilt
+from the current guest resources. Ordinary source tests do not certify it.
+
 The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
 topology report. Given a raw Wine/QEMU PE trace, an owning `Project`, and one
 analyzed function entry, `observed_pe_import_roles` joins each observed call

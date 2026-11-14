@@ -1,4 +1,4 @@
-"""Observed PE64 import boundaries; imported implementation bodies stay opaque.
+"""Observed PE64 import boundaries and opt-in bounded implementation evidence.
 
 The export resolver reads the stopped target's actual mapped PE images. Names
 and hashes establish observation identity, not publisher authenticity or proof
@@ -208,17 +208,166 @@ def _ranges(rows, maximum):
     return result
 
 
+def _trace_implementation(session, document, *, deadline, call, read, registers):
+    """Collect only the closed TLS thunk/leaf profile, refusing before unknown code."""
+    import capstone
+    from capstone import x86_const as X
+    from .debug_semantics import PE_TRACE_SEMANTICS, normalize_trace
+    implementation = {'format': 'fdisbull-wine-api-implementation-1', 'status': 'partial',
+        'bits': 64, 'semantics': PE_TRACE_SEMANTICS, 'events': [], 'code_reads': [],
+        'accesses': [], 'memory': {'entry': [], 'exit': []}}
+    # Install immediately: every later failure retains reads and completed steps.
+    document['implementation'] = implementation
+    thread = call('thread-info')
+    implementation['thread_info'] = thread
+    entry = document['contexts']['entry']
+    if (thread.get('bits') != 64 or thread.get('thread') != entry['thread']
+            or thread.get('gs_base_register_observed') is not False
+            or thread.get('teb_source') not in {'CREATE_PROCESS_DEBUG_EVENT.lpThreadLocalBase',
+                                              'CREATE_THREAD_DEBUG_EVENT.lpThreadLocalBase'}):
+        raise ValueError('Native implementation tracing requires an observed selected-thread TEB')
+    teb, stack = _address(thread['teb']), _address(entry['general']['rsp'])
+    if teb + 0x70 > 1 << 64 or stack + 8 > 1 << 64:
+        raise ValueError('Native implementation TEB/frame address wraps')
+    implementation['segment_binding'] = {'segment': 'gs', 'offset': '0x30',
+        'teb': hex(teb), 'gs_base_register_observed': False}
+    initial = {}
+    def rows(cells):
+        result = []
+        for address, byte in sorted(cells.items()):
+            if result and int(result[-1]['address'], 16) + len(result[-1]['hex']) // 2 == address:
+                result[-1]['hex'] += f'{byte:02x}'
+            else:
+                result.append({'address': hex(address), 'hex': f'{byte:02x}'})
+        return result
+    def remember(address, raw):
+        for k, byte in enumerate(raw):
+            initial.setdefault(address + k, byte)
+        implementation['memory']['entry'] = rows(initial)
+    for address, length in ((teb + 0x30, 8), (teb + 0x68, 4), (stack, 8)):
+        remember(address, read(address, length))
+    if int.from_bytes(bytes(initial[teb + 0x30 + k] for k in range(8)), 'little') != teb:
+        raise ValueError('Observed selected TEB self word does not equal its debug-event identity')
+    caller = _address(document['import']['return_address'])
+    if int.from_bytes(bytes(initial[stack + k] for k in range(8)), 'little') != caller:
+        raise ValueError('Observed API entry return word differs from the actual caller')
+    decoder = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    decoder.detail = True
+    current = entry
+    for index in range(32):
+        if time.monotonic() >= deadline:
+            raise ValueError('Native API implementation trace deadline exhausted')
+        address = _address(current['rip'])
+        if address == caller:
+            break
+        if session.project_address(address) is not None:
+            raise ValueError('An API implementation entered authored main-module code before RET')
+        owners = [m for m in document['modules_before']['modules']
+                  if _address(m['base']) <= address < _address(m['base']) + m['size']]
+        if len(owners) != 1 or owners[0].get('bits') != 64 or not owners[0]['name'].casefold().endswith('.dll'):
+            raise ValueError('API instruction lacks one observed foreign AMD64 DLL owner')
+        owner = {key: owners[0][key] for key in ('name', 'base', 'size', 'generation')}
+        raw = read(address, min(15, _address(owner['base']) + owner['size'] - address))
+        implementation['code_reads'].append({'event_index': index, 'address': hex(address), 'hex': raw.hex(),
+            'sha256': hashlib.sha256(raw).hexdigest(), 'module': owner})
+        decoded = list(decoder.disasm(raw, address, count=1))
+        if not decoded:
+            raise ValueError('Native API instruction could not be decoded before stepping')
+        ins = decoded[0]
+        executed = raw[:ins.size]
+        access = None
+        if executed in (b'\xf3\x0f\x1e\xfa', b'\x90', b'\x66\x90', bytes.fromhex('488da42400000000')):
+            pass
+        elif executed == bytes.fromhex('65488b042530000000'):
+            access = ('read', teb + 0x30, 8)
+        elif executed[:2] == b'\xff\x25' and len(executed) == 6:
+            access = ('read', address + 6 + int.from_bytes(executed[2:], 'little', signed=True), 8)
+        elif ((executed[0] == 0xe9 and len(executed) == 5) or
+              (executed[0] == 0xeb and len(executed) == 2)):
+            pass
+        elif ins.mnemonic == 'mov' and len(ins.operands) == 2:
+            dest, src = ins.operands
+            if (dest.type == X.X86_OP_REG and dest.size == 4 and src.type == X.X86_OP_MEM
+                    and ins.reg_name(src.mem.base) == 'rax' and not src.mem.index
+                    and not src.mem.segment and src.mem.disp == 0x68):
+                access = ('read', _address(current['general']['rax']) + 0x68, 4)
+            elif (dest.type == X.X86_OP_MEM and dest.size == 4 and src.type == X.X86_OP_REG and src.size == 4
+                    and ins.reg_name(dest.mem.base) == 'rax' and not dest.mem.index
+                    and not dest.mem.segment and dest.mem.disp == 0x68):
+                access = ('write', _address(current['general']['rax']) + 0x68, 4)
+            else:
+                raise ValueError('Unknown API instruction refused before native execution')
+            if access[1] != teb + 0x68:
+                raise ValueError('Native API DWORD access does not address the observed TEB slot')
+        elif executed == b'\xc3':
+            access = ('read', _address(current['general']['rsp']), 8)
+            if access[1] != stack:
+                raise ValueError('Native API RET does not use its original caller frame')
+        else:
+            raise ValueError('Unknown API instruction refused before native execution')
+        record = None
+        if access is not None:
+            kind, pointer, width = access
+            if not 0 <= pointer <= (1 << 64) - width:
+                raise ValueError('Native API operand address wraps')
+            prior = read(pointer, width)
+            remember(pointer, prior)
+            record = {'event_index': index, 'kind': kind, 'address': hex(pointer), 'width': width,
+                      'before_hex': prior.hex(), 'after_hex': None}
+            implementation['accesses'].append(record)
+        event, state = session._step_instruction(deadline)
+        if (event is None or state.get('stop_reason', {}).get('kind') != 'step'
+                or event.get('active_layers') or event.get('registers') != current
+                or event.get('execution_bytes', event.get('bytes')) != executed.hex()
+                or event.get('ram_bytes', event.get('bytes')) != executed.hex()):
+            raise ValueError('Native API instruction did not complete as its observed exact byte sequence')
+        event['project_address'] = None
+        normalize_trace('wine-qemu', [event], version=session.version['id'])
+        implementation['events'].append(event)
+        if record is not None:
+            record['after_hex'] = read(access[1], access[2]).hex()
+        current = registers()
+        if current['thread'] != entry['thread']:
+            raise ValueError('Native API instruction trace changed its selected thread')
+        if executed == bytes.fromhex('65488b042530000000') and _address(current['general']['rax']) != teb:
+            raise ValueError('Actual GS self load disagrees with the explicit observed-thread TEB binding')
+    if _address(current['rip']) != caller:
+        raise ValueError('Native API implementation did not return within 32 instructions')
+    final_raw = read(caller, 15)
+    ins = Decoder(64, final_raw, ip=caller).decode()
+    if ins.is_invalid:
+        raise ValueError('Native API caller boundary has no valid observed instruction')
+    final = {'address': hex(caller), 'project_address': session.project_address(caller),
+        'bytes': final_raw[:ins.len].hex(), 'execution_bytes': final_raw[:ins.len].hex(),
+        'ram_bytes': final_raw[:ins.len].hex(), 'registers': current}
+    normalize_trace('wine-qemu', [final], version=session.version['id'])
+    final['observation'].update(instruction_completed=False,
+        evidence='Actual stopped caller boundary after native imported RET; not executed')
+    implementation['events'].append(final)
+    ending = {}
+    for row in rows(initial):
+        address, length = _address(row['address']), len(row['hex']) // 2
+        ending.update({address + k: b for k, b in enumerate(read(address, length))})
+    implementation['memory']['exit'] = rows(ending)
+    implementation['status'] = 'complete'
+    return current
+
+
 def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
-                        code_ranges=None, timeout_ms=60000):
+                        code_ranges=None, timeout_ms=60000, trace_implementation=False):
     """Execute one current FF15 import call and preserve its real boundaries.
 
     Returning calls run opaquely to their owned caller breakpoint. ExitProcess
     is terminal and must produce the actual process-exit debug event. No return
     register, TLS formula or unknown OS-memory effect is invented here.
+    ``trace_implementation`` instead single-steps the closed Set/GetLastError
+    thunk/TLS/RET profile and validates its exact machine-code effects.
     """
     _file_name(name)
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
         raise ValueError('Import-call timeout must be 1..600000 ms')
+    if type(trace_implementation) is not bool:
+        raise ValueError('trace_implementation must be boolean')
     ram, code = _ranges(memory_ranges, 256), _ranges(code_ranges, 512)
     if getattr(session, 'bits', 64) != 64 or session.closed:
         raise ValueError('Import-call observation requires a live PE64 session')
@@ -230,6 +379,10 @@ def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
         'memory': {}, 'code': {}, 'contexts': {},
         'scope': 'Observed imported-call entry/return or actual process exit; DLL instructions, '
                  'TLS/OS effects and unobserved memory remain outside this observation'}
+    if trace_implementation:
+        document['scope'] = ('Observed imported-call boundaries and complete bounded native DLL thunk/TLS/RET '
+            'steps; exact effects are checked separately against those bytes under explicit GS/TEB binding. '
+            'Other implementations, library initialization, OS-private effects and timing remain unproved')
     breakpoint = None
 
     def remaining():
@@ -282,6 +435,8 @@ def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
         if len(matches) != 1 or matches[0].get('name') not in _APIS or matches[0]['module'].casefold() != 'kernel32.dll':
             raise ValueError('CALL does not identify one supported source import')
         imported = matches[0]
+        if trace_implementation and imported['name'] == 'ExitProcess':
+            raise ValueError('Bounded implementation tracing is available only for SetLastError/GetLastError')
         state = call('modules')
         document['modules_before'] = state
         resolution = resolve_loaded_export(state, imported['module'], imported['name'], read)
@@ -340,10 +495,14 @@ def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
         document['shadow_store']['entry_hex'] = read(stack, 32).hex()
         if read(slot, 8) != iat:
             raise ValueError('IAT changed while entering the imported call')
-        if imported['name'] != 'ExitProcess':
+        if imported['name'] != 'ExitProcess' and not trace_implementation:
             breakpoint = session.breakpoint(site + 6 - session.delta)
             document['return_breakpoint'] = breakpoint
-        outcome = session.run(timeout_ms=remaining())
+        if trace_implementation:
+            _trace_implementation(session, document, deadline=deadline, call=call, read=read, registers=registers)
+            outcome = {'outcome': 'implementation-return', 'session': call('status')}
+        else:
+            outcome = session.run(timeout_ms=remaining())
         document['outcome'] = outcome
         if imported['name'] == 'ExitProcess':
             if outcome.get('outcome') != 'exited' or outcome.get('session', {}).get('state') != 'exited':
@@ -355,11 +514,13 @@ def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
         else:
             after = registers()
             document['contexts']['return'] = after
-            if (outcome.get('outcome') != 'breakpoint' or after['rip'] != hex(site + 6)
+            if (outcome.get('outcome') != ('implementation-return' if trace_implementation else 'breakpoint')
+                    or after['rip'] != hex(site + 6)
                     or after['thread'] != before['thread'] or _address(after['general']['rsp']) != stack):
                 raise ValueError('Imported call did not return to its observed caller frame')
-            document['breakpoint_cleanup'] = session.delete_breakpoint(breakpoint['breakpoint_id'])
-            breakpoint = None
+            if breakpoint is not None:
+                document['breakpoint_cleanup'] = session.delete_breakpoint(breakpoint['breakpoint_id'])
+                breakpoint = None
             changed = [n for n in _NONVOLATILE if after['general'][n] != before['general'][n]]
             document['abi_observation'] = {'nonvolatile_gpr_changed': changed,
                 'volatile_gpr_flags': 'Observed only; no preservation assumption',
@@ -373,7 +534,15 @@ def observe_import_call(session, *, name='import-call.json', memory_ranges=None,
             if after_modules['module_revision'] != state['module_revision'] or after_modules['modules'] != state['modules']:
                 raise ValueError('Loaded module identity changed during the imported call')
         document['status'] = 'complete'
+        if trace_implementation:
+            from .wine_api_contracts import validate_wine_api_contract
+            proof = validate_wine_api_contract(document)
+            document['implementation_contract'] = proof
+            if proof['status'] != 'proved_for_observed_implementation':
+                raise ValueError('Observed API implementation did not discharge its machine-code contract: '
+                                 + proof.get('reason', proof['status']))
     except Exception as error:
+        document['status'] = 'partial'
         document['error'] = {'type': type(error).__name__, 'message': str(error)}
     finally:
         if breakpoint is not None:

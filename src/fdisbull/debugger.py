@@ -84,7 +84,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
-                 guest_profile=None):
+                 guest_profile=None, loader_mode='entry'):
+        if loader_mode not in ('entry','process-create'):
+            raise ValueError('loader_mode must be entry or process-create')
+        if loader_mode!='entry' and (self.meta['format']!='PE' or self.bits!=64 or backend not in (None,'wine-qemu')):
+            raise ValueError('process-create loader mode requires the native PE64 Wine backend')
         if guest_profile is not None and backend != 'qemu-machine':
             raise ValueError('guest_profile requires the qemu-machine full-system backend')
         if dot_mode is not None:
@@ -161,7 +165,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                 raise ValueError('PE32/PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib,
+                loader_mode=loader_mode)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
@@ -1243,6 +1248,7 @@ class DebugWorkspace:
                    'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
                    'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-loader-control':'loader_control','debug-loader-events':'loader_events','debug-thread-info':'thread_info',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',
