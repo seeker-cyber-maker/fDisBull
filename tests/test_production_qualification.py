@@ -45,7 +45,8 @@ def fixture(tmp_path, monkeypatch):
         if path.endswith('/jobs/30'): return job
         raise AssertionError(path)
     monkeypatch.setattr(q.platform, 'system', lambda: 'Linux'); monkeypatch.setattr(q.platform, 'machine', lambda: 'x86_64')
-    monkeypatch.setattr(q.shutil, 'disk_usage', lambda p: SimpleNamespace(free=50_000_000_000))
+    # No fixed reserve policy; actual filesystem writes decide allocation.
+    monkeypatch.setattr(q.shutil, 'disk_usage', lambda p: SimpleNamespace(free=32))
     monkeypatch.setattr(q.bootstrap, '_atomic_publish', lambda src, dst: src.rename(dst))
     healthy = record(); healthy['observed_epoch'] = time.time()
     capsule = {'schema': 'fdisbull-host-health-capsule-1', 'run_id': '42', 'run_attempt': '1',

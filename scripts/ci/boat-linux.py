@@ -62,19 +62,74 @@ def read_worker(path):
     return data
 
 
-def admit_destinations(parent, expected, reserve):
-    docker_root = Path(capture(['docker', 'info', '--format', '{{.DockerRootDir}}']).strip()).resolve(strict=True)
+def read_local_host(path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('Local Docker host receipt missing or unsafe')
+    data = read_regular_json(path)
+    if (set(data) != {'schema', 'execution_origin', 'architecture', 'host_boot_id', 'host_name', 'observed_at'}
+            or data.get('schema') != 'fdisbull-local-docker-host-v1'
+            or data.get('execution_origin') != 'local-linux' or data.get('architecture') != 'x86_64'
+            or not isinstance(data.get('host_name'), str) or not data['host_name']
+            or data['host_name'] != platform.node()):
+        raise ValueError('Invalid local Docker host receipt or host identity')
+    try:
+        if str(uuid.UUID(data['host_boot_id'])) != data['host_boot_id']:
+            raise ValueError
+        if datetime.datetime.fromisoformat(data['observed_at'].replace('Z', '+00:00')).utcoffset() is None:
+            raise ValueError
+    except (KeyError, ValueError, TypeError, AttributeError):
+        raise ValueError('Invalid local Docker host boot identity or observation time') from None
+    if platform.system() != 'Linux' or platform.machine() != 'x86_64':
+        raise ValueError('Local Docker executor requires Linux x86_64')
+    if Path('/proc/sys/kernel/random/boot_id').read_text().strip() != data['host_boot_id']:
+        raise ValueError('Local Docker receipt boot identity differs from current host')
+    return data
+
+
+def authored_fixture(source, fixture):
+    if fixture is None or fixture.is_symlink() or not fixture.is_file():
+        raise ValueError('Authored Win16 fixture required for full Windows acceptance')
+    data = fixture.read_bytes()
+    # Generate the profile using this candidate's declared oracle source.
+    oracle_path = source / 'tests/offline_windows_oracles.py'
+    spec = importlib.util.spec_from_file_location('fdisbull_authored_win16_oracle', oracle_path)
+    oracle = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(source / 'src'))
+    try:
+        spec.loader.exec_module(oracle)
+        profile = oracle.win16_profile(data)
+    finally:
+        sys.path.pop(0)
+    return {'sha256': hashlib.sha256(data).hexdigest(), 'size': len(data),
+            'source_sha256': profile['source_sha256']}
+
+
+def stage_authored_fixture(source, fixture, expected, work, environment):
+    target = work / '.native/authored-win16/ORACLE.EXE'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(fixture, target)
+    if authored_fixture(source, target) != expected:
+        raise ValueError('Authored Win16 fixture changed during staging')
+    environment['FDISBULL_NE_AUTHORED_FIXTURE'] = '/work/.native/authored-win16/ORACLE.EXE'
+
+
+def observe_destinations(parent, expected, reserve):
+    docker_root = Path(capture(['docker', 'info', '--format', '{{.DockerRootDir}}']).strip())
+    if docker_root.is_symlink() or not docker_root.is_dir():
+        raise ValueError(f'Storage destination unavailable for docker_store: {docker_root}')
+    docker_root = docker_root.resolve(strict=True)
     result = {}
     devices = set()
     for label, path in (('output', parent), ('docker_store', docker_root)):
+        if path.is_symlink() or not path.is_dir():
+            raise ValueError(f'Storage destination unavailable for {label}: {path}')
         dev = path.stat().st_dev
         if dev in devices:
             continue
         devices.add(dev)
         usage = shutil.disk_usage(path)
-        if usage.free - expected < reserve:
-            raise ValueError(f'Storage admission rejected for {label}: free={usage.free}, expected={expected}, reserve={reserve}')
-        result[label] = {'free_bytes': usage.free, 'expected_bytes': expected, 'reserve_bytes': reserve}
+        result[label] = {'free_bytes': usage.free, 'expected_bytes': expected, 'reserve_bytes': reserve,
+                         'storage_status': 'observed', 'reserve_enforced': False}
     return result
 
 
@@ -211,7 +266,11 @@ def extract_consumer_kit(archive, destination, expected_sha):
 
 
 def docker_command(profile, name, image, work, guest_data, stage, environment, retained_mounts=(), consumer_kit=None):
-    command = ['docker', 'run', '--name', name, '--platform', 'linux/amd64', '--cpus', '4', '--memory', '8g', '--workdir', '/']
+    command = ['docker', 'run', '--name', name, '--platform', 'linux/amd64', '--cpus', '2',
+               '--memory', '8g', '--memory-swap', '8g', '--pids-limit', '512', '--workdir', '/',
+               '--label', 'fdisbull.ci.owner=n8n-release-pipeline',
+               '--label', 'fdisbull.ci.pipeline_run=' + environment['FDISBULL_LOCAL_RUN_ID'],
+               '--label', 'fdisbull.ci.source=' + environment['CI_COMMIT_SHA']]
     if profile == 'chat-consumer':
         if consumer_kit is None:
             raise ValueError('Consumer kit mount missing')
@@ -264,6 +323,12 @@ def run_container(command, log, timeout, name):
 def execute(args):
     source = args.source.resolve()
     sha, branch = source_identity(source)
+    origin = 'local-linux' if args.local_host else 'boat-linux'
+    worker = read_local_host(args.worker_receipt) if args.local_host else read_worker(args.worker_receipt)
+    fixture = args.authored_win16_fixture
+    if args.windows_acceptance == 'pe64-pe32-win16' and args.profile in ('all', 'chat-prepare') and fixture is None:
+        raise ValueError('Authored Win16 fixture required for full Windows acceptance')
+    fixture_identity = authored_fixture(source, fixture) if fixture is not None else None
     upstream_archive = getattr(args, 'dosbox_upstream_archive', None)
     upstream_sha256 = getattr(args, 'dosbox_upstream_sha256', None)
     if any(p in ('stable', 'layers') for p in profiles_for(args.profile)):
@@ -286,41 +351,46 @@ def execute(args):
     if run_root.is_relative_to(source) or source.is_relative_to(run_root):
         raise ValueError('Output must be outside the source checkout')
     parent = run_root if run_root.exists() else run_root.parent
-    # Initial control-file admission is small; every new material leg gets its
-    # own budget after completed legs have been checked. A resumed preparation
-    # must not require the original compiler allocation a second time.
+    # Record current destination availability; a resumed preparation does not
+    # need a second estimate for its already completed compiler stage.
     if args.profile == 'qualify':
         if not run_root.is_dir() or not (run_root / 'run.json').is_file():
             raise ValueError('Readback qualification requires an existing local run')
     else:
-        admit_destinations(parent, 0, args.reserve_bytes)
+        observe_destinations(parent, 0, args.reserve_bytes)
     run_root.mkdir(exist_ok=True)
-    worker = read_worker(args.worker_receipt)
-    worker_path = run_root / 'qualification/artifacts/receipts/boat-worker.json'
+    worker_name = 'local-docker-host.json' if args.local_host else 'boat-worker.json'
+    worker_path = run_root / 'qualification/artifacts/receipts' / worker_name
     worker_path.parent.mkdir(parents=True, exist_ok=True)
     if worker_path.exists():
         if worker_path.read_bytes() != args.worker_receipt.read_bytes():
             raise ValueError('Worker receipt changed for resumed run')
     else:
         shutil.copyfile(args.worker_receipt, worker_path)
-    worker_ref = artifact_identity(run_root / 'qualification', 'artifacts/receipts/boat-worker.json')
-    boat_id = worker['boat_sandbox_id']
+    worker_ref = artifact_identity(run_root / 'qualification', 'artifacts/receipts/' + worker_name)
+    boat_id = worker.get('boat_sandbox_id')
+    origin_metadata = ({'boat_sandbox_id': boat_id, 'boat_worker_receipt': worker_ref}
+                       if not args.local_host else {'local_host_receipt': worker_ref})
     manifest_path = run_root / 'run.json'
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text())
         if (manifest['source_commit'] != sha or manifest['source'] != str(source)
-            or manifest.get('execution_origin') != 'boat-linux' or manifest.get('boat_sandbox_id') != boat_id
-            or manifest.get('boat_worker_receipt') != worker_ref):
+            or manifest.get('execution_origin') != origin
+            or any(manifest.get(k) != v for k, v in origin_metadata.items())
+            or manifest.get('authored_win16_fixture') != fixture_identity
+            or manifest.get('windows_acceptance', 'pe64-pe32-win16') != args.windows_acceptance):
             raise ValueError('Cannot resume a different source commit or checkout')
     else:
-        manifest = {'schema': 'fdisbull-boat-linux-run-1', 'execution_origin': 'boat-linux',
-                    'boat_sandbox_id': boat_id, 'boat_worker_receipt': worker_ref,
+        manifest = {'schema': 'fdisbull-boat-linux-run-1' if not args.local_host else 'fdisbull-local-linux-run-1',
+                    'execution_origin': origin, **origin_metadata,
                     'local_run_id': str(uuid.uuid4()), 'source_commit': sha, 'source': str(source),
                     'created_at': now(), 'host_platform': platform.platform()}
+        if fixture_identity is not None or args.windows_acceptance != 'pe64-pe32-win16' or args.local_host:
+            manifest.update(authored_win16_fixture=fixture_identity, windows_acceptance=args.windows_acceptance)
         save(manifest_path, manifest)
     output = run_root / 'qualification'
     output.mkdir(exist_ok=True)
-    run_receipt = output / 'artifacts/receipts/boat-run.json'
+    run_receipt = output / 'artifacts/receipts' / ('local-docker-run.json' if args.local_host else 'boat-run.json')
     if run_receipt.exists():
         if read_regular_json(run_receipt) != manifest:
             raise ValueError('Boat run receipt changed')
@@ -336,7 +406,7 @@ def execute(args):
             if (marker.is_file() and process.get('exit_code') == 0
                     and json.loads(marker.read_text()).get('local_job_id') == process.get('local_job_id')):
                 if profile == 'unified-prepare':
-                    prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'], origin='boat-linux', boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
+                    prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'], origin=origin, boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
                 print(f'{profile}: retained completed leg', flush=True)
                 continue
             raise ValueError('Failed attempt retained; use a new run directory')
@@ -352,8 +422,6 @@ def execute(args):
                 (output / '.native/backends/layers/dosbox-x').stat().st_size, source_root=source,
                 shared_os_base=base_root / '.native/pe/runtime.cpio.gz')
             save(phase / 'retained-base-allocation-bound.json', bound)
-            if args.expected_bytes is not None and args.expected_bytes < bound['expected_bytes']:
-                raise ValueError('Explicit allocation is below the measured retained-base bound')
             allocation = bound['expected_bytes'] if args.expected_bytes is None else args.expected_bytes
         if profile == 'unified' and (output/'native-evidence/pe/windows-runtime.cpio.gz').exists():
             runtime_bytes = sum((output/name).stat().st_size for name in UNIFIED_INPUTS)
@@ -361,12 +429,10 @@ def execute(args):
             # Staged host input, guest working copy and exported evidence; the
             # completed preparation/qualification copies already occupy space.
             needed = ((3*runtime_bytes + 4_000_000_000 + 999_999_999)//1_000_000_000)*1_000_000_000
-            if args.expected_bytes is not None and args.expected_bytes < needed:
-                raise ValueError('Explicit acceptance allocation is below its retained-input copy bound')
             allocation = needed if args.expected_bytes is None else args.expected_bytes
             save(phase/'retained-acceptance-allocation-bound.json', {'expected_bytes':needed,
                  'prepared_input_bytes':runtime_bytes,'retained_copies':3,'system_and_evidence_budget':4_000_000_000})
-        save(phase / 'storage-admission.json', admit_destinations(run_root, allocation, args.reserve_bytes))
+        save(phase / 'storage-observation.json', observe_destinations(run_root, allocation, args.reserve_bytes))
         job_id = str(uuid.uuid4())
         name = f'fdb-ci-{profile}-{job_id[:8]}'
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
@@ -383,13 +449,13 @@ def execute(args):
             shutil.copytree(output / 'native-evidence/layers', work / 'native-evidence/layers')
         preparation = None
         if profile in ('unified', 'chat-prepare'):
-            preparation = stage_prepared_unified(source, run_root, output, work, sha, manifest['local_run_id'], origin='boat-linux', boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
+            preparation = stage_prepared_unified(source, run_root, output, work, sha, manifest['local_run_id'], origin=origin, boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
         if profile == 'chat-prepare':
             for relative in ('.native/offline/output', 'artifacts/receipts'):
                 shutil.copytree(output / relative, work / relative, dirs_exist_ok=True)
         chat_producer = chat_archive = None
         if profile == 'chat-consumer':
-            chat_producer, chat_archive = stage_chat_archive(run_root, output, phase / 'input', sha, manifest['local_run_id'], origin='boat-linux', boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
+            chat_producer, chat_archive = stage_chat_archive(run_root, output, phase / 'input', sha, manifest['local_run_id'], origin=origin, boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
             shutil.copy2(work / 'scripts/ci/native-chat-consumer.sh', phase / 'input/bootstrap.sh')
             extract_consumer_kit(phase / 'input/archive.zip', phase / 'consumer-kit', chat_archive['sha256'])
         image = pull_image(IMAGES[profile], phase / 'image-pull.log')
@@ -399,8 +465,16 @@ def execute(args):
         guest_data = phase / 'guest-data'
         guest_data.mkdir()
         environment = job_environment(profile, sha, manifest['local_run_id'], job_id,
-                                      origin='boat-linux', boat_sandbox_id=boat_id,
+                                      origin=origin, boat_sandbox_id=boat_id,
                                       boat_worker_receipt=worker_ref)
+        if profile in ('unified-prepare', 'unified', 'chat-prepare') and fixture_identity is not None:
+            stage_authored_fixture(source, fixture, fixture_identity, work, environment)
+            if profile == 'unified':
+                environment.update(FDISBULL_NE_QEMU=environment['FDISBULL_PE_QEMU'],
+                                   FDISBULL_NE_KERNEL=environment['FDISBULL_PE_KERNEL'],
+                                   FDISBULL_NE_INITRAMFS='/work/native-evidence/pe/windows-runtime.cpio.gz')
+        if profile == 'chat-prepare':
+            environment['FDISBULL_CHAT_WINDOWS_ACCEPTANCE'] = args.windows_acceptance
         retained_mounts = []
         if profile == 'unified-prepare' and retained_base is not None:
             staged = work / '.native/retained-base-manifest.json'
@@ -457,8 +531,7 @@ def execute(args):
             runtime = {k: data[k] for k in ('python', 'machine', 'system')}
         except (OSError, ValueError, KeyError):
             runtime = None
-        process = {'execution_origin': 'boat-linux', 'boat_sandbox_id': boat_id,
-                   'boat_worker_receipt': worker_ref, 'source_commit': sha,
+        process = {'execution_origin': origin, **origin_metadata, 'source_commit': sha,
                    'local_run_id': manifest['local_run_id'], 'local_job_id': job_id,
                    'job_name': PREPARE_JOB if profile == 'unified-prepare' else JOBS[profile],
                    'termination': termination, 'exit_code': code,
@@ -499,15 +572,14 @@ def execute(args):
             receipt_path_chat = output / 'artifacts/receipts/chat-consumer.json'
             receipt_path_chat.parent.mkdir(parents=True, exist_ok=True)
             save(receipt_path_chat, {'schema': 'fdisbull-chat-consumer-job-v1', 'status': 'passed',
-                'execution_origin': 'boat-linux', 'boat_sandbox_id': boat_id,
-                   'boat_worker_receipt': worker_ref, 'source_commit': sha, 'test_source_commit': sha,
+                'execution_origin': origin, **origin_metadata, 'source_commit': sha, 'test_source_commit': sha,
                 'local_run_id': manifest['local_run_id'], 'local_job_id': job_id,
                 'producer_job_id': chat_producer['local_job_id'], 'source_access': 'absent',
                 'source_check': 'artifact-and-host-clone', **identities})
         else:
             verify_guest_postcheck(guest_data, sha)
         if profile == 'chat-prepare':
-            write_chat_prepare_receipt(output, guest_data, process, sha, manifest['local_run_id'], origin='boat-linux', boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
+            write_chat_prepare_receipt(output, guest_data, process, sha, manifest['local_run_id'], origin=origin, boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
         (phase / 'process.json').write_text(json.dumps(process, indent=2) + '\n')
         if profile == 'unified-prepare':
             unified_input_verifier(source).verify(output, sha, manifest['local_run_id'], job_id,
@@ -515,14 +587,14 @@ def execute(args):
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
         save(receipt_path, process)
         save(phase / 'completed.json', {'local_job_id': job_id, 'source_commit': sha, 'completed_at': now(),
-             'execution_origin': 'boat-linux', 'boat_sandbox_id': boat_id, 'boat_worker_receipt': worker_ref})
+             'execution_origin': origin, **origin_metadata})
         if profile == 'unified-prepare':
             evidence = output / 'native-evidence/pe'
             for name, value in [('preparation-process.json', process),
                                 ('preparation-source-postcheck.json', verify_guest_postcheck(guest_data, sha)),
                                 ('preparation-completed.json', read_regular_json(phase / 'completed.json'))]:
                 save(evidence / name, value)
-            prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'], origin='boat-linux', boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
+            prepared_unified_stage(source, run_root, output, sha, manifest['local_run_id'], origin=origin, boat_sandbox_id=boat_id, boat_worker_receipt=worker_ref)
         print(f'{profile}: process exited successfully; evidence retained', flush=True)
     if args.profile in ('all', 'qualify'):
         checker = run_root / 'ordinary/work/scripts/check_ci_qualification.py'
@@ -542,6 +614,9 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--worker-receipt', type=Path, required=True)
+    parser.add_argument('--local-host', action='store_true', help='Use a validated local Linux Docker host receipt instead of a Boat worker receipt')
+    parser.add_argument('--authored-win16-fixture', type=Path, help='Authored Win16 ORACLE.EXE for extended Windows acceptance')
+    parser.add_argument('--windows-acceptance', choices=['pe64-pe32-win16', 'pe64'], default='pe64-pe32-win16')
     parser.add_argument('--reuse-stable-backend', type=Path)
     parser.add_argument('--reuse-layers-backend', type=Path)
     parser.add_argument('--dosbox-upstream-archive', type=Path, help='Self-contained bare Git tar for the pinned DOSBox upstream; required by local native legs')
@@ -553,12 +628,13 @@ def main():
     parser.add_argument('--retained-windows-fixtures', type=Path, help='Explicit pinned authored selector.exe, PROGRAM.EXE and INITIAL.BIN')
     parser.add_argument('--require-os-capability', choices=['wine64', 'dos', 'pe32', 'win16-guards'], action='append')
     parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
-    parser.add_argument('--expected-bytes', type=int)
-    parser.add_argument('--reserve-bytes', type=int, default=20_000_000_000)
+    parser.add_argument('--expected-bytes', type=int, help='Per-leg allocation estimate for telemetry only')
+    parser.add_argument('--reserve-bytes', type=int, default=20_000_000_000,
+                        help='Legacy compatibility value, recorded as telemetry only and not enforced')
     parser.add_argument('--timeout', type=int, default=7200)
     args = parser.parse_args()
-    if args.reserve_bytes < 20_000_000_000 or args.timeout <= 0 or (args.expected_bytes is not None and args.expected_bytes < 0):
-        parser.error('Require nonnegative estimate, at least 20 GB reserve, and positive timeout')
+    if args.reserve_bytes < 0 or args.timeout <= 0 or (args.expected_bytes is not None and args.expected_bytes < 0):
+        parser.error('Require nonnegative estimates and reserve telemetry, and positive timeout')
     try:
         execute(args)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:

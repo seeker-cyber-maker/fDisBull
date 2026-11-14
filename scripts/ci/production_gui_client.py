@@ -73,7 +73,7 @@ class GuiClient:
 
     def _intent(self,kind,doc,key,timeout):
         self._check()
-        if (kind not in ('provider','source') or not isinstance(doc,dict) or not isinstance(key,str)
+        if (kind not in ('provider','source','release') or not isinstance(doc,dict) or not isinstance(key,str)
                 or not key or len(key)>500 or any(ord(c)<32 for c in key)):
             raise ValueError('invalid GUI action')
         if type(timeout) not in (int,float) or not 0<timeout<=600:raise ValueError('invalid GUI timeout')
@@ -228,3 +228,13 @@ class GuiSourceTransport:
     def reconcile_prepare(self,target,evidence):return self._call('reconcile_prepare',target=target,evidence=evidence)
     def repair(self,key,payload):return self._call('repair',binding=key,key=key,payload=payload)
     def reconcile(self,key,payload):return self._call('reconcile',key=key,payload=payload)
+
+
+class GuiReleaseTransport:
+    def __init__(self,client):self.client=client
+    def preflight(self,key,source_sha):
+        return self.client.call('release',{'operation':'preflight','key':key,'payload':{'source_sha':source_sha,'version':'0.35.0','tag':'v0.35.0'}},timeout=180)
+    def publish(self,key,payload):
+        return self.client.call('release',{'operation':'publish','key':key,'payload':payload},key='release-publish:'+key,timeout=600)
+    def reconcile(self,key,payload):
+        return self.client.call('release',{'operation':'reconcile','key':key,'payload':payload},timeout=600)

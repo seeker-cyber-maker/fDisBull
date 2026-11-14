@@ -354,6 +354,8 @@ class ProductionService:
         if not self.config['enabled']:
             return {'schema_version': 1, 'pending_work': False}
         self._state_guard()
+        if self.config.get('pipeline_request') is not None:
+            return {'schema_version': 1, 'pending_work': self._pipeline_result() is None}
         # GET /ci/status is a read-only metadata check. Durable intake belongs
         # to run(), under the shared executor lease, rather than to readers.
         discovered = self.discover(self.config['export_root'], self.config['activated_epoch'],
@@ -375,6 +377,23 @@ class ProductionService:
         running = active is not None and active.get('status') not in TERMINAL
         initial = self.config.get('initial_request') is not None and self._initial_result() is None
         return {'schema_version': 1, 'pending_work': bool(queued or running or initial)}
+
+    def _pipeline_result(self):
+        """A configured release job owns this service; legacy history stays intact."""
+        pointer = self.config['pipeline_request']
+        if (type(pointer) is not dict or set(pointer) != {'path', 'sha256'}
+                or not isinstance(pointer['sha256'], str)
+                or not re.fullmatch('[a-f0-9]{64}', pointer['sha256'])):
+            raise ValueError('invalid release pipeline pointer')
+        path = self.root / 'pipelines' / pointer['sha256'] / 'result.json'
+        if not path.exists():
+            return None
+        value = read_json(path)
+        if (value.get('schema') != 'fdisbull-production-release-result-1'
+                or value.get('request_sha256') != pointer['sha256']
+                or value.get('status') not in ('complete', 'attention')):
+            raise ValueError('release pipeline result binding differs')
+        return value
 
     def _initial_result(self):
         path = self.root / 'initial-result.json'
@@ -454,6 +473,12 @@ class ProductionService:
         if not self.config['enabled']: return {'status': 'disabled'}
         with executor_lease(self.config['executor_lock']) as lease:
             runtime = self.factory(self.config, self.root, lease)
+            if self.config.get('pipeline_request') is not None:
+                with cleanup_guard(runtime):
+                    retained = self._pipeline_result()
+                    if retained is not None:
+                        return retained
+                    return runtime.run_pipeline(self.config['pipeline_request'])
             with cleanup_guard(runtime), self._inbox() as inbox:
                 self._discover(inbox)
                 initial = self.config.get('initial_request')

@@ -245,7 +245,7 @@ def passing_junit(path, *, native=False):
 
 CHAT_CHECKS = frozenset({'dos_screenshot','dos_keyboard','dos_restore','pe_breakpoint','pe_memory',
     'pe_screenshot','pe_click','pe_trace','pe_restore','solver_counterexample','solver_equivalence',
-    'player_save','player_resume','skill_fdisbull','skill_gamefaqs'})
+    'player_save','player_resume','skill_fdisbull','skill_gamefaqs','cli_import','cli_analyze','cli_restart'})
 
 
 def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_artifacts, origin, boat):

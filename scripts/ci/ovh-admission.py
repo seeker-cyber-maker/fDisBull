@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Admit one OVH CI phase without reducing the host storage reserve."""
+"""Record OVH CI storage telemetry without reserve-based admission."""
 import datetime
 import json
 import os
@@ -8,15 +8,12 @@ import platform
 import shutil
 
 
-def admit(path, expected, reserve=20_000_000_000):
-    if expected < 0 or reserve < 20_000_000_000:
-        raise ValueError("Invalid allocation or reserve")
+def observe(path, expected, reserve=20_000_000_000):
+    if expected < 0 or reserve < 0:
+        raise ValueError("Invalid allocation estimate or reserve telemetry")
     free = shutil.disk_usage(path).free
-    result = {"free_bytes": free, "expected_bytes": expected, "reserve_bytes": reserve,
-              "admitted": free - expected >= reserve}
-    if not result["admitted"]:
-        raise ValueError(f"OVH storage admission refused: {result}")
-    return result
+    return {"free_bytes": free, "expected_bytes": expected, "reserve_bytes": reserve,
+            "storage_status": "observed", "reserve_enforced": False}
 
 
 def main():
@@ -26,7 +23,7 @@ def main():
     job = os.environ["CI_JOB_ID"]
     if not job.isdecimal():
         raise ValueError("Invalid job identity")
-    result = admit(Path.cwd(), int(os.environ["FDISBULL_EXPECTED_BYTES"]))
+    result = observe(Path.cwd(), int(os.environ["FDISBULL_EXPECTED_BYTES"]))
     result.update(source_commit=os.environ["CI_COMMIT_SHA"], job_id=job,
                   pipeline_id=os.environ["CI_PIPELINE_ID"], runner_id=os.environ["CI_RUNNER_ID"],
                   observed_at=datetime.datetime.now(datetime.timezone.utc).isoformat())

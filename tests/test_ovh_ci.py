@@ -23,12 +23,13 @@ admission = load('ovh-admission')
 exporter = load('ovh-export')
 
 
-def test_storage_admission_rejects_reserve_and_negative(monkeypatch, tmp_path):
-    monkeypatch.setattr(admission.shutil, 'disk_usage', lambda _: SimpleNamespace(free=30_000_000_000))
-    assert admission.admit(tmp_path, 10_000_000_000)['admitted']
-    for expected, reserve in [(10_000_000_001, 20_000_000_000), (-1, 20_000_000_000), (0, 19_999_999_999)]:
-        with pytest.raises(ValueError):
-            admission.admit(tmp_path, expected, reserve)
+def test_ovh_storage_reports_low_space_without_reserve_admission(monkeypatch, tmp_path):
+    monkeypatch.setattr(admission.shutil, 'disk_usage', lambda _: SimpleNamespace(free=1_000_000))
+    result = admission.observe(tmp_path, 10_000_000_000, 0)
+    assert result == {'free_bytes': 1_000_000, 'expected_bytes': 10_000_000_000,
+                      'reserve_bytes': 0, 'storage_status': 'observed', 'reserve_enforced': False}
+    with pytest.raises(ValueError, match='Invalid allocation estimate'):
+        admission.observe(tmp_path, -1)
 
 
 def test_runner_admission_rejects_unapproved_runner(monkeypatch):

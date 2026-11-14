@@ -6,6 +6,54 @@ operational acceptance record determine which deployment is live. Fixture
 tests alone do not establish activation, notification delivery or recovery of
 a naturally occurring failure.
 
+## Direct VPS source-to-release job
+
+The installed, root-only queue command is:
+
+```sh
+python3 /usr/local/libexec/fdisbull-ci-production/production_pipeline.py --enqueue FULL_SOURCE_SHA
+```
+
+It uses the operator-installed 0.35.0 input template, records one immutable
+request and lets the existing n8n timer start the job. It starts no worker and
+performs no release itself. The source integrator calls it only after the
+primary repository's contribution disposition and full source SHA are frozen.
+Repeated calls for that same request do not launch another attempt.
+
+A frozen release request can select the existing n8n service's direct VPS path.
+The request records the full commit on the primary GitHub repository, version,
+new tag, retained native input identities and private source/output locations.
+The service holds the same single executor lease. It does not dispatch a hosted
+workflow or ask a chat to poll its progress.
+
+The existing serial Docker runner executes ordinary packaging, both declared
+DOS native legs, prepared Wine/QEMU acceptance, complete kit assembly and a
+separate source-free consumer with networking disabled. Full kit preparation
+requires authored PE32 and Win16 inputs; PE64-only output requires an explicit
+legacy choice. The consumer also imports a tiny authored executable through the
+packaged CLI, analyzes it and reopens its persisted project. These checks are
+part of the delivered consumer seam, rather than another qualification harness.
+
+The owner records actual progress, a finite deadline and host health during the
+job. Workers carry the run and source labels used for exact owned-process
+cleanup. Results, failed attempts and stopped container disks are preserved.
+Fixed disk-reserve floors and reserve-based permission gates have been removed;
+valid mounted destinations and actual filesystem errors remain authoritative.
+
+A completed consumer and matching ordinary package inventory produce one
+release input manifest. The existing Mac GUI worker keeps its existing named
+GitHub credential in place. It creates a draft of the authorized new release,
+uploads the four packages, complete offline ZIP and checksum file, checks asset
+identities, then publishes. Every mutation has a durable intent. An uncertain
+response stops with its partial effects retained; read-only reconciliation never
+repeats a mutation. A successful CLI exit alone is not publication proof.
+
+This code path must pass a real uninterrupted source-to-release run before
+being called operationally qualified. Historical operator-assisted closure does
+not qualify it. Publication and the active local installation retain separate
+identities and gates. There is no automatic system-wide application installation
+in this path.
+
 ## Execution and ownership
 
 The existing n8n operations timer reads the fixed native `status` command. Its

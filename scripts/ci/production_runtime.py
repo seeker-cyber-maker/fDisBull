@@ -193,9 +193,11 @@ class Runtime:
             raise ValueError('GUI transport configuration mismatch')
         if gui['enabled']:
             client=(gui_client_factory or gui_client_module.GuiClient)(gui['state_dir'])
+            self._gui_client=client
             factory=transport_factory or (lambda provider:gui_client_module.GuiProviderTransport(provider,client))
             self.source=source_transport or gui_client_module.GuiSourceTransport(client)
         else:
+            self._gui_client=None
             factory=transport_factory or (lambda provider:transport_module.SSHProviderTransport(provider,BRIDGE))
             self.source=source_transport or source_module.SSHSourceTransport()
         self.transports={p:_GatedTransport(factory(p),self._guard,clock,p,sleeper=self._sleep,
@@ -203,6 +205,32 @@ class Runtime:
                         for p in ('github','gitlab')}
         self.host_factory=host_factory or host_module.GitHubHost
         self._host=None
+
+    def run_pipeline(self,pointer):
+        """Run the frozen source directly on this VPS, without provider polling."""
+        self._guard()
+        pipeline=_module('production_pipeline.py')
+        request=pipeline.inspect_request(pointer)
+        directory=_private(self.root/'pipelines'/pointer['sha256'])
+        if request.get('publish') and self._gui_client is None:
+            raise ValueError('approved release publication transport unavailable')
+        if request.get('publish'):
+            ready=gui_client_module.GuiReleaseTransport(self._gui_client).preflight(request['key'],request['source_sha'])
+            if (not isinstance(ready,dict) or ready.get('status')!='ready'
+                    or ready.get('source_sha')!=request['source_sha'] or ready.get('tag')!='v0.35.0'):
+                raise ValueError('release publication preflight unavailable')
+        def publish(key,payload):
+            self._guard()
+            return gui_client_module.GuiReleaseTransport(self._gui_client).publish(key,payload)
+        result=pipeline.run(request,directory,guard=self._guard,health=self.health,publisher=publish)
+        if result.get('owned_cleanup_verified') is not True:
+            self._cleanup_unknown=True
+            self._qualification_ownership_hold=True
+        if result.get('status')!='complete':
+            self._stop_notice('qualification','pipeline:'+pointer['sha256'],'PipelineAttention',
+                deadline_epoch=None,proof={'scope':'source-to-release-pipeline',
+                    'request_sha256':pointer['sha256'],'result_path':str(directory/'result.json')})
+        return result
 
     def _check_lease(self):
         try:

@@ -524,6 +524,32 @@ def prepare_dos_fixture(workspace):
     return directory,target
 
 
+def verify_packaged_cli(cli, target, workspace):
+    """Exercise the delivered command, persisted project and real decoder."""
+    project=workspace/'cli-intake.fdb'
+    commands=[['import',str(target),str(project)],
+              ['analyze',str(project),'--max-instructions','64'],
+              ['status',str(project)]]
+    receipts=[]
+    for index,args in enumerate(commands):
+        run=subprocess.run([str(cli),*args],cwd=workspace,capture_output=True,timeout=60,check=False)
+        if len(run.stdout)>1024*1024 or len(run.stderr)>1024*1024:
+            raise ValueError('Packaged CLI output exceeds bound')
+        (workspace/('cli-%d.stdout.json'%index)).write_bytes(run.stdout)
+        (workspace/('cli-%d.stderr.log'%index)).write_bytes(run.stderr)
+        value=json.loads(run.stdout)
+        if run.returncode!=0 or value.get('ok') is not True:
+            raise ValueError('Packaged CLI intake or analysis failed')
+        receipts.append({'command':args[0],'exit_code':run.returncode,
+                         'stdout_sha256':hashlib.sha256(run.stdout).hexdigest()})
+    if (not project.is_file() or type(value.get('result')) is not dict
+            or type(value['result'].get('counts',{}).get('instructions')) is not int
+            or value['result']['counts']['instructions']<1):
+        raise ValueError('Packaged CLI persisted analysis is empty')
+    return {'status':'passed','fixture_sha256':digest(target),
+            'persisted_instructions':value['result']['counts']['instructions'],'commands':receipts}
+
+
 def verify(root, workspace, archive):
     root, workspace, archive = root.resolve(), workspace.resolve(), archive.resolve()
     if root == workspace or root.is_relative_to(workspace) or workspace.is_relative_to(root):
@@ -575,6 +601,7 @@ def verify(root, workspace, archive):
         if skill != 'fdisbull': cmd += ['--skill',skill]
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, timeout=30)
     dos_directory,dos=prepare_dos_fixture(workspace)
+    cli_result=verify_packaged_cli(cli,dos,workspace)
     with Project.create(dos_directory/'dos.fdb',dos) as project, project.debugger(root/'bin/dosbox',dos_directory) as debug:
         debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True); state=debug.save_state('before.sav')
         debug.keyboard.press('a');debug.run(guest_ms=250,timeout_ms=5000,fast_forward=True)
@@ -604,6 +631,8 @@ def verify(root, workspace, archive):
                 'skill_fdisbull','skill_gamefaqs')},
             'dos_screenshot_sha256':dos_image['sha256'],'pe_screenshot_sha256':frames['wine']['sha256'],
             'profiles':['dos','wine','player','z3']}
+    result['packaged_cli']=cli_result
+    result['checks'].update(cli_import=True,cli_analyze=True,cli_restart=True)
     if extended_result is not None:
         result['windows_native_qualification'].update(scope='authored PE64, PE32 and Win16 oracles', pe32='passed', win16='passed')
         result['extended_windows'] = extended_result

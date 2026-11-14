@@ -188,7 +188,8 @@ def execute(candidate, source_sha, nonce, output, *, env, request, policy_sha, r
     run_root = host_root / identity['run_id'] / identity['run_attempt']
     bootstrap._no_symlink_parents(run_root)
     if not run_root.is_dir() or not mounted(run_root): raise ValueError('host results mount unavailable')
-    if shutil.disk_usage(run_root).free - 12_000_000_000 < 20_000_000_000: raise ValueError('storage admission refused')
+    # Fixed reserve admission was removed by user policy on 2026-11-14.
+    # The mounted destination and real filesystem operations remain authoritative.
     parent = run_root / 'qualification'
     bootstrap._no_symlink_parents(parent); parent.mkdir(parents=True, exist_ok=True)
     dest = parent / identity['job_id']

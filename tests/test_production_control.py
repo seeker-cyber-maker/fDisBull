@@ -384,3 +384,35 @@ def test_parent_terminal_receipt_mismatch_fails_closed(tmp_path):
     with service._inbox() as inbox:
         service._discover(inbox)
         assert inbox.get(child['event_key'])['state'] == 'pending'
+
+
+def test_release_job_uses_existing_owner_without_provider_or_legacy_intake(tmp_path):
+    c=config(tmp_path);pointer={'path':'/var/lib/fdisbull-ci/control/production/request.json','sha256':'d'*64}
+    c['pipeline_request']=pointer;calls=[]
+    class Runtime:
+        def run_pipeline(self,request):
+            assert request==pointer
+            with pytest.raises(BlockingIOError):
+                with control.executor_lease(c['executor_lock']):pass
+            calls.append(request)
+            result={'schema':'fdisbull-production-release-result-1','request_sha256':'d'*64,
+                    'status':'complete','owned_cleanup_verified':True,'source_sha':'a'*40,'tag':'v0.35.0',
+                    'release_url':'https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.35.0'}
+            path=Path(c['state_dir'])/'pipelines'/('d'*64)/'result.json';path.parent.mkdir(parents=True,mode=0o700)
+            control.write_json(path,result,exclusive=True);return result
+    def no_discovery(*a,**k):pytest.fail('release job must not poll hosted CI or legacy intake')
+    service=control.ProductionService(c,lambda *a:Runtime(),discover=no_discovery)
+    assert service.status()=={'schema_version':1,'pending_work':True}
+    result=service.run()
+    assert result['status']=='complete' and calls==[pointer]
+    assert service.status()=={'schema_version':1,'pending_work':False}
+    assert service.run()==result and calls==[pointer]
+
+
+def test_terminal_pipeline_attention_is_not_automatically_replayed(tmp_path):
+    c=config(tmp_path);c['pipeline_request']={'path':'/var/lib/fdisbull-ci/control/production/request.json','sha256':'d'*64}
+    path=Path(c['state_dir'])/'pipelines'/('d'*64)/'result.json';path.parent.mkdir(parents=True,mode=0o700)
+    control.write_json(path,{'schema':'fdisbull-production-release-result-1','request_sha256':'d'*64,'status':'attention'},exclusive=True)
+    service=control.ProductionService(c,lambda *a:object(),discover=lambda *a,**k:pytest.fail('no legacy polling'))
+    assert service.status()=={'schema_version':1,'pending_work':False}
+    assert service.run()['status']=='attention'

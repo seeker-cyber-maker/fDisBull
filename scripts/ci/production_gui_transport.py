@@ -144,6 +144,22 @@ def _request(kind,document):
                     and isinstance(payload['source_prepare']['event_key'],str)
                     and re.fullmatch('[0-9a-f]{64}',payload['source_prepare']['event_key'])):
                 source.identity.target(payload['target']);return
+    elif kind=='release':
+        if (set(document)=={'operation','key','payload'} and document['operation']=='preflight'
+                and isinstance(document['key'],str) and 1<=len(document['key'])<=500
+                and isinstance(document['payload'],dict)
+                and set(document['payload'])=={'source_sha','version','tag'}
+                and re.fullmatch('[a-f0-9]{40}',str(document['payload']['source_sha']))
+                and document['payload']['version']=='0.35.0' and document['payload']['tag']=='v0.35.0'):
+            return
+        if set(document)=={'operation','key','payload'} and document['operation'] in ('publish','reconcile'):
+            key,payload=document['key'],document['payload']
+            if (isinstance(key,str) and 1<=len(key)<=500 and not any(ord(c)<32 for c in key)
+                    and isinstance(payload,dict) and set(payload)=={'manifest_path','manifest_sha256'}
+                    and isinstance(payload['manifest_path'],str)
+                    and re.fullmatch(r'/var/lib/fdisbull-ci/results/[A-Za-z0-9_./-]+',payload['manifest_path'])
+                    and '..' not in payload['manifest_path'].split('/') and _is_sha256(payload['manifest_sha256'])):
+                return
     raise ValueError('request outside fixed bridge contract')
 
 
@@ -178,8 +194,9 @@ def _activation():
             or value['schema']!='fdisbull-gui-activation-1' or not isinstance(value['allowed_kinds'],list)
             or not value['allowed_kinds'] or len(set(value['allowed_kinds']))!=len(value['allowed_kinds'])
             or 'credential_probe' not in value['allowed_kinds']
-            or not set(value['allowed_kinds'])<={'credential_probe','provider','source','canonical_read'}
-            or not isinstance(value['modules'],dict) or set(value['modules'])!=MODULES
+            or not set(value['allowed_kinds'])<={'credential_probe','provider','source','canonical_read','release'}
+            or not isinstance(value['modules'],dict)
+            or set(value['modules'])!=MODULES | ({'production_release.py'} if 'release' in value['allowed_kinds'] else set())
             or not isinstance(value['interpreters'],dict) or set(value['interpreters'])!={'provider','source'}):
         raise RuntimeError('GUI activation invalid')
     if (any(x.is_symlink() for x in (BRIDGE,*BRIDGE.parents)) or not BRIDGE.is_dir()
@@ -652,7 +669,7 @@ class GuiSpool:
         # Child input is the exact validated request only, never a shell command.
         # Keep original envelope immutable; create a separate bounded input file.
         # Existing helpers read a single JSON object from stdin.
-        targets={'provider':'production_transport.py','source':'production_source_transport.py',
+        targets={'provider':'production_transport.py','source':'production_source_transport.py','release':'production_release.py',
                  'canonical_read':'production_held_reconcile.py','credential_probe':'production_transport.py'}
         command=[('/usr/bin/python3' if doc['kind']=='provider' else SOURCE_PYTHON),'-I',
                  str(BRIDGE/targets[doc['kind']])]
