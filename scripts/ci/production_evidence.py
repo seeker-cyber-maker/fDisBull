@@ -66,7 +66,31 @@ def _closed(exported,inventory,files):
     return seen
 
 
-def _junit(path,strict):
+def _pytest_subtest_summary(path):
+    path=_regular(path)
+    if path.stat().st_size>16*1024*1024:raise ValueError('junit pytest log too large')
+    with path.open('rb') as stream:data=stream.read(16*1024*1024+1)
+    if len(data)>16*1024*1024 or not data.endswith(b'\n'):
+        raise ValueError('junit pytest terminal summary incomplete')
+    try:lines=[line.strip().strip('=').strip() for line in data.decode('utf-8').splitlines() if line.strip()]
+    except UnicodeError:raise ValueError('junit pytest log encoding invalid') from None
+    pattern=re.compile(r'(?P<results>[0-9]+ [a-z]+(?: [a-z]+)?(?:, [0-9]+ [a-z]+(?: [a-z]+)?)*)'
+                       r' in [0-9]+(?:\.[0-9]+)?s(?: \([0-9]+:[0-5][0-9](?::[0-5][0-9])?\))?')
+    matches=[(index,match) for index,line in enumerate(lines) if (match:=pattern.fullmatch(line))]
+    if len(matches)!=1 or matches[0][0]!=len(lines)-1:
+        raise ValueError('junit pytest terminal summary missing or ambiguous')
+    counts={}
+    for item in matches[0][1]['results'].split(', '):
+        value,label=item.split(' ',1)
+        if label not in ('passed','skipped','subtests passed') or label in counts:
+            raise ValueError('junit pytest terminal outcomes unsupported or failing')
+        counts[label]=int(value)
+    if counts.get('subtests passed',0)<=0:
+        raise ValueError('junit passed subtest proof missing')
+    return counts.get('passed',0),counts.get('skipped',0),counts['subtests passed']
+
+
+def _junit(path,strict,*,summary_path=None):
     path=_regular(path)
     if path.stat().st_size>16*1024*1024:raise ValueError('junit too large')
     root=ET.parse(path).getroot()
@@ -79,9 +103,23 @@ def _junit(path,strict):
             if not re.fullmatch('[0-9]+',value): raise ValueError('invalid junit total')
             totals[k]+=int(value)
     if (totals['tests']<=0 or totals['failures'] or totals['errors'] or strict and totals['skipped']
-            or root.findall('.//failure') or root.findall('.//error') or strict and root.findall('.//skipped')
-            or len(root.findall('.//testcase')) != totals['tests']):
+            or root.findall('.//failure') or root.findall('.//error') or strict and root.findall('.//skipped')):
         raise ValueError('junit failed or missing')
+    cases=root.findall('.//testcase')
+    if len(cases)!=totals['tests']:
+        # Pytest 9 counts passing subreports in tests, but reuses their parent
+        # testcase node. XML alone cannot distinguish that from missing cases.
+        # Only the ordinary caller may supply its already inventory-bound log.
+        if (not cases or strict or summary_path is None or len(suites)!=1
+                or any(suite.findall('.//testsuite') for suite in suites)
+                or len(suites[0].findall('testcase'))!=len(cases)):
+            raise ValueError('junit testcase count lacks independent subtest proof')
+        passed,skipped,subtests=_pytest_subtest_summary(summary_path)
+        skipped_cases=sum(case.find('skipped') is not None for case in cases)
+        if (len(cases)!=passed+skipped or totals['tests']!=passed+skipped+subtests
+                or totals['skipped']!=skipped or skipped_cases!=skipped
+                or len(root.findall('.//skipped'))!=skipped_cases):
+            raise ValueError('junit testcase or subtest counts disagree with terminal summary')
     return totals['tests']
 
 
@@ -291,7 +329,10 @@ class ProductionEvidence:
             _reference(ref,inventory,exported,meta.get('project_directory',''))
         for ref in ovh.references(receipt):_reference(ref,inventory,exported,meta.get('project_directory',''))
         for junit in junits:
-            count=_junit(exported/junit,self.profile!='ordinary' or junit.endswith('required-contracts.xml'))
+            log='artifacts/ordinary/tests.log'
+            summary=(exported/log if self.profile=='ordinary' and junit=='artifacts/ordinary/tests.xml'
+                     and log in inventory else None)
+            count=_junit(exported/junit,self.profile!='ordinary' or junit.endswith('required-contracts.xml'),summary_path=summary)
             if junit=='artifacts/ordinary/required-contracts.xml' and count!=26:
                 raise ValueError('required contract count mismatch')
         if self.profile!='ordinary' and receipt.get('backend_identity',{}).get('source_commit')!=target['source_sha']:

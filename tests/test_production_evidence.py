@@ -2,8 +2,10 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -15,6 +17,171 @@ GH={'provider':'github','repository':'seeker-cyber-maker/fDisBull','run_id':'11'
 GL={'provider':'gitlab','project_id':'88349936','pipeline_id':'10','job_id':'20','source_sha':SHA,
     'job_name':'test-and-package','runner_id':'58990209','ref':'main'}
 REQ=sorted(m.ORDINARY)
+
+
+@pytest.fixture(scope='module')
+def genuine_subtest_report(tmp_path_factory):
+    if importlib.util.find_spec('_pytest.subtests') is None:
+        pytest.skip('genuine built-in subtest serialization requires pytest 9')
+    root=tmp_path_factory.mktemp('genuine-pytest-subtest-junit')
+    source=root/'test_subtest_fixture.py'
+    source.write_text('''import pytest
+
+def test_parent(subtests):
+    for value in range(3):
+        with subtests.test(value=value):
+            assert value >= 0
+
+@pytest.mark.skip(reason="serializer fixture")
+def test_skipped():
+    pass
+''')
+    config=root/'pytest.ini';config.write_text('[pytest]\n')
+    xml=root/'tests.xml';log=root/'tests.log'
+    env={**os.environ,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1','PYTEST_ADDOPTS':''}
+    env.pop('PYTEST_PLUGINS',None)
+    result=subprocess.run([sys.executable,'-m','pytest','-q','--color=no','-c',str(config),
+                           '-p','no:cacheprovider','--junitxml='+str(xml),str(source)],
+                          cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=30,check=True)
+    log.write_bytes(result.stdout)
+    tree=m.ET.parse(xml).getroot();suite=tree.find('testsuite')
+    assert suite is not None and int(suite.get('tests'))==5
+    assert len(tree.findall('.//testcase'))==2 and len(tree.findall('.//skipped'))==1
+    assert b'1 passed, 1 skipped, 3 subtests passed' in result.stdout
+    return xml.read_bytes(),log.read_bytes()
+
+
+def rebind_success_export(folder):
+    exported=folder/'exported';receipt=exported/'artifacts/receipts/ordinary.json'
+    document=json.loads(receipt.read_text())
+    document['test_results']=[ident(exported/ref['path'],exported) for ref in document['test_results']]
+    write(receipt,document)
+    inventory=[ident(p,exported) for p in sorted(exported.rglob('*')) if p.is_file()]
+    write(folder/'inventory.json',inventory)
+    meta=json.loads((folder/'job.json').read_text());meta['files']=len(inventory)
+    item=ident(folder/'inventory.json',folder);meta['inventory.json']={'size':item['size'],'sha256':item['sha256']}
+    write(folder/'job.json',meta)
+
+
+def test_genuine_pytest_passed_subtests_need_inventory_bound_terminal_summary(tmp_path,genuine_subtest_report):
+    root,folder=gh_export(tmp_path);exported=folder/'exported';xml,log=genuine_subtest_report
+    write(exported/'artifacts/ordinary/tests.xml',xml)
+    write(exported/'artifacts/ordinary/tests.log',log)
+    rebind_success_export(folder)
+    result=m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)
+    assert result['required_artifacts_verified'] is True
+    assert set(result['verified_artifacts'])==set(REQ)
+
+
+SUBTEST_XML=(b'<testsuites><testsuite tests="5" failures="0" errors="0" skipped="1">'
+             b'<testcase name="parent"/><testcase name="skipped"><skipped/></testcase></testsuite></testsuites>')
+SUBTEST_SUMMARY=b'1 passed, 1 skipped, 3 subtests passed in 0.01s\n'
+
+
+@pytest.mark.parametrize('damage',[
+    'no-log','missing-parent','missing-skip','extra-skip','orphan-skip','nested-skip','nested-suite','wrong-skip-total','wrong-test-total',
+    'failure-node','error-node','failed-summary','error-summary','xfail-summary','missing-subtests',
+    'wrong-subtests','wrong-parents','partial-summary','missing-newline','ambiguous-summary',
+    'trailing-output','missing-summary','truncated-xml','missing-cases',
+])
+def test_subtest_reconciliation_rejects_missing_or_contradictory_proof(tmp_path,damage):
+    root,folder=gh_export(tmp_path);exported=folder/'exported'
+    tree=m.ET.fromstring(SUBTEST_XML);suite=tree.find('testsuite');cases=suite.findall('testcase')
+    log=SUBTEST_SUMMARY
+    if damage=='missing-parent':suite.remove(cases[0])
+    elif damage=='missing-skip':cases[1].remove(cases[1].find('skipped'))
+    elif damage=='extra-skip':m.ET.SubElement(cases[1],'skipped')
+    elif damage in ('orphan-skip','nested-skip'):
+        skipped=cases[1].find('skipped');cases[1].remove(skipped)
+        parent=suite if damage=='orphan-skip' else m.ET.SubElement(cases[1],'system-out')
+        parent.append(skipped)
+    elif damage=='nested-suite':m.ET.SubElement(suite,'testsuite',tests='1',failures='1',errors='0',skipped='0')
+    elif damage=='wrong-skip-total':suite.set('skipped','0')
+    elif damage=='wrong-test-total':suite.set('tests','6')
+    elif damage=='failure-node':m.ET.SubElement(cases[0],'failure')
+    elif damage=='error-node':m.ET.SubElement(cases[0],'error')
+    elif damage=='failed-summary':log=b'1 passed, 1 failed, 3 subtests passed in 0.01s\n'
+    elif damage=='error-summary':log=b'1 passed, 1 error, 3 subtests passed in 0.01s\n'
+    elif damage=='xfail-summary':log=b'1 passed, 1 xfailed, 3 subtests passed in 0.01s\n'
+    elif damage=='missing-subtests':log=b'1 passed, 1 skipped in 0.01s\n'
+    elif damage=='wrong-subtests':log=b'1 passed, 1 skipped, 2 subtests passed in 0.01s\n'
+    elif damage=='wrong-parents':log=b'2 passed, 1 skipped, 2 subtests passed in 0.01s\n'
+    elif damage=='partial-summary':log=b'1 passed, 1 skipped, 3 subtests passed in\n'
+    elif damage=='missing-newline':log=log[:-1]
+    elif damage=='ambiguous-summary':log+=SUBTEST_SUMMARY
+    elif damage=='trailing-output':log+=b'capture ended unexpectedly\n'
+    elif damage=='missing-summary':log=b'.....................................\n'
+    elif damage=='missing-cases':
+        for case in cases:suite.remove(case)
+    xml=m.ET.tostring(tree)
+    if damage=='truncated-xml':xml=xml[:-10]
+    write(exported/'artifacts/ordinary/tests.xml',xml)
+    if damage!='no-log':write(exported/'artifacts/ordinary/tests.log',log)
+    rebind_success_export(folder)
+    with pytest.raises((ValueError,m.ET.ParseError)):
+        m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)
+
+
+def test_summary_companion_must_match_closed_inventory_bytes(tmp_path):
+    root,folder=gh_export(tmp_path);exported=folder/'exported'
+    write(exported/'artifacts/ordinary/tests.xml',SUBTEST_XML)
+    log=exported/'artifacts/ordinary/tests.log';write(log,SUBTEST_SUMMARY);rebind_success_export(folder)
+    log.write_bytes(b'changed\n'+SUBTEST_SUMMARY)
+    with pytest.raises(ValueError,match='inventory byte mismatch'):
+        m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)
+
+
+def test_unlisted_summary_cannot_be_used_as_subtest_proof(tmp_path):
+    root,folder=gh_export(tmp_path);exported=folder/'exported'
+    write(exported/'artifacts/ordinary/tests.xml',SUBTEST_XML);rebind_success_export(folder)
+    write(exported/'artifacts/ordinary/tests.log',SUBTEST_SUMMARY)
+    with pytest.raises(ValueError,match='inventory not closed'):
+        m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)
+
+
+def test_flat_equal_count_ordinary_report_keeps_optional_log_semantics(tmp_path):
+    root,folder=gh_export(tmp_path);exported=folder/'exported'
+    write(exported/'artifacts/ordinary/tests.log',b'not a terminal summary and no final newline')
+    rebind_success_export(folder)
+    assert m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)['required_artifacts_verified']
+
+
+@pytest.mark.parametrize('cases,total',[(26,27),(27,27)])
+def test_required_contracts_remain_exactly_26_and_cannot_use_subtest_summary(tmp_path,cases,total):
+    root,folder=gh_export(tmp_path);exported=folder/'exported'
+    xml=('<testsuite tests="%d" failures="0" errors="0" skipped="0">'%total
+         +'<testcase name="contract"/>'*cases+'</testsuite>').encode()
+    write(exported/'artifacts/ordinary/required-contracts.xml',xml)
+    write(exported/'artifacts/ordinary/tests.log',b'26 passed, 1 subtests passed in 0.01s\n')
+    rebind_success_export(folder)
+    with pytest.raises(ValueError):
+        m.ProductionEvidence(root,tmp_path/'private','ordinary',capture)({**GH,'status':'success'},REQ)
+
+
+def test_strict_native_junit_cannot_reconcile_passed_subtests(tmp_path):
+    xml=tmp_path/'native.xml';log=tmp_path/'native.log'
+    write(xml,b'<testsuite tests="4"><testcase name="parent"/></testsuite>')
+    write(log,b'1 passed, 3 subtests passed in 0.01s\n')
+    with pytest.raises(ValueError,match='independent subtest proof'):m._junit(xml,True,summary_path=log)
+    assert m._junit(xml,False,summary_path=log)==4
+
+
+def test_subtest_only_summary_cannot_establish_missing_parent_cases(tmp_path):
+    xml=tmp_path/'tests.xml';log=tmp_path/'tests.log'
+    write(xml,b'<testsuite tests="3" failures="0" errors="0" skipped="0"/>')
+    write(log,b'3 subtests passed in 0.01s\n')
+    with pytest.raises(ValueError,match='independent subtest proof'):m._junit(xml,False,summary_path=log)
+
+
+def test_actual_retry_summary_totals_reconcile_only_with_all_parent_cases(tmp_path):
+    xml=tmp_path/'tests.xml';log=tmp_path/'tests.log'
+    write(xml,b'<testsuites><testsuite tests="14795" failures="0" errors="0" skipped="418">'
+          +b'<testcase name="passed"/>'*11998+b'<testcase name="skipped"><skipped/></testcase>'*418
+          +b'</testsuite></testsuites>')
+    write(log,b'11998 passed, 418 skipped, 2379 subtests passed in 674.25s (0:11:14)\n')
+    assert m._junit(xml,False,summary_path=log)==14795
+    data=xml.read_bytes();xml.write_bytes(data.replace(b'<testcase name="passed"/>',b'',1))
+    with pytest.raises(ValueError,match='counts disagree'):m._junit(xml,False,summary_path=log)
 
 
 def write(path,data):
