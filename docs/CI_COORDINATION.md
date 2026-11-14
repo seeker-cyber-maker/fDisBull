@@ -1,8 +1,16 @@
 # CI triggers and status coordination
 
-fDisBull maintains **equal repository state** across local Git (`/Volumes/CODEX/Codex_Projects/fDisBull` and `local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git`) and GitLab (`gitlab` at `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project ID `88349936`) during the 30-day GitLab evaluation trial. **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete** (`remote.origin.pushurl` is locked to `RETIRED_GITHUB_DO_NOT_PUSH`, and `scripts/ci_status.py` blocks live refreshes against `seeker-cyber-maker/fDisBull`).
+For the complete source-to-release sequence, ownership and identity requirements,
+start with [the release process](RELEASE_PROCESS.md). The intended next release is
+0.35.0; CI success alone does not establish release completion.
 
-Agents are required to update **both** local Git and GitLab when landing or syncing branches and tags, while strictly preventing duplicate or unthrottled CI pipeline runs that could trigger provider abuse filters.
+The user selected original GitHub [`seeker-cyber-maker/fDisBull`](https://github.com/seeker-cyber-maker/fDisBull), repository ID `1431097789`, as the preferred source/review platform. The connected `TiGa-RCE` account now has Write access. `TiGa-RCE/fdisbull` is a distinct partial import, not the restoration target.
+
+The guarded mirror service preserves original GitHub, local-hub and GitLab refs. GitHub and GitLab use separate durable histories and one outer lock. GitLab pushes retain `ci.skip`; GitHub/local pushes do not receive that option. Historical tag identities remain immutable. See [the restoration contract](GITHUB_RESTORATION.md).
+
+**CI owner: n8n. The manual GitHub → OVH bootstrap passed on 2026-11-13.** [Run 43512305780](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/43512305780), attempt 1, completed successfully on runner `fdisbull-ovh-ca-gh1`; its artifact was independently verified and [handed back to PR #84](https://github.com/seeker-cyber-maker/fDisBull/pull/84#issuecomment-6865708771). Actions is enabled, `ovh-bootstrap.yml` is manual-only, and legacy workflow IDs `394106283` and `394474280` remain disabled. Its finite worker shares the OVH executor lock with GitLab and relinquishes the lock after owned-process cleanup. Pushes, PRs and tags do not automatically dispatch this workflow. Only n8n dispatches/observes jobs; other workers consume dated receipts.
+
+This establishes infrastructure and artifact handoff, not application/native qualification. The real qualification checker rejected missing ordinary/native receipts and emitted `release_ready=false`. Existing exact-candidate GitLab/local receipts retain their own scope. QEMU qualification, the full offline consumer kit and release publication remain separate gates.
 
 ## Workflow routing (`.gitlab-ci.yml` and portable `.github/workflows/*`)
 
@@ -25,20 +33,10 @@ Compiling `dosbox-x` from source downloads system packages and runs a 30–45 mi
 4. Every job sets `interruptible: true`, `retry: 0`, and a per-ref `resource_group` so superseded runs cancel immediately and concurrent jobs never pile up.
 5. `native-debugger-stable` and `native-debugger-layers` are `when: manual` by default and are triggered explicitly only when qualifying a release candidate SHA before tagging.
 
-## Dual synchronization between Local Git and GitLab
+## Legacy local/GitLab helper
 
-Whenever an agent updates `main`, a topic branch, or release tags, both the local Git repository and GitLab must be kept in sync:
+Use the installed guarded three-way service for normal propagation. Push an ordinary source branch to `origin` or `local-hub`; the service preserves the other endpoints. The legacy `scripts/sync_mirrors.py` helper is only for reviewed local/GitLab operations. Do not use the old `dual` command or pass `ci.skip` to GitHub/local-hub. Manual GitLab pushes require `-o ci.skip`.
 
-```sh
-# Dry-run planned sync commands across local-hub and gitlab:
-python scripts/sync_mirrors.py --dry-run
-
-# Sync a specific branch to both local-hub and gitlab (automatically passes -o ci.skip on GitLab):
-python scripts/sync_mirrors.py --branch codex/my-feature
-
-# Or push directly to the configured dual remote with ci.skip:
-git push -o ci.skip dual refs/heads/codex/my-feature:refs/heads/codex/my-feature
-```
 
 ## One owner and a finite status command
 
@@ -71,3 +69,36 @@ Missing runs, incomplete pages, mismatched SHAs, stale data and provider errors 
 Authentication/access failures, rate limits, CI quota exhaustion and confirmed account restrictions stop refreshes through a persisted `provider_stop`. Do not repeatedly retry, change accounts/repositories, weaken checks or push empty commits to evade the condition. Resolve normal provider access first.
 
 Do not start watchers, scheduled checks or monitoring services without a separate user request. Source fixes, CI qualification, review readiness, merging and releasing remain separate gates.
+
+## Finite agent waits and controller handoffs
+
+Reviewers must not remain active solely to wait for another CI chat. Read the
+owner's existing receipt first. At most one bounded chat wait of up to 60 seconds
+is appropriate for an imminent result; do not renew it merely because the owner
+is active or its cursor changed. If the required result is unavailable, publish
+the completed review, name the missing evidence and its owner, and end the turn
+or continue independent authorized work. Resume review when concrete new evidence
+is available. This rule does not stop an authorized finite worker or replace the
+existing n8n service with a chat-based polling loop.
+
+The CI owner maintains one durable current-state handoff in the existing control
+records. Include the incident, run and attempt, exact application and workflow
+commits, owner, current stage, last substantive progress time, stage deadline,
+next action, blocker and paths to retained results. Repeated status reads and
+additional passing test counts are not substantive progress by themselves.
+
+Controller stages need finite deadlines and explicit success, failure or
+attention outcomes. A timeout must retain the original action intent and evidence;
+it must not authorize replay of an uncertain mutation. A completed job must not
+leave an idle holder retaining the executor indefinitely. Before releasing or
+transferring ownership, reconcile live workers and unresolved actions under the
+existing executor protocol. Report controller attention through the existing
+deduplicated notification route, including failures before job-evidence capture.
+
+When a verifier rejects a completed export, preserve it and correct the verifier
+against that real evidence without weakening failure detection. Reuse the export
+where source identity and completeness remain valid; do not rebuild merely to
+repair receipt interpretation. Record operator-assisted reconciliation separately
+from automatic recovery. A fix, a successful rehearsal and a recovered production
+incident are distinct outcomes. These are required behaviors, not a declaration
+that the current deployment has passed them.
