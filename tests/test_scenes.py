@@ -362,6 +362,13 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/desqview-and-memory-search.md",
         "references/execution-event-search.md",
         "references/binary-claim-verification.md",
+        "references/contradiction-recovery.md",
+        "references/next-steps.md",
+        "references/analysis-types.md",
+        "references/dos-qemu-migration.md",
+        "references/dos-file-layers.md",
+        "references/chip8-qemu.md",
+        "references/kint6-sherlock7.md",
     }
     local_links = {
         target

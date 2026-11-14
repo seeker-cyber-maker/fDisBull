@@ -109,7 +109,7 @@ REQUIRED_SOURCE_DELIVERY = {
 REQUIRED_TEST_HELPERS.add("tests/test_analysis_approach_skill.py")
 REQUIRED_TEST_HELPERS |= {
     "tests/rom_asm_sh2_vectors.json",
-    "tests/test_media_modules.py",
+    "tests/test_media_modules.py", "tests/test_shi.py",
 }
 REQUIRED_SOURCE_EVIDENCE = {
     "docs/evidence/output-024/" + name
@@ -862,7 +862,7 @@ REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsm.java")
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsmServer.java")
 REQUIRED_KNOWLEDGE_RESOURCES = {
     "data/dinopark-e55-terminal.json",
-    "media.py",
+    "media.py", "shi.py",
     "capabilities.py",
     "capture_audit.py",
     "skills/fdisbull-investigate/references/media-modules.md",
@@ -926,6 +926,17 @@ REQUIRED_SOURCE_EVIDENCE |= {
     "docs/evidence/common-uil-desktop-2026-11-01/verification.json",
     "docs/verification/kq1-tas-2026-10-31.json",
 }
+REQUIRED_KINT_RESOURCES = {
+    "kint6_format.py", "kint6_processor.py", "sherlock7_media.py",
+    "skills/fdisbull-investigate/references/kint6-sherlock7.md",
+}
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_KINT_RESOURCES
+REQUIRED_TEST_HELPERS |= {
+    "tests/test_kint6_format.py", "tests/test_kint6_processor.py", "tests/test_sherlock7_media.py",
+    "tests/test_sherlock7_modules.py",
+    "tests/kint6_vectors.json", "tests/test_kint6_vectors.py",
+}
+REQUIRED_SOURCE_EVIDENCE.add("docs/SHERLOCK7_MEDIA.md")
 REQUIRED_KNOWLEDGE_RESOURCES |= {
     "media.py",
     "capabilities.py",

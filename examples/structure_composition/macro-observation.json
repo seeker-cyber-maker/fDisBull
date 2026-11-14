@@ -1,0 +1,22 @@
+{
+  "contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "scope": "authored menu outputs and ordered effects",
+  "inputs": {
+    "accepted": true
+  },
+  "outputs": {
+    "cash": 123,
+    "view": "new"
+  },
+  "effects": [
+    {
+      "kind": "sound",
+      "asset": 1
+    },
+    {
+      "kind": "image",
+      "asset": 2
+    }
+  ],
+  "complete": true
+}

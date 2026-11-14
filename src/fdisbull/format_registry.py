@@ -205,7 +205,7 @@ def _catalog_links(definitions,modules):
         if definition['category']=='console-media':links.append('console-headers')
         links += {'dos-mz':['mz-envelope'],'riff-avi':['avi-capture'],
             'iso9660':['iso-primary'],'smacker':['smacker'],'flic':['flic'],'bullfrog-flic12':['flic'],
-            'fab':['fab'],'pkware-dcl':['pkware-dcl'],'mads-hag':['mads-hag'],'mads-pack':['mads-pack']}.get(ident,[])
+            'fab':['fab'],'pkware-dcl':['pkware-dcl'],'mads-hag':['mads-hag'],'mads-pack':['mads-pack'],'interplay-mve':['mve'],'context-castles2-slb':['castles2-slb','castles2-slb-playback'],'dinopark-actor':['dinopark-act','dinopark-act-sequence'],'dinopark-picture':['dinopark-pic'],'context-dinopark-act':['dinopark-act','dinopark-act-sequence'],'context-dinopark-pic':['dinopark-pic'],'context-dinopark-abt':['dinopark-abt','dinopark-abt-playback']}.get(ident,[])
         if definition['category']=='image':links.append('pillow-images')
         for module in links:
             if module in available:yield ident,definition['revision'],module,1
@@ -222,9 +222,11 @@ def _decoder_role(identifier):
     return {'format-headers':'recognition-only','native-images':'image-loader',
         'console-headers':'recognition-only','iso-primary':'container-reader',
         'pillow-images':'pixel-reader','agi-picture':'pixel-reader',
-        'smacker':'media-decoder-and-framer','avi-capture':'video-reader',
+        'smacker':'media-decoder-and-framer','mve':'media-decoder-and-framer',
+        'castles2-slb':'audio-container-reader','castles2-slb-playback':'audio-playback-profile',
+        'avi-capture':'video-reader',
         'mz-envelope':'container-reader','agi-v2':'container-reader',
-        'gog-inno':'container-reader','flic':'container-reader'}.get(identifier,'recognition-only')
+        'dinopark-act':'pixel-reader', 'dinopark-pic':'pixel-reader', 'dinopark-abt':'audio-reader', 'dinopark-act-sequence':'animation-reader', 'dinopark-abt-playback':'audio-playback-profile', 'gog-inno':'container-reader','flic':'container-reader'}.get(identifier,'recognition-only')
 
 
 def resource_profile_hints(path, catalog):
@@ -234,6 +236,7 @@ def resource_profile_hints(path, catalog):
     name=source.name.casefold()
     context=str(source.parent).casefold()
     rows=[]
+    modules={(m['module_id'],m['revision']):m for m in catalog['modules']}
     for record in catalog['formats']:
         hint=record.get('context_hints')
         if not isinstance(hint,dict) or not all(isinstance(record.get(k),str) for k in ('name','category')):continue
@@ -246,7 +249,10 @@ def resource_profile_hints(path, catalog):
         if markers and not any(marker.casefold() in context for marker in markers):continue
         rows.append(dict(format_id=record['format_id'],revision=record['revision'],
             name=record['name'],category=record['category'],qualification='context-candidate-only',
-            companions=hint.get('companions',[]),recovery=record.get('limitations',[])))
+            companions=hint.get('companions',[]),recovery=record.get('limitations',[]),
+            decoder_modules=[modules[(b['module_id'],b['module_revision'])] for b in catalog['bindings']
+                if b['format_id']==record['format_id'] and b['format_revision']==record['revision']
+                and (b['module_id'],b['module_revision']) in modules]))
     return rows
 
 

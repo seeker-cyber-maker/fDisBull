@@ -1,0 +1,62 @@
+{
+  "format": "sherlock-browser-parity-1",
+  "scope": "Finite execution comparison of the retained native C implementation and JavaScript; no new original DOS or AppKit qualification.",
+  "node": "v24.22.1",
+  "started_at": "2026-11-05T23:59:10.250Z",
+  "counts": {
+    "relations": 1,
+    "predicate_tuples": 1728,
+    "verify": 20,
+    "hidden_answer_controls": 74,
+    "analyze": 13,
+    "generate": 17,
+    "generated_wrong_answers": 72,
+    "candidates": 8,
+    "hint": 14,
+    "proof": 19,
+    "replay": 11,
+    "trace": 11,
+    "state_transitions": 1116,
+    "hint_applications": 458,
+    "complete_hint_games": 3,
+    "complete_game_hint_applications": 455
+  },
+  "failures": [],
+  "private_assets": {
+    "status": "skipped",
+    "reason": "Explicit skip or focused kind selection."
+  },
+  "negative_control": {
+    "mutation": "NOT_BETWEEN = !BETWEEN",
+    "rejected": true,
+    "differing_cases": 168
+  },
+  "source_hashes": {
+    "core/sherlock_core.c": "1708830e3f46be8152cb2f6c1581113ac140a3185419d99dc0b46ea1370c18d5",
+    "core/sherlock_core.h": "e707ed51bda9179e80b06544600467be8f8dd3a5b86afb2ad467cb34dcd6a92a",
+    "core/sherlock_logic.c": "448f60902afff61e4fdafddeffcae684344f835ef815f388e681f6b378777688",
+    "core/sherlock_logic.h": "ce315191a07f932575d2f1b5f46627a102ed4636683c104f9fe360dd30163a7f",
+    "state/sherlock_state.c": "c95af125b644f64a78991ada03c5eca69290a6584ebc622a0a68cf45f9673176",
+    "state/sherlock_state.h": "c50740c4437d2c1e4769b5e642124e87f06718fe277e10db70269b8ace23f663",
+    "state/sherlock_hint_proof.c": "c087c32f2ffb6f943dbdc75ef1f1efbf584196214d0db5e806bba03921852763",
+    "state/sherlock_hint_proof.h": "2ba7af1cd612976608932c9d8efed663d9c2e380e4bdf7e43c111deac2619bb4",
+    "media/shi.c": "8d7961a122bc73b56e5e2e0839cbc71abf65b96d77860f2b06192910b7b746dd",
+    "media/shi.h": "6e485b8d137a77dba27849cb4453a43926bb69304bde161c589d2664dfeae072",
+    "cli/sherlock_cli.c": "52ba140786953fb6730a675a1cdd7aaceebfdee3c410b85baeba3a9c49755976",
+    "cli/main.c": "f4b461fec2255f8c286ed2c77851e6a8ffb53e757975a7854eb7977de21fc8c7",
+    "web/engine.js": "8a56c7dc8c318e6fa7d80f3eff90ae0e1cf29ba80c222b623ef0e8d6eb6ae696",
+    "web/state.js": "0fe82f9b66bbff3f32b81df536887fc38f40d8841bace781d430f430240c341a",
+    "web/proof.js": "0c4ccdae94d510452f578d044cea865f4b0e78d5a27f7d53bc8732e8a990e38a",
+    "web/assets.js": "de41f0c9da646cdd6b5019e3cbed44b8b2f6783eff36bb3e2c4bda856459adb9",
+    "web/tests/parity-oracle.c": "a725a14e5bf9de1ea1360c958da63ac05cfeae7a80c66e40db3b792912ce194b",
+    "web/tests/parity-assets.c": "d985309c8751b4b9f4647a0c591d8e58e2f0970041057f6deeb8ca45c739d121",
+    "web/tests/parity.js": "0702d4136a56ce98fc95f6a78b57fcb31a7103fc0dd3793640d144f9d99d245e"
+  },
+  "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "oracle_output_sha256": "b003e043a81f64c1191e091578431981e0cc4a6bc65b4575f478b3cfa3d2786d",
+  "oracle_binary_sha256": "300c4ef1f157be536a24a5ed0bedcd0d29fdbb02dcee1f1ea15db5b96192c29a",
+  "oracle_fixtures": 114,
+  "assertions": 4360,
+  "status": "passed",
+  "completed_at": "2026-11-05T23:59:13.465Z"
+}

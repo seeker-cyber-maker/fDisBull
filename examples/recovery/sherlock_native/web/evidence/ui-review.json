@@ -1,0 +1,43 @@
+{
+  "format": "sherlock-browser-ui-review-1",
+  "status": "passed",
+  "scope": "Managed Chrome preview interaction and narrow-layout review; hosted owner authentication limits are explicit.",
+  "observed_at": "2026-11-06T00:35:01.183385+00:00",
+  "source_hashes": {
+    "replica/web/app.js": "d8c914fbad5ba090ffab0fd0a23b57aa6c69e694492db9b0a4601fad478cb521",
+    "replica/web/index.html": "c8e53d5c10672ba08705e4e02a1d92a10bc822a94ac8e65d7c2dd9fba546e453",
+    "replica/web/style.css": "8a61c2de4b5197e389d7ebf08338c6356c57406b8d6a019f58221a214103db86",
+    "replica/web/build.mjs": "e48a30bb26e7c107a2869f7f6a6a2b3ed718ca3088946271346222485c9bac71",
+    "replica/web/engine.js": "8a56c7dc8c318e6fa7d80f3eff90ae0e1cf29ba80c222b623ef0e8d6eb6ae696",
+    "replica/web/state.js": "0fe82f9b66bbff3f32b81df536887fc38f40d8841bace781d430f430240c341a",
+    "replica/web/proof.js": "0c4ccdae94d510452f578d044cea865f4b0e78d5a27f7d53bc8732e8a990e38a",
+    "replica/web/assets.js": "de41f0c9da646cdd6b5019e3cbed44b8b2f6783eff36bb3e2c4bda856459adb9",
+    "replica/web/protocol.js": "5fb50236d2b5409e186e23a0a4bf1dd0642b504634e3d2beb7af3119e628ff9b"
+  },
+  "checks": [
+    "candidate edit and undo",
+    "seed42 hint and supporting clue4",
+    "30second fee and20second deadline",
+    "pause concealed candidates/clues/diagnostics",
+    "archive to Other bank",
+    "real JSON download and reload",
+    "local SHI chooser decode",
+    "accepted answer leaves board unchanged",
+    "canonical analysis JSON",
+    "UINT64_MAX generation",
+    "375px content no horizontal overflow",
+    "44x44px candidate picker"
+  ],
+  "download": {
+    "bytes": 10420,
+    "sha256": "8a035dd90ab0c967bfe6154d2fb1d11e998663d4f8e306c70ca0434c878c79c1"
+  },
+  "notes": "research/browser-slice-20261105/ui-review.md",
+  "integration_receipt": "research/browser-slice-20261105/app-import-review.json",
+  "limitations": [
+    "Production Site and Space browser interaction require ChatGPT sign-in; exact embed and successful private deployment were verified through their authenticated services.",
+    "SHI chooser decode observed; no imported-art rendered pixel comparison in this UI pass.",
+    "No AppKit, Safari/iOS, actual shared Space persistence, image-editor or audio qualification."
+  ],
+  "internal_preview": "research/browser-slice-20261105/ui-board.jpg"
+}

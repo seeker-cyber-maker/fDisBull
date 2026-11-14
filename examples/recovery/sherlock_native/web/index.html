@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Play and inspect the Sherlock replica in your browser. Seeded puzzles, verified hints, local SHI artwork and reproducible JSON saves.">
+  <title>Sherlock Replica Lab</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- SHERLOCK_APP_START -->
+<div id="sherlock-app">
+  <header class="sh-header">
+    <div class="sh-brand"><span class="sh-emblem" aria-hidden="true">S</span><div><h1>SHERLOCK</h1><span class="sh-subtitle">Replica lab · browser edition</span></div></div>
+    <div class="sh-header-actions"><button type="button" id="sh-save">Save game</button><button type="button" id="sh-bug">Capture bug</button><button type="button" id="sh-help">How to play</button></div>
+  </header>
+  <div class="sh-new-game">
+    <label>Source<select id="sh-source"><option value="native">Generated puzzle</option><option value="original">Original numbered puzzle</option></select></label>
+    <label><span id="sh-seed-label">Seed</span><input id="sh-seed" value="42" inputmode="numeric" autocomplete="off" aria-label="Puzzle seed"></label>
+    <label>Time limit<select id="sh-limit"><option value="0">No limit</option><option value="20">20 seconds · test</option><option value="180">3 minutes</option><option value="300">5 minutes</option><option value="600">10 minutes</option><option value="1200">20 minutes</option></select></label>
+    <button type="button" class="sh-primary" id="sh-new">New puzzle</button><button type="button" id="sh-random">Random seed</button>
+  </div>
+  <div class="sh-gamebar">
+    <div><strong id="sh-identity">Preparing puzzle…</strong><span class="sh-meta" id="sh-provenance"></span></div>
+    <div class="sh-score"><span id="sh-progress">0 / 36</span><strong id="sh-clock" aria-label="Elapsed game time">00:00</strong><span id="sh-outcome" class="sh-badge">Playing</span></div>
+  </div>
+  <div class="sh-toolbar">
+    <div class="sh-modes" role="group" aria-label="Candidate action"><button type="button" data-mode="remove" aria-pressed="true">Eliminate</button><button type="button" data-mode="choose" aria-pressed="false">Choose</button><button type="button" data-mode="restore" aria-pressed="false">Restore</button></div>
+    <div class="sh-controls"><button type="button" id="sh-undo">Undo</button><button type="button" class="sh-primary" id="sh-hint">Hint</button><button type="button" id="sh-pause">Pause</button><button type="button" id="sh-restart">Restart</button></div>
+  </div>
+  <main class="sh-workspace">
+    <section class="sh-board-pane" aria-label="Puzzle board">
+      <div class="sh-board-shell"><div id="sh-board" class="sh-board"></div></div>
+      <div class="sh-cell-tools"><span id="sh-cell-label">Faces · column 1</span><div id="sh-cell-picker" class="sh-cell-picker"></div></div>
+      <p class="sh-instruction" id="sh-mode-description">Click a small picture to eliminate it. Right-click to choose; Shift-click to restore.</p>
+    </section>
+    <aside class="sh-clue-pane" aria-label="Clue cards">
+      <div class="sh-clue-heading"><h2>Clues</h2><div role="group" aria-label="Displayed clue bank"><button type="button" id="sh-game-bank" aria-pressed="true">Game</button><button type="button" id="sh-other-bank" aria-pressed="false">Other</button></div></div>
+      <div id="sh-clues" class="sh-clue-grid"></div>
+      <p class="sh-instruction">Select a card to read its rule, move it, or send it to the other bank.</p>
+    </aside>
+    <div id="sh-pause-cover" class="sh-pause-cover" hidden><strong>Paused</strong><span>The puzzle is concealed and the clock is stopped.</span><button type="button" id="sh-resume">Resume puzzle</button></div>
+  </main>
+  <section class="sh-inspector" id="sh-inspector" hidden aria-label="Selected clue">
+    <div><h2 id="sh-clue-title"></h2><p id="sh-clue-rule"></p></div>
+    <div class="sh-inline-actions"><button type="button" id="sh-archive">Move to other bank</button><label>Slot<select id="sh-slot"></select></label><button type="button" id="sh-move">Move card</button><button type="button" id="sh-close-clue">Close</button></div>
+  </section>
+  <div id="sh-notice" class="sh-notice" role="status" aria-live="polite">Loading the game engine…</div>
+  <details class="sh-details" id="sh-files-panel"><summary>Local files and saved games</summary>
+    <div class="sh-file-grid">
+      <label>Original artwork · .SHI<input type="file" id="sh-shi-file" accept=".shi,.SHI"><span id="sh-art-name">Built-in symbols</span></label>
+      <label>Original puzzle table · .bin<input type="file" id="sh-table-file" accept=".bin"><span id="sh-table-name">Load sherlock_puzzles.bin to play an original number.</span></label>
+      <label>Saved game or challenge · .json<input type="file" id="sh-json-file" accept=".json,application/json"><span>Load a browser save, bug capture, or native CLI challenge.</span></label>
+    </div>
+    <div class="sh-inline-actions"><button type="button" id="sh-default-art">Use built-in symbols</button><button type="button" id="sh-load-json-text">Load JSON from the box below</button></div>
+    <p class="sh-instruction">Files are read locally. Artwork and the original puzzle table stay in this tab; reload those files after reopening.</p>
+  </details>
+  <details class="sh-details" id="sh-agent-panel"><summary>Agent JSON and diagnostics</summary>
+    <div class="sh-inline-actions"><button type="button" id="sh-export-challenge">Challenge JSON</button><button type="button" id="sh-export-state">Candidate state</button><button type="button" id="sh-export-proof">Hint evidence</button><button type="button" id="sh-analyze">Analyze puzzle</button></div>
+    <label class="sh-json-label">JSON input and output<textarea id="sh-json" rows="9" spellcheck="false" placeholder='Paste a CLI challenge, saved game, {"solution":[…]}, or {"kind":"remove","row":0,"column":0,"item":0}.'></textarea></label>
+    <div class="sh-inline-actions"><button type="button" id="sh-check-answer">Check solution</button><button type="button" id="sh-check-move">Check proposed move</button><button type="button" id="sh-copy-json">Copy JSON</button><button type="button" id="sh-download-json">Download JSON</button></div>
+    <p class="sh-instruction">Indices are zero based. The verifier uses public clues and givens. Checking a solution or move does not edit the board.</p>
+    <pre id="sh-diagnostic" aria-live="polite"></pre>
+  </details>
+  <footer class="sh-footer"><span id="sh-save-status">Progress is saved after each action.</span><span>Browser slice 1 · native generator v1</span></footer>
+  <section id="sh-dialog" class="sh-dialog" role="dialog" aria-modal="true" aria-labelledby="sh-dialog-title" hidden>
+    <div class="sh-dialog-box"><h2 id="sh-dialog-title"></h2><div id="sh-dialog-content"></div><div id="sh-dialog-actions" class="sh-dialog-actions"></div></div>
+  </section>
+</div>
+<!-- SHERLOCK_APP_END -->
+<script src="engine.js"></script><script src="state.js"></script><script src="proof.js"></script><script src="assets.js"></script><script src="protocol.js"></script><script src="app.js"></script>
+</body>
+</html>

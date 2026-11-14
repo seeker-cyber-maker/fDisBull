@@ -1,0 +1,5 @@
+include README.md RULES.md RESEARCH.md AGENT_PROMPT.md pyproject.toml
+recursive-include sherlock_benchmark *.py
+recursive-include tests *.py
+recursive-include examples *.json *.jsonl
+global-exclude __pycache__ *.py[cod]

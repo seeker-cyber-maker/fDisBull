@@ -36,9 +36,9 @@ REQUIRED_SOURCE_FILES = (
     "player/fdisbull_player/game_intents.py",
     "player/fdisbull_player/intent_runtime.py",
     "player/fdisbull_player/batch.py",
-    "src/fdisbull/media.py",
+    "src/fdisbull/media.py", "src/fdisbull/shi.py",
     "src/fdisbull/skills/fdisbull-investigate/references/media-modules.md",
-    "tests/test_media_modules.py",
+    "tests/test_media_modules.py", "tests/test_shi.py",
     "src/fdisbull/__init__.py",
     "pyproject.toml",
     "tests/fixtures_formats.py",
@@ -962,6 +962,25 @@ DESKTOP_EVIDENCE_FILE = "docs/evidence/common-uil-desktop-2026-11-01/verificatio
 
 WINDOWS_RUNTIME_MODULES=('wine_guest/selftest32.c','wine_arch.py','windows_ui.py','win16_debugger.py')
 
+KINT_SOURCE_FILES = (
+    'src/fdisbull/kint6_format.py', 'src/fdisbull/kint6_processor.py',
+    'src/fdisbull/sherlock7_media.py',
+    'src/fdisbull/skills/fdisbull-investigate/references/kint6-sherlock7.md',
+    'tests/test_kint6_format.py', 'tests/test_kint6_processor.py', 'tests/test_sherlock7_media.py',
+    'tests/test_sherlock7_modules.py', 'docs/SHERLOCK7_MEDIA.md',
+    'tests/kint6_vectors.json', 'tests/test_kint6_vectors.py',
+)
+REQUIRED_SOURCE_FILES += KINT_SOURCE_FILES
+
+@pytest.mark.parametrize('required', KINT_SOURCE_FILES)
+def test_distribution_requires_kint_modules_and_specification(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-missing-kint.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
+
+
 WINDOWS_RUNTIME_FILES=tuple('src/fdisbull/'+name for name in WINDOWS_RUNTIME_MODULES)+tuple('tests/'+name for name in (
     'test_wine_pe32.py','test_wine_pe32_state.py','test_wine_guest_bridge.py','test_windows_interfaces.py',
     'test_windows_scenes.py','test_windows_dot_mode.py','test_windows_native.py','test_win16_debugger.py','test_win16_native.py'))
@@ -1196,8 +1215,8 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
         "src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md",
         "src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md",
         "src/fdisbull/skills/fdisbull-investigate/references/media-modules.md",
-        "src/fdisbull/media.py",
-        "tests/test_media_modules.py",
+        "src/fdisbull/media.py", "src/fdisbull/shi.py",
+        "tests/test_media_modules.py", "tests/test_shi.py",
     ],
 )
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path, required):
