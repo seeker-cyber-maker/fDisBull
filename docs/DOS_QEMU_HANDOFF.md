@@ -6022,3 +6022,83 @@ hashes unchanged, including the exact two files checked by the input run.
 The remaining qualification is the final immutable installed candidate on the
 original protected target and original DESQview workflow, using private evidence
 and the independent stopped physical-read scope described above.
+
+## 2026-11-13 — continuous protected-mode LE source binding and traces
+
+Runtime candidate `d8adf49dfa41176cefdab729778813fe6f3c2f6b` adds explicit
+`dos_source_bind`, `dos_source_binding` and `dos_source_unbind`. A new recipe is
+derived from a fresh stopped admission, retaining original carrier, version,
+owner, capture epoch, descriptor and object-placement evidence. The initial MZ
+mapping stays intact. This source relation establishes no OS task/allocation
+lifetime. DOSBox-X remains default and retained. No CI, release, merge, shared
+activation or native rebuild was performed.
+
+Current authority is withdrawn before execution and refresh. Ordinary runs
+qualify stopped endpoints; source traces revalidate every retained instruction
+boundary. The complete decoded instruction, including supported whole internal
+offset32 fixups, must match canonical source and proved runtime placements.
+Unsupported/straddling fixups, changed code or descriptor context, unrelated PCs
+and uncertain observations stop source qualification. Mutation, restore,
+task-view and owner/epoch changes retire the recipe. A recipe does not authorize
+LE-addressed layers, hooks, redirects or checkpoint binding, and does not thaw
+selected-state undo. Existing trials, histories, layers, hooks, checkpoints,
+IRQs and shared replay keep their own contracts.
+
+The native DOS trace collector, predicates, scripts and cold event query/search
+now consume an explicit `embedded-le` view. LE source sites use application
+identity, object ID/index and object offset; preferred LE addresses never become
+MZ project addresses. There is no implicit bind or fallback after a failed LE
+relation. See the [public contract](QEMU_DOS_PROTECTED_SOURCE.md) and
+[shared seam account](QEMU_DEBUGGER_REUSE.md).
+
+Local evidence on the exact private installed runtime:
+
+- The bounded host preservation batch passed **3,023**, with **12** checks
+  skipped for absent native inputs. Final focused checks passed **139** on
+  source and again on the private install; five additional installed trace
+  preflight checks and 33 documentation/package gates passed. These overlapping
+  selections are not additive.
+- All **708 runtime files** match committed source, private wheel and private
+  install. Wheel SHA-256 is
+  `2d0a3ab6efc02198ee84ecf316126a98e479a55357edbf1daa45e943c89f87fa`.
+  All **1,273 Python source/test files** remained unchanged through validation.
+- The real authored DOS loader entered protected32 and passed standard and
+  instrumented virtual-clock native cases. Count/predicate traces include exact
+  relocated operands; unrelated-source boundaries retain no source authority.
+  An independent immutable FDB/CAS audit reproduced cold queries/searches and
+  exact exports. The virtual profile retains stable clock brackets.
+- Untouched Ultimate Doom was discovered without seeded runtime addresses,
+  explicitly bound, and traced across **eight distinct qualified source sites**.
+  A current mnemonic/EIP predicate matched with zero additional steps. A separate
+  cold process reconstructed complete queries with eight/one matches, zero
+  unknowns, and byte-identical admission/binding/count/predicate exports.
+  These nine observed instruction boundaries overlap no loader fixup;
+  native executed-relocation coverage belongs to the authored fixture. Doom's
+  eight offset32 placement pointers were witnessed at each boundary. The
+  retained read-only step policy masks IRQs/timers, so these traces do not
+  qualify interrupt/timer-transparent tracing or instruction retirement.
+- A later ordinary Doom run advanced the source generation and retained its
+  native timeout stop. Its exhausted refresh allowance withdrew source
+  authority; an explicit new observation detected changed GDT identity and
+  remained out of scope. This is a successful refusal boundary, not proof of
+  source continuity across that run.
+- Six existing native DOS/CHIP-8 compositions passed: IRQ histories/cold restore,
+  comparative trials/private IRQ/layers/hooks/held keys, selected CPU/RAM undo
+  recovery with retained frame DAGs, and CHIP-8 layers/RNG/frame/trial restore.
+  Together with the authored profiles, **eight native pytest cases passed with
+  zero skips**. The original-Doom witness is a separate finite controller.
+
+All owned guests closed/reaped; native, boot, tool and original input pins and
+the shared selector remained unchanged. One retained Doom boot-preparation
+attempt failed before guest creation because a multicall `mcopy` symlink had
+been resolved to `mtools`; the corrected controller passed boot preflight and
+the new finite native run. No failed native execution was replayed.
+
+The separately authorized DESQview source-ambiguity/task-continuity candidate
+remains a distinct source/native tuple, without integration into this milestone.
+Paged/LDT and bridge execution, broader task/driver and media/input/time
+campaigns, Windows shared-core qualification, LE hook/layer/checkpoint consumers,
+component04 boot, the historical DOSBox startup issue and overall parity remain
+open. The milestone does not permit DOSBox-X removal. Sanitized results are in
+[the acceptance receipt](evidence/qemu-dos-le-binding-2026-11-13/verification.json);
+private originals, FDB/CAS and byte-retaining traces stay outside Git.
