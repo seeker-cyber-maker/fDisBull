@@ -111,7 +111,7 @@ def qualify(provider, snapshot_artifact, native_identity):
         raise dv.DesqviewProviderError('Physical DESQview qualification requires its owned native project')
     with _observation_budget(session):
         owner, process = session.vm, session.vm.process
-        run, epoch = session.run_id, getattr(session, '_runtime_epoch', None)
+        run, epoch = session.run_id, getattr(session, '_runtime_epoch', session.run_id)
         expected_native = deepcopy(native_identity)
         expected_task = None
         selected = session.project.version(session.version['id'])
@@ -144,7 +144,7 @@ def qualify(provider, snapshot_artifact, native_identity):
         def own():
             remaining()
             dv._require(session.vm is owner and session.vm.process is process and process is not None
-                and session.run_id == run and getattr(session, '_runtime_epoch', None) == epoch
+                and session.run_id == run and getattr(session, '_runtime_epoch', session.run_id) == epoch
                 and not getattr(session, 'closed', False), 'DESQview physical owner/run/epoch changed')
             dv._require(session.version['id'] == selected['id'] and
                 session.project.version(selected['id'])['sha256'] == selected['sha256'] and
