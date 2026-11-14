@@ -38,7 +38,6 @@ CACHE_UUID = 'DB098A4B-7968-418F-8B20-61597F42392A'
 STATE = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-source-state')
 HELPER = '/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/production_source_transport.py'
 ACTIVATION = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/source-activation.json')
-STORAGE = '/Users/tiga/.codex/bin/storage_admit.py'
 SOURCE_PYTHON = '/Users/tiga/miniconda/bin/python3'
 SOURCE_PYTHON_VERSION = '3.13.13'
 SOURCE_PYTHON_SHA256 = '0f5374bca527c5a5e958ee94e03e55816a368533286e6315b8bf013da622fc61'
@@ -280,9 +279,8 @@ class SourceServer:
                   'source_hashes': {p: _hash(self._blob(sha, p)) for p in allowed},
                   'test_hashes': {test: _hash(test_bytes)}, 'verifier_hashes': verifiers,
                   'reproducer_argv': ['python', '-m', 'pytest', '-q', node], 'max_diff_bytes': 65536}
-        # Storage and mount gates occur immediately before the new worktree.
+        # Recheck the actual pinned destination before creating the worktree.
         self.guard()
-        self._run(['/usr/bin/python3', STORAGE, '--path', str(self.worktrees), '--expected-bytes', '200000000'], self.repo)
         if worktree.exists() or worktree.is_symlink(): raise RuntimeError('worktree already exists; reconcile only')
         self._git('-c', 'core.hooksPath=/dev/null', 'worktree', 'add', '-b', branch, str(worktree), sha)
         worker = self.worker_class(worktree, directory, policy, runner=self.runner, admission=lambda repo, p: True)

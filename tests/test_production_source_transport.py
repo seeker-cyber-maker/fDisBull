@@ -83,7 +83,7 @@ def test_fixed_ssh_route_and_structured_input_only():
     with pytest.raises(ValueError):s.handle(object(),{'operation':'repair','key':'k','payload':{'cmd':'arbitrary'}})
 
 
-def test_prepare_records_one_local_failure_after_admission_without_model(tmp_path,monkeypatch):
+def test_prepare_rechecks_destination_without_mandatory_storage_tool(tmp_path,monkeypatch):
     bundle=make_bundle();cmds=[];worker_calls=[]
     repo=tmp_path/'repo';repo.mkdir();worktrees=tmp_path/'worktrees';worktrees.mkdir()
     state=tmp_path/'state';state.mkdir()
@@ -104,16 +104,16 @@ def test_prepare_records_one_local_failure_after_admission_without_model(tmp_pat
         def _tests(self):pass
         def _check(self):return 1
     monkeypatch.setenv('SECRET_TOKEN','sensitive')
-    server=s.SourceServer(repo=repo,worktrees=worktrees,state=state,runner=runner,guard=lambda:None,
+    guards=[]
+    server=s.SourceServer(repo=repo,worktrees=worktrees,state=state,runner=runner,guard=lambda:guards.append(len(cmds)),
                           selection_policy_approved=True,worker_class=Worker,interpreter_check=lambda:dict(s.PINNED_INTERPRETER))
     result=server.prepare(bundle['target'],bundle)
     assert result['status']=='verified_reproducer' and result['linux_parity'] is False
     assert result['policy']['source_hashes']=={'src/fdisbull/foo.py':sha(source_bytes)}
     assert result['policy']['test_hashes']=={'tests/test_foo.py':sha(test_bytes)}
     assert result['policy']['reproducer_argv']==['python','-m','pytest','-q','tests/test_foo.py::test_bad']
-    storage=next(i for i,c in enumerate(cmds) if s.STORAGE in c)
     create=next(i for i,c in enumerate(cmds) if c[:5]==['git','-c','core.hooksPath=/dev/null','worktree','add'])
-    assert storage<create and cmds[storage][-1]=='200000000'
+    assert create in guards and not any('storage_admit.py' in str(c) for c in cmds)
     assert server.reconcile_prepare(bundle['target'],bundle)['event_key']==result['event_key']
     with pytest.raises(FileExistsError):server.prepare(bundle['target'],bundle)
     assert len([c for c in cmds if c[:5]==['git','-c','core.hooksPath=/dev/null','worktree','add']])==1
