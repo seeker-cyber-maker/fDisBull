@@ -4,6 +4,7 @@ The existing production QMP/clock envelope runs against its bounded wire peer;
 only execution and selected memory are supplied at the native boundary. Real
 project/event persistence and public routing are retained.
 """
+from copy import deepcopy
 import json
 import uuid
 
@@ -14,6 +15,11 @@ from fdisbull.debug_script import execute_script, validate_script
 from fdisbull.debugger import DebugWorkspace, stamp
 from test_qemu_clock_budget import owned
 from test_qemu_io_public import raw_project
+from test_qemu_io_deadlines import observation
+from test_qemu_input_schedule import scheduled
+from test_qemu_keyboard_press import press
+from test_qemu_keyboard_type import typing
+from test_qemu_mouse_click import click
 
 
 OBS = {'counter': {'kind': 'memory', 'address': '0x7c00', 'length': 2}}
@@ -337,3 +343,210 @@ def test_epoch_boundary_does_not_capture_a_diagnostic_from_replacement_context(w
     result = o.context.wait(**dict(options(), timeout_screenshot='wait-timeout.png'))
     assert result['outcome'] == 'incomplete' and not diagnostics
     assert result['capture_epoch'] == o.context.run_id and not result['matched']
+
+
+def drive_press_until_clock_stop(o, *, stop_after_edges=None, extra_lateness=0):
+    """Native boundary honours strict clock cutoff and first-stop cancellation."""
+    o.executions = []
+    o.session._stopped = lambda: o.gdb
+    o.session.memory = lambda address, length=16, space='physical': dict(
+        context='machine', address=hex(int(address, 0) if isinstance(address, str) else address),
+        space=space, length=length,
+        hex=(o.wire.input['state'] == 'dispatched').to_bytes(length, 'little').hex())
+    def execute(command, timeout_ms):
+        o.executions.append((command, timeout_ms))
+        cutoff = o.wire.receipt['budget-deadline-ns']
+        if o.wire.input['state'] != 'armed':
+            terminal = cutoff + 64
+            o.wire.receipt.update({'virtual-ns': terminal, 'budget-state': 'stopped',
+                'budget-fired-ns': terminal, 'budget-stopped-ns': terminal})
+            return b'T02thread:1;', False
+        mode = next(mode for mode in ('press', 'typing', 'click') if mode in o.wire.input)
+        steps = o.wire.input[mode]['steps']
+        at, count = o.wire.input['start-ns'], 0
+        for step in steps:
+            at += step['delay-ns'] + extra_lateness
+            if at >= cutoff:
+                break
+            count += 1
+        if stop_after_edges is not None:
+            count = min(count, stop_after_edges)
+        terminal = cutoff + 64
+        o.wire.stop_after(count, lateness=extra_lateness, stopped_ns=terminal, reason='budget-deadline')
+        o.wire.receipt.update({'budget-state': 'stopped', 'budget-fired-ns': terminal,
+                              'budget-stopped-ns': terminal})
+        return b'T02thread:1;', False
+    o.gdb.execute = execute
+
+
+def test_public_press_then_default_slice_wait_does_not_cancel_known_release(press):
+    o = press
+    drive_press_until_clock_stop(o)
+    armed = o.session.keyboard_press('q', hold_ms=80, gap_ms=80)
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50, timeout_ms=1000))
+    assert result['complete'] and result['matched'], result
+    assert len(o.executions) == 1
+    assert result['runs'][0]['input_delivery']['state'] == 'dispatched'
+    assert result['runs'][0]['input_delivery']['token'] == armed['token']
+    assert result['runs'][0]['input_delivery']['press']['dispatched_count'] == 2
+    plan = result['input_plan']
+    assert plan['nominal_span_ns'] == 82_000_000 and plan['requested_slice_ns'] == 50_000_000
+    assert plan['effective_first_slice_ns'] == 132_000_000
+    assert plan['first_slice_attempted'] and plan['first_slice_result_observed']
+    assert plan['token'] == armed['token'] and not plan['replay'] and not plan['cancel'] and not plan['release']
+    assert o.session.input_state()['pending_edges'] == 0 and not o.session.input_state()['leases']
+    assert [name for name, _ in o.wire.calls].count('x-fdisbull-arm-keyboard-press') == 1
+    assert not any(name == 'x-fdisbull-cancel-input' for name, _ in o.wire.calls)
+
+
+@pytest.mark.parametrize('guest_ms', [1, 50, 82, 100, 131, 132])
+def test_input_budget_refuses_before_native_effects_and_preserves_armed_owner(press, guest_ms):
+    o = press
+    drive_press_until_clock_stop(o)
+    o.session.keyboard_press('q', hold_ms=80, gap_ms=80)
+    original, calls = deepcopy(o.vm._physical_input), list(o.wire.calls)
+    writes = []
+    o.session.write_memory = lambda *a, **kw: writes.append(a)
+    value = dict(options(), guest_ms=guest_ms, slice_ms=50)
+    for invoke in (lambda: o.session.wait(**value),
+                   lambda: execute_script(o.session, dict(route(value), backend='qemu-machine'))):
+        with pytest.raises(ValueError, match='total virtual budget'):
+            invoke()
+    assert o.vm._physical_input == original and o.wire.calls == calls
+    assert not o.executions and not writes and not o.vm.closed
+
+
+@pytest.mark.parametrize('form', ['modifiers', 'typing', 'click'])
+def test_fixed_public_plan_forms_share_bounded_first_slice(request, form):
+    o = request.getfixturevalue('typing' if form == 'typing' else 'click' if form == 'click' else 'press')
+    drive_press_until_clock_stop(o)
+    if form == 'typing':
+        armed = o.session.keyboard_type('aA', hold_ms=80, gap_ms=20)
+    elif form == 'click':
+        armed = o.session.mouse_button_click('left', hold_ms=80)
+    else:
+        armed = o.session.keyboard_press('q', modifiers=['ctrl', 'shift'], hold_ms=80)
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert result['matched'] and len(o.executions) == 1
+    assert result['input_plan']['token'] == armed['token']
+    assert result['runs'][0]['input_delivery']['state'] == 'dispatched'
+    assert not o.session.input_state()['leases'] and not o.session.input_state()['pending_edges']
+
+
+def test_callback_lateness_returns_interrupted_prefix_without_another_continue(press):
+    o = press
+    drive_press_until_clock_stop(o, extra_lateness=60_000_000)
+    armed = o.session.keyboard_press('q', hold_ms=80)
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert result['outcome'] == 'input_interrupted' and not result['complete'] and not result['matched']
+    delivery = result['input_interrupted']
+    assert delivery['token'] == armed['token'] and delivery['requires_resolution']
+    assert delivery['press']['dispatched_count'] == 1
+    assert len(o.executions) == len(result['polls']) == 1
+    assert o.session.input_state()['pending_edges'] == 1 and o.session.input_state()['leases']
+    assert not any(name == 'x-fdisbull-cancel-input' for name, _ in o.wire.calls)
+    assert not o.vm.closed
+
+
+def test_hook_precedes_input_interruption_and_retains_delivered_prefix(press):
+    o = press
+    drive_press_until_clock_stop(o, stop_after_edges=1)
+    o.session.keyboard_press('q', hold_ms=80)
+    execute = o.session._execute
+    def hook(*args, **kwargs):
+        result = execute(*args, **kwargs)
+        result.update(outcome='hook', hook_hits=[{'hook': 'existing'}])
+        return result
+    o.session._execute = hook
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert result['outcome'] == 'hook' and not result['complete']
+    assert result['stop']['input_delivery']['press']['dispatched_count'] == 1
+    assert len(o.executions) == 1 and not o.vm.closed
+
+
+def test_cancelled_input_requires_explicit_recovery_without_new_effects(press):
+    o = press
+    drive_press_until_clock_stop(o, stop_after_edges=1)
+    o.session.keyboard_press('q', hold_ms=80)
+    o.session._clock_advance_with_hooks(50_000_000, timeout_ms=100)
+    original, calls = deepcopy(o.vm._physical_input), list(o.wire.calls)
+    with pytest.raises(ValueError, match='interrupted or partial'):
+        o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert o.vm._physical_input == original and o.wire.calls == calls
+    assert len(o.executions) == 1 and not o.vm.closed
+
+
+@pytest.mark.parametrize('fault', ['invalid', 'partial', 'motion', 'prefix', 'pending'])
+def test_unusable_cached_arm_refuses_before_io_and_preserves_input(press, fault):
+    o = press
+    drive_press_until_clock_stop(o)
+    o.session.keyboard_press('q', hold_ms=80)
+    state = o.vm._physical_input
+    if fault == 'invalid':state['valid'] = False
+    elif fault == 'partial':state['schedule']['applied_count'] = 1
+    elif fault == 'motion':state['schedule']['motion'] = {}
+    elif fault == 'prefix':state['schedule']['native']['press']['dispatched-count'] = 1
+    else:state['pending'].pop()
+    original, calls = deepcopy(state), list(o.wire.calls)
+    with pytest.raises(ValueError):
+        o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert o.vm._physical_input == original and o.wire.calls == calls and not o.executions
+    assert not o.vm.closed
+
+
+def test_fresh_native_arm_is_revalidated_before_any_clock_execution(press):
+    o = press
+    drive_press_until_clock_stop(o)
+    o.session.keyboard_press('q', hold_ms=80)
+    o.wire.mutate = lambda value: dict(value, token='foreign')
+    with pytest.raises(Exception, match='identity differs'):
+        o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert not o.executions and o.vm.closed
+
+
+def test_completed_plan_is_not_replayed_when_later_polls_are_needed(press):
+    o = press
+    drive_press_until_clock_stop(o)
+    o.session.memory = lambda address, length=16, space='physical': dict(
+        context='machine', address=hex(int(address, 0) if isinstance(address, str) else address),
+        space=space, length=length, hex=(len(o.executions) >= 3).to_bytes(length, 'little').hex())
+    o.session.keyboard_press('q', hold_ms=80)
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert result['matched'] and len(o.executions) == 3
+    assert [run['clock_budget']['requested_delta_ns'] for run in result['runs']] == [132_000_000, 50_000_000, 50_000_000]
+    assert [name for name, _ in o.wire.calls].count('x-fdisbull-arm-keyboard-press') == 1
+    assert not any(name == 'x-fdisbull-cancel-input' for name, _ in o.wire.calls)
+
+
+def test_plain_scheduled_batch_uses_its_fixed_deadline_without_releasing_hold(scheduled):
+    o = scheduled
+    o.executions = []
+    o.session._stopped = lambda: o.gdb
+    o.session.memory = lambda address, length=16, space='physical': dict(
+        hex=(o.wire.input['state'] == 'dispatched').to_bytes(length, 'little').hex())
+    def execute(command, timeout_ms):
+        o.executions.append(command)
+        o.wire.finish()
+        end = o.wire.receipt['budget-deadline-ns'] + 64
+        o.wire.receipt.update({'virtual-ns': end, 'budget-state': 'stopped',
+            'budget-fired-ns': end, 'budget-stopped-ns': end})
+        return b'T02thread:1;', False
+    o.gdb.execute = execute
+    lease = o.session.keyboard_key_down('q')['lease']
+    armed = o.session.input_schedule(80_000_000)
+    result = o.session.wait(**dict(options(), guest_ms=750, slice_ms=50))
+    assert result['matched'] and len(o.executions) == 1
+    assert result['input_plan']['kind'] == 'batch' and result['input_plan']['token'] == armed['token']
+    assert result['input_plan']['effective_first_slice_ns'] == 130_000_000
+    assert o.session.input_state()['leases'][lease]['make'] == 'native_dispatched'
+    assert not o.session.input_state()['pending_edges']
+    assert not any(name == 'x-fdisbull-cancel-input' for name, _ in o.wire.calls)
+
+
+def test_plan_larger_than_one_native_slice_refuses_without_splitting(typing):
+    o = typing
+    o.session.keyboard_type('a' * 64, hold_ms=1000, gap_ms=1000)
+    original, calls = deepcopy(o.vm._physical_input), list(o.wire.calls)
+    with pytest.raises(ValueError, match='total virtual budget'):
+        o.session.wait(**dict(options(), guest_ms=3_600_000, slice_ms=50))
+    assert o.vm._physical_input == original and o.wire.calls == calls and not o.vm.closed

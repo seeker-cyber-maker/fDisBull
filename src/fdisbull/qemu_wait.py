@@ -9,7 +9,7 @@ import json
 import re
 import time
 
-from .qemu_clock import VIRTUAL_CLOCK_COMMANDS, clock_timer_stop_is_ordinary
+from .qemu_clock import VIRTUAL_CLOCK_COMMANDS, MAX_CLOCK_BUDGET_NS, clock_timer_stop_is_ordinary
 
 
 _MAX_EVIDENCE = 8 * 1024**2
@@ -49,7 +49,66 @@ def validate_qemu_wait_parameters(observations, until, *, guest_ms, slice_ms=50,
         timeout_screenshot=timeout_screenshot)
 
 
-def validate_qemu_wait_session(session):
+def _input_plan(session, *, guest_ms=None, slice_ms=50, now=None):
+    """Use only a verified, wholly undelivered owned arm; never repair input.
+
+    A native stop cancels its remaining suffix. Avoid choosing a clock cutoff
+    already known to split a fixed plan. One requested poll tail allows callback
+    lateness, without promising a universal completion bound or spending beyond
+    the caller's total budget. Unexpected lateness still ends at the first stop.
+    """
+    state = getattr(session.vm, '_physical_input', None)
+    if state is None:
+        return None
+    if state.get('valid') is not True:
+        raise ValueError('QEMU wait refuses uncertain input ownership; explicit input recovery is required')
+    schedule = state.get('schedule')
+    if schedule is None or not schedule.get('bound'):
+        return None
+    native = schedule.get('native', {})
+    if native.get('state') != 'armed' or schedule.get('applied_count', 0) != 0:
+        raise ValueError('QEMU wait refuses interrupted or partial input; explicit recovery is required')
+    kinds = [kind for kind in ('press', 'typing', 'click', 'retrace', 'motion') if kind in schedule]
+    if len(kinds) > 1 or any(kind in ('retrace', 'motion') for kind in kinds):
+        raise ValueError('QEMU wait cannot coalesce this input plan; execute or resolve it explicitly')
+    kind = kinds[0] if kinds else 'batch'
+    if native.get('token') != schedule.get('token') or native.get('start-ns') != schedule.get('start_ns'):
+        raise ValueError('QEMU wait owned input identity differs from its verified arm')
+    records = schedule.get('records')
+    if (type(records) is not list or not records or state.get('pending') != records or
+            native.get('event-count') != len(records)):
+        raise ValueError('QEMU wait pending input differs from its complete undelivered arm')
+    start = schedule.get('start_ns')
+    current = native.get('virtual-ns') if now is None else now
+    if kind != 'batch':
+        steps = schedule[kind].get('steps')
+        if (type(steps) is not list or len(steps) != len(records) or
+                native.get(kind, {}).get('dispatched-count') != 0 or
+                any(type(step.get('delay-ns')) is not int or step['delay-ns'] <= 0 for step in steps)):
+            raise ValueError('QEMU wait requires known fixed input delays and an undelivered prefix')
+        nominal_span = sum(step['delay-ns'] for step in steps)
+    else:
+        deadline = schedule.get('deadline_ns')
+        if type(start) is not int or type(deadline) is not int or deadline <= start:
+            raise ValueError('QEMU wait input batch has no valid fixed deadline')
+        nominal_span = deadline - start
+    if type(start) is not int or type(current) is not int or not start <= current < start + nominal_span:
+        raise ValueError('QEMU wait input plan is not a current undelivered arm')
+    tail = slice_ms * 1_000_000
+    nominal_remaining = start + nominal_span - current
+    effective = nominal_remaining + tail
+    if effective > MAX_CLOCK_BUDGET_NS or guest_ms is not None and effective >= guest_ms * 1_000_000:
+        raise ValueError('QEMU wait input plan plus one poll tail exceeds its total virtual budget; input is unchanged')
+    return dict(token=schedule['token'], kind=kind, start_ns=start,
+        nominal_span_ns=nominal_span, nominal_remaining_ns=nominal_remaining,
+        requested_slice_ns=tail, poll_tail_ns=tail, effective_first_slice_ns=effective,
+        first_slice_attempted=False, first_slice_result_observed=False,
+        replay=False, cancel=False, release=False,
+        scope='First slice coalesces the already armed fixed plan plus one requested poll tail; '
+              'callback lateness may still interrupt it; no consumption, completion or replay is inferred')
+
+
+def validate_qemu_wait_session(session, *, guest_ms=None, slice_ms=50):
     """Passive profile/ownership admission, also used before earlier script steps."""
     vm = session.vm
     if (not getattr(session, 'capabilities', {}).get('virtual_clock_budget') or
@@ -66,6 +125,7 @@ def validate_qemu_wait_session(session):
     process = getattr(session, '_process', None)
     if process is not None and (process.get('state') != 'active' or process.get('machine_closed')):
         raise ValueError('QEMU wait requires the selected DOS process to remain active')
+    _input_plan(session, guest_ms=guest_ms, slice_ms=slice_ms)
 
 
 class _Boundary(ValueError):
@@ -97,7 +157,17 @@ class QemuWaitMixin:
         validate_qemu_wait_parameters(observations, until, guest_ms=guest_ms,
             slice_ms=slice_ms, timeout_ms=timeout_ms, fast_forward=fast_forward,
             max_polls=max_polls, timeout_screenshot=timeout_screenshot)
-        validate_qemu_wait_session(self)
+        validate_qemu_wait_session(self, guest_ms=guest_ms, slice_ms=slice_ms)
+        input_plan = _input_plan(self, guest_ms=guest_ms, slice_ms=slice_ms)
+        if input_plan is not None:
+            # Fresh public observation validates the native token, epoch, plan,
+            # prefix and lease ledger under the operation's inherited lock.
+            observed_input = self.input_schedule_observe()
+            refreshed = _input_plan(self, guest_ms=guest_ms, slice_ms=slice_ms,
+                                    now=observed_input['observed_ns'])
+            if refreshed is None or refreshed != input_plan:
+                raise ValueError('QEMU wait input arm changed before execution; explicit recovery is required')
+            input_plan['observed_input'] = observed_input
         owner, seed, project = self.vm, _identity(self), self.project
         started = time.monotonic()
         result = dict(format='fdisbull-wait-result-1', complete=False, matched=False,
@@ -106,6 +176,7 @@ class QemuWaitMixin:
             clock_progress_complete=True,
             polls=[], runs=[], initial_observation=None, last_observation=None,
             diagnostic_frame=None, error=None,
+            input_plan=input_plan,
             run=seed[1], capture_epoch=seed[2], source_sha256=seed[3], version=deepcopy(seed[4]),
             address_scope='explicit machine physical/selected-vCPU virtual addresses; no source/task lifetime claim')
 
@@ -189,6 +260,9 @@ class QemuWaitMixin:
                     result['outcome'] = 'poll_budget'
                     break
                 delta = min(slice_ms * 1_000_000, result['requested_virtual_ns'] - result['guest_elapsed_ns'])
+                if input_plan is not None and not result['runs']:
+                    delta = input_plan['effective_first_slice_ns']
+                    input_plan['first_slice_attempted'] = True
                 try:
                     run = self._clock_advance_with_hooks(delta, timeout_ms=remaining())
                 except BaseException:
@@ -197,6 +271,8 @@ class QemuWaitMixin:
                     result['clock_progress_complete'] = False
                     raise
                 result['runs'].append(run)
+                if input_plan is not None and len(result['runs']) == 1:
+                    input_plan['first_slice_result_observed'] = True
                 evidence_bytes += len(json.dumps(run, allow_nan=False))
                 if evidence_bytes > _MAX_EVIDENCE:
                     raise _Boundary('QEMU wait exceeds its bounded execution evidence')
@@ -213,6 +289,15 @@ class QemuWaitMixin:
                     result['outcome'] = 'hook' if run.get('hook_hits') else run.get('outcome', 'incomplete')
                     result['stop'] = run
                     break
+                delivery = run.get('input_delivery')
+                if delivery is not None and (delivery.get('requires_resolution') or
+                        delivery.get('state') in ('cancelled', 'failed')):
+                    result.update(outcome='input_interrupted', stop=run, input_interrupted=delivery)
+                    break
+                if input_plan is not None and len(result['runs']) == 1 and (
+                        delivery is None or delivery.get('token') != input_plan['token'] or
+                        delivery.get('state') != 'dispatched'):
+                    raise _Boundary('QEMU wait lacks the complete delivery of its admitted input plan')
                 if budget['stopped_ns'] <= budget['start_ns']:
                     raise _Boundary('QEMU wait made no measured native virtual progress')
                 clock = dict(after, virtual_ns=budget['stopped_ns'])

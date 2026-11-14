@@ -342,7 +342,9 @@ def validate_script(script, *, session=None):
                         if (backend or actual) in ('qemu-machine','qemu-dos'):
                             from .qemu_wait import validate_qemu_wait_parameters, validate_qemu_wait_session
                             validate_qemu_wait_parameters(**params)
-                            if session is not None:validate_qemu_wait_session(session)
+                            if session is not None:
+                                validate_qemu_wait_session(session, guest_ms=params['guest_ms'],
+                                                          slice_ms=params.get('slice_ms',50))
                         elif getattr(owner,'scene_time_basis',None)=='host':
                             checked=dict(params)
                             active=checked.pop('active_ms',None);legacy=checked.pop('guest_ms',None)

@@ -1,18 +1,23 @@
-"""One narrow real-game comparison across DOSBox and native QEMU.
+"""Bounded real-game comparisons across DOSBox and native QEMU.
 
-The opt-in test runs the repository's original, hash-pinned ATTT.COM with the
-same physical Q key in both backends. It compares the loaded COM image's
-startup and post-move bytes, including the documented Player 1 move. This
-does not claim whole-game, rendering, or frame-timing equivalence.
+The first opt-in test compares one physical Q move in the original hash-pinned
+ATTT.COM. A second retained witness exercises QEMU-only cold recovery. The
+paired full-round witness compares the same win/recovery/replay/reset/exit
+workload and observed text characters in both backends. Stored screenshots
+remain backend-specific; these cases do not claim whole-game or frame-timing
+equivalence.
 """
 from __future__ import annotations
 
+import base64
 import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
 
 import pytest
+from PIL import Image
 
 from fdisbull.project import Project
 from fdisbull.dosbox_rpc import DebuggerError
@@ -222,3 +227,286 @@ def test_original_tic_tac_toe_cold_restore_winning_round_and_guest_exit(tmp_path
         assert completed['ended'] is not None
     assert hashlib.sha256(source.read_bytes()).hexdigest() == _ATTT_SHA256
     assert hashlib.sha256(game_runtime['boot_image'].read_bytes()).hexdigest() == game_runtime['boot_sha256']
+
+
+def _round_state(debug, *, qemu):
+    image = (_read_qemu_image if qemu else _read_dosbox_image)(debug, 22)
+    # The original fixture's declared data layout: board, current player,
+    # winner, starting player, the two win counters and completed move count.
+    return dict(board=image[3:12].decode('ascii'), player=image[16], winner=image[17],
+                starts=image[18], wins=[image[19], image[20]], turns=image[21])
+
+
+def _text_screen(debug, *, qemu, diagnostic_dir, label):
+    """Read public text-mode RAM, without treating rendered pixels as equal."""
+    def read(address, length):
+        if qemu:
+            return bytes.fromhex(debug.memory(address, length=length, space='physical')['hex'])
+        result = debug.call('memory.read', dict(
+            address=dict(space='linear', offset=f'0x{address:08x}'), length=length))
+        return base64.b64decode(result['data_base64'], validate=True)
+
+    video = read(0x449, 7)
+    mode, columns = video[0], int.from_bytes(video[1:3], 'little')
+    rows = read(0x484, 1)[0] + 1
+    page = int.from_bytes(video[5:7], 'little')
+    expected = mode == 3 and columns == 80 and rows == 25 and page < 0x8000
+    diagnostic = dict(bda_0449_hex=video.hex(), mode=mode, columns=columns,
+                      rows=rows, page_offset=page)
+    if not expected:
+        # Preserve this backend observation rather than relaxing the source
+        # oracle: ATTT prints with INT21h and contains no video-mode switch.
+        try:
+            captured = debug.screenshot(name=label+'-unexpected-video.png')
+            output = diagnostic_dir / (label+'-unexpected-video.png')
+            debug.project.debug_export(captured['artifact'], output)
+            diagnostic['screenshot'] = dict(artifact=captured['artifact'],
+                sha256=captured['sha256'], output=str(output))
+        except Exception as error:
+            diagnostic['capture_error'] = dict(type=type(error).__name__, message=str(error))
+        (diagnostic_dir/(label+'-unexpected-video.json')).write_text(
+            json.dumps(diagnostic, sort_keys=True, indent=2)+'\n')
+    assert expected, diagnostic
+    cells = read(0xb8000 + page, rows * columns * 2)[::2]
+    # Attributes, fonts, raster dimensions and cursor blinking are renderer
+    # observations. Compare the game characters, retaining every nonblank row.
+    text = cells.decode('cp437').replace('\0', ' ')
+    lines = [text[start:start+columns].rstrip() for start in range(0, len(text), columns)]
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+    assert lines
+    return '\n'.join(lines)
+
+
+def _stored_frame(project, debug, directory, label):
+    captured = debug.screenshot(name=label+'.png')
+    output = directory / (label+'-warm.png')
+    project.debug_export(captured['artifact'], output)
+    raw = output.read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == captured['sha256']
+    with Image.open(output) as image:
+        assert image.format == 'PNG' and image.width > 0 and image.height > 0
+        image.load()
+        dimensions = list(image.size)
+    return dict(artifact=captured['artifact'], sha256=captured['sha256'],
+                label=label, dimensions=dimensions)
+
+
+def _cold_frames(project, frames, directory, suffix):
+    for frame in frames:
+        output = directory / (frame['label']+'-'+suffix+'.png')
+        project.debug_export(frame['artifact'], output)
+        assert hashlib.sha256(output.read_bytes()).hexdigest() == frame['sha256']
+        with Image.open(output) as image:
+            assert image.format == 'PNG' and list(image.size) == frame['dimensions']
+            image.load()
+
+
+def _complete_round(root, runtime, *, qemu, checkpoint_tool):
+    """Run the same physical-input workload through each public debugger."""
+    root.mkdir()
+    game = root / 'game'
+    game.mkdir()
+    source = game / 'ATTT.COM'
+    source.write_bytes(runtime['source_bytes'])
+    database = root / 'round.fdb'
+    backend = 'qemu-dos' if qemu else 'dosbox'
+    frames, observations, run_ids = [], [], []
+
+    def launch(project):
+        if qemu:
+            return _launch_qemu(project, game, runtime, checkpoint_tool=checkpoint_tool)
+        return project.debugger(str(runtime['dosbox']), game)
+
+    def observe(debug, label):
+        state = _round_state(debug, qemu=qemu)
+        observations.append(dict(label=label, state=state, text=_text_screen(
+            debug, qemu=qemu, diagnostic_dir=root, label=label)))
+        return state
+
+    with Project.create(database, source, image='com') as project:
+        project.analyze(max_instructions=4096)
+        with launch(project) as debug:
+            run_ids.append(debug.run_id)
+            if qemu:
+                settled = debug.clock_advance(750_000_000, timeout_ms=5000)
+                assert settled['clock_budget']['deadline_reached']
+            else:
+                debug.run(timeout_ms=5000, guest_ms=750, fast_forward=True)
+            assert observe(debug, 'initial') == dict(board=' '*9, player=1, winner=0,
+                starts=1, wins=[0, 0], turns=0)
+            frames.append(_stored_frame(project, debug, root, 'initial'))
+            for key, board in [('q', 'x        '), ('4', 'x  o     '),
+                               ('w', 'xx o     '), ('5', 'xx oo    ')]:
+                _play_one_move(debug, key, qemu=qemu)
+                assert observe(debug, key)['board'] == board
+            midpoint = observations[-1]['state']
+            assert midpoint == dict(board='xx oo    ', player=1, winner=0,
+                starts=1, wins=[0, 0], turns=4)
+            frames.append(_stored_frame(project, debug, root, 'midpoint'))
+            saved = debug.save_state(name='round-checkpoint.qcow2' if qemu else 'round-checkpoint.sav')
+            assert project.debug_state_info(saved['artifact'])['sha256'] == saved['sha256']
+        assert debug.closed
+
+    # FDB, screenshots and exports live outside the immutable game directory.
+    # In particular they must not change DOSBox's mounted-file state identity.
+    with Project(database) as project:
+        _cold_frames(project, frames, root, 'first-cold')
+        assert project.debug_state_info(saved['artifact'])['sha256'] == saved['sha256']
+        with launch(project) as debug:
+            run_ids.append(debug.run_id)
+            restored = debug.load_state(saved['artifact'])
+            assert restored['artifact'] == saved['artifact']
+            assert observe(debug, 'restored') == midpoint
+            _play_one_move(debug, 'e', qemu=qemu)
+            winning = observe(debug, 'win')
+            assert winning == dict(board='xxxoo    ', player=1, winner=1,
+                starts=1, wins=[1, 0], turns=5)
+            assert 'WINS' in observations[-1]['text']
+            frames.append(_stored_frame(project, debug, root, 'win'))
+            debug.load_state(saved['artifact'])
+            assert observe(debug, 'reloaded') == midpoint
+            _play_one_move(debug, 'e', qemu=qemu)
+            assert observe(debug, 'replayed-win') == winning
+            assert observations[-1]['text'] == next(o['text'] for o in observations if o['label'] == 'win')
+            frames.append(_stored_frame(project, debug, root, 'replayed-win'))
+            _play_one_move(debug, 'space', qemu=qemu)
+            assert observe(debug, 'reset') == dict(board=' '*9, player=2, winner=0,
+                starts=2, wins=[1, 0], turns=0)
+            frames.append(_stored_frame(project, debug, root, 'reset'))
+            debug.keyboard_press('escape', hold_ms=80, gap_ms=80)
+            ended = debug.run(timeout_ms=5000) if qemu else debug.run(
+                timeout_ms=5000, guest_ms=750, fast_forward=True)
+            assert ended['outcome'] == 'guest_exit'
+            code = (ended['process']['termination']['code'] if qemu else
+                    ended['session']['stop_reason']['guest_exit']['requested_exit_code'])
+            assert code == 0
+        assert debug.closed
+
+    with Project(database) as cold:
+        _cold_frames(cold, frames, root, 'final-cold')
+        runs = cold.debug_runs()['runs']
+        assert len(runs) == 2 and {row['id'] for row in runs} == set(run_ids)
+        assert all(row['ended'] is not None and row['metadata']['source_sha256'] == _ATTT_SHA256
+                   for row in runs)
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == _ATTT_SHA256
+    assert hashlib.sha256(runtime['boot_image'].read_bytes()).hexdigest() == runtime['boot_sha256']
+    report = dict(backend=backend, observations=observations,
+        terminal=dict(outcome='guest_exit', code=code), frames=frames,
+        checkpoint=dict(artifact=saved['artifact'], sha256=saved['sha256']),
+        source_sha256=_ATTT_SHA256, cold_run_count=2,
+        timing_scope='backend-specific 750 ms bounded advances; no clock or frame-timing equivalence',
+        frame_scope='decoded stored screenshots with exact cold artifact exports; no cross-backend pixel equality')
+    (root/'workflow.json').write_text(json.dumps(report, sort_keys=True, indent=2)+'\n')
+    return report
+
+
+def test_original_tic_tac_toe_complete_round_cold_restore_replay_reset_and_exit_are_paired(
+        tmp_path, game_runtime):
+    """Same complete round on both backends, each using its own native state."""
+    tool = os.environ.get('FDISBULL_QEMU_IMG')
+    if not tool:
+        if os.environ.get('FDISBULL_REQUIRE_QEMU_DOS_OS') == '1':
+            pytest.fail('Paired complete game workflow requires FDISBULL_QEMU_IMG')
+        pytest.skip('Set FDISBULL_QEMU_IMG for paired cold game workflows')
+    dosbox = _complete_round(tmp_path/'dosbox-round', game_runtime,
+                            qemu=False, checkpoint_tool=tool)
+    qemu = _complete_round(tmp_path/'qemu-round', game_runtime,
+                          qemu=True, checkpoint_tool=tool)
+    assert dosbox['observations'] == qemu['observations']
+    assert dosbox['terminal'] == qemu['terminal']
+    assert dosbox['source_sha256'] == qemu['source_sha256'] == _ATTT_SHA256
+
+
+def _fresh_complete_round(root, runtime, *, qemu):
+    """A separate fresh-game gate; no state save/load or recovery is performed."""
+    root.mkdir()
+    game = root/'game'
+    game.mkdir()
+    source = game/'ATTT.COM'
+    source.write_bytes(runtime['source_bytes'])
+    database = root/'fresh-round.fdb'
+    observations, frames = [], []
+    with Project.create(database, source, image='com') as project:
+        project.analyze(max_instructions=4096)
+        session = (_launch_qemu(project, game, runtime) if qemu else
+                   project.debugger(str(runtime['dosbox']), game))
+        with session as debug:
+            run_id = debug.run_id
+
+            def observe(label):
+                state = _round_state(debug, qemu=qemu)
+                observations.append(dict(label=label, state=state, text=_text_screen(
+                    debug, qemu=qemu, diagnostic_dir=root, label=label)))
+                return state
+
+            def frame(label):
+                captured = _stored_frame(project, debug, root, label)
+                with Image.open(root/(label+'-warm.png')) as image:
+                    rgb = image.convert('RGB')
+                    # A decoded but uniformly black/blank surface is not a
+                    # useful rendering witness for this text-and-board game.
+                    assert any(low != high for low, high in rgb.getextrema()), captured
+                    captured['pixel_sha256'] = hashlib.sha256(rgb.tobytes()).hexdigest()
+                frames.append(captured)
+
+            if qemu:
+                settled = debug.clock_advance(750_000_000, timeout_ms=5000)
+                assert settled['clock_budget']['deadline_reached']
+            else:
+                debug.run(timeout_ms=5000, guest_ms=750, fast_forward=True)
+            assert observe('initial') == dict(board=' '*9, player=1, winner=0,
+                starts=1, wins=[0, 0], turns=0)
+            frame('initial')
+            for key, board in [('q', 'x        '), ('4', 'x  o     '),
+                               ('w', 'xx o     '), ('5', 'xx oo    ')]:
+                _play_one_move(debug, key, qemu=qemu)
+                assert observe(key)['board'] == board
+            assert observations[-1]['state'] == dict(board='xx oo    ', player=1,
+                winner=0, starts=1, wins=[0, 0], turns=4)
+            frame('midpoint')
+            _play_one_move(debug, 'e', qemu=qemu)
+            assert observe('win') == dict(board='xxxoo    ', player=1, winner=1,
+                starts=1, wins=[1, 0], turns=5)
+            assert 'WINS' in observations[-1]['text']
+            frame('win')
+            _play_one_move(debug, 'space', qemu=qemu)
+            assert observe('reset') == dict(board=' '*9, player=2, winner=0,
+                starts=2, wins=[1, 0], turns=0)
+            frame('reset')
+            assert frames[1]['pixel_sha256'] != frames[2]['pixel_sha256']
+            assert frames[2]['pixel_sha256'] != frames[3]['pixel_sha256']
+            debug.keyboard_press('escape', hold_ms=80, gap_ms=80)
+            ended = debug.run(timeout_ms=5000) if qemu else debug.run(
+                timeout_ms=5000, guest_ms=750, fast_forward=True)
+            assert ended['outcome'] == 'guest_exit'
+            code = (ended['process']['termination']['code'] if qemu else
+                    ended['session']['stop_reason']['guest_exit']['requested_exit_code'])
+            assert code == 0
+        assert debug.closed
+    with Project(database) as cold:
+        _cold_frames(cold, frames, root, 'cold-export')
+        runs = cold.debug_runs()['runs']
+        assert len(runs) == 1 and runs[0]['id'] == run_id and runs[0]['ended'] is not None
+        assert runs[0]['metadata']['source_sha256'] == _ATTT_SHA256
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == _ATTT_SHA256
+    assert hashlib.sha256(runtime['boot_image'].read_bytes()).hexdigest() == runtime['boot_sha256']
+    report = dict(backend='qemu-dos' if qemu else 'dosbox', observations=observations,
+        terminal=dict(outcome='guest_exit', code=code), frames=frames,
+        source_sha256=_ATTT_SHA256, run_count=1, checkpoint_restore_performed=False,
+        timing_scope='same input sequence with backend-specific 750 ms advances; no clock/frame-timing equivalence',
+        frame_scope='nonuniform stored PNGs and changed winning/reset images; no cross-backend pixel equality')
+    (root/'fresh-workflow.json').write_text(json.dumps(report, sort_keys=True, indent=2)+'\n')
+    return report
+
+
+def test_original_tic_tac_toe_fresh_complete_round_reset_and_guest_exit_are_paired(
+        tmp_path, game_runtime):
+    """Fresh full-round compatibility is separate from the strict cold gate."""
+    dosbox = _fresh_complete_round(tmp_path/'dosbox-fresh', game_runtime, qemu=False)
+    qemu = _fresh_complete_round(tmp_path/'qemu-fresh', game_runtime, qemu=True)
+    assert dosbox['observations'] == qemu['observations']
+    assert dosbox['terminal'] == qemu['terminal']
+    assert dosbox['source_sha256'] == qemu['source_sha256'] == _ATTT_SHA256

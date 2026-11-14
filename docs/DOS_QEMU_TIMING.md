@@ -583,3 +583,19 @@ invented for that terminal interval.
 A matched predicate can precede the scheduled release of a held key. Inspect
 owned input and explicitly finish or recover it before checkpointing. A wait
 never silently cancels, replays or releases an interrupted input batch.
+
+When a known, wholly undelivered timed input plan is already armed, native wait
+can coalesce its nominal fixed duration plus one requested poll interval into
+the first clock slice. It records the original token, nominal duration,
+requested/effective slice and fresh dispatch receipt. The total `guest_ms`
+budget does not increase. This reduces avoidable cuts through a timed press;
+it is not a universal callback-lateness guarantee. If the first stop still
+cancels a suffix, `input_interrupted` retains the exact prefix and no second
+continue occurs. Interrupted, unknown, partial, unsupported or over-budget
+plans require explicit recovery and are never replayed or silently released.
+
+Script admission checks plans already owned at route entry as well as each
+literal's capability, parameter and transaction rules. Input newly armed by an
+earlier script step is checked again when wait executes. Static prediction of
+all cross-step resource states is not provided; failure stops the route and
+uses its existing owned-input cleanup policy.
