@@ -23,10 +23,10 @@ spec:
 workflow:
   name: "fDisBull CI ($CI_PIPELINE_SOURCE / $CI_COMMIT_REF_NAME) action:$[[ inputs.recovery_action_id ]]"
   rules:
-    - if: '$CI_COMMIT_MESSAGE =~ /\[(skip ci|ci skip)\]/i'
-      when: never
     - if: '$FDISBULL_DISABLE_CI == "1"'
       when: never
+    # A deliberate request can qualify a commit previously mirrored with a
+    # skip marker. Pushes, merge requests and tags still fall through to never.
     - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"'
       when: always
     - when: never
