@@ -33,13 +33,17 @@ class CompletedGuiFailure(RuntimeError):
         super().__init__('GUI child completed with unknown operation result')
 
 
+class GuiTransportError(RuntimeError):
+    """A finite transport call failed before a validated response arrived."""
+
+
 def _bytes(value):return (json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
 def _hash(data):return hashlib.sha256(data).hexdigest()
 
 
 class GuiClient:
-    def __init__(self,state_dir=STATE,*,runner=None,clock=time.time,sleep=time.sleep):
-        self.state=Path(state_dir);self.runner=runner or run_command;self.clock=clock;self.sleep=sleep
+    def __init__(self,state_dir=STATE,*,runner=None,clock=time.time,sleep=time.sleep,monotonic=time.monotonic):
+        self.state=Path(state_dir);self.runner=runner or run_command;self.clock=clock;self.sleep=sleep;self.monotonic=monotonic
 
     def _check(self):
         p=self.state
@@ -108,8 +112,23 @@ class GuiClient:
         argv=['/usr/bin/tailscale','ssh','tiga@100.76.103.43',PYTHON,'-I',HELPER,'request']
         markers=('TOKEN','API_KEY','PASSWORD','SECRET','CREDENTIAL','AUTHORIZATION')
         env={k:v for k,v in os.environ.items() if not any(x in k.upper() for x in markers)}
-        result=self.runner(argv,cwd='/',env=env,input_bytes=payload,timeout=timeout)
-        if (not isinstance(result,dict) or result.get('returncode')!=0 or result.get('timed_out') is not False
+        try:result=self.runner(argv,cwd='/',env=env,input_bytes=payload,timeout=timeout)
+        except (OSError,TimeoutError):raise GuiTransportError('GUI transport outcome unknown') from None
+        if not isinstance(result,dict):raise RuntimeError('GUI transport outcome unknown')
+        if result.get('overflow') is not False:raise RuntimeError('GUI transport outcome unknown')
+        if result.get('timed_out') is True:
+            raise GuiTransportError('GUI transport outcome unknown')
+        if type(result.get('returncode')) is int and result['returncode']!=0:
+            # A structured helper rejection is an application outcome, not a
+            # transport blip; never retry it as though no response arrived.
+            raw=result.get('stdout')
+            if isinstance(raw,bytes) and len(raw)<=MAX_REPLY:
+                try:failure=json.loads(raw)
+                except (ValueError,UnicodeError):failure=None
+                if isinstance(failure,dict) and 'error' in failure:
+                    raise RuntimeError('GUI transport outcome unknown')
+            raise GuiTransportError('GUI transport outcome unknown')
+        if (result.get('returncode')!=0 or result.get('timed_out') is not False
                 or result.get('overflow') is not False or not isinstance(result.get('stdout'),bytes)
                 or len(result['stdout'])>MAX_REPLY):raise RuntimeError('GUI transport outcome unknown')
         try:value=json.loads(result['stdout'])
@@ -122,7 +141,7 @@ class GuiClient:
         # stable key; repeated calls use the old nonce and never resubmit.
         if key is None:key='read:'+secrets.token_hex(32)
         intent,new=self._intent(kind,doc,key,timeout);nonce=intent['nonce']
-        if new:
+        if new and self.clock()<intent['expires_epoch']:
             try:
                 sent=self._remote({'operation':'submit','kind':kind,'request':doc,
                                    'expires_epoch':intent['expires_epoch'],'nonce':nonce},timeout=min(45,timeout))
@@ -132,9 +151,17 @@ class GuiClient:
                 # This request might already be queued; only read its receipt.
                 pass
         while True:
-            remaining=intent['expires_epoch']-self.clock()
-            try:result=self._remote({'operation':'result','request_id':nonce},timeout=min(45,max(1,remaining)))
-            except Exception:raise RuntimeError('GUI result outcome unknown') from None
+            # Receipt lookup has its own total budget, including one bounded
+            # transport retry; action expiry never truncates a retained read.
+            deadline=self.monotonic()+45
+            for attempt in range(2):
+                remaining=deadline-self.monotonic()
+                if remaining<=0:raise RuntimeError('GUI result outcome unknown')
+                try:
+                    result=self._remote({'operation':'result','request_id':nonce},timeout=remaining)
+                    break
+                except GuiTransportError:
+                    if attempt==1:raise RuntimeError('GUI result outcome unknown') from None
             if result.get('request_id') not in (None,nonce):raise RuntimeError('GUI result identity mismatch')
             if result.get('status')=='complete':
                 value=result.get('result')
