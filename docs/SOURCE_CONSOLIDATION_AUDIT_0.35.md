@@ -76,14 +76,15 @@ direction; a CI-ready pipeline does not waive it.
 | `f8a70aade905310c533cef196cca4551e6e559d7`<br>`docs/udc-module-layers-provenance` | ["docs/UDC_MODULE_LAYERS.md"] {"action": "Port the missing module-layer design and useful provenance concepts into current docs, preserving historical0.27 publication notes without copying stale front-door identity or claiming implementation.", "owner": "release source integration owner; n8n only for CI/native/package gates", "decision_state": "recommended disposition from read-only audit; not an invented owner approval or integration completion", "branch_retention": "retain all listed original GitHub branches/OIDs; no deletion/force update"} |
 | `fcef2877320e0981d5b979ad9bba1e1d1dcbd488`<br>`fdisbull-origin/fix/review-ghidra-resource-gate` | ["src/fdisbull/dcc_asm_c.py", "src/fdisbull/ghidra_asm_c.py", "src/fdisbull/reko_asm_c.py", "src/fdisbull/data/FdisbullGhidraAsmC.txt", "tests/test_asm_c_engine_contract.py"] {"action": "Port independently reviewed bounded adapter interfaces/resource gates and authored rejection tests against current UDL block contracts. External tool invocation/benchmarks/native results require their own authorization and fresh evidence; do not claim universal decompiler parity.", "owner": "release source integration owner; n8n only for CI/native/package gates", "decision_state": "recommended disposition from read-only audit; not an invented owner approval or integration completion", "branch_retention": "retain all listed original GitHub branches/OIDs; no deletion/force update"} |
 
-## Freeze decision
+## Implementation handoff
 
-The current instruction is to integrate all unique eligible source. Under that
-instruction, the candidate remains provisional until these adaptations and their
-checks are complete. A quick 0.35.0 freeze would require a direct human decision
-to narrow scope and name the deferred contributions; no agent may silently turn
-their preservation into release acceptance. Existing authorization to install
-and activate 0.35.0 applies after the full checks, with rollback preserved.
+The existing user instruction authorizes all unique eligible adaptations. This
+is engineering work, not a missing permission or a generic scope decision.
+The [deduplicated capability work items](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
+assign owners, source/test references and the next concrete changes. The
+candidate stays provisional while those source changes and combination checks
+are completed. Only an actual conflicting product requirement or behavior that
+cannot coexist calls for an explicit decision with precise alternatives.
 
 The endpoint-authentication/checkpoint-selector contribution `dd7c43a4` is now
 included through integration merge `2ca96ea7`; its focused checks passed with

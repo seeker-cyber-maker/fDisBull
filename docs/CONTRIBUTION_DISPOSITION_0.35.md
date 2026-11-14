@@ -102,8 +102,9 @@ DOSBox RPC automatic-tracking hooks also require backend-specific adaptation
 instead of assuming that QEMU lifecycle coverage transfers.
 
 Before freeze, implement the [remaining source adaptations](SOURCE_CONSOLIDATION_AUDIT_0.35.md)
-under the existing integrate-all instruction, or obtain a direct human scope
-decision naming deferred work. Close the remaining delivery gaps, then qualify
+under the existing integrate-all instruction using the
+[deduplicated work items](RECOVERED_CAPABILITY_INTEGRATION_0.35.md). Required
+adaptation effort is not a missing permission or generic scope decision. Close the remaining delivery gaps, then qualify
 one exact primary-GitHub SHA. Ordinary/native CI, complete offline packaging,
 network-disabled DOS/PE32/Win16 consumption, public delivery and fresh shared
 installation verification remain independent open gates.
