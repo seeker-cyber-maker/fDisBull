@@ -399,3 +399,12 @@ def test_runner_setup_error_also_reaps_the_owned_process(tmp_path,monkeypatch):
     with pytest.raises(OSError,match='selector setup'):
         installer._run([sys.executable,'-c','import time; time.sleep(60)'],work)
     assert len(children)==1 and children[0].poll() is not None and closed==[True]
+
+
+def test_absolute_previous_selector_is_preserved_exactly(tmp_path,monkeypatch):
+    base,prefix,_=activation_case(tmp_path,monkeypatch)
+    previous=str(base/'releases/old');installer._switch(base,previous)
+    result=installer.activate(prefix,base)
+    assert result['previous_selector']==previous
+    assert installer.rollback(prefix,base)['restored_selector']==previous
+    assert str((base/'current').readlink())==previous
