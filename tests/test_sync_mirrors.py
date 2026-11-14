@@ -107,7 +107,7 @@ def test_reconcile_with_remote_fast_forwards_behind_local_branch_and_skips_synce
     assert updated_sha == sha2
 
 
-def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
+def test_legacy_sync_helper_keeps_github_on_guarded_service(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
@@ -120,7 +120,7 @@ def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
         ["git", "-C", str(repo), "remote", "add", "origin", "https://github.com/seeker-cyber-maker/fDisBull.git"],
         check=True,
     )
-    with pytest.raises(mirror.MirrorSyncError, match="Refusing to push to retired GitHub remote"):
+    with pytest.raises(mirror.MirrorSyncError, match="Legacy helper excludes GitHub remote"):
         mirror.sync_mirrors(repo, remotes=("origin",), dry_run=True)
 
 

@@ -514,8 +514,8 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 ## Status, testing and history
 
 GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
-release and CI authority; GitHub (`seeker-cyber-maker/fDisBull`) is an active
-public peer mirror. Read
+release and CI authority. GitHub (`seeker-cyber-maker/fDisBull`) is inactive
+following the user's reported account flag. Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
 [methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
