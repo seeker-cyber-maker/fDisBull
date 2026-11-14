@@ -183,6 +183,10 @@ def validate_script(script, *, session=None):
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
                     else:signature.bind(**params)
+                    if op in ('trace','trace-until') and (backend or actual)=='qemu-dos':
+                        from .qemu_dos_trace import _select_source_view, _validate_source_view
+                        if session is None:_validate_source_view(params.get('source_view'))
+                        else:_select_source_view(session,params.get('source_view'))
                     if op=='trace-until':
                         # This first adapter admits literal predicates/actions.
                         # Validate the entire descriptor before an earlier step
@@ -196,7 +200,9 @@ def validate_script(script, *, session=None):
                             elif isinstance(value,list):
                                 for child in value:literal(child)
                         literal(params)
-                        validate_trace_until(**params)
+                        descriptor=dict(params)
+                        if (backend or actual)=='qemu-dos':descriptor.pop('source_view',None)
+                        validate_trace_until(**descriptor)
                         from .execution_clock import clock_predicates
                         if clock_predicates(params['until']):
                             if (backend or actual) != 'qemu-dos':

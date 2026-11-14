@@ -21,6 +21,9 @@ when the QEMU build supports them, and stopped memory snapshot/search/edit/rule
 operations. The process slice adds real DOS EXEC loading, verified PSP/source
 entry and selected-process exit/TSR observations. Source-bound trace predicates
 and persistent event searches cover the initial verified real-mode module.
+Explicit owned LE recipes add revalidated protected32 boundaries in a separate
+source namespace. Native qualification belongs to exact candidate receipts,
+not the contract or host checks alone.
 Owned keyboard and relative PS/2 mouse input, optional native virtual-time batch
 scheduling, explicit instruction-count observation and stopped surface/CPU/clock
 captures are now available.
@@ -106,29 +109,34 @@ results do not qualify generic
 
 ## Stopped protected source admission
 
-For an owned native DOS session already stopped in unpaged protected32 mode,
-`dos_source_admit(expected_source_sha256=...)` records a bounded original-source
-LE view. The foreground JSON route is `debug-dos-source-admit` with the selected
-`run`; capability `dos_protected_source_admission` identifies this operation.
-See the [protected-source contract](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/QEMU_DOS_PROTECTED_SOURCE.md)
-for comparison/scan/deadline limits and private artifact export.
+`dos_source_admit(expected_source_sha256=...)` / `debug-dos-source-admit`
+records historical LE evidence at a stopped unpaged protected32 CPU. It checks
+A20, CS/GDT, original-source identity and stable physical/linear readback;
+active layers/task-private views refuse. Comparison is at most 512 KiB and
+scan at most 16 MiB, under a bounded host deadline. Complete masked matching
+refuses ambiguity; excluded fixups and a symbolic bridge do not prove execution.
+Its receipt retains `lifetime_qualified: false`, `live_mapping_installed: false`
+and the unchanged MZ mapping. Re-admit after execution, mutation or restore.
 
-It checks source/version/producer pins, A20, CS/GDT consistency and fresh
-physical/linear RAM readback. Active RAM/fetch overlays and cooperating
-task-private views refuse. Complete masked-window comparison rejects ambiguous
-source placement; loader fixups remain explicitly excluded, and a matched
-16-bit bridge does not prove bridge execution or its symbolic selector operand.
-LE object IDs are a separate preferred-address namespace. The initial MZ EXEC
-binding and existing real-mode trace/layer/hook admission do not change.
+## Owned protected source binding and traces
 
-The receipt is historical stopped evidence with `lifetime_qualified: false`
-and `live_mapping_installed: false`. Call again after execution, mutation,
-restore or owner replacement. It neither grants resume from frozen selected
-undo nor installs automatic registry bindings. The separately integrated runtime
-registry/tracker dependencies retain their own source/span and lifetime
-contracts; exact combined native qualification remains a separate gate. Read
-the [reuse account](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/agent/qemu-sunset-284eb73c/docs/QEMU_DEBUGGER_REUSE.md)
-for that boundary.
+`dos_source_bind(expected_source_sha256=...)` makes a fresh admission and
+installs an owned recipe. Inspect with `dos_source_binding()` or validate again
+with `refresh=True`; `dos_source_unbind()` removes it. JSON routes use the
+`debug-dos-source-` prefix and owned `run`.
+
+`trace` / `trace_until` select an installed handle by default.
+`source_view='embedded-le'` requires it; `initial-dos` overrides it with existing
+real16 rules. There is no implicit bind or fallback. LE count traces accept
+`bits=32`. Runs validate stopped endpoints; traces validate each retained
+boundary, without retirement or OS/task lifetime claims. Whole instructions
+need proved fixups and stable source/CS/GDT/readback. Mutation/restore/owner
+drift retires the recipe; checkpoints do not restore it or authorize LE
+layers/hooks. LE object sites remain separate from MZ project addresses.
+
+Use the [LE capture guide](execution-event-search.md#capture-owned-protected-le-boundaries)
+for APIs, scripts, bounds, lifecycle and cold queries. DOSBox-X remains default;
+no CI is introduced. Native evidence belongs to exact candidate receipts.
 
 ## Checkpoint histories
 
@@ -415,7 +423,7 @@ witnesses; production uses the packaged helper without requiring NASM.
 
 ## Capture register and execution events
 
-On a live COM/MZ process, `debug-trace` preserves the existing bounded-count
+On a live COM/MZ process with the initial-DOS view, `debug-trace` preserves the existing bounded-count
 artifact route. `debug-trace-until` accepts the shared register, PC-range,
 mnemonic, region-change and nonsequential predicates. For example:
 
@@ -484,9 +492,10 @@ foreign identities are unknown offline; malformed brackets are rejected even
 when the query concerns only a register. Historical clockless records remain
 supported.
 
-A time predicate may match the observed final boundary after leaving the
-source binding. Its source site stays unknown and its open source window
-cannot narrow an event search.
+For the initial-DOS view, a time predicate may match the observed final boundary
+after leaving the source binding. Its source site stays unknown and its open
+source window cannot narrow an event search. The embedded-LE view instead ends
+at an unqualified source boundary before evaluating its predicate.
 
 Live and saved-script predicates must match the current run and both epochs.
 Every nested clock leaf is checked before execution, including before earlier

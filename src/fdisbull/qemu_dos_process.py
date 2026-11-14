@@ -35,6 +35,7 @@ from .qemu_cpu_deltas import QemuCpuDeltaMixin
 from .qemu_experiments import QemuExperimentMixin
 from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
 from .qemu_dos_source_admission import QemuDOSSourceAdmissionMixin
+from .qemu_dos_le_binding import QemuDOSLEBindingMixin
 
 
 def _sha(data):
@@ -161,7 +162,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -388,6 +389,8 @@ class QemuDOSProcessSession(QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, Qem
                 self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.capabilities['dos_protected_source_admission'] = True
+            self.capabilities['dos_protected_source_binding'] = 'owned stopped LE source revalidation; not task/allocation lifetime'
+            self.capabilities['source_trace'] = 'initial real16 DOS module or explicitly bound protected32 embedded LE source'
             self.metadata = dict(backend=self.backend_id, context='machine',
                 runtime_profile='dos-exec-load-only-v1', source_sha256=project.meta['source_sha256'],
                 version_sha256=selected['sha256'], runtime_inputs=vm.inputs,
@@ -432,6 +435,7 @@ class QemuDOSProcessSession(QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, Qem
                     channel.operation_deadline = deadline
 
     def _advance_epoch(self):
+        self._le_source_retire('DOS capture epoch changed')
         self._epoch_number = getattr(self, '_epoch_number', 1) + 1
         run_id = self.run_id or self._runtime_epoch.split(':', 1)[0]
         self._runtime_epoch = run_id + ':process:' + str(self._epoch_number)

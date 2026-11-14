@@ -4,6 +4,7 @@
 
 - [Choose the question and window](#choose-the-question-and-window)
 - [Capture a live window](#capture-a-live-window)
+- [Capture owned protected LE boundaries](#capture-owned-protected-le-boundaries)
 - [Define predicates and regions](#define-predicates-and-regions)
 - [Join native source clocks](#join-native-source-clocks)
 - [Query an existing trace](#query-an-existing-trace)
@@ -25,7 +26,8 @@ they do not add live Windows support. Source version, runtime code bytes,
 CPU mode and qualified address context belong to each candidate's identity.
 
 The native `qemu-dos` process adapter also supports initial real-mode COM/MZ
-source boundaries. Its virtual profile adds clock-qualified source observations;
+source boundaries and explicitly bound protected32 LE source views. Its virtual
+profile adds clock-qualified source observations;
 see [native QEMU migration](dos-qemu-migration.md#relate-source-boundaries-to-virtual-time)
 for its distinct debugger-step and input contracts.
 
@@ -94,7 +96,7 @@ same predicate at that stop can therefore return immediately again. Choose the
 next boundary deliberately instead of assuming an implicit advance. An
 unmatched initial observation with `max_steps=0` queues no input either.
 
-Each advancing interval uses native `trace.start` with `instruction_count=2`,
+For DOSBox, each advancing interval uses native `trace.start` with `instruction_count=2`,
 followed by callback-safe `execution.continue`/`execution.wait`. One owned lock
 and shared host deadline cover the operation. This uses DOSBox's existing
 service-callback path and does not invoke the high-level `run` hook dispatcher.
@@ -123,6 +125,7 @@ Interpret the outcome before issuing another action:
 - `unqualified_interval`: native fetch endpoints did not match the stopped
   snapshots; execution may have occurred, but `complete` and `exact_stop` remain false.
 - `artifact_budget`: the evidence budget ended capture; the retained window is incomplete.
+- `source_boundary`: the native QEMU source view no longer qualifies the observed endpoint.
 - `cancelled`: bounded cleanup and evidence retention ran, then the Python
   cancellation was re-raised with its `.result` attached.
 - `exited` or `error`: inspect the guest stop, error and cleanup evidence.
@@ -170,6 +173,63 @@ terminal cleanup. If trace or journal persistence fails, inspect
 `error.result`, and script failure records preserve it. Evidence failure must
 not become an automatic retry of the input.
 
+## Capture owned protected LE boundaries
+
+For `backend='qemu-dos'`, bind the eligible stopped protected32 carrier before
+capturing its LE source view:
+
+```python
+bound = debug.dos_source_bind(expected_source_sha256=original_executable_sha256)
+captured = debug.trace_until(
+    {'kind': 'register', 'register': 'eax', 'equals': 7},
+    source_view='embedded-le', max_steps=64, timeout_ms=10000,
+)
+```
+
+The initial stopped `dos_source_admit` receipt remains historical evidence; it
+does not install this handle. Binding makes a fresh admission and records an
+owned recipe. `dos_source_binding(refresh=True)` revalidates its stopped
+relation, and `dos_source_unbind()` removes it. The native QEMU migration
+reference linked above also describes source/CS/GDT/readback, supported fixup
+and lifecycle requirements under "Owned protected source binding and traces."
+
+The existing `debug-trace` / `debug-trace-until` JSON routes and saved-script
+operations accept `source_view` for native DOS. `None` chooses an installed LE
+handle, otherwise the initial-DOS view. Explicit `embedded-le` requires the
+handle; `initial-dos` retains the original real16 rules. Neither mode binding
+nor fallback is implicit. Bind through the public session operation before the
+script; malformed or unavailable explicit views refuse whole-script preflight
+before earlier writes.
+
+The native collector uses bounded `session.step()` stop intervals rather than
+DOSBox's two-fetch continuation protocol. LE capture revalidates each retained
+instruction's source/owner/epoch, CS/GDT, anchors, pointer witnesses and stable
+physical/linear readback. A complete instruction needs canonical byte and
+supported whole-fixup proof. An unqualified endpoint stops with
+`outcome='source_boundary'` before predicate evaluation or another step, so a
+register match there cannot become an exact source stop. Foreign controls keep
+their precedence. Retirement, input consumption and OS/task lifetime remain
+unqualified.
+
+LE traces keep `pc.project=None`. Use observed linear or segmented PC
+predicates, not MZ project ranges. Default regions are empty; explicitly
+supplied LE capture regions must be runtime `linear` ranges. Source locations
+instead identify `embedded-le`, application SHA-256, object ID/index, object
+offset and preferred LE address. Historical search sites use
+`space='embedded-le'` with an object-relative address and canonical
+full-instruction hash. They can be compared across proved runtime placements
+without treating a preferred LE key as a MZ project instruction address.
+
+The LE capture format `fdisbull-qemu-dos-le-capture-1` retains the recipe,
+binding artifact identity and shared GDT material. Each event carries a bounded
+CPU/readback witness. Cold query/search reconstructs recipe and instruction
+proofs from original source and linked ordered receipts; a source flag/hash
+alone is insufficient. Reopening artifacts does not reconnect a guest or
+restore an LE handle. Existing checkpoints/layers/hooks do not gain LE source
+authorization from these traces. DOSBox-X remains default and retained, and
+this slice introduces no CI. Native evidence belongs to exact candidate
+receipts; this contract and host checks alone are not native qualification.
+
 ## Define predicates and regions
 
 The same predicate vocabulary applies to live capture and retrospective trace
@@ -209,6 +269,8 @@ linear addresses describe the observed runtime space; segmented ranges require
 the explicit segment. Protected/v86 historical observations with unknown source
 mapping remain unknown for project-address predicates. Do not use
 `selector * 16` to manufacture a protected-mode source address.
+An owned LE source site still leaves the MZ project PC unknown; its independent
+object namespace does not make an MZ project-range predicate meaningful.
 
 Mnemonic predicates decode the observed bytes and compare the canonical
 operation, preserving prefixes without treating `rep` as the mnemonic.
@@ -243,8 +305,9 @@ The optional `virtual-time-range` predicate has exact fields `kind`, `run`,
 half-open, with `0 <= start_ns < end_ns <= 2**63`. Obtain the run, 32-hex host
 epoch and positive native epoch from the same session's `clock_observe()`;
 the native epoch is `virtual_clock.native.epoch`. This predicate is admitted
-live only by the initial native DOS process adapter under its explicit virtual
-profile, and can be combined with other predicates through `all` / `any`.
+live only by the native DOS process adapter under its explicit virtual profile,
+for its initial-DOS or bound LE source view. It can be combined with other
+predicates through `all` / `any`.
 
 Qualified event rows and search samples retain a `fdisbull-source-clock-1`
 object with native nanoseconds, a separate instruction counter and unchanged
@@ -260,8 +323,10 @@ identities before earlier writes, then recheck at trace admission. `$` result
 references inside trace-until parameters remain unsupported. Clockless
 historical traces and search artifacts remain readable.
 
-A time predicate can match an observed unbound final boundary; its source site
-remains unknown and `source_window_closed=False` prevents search narrowing.
+A time predicate in the initial-DOS view can match an observed unbound final
+boundary; its source site remains unknown and `source_window_closed=False`
+prevents search narrowing. The LE view stops at its unqualified boundary before
+evaluating a time or other source predicate.
 A future interval may also be skipped between debugger stops. This predicate
 does not install a timer cutoff. Use finite `max_steps` and `timeout_ms`.
 

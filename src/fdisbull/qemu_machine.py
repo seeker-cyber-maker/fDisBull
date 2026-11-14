@@ -61,6 +61,9 @@ def firmware_identity(directory):
 
 def _tracking(session, operation, reason):
     from .debugger import _tracking_callback
+    source = getattr(session, '_le_source_lifecycle', None)
+    if source is not None:
+        source(operation, reason)
     return _tracking_callback(session, operation, reason)
 
 
@@ -73,6 +76,39 @@ def _before_machine_execution(session, reason):
 
 class _TrackingDeadline(TimeoutError):
     """No native instruction was dispatched before the tracking budget ended."""
+
+
+def _source_execution_operation(function):
+    """Bound optional LE revalidation by the owned run/step interval.
+
+    Ordinary contexts keep their existing execution contract. A valid late
+    stopped reply remains a stopped reply; expired optional source validation
+    withdraws source authority rather than granting a new native-I/O budget.
+    """
+    @wraps(function)
+    def invoke(self, command, timeout_ms):
+        active = getattr(self, '_le_source_execution_bound', None)
+        if active is None or not active():
+            return function(self, command, timeout_ms)
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:
+            return function(self, command, timeout_ms)
+        from .operation_budget import request_deadline
+        vm = self.vm
+        previous = getattr(self, '_le_source_execution_deadline', None)
+        limits = [request_deadline(self, timeout_ms), previous,
+                  getattr(vm, 'operation_deadline', None), getattr(self, '_deadline', None),
+                  *[getattr(c, 'operation_deadline', None) for c in
+                    (getattr(vm, 'qmp', None), getattr(vm, 'gdb', None)) if c is not None]]
+        bound = min(v for v in limits if v is not None)
+        # Existing native stop classification keeps its established recovery
+        # policy. Only a source refresh installs this remaining bound on the
+        # channels; a late known stop must not be lost to optional enrichment.
+        self._le_source_execution_deadline = bound
+        try:
+            return function(self, command, timeout_ms)
+        finally:
+            self._le_source_execution_deadline = previous
+    return invoke
 
 
 _MAX_INTERNAL_STOPS = 256
@@ -305,8 +341,11 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
-    if name not in ('close','dos_process_info','tracking_status') and getattr(vm,'_fdisbull_control_quarantine',None):
+    if name not in ('close','dos_process_info','tracking_status','dos_source_binding','dos_source_unbind') and getattr(vm,'_fdisbull_control_quarantine',None):
         raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
+    source = getattr(getattr(vm, 'context', None), '_le_source_operation_guard', None)
+    if source is not None:
+        source(name, args, kwargs or {})
     guard = getattr(vm, 'operation_guard', None)
     if guard is not None:
         guard(name)
@@ -1121,6 +1160,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             raise error
         return result
 
+    @_source_execution_operation
     def _execute(self,command,timeout_ms):
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:
             raise ValueError('Machine timeout must be1..600000ms')

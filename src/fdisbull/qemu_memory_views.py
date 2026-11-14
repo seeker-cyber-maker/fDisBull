@@ -501,6 +501,9 @@ def expected_memory_view_after(descriptor, prepared, overlay):
 
 def commit_qemu_memory_write(session, prepared):
     """Create one immutable RAM overlay and atomically switch its layer view."""
+    retire = getattr(session, '_le_source_retire', None)
+    if retire is not None:
+        retire('native memory-view mutation', persist=True)
     overlay = _new_overlay(session, prepared)
     active = list(prepared['active_after']) + [overlay]
     if prepared['scope'] == 'task-private':

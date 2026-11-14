@@ -7,8 +7,8 @@ below is preserved separately from the current source integration. This account
 answers what a new architecture can actually reuse. It is
 not a promise that a third CPU needs only a small adapter, or that every separate
 module is unnecessary. DOSBox-X remains default and retained. The current
-source-matching integration is host code and reuses the retained native
-candidate; its exact combined native qualification remains pending. No CI or
+LE binding and trace integration is host code and reuses the retained native
+candidate; native qualification belongs to exact candidate receipts. No CI or
 default switch is part of this integration.
 
 ## Feature account
@@ -28,8 +28,9 @@ default switch is part of this integration.
 | RAM/code layers | Common persistent layer definitions and patch grouping | DOS segmented/paged aliases and task identity versus flat CHIP-8 RAM and atomic native configuration | Similar stack-transition structure; address proofs and native commands justify distinct adapters. |
 | Hooks | GDB breakpoints and persistent logical hook definitions | DOS task/runtime address binding and action types versus CHIP-8 fixed addresses/actions | Hit/displace/resume loops remain tied to backend live-control policies. |
 | Stopped source-window search | `qemu_dos_le_match.masked_window_offsets`, used by the explicit QEMU LE matcher and legacy `runtime_source_matching` adapter | Source-backed ranges, loader fixup exclusions and each adapter's evidence/exception contract | One complete bounded masked-window search now owns within-object ambiguity refusal; there is no separate anchor heuristic to maintain. |
+| Owned LE source traces | Existing DOS trace collector, predicates, GDB steps, clocks, artifacts and event searches | `qemu_dos_le_binding` owns current stopped relations; `qemu_dos_le_identity` rechecks protected CS/GDT, source anchors and complete instruction fixups | Ordinary runs qualify fresh endpoints; stepped captures qualify retained stopped boundaries, without retirement or OS lifetime claims. |
 | Recorded runtime mappings | Project `runtime_mappings` registry, snapshot qualification and event/checkpoint queries | Original object identities, declared or observed task episodes, address-space/page evidence | Registry records remain separate from the strict stopped LE admission artifact and from native task-private controls. |
-| Automatic stopped-state tracking | `runtime_tracking` callbacks integrated into the owned debugger/machine stop path | Provider source identity, source-byte matching and `runtime_desqview` containment/lifecycle observations | Provider-specific stop semantics remain adapters. Native qualification of this exact combined integration is pending. |
+| Automatic stopped-state tracking | `runtime_tracking` callbacks integrated into the owned debugger/machine stop path | Provider source identity, source-byte matching and `runtime_desqview` containment/lifecycle observations | Provider-specific stop semantics remain adapters. Native evidence belongs to the exact combined candidate receipt. |
 
 The source anchors are `chip8_history.py:Chip8HistoryMixin`,
 `qemu_dos_history.py:QemuDOSHistoryMixin`, `qemu_chip8.py:_Owner`,
@@ -117,20 +118,46 @@ artifact boundaries remain in place.
 These consumers retain separate authority. A stopped LE admission always has
 `lifetime_qualified: false` and `live_mapping_installed: false`; it does not create
 a runtime task episode, install registry bindings, authorize LE source-addressed
-hooks/layers, or extend existing real-mode source tracing. The legacy tracker
-and registry have their own source/span and lifetime contracts. Their presence
-does not automatically adapt the strict LE artifact into a continuous mapping.
-Call stopped admission again after execution, mutation, restore or replacement
-of the owner.
+hooks/layers, or itself extend tracing. The legacy tracker and registry retain
+their own source/span and lifetime contracts.
+
+The explicit `dos_source_bind` operation adds a separate owned recipe. It makes
+a fresh stopped admission, records immutable carrier/version/run/epoch and
+placement evidence, and revalidates source bytes after owned execution. A
+normal run has an unobserved interval and qualifies only its new stopped
+endpoint. A source trace reuses `session.step()` and validates each retained
+boundary. The protected qualifier checks the current CS/GDT and physical/linear
+readback, then compares the whole decoded instruction, including any supported
+internal offset32 relocation with a proved target placement. Masked discovery
+bytes do not become instruction proof. Symbolic, straddling or unproved fixups
+and unrelated/changed instructions stop qualification.
+
+The collector selects an installed LE handle by default; `source_view` can
+explicitly request `embedded-le` or retain `initial-dos`. There is no implicit
+bind or fallback after an LE failure. LE locations and historical search sites
+carry an application hash, object ID/index and object offset in a distinct
+namespace; no LE preferred address is presented as an ordinary MZ project PC.
+Cold consumers reconstruct recipe and instruction claims from original source
+and linked receipts. The initial MZ mapping and classic trace format remain
+unchanged.
+
+Source authority is withdrawn before execution and is not usable while running.
+Mutation, unmonitored resume, owner/source/epoch drift and restore/rewind paths
+retire the handle. Existing checkpoints do not restore it. Fresh source checks
+share a bounded run/step's remaining allowance; an already exhausted allowance
+defers optional revalidation without discarding a known native stop. Actual
+source transport uncertainty retains the stop/error and follows existing owner
+cleanup. LE source observation still refuses active layers and task-private
+views and does not authorize LE hooks, layers, redirects or checkpoint bindings.
+No OS task/allocation lifetime follows from this source recipe.
 
 The earlier local QEMU-DOS probe reached the original Ultimate Doom title and
 recorded bounded protected-source extents without seeded runtime placement.
 That result is separate from the private candidate's older DOSBox observations.
-The exact combined source, including the integrated tracker dependencies and
-complete ambiguity search, still needs its own native qualification. The
-source tests and earlier artifacts support their named contracts; they do not
-qualify continuing protected ownership, bridge execution, general gameplay or
-the broader DOS compatibility campaigns.
+The continuous source-revalidation and LE trace/search slice has a separate
+exact-candidate native qualification gate. Host checks and earlier artifacts support
+their named contracts; they do not qualify OS/task lifetime, bridge execution,
+general gameplay or the broader DOS compatibility campaigns.
 
 ## What a third architecture must provide
 

@@ -5,7 +5,7 @@ from functools import wraps
 CPU_OPERATIONS = frozenset({'cpu_delta_start','cpu_delta_status','cpu_delta_record',
                             'cpu_delta_rewind','cpu_delta_recover'})
 READ_ONLY = frozenset({'cpu_delta_status','status','registers','memory','memory_translation','code',
-    'dos_process_info','dos_source_admit','tracking_status','dos_task_observe','dos_task_context','dos_task_scheduler_observe',
+    'dos_process_info','dos_source_admit','dos_source_bind','dos_source_binding','dos_source_unbind','_le_source_refresh','tracking_status','dos_task_observe','dos_task_context','dos_task_scheduler_observe',
     'dos_task_memory','hooks','layer_stack','clock_observe','audio_observe',
     'display_observe','retrace_observe','input_state','keyboard_state',
     'rewind_status','timeline_status','timeline_image','controls','close',

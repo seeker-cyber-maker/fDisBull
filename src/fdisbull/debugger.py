@@ -1368,7 +1368,7 @@ class DebugWorkspace:
                    'debug-dos-task-scheduler-observe':'dos_task_scheduler_observe',
                    'debug-dos-task-scheduler-disable':'dos_task_scheduler_disable',
                    'debug-dos-task-preemption':'dos_task_preemption',
-                   'debug-status':'status','debug-tracking':'tracking_status','debug-dos-process':'dos_process_info','debug-dos-source-admit':'dos_source_admit','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-status':'status','debug-tracking':'tracking_status','debug-dos-process':'dos_process_info','debug-dos-source-admit':'dos_source_admit','debug-dos-source-bind':'dos_source_bind','debug-dos-source-binding':'dos_source_binding','debug-dos-source-unbind':'dos_source_unbind','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',

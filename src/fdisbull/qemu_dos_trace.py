@@ -4,6 +4,7 @@ A QEMU GDB step is an observed stop interval, not a retirement certificate.
 Each instruction is compared with the original module after DOS relocation and
 loader writes. The binding ends at its initial process epoch, allocation, mode
 or byte boundary; this adapter never guesses an overlay or a scheduled task.
+An explicitly bound embedded-LE view uses its own revalidated object namespace.
 """
 from __future__ import annotations
 
@@ -15,6 +16,24 @@ from .execution_trace import (ExecutionTraceError, MAX_BOUNDARY_BYTES,
                               MAX_TRACE_BYTES, _encoded, _needs_region,
                               validate_trace_until)
 from .qemu_machine import machine_trace_operation
+
+
+def _validate_source_view(source_view):
+    if source_view is not None and (type(source_view) is not str
+            or source_view not in ('initial-dos', 'embedded-le')):
+        raise ValueError('DOS trace source_view must be initial-dos or embedded-le')
+
+
+def _select_source_view(session, source_view):
+    """Select an installed handle without binding or observing native state."""
+    _validate_source_view(source_view)
+    if source_view == 'initial-dos':
+        return source_view
+    bound = getattr(session, '_le_source_bound', None)
+    installed = callable(bound) and bound()
+    if source_view == 'embedded-le' and not installed:
+        raise ValueError('Embedded LE tracing requires an explicitly bound source handle')
+    return 'embedded-le' if installed else 'initial-dos'
 
 
 def _clock_preflight(session, predicate):
@@ -156,11 +175,17 @@ def _document(session, metadata, events, policy, **fields):
     semantics = contract('qemu-dos')
     semantics['trace_completion'] = 'stopped instruction boundaries; architectural retirement unqualified'
     epoch = metadata['process']['capture_epoch']
+    recipe = metadata.get('protected_source_binding')
+    if recipe is not None:
+        from .qemu_dos_le_identity import CAPTURE_FORMAT, SOURCE_SCOPE
+        capture = dict(format=CAPTURE_FORMAT, capture_epoch=epoch, step_policy=policy,
+                       binding_id=recipe['binding_id'], source_scope=SOURCE_SCOPE)
+    else:
+        capture = dict(format='fdisbull-qemu-dos-capture-1', capture_epoch=epoch,
+                       step_policy=policy, source_scope='initial verified DOS module')
     return dict(run={'run': session.run_id}, version=session.version['id'],
                 mapping=metadata, events=events, capture_epoch=epoch,
-                native_process_capture=dict(format='fdisbull-qemu-dos-capture-1',
-                    capture_epoch=epoch, step_policy=policy,
-                    source_scope='initial verified DOS module'),
+                native_process_capture=capture,
                 observation_contract=semantics, **fields)
 
 
@@ -183,7 +208,7 @@ def _at_breakpoint(session, event):
 
 
 def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
-             regions=None, label='trial'):
+             regions=None, label='trial', source_view='initial-dos'):
     from .execution_events import evaluate_predicate, validate_regions
     from .qemu_step_policy import observe_step_policy
     from .qemu_trace_identity import load_trace_binding
@@ -194,21 +219,35 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     if session._input_pending():
         raise ValueError('Queued physical input requires run() before stepping or tracing')
     session._remaining()
+    le_binding = session._le_source_trace_binding() if source_view == 'embedded-le' else None
     clocked = _configuration(session.vm)['profile'] == 'virtual'
     _clock_preflight(session, until)
     started = time.monotonic()
     metadata = deepcopy(session.metadata)
+    # A prior LE trace or explicit handle must never relabel an initial-DOS
+    # capture. Only this collection's selected view installs its private header.
+    for field in ('protected_source_binding', 'protected_source_binding_artifact',
+                  'protected_source_binding_material'):
+        metadata.pop(field, None)
+    if le_binding is not None:
+        metadata['process'] = deepcopy(session._process)
+        metadata['protected_source_binding'] = deepcopy(le_binding['recipe'])
+        metadata['protected_source_binding_artifact'] = deepcopy(le_binding['binding_artifact'])
+        metadata['protected_source_binding_material'] = deepcopy(le_binding['material'])
     if clocked:
         # Full checkpoint import re-admits the native clock under a fresh
         # owner epoch. Preserve launch metadata and bind this capture to the
         # verified current admission, including its unchanged clock profile.
         metadata['machine_configuration']['native_clock_admission'] = deepcopy(session.vm.native_clock_admission)
-    binding = load_trace_binding(session.project, session.version['id'], metadata)
+    binding = le_binding if le_binding is not None else load_trace_binding(
+        session.project, session.version['id'], metadata)
     _require_active(session, binding)
     if regions is None:
-        regions = validate_regions([dict(id=region.name, space='project',
+        regions = validate_regions([] if le_binding is not None else [dict(id=region.name, space='project',
             start=region.start, end=region.start + len(region.data))
             for region in session.project.regions(session.version['id']) if region.data])
+    if le_binding is not None and any(region['space'] != 'linear' for region in regions):
+        raise ValueError('Embedded LE traces require explicitly declared linear regions')
     if until is not None and _needs_region(until) and not regions:
         raise ValueError('Region-change requires declared regions')
 
@@ -221,6 +260,15 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     events = []
     policy = None
     interrupted = None
+    def observe(sequence):
+        if le_binding is None:
+            return _observe(session, binding, sequence, clocked=clocked)
+        raw, stopped = session._le_source_observe(binding, sequence, clocked=clocked)
+        session._remaining()
+        if len(_encoded(raw)) > MAX_BOUNDARY_BYTES:
+            raise ValueError('Stopped boundary exceeds its 8 KiB observation budget')
+        return raw, stopped
+
     try:
         remote = session._stopped()
         policy = observe_step_policy(remote, timeout_ms=session._remaining())
@@ -230,7 +278,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
         header_bytes = len(_encoded(_document(session, metadata, [], policy)))
         if header_bytes + MAX_BOUNDARY_BYTES > MAX_TRACE_BYTES:
             raise ValueError('Source trace metadata exceeds its artifact budget')
-        raw, result['current_stop'] = _observe(session, binding, 1, clocked=clocked)
+        raw, result['current_stop'] = observe(1)
         events.append(raw)
         event_bytes = len(_encoded(raw)) + 1
         current = _compiled(session, metadata, raw, policy, regions)
@@ -243,6 +291,9 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
                     kind='armed_execution_breakpoint_boundary', breakpoint_ids=points))
                 break
             qualified = events[-1]['source_qualification']['qualified']
+            if le_binding is not None and not qualified:
+                result['outcome'] = 'source_boundary'
+                break
             if until is not None:
                 evaluation = evaluate_predicate(until, current, initial=initial, previous=previous)
                 result['evaluation'] = evaluation
@@ -272,8 +323,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
                               foreign_stop=deepcopy(native))
                 break
             result['steps'] += 1
-            following, result['current_stop'] = _observe(session, binding, len(events) + 1,
-                                                         clocked=clocked)
+            following, result['current_stop'] = observe(len(events) + 1)
             if count is not None and result['steps'] == count:
                 # trace(count=N) retains its N attempts / N pre-step snapshots
                 # interface; inspect its final endpoint without adding N+1.
@@ -355,24 +405,30 @@ class QemuDOSSourceTraceMixin:
         _clock_preflight(self, until)
 
     @machine_trace_operation
-    def trace(self, name='machine-trace.json', *, count=128, timeout_ms=10000, bits=None):
+    def trace(self, name='machine-trace.json', *, count=128, timeout_ms=10000, bits=None,
+              source_view=None):
         from .external_files import _file_name
         _file_name(name)
         if type(count) is not int or not 1 <= count <= 10000:
             raise ValueError('Machine trace count must be 1..10000')
         if type(timeout_ms) is not int or not 1 <= timeout_ms <= 600000:
             raise ValueError('Machine trace timeout must be 1..600000 ms')
-        if bits is not None and (type(bits) is not int or bits != 16):
-            raise ValueError('Source-bound DOS traces require observed 16-bit real mode')
+        source_view = _select_source_view(self, source_view)
+        expected_bits = 32 if source_view == 'embedded-le' else 16
+        if bits is not None and (type(bits) is not int or bits != expected_bits):
+            if source_view == 'initial-dos':
+                raise ValueError('Source-bound DOS traces require observed 16-bit real mode')
+            raise ValueError('Embedded LE source traces require observed 32-bit protected mode')
         return _collect(self, name=name, count=count, max_steps=count,
-                        timeout_ms=timeout_ms)['trace']
+                        timeout_ms=timeout_ms, source_view=source_view)['trace']
 
     @machine_trace_operation
     def trace_until(self, until, *, regions=None, max_steps=1000, timeout_ms=10000,
-                    name='trace-until.json', action=None, label='trial'):
+                    name='trace-until.json', action=None, label='trial', source_view=None):
         until, regions, action = validate_trace_until(until, regions=regions,
             max_steps=max_steps, timeout_ms=timeout_ms, name=name, action=action, label=label)
         if action is not None:
             raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
+        source_view = _select_source_view(self, source_view)
         return _collect(self, name=name, timeout_ms=timeout_ms, max_steps=max_steps,
-                        until=until, regions=regions, label=label)
+                        until=until, regions=regions, label=label, source_view=source_view)
