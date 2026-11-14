@@ -78,6 +78,44 @@ def test_clone_binds_clean_exact_commit_and_generated_outputs(tmp_path):
         runner.source_identity(dest, generated_outputs=True)
 
 
+@pytest.mark.parametrize('driver', ['local-linux.py', 'boat-linux.py'])
+def test_detached_source_clones_exact_commit_and_rejects_drift(tmp_path, driver):
+    spec = importlib.util.spec_from_file_location('detached_ci_driver', ROOT / 'scripts/ci' / driver)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = tmp_path / 'source'
+    source.mkdir()
+    git(source, 'init', '-b', 'fixture')
+    git(source, 'config', 'user.name', 'CI fixture')
+    git(source, 'config', 'user.email', 'fixture@example.invalid')
+    (source / 'tracked.txt').write_text('first\n')
+    git(source, 'add', 'tracked.txt')
+    git(source, 'commit', '-m', 'first')
+    first = git(source, 'rev-parse', 'HEAD')
+    (source / 'tracked.txt').write_text('second\n')
+    git(source, 'commit', '-am', 'second')
+    second = git(source, 'rev-parse', 'HEAD')
+    git(source, 'checkout', '--detach', first)
+    assert module.source_identity(source) == (first, None)
+    dest = tmp_path / 'detached-clone'
+    module.clone_source(source, dest, first, None)
+    assert module.source_identity(dest) == (first, None)
+    assert git(dest, 'rev-parse', '--is-shallow-repository') == 'true'
+    assert (dest / 'tracked.txt').read_text() == 'first\n'
+    (dest / 'generated-output').write_text('generated')
+    assert module.source_identity(dest, generated_outputs=True) == (first, None)
+    with pytest.raises(ValueError, match='clean'):
+        module.source_identity(dest)
+    with pytest.raises(ValueError, match='Source moved'):
+        module.clone_source(source, tmp_path / 'wrong-sha', second, None)
+    git(source, 'checkout', '--detach', second)
+    with pytest.raises(ValueError, match='Source moved'):
+        module.clone_source(source, tmp_path / 'moved-source', first, None)
+    (source / 'tracked.txt').write_text('modified')
+    with pytest.raises(ValueError, match='clean'):
+        module.source_identity(source, generated_outputs=True)
+
+
 def test_collect_retains_identical_outputs_and_rejects_conflicts(tmp_path):
     work, output = tmp_path / 'work', tmp_path / 'output'
     (work / 'dist').mkdir(parents=True)
