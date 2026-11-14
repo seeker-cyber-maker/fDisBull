@@ -2,7 +2,7 @@
 from hashlib import sha256
 from pathlib import Path
 
-from fdisbull.udc_memory_win16_shell import inspect_windows_ne
+from fdisbull.windows_ne import inspect_windows_ne
 
 SOURCE = Path(__file__).with_name('offline_win16_oracle.c')
 STATE = bytes.fromhex('4644425731075354415445')
