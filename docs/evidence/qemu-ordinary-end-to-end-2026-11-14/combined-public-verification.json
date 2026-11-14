@@ -121,7 +121,8 @@
     "original_EXE_WAD_hashes_unchanged": true,
     "controller_guest_group_absent": true,
     "failure_database_WAL_SHM_retained_private": true,
-    "probe01_controller_parameter_failure_retained_separately": true
+    "probe01_controller_parameter_failure_retained_separately": true,
+    "arguments": "-nosound -nomouse"
   },
   "preservation": {
     "original_executables_untouched": true,
