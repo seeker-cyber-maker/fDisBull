@@ -280,3 +280,16 @@ budget stop or unsupported operation as such, with the next useful action.
 For a human-readable review of established findings, use the companion
 `write-gamefaqs-guide` skill. Report what was actually observed, what remains a
 candidate, and which question or capability is now available.
+
+## Deeper recovery and tooling references
+
+The existing `references/recovery-research.md` adds an initial documentation pass
+and provisional Z blueprints. For a consequential worker handoff,
+`references/methodology.md` separates role, supplied context and independent
+evidence; these optional deeper procedures are not a checklist for routine
+commands. It also covers bounded diagnostic entries when ordinary progression
+is unavailable. The existing sweding reference describes qualified equivalence
+across chosen backings. [Friction reports](references/friction-to-feature.md) are
+opt-in QA records; they do not add a mandatory approval gate or override the user's
+existing task authorization. DOS launch arguments and explicit read-only CD media
+are covered by the existing `references/formats-and-media.md` reference.

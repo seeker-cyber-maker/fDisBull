@@ -89,3 +89,12 @@ source/archive identities to the receipt first. Tool or host differences require
 a new receipt; do not assume identical native module hashes across toolchains.
 No whole-repository test suite or new native-game investigation was run for this
 principles-only change.
+
+## Preserved executable-Rosetta design material
+
+The historical contribution `cbeb6ce6` adds [agent-first topology](AGENT_FIRST_TOPOLOGY.md),
+[pipeline map](PIPELINE_MAP.md), [research and verification](RESEARCH_AND_VERIFICATION.md),
+[semantic ports and services](SEMANTIC_PORTS_AND_SERVICES.md), and
+[labels/orchestration boundaries](LABELS_ORCHESTRATION_AND_ROUNDTRIPS.md).
+Its component witness script and recorded result qualify their authored model only;
+they do not establish current native execution or a general compiler.

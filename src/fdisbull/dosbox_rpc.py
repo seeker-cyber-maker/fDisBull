@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 import os
 from pathlib import Path
 import select
@@ -10,16 +11,26 @@ import sys
 import tempfile
 import threading
 import time
+import weakref
 
 
 class DebuggerError(ValueError):
     """A debugger operation failed; uncertain requests are never replayed."""
 
 
+class DebuggerShutdownError(DebuggerError):
+    """Terminal ownership was released without a successful shutdown certificate."""
+    def __init__(self, receipt):
+        self.receipt = deepcopy(receipt)
+        reason = receipt.get('error') or receipt.get('reason') or 'guest stop or process cleanup incomplete'
+        super().__init__('Debugger shutdown interrupted: ' + reason)
+
+
 class DOSBoxRPC:
     limit = 8 * 1024 * 1024
 
-    def __init__(self, executable, game_dir, *, window=False, on_spawn=None):
+    def __init__(self, executable, game_dir, *, window=False, on_spawn=None,
+                 launch_arguments=None, cd_image=None):
         if type(window) is not bool:
             raise ValueError('window must be boolean')
         if window:
@@ -36,17 +47,31 @@ class DOSBoxRPC:
             raise DebuggerError('Expected an executable DOSBox agent and a game directory')
         if any(c in str(executable) + str(game_dir) for c in '\r\n\0'):
             raise DebuggerError('Paths cannot contain configuration line breaks or NUL')
+        from .dos_launch_profile import prepare_launch_options
+        self.launch_profile = prepare_launch_options(launch_arguments, cd_image)
         self.process = None
         self.reader = self.writer = None
         self.sequence = 0
         self.lock = threading.Lock()
         self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-dosbox-')
+        temp_finalizer = getattr(self.temporary, '_finalizer', None)
+        if temp_finalizer is not None:
+            temp_finalizer.detach()
+        self._cleanup_state = {
+            'reader': None,
+            'writer': None,
+            'process': None,
+            'temporary': self.temporary,
+        }
+        self._finalizer = weakref.finalize(self, self._finalize_unclosed, self._cleanup_state)
         directory = Path(self.temporary.name)
         descriptors = []
         try:
             child_read, self.writer = os.pipe()
+            self._cleanup_state['writer'] = self.writer
             descriptors.append(child_read)
             self.reader, child_write = os.pipe()
+            self._cleanup_state['reader'] = self.reader
             descriptors.append(child_write)
             config = directory / 'agent.env'
             config.write_text(
@@ -57,22 +82,36 @@ class DOSBoxRPC:
             config.chmod(0o600)
             environment = {k:v for k,v in os.environ.items() if not k.upper().startswith('DOSBOX_')}
             environment['XDG_CONFIG_HOME'] = str(directory / 'config')
+            # Owned sessions must never block on a host quit-confirmation dialog.
             arguments = [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
+                         '-set', 'dosbox quit warning=false',
                          '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
+            if self.launch_profile['cd'] is not None:
+                arguments.extend(['-c', self.launch_profile['cd']['startup_command']])
             if window:
                 arguments.append('-agent-window')
             else:
-                # Owned headless sessions must never wait for a host quit dialog.
-                arguments.extend(['-set', 'dosbox quit warning=false'])
-                # MIDI can bypass SDL's audio driver on macOS. Disable both
-                # host output paths while retaining the emulated sound devices.
+                # Default no-pop-ups mode: force dummy SDL video/audio and software
+                # surface rendering so neither patched nor stock DOSBox-X can open a
+                # desktop window, menu bar, cursor grab, or audio output device.
+                environment['SDL_VIDEODRIVER'] = 'dummy'
                 environment['SDL_AUDIODRIVER'] = 'dummy'
-                arguments.extend(['-set', 'mixer nosound=true', '-set', 'midi mididevice=none'])
+                environment['SDL_RENDER_DRIVER'] = 'software'
+                arguments.extend([
+                    '--nogui', '--nomenu', '--noconsole', '--fastlaunch',
+                    '-set', 'sdl videodriver=dummy',
+                    '-set', 'sdl output=surface',
+                    '-set', 'sdl showmenu=false',
+                    '-set', 'sdl usesystemcursor=false',
+                    '-set', 'mixer nosound=true',
+                    '-set', 'midi mididevice=none',
+                ])
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
                     arguments,
                     cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(child_read,child_write))
+                self._cleanup_state['process'] = self.process
             if on_spawn is not None:on_spawn(self.process)
             os.close(child_read); descriptors.remove(child_read)
             os.close(child_write); descriptors.remove(child_write)
@@ -96,6 +135,9 @@ class DOSBoxRPC:
             raise
 
     def call(self, method, params=None, timeout_ms=15000):
+        if method == 'session.start' and self.launch_profile['explicit']:
+            from .dos_launch_profile import bind_start
+            params = bind_start(params, self.launch_profile)
         deadline = time.monotonic() + timeout_ms / 1000
         if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
             raise DebuggerError('Timed out waiting for RPC channel ownership')
@@ -126,7 +168,15 @@ class DOSBoxRPC:
                 except (BlockingIOError,InterruptedError):
                     continue
                 if not chunk:
-                    raise OSError('Emulator closed the RPC channel')
+                    detail = ''
+                    try:
+                        with (Path(self.temporary.name) / 'emulator.log').open('rb') as log:
+                            size = log.seek(0, 2)
+                            log.seek(max(0, size - 4000))
+                            detail = log.read(4000).decode('utf-8', errors='replace').strip()
+                    except (AttributeError, OSError):
+                        pass
+                    raise OSError('Emulator closed the RPC channel' + (': ' + detail if detail else ''))
                 response.extend(chunk)
                 if len(response) > self.limit:
                     raise OSError('RPC response exceeds message budget')
@@ -161,12 +211,52 @@ class DOSBoxRPC:
             except InterruptedError:
                 continue
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    @staticmethod
+    def _finalize_unclosed(state):
+        for name in ('reader', 'writer'):
+            fd = state.get(name)
+            if fd is not None:
+                state[name] = None
+                try:
+                    os.close(fd)
+                except BaseException:
+                    pass
+        process = state.get('process')
+        if process is not None:
+            state['process'] = None
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                process.wait(timeout=2)
+            except BaseException:
+                pass
+        temporary = state.get('temporary')
+        if temporary is not None:
+            state['temporary'] = None
+            try:
+                temporary.cleanup()
+            except BaseException:
+                pass
+
     def _close_pipes(self):
         failure = None
+        state = getattr(self, '_cleanup_state', None)
         for name in ('reader','writer'):
             fd = getattr(self,name,None)
             if fd is not None:
                 setattr(self,name,None)
+                if state is not None:
+                    state[name] = None
                 try:
                     os.close(fd)
                 except BaseException as error:
@@ -176,7 +266,13 @@ class DOSBoxRPC:
             raise failure
 
     def close(self):
+        if (self.temporary is None and getattr(self, 'close_evidence', None) is not None
+                and (self.process is None or self.close_evidence.get('process_reaped') is True)):
+            return deepcopy(self.close_evidence)
+        finalizer = getattr(self, '_finalizer', None)
+        state = getattr(self, '_cleanup_state', None)
         failure = None
+        signals = []
         try:
             self._close_pipes()
         except BaseException as error:
@@ -184,16 +280,40 @@ class DOSBoxRPC:
         try:
             if self.process is not None:
                 if self.process.poll() is None:
+                    signals.append('terminate')
                     self.process.terminate()
                     try:
                         self.process.wait(timeout=2)
                     except subprocess.TimeoutExpired:
+                        signals.append('kill')
                         self.process.kill()
                 self.process.wait(timeout=2)
+                if state is not None:
+                    state['process'] = None
         except BaseException as error:
             if failure is None:
                 failure = error
         finally:
+            evidence = {'process_returncode': None, 'process_reaped': None, 'signals': signals}
+            try:
+                if self.process is not None:
+                    evidence['process_returncode'] = self.process.poll()
+                    evidence['process_reaped'] = evidence['process_returncode'] is not None
+            except Exception as error:
+                evidence['process_status_error'] = str(error)
+            directory = getattr(self.temporary, 'name', None)
+            if directory is not None:
+                try:
+                    with (Path(directory) / 'emulator.log').open('rb') as log:
+                        size = log.seek(0, 2)
+                        log.seek(max(0, size - 8192))
+                        raw = log.read(8192)
+                        encoded = raw.decode('utf-8', errors='replace').encode('utf-8')
+                        tail = encoded[-8192:].decode('utf-8', errors='ignore')
+                    evidence['native_log'] = {'size': size, 'tail': tail, 'truncated': size > 8192}
+                except OSError as error:
+                    evidence['native_log'] = {'error': str(error)}
+            self.close_evidence = evidence
             if self.temporary is not None:
                 try:
                     self.temporary.cleanup()
@@ -202,5 +322,10 @@ class DOSBoxRPC:
                         failure = error
                 else:
                     self.temporary = None
+                    if state is not None:
+                        state['temporary'] = None
         if failure is not None:
             raise failure
+        if finalizer is not None:
+            finalizer.detach()
+        return deepcopy(self.close_evidence)

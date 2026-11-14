@@ -1,0 +1,224 @@
+{
+  "format": "fdisbull-recovered-tool-source-integration-1",
+  "base_commit": "9c682c8480771718f7e4987cec8d92d116681bc0",
+  "date": "2026-11-14",
+  "origins": [
+    {
+      "origin_commit": "1e3c1ca8e8610fe435df9a509ec849134896ee28",
+      "capability": "DOSBox startup EOF diagnostics",
+      "disposition": "Ported bounded4000-byte log tail without reading the entire native log; owned-process cleanup remains explicit.",
+      "checks": [
+        "tests/test_dosbox_window.py"
+      ]
+    },
+    {
+      "origin_commit": "1e837a204539e2b47b3a63ea1ac60467b0388430",
+      "capability": "DOSBox no-popup and finalizer ownership",
+      "disposition": "Ported default dummy video/audio/software headless settings, no quit dialog, context cleanup and owner-only finalizer; retain current protocol/callback behavior.",
+      "checks": [
+        "tests/test_dosbox_window.py"
+      ]
+    },
+    {
+      "origin_commit": "e2f6b2d39aade165e82c9d433e77ec4602d1792c",
+      "capability": "Truthful shutdown and corrupt-MCB containment",
+      "disposition": "Ported e445073f host receipt/Project cleanup plus native int(7) guards composed on current stable/layers source; no native build/run.",
+      "checks": [
+        "tests/test_shutdown_receipts.py",
+        "tests/test_dosbox_cleanup_native_contract.py"
+      ]
+    },
+    {
+      "origin_commit": "b3f9deade7a0305a6dd820b7161078f1bf7e6917",
+      "capability": "Drive source backup/sync",
+      "disposition": "Included scripts, authored tests, source-only Swift watcher and historical operational documentation; no installation, watcher or Drive network operation.",
+      "checks": [
+        "tests/test_drive_library_sync.py",
+        "tests/test_fdb_backup.py"
+      ]
+    },
+    {
+      "origin_commit": "bc1bcee6d78186236b411a5b5d632a57ae4216da",
+      "capability": "Bounded Windows route fuzzing",
+      "disposition": "Ported pure campaign model, native-adapter source, CLI command and experimental capability. Tests use fake adapters; no Wine/VM.",
+      "checks": [
+        "tests/test_debug_fuzz.py",
+        "tests/test_debug_fuzz_native.py"
+      ]
+    },
+    {
+      "origin_commit": "d2d787176b414b7d8cacdd3d76ae482f2039cb3f",
+      "capability": "Opt-in agent-friction records",
+      "disposition": "Ported module, authored tests, indexed guide, pilot and roadmap; subjective notes are not proof and this does not add mandatory approval ceremony.",
+      "checks": [
+        "tests/test_agent_friction.py"
+      ]
+    },
+    {
+      "origin_commit": "d87ae33e75063b4e9485cde830c344cf1773d2df",
+      "capability": "Authored backend-loss probe and recovery limits",
+      "disposition": "Included source/limits; adapted expected killed-owner cleanup to retain interrupted receipt, removed fixed disk-reserve stops, preserved plan-by-default and bounded explicit execute path. Actual native probe not run.",
+      "checks": [
+        "tests/test_native_crash_probe_source.py"
+      ]
+    },
+    {
+      "origin_commit": "e795a9ff1e2de774eea8966f3131572b3a1d5370",
+      "capability": "RTLink and explicit DOS launch",
+      "disposition": "Ported standalone bounded RTLink parser/export/disassembly, DOS launcher and console entry; narrow CUE one/two-digit TRACK/INDEX normalization and INS routing. Canonical loader unchanged.",
+      "checks": [
+        "tests/test_rtlink.py",
+        "tests/test_dos_launch_profile.py",
+        "tests/test_dos_tools_delivery.py"
+      ]
+    },
+    {
+      "origin_commit": "09ab554ce0d27a0e755707be2f2ed9951655de53",
+      "capability": "Sweding contract",
+      "disposition": "Included missing design document/authored example test; existing installed guide and runtime IR remain authoritative. No universal compiler introduced.",
+      "checks": [
+        "tests/test_sweding_examples.py"
+      ]
+    },
+    {
+      "origin_commit": "22903caf22cb380be0fef6e1ae2481c9722e0424",
+      "capability": "Worker continuity and context/evidence scope",
+      "disposition": "Ported optional bounded-question/context-policy/evidence-boundary methodology. Current cheap exploration defaults/router retained.",
+      "checks": [
+        "tests/test_source_reconstruction_skill.py"
+      ]
+    },
+    {
+      "origin_commit": "46f95e96f43ae986565d202ca698590995efe79a",
+      "capability": "Scoped absence claims",
+      "disposition": "Ported applicable-alternative discriminators for stated absence scope, without turning ordinary work into a checklist.",
+      "checks": [
+        "tests/test_source_reconstruction_skill.py"
+      ]
+    },
+    {
+      "origin_commit": "464bdc5c1c2445a47f2340522081796057064677",
+      "capability": "Factorio/Python media boundary",
+      "disposition": "Preserved dated historical report with explicit original-source/qualification ceiling; no new runtime feature.",
+      "checks": "historical documentation review"
+    },
+    {
+      "origin_commit": "5d9118ae6c967439c935471c1ca4e992ce2fcdfb",
+      "capability": "DinoPark travel/purchase feedback",
+      "disposition": "Preserved historical save/travel/Store/DinoMart observations with original scopes; no new game run.",
+      "checks": "historical documentation review"
+    },
+    {
+      "origin_commit": "641b7e950e000422a9f740757471498f54fffeb2",
+      "capability": "Bounded diagnostic recovery",
+      "disposition": "Included diagnostic study and scoped preparation/caller-obligation methodology; no new mutation API or execution authorization.",
+      "checks": [
+        "tests/test_source_reconstruction_skill.py"
+      ]
+    },
+    {
+      "origin_commit": "874f0a8b760a272840f9d36a24e3edeede904182",
+      "capability": "Checkpoint public cold-reopen evidence",
+      "disposition": "Preserved sanitized README/hash/count receipt bound to its daab62e5 runtime; no FDB/checkpoint/frame bytes or borrowed current qualification.",
+      "checks": "historical receipt sanitation review"
+    },
+    {
+      "origin_commit": "b57f51d5e967e1f5ed1973271433d86300710574",
+      "capability": "XCOM/TFTD entity-state synthesis",
+      "disposition": "Included attributed dated load/adoption/redraw/FSM methodology report, no new experiment claim.",
+      "checks": "historical documentation review"
+    },
+    {
+      "origin_commit": "ae39d078595b7557e090b56a036853680374f1e5",
+      "capability": "Venue-neutral UIL and semantic input proposal",
+      "disposition": "Ported world-IR presentation/intent boundaries; retained proposal status and corrected historical no-keydown wording relative to current QEMU physical leases.",
+      "checks": "current/historical contract comparison"
+    },
+    {
+      "origin_commit": "cbeb6ce608acf4d448f28c95bb805cd8ed26e2ea",
+      "capability": "Executable Rosetta RFC",
+      "disposition": "Included topology/pipeline/service docs and authored illustrative witness source/result; preserve non-native/nonproduction scope.",
+      "checks": "RFC and historical witness sanitation review"
+    },
+    {
+      "origin_commit": "da5f55a0e4c93d81d523fa81191c76346d93e775",
+      "capability": "Research-led recovery and guide lineage",
+      "disposition": "Included initial documentation/provisional Z blueprint sections and historical FF7 comparison; router retains current recipes.",
+      "checks": [
+        "tests/test_source_reconstruction_skill.py",
+        "tests/test_next_step_recipes.py"
+      ]
+    },
+    {
+      "origin_commit": "f8a70aade905310c533cef196cca4551e6e559d7",
+      "capability": "Per-module UDC/provenance layers",
+      "disposition": "Ported missing UDC_MODULE_LAYERS design only; did not transplant stale0.27 README/provider/version files or byte-retaining research archives.",
+      "checks": "historical design/current-policy review"
+    },
+    {
+      "origin_commit": "263cfcca8f967fda037de8da9f7e082b6d8888d1",
+      "capability": "CI policy semantic conflict",
+      "disposition": "Tip zlib addition is already represented in current native prerequisites. Branch ancestors a896955c/1b0a05e9 concern deliberate web/API after skip-marked commit; no active workflow edited. n8n owns be68826e reconciliation separately.",
+      "checks": "CI-owner disposition; no dispatch/polling"
+    },
+    {
+      "origin_commit": "35f7dffb0df031760d9b17b61f4b81e665fc1aa2",
+      "capability": "Generic DOSBox stopped-state tracking",
+      "disposition": "Ported RPC mutation invalidation, stopped/exit observation, checkpoint restore/owner close hooks and status. Startup attachment requires observed lifecycle.dos_guest_exit. Current QEMU tracker/provider retained.",
+      "checks": [
+        "tests/test_dosbox_runtime_tracking_hooks.py"
+      ]
+    },
+    {
+      "origin_commit": "b875722cfd832624cb57ab41b6f725de468aab57",
+      "capability": "Containment-aware generic observer port",
+      "disposition": "Reuses current containment-aware tracker through generic DOSBox seams; no old schema10/loader overwrite. Root owns mixed-LE schema integration.",
+      "checks": [
+        "tests/test_runtime_tracking.py",
+        "tests/test_runtime_tracking_containment.py",
+        "tests/test_runtime_tracking_source_errors.py"
+      ]
+    }
+  ],
+  "dosbox_patch_source_checks": [
+    {
+      "profile": "stable",
+      "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "patch_sha256": "67c78a61cd3aa576fde0728edba341053717f6a3037f294d2c05e7aaf71a8bdc",
+      "verified_source_files": 38,
+      "git_apply_check": true,
+      "source_manifest_readback": true,
+      "compiled": false,
+      "native_run": false
+    },
+    {
+      "profile": "layers/",
+      "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "patch_sha256": "0521dea481d1da97a34a869e7897b90bbe52c9d80e085bfa978dc381159f3bab",
+      "verified_source_files": 39,
+      "git_apply_check": true,
+      "source_manifest_readback": true,
+      "compiled": false,
+      "native_run": false
+    }
+  ],
+  "no_model_gpu_vm_native_workload_executed": true,
+  "no_service_installed_or_started": true,
+  "no_provider_CI_dispatch_or_polling": true,
+  "known_combined_gate": {
+    "check": "tests/test_capabilities.py::test_cli_and_projectless_json_agree",
+    "status": "open integration wire-size budget",
+    "observed_bytes": 33743,
+    "bound_bytes": 32768,
+    "owner": "root final combined capability catalog; behavior checks otherwise pass"
+  },
+  "qualification": "source integration and pure/source checks only; exact candidate native/package/offline acceptance remains n8n-owned",
+  "focused_validation": {
+    "command_scope": "Pure source, authored adapter, parser, lifecycle, skill, Drive and tracking regression checks with PYTHONPATH=src",
+    "passed": 336,
+    "skipped": 6,
+    "native_emulator_started": false,
+    "compiled_backend": false,
+    "notes": "The selected native-placeholder tests skip without explicit native inputs; separate patch apply/hash checks cover source identity only."
+  }
+}

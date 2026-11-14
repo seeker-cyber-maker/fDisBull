@@ -19,6 +19,7 @@ AGENT_SKILL_GUIDES = {
     "references/next-steps.md": "Turn a question into a probe: executable static/data recipes, result branches and failure recovery",
     "references/analysis-types.md": "Use structural types and static accesses with explicit file/runtime address and RAM/ROM boundaries",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
+    "references/friction-to-feature.md": "Record optional reproducible QA friction and scope choices without changing tools or approvals",
     "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
     "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
     "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
@@ -1825,6 +1826,8 @@ def parser():
         choices=["physical", "assisted", "story"],
         help="Choose ordinary movement, qualified placement or source-identified proximity waivers",
     )
+    c = sub.add_parser("fuzz", help="Run a bounded source-bound Windows route campaign from a private configuration")
+    c.add_argument("configuration", help="Private fdisbull-native-fuzz-1 JSON configuration")
     c = sub.add_parser(
         "zork",
         help="Bounded original-story JSON-lines harness with an explicitly selected Jericho Python",
@@ -4015,6 +4018,16 @@ def _dispatch(args):
             return 0
         except (ValueError, OSError) as error:
             emit({"ok": False, "error": str(error)})
+            return 1
+    if command == "fuzz":
+        from .debug_fuzz_native import run_native_fuzz
+        try:
+            result = run_native_fuzz(args["configuration"])
+            emit(result)
+            return 0 if result["report"]["stop_reason"] == "completed" else 1
+        except (ValueError, OSError, RuntimeError, sqlite3.Error) as error:
+            reason = str(error)
+            emit({"ok": False, "error": reason if reason.startswith("native_fuzz_") else "native_fuzz_refused"})
             return 1
     if command == "serve":
         return serve(args["project"])
