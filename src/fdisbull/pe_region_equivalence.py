@@ -157,7 +157,7 @@ def _arithmetic_flags(z, op, a, b, result, flags, fresh):
 
 
 def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline,
-             *, execution_code=None):
+             *, execution_code=None, external_handler=None):
     regs, flags, memory = dict(initial), initial_flags, dict(initial_memory)
     domains, accesses, returns = [], [], []
     safety, alias_work = [], 0
@@ -165,6 +165,7 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
     code_cells = set(execution_code or {})
     code_versions = []
     fetch_checks = 0
+    terminated = False
     runs = []
     for address in sorted(memory):
         if runs and runs[-1][1] == address:
@@ -188,12 +189,23 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             raise ValueError('Captured entry contradicts fixed-memory assumptions')
     substitutions = [(initial[n], z.BitVecVal(v, bits)) for n, v in concrete.items()]
     substitutions += [(initial_flags, z.BitVecVal(concrete_flags, 32))]
-    substitutions += [(initial_memory[a], z.BitVecVal(v, 8)) for a, v in snapshots[0].items()]
+    substitutions += [(initial_memory[a], z.BitVecVal(v, 8)) for a, v in snapshots[0].items()
+                      if not z.is_bv_value(initial_memory[a])]
+    observed_cache = {}
     def observed(expression):
+        if z.is_bv_value(expression):
+            return expression.as_long()
+        key = expression.get_id()
+        if key in observed_cache:
+            return observed_cache[key][1]
         result = z.simplify(z.substitute(expression, *substitutions))
         if not z.is_bv_value(result):
             raise ValueError('Sampled expression is not concrete')
-        return result.as_long()
+        value = result.as_long()
+        # Keep the AST alive so its context-local ID cannot be reused. Sample
+        # bindings are immutable; external handlers only append fresh symbols.
+        observed_cache[key] = (expression, value)
+        return value
     def code_image():
         return {hex(a): observed(memory[a]) for a in sorted(code_cells)}
     if execution_code is not None:
@@ -312,6 +324,10 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 code_versions.append({'after_event_index': index, 'bytes': image})
         def read(operand):
             if operand.type == X.X86_OP_REG:
+                if bits == 64 and operand.size == 4:
+                    name = _GPR32_TO_64.get(ins.reg_name(operand.reg))
+                    if name is not None:
+                        return z.Extract(31, 0, regs[name])
                 return regs[reg_name(operand)]
             if operand.type == X.X86_OP_IMM:
                 return z.BitVecVal(operand.imm % (1 << (operand.size * 8)), operand.size * 8)
@@ -319,7 +335,21 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 a, width = location(operand)
                 return read_memory(a, width)
             raise ValueError(f'Event {index}: unknown operand')
-        if raw == b'\xc3':
+        if external_handler is not None and ins.mnemonic == 'call' and raw[0] != 0xe8:
+            outcome = external_handler(index, event, following, {
+                'instruction': ins, 'raw': raw, 'sequential': sequential,
+                'registers': regs, 'flags': flags, 'memory': memory,
+                'initial': initial, 'domains': domains, 'call_stack': call_stack,
+                'observed': observed, 'sample_substitutions': substitutions,
+                'memory_location': memory_location, 'location': location,
+                'read_memory': read_memory, 'write_memory': write_memory,
+                'obligations': obligations})
+            flags = outcome['flags']
+            undefined = 0
+            terminated = outcome.get('terminated', False)
+            if terminated and index != len(events) - 2:
+                raise ValueError('A terminating external call must be the final completed instruction')
+        elif raw == b'\xc3':
             stack = 'rsp' if bits == 64 else 'esp'
             stack_address, width = memory_location(regs[stack], bits // 8)
             target = read_memory(stack_address, width)
@@ -335,6 +365,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                     valid = z.And(stack_address == frame['stack_address'], target == frame['return_address'],
                                   target == next_address)
                 else:
+                    if external_handler is not None:
+                        raise ValueError('Module entry returned before its terminating external call')
                     if index != len(events) - 2:
                         raise ValueError(f'Event {index}: outer RET is not the final completed instruction')
                     valid = z.And(stack_address == initial['rsp'], target == next_address)
@@ -376,6 +408,20 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             operands = ins.operands
             if raw == b'\x90':
                 pass
+            elif ins.mnemonic == 'lea' and len(operands) == 2:
+                dest, src = operands
+                if src.type != X.X86_OP_MEM:
+                    raise ValueError(f'Event {index}: unsupported LEA operand')
+                name = reg_name(dest)
+                value = z.BitVecVal(src.mem.disp % (1 << bits), bits)
+                for register, scale in ((src.mem.base, 1), (src.mem.index, src.mem.scale)):
+                    if register:
+                        source = ins.reg_name(register)
+                        term = z.BitVecVal(sequential, bits) if source in ('rip', 'eip') else regs.get(source)
+                        if term is None:
+                            raise ValueError(f'Event {index}: unknown LEA address register')
+                        value = value + term * scale
+                regs[name] = value
             elif ins.mnemonic in ('mov', 'movabs') and len(operands) == 2:
                 dest, src = operands
                 if bits == 64 and dest.type == X.X86_OP_REG and dest.size == 4:
@@ -434,14 +480,16 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
     if execution_code is not None:
         if call_stack:
             raise ValueError('Internal CALL stack is not balanced at the caller boundary')
-        check_fetch(events[-1], len(events) - 1)
+        if not terminated:
+            check_fetch(events[-1], len(events) - 1)
     if any(observed(memory[a]) != v for a, v in snapshots[1].items()):
         raise ValueError('Exit RAM snapshot contradicts modeled stores')
     return {'registers': regs, 'flags': flags, 'memory': memory,
             'domain': z.And(*domains), 'accesses': accesses, 'safety': safety,
             'alias_byte_cell_operations': alias_work, 'returns': returns,
             'calls': calls, 'proof_obligations': obligations, 'code_writes': code_writes,
-            'code_versions': code_versions, 'fetch_checks': fetch_checks}
+            'code_versions': code_versions, 'fetch_checks': fetch_checks,
+            'terminated': terminated}
 
 
 def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspondence=None,

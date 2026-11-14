@@ -181,6 +181,9 @@ METHODS = {
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
     "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
     "debug-compare-runtime-functions": "Recover complete returning PE64 path families; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms,execution_mode]",
+    "debug-compare-runtime-modules": "Recover PE entry through observed ExitProcess under imported-call contracts; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
+    "debug-import-call": "Observe one supported PE64 import CALL through return or actual exit; run,[name,memory_ranges,code_ranges,timeout_ms]",
+    "debug-capture-module-entry": "Capture original PE data/IAT at actual post-loader entry; run,data_ranges,[name]",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
@@ -1032,6 +1035,7 @@ def invoke(method, params, debugger=None):
         "debug-trace-view",
         "debug-compare-runtime-code",
         "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
     ):
         if debugger is None:
             raise ValueError(
@@ -1112,6 +1116,7 @@ def invoke(method, params, debugger=None):
             "debug-trace-view",
             "debug-compare-runtime-code",
             "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -2405,6 +2410,7 @@ def parser():
         "debug-trace-view",
         "debug-compare-runtime-code",
         "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2418,15 +2424,17 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
-        elif name == "debug-compare-runtime-functions":
+        elif name in ("debug-compare-runtime-functions", "debug-compare-runtime-modules"):
             c.add_argument("baseline_version", type=int)
             c.add_argument("layer_version", type=int)
             c.add_argument("--baseline-paths", type=json.loads, required=True)
             c.add_argument("--layer-paths", type=json.loads, required=True)
             c.add_argument("--contract", type=json.loads, required=True)
-            c.add_argument("--timeout-ms", type=int, default=5000)
-            c.add_argument("--execution-mode", choices=("stable_leaf", "single_threaded_calls_smc"),
-                           default="stable_leaf")
+            c.add_argument("--timeout-ms", type=int,
+                           default=10000 if name == "debug-compare-runtime-modules" else 5000)
+            if name == "debug-compare-runtime-functions":
+                c.add_argument("--execution-mode", choices=("stable_leaf", "single_threaded_calls_smc"),
+                               default="stable_leaf")
         elif name == "debug-compare-runtime-code":
             c.add_argument("baseline_version", type=int)
             c.add_argument("layer_version", type=int)

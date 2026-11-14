@@ -33,7 +33,9 @@ def _address(value):
     return int(value, 16)
 
 
-def _qualified_trace(trace):
+def _qualified_trace(trace, *, minimum_events=2, allow_external_boundary=False):
+    if type(minimum_events) is not int or minimum_events not in (1, 2) or type(allow_external_boundary) is not bool:
+        raise ValueError('Invalid bounded trace qualification profile')
     if not isinstance(trace, dict) or not isinstance(trace.get('events'), list):
         raise ValueError('Raw PE trace with events is required')
     mapping = trace.get('mapping')
@@ -46,10 +48,10 @@ def _qualified_trace(trace):
                    for key in ('source_sha256', 'version_sha256'))):
         raise ValueError('Source-bound completed Wine/QEMU PE trace is required')
     events = trace['events']
-    if not 2 <= len(events) <= 10000 or any(not isinstance(item, dict) for item in events):
-        raise ValueError('PE trace must contain 2..10000 events')
+    if not minimum_events <= len(events) <= 10000 or any(not isinstance(item, dict) for item in events):
+        raise ValueError(f'PE trace must contain {minimum_events}..10000 events')
     bits, version = mapping['bits'], trace['version']
-    for event in events:
+    for index, event in enumerate(events):
         identity = event.get('identity')
         if (not isinstance(identity, dict) or identity.get('context') != 'flat'
                 or identity.get('source_version') != version
@@ -58,7 +60,9 @@ def _qualified_trace(trace):
             raise ValueError('PE trace event identity is incomplete')
         try:
             _address(event['address'])
-            _address(event['project_address'])
+            if not (allow_external_boundary and index == len(events) - 1
+                    and event.get('project_address') is None):
+                _address(event['project_address'])
             validate_context(event['registers'], bits)
             if _address(event['registers'][ip_name(event['registers'])]) != _address(event['address']):
                 raise ValueError('Pre-instruction PC differs from trace address')

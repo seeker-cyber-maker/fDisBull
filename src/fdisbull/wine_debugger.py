@@ -307,6 +307,18 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
         self._event('step',evidence)
         return evidence
 
+    @pe_delta_locked
+    def capture_module_entry(self, *, data_ranges, name='module-entry.json'):
+        from .runtime_module_analysis import observe_module_entry
+        return observe_module_entry(self, data_ranges=data_ranges, name=name)
+
+    @pe_delta_locked
+    def import_call(self, *, name='import-call.json', memory_ranges=None, code_ranges=None,
+                    timeout_ms=60000):
+        from .wine_import_calls import observe_import_call
+        return observe_import_call(self, name=name, memory_ranges=memory_ranges,
+                                   code_ranges=code_ranges, timeout_ms=timeout_ms)
+
     def trace(self,name='trace.json',*,count=512,timeout_ms=10000,fast_forward=False):
         from .decoder import decode
         _file_name(name);bounded(count,'count',1,10000);bounded(timeout_ms,'timeout_ms',1,600000)

@@ -247,3 +247,71 @@ probe resets separately from guest-executed mutation, captures each code state,
 and checks complete recovery against an independent source specification after
 closing and reopening the project. Concurrent mutation, external calls, traps,
 devices, timing, other platforms and whole-module behavior remain unqualified.
+
+## PE entry and imported-call contracts
+
+`debug_compare_runtime_modules` / offline `debug-compare-runtime-modules`
+extends the bounded instruction model from the original authored PE entry to
+an observed `ExitProcess` event. This is module recovery **under explicit loader
+and imported-call contracts**, not a proof of Windows, Wine, DLL initialization
+or arbitrary OS side effects. It admits a no-CRT/no-TLS/CLR PE64 target with at
+most eight paths per family, 256 authored instructions, 512 code bytes and 256
+declared data/stack bytes. The existing function profiles remain unchanged.
+
+At the actual stopped entry, use
+`debug.capture_module_entry(data_ranges=[...], name="entry.json")`, or live JSON
+`debug-capture-module-entry`. The observation binds the original PE hash, entry
+address and mapped bases, verifies the selected initialized data against the
+original mapped image, rejects TLS/CLR, and captures every resolved IAT word.
+It resolves each supported import through the target's loaded AMD64 export
+tables, including bounded name/ordinal forwarders. Every raw memory read and
+module generation is retained. Offline binding recomputes those resolutions
+from the immutable read ledger. This observes the post-loader state; it does
+not trace the loader or library initializers that ran before entry.
+
+`debug.import_call(memory_ranges=[...], code_ranges=[...])`, or live JSON
+`debug-import-call`, observes one current main-module RIP-relative `FF15` CALL.
+It records the completed native CALL, the actual imported entry context and
+instruction bytes, the pushed return word, selected RAM/code snapshots and
+resolved import identity. Returning APIs run to an owned authored return
+breakpoint, which is removed before the final snapshots. `ExitProcess` instead
+requires an actual process-exit debug event and matching exit code. Failed or
+partial observations remain stored and cannot qualify module recovery.
+
+The first contracts cover `KERNEL32.SetLastError`, `GetLastError` and
+`ExitProcess`. A per-thread last-error value and ordered API effects are explicit.
+SetLastError has a void return. Only the low 32 GetLastError return bits are
+defined; upper RAX bits remain unknown. Win64 volatile GPRs, FLAGS and declared
+API stack scratch become opaque environmental choices, checked against the
+observed boundaries rather than presumed preserved. Caller RSP alignment and
+32 bytes of shadow store are required. Nonvolatile GPR/RSP preservation and
+declared code/data frame conditions are checked; library-private memory, SIMD
+and other unobserved OS state remain outside the proof. Coupled corresponding
+API choices describe the external contract, not implementation equivalence.
+
+A runtime module path contains `segments=[{"trace": id, "version": id}, ...]`,
+`code_versions=[{"after_event": 0, "version": id}, ...]`, entry/terminal-entry
+`memory`, its stored `initialization` artifact ID, and
+`external_calls=[{"event_index": n, "artifact": import_call_id}, ...]`.
+Each single-instruction API CALL trace is retained separately. The binder
+composes only authored instructions, with explicit API gaps and an actual
+foreign imported-entry observation at the terminal boundary. It does not invent
+a project address for DLL code or claim to have traced the skipped DLL body.
+Code versions still account for every code-writing instruction. Source/run and
+temporal identities remain distinct, and captures keep `execution_proven=false`.
+
+The model proves feasible path coverage, all selected GPR/FLAGS and declared
+RAM/code effects, last-error state and process-exit argument. It compares the
+ordered external effects as well as ordinary memory accesses. A contraction
+re-expands only with the exact original trace, API, initialization and code
+evidence. Unknown imports, missing termination, stale epochs, changed import
+identity or unaccounted memory effects cannot qualify equivalence.
+
+`tests/fixtures/self_modifying_module_wine.S` initializes nonzero PE defaults,
+runs the prior nested-call self-modifying function twice, round-trips last-error
+state through real Wine APIs and calls ExitProcess. Its source rule is output
+`{4,5}`, accepted return 5, unchanged rejected sentinels, rejected return
+UINT64_MAX, last-error 0x1234 and exit 7. The native acceptance in
+`tests/test_smc_module_wine.py` uses fresh natural entry states, a repeated run,
+and an explicitly labeled exit-immediate control. It preserves original and
+modified images and verifies saved-project recovery after all guests close.

@@ -48,6 +48,12 @@ def qualify_capture(session, observed):
 
 
 class RuntimeCodeMixin:
+    def debug_compare_runtime_modules(self, baseline_version, layer_version, baseline_paths, layer_paths, *,
+                                      contract, timeout_ms=10000):
+        from .runtime_module_analysis import compare_runtime_modules
+        return compare_runtime_modules(self, baseline_version, layer_version, baseline_paths, layer_paths,
+                                       contract=contract, timeout_ms=timeout_ms)
+
     def debug_compare_runtime_functions(self, baseline_version, layer_version, baseline_paths, layer_paths, *,
                                         contract, timeout_ms=5000, execution_mode='stable_leaf'):
         from .runtime_patch_analysis import compare_runtime_functions

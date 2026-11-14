@@ -1254,7 +1254,7 @@ class DebugWorkspace:
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-trace-until':'trace_until',
                    'debug-screenshot-hooks':'screenshot_hooks',
-                   'debug-memory':'memory','debug-stack-memory':'stack_memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
+                   'debug-memory':'memory','debug-stack-memory':'stack_memory','debug-import-call':'import_call','debug-capture-module-entry':'capture_module_entry','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',

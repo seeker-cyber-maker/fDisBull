@@ -19,7 +19,7 @@ def _artifact(project, identifier, kind):
     return row, json.loads(raw)
 
 
-def _bound_trace(project, version, artifact):
+def _bound_trace(project, version, artifact, *, allow_single=False):
     selected = project.version(version)
     record = project._runtime_record(selected['id'])
     if record is None or record['kind'] != 'runtime-capture':
@@ -32,7 +32,7 @@ def _bound_trace(project, version, artifact):
             or project.digest(project.regions(selected['id'])) != selected['sha256']):
         raise ValueError('Temporal capture or mapped-byte identity mismatch')
     row, trace = _artifact(project, artifact, 'trace')
-    bits = _qualified_trace(trace)
+    bits = _qualified_trace(trace, minimum_events=1 if allow_single else 2)
     source = project.version(record['source_version'])
     if (bits != project.bits or trace.get('complete') is not True
             or row['run'] != record['run'] or row['source_version'] != source['id']
