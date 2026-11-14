@@ -38,7 +38,8 @@ also work as offline CLI commands.
 Native DOSBox and DOSBox/QEMU require the layers-capable backend. Custom PE64
 Wine/QEMU supports experiments with execution/data breakpoints and its existing
 RAM/execution layers. PE hook actions remain unsupported. The optional IDA
-backend and outer/raw machine context do not support saved experiments.
+backend and outer/raw machine context do not support saved experiments. The
+separate CHIP-8 v6 profile also supports the bounded trial contract below.
 
 ## Capture and restore controls
 
@@ -115,8 +116,10 @@ A partial native/control restore closes the session; it must not be resumed.
 
 `timeout_ms` is a shared comparison dispatch budget of 1..600,000 host ms.
 Existing native serialization and RPC deadlines still govern calls already
-dispatched. Final baseline restoration is attempted even after budget expiry;
-the timeout is not a hard wall-clock limit on serialization and cleanup.
+dispatched. For the DOS/PE behavior described above, final baseline restoration is attempted
+even after budget expiry; the timeout is not a hard wall-clock limit on
+serialization and cleanup. The CHIP-8 v6 rule below uses its remaining budget
+and closes the owner if the final restore cannot be completed.
 There are at most 64 memory observations, totaling 64 KiB per trial. Existing
 script, layer, artifact and native-state size budgets remain in force.
 
@@ -126,6 +129,65 @@ time to refresh the frame. Check that no earlier watched event interrupts that
 warm-up. Host/game files are checked by the native-state manifest and are not
 rolled back. Scripts that write an in-game save can invalidate the baseline;
 use an isolated input copy and preserve the matching files separately.
+
+## CHIP-8 v6 comparative trials
+
+The explicit `qemu-chip8` v6 frame-key runtime, launched with its matching
+checkpoint tool, supports `controls`, `save_experiment`, `restore_experiment`
+and `compare_experiment`. The existing JSON `debug-*` methods and offline
+`debug-experiments` / `debug-experiment-info` routes use the same names. The
+experiment, trial and comparison documents use the separate formats
+`fdisbull-chip8-experiment-1`, `fdisbull-chip8-trial-observations-1` and
+`fdisbull-chip8-experiment-comparison-1`. An experiment and its checkpoint are
+bound to the original ROM and version, exact v6 QEMU and checkpoint tool, and
+full checkpoint bytes and metadata. Original ROM bytes are unchanged.
+
+Each arm starts by restoring the same verified full checkpoint. The baseline
+uses its saved layer stack; `layers=[...]` supplies the complete ordered
+candidate RAM/fetch stack. Layer guards are checked against the saved 4 KiB
+RAM and saved active-layer base before either arm. An unchanged stack can be
+used even when its saved RAM layer has guest-modified bytes. Hook definitions,
+logical IDs and hit counts are restored, and a fresh key owner adopts held
+keys without injecting new edges. A final verified full restore reinstates the
+saved setup. A stored full or delta frame-history DAG remains retained; trial
+execution invalidates its former live edge. Host files are not restored.
+
+A CHIP-8 trial script may use only `step`, `run`, `registers`, `memory`,
+`screenshot`, `assert`, and deletion of a captured hook through
+`$controls.hooks.<id>.hook`. If any hooks were captured, every `run` must
+specify `stop_on_hook=True`, limiting a run to one dispatched hook. Ordinary
+user breakpoints must be removed before capture. Input, writes, tracing,
+timelines, selected undo, nested experiments and other operations are not
+trial-script operations. The whole script and candidate are checked before
+execution; failed baseline assertions or other incomplete baseline evidence
+skip the candidate. A timeout makes a CHIP-8 arm incomplete even when the
+script expects that stop. At most 128 expanded steps and a 1 MiB script are admitted,
+subject to the more conservative 4 MiB per-arm report-plan limit. Up to four
+PNG screenshots per arm are accepted, each at most 1 MiB. There are at most 64
+nonoverlapping declared flat RAM ranges totalling 4 KiB; each scripted memory
+read is at most 4 KiB, and declared plus scripted reads are bounded to 64 KiB.
+The project artifact budget and native checkpoint limits can bind earlier.
+
+The comparison covers exposed CPU registers, declared and intermediate RAM
+reads, normalized stops and hook actions, decoded screenshot pixels, and the
+reported RNG, timer, framebuffer, key and fault fields. Administrative owner
+IDs and virtual-time bookkeeping are retained as provenance but do not alone
+establish a program difference. PNG file hashes remain available alongside the
+pixel comparison. `observed_difference` describes only this captured evidence;
+it is `null` for an incomplete paired comparison, and no comparison is produced
+if an arm is missing. This is not deterministic replay or proof of complete
+execution coverage.
+
+An uncertain dispatched arm, failed final restore or uncertain result
+publication closes the owner and retains the available receipt; do not replay
+it automatically. If the comparison deadline leaves no time for final restore,
+the owner closes and `baseline_restored` remains false. A selected CPU/RAM
+partial undo blocks saving or comparing an experiment; an explicitly requested,
+verified `restore_experiment` can load the full anchor and clear that freeze.
+Eleven bounded authored native CHIP-8 trial witnesses passed locally on macOS
+arm64 as part of a 65-case trial and preservation run. This does not establish
+game or conversion compatibility, historical timing, hosted CI qualification,
+or a change to the DOSBox-X default.
 
 ## Real DinoPark verification
 

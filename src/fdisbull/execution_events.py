@@ -14,6 +14,8 @@ import re
 
 from iced_x86 import Decoder, Mnemonic
 
+from .execution_clock import validate_clock, validate_clock_predicate, validate_trace_clocks
+
 
 MAX_EVENTS = 10_000
 MAX_SAMPLES = 10_000
@@ -25,7 +27,7 @@ MAX_PREDICATE_NODES = 64
 MAX_PREDICATE_DEPTH = 8
 MAX_ROW_SAMPLES = 8
 _ADDRESS_MAX = (1 << 64) - 1
-_DOS = {'dosbox', 'dosbox-qemu'}
+_DOS = {'dosbox', 'dosbox-qemu', 'qemu-dos'}
 _PE = {'wine-qemu', 'ida-wine-qemu'}
 _COMPARISONS = {'equals', 'not_equals', 'lt', 'le', 'gt', 'ge'}
 _MNEMONICS = {value: name.lower() for name, value in vars(Mnemonic).items()
@@ -148,6 +150,8 @@ def validate_predicate(predicate):
                     raise ValueError('Boolean predicate requires a nonempty bounded list')
                 return {operator: [visit(c, depth + 1) for c in children]}
         kind = value.get('kind')
+        if kind == 'virtual-time-range':
+            return validate_clock_predicate(value)
         if kind in ('register', 'any-register'):
             field = 'register' if kind == 'register' else 'registers'
             names = [_register(value.get(field))] if kind == 'register' else _registers(value.get(field))
@@ -222,6 +226,13 @@ def _evaluate(predicate, event, initial, previous):
             matched = (False if False in values else None if None in values else True) if operator == 'all' else (True if True in values else None if None in values else False)
             return {'matched': matched, 'unknown': sorted({s for r in results for s in r['unknown']})}
     kind = predicate['kind']
+    if kind == 'virtual-time-range':
+        if 'clock' not in event:
+            return answer(None, 'Qualified virtual clock unavailable')
+        clock = validate_clock(event['clock'])
+        if any(clock[field] != predicate[field] for field in ('run', 'epoch', 'native_epoch')):
+            return answer(None, 'Virtual clock identity differs from predicate')
+        return answer(predicate['start_ns'] <= clock['virtual_ns'] < predicate['end_ns'])
     if kind in ('register', 'any-register'):
         names = [predicate['register']] if kind == 'register' else predicate['registers']
         operator = next(k for k in _COMPARISONS if k in predicate)
@@ -391,10 +402,64 @@ def _pc(raw, backend, mode):
             raise ValueError('Unsupported trace PC address space')
     else:
         pc['linear'] = pc['offset'] = _number(address, 'PC')
+    if backend == 'qemu-dos':
+        segmented = raw.get('segmented_address')
+        if segmented is not None:
+            if type(segmented) is not dict or segmented.get('space') != 'segmented':
+                raise ValueError('Native DOS trace requires an explicit segmented PC')
+            segment = _number(segmented.get('segment'), 'PC segment', 0xffff)
+            offset = _number(segmented.get('offset'), 'PC offset', 0xffffffff)
+            if pc['segment'] is not None and (pc['segment'], pc['offset']) != (segment, offset):
+                raise ValueError('Native DOS trace has contradictory segmented PCs')
+            pc['segment'], pc['offset'] = segment, offset
+        if pc['segment'] is None:
+            raise ValueError('Native DOS trace lacks its observed CS:IP')
+        cache = (raw.get('address_context') or {}).get('cs')
+        if cache is not None:
+            if type(cache) is not dict:
+                raise ValueError('Native DOS observed CS cache must be an object')
+            if _number(cache.get('selector'), 'CS cache selector', 0xffff) != pc['segment']:
+                raise ValueError('Native DOS CS cache differs from the observed segment')
+            base = _number(cache.get('base'), 'CS cache base')
+            expected = base + pc['offset']
+            if mode == 'real' and base != pc['segment'] * 16:
+                raise ValueError('Native DOS source trace has a changed real-mode CS base')
+        elif mode == 'real':
+            expected = pc['segment'] * 16 + pc['offset']
+        else:
+            expected = None
+        if expected is not None:
+            if pc['linear'] is not None and pc['linear'] != expected:
+                raise ValueError('Native DOS linear PC differs from its observed CS:IP')
+            pc['linear'] = expected
     project = raw.get('project_address')
     if project is not None and (backend in _PE or backend in _DOS and mode == 'real' and pc['segment'] is not None):
         pc['project'] = _number(project, 'project PC')
     return pc
+
+
+def _le_source_location(value):
+    """Validate an embedded namespace without projecting it onto the MZ image."""
+    fields = {'source_view', 'application_source_sha256', 'object_id', 'object_index',
+              'object_offset', 'preferred_address'}
+    if type(value) is not dict or set(value) != fields or value['source_view'] != 'embedded-le':
+        raise ValueError('Invalid embedded LE source location')
+    app = _digest(value['application_source_sha256'], 'LE application source sha256')
+    index = _number(value['object_index'], 'LE object index', 0xffffffff)
+    if not index or value['object_id'] != f'le:{index}':
+        raise ValueError('LE object identity differs from its index')
+    return dict(source_view='embedded-le', application_source_sha256=app,
+                object_id=value['object_id'], object_index=index,
+                object_offset=_number(value['object_offset'], 'LE object offset', 0xffffffff),
+                preferred_address=_number(value['preferred_address'], 'LE preferred address', 0xffffffff))
+
+
+def _le_site(location, digest):
+    return dict(space='embedded-le', address=location['object_offset'],
+        source_view=location['source_view'], application_source_sha256=location['application_source_sha256'],
+        object_id=location['object_id'], object_index=location['object_index'],
+        context=f"embedded-le:{location['application_source_sha256']}:{location['object_id']}:32",
+        cpu_mode='protected', code_bits=32, instruction_sha256=digest)
 
 
 def normalize_trace(document, *, regions=None):
@@ -407,11 +472,32 @@ def normalize_trace(document, *, regions=None):
     identity = _identity({'source_sha256': mapping.get('source_sha256'), 'version_sha256': mapping.get('version_sha256'),
                           'version': document.get('version'), 'backend': contract.get('backend')})
     backend = identity['backend']
+    le_capture = False
+    if backend == 'qemu-dos':
+        from .qemu_trace_identity import CAPTURE_FORMAT, SOURCE_SCOPE
+        capture = document.get('native_process_capture')
+        le_capture = type(capture) is dict and capture.get('format') == 'fdisbull-qemu-dos-le-capture-1'
+        if le_capture:
+            from .qemu_dos_le_identity import CAPTURE_FORMAT as LE_FORMAT, SOURCE_SCOPE as LE_SCOPE
+            if capture.get('format') != LE_FORMAT or capture.get('source_scope') != LE_SCOPE:
+                raise ValueError('Native LE events require a source-bound process capture')
+        elif (type(capture) is not dict or capture.get('format') != CAPTURE_FORMAT
+                or capture.get('source_scope') != SOURCE_SCOPE):
+            raise ValueError('Native DOS events require a source-bound process capture')
+        if le_capture:
+            recipe = mapping.get('protected_source_binding')
+            if (type(recipe) is not dict or capture.get('binding_id') != recipe.get('binding_id')
+                    or not _text(capture.get('binding_id'), 'LE binding id', 128)):
+                raise ValueError('Native LE capture differs from its source binding')
+        epoch = _text(document.get('capture_epoch'), 'native capture epoch', 128)
+        if capture.get('capture_epoch', epoch) != epoch:
+            raise ValueError('Native DOS capture epoch fields disagree')
     run = document.get('run'); run = run.get('run') if type(run) is dict else run
     run = _text(run, 'trace run', 128)
     raw_events = document.get('events')
     if type(raw_events) is not list or len(raw_events) > MAX_EVENTS:
         raise ValueError('Trace event budget exceeded or events are missing')
+    clocks, endpoint_clock = validate_trace_clocks(document, run=run, backend=backend, mapping=mapping)
     regions = validate_regions(regions)
     events, registers, last_sequence, last_context, gaps = [], {}, None, None, 0
     explicit_sequence = None
@@ -495,12 +581,33 @@ def normalize_trace(document, *, regions=None):
         if source_identity.get('project_address') is not None and pc['project'] is not None:
             if _number(source_identity['project_address'], 'identity project PC') != pc['project']:
                 raise ValueError('Event project address identity mismatch')
+        if backend == 'qemu-dos' and ((source_identity.get('project_address') is None)
+                                    != (pc['project'] is None)):
+            raise ValueError('Native DOS source PC claims must agree')
         if source_identity.get('runtime_address') is not None:
-            claimed_pc = _pc({'address': source_identity['runtime_address']}, backend, mode)
+            claimed = {'address': source_identity['runtime_address']}
+            if backend == 'qemu-dos':
+                claimed = dict(address=raw['address'], segmented_address=source_identity['runtime_address'],
+                               address_context=raw.get('address_context'))
+            claimed_pc = _pc(claimed, backend, mode)
             if any(claimed_pc[name] != pc[name] for name in ('linear', 'segment', 'offset')):
                 raise ValueError('Event runtime address identity mismatch')
         source_context = None
-        if backend in _DOS and pc['project'] is not None:
+        le_location = None
+        if le_capture:
+            if (raw.get('project_address') is not None or source_identity.get('project_address') is not None
+                    or raw.get('task_id') is not None):
+                raise ValueError('Embedded LE events cannot claim a DOS project address or task identity')
+            if source_identity.get('source_location') is not None:
+                le_location = _le_source_location(source_identity['source_location'])
+                source_context = _le_site(le_location, None)['context']
+                if (mode != 'protected' or bits != 32 or source_identity.get('context') != source_context
+                        or observation.get('registers_stage') != 'before-instruction'
+                        or observation.get('flags_materialized') is not True):
+                    raise ValueError('Embedded LE source requires observed stopped protected32 context')
+            elif source_identity.get('context') is not None or source_identity.get('source_instruction_sha256') is not None:
+                raise ValueError('Unqualified LE boundary claims a source identity')
+        elif backend in _DOS and pc['project'] is not None:
             projected_cs, remainder = divmod(pc['project'] - pc['offset'], 16)
             if remainder == 0 and 0 <= projected_cs <= 0xffff:
                 source_context = f'real:{projected_cs:04x}'
@@ -511,6 +618,12 @@ def normalize_trace(document, *, regions=None):
                          - _number(mapping['static_load_segment'], 'static load segment', 0xffff)) * 16
                 if pc['linear'] - delta != pc['project']:
                     raise ValueError('Trace project mapping identity mismatch')
+            if backend == 'qemu-dos':
+                native_mapping = mapping.get('process', {}).get('source_mapping', {})
+                static = _number(native_mapping.get('static_base'), 'native static image base')
+                runtime = _number(native_mapping.get('runtime_base'), 'native runtime image base')
+                if pc['project'] != pc['linear'] - runtime + static:
+                    raise ValueError('Native DOS project mapping identity mismatch')
         elif backend in _PE and pc['project'] is not None:
             source_context = 'flat'
             if source_identity.get('context', 'flat') != 'flat':
@@ -531,10 +644,24 @@ def normalize_trace(document, *, regions=None):
                     mnemonic = _MNEMONICS.get(instruction.mnemonic)
                     digest = hashlib.sha256(bytes.fromhex(code)[:size]).hexdigest()
         site = None
-        if (source_context is not None and digest and observation.get('registers_stage') == 'before-instruction'
+        site_digest = digest
+        if backend == 'qemu-dos':
+            # The owned storage adapter independently reconstructs this claim
+            # from original bytes, ordered fixups and the initial entry receipt.
+            # Keep the observed runtime digest on the event for inspection.
+            site_digest = source_identity.get('source_instruction_sha256')
+            if site_digest is not None:
+                _digest(site_digest, 'native source instruction sha256')
+                if source_context is None or not digest or bits != (32 if le_capture else 16):
+                    raise ValueError('Native DOS source instruction has no qualified source PC')
+        if le_location is not None:
+            if not site_digest:
+                raise ValueError('Embedded LE source location lacks a canonical instruction identity')
+            site = _le_site(le_location, site_digest)
+        elif (source_context is not None and site_digest and observation.get('registers_stage') == 'before-instruction'
                 and (backend not in _PE or bits in (32, 64))):
             site = {'space': 'project', 'address': pc['project'], 'context': source_context,
-                    'cpu_mode': mode, 'code_bits': bits, 'instruction_sha256': digest}
+                    'cpu_mode': mode, 'code_bits': bits, 'instruction_sha256': site_digest}
         matching_regions = [r for r in regions if pc[r['space']] is not None and r['start'] <= pc[r['space']] < r['end']]
         # Project regions take precedence over linear labels when both were supplied.
         region = next((r for r in matching_regions if r['space'] == 'project'), next(iter(matching_regions), None))
@@ -543,6 +670,10 @@ def normalize_trace(document, *, regions=None):
                        'instruction_sha256': digest, 'region': deepcopy(region),
                        'observation': deepcopy(observation), 'cpu_mode': mode, 'code_bits': bits,
                        'execution_context': context, 'contiguous': contiguous})
+        if le_location is not None:
+            events[-1]['source_location'] = le_location
+        if clocks[index] is not None:
+            events[-1]['clock'] = clocks[index]
         last_sequence, last_context, explicit_sequence = sequence, context, has_sequence
     explicit = document.get('window')
     requested = document.get('requested_count')
@@ -559,11 +690,14 @@ def normalize_trace(document, *, regions=None):
         reason = 'requested event window captured' if closed else 'incomplete trace window'
     if gaps:
         closed, reason = False, 'sequence gaps in captured window'
-    return {'format': 'fdisbull-execution-events-1', 'identity': identity, 'run': run,
-            'regions': regions, 'events': events,
-            'window': {'closed': bool(closed), 'reason': reason, 'requested_count': requested,
-                       'event_count': len(events), 'sequence_gaps': gaps},
-            'unqualified_events': sum(e['site'] is None for e in events)}
+    compiled = {'format': 'fdisbull-execution-events-1', 'identity': identity, 'run': run,
+                'regions': regions, 'events': events,
+                'window': {'closed': bool(closed), 'reason': reason, 'requested_count': requested,
+                           'event_count': len(events), 'sequence_gaps': gaps},
+                'unqualified_events': sum(e['site'] is None for e in events)}
+    if endpoint_clock is not None:
+        compiled['collector'] = {'current_stop': {'clock': endpoint_clock}}
+    return compiled
 
 
 def _artifact(compiled):
@@ -583,6 +717,7 @@ def _check_compiled(compiled):
     _artifact(compiled)
     if type(compiled.get('events')) is not list or len(compiled['events']) > MAX_EVENTS:
         raise ValueError('Compiled event budget exceeded')
+    validate_trace_clocks(compiled, run=compiled['run'], backend=compiled['identity']['backend'])
     if type(compiled.get('window')) is not dict or compiled['window'].get('closed') is not True:
         raise ValueError('Narrowing requires a closed bounded trace window')
     validate_regions(compiled.get('regions'))
@@ -641,6 +776,8 @@ def _add_trial(state, compiled, observed, unknown, mode, label, predicate):
                 break
             event = compiled['events'][index]
             sample = {'artifact': artifact, 'run': compiled['run'], 'index': index, 'sequence': event['sequence']}
+            if 'clock' in event:
+                sample['clock'] = validate_clock(event['clock'], run=compiled['run'])
             digest = _hash(sample)
             if digest not in sample_lookup:
                 if len(state['samples']) >= MAX_SAMPLES:
@@ -712,7 +849,16 @@ def validate_search(state):
             raise ValueError('Invalid candidate row')
         key = _digest(row['key'], 'candidate key')
         site = row['site']
-        if (type(site) is not dict or set(site) != {'space', 'address', 'context', 'cpu_mode', 'code_bits', 'instruction_sha256'}
+        base_fields = {'space', 'address', 'context', 'cpu_mode', 'code_bits', 'instruction_sha256'}
+        le_fields = {'source_view', 'application_source_sha256', 'object_id', 'object_index'}
+        if type(site) is dict and site.get('space') == 'embedded-le':
+            if set(site) != base_fields | le_fields or state['identity']['backend'] != 'qemu-dos':
+                raise ValueError('Invalid embedded LE candidate site')
+            location = _le_source_location({key: site[key] for key in le_fields} |
+                dict(object_offset=site['address'], preferred_address=0))
+            if site != _le_site(location, site['instruction_sha256']):
+                raise ValueError('Inconsistent embedded LE candidate identity')
+        elif (type(site) is not dict or set(site) != base_fields
                 or site['space'] != 'project' or type(site['code_bits']) is not int or site['code_bits'] not in (16, 32, 64)
                 or site['cpu_mode'] not in ('real', 'protected', 'v86', 'flat')):
             raise ValueError('Invalid qualified candidate site')
@@ -734,11 +880,18 @@ def validate_search(state):
         for sample in row['samples']:
             _number(sample, 'sample index', len(state['samples']) - 1)
     for sample in state['samples']:
-        if type(sample) is not dict or set(sample) != {'artifact', 'run', 'index', 'sequence'}:
+        fields = {'artifact', 'run', 'index', 'sequence'}
+        if type(sample) is dict and 'clock' in sample:
+            fields.add('clock')
+        if type(sample) is not dict or set(sample) != fields:
             raise ValueError('Invalid witness sample')
         _artifact({'artifact': sample['artifact']}); _text(sample['run'], 'sample run', 128)
         _number(sample['index'], 'sample event index', MAX_EVENTS - 1)
         _number(sample['sequence'], 'sample event sequence')
+        if 'clock' in sample:
+            if state['identity']['backend'] != 'qemu-dos':
+                raise ValueError('Source clock witness requires the native DOS backend')
+            validate_clock(sample['clock'], run=sample['run'])
     for index, trial in enumerate(state['history']):
         fields = {'mode', 'label', 'predicate', 'artifact', 'run', 'window', 'event_count',
                   'unqualified_events', 'unknown_observations', 'observed_count', 'candidate_count'}

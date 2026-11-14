@@ -1,0 +1,139 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 with native/qemu-instrumented-checkpoint applied",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-instrumented-checkpoint/qemu-10.0.13-fdisbull-instrumented-checkpoint-v1.patch",
+  "base_patch_sha256": "45ca495d574d9978f31733a9fe6978ec4b00a1045e4ab50ad99ef6ff5ad468fe",
+  "patch_file": "qemu-10.0.13-fdisbull-task-context-v1.patch",
+  "patch_sha256": "227a5a2f3f509891f8d8837eef9a2bb94511ae2ae48423d4c0b8c2d8a3b74f79",
+  "scope": "Read-only task-context observation for a stopped single-vCPU x86 TCG machine, with a caller-selected 56-byte direct-RAM monitor anchor and migration-backed native epoch/generation.",
+  "modified_files": [
+    {
+      "path": "include/system/fdisbull-task-context.h",
+      "before_sha256": null,
+      "after_sha256": "e842e322cd1415c60d87227599831906ffaf351c1ee075dd0a297389c1ed87de"
+    },
+    {
+      "path": "qapi/fdisbull-task-context.json",
+      "before_sha256": null,
+      "after_sha256": "ac3671b3cd8c97b7421d4e1586ef2d94d043369f27ceb1bea89ec28cf70c4a4c"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "6784ad9d7d224117d101ca1e23409b736a64e5c923472bd9080167179ebad944",
+      "after_sha256": "5f87ee729a997f6059d52edde25ce7fe3115d5d84b217e10a27c073070cf25fc"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "e9b7e2de582ae4e09263ca2fa2cfce168c2229b2b9dfd12e78d0229fe021a49c",
+      "after_sha256": "69ec2a695d01bc13220e1f5a7d996d24854a8aeabc88d9039b5b56c3413e3ea4"
+    },
+    {
+      "path": "system/fdisbull-task-context.c",
+      "before_sha256": null,
+      "after_sha256": "7cdb023dead2604a194479233d4a02cc1ee5465243034454181557bdb7f2c6ba"
+    },
+    {
+      "path": "system/meson.build",
+      "before_sha256": "669b41fd21724de948d80c966a1538e7f9f03a2c1e9158907aaa36bb83374694",
+      "after_sha256": "0efb42996fea6882cb776888ba818964012034943098643f3200eee00bad3dc7"
+    },
+    {
+      "path": "target/i386/cpu.c",
+      "before_sha256": "198e851860b766a64102f71f7a4647d4e380885efc0839c48336d2aeee6d5d8d",
+      "after_sha256": "8726a25707cb271e6a7a6c0bdee780a8960e4495811f1d0665a34a750e3bd6ca"
+    },
+    {
+      "path": "target/i386/helper.c",
+      "before_sha256": "ae9cb4f55f3dca7488f63dd9c34d47b41dc79ca1dea1f0fd034b68a7df730b9a",
+      "after_sha256": "687c9f8725cde826dfb3fa938ad1d3bb9ad6f801d1fff00509e24eb6d2870bb2"
+    },
+    {
+      "path": "target/i386/meson.build",
+      "before_sha256": "5e4484fbbbbe4182e778d940aba9f8a81e39d823478aa201bc3b6e93329ffc73",
+      "after_sha256": "4189f923a21a7e0d60deff77b68a4e98e8a00a6e3a90af9d28bb5e71d1ef45c4"
+    },
+    {
+      "path": "target/i386/task-context.c",
+      "before_sha256": null,
+      "after_sha256": "9aa8245f6662b20fe3fd99429d04043ab94af1e8910e5bf41dca69a2cb8df1b7"
+    },
+    {
+      "path": "target/i386/tcg/seg_helper.c",
+      "before_sha256": "592c2bacf24207bfbb5f27dc280b360514d41d323a32528d9cc28c20a81ea9d4",
+      "after_sha256": "a91928a44d0c55eac41adb548f886af62422970d18e33334859a4b59e427b0ca"
+    }
+  ],
+  "qmp_command": "x-fdisbull-query-task-context",
+  "qmp_arguments": {
+    "anchor-address": "optional uint64 guest physical address"
+  },
+  "qmp_fields": [
+    "api-version",
+    "model",
+    "epoch",
+    "context-generation",
+    "cpu-index",
+    "mode",
+    "cpl",
+    "eip",
+    "esp",
+    "cs-selector",
+    "ss-selector",
+    "cr0",
+    "cr3",
+    "cr4",
+    "efer",
+    "gdt-base",
+    "gdt-limit",
+    "idt-base",
+    "idt-limit",
+    "tr-selector",
+    "tr-base",
+    "tr-limit",
+    "tr-flags",
+    "ldtr-selector",
+    "ldtr-base",
+    "ldtr-limit",
+    "ldtr-flags",
+    "anchor-address",
+    "anchor-hex"
+  ],
+  "generation_transitions": [
+    "CR3 value changes",
+    "successful LLDT hidden-cache changes",
+    "successful LTR hidden-cache changes",
+    "successful hardware TSS task switch",
+    "x86 CPU reset (advances epoch and generation)"
+  ],
+  "anchor_protocol": {
+    "size": 56,
+    "layout": [
+      "8-byte magic FDBTASK1",
+      "16-byte UUID",
+      "uint64 little-endian scheduler sequence",
+      "uint64 little-endian task cookie",
+      "uint64 little-endian incarnation",
+      "uint32 little-endian state (1 active)",
+      "uint32 little-endian reserved (0)"
+    ],
+    "native_behavior": "Raw byte read only; host validates protocol and derives any monitor task identity."
+  },
+  "limits": [
+    "Architectural context and generation are not a QEMM/DESQview software task ID.",
+    "Tasks sharing CR3/TR/LDTR without a cooperating anchor remain indistinguishable.",
+    "Anchor address must map to one contiguous 56-byte direct RAM span; I/O, ROM/ROMD, RAM devices, discard-managed and cross-region reads are refused.",
+    "Task-context VMState is registered when the QMP query is first called; host must query source and fresh destination before snapshot save/load.",
+    "QEMU does not parse the anchor; software identity and sequence validation belong to the host.",
+    "This x86-specific patch has no non-x86 QMP-handler stub and is intended for an x86 system target, not a multi-target QEMU build."
+  ],
+  "build_receipt": {
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/task-context-runtime/build/qemu-system-x86_64",
+    "binary_sha256": "fa432ef64b0d10dd09c4174a8538953a0a11f70fb602cd774e2656d85db1290f",
+    "reported_runtime_witness": "Root-reported native witness passed remapped A\u2192B\u2192A task context and cold Python subprocess restore, including physical native RAM layer, fetch overlay, scoped hooks, and epoch/generation checks; no broader QEMM/DESQview task-ID claim.",
+    "runtime_tests": "Root-owned bounded native witness passed; no tests or guests run by this patch author."
+  }
+}

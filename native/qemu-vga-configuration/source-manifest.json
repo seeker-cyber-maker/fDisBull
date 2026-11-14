@@ -1,0 +1,82 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "command": "x-fdisbull-query-vga-configuration",
+  "model": "qemu-vga-configuration-fdisbull-v1",
+  "patch": "qemu-10.0.13-fdisbull-vga-configuration-v1.patch",
+  "patch_sha256": "960a2cee1ffc95705760d1af314f7081d94db4b7f70c96bbd7b73845451a5ad7",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_retrace_patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "requires_retrace_patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "requires_input_retrace_patch": "qemu-10.0.13-fdisbull-input-retrace-v1.patch",
+  "requires_input_retrace_patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80",
+  "requires_keyboard_press_patch": "qemu-10.0.13-fdisbull-keyboard-press-v1.patch",
+  "requires_keyboard_press_patch_sha256": "0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0",
+  "requires_keyboard_type_patch": "qemu-10.0.13-fdisbull-keyboard-type-v1.patch",
+  "requires_keyboard_type_patch_sha256": "d680d253af93b60d3101ef74c1243e19e887b1cabdf0df194fdec0aafed23cc5",
+  "requires_mouse_click_patch": "qemu-10.0.13-fdisbull-mouse-click-v1.patch",
+  "requires_mouse_click_patch_sha256": "23f38d65391587b0be11af021fc3858872475d25a03719844b486719eee154d9",
+  "requires_display_probe_patch": "qemu-10.0.13-fdisbull-display-probe-v1.patch",
+  "requires_display_probe_patch_sha256": "d4dc9a87a9c00e807da66339bc8cf055779de754a937ce727b0baa143300f5aa",
+  "files": [
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_sha256": "c7a498f082a8e87b1862cee481f5ee0e22f5b4120fcf0e132cc617773622d6b3",
+      "patched_sha256": "bbf05a35bdd806762f751cc1545ff4a3940e0c3b69494054ff55feaa82ec0e75"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_sha256": "1c13b40ded1f472d21198fcb3eea5d1c743efbabe4bcd84074d417b32baad9d3",
+      "patched_sha256": "b8f50ec3f47e86ae651a7e1ab4c58602200057ca4286729dd4af9c165a380bc6"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_sha256": "5c4481d0497544572618d21588cd62036e15d43981a66b62be396dfa97a101f4",
+      "patched_sha256": "f5509684133a2c06ba02945df97e468d78ce7f4379e3960b88b0650dfd07c511"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_sha256": "1fc930ed72cd7a5043d845d44a75635c49fe4b1799d7ce60588eb626b64862b7",
+      "patched_sha256": "06e109c81b070570adf1beb7f01c7254f19d0e3a81ceaa04762d1ee366572330"
+    },
+    {
+      "path": "qapi/fdisbull-vga-configuration.json",
+      "base_sha256": null,
+      "patched_sha256": "8029255cbcf602e2e00d450e2431bb606816e8ea71f97cdda929f61d64e53185"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "c2c41381635043acbd5cf66379035ac006593f35e631874e5b762a5320cdb0c0",
+      "patched_sha256": "9246e18e7e733568bd9842c444724cb27c0403dabb314f3961390f7838f7b382"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "d39ece8055aec71bff62e3d0dc9f32f2411673d85711843cf36ff978aa90ec23",
+      "patched_sha256": "1e33bf78994a39015c764b328965fa946af7ed9e816932bddab3d22bf0d6afd4"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "base_sha256": "65b3abab9248cb8782b1fef2a521ca7ed8178c97ae664eee65fb35d6d4cc0fb3",
+      "patched_sha256": "195491fb95ba7690f4f22ebe65451853f658fa4922c0a9c5236ea9774bc87b37"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_sha256": "e334fd9eac7e29fcc6bce971a2c09b27d3c9c49c0a2b9395928c7d0ee363f177",
+      "patched_sha256": "04227deb4f8454554ebace4895f46729aee82d66ce688b58f5abb0f09e61fe53"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed forward and reverse with zero fuzz/offset against the exact nine-layer source subset; all 27 resulting native members matched and reverse restored all 26 prior members and removed the new schema",
+  "schema_validation": "Schema source inspected; complete QAPI generation is reported separately by root integration receipts",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

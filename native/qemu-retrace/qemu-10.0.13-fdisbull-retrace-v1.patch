@@ -1,0 +1,718 @@
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -26,7 +26,10 @@
+ 
+ #include "qemu/osdep.h"
+ #include "hw/pci/pci_device.h"
++#include "hw/display/vga.h"
+ #include "hw/qdev-properties.h"
++#include "qapi/error.h"
++#include "qapi/qapi-types-fdisbull-retrace.h"
+ #include "migration/vmstate.h"
+ #include "vga_int.h"
+ #include "ui/pixel_ops.h"
+@@ -56,6 +59,29 @@
+ 
+ #define TYPE_PCI_VGA "pci-vga"
+ OBJECT_DECLARE_SIMPLE_TYPE(PCIVGAState, PCI_VGA)
++
++bool pci_std_vga_fdisbull_retrace_query(Object *obj, int64_t virtual_ns,
++                                      FdisbullRetraceInfo *info, Error **errp)
++{
++    PCIVGAState *d;
++    VGACommonState *s;
++
++    if (!obj || strcmp(object_get_typename(obj), "VGA")) {
++        error_setg(errp, "Retrace observation requires exact primary type VGA");
++        return false;
++    }
++    d = PCI_VGA(obj);
++    s = &d->vga;
++    if (!s->con || qemu_console_lookup_by_index(0) != s->con ||
++        qemu_console_get_head(s->con) != 0 ||
++        object_property_get_link(OBJECT(s->con), "device", NULL) != obj) {
++        error_setg(errp, "Retrace observation requires owned console zero head zero");
++        return false;
++    }
++    info->console = 0;
++    info->head = 0;
++    return vga_fdisbull_retrace_query(s, virtual_ns, info, errp);
++}
+ 
+ static const VMStateDescription vmstate_vga_pci = {
+     .name = "vga",
+@@ -331,6 +357,7 @@
+ }
+ 
+ static const Property vga_pci_properties[] = {
++    DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+     DEFINE_PROP_UINT32("vgamem_mb", PCIVGAState, vga.vram_size_mb, 16),
+     DEFINE_PROP_BIT("mmio", PCIVGAState, flags, PCI_VGA_FLAG_ENABLE_MMIO, true),
+     DEFINE_PROP_BIT("qemu-extended-regs",
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -26,6 +26,8 @@
+ #include "qemu/units.h"
+ #include "system/reset.h"
+ #include "qapi/error.h"
++#include "qapi/qapi-types-fdisbull-retrace.h"
++#include "qemu/main-loop.h"
+ #include "exec/tswap.h"
+ #include "hw/display/vga.h"
+ #include "hw/i386/x86.h"
+@@ -188,7 +190,8 @@
+     (void) s;
+ }
+ 
+-static void vga_precise_update_retrace_info(VGACommonState *s)
++static void vga_precise_calculate_retrace_info(VGACommonState *s,
++                                             struct vga_precise_retrace *r)
+ {
+     int htotal_chars;
+     int hretr_start_char;
+@@ -207,7 +210,6 @@
+     int clock_sel;
+     const int clk_hz[] = {25175000, 28322000, 25175000, 25175000};
+     int64_t chars_per_sec;
+-    struct vga_precise_retrace *r = &s->retrace_info.precise;
+ 
+     htotal_chars = s->cr[VGA_CRTC_H_TOTAL] + 5;
+     hretr_start_char = s->cr[VGA_CRTC_H_SYNC_START];
+@@ -280,6 +282,94 @@
+ #endif
+ }
+ 
++static void vga_precise_update_retrace_info(VGACommonState *s)
++{
++    vga_precise_calculate_retrace_info(s, &s->retrace_info.precise);
++    if (s->fdisbull_retrace) {
++        s->fdisbull_retrace_initialized = true;
++    }
++}
++
++typedef struct FdisbullRetraceBefore {
++    FdisbullRetraceRaw raw;
++    struct vga_precise_retrace timing;
++    bool initialized;
++} FdisbullRetraceBefore;
++
++static FdisbullRetraceRaw vga_fdisbull_retrace_raw(VGACommonState *s)
++{
++    return (FdisbullRetraceRaw) {
++        .msr = s->msr,
++        .sr1 = sr(s, VGA_SEQ_CLOCK_MODE),
++        .cr00 = s->cr[VGA_CRTC_H_TOTAL],
++        .cr04 = s->cr[VGA_CRTC_H_SYNC_START],
++        .cr05 = s->cr[VGA_CRTC_H_SYNC_END],
++        .cr06 = s->cr[VGA_CRTC_V_TOTAL],
++        .cr07 = s->cr[VGA_CRTC_OVERFLOW],
++        .cr10 = s->cr[VGA_CRTC_V_SYNC_START],
++        .cr11 = s->cr[VGA_CRTC_V_SYNC_END],
++        .vbe_enable = s->vbe_regs[VBE_DISPI_INDEX_ENABLE],
++    };
++}
++
++static bool vga_fdisbull_raw_equal(const FdisbullRetraceRaw *a,
++                                  const FdisbullRetraceRaw *b)
++{
++    return a->msr == b->msr && a->sr1 == b->sr1 &&
++           a->cr00 == b->cr00 && a->cr04 == b->cr04 &&
++           a->cr05 == b->cr05 && a->cr06 == b->cr06 &&
++           a->cr07 == b->cr07 && a->cr10 == b->cr10 &&
++           a->cr11 == b->cr11 && a->vbe_enable == b->vbe_enable;
++}
++
++static bool vga_fdisbull_timing_equal(const struct vga_precise_retrace *a,
++                                     const struct vga_precise_retrace *b)
++{
++    return a->ticks_per_char == b->ticks_per_char &&
++           a->total_chars == b->total_chars && a->htotal == b->htotal &&
++           a->hstart == b->hstart && a->hend == b->hend &&
++           a->vstart == b->vstart && a->vend == b->vend && a->freq == b->freq;
++}
++
++static void vga_fdisbull_retrace_advance_generation(VGACommonState *s)
++{
++    if (s->fdisbull_retrace_generation == UINT64_MAX) {
++        s->fdisbull_retrace_overflow = true;
++    } else {
++        s->fdisbull_retrace_generation++;
++    }
++}
++
++static void vga_fdisbull_retrace_before(VGACommonState *s,
++                                       FdisbullRetraceBefore *before)
++{
++    before->raw = vga_fdisbull_retrace_raw(s);
++    before->timing = s->retrace_info.precise;
++    before->initialized = s->fdisbull_retrace_initialized;
++}
++
++static void vga_fdisbull_retrace_after(VGACommonState *s,
++                                      const FdisbullRetraceBefore *before)
++{
++    FdisbullRetraceRaw raw = vga_fdisbull_retrace_raw(s);
++    bool raw_changed = !vga_fdisbull_raw_equal(&before->raw, &raw);
++
++    /*
++     * Only the explicitly selected private model changes stock behavior.
++     * Commit after the complete guest write, including VBE-derived register
++     * changes.  This covers CR10 and VBE transitions that stock precise VGA
++     * does not refresh.  Query never repairs live model state.
++     */
++    if (raw_changed) {
++        vga_precise_update_retrace_info(s);
++    }
++    if (raw_changed ||
++        before->initialized != s->fdisbull_retrace_initialized ||
++        !vga_fdisbull_timing_equal(&before->timing, &s->retrace_info.precise)) {
++        vga_fdisbull_retrace_advance_generation(s);
++    }
++}
++
+ static uint8_t vga_precise_retrace(VGACommonState *s)
+ {
+     struct vga_precise_retrace *r = &s->retrace_info.precise;
+@@ -312,6 +402,87 @@
+ static uint8_t vga_dumb_retrace(VGACommonState *s)
+ {
+     return s->st01 ^ (ST01_V_RETRACE | ST01_DISP_ENABLE);
++}
++
++bool vga_fdisbull_retrace_query(VGACommonState *s, int64_t virtual_ns,
++                              FdisbullRetraceInfo *info, Error **errp)
++{
++    const struct vga_precise_retrace *r = &s->retrace_info.precise;
++    struct vga_precise_retrace expected = { 0 };
++    FdisbullRetraceRaw raw = vga_fdisbull_retrace_raw(s);
++    FdisbullRetracePhase *phase;
++    int64_t lines;
++
++    assert(bql_locked());
++    if (!s->fdisbull_retrace || s->retrace != vga_precise_retrace ||
++        s->update_retrace_info != vga_precise_update_retrace_info) {
++        error_setg(errp, "Retrace observation requires x-fdisbull-retrace=on "
++                   "and the selected precise VGA model");
++        return false;
++    }
++    if (!s->fdisbull_retrace_generation || s->fdisbull_retrace_overflow) {
++        error_setg(errp, "Retrace timing generation invalidated or overflowed");
++        return false;
++    }
++    if (s->fdisbull_retrace_initialized) {
++        /* The copy is deliberate: a passive query must not repair the cache. */
++        vga_precise_calculate_retrace_info(s, &expected);
++    }
++    if (!vga_fdisbull_timing_equal(r, &expected)) {
++        error_setg(errp, "Retrace timing cache is incoherent with model-v1 registers");
++        return false;
++    }
++
++    info->timing_generation = s->fdisbull_retrace_generation;
++    info->raw = g_new(FdisbullRetraceRaw, 1);
++    *info->raw = raw;
++    info->timing = g_new0(FdisbullRetraceTiming, 1);
++    info->timing->ticks_per_char = r->ticks_per_char;
++    info->timing->total_chars = r->total_chars;
++    info->timing->htotal = r->htotal;
++    info->timing->hstart = r->hstart;
++    info->timing->hend = r->hend;
++    info->timing->vstart = r->vstart;
++    info->timing->vend = r->vend;
++    info->timing->freq = r->freq;
++
++    if (!s->fdisbull_retrace_initialized) {
++        info->unsupported_reason = g_strdup("uninitialized");
++        return true;
++    }
++    if (vbe_enabled(s)) {
++        info->unsupported_reason = g_strdup("vbe-enabled");
++        return true;
++    }
++    if (virtual_ns < 0 || r->freq || r->ticks_per_char <= 0 ||
++        r->total_chars <= 0 || r->htotal <= 0 ||
++        r->total_chars % r->htotal ||
++        r->total_chars > INT64_MAX / r->ticks_per_char) {
++        info->unsupported_reason = g_strdup("invalid-timing");
++        return true;
++    }
++    lines = r->total_chars / r->htotal;
++    if (r->hstart < 0 || r->hend < r->hstart || r->hend >= r->htotal ||
++        r->vstart < 0 || r->vend < r->vstart || r->vend >= lines) {
++        info->unsupported_reason = g_strdup("invalid-timing");
++        return true;
++    }
++
++    info->phase_supported = true;
++    info->phase = phase = g_new0(FdisbullRetracePhase, 1);
++    phase->period_ns = r->ticks_per_char * r->total_chars;
++    phase->phase_ns = virtual_ns % phase->period_ns;
++    phase->character = phase->phase_ns / r->ticks_per_char;
++    phase->line = phase->character / r->htotal;
++    phase->line_character = phase->character % r->htotal;
++    phase->vertical_retrace = phase->line >= r->vstart && phase->line <= r->vend;
++    phase->horizontal_retrace = phase->line_character >= r->hstart &&
++                                phase->line_character <= r->hend;
++    phase->status1_timing_bits =
++        (phase->vertical_retrace ? ST01_V_RETRACE : 0) |
++        ((phase->vertical_retrace || phase->horizontal_retrace) ?
++         ST01_DISP_ENABLE : 0);
++    return true;
+ }
+ 
+ int vga_ioport_invalid(VGACommonState *s, uint32_t addr)
+@@ -418,11 +589,15 @@
+ void vga_ioport_write(void *opaque, uint32_t addr, uint32_t val)
+ {
+     VGACommonState *s = opaque;
++    FdisbullRetraceBefore retrace_before = { 0 };
+     int index;
+ 
+     /* check port range access depending on color/monochrome mode */
+     if (vga_ioport_invalid(s, addr)) {
+         return;
++    }
++    if (s->fdisbull_retrace) {
++        vga_fdisbull_retrace_before(s, &retrace_before);
+     }
+     trace_vga_std_write_io(addr, val);
+ 
+@@ -522,7 +697,7 @@
+                     (val & 0x10);
+                 vbe_update_vgaregs(s);
+             }
+-            return;
++            goto write_done;
+         }
+         s->cr[s->cr_index] = val;
+         vbe_update_vgaregs(s);
+@@ -543,6 +718,10 @@
+     case VGA_IS1_RC:
+         s->fcr = val & 0x10;
+         break;
++    }
++write_done:
++    if (s->fdisbull_retrace) {
++        vga_fdisbull_retrace_after(s, &retrace_before);
+     }
+ }
+ 
+@@ -725,6 +904,11 @@
+ void vbe_ioport_write_data(void *opaque, uint32_t addr, uint32_t val)
+ {
+     VGACommonState *s = opaque;
++    FdisbullRetraceBefore retrace_before = { 0 };
++
++    if (s->fdisbull_retrace) {
++        vga_fdisbull_retrace_before(s, &retrace_before);
++    }
+ 
+     if (s->vbe_index <= VBE_DISPI_INDEX_NB) {
+         trace_vga_vbe_write(s->vbe_index, val);
+@@ -781,6 +965,9 @@
+         default:
+             break;
+         }
++    }
++    if (s->fdisbull_retrace) {
++        vga_fdisbull_retrace_after(s, &retrace_before);
+     }
+ }
+ 
+@@ -1831,6 +2018,10 @@
+ 
+ void vga_common_reset(VGACommonState *s)
+ {
++    if (s->fdisbull_retrace) {
++        s->fdisbull_retrace_initialized = false;
++        vga_fdisbull_retrace_advance_generation(s);
++    }
+     s->sr_index = 0;
+     memset(s->sr, '\0', sizeof(s->sr));
+     memset(s->sr_vbe, '\0', sizeof(s->sr_vbe));
+@@ -2196,6 +2387,16 @@
+     int i, j, v, b;
+     Error *local_err = NULL;
+ 
++    if (s->fdisbull_retrace) {
++        if (vga_retrace_method != VGA_RETRACE_PRECISE ||
++            strcmp(object_get_typename(obj), "VGA")) {
++            error_setg(errp, "x-fdisbull-retrace requires exact primary VGA "
++                       "with retrace=precise");
++            return false;
++        }
++        s->fdisbull_retrace_generation = 1;
++    }
++
+     for(i = 0;i < 256; i++) {
+         v = 0;
+         for(j = 0; j < 8; j++) {
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -150,6 +150,11 @@
+     vga_retrace_fn retrace;
+     vga_update_retrace_info_fn update_retrace_info;
+     union vga_retrace retrace_info;
++    /* Opt-in model identity is process-local and never migrated. */
++    bool fdisbull_retrace;
++    bool fdisbull_retrace_initialized;
++    bool fdisbull_retrace_overflow;
++    uint64_t fdisbull_retrace_generation;
+     uint8_t is_vbe_vmstate;
+ } VGACommonState;
+ 
+@@ -168,6 +173,9 @@
+                           const MemoryRegionPortio **vga_ports,
+                           const MemoryRegionPortio **vbe_ports);
+ void vga_common_reset(VGACommonState *s);
++struct FdisbullRetraceInfo;
++bool vga_fdisbull_retrace_query(VGACommonState *s, int64_t virtual_ns,
++                              struct FdisbullRetraceInfo *info, Error **errp);
+ 
+ void vga_dirty_log_start(VGACommonState *s);
+ void vga_dirty_log_stop(VGACommonState *s);
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -22,6 +22,11 @@
+ 
+ extern enum vga_retrace_method vga_retrace_method;
+ 
++struct FdisbullRetraceInfo;
++bool pci_std_vga_fdisbull_retrace_query(Object *obj, int64_t virtual_ns,
++                                      struct FdisbullRetraceInfo *info,
++                                      Error **errp);
++
+ #define TYPE_VGA_MMIO "vga-mmio"
+ 
+ #endif
+diff --git a/qapi/fdisbull-retrace.json b/qapi/fdisbull-retrace.json
+new file mode 100644
+--- /dev/null
++++ b/qapi/fdisbull-retrace.json
+@@ -0,0 +1,125 @@
++# Experimental opt-in fDisBull precise VGA model observation, API/model 1.
++{ 'include': 'run-state.json' }
++
++##
++# @FdisbullRetraceRaw:
++#
++# Registers defining the selected QEMU retrace model and VBE eligibility.
++# These are stored register values, not values read through guest I/O ports.
++#
++# @msr: Miscellaneous output register.
++# @sr1: Effective sequencer clock-mode register; sr_vbe[1] in VBE mode.
++# @cr00: Horizontal total register.
++# @cr04: Horizontal retrace start register.
++# @cr05: Horizontal retrace end and skew register.
++# @cr06: Vertical total register.
++# @cr07: CRTC overflow register.
++# @cr10: Vertical retrace start register.
++# @cr11: Vertical retrace end register.
++# @vbe-enable: Bochs VBE enable register; enabled VBE has no supported phase.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRetraceRaw',
++  'data': { 'msr': 'uint8', 'sr1': 'uint8', 'cr00': 'uint8',
++            'cr04': 'uint8', 'cr05': 'uint8', 'cr06': 'uint8',
++            'cr07': 'uint8', 'cr10': 'uint8', 'cr11': 'uint8',
++            'vbe-enable': 'uint16' } }
++
++##
++# @FdisbullRetraceTiming:
++#
++# Exact cached parameters used by QEMU's selected precise retrace model.
++# The entire tuple is zero before initialization.  Initialized model 1 uses
++# the existing integer formulas, including their approximations and inclusive
++# endpoints; it does not implement a physical VGA raster model.
++#
++# @ticks-per-char: Integer virtual nanoseconds per modeled character.
++# @total-chars: Modeled characters per complete timing period.
++# @htotal: Modeled characters per line.
++# @hstart: Inclusive horizontal retrace start character.
++# @hend: Inclusive horizontal retrace end character.
++# @vstart: Inclusive vertical retrace start line.
++# @vend: Inclusive vertical retrace end line.
++# @freq: Native frequency override; zero in model 1.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRetraceTiming',
++  'data': { 'ticks-per-char': 'int', 'total-chars': 'int', 'htotal': 'int',
++            'hstart': 'int', 'hend': 'int', 'vstart': 'int',
++            'vend': 'int', 'freq': 'int' } }
++
++##
++# @FdisbullRetracePhase:
++#
++# Pure calculation at the returned QEMU_CLOCK_VIRTUAL timestamp.  This is a
++# modeled retrace phase, not all of VBlank, visible scanout or guest completion.
++#
++# @period-ns: ticks-per-char multiplied by total-chars.
++# @phase-ns: Virtual timestamp modulo period-ns.
++# @character: phase-ns divided by ticks-per-char, rounded down.
++# @line: character divided by htotal, rounded down.
++# @line-character: character modulo htotal.
++# @vertical-retrace: vstart <= line <= vend.
++# @horizontal-retrace: hstart <= line-character <= hend.
++# @status1-timing-bits: Native status bits 3 and 0 only.  Bit 3 is vertical
++#     retrace; bit 0 is set during vertical or horizontal retrace.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRetracePhase',
++  'data': { 'period-ns': 'int', 'phase-ns': 'int', 'character': 'int',
++            'line': 'int', 'line-character': 'int',
++            'vertical-retrace': 'bool', 'horizontal-retrace': 'bool',
++            'status1-timing-bits': 'uint8' } }
++
++##
++# @FdisbullRetraceInfo:
++#
++# @api-version: Private observation protocol version, one.
++# @model: qemu-vga-precise-fdisbull-v1.
++# @epoch: Native virtual-clock epoch.
++# @virtual-ns: Actual stopped QEMU_CLOCK_VIRTUAL timestamp.
++# @device: Exact canonical QOM path of the pinned primary VGA device.
++# @device-type: Exact type name, VGA.
++# @console: Console index, zero.
++# @head: Display head, zero.
++# @timing-generation: Monotone identity for changes to the returned raw or
++#     cached timing tuple and initialization/eligibility.  Write-time tracking
++#     detects A-to-B-to-A changes even without intervening queries.
++# @phase-supported: Whether the current initialized model has a supported phase.
++# @raw: Current stored timing registers and VBE eligibility.
++# @timing: Current cached native model parameters.
++# @unsupported-reason: Present only without phase support: uninitialized,
++#     vbe-enabled or invalid-timing, in that precedence order.
++# @phase: Present only when phase-supported is true.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRetraceInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
++            'virtual-ns': 'int', 'device': 'str', 'device-type': 'str',
++            'console': 'int', 'head': 'int', 'timing-generation': 'uint64',
++            'phase-supported': 'bool', 'raw': 'FdisbullRetraceRaw',
++            'timing': 'FdisbullRetraceTiming', '*unsupported-reason': 'str',
++            '*phase': 'FdisbullRetracePhase' } }
++
++##
++# @x-fdisbull-query-retrace:
++#
++# Observe the explicitly selected precise VGA model without rendering,
++# advancing time, executing guest instructions or reading guest I/O ports.
++# Requires native clock API 1, one stopped vCPU, and exactly one primary VGA
++# device with x-fdisbull-retrace=on and retrace=precise.  First successful
++# admission pins the device and blocks migration for the process lifetime.
++#
++# VBE and zero/wrapped timing are valid unsupported results.  Unsupported
++# property/model, reset/epoch change, cache incoherence and generation overflow
++# are errors.  No timing synchronization, edge wait or guest-frame boundary is
++# provided by this command.
++#
++# Returns: A model-versioned retrace observation.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-retrace', 'returns': 'FdisbullRetraceInfo' }
+diff --git a/qapi/meson.build b/qapi/meson.build
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -63,6 +63,7 @@
+     'fdisbull-audio',
+     'fdisbull-display',
+     'fdisbull-input',
++    'fdisbull-retrace',
+     'cryptodev',
+     'qdev',
+     'pci',
+diff --git a/qapi/qapi-schema.json b/qapi/qapi-schema.json
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -66,6 +66,7 @@
+ { 'include': 'fdisbull-audio.json' }
+ { 'include': 'fdisbull-display.json' }
+ { 'include': 'fdisbull-input.json' }
++{ 'include': 'fdisbull-retrace.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+diff --git a/system/fdisbull-retrace.c b/system/fdisbull-retrace.c
+new file mode 100644
+--- /dev/null
++++ b/system/fdisbull-retrace.c
+@@ -0,0 +1,138 @@
++/*
++ * Passive opt-in fDisBull precise VGA model observation, protocol version 1.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * BQL serializes admission and reads.  This command never starts a renderer,
++ * timer or CPU and never performs a guest I/O read.  Device pinning and a
++ * process-lifetime migration blocker protect the returned identity.
++ */
++#include "qemu/osdep.h"
++#include "hw/core/cpu.h"
++#include "hw/display/vga.h"
++#include "hw/qdev-core.h"
++#include "migration/blocker.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qemu/main-loop.h"
++#include "system/reset.h"
++
++static struct {
++    bool invalidated;
++    uint64_t epoch;
++    Object *device;
++    char *device_path;
++    Error *migration_blocker;
++} retrace_owner;
++
++typedef struct PrimaryVGASearch {
++    unsigned count;
++    Object *device;
++} PrimaryVGASearch;
++
++static int retrace_find_primary(Object *obj, void *opaque)
++{
++    PrimaryVGASearch *search = opaque;
++
++    if (!strcmp(object_get_typename(obj), "VGA") &&
++        qdev_is_realized(DEVICE(obj))) {
++        search->count++;
++        search->device = obj;
++    }
++    return 0;
++}
++
++static void retrace_reset(void *opaque)
++{
++    assert(bql_locked());
++    retrace_owner.invalidated = true;
++}
++
++static bool retrace_guard(FdisbullClockInfo *clock, Error **errp)
++{
++    CPUState *cpu;
++
++    if (retrace_owner.invalidated ||
++        (retrace_owner.device && retrace_owner.epoch != clock->epoch)) {
++        error_setg(errp, "Retrace observation epoch invalidated; close the VM");
++        return false;
++    }
++    if (clock->api_version != 1 || !clock->budget_supported ||
++        clock->virtual_ns < 0 ||
++        clock->running || clock->pending_stop ||
++        (clock->status != RUN_STATE_PRELAUNCH &&
++         clock->status != RUN_STATE_PAUSED && clock->status != RUN_STATE_DEBUG) ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        error_setg(errp, "Retrace observation requires a valid stopped native "
++                   "clock API 1 epoch");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        if (!cpu->stopped) {
++            error_setg(errp, "Retrace observation requires one stopped vCPU");
++            return false;
++        }
++    }
++    return true;
++}
++
++FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(FdisbullRetraceInfo) info = NULL;
++    g_autofree char *path = NULL;
++    PrimaryVGASearch search = { 0 };
++
++    assert(bql_locked());
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock || !retrace_guard(clock, errp)) {
++        return NULL;
++    }
++    object_child_foreach_recursive(object_get_root(),
++                                   retrace_find_primary, &search);
++    if (search.count != 1) {
++        if (retrace_owner.device) {
++            retrace_owner.invalidated = true;
++        }
++        error_setg(errp, "Retrace observation requires exactly one primary VGA");
++        return NULL;
++    }
++    path = object_get_canonical_path(search.device);
++    if (!path || (retrace_owner.device &&
++        (retrace_owner.device != search.device ||
++         strcmp(retrace_owner.device_path, path)))) {
++        retrace_owner.invalidated = true;
++        error_setg(errp, "Retrace observation device identity changed; close VM");
++        return NULL;
++    }
++    info = g_new0(FdisbullRetraceInfo, 1);
++    if (!pci_std_vga_fdisbull_retrace_query(search.device, clock->virtual_ns,
++                                           info, errp)) {
++        if (retrace_owner.device) {
++            retrace_owner.invalidated = true;
++        }
++        return NULL;
++    }
++    if (!retrace_owner.migration_blocker) {
++        error_setg(&retrace_owner.migration_blocker,
++                   "fDisBull precise retrace ownership does not support migration");
++        if (migrate_add_blocker(&retrace_owner.migration_blocker, errp) < 0) {
++            return NULL;
++        }
++    }
++    if (!retrace_owner.device) {
++        object_ref(search.device);
++        retrace_owner.device = search.device;
++        retrace_owner.device_path = g_strdup(path);
++        retrace_owner.epoch = clock->epoch;
++        qemu_register_reset(retrace_reset, NULL);
++    }
++    info->api_version = 1;
++    info->model = g_strdup("qemu-vga-precise-fdisbull-v1");
++    info->epoch = clock->epoch;
++    info->virtual_ns = clock->virtual_ns;
++    info->device = g_steal_pointer(&path);
++    info->device_type = g_strdup("VGA");
++    return g_steal_pointer(&info);
++}
+diff --git a/system/fdisbull-retrace-stub.c b/system/fdisbull-retrace-stub.c
+new file mode 100644
+--- /dev/null
++++ b/system/fdisbull-retrace-stub.c
+@@ -0,0 +1,13 @@
++/*
++ * Unsupported-target stub for the private fDisBull retrace interface.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-retrace.h"
++
++FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
++{
++    error_setg(errp, "Retrace observation requires standard PCI VGA support");
++    return NULL;
++}
+diff --git a/system/meson.build b/system/meson.build
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -31,6 +31,10 @@
+   'watchpoint.c',
+ ), sdl, libpmem, libdaxctl)
+ 
++system_ss.add(when: 'CONFIG_VGA_PCI',
++              if_true: files('fdisbull-retrace.c'),
++              if_false: files('fdisbull-retrace-stub.c'))
++
+ if have_tpm
+   system_ss.add(files('tpm.c'))
+ endif

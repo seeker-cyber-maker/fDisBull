@@ -1,0 +1,99 @@
+{
+  "chip8_native_sha256": "4c06e9426b581dc889f35f980b3bced1b92742e2b23cd28f8118924469f08ee5",
+  "claim_limits": {
+    "architectural_retirement": false,
+    "bridge_execution": false,
+    "dosbox_removal_permitted": false,
+    "irq_timer_transparent_tracing": false,
+    "le_source_addressed_layer_hook_checkpoint_authority": false,
+    "os_task_allocation_lifetime": false,
+    "paged_or_ldt": false,
+    "scope": "bounded owned LE stopped-source sequence, instruction reconstruction, trace predicates and cold evidence",
+    "whole_game_or_dosbox_parity": false
+  },
+  "date": "2026-11-13",
+  "format": "fdisbull-qemu-dos-le-acceptance-1",
+  "host": {
+    "counts_overlap": true,
+    "docs_package_passed": 33,
+    "extra_installed_preflight_passed": 5,
+    "focused_final_source_passed": 139,
+    "focused_private_install_passed": 139,
+    "preservation_passed": 3023,
+    "runtime_input_skips": 12
+  },
+  "native": {
+    "all_guards_completed_normally": true,
+    "authored_profiles": [
+      "standard",
+      "virtual"
+    ],
+    "authored_pytest_passed": 2,
+    "composed_preservation_pytest_passed": 6,
+    "failed_precursors": [
+      {
+        "corrected_preflight_and_new_run_passed": true,
+        "guest_started": false,
+        "phase": "private Doom boot preparation",
+        "preserved": true,
+        "reason": "multicall mcopy invocation name was resolved to mtools"
+      }
+    ],
+    "original_target_witness": {
+      "cold_query_matches": [
+        8,
+        1
+      ],
+      "cold_query_unknowns": 0,
+      "current_predicate_additional_steps": 0,
+      "distinct_source_sites": 8,
+      "executed_instructions_overlapping_fixups": 0,
+      "four_exports_byte_equal": true,
+      "guest_closed_reaped": true,
+      "observed_read_only_step_mask": 7,
+      "ordinary_run_generation": [
+        1,
+        2
+      ],
+      "ordinary_run_source_scope": "refresh allowance exhausted; explicit fresh observation refused changed GDT identity",
+      "placement_pointer_witness_checks": 72,
+      "preseeded_runtime_addresses": false,
+      "qualified_trace_observations": 8,
+      "source_sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "step_irqs_masked": true,
+      "step_timers_masked": true
+    },
+    "pytest_skipped": 0,
+    "retained_inputs_unchanged": true
+  },
+  "native_executable_sha256": "d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d",
+  "policy": {
+    "ci": false,
+    "default_backend": "dosbox",
+    "merge": false,
+    "native_rebuild": false,
+    "release": false,
+    "shared_activation": false
+  },
+  "private_receipt_sha256": {
+    "doom-native-01/controller-receipt.json": "ae87bb13b9fe4b00f124d79b42b533599e983682a781ea61f88bb638b5b89212",
+    "doom-native-02/cold-receipt.json": "0aa43671887597fc395d10311f50c7da1359f316825a5569a2ffab2e2de8f548",
+    "doom-native-02/controller-receipt.json": "c069216fc0b075243bb12847a95c531c257a03f78d842be130d31ecc91ae4f2c",
+    "doom-native-02/hot-receipt.json": "c36c8864dd3cc184ac0d94fcf39873119deb6e6bc315c140cc7f72bab3aedea1",
+    "doom-native-output-audit-02.json": "fe3844de05f26e408c278f44a26c74fde14b14e6f516ffd1bdff723a128d4450",
+    "host-preservation-20261114T024639Z-4c2ef3.xml": "126db0f4d8a56a7f4fdd37a613edf4103c5c2cce758cc0ecb17345049b38da29",
+    "installed-contract-host-01.xml": "d4072f9657d2d393667040f60ac47f2038292300a468d3fb375ebb314b55b619",
+    "installed-host-01.xml": "6eafe5b9e4acbcc41bac01ff62ed3c8f29b60ccf1fb452ef85aa322b9ccf49df",
+    "integrated-final-02.xml": "5a048e01628721aedf3be0d491b7f57a255750272497cac80904e90c05741924",
+    "native-authored-output-audit-01.json": "989ffa36b585741d19d505a1abd0885053bb586e6e9e1b178fa769577a80a54e",
+    "native-authored-standard-01-result.json": "d80d748b47172391e0e335a97f1ee3c80c87aeddc8d919ce80655a221d7bb0c8",
+    "native-authored-virtual-01-result.json": "3081c3b8106f61d5e4a1ef8081c602eacc7bca5fdd7951c13ecf4ec22c32c5f9",
+    "native-preservation-01-result.json": "7ad13775db43a50c1ff1e65f1b54e690229892d60a34ce3b07c02fa1f1b52e39",
+    "package-d8adf49d.json": "d10a3df8c9b8c26a22f69ce09e7a5fa5fb29e912b19f3ebaa7db8321fa13563d"
+  },
+  "python_source_test_hashes_unchanged": 1273,
+  "runtime_files_source_wheel_install_equal": 708,
+  "runtime_source_commit": "d8adf49dfa41176cefdab729778813fe6f3c2f6b",
+  "separate_desqview_candidate_integrated": false,
+  "wheel_sha256": "2d0a3ab6efc02198ee84ecf316126a98e479a55357edbf1daa45e943c89f87fa"
+}

@@ -94,9 +94,11 @@ from .proofs import ProofProjectMixin, PROOF_DDL
 from .snippet_links import SnippetLinksMixin, SNIPPET_DDL
 from .uil_store import CommonUILMixin
 from .cortex_m import CortexMMixin, DDL as CORTEX_M_DDL
+from .runtime_mappings import RuntimeMappingsMixin, RUNTIME_MAPPING_DDL
 
 
 class Project(
+    RuntimeMappingsMixin,
     CommonUILMixin,
     SnippetLinksMixin,
     TargetSourcesMixin,
@@ -182,10 +184,11 @@ class Project(
                 if k not in ("application", "schema")
             }
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
-            self.context = f"{self.arch}:{self.bits}:little" + (
+            endian = 'big' if self.arch == 'chip8' else 'little'
+            self.context = f"{self.arch}:{self.bits}:{endian}" + (
                 ":ne" if self.meta["format"] == "NE" else ""
             )
-            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL)
+            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL + RUNTIME_MAPPING_DDL)
             if external and int(meta["schema"]) != SCHEMA:
                 self.db.execute(
                     "UPDATE metadata SET value=? WHERE key='schema'", (str(SCHEMA),)
@@ -282,7 +285,8 @@ class Project(
                     "INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
                     ("original", "file import", cls.digest(image.regions), now()),
                 )
-                context = f"{image.arch}:{image.bits}:little" + (
+                endian = 'big' if image.arch == 'chip8' else 'little'
+                context = f"{image.arch}:{image.bits}:{endian}" + (
                     ":ne" if image.format == "NE" else ""
                 )
                 for r in image.regions:

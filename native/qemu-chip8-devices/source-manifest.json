@@ -1,0 +1,135 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "CHIP-8 display, keypad, delay/sound timers and stopped-state device controls, incremental over the sealed CPU-only target",
+  "base": {
+    "qemu_version": "10.0.13",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "patch_parent": "native/qemu-chip8/qemu-10.0.13-fdisbull-chip8-tcg-v1.patch",
+    "patch_parent_sha256": "81fdfca213e47439d2acadea0d05ddc1e3e810e732942e8bc35cd1e1e4101e69",
+    "applies_to": "QEMU source after applying the sealed fDisBull CHIP-8 CPU v1 patch"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-devices-v2.patch",
+    "sha256": "0bfaec7730ac13b172b3a743c10dbb39d0b214924098e7cc475afb48c1a37d11",
+    "modified_file_count": 7,
+    "files": [
+      {
+        "path": "qapi/misc.json",
+        "before_sha256": "20b708ba5959f7b47fbc4ae01bc9c9643b8fdf504ec07fda988b7faa29a689f8",
+        "after_sha256": "940b83a10213f0aba605a4cc919c44bbd79f44082dfae137d143a57b953c4062"
+      },
+      {
+        "path": "system/qmp-chip8.c",
+        "before_sha256": "aaaf46d626abbce5c495df75d96ec21d0fb3f2e269ae64f4d12259cfd568e062",
+        "after_sha256": "5f25dc131083c9ba99b3b1ba21b54eda4291d72e479546de7f5cd59df8ae5028"
+      },
+      {
+        "path": "target/chip8/cpu.c",
+        "before_sha256": "b4a55eb9169a8f1defd66f8e5468f557837bf5bfd3ecc00ee82f320be332623e",
+        "after_sha256": "29b0db3b71e404e11a825cd3eb284c6a2d6de19904d24c2c63f7d264f43b81d0"
+      },
+      {
+        "path": "target/chip8/cpu.h",
+        "before_sha256": "d3093921557d82c0a7acd46da350c3e279d336b7592a3544b7072013d3680561",
+        "after_sha256": "8d9af0767b7ebd8351eb20d44ee11139c1059cd62138896c151ac1607c3f33cd"
+      },
+      {
+        "path": "target/chip8/gdbstub.c",
+        "before_sha256": "3b50464f4d900381178f4e7136ad8d92bfa24939726c13e5955f2003559d1945",
+        "after_sha256": "8799629f051c81464bcc36b565bef28d0d1bfe123a64db1a3b64c7979d829daf"
+      },
+      {
+        "path": "target/chip8/helper.c",
+        "before_sha256": "fadc37aa33bc61a44a54ad680d24c6c17b24b876f907d1f5f408d8b6b82b9e40",
+        "after_sha256": "d69dea47912049248da981efc4a1f46490e2ce9b5c5fffa4701b93144c97657f"
+      },
+      {
+        "path": "target/chip8/vmstate.c",
+        "before_sha256": "3e70f9165c21b68cbc6dbb0743fdab711e7fe9e713955606e347d6af8a770586",
+        "after_sha256": "97d88f202c0c3daed216282becfaf3cbb84c7fca1a894f98863de9bff12b5b17"
+      }
+    ],
+    "applied_verification": {
+      "receipt": "R/chip8-devices-patch-replay-receipt.json",
+      "seeded_baseline_files": 7,
+      "new_files": 0,
+      "all_after_hashes_match": true,
+      "result": "Applied incrementally to the seven modified v1 files and verified all output hashes against the device candidate source.",
+      "receipt_absolute": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-devices-patch-replay-receipt.json"
+    }
+  },
+  "target": {
+    "qemu_target": "chip8-softmmu",
+    "machine": "chip8-test",
+    "cpu_model": "chip8-cpu",
+    "profile": "chip8-classic-pilot-default-v1",
+    "cpu_subset": "fdisbull-chip8-classic-devices-2",
+    "environment_model": "fdisbull-chip8-display-keypad-timers-1",
+    "display": "64x32; 2048 one-byte pixels; each byte is 0 or 1",
+    "keyboard": "16-bit held-key mask; FX0A empty-key stop is explicitly attributed and re-executes without PC advance",
+    "timers": "delay/sound byte timers; QEMU virtual-clock 60 Hz with rational 1e9/60 deadline phase; explicit stopped-state manual ticks",
+    "audio_output": false,
+    "qmp_query": "query-chip8-environment",
+    "qmp_mutators": [
+      "x-chip8-set-keys",
+      "x-chip8-debug-ticks"
+    ],
+    "qmp_mutator_response": "full Chip8EnvironmentInfo post-state receipt",
+    "vmstate": "CHIP-8 CPU state version 2/minimum 2 plus machine RAM; only same-binary cold restore is qualified"
+  },
+  "build": {
+    "runtime": "R/native-runtime/chip8-devices-runtime",
+    "source": "R/native-runtime/chip8-devices-runtime",
+    "build_dir": "R/native-runtime/chip8-devices-runtime/build-devices",
+    "temporary_dir": "R/native-runtime/chip8-devices-runtime/tmp-devices",
+    "target": "chip8-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "TMPDIR=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-devices-runtime/tmp-devices ../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-devices>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command": "TMPDIR=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-devices-runtime/tmp-devices /Users/tiga/miniconda/bin/ninja -C build-devices -j4 qemu-system-chip8",
+    "candidate_binary": "R/native-runtime/chip8-devices-runtime/build-devices/qemu-system-chip8",
+    "candidate_binary_sha256": "8dfc32e0853dba5096563d97f4dd5f54b319b7e4d4c5ebfa416dbfc82d903ebd",
+    "candidate_binary_size": 6202728,
+    "configure_cwd": "R/native-runtime/chip8-devices-runtime/build-devices",
+    "build_cwd": "R/native-runtime/chip8-devices-runtime",
+    "tmpdir_actual": "The original configure and candidate build invocations did not explicitly set TMPDIR.",
+    "normalized_tmpdir": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-devices-runtime/tmp-devices",
+    "configure_command_actual": "../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-devices>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command_actual": "/Users/tiga/miniconda/bin/ninja -C build-devices -j4 qemu-system-chip8",
+    "reproducible_configure_command": "TMPDIR=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-devices-runtime/tmp-devices ../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-devices>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "reproducible_build_command": "TMPDIR=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-devices-runtime/tmp-devices /Users/tiga/miniconda/bin/ninja -C build-devices -j4 qemu-system-chip8"
+  },
+  "qualification": {
+    "status": "Bounded local device/CPU slice and integrated preservation passed; broader compatibility and conversion gates remain open",
+    "native_cases": 9,
+    "native_passed": 9,
+    "native_failures": 0,
+    "native_errors": 0,
+    "native_skipped": 0,
+    "ci": false,
+    "cross_architecture_build": false,
+    "cross_binary_restore_qualified": false,
+    "retained_cpu_cases": 10,
+    "retained_cpu_passed": 10,
+    "retained_cpu_xml": "R/chip8-devices-cpu-regression-02.xml",
+    "native_xml": "R/chip8-devices-storage-native-05.xml",
+    "native_selection_note": "This 32-case selection contains nine actual CHIP-8 device witnesses, 22 host storage cases and one actual DOSBox-X storage witness.",
+    "external_framebuffer_metadata": true,
+    "parent_preservation": {
+      "cases": 2697,
+      "files": 163,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "deselection": "existing private DinoPark identification fixture unavailable",
+      "python_source_test_files": 1194,
+      "source_unchanged": true,
+      "xml": "R/chip8-devices-preservation-final-03.xml",
+      "receipt": "R/chip8-devices-final-receipt.json"
+    },
+    "retained_dosbox_cases": 323,
+    "host_package_cases": 97,
+    "storage_device_cases": 32,
+    "external_storage_receipt": "R/chip8-devices-external-storage-receipt.json"
+  }
+}

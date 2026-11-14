@@ -1,0 +1,168 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Classic CHIP-8 Bnnn/Cxkk/Fx1e/Fx33 opcodes and deterministic LCG random source, incremental over device-aware v2",
+  "implementation_status": "built and locally native-tested classic profile/RNG; broader compatibility and conversion qualification remains open",
+  "base": {
+    "qemu_version": "10.0.13",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "patch_parent": "native/qemu-chip8-devices/qemu-10.0.13-fdisbull-chip8-devices-v2.patch",
+    "patch_parent_sha256": "0bfaec7730ac13b172b3a743c10dbb39d0b214924098e7cc475afb48c1a37d11",
+    "patch_parent_manifest_sha256": "aba5abece65ea8323837f605211fd9ecfb7f0a5a6e437d3ff2466d8edfc7df8b",
+    "applies_to": "QEMU source after applying the sealed v1 CPU-only patch and the v2 device patch"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-classic-v3.patch",
+    "sha256": "cb80c64be2ea206177fb9d5f787dad9f640a15de6dc2b4a34f2e768923713124",
+    "modified_file_count": 6,
+    "files": [
+      {
+        "path": "qapi/misc.json",
+        "before_sha256": "940b83a10213f0aba605a4cc919c44bbd79f44082dfae137d143a57b953c4062",
+        "after_sha256": "0f78a84a3c65e58c89f4d30a76fe3d1c8fffb4f334b0e1b98994216078902c2b"
+      },
+      {
+        "path": "system/qmp-chip8.c",
+        "before_sha256": "5f25dc131083c9ba99b3b1ba21b54eda4291d72e479546de7f5cd59df8ae5028",
+        "after_sha256": "4a6217e37cd0b24b4ea253d1d968e6e3510fac1894ec5dd530ab663ae18682c0"
+      },
+      {
+        "path": "target/chip8/cpu.c",
+        "before_sha256": "29b0db3b71e404e11a825cd3eb284c6a2d6de19904d24c2c63f7d264f43b81d0",
+        "after_sha256": "57609cc88e4a204049069d840d5638833d0fa5cbda4df19f6ab9553b3b34c1ef"
+      },
+      {
+        "path": "target/chip8/cpu.h",
+        "before_sha256": "8d9af0767b7ebd8351eb20d44ee11139c1059cd62138896c151ac1607c3f33cd",
+        "after_sha256": "8e7f74b31a7102ba2bb91fdf439b18076893b4eee0e0516281158b0c5dbe3339"
+      },
+      {
+        "path": "target/chip8/helper.c",
+        "before_sha256": "d69dea47912049248da981efc4a1f46490e2ce9b5c5fffa4701b93144c97657f",
+        "after_sha256": "306c4a603d45d7aaa242870135f0299b3bcd090fc669ad8c0023688594f30938"
+      },
+      {
+        "path": "target/chip8/vmstate.c",
+        "before_sha256": "97d88f202c0c3daed216282becfaf3cbb84c7fca1a894f98863de9bff12b5b17",
+        "after_sha256": "ba1bed70b508de5e8ff4297e1db08b77d5d45ef230c49dc2525dcf8518b54472"
+      }
+    ]
+  },
+  "target": {
+    "qemu_target": "chip8-softmmu",
+    "machine": "chip8-test",
+    "cpu_model": "chip8-cpu",
+    "profile": "chip8-classic-pilot-default-v1",
+    "cpu_subset": "fdisbull-chip8-classic-complete-3",
+    "environment_model": "fdisbull-chip8-display-keypad-timers-rng-2",
+    "added_instructions": [
+      "Bnnn",
+      "Cxkk",
+      "Fx1e",
+      "Fx33"
+    ],
+    "Bnnn": "PC = nnn + V0 without 12-bit wrapping; odd and out-of-RAM destinations preserve existing sticky fault behavior on attempted fetch",
+    "Cxkk": "state = (1664525*state + 1013904223) mod 2^32; Vx = (state >> 24) & kk; consumes a draw for kk=0; VF is preserved unless x=F",
+    "Fx1e": "I = (I + Vx) mod 2^16; reads Vx before updating I; does not modify VF",
+    "Fx33": "Preflight a three-byte extent, then write hundreds/tens/ones; leaves Vx, VF, and I unchanged",
+    "rng_model": "fdisbull-lcg32-high8-v1",
+    "rng_qmp_command": "x-chip8-seed-rng(seed:uint32,expected-generation:uint64), stopped CAS returning full environment",
+    "rng_seed_effect": "Sets seed and state to seed, clears draw count, increments state generation once, clears only ephemeral key-wait-stop attribution",
+    "vmstate": "Version 3/minimum 3, same-binary only; includes RNG seed/state/draw count"
+  },
+  "build": {
+    "runtime": "R/native-runtime/chip8-classic-runtime",
+    "source": "R/native-runtime/chip8-classic-runtime",
+    "build_dir": "R/native-runtime/chip8-classic-runtime/build-classic",
+    "temporary_dir": "R/native-runtime/chip8-classic-runtime/tmp-classic",
+    "normalized_tmpdir": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/chip8-classic-runtime/tmp-classic",
+    "target": "chip8-softmmu",
+    "accelerator": "TCG",
+    "configure_cwd": "R/native-runtime/chip8-classic-runtime/build-classic",
+    "configure_command": "../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-classic>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_cwd": "R/native-runtime/chip8-classic-runtime",
+    "build_command": "/Users/tiga/miniconda/bin/ninja -C build-classic -j4 qemu-system-chip8",
+    "tmpdir_environment": "TMPDIR=<normalized_tmpdir> (set for configure and direct Ninja build)",
+    "candidate_binary": "R/native-runtime/chip8-classic-runtime/build-classic/qemu-system-chip8",
+    "memory_guard_refusal_receipt": "R/chip8-classic-memory-run-refusal.json",
+    "memory_guard_status": "initial attempt denied; user later explicitly overrode guard; direct build completed",
+    "candidate_binary_sha256": "c1dca2817894b3d45e0ea3262f3b907167c854f28e4c35df25e283a24262a987",
+    "candidate_binary_size": 6220664,
+    "override_receipt": "R/chip8-classic-build-override-receipt.json",
+    "authorization": "Explicit user override for this build; original memory-run refusal preserved"
+  },
+  "qualification": {
+    "status": "bounded local macOS arm64 native classic/RNG acceptance passed",
+    "source_static_review": true,
+    "ci": false,
+    "cross_architecture_build": false,
+    "cross_binary_restore_qualified": false,
+    "native_selection": {
+      "total_cases": 31,
+      "native_cases": 30,
+      "host_map_cases": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml": "R/chip8-classic-native-01.xml"
+    },
+    "representative_classic_families_executed": 34,
+    "retained_compatibility": {
+      "cases": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "exclusion": "obsolete v1 CPU-only CLS refusal on v3",
+      "xml": "R/chip8-classic-compat-01.xml"
+    },
+    "integrated_preservation": {
+      "cases": 2731,
+      "files": 166,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "exclusion": "existing private DinoPark identification input unavailable",
+      "python_source_test_files": 1197,
+      "source_unchanged": true,
+      "xml": "R/chip8-classic-preservation-final-01.xml"
+    },
+    "host_verification": {
+      "cases": 138,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "exclusion": "native DOSBox storage case excluded from host-only selection, included in integrated acceptance",
+      "xml": "R/chip8-classic-host-final-02.xml"
+    },
+    "retained_dosbox_cases": 323,
+    "retained_v2_artifact_restore_cases": 2,
+    "external_schema3_artifacts_verified": 4,
+    "external_seed_events_verified": 18,
+    "receipt": "R/chip8-classic-native-final-receipt.json"
+  },
+  "applied_verification": {
+    "status": "passed",
+    "receipt": "R/chip8-classic-patch-replay-receipt.json",
+    "patch_sha256": "cb80c64be2ea206177fb9d5f787dad9f640a15de6dc2b4a34f2e768923713124",
+    "replayed_file_count": 6,
+    "replayed_after_sha256": {
+      "qapi/misc.json": "0f78a84a3c65e58c89f4d30a76fe3d1c8fffb4f334b0e1b98994216078902c2b",
+      "system/qmp-chip8.c": "4a6217e37cd0b24b4ea253d1d968e6e3510fac1894ec5dd530ab663ae18682c0",
+      "target/chip8/cpu.c": "57609cc88e4a204049069d840d5638833d0fa5cbda4df19f6ab9553b3b34c1ef",
+      "target/chip8/cpu.h": "8e7f74b31a7102ba2bb91fdf439b18076893b4eee0e0516281158b0c5dbe3339",
+      "target/chip8/helper.c": "306c4a603d45d7aaa242870135f0299b3bcd090fc669ad8c0023688594f30938",
+      "target/chip8/vmstate.c": "ba1bed70b508de5e8ff4297e1db08b77d5d45ef230c49dc2525dcf8518b54472"
+    }
+  },
+  "schema_validation": {
+    "status": "passed",
+    "method": "direct QAPI generator invocation only; no C compile or Ninja",
+    "command": "python3 scripts/qapi-gen.py -o <external TMPDIR>/qapi-check -b ../qapi/qapi-schema.json",
+    "working_directory": "R/native-runtime/chip8-classic-runtime/build-classic",
+    "output_directory": "R/native-runtime/chip8-classic-runtime/tmp-classic/qapi-check",
+    "parent_command": "TMPDIR=<external tmp-classic> /Users/tiga/miniconda/bin/python3 scripts/qapi-gen.py -o tmp-classic/qapi-parent-check-01 -b qapi/qapi-schema.json",
+    "parent_working_directory": "R/native-runtime/chip8-classic-runtime"
+  }
+}

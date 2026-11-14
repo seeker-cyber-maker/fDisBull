@@ -1,0 +1,234 @@
+--- a/qemu-10.0.13/qapi/fdisbull-dos-checkpoint.json
++++ b/qemu-10.0.13/qapi/fdisbull-dos-checkpoint.json
+@@ -0,0 +1,49 @@
++##
++# Read-only UART state for stopped fDisBull DOS process checkpoints.
++##
++
++##
++# @FdisbullDosCheckpointStatus:
++# Bounded internal state for the one ISA COM2 UART. The device registers are
++# sampled directly; this command never performs guest I/O-port reads, so it
++# cannot pop receive data or clear line-status error bits. Host socket buffers
++# are outside this reply and must be checked by the owning host session.
++#
++# @device-path: Stable QOM path of the selected ISA serial frontend.
++# @uart-path: Stable QOM path of its native UART child.
++# @device-type: QOM device type.
++# @index: ISA serial index.
++# @iobase: ISA I/O base, required to equal 0x2f8.
++# @irq: ISA interrupt line.
++# @lsr: Raw line status register value.
++# @fifo-enabled: Whether the UART FIFO enable bit is set.
++# @rx-fifo-bytes: Number of bytes in the receive FIFO, at most 16.
++# @tx-fifo-bytes: Number of bytes in the transmit FIFO, at most 16.
++# @rbr: Receive buffer register value; may be stale while FIFO mode is active.
++# @thr: Transmit holding register value; may be stale while FIFO mode is active.
++# @tsr: Transmit shift register value; may be stale when @temt is true.
++# @tsr-retry: Pending character backend write retries.
++# @thre: Raw LSR transmit-holding/FIFO-empty bit.
++# @temt: Raw LSR transmitter-empty bit.
++# @tx-idle: True only when both raw empty bits are set, the TX FIFO is empty,
++#     and no backend retry is pending. This does not attest the host socket queue.
++# @rx-empty: True only when LSR data-ready is clear and the RX FIFO is empty.
++##
++{ 'struct': 'FdisbullDosCheckpointStatus',
++  'data': { 'device-path': 'str', 'uart-path': 'str', 'device-type': 'str', 'index': 'uint32',
++            'iobase': 'uint16', 'irq': 'uint16', 'lsr': 'uint8',
++            'fifo-enabled': 'bool', 'rx-fifo-bytes': 'uint8',
++            'tx-fifo-bytes': 'uint8', 'rbr': 'uint8', 'thr': 'uint8',
++            'tsr': 'uint8', 'tsr-retry': 'uint32', 'thre': 'bool',
++            'temt': 'bool', 'tx-idle': 'bool', 'rx-empty': 'bool' } }
++
++##
++# @x-fdisbull-dos-checkpoint-status:
++# Read the internal state of exactly one realized ISA serial device at 0x2f8.
++# Requires a paused, single-vCPU system-mode TCG machine. No UART register is
++# read through its I/O interface and no FIFO or error state is changed.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-dos-checkpoint-status',
++  'returns': 'FdisbullDosCheckpointStatus' }
+--- a/qemu-10.0.13/qapi/meson.build
++++ b/qemu-10.0.13/qapi/meson.build
+@@ -66,6 +66,7 @@
+     'fdisbull-retrace',
+     'fdisbull-vga-configuration',
+     'fdisbull-layers',
++  'fdisbull-dos-checkpoint',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qemu-10.0.13/qapi/qapi-schema.json
++++ b/qemu-10.0.13/qapi/qapi-schema.json
+@@ -69,6 +69,7 @@
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
+ { 'include': 'fdisbull-layers.json' }
++{ 'include': 'fdisbull-dos-checkpoint.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/qemu-10.0.13/system/fdisbull-dos-checkpoint.c
++++ b/qemu-10.0.13/system/fdisbull-dos-checkpoint.c
+@@ -0,0 +1,149 @@
++/*
++ * Read-only native UART status for stopped DOS process checkpoints.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "hw/char/serial.h"
++#include "hw/char/serial-isa.h"
++#include "hw/core/cpu.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-dos-checkpoint.h"
++#include "qemu/main-loop.h"
++#include "qom/object.h"
++#include "system/cpus.h"
++#include "system/runstate.h"
++#include "system/tcg.h"
++
++#define UART_LSR_DR   0x01
++#define UART_LSR_THRE 0x20
++#define UART_LSR_TEMT 0x40
++#define UART_FCR_FE   0x01
++#define DOS_COM2_IOBASE 0x2f8
++
++typedef struct SerialLookup {
++    Object *device;
++    unsigned matches;
++    Error *error;
++} SerialLookup;
++
++static int find_com2(Object *object, void *opaque)
++{
++    SerialLookup *lookup = opaque;
++    Error *local_err = NULL;
++    uint64_t iobase;
++
++    if (!object_dynamic_cast(object, TYPE_ISA_SERIAL)) {
++        return 0;
++    }
++    iobase = object_property_get_uint(object, "iobase", &local_err);
++    if (local_err) {
++        lookup->error = local_err;
++        return 1;
++    }
++    if (iobase == DOS_COM2_IOBASE) {
++        lookup->device = object;
++        lookup->matches++;
++    }
++    return 0;
++}
++
++FdisbullDosCheckpointStatus *qmp_x_fdisbull_dos_checkpoint_status(Error **errp)
++{
++    SerialLookup lookup = { 0 };
++    Object *serial_object;
++    SerialState *serial;
++    CPUState *cpu;
++    unsigned cpus = 0;
++    g_autofree char *device_path = NULL;
++    g_autofree char *serial_path = NULL;
++    g_autofree char *device_type = NULL;
++    g_autoptr(Error) prop_err = NULL;
++    FdisbullDosCheckpointStatus *result;
++    uint64_t index, iobase, irq;
++    bool fifo_enabled, thre, temt;
++    uint32_t rx_fifo_bytes, tx_fifo_bytes;
++
++    assert(bql_locked());
++    if (!tcg_enabled() || (runstate_get() != RUN_STATE_PAUSED &&
++                           runstate_get() != RUN_STATE_DEBUG &&
++                           runstate_get() != RUN_STATE_PRELAUNCH)) {
++        error_setg(errp, "DOS checkpoint status requires stopped system-mode TCG");
++        return NULL;
++    }
++    CPU_FOREACH(cpu) {
++        cpus++;
++        if (cpus > 1 || !cpu->stopped) {
++            error_setg(errp, "DOS checkpoint status requires one stopped vCPU");
++            return NULL;
++        }
++    }
++    if (cpus != 1) {
++        error_setg(errp, "DOS checkpoint status requires one stopped vCPU");
++        return NULL;
++    }
++
++    object_child_foreach_recursive(object_get_root(), find_com2, &lookup);
++    if (lookup.error) {
++        error_propagate(errp, lookup.error);
++        return NULL;
++    }
++    if (lookup.matches != 1 || !lookup.device) {
++        error_setg(errp, "DOS checkpoint status requires exactly one ISA serial at 0x2f8");
++        return NULL;
++    }
++    serial_object = object_property_get_link(lookup.device, "serial", NULL);
++    if (!serial_object || !object_dynamic_cast(serial_object, TYPE_SERIAL)) {
++        error_setg(errp, "Selected ISA serial has no realized UART state");
++        return NULL;
++    }
++    serial = SERIAL(serial_object);
++    device_path = object_get_canonical_path(lookup.device);
++    serial_path = object_get_canonical_path(serial_object);
++    device_type = g_strdup(object_get_typename(lookup.device));
++    if (!device_path || !serial_path) {
++        error_setg(errp, "Selected ISA serial has no stable QOM path");
++        return NULL;
++    }
++    index = object_property_get_uint(lookup.device, "index", &prop_err);
++    if (prop_err) {
++        error_propagate(errp, g_steal_pointer(&prop_err));
++        return NULL;
++    }
++    iobase = object_property_get_uint(lookup.device, "iobase", &prop_err);
++    if (prop_err) {
++        error_propagate(errp, g_steal_pointer(&prop_err));
++        return NULL;
++    }
++    irq = object_property_get_uint(lookup.device, "irq", &prop_err);
++    if (prop_err) {
++        error_propagate(errp, g_steal_pointer(&prop_err));
++        return NULL;
++    }
++
++    fifo_enabled = (serial->fcr & UART_FCR_FE) != 0;
++    rx_fifo_bytes = fifo8_num_used(&serial->recv_fifo);
++    tx_fifo_bytes = fifo8_num_used(&serial->xmit_fifo);
++    thre = (serial->lsr & UART_LSR_THRE) != 0;
++    temt = (serial->lsr & UART_LSR_TEMT) != 0;
++
++    result = g_new0(FdisbullDosCheckpointStatus, 1);
++    result->device_path = g_steal_pointer(&device_path);
++    result->uart_path = g_steal_pointer(&serial_path);
++    result->device_type = g_steal_pointer(&device_type);
++    result->index = index;
++    result->iobase = iobase;
++    result->irq = irq;
++    result->lsr = serial->lsr;
++    result->fifo_enabled = fifo_enabled;
++    result->rx_fifo_bytes = rx_fifo_bytes;
++    result->tx_fifo_bytes = tx_fifo_bytes;
++    result->rbr = serial->rbr;
++    result->thr = serial->thr;
++    result->tsr = serial->tsr;
++    result->tsr_retry = serial->tsr_retry;
++    result->thre = thre;
++    result->temt = temt;
++    result->tx_idle = thre && temt && tx_fifo_bytes == 0 && serial->tsr_retry == 0;
++    result->rx_empty = !(serial->lsr & UART_LSR_DR) && rx_fifo_bytes == 0;
++    return result;
++}
+--- a/qemu-10.0.13/system/meson.build
++++ b/qemu-10.0.13/system/meson.build
+@@ -19,6 +19,7 @@
+   'fdisbull-display.c',
+   'fdisbull-input.c',
+   'fdisbull-layers.c',
++  'fdisbull-dos-checkpoint.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',

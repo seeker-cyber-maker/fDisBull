@@ -272,6 +272,9 @@ budget stop or unsupported operation as such, with the next useful action.
 | Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [DESQview and memory search](references/desqview-and-memory-search.md) |
 | Compare action traces for code/register candidates or stop at a bounded instruction predicate | [execution event search](references/execution-event-search.md) |
 | Identify architecture/container/media headers through the persistent format catalog or frame native SMK2 movies | [file formats](references/file-formats.md) |
+| Prepare a FreeDOS runtime, capture a private D: directory, inspect/edit file generations or restore file-aware checkpoints | [references/dos-file-layers.md](references/dos-file-layers.md) |
+| Test native QEMU DOS, inspect migration coverage, or select the retained DOSBox fallback | [references/dos-qemu-migration.md](references/dos-qemu-migration.md) |
+| Import a CHIP-8 ROM, inspect its native CPU/RAM or restore an exact-runtime checkpoint | [references/chip8-qemu.md](references/chip8-qemu.md) |
 
 
 For a human-readable review of established findings, use the companion

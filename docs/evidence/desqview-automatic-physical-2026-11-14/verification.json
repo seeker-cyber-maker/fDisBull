@@ -1,0 +1,135 @@
+{
+  "contract": {
+    "all_captured_bytes_compared_including_fixups": true,
+    "certificate_format": "fdisbull-desqview-physical-readback-1",
+    "checkpoint_proof_historical_until_fresh_readback": true,
+    "legacy32_nonpae_4k_a20_only": true,
+    "max_bytes": 1048576,
+    "max_pages": 256,
+    "observer_seconds": 10,
+    "passes": 2,
+    "physical_addresses_excluded_from_identity_keys": true,
+    "physical_only_failure_withdraws_maps_and_revalidates_native_coverage": true,
+    "provider": "DesqviewProvider.qualify_physical",
+    "scope": "two-pass stopped physical/linear equality for exact captured source extents under revalidated native identity"
+  },
+  "date": "2026-11-14",
+  "format": "fdisbull-desqview-automatic-physical-host-acceptance-1",
+  "host": {
+    "errors": 0,
+    "failures": 0,
+    "hashes_unchanged": true,
+    "passed": 3315,
+    "receipt": {
+      "file": "host-candidate-01-53cb1b-result.json",
+      "sha256": "60e15c2b28d518a360709e12724e2710fd0db3cfad203f23fcea3306bf0904c8",
+      "size": 10099
+    },
+    "selected_files": 113,
+    "skipped": 12,
+    "source_test_hashes": 1279
+  },
+  "independent_host": {
+    "errors": 0,
+    "failures": 0,
+    "final_epoch_and_process_race_reproduced_then_refused": true,
+    "overlaps_host_selection": true,
+    "passed": 161,
+    "receipt": {
+      "file": "physical-independent-host-02.xml",
+      "sha256": "f3c43b420698ae6e9a47ddfe76b6a78ce8166f47952f6ce6aa5de51aaaf92c2a",
+      "size": 24180
+    },
+    "reviewed_hashes_unchanged": 7
+  },
+  "installed_host": {
+    "errors": 0,
+    "failures": 0,
+    "overlaps_host_selection": true,
+    "passed": 297,
+    "receipt": {
+      "file": "installed-host-01.xml",
+      "sha256": "8e9dd6eb1ea5ec2d0ffedcc2732be2c8d785cc0219c968fd41a9ecad8abb16cf",
+      "size": 44035
+    },
+    "skipped": 0,
+    "tests": 297
+  },
+  "limitations": [
+    "Host fixtures do not prove native original DESQview behavior.",
+    "No physical qualification of all manager records or whole task RAM.",
+    "No continuous residency, execution or allocation-lifetime proof.",
+    "A public raw-machine run timeout may be separate from the observer budget when no parent deadline is exported.",
+    "Prior 62d01df8 native results are historical and are not acceptance of this runtime.",
+    "Overall QEMU-DOS/DOSBox-X parity and DOSBox-X removal remain unqualified."
+  ],
+  "native": {
+    "attempts": 2,
+    "automatic_provider_physical_qualification": null,
+    "guests_started": 0,
+    "reason": "macOS reports warning memory pressure",
+    "receipt": {
+      "file": "native-admission.json",
+      "sha256": "f103e6c0a77e6b6a3df5583062f10fdb37f057442256e91287f5770a6665981b",
+      "size": 1140
+    },
+    "remaining": [
+      "8 native preservation/failure cases on exact wheel",
+      "standard and virtual authored protected LE profiles on exact wheel",
+      "fresh original DESQview automatic certificates versus independent physical readbacks",
+      "same-task physical relocation, genuine native handle reuse and source-error recovery",
+      "cold artifact/source/binding joins and guest/input/package postflight"
+    ],
+    "status": "not-started-admission-denied",
+    "tests_run": 0,
+    "tickets_granted": 0
+  },
+  "package": {
+    "critical_module_imports": 20,
+    "helper_sha256": "9fa384ecdd02223392030c5b5afe1b9436d9f095a92a3c1be32621406cc80400",
+    "manifest": {
+      "file": "package-72423fad.json",
+      "sha256": "9ac050086fb50fbd446bd629645d4618651543d921a1e4862661c1d20a5b364b",
+      "size": 78126
+    },
+    "postflight": {
+      "file": "runtime-postflight-01.json",
+      "sha256": "918b488e4064b8d4624eb6862f500ba35cc070436382149e7b18e8f5e1dfc2ae",
+      "size": 283
+    },
+    "readback": {
+      "file": "installed-readback-01.json",
+      "sha256": "67890d50a257b7d0c2336477277826950f6b3dddd643ee6b1fda51d1198dc0c7",
+      "size": 5945
+    },
+    "runtime_files": 709,
+    "source_wheel_installed_equal": true,
+    "wheel_sha256": "10b82f1f7c9f8e008199d66693f8b00ded479f300799c9827fb5e95b64c86035"
+  },
+  "preservation": {
+    "ci_run": false,
+    "default_readback": {
+      "file": "default-after.json",
+      "sha256": "39775026b983f4168bd47efe60c35fbf621b347aebd22abc9951981689428247",
+      "size": 2421
+    },
+    "dosbox_x_default_retained": true,
+    "fresh_native_acceptance": false,
+    "host_contracts": [
+      "trials",
+      "histories",
+      "shared replay",
+      "task-private RAM/code layers",
+      "hooks",
+      "checkpoints",
+      "IRQs"
+    ],
+    "mr_merge": false,
+    "native_rebuild": false,
+    "release": false,
+    "shared_activation": false,
+    "shared_install_unchanged": true
+  },
+  "runtime_commit": "72423fadd263b579ba2193d960f1e35d83fba9df",
+  "status": "implemented-host-verified-native-pending"
+}

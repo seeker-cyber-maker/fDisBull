@@ -27,6 +27,12 @@ that does not qualify live Windows tracing. Protected/v86 observations retain
 their recorded mode, and an unqualified selector is never converted into a DOS
 paragraph address.
 
+The native `qemu-dos` COM/MZ adapter also supplies source-bound stopped traces
+for the initial verified real-mode module. Its explicit virtual clock profile
+adds [timestamped source observations](DOS_QEMU_MIGRATION.md#join-source-observations-to-virtual-time).
+Its debugger-step semantics and input restrictions are distinct from the
+DOSBox capture path below.
+
 ## Stop at an observed boundary
 
 The example assumes `debug` is the caller's already owned, stopped DOSBox
@@ -151,6 +157,35 @@ contiguous same-context observations against the preceding instruction's
 decoded fallthrough. A gap, unknown decode or context change remains unknown.
 A nonsequential transfer alone does not identify a function or an unpacker's
 original entry point.
+
+### Query one native virtual-clock interval
+
+`virtual-time-range` selects clock-qualified native DOS observations in a
+half-open interval. It requires the exact `run`, 32-hex host `epoch`, positive
+`native_epoch`, and integer `start_ns` / `end_ns` fields. Obtain the identity
+from that session's `clock_observe()` receipt; bounds satisfy
+`0 <= start_ns < end_ns <= 2**63`. The same predicate works with query and
+search methods and with live native DOS `trace-until` under the virtual profile.
+
+Each matching row and retained search sample includes its validated `clock`:
+native nanoseconds and a separate instruction counter, with unchanged samples
+before and after the full stopped source observation. Candidate identities
+remain source/site/register identities; timestamps do not prevent comparisons
+across runs. A count trace's final endpoint is returned separately as optional
+`endpoint_clock`, and is not counted as another event or candidate.
+
+Missing clocks or a different run/epoch produce unknown retrospective results.
+Malformed or unstable clock fields reject the artifact even when a different
+predicate was requested. Live requests refuse every unsupported or foreign
+clock leaf before stepping, including leaves inside Boolean expressions.
+Saved scripts require literal identities from an earlier request and validate
+them before earlier writes; `$` references inside trace-until remain refused.
+
+This permits temporal comparison with input dispatch and media publication
+receipts from the same clock. It does not establish input causation, natural
+instruction latency, or guest-frame completion. Time predicates observe
+debugger stops; they do not install an exact live timer cutoff. Historical
+clockless traces and searches remain supported.
 
 ## Narrow repeated actions
 

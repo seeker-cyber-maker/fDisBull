@@ -89,10 +89,15 @@ Configuration evidence starts with `memory_manager.observed = unknown`.
 Import the disk as an explicit raw project solely for machine/source identity:
 
 ```sh
-fdisbull import /private/boot.img /private/machine.fdb --arch x86 --bits 16 --base 0 --entry 0
+fdisbull import /private/boot.img /private/machine.fdb --arch x86 --bits 32 --base 0 --entry 0
 fdisbull debug /private/machine.fdb --executable /path/to/qemu-system-x86_64 \
   --game-dir /private --backend qemu-machine --guest-profile qemm
 ```
+
+The raw disk's 32-bit file-address view accommodates the whole image; observed
+CPU mode and code-segment width determine actual instruction decoding. For
+the explicit native DOS migration lane and pipe transport, read
+[DOS/QEMU migration](dos-qemu-migration.md).
 
 The machine begins paused. Use the returned run ID in subsequent JSON-line
 requests. Plan program launch in the private image's DOS startup files or use
@@ -112,6 +117,13 @@ caller width. Translation reads the stopped machine's current CR3/PDE/PTE for
 non-PAE 4 KiB maps; absent pages, unobserved A20, large pages and unsupported
 paging formats stay unknown/unsupported. It does not establish allocation
 ownership, lifetime, a permanent source binding or a complete access verdict.
+
+Add `"length": 4` to a `debug-memory-translation` request to read one range
+within an observed non-PAE page mapped to extended RAM. `backing_layer.id`
+identifies the selected physical page for the current run and VM epoch;
+`data_hex` is checked against QEMU's virtual read. A guest remap can select
+another layer without changing the first page's bytes. The command is read-only
+and does not control the guest mapping or infer the owning task or allocation.
 
 ## Record QEMM's own observations
 

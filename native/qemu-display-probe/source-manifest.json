@@ -1,0 +1,44 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "command": "x-fdisbull-probe-display",
+  "patch": "qemu-10.0.13-fdisbull-display-probe-v1.patch",
+  "patch_sha256": "d4dc9a87a9c00e807da66339bc8cf055779de754a937ce727b0baa143300f5aa",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_retrace_patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "requires_retrace_patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "requires_input_retrace_patch": "qemu-10.0.13-fdisbull-input-retrace-v1.patch",
+  "requires_input_retrace_patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80",
+  "requires_keyboard_press_patch": "qemu-10.0.13-fdisbull-keyboard-press-v1.patch",
+  "requires_keyboard_press_patch_sha256": "0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0",
+  "requires_keyboard_type_patch": "qemu-10.0.13-fdisbull-keyboard-type-v1.patch",
+  "requires_keyboard_type_patch_sha256": "d680d253af93b60d3101ef74c1243e19e887b1cabdf0df194fdec0aafed23cc5",
+  "requires_mouse_click_patch": "qemu-10.0.13-fdisbull-mouse-click-v1.patch",
+  "requires_mouse_click_patch_sha256": "23f38d65391587b0be11af021fc3858872475d25a03719844b486719eee154d9",
+  "files": [
+    {
+      "path": "qapi/fdisbull-display.json",
+      "base_sha256": "b07f94f3eb0f8b109ac27b67429218b93d430463a22141186221d93b4dd17fad",
+      "patched_sha256": "5c14103d746a722116571298a1e135b1b971cf7e9951341794f3b431e474aaf5"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "base_sha256": "50d1e0298c070b6dd5a49def4613cf5c16bd0685944c23dda38a31fc28fa3510",
+      "patched_sha256": "65b3abab9248cb8782b1fef2a521ca7ed8178c97ae664eee65fb35d6d4cc0fb3"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Corrected QAPI documentation attempt passed forward and reverse with zero fuzz/offset against the two exact eight-layer source members; both outputs matched and reverse restored both bases. Earlier generation failure is retained separately in the handoff and private receipts",
+  "schema_validation": "Reported separately by full-source QAPI generation receipts",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

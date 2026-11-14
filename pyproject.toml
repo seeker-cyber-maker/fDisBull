@@ -29,4 +29,4 @@ testpaths = ["tests"]
 pythonpath = ["src", "."]
 
 [tool.setuptools.package-data]
-fdisbull = ["wine_guest/*.c", "wine_guest/*.sh", "wine_guest/*.py", "ida_guest/*.c", "ida_guest/*.sh", "ida_guest/*.py", "ida_guest/SDK-LICENSE.txt", "dos_guest/*.sh", "dos_guest/*.py", "native_runtime/*.c", "native_runtime/*.h", "native_runtime/*.m", "web_runtime/*.mjs", "web_runtime/*.html", "ghidra_scripts/*.java", "game_sources/*.c", "game_sources/*.m", "game_sources/*.s", "game_sources/*.S", "game_sources/*.cfg", "game_sources/*.txt", "data/*.json", "data/*.txt", "data/*.swift", "skills/*/*.md", "skills/*/references/*.md"]
+fdisbull = ["wine_guest/*.c", "wine_guest/*.sh", "wine_guest/*.py", "ida_guest/*.c", "ida_guest/*.sh", "ida_guest/*.py", "ida_guest/SDK-LICENSE.txt", "dos_guest/*.sh", "dos_guest/*.py", "dos_guest/*.asm", "native_runtime/*.c", "native_runtime/*.h", "native_runtime/*.m", "web_runtime/*.mjs", "web_runtime/*.html", "ghidra_scripts/*.java", "game_sources/*.c", "game_sources/*.m", "game_sources/*.s", "game_sources/*.S", "game_sources/*.cfg", "game_sources/*.txt", "data/*.json", "data/*.txt", "data/*.swift", "skills/*/*.md", "skills/*/references/*.md"]
